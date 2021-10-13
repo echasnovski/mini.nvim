@@ -1,0 +1,1855 @@
+================================================================================
+                                                                     *mini.nvim*
+
+|mini.nvim| is a collection of minimal, independent, and fast Lua modules
+dedicated to improve Neovim (version 0.5 and higher) experience. Each module
+can be considered as a separate sub-plugin.
+
+# General principles
+
+- <Design>. Each module is designed to solve a particular problem targeting 
+  balance between feature-richness (handling as many edge-cases as possible)
+  and simplicity of implementation/support. Granted, not all of them ended up
+  with the same balance, but it is the goal nevertheless.
+- <Independence>. Modules are independent of each other and can be run without
+  external dependencies. Although some of them may need dependencies for full
+  experience.
+- <Structure>. Each module is a submodule for a placeholder "mini" module. So, 
+  for example, "surround" module should be referred to as "mini.surround". As
+  later will be explained, this plugin can also be referred to as
+  "MiniSurround".
+- <Setup>:
+    - Each module (if needed) should be setup separately with
+      `require(<name of module>).setup({})` (possibly replace {} with your
+      config table or omit to use defaults). You can supply only values which
+      differ from defaults, which will be used for the rest ones.
+    - Call to module's `setup()` always creates a global Lua object with 
+      coherent camel-case name: `require('mini.suround').setup()` creates 
+      `_G.MiniSurround`. This allows for a simpler usage of plugin 
+      functionality: instead of `require('mini.surround')` use `MiniSurround`;
+      available from |v:lua| with `v:lua.MiniSurround`. Considering this,
+      "module" and "Lua object" names can be used interchangeably:
+      'mini.surround' and 'MiniSurround' will mean the same thing.
+    - Each supplied `config` table (after extending with default values) is 
+      stored in `config` field of global object. Like `MiniSurround.config`.
+    - Values of `config`, which affect runtime activity, can be changed on the
+      fly to have effect. For example, `MiniSurround.config.n_lines` can be
+      changed during runtime; but changing `MiniSurround.config.mappings` won't
+      have any effect (as mappings are created once during `setup()`).
+- <Disabling>. Each module's core functionality can be disabled globally or 
+  buffer-locally by creating appropriate global or buffer-scoped variables with
+  |v:true| value. For example:
+    - To disable `MiniSurround` globally run `:let g:minisurround_disable=v:true`.
+    - To disable `MiniSurround` for current buffer run `:let b:minisurround_disable=v:true`.
+    - To toggle `MiniSurround` globally (disable if enabled, enable if
+      disabled) use of Lua is more appropriate:
+      `:lua vim.g.minisurround_disable = not vim.g.minisurround_disable`.
+- <Highlight groups>. Appearance of module's output is controlled by certain
+  highlight group (see |highlight-groups|). To customize them, use |highlight|
+  command. Note: currently not many Neovim themes support this plugin's
+  highlight groups; fixing this situation is highly appreciated. To see a more
+  calibrated look, use |MiniBase16| or plugin's colorscheme `minischeme`.
+- <Stability>. Each module upon release is considered to be relatively stable:
+  both in terms of setup and functionality. Any non-bugfix
+  backward-incompatible change will be released gradually as much as possible.
+
+# List of modules
+
+- |MiniBase16| - fast implementation of base16 theme for manually supplied 
+  palette. Has unique palette generator which needs only background and 
+  foreground colors.
+- |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving 
+  window layout.
+- |MiniComment| - fast and familiar per-line code commenting.
+- |MiniCompletion| - async (with customizable 'debounce' delay) 'two-stage 
+  chain completion': first builtin LSP, then configurable fallback. Also has
+  functionality for completion item info and function signature (both in
+  floating window appearing after customizable delay).
+- |MiniCursorword| - automatic highlighting of word under cursor (displayed 
+  after customizable delay).
+- |MiniFuzzy| - functions for fast and simple fuzzy matching. It has not only
+  functions to perform fuzzy matching of one string to others, but also a
+  sorter for |telescope.nvim|.
+- |MiniMisc| - collection of miscellaneous useful functions. Like `put()` and
+  `put_text()` which print Lua objects to command line and current buffer
+  respectively.
+- |MiniPairs| - autopairs plugin which has minimal defaults and functionality
+  to do per-key expression mappings.
+- |MiniStatusline| - minimal and fast statusline. Has ability to use custom 
+  content supplied with concise function (using module's provided section 
+  functions) along with builtin default. For full experience needs [Nerd 
+  font](https://www.nerdfonts.com/), 
+  [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and 
+  [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin
+  (but works without any them).
+- |MiniSurround| - fast surround plugin. Add, delete, replace, find, highlight
+  surrounding (like pair of parenthesis, quotes, etc.). Has special "function
+  call", "tag", and "interactive" surroundings. Supports dot-repeatability,
+  textobject, motions.
+- |MiniTabline| - minimal tabline which shows listed (see 'buflisted') buffers
+  in case of one tab and falls back to default otherwise. For full experience
+  needs [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
+- |MiniTrailspace| - automatic highlighting of trailing whitespace with 
+  functionality to remove it.
+
+# Plugin colorscheme
+
+This plugin comes with an official colorscheme named `minischeme`. This is a
+|MiniBase16| theme created with faster version of the following Lua code:
+`require('mini.base16').setup({palette = palette, name = 'minischeme',
+use_cterm = true})` where `palette` is:
+- For dark 'background': `require('mini.base16').mini_palette('#112641',
+  '#e2e98f', 75)`
+- For light 'background': `require('mini.base16').mini_palette('#e2e5ca',
+  '#002a83', 75)`
+
+Activate it as a regular |colorscheme|.
+
+
+================================================================================
+                                                      *MiniBase16* *mini.base16*
+
+Custom minimal and fast Lua module which implements
+[base16](http://chriskempson.com/projects/base16/) color scheme (with Copyright
+(C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua plugins. Extra
+features:
+- Configurable automatic support of cterm colors (see |highlight-cterm|).
+- Opinionated palette generator based only on background and foreground colors.
+
+# Setup
+
+This module needs a setup with `require('mini.base16').setup({})` (replace `{}`
+with your - `config` table).
+
+Default `config`:
+{
+  -- Table with names from `base00` to `base0F` and values being strings of HEX
+  -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
+  -- `setup()`.
+  palette = nil,
+
+  -- Name of applied theme (stored in `g:colors_name`)
+  name = 'base16-custom',
+
+ -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
+ -- or table with cterm colors. See `setup()` documentation for more
+ -- information.
+  use_cterm = nil,
+}
+
+Example:
+
+`require('mini.base16').setup({`
+  `palette = {`
+    `base00 = '#112641',`
+    `base01 = '#3a475e',`
+    `base02 = '#606b81',`
+    `base03 = '#8691a7',`
+    `base04 = '#d5dc81',`
+    `base05 = '#e2e98f',`
+    `base06 = '#eff69c',`
+    `base07 = '#fcffaa',`
+    `base08 = '#ffcfa0',`
+    `base09 = '#cc7e46',`
+    `base0A = '#46a436',`
+    `base0B = '#9ff895',`
+    `base0C = '#ca6ecf',`
+    `base0D = '#42f7ff',`
+    `base0E = '#ffc4ff',`
+    `base0F = '#00a5c5',`
+  `},`
+  `name = 'minischeme',`
+  `use_cterm = true,`
+`})`
+
+# Notes
+1. This module is used for creating plugin's official colorscheme named 
+   `minischeme` (see |mini.nvim|).
+
+MiniBase16.setup({config})                                *MiniBase16.setup()*
+    Module setup
+
+    Setup is done by applying base16 palette to enable colorscheme. Highlight
+    groups make an extended set from original
+    [base16-vim](https://github.com/chriskempson/base16-vim/) plugin. It is a
+    good idea to have `config.palette` respect the original [styling
+    principles](https://github.com/chriskempson/base16/blob/master/styling.md).
+
+    By default only 'gui highlighting' (see |highlight-gui| and
+    |termguicolors|) is supported. To support 'cterm highlighting' (see
+    |highlight-cterm|) supply `config.use_cterm` argument in one of the
+    formats:
+    - `true` to auto-generate from `palette` (as closest colors).
+    - Table with similar structure to `palette` but having terminal colors 
+      (integers from 0 to 255) instead of hex strings.
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.base16').setup({})` (replace `{}` with your `config`
+        table; `config.palette` should be a table with colors)
+
+
+MiniBase16.mini_palette({background}, {foreground}, {accent_chroma})*MiniBase16.mini_palette()*
+    Create 'mini' palette
+
+    Create base16 palette based on the HEX (string '#RRGGBB') colors of main
+    background and foreground with optional setting of accent chroma (see
+    details).
+
+    # Algorithm design
+    - Main operating color space is 
+      [CIELCh(uv)](https://en.wikipedia.org/wiki/CIELUV#Cylindrical_representation_(CIELCh))
+      which is a cylindrical representation of a perceptually uniform CIELUV 
+      color space. It defines color by three values: lightness L (values from 0
+      to 100), chroma (positive values), and hue (circular values from 0 to 360
+      degress). Useful converting tool: https://www.easyrgb.com/en/convert.php
+    - There are four important lightness values: background, foreground, focus 
+      (around the middle of background and foreground, leaning towards 
+      foreground), and edge (extreme lightness closest to foreground).
+    - First four colors have the same chroma and hue as `background` but 
+      lightness progresses from background towards focus.
+    - Second four colors have the same chroma and hue as `foreground` but 
+      lightness progresses from foreground towards edge in such a way that 
+      'base05' color is main foreground color.
+    - The rest eight colors are accent colors which are created in pairs
+        - Each pair has same hue from set of hues 'most different' to 
+          background and foreground hues (if respective chorma is positive).
+        - All colors have the same chroma equal to `accent_chroma` (if not 
+          provided, chroma of foreground is used, as they will appear next to
+          each other). Note: this means that in case of low foreground chroma,
+          it is a good idea to set `accent_chroma` manually. Values from 30
+          (low chorma) to 80 (high chroma) are common.
+        - Within pair there is base lightness (equal to foreground lightness)
+          and alternative (equal to focus lightness). Base lightness goes to
+          colors which will be used more frequently in code: base08
+          (variables), base0B (strings), base0D (functions), base0E (keywords).
+          How exactly accent colors are mapped to base16 palette is a result of
+          trial and error. One rule of thumb was: colors within one hue pair
+          should be more often seen next to each other. This is because it is
+          easier to distinguish them and seems to be more visually appealing.
+          That is why `base0D` and `base0F` have same hues because they usually
+          represent functions and delimiter (brackets included).
+
+
+
+    Parameters: ~
+        {background}    (string)  Background HEX color (formatted as
+                                  `#RRGGBB`).
+        {foreground}    (string)  Foreground HEX color (formatted as
+                                  `#RRGGBB`).
+        {accent_chroma} (number)  Optional positive number (usually between 0
+                                  and 100). Default: chroma of foreground
+                                  color.
+
+    Return: ~
+        table: Table with base16 palette.
+
+    Usage: ~
+        `local palette = require('mini.base16').mini_palette('#112641',
+        '#e2e98f', 75)`
+        `require('mini.base16').setup({palette = palette, name =
+        'my-base16'})`
+
+
+MiniBase16.rgb_palette_to_cterm_palette({palette})*MiniBase16.rgb_palette_to_cterm_palette()*
+    Converts palette with RGB colors to terminal colors
+
+    Useful for caching `use_cterm` variable to increase speed.
+
+
+
+    Parameters: ~
+        {palette} (table)  Table with base16 palette (same as in
+                           `MiniBase16.config.palette`).
+
+    Return: ~
+        table: Table with base16 palette using |highlight-cterm|.
+
+
+
+================================================================================
+                                                *MiniBufremove* *mini.bufremove*
+
+Lua module for minimal buffer removing (unshow, delete, wipeout), which saves
+window layout (opposite to builtin Neovim's commands). This is mostly a Lua
+implementation of
+[bclose.vim](https://vim.fandom.com/wiki/Deleting_a_buffer_without_closing_the_window).
+Other alternatives:
+- [vim-bbye](https://github.com/moll/vim-bbye)
+- [vim-sayonara](https://github.com/mhinz/vim-sayonara)
+
+# Setup
+
+This module doesn't need setup, but it can be done to improve usability. Setup
+with `require('mini.bufremove').setup({})` (replace `{}` with your `config`
+table).
+
+Default `config`:
+{
+  -- Whether to set Vim's settings for buffers (allow hidden buffers)
+  set_vim_settings = true,
+}
+
+# Notes
+1. Which buffer to show in window(s) after its current buffer is removed is 
+   decided by the algorithm:
+   - If alternate buffer (see |CTRL-^|) is listed (see |buflisted()|), use it.
+   - If previous listed buffer (see |bprevious|) is different, use it.
+   - Otherwise create a scratch one with `nvim_create_buf(true, true)` and use 
+     it.
+
+# Disabling
+
+To disable core functionality, set `g:minibufremove_disable` (globally) or
+`b:minibufremove_disable` (for a buffer) to `v:true`.
+
+MiniBufremove.setup({config})                          *MiniBufremove.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.bufremove').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniBufremove.delete({buf_id}, {force})               *MiniBufremove.delete()*
+    Delete buffer `buf_id` with |:bdelete| after unshowing it.
+
+
+
+    Parameters: ~
+        {buf_id} (number)   Buffer identifier (see |bufnr()|) to use. Default:
+                            0 for current.
+        {force}  (boolean)  Whether to ignore unsaved changes (using `!`
+                            version of command). Default: `false`.
+
+    Return: ~
+        boolean: Whether operation was successful.
+
+
+MiniBufremove.wipeout({buf_id}, {force})             *MiniBufremove.wipeout()*
+    Wipeout buffer `buf_id` with |:bwipeout| after unshowing it.
+
+
+
+    Parameters: ~
+        {buf_id} (number)   Buffer identifier (see |bufnr()|) to use. Default:
+                            0 for current.
+        {force}  (boolean)  Whether to ignore unsaved changes (using `!`
+                            version of command). Default: `false`.
+
+    Return: ~
+        boolean: Whether operation was successful.
+
+
+MiniBufremove.unshow({buf_id})                        *MiniBufremove.unshow()*
+    Stop showing buffer `buf_id` in all windows
+
+
+
+    Parameters: ~
+        {buf_id} (number)  Buffer identifier (see |bufnr()|) to use. Default:
+                           0 for current.
+
+    Return: ~
+        boolean: Whether operation was successful.
+
+
+MiniBufremove.unshow_in_window({win_id})    *MiniBufremove.unshow_in_window()*
+    Stop showing current buffer of window `win_id`
+
+
+    Parameters: ~
+        {win_id} (number)  Window identifier (see |win_getid()|) to use.
+                           Default: 0 for current.
+
+    Return: ~
+        boolean: Whether operation was successful.
+
+
+
+================================================================================
+                                                    *MiniComment* *mini.comment*
+
+Custom minimal and fast Lua module for code commenting. This is basically a
+reimplementation of "tpope/vim-commentary". Commenting in Normal mode respects
+|count| and is dot-repeatable. Comment structure is inferred from
+'commentstring'.
+
+What it doesn't do:
+- Block and sub-line comments. This will only support per-line commenting.
+- Configurable (from module) comment structure. Modify |commentstring| instead.
+
+# Setup
+
+This module needs a setup with `require('mini.comment').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+  -- Module mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    -- Toggle comment (like `gcip` - comment inner paragraph) for both
+    -- Normal and Visual modes
+    comment = 'gc',
+
+    -- Toggle comment on current line
+    comment_line = 'gcc',
+
+    -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+    textobject = 'gc',
+  }
+}
+
+# Disabling To disable core functionality, set `g:minicomment_disable`
+(globally) or - `b:minicomment_disable` (for a buffer) to `v:true`.
+
+MiniComment.setup({config})                              *MiniComment.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.comment').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniComment.operator({mode})                          *MiniComment.operator()*
+    Main function to be mapped
+
+    It is meant to be used in expression mappings (see |map-<expr>|) to enable
+    dot-repeatability and commenting on range. There is no need to do this
+    manually, everything is done inside |MiniComment.setup()|.
+
+    It has a somewhat unintuitive logic (because of how expression mapping with
+    dot-repeatability works): it should be called without arguments inside
+    expression mapping and with argument when action should be performed.
+
+
+
+    Parameters: ~
+        {mode} (string)  Optional string with 'operatorfunc' mode (see |g@|).
+
+    Return: ~
+        string: 'g@' if called without argument, '' otherwise (but after
+        performing action).
+
+
+MiniComment.toggle_lines({line_start}, {line_end})*MiniComment.toggle_lines()*
+    Toggle comments between two line numbers
+
+    It uncomments if lines are comment (every line is a comment) and comments
+    otherwise. It respects indentation and doesn't insert trailing whitespace.
+    Toggle commenting not in visual mode is also dot-repeatable and respects
+    |count|.
+
+    # Notes
+    1. Currently call to this function will remove marks inside written range. 
+       Use |lockmarks| to preserve marks.
+
+
+
+    Parameters: ~
+        {line_start} (number)  Start line number.
+        {line_end}   (number)  End line number.
+
+
+MiniComment.textobject()                            *MiniComment.textobject()*
+    Comment textobject This selects all commented lines adjacent to cursor line
+    (if it itself is commented). Designed to be used with operator mode
+    mappings (see |mapmode-o|).
+
+
+
+
+================================================================================
+                                              *MiniCompletion* *mini.completion*
+
+Custom somewhat minimal autocompletion Lua plugin. Key design ideas:
+- Have an async (with customizable 'debounce' delay) 'two-stage chain 
+  completion': first try to get completion items from LSP client (if set up)
+  and if no result, fallback to custom action.
+- Managing completion is done as much with Neovim's built-in tools as possible.
+
+Features:
+- Two-stage chain completion:
+    - First stage is an LSP completion implemented via 
+      |MiniCompletion.completefunc_lsp()|. It should be set up as either 
+      |completefunc| or |omnifunc|. It tries to get completion items from LSP
+      client (via 'textDocument/completion' request). Custom preprocessing of 
+      response items is possible (with 
+      `MiniCompletion.config.lsp_completion.process_items`), for example with
+      fuzzy matching. By default items which are not snippets and directly
+      start with completed word are kept and sorted according to LSP
+      specification.
+    - If first stage is not set up or resulted into no candidates, fallback 
+      action is executed. The most tested actions are Neovim's built-in insert
+      completion (see |ins-completion|).
+- Automatic display in floating window of completion item info and signature 
+  help (with highlighting of active parameter if LSP server provides such 
+  information). After opening, window for signature help is fixed and is closed
+  when there is nothing to show, text is different or when leaving Insert mode.
+- Automatic actions are done after some configurable amount of delay. This 
+  reduces computational load and allows fast typing (completion and signature
+  help) and item selection (item info)
+- Autoactions are triggered on Neovim's built-in events.
+- User can force two-stage completion via |MiniCompletion.complete_twostage()|
+  (by default is mapped to `<C-Space>`) or fallback completion via 
+  |MiniCompletion.complete_fallback()| (maped to `<M-Space>`).
+
+What it doesn't do:
+- Snippet expansion.
+- Many configurable sources.
+
+# Setup
+
+This module needs a setup with `require('mini.completion').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+  -- Delay (debounce type, in ms) between certain Neovim event and action.
+  -- This can be used to (virtually) disable certain automatic actions by
+  -- setting very high delay time (like 10^7).
+  delay = {completion = 100, info = 100, signature = 50},
+
+  -- Maximum dimensions of floating windows for certain actions. Action entry
+  -- should be a table with 'height' and 'width' fields.
+  window_dimensions = {
+    info = {height = 25, width = 80},
+    signature = {height = 25, width = 80}
+  },
+
+  -- Way of how module does LSP completion:
+  -- - `source_func` should be one of 'completefunc' or 'omnifunc'.
+  -- - `auto_setup` should be boolean indicating if LSP completion is set up on
+  --   every `BufEnter` event.
+  -- - `process_items` should be a function which takes LSP
+  --   'textDocument/completion' response items and word to complete. Its
+  --   output should be a table of the same nature as input items. The most
+  --   common use-cases are custom filtering and sorting. You can use
+  --   default `process_items` as `MiniCompletion.default_process_items()`.
+  lsp_completion = {
+    source_func = 'completefunc',
+    auto_setup = true,
+    process_items = --<function: filters 'not snippets' by prefix and sorts by LSP specification>,
+  },
+
+  -- Fallback action. It will always be run in Insert mode. To use Neovim's
+  -- built-in completion (see `:h ins-completion`), supply its mapping as
+  -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
+  fallback_action = --<function equivalent to '<C-n>' completion>,
+
+  -- Module mappings. Use `''` (empty string) to disable one. Some of them
+  -- might conflict with system mappings.
+  mappings = {
+    force_twostep  = '<C-Space>', -- Force two-step completion
+    force_fallback = '<A-Space>'  -- Force fallback completion
+  }
+
+  -- Whether to set Vim's settings for better experience (modifies
+  -- `shortmess` and `completeopt`)
+  set_vim_settings = true
+}
+
+# Notes
+- More appropriate, albeit slightly advanced, LSP completion setup is to set it
+  not on every `BufEnter` event (default), but on every attach of LSP client.
+  To do that:
+    - Use in initial config: `lsp_completion = {source_func = 'omnifunc', 
+      auto_setup = false}`.
+    - In `on_attach()` of every LSP client set 'omnifunc' option to exactly 
+      `v:lua.MiniCompletion.completefunc_lsp`.
+
+# Comparisons
+
+- 'completion-nvim':
+    - Has timer activated on InsertEnter which does something every period of
+      time (makes LSP request, shows floating help). MiniCompletion relies on
+      Neovim's (Vim's) events.
+    - Uses 'textDocument/hover' request to show completion item info.
+    - Doesn't have highlighting of active parameter in signature help.
+- 'nvim-cmp':
+    - More elaborate design which allows multiple sources. However, it 
+      currently does not have a robust 'opened buffers' source, which is very
+      handy.
+    - Doesn't allow fallback action.
+    - Doesn't provide signature help.
+- Both:
+    - Can manage multiple configurable sources. MiniCompletion has only two: 
+      LSP and fallback.
+    - Provide advanced custom ways of filtering and sorting of completion list
+      as user types. MiniCompletion in this case relies on Neovim's (which
+      currently is equal to Vim's) filtering, which keeps only items which
+      directly start with completed word.
+    - Currently use simple text wrapping in completion item window. This module
+      wraps by words (see `:h linebreak` and `:h breakat`).
+    - Support snippet expansions.
+
+# Highlight groups
+
+1. `MiniCompletionActiveParameter` - highlighting of signature active
+   parameter. Default: plain underline.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable, set `g:minicompletion_disable` (globally) or
+`b:minicompletion_disable` (for a buffer) to `v:true`.
+
+MiniCompletion.setup({config})                        *MiniCompletion.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.completion').setup({})` (replace `{}` with your
+        `config` table)
+
+
+MiniCompletion.auto_completion()            *MiniCompletion.auto_completion()*
+    Auto completion
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCompletion.setup|.
+
+
+
+MiniCompletion.complete_twostage({fallback}, {force})*MiniCompletion.complete_twostage()*
+    Run two-stage completion
+
+
+
+    Parameters: ~
+        {fallback} (boolean)  Whether to use fallback completion.
+        {force}    (boolean)  Whether to force update of completion popup.
+
+
+MiniCompletion.complete_fallback()        *MiniCompletion.complete_fallback()*
+    Run fallback completion
+
+
+
+MiniCompletion.auto_info()                        *MiniCompletion.auto_info()*
+    Auto completion entry information
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCompletion.setup|.
+
+
+
+MiniCompletion.auto_signature()              *MiniCompletion.auto_signature()*
+    Auto function signature
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCompletion.setup|.
+
+
+
+MiniCompletion.stop({actions})                         *MiniCompletion.stop()*
+    Stop actions
+
+    This stops currently active (because of module delay or LSP answer delay)
+    actions.
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCompletion.setup|.
+
+
+
+    Parameters: ~
+        {actions} (table)  List containing any of 'completion', 'info', or
+                           'signature' string.
+
+
+MiniCompletion.on_text_changed_i()        *MiniCompletion.on_text_changed_i()*
+    Act on every |TextChangedI|
+
+
+
+MiniCompletion.on_text_changed_p()        *MiniCompletion.on_text_changed_p()*
+    Act on every |TextChangedP|
+
+
+
+MiniCompletion.completefunc_lsp()          *MiniCompletion.completefunc_lsp()*
+    Module's |complete-function|
+
+    This is the main function which enables two-stage completion. It should be
+    set as one of |completefunc| or |omnifunc|.
+
+    No need to use it directly, everything is setup in |MiniCompletion.setup|.
+
+
+
+MiniCompletion.default_process_items()*MiniCompletion.default_process_items()*
+    Default `MiniCompletion.config.lsp_completion.process_items`.
+
+
+
+
+================================================================================
+                                              *MiniCursorword* *mini.cursorword*
+
+Custom minimal and fast module for autohighlighting word under cursor with
+customizable delay. It is triggered only if current cursor character is a
+|[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|: something
+user would get as 'iw' text object. Highlighting stops in insert and terminal
+modes.
+
+# Setup
+
+This module needs a setup with `require('mini.cursorword').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+ -- Delay (in ms) between when cursor moved and when highlighting appeared
+ delay = 100,
+}
+
+# Highlight groups
+
+1. `MiniCursorword` - highlight group of cursor word. Default: plain underline.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable core functionality, set `g:minicursorword_disable` (globally) or
+`b:minicursorword_disable` (for a buffer) to `v:true`. Note: after disabling
+there might be highlighting left; it will be removed after next highlighting
+update.
+
+MiniCursorword.setup({config})                        *MiniCursorword.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.cursorword').setup({})` (replace `{}` with your
+        `config` table)
+
+
+MiniCursorword.auto_highlight()              *MiniCursorword.auto_highlight()*
+    Auto highlight word under cursor
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCursorword.setup|.
+
+
+
+MiniCursorword.auto_unhighlight()          *MiniCursorword.auto_unhighlight()*
+    Auto unhighlight word under cursor
+
+    Designed to be used with |autocmd|. No need to use it directly, everything
+    is setup in |MiniCursorword.setup|.
+
+
+
+
+================================================================================
+                                                        *MiniFuzzy* *mini.fuzzy*
+
+Lua module which implements minimal and fast fuzzy matching.
+
+# Setup
+
+This module doesn't need setup, but it can be done to improve usability. Setup
+with `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table).
+
+Default `config`:
+{
+  -- Maximum allowed value of match features (width and first match). All
+  -- feature values greater than cutoff can be considered "equally bad".
+  cutoff = 100,
+}
+
+# Notes
+1. Currently there is no explicit design to work with multibyte symbols, but
+   simple examples should work.
+2. Smart case is used: case insensitive if input word (which is usually a user
+   input) is all lower ase. Case sensitive otherwise.
+
+# Algorithm design
+
+General design uses only width of found match and index of first letter match.
+No special characters or positions (like in fzy and fzf) are used.
+
+Given input `word` and target `candidate`:
+- The goal is to find matching between `word`'s letters and letters in 
+  `candidate`, which minimizes certain score. It is assumed that order of 
+  letters in `word` and those matched in `candidate` should be the same.
+- Matching is represented by matched positions: a list `positions` of integers
+  with length equal to number of letter in `word`. The following should be
+  always true in case of a match: `candidate`'s letter at index `positions[i]`
+  is letters[i]` for all valid `i`.
+- Matched positions are evaluated based only on two features: their width 
+  (number of indexes between first and last positions) and first match (index
+  of first letter match). There is a global setting `cutoff` for which all
+  feature values greater than it can be considered "equally bad".
+- Score of matched positions is computed with following explicit formula: 
+  `cutoff * min(width, cutoff) + min(first, cutoff)`. It is designed to be 
+  equivalent to first comparing widths (lower is better) and then comparing 
+  first match (lower is better). For example, if `word = 'time'`:
+    - '_time' (width 4) will have a better match than 't_ime' (width 5).
+    - 'time_a' (width 4, first 1) will have a better match than 'a_time' (width
+      4, first 3).
+- Final matched positions are those which minimize score among all possible 
+  matched positions of `word` and `candidate`.
+
+MiniFuzzy.setup({config})                                  *MiniFuzzy.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.fuzzy').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniFuzzy.match({word}, {candidate})                       *MiniFuzzy.match()*
+    Compute match data of input `word` and `candidate` strings
+
+    It tries to find best match for input string `word` (usually user input)
+    and string `candidate`. Returns table with elements:
+    - `positions` - list with letter indexes inside `candidate` which matched
+      to corresponding letters in `word`. Or `nil` if no match.
+    - `score` - positive number representing how good the match is (lower is 
+      better). Or `-1` if no match.
+
+
+
+    Parameters: ~
+        {word}      (string)  Input word (usually user input).
+        {candidate} (string)  Target word (usually with which matching is
+                              done).
+
+    Return: ~
+        table: Table with matching information (see function's description).
+
+
+MiniFuzzy.filtersort({word}, {candidate_list})        *MiniFuzzy.filtersort()*
+    Filter string list
+
+    This leaves only those elements of input list which matched with `word` and
+    sorts from best to worst matches (based on score and index in original
+    list, both lower is better).
+
+
+
+    Parameters: ~
+        {word}           (string)  String which will be searched
+        {candidate_list} (list)    Lua list of strings inside which word will
+                                   be searched
+
+    Return: ~
+        matched_candidates, matched_indexes tuple: Arrays of matched
+        candidates and their indexes in original input.
+
+
+MiniFuzzy.process_lsp_items({items}, {base})   *MiniFuzzy.process_lsp_items()*
+    Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
+
+
+
+    Parameters: ~
+        {items} (list)    Lua list with LSP 'textDocument/completion' response
+                          items.
+        {base}  (string)  Word to complete.
+
+
+MiniFuzzy.get_telescope_sorter({opts})      *MiniFuzzy.get_telescope_sorter()*
+    Custom getter for `telescope.nvim` sorter
+
+    Designed to be used as value for |telescope.defaults.file_sorter| and
+    |telescope.defaults.generic_sorter| inside `setup()` call.
+
+
+
+    Parameters: ~
+        {opts} (table)  Options (currently not used).
+
+    Usage: ~
+        `require('telescope').setup({default = {generic_sorter =
+        require('mini.fuzzy').get_telescope_sorter}})`
+
+
+
+================================================================================
+                                                          *MiniMisc* *mini.misc*
+
+Lua module with miscellaneous useful functions (can be used independently).
+
+# Setup
+
+This module doesn't need setup, but it can be done to improve usability. Setup
+with `require('mini.misc').setup({})` (replace `{}` with your `config` table).
+
+Default `config`:
+{
+  -- List of fields to make global (to be used as independent variables)
+  make_global = { 'put', 'put_text' },
+}
+
+MiniMisc.setup({config})                                    *MiniMisc.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.misc').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniMisc.bench_time({f}, {...})                        *MiniMisc.bench_time()*
+    Execute `f` once and time how long it took
+
+
+
+    Parameters: ~
+        {f}   (function)  Function which execution to benchmark.
+        {...} (vararg)    Arguments when calling `f`.
+
+    Return: ~
+        duration, output tuple: Duration (in seconds; up to microseconds) and
+        output of function execution.
+
+
+MiniMisc.get_gutter_width({win_id})              *MiniMisc.get_gutter_width()*
+    Compute width of gutter (info column on the left of the window)
+
+
+
+    Parameters: ~
+        {win_id} (number)  Window identifier (see |win_getid()|) for which
+                           gutter width is computed. Default: 0 for current.
+
+
+MiniMisc.put({...})                                           *MiniMisc.put()*
+    Print Lua objects in command line
+
+
+
+    Parameters: ~
+        {...} (vararg)  Any number of objects to be printed each on separate
+                        line.
+
+
+MiniMisc.put_text({...})                                 *MiniMisc.put_text()*
+    Print Lua objects in current buffer
+
+
+
+    Parameters: ~
+        {...} (vararg)  Any number of objects to be printed each on separate
+                        line.
+
+
+MiniMisc.resize_window({win_id}, {text_width})      *MiniMisc.resize_window()*
+    Resize window to have exact number of editable columns
+
+
+
+    Parameters: ~
+        {win_id}     (number)  Window identifier (see |win_getid()|) to be
+                               resized. Default: 0 for current.
+        {text_width} (number)  Number of editable columns resized window will
+                               display. Default: first element of
+                               'colorcolumn' or otherwise 'textwidth' (using
+                               screen width as its default but not more than
+                               79).
+
+
+MiniMisc.tbl_head({t}, {n})                              *MiniMisc.tbl_head()*
+    Return "first" elements of table as decided by `pairs`
+
+    Note: order of elements might vary.
+
+
+
+    Parameters: ~
+        {t} (table)
+        {n} (number)  Maximum number of first elements. Default: 5.
+
+    Return: ~
+        table: Table with at most `n` first elements of `t` (with same keys).
+
+
+MiniMisc.tbl_tail({t}, {n})                              *MiniMisc.tbl_tail()*
+    Return "last" elements of table as decided by `pairs`
+
+    This function makes two passes through elements of `t`:
+    - First to count number of elements.
+    - Second to construct result.
+
+    Note: order of elements might vary.
+
+
+
+    Parameters: ~
+        {t} (table)
+        {n} (number)  Maximum number of last elements. Default: 5.
+
+    Return: ~
+        table: Table with at most `n` last elements of `t` (with same keys).
+
+
+MiniMisc.use_nested_comments({buf_id})        *MiniMisc.use_nested_comments()*
+    Add possibility of nested comment leader.
+
+    This works by parsing 'commentstring' buffer option, extracting
+    non-whitespace comment leader (symbols on the left of commented line), and
+    locally modifying 'comments' option (by prepending `n:<leader>`). Does
+    nothing if 'commentstring' is empty or has comment symbols both in front
+    and back (like "/*%s*/").
+
+    Nested comment leader added with this function is useful for formatting
+    nested comments. For example, have in Lua "first-level" comments with '--'
+    and "second-level" comments with '----'. With nested comment leader second
+    type can be formatted with `gq` in the same way as first one.
+
+    Recommended usage is with |autocmd|:
+    `autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
+
+    Note: for most filetypes 'commentstring' option is added only when buffer
+    with this filetype is entered, so using non-current `buf_id` can not lead
+    to desired effect.
+
+
+
+    Parameters: ~
+        {buf_id} (number)  Buffer identifier (see |bufnr()|) in which function
+                           will operate. Default: 0 for current.
+
+
+MiniMisc.zoom({buf_id}, {config})                            *MiniMisc.zoom()*
+    Zoom in and out of a buffer, making it full screen in a floating window
+
+    This function is useful when working with multiple windows but temporarily
+    needing to zoom into one to see more of the code from that buffer. Call it
+    again (without arguments) to zoom out.
+
+
+
+    Parameters: ~
+        {buf_id} (number)  Buffer identifier (see |bufnr()|) to be zoomed.
+                           Default: 0 for current.
+        {config} (table)   Optional config for window (as for
+                           |nvim_open_win()|).
+
+
+
+================================================================================
+                                                        *MiniPairs* *mini.pairs*
+
+Custom minimal and fast autopairs Lua module. It provides functionality to work
+with 'paired' characters conditional on cursor's neighborhood (two characters
+to its left and right). Its usage should be through making appropriate `<expr>`
+mappings.
+
+What it doesn't do:
+- It doesn't support multiple characters as "open" and "close" symbols. Use 
+  snippets for that.
+- It doesn't support dependency on filetype. Use |i_CTRL-V| to insert single
+  symbol or `autocmd` command or 'after/ftplugin' approach to:
+    - Disable module for buffer (see 'Disabling' section).
+    - `inoremap <buffer> <*> <*>` : return mapping of '<*>' to its original 
+      action, virtually unmapping.
+    - `inoremap <buffer> <expr> <*> v:lua.MiniPairs.?` : make new buffer
+      mapping for '<*>'.
+
+# Setup
+
+This module needs a setup with `require('mini.pairs').setup({})` (replace `{}`
+with your `config` table).
+
+Default `config`:
+{
+  -- In which modes mappings should be created
+  modes = {insert = true, command = false, terminal = false}
+}
+
+By default in `MiniPairs.setup()`:
+- The following pairs are respected: `()`, `[]`, `{}`, `""`, `''`, `\`\``. 
+  Single opening symbol is inserted after `\`. Single `'` is inserted after a
+  letter (to be used in English comments).
+- `<BS>` respects same pairs.
+- `<CR>` is mapped only in insert mode and respects `()`, `[]`, `{}`.
+
+# Example mappings
+
+- Insert `<>` pair if `<` is typed as first character in line:
+    Vimscript:
+    `inoremap <expr> < v:lua.MiniPairs.open('<>', "\r.")`
+    `inoremap <expr> > v:lua.MiniPairs.close('<>', "..")`
+    Lua:
+    `vim.api.nvim_set_keymap('i', '<', [[v:lua.MiniPairs.open('<>', "\r.")]], { expr = true, noremap = true })`
+    `vim.api.nvim_set_keymap('i', '>', [[v:lua.MiniPairs.close('<>', "..")]], { expr = true, noremap = true })`
+- Create symmerical `$$` pair only in Tex files:
+    Vimscript:
+    `au FileType tex inoremap <buffer> <expr> $ v:lua.MiniPairs.closeopen('$$', "[^\\].")`
+    Lua:
+    `au FileType tex lua vim.api.nvim_buf_set_keymap(0, 'i', '$', [[v:lua.MiniPairs.closeopen('$$', "[^\\].")]], { expr = true, noremap = true })`
+
+# Notes
+- Make sure to make proper mapping of `<CR>` in order to support completion 
+  plugin of your choice.
+- Having mapping in terminal mode can conflict with:
+    - Autopairing capabilities of interpretators (`ipython`, `radian`).
+    - Vim mode of terminal itself.
+
+# Disabling
+
+To disable, set `g:minipairs_disable` (globally) or `b:minipairs_disable` (for
+a buffer) to `v:true`.
+
+MiniPairs.setup({config})                                  *MiniPairs.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.completion').setup({})` (replace `{}` with your
+        `config` table)
+
+
+MiniPairs.open({pair}, {twochars_pattern})                  *MiniPairs.open()*
+    Process 'open' symbols
+
+    Use this for mapping 'open' symbols in asymmetric pair ('(', '[', etc.). If
+    neighborhood doesn't match supplied pattern, function results into 'open'
+    symbol. Otherwise, it pastes whole pair and moves inside pair with
+    |<Left>|.
+
+    Example:
+    - Vimscript: `inoremap <expr> ( v:lua.MiniPairs.open('()', "[^\\].")`
+    - Lua: `vim.api.nvim_set_keymap('i', '(', [[v:lua.MiniPairs.open('()', "[^\\].")]], { expr = true, noremap = true })`
+
+
+
+    Parameters: ~
+        {pair}             (string)  String with two characters representing
+                                     pair.
+        {twochars_pattern} (string)  Pattern for two neighborhood characters
+                                     ("\r" line start, "\n" - line end).
+
+
+MiniPairs.close({pair}, {twochars_pattern})                *MiniPairs.close()*
+    Process 'close' symbols
+
+    Use this for mapping 'close' symbols in asymmetric pair (')', ']', etc.).
+    If neighborhood doesn't match supplied pattern, function results into
+    'close' symbol. Otherwise it jumps over symbol to the right of cursor (with
+    |<Right>|) if it is equal to 'close' one and inserts it otherwise.
+
+    Example:
+    - Vimscript: `inoremap <expr> ) v:lua.MiniPairs.close('()', "[^\\].")`
+    - Lua: `vim.api.nvim_set_keymap('i', ')', [[v:lua.MiniPairs.close('()', "[^\\].")]], { expr = true, noremap = true })`
+
+
+
+    Parameters: ~
+        {pair}             (string)  String with two characters representing
+                                     pair.
+        {twochars_pattern} (string)  Pattern for two neighborhood characters
+                                     ("\r" line start, "\n" - line end).
+
+
+MiniPairs.closeopen({pair}, {twochars_pattern})        *MiniPairs.closeopen()*
+    Process 'closeopen' symbols
+
+    Use this for mapping 'symmetrical' symbols (from pairs '""', '\'\'', '``').
+    It tries to perform 'closeopen action': move over right character (with
+    |<Right>|) if it is equal to second character from pair or conditionally
+    paste pair otherwise (with |MiniPairs.open()|).
+
+    Example:
+    - Vimscript: `inoremap <expr> " v:lua.MiniPairs.closeopen('""', "[^\\].")`
+    - Lua: `vim.api.nvim_set_keymap('i', '"', [[v:lua.MiniPairs.closeopen('""', "[^\\].")]], { expr = true, noremap = true })`
+
+
+
+    Parameters: ~
+        {pair}             (string)  String with two characters representing
+                                     pair.
+        {twochars_pattern} (string)  Pattern for two neighborhood characters
+                                     ("\r" line start, "\n" - line end).
+
+
+MiniPairs.bs({pair_set})                                      *MiniPairs.bs()*
+    Process |<BS>|
+
+    Use this to map `<BS>`. It removes whole pair (via `<BS><Del>`) if
+    neighborhood is equal to whole pair.
+
+    Example:
+    - Vimscript: `inoremap <expr> <BS> v:lua.MiniPairs.bs(['()', '[]', '{}', '""', "''", '``'])`
+    - Lua: `vim.api.nvim_set_keymap('i', '<BS>', [[v:lua.MiniPairs.bs(['()', '[]', '{}', '""', "''", '``'])]], { expr = true, noremap = true })`
+
+
+
+    Parameters: ~
+        {pair_set} (table)  List with pairs which trigger extra action.
+
+
+MiniPairs.cr({pair_set})                                      *MiniPairs.cr()*
+    Process |i_<CR>|
+
+    Use this to map `<CR>` in insert mode. It puts "close" symbol on next line
+    (via `<CR><C-o>O`) if neighborhood is equal to whole pair. Should be used
+    only in insert mode.
+
+    Example:
+    - Vimscript: `inoremap <expr> <CR> v:lua.MiniPairs.cr(['()', '[]', '{}'])`
+    - Lua: `vim.api.nvim_set_keymap('i', '<CR>', [[v:lua.MiniPairs.cr(['()', '[]', '{}'])]], { expr = true, noremap = true })`
+
+
+
+    Parameters: ~
+        {pair_set} (table)  List with pairs which trigger extra action.
+
+
+
+================================================================================
+                                              *MiniStatusline* *mini.statusline*
+
+Custom minimal and fast statusline module with opinionated default look.
+Special features: change color depending on current mode and compact version of
+sections activated when window width is small enough.
+
+Features:
+- Built-in active mode indicator with colors.
+- Sections can hide information when window is too narrow (specific window 
+  width is configurable per section).
+- Define own custom statusline structure for active and inactive windows. This
+  is done with a function which should return string appropriate for 
+  |statusline|. Its code should be similar to default one with structure:
+    - Compute string data for every section you want to be displayed.
+    - Combine them in groups with |MiniStatusline.combine_groups()|.
+
+# Dependencies
+
+Suggested dependencies (provide extra functionality, statusline will work
+without them):
+- Nerd font (to support extra icons).
+- Plugin 'lewis6991/gitsigns.nvim' for Git information in 
+  |MiniStatusline.section_git|. If missing, no section will be shown.
+- Plugin 'kyazdani42/nvim-web-devicons' for filetype icons in 
+  `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
+
+# Setup
+
+This module needs a setup with `require('mini.statusline').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+  -- Content of statusline as functions which return statusline string. See `:h
+  -- statusline` and code of default contents (used when `nil` is supplied).
+  content = {
+    -- Content for active window
+    active = nil,
+
+    -- Content for inactive window(s)
+    inactive = nil,
+  },
+
+  -- Whether to set Vim's settings for statusline (make it always shown)
+  set_vim_settings = true,
+}
+
+# Example content
+
+This function is used as default value for active content:
+`function()`
+  `local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })`
+  `local spell         = MiniStatusline.section_spell({ trunc_width = 120 })`
+  `local wrap          = MiniStatusline.section_wrap({ trunc_width = 120 })`
+  `local git           = MiniStatusline.section_git({ trunc_width = 75 })`
+  `local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })`
+  `local filename      = MiniStatusline.section_filename({ trunc_width = 140 })`
+  `local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })`
+  `local location      = MiniStatusline.section_location({ trunc_width = 75 })`
+
+  `return MiniStatusline.combine_groups({`
+    `{ hl = mode_hl,                  strings = { mode, spell, wrap } },`
+    `{ hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },`
+    `'%<', -- Mark general truncate point`
+    `{ hl = 'MiniStatuslineFilename', strings = { filename } },`
+    `'%=', -- End left alignment`
+    `{ hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },`
+    `{ hl = mode_hl,                  strings = { location } },`
+  `})`
+`end`
+
+# Highlight groups
+
+1. Highlighting depending on mode (returned as second value from 
+   |MiniStatusline.section_mode|):
+    - `MiniStatuslineModeNormal` - normal mode.
+    - `MiniStatuslineModeInsert` - insert mode.
+    - `MiniStatuslineModeVisual` - visual mode.
+    - `MiniStatuslineModeReplace` - replace mode.
+    - `MiniStatuslineModeCommand` - command mode.
+    - `MiniStatuslineModeOther` - other mode (like terminal, etc.).
+2. Highlight groups used in default statusline:
+    - `MiniStatuslineDevinfo` - highlighting of "dev info" group 
+      (|MiniStatusline.section_git| and |MiniStatusline.section_diagnostics|).
+    - `MiniStatuslineFilename` - highliting of 
+      |MiniStatusline.section_filename| section.
+    - `MiniStatuslineFileinfo` - highliting of 
+      |MiniStatusline.section_fileinfo| section.
+3. `MiniStatuslineInactive` - highliting in not focused window.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable (show empty statusline), set `g:ministatusline_disable` (globally)
+or `b:ministatusline_disable` (for a buffer) to `v:true`.
+
+MiniStatusline.setup({config})                        *MiniStatusline.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.statusline').setup({})` (replace `{}` with your
+        `config` table)
+
+
+MiniStatusline.active()                              *MiniStatusline.active()*
+    Compute content for active window
+
+
+
+MiniStatusline.inactive()                          *MiniStatusline.inactive()*
+    Compute content for inactive window
+
+
+
+MiniStatusline.combine_groups({groups})      *MiniStatusline.combine_groups()*
+    Combine groups of sections
+
+    Each group can be either a string or a table with fields `hl` (group's
+    highlight group) and `strings` (strings representing sections).
+
+    General idea of this function is as follows. String group is used as is
+    (useful for special strings like `%<` or `%=`). Each group defined by table
+    has own highlighting (if not supplied explicitly, the previous one is
+    used). Non-empty strings inside group are separated by one space. Non-empty
+    groups are separated by two spaces (one for each highlighting).
+
+
+
+    Parameters: ~
+        {groups} (table)  List of groups
+
+    Return: ~
+        string: String suitable for 'statusline'.
+
+
+MiniStatusline.section_mode({args})            *MiniStatusline.section_mode()*
+    Section for Vim |mode()|
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        section_string, mode_hl tuple: Section string and mode's highlight
+        group.
+
+
+MiniStatusline.section_spell({args})          *MiniStatusline.section_spell()*
+    Section for 'spell'
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_wrap({args})            *MiniStatusline.section_wrap()*
+    Section for 'wrap'
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_git({args})              *MiniStatusline.section_git()*
+    Section for Git information
+
+    Normal output contains name of `HEAD` (via |b:gitsigns_head|) and chunk
+    information (via |b:gitsigns_status|). Short output - only name of `HEAD`.
+    Note: requires 'lewis6991/gitsigns' plugin.
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_diagnostics({args})*MiniStatusline.section_diagnostics()*
+    Section for Neovim's builtin diagnostics
+
+    Shows nothing if there is no attached LSP clients or for short output.
+    Otherwise uses |vim.lsp.diagnostic.get_count()| to show number of errors
+    ('E'), warnings ('W'), information ('I'), and hints ('H').
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_filename({args})    *MiniStatusline.section_filename()*
+    Section for file name
+
+    Show full file name or relative in short output.
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_fileinfo({args})    *MiniStatusline.section_fileinfo()*
+    Section for file information
+
+    Short output contains only extension and is returned if window width is
+    lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+MiniStatusline.section_location({args})    *MiniStatusline.section_location()*
+    Section for location inside buffer
+
+    Show location inside buffer in the form:
+    - Normal: '<cursor line>|<total lines>│<cursor column>|<total columns>'.
+    - Short: '<cursor line>│<cursor column>'.
+
+    Short output is returned if window width is lower than `args.trunc_width`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
+
+================================================================================
+                                                  *MiniSurround* *mini.surround*
+
+Custom somewhat minimal and fast surrounding Lua plugin. This is mostly a
+reimplementation of the core features of 'machakann/vim-sandwich' with a couple
+more on top (find surrounding, highlight surrounding).
+
+Features:
+- Actions (all of them are dot-repeatable out of the box):
+    - Add surrounding with `sa` (in visual mode or on motion).
+    - Delete surrounding with `sd`.
+    - Replace surrounding with `sr`.
+    - Find surrounding with `sf` or `sF` (move cursor right or left).
+    - Highlight surrounding with `sh`.
+    - Change number of neighbor lines with `sn` (see algorithm details).
+- Surrounding is identified by a single character as both 'input' (in `delete`
+  and `replace` start) and 'output' (in `add` and `replace` end):
+    - 'f' - function call (string of letters or '_' or '.' followed by balanced
+      '()'). In 'input' finds function call, in 'output' prompts user to enter
+      function name.
+    - 'i' - interactive. Prompts user to enter left and right parts.
+    - 't' - tag. In 'input' finds tab with same identifier, in 'output' prompts
+      user to enter tag name.
+    - All symbols in brackets '()', '[]', '{}', '<>'. In 'input' represents 
+      balanced brackets, in 'output' - left and right parts of brackets.
+    - All other alphanumeric, punctuation, or space characters represent 
+      surrounding with identical left and right parts.
+
+Known issues which won't be resolved:
+- Search for surrounding is done using Lua patterns (regex-like approach). So
+  certain amount of false positives should be expected.
+- When searching for 'input' surrounding, there is no distinction if it is 
+  inside string or comment. So in this case there will be not proper match for
+  a function call: 'f(a = ")", b = 1)'.
+- Tags are searched using regex-like methods, so issues are inevitable. Overall
+  it is pretty good, but certain cases won't work. Like self-nested tags won't
+  match correctly on both ends: '<a><a></a></a>'.
+
+# Setup
+
+This module needs a setup with `require('mini.surround').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+  -- Number of lines within which surrounding is searched
+  n_lines = 20,
+
+  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
+  highlight_duration = 500,
+
+  -- Pattern to match function name in 'function call' surrounding
+  -- By default it is a string of letters, '_' or '.'
+  funname_pattern = '[%w_%.]+',
+
+  -- Mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    add = 'sa',           -- Add surrounding
+    delete = 'sd',        -- Delete surrounding
+    find = 'sf',          -- Find surrounding (to the right)
+    find_left = 'sF',     -- Find surrounding (to the left)
+    highlight = 'sh',     -- Highlight surrounding
+    replace = 'sr',       -- Replace surrounding
+    update_n_lines = 'sn' -- Update `n_lines`
+  }
+}
+
+# Example usage
+
+- `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
+- `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive 
+  surrounding (`i`): `[[` for left and `]]` for right.
+- `sdf` - delete (`sd`) surrounding function call (`f`).
+- `sr)tdiv<CR>` - replace (`sr`) surrounding parenthesis (`)`) with tag (`t`)
+  with identifier 'div' (`div<CR>` in command line prompt).
+- `sff` - find right (`sf`) part of surrounding function call (`f`).
+- `sh}` - highlight (`sh`) for a brief period of time surrounding curly 
+  brackets (`}`)
+
+# Algorithm design
+
+- Adding 'output' surrounding has a fairly straightforward algorithm:
+    - Determine places for left and right parts (via `<>` or `[]` marks).
+    - Determine left and right parts of surrounding.
+    - Properly add.
+- Finding 'input' surrounding is a lot more complicated and is a reason why 
+  this implementation is only somewhat minimal. In a nutshell, current 
+  algorithm `searches in the neighborhood lines based on a certain pattern a
+  _smallest_ match that covers cursor`. More detailed:
+    - Extract neighborhood of cursor line: no more than 
+      `MiniSurround.config.n_lines` before, cursor line itself, no more than 
+      `MiniSurround.config.n_lines` after.
+    - Convert it to '1d neighborhood' by concatenating with '\n' delimiter. 
+      Compute location of current cursor position in this line.
+    - Given Lua pattern for a 'input' surrounding, search for a smallest (with
+      minimal width) match that covers cursor position. This is an iterative
+      procedure, duration of which heavily depends on the length of '1d
+      neighborhood' and frequency of pattern matching. If no match is found,
+      there is no surrounding.
+    - Compute parts of '1d neighborhood' that represent left and right part of
+      found surrounding. This is done by using 'extract' pattern computed for
+      every type of surrounding.
+    - Convert '1d offsets' of found parts to their positions in buffer. Actual
+      search is done firstly on cursor line (as it is the most frequent usage)
+      and only then searches in neighborhood.
+
+# Highlight groups
+
+1. `MiniSurround` - highlighting of requested surrounding.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable, set `g:minisurround_disable` (globally) or `b:minisurround_disable`
+(for a buffer) to `v:true`.
+
+MiniSurround.setup({config})                            *MiniSurround.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.surround').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniSurround.operator({task}, {cache})               *MiniSurround.operator()*
+    Surround operator
+
+    Main function to be used in expression mappings. No need to use it
+    directly, everything is setup in |MiniSurround.setup|.
+
+
+
+    Parameters: ~
+        {task}  (string)  Name of surround task.
+        {cache} (table)   Task cache.
+
+
+MiniSurround.add({mode})                                  *MiniSurround.add()*
+    Add surrounding
+
+    No need to use it directly, everything is setup in |MiniSurround.setup|.
+
+
+
+    Parameters: ~
+        {mode} (string)  Mapping mode (normal by default).
+
+
+MiniSurround.delete()                                  *MiniSurround.delete()*
+    Delete surrounding
+
+    No need to use it directly, everything is setup in |MiniSurround.setup|.
+
+
+
+MiniSurround.replace()                                *MiniSurround.replace()*
+    Replace surrounding
+
+    No need to use it directly, everything is setup in |MiniSurround.setup|.
+
+
+
+MiniSurround.find()                                      *MiniSurround.find()*
+    Find surrounding
+
+    No need to use it directly, everything is setup in |MiniSurround.setup|.
+
+
+
+MiniSurround.highlight()                            *MiniSurround.highlight()*
+    Highlight surrounding
+
+    No need to use it directly, everything is setup in |MiniSurround.setup|.
+
+
+
+MiniSurround.update_n_lines()                  *MiniSurround.update_n_lines()*
+    Update `MiniSurround.config.n_lines`
+
+    Convenient wrapper for updating `MiniSurround.config.n_lines` in case the
+    default one is not appropriate.
+
+
+
+
+================================================================================
+                                                    *MiniTabline* *mini.tabline*
+
+Custom minimal and fast tabline module. General idea: show all listed buffers
+in readable way with minimal total width in case of one vim tab, fall back for
+deafult otherwise. Inspired by
+[ap/vim-buftabline](https://github.com/ap/vim-buftabline).
+
+Features:
+- Buffers are listed by their identifier (see |bufnr()|).
+- Different highlight groups for "states" of buffer affecting 'buffer tabs':
+- Buffer names are made unique by extending paths to files or appending unique
+  identifier to buffers without name.
+- Current buffer is displayed "optimally centered" (in center of screen while
+  maximizing the total number of buffers shown) when there are many buffers
+  open.
+- 'Buffer tabs' are clickable if Neovim allows it.
+
+What it doesn't do:
+- Custom buffer order is not supported.
+
+# Dependencies
+
+Suggested dependencies (provide extra functionality, tabline will work without
+them):
+- Plugin 'kyazdani42/nvim-web-devicons' for filetype icons near the buffer 
+  name. If missing, no icons will be shown.
+
+# Setup
+
+This module needs a setup with `require('mini.tabline').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`:
+{
+  -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
+  show_icons = true,
+
+  -- Whether to set Vim's settings for tabline (make it always shown and
+  -- allow hidden buffers)
+  set_vim_settings = true
+}
+
+# Highlight groups
+
+1. `MiniTablineCurrent` - buffer is current (has cursor in it).
+2. `MiniTablineVisible` - buffer is visible (displayed in some window).
+3. `MiniTablineHidden` - buffer is hidden (not displayed).
+4. `MiniTablineModifiedCurrent` - buffer is modified and current.
+5. `MiniTablineModifiedVisible` - buffer is modified and visible.
+6. `MiniTablineModifiedHidden` - buffer is modified and hidden.
+7. `MiniTablineFill` - unused right space of tabline.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable (show empty tabline), set `g:minitabline_disable` (globally) or
+`b:minitabline_disable` (for a buffer) to `v:true`. Note: after disabling
+tabline is not updated right away, but rather after dedicated event (see
+|events| and `MiniTabline` |augroup|).
+
+MiniTabline.setup({config})                              *MiniTabline.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.tabline').setup({})` (replace `{}` with your `config`
+        table)
+
+
+MiniTabline.update_tabline()                    *MiniTabline.update_tabline()*
+    Update |tabline|
+
+    Designed to be used with |autocmd|. No need to use it directly,
+
+
+
+MiniTabline.make_tabline_string()          *MiniTabline.make_tabline_string()*
+    Make string for |tabline| in case of single tab
+
+
+
+
+================================================================================
+                                              *MiniTrailspace* *mini.trailspace*
+
+Custom minimal and fast module for working with trailing whitespace.
+
+Features:
+- Highlighting is done only in modifiable buffer by default; only in Normal 
+  mode; stops in Insert mode and when leaving window.
+- Trim all trailing whitespace with |MiniTrailspace.trim()| function.
+
+# Setup
+
+This module needs a setup with `require('mini.trailspace').setup({})` (replace
+`{}` with your `config` table).
+
+Default `config`: {} (currently nothing to configure)
+
+# Highlight groups
+
+1. `MiniTrailspace` - highlight group for trailing space.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling
+
+To disable, set `g:minitrailspace_disable` (globally) or
+`b:minitrailspace_disable` (for a buffer) to `v:true`. Note: after disabling
+there might be highlighting left; it will be removed after next highlighting
+update (see |events| and `MiniTrailspace` |augroup|).
+
+MiniTrailspace.setup({config})                        *MiniTrailspace.setup()*
+    Module setup
+
+
+
+    Parameters: ~
+        {config} (table)  Module config table.
+
+    Usage: ~
+        `require('mini.trailspace').setup({})` (replace `{}` with your
+        `config` table)
+
+
+MiniTrailspace.highlight({check_modifiable})      *MiniTrailspace.highlight()*
+    Highlight trailing whitespace
+
+
+
+    Parameters: ~
+        {check_modifiable} (boolean)  Whether to check |modifiable| (if it is
+                                      off, don't highlight). Default: `true`.
+
+
+MiniTrailspace.unhighlight()                    *MiniTrailspace.unhighlight()*
+    Unhighlight trailing whitespace
+
+
+
+MiniTrailspace.trim()                                  *MiniTrailspace.trim()*
+    Trim trailing whitespace
+
+
+
+
+ vim:tw=78:ts=8:ft=help:norl:
