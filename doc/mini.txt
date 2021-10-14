@@ -119,7 +119,7 @@ features:
 # Setup
 
 This module needs a setup with `require('mini.base16').setup({})` (replace `{}`
-with your - `config` table).
+with your `config` table).
 
 Default `config`:
 {
@@ -127,9 +127,6 @@ Default `config`:
   -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
   -- `setup()`.
   palette = nil,
-
-  -- Name of applied theme (stored in `g:colors_name`)
-  name = 'base16-custom',
 
  -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
  -- or table with cterm colors. See `setup()` documentation for more
@@ -158,13 +155,20 @@ Example:
     `base0E = '#ffc4ff',`
     `base0F = '#00a5c5',`
   `},`
-  `name = 'minischeme',`
   `use_cterm = true,`
 `})`
 
 # Notes
 1. This module is used for creating plugin's official colorscheme named 
    `minischeme` (see |mini.nvim|).
+2. Using `setup()` doesn't actually create a |colorscheme|. It basically 
+   creates a coordinated set of |highlight|s. To create your own theme:
+    - Put "myscheme.lua" file (name after your chosen theme name) inside any
+      "colors" directory reachable from 'runtimepath' ("colors" inside your
+      Neovim config directory is usually enough).
+    - Inside "myscheme.lua" call `require('mini.base16').setup()` with your 
+      palette and only after that set |g:colors_name| to "myscheme".
+
 
 MiniBase16.setup({config})                                *MiniBase16.setup()*
     Module setup
@@ -251,8 +255,7 @@ MiniBase16.mini_palette({background}, {foreground}, {accent_chroma})*MiniBase16.
     Usage: ~
         `local palette = require('mini.base16').mini_palette('#112641',
         '#e2e98f', 75)`
-        `require('mini.base16').setup({palette = palette, name =
-        'my-base16'})`
+        `require('mini.base16').setup({palette = palette})`
 
 
 MiniBase16.rgb_palette_to_cterm_palette({palette})*MiniBase16.rgb_palette_to_cterm_palette()*

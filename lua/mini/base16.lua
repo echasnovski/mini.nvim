@@ -12,7 +12,7 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.base16').setup({})` (replace
----`{}` with your - `config` table).
+---`{}` with your `config` table).
 ---
 --- Default `config`:
 --- <pre>
@@ -21,9 +21,6 @@
 ---   -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
 ---   -- `setup()`.
 ---   palette = nil,
----
----   -- Name of applied theme (stored in `g:colors_name`)
----   name = 'base16-custom',
 ---
 ---  -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
 ---  -- or table with cterm colors. See `setup()` documentation for more
@@ -54,7 +51,6 @@
 ---     `base0E = '#ffc4ff',`
 ---     `base0F = '#00a5c5',`
 ---   `},`
----   `name = 'minischeme',`
 ---   `use_cterm = true,`
 --- `})`
 --- </pre>
@@ -62,6 +58,14 @@
 --- # Notes
 --- 1. This module is used for creating plugin's official colorscheme named
 ---    `minischeme` (see |mini.nvim|).
+--- 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
+---    creates a coordinated set of |highlight|s. To create your own theme:
+---     - Put "myscheme.lua" file (name after your chosen theme name) inside
+---       any "colors" directory reachable from 'runtimepath' ("colors" inside
+---       your Neovim config directory is usually enough).
+---     - Inside "myscheme.lua" call `require('mini.base16').setup()` with your
+---       palette and only after that set |g:colors_name| to "myscheme".
+---
 ---@brief ]]
 ---@tag MiniBase16 mini.base16
 
@@ -102,9 +106,6 @@ MiniBase16.config = {
   -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
   -- `setup()`.
   palette = nil,
-
-  -- Name of applied theme (stored in `g:colors_name`)
-  name = 'base16-custom',
 
   -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
   -- or table with cterm colors. See `setup()` documentation for more
@@ -157,7 +158,7 @@ MiniBase16.config = {
 ---@param accent_chroma number: Optional positive number (usually between 0 and 100). Default: chroma of foreground color.
 ---@return table: Table with base16 palette.
 ---@usage `local palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
----@usage `require('mini.base16').setup({palette = palette, name = 'my-base16'})`
+---@usage `require('mini.base16').setup({palette = palette})`
 function MiniBase16.mini_palette(background, foreground, accent_chroma)
   H.validate_hex(background, 'background')
   H.validate_hex(foreground, 'foreground')
@@ -254,9 +255,6 @@ function H.setup_config(config)
 
   -- Validate settings
   H.validate_base16_palette(config.palette, 'config.palette')
-  if type(config.name) ~= 'string' then
-    error('(mini.base16) `config.name` is not a string.')
-  end
   H.validate_use_cterm(config.use_cterm, 'config.use_cterm')
 
   return config
@@ -265,7 +263,7 @@ end
 function H.apply_config(config)
   MiniBase16.config = config
 
-  H.apply_palette(config.palette, config.name, config.use_cterm)
+  H.apply_palette(config.palette, config.use_cterm)
 end
 
 ---- Validators
@@ -342,14 +340,16 @@ function H.validate_hex(x, x_name)
 end
 
 ---- Highlighting
-function H.apply_palette(palette, name, use_cterm)
+function H.apply_palette(palette, use_cterm)
   -- Prepare highlighting application. Notes:
   -- - Clear current highlight only if other theme was loaded previously.
   -- - No need to `syntax reset` because *all* syntax groups are defined later.
   if vim.g.colors_name then
     vim.cmd([[highlight clear]])
   end
-  vim.g.colors_name = name or 'base16-custom'
+  -- As this doesn't create colorscheme, don't store any name. Not doing it
+  -- might cause some issues with `syntax on`.
+  vim.g.colors_name = nil
 
   local p, hi
   if use_cterm then
