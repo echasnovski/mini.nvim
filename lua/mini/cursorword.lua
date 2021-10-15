@@ -67,7 +67,7 @@ function MiniCursorword.setup(config)
   )
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi MiniCursorword term=underline cterm=underline gui=underline]], false)
+  vim.api.nvim_exec([[hi default MiniCursorword term=underline cterm=underline gui=underline]], false)
 end
 
 -- Module config

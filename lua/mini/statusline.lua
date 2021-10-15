@@ -133,17 +133,17 @@ function MiniStatusline.setup(config)
 
   -- Create highlighting
   vim.api.nvim_exec(
-    [[hi link MiniStatuslineModeNormal  Cursor
-      hi link MiniStatuslineModeInsert  DiffChange
-      hi link MiniStatuslineModeVisual  DiffAdd
-      hi link MiniStatuslineModeReplace DiffDelete
-      hi link MiniStatuslineModeCommand DiffText
-      hi link MiniStatuslineModeOther   IncSearch
+    [[hi default link MiniStatuslineModeNormal  Cursor
+      hi default link MiniStatuslineModeInsert  DiffChange
+      hi default link MiniStatuslineModeVisual  DiffAdd
+      hi default link MiniStatuslineModeReplace DiffDelete
+      hi default link MiniStatuslineModeCommand DiffText
+      hi default link MiniStatuslineModeOther   IncSearch
 
-      hi link MiniStatuslineDevinfo  StatusLine
-      hi link MiniStatuslineFilename StatusLineNC
-      hi link MiniStatuslineFileinfo StatusLine
-      hi link MiniStatuslineInactive StatusLineNC]],
+      hi default link MiniStatuslineDevinfo  StatusLine
+      hi default link MiniStatuslineFilename StatusLineNC
+      hi default link MiniStatuslineFileinfo StatusLine
+      hi default link MiniStatuslineInactive StatusLineNC]],
     false
   )
 end

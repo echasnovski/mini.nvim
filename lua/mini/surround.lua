@@ -138,7 +138,7 @@ function MiniSurround.setup(config)
   H.apply_config(config)
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi link MiniSurround IncSearch]], false)
+  vim.api.nvim_exec([[hi default link MiniSurround IncSearch]], false)
 end
 
 -- Module config

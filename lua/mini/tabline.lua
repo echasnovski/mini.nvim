@@ -105,15 +105,15 @@ function MiniTabline.setup(config)
 
   -- Create highlighting
   vim.api.nvim_exec(
-    [[hi link MiniTablineCurrent TabLineSel
-      hi link MiniTablineVisible TabLineSel
-      hi link MiniTablineHidden  TabLine
+    [[hi default link MiniTablineCurrent TabLineSel
+      hi default link MiniTablineVisible TabLineSel
+      hi default link MiniTablineHidden  TabLine
 
-      hi link MiniTablineModifiedCurrent StatusLine
-      hi link MiniTablineModifiedVisible StatusLine
-      hi link MiniTablineModifiedHidden  StatusLineNC
+      hi default link MiniTablineModifiedCurrent StatusLine
+      hi default link MiniTablineModifiedVisible StatusLine
+      hi default link MiniTablineModifiedHidden  StatusLineNC
 
-      hi MiniTablineFill NONE]],
+      hi default MiniTablineFill NONE]],
     false
   )
 end

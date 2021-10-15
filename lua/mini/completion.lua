@@ -227,7 +227,7 @@ function MiniCompletion.setup(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi MiniCompletionActiveParameter term=underline cterm=underline gui=underline]], false)
+  vim.api.nvim_exec([[hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline]], false)
 end
 
 -- Module config
