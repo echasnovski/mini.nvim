@@ -63,7 +63,7 @@ function MiniTrailspace.setup(config)
   )
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi link MiniTrailspace Error]], false)
+  vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
 end
 
 -- Module config
@@ -86,21 +86,27 @@ function MiniTrailspace.highlight(check_modifiable)
     return
   end
 
-  local win_id = vim.fn.win_getid()
-  local win_match = H.window_matches[win_id]
+  local win_id = vim.api.nvim_get_current_win()
+  if not vim.api.nvim_win_is_valid(win_id) then
+    return
+  end
 
   -- Don't add match id on top of existing one
-  if win_match == nil then
+  if H.window_matches[win_id] == nil then
     H.window_matches[win_id] = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
   end
 end
 
 --- Unhighlight trailing whitespace
 function MiniTrailspace.unhighlight()
-  local win_id = vim.fn.win_getid()
+  local win_id = vim.api.nvim_get_current_win()
+  if not vim.api.nvim_win_is_valid(win_id) then
+    return
+  end
+
   local win_match = H.window_matches[win_id]
   if win_match ~= nil then
-    vim.fn.matchdelete(win_match)
+    pcall(vim.fn.matchdelete, win_match)
     H.window_matches[win_id] = nil
   end
 end
