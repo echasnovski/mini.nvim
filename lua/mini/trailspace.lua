@@ -93,7 +93,8 @@ function MiniTrailspace.highlight(check_modifiable)
 
   -- Don't add match id on top of existing one
   if H.window_matches[win_id] == nil then
-    H.window_matches[win_id] = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
+    local match_id = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
+    H.window_matches[win_id] = { id = match_id }
   end
 end
 
@@ -106,7 +107,9 @@ function MiniTrailspace.unhighlight()
 
   local win_match = H.window_matches[win_id]
   if win_match ~= nil then
-    pcall(vim.fn.matchdelete, win_match)
+    -- Use `pcall` because there is an error if match id is not present. It can
+    -- happen if something else called `clearmatches`.
+    pcall(vim.fn.matchdelete, win_match.id)
     H.window_matches[win_id] = nil
   end
 end
@@ -124,8 +127,9 @@ end
 ---- Module default config
 H.default_config = MiniTrailspace.config
 
--- Information about last match highlighting: word and match id (returned from
--- `vim.fn.matchadd()`). Stored *per window* by its unique identifier.
+-- Information about last match highlighting (stored *per window*):
+-- - Key: windows' unique buffer identifiers.
+-- - Value: table with `id` field for match id (from `vim.fn.matchadd()`).
 H.window_matches = {}
 
 ---- Settings

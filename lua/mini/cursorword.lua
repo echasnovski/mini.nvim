@@ -133,8 +133,11 @@ H.default_config = MiniCursorword.config
 ---- Delay timer
 H.timer = vim.loop.new_timer()
 
----- Information about last match highlighting: word and match id (returned
----- from `vim.fn.matchadd()`). Stored *per window* by its unique identifier.
+---- Information about last match highlighting (stored *per window*):
+---- - Key: windows' unique buffer identifiers.
+---- - Value: table with:
+----     - `id` field for match id (from `vim.fn.matchadd()`).
+----     - `word` field for matched word.
 H.window_matches = {}
 
 -- Helper functions
@@ -164,6 +167,10 @@ function H.highlight()
   -- Using `matchadd()` instead of a simpler `:match` to tweak priority of
   -- 'current word' highlighting: with `:match` it is higher than for
   -- `incsearch` which is not convenient.
+  local win_id = vim.api.nvim_get_current_win()
+  if not vim.api.nvim_win_is_valid(win_id) then
+    return
+  end
 
   local curword = H.get_cursor_word()
 
@@ -171,17 +178,25 @@ function H.highlight()
   -- ('\<' and '\>')
   local curpattern = string.format([[\V\<%s\>]], curword)
 
-  -- Add match highlight with very low priority and store match information
-  local win_id = vim.fn.win_getid()
-  local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -1)
-  H.window_matches[win_id] = { word = curword, id = match_id }
+  -- Don't add match id on top of existing one
+  if H.window_matches[win_id] == nil then
+    -- Add match highlight with very low priority and store match information
+    local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -1)
+    H.window_matches[win_id] = { id = match_id, word = curword }
+  end
 end
 
 function H.unhighlight()
-  local win_id = vim.fn.win_getid()
+  local win_id = vim.api.nvim_get_current_win()
+  if not vim.api.nvim_win_is_valid(win_id) then
+    return
+  end
+
   local win_match = H.window_matches[win_id]
   if win_match ~= nil then
-    vim.fn.matchdelete(win_match.id)
+    -- Use `pcall` because there is an error if match id is not present. It can
+    -- happen if something else called `clearmatches`.
+    pcall(vim.fn.matchdelete, win_match.id)
     H.window_matches[win_id] = nil
   end
 end
