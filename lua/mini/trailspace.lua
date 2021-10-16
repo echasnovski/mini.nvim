@@ -13,7 +13,14 @@
 --- This module needs a setup with `require('mini.trailspace').setup({})`
 --- (replace `{}` with your `config` table).
 ---
---- Default `config`: {} (currently nothing to configure)
+--- Default `config`:
+--- <pre>
+--- {
+---   -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+---   -- useful to not show trailing whitespace where it usually doesn't matter.
+---   only_in_normal_buffers = true,
+--- }
+--- </pre>
 ---
 --- # Highlight groups
 ---
@@ -54,27 +61,49 @@ function MiniTrailspace.setup(config)
   vim.api.nvim_exec(
     [[augroup MiniTrailspace
         au!
-        au WinEnter,BufWinEnter,InsertLeave * lua vim.defer_fn(MiniTrailspace.highlight, 0)
-        au WinLeave,BufWinLeave,InsertEnter * lua MiniTrailspace.unhighlight()
+        au WinEnter,BufEnter,InsertLeave * lua MiniTrailspace.highlight()
+        au WinLeave,BufLeave,InsertEnter * lua MiniTrailspace.unhighlight()
 
         au FileType TelescopePrompt let b:minitrailspace_disable=v:true
       augroup END]],
     false
   )
 
+  if config.only_in_normal_buffers then
+    -- Add tracking of 'buftype' changing because it can be set after events on
+    -- which highlighting is done. If not done, highlighting appears but
+    -- disappears if buffer is reentered.
+    vim.api.nvim_exec(
+      [[augroup MiniTrailspace
+          au OptionSet buftype lua MiniTrailspace.track_normal_buffer()
+        augroup END]],
+      false
+    )
+  end
+
   -- Create highlighting
   vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
 end
 
 -- Module config
-MiniTrailspace.config = {}
+MiniTrailspace.config = {
+  -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+  -- useful to not show trailing whitespace where it usually doesn't matter.
+  only_in_normal_buffers = true,
+}
 
 -- Functions to perform actions
 --- Highlight trailing whitespace
----
----@param check_modifiable boolean: Whether to check |modifiable| (if it is off, don't highlight). Default: `true`.
 function MiniTrailspace.highlight(check_modifiable)
-  check_modifiable = check_modifiable or true
+  -- Warn about deprecated `check_modifiable`
+  -- TODO: remove `check_modifiable`
+  if check_modifiable ~= nil then
+    vim.notify(
+      '(mini.trailspace) `check_modifiable` argument is deprecated and will be removed on 2021-10-30.'
+        .. [[ It was a result of poor design to disable highlighting where it usually doesn't matter.]]
+        .. [[ Use `config.only_in_normal_buffers`. Sorry for this.]]
+    )
+  end
 
   -- Highlight only in normal mode
   if H.is_disabled() or vim.fn.mode() ~= 'n' then
@@ -82,7 +111,7 @@ function MiniTrailspace.highlight(check_modifiable)
     return
   end
 
-  if check_modifiable and not vim.bo.modifiable then
+  if MiniTrailspace.config.only_in_normal_buffers and not H.is_buffer_normal() then
     return
   end
 
@@ -123,6 +152,23 @@ function MiniTrailspace.trim()
   vim.api.nvim_win_set_cursor(0, curpos)
 end
 
+--- Track normal buffer
+---
+--- Designed to be used with |autocmd|. No need to use it directly.
+function MiniTrailspace.track_normal_buffer()
+  if not MiniTrailspace.config.only_in_normal_buffers then
+    return
+  end
+
+  -- This should be used with 'OptionSet' event for 'buftype' option
+  -- Empty 'buftype' means "normal buffer"
+  if vim.v.option_new == '' then
+    MiniTrailspace.highlight()
+  else
+    MiniTrailspace.unhighlight()
+  end
+end
+
 -- Helper data
 ---- Module default config
 H.default_config = MiniTrailspace.config
@@ -139,15 +185,21 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  vim.validate({ only_in_normal_buffers = { config.only_in_normal_buffers, 'boolean' } })
+
   return config
 end
 
 function H.apply_config(config)
-  -- There is nothing to do yet
+  MiniTrailspace.config = config
 end
 
 function H.is_disabled()
   return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true
+end
+
+function H.is_buffer_normal(buf_id)
+  return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == ''
 end
 
 return MiniTrailspace

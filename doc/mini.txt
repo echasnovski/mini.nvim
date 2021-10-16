@@ -1806,7 +1806,12 @@ Features:
 This module needs a setup with `require('mini.trailspace').setup({})` (replace
 `{}` with your `config` table).
 
-Default `config`: {} (currently nothing to configure)
+Default `config`:
+{
+  -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+  -- useful to not show trailing whitespace where it usually doesn't matter.
+  only_in_normal_buffers = true,
+}
 
 # Highlight groups
 
@@ -1834,14 +1839,9 @@ MiniTrailspace.setup({config})                        *MiniTrailspace.setup()*
         `config` table)
 
 
-MiniTrailspace.highlight({check_modifiable})      *MiniTrailspace.highlight()*
+MiniTrailspace.highlight()                        *MiniTrailspace.highlight()*
     Highlight trailing whitespace
 
-
-
-    Parameters: ~
-        {check_modifiable} (boolean)  Whether to check |modifiable| (if it is
-                                      off, don't highlight). Default: `true`.
 
 
 MiniTrailspace.unhighlight()                    *MiniTrailspace.unhighlight()*
@@ -1851,6 +1851,13 @@ MiniTrailspace.unhighlight()                    *MiniTrailspace.unhighlight()*
 
 MiniTrailspace.trim()                                  *MiniTrailspace.trim()*
     Trim trailing whitespace
+
+
+
+MiniTrailspace.track_normal_buffer()    *MiniTrailspace.track_normal_buffer()*
+    Track normal buffer
+
+    Designed to be used with |autocmd|. No need to use it directly.
 
 
 
