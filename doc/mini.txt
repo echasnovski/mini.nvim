@@ -1383,6 +1383,24 @@ MiniStatusline.combine_groups({groups})      *MiniStatusline.combine_groups()*
         string: String suitable for 'statusline'.
 
 
+MiniStatusline.is_truncated({trunc_width})     *MiniStatusline.is_truncated()*
+    Decide whether to truncate
+
+    This basically computes window width and compares it to `trunc_width`: if
+    window is smaller then truncate; otherwise don't. Don't truncate by
+    default.
+
+    Use this to manually decide if section needs truncation or not.
+
+
+
+    Parameters: ~
+        {trunc_width} (number)  Truncation width. If `nil`, output is `false`.
+
+    Return: ~
+        boolean: Whether to truncate.
+
+
 MiniStatusline.section_mode({args})            *MiniStatusline.section_mode()*
     Section for Vim |mode()|
 

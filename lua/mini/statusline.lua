@@ -215,6 +215,21 @@ function MiniStatusline.combine_groups(groups)
   return table.concat(t, '')
 end
 
+--- Decide whether to truncate
+---
+--- This basically computes window width and compares it to `trunc_width`: if
+--- window is smaller then truncate; otherwise don't. Don't truncate by
+--- default.
+---
+--- Use this to manually decide if section needs truncation or not.
+---
+---@param trunc_width number: Truncation width. If `nil`, output is `false`.
+---@return boolean: Whether to truncate.
+function MiniStatusline.is_truncated(trunc_width)
+  -- Use -1 to default to 'not truncated'
+  return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
+end
+
 -- Statusline sections. Should return output text without whitespace on sides
 -- or empty string to omit section.
 
@@ -256,7 +271,7 @@ MiniStatusline.modes = setmetatable({
 function MiniStatusline.section_mode(args)
   local mode_info = MiniStatusline.modes[vim.fn.mode()]
 
-  local mode = H.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
+  local mode = MiniStatusline.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
   return mode, mode_info.hl
 end
@@ -272,7 +287,7 @@ function MiniStatusline.section_spell(args)
     return ''
   end
 
-  if H.is_truncated(args.trunc_width) then
+  if MiniStatusline.is_truncated(args.trunc_width) then
     return 'SP'
   end
 
@@ -290,7 +305,7 @@ function MiniStatusline.section_wrap(args)
     return ''
   end
 
-  if H.is_truncated(args.trunc_width) then
+  if MiniStatusline.is_truncated(args.trunc_width) then
     return 'WR'
   end
 
@@ -313,7 +328,7 @@ function MiniStatusline.section_git(args)
   end
 
   local head = vim.b.gitsigns_head or '-'
-  local signs = H.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
+  local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
 
   if signs == '' then
     if head == '-' or head == '' then
@@ -338,7 +353,7 @@ function MiniStatusline.section_diagnostics(args)
   -- Assumption: there are no attached clients if table
   -- `vim.lsp.buf_get_clients()` is empty
   local hasnt_attached_client = next(vim.lsp.buf_get_clients()) == nil
-  local dont_show_lsp = H.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or hasnt_attached_client
+  local dont_show_lsp = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or hasnt_attached_client
   if dont_show_lsp then
     return ''
   end
@@ -371,7 +386,7 @@ function MiniStatusline.section_filename(args)
   -- In terminal always use plain name
   if vim.bo.buftype == 'terminal' then
     return '%t'
-  elseif H.is_truncated(args.trunc_width) then
+  elseif MiniStatusline.is_truncated(args.trunc_width) then
     -- File name with 'truncate', 'modified', 'readonly' flags
     -- Use relative path if truncated
     return '%f%m%r'
@@ -404,7 +419,7 @@ function MiniStatusline.section_fileinfo(args)
   end
 
   -- Construct output string if truncated
-  if H.is_truncated(args.trunc_width) then
+  if MiniStatusline.is_truncated(args.trunc_width) then
     return filetype
   end
 
@@ -428,7 +443,7 @@ end
 ---@return string: Section string.
 function MiniStatusline.section_location(args)
   -- Use virtual column number to allow update when paste last column
-  if H.is_truncated(args.trunc_width) then
+  if MiniStatusline.is_truncated(args.trunc_width) then
     return '%l│%2v'
   end
 
@@ -510,11 +525,6 @@ function H.default_content_inactive()
 end
 
 ---- Various helpers
-function H.is_truncated(width)
-  -- Use -1 to default to 'not truncated'
-  return vim.api.nvim_win_get_width(0) < (width or -1)
-end
-
 function H.isnt_normal_buffer()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ''
