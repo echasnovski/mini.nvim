@@ -1291,11 +1291,11 @@ Default `config`:
 
 # Example content
 
+## Default content
+
 This function is used as default value for active content:
 `function()`
   `local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })`
-  `local spell         = MiniStatusline.section_spell({ trunc_width = 120 })`
-  `local wrap          = MiniStatusline.section_wrap({ trunc_width = 120 })`
   `local git           = MiniStatusline.section_git({ trunc_width = 75 })`
   `local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })`
   `local filename      = MiniStatusline.section_filename({ trunc_width = 140 })`
@@ -1303,7 +1303,7 @@ This function is used as default value for active content:
   `local location      = MiniStatusline.section_location({ trunc_width = 75 })`
 
   `return MiniStatusline.combine_groups({`
-    `{ hl = mode_hl,                  strings = { mode, spell, wrap } },`
+    `{ hl = mode_hl,                  strings = { mode } },`
     `{ hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },`
     `'%<', -- Mark general truncate point`
     `{ hl = 'MiniStatuslineFilename', strings = { filename } },`
@@ -1312,6 +1312,17 @@ This function is used as default value for active content:
     `{ hl = mode_hl,                  strings = { location } },`
   `})`
 `end`
+
+## Show boolean options
+
+To compute section string for boolean option use variation of this code snippet
+inside content function (you can modify option itself, truncation width, short
+and long displayed names):
+
+`local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''`
+
+Here `x and y or z` is a common Lua way of doing ternary operator: if `x` is
+`true`-ish then return `y`, if not - return `z`.
 
 # Highlight groups
 

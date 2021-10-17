@@ -50,12 +50,12 @@
 ---
 --- # Example content
 ---
+--- ## Default content
+---
 --- This function is used as default value for active content:
 --- <pre>
 --- `function()`
 ---   `local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })`
----   `local spell         = MiniStatusline.section_spell({ trunc_width = 120 })`
----   `local wrap          = MiniStatusline.section_wrap({ trunc_width = 120 })`
 ---   `local git           = MiniStatusline.section_git({ trunc_width = 75 })`
 ---   `local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })`
 ---   `local filename      = MiniStatusline.section_filename({ trunc_width = 140 })`
@@ -63,7 +63,7 @@
 ---   `local location      = MiniStatusline.section_location({ trunc_width = 75 })`
 ---
 ---   `return MiniStatusline.combine_groups({`
----     `{ hl = mode_hl,                  strings = { mode, spell, wrap } },`
+---     `{ hl = mode_hl,                  strings = { mode } },`
 ---     `{ hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },`
 ---     `'%<', -- Mark general truncate point`
 ---     `{ hl = 'MiniStatuslineFilename', strings = { filename } },`
@@ -73,6 +73,19 @@
 ---   `})`
 --- `end`
 --- </pre>
+---
+--- ## Show boolean options
+---
+--- To compute section string for boolean option use variation of this code
+--- snippet inside content function (you can modify option itself, truncation
+--- width, short and long displayed names):
+---
+--- <pre>
+--- `local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''`
+--- </pre>
+---
+--- Here `x and y or z` is a common Lua way of doing ternary operator: if `x`
+--- is `true`-ish then return `y`, if not - return `z`.
 ---
 --- # Highlight groups
 ---
@@ -283,6 +296,17 @@ end
 ---@param args table: Section arguments.
 ---@return string: Section string.
 function MiniStatusline.section_spell(args)
+  if not H.is_deprecation_showed then
+    vim.notify(
+      [[(mini.statusline) `MiniStatusline.section_spell` is deprecated in favor of custom manual code snippet.]]
+        .. [[ It will be removed on 2021-10-30.]]
+        .. [[ This was a poor design choice because for average user 'spell' option is not that specially important.]]
+        .. [[ For replacement see section 'Show boolean options' in help page for 'mini.statusline'.]]
+        .. [[ Sorry about this.]]
+    )
+    H.is_deprecation_showed = true
+  end
+
   if not vim.wo.spell then
     return ''
   end
@@ -301,6 +325,17 @@ end
 ---@param args table: Section arguments.
 ---@return string: Section string.
 function MiniStatusline.section_wrap(args)
+  if not H.is_deprecation_showed then
+    vim.notify(
+      [[(mini.statusline) `MiniStatusline.section_wrap` is deprecated in favor of custom manual code snippet.]]
+        .. [[ It will be removed on 2021-10-30.]]
+        .. [[ This was a poor design choice because for average user 'wrap' option is not that specially important.]]
+        .. [[ For replacement see section 'Show boolean options' in help page for 'mini.statusline'.]]
+        .. [[ Sorry about this.]]
+    )
+    H.is_deprecation_showed = true
+  end
+
   if not vim.wo.wrap then
     return ''
   end
@@ -461,6 +496,9 @@ H.diagnostic_levels = {
   { name = 'Hint', sign = 'H' },
 }
 
+---- Deprecation info
+H.is_deprecation_showed = false
+
 -- Helper functions
 ---- Settings
 function H.setup_config(config)
@@ -497,8 +535,6 @@ end
 function H.default_content_active()
   -- stylua: ignore start
   local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
-  local spell         = MiniStatusline.section_spell({ trunc_width = 120 })
-  local wrap          = MiniStatusline.section_wrap({ trunc_width = 120 })
   local git           = MiniStatusline.section_git({ trunc_width = 75 })
   local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
   local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
@@ -509,7 +545,7 @@ function H.default_content_active()
   -- correct padding with spaces between groups (accounts for 'missing'
   -- sections, etc.)
   return MiniStatusline.combine_groups({
-    { hl = mode_hl,                  strings = { mode, spell, wrap } },
+    { hl = mode_hl,                  strings = { mode } },
     { hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },
     '%<', -- Mark general truncate point
     { hl = 'MiniStatuslineFilename', strings = { filename } },
