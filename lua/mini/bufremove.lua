@@ -197,7 +197,17 @@ function H.unshow_and_cmd(buf_id, force, cmd)
 
   -- Execute command
   local command = string.format('%s%s %d', cmd, force and '!' or '', buf_id)
-  vim.cmd(command)
+  ---- Use `pcall` here to take care of case where `unshow()` was enough.
+  ---- This can happen with 'bufhidden' option values:
+  ---- - If `delete` then `unshow()` already `bdelete`d buffer. Without `pcall`
+  ----   it gives E516 for `MiniBufremove.delete()` (`wipeout` works).
+  ---- - If `wipe` then `unshow()` already `bwipeout`ed buffer. Without `pcall`
+  ----   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
+  local ok, result = pcall(vim.cmd, command)
+  if not (ok or result:find('E516') or result:find('E517')) then
+    vim.notify('(mini.bufremove) ' .. result)
+    return false
+  end
 
   return true
 end
