@@ -197,7 +197,7 @@ MiniBase16.setup({config})                                *MiniBase16.setup()*
         table; `config.palette` should be a table with colors)
 
 
-MiniBase16.mini_palette({background}, {foreground}, {accent_chroma})*MiniBase16.mini_palette()*
+MiniBase16.mini_palette({background}, {foreground}, {accent_chroma}) *MiniBase16.mini_palette()*
     Create 'mini' palette
 
     Create base16 palette based on the HEX (string '#RRGGBB') colors of main
@@ -258,7 +258,7 @@ MiniBase16.mini_palette({background}, {foreground}, {accent_chroma})*MiniBase16.
         `require('mini.base16').setup({palette = palette})`
 
 
-MiniBase16.rgb_palette_to_cterm_palette({palette})*MiniBase16.rgb_palette_to_cterm_palette()*
+MiniBase16.rgb_palette_to_cterm_palette({palette}) *MiniBase16.rgb_palette_to_cterm_palette()*
     Converts palette with RGB colors to terminal colors
 
     Useful for caching `use_cterm` variable to increase speed.
@@ -449,7 +449,7 @@ MiniComment.operator({mode})                          *MiniComment.operator()*
         performing action).
 
 
-MiniComment.toggle_lines({line_start}, {line_end})*MiniComment.toggle_lines()*
+MiniComment.toggle_lines({line_start}, {line_end}) *MiniComment.toggle_lines()*
     Toggle comments between two line numbers
 
     It uncomments if lines are comment (every line is a comment) and comments
@@ -633,7 +633,7 @@ MiniCompletion.auto_completion()            *MiniCompletion.auto_completion()*
 
 
 
-MiniCompletion.complete_twostage({fallback}, {force})*MiniCompletion.complete_twostage()*
+MiniCompletion.complete_twostage({fallback}, {force}) *MiniCompletion.complete_twostage()*
     Run two-stage completion
 
 
@@ -700,7 +700,7 @@ MiniCompletion.completefunc_lsp()          *MiniCompletion.completefunc_lsp()*
 
 
 
-MiniCompletion.default_process_items()*MiniCompletion.default_process_items()*
+MiniCompletion.default_process_items() *MiniCompletion.default_process_items()*
     Default `MiniCompletion.config.lsp_completion.process_items`.
 
 
@@ -1473,7 +1473,7 @@ MiniStatusline.section_git({args})              *MiniStatusline.section_git()*
         string: Section string.
 
 
-MiniStatusline.section_diagnostics({args})*MiniStatusline.section_diagnostics()*
+MiniStatusline.section_diagnostics({args}) *MiniStatusline.section_diagnostics()*
     Section for Neovim's builtin diagnostics
 
     Shows nothing if there is no attached LSP clients or for short output.
