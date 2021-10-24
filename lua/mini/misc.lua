@@ -152,6 +152,55 @@ function H.default_text_width(win_id)
   end
 end
 
+--- Compute summary statistics of numerical list
+---
+--- This might be useful to compute summary of time benchmarking with
+--- |MiniMisc.bench_time|.
+---
+---@param t table: List (table suitable for `ipairs`) of numbers.
+---@return table: Table with summary values under following keys (may be extended in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of elements), `sd` (sample standard deviation).
+function MiniMisc.stat_summary(t)
+  if type(t) ~= 'table' then
+    vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be a list of numbers.]])
+    return
+  end
+
+  -- Welford algorithm of computing variance
+  -- Source: https://www.johndcook.com/blog/skewness_kurtosis/
+  local n = #t
+  local delta, m1, m2 = 0, 0, 0
+  local minimum, maximum = math.huge, -math.huge
+  for i, x in ipairs(t) do
+    delta = x - m1
+    m1 = m1 + delta / i
+    m2 = m2 + delta * (x - m1)
+
+    -- Extremums
+    minimum = x < minimum and x or minimum
+    maximum = x > maximum and x or maximum
+  end
+
+  return {
+    maximum = maximum,
+    mean = m1,
+    median = H.compute_median(t),
+    minimum = minimum,
+    n = n,
+    sd = math.sqrt(n > 1 and m2 / (n - 1) or 0),
+  }
+end
+
+function H.compute_median(t)
+  local n = #t
+  if n == 0 then
+    return 0
+  end
+
+  local t_sorted = vim.deepcopy(t)
+  table.sort(t_sorted)
+  return 0.5 * (t_sorted[math.ceil(0.5 * n)] + t_sorted[math.ceil(0.5 * (n + 1))])
+end
+
 --- Return "first" elements of table as decided by `pairs`
 ---
 --- Note: order of elements might vary.

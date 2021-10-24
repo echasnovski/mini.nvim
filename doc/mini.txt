@@ -989,6 +989,23 @@ MiniMisc.resize_window({win_id}, {text_width})      *MiniMisc.resize_window()*
                                79).
 
 
+MiniMisc.stat_summary({t})                           *MiniMisc.stat_summary()*
+    Compute summary statistics of numerical list
+
+    This might be useful to compute summary of time benchmarking with
+    |MiniMisc.bench_time|.
+
+
+
+    Parameters: ~
+        {t} (table)  List (table suitable for `ipairs`) of numbers.
+
+    Return: ~
+        table: Table with summary values under following keys (may be extended
+        in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of
+        elements), `sd` (sample standard deviation).
+
+
 MiniMisc.tbl_head({t}, {n})                              *MiniMisc.tbl_head()*
     Return "first" elements of table as decided by `pairs`
 
