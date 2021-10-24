@@ -44,18 +44,23 @@ MiniMisc.config = {
   make_global = { 'put', 'put_text' },
 }
 
---- Execute `f` once and time how long it took
+--- Execute `f` several times and time how long it took
 ---
 ---@param f function: Function which execution to benchmark.
+---@param n number: Number of times to execute `f(...)`. Default: 1.
 ---@param ... vararg: Arguments when calling `f`.
----@return duration, output tuple: Duration (in seconds; up to microseconds) and output of function execution.
-function MiniMisc.bench_time(f, ...)
-  local start_sec, start_usec = vim.loop.gettimeofday()
-  local output = f(...)
-  local end_sec, end_usec = vim.loop.gettimeofday()
-  local duration = (end_sec - start_sec) + 0.000001 * (end_usec - start_usec)
+---@return durations, output tuple: Table with durations (in seconds; up to microseconds) and output of (last) function execution.
+function MiniMisc.bench_time(f, n, ...)
+  n = n or 1
+  local durations, output = {}, nil
+  for _ = 1, n do
+    local start_sec, start_usec = vim.loop.gettimeofday()
+    output = f(...)
+    local end_sec, end_usec = vim.loop.gettimeofday()
+    table.insert(durations, (end_sec - start_sec) + 0.000001 * (end_usec - start_usec))
+  end
 
-  return duration, output
+  return durations, output
 end
 
 --- Compute width of gutter (info column on the left of the window)
@@ -127,7 +132,7 @@ function MiniMisc.resize_window(win_id, text_width)
   vim.api.nvim_win_set_width(win_id, text_width + MiniMisc.get_gutter_width(win_id))
 end
 
-H.default_text_width = function(win_id)
+function H.default_text_width(win_id)
   local buf = vim.api.nvim_win_get_buf(win_id)
   local textwidth = vim.api.nvim_buf_get_option(buf, 'textwidth')
   textwidth = (textwidth == 0) and math.min(vim.o.columns, 79) or textwidth

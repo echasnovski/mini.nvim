@@ -929,18 +929,19 @@ MiniMisc.setup({config})                                    *MiniMisc.setup()*
         table)
 
 
-MiniMisc.bench_time({f}, {...})                        *MiniMisc.bench_time()*
-    Execute `f` once and time how long it took
+MiniMisc.bench_time({f}, {n}, {...})                   *MiniMisc.bench_time()*
+    Execute `f` several times and time how long it took
 
 
 
     Parameters: ~
         {f}   (function)  Function which execution to benchmark.
+        {n}   (number)    Number of times to execute `f(...)`. Default: 1.
         {...} (vararg)    Arguments when calling `f`.
 
     Return: ~
-        duration, output tuple: Duration (in seconds; up to microseconds) and
-        output of function execution.
+        durations, output tuple: Table with durations (in seconds; up to
+        microseconds) and output of (last) function execution.
 
 
 MiniMisc.get_gutter_width({win_id})              *MiniMisc.get_gutter_width()*
