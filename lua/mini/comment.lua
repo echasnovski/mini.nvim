@@ -224,7 +224,11 @@ function H.apply_config(config)
   MiniComment.config = config
 
   -- Make mappings
-  H.keymap('n', config.mappings.comment, 'v:lua.MiniComment.operator()', { expr = true, noremap = true, silent = true })
+  H.keymap('n', config.mappings.comment, 'v:lua.MiniComment.operator()', {
+    expr = true,
+    noremap = true,
+    silent = true,
+  })
   H.keymap(
     'x',
     config.mappings.comment,
