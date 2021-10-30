@@ -6,11 +6,11 @@ body:
     attributes:
       label: Contributing guidelines
       options:
-      - label: I have read 'CONTRIBUTING.md'
+      - label: I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
         required: true
-      - label: I have read 'CODE_OF_CONDUCT.md'
+      - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
         required: true
-      - label: I updated 'mini.nvim' to latest version
+      - label: I have updated 'mini.nvim' to latest version
         required: true
   - type: input
     attributes:
@@ -27,7 +27,7 @@ body:
   - type: input
     attributes:
       label: "Neovim version"
-      description: "Something like `0.5`, `0.5.1`, Neovim nightly (include commit)"
+      description: "Something like `0.5`, `0.5.1`, Neovim nightly (please, include latest commit)"
     validations:
       required: true
   - type: textarea
