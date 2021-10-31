@@ -1445,34 +1445,6 @@ MiniStatusline.section_mode({args})            *MiniStatusline.section_mode()*
         group.
 
 
-MiniStatusline.section_spell({args})          *MiniStatusline.section_spell()*
-    Section for 'spell'
-
-    Short output is returned if window width is lower than `args.trunc_width`.
-
-
-
-    Parameters: ~
-        {args} (table)  Section arguments.
-
-    Return: ~
-        string: Section string.
-
-
-MiniStatusline.section_wrap({args})            *MiniStatusline.section_wrap()*
-    Section for 'wrap'
-
-    Short output is returned if window width is lower than `args.trunc_width`.
-
-
-
-    Parameters: ~
-        {args} (table)  Section arguments.
-
-    Return: ~
-        string: Section string.
-
-
 MiniStatusline.section_git({args})              *MiniStatusline.section_git()*
     Section for Git information
 
