@@ -1,0 +1,2 @@
+- [ ] I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
+- [ ] I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
