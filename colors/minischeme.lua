@@ -90,6 +90,6 @@ if vim.o.background == 'light' then
 end
 
 if palette then
-  require('mini.base16').setup({palette = palette, use_cterm = use_cterm})
+  require('mini.base16').setup({ palette = palette, use_cterm = use_cterm })
   vim.g.colors_name = 'minischeme'
 end

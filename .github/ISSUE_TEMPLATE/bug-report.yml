@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a problem
+labels: [bug]
+body:
+  - type: checkboxes
+    attributes:
+      label: Contributing guidelines
+      options:
+      - label: I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
+        required: true
+      - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
+        required: true
+      - label: I have updated 'mini.nvim' to latest version
+        required: true
+  - type: input
+    attributes:
+      label: "Module(s)"
+      description: "List one or several modules this bug is coming from"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Description"
+      description: "A short description of a problem"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: "Neovim version"
+      description: "Something like `0.5`, `0.5.1`, Neovim nightly (please, include latest commit)"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Steps to reproduce"
+      description: "Steps to reproduce using as minimal config as possible"
+      value: |
+        1. `nvim -nu minimal.lua`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Expected behavior"
+      description: "A description of behavior you expected"
+  - type: textarea
+    attributes:
+      label: "Actual behavior"
+      description: "A description of behavior you observed (feel free to include images, gifs, etc.)"
+    validations:
+      required: true

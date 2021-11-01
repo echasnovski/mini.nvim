@@ -400,12 +400,7 @@ function H.apply_config(config)
     [[v:lua.MiniSurround.operator('add')]],
     { expr = true, noremap = true, silent = true }
   )
-  H.keymap(
-    'x',
-    config.mappings.add,
-    [[:<c-u>lua MiniSurround.add('visual')<cr>]],
-    { noremap = true, silent = true }
-  )
+  H.keymap('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]], { noremap = true, silent = true })
   H.keymap(
     'n',
     config.mappings.delete,

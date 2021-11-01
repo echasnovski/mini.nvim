@@ -1,0 +1,24 @@
+name: Feature request
+description: Describe a feature you want to see
+labels: [feature-request]
+body:
+  - type: checkboxes
+    attributes:
+      label: Contributing guidelines
+      options:
+      - label: I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
+        required: true
+      - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
+        required: true
+  - type: input
+    attributes:
+      label: "Module(s)"
+      description: "List one or several modules this feature is related to"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Description"
+      description: "A concise and justified description of a feature"
+    validations:
+      required: true

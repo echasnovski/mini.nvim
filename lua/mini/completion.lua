@@ -768,8 +768,12 @@ H.stop_actions = {
 --@return boolean: Whether there is at least one LSP client that has resolved `capability`.
 function H.has_lsp_clients(capability)
   local clients = vim.lsp.buf_get_clients()
-  if vim.tbl_isempty(clients) then return false end
-  if not capability then return true end
+  if vim.tbl_isempty(clients) then
+    return false
+  end
+  if not capability then
+    return true
+  end
 
   for _, c in pairs(clients) do
     if c.resolved_capabilities[capability] then

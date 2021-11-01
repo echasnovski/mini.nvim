@@ -929,18 +929,19 @@ MiniMisc.setup({config})                                    *MiniMisc.setup()*
         table)
 
 
-MiniMisc.bench_time({f}, {...})                        *MiniMisc.bench_time()*
-    Execute `f` once and time how long it took
+MiniMisc.bench_time({f}, {n}, {...})                   *MiniMisc.bench_time()*
+    Execute `f` several times and time how long it took
 
 
 
     Parameters: ~
         {f}   (function)  Function which execution to benchmark.
+        {n}   (number)    Number of times to execute `f(...)`. Default: 1.
         {...} (vararg)    Arguments when calling `f`.
 
     Return: ~
-        duration, output tuple: Duration (in seconds; up to microseconds) and
-        output of function execution.
+        durations, output tuple: Table with durations (in seconds; up to
+        microseconds) and output of (last) function execution.
 
 
 MiniMisc.get_gutter_width({win_id})              *MiniMisc.get_gutter_width()*
@@ -986,6 +987,23 @@ MiniMisc.resize_window({win_id}, {text_width})      *MiniMisc.resize_window()*
                                'colorcolumn' or otherwise 'textwidth' (using
                                screen width as its default but not more than
                                79).
+
+
+MiniMisc.stat_summary({t})                           *MiniMisc.stat_summary()*
+    Compute summary statistics of numerical list
+
+    This might be useful to compute summary of time benchmarking with
+    |MiniMisc.bench_time|.
+
+
+
+    Parameters: ~
+        {t} (table)  List (table suitable for `ipairs`) of numbers.
+
+    Return: ~
+        table: Table with summary values under following keys (may be extended
+        in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of
+        elements), `sd` (sample standard deviation).
 
 
 MiniMisc.tbl_head({t}, {n})                              *MiniMisc.tbl_head()*
@@ -1425,34 +1443,6 @@ MiniStatusline.section_mode({args})            *MiniStatusline.section_mode()*
     Return: ~
         section_string, mode_hl tuple: Section string and mode's highlight
         group.
-
-
-MiniStatusline.section_spell({args})          *MiniStatusline.section_spell()*
-    Section for 'spell'
-
-    Short output is returned if window width is lower than `args.trunc_width`.
-
-
-
-    Parameters: ~
-        {args} (table)  Section arguments.
-
-    Return: ~
-        string: Section string.
-
-
-MiniStatusline.section_wrap({args})            *MiniStatusline.section_wrap()*
-    Section for 'wrap'
-
-    Short output is returned if window width is lower than `args.trunc_width`.
-
-
-
-    Parameters: ~
-        {args} (table)  Section arguments.
-
-    Return: ~
-        string: Section string.
 
 
 MiniStatusline.section_git({args})              *MiniStatusline.section_git()*

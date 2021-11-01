@@ -44,18 +44,23 @@ MiniMisc.config = {
   make_global = { 'put', 'put_text' },
 }
 
---- Execute `f` once and time how long it took
+--- Execute `f` several times and time how long it took
 ---
 ---@param f function: Function which execution to benchmark.
+---@param n number: Number of times to execute `f(...)`. Default: 1.
 ---@param ... vararg: Arguments when calling `f`.
----@return duration, output tuple: Duration (in seconds; up to microseconds) and output of function execution.
-function MiniMisc.bench_time(f, ...)
-  local start_sec, start_usec = vim.loop.gettimeofday()
-  local output = f(...)
-  local end_sec, end_usec = vim.loop.gettimeofday()
-  local duration = (end_sec - start_sec) + 0.000001 * (end_usec - start_usec)
+---@return durations, output tuple: Table with durations (in seconds; up to microseconds) and output of (last) function execution.
+function MiniMisc.bench_time(f, n, ...)
+  n = n or 1
+  local durations, output = {}, nil
+  for _ = 1, n do
+    local start_sec, start_usec = vim.loop.gettimeofday()
+    output = f(...)
+    local end_sec, end_usec = vim.loop.gettimeofday()
+    table.insert(durations, (end_sec - start_sec) + 0.000001 * (end_usec - start_usec))
+  end
 
-  return duration, output
+  return durations, output
 end
 
 --- Compute width of gutter (info column on the left of the window)
@@ -127,7 +132,7 @@ function MiniMisc.resize_window(win_id, text_width)
   vim.api.nvim_win_set_width(win_id, text_width + MiniMisc.get_gutter_width(win_id))
 end
 
-H.default_text_width = function(win_id)
+function H.default_text_width(win_id)
   local buf = vim.api.nvim_win_get_buf(win_id)
   local textwidth = vim.api.nvim_buf_get_option(buf, 'textwidth')
   textwidth = (textwidth == 0) and math.min(vim.o.columns, 79) or textwidth
@@ -145,6 +150,55 @@ H.default_text_width = function(win_id)
   else
     return textwidth
   end
+end
+
+--- Compute summary statistics of numerical list
+---
+--- This might be useful to compute summary of time benchmarking with
+--- |MiniMisc.bench_time|.
+---
+---@param t table: List (table suitable for `ipairs`) of numbers.
+---@return table: Table with summary values under following keys (may be extended in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of elements), `sd` (sample standard deviation).
+function MiniMisc.stat_summary(t)
+  if type(t) ~= 'table' then
+    vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be a list of numbers.]])
+    return
+  end
+
+  -- Welford algorithm of computing variance
+  -- Source: https://www.johndcook.com/blog/skewness_kurtosis/
+  local n = #t
+  local delta, m1, m2 = 0, 0, 0
+  local minimum, maximum = math.huge, -math.huge
+  for i, x in ipairs(t) do
+    delta = x - m1
+    m1 = m1 + delta / i
+    m2 = m2 + delta * (x - m1)
+
+    -- Extremums
+    minimum = x < minimum and x or minimum
+    maximum = x > maximum and x or maximum
+  end
+
+  return {
+    maximum = maximum,
+    mean = m1,
+    median = H.compute_median(t),
+    minimum = minimum,
+    n = n,
+    sd = math.sqrt(n > 1 and m2 / (n - 1) or 0),
+  }
+end
+
+function H.compute_median(t)
+  local n = #t
+  if n == 0 then
+    return 0
+  end
+
+  local t_sorted = vim.deepcopy(t)
+  table.sort(t_sorted)
+  return 0.5 * (t_sorted[math.ceil(0.5 * n)] + t_sorted[math.ceil(0.5 * (n + 1))])
 end
 
 --- Return "first" elements of table as decided by `pairs`
