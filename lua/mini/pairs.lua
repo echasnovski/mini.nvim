@@ -26,7 +26,9 @@
 --- <pre>
 --- {
 ---   -- In which modes mappings should be created
----   modes = {insert = true, command = false, terminal = false}
+---   modes = {insert = true, command = false, terminal = false},
+---   -- When a closing bracket is pressed, jump to it anywhere in the buffer
+---   fly_mode = false,
 --- }
 --- </pre>
 ---
@@ -101,6 +103,8 @@ end
 MiniPairs.config = {
   -- In which modes mappings should be created
   modes = { insert = true, command = false, terminal = false },
+  -- When a closing bracket is pressed, jump to it anywhere in the buffer
+  fly_mode = false,
 }
 
 -- Module functionality
@@ -151,7 +155,15 @@ function MiniPairs.close(pair, twochars_pattern)
   if H.get_cursor_neigh(1, 1) == close then
     return H.get_arrow_key('right')
   else
-    return close
+    if MiniPairs.config.fly_mode then
+      if H.search('\\V' .. close) ~= 0 then
+        return H.keys.cmd_start .. "call search('\\V" .. close .. "')" .. H.keys.cmd_end .. H.get_arrow_key('right')
+      else
+        return close
+      end
+    else
+      return close
+    end
   end
 end
 
@@ -239,6 +251,7 @@ function H.setup_config(config)
     ['modes.insert'] = { config.modes.insert, 'boolean' },
     ['modes.command'] = { config.modes.command, 'boolean' },
     ['modes.terminal'] = { config.modes.terminal, 'boolean' },
+    fly_mode = { config.fly_mode, 'boolean' },
   })
 
   return config
@@ -311,6 +324,10 @@ function H.neigh_match(pattern)
   return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil)
 end
 
+function H.search(pattern)
+  return vim.fn.search(pattern, 'nWz')
+end
+
 function H.escape(s)
   return vim.api.nvim_replace_termcodes(s, true, true, true)
 end
@@ -321,6 +338,8 @@ H.keys = {
   bs        = H.escape('<bs>'),
   cr        = H.escape('<cr>'),
   del       = H.escape('<del>'),
+  cmd_start = H.escape('<cmd>'),
+  cmd_end   = H.escape('<cr>'),
   keep_undo = H.escape('<C-g>U'),
   -- NOTE: use `get_arrow_key()` instead of `H.keys.left` or `H.keys.right`
   left      = H.escape('<left>'),
