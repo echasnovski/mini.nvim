@@ -126,9 +126,8 @@ end
 function H.apply_config(config)
   MiniJump.config = config
 
-  modes = { 'n', 'o', 'x' }
-
   if config.map_ft then
+    local modes = { 'n', 'o', 'x' }
     for _, mode in ipairs(modes) do
       H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(1, false, false)]])
       H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
