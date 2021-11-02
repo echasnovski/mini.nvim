@@ -164,7 +164,7 @@ end
 
 function H.get_chars(num_chars)
   local chars = ''
-  for _ = 1,num_chars do
+  for _ = 1, num_chars do
     chars = chars .. vim.fn.nr2char(vim.fn.getchar())
   end
   return chars
