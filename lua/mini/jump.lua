@@ -1,7 +1,10 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
 ---@brief [[
---- A module for smarter jumping, inspired by clever-f. By default it does nothing.
+--- A module for smarter jumping, inspired by clever-f.
+--- By default it extends f, F, t, T to work on multiple lines,
+--- be repeatable by pressing f, F, t, T again,
+--- and highlight characters they're going to jump to.
 ---
 --- # Setup
 ---
