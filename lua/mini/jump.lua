@@ -18,6 +18,8 @@
 ---     forward_1_till = 't',
 ---     backward_1_till = 'T',
 ---   },
+---   -- Highlight matches when jumping.
+---   highlight = true,
 --- }
 --- </pre>
 ---@brief ]]
@@ -50,10 +52,13 @@ MiniJump.config = {
     forward_1_till = 't',
     backward_1_till = 'T',
   },
+  -- Highlight matches when jumping.
+  highlight = true,
 }
 
 -- Module functionality
-H.target = nil
+H.jumping = false
+vim.cmd([[highlight link MiniJumpHighlight Search]])
 
 --- Jump to target
 ---
@@ -71,16 +76,21 @@ function MiniJump.jump(target, backward, till)
     flags = flags .. 'b'
   end
   local pattern = [[\V%s]]
+  local hl_pattern = [[\V%s]]
   if till then
     if backward then
       pattern = [[\V%s\.]]
+      hl_pattern = [[\V%s\ze\.]]
       flags = flags .. 'e'
     else
       pattern = [[\V\.%s]]
+      hl_pattern = [[\V\.\zs%s]]
     end
   end
   pattern = pattern:format(vim.fn.escape(target, [[\]]))
+  hl_pattern = hl_pattern:format(vim.fn.escape(target, [[\]]))
   vim.fn.search(pattern, flags)
+  H.highlight(hl_pattern)
 end
 
 --- Smart jump
@@ -96,14 +106,14 @@ function MiniJump.smart_jump(num_chars, backward, till)
   num_chars = num_chars or 1
   backward = backward or false
   till = till or false
-  local target = H.target or H.get_chars(num_chars)
-  MiniJump.jump(target, backward, till)
+  H.target = H.target or H.get_chars(num_chars)
+  MiniJump.jump(H.target, backward, till)
   for _ = 2, vim.v.count do
-    MiniJump.jump(target, backward, till)
+    MiniJump.jump(H.target, backward, till)
   end
-  -- This has to be scheduled so it doesn't get overridden by CursorMoved from the jump.
+  H.jumping = true
   vim.schedule(function()
-    H.target = target
+    H.jumping = false
   end)
 end
 
@@ -112,7 +122,10 @@ end
 --- Forces the next smart jump to prompt for the target.
 --- Triggered automatically on CursorMoved, but can be also triggered manually.
 function MiniJump.reset_target()
-  H.target = nil
+  if not H.jumping then
+    H.target = nil
+    H.reset_highlight()
+  end
 end
 
 -- Helpers
@@ -132,6 +145,7 @@ function H.setup_config(config)
     ['mappings.backward_1'] = { config.mappings.forward_1, 'string' },
     ['mappings.forward_1_till'] = { config.mappings.forward_1, 'string' },
     ['mappings.backward_1_till'] = { config.mappings.forward_1, 'string' },
+    highlight = { config.highlight, 'boolean' },
   })
 
   return config
@@ -210,6 +224,20 @@ function H.get_chars(num_chars)
     chars = chars .. vim.fn.nr2char(vim.fn.getchar())
   end
   return chars
+end
+
+function H.highlight(pattern)
+  if MiniJump.config.highlight then
+    H.reset_highlight()
+    H.match_id = vim.fn.matchadd('MiniJumpHighlight', pattern)
+  end
+end
+
+function H.reset_highlight()
+  if H.match_id then
+    vim.fn.matchdelete(H.match_id)
+    H.match_id = nil
+  end
 end
 
 return MiniJump
