@@ -16,7 +16,7 @@
 --- }
 --- </pre>
 ---@brief ]]
----@tag MiniJump mini.pairs
+---@tag MiniJump mini.jump
 
 -- Module and its helper
 local MiniJump = {}
@@ -43,42 +43,38 @@ MiniJump.config = {
 }
 
 -- Module functionality
-MiniJump.target = nil
-MiniJump.ask_for_target = true
+H.target = nil
 
 function MiniJump.jump(target, backward, till)
   local flags = 'W'
   if backward then
-    flags = flags .. 'b'
+    flags = flags .. 'be'
   end
-  if target == '\\' then
-    target = '\\\\'
+  if target == [[\]] then
+    target = [[\\]]
   end
-  local pattern
-  if target == "'" then
-    pattern = [["'"]]
-  else
-    pattern = [['\V]] .. target .. [[']]
-  end
-  local rhs = H.keys.cmd_start .. 'call search(' .. pattern .. ", '" .. flags .. "')" .. H.keys.cmd_end
+  local pattern = ([[\V%s]]):format(target)
   if till then
     if backward then
-      rhs = H.get_arrow_key('left') .. rhs .. H.get_arrow_key('right')
+      pattern = ([[\V%s\.]]):format(target)
     else
-      rhs = H.get_arrow_key('right') .. rhs .. H.get_arrow_key('left')
+      pattern = ([[\V\.%s]]):format(target)
     end
   end
-  return rhs
+  vim.fn.search(pattern, flags)
 end
 
 function MiniJump.smart_jump(backward, till)
-  if MiniJump.ask_for_target then
-    MiniJump.target = H.get_char()
-  end
-  return MiniJump.jump(MiniJump.target, backward, till)
-    .. H.keys.cmd_start
-    .. [[lua MiniJump.ask_for_target = false]]
-    .. H.keys.cmd_end
+  local target = H.target or H.get_char()
+  MiniJump.jump(target, backward, till)
+  -- This has to be scheduled so it doesn't get overridden by CursorMoved from the jump.
+  vim.schedule(function()
+    H.target = target
+  end)
+end
+
+function MiniJump.on_cursor_moved()
+  H.target = nil
 end
 
 -- Helpers
@@ -105,11 +101,11 @@ function H.apply_config(config)
   mode = 'n'
 
   if config.map_ft then
-    H.map(mode, 'f', [[v:lua.MiniJump.smart_jump(v:false, v:false)]])
-    H.map(mode, 'F', [[v:lua.MiniJump.smart_jump(v:true, v:false)]])
-    H.map(mode, 't', [[v:lua.MiniJump.smart_jump(v:false, v:true)]])
-    H.map(mode, 'T', [[v:lua.MiniJump.smart_jump(v:true, v:true)]])
-    vim.cmd([[autocmd CursorMoved * lua MiniJump.ask_for_target = true]])
+    H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(false, false)]])
+    H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(true, false)]])
+    H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(false, true)]])
+    H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(true, true)]])
+    vim.cmd([[autocmd CursorMoved * lua MiniJump.on_cursor_moved()]])
   end
 end
 
@@ -118,8 +114,8 @@ function H.is_disabled()
 end
 
 ---- Various helpers
-function H.map(mode, key, command)
-  vim.api.nvim_set_keymap(mode, key, command, { expr = true, noremap = true })
+function H.map_cmd(mode, key, command)
+  vim.api.nvim_set_keymap(mode, key, ':' .. command .. H.keys.cmd_end, { noremap = true })
 end
 
 function H.escape(s)
