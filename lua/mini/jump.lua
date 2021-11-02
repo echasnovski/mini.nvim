@@ -123,14 +123,16 @@ end
 function H.apply_config(config)
   MiniJump.config = config
 
-  mode = 'n'
+  modes = { 'n', 'o', 'x' }
 
-  if config.map_ft then
-    H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(1, false, false)]])
-    H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
-    H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(1, false, true)]])
-    H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(1, true, true)]])
-    vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
+  for _, mode in ipairs(modes) do
+    if config.map_ft then
+      H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(1, false, false)]])
+      H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
+      H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(1, false, true)]])
+      H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(1, true, true)]])
+      vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
+    end
   end
 end
 
@@ -140,8 +142,11 @@ end
 
 ---- Various helpers
 function H.map_cmd(mode, key, command)
-  -- For some reason, <cmd> doesn't work
-  vim.api.nvim_set_keymap(mode, key, ':' .. command .. H.keys.cmd_end, { noremap = true, silent = true })
+  local rhs = ('<cmd>%s<cr>'):format(command)
+  if mode == 'o' then
+    rhs = 'v' .. rhs
+  end
+  vim.api.nvim_set_keymap(mode, key, rhs, { noremap = true })
 end
 
 function H.escape(s)
@@ -153,8 +158,6 @@ H.keys = {
   bs        = H.escape('<bs>'),
   cr        = H.escape('<cr>'),
   del       = H.escape('<del>'),
-  cmd_start = H.escape('<cmd>'),
-  cmd_end   = H.escape('<cr>'),
   keep_undo = H.escape('<C-g>U'),
   -- NOTE: use `get_arrow_key()` instead of `H.keys.left` or `H.keys.right`
   left      = H.escape('<left>'),
