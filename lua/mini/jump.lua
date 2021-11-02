@@ -119,7 +119,7 @@ end
 
 --- Reset target
 ---
---- Forces the next smart jump to prompt for the target.
+--- Removes highlights (if any) and forces the next smart jump to prompt for the target.
 --- Triggered automatically on CursorMoved, but can be also triggered manually.
 function MiniJump.reset_target()
   if not H.jumping then
@@ -182,40 +182,6 @@ end
 
 function H.escape(s)
   return vim.api.nvim_replace_termcodes(s, true, true, true)
-end
-
--- stylua: ignore start
-H.keys = {
-  bs        = H.escape('<bs>'),
-  cr        = H.escape('<cr>'),
-  del       = H.escape('<del>'),
-  keep_undo = H.escape('<C-g>U'),
-  -- NOTE: use `get_arrow_key()` instead of `H.keys.left` or `H.keys.right`
-  left      = H.escape('<left>'),
-  right     = H.escape('<right>')
-}
--- stylua: ignore end
-
-function H.get_arrow_key(key)
-  if vim.fn.mode() == 'i' then
-    -- Using left/right keys in insert mode breaks undo sequence and, more
-    -- importantly, dot-repeat. To avoid this, use 'i_CTRL-G_U' mapping.
-    return H.keys.keep_undo .. H.keys[key]
-  else
-    return H.keys[key]
-  end
-end
-
-function H.is_in_table(val, tbl)
-  if tbl == nil then
-    return false
-  end
-  for _, value in pairs(tbl) do
-    if val == value then
-      return true
-    end
-  end
-  return false
 end
 
 function H.get_chars(num_chars)
