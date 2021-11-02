@@ -46,26 +46,29 @@ MiniJump.config = {
 H.target = nil
 
 function MiniJump.jump(target, backward, till)
+  backward = backward or false
+  till = till or false
   local flags = 'W'
   if backward then
     flags = flags .. 'be'
   end
-  if target == [[\]] then
-    target = [[\\]]
-  end
-  local pattern = ([[\V%s]]):format(target)
+  local pattern = [[\V%s]]
   if till then
     if backward then
-      pattern = ([[\V%s\.]]):format(target)
+      pattern = [[\V%s\.]]
     else
-      pattern = ([[\V\.%s]]):format(target)
+      pattern = [[\V\.%s]]
     end
   end
+  pattern = pattern:format(vim.fn.escape(target, [[\]]))
   vim.fn.search(pattern, flags)
 end
 
-function MiniJump.smart_jump(backward, till)
-  local target = H.target or H.get_char()
+function MiniJump.smart_jump(num_chars, backward, till)
+  num_chars = num_chars or 1
+  backward = backward or false
+  till = till or false
+  local target = H.target or H.get_chars(num_chars)
   MiniJump.jump(target, backward, till)
   -- This has to be scheduled so it doesn't get overridden by CursorMoved from the jump.
   vim.schedule(function()
@@ -101,10 +104,10 @@ function H.apply_config(config)
   mode = 'n'
 
   if config.map_ft then
-    H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(false, false)]])
-    H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(true, false)]])
-    H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(false, true)]])
-    H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(true, true)]])
+    H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(1, false, false)]])
+    H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
+    H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(1, false, true)]])
+    H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(1, true, true)]])
     vim.cmd([[autocmd CursorMoved * lua MiniJump.on_cursor_moved()]])
   end
 end
@@ -115,7 +118,8 @@ end
 
 ---- Various helpers
 function H.map_cmd(mode, key, command)
-  vim.api.nvim_set_keymap(mode, key, ':' .. command .. H.keys.cmd_end, { noremap = true })
+  -- For some reason, <cmd> doesn't work
+  vim.api.nvim_set_keymap(mode, key, ':' .. command .. H.keys.cmd_end, { noremap = true, silent = true })
 end
 
 function H.escape(s)
@@ -158,8 +162,12 @@ function H.is_in_table(val, tbl)
   return false
 end
 
-function H.get_char()
-  return vim.fn.nr2char(vim.fn.getchar())
+function H.get_chars(num_chars)
+  local chars = ''
+  for _ = 1,num_chars do
+    chars = chars .. vim.fn.nr2char(vim.fn.getchar())
+  end
+  return chars
 end
 
 return MiniJump
