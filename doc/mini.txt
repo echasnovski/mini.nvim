@@ -122,42 +122,43 @@ This module needs a setup with `require('mini.base16').setup({})` (replace `{}`
 with your `config` table).
 
 Default `config`:
-{
-  -- Table with names from `base00` to `base0F` and values being strings of HEX
-  -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
-  -- `setup()`.
-  palette = nil,
+>
+  {
+    -- Table with names from `base00` to `base0F` and values being strings of HEX
+    -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
+    -- `setup()`.
+    palette = nil,
 
- -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
- -- or table with cterm colors. See `setup()` documentation for more
- -- information.
-  use_cterm = nil,
-}
-
+   -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
+   -- or table with cterm colors. See `setup()` documentation for more
+   -- information.
+    use_cterm = nil,
+  }
+<
 Example:
-
-`require('mini.base16').setup({`
-  `palette = {`
-    `base00 = '#112641',`
-    `base01 = '#3a475e',`
-    `base02 = '#606b81',`
-    `base03 = '#8691a7',`
-    `base04 = '#d5dc81',`
-    `base05 = '#e2e98f',`
-    `base06 = '#eff69c',`
-    `base07 = '#fcffaa',`
-    `base08 = '#ffcfa0',`
-    `base09 = '#cc7e46',`
-    `base0A = '#46a436',`
-    `base0B = '#9ff895',`
-    `base0C = '#ca6ecf',`
-    `base0D = '#42f7ff',`
-    `base0E = '#ffc4ff',`
-    `base0F = '#00a5c5',`
-  `},`
-  `use_cterm = true,`
-`})`
-
+>
+  require('mini.base16').setup({
+    palette = {
+      base00 = '#112641',
+      base01 = '#3a475e',
+      base02 = '#606b81',
+      base03 = '#8691a7',
+      base04 = '#d5dc81',
+      base05 = '#e2e98f',
+      base06 = '#eff69c',
+      base07 = '#fcffaa',
+      base08 = '#ffcfa0',
+      base09 = '#cc7e46',
+      base0A = '#46a436',
+      base0B = '#9ff895',
+      base0C = '#ca6ecf',
+      base0D = '#42f7ff',
+      base0E = '#ffc4ff',
+      base0F = '#00a5c5',
+    },
+    use_cterm = true,
+  })
+<
 # Notes
 1. This module is used for creating plugin's official colorscheme named 
    `minischeme` (see |mini.nvim|).
@@ -292,11 +293,12 @@ with `require('mini.bufremove').setup({})` (replace `{}` with your `config`
 table).
 
 Default `config`:
-{
-  -- Whether to set Vim's settings for buffers (allow hidden buffers)
-  set_vim_settings = true,
-}
-
+>
+  {
+    -- Whether to set Vim's settings for buffers (allow hidden buffers)
+    set_vim_settings = true,
+  }
+<
 # Notes
 1. Which buffer to show in window(s) after its current buffer is removed is 
    decided by the algorithm:
@@ -397,23 +399,26 @@ This module needs a setup with `require('mini.comment').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    -- Toggle comment (like `gcip` - comment inner paragraph) for both
-    -- Normal and Visual modes
-    comment = 'gc',
+>
+  {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      -- Toggle comment (like `gcip` - comment inner paragraph) for both
+      -- Normal and Visual modes
+      comment = 'gc',
 
-    -- Toggle comment on current line
-    comment_line = 'gcc',
+      -- Toggle comment on current line
+      comment_line = 'gcc',
 
-    -- Define 'comment' textobject (like `dgc` - delete whole comment block)
-    textobject = 'gc',
+      -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+      textobject = 'gc',
+    }
   }
-}
+<
+# Disabling
 
-# Disabling To disable core functionality, set `g:minicomment_disable`
-(globally) or - `b:minicomment_disable` (for a buffer) to `v:true`.
+To disable core functionality, set `g:minicomment_disable` (globally) or
+`b:minicomment_disable` (for a buffer) to `v:true`.
 
 MiniComment.setup({config})                              *MiniComment.setup()*
     Module setup
@@ -521,51 +526,52 @@ This module needs a setup with `require('mini.completion').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Delay (debounce type, in ms) between certain Neovim event and action.
-  -- This can be used to (virtually) disable certain automatic actions by
-  -- setting very high delay time (like 10^7).
-  delay = {completion = 100, info = 100, signature = 50},
+>
+  {
+    -- Delay (debounce type, in ms) between certain Neovim event and action.
+    -- This can be used to (virtually) disable certain automatic actions by
+    -- setting very high delay time (like 10^7).
+    delay = {completion = 100, info = 100, signature = 50},
 
-  -- Maximum dimensions of floating windows for certain actions. Action entry
-  -- should be a table with 'height' and 'width' fields.
-  window_dimensions = {
-    info = {height = 25, width = 80},
-    signature = {height = 25, width = 80}
-  },
+    -- Maximum dimensions of floating windows for certain actions. Action entry
+    -- should be a table with 'height' and 'width' fields.
+    window_dimensions = {
+      info = {height = 25, width = 80},
+      signature = {height = 25, width = 80}
+    },
 
-  -- Way of how module does LSP completion:
-  -- - `source_func` should be one of 'completefunc' or 'omnifunc'.
-  -- - `auto_setup` should be boolean indicating if LSP completion is set up on
-  --   every `BufEnter` event.
-  -- - `process_items` should be a function which takes LSP
-  --   'textDocument/completion' response items and word to complete. Its
-  --   output should be a table of the same nature as input items. The most
-  --   common use-cases are custom filtering and sorting. You can use
-  --   default `process_items` as `MiniCompletion.default_process_items()`.
-  lsp_completion = {
-    source_func = 'completefunc',
-    auto_setup = true,
-    process_items = --<function: filters 'not snippets' by prefix and sorts by LSP specification>,
-  },
+    -- Way of how module does LSP completion:
+    -- - `source_func` should be one of 'completefunc' or 'omnifunc'.
+    -- - `auto_setup` should be boolean indicating if LSP completion is set up on
+    --   every `BufEnter` event.
+    -- - `process_items` should be a function which takes LSP
+    --   'textDocument/completion' response items and word to complete. Its
+    --   output should be a table of the same nature as input items. The most
+    --   common use-cases are custom filtering and sorting. You can use
+    --   default `process_items` as `MiniCompletion.default_process_items()`.
+    lsp_completion = {
+      source_func = 'completefunc',
+      auto_setup = true,
+      process_items = --<function: filters 'not snippets' by prefix and sorts by LSP specification>,
+    },
 
-  -- Fallback action. It will always be run in Insert mode. To use Neovim's
-  -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
-  fallback_action = --<function equivalent to '<C-n>' completion>,
+    -- Fallback action. It will always be run in Insert mode. To use Neovim's
+    -- built-in completion (see `:h ins-completion`), supply its mapping as
+    -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
+    fallback_action = --<function equivalent to '<C-n>' completion>,
 
-  -- Module mappings. Use `''` (empty string) to disable one. Some of them
-  -- might conflict with system mappings.
-  mappings = {
-    force_twostep  = '<C-Space>', -- Force two-step completion
-    force_fallback = '<A-Space>'  -- Force fallback completion
+    -- Module mappings. Use `''` (empty string) to disable one. Some of them
+    -- might conflict with system mappings.
+    mappings = {
+      force_twostep  = '<C-Space>', -- Force two-step completion
+      force_fallback = '<A-Space>'  -- Force fallback completion
+    }
+
+    -- Whether to set Vim's settings for better experience (modifies
+    -- `shortmess` and `completeopt`)
+    set_vim_settings = true
   }
-
-  -- Whether to set Vim's settings for better experience (modifies
-  -- `shortmess` and `completeopt`)
-  set_vim_settings = true
-}
-
+<
 # Notes
 - More appropriate, albeit slightly advanced, LSP completion setup is to set it
   not on every `BufEnter` event (default), but on every attach of LSP client.
@@ -721,11 +727,12 @@ This module needs a setup with `require('mini.cursorword').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
- -- Delay (in ms) between when cursor moved and when highlighting appeared
- delay = 100,
-}
-
+>
+  {
+   -- Delay (in ms) between when cursor moved and when highlighting appeared
+   delay = 100,
+  }
+<
 # Highlight groups
 
 1. `MiniCursorword` - highlight group of cursor word. Default: plain underline.
@@ -780,12 +787,13 @@ This module doesn't need setup, but it can be done to improve usability. Setup
 with `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Maximum allowed value of match features (width and first match). All
-  -- feature values greater than cutoff can be considered "equally bad".
-  cutoff = 100,
-}
-
+>
+  {
+    -- Maximum allowed value of match features (width and first match). All
+    -- feature values greater than cutoff can be considered "equally bad".
+    cutoff = 100,
+  }
+<
 # Notes
 1. Currently there is no explicit design to work with multibyte symbols, but
    simple examples should work.
@@ -868,8 +876,8 @@ MiniFuzzy.filtersort({word}, {candidate_list})        *MiniFuzzy.filtersort()*
                                    be searched
 
     Return: ~
-        matched_candidates, matched_indexes tuple: Arrays of matched
-        candidates and their indexes in original input.
+        tuple: Arrays of matched candidates and their indexes in original
+        input.
 
 
 MiniFuzzy.process_lsp_items({items}, {base})   *MiniFuzzy.process_lsp_items()*
@@ -911,10 +919,12 @@ This module doesn't need setup, but it can be done to improve usability. Setup
 with `require('mini.misc').setup({})` (replace `{}` with your `config` table).
 
 Default `config`:
-{
-  -- List of fields to make global (to be used as independent variables)
-  make_global = { 'put', 'put_text' },
-}
+>
+  {
+    -- List of fields to make global (to be used as independent variables)
+    make_global = { 'put', 'put_text' },
+  }
+<
 
 MiniMisc.setup({config})                                    *MiniMisc.setup()*
     Module setup
@@ -940,8 +950,8 @@ MiniMisc.bench_time({f}, {n}, {...})                   *MiniMisc.bench_time()*
         {...} (vararg)    Arguments when calling `f`.
 
     Return: ~
-        durations, output tuple: Table with durations (in seconds; up to
-        microseconds) and output of (last) function execution.
+        tuple: Table with durations (in seconds; up to microseconds) and
+        output of (last) function execution.
 
 
 MiniMisc.get_gutter_width({win_id})              *MiniMisc.get_gutter_width()*
@@ -1110,11 +1120,12 @@ This module needs a setup with `require('mini.pairs').setup({})` (replace `{}`
 with your `config` table).
 
 Default `config`:
-{
-  -- In which modes mappings should be created
-  modes = {insert = true, command = false, terminal = false}
-}
-
+>
+  {
+    -- In which modes mappings should be created
+    modes = {insert = true, command = false, terminal = false}
+  }
+<
 By default in `MiniPairs.setup()`:
 - The following pairs are respected: `()`, `[]`, `{}`, `""`, `''`, `\`\``. 
   Single opening symbol is inserted after `\`. Single `'` is inserted after a
@@ -1131,7 +1142,7 @@ By default in `MiniPairs.setup()`:
     Lua:
     `vim.api.nvim_set_keymap('i', '<', [[v:lua.MiniPairs.open('<>', "\r.")]], { expr = true, noremap = true })`
     `vim.api.nvim_set_keymap('i', '>', [[v:lua.MiniPairs.close('<>', "..")]], { expr = true, noremap = true })`
-- Create symmerical `$$` pair only in Tex files:
+- Create symmetrical `$$` pair only in Tex files:
     Vimscript:
     `au FileType tex inoremap <buffer> <expr> $ v:lua.MiniPairs.closeopen('$$', "[^\\].")`
     Lua:
@@ -1292,53 +1303,55 @@ This module needs a setup with `require('mini.statusline').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Content of statusline as functions which return statusline string. See `:h
-  -- statusline` and code of default contents (used when `nil` is supplied).
-  content = {
-    -- Content for active window
-    active = nil,
+>
+  {
+    -- Content of statusline as functions which return statusline string. See `:h
+    -- statusline` and code of default contents (used when `nil` is supplied).
+    content = {
+      -- Content for active window
+      active = nil,
 
-    -- Content for inactive window(s)
-    inactive = nil,
-  },
+      -- Content for inactive window(s)
+      inactive = nil,
+    },
 
-  -- Whether to set Vim's settings for statusline (make it always shown)
-  set_vim_settings = true,
-}
-
+    -- Whether to set Vim's settings for statusline (make it always shown)
+    set_vim_settings = true,
+  }
+<
 # Example content
 
 ## Default content
 
 This function is used as default value for active content:
-`function()`
-  `local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })`
-  `local git           = MiniStatusline.section_git({ trunc_width = 75 })`
-  `local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })`
-  `local filename      = MiniStatusline.section_filename({ trunc_width = 140 })`
-  `local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })`
-  `local location      = MiniStatusline.section_location({ trunc_width = 75 })`
+>
+  function()
+    local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
+    local git           = MiniStatusline.section_git({ trunc_width = 75 })
+    local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
+    local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
+    local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
+    local location      = MiniStatusline.section_location({ trunc_width = 75 })
 
-  `return MiniStatusline.combine_groups({`
-    `{ hl = mode_hl,                  strings = { mode } },`
-    `{ hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },`
-    `'%<', -- Mark general truncate point`
-    `{ hl = 'MiniStatuslineFilename', strings = { filename } },`
-    `'%=', -- End left alignment`
-    `{ hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },`
-    `{ hl = mode_hl,                  strings = { location } },`
-  `})`
-`end`
-
+    return MiniStatusline.combine_groups({
+      { hl = mode_hl,                  strings = { mode } },
+      { hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },
+      '%<', -- Mark general truncate point
+      { hl = 'MiniStatuslineFilename', strings = { filename } },
+      '%=', -- End left alignment
+      { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+      { hl = mode_hl,                  strings = { location } },
+    })
+  end
+<
 ## Show boolean options
 
 To compute section string for boolean option use variation of this code snippet
 inside content function (you can modify option itself, truncation width, short
 and long displayed names):
-
-`local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''`
-
+>
+  local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''
+<
 Here `x and y or z` is a common Lua way of doing ternary operator: if `x` is
 `true`-ish then return `y`, if not - return `z`.
 
@@ -1441,8 +1454,7 @@ MiniStatusline.section_mode({args})            *MiniStatusline.section_mode()*
         {args} (table)  Section arguments.
 
     Return: ~
-        section_string, mode_hl tuple: Section string and mode's highlight
-        group.
+        tuple: Section string and mode's highlight group.
 
 
 MiniStatusline.section_git({args})              *MiniStatusline.section_git()*
@@ -1575,29 +1587,30 @@ This module needs a setup with `require('mini.surround').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Number of lines within which surrounding is searched
-  n_lines = 20,
+>
+  {
+    -- Number of lines within which surrounding is searched
+    n_lines = 20,
 
-  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
-  highlight_duration = 500,
+    -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
+    highlight_duration = 500,
 
-  -- Pattern to match function name in 'function call' surrounding
-  -- By default it is a string of letters, '_' or '.'
-  funname_pattern = '[%w_%.]+',
+    -- Pattern to match function name in 'function call' surrounding
+    -- By default it is a string of letters, '_' or '.'
+    funname_pattern = '[%w_%.]+',
 
-  -- Mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    add = 'sa',           -- Add surrounding
-    delete = 'sd',        -- Delete surrounding
-    find = 'sf',          -- Find surrounding (to the right)
-    find_left = 'sF',     -- Find surrounding (to the left)
-    highlight = 'sh',     -- Highlight surrounding
-    replace = 'sr',       -- Replace surrounding
-    update_n_lines = 'sn' -- Update `n_lines`
+    -- Mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      add = 'sa',           -- Add surrounding
+      delete = 'sd',        -- Delete surrounding
+      find = 'sf',          -- Find surrounding (to the right)
+      find_left = 'sF',     -- Find surrounding (to the left)
+      highlight = 'sh',     -- Highlight surrounding
+      replace = 'sr',       -- Replace surrounding
+      update_n_lines = 'sn' -- Update `n_lines`
+    }
   }
-}
-
+<
 # Example usage
 
 - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
@@ -1756,15 +1769,16 @@ This module needs a setup with `require('mini.tabline').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
-  show_icons = true,
+>
+  {
+    -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
+    show_icons = true,
 
-  -- Whether to set Vim's settings for tabline (make it always shown and
-  -- allow hidden buffers)
-  set_vim_settings = true
-}
-
+    -- Whether to set Vim's settings for tabline (make it always shown and
+    -- allow hidden buffers)
+    set_vim_settings = true
+  }
+<
 # Highlight groups
 
 1. `MiniTablineCurrent` - buffer is current (has cursor in it).
@@ -1826,12 +1840,13 @@ This module needs a setup with `require('mini.trailspace').setup({})` (replace
 `{}` with your `config` table).
 
 Default `config`:
-{
-  -- Highlight only in normal buffers (ones with empty 'buftype'). This is
-  -- useful to not show trailing whitespace where it usually doesn't matter.
-  only_in_normal_buffers = true,
-}
-
+>
+  {
+    -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+    -- useful to not show trailing whitespace where it usually doesn't matter.
+    only_in_normal_buffers = true,
+  }
+<
 # Highlight groups
 
 1. `MiniTrailspace` - highlight group for trailing space.

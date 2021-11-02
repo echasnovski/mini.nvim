@@ -10,14 +10,13 @@
 --- `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- Maximum allowed value of match features (width and first match). All
----   -- feature values greater than cutoff can be considered "equally bad".
----   cutoff = 100,
---- }
---- </pre>
----
+--- <code>
+---   {
+---     -- Maximum allowed value of match features (width and first match). All
+---     -- feature values greater than cutoff can be considered "equally bad".
+---     cutoff = 100,
+---   }
+--- </code>
 --- # Notes
 --- 1. Currently there is no explicit design to work with multibyte symbols,
 ---    but simple examples should work.
@@ -109,7 +108,7 @@ end
 ---
 ---@param word string: String which will be searched
 ---@param candidate_list list: Lua list of strings inside which word will be searched
----@return matched_candidates, matched_indexes tuple: Arrays of matched candidates and their indexes in original input.
+---@return tuple: Arrays of matched candidates and their indexes in original input.
 function MiniFuzzy.filtersort(word, candidate_list)
   -- Use 'smart case'. New list is needed to preserve input for later filtering
   local cand_list

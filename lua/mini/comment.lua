@@ -17,25 +17,25 @@
 --- `{}` with your `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- Module mappings. Use `''` (empty string) to disable one.
----   mappings = {
----     -- Toggle comment (like `gcip` - comment inner paragraph) for both
----     -- Normal and Visual modes
----     comment = 'gc',
+--- <code>
+---   {
+---     -- Module mappings. Use `''` (empty string) to disable one.
+---     mappings = {
+---       -- Toggle comment (like `gcip` - comment inner paragraph) for both
+---       -- Normal and Visual modes
+---       comment = 'gc',
 ---
----     -- Toggle comment on current line
----     comment_line = 'gcc',
+---       -- Toggle comment on current line
+---       comment_line = 'gcc',
 ---
----     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
----     textobject = 'gc',
+---       -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+---       textobject = 'gc',
+---     }
 ---   }
---- }
---- </pre>
----
+--- </code>
 --- # Disabling
---- To disable core functionality, set `g:minicomment_disable` (globally) or -
+---
+--- To disable core functionality, set `g:minicomment_disable` (globally) or
 --- `b:minicomment_disable` (for a buffer) to `v:true`.
 ---@brief ]]
 ---@tag MiniComment mini.comment

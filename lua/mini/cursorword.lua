@@ -13,13 +13,12 @@
 --- (replace `{}` with your `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----  -- Delay (in ms) between when cursor moved and when highlighting appeared
----  delay = 100,
---- }
---- </pre>
----
+--- <code>
+---   {
+---    -- Delay (in ms) between when cursor moved and when highlighting appeared
+---    delay = 100,
+---   }
+--- </code>
 --- # Highlight groups
 ---
 --- 1. `MiniCursorword` - highlight group of cursor word. Default: plain

@@ -16,13 +16,12 @@
 --- `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- Whether to set Vim's settings for buffers (allow hidden buffers)
----   set_vim_settings = true,
---- }
---- </pre>
----
+--- <code>
+---   {
+---     -- Whether to set Vim's settings for buffers (allow hidden buffers)
+---     set_vim_settings = true,
+---   }
+--- </code>
 --- # Notes
 --- 1. Which buffer to show in window(s) after its current buffer is removed is
 ---    decided by the algorithm:

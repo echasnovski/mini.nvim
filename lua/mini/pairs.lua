@@ -23,13 +23,12 @@
 --- (replace `{}` with your `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- In which modes mappings should be created
----   modes = {insert = true, command = false, terminal = false}
---- }
---- </pre>
----
+--- <code>
+---   {
+---     -- In which modes mappings should be created
+---     modes = {insert = true, command = false, terminal = false}
+---   }
+--- </code>
 --- By default in `MiniPairs.setup()`:
 --- - The following pairs are respected: `()`, `[]`, `{}`, `""`, `''`, `\`\``.
 ---   Single opening symbol is inserted after `\`. Single `'` is inserted after
@@ -47,7 +46,7 @@
 ---     Lua:
 ---     `vim.api.nvim_set_keymap('i', '<', [[v:lua.MiniPairs.open('<>', "\r.")]], { expr = true, noremap = true })`
 ---     `vim.api.nvim_set_keymap('i', '>', [[v:lua.MiniPairs.close('<>', "..")]], { expr = true, noremap = true })`
---- - Create symmerical `$$` pair only in Tex files:
+--- - Create symmetrical `$$` pair only in Tex files:
 ---     Vimscript:
 ---     `au FileType tex inoremap <buffer> <expr> $ v:lua.MiniPairs.closeopen('$$', "[^\\].")`
 ---     Lua:

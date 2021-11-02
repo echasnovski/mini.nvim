@@ -14,14 +14,13 @@
 --- (replace `{}` with your `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- Highlight only in normal buffers (ones with empty 'buftype'). This is
----   -- useful to not show trailing whitespace where it usually doesn't matter.
----   only_in_normal_buffers = true,
---- }
---- </pre>
----
+--- <code>
+---   {
+---     -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+---     -- useful to not show trailing whitespace where it usually doesn't matter.
+---     only_in_normal_buffers = true,
+---   }
+--- </code>
 --- # Highlight groups
 ---
 --- 1. `MiniTrailspace` - highlight group for trailing space.

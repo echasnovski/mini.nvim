@@ -10,12 +10,12 @@
 --- `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- List of fields to make global (to be used as independent variables)
----   make_global = { 'put', 'put_text' },
---- }
---- </pre>
+--- <code>
+---   {
+---     -- List of fields to make global (to be used as independent variables)
+---     make_global = { 'put', 'put_text' },
+---   }
+--- </code>
 ---@brief ]]
 ---@tag MiniMisc mini.misc
 
@@ -49,7 +49,7 @@ MiniMisc.config = {
 ---@param f function: Function which execution to benchmark.
 ---@param n number: Number of times to execute `f(...)`. Default: 1.
 ---@param ... vararg: Arguments when calling `f`.
----@return durations, output tuple: Table with durations (in seconds; up to microseconds) and output of (last) function execution.
+---@return tuple: Table with durations (in seconds; up to microseconds) and output of (last) function execution.
 function MiniMisc.bench_time(f, n, ...)
   n = n or 1
   local durations, output = {}, nil
