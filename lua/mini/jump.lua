@@ -1,4 +1,4 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+-- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
 ---@brief [[
 --- A module for smarter jumping, inspired by clever-f. By default it does nothing.
@@ -11,8 +11,13 @@
 --- Default `config`:
 --- <pre>
 --- {
----   -- Make f, F, t and T able to jump across lines and be repeated by pressing them again.
----   map_ft = false,
+---   -- Mappings. Use `''` (empty string) to disable one.
+---   mappings = {
+---     forward_1 = 'f',
+---     backward_1 = 'F',
+---     forward_1_till = 't',
+---     backward_1_till = 'T',
+---   },
 --- }
 --- </pre>
 ---@brief ]]
@@ -39,7 +44,12 @@ end
 
 -- Module config
 MiniJump.config = {
-  map_ft = false,
+  mappings = {
+    forward_1 = 'f',
+    backward_1 = 'F',
+    forward_1_till = 't',
+    backward_1_till = 'T',
+  },
 }
 
 -- Module functionality
@@ -117,7 +127,11 @@ function H.setup_config(config)
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
   vim.validate({
-    map_ft = { config.map_ft, 'boolean' },
+    mappings = { config.mappings, 'table' },
+    ['mappings.forward_1'] = { config.mappings.forward_1, 'string' },
+    ['mappings.backward_1'] = { config.mappings.forward_1, 'string' },
+    ['mappings.forward_1_till'] = { config.mappings.forward_1, 'string' },
+    ['mappings.backward_1_till'] = { config.mappings.forward_1, 'string' },
   })
 
   return config
@@ -126,16 +140,12 @@ end
 function H.apply_config(config)
   MiniJump.config = config
 
-  if config.map_ft then
-    local modes = { 'n', 'o', 'x' }
-    for _, mode in ipairs(modes) do
-      H.map_cmd(mode, 'f', [[lua MiniJump.smart_jump(1, false, false)]])
-      H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
-      H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(1, false, true)]])
-      H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(1, true, true)]])
-      vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
-    end
-  end
+  local modes = { 'n', 'o', 'x' }
+  H.map_cmd(modes, config.mappings.forward_1, [[lua MiniJump.smart_jump(1, false, false)]])
+  H.map_cmd(modes, config.mappings.backward_1, [[lua MiniJump.smart_jump(1, true, false)]])
+  H.map_cmd(modes, config.mappings.forward_1_till, [[lua MiniJump.smart_jump(1, false, true)]])
+  H.map_cmd(modes, config.mappings.backward_1_till, [[lua MiniJump.smart_jump(1, true, true)]])
+  vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
 end
 
 function H.is_disabled()
@@ -143,12 +153,17 @@ function H.is_disabled()
 end
 
 ---- Various helpers
-function H.map_cmd(mode, key, command)
-  local rhs = ('<cmd>%s<cr>'):format(command)
-  if mode == 'o' then
-    rhs = 'v' .. rhs
+function H.map_cmd(modes, key, command)
+  if key == '' then
+    return
   end
-  vim.api.nvim_set_keymap(mode, key, rhs, { noremap = true })
+  for _, mode in ipairs(modes) do
+    local rhs = ('<cmd>%s<cr>'):format(command)
+    if mode == 'o' then
+      rhs = 'v' .. rhs
+    end
+    vim.api.nvim_set_keymap(mode, key, rhs, { noremap = true })
+  end
 end
 
 function H.escape(s)
