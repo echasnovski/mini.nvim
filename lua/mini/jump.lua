@@ -45,17 +45,26 @@ MiniJump.config = {
 -- Module functionality
 H.target = nil
 
+--- Jump to target
+---
+--- Takes a string and jumps to the first occurence of it after the cursor.
+---
+--- @param target string: The string to jump to.
+--- @param backward boolean: If true, jump backward.
+--- @param till boolean: If true, jump just before/after the match instead of to the first character.
+---   Also ignore matches that don't have space before/after them. (This will probably be changed in the future.)
 function MiniJump.jump(target, backward, till)
   backward = backward or false
   till = till or false
   local flags = 'W'
   if backward then
-    flags = flags .. 'be'
+    flags = flags .. 'b'
   end
   local pattern = [[\V%s]]
   if till then
     if backward then
       pattern = [[\V%s\.]]
+      flags = flags .. 'e'
     else
       pattern = [[\V\.%s]]
     end
@@ -64,6 +73,15 @@ function MiniJump.jump(target, backward, till)
   vim.fn.search(pattern, flags)
 end
 
+--- Smart jump
+---
+--- If the last movement was a jump, perform another jump with the same target.
+--- Otherwise, prompt for a target.
+---
+--- @param num_chars number: The length of the target to prompt for.
+--- @param backward boolean: If true, jump backward.
+--- @param till boolean: If true, jump just before/after the match instead of to the first character.
+---   Also ignore matches that don't have space before/after them. (This will probably be changed in the future.)
 function MiniJump.smart_jump(num_chars, backward, till)
   num_chars = num_chars or 1
   backward = backward or false
@@ -76,7 +94,11 @@ function MiniJump.smart_jump(num_chars, backward, till)
   end)
 end
 
-function MiniJump.on_cursor_moved()
+--- Reset target
+---
+--- Forces the next smart jump to prompt for the target.
+--- Triggered automatically on CursorMoved, but can be also triggered manually.
+function MiniJump.reset_target()
   H.target = nil
 end
 
@@ -108,7 +130,7 @@ function H.apply_config(config)
     H.map_cmd(mode, 'F', [[lua MiniJump.smart_jump(1, true, false)]])
     H.map_cmd(mode, 't', [[lua MiniJump.smart_jump(1, false, true)]])
     H.map_cmd(mode, 'T', [[lua MiniJump.smart_jump(1, true, true)]])
-    vim.cmd([[autocmd CursorMoved * lua MiniJump.on_cursor_moved()]])
+    vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
   end
 end
 
