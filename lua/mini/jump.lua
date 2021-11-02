@@ -76,7 +76,7 @@ end
 --- Smart jump
 ---
 --- If the last movement was a jump, perform another jump with the same target.
---- Otherwise, prompt for a target.
+--- Otherwise, prompt for a target. Respects v:count.
 ---
 --- @param num_chars number: The length of the target to prompt for.
 --- @param backward boolean: If true, jump backward.
@@ -88,6 +88,9 @@ function MiniJump.smart_jump(num_chars, backward, till)
   till = till or false
   local target = H.target or H.get_chars(num_chars)
   MiniJump.jump(target, backward, till)
+  for _ = 2, vim.v.count do
+    MiniJump.jump(target, backward, till)
+  end
   -- This has to be scheduled so it doesn't get overridden by CursorMoved from the jump.
   vim.schedule(function()
     H.target = target
