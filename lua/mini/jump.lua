@@ -162,7 +162,7 @@ function H.apply_config(config)
   H.map_cmd(modes, config.mappings.backward_1, [[lua MiniJump.smart_jump(1, true, false)]])
   H.map_cmd(modes, config.mappings.forward_1_till, [[lua MiniJump.smart_jump(1, false, true)]])
   H.map_cmd(modes, config.mappings.backward_1_till, [[lua MiniJump.smart_jump(1, true, true)]])
-  vim.cmd([[autocmd CursorMoved * lua MiniJump.reset_target()]])
+  vim.cmd([[autocmd BufLeave,CursorMoved,InsertEnter * lua MiniJump.reset_target()]])
 end
 
 function H.is_disabled()
