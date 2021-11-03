@@ -82,12 +82,12 @@ function MiniJump.jump(target, backward, till)
   local hl_pattern = [[\V%s]]
   if till then
     if backward then
-      pattern = [[\V%s\.]]
-      hl_pattern = [[\V%s\ze\.]]
+      pattern = [[\V\(%s\)\@<=\.]]
+      hl_pattern = [[\V%s\.\@=]]
       flags = flags .. 'e'
     else
-      pattern = [[\V\.%s]]
-      hl_pattern = [[\V\.\zs%s]]
+      pattern = [[\V\.\(%s\)\@=]]
+      hl_pattern = [[\V\.\@<=%s]]
     end
   end
   pattern = pattern:format(vim.fn.escape(target, [[\]]))
