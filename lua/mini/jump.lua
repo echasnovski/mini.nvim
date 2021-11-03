@@ -101,8 +101,10 @@ function MiniJump.jump(target, backward, till)
   target = vim.fn.escape(target, [[\]])
   pattern, hl_pattern = pattern:format(target), hl_pattern:format(target)
 
-  vim.fn.search(pattern, flags)
   H.highlight(hl_pattern)
+  vim.fn.search(pattern, flags)
+  -- Open enough folds to show jump
+  vim.cmd([[normal! zv]])
 end
 
 --- Smart jump
