@@ -21,7 +21,8 @@
 ---       forward_1_till = 't',
 ---       backward_1_till = 'T',
 ---     },
----     -- Highlight matches when jumping.
+---
+---     -- Highlight matches when jumping
 ---     highlight = true,
 ---   }
 --- </code>
@@ -51,7 +52,8 @@ function MiniJump.setup(config)
   H.apply_config(config)
 
   -- Module behavior
-  vim.cmd([[autocmd CursorMoved,BufLeave,InsertEnter * lua MiniJump.reset_target()]])
+  vim.cmd([[autocmd CursorMoved * lua MiniJump.on_cursormoved()]])
+  vim.cmd([[autocmd BufLeave,InsertEnter * lua MiniJump.stop_jumping()]])
 
   -- Highlight groups
   vim.cmd([[hi default link MiniJumpHighlight IncSearch]])
@@ -124,25 +126,31 @@ function MiniJump.smart_jump(num_chars, backward, till)
   num_chars = num_chars or 1
   backward = backward == nil and false or backward
   till = till == nil and false or till
+
   H.target = H.target or H.get_chars(num_chars)
   for _ = 1, vim.v.count1 do
     MiniJump.jump(H.target, backward, till)
   end
+
   H.jumping = true
-  vim.schedule(function()
-    H.jumping = false
-  end)
 end
 
---- Reset target
+--- Stop jumping
 ---
---- Removes highlights (if any) and forces the next smart jump to prompt for the target.
---- Triggered automatically on CursorMoved, but can be also triggered manually.
-function MiniJump.reset_target()
+--- Removes highlights (if any) and forces the next smart jump to prompt for
+--- the target.
+function MiniJump.stop_jumping()
+  H.target = nil
+  H.unhighlight()
+end
+
+--- Act on every |CursorMoved|
+function MiniJump.on_cursormoved()
+  -- Stop jumping only if `CursorMoved` was not a result of smart jump
   if not H.jumping then
-    H.target = nil
-    H.reset_highlight()
+    MiniJump.stop_jumping()
   end
+  H.jumping = false
 end
 
 -- Helpers
@@ -152,11 +160,15 @@ H.default_config = MiniJump.config
 ---- Current target
 H.target = nil
 
----- Indicator of whether inside jumping
+---- Indicator of whether inside smart jumping
 H.jumping = false
 
----- Match identifier for highlighting
-H.match_id = nil
+---- Information about last match highlighting (stored *per window*):
+---- - Key: windows' unique buffer identifiers.
+---- - Value: table with:
+----     - `id` field for match id (from `vim.fn.matchadd()`).
+----     - `pattern` field for highlighted pattern.
+H.window_matches = {}
 
 ---- Settings
 function H.setup_config(config)
@@ -214,16 +226,39 @@ function H.get_chars(num_chars)
 end
 
 function H.highlight(pattern)
-  if MiniJump.config.highlight then
-    H.reset_highlight()
-    H.match_id = vim.fn.matchadd('MiniJumpHighlight', pattern)
+  if not MiniJump.config.highlight then
+    H.unhighlight()
+    return
   end
+
+  local win_id = vim.api.nvim_get_current_win()
+  local match_info = H.window_matches[win_id]
+
+  -- Don't do anything if already highlighting input pattern
+  if match_info and match_info.pattern == pattern then
+    return
+  end
+
+  -- Stop highlighting possible previous pattern. Needed to adjust highlighting
+  -- when inside jumping but a different kind one. Example: first jump with
+  -- `till = false` and then, without jumping stop, jump to same character with
+  -- `till = true`. If this character is first on line, highlighting should change
+  H.unhighlight()
+
+  local match_id = vim.fn.matchadd('MiniJumpHighlight', pattern)
+  H.window_matches[win_id] = { id = match_id, pattern = pattern }
 end
 
-function H.reset_highlight()
-  if H.match_id then
-    pcall(vim.fn.matchdelete, H.match_id)
-    H.match_id = nil
+function H.unhighlight()
+  -- Remove highlighting from all windows as jumping is intended to work only
+  -- in current window. This will work also from other (usually popup) window.
+  for win_id, match_info in pairs(H.window_matches) do
+    if vim.api.nvim_win_is_valid(win_id) then
+      -- Use `pcall` because there is an error if match id is not present. It
+      -- can happen if something else called `clearmatches`.
+      pcall(vim.fn.matchdelete, match_info.id, win_id)
+      H.window_matches[win_id] = nil
+    end
   end
 end
 
