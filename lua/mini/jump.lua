@@ -12,19 +12,23 @@
 --- (replace `{}` with your `config` table).
 ---
 --- Default `config`:
---- <pre>
---- {
----   -- Mappings. Use `''` (empty string) to disable one.
----   mappings = {
----     forward_1 = 'f',
----     backward_1 = 'F',
----     forward_1_till = 't',
----     backward_1_till = 'T',
----   },
----   -- Highlight matches when jumping.
----   highlight = true,
---- }
---- </pre>
+--- <code>
+---   {
+---     -- Mappings. Use `''` (empty string) to disable one.
+---     mappings = {
+---       forward_1 = 'f',
+---       backward_1 = 'F',
+---       forward_1_till = 't',
+---       backward_1_till = 'T',
+---     },
+---     -- Highlight matches when jumping.
+---     highlight = true,
+---   }
+--- </code>
+--- # Disabling
+---
+--- To disable core functionality, set `g:minijump_disable` (globally) or
+--- `b:minijump_disable` (for a buffer) to `v:true`.
 ---@brief ]]
 ---@tag MiniJump mini.jump
 
@@ -35,7 +39,7 @@ local H = {}
 --- Module setup
 ---
 ---@param config table: Module config table.
----@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
+---@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
 function MiniJump.setup(config)
   -- Export module
   _G.MiniJump = MiniJump
@@ -45,6 +49,12 @@ function MiniJump.setup(config)
 
   -- Apply config
   H.apply_config(config)
+
+  -- Module behavior
+  vim.cmd([[autocmd CursorMoved,BufLeave,InsertEnter * lua MiniJump.reset_target()]])
+
+  -- Highlight groups
+  vim.cmd([[hi default link MiniJumpHighlight IncSearch]])
 end
 
 -- Module config
@@ -55,43 +65,42 @@ MiniJump.config = {
     forward_1_till = 't',
     backward_1_till = 'T',
   },
+
   -- Highlight matches when jumping.
   highlight = true,
 }
 
 -- Module functionality
-H.jumping = false
-vim.cmd([[highlight link MiniJumpHighlight Search]])
-
 --- Jump to target
 ---
 --- Takes a string and jumps to the first occurence of it after the cursor.
 ---
 --- @param target string: The string to jump to.
---- @param backward boolean: If true, jump backward.
---- @param till boolean: If true, jump just before/after the match instead of to the first character.
+--- @param backward boolean: If `true`, jump backward.
+--- @param till boolean: If `true`, jump just before/after the match instead of to the first character.
 ---   Also ignore matches that don't have space before/after them. (This will probably be changed in the future.)
 function MiniJump.jump(target, backward, till)
-  backward = backward or false
-  till = till or false
-  local flags = 'W'
-  if backward then
-    flags = flags .. 'b'
+  if H.is_disabled() then
+    return
   end
-  local pattern = [[\V%s]]
-  local hl_pattern = [[\V%s]]
+
+  backward = backward == nil and false or backward
+  till = till == nil and false or till
+
+  local flags = backward and 'Wb' or 'W'
+  local pattern, hl_pattern = [[\V%s]], [[\V%s]]
   if till then
     if backward then
-      pattern = [[\V\(%s\)\@<=\.]]
-      hl_pattern = [[\V%s\.\@=]]
+      pattern, hl_pattern = [[\V\(%s\)\@<=\.]], [[\V%s\.\@=]]
       flags = flags .. 'e'
     else
-      pattern = [[\V\.\(%s\)\@=]]
-      hl_pattern = [[\V\.\@<=%s]]
+      pattern, hl_pattern = [[\V\.\(%s\)\@=]], [[\V\.\@<=%s]]
     end
   end
-  pattern = pattern:format(vim.fn.escape(target, [[\]]))
-  hl_pattern = hl_pattern:format(vim.fn.escape(target, [[\]]))
+
+  target = vim.fn.escape(target, [[\]])
+  pattern, hl_pattern = pattern:format(target), hl_pattern:format(target)
+
   vim.fn.search(pattern, flags)
   H.highlight(hl_pattern)
 end
@@ -106,12 +115,15 @@ end
 --- @param till boolean: If true, jump just before/after the match instead of to the first character.
 ---   Also ignore matches that don't have space before/after them. (This will probably be changed in the future.)
 function MiniJump.smart_jump(num_chars, backward, till)
+  if H.is_disabled() then
+    return
+  end
+
   num_chars = num_chars or 1
-  backward = backward or false
-  till = till or false
+  backward = backward == nil and false or backward
+  till = till == nil and false or till
   H.target = H.target or H.get_chars(num_chars)
-  MiniJump.jump(H.target, backward, till)
-  for _ = 2, vim.v.count do
+  for _ = 1, vim.v.count1 do
     MiniJump.jump(H.target, backward, till)
   end
   H.jumping = true
@@ -134,6 +146,15 @@ end
 -- Helpers
 ---- Module default config
 H.default_config = MiniJump.config
+
+---- Current target
+H.target = nil
+
+---- Indicator of whether inside jumping
+H.jumping = false
+
+---- Match identifier for highlighting
+H.match_id = nil
 
 ---- Settings
 function H.setup_config(config)
@@ -162,7 +183,6 @@ function H.apply_config(config)
   H.map_cmd(modes, config.mappings.backward_1, [[lua MiniJump.smart_jump(1, true, false)]])
   H.map_cmd(modes, config.mappings.forward_1_till, [[lua MiniJump.smart_jump(1, false, true)]])
   H.map_cmd(modes, config.mappings.backward_1_till, [[lua MiniJump.smart_jump(1, true, true)]])
-  vim.cmd([[autocmd BufLeave,CursorMoved,InsertEnter * lua MiniJump.reset_target()]])
 end
 
 function H.is_disabled()
@@ -183,10 +203,6 @@ function H.map_cmd(modes, key, command)
   end
 end
 
-function H.escape(s)
-  return vim.api.nvim_replace_termcodes(s, true, true, true)
-end
-
 function H.get_chars(num_chars)
   local chars = ''
   for _ = 1, num_chars do
@@ -204,7 +220,7 @@ end
 
 function H.reset_highlight()
   if H.match_id then
-    vim.fn.matchdelete(H.match_id)
+    pcall(vim.fn.matchdelete, H.match_id)
     H.match_id = nil
   end
 end
