@@ -423,6 +423,37 @@ function MiniStatusline.section_location(args)
   return '%l|%L│%2v|%-2{col("$") - 1}'
 end
 
+--- Section for current search count
+---
+--- Show the current status of |searchcount()|. Empty output is returned if
+--- window width is lower than `args.trunc_width`, search highlighting is not
+--- on (see |v:hlsearch|), or if number of search result is 0.
+---
+--- `args.options` is forwarded to |searchcount()|.  By default it recomputes
+--- data on every call which can be computationally expensive (although still
+--- usually same order of magnitude as 0.1 ms). To prevent this, supply
+--- `args.options = {recompute = false}`.
+---
+---@param args table: Section arguments.
+---@return string: Section string.
+function MiniStatusline.section_searchcount(args)
+  if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then
+    return ''
+  end
+  local s_count = vim.fn.searchcount((args or {}).options or { recompute = true })
+  if s_count.current == nil or s_count.total == 0 then
+    return ''
+  end
+
+  if s_count.incomplete == 1 then
+    return '?/?'
+  end
+
+  local total_sign = s_count.total > s_count.maxcount and '>' or ''
+  local current_sign = s_count.current > s_count.maxcount and '>' or ''
+  return ('%s%d/%s%d'):format(current_sign, s_count.current, total_sign, s_count.total)
+end
+
 -- Helper data
 ---- Module default config
 H.default_config = MiniStatusline.config

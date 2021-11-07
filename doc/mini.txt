@@ -1542,6 +1542,27 @@ MiniStatusline.section_location({args})    *MiniStatusline.section_location()*
         string: Section string.
 
 
+MiniStatusline.section_searchcount({args}) *MiniStatusline.section_searchcount()*
+    Section for current search count
+
+    Show the current status of |searchcount()|. Empty output is returned if
+    window width is lower than `args.trunc_width`, search highlighting is not
+    on (see |v:hlsearch|), or if number of search result is 0.
+
+    `args.options` is forwarded to |searchcount()|. By default it recomputes
+    data on every call which can be computationally expensive (although still
+    usually same order of magnitude as 0.1 ms). To prevent this, supply
+    `args.options = {recompute = false}`.
+
+
+
+    Parameters: ~
+        {args} (table)  Section arguments.
+
+    Return: ~
+        string: Section string.
+
+
 
 ================================================================================
                                                   *MiniSurround* *mini.surround*
