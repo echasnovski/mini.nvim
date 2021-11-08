@@ -90,9 +90,6 @@ Default `config`:
   -- `setup()`.
   palette = nil,
 
-  -- Name of applied theme (stored in `g:colors_name`)
-  name = 'base16-custom',
-
  -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
  -- or table with cterm colors. See `setup()` documentation for more
  -- information.
@@ -414,7 +411,11 @@ Automatic highlighting of trailing whitespace with functionality to remove it.
 Default `config`:
 
 ```lua
-{} -- (currently nothing to configure)
+{
+  -- Highlight only in normal buffers (ones with empty 'buftype'). This is
+  -- useful to not show trailing whitespace where it usually doesn't matter.
+  only_in_normal_buffers = true,
+}
 ```
 
 For more information, read 'mini.trailspace' section of [help file](doc/mini.txt).
@@ -427,8 +428,9 @@ Plugins with similar functionality:
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow):
 
-- 'mini.startscreen' (or 'mini.starter', or 'mini.menu') - fast and configurable startscreen with some unique features. Something like start screen of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
-- 'mini.sessions' - work with sessions (save, load, delete, persistent sessions). Something like session management of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
+- 'mini.starter' - fast and configurable startscreen with some unique features. Something like start screen of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
+- 'mini.sessions' - work with sessions (read, write, delete, persistent sessions). Something like session management of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
+- 'mini.genhelp' - automatic generation of (Neo)Vim help files from EmmyLua-like annotations next to source code. Something like similar functionality of [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua).
 - 'mini.terminal' (or 'mini.repl') - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
 - 'mini.exchange' (or 'mini.swap') - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
 - 'mini.align' - fast text alignment. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
