@@ -274,7 +274,7 @@ Default `config`:
 
 ```lua
 {
-  -- List of fields to make global (to be used as independent variables)
+  -- Array of fields to make global (to be used as independent variables)
   make_global = { 'put', 'put_text' },
 }
 ```

@@ -682,7 +682,7 @@ MiniCompletion.stop({actions})                         *MiniCompletion.stop()*
 
 
     Parameters: ~
-        {actions} (table)  List containing any of 'completion', 'info', or
+        {actions} (table)  Array containing any of 'completion', 'info', or
                            'signature' string.
 
 
@@ -809,10 +809,10 @@ Given input `word` and target `candidate`:
 - The goal is to find matching between `word`'s letters and letters in 
   `candidate`, which minimizes certain score. It is assumed that order of 
   letters in `word` and those matched in `candidate` should be the same.
-- Matching is represented by matched positions: a list `positions` of integers
-  with length equal to number of letter in `word`. The following should be
-  always true in case of a match: `candidate`'s letter at index `positions[i]`
-  is letters[i]` for all valid `i`.
+- Matching is represented by matched positions: an array `positions` of 
+  integers with length equal to number of letter in `word`. The following 
+  should be always true in case of a match: `candidate`'s letter at index 
+  `positions[i]` is letters[i]` for all valid `i`.
 - Matched positions are evaluated based only on two features: their width 
   (number of indexes between first and last positions) and first match (index
   of first letter match). There is a global setting `cutoff` for which all
@@ -845,7 +845,7 @@ MiniFuzzy.match({word}, {candidate})                       *MiniFuzzy.match()*
 
     It tries to find best match for input string `word` (usually user input)
     and string `candidate`. Returns table with elements:
-    - `positions` - list with letter indexes inside `candidate` which matched
+    - `positions` - array with letter indexes inside `candidate` which matched
       to corresponding letters in `word`. Or `nil` if no match.
     - `score` - positive number representing how good the match is (lower is 
       better). Or `-1` if no match.
@@ -861,19 +861,19 @@ MiniFuzzy.match({word}, {candidate})                       *MiniFuzzy.match()*
         table: Table with matching information (see function's description).
 
 
-MiniFuzzy.filtersort({word}, {candidate_list})        *MiniFuzzy.filtersort()*
-    Filter string list
+MiniFuzzy.filtersort({word}, {candidate_array})       *MiniFuzzy.filtersort()*
+    Filter string array
 
-    This leaves only those elements of input list which matched with `word` and
-    sorts from best to worst matches (based on score and index in original
-    list, both lower is better).
+    This leaves only those elements of input array which matched with `word`
+    and sorts from best to worst matches (based on score and index in original
+    array, both lower is better).
 
 
 
     Parameters: ~
-        {word}           (string)  String which will be searched
-        {candidate_list} (list)    Lua list of strings inside which word will
-                                   be searched
+        {word}            (string)  String which will be searched.
+        {candidate_array} (table)   Lua array of strings inside which word
+                                    will be searched.
 
     Return: ~
         tuple: Arrays of matched candidates and their indexes in original
@@ -886,8 +886,8 @@ MiniFuzzy.process_lsp_items({items}, {base})   *MiniFuzzy.process_lsp_items()*
 
 
     Parameters: ~
-        {items} (list)    Lua list with LSP 'textDocument/completion' response
-                          items.
+        {items} (table)   Lua array with LSP 'textDocument/completion'
+                          response items.
         {base}  (string)  Word to complete.
 
 
@@ -921,7 +921,7 @@ with `require('mini.misc').setup({})` (replace `{}` with your `config` table).
 Default `config`:
 >
   {
-    -- List of fields to make global (to be used as independent variables)
+    -- Array of fields to make global (to be used as independent variables)
     make_global = { 'put', 'put_text' },
   }
 <
@@ -1000,7 +1000,7 @@ MiniMisc.resize_window({win_id}, {text_width})      *MiniMisc.resize_window()*
 
 
 MiniMisc.stat_summary({t})                           *MiniMisc.stat_summary()*
-    Compute summary statistics of numerical list
+    Compute summary statistics of numerical array
 
     This might be useful to compute summary of time benchmarking with
     |MiniMisc.bench_time|.
@@ -1008,7 +1008,7 @@ MiniMisc.stat_summary({t})                           *MiniMisc.stat_summary()*
 
 
     Parameters: ~
-        {t} (table)  List (table suitable for `ipairs`) of numbers.
+        {t} (table)  Array (table suitable for `ipairs`) of numbers.
 
     Return: ~
         table: Table with summary values under following keys (may be extended
@@ -1249,7 +1249,7 @@ MiniPairs.bs({pair_set})                                      *MiniPairs.bs()*
 
 
     Parameters: ~
-        {pair_set} (table)  List with pairs which trigger extra action.
+        {pair_set} (table)  Array with pairs which trigger extra action.
 
 
 MiniPairs.cr({pair_set})                                      *MiniPairs.cr()*
@@ -1266,7 +1266,7 @@ MiniPairs.cr({pair_set})                                      *MiniPairs.cr()*
 
 
     Parameters: ~
-        {pair_set} (table)  List with pairs which trigger extra action.
+        {pair_set} (table)  Array with pairs which trigger extra action.
 
 
 
@@ -1419,7 +1419,7 @@ MiniStatusline.combine_groups({groups})      *MiniStatusline.combine_groups()*
 
 
     Parameters: ~
-        {groups} (table)  List of groups
+        {groups} (table)  Array of groups
 
     Return: ~
         string: String suitable for 'statusline'.

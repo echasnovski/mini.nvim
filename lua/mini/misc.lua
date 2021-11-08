@@ -12,7 +12,7 @@
 --- Default `config`:
 --- <code>
 ---   {
----     -- List of fields to make global (to be used as independent variables)
+---     -- Array of fields to make global (to be used as independent variables)
 ---     make_global = { 'put', 'put_text' },
 ---   }
 --- </code>
@@ -40,7 +40,7 @@ end
 
 -- Module config
 MiniMisc.config = {
-  -- List of fields to make global (to be used as independent variables)
+  -- Array of fields to make global (to be used as independent variables)
   make_global = { 'put', 'put_text' },
 }
 
@@ -152,16 +152,16 @@ function H.default_text_width(win_id)
   end
 end
 
---- Compute summary statistics of numerical list
+--- Compute summary statistics of numerical array
 ---
 --- This might be useful to compute summary of time benchmarking with
 --- |MiniMisc.bench_time|.
 ---
----@param t table: List (table suitable for `ipairs`) of numbers.
+---@param t table: Array (table suitable for `ipairs`) of numbers.
 ---@return table: Table with summary values under following keys (may be extended in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of elements), `sd` (sample standard deviation).
 function MiniMisc.stat_summary(t)
   if type(t) ~= 'table' then
-    vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be a list of numbers.]])
+    vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be an array of numbers.]])
     return
   end
 

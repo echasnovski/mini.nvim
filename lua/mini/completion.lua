@@ -424,7 +424,7 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 ---
----@param actions table: List containing any of 'completion', 'info', or 'signature' string.
+---@param actions table: Array containing any of 'completion', 'info', or 'signature' string.
 function MiniCompletion.stop(actions)
   actions = actions or { 'completion', 'info', 'signature' }
   for _, n in pairs(actions) do

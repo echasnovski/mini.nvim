@@ -202,7 +202,7 @@ end
 --- used). Non-empty strings inside group are separated by one space. Non-empty
 --- groups are separated by two spaces (one for each highlighting).
 ---
----@param groups table: List of groups
+---@param groups table: Array of groups
 ---@return string: String suitable for 'statusline'.
 function MiniStatusline.combine_groups(groups)
   local t = vim.tbl_map(function(s)

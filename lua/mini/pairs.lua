@@ -188,7 +188,7 @@ end
 --- - Lua: `vim.api.nvim_set_keymap('i', '<BS>', [[v:lua.MiniPairs.bs(['()', '[]', '{}', '""', "''", '``'])]], { expr = true, noremap = true })`
 --- </pre>
 ---
----@param pair_set table: List with pairs which trigger extra action.
+---@param pair_set table: Array with pairs which trigger extra action.
 function MiniPairs.bs(pair_set)
   local res = H.keys.bs
 
@@ -211,7 +211,7 @@ end
 --- - Lua: `vim.api.nvim_set_keymap('i', '<CR>', [[v:lua.MiniPairs.cr(['()', '[]', '{}'])]], { expr = true, noremap = true })`
 --- </pre>
 ---
----@param pair_set table: List with pairs which trigger extra action.
+---@param pair_set table: Array with pairs which trigger extra action.
 function MiniPairs.cr(pair_set)
   local res = H.keys.cr
 
@@ -249,14 +249,14 @@ function H.apply_config(config)
   -- Setup mappings in supplied modes
   local mode_ids = { insert = 'i', command = 'c', terminal = 't' }
   ---- Compute in which modes mapping should be set up
-  local mode_list = {}
+  local mode_array = {}
   for name, to_set in pairs(config.modes) do
     if to_set then
-      table.insert(mode_list, mode_ids[name])
+      table.insert(mode_array, mode_ids[name])
     end
   end
 
-  for _, mode in pairs(mode_list) do
+  for _, mode in pairs(mode_array) do
     -- Adding pair is disabled if symbol is after `\`
     H.map(mode, '(', [[v:lua.MiniPairs.open('()', "[^\\].")]])
     H.map(mode, '[', [[v:lua.MiniPairs.open('[]', "[^\\].")]])

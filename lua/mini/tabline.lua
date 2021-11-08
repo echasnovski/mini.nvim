@@ -356,9 +356,9 @@ function H.finalize_labels()
   end
 end
 
---@return List of `H.tabs` ids which have non-unique labels
+--@return Array of `H.tabs` ids which have non-unique labels
 function H.get_nonunique_tab_ids()
-  -- Collect tab-list-id per label
+  -- Collect tab-array-id per label
   local label_tab_ids = {}
   for i, tab in ipairs(H.tabs) do
     local label = tab.label
@@ -369,7 +369,7 @@ function H.get_nonunique_tab_ids()
     end
   end
 
-  -- Collect tab-list-ids with non-unique labels
+  -- Collect tab-array-ids with non-unique labels
   return vim.tbl_flatten(vim.tbl_filter(function(x)
     return #x > 1
   end, label_tab_ids))

@@ -32,7 +32,7 @@
 --- - The goal is to find matching between `word`'s letters and letters in
 ---   `candidate`, which minimizes certain score. It is assumed that order of
 ---   letters in `word` and those matched in `candidate` should be the same.
---- - Matching is represented by matched positions: a list `positions` of
+--- - Matching is represented by matched positions: an array `positions` of
 ---   integers with length equal to number of letter in `word`. The following
 ---   should be always true in case of a match: `candidate`'s letter at index
 ---   `positions[i]` is letters[i]` for all valid `i`.
@@ -84,7 +84,7 @@ MiniFuzzy.config = {
 ---
 --- It tries to find best match for input string `word` (usually user input)
 --- and string `candidate`. Returns table with elements:
---- - `positions` - list with letter indexes inside `candidate` which
+--- - `positions` - array with letter indexes inside `candidate` which
 ---   matched to corresponding letters in `word`. Or `nil` if no match.
 --- - `score` - positive number representing how good the match is (lower is
 ---   better). Or `-1` if no match.
@@ -100,33 +100,33 @@ function MiniFuzzy.match(word, candidate)
   return { positions = positions, score = H.score_positions(positions) }
 end
 
---- Filter string list
+--- Filter string array
 ---
---- This leaves only those elements of input list which matched with `word` and
---- sorts from best to worst matches (based on score and index in original
---- list, both lower is better).
+--- This leaves only those elements of input array which matched with `word`
+--- and sorts from best to worst matches (based on score and index in original
+--- array, both lower is better).
 ---
----@param word string: String which will be searched
----@param candidate_list list: Lua list of strings inside which word will be searched
+---@param word string: String which will be searched.
+---@param candidate_array table: Lua array of strings inside which word will be searched.
 ---@return tuple: Arrays of matched candidates and their indexes in original input.
-function MiniFuzzy.filtersort(word, candidate_list)
-  -- Use 'smart case'. New list is needed to preserve input for later filtering
-  local cand_list
+function MiniFuzzy.filtersort(word, candidate_array)
+  -- Use 'smart case'. Create new array to preserve input for later filtering
+  local cand_array
   if word ~= word:lower() then
-    cand_list = vim.tbl_map(string.lower, candidate_list)
+    cand_array = vim.tbl_map(string.lower, candidate_array)
   else
-    cand_list = candidate_list
+    cand_array = candidate_array
   end
 
-  local filter_ids = H.make_filter_indexes(word, cand_list)
+  local filter_ids = H.make_filter_indexes(word, cand_array)
   table.sort(filter_ids, H.compare_filter_indexes)
 
-  return H.filter_by_indexes(candidate_list, filter_ids)
+  return H.filter_by_indexes(candidate_array, filter_ids)
 end
 
 --- Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
 ---
----@param items list: Lua list with LSP 'textDocument/completion' response items.
+---@param items table: Lua array with LSP 'textDocument/completion' response items.
 ---@param base string: Word to complete.
 function MiniFuzzy.process_lsp_items(items, base)
   -- Extract completion words from items
@@ -220,7 +220,7 @@ function H.apply_config(config)
 end
 
 ---- Fuzzy matching
--- @param letters List of letters from input word
+-- @param letters Array of letters from input word
 -- @param candidate String of interest
 --
 -- @return Table with matched positions (in `candidate`) if there is a match,
@@ -318,12 +318,12 @@ function H.score_positions(positions)
   return cutoff * math.min(last - first + 1, cutoff) + math.min(first, cutoff)
 end
 
-function H.make_filter_indexes(word, candidate_list)
+function H.make_filter_indexes(word, candidate_array)
   -- Precompute a table of word's letters
   local letters = H.string_to_letters(word)
 
   local res = {}
-  for i, cand in ipairs(candidate_list) do
+  for i, cand in ipairs(candidate_array) do
     local positions = H.find_best_positions(letters, cand)
     if positions then
       table.insert(res, { index = i, score = H.score_positions(positions) })
@@ -346,10 +346,10 @@ function H.compare_filter_indexes(a, b)
   return false
 end
 
-function H.filter_by_indexes(candidate_list, ids)
+function H.filter_by_indexes(candidate_array, ids)
   local res, res_ids = {}, {}
   for _, id in pairs(ids) do
-    table.insert(res, candidate_list[id.index])
+    table.insert(res, candidate_array[id.index])
     table.insert(res_ids, id.index)
   end
 

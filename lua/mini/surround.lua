@@ -279,16 +279,16 @@ function MiniSurround.find()
     return ''
   end
 
-  -- Make list of positions to cycle through
-  local pos_list = H.linepart_to_pos_table(surr.left)
+  -- Make array of positions to cycle through
+  local pos_array = H.linepart_to_pos_table(surr.left)
   local pos_table_right = H.linepart_to_pos_table(surr.right)
   for _, v in pairs(pos_table_right) do
-    table.insert(pos_list, v)
+    table.insert(pos_array, v)
   end
 
   -- Cycle cursor through positions
   local dir = H.cache.direction or 'right'
-  H.cursor_cycle(pos_list, dir)
+  H.cursor_cycle(pos_array, dir)
 
   -- Open 'enough folds' to show cursor
   vim.cmd([[normal! zv]])
@@ -566,13 +566,13 @@ function H.compare_pos(pos1, pos2)
   return '='
 end
 
-function H.cursor_cycle(pos_list, dir)
+function H.cursor_cycle(pos_array, dir)
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   cur_pos = { line = cur_pos[1], col = cur_pos[2] + 1 }
 
   local compare, to_left, to_right, res_pos
-  -- NOTE: `pos_list` should be an increasingly ordered list of positions
-  for _, pos in pairs(pos_list) do
+  -- NOTE: `pos_array` should be an increasingly ordered array of positions
+  for _, pos in pairs(pos_array) do
     compare = H.compare_pos(cur_pos, pos)
     -- Take position when moving to left if cursor is strictly on right.
     -- This will lead to updating `res_pos` until the rightmost such position.
@@ -585,7 +585,7 @@ function H.cursor_cycle(pos_list, dir)
     end
   end
 
-  res_pos = res_pos or (dir == 'right' and pos_list[1] or pos_list[#pos_list])
+  res_pos = res_pos or (dir == 'right' and pos_array[1] or pos_array[#pos_array])
   vim.api.nvim_win_set_cursor(0, { res_pos.line, res_pos.col - 1 })
 end
 
