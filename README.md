@@ -30,16 +30,31 @@ Collection of minimal, independent, and fast Lua modules dedicated to improve [N
 
 ## Installation
 
+This plugin offers two branches to install from:
+
+- `main` (default) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled).
+- `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch.
+
+There are at least the following ways to install this plugin:
+
 - Using [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
 
-    ```
+    ```lua
+    -- Development
     use 'echasnovski/mini.nvim'
+
+    -- Stable
+    use { 'echasnovski/mini.nvim', branch = 'stable' }
     ```
 
 - Using [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
-    ```
+    ```vim
+    " Development
     Plug 'echasnovski/mini.nvim'
+
+    " Stable
+    Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
     ```
 
 - Each module is independent and implemented within single file. You can copy corresponding file from 'lua/mini/' directory to your '.config/nvim/lua' directory and use it from there.
