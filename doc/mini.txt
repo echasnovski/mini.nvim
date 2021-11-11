@@ -1100,19 +1100,21 @@ MiniMisc.zoom({buf_id}, {config})                            *MiniMisc.zoom()*
 
 Custom minimal and fast autopairs Lua module. It provides functionality to work
 with 'paired' characters conditional on cursor's neighborhood (two characters
-to its left and right). Its usage should be through making appropriate `<expr>`
-mappings.
+to its left and right). Its usage should be through making appropriate mappings
+using |MiniPairs.map| or in |MiniPairs.setup| (for global mapping),
+|MiniPairs.map_buf| (for buffer mapping). Pairs get automatically registered to
+be recognized by `<BS>` and `<CR>`.
 
 What it doesn't do:
 - It doesn't support multiple characters as "open" and "close" symbols. Use 
   snippets for that.
 - It doesn't support dependency on filetype. Use |i_CTRL-V| to insert single
   symbol or `autocmd` command or 'after/ftplugin' approach to:
+    - `lua MiniPairs.map_buf(0, 'i', <*>, <pair_info>)` : make new mapping for
+      '<*>' in current buffer.
+    - `lua MiniPairs.unmap_buf(0, 'i', <*>, <pair>)`: unmap key `<*>` while 
+      unregistering `<pair>` pair in current buffer.
     - Disable module for buffer (see 'Disabling' section).
-    - `inoremap <buffer> <*> <*>` : return mapping of '<*>' to its original 
-      action, virtually unmapping.
-    - `inoremap <buffer> <expr> <*> v:lua.MiniPairs.?` : make new buffer
-      mapping for '<*>'.
 
 # Setup
 
@@ -1122,31 +1124,44 @@ with your `config` table).
 Default `config`:
 >
   {
-    -- In which modes mappings should be created
+    -- In which modes mappings from this `config` should be created
     modes = {insert = true, command = false, terminal = false}
+
+    -- Global mappings. Each right hand side should be a pair information, a
+    -- table with at least these fields (see more in |MiniPairs.map|):
+    -- - `action` - one of 'open', 'close', 'closeopen'.
+    -- - `pair` - two character string for pair to be used.
+    -- By default pair is not inserted after `\`, quotes are not recognized by
+    -- `<CR>`, `'` does not insert pair after a letter.
+    -- Only parts of the tables can be tweaked (others will use these defaults).
+    mappings = {
+      ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
+      ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
+      ['{'] = { action = 'open', pair = '{}', neigh_pattern = '[^\\].' },
+
+      [')'] = { action = 'close', pair = '()', neigh_pattern = '[^\\].' },
+      [']'] = { action = 'close', pair = '[]', neigh_pattern = '[^\\].' },
+      ['}'] = { action = 'close', pair = '{}', neigh_pattern = '[^\\].' },
+
+      ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].', register = { cr = false } },
+      ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } },
+      ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
+    },
   }
 <
-By default in `MiniPairs.setup()`:
-- The following pairs are respected: `()`, `[]`, `{}`, `""`, `''`, `\`\``. 
-  Single opening symbol is inserted after `\`. Single `'` is inserted after a
-  letter (to be used in English comments).
-- `<BS>` respects same pairs.
-- `<CR>` is mapped only in insert mode and respects `()`, `[]`, `{}`.
 
 # Example mappings
 
-- Insert `<>` pair if `<` is typed as first character in line:
-    Vimscript:
-    `inoremap <expr> < v:lua.MiniPairs.open('<>', "\r.")`
-    `inoremap <expr> > v:lua.MiniPairs.close('<>', "..")`
-    Lua:
-    `vim.api.nvim_set_keymap('i', '<', [[v:lua.MiniPairs.open('<>', "\r.")]], { expr = true, noremap = true })`
-    `vim.api.nvim_set_keymap('i', '>', [[v:lua.MiniPairs.close('<>', "..")]], { expr = true, noremap = true })`
+- Register quotes inside `config` of |MiniPairs.setup|:
+  `mappings = {`
+  `  ['"'] = { register = { cr = true } },`
+  `  ["'"] = { register = { cr = true } },`
+  `}`
+- Insert `<>` pair if `<` is typed as first character in line, don't register for `<CR>`:
+  `lua MiniPairs.map('i', '<', { action = 'open', pair = '<>', neigh_pattern = '\r.', register = { cr = false } })`
+  `lua MiniPairs.map('i', '>', { action = 'close', pair = '<>', register = { cr = false } })`
 - Create symmetrical `$$` pair only in Tex files:
-    Vimscript:
-    `au FileType tex inoremap <buffer> <expr> $ v:lua.MiniPairs.closeopen('$$', "[^\\].")`
-    Lua:
-    `au FileType tex lua vim.api.nvim_buf_set_keymap(0, 'i', '$', [[v:lua.MiniPairs.closeopen('$$', "[^\\].")]], { expr = true, noremap = true })`
+  `au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})`
 
 # Notes
 - Make sure to make proper mapping of `<CR>` in order to support completion 
@@ -1173,100 +1188,168 @@ MiniPairs.setup({config})                                  *MiniPairs.setup()*
         `config` table)
 
 
-MiniPairs.open({pair}, {twochars_pattern})                  *MiniPairs.open()*
+MiniPairs.map({mode}, {lhs}, {pair_info}, {opts})            *MiniPairs.map()*
+    Make global mapping
+
+    This is similar to |nvim_set_keymap()| but instead of right hand side of
+    mapping (as string) it expects table with pair information:
+    - `action` - one of 'open' (for |MiniPairs.open|), 'close' (for 
+      |MiniPairs.close|), or 'closeopen' (for |MiniPairs.closeopen|).
+    - `pair` - two character string to be used as argument for action function.
+    - `neigh_pattern` - optional 'two character' neighborhood pattern to be 
+      used as argument for action function. Default: '..' (no restriction from 
+      neighborhood).
+    - `register` - optional table with information about whether this pair 
+      should be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in 
+      |MiniPairs.cr|). Should have boolean elements `bs` and `cr` which are 
+      both `true` by default (if not overriden explicitly).
+
+    Using this function instead of |nvim_set_keymap()| allows automatic
+    registration of pairs which will be recognized by `<BS>` and `<CR>`.
+
+
+
+    Parameters: ~
+        {mode}      (string)  `mode` for |nvim_set_keymap()|.
+        {lhs}       (string)  `lhs` for |nvim_set_keymap()|.
+        {pair_info} (table)   Table with pair information.
+        {opts}      (table)   Optional table `opts` for |nvim_set_keymap()|.
+                              Elements `expr` and `noremap` won't be
+                              recognized (`true` by default).
+
+
+MiniPairs.map_buf({mode}, {lhs}, {pair_info}, {opts})    *MiniPairs.map_buf()*
+    Make buffer mapping
+
+    This is similar to |nvim_buf_set_keymap()| but instead of string right hand
+    side of mapping it expects table with pair information similar to one in
+    |MiniPairs.map|.
+
+    Using this function instead of |nvim_buf_set_keymap()| allows automatic
+    registration of pairs which will be recognized by `<BS>` and `<CR>`.
+
+
+
+    Parameters: ~
+        {mode}      (string)  `mode` for |nvim_buf_set_keymap()|.
+        {lhs}       (string)  `lhs` for |nvim_buf_set_keymap()|.
+        {pair_info} (table)   Table with pair information.
+        {opts}      (table)   Optional table `opts` for
+                              |nvim_buf_set_keymap()|. Elements `expr` and
+                              `noremap` won't be recognized (`true` by
+                              default).
+
+
+MiniPairs.unmap({mode}, {lhs}, {pair})                     *MiniPairs.unmap()*
+    Remove global mapping
+
+    Uses |nvim_del_keymap()| together with unregistering supplied `pair`.
+
+
+
+    Parameters: ~
+        {mode} (string)  `mode` for |nvim_del_keymap()|.
+        {lhs}  (string)  `lhs` for |nvim_del_keymap()|.
+        {pair} (string)  pair which should be unregistered. Supply `''` to not
+                         unregister pair.
+
+
+MiniPairs.unmap_buf({mode}, {lhs}, {pair})             *MiniPairs.unmap_buf()*
+    Remove buffer mapping
+
+    Uses |nvim_buf_del_keymap()| together with unregistering supplied `pair`.
+
+
+
+    Parameters: ~
+        {mode} (string)  `mode` for |nvim_buf_del_keymap()|.
+        {lhs}  (string)  `lhs` for |nvim_buf_del_keymap()|.
+        {pair} (string)  pair which should be unregistered. Supply `''` to not
+                         unregister pair.
+
+
+MiniPairs.open({pair}, {neigh_pattern})                     *MiniPairs.open()*
     Process 'open' symbols
 
-    Use this for mapping 'open' symbols in asymmetric pair ('(', '[', etc.). If
-    neighborhood doesn't match supplied pattern, function results into 'open'
-    symbol. Otherwise, it pastes whole pair and moves inside pair with
-    |<Left>|.
+    Used as |map-expr| mapping for 'open' symbols in asymmetric pair ('(', '[',
+    etc.). If neighborhood doesn't match supplied pattern, function results
+    into 'open' symbol. Otherwise, it pastes whole pair and moves inside pair
+    with |<Left>|.
 
-    Example:
-    - Vimscript: `inoremap <expr> ( v:lua.MiniPairs.open('()', "[^\\].")`
-    - Lua: `vim.api.nvim_set_keymap('i', '(', [[v:lua.MiniPairs.open('()', "[^\\].")]], { expr = true, noremap = true })`
+    Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
 
 
     Parameters: ~
-        {pair}             (string)  String with two characters representing
-                                     pair.
-        {twochars_pattern} (string)  Pattern for two neighborhood characters
-                                     ("\r" line start, "\n" - line end).
+        {pair}          (string)  String with two characters representing
+                                  pair.
+        {neigh_pattern} (string)  Pattern for two neighborhood characters
+                                  ("\r" line start, "\n" - line end).
 
 
-MiniPairs.close({pair}, {twochars_pattern})                *MiniPairs.close()*
+MiniPairs.close({pair}, {neigh_pattern})                   *MiniPairs.close()*
     Process 'close' symbols
 
-    Use this for mapping 'close' symbols in asymmetric pair (')', ']', etc.).
-    If neighborhood doesn't match supplied pattern, function results into
-    'close' symbol. Otherwise it jumps over symbol to the right of cursor (with
-    |<Right>|) if it is equal to 'close' one and inserts it otherwise.
+    Used as |map-expr| mapping for 'close' symbols in asymmetric pair (')',
+    ']', etc.). If neighborhood doesn't match supplied pattern, function
+    results into 'close' symbol. Otherwise it jumps over symbol to the right of
+    cursor (with |<Right>|) if it is equal to 'close' one and inserts it
+    otherwise.
 
-    Example:
-    - Vimscript: `inoremap <expr> ) v:lua.MiniPairs.close('()', "[^\\].")`
-    - Lua: `vim.api.nvim_set_keymap('i', ')', [[v:lua.MiniPairs.close('()', "[^\\].")]], { expr = true, noremap = true })`
+    Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
 
 
     Parameters: ~
-        {pair}             (string)  String with two characters representing
-                                     pair.
-        {twochars_pattern} (string)  Pattern for two neighborhood characters
-                                     ("\r" line start, "\n" - line end).
+        {pair}          (string)  String with two characters representing
+                                  pair.
+        {neigh_pattern} (string)  Pattern for two neighborhood characters
+                                  ("\r" line start, "\n" - line end).
 
 
-MiniPairs.closeopen({pair}, {twochars_pattern})        *MiniPairs.closeopen()*
+MiniPairs.closeopen({pair}, {neigh_pattern})           *MiniPairs.closeopen()*
     Process 'closeopen' symbols
 
-    Use this for mapping 'symmetrical' symbols (from pairs '""', '\'\'', '``').
-    It tries to perform 'closeopen action': move over right character (with
-    |<Right>|) if it is equal to second character from pair or conditionally
-    paste pair otherwise (with |MiniPairs.open()|).
+    Used as |map-expr| mapping for 'symmetrical' symbols (from pairs '""',
+    '\'\'', '``'). It tries to perform 'closeopen action': move over right
+    character (with |<Right>|) if it is equal to second character from pair or
+    conditionally paste pair otherwise (with |MiniPairs.open()|).
 
-    Example:
-    - Vimscript: `inoremap <expr> " v:lua.MiniPairs.closeopen('""', "[^\\].")`
-    - Lua: `vim.api.nvim_set_keymap('i', '"', [[v:lua.MiniPairs.closeopen('""', "[^\\].")]], { expr = true, noremap = true })`
+    Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
 
 
     Parameters: ~
-        {pair}             (string)  String with two characters representing
-                                     pair.
-        {twochars_pattern} (string)  Pattern for two neighborhood characters
-                                     ("\r" line start, "\n" - line end).
+        {pair}          (string)  String with two characters representing
+                                  pair.
+        {neigh_pattern} (string)  Pattern for two neighborhood characters
+                                  ("\r" line start, "\n" - line end).
 
 
-MiniPairs.bs({pair_set})                                      *MiniPairs.bs()*
+MiniPairs.bs()                                                *MiniPairs.bs()*
     Process |<BS>|
 
-    Use this to map `<BS>`. It removes whole pair (via `<BS><Del>`) if
-    neighborhood is equal to whole pair.
+    Used as |map-expr| mapping for `<BS>`. It removes whole pair (via
+    `<BS><Del>`) if neighborhood is equal to a whole pair recognized for
+    current buffer. Pair is recognized for current buffer if it is registered
+    for global or current buffer mapping. Pair is registered as a result of
+    calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
-    Example:
-    - Vimscript: `inoremap <expr> <BS> v:lua.MiniPairs.bs(['()', '[]', '{}', '""', "''", '``'])`
-    - Lua: `vim.api.nvim_set_keymap('i', '<BS>', [[v:lua.MiniPairs.bs(['()', '[]', '{}', '""', "''", '``'])]], { expr = true, noremap = true })`
-
-
-
-    Parameters: ~
-        {pair_set} (table)  Array with pairs which trigger extra action.
+    Mapped by default inside |MiniPairs.setup|.
 
 
-MiniPairs.cr({pair_set})                                      *MiniPairs.cr()*
+
+MiniPairs.cr()                                                *MiniPairs.cr()*
     Process |i_<CR>|
 
-    Use this to map `<CR>` in insert mode. It puts "close" symbol on next line
-    (via `<CR><C-o>O`) if neighborhood is equal to whole pair. Should be used
-    only in insert mode.
+    Used as |map-expr| mapping for `<CR>` in insert mode. It puts "close"
+    symbol on next line (via `<CR><C-o>O`) if neighborhood is equal to a whole
+    pair recognized for current buffer. Pair is recognized for current buffer
+    if it is registered for global or current buffer mapping. Pair is
+    registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
-    Example:
-    - Vimscript: `inoremap <expr> <CR> v:lua.MiniPairs.cr(['()', '[]', '{}'])`
-    - Lua: `vim.api.nvim_set_keymap('i', '<CR>', [[v:lua.MiniPairs.cr(['()', '[]', '{}'])]], { expr = true, noremap = true })`
+    Mapped by default inside |MiniPairs.setup|.
 
-
-
-    Parameters: ~
-        {pair_set} (table)  Array with pairs which trigger extra action.
 
 
 
