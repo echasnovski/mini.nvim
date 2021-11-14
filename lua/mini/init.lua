@@ -84,6 +84,10 @@
 ---   functionality to do per-key expression mappings.
 --- - |MiniSessions| - session management (read, write, delete) which works
 ---   using |mksession|.
+--- - |MiniStarter| - minimal, fast, and flexible start screen. Displayed items
+---   are fully customizable both in terms of what they do and how they look
+---   (with reasonable defaults). Item selection can be done using prefix query
+---   with instant visual feedback.
 --- - |MiniStatusline| - minimal and fast statusline. Has ability to use custom
 ---   content supplied with concise function (using module's provided section
 ---   functions) along with builtin default. For full experience needs [Nerd

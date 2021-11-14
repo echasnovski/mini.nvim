@@ -370,6 +370,59 @@ Plugins with similar functionality:
 - [mhinz/vim-startify](https://github.com/mhinz/vim-startify)
 - [Shatur/neovim-session-manager](https://github.com/Shatur/neovim-session-manager)
 
+### mini.starter
+
+Minimal, fast, and flexible start screen. Displayed items are fully customizable both in terms of what they do and how they look (with reasonable defaults). Item selection can be done using prefix query with instant visual feedback.
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-starter.gif" height="400em"/>
+
+Default `config`:
+
+```lua
+{
+  -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
+  -- started with intent to show something else.
+  autoopen = true,
+
+  -- Whether to evaluate action of single active item
+  evaluate_single = false,
+
+  -- Items to be displayed. Should be an array with the following elements:
+  -- - Item: table with `action`, `name`, and `section` keys.
+  -- - Function: should return one of these three categories.
+  -- - Array: elements of these three types (i.e. item, array, function).
+  -- If `nil`, default items will be used (see |mini.starter|).
+  items = nil,
+
+  -- Header to be displayed before items. Should be a string or function
+  -- evaluating to single string (use `\n` for new lines). If `nil` (default),
+  -- polite greeting will be used.
+  header = nil,
+
+  -- Footer to be displayed after items. Should be a string or function
+  -- evaluating to string. If `nil`, default usage instructions will be used.
+  footer = nil,
+
+  -- Array  of functions to be applied consecutively to initial content. Each
+  -- function should take and return content for 'Starter' buffer (see
+  -- |mini.starter| for more details).
+  content_hooks = nil,
+
+  -- Characters to update query. Each character will have special buffer
+  -- mapping overriding your global ones. Be careful to not add `:` as it
+  -- allows you to go into command mode.
+  query_updaters = [[abcdefghijklmnopqrstuvwxyz0123456789_-.]],
+}
+```
+
+For more information, read 'mini.starter' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [mhinz/vim-startify](https://github.com/mhinz/vim-startify)
+- [glepnir/dashboard-nvim](https://github.com/glepnir/dashboard-nvim)
+- [goolord/alpha-nvim](https://github.com/goolord/alpha-nvim)
+
 ### mini.statusline
 
 Minimal and fast statusline. Has ability to use custom content supplied with concise function (using module's provided section functions) along with builtin default. For full experience needs [Nerd font](https://www.nerdfonts.com/), [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin (but works without any them).

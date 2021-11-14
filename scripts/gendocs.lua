@@ -14,6 +14,7 @@ docs.run = function()
     './lua/mini/misc.lua',
     './lua/mini/pairs.lua',
     './lua/mini/sessions.lua',
+    './lua/mini/starter.lua',
     './lua/mini/statusline.lua',
     './lua/mini/surround.lua',
     './lua/mini/tabline.lua',

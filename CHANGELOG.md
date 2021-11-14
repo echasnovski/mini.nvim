@@ -1,5 +1,9 @@
 # Version 0.1.0.9000 (development)
 
+## mini.starter
+
+Introduction of new module.
+
 ## mini.sessions
 
 Introduction of new module.
