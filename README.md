@@ -339,6 +339,37 @@ Plugins with similar functionality:
 - [jiangmiao/auto-pairs](https://github.com/jiangmiao/auto-pairs)
 - [windwp/nvim-autopairs](https://github.com/windwp/nvim-autopairs)
 
+### mini.sessions
+
+Session management (read, write, delete) which works using |mksession|.
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-sessions.gif" height="400em"/>
+
+Default `config`:
+
+```lua
+{
+  -- Whether to autoread latest session if Neovim was called without file arguments
+  autoread = false,
+
+  -- Whether to write current session before quitting Neovim
+  autowrite = true,
+
+  -- Directory where sessions are stored
+  directory = --<"session" subdirectory of user data directory from |stdpath()|>,
+
+  -- Whether to force possibly harmful actions (meaning depends on function)
+  force = { read = false, write = true, delete = false },
+}
+```
+
+For more information, read 'mini.sessions' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [mhinz/vim-startify](https://github.com/mhinz/vim-startify)
+- [Shatur/neovim-session-manager](https://github.com/Shatur/neovim-session-manager)
+
 ### mini.statusline
 
 Minimal and fast statusline. Has ability to use custom content supplied with concise function (using module's provided section functions) along with builtin default. For full experience needs [Nerd font](https://www.nerdfonts.com/), [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin (but works without any them).

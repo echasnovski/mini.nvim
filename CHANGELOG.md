@@ -1,5 +1,9 @@
 # Version 0.1.0.9000 (development)
 
+## mini.sessions
+
+Introduction of new module.
+
 ## mini.pairs
 
 - Implement pair registration with custom mapping functions. More detailed:

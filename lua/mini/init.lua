@@ -82,6 +82,8 @@
 ---   buffer respectively.
 --- - |MiniPairs| - autopairs plugin which has minimal defaults and
 ---   functionality to do per-key expression mappings.
+--- - |MiniSessions| - session management (read, write, delete) which works
+---   using |mksession|.
 --- - |MiniStatusline| - minimal and fast statusline. Has ability to use custom
 ---   content supplied with concise function (using module's provided section
 ---   functions) along with builtin default. For full experience needs [Nerd

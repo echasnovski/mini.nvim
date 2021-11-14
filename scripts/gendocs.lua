@@ -13,6 +13,7 @@ docs.run = function()
     './lua/mini/fuzzy.lua',
     './lua/mini/misc.lua',
     './lua/mini/pairs.lua',
+    './lua/mini/sessions.lua',
     './lua/mini/statusline.lua',
     './lua/mini/surround.lua',
     './lua/mini/tabline.lua',
