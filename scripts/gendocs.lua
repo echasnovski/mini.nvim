@@ -11,6 +11,7 @@ docs.run = function()
     './lua/mini/completion.lua',
     './lua/mini/cursorword.lua',
     './lua/mini/fuzzy.lua',
+    './lua/mini/jump.lua',
     './lua/mini/misc.lua',
     './lua/mini/pairs.lua',
     './lua/mini/sessions.lua',

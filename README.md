@@ -20,8 +20,11 @@ Collection of minimal, independent, and fast Lua modules dedicated to improve [N
     - [mini.completion](#minicompletion)
     - [mini.cursorword](#minicursorword)
     - [mini.fuzzy](#minifuzzy)
+    - [mini.jump](#minijump)
     - [mini.misc](#minimisc)
     - [mini.pairs](#minipairs)
+    - [mini.sessions](#minisessions)
+    - [mini.starter](#ministarter)
     - [mini.statusline](#ministatusline)
     - [mini.surround](#minisurround)
     - [mini.tabline](#minitabline)
@@ -278,6 +281,38 @@ For more information, read 'mini.fuzzy' section of [help file](doc/mini.txt).
 Plugins with similar functionality:
 
 - [nvim-telescope/telescope-fzy-native.nvim](https://github.com/nvim-telescope/telescope-fzy-native.nvim)
+
+### mini.jump
+
+Minimal and fast module for smarter jumping to a single character. Initial idea and implementation by [Adam Blažek](https://github.com/xigoi).
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-jump.gif" height="400em"/>
+
+Default `config`:
+
+```lua
+{
+  -- Mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    forward = 'f',
+    backward = 'F',
+    forward_till = 't',
+    backward_till = 'T',
+  },
+
+  -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
+  -- very big number (like 10^7) to virtually disable highlighting.
+  highlight_delay = 250,
+}
+```
+
+For more information, read 'mini.jump' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [rhysd/clever-f.vim](https://github.com/rhysd/clever-f.vim)
+- [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
+- [phaazon/hop.nvim](https://github.com/phaazon/hop.nvim)
 
 ### mini.misc
 

@@ -77,6 +77,8 @@
 --- - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
 ---   not only functions to perform fuzzy matching of one string to others, but
 ---   also a sorter for |telescope.nvim|.
+--- - |MiniJump| - minimal and fast module for smarter jumping to a single
+---   character.
 --- - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
 ---   and `put_text()` which print Lua objects to command line and current
 ---   buffer respectively.

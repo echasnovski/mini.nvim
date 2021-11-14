@@ -8,6 +8,10 @@ Introduction of new module.
 
 Introduction of new module.
 
+## mini.jump
+
+Introduction of new module.
+
 ## mini.pairs
 
 - Implement pair registration with custom mapping functions. More detailed:
