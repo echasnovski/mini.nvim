@@ -298,6 +298,7 @@ Default `config`:
     backward = 'F',
     forward_till = 't',
     backward_till = 'T',
+    repeat_jump = ';',
   },
 
   -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
@@ -313,6 +314,7 @@ Plugins with similar functionality:
 - [rhysd/clever-f.vim](https://github.com/rhysd/clever-f.vim)
 - [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
 - [phaazon/hop.nvim](https://github.com/phaazon/hop.nvim)
+- [ggandor/lightspeed.nvim](https://github.com/ggandor/lightspeed.nvim)
 
 ### mini.misc
 
@@ -376,7 +378,7 @@ Plugins with similar functionality:
 
 ### mini.sessions
 
-Session management (read, write, delete) which works using |mksession|.
+Session management (read, write, delete) which works using |mksession|. It was heavily inspired by 'vim-startify' and should work out of the box with sessions created by it.
 
 <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-sessions.gif" height="400em"/>
 
@@ -450,7 +452,7 @@ Default `config`:
 }
 ```
 
-For more information, read 'mini.starter' section of [help file](doc/mini.txt).
+For more information, read 'mini.starter' section of [help file](doc/mini.txt) (also contains example configurations similar to 'vim-startify' and 'dashboard-nvim'). For its benchmarks alongside plugins with similar functionality, see [benchmarks/starter/startup-summary.md](benchmarks/starter/startup-summary.md) (more details [here](benchmarks/starter/README.md)).
 
 Plugins with similar functionality:
 
