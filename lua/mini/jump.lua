@@ -26,6 +26,7 @@
 ---       backward = 'F',
 ---       forward_till = 't',
 ---       backward_till = 'T',
+---       repeat_jump = ';',
 ---     },
 ---
 ---     -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
@@ -77,6 +78,7 @@ MiniJump.config = {
     backward = 'F',
     forward_till = 't',
     backward_till = 'T',
+    repeat_jump = ';',
   },
 
   -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
@@ -258,16 +260,19 @@ function H.apply_config(config)
   H.map('n', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]])
   H.map('n', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]])
   H.map('n', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]])
+  H.map('n', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]])
 
   H.map('x', config.mappings.forward, [[<Cmd>lua MiniJump.smart_jump(false, false)<CR>]])
   H.map('x', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]])
   H.map('x', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]])
   H.map('x', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]])
+  H.map('x', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]])
 
   H.map('o', config.mappings.forward, [[v:lua.MiniJump.expr_jump(v:false, v:false)]], { expr = true })
   H.map('o', config.mappings.backward, [[v:lua.MiniJump.expr_jump(v:true, v:false)]], { expr = true })
   H.map('o', config.mappings.forward_till, [[v:lua.MiniJump.expr_jump(v:false, v:true)]], { expr = true })
   H.map('o', config.mappings.backward_till, [[v:lua.MiniJump.expr_jump(v:true, v:true)]], { expr = true })
+  H.map('o', config.mappings.repeat_jump, [[v:lua.MiniJump.expr_jump()]], { expr = true })
 end
 
 function H.is_disabled()
