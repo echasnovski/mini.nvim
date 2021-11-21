@@ -591,28 +591,20 @@ Default `config`:
 
 # Comparisons
 
-- 'completion-nvim':
-    - Has timer activated on InsertEnter which does something every period of
-      time (makes LSP request, shows floating help). MiniCompletion relies on
-      Neovim's (Vim's) events.
-    - Uses 'textDocument/hover' request to show completion item info.
-    - Doesn't have highlighting of active parameter in signature help.
 - 'nvim-cmp':
-    - More elaborate design which allows multiple sources. However, it 
-      currently does not have a robust 'opened buffers' source, which is very
-      handy.
+    - More complex design which allows multiple sources each in form of 
+      separate plugin. `MiniCompletion` has two built in: LSP and fallback.
+    - Supports snippet expansion.
+    - Doesn't have customizable delays for basic actions.
     - Doesn't allow fallback action.
     - Doesn't provide signature help.
-- Both:
-    - Can manage multiple configurable sources. MiniCompletion has only two: 
-      LSP and fallback.
-    - Provide advanced custom ways of filtering and sorting of completion list
-      as user types. MiniCompletion in this case relies on Neovim's (which
-      currently is equal to Vim's) filtering, which keeps only items which
-      directly start with completed word.
-    - Currently use simple text wrapping in completion item window. This module
-      wraps by words (see `:h linebreak` and `:h breakat`).
-    - Support snippet expansions.
+
+# Helpful key mappings
+
+To use `<Tab>` and `<S-Tab>` for navigation through completion list, make these
+key mappings:
+`vim.api.nvim_set_keymap('i', [[<Tab>]],   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { noremap = true, expr = true })`
+`vim.api.nvim_set_keymap('i', [[<S-Tab>]], [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })`
 
 # Highlight groups
 
@@ -944,6 +936,7 @@ Default `config`:
       backward = 'F',
       forward_till = 't',
       backward_till = 'T',
+      repeat_jump = ';',
     },
 
     -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
