@@ -25,7 +25,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.sessions').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniSessions` which you can use for scripting or manually (with
+--- `:lua MiniSessions.*`).
 ---
 --- Default `config`:
 --- <code>

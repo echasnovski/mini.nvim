@@ -34,7 +34,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.starter').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniStarter` which you can use for scripting or manually (with
+--- `:lua MiniStarter.*`).
 ---
 --- Default `config`:
 --- <code>

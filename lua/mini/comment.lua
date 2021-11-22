@@ -14,7 +14,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.comment').setup({})` (replace
---- `{}` with your `config` table).
+--- `{}` with your `config` table). It will create global Lua table
+--- `MiniComment` which you can use for scripting or manually (with
+--- `:lua MiniComment.*`).
 ---
 --- Default `config`:
 --- <code>

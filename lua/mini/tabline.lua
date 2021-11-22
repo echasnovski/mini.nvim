@@ -29,7 +29,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.tabline').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniTabline` which you can use for scripting or manually (with
+--- `:lua MiniTabline.*`).
 ---
 --- Default `config`:
 --- <code>

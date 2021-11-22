@@ -25,13 +25,13 @@
 ---       You can supply only values which differ from defaults, which will be
 ---       used for the rest ones.
 ---     - Call to module's `setup()` always creates a global Lua object with
----       coherent camel-case name: `require('mini.suround').setup()` creates
+---       coherent camel-case name: `require('mini.surround').setup()` creates
 ---       `_G.MiniSurround`. This allows for a simpler usage of plugin
 ---       functionality: instead of `require('mini.surround')` use
----       `MiniSurround`; available from |v:lua| with `v:lua.MiniSurround`.
----       Considering this, "module" and "Lua object" names can be used
----       interchangeably: 'mini.surround' and 'MiniSurround' will mean the
----       same thing.
+---       `MiniSurround` (or manually `:lua MiniSurround.*` in command line);
+---       available from `v:lua` like `v:lua.MiniSurround`. Considering this,
+---       "module" and "Lua object" names can be used interchangeably:
+---       'mini.surround' and 'MiniSurround' will mean the same thing.
 ---     - Each supplied `config` table (after extending with default values) is
 ---       stored in `config` field of global object. Like `MiniSurround.config`.
 ---     - Values of `config`, which affect runtime activity, can be changed on

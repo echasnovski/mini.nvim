@@ -11,7 +11,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.trailspace').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniTrailspace` which you can use for scripting or manually (with
+--- `:lua MiniTrailspace.*`).
 ---
 --- Default `config`:
 --- <code>

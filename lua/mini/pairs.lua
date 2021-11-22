@@ -22,7 +22,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.pairs').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniPairs` which you can use for scripting or manually (with
+--- `:lua MiniPairs.*`).
 ---
 --- Default `config`:
 --- <code>

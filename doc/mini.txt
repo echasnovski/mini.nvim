@@ -24,12 +24,13 @@ can be considered as a separate sub-plugin.
       config table or omit to use defaults). You can supply only values which
       differ from defaults, which will be used for the rest ones.
     - Call to module's `setup()` always creates a global Lua object with 
-      coherent camel-case name: `require('mini.suround').setup()` creates 
+      coherent camel-case name: `require('mini.surround').setup()` creates 
       `_G.MiniSurround`. This allows for a simpler usage of plugin 
-      functionality: instead of `require('mini.surround')` use `MiniSurround`;
-      available from |v:lua| with `v:lua.MiniSurround`. Considering this,
-      "module" and "Lua object" names can be used interchangeably:
-      'mini.surround' and 'MiniSurround' will mean the same thing.
+      functionality: instead of `require('mini.surround')` use `MiniSurround`
+      (or manually `:lua MiniSurround.*` in command line); available from
+      `v:lua` like `v:lua.MiniSurround`. Considering this, "module" and "Lua
+      object" names can be used interchangeably: 'mini.surround' and
+      'MiniSurround' will mean the same thing.
     - Each supplied `config` table (after extending with default values) is 
       stored in `config` field of global object. Like `MiniSurround.config`.
     - Values of `config`, which affect runtime activity, can be changed on the
@@ -127,7 +128,8 @@ features:
 # Setup
 
 This module needs a setup with `require('mini.base16').setup({})` (replace `{}`
-with your `config` table).
+with your `config` table). It will create global Lua table `MiniBase16` which
+you can use for scripting or manually (with `:lua MiniBase16.*`).
 
 Default `config`:
 >
@@ -298,7 +300,8 @@ Other alternatives:
 
 This module doesn't need setup, but it can be done to improve usability. Setup
 with `require('mini.bufremove').setup({})` (replace `{}` with your `config`
-table).
+table). It will create global Lua table `MiniBufremove` which you can use for
+scripting or manually (with `:lua MiniBufremove.*`).
 
 Default `config`:
 >
@@ -404,7 +407,8 @@ What it doesn't do:
 # Setup
 
 This module needs a setup with `require('mini.comment').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table `MiniComment`
+which you can use for scripting or manually (with `:lua MiniComment.*`).
 
 Default `config`:
 >
@@ -531,7 +535,9 @@ What it doesn't do:
 # Setup
 
 This module needs a setup with `require('mini.completion').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table
+`MiniCompletion` which you can use for scripting or manually (with `:lua
+MiniCompletion.*`).
 
 Default `config`:
 >
@@ -724,7 +730,9 @@ modes.
 # Setup
 
 This module needs a setup with `require('mini.cursorword').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table
+`MiniCursorword` which you can use for scripting or manually (with `:lua
+MiniCursorword.*`).
 
 Default `config`:
 >
@@ -785,6 +793,8 @@ Lua module which implements minimal and fast fuzzy matching.
 
 This module doesn't need setup, but it can be done to improve usability. Setup
 with `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table).
+It will create global Lua table `MiniFuzzy` which you can use for scripting or
+manually (with `:lua MiniFuzzy.*`).
 
 Default `config`:
 >
@@ -925,7 +935,8 @@ Features:
 # Setup
 
 This module needs a setup with `require('mini.jump').setup({})` (replace `{}`
-with your `config` table).
+with your `config` table). It will create global Lua table `MiniJump` which you
+can use for scripting or manually (with `:lua MiniJump.*`).
 
 Default `config`:
 >
@@ -1043,6 +1054,8 @@ Lua module with miscellaneous useful functions (can be used independently).
 
 This module doesn't need setup, but it can be done to improve usability. Setup
 with `require('mini.misc').setup({})` (replace `{}` with your `config` table).
+It will create global Lua table `MiniMisc` which you can use for scripting or
+manually (with `:lua MiniMisc.*`).
 
 Default `config`:
 >
@@ -1245,7 +1258,8 @@ What it doesn't do:
 # Setup
 
 This module needs a setup with `require('mini.pairs').setup({})` (replace `{}`
-with your `config` table).
+with your `config` table). It will create global Lua table `MiniPairs` which
+you can use for scripting or manually (with `:lua MiniPairs.*`).
 
 Default `config`:
 >
@@ -1506,7 +1520,8 @@ Features:
 # Setup
 
 This module needs a setup with `require('mini.sessions').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table `MiniSessions`
+which you can use for scripting or manually (with `:lua MiniSessions.*`).
 
 Default `config`:
 >
@@ -1662,7 +1677,8 @@ What is doesn't do:
 # Setup
 
 This module needs a setup with `require('mini.starter').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table `MiniStarter`
+which you can use for scripting or manually (with `:lua MiniStarter.*`).
 
 Default `config`:
 >
@@ -2200,7 +2216,9 @@ without them):
 # Setup
 
 This module needs a setup with `require('mini.statusline').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table
+`MiniStatusline` which you can use for scripting or manually (with `:lua
+MiniStatusline.*`).
 
 Default `config`:
 >
@@ -2505,7 +2523,8 @@ Known issues which won't be resolved:
 # Setup
 
 This module needs a setup with `require('mini.surround').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table `MiniSurround`
+which you can use for scripting or manually (with `:lua MiniSurround.*`).
 
 Default `config`:
 >
@@ -2687,7 +2706,8 @@ them):
 # Setup
 
 This module needs a setup with `require('mini.tabline').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table `MiniTabline`
+which you can use for scripting or manually (with `:lua MiniTabline.*`).
 
 Default `config`:
 >
@@ -2758,7 +2778,9 @@ Features:
 # Setup
 
 This module needs a setup with `require('mini.trailspace').setup({})` (replace
-`{}` with your `config` table).
+`{}` with your `config` table). It will create global Lua table
+`MiniTrailspace` which you can use for scripting or manually (with `:lua
+MiniTrailspace.*`).
 
 Default `config`:
 >

@@ -28,7 +28,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.statusline').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniStatusline` which you can use for scripting or manually (with
+--- `:lua MiniStatusline.*`).
 ---
 --- Default `config`:
 --- <code>

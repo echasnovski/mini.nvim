@@ -39,7 +39,9 @@
 --- # Setup
 ---
 --- This module needs a setup with `require('mini.surround').setup({})`
---- (replace `{}` with your `config` table).
+--- (replace `{}` with your `config` table). It will create global Lua table
+--- `MiniSurround` which you can use for scripting or manually (with
+--- `:lua MiniSurround.*`).
 ---
 --- Default `config`:
 --- <code>

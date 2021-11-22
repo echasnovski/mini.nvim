@@ -7,7 +7,8 @@
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.fuzzy').setup({})` (replace `{}` with your
---- `config` table).
+--- `config` table). It will create global Lua table `MiniFuzzy` which you can
+--- use for scripting or manually (with `:lua MiniFuzzy.*`).
 ---
 --- Default `config`:
 --- <code>
