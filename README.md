@@ -585,11 +585,10 @@ Plugins with similar functionality:
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow):
 
-- 'mini.starter' - fast and configurable startscreen with some unique features. Something like start screen of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
-- 'mini.sessions' - work with sessions (read, write, delete, persistent sessions). Something like session management of [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
-- 'mini.genhelp' - automatic generation of (Neo)Vim help files from EmmyLua-like annotations next to source code. Something like similar functionality of [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua).
+- 'mini.doc' - automatic generation of (Neo)Vim help files from EmmyLua-like annotations next to source code. Something like similar functionality of [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua).
+- 'mini.indentscope' - show (with vertical line) indent scope under cursor after customizable delay.
+- 'mini.align' - fast text alignment. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
 - 'mini.terminal' (or 'mini.repl') - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
 - 'mini.exchange' (or 'mini.swap') - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
-- 'mini.align' - fast text alignment. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
 - 'mini.arguments' - work with listed arguments. Something like [FooSoft/vim-argwrap](https://github.com/FooSoft/vim-argwrap) and [AndrewRadev/sideways.vim](https://github.com/AndrewRadev/sideways.vim).
 - 'mini.tree' - file tree explorer. Truncated version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
