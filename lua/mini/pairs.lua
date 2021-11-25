@@ -298,7 +298,7 @@ end
 --- Mapped by default inside |MiniPairs.setup|.
 function MiniPairs.bs(pair_set)
   -- TODO: remove `pair_set` argument
-  if pair_set ~= nil then
+  if pair_set ~= nil and not H.showed_deprecation then
     vim.notify(table.concat({
       '(mini.pairs)',
       [[`pair_set` arugment in both `MiniPairs.bs()` and `MiniPairs.cr()` is soft deprecated.]],
@@ -306,6 +306,7 @@ function MiniPairs.bs(pair_set)
       [[See `:h MiniPairs.map()` and `:h MiniPairs.map_buf()`.]],
       [[It will be removed in the future. Sorry for this.]],
     }, ' '))
+    H.showed_deprecation = true
   end
 
   local res = H.keys.bs
@@ -329,7 +330,7 @@ end
 --- Mapped by default inside |MiniPairs.setup|.
 function MiniPairs.cr(pair_set)
   -- TODO: remove `pair_set` argument
-  if pair_set ~= nil then
+  if pair_set ~= nil and not H.showed_deprecation then
     vim.notify(table.concat({
       '(mini.pairs)',
       [[`pair_set` arugment in both `MiniPairs.bs()` and `MiniPairs.cr()` is soft deprecated.]],
@@ -337,6 +338,7 @@ function MiniPairs.cr(pair_set)
       [[See `:h MiniPairs.map()` and `:h MiniPairs.map_buf()`.]],
       [[It will be removed in the future. Sorry for this.]],
     }, ' '))
+    H.showed_deprecation = true
   end
 
   local res = H.keys.cr
@@ -363,6 +365,9 @@ H.registered_pairs = {
   c = { all = { bs = {}, cr = {} } },
   t = { all = { bs = {}, cr = {} } },
 }
+
+-- Deprecation indication. TODO: remove when there is not deprecation.
+H.showed_deprecation = false
 
 -- Precomputed keys to increase speed
 -- stylua: ignore start
