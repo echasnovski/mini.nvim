@@ -486,22 +486,66 @@ function H.apply_palette(palette, use_cterm)
   hi('gitcommitUntracked',     {fg=p.base03, bg=nil, attr=nil,    sp=nil})
   hi('gitcommitUntrackedFile', {fg=p.base0A, bg=nil, attr=nil,    sp=nil})
 
-  -- Built-in LSP (similar to spelling)
-  hi('LspDiagnosticsDefaultError',       {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
-  hi('LspDiagnosticsDefaultHint',        {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
-  hi('LspDiagnosticsDefaultInformation', {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
-  hi('LspDiagnosticsDefaultWarning',     {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
+  -- Built-in diagnostic
+  if vim.fn.has("nvim-0.6.0") == 1 then
+    hi('DiagnosticError', {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
+    hi('DiagnosticHint',  {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
+    hi('DiagnosticInfo',  {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
+    hi('DiagnosticWarn',  {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
 
-  hi('LspDiagnosticsUnderlineError',       {fg=nil, bg=nil, attr='underline', sp=p.base08})
-  hi('LspDiagnosticsUnderlineHint',        {fg=nil, bg=nil, attr='underline', sp=p.base0D})
-  hi('LspDiagnosticsUnderlineInformation', {fg=nil, bg=nil, attr='underline', sp=p.base0C})
-  hi('LspDiagnosticsUnderlineWarning',     {fg=nil, bg=nil, attr='underline', sp=p.base0E})
+    hi('DiagnosticFloatingError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticFloatingHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticFloatingInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticFloatingWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+
+    hi('DiagnosticSignError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticSignHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticSignInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticSignWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+
+    hi('DiagnosticUnderlineError', {fg=nil, bg=nil, attr='underline', sp=p.base08})
+    hi('DiagnosticUnderlineHint',  {fg=nil, bg=nil, attr='underline', sp=p.base0D})
+    hi('DiagnosticUnderlineInfo',  {fg=nil, bg=nil, attr='underline', sp=p.base0C})
+    hi('DiagnosticUnderlineWarn',  {fg=nil, bg=nil, attr='underline', sp=p.base0E})
+  else
+    hi('LspDiagnosticsDefaultError',       {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultHint',        {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultInformation', {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultWarning',     {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
+
+    hi('LspDiagnosticsFloatingError',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsFloatingHint',        {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsFloatingInformation', {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsFloatingWarning',     {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+
+    hi('LspDiagnosticsSignError',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsSignHint',        {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsSignInformation', {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsSignWarning',     {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+
+    hi('LspDiagnosticsUnderlineError',       {fg=nil, bg=nil, attr='underline', sp=p.base08})
+    hi('LspDiagnosticsUnderlineHint',        {fg=nil, bg=nil, attr='underline', sp=p.base0D})
+    hi('LspDiagnosticsUnderlineInformation', {fg=nil, bg=nil, attr='underline', sp=p.base0C})
+    hi('LspDiagnosticsUnderlineWarning',     {fg=nil, bg=nil, attr='underline', sp=p.base0E})
+  end
 
   -- Plugins
   ---- 'mini'
   hi('MiniCompletionActiveParameter', {fg=nil, bg=nil, attr='underline', sp=nil})
 
   hi('MiniCursorword', {fg=nil, bg=nil, attr='underline', sp=nil})
+
+  hi('MiniJump', {fg=nil, bg=nil, attr='undercurl', sp=p.base0E})
+
+  hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterInactive',   {fg=p.base03, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterItem',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterItemBullet', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterItemPrefix', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterSection',    {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterQuery',      {fg=p.base0B, bg=nil, attr=nil, sp=nil})
 
   hi('MiniStatuslineDevinfo',     {fg=p.base04, bg=p.base02, attr=nil,    sp=nil})
   hi('MiniStatuslineFileinfo',    {fg=p.base04, bg=p.base02, attr=nil,    sp=nil})
