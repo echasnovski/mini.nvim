@@ -336,7 +336,7 @@ function MiniStatusline.section_diagnostics(args)
   -- Construct diagnostic info using predefined order
   local t = {}
   for _, level in ipairs(H.diagnostic_levels) do
-    local n = vim.lsp.diagnostic.get_count(0, level.name)
+    local n = H.get_diagnostic_count(level.id)
     -- Add level info only if diagnostic is present
     if n > 0 then
       table.insert(t, string.format(' %s%s', level.sign, n))
@@ -460,12 +460,23 @@ end
 ---- Module default config
 H.default_config = MiniStatusline.config
 
-H.diagnostic_levels = {
-  { name = 'Error', sign = 'E' },
-  { name = 'Warning', sign = 'W' },
-  { name = 'Information', sign = 'I' },
-  { name = 'Hint', sign = 'H' },
-}
+---- Showed diagnostic levels
+H.diagnostic_levels = nil
+if vim.fn.has('nvim-0.6') == 1 then
+  H.diagnostic_levels = {
+    { id = vim.diagnostic.severity.ERROR, sign = 'E' },
+    { id = vim.diagnostic.severity.WARN, sign = 'W' },
+    { id = vim.diagnostic.severity.INFO, sign = 'I' },
+    { id = vim.diagnostic.severity.HINT, sign = 'H' },
+  }
+else
+  H.diagnostic_levels = {
+    { id = 'Error', sign = 'E' },
+    { id = 'Warning', sign = 'W' },
+    { id = 'Information', sign = 'I' },
+    { id = 'Hint', sign = 'H' },
+  }
+end
 
 ---- Deprecation info
 H.is_deprecation_showed = false
@@ -557,6 +568,17 @@ function H.get_filetype_icon()
 
   local file_name, file_ext = vim.fn.expand('%:t'), vim.fn.expand('%:e')
   return devicons.get_icon(file_name, file_ext, { default = true })
+end
+
+H.get_diagnostic_count = nil
+if vim.fn.has('nvim-0.6') == 1 then
+  H.get_diagnostic_count = function(id)
+    return #vim.diagnostic.get(0, { severity = id })
+  end
+else
+  H.get_diagnostic_count = function(id)
+    return vim.lsp.diagnostic.get_count(0, id)
+  end
 end
 
 return MiniStatusline
