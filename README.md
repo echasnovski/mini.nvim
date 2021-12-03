@@ -378,7 +378,7 @@ Plugins with similar functionality:
 
 ### mini.sessions
 
-Session management (read, write, delete) which works using |mksession|. It was heavily inspired by 'vim-startify' and should work out of the box with sessions created by it.
+Session management (read, write, delete) which works using |mksession|. It was heavily inspired by 'vim-startify' and should work out of the box with sessions created by it. Works with global (from configured directory) and local (from current directory) sessions.
 
 <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-sessions.gif" height="400em"/>
 
@@ -392,8 +392,11 @@ Default `config`:
   -- Whether to write current session before quitting Neovim
   autowrite = true,
 
-  -- Directory where sessions are stored
+  -- Directory where global sessions are stored (use `''` to disable)
   directory = --<"session" subdirectory of user data directory from |stdpath()|>,
+
+  -- File for local session (use `''` to disable)
+  file = 'Session.vim',
 
   -- Whether to force possibly harmful actions (meaning depends on function)
   force = { read = false, write = true, delete = false },

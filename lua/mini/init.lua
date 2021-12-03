@@ -85,7 +85,8 @@
 --- - |MiniPairs| - autopairs plugin which has minimal defaults and
 ---   functionality to do per-key expression mappings.
 --- - |MiniSessions| - session management (read, write, delete) which works
----   using |mksession|.
+---   using |mksession|. Implements both global (from configured directory) and
+---   local (from current directory) sessions.
 --- - |MiniStarter| - minimal, fast, and flexible start screen. Displayed items
 ---   are fully customizable both in terms of what they do and how they look
 ---   (with reasonable defaults). Item selection can be done using prefix query
