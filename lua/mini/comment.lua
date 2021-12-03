@@ -4,12 +4,14 @@
 --- Custom minimal and fast Lua module for code commenting. This is basically a
 --- reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 --- respects |count| and is dot-repeatable. Comment structure is inferred
---- from 'commentstring'.
+--- from 'commentstring'. Handles both tab and space indenting (but not when
+--- they are mixed).
 ---
 --- What it doesn't do:
 --- - Block and sub-line comments. This will only support per-line commenting.
 --- - Configurable (from module) comment structure. Modify |commentstring|
 ---   instead.
+--- - Handle indentation with mixed tab and space.
 ---
 --- # Setup
 ---
@@ -285,18 +287,21 @@ function H.make_comment_check(comment_parts)
 end
 
 function H.get_lines_info(lines, comment_parts)
-  local indent = math.huge
-  local indent_cur = indent
+  local n_indent, n_indent_cur = math.huge, math.huge
+  local indent, indent_cur
 
   local is_comment = true
   local comment_check = H.make_comment_check(comment_parts)
 
   for _, l in pairs(lines) do
     -- Update lines indent: minimum of all indents except empty lines
-    if indent > 0 then
-      _, indent_cur = l:find('^%s*')
-      -- Condition "current indent equals line length" detects empty line
-      if (indent_cur < indent) and (indent_cur < l:len()) then
+    if n_indent > 0 then
+      _, n_indent_cur, indent_cur = l:find('^(%s*)')
+      -- Condition "current n-indent equals line length" detects empty line
+      if (n_indent_cur < n_indent) and (n_indent_cur < l:len()) then
+        -- NOTE: Copy of actual indent instead of recreating it with `n_indent`
+        -- allows to handle both tabs and spaces
+        n_indent = n_indent_cur
         indent = indent_cur
       end
     end
@@ -311,15 +316,15 @@ function H.get_lines_info(lines, comment_parts)
 end
 
 function H.make_comment_function(comment_parts, indent)
-  local indent_str = string.rep(' ', indent)
-  local nonindent_start = indent + 1
+  -- NOTE: this assumes that indent doesn't mix tabs with spaces
+  local nonindent_start = indent:len() + 1
 
   local l, r = comment_parts.left, comment_parts.right
   local lpad = (l == '') and '' or ' '
   local rpad = (r == '') and '' or ' '
 
-  local empty_comment = indent_str .. l .. r
-  local nonempty_format = indent_str .. l .. lpad .. '%s' .. rpad .. r
+  local empty_comment = indent .. l .. r
+  local nonempty_format = indent .. l .. lpad .. '%s' .. rpad .. r
 
   return function(line)
     -- Line is empty if it doesn't have anything except whitespace
@@ -342,16 +347,16 @@ function H.make_uncomment_function(comment_parts)
   local uncomment_regex = string.format([[^(%%s-)%s%s(.-)%s%s%%s-$]], vim.pesc(l), lpad, rpad, vim.pesc(r))
 
   return function(line)
-    local indent_str, new_line = string.match(line, uncomment_regex)
+    local indent, new_line = string.match(line, uncomment_regex)
     -- Return original if line is not commented
     if new_line == nil then
       return line
     end
     -- Remove indent if line is a commented empty line
     if new_line == '' then
-      indent_str = ''
+      indent = ''
     end
-    return indent_str .. new_line
+    return ('%s%s'):format(indent, new_line)
   end
 end
 
