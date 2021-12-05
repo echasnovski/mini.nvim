@@ -400,6 +400,9 @@ Default `config`:
 
   -- Whether to force possibly harmful actions (meaning depends on function)
   force = { read = false, write = true, delete = false },
+
+  -- Whether to print session path after action
+  verbose = { read = false, write = true, delete = true },
 }
 ```
 

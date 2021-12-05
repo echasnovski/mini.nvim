@@ -51,6 +51,9 @@
 ---
 ---     -- Whether to force possibly harmful actions (meaning depends on function)
 ---     force = { read = false, write = true, delete = false },
+---
+---     -- Whether to print session path after action
+---     verbose = { read = false, write = true, delete = true },
 ---   }
 --- </code>
 --- # Disabling
@@ -102,6 +105,9 @@ MiniSessions.config = {
 
   -- Whether to force possibly harmful actions (meaning depends on function)
   force = { read = false, write = true, delete = false },
+
+  -- Whether to print session path after action
+  verbose = { read = false, write = true, delete = true },
 }
 
 -- Module data --
@@ -123,7 +129,7 @@ MiniSessions.detected = {}
 --- - Source session with supplied name.
 ---
 ---@param session_name string: Name of detected session file to read. Default: `nil` for default session: local (if detected) or latest session (see |MiniSessions.get_latest|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to delete unsaved buffers; default: `MiniSessions.config.force.read`).
+---@param opts table: Table with options. Current allowed keys: `force` (whether to delete unsaved buffers; default: `MiniSessions.config.force.read`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.read`).
 function MiniSessions.read(session_name, opts)
   if H.is_disabled() then
     return
@@ -152,6 +158,10 @@ function MiniSessions.read(session_name, opts)
 
   local session_path = MiniSessions.detected[session_name].path
   vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
+
+  if opts.verbose then
+    H.notify(('Read session %s'):format(session_path))
+  end
 end
 
 --- Write session
@@ -170,7 +180,7 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string: Name of session file to write. Default: `nil` for current session (|v:this_session|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to ignore existence of session file; default: `MiniSessions.config.force.write`).
+---@param opts table: Table with options. Current allowed keys: `force` (whether to ignore existence of session file; default: `MiniSessions.config.force.write`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.write`).
 function MiniSessions.write(session_name, opts)
   if H.is_disabled() then
     return
@@ -199,6 +209,10 @@ function MiniSessions.write(session_name, opts)
   -- Update detected sessions
   local s = H.new_session(session_path)
   MiniSessions.detected[s.name] = s
+
+  if opts.verbose then
+    H.notify(('Written session %s'):format(session_path))
+  end
 end
 
 --- Delete detected session
@@ -210,7 +224,7 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string: Name of detected session file to delete. Default: `nil` for name of current session (taken from |v:this_session|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to ignore deletion of current session; default: `MiniSessions.config.force.delete`).
+---@param opts table: Table with options. Current allowed keys: `force` (whether to ignore deletion of current session; default: `MiniSessions.config.force.delete`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.delete`).
 function MiniSessions.delete(session_name, opts)
   if H.is_disabled() then
     return
@@ -245,6 +259,10 @@ function MiniSessions.delete(session_name, opts)
   MiniSessions.detected[session_name] = nil
   if is_current_session then
     vim.v.this_session = ''
+  end
+
+  if opts.verbose then
+    H.notify(('Deleted session %s'):format(session_path))
   end
 end
 
@@ -301,6 +319,11 @@ function H.setup_config(config)
     ['force.read'] = { config.force.read, 'boolean' },
     ['force.write'] = { config.force.write, 'boolean' },
     ['force.delete'] = { config.force.delete, 'boolean' },
+
+    verbose = { config.verbose, 'table' },
+    ['verbose.read'] = { config.verbose.read, 'boolean' },
+    ['verbose.write'] = { config.verbose.write, 'boolean' },
+    ['verbose.delete'] = { config.verbose.delete, 'boolean' },
   })
 
   return config
@@ -430,7 +453,7 @@ end
 
 -- Utilities
 function H.default_opts(action)
-  return { force = MiniSessions.config.force[action] }
+  return { force = MiniSessions.config.force[action], verbose = MiniSessions.config.verbose[action] }
 end
 
 function H.notify(msg)

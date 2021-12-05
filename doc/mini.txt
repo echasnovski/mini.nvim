@@ -1548,6 +1548,9 @@ Default `config`:
 
     -- Whether to force possibly harmful actions (meaning depends on function)
     force = { read = false, write = true, delete = false },
+
+    -- Whether to print session path after action
+    verbose = { read = false, write = true, delete = true },
   }
 <
 # Disabling
@@ -1600,7 +1603,10 @@ MiniSessions.read({session_name}, {opts})                *MiniSessions.read()*
                                  |MiniSessions.get_latest|).
         {opts}         (table)   Table with options. Current allowed keys:
                                  `force` (whether to delete unsaved buffers;
-                                 default: `MiniSessions.config.force.read`).
+                                 default: `MiniSessions.config.force.read`),
+                                 `verbose` (whether to print session path
+                                 after action; default
+                                 `MiniSessions.config.verbose.read`).
 
 
 MiniSessions.write({session_name}, {opts})              *MiniSessions.write()*
@@ -1627,7 +1633,9 @@ MiniSessions.write({session_name}, {opts})              *MiniSessions.write()*
         {opts}         (table)   Table with options. Current allowed keys:
                                  `force` (whether to ignore existence of
                                  session file; default:
-                                 `MiniSessions.config.force.write`).
+                                 `MiniSessions.config.force.write`), `verbose`
+                                 (whether to print session path after action;
+                                 default `MiniSessions.config.verbose.write`).
 
 
 MiniSessions.delete({session_name}, {opts})            *MiniSessions.delete()*
@@ -1648,7 +1656,10 @@ MiniSessions.delete({session_name}, {opts})            *MiniSessions.delete()*
         {opts}         (table)   Table with options. Current allowed keys:
                                  `force` (whether to ignore deletion of
                                  current session; default:
-                                 `MiniSessions.config.force.delete`).
+                                 `MiniSessions.config.force.delete`),
+                                 `verbose` (whether to print session path
+                                 after action; default
+                                 `MiniSessions.config.verbose.delete`).
 
 
 MiniSessions.get_latest()                          *MiniSessions.get_latest()*
