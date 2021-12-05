@@ -1582,7 +1582,7 @@ MiniSessions.setup({config})                            *MiniSessions.setup()*
         table)
 
 
-MiniSessions.read({session_name}, {force})               *MiniSessions.read()*
+MiniSessions.read({session_name}, {opts})                *MiniSessions.read()*
     Read detected session
 
     What it does:
@@ -1594,15 +1594,16 @@ MiniSessions.read({session_name}, {force})               *MiniSessions.read()*
 
 
     Parameters: ~
-        {session_name} (string)   Name of detected session file to read.
-                                  Default: `nil` for default session: local
-                                  (if detected) or latest session (see
-                                  |MiniSessions.get_latest|).
-        {force}        (boolean)  Whether to delete unsaved buffers. Default:
-                                  `MiniSessions.config.force.read`.
+        {session_name} (string)  Name of detected session file to read.
+                                 Default: `nil` for default session: local (if
+                                 detected) or latest session (see
+                                 |MiniSessions.get_latest|).
+        {opts}         (table)   Table with options. Current allowed keys:
+                                 `force` (whether to delete unsaved buffers;
+                                 default: `MiniSessions.config.force.read`).
 
 
-MiniSessions.write({session_name}, {force})             *MiniSessions.write()*
+MiniSessions.write({session_name}, {opts})              *MiniSessions.write()*
     Write session
 
     What it does:
@@ -1621,14 +1622,15 @@ MiniSessions.write({session_name}, {force})             *MiniSessions.write()*
 
 
     Parameters: ~
-        {session_name} (string)   Name of session file to write. Default:
-                                  `nil` for current session
-                                  (|v:this_session|).
-        {force}        (boolean)  Whether to ignore existence of session file.
-                                  Default: `MiniSessions.config.force.write`.
+        {session_name} (string)  Name of session file to write. Default: `nil`
+                                 for current session (|v:this_session|).
+        {opts}         (table)   Table with options. Current allowed keys:
+                                 `force` (whether to ignore existence of
+                                 session file; default:
+                                 `MiniSessions.config.force.write`).
 
 
-MiniSessions.delete({session_name}, {force})           *MiniSessions.delete()*
+MiniSessions.delete({session_name}, {opts})            *MiniSessions.delete()*
     Delete detected session
 
     What it does:
@@ -1640,12 +1642,13 @@ MiniSessions.delete({session_name}, {force})           *MiniSessions.delete()*
 
 
     Parameters: ~
-        {session_name} (string)   Name of detected session file to delete.
-                                  Default: `nil` for name of current session
-                                  (taken from |v:this_session|).
-        {force}        (boolean)  Whether to ignore deletion of current
-                                  session. Default:
-                                  `MiniSessions.config.force.delete`.
+        {session_name} (string)  Name of detected session file to delete.
+                                 Default: `nil` for name of current session
+                                 (taken from |v:this_session|).
+        {opts}         (table)   Table with options. Current allowed keys:
+                                 `force` (whether to ignore deletion of
+                                 current session; default:
+                                 `MiniSessions.config.force.delete`).
 
 
 MiniSessions.get_latest()                          *MiniSessions.get_latest()*

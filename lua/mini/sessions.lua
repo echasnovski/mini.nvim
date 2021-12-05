@@ -82,7 +82,7 @@ function MiniSessions.setup(config)
   vim.cmd([[au VimEnter * ++nested ++once lua MiniSessions.on_vimenter()]])
 
   if config.autowrite then
-    vim.cmd([[au VimLeavePre * lua if vim.v.this_session ~= '' then MiniSessions.write(nil, true) end]])
+    vim.cmd([[au VimLeavePre * lua if vim.v.this_session ~= '' then MiniSessions.write(nil, {force = true}) end]])
   end
 end
 
@@ -123,8 +123,8 @@ MiniSessions.detected = {}
 --- - Source session with supplied name.
 ---
 ---@param session_name string: Name of detected session file to read. Default: `nil` for default session: local (if detected) or latest session (see |MiniSessions.get_latest|).
----@param force boolean: Whether to delete unsaved buffers. Default: `MiniSessions.config.force.read`.
-function MiniSessions.read(session_name, force)
+---@param opts table: Table with options. Current allowed keys: `force` (whether to delete unsaved buffers; default: `MiniSessions.config.force.read`).
+function MiniSessions.read(session_name, opts)
   if H.is_disabled() then
     return
   end
@@ -140,12 +140,13 @@ function MiniSessions.read(session_name, force)
       session_name = MiniSessions.get_latest()
     end
   end
-  force = (force == nil) and MiniSessions.config.force.read or force
+
+  opts = vim.tbl_deep_extend('force', H.default_opts('read'), opts or {})
 
   if not H.validate_detected(session_name) then
     return
   end
-  if not H.wipeout_all_buffers(force) then
+  if not H.wipeout_all_buffers(opts.force) then
     return
   end
 
@@ -169,8 +170,8 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string: Name of session file to write. Default: `nil` for current session (|v:this_session|).
----@param force boolean: Whether to ignore existence of session file. Default: `MiniSessions.config.force.write`.
-function MiniSessions.write(session_name, force)
+---@param opts table: Table with options. Current allowed keys: `force` (whether to ignore existence of session file; default: `MiniSessions.config.force.write`).
+function MiniSessions.write(session_name, opts)
   if H.is_disabled() then
     return
   end
@@ -179,19 +180,20 @@ function MiniSessions.write(session_name, force)
     return
   end
 
-  force = (force == nil) and MiniSessions.config.force.write or force
+  opts = vim.tbl_deep_extend('force', H.default_opts('write'), opts or {})
+
   local session_path = H.name_to_path(session_name)
   if session_path == nil then
     return
   end
 
-  if not force and H.is_readable_file(session_path) then
-    H.notify([[Can't write to existing session when `force` is not `true`.]])
+  if not opts.force and H.is_readable_file(session_path) then
+    H.notify([[Can't write to existing session when `opts.force` is not `true`.]])
     return
   end
 
   -- Make session file
-  local cmd = ('mksession%s'):format(force and '!' or '')
+  local cmd = ('mksession%s'):format(opts.force and '!' or '')
   vim.cmd(('%s %s'):format(cmd, vim.fn.fnameescape(session_path)))
 
   -- Update detected sessions
@@ -208,8 +210,8 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string: Name of detected session file to delete. Default: `nil` for name of current session (taken from |v:this_session|).
----@param force boolean: Whether to ignore deletion of current session. Default: `MiniSessions.config.force.delete`.
-function MiniSessions.delete(session_name, force)
+---@param opts table: Table with options. Current allowed keys: `force` (whether to ignore deletion of current session; default: `MiniSessions.config.force.delete`).
+function MiniSessions.delete(session_name, opts)
   if H.is_disabled() then
     return
   end
@@ -218,7 +220,8 @@ function MiniSessions.delete(session_name, force)
     return
   end
 
-  force = (force == nil) and MiniSessions.config.force.delete or force
+  opts = vim.tbl_deep_extend('force', H.default_opts('delete'), opts or {})
+
   local session_path = H.name_to_path(session_name)
   if session_path == nil then
     return
@@ -232,8 +235,8 @@ function MiniSessions.delete(session_name, force)
   session_path = MiniSessions.detected[session_name].path
 
   local is_current_session = session_path == vim.v.this_session
-  if not force and is_current_session then
-    H.notify([[Can't delete current session when `force` is not `true`.]])
+  if not opts.force and is_current_session then
+    H.notify([[Can't delete current session when `opts.force` is not `true`.]])
     return
   end
 
@@ -290,13 +293,14 @@ function H.setup_config(config)
 
   vim.validate({
     autoread = { config.autoread, 'boolean' },
+    autowrite = { config.autowrite, 'boolean' },
     directory = { config.directory, 'string' },
-    file = { config.file, 'string', true },
+    file = { config.file, 'string' },
+
     force = { config.force, 'table' },
     ['force.read'] = { config.force.read, 'boolean' },
     ['force.write'] = { config.force.write, 'boolean' },
     ['force.delete'] = { config.force.delete, 'boolean' },
-    autowrite = { config.autowrite, 'boolean' },
   })
 
   return config
@@ -425,6 +429,10 @@ function H.name_to_path(session_name)
 end
 
 -- Utilities
+function H.default_opts(action)
+  return { force = MiniSessions.config.force[action] }
+end
+
 function H.notify(msg)
   vim.notify(('(mini.sessions) %s'):format(msg))
 end
