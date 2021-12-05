@@ -447,6 +447,7 @@ end
 ---   that there are no sessions at the current sessions directory. Either
 ---   create session or supply different directory where session files are
 ---   stored (see |MiniSessions.setup|).
+--- - Local session (if detected) is always displayed first.
 ---
 ---@param n number: Number of returned items. Default: 5.
 ---@param recent boolean: Whether to use recent sessions (instead of alphabetically by name). Default: true.
@@ -463,8 +464,8 @@ function MiniStarter.sections.sessions(n, recent)
     local items = {}
     for session_name, session in pairs(_G.MiniSessions.detected) do
       table.insert(items, {
-        modify_time = session.modify_time,
-        name = session_name,
+        _session = session,
+        name = ('%s%s'):format(session_name, session.type == 'local' and ' (local)' or ''),
         action = ([[lua _G.MiniSessions.read('%s')]]):format(session_name),
         section = 'Sessions',
       })
@@ -477,18 +478,22 @@ function MiniStarter.sections.sessions(n, recent)
     local sort_fun
     if recent then
       sort_fun = function(a, b)
-        return a.modify_time > b.modify_time
+        local a_time = a._session.type == 'local' and math.huge or a._session.modify_time
+        local b_time = b._session.type == 'local' and math.huge or b._session.modify_time
+        return a_time > b_time
       end
     else
       sort_fun = function(a, b)
-        return a.name < b.name
+        local a_name = a._session.type == 'local' and '' or a.name
+        local b_name = b._session.type == 'local' and '' or b.name
+        return a_name < b_name
       end
     end
     table.sort(items, sort_fun)
 
-    -- Take only first `n` elements and remove helper `modify_time`
+    -- Take only first `n` elements and remove helper fields
     return vim.tbl_map(function(x)
-      x.modify_time = nil
+      x._session = nil
       return x
     end, vim.list_slice(items, 1, n))
   end
