@@ -12,6 +12,7 @@
 --- - Configurable (from module) comment structure. Modify |commentstring|
 ---   instead.
 --- - Handle indentation with mixed tab and space.
+--- - Preserve trailing whitespace in empty lines.
 ---
 --- # Setup
 ---
@@ -312,7 +313,8 @@ function H.get_lines_info(lines, comment_parts)
     end
   end
 
-  return indent, is_comment
+  -- `indent` can still be `nil` in case all `lines` are empty
+  return indent or '', is_comment
 end
 
 function H.make_comment_function(comment_parts, indent)
