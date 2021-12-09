@@ -295,7 +295,7 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
+---@param args table: Section arguments. Use `args.icon` to supply your own icon.
 ---@return string: Section string.
 function MiniStatusline.section_git(args)
   if H.isnt_normal_buffer() then
@@ -304,14 +304,15 @@ function MiniStatusline.section_git(args)
 
   local head = vim.b.gitsigns_head or '-'
   local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
+  local icon = args.icon or ''
 
   if signs == '' then
     if head == '-' or head == '' then
       return ''
     end
-    return string.format(' %s', head)
+    return string.format('%s %s', icon, head)
   end
-  return string.format(' %s %s', head, signs)
+  return string.format('%s %s %s', icon, head, signs)
 end
 
 --- Section for Neovim's builtin diagnostics
@@ -322,7 +323,7 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
+---@param args table: Section arguments. Use `args.icon` to supply your own icon.
 ---@return string: Section string.
 function MiniStatusline.section_diagnostics(args)
   -- Assumption: there are no attached clients if table
@@ -343,10 +344,11 @@ function MiniStatusline.section_diagnostics(args)
     end
   end
 
+  local icon = args.icon or 'ﯭ'
   if vim.tbl_count(t) == 0 then
-    return 'ﯭ  -'
+    return ('%s -'):format(icon)
   end
-  return string.format('ﯭ %s', table.concat(t, ''))
+  return string.format('%s %s', icon, table.concat(t, ''))
 end
 
 --- Section for file name

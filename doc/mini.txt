@@ -406,6 +406,7 @@ What it doesn't do:
 - Block and sub-line comments. This will only support per-line commenting.
 - Configurable (from module) comment structure. Modify |commentstring| instead.
 - Handle indentation with mixed tab and space.
+- Preserve trailing whitespace in empty lines.
 
 # Setup
 
@@ -2427,7 +2428,8 @@ MiniStatusline.section_git({args})              *MiniStatusline.section_git()*
 
 
     Parameters: ~
-        {args} (table)  Section arguments.
+        {args} (table)  Section arguments. Use `args.icon` to supply your own
+                        icon.
 
     Return: ~
         string: Section string.
@@ -2445,7 +2447,8 @@ MiniStatusline.section_diagnostics({args}) *MiniStatusline.section_diagnostics()
 
 
     Parameters: ~
-        {args} (table)  Section arguments.
+        {args} (table)  Section arguments. Use `args.icon` to supply your own
+                        icon.
 
     Return: ~
         string: Section string.
