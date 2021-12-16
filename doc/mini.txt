@@ -917,7 +917,7 @@ MiniFuzzy.get_telescope_sorter({opts})      *MiniFuzzy.get_telescope_sorter()*
         {opts} (table)  Options (currently not used).
 
     Usage: ~
-        `require('telescope').setup({default = {generic_sorter =
+        `require('telescope').setup({defaults = {generic_sorter =
         require('mini.fuzzy').get_telescope_sorter}})`
 
 

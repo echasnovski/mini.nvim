@@ -151,7 +151,7 @@ end
 --- |telescope.defaults.generic_sorter| inside `setup()` call.
 ---
 ---@param opts table: Options (currently not used).
----@usage `require('telescope').setup({default = {generic_sorter = require('mini.fuzzy').get_telescope_sorter}})`
+---@usage `require('telescope').setup({defaults = {generic_sorter = require('mini.fuzzy').get_telescope_sorter}})`
 function MiniFuzzy.get_telescope_sorter(opts)
   opts = opts or {}
 
