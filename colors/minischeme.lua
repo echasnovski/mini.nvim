@@ -46,7 +46,7 @@ if vim.o.background == 'dark' then
   }
 end
 
--- Dark palette is an 'inverted dark', output of 'MiniBase16.mini_palette':
+-- Light palette is an 'inverted dark', output of 'MiniBase16.mini_palette':
 -- - Background '#e2e5ca' (LCh(uv) = 90-20-90)
 -- - Foreground '#002a83' (Lch(uv) = 15-60-250)
 -- - Accent chroma 75
