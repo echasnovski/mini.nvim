@@ -480,9 +480,6 @@ else
   }
 end
 
----- Deprecation info
-H.is_deprecation_showed = false
-
 -- Helper functions
 ---- Settings
 function H.setup_config(config)

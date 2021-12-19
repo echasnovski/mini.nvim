@@ -296,19 +296,7 @@ end
 --- calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
-function MiniPairs.bs(pair_set)
-  -- TODO: remove `pair_set` argument
-  if pair_set ~= nil and not H.showed_deprecation then
-    vim.notify(table.concat({
-      '(mini.pairs)',
-      [[`pair_set` arugment in both `MiniPairs.bs()` and `MiniPairs.cr()` is soft deprecated.]],
-      [[It is no longer needed due to the mechanism of pairs registration inside new mapping functions.]],
-      [[See `:h MiniPairs.map()` and `:h MiniPairs.map_buf()`.]],
-      [[It will be removed in the future. Sorry for this.]],
-    }, ' '))
-    H.showed_deprecation = true
-  end
-
+function MiniPairs.bs()
   local res = H.keys.bs
 
   local neigh = H.get_cursor_neigh(0, 1)
@@ -328,19 +316,7 @@ end
 --- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
-function MiniPairs.cr(pair_set)
-  -- TODO: remove `pair_set` argument
-  if pair_set ~= nil and not H.showed_deprecation then
-    vim.notify(table.concat({
-      '(mini.pairs)',
-      [[`pair_set` arugment in both `MiniPairs.bs()` and `MiniPairs.cr()` is soft deprecated.]],
-      [[It is no longer needed due to the mechanism of pairs registration inside new mapping functions.]],
-      [[See `:h MiniPairs.map()` and `:h MiniPairs.map_buf()`.]],
-      [[It will be removed in the future. Sorry for this.]],
-    }, ' '))
-    H.showed_deprecation = true
-  end
-
+function MiniPairs.cr()
   local res = H.keys.cr
 
   local neigh = H.get_cursor_neigh(0, 1)
@@ -365,9 +341,6 @@ H.registered_pairs = {
   c = { all = { bs = {}, cr = {} } },
   t = { all = { bs = {}, cr = {} } },
 }
-
--- Deprecation indication. TODO: remove when there is not deprecation.
-H.showed_deprecation = false
 
 -- Precomputed keys to increase speed
 -- stylua: ignore start
