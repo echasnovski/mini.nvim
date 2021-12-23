@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Lua module for minimal session management (read, write, delete), which
 --- works using |mksession| (meaning 'sessionoptions' is fully respected).
@@ -63,7 +64,7 @@
 ---@brief ]]
 ---@tag MiniSessions mini.sessions
 
--- Module and its helper --
+-- Module definition ==========================================================
 local MiniSessions = {}
 local H = { path_sep = package.config:sub(1, 1) }
 
@@ -89,7 +90,6 @@ function MiniSessions.setup(config)
   end
 end
 
--- Module config --
 MiniSessions.config = {
   -- Whether to read latest session if Neovim was called without file arguments
   autoread = false,
@@ -110,7 +110,7 @@ MiniSessions.config = {
   verbose = { read = false, write = true, delete = true },
 }
 
--- Module data --
+-- Module data ================================================================
 ---@class MiniSessions.detected @Table of detected sessions. Keys represent session name. Values are tables with session information that currently has these fields (but subject to change):
 ---@field modify_time number: modification time (see |getftime|) of session file.
 ---@field name string: name of session (should be equal to table value).
@@ -119,7 +119,7 @@ MiniSessions.config = {
 
 MiniSessions.detected = {}
 
--- Module functionality --
+-- Module functionality =======================================================
 --- Read detected session
 ---
 --- What it does:
@@ -297,12 +297,12 @@ function MiniSessions.on_vimenter()
   end
 end
 
--- Helper data --
+-- Helper data ================================================================
 -- Module default config
 H.default_config = MiniSessions.config
 
--- Helper functions --
--- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -339,7 +339,7 @@ function H.is_disabled()
   return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true
 end
 
--- Work with sessions
+-- Work with sessions ---------------------------------------------------------
 function H.detect_sessions(config)
   local res_global = config.directory == '' and {} or H.detect_sessions_global(config.directory)
   local res_local = config.file == '' and {} or H.detect_sessions_local(config.file)
@@ -451,7 +451,7 @@ function H.name_to_path(session_name)
   return vim.fn.fnamemodify(path, ':p')
 end
 
--- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.default_opts(action)
   return { force = MiniSessions.config.force[action], verbose = MiniSessions.config.verbose[action] }
 end

@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Lua module for minimal, fast, and flexible start screen. Displayed items
 --- are fully customizable both in terms of what they do and how they look
@@ -220,7 +221,7 @@
 ---@brief ]]
 ---@tag MiniStarter mini.starter
 
--- Module and its helper --
+-- Module definition ==========================================================
 local MiniStarter = {}
 local H = {}
 
@@ -262,7 +263,6 @@ function MiniStarter.setup(config)
   )
 end
 
--- Module config --
 MiniStarter.config = {
   -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
   -- started with intent to show something else.
@@ -297,11 +297,11 @@ MiniStarter.config = {
   query_updaters = [[abcdefghijklmnopqrstuvwxyz0123456789_-.]],
 }
 
--- Module data --
+-- Module data ================================================================
 ---@class MiniStarter.content@ Final content of Starter buffer. For more information see "Definition of buffer content" section in |mini.starter|.
 MiniStarter.content = {}
 
--- Module functionality --
+-- Module functionality =======================================================
 --- Act on |VimEnter|.
 function MiniStarter.on_vimenter()
   -- It is assumed that something is shown if there is something in 'current'
@@ -424,7 +424,7 @@ function MiniStarter.close()
   H.buf_id = nil
 end
 
--- Sections --
+-- Sections -------------------------------------------------------------------
 ---@class MiniStarter.sections@Table of pre-configured sections
 MiniStarter.sections = {}
 
@@ -572,7 +572,7 @@ function MiniStarter.sections.telescope()
 end
 -- stylua: ignore end
 
--- Content hooks --
+-- Content hooks --------------------------------------------------------------
 ---@class MiniStarter.gen_hook@Table with pre-configured content hook generators. Each element is a function which returns content hook. So to use them inside |MiniStarter.setup|, call them.
 MiniStarter.gen_hook = {}
 
@@ -712,7 +712,7 @@ function MiniStarter.gen_hook.aligning(horizontal, vertical)
   end
 end
 
--- Work with content --
+-- Work with content ----------------------------------------------------------
 --- Helper to iterate through content
 ---
 --- Basically, this traverses content "2d array" (in depth-first fashion; top
@@ -823,7 +823,7 @@ function MiniStarter.content_to_items(content)
   return items
 end
 
--- Other exported functions --
+-- Other exported functions ---------------------------------------------------
 --- Evaluate current item
 function MiniStarter.eval_current_item()
   H.eval_fun_or_string(H.items[H.current_item_id].action, true)
@@ -874,7 +874,7 @@ function MiniStarter.on_cursormoved()
   H.position_cursor_on_current_item()
 end
 
--- Helper data --
+-- Helper data ================================================================
 -- Module default config
 H.default_config = MiniStarter.config
 
@@ -930,7 +930,8 @@ H.ns = {
 -- Current search query
 H.query = ''
 
--- Settings --
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -961,7 +962,7 @@ function H.is_disabled()
   return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true
 end
 
--- Normalize config elements --
+-- Normalize config elements --------------------------------------------------
 function H.normalize_items(items)
   local res = H.items_flatten(items)
   if #res == 0 then
@@ -982,7 +983,7 @@ function H.normalize_header_footer(x, x_name)
   return vim.split(res, '\n')
 end
 
--- Work with buffer content --
+-- Work with buffer content ---------------------------------------------------
 function H.make_initial_content(items)
   MiniStarter.content = {}
 
@@ -1044,7 +1045,7 @@ function H.content_highlight()
   end
 end
 
--- Work with items --
+-- Work with items -----------------------------------------------------------
 function H.items_flatten(items)
   local res, f = {}, nil
   f = function(x)
@@ -1123,7 +1124,7 @@ function H.position_cursor_on_current_item()
   vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos)
 end
 
--- Work with queries --
+-- Work with queries ----------------------------------------------------------
 function H.make_query(query)
   -- Ignore case
   query = (query or H.query):lower()
@@ -1161,7 +1162,7 @@ function H.make_query(query)
   vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
 end
 
--- Work with starter buffer --
+-- Work with starter buffer ---------------------------------------------------
 function H.apply_buffer_options()
   -- Force Normal mode
   vim.cmd([[normal! <ESC>]])
@@ -1237,7 +1238,7 @@ function H.add_hl_current_item()
   H.buf_hl(H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col)
 end
 
--- Predicates --
+-- Predicates -----------------------------------------------------------------
 function H.is_fun_or_string(x, allow_nil)
   allow_nil = allow_nil == nil and true or allow_nil
   return (allow_nil and x == nil) or type(x) == 'function' or type(x) == 'string'
@@ -1250,7 +1251,7 @@ function H.is_item(x)
     and type(x['section']) == 'string'
 end
 
--- Utilities --
+-- Utilities ------------------------------------------------------------------
 function H.eval_fun_or_string(x, string_as_cmd)
   if type(x) == 'function' then
     return x()

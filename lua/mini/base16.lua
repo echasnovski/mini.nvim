@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast Lua module which implements
 --- [base16](http://chriskempson.com/projects/base16/) color scheme (with
@@ -24,10 +25,10 @@
 ---     -- `setup()`.
 ---     palette = nil,
 ---
----    -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
----    -- or table with cterm colors. See `setup()` documentation for more
----    -- information.
----     use_cterm = nil,
+---     -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
+---     -- or table with cterm colors. See `setup()` documentation for more
+---     -- information.
+---      use_cterm = nil,
 ---   }
 --- </code>
 --- Example:
@@ -68,7 +69,7 @@
 ---@brief ]]
 ---@tag MiniBase16 mini.base16
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniBase16 = {}
 local H = {}
 
@@ -112,6 +113,7 @@ MiniBase16.config = {
   use_cterm = nil,
 }
 
+-- Module functionality =======================================================
 --- Create 'mini' palette
 ---
 --- Create base16 palette based on the HEX (string '#RRGGBB') colors of main background and
@@ -191,8 +193,9 @@ function MiniBase16.mini_palette(background, foreground, accent_chroma)
   palette[8] = { l = fg.l + 2 * fg_step, c = fg.c, h = fg.h }
 
   -- Accent colors
-  ---- Only try to avoid color if it has positive chroma, because with zero
-  ---- chroma hue is meaningless (as in polar coordinates)
+
+  -- Only try to avoid color if it has positive chroma, because with zero
+  -- chroma hue is meaningless (as in polar coordinates)
   local present_hues = {}
   if bg.c > 0 then
     table.insert(present_hues, bg.h)
@@ -241,11 +244,12 @@ function MiniBase16.rgb_palette_to_cterm_palette(palette)
   end, palette)
 end
 
--- Helpers
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniBase16.config
 
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -265,7 +269,7 @@ function H.apply_config(config)
   H.apply_palette(config.palette, config.use_cterm)
 end
 
----- Validators
+-- Validators -----------------------------------------------------------------
 H.base16_names = {
   'base00',
   'base01',
@@ -338,7 +342,7 @@ function H.validate_hex(x, x_name)
   return true
 end
 
----- Highlighting
+-- Highlighting ---------------------------------------------------------------
 function H.apply_palette(palette, use_cterm)
   -- Prepare highlighting application. Notes:
   -- - Clear current highlight only if other theme was loaded previously.
@@ -378,8 +382,8 @@ function H.apply_palette(palette, use_cterm)
   hi('Folded',       {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
   hi('IncSearch',    {fg=p.base01, bg=p.base09, attr=nil,         sp=nil})
   hi('LineNr',       {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
-  ---- Slight difference from base16, where `bg=base03` is used. This makes
-  ---- it possible to comfortably see this highlighting in comments.
+  -- Slight difference from base16, where `bg=base03` is used. This makes
+  -- it possible to comfortably see this highlighting in comments.
   hi('MatchParen',   {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
   hi('ModeMsg',      {fg=p.base0B, bg=nil,      attr=nil,         sp=nil})
   hi('MoreMsg',      {fg=p.base0B, bg=nil,      attr=nil,         sp=nil})
@@ -530,7 +534,7 @@ function H.apply_palette(palette, use_cterm)
   end
 
   -- Plugins
-  ---- 'mini'
+  -- 'mini'
   hi('MiniCompletionActiveParameter', {fg=nil, bg=nil, attr='underline', sp=nil})
 
   hi('MiniCursorword', {fg=nil, bg=nil, attr='underline', sp=nil})
@@ -570,7 +574,7 @@ function H.apply_palette(palette, use_cterm)
 
   hi('MiniTrailspace', {fg=p.base00, bg=p.base08, attr=nil, sp=nil})
 
-  ---- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
+  -- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
   hi('NvimTreeExecFile',     { fg=p.base0B, bg=nil,      attr='bold',           sp=nil })
   hi('NvimTreeFolderIcon',   { fg=p.base03, bg=nil,      attr=nil,              sp=nil })
   hi('NvimTreeGitDeleted',   { fg=p.base08, bg=nil,      attr=nil,              sp=nil })
@@ -587,18 +591,18 @@ function H.apply_palette(palette, use_cterm)
   hi('NvimTreeSymlink',      { fg=p.base0F, bg=nil,      attr='bold',           sp=nil })
   hi('NvimTreeWindowPicker', { fg=p.base05, bg=p.base01, attr="bold",           sp=nil })
 
-  ---- lewis6991/gitsigns.nvim
+  -- lewis6991/gitsigns.nvim
   hi('GitSignsAdd',    {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
   hi('GitSignsChange', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
   hi('GitSignsDelete', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
 
-  ---- nvim-telescope/telescope.nvim
+  -- nvim-telescope/telescope.nvim
   hi('TelescopeBorder',         {fg=p.base0F, bg=nil,      attr=nil,    sp=nil}) -- as in 'Delimiter'
   hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil}) -- as in 'Search'
   hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
   hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
 
-  ---- folke/which-key.nvim
+  -- folke/which-key.nvim
   hi('WhichKey',          {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
   hi('WhichKeyDesc',      {fg=p.base05, bg=nil,      attr=nil, sp=nil})
   hi('WhichKeyFloat',     {fg=p.base05, bg=p.base01, attr=nil, sp=nil})
@@ -662,7 +666,7 @@ function H.highlight_both(group, args)
   vim.cmd(command)
 end
 
----- Compound (gui and cterm) palette
+-- Compound (gui and cterm) palette -------------------------------------------
 function H.make_compound_palette(palette, use_cterm)
   local cterm_table = use_cterm
   if type(use_cterm) == 'boolean' then
@@ -676,9 +680,8 @@ function H.make_compound_palette(palette, use_cterm)
   return res
 end
 
----- Optimal scales
----- Make a set of equally spaced hues which are as different to present hues
----- as possible
+-- Optimal scales. Make a set of equally spaced hues which are as different to
+-- present hues as possible
 function H.make_different_hues(present_hues, n)
   local max_offset = math.floor(360 / n + 0.5)
 
@@ -709,10 +712,10 @@ function H.make_hue_scale(n, offset)
   return res
 end
 
----- Terminal colors
----- Sources:
----- - https://github.com/shawncplus/Vim-toCterm/blob/master/lib/Xterm.php
----- - https://gist.github.com/MicahElliott/719710
+-- Terminal colors ------------------------------------------------------------
+-- Sources:
+-- - https://github.com/shawncplus/Vim-toCterm/blob/master/lib/Xterm.php
+-- - https://gist.github.com/MicahElliott/719710
 -- stylua: ignore start
 H.cterm_first16 = {
   { r = 0,   g = 0,   b = 0 },
@@ -763,10 +766,11 @@ function H.ensure_cterm_palette()
   end
 end
 
----- Color conversion
----- Source: https://www.easyrgb.com/en/math.php
----- Accuracy is usually around 2-3 decimal digits, which should be fine
------- HEX <-> CIELCh(uv)
+-- Color conversion -----------------------------------------------------------
+-- Source: https://www.easyrgb.com/en/math.php
+-- Accuracy is usually around 2-3 decimal digits, which should be fine
+
+-- HEX <-> CIELCh(uv)
 function H.hex2lch(hex)
   local res = hex
   for _, f in pairs({ H.hex2rgb, H.rgb2xyz, H.xyz2luv, H.luv2lch }) do
@@ -783,7 +787,7 @@ function H.lch2hex(lch)
   return res
 end
 
------- HEX <-> RGB
+-- HEX <-> RGB
 function H.hex2rgb(hex)
   local dec = tonumber(hex:sub(2), 16)
 
@@ -804,7 +808,7 @@ function H.rgb2hex(rgb)
   return '#' .. string.format('%02x', t.r) .. string.format('%02x', t.g) .. string.format('%02x', t.b)
 end
 
------- RGB <-> XYZ
+-- RGB <-> XYZ
 function H.rgb2xyz(rgb)
   local t = vim.tbl_map(function(c)
     c = c / 255
@@ -846,8 +850,8 @@ function H.xyz2rgb(xyz)
   })
 end
 
------- XYZ <-> CIELuv
--------- Using white reference for D65 and 2 degress
+-- XYZ <-> CIELuv
+-- Using white reference for D65 and 2 degress
 H.ref_u = (4 * 95.047) / (95.047 + (15 * 100) + (3 * 108.883))
 H.ref_v = (9 * 100) / (95.047 + (15 * 100) + (3 * 108.883))
 
@@ -893,7 +897,7 @@ function H.luv2xyz(luv)
   return { x = x, y = y, z = z }
 end
 
------- CIELuv <-> CIELCh(uv)
+-- CIELuv <-> CIELCh(uv)
 H.tau = 2 * math.pi
 
 function H.luv2lch(luv)
@@ -915,7 +919,7 @@ function H.lch2luv(lch)
   return { l = lch.l, u = u, v = v }
 end
 
----- Distances
+-- Distances ------------------------------------------------------------------
 function H.dist_circle(x, y)
   local d = math.abs(x - y) % 360
   return d > 180 and (360 - d) or d

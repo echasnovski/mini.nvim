@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast module for working with trailing whitespace.
 ---
@@ -38,7 +39,7 @@
 ---@brief ]]
 ---@tag MiniTrailspace mini.trailspace
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniTrailspace = {}
 local H = {}
 
@@ -86,14 +87,13 @@ function MiniTrailspace.setup(config)
   vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
 end
 
--- Module config
 MiniTrailspace.config = {
   -- Highlight only in normal buffers (ones with empty 'buftype'). This is
   -- useful to not show trailing whitespace where it usually doesn't matter.
   only_in_normal_buffers = true,
 }
 
--- Functions to perform actions
+-- Module functionality =======================================================
 --- Highlight trailing whitespace
 function MiniTrailspace.highlight()
   -- Highlight only in normal mode
@@ -160,8 +160,8 @@ function MiniTrailspace.track_normal_buffer()
   end
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniTrailspace.config
 
 -- Information about last match highlighting (stored *per window*):
@@ -169,7 +169,8 @@ H.default_config = MiniTrailspace.config
 -- - Value: table with `id` field for match id (from `vim.fn.matchadd()`).
 H.window_matches = {}
 
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config

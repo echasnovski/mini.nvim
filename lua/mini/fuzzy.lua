@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Lua module which implements minimal and fast fuzzy matching.
 ---
@@ -53,7 +54,7 @@
 ---@brief ]]
 ---@tag MiniFuzzy mini.fuzzy
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniFuzzy = {}
 local H = {}
 
@@ -72,15 +73,13 @@ function MiniFuzzy.setup(config)
   H.apply_config(config)
 end
 
--- Module config
 MiniFuzzy.config = {
   -- Maximum allowed value of match features (width and first match). All
   -- feature values greater than cutoff can be considered "equally bad".
   cutoff = 100,
 }
 
--- Module functionality
-
+-- Module functionality =======================================================
 --- Compute match data of input `word` and `candidate` strings
 ---
 --- It tries to find best match for input string `word` (usually user input)
@@ -191,12 +190,12 @@ function MiniFuzzy.get_telescope_sorter(opts)
   })
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniFuzzy.config
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -220,12 +219,13 @@ function H.apply_config(config)
   MiniFuzzy.config = config
 end
 
----- Fuzzy matching
--- @param letters Array of letters from input word
--- @param candidate String of interest
---
--- @return Table with matched positions (in `candidate`) if there is a match,
---   `nil` otherwise.
+-- Fuzzy matching -------------------------------------------------------------
+---@param letters string[] Array of letters from input word
+---@param candidate string String of interest
+---
+---@return table Table with matched positions (in `candidate`) if there is a
+---  match, `nil` otherwise.
+---@private
 function H.find_best_positions(letters, candidate)
   local n_candidate, n_letters = #candidate, #letters
   if n_letters == 0 or n_candidate < n_letters then
@@ -357,7 +357,7 @@ function H.filter_by_indexes(candidate_array, ids)
   return res, res_ids
 end
 
----- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.string_to_letters(s)
   return vim.tbl_map(vim.pesc, vim.split(s, ''))
 end

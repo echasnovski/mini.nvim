@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 --- a reimplementation of the core features of 'machakann/vim-sandwich' with a
@@ -120,7 +121,7 @@
 ---@brief ]]
 ---@tag MiniSurround mini.surround
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniSurround = {}
 local H = {}
 
@@ -142,7 +143,6 @@ function MiniSurround.setup(config)
   vim.api.nvim_exec([[hi default link MiniSurround IncSearch]], false)
 end
 
--- Module config
 MiniSurround.config = {
   -- Number of lines within which surrounding is searched
   n_lines = 20,
@@ -165,7 +165,7 @@ MiniSurround.config = {
   },
 }
 
--- Module functionality
+-- Module functionality =======================================================
 --- Surround operator
 ---
 --- Main function to be used in expression mappings. No need to use it
@@ -211,7 +211,8 @@ function MiniSurround.add(mode)
   end
 
   -- Add surrounding. Begin insert with 'end' to not break column numbers
-  ---- Insert after the right mark (`+ 1` is for that)
+
+  -- Insert after the right mark (`+ 1` is for that)
   H.insert_into_line(marks.second.line, marks.second.col + 1, surr_info.right)
   H.insert_into_line(marks.first.line, marks.first.col, surr_info.left)
 
@@ -329,14 +330,14 @@ function MiniSurround.update_n_lines()
   MiniSurround.config.n_lines = n_lines
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniSurround.config
 
----- Namespace for highlighting
+-- Namespace for highlighting
 H.ns_id = vim.api.nvim_create_namespace('MiniSurround')
 
----- Table of non-special surroundings
+-- Table of non-special surroundings
 H.surroundings = setmetatable({
   -- Brackets that need balancing
   ['('] = { find = '%b()', left = '(', right = ')' },
@@ -354,18 +355,18 @@ H.surroundings = setmetatable({
   end,
 })
 
----- Cache for dot-repeatability. This table is currently used with these keys:
----- - 'input' - surround info for searching (in 'delete' and 'replace' start).
----- - 'output' - surround info for adding (in 'add' and 'replace' end).
----- - 'direction' - direction in which `MiniSurround.find()` should go. Used
-----   to enable same `operatorfunc` pattern for dot-repeatability.
+-- Cache for dot-repeatability. This table is currently used with these keys:
+-- - 'input' - surround info for searching (in 'delete' and 'replace' start).
+-- - 'output' - surround info for adding (in 'add' and 'replace' end).
+-- - 'direction' - direction in which `MiniSurround.find()` should go. Used to
+--   enable same `operatorfunc` pattern for dot-repeatability.
 H.cache = {}
 
----- Helper table for `H.user_surround_id()` to keep track of help messages
+-- Helper table for `H.user_surround_id()` to keep track of help messages
 H.needs_help_msg = {}
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -444,29 +445,28 @@ function H.is_disabled()
   return vim.g.minisurround_disable == true or vim.b.minisurround_disable == true
 end
 
----- Find surrounding
----- NOTE: more simple approach for `find_surrounding()` would have been to use
----- combination of `searchpairpos()` (to search for balanced pair) and
----- `searchpos()` (to search end of balanced search and for unbalanced pairs).
----- However, there are several problems with it:
----- - It is slower (around 2-5 times) than current Lua pattern approach.
----- - It has limitations when dealing with crucial 'function call' search.
-----   Function call is defined as 'non-empty function name followed by
-----   balanced pair of "(" and ")"'. Naive use of `searchpairpos()` is to use
-----   `searchpairpos('\w\+(', '', ')')` which works most of the time.
-----   However, in example `foo(a = (1 + 1), b = c(1, 2))` this will match
-----   `o(a = (1 + 1)` when cursor is on 'a'. This is because '(' inside it is
-----   not recognized for balancing because it doesn't match '\w\+('.
-----
----- Vim's approach also has some upsides:
----- - `searchpairpos()` allows skipping of certain matches, like if it is
-----   inside string or comment. It works decently well with example from help
-----   (with `synIDattr`, etc.) but this only works when Vim's builtin
-----   highlighting is used. When treesitter's highlighting is active, this
-----   doesn't work.
-----
----- All in all, using Vim's builtin functions is doable, but leads to roughly
----- same efforts as Lua pattern approach.
+-- Find surrounding
+-- NOTE: more simple approach for `find_surrounding()` would have been to use
+-- combination of `searchpairpos()` (to search for balanced pair) and
+-- `searchpos()` (to search end of balanced search and for unbalanced pairs).
+-- However, there are several problems with it:
+-- - It is slower (around 2-5 times) than current Lua pattern approach.
+-- - It has limitations when dealing with crucial 'function call' search.
+--   Function call is defined as 'non-empty function name followed by balanced
+--   pair of "(" and ")"'. Naive use of `searchpairpos()` is to use
+--   `searchpairpos('\w\+(', '', ')')` which works most of the time. However,
+--   in example `foo(a = (1 + 1), b = c(1, 2))` this will match
+--   `o(a = (1 + 1)` when cursor is on 'a'. This is because '(' inside it is
+--   not recognized for balancing because it doesn't match '\w\+('.
+--
+-- Vim's approach also has some upsides:
+-- - `searchpairpos()` allows skipping of certain matches, like if it is inside
+--   string or comment. It works decently well with example from help (with
+--   `synIDattr`, etc.) but this only works when Vim's builtin highlighting is
+--   used. When treesitter's highlighting is active, this doesn't work.
+--
+-- All in all, using Vim's builtin functions is doable, but leads to roughly
+-- same efforts as Lua pattern approach.
 function H.find_surrounding(surround_info)
   -- `surround_info` should have `find` field with surrounding pattern. If
   -- needed, it should also have a `extract` field with extract pattern for two
@@ -487,7 +487,7 @@ function H.find_surrounding(surround_info)
   return surr
 end
 
----- Work with operator marks
+-- Work with operator marks ---------------------------------------------------
 function H.get_marks_pos(mode)
   -- Region is inclusive on both ends
   local mark1, mark2
@@ -524,8 +524,8 @@ function H.get_marks_pos(mode)
   -- - For the second mark we want last byte of symbol. To add surrounding to
   --   the right, use `pos2[2] + 1`.
   local line2 = vim.fn.getline(pos2[1])
-  ---- This returns the last byte inside character because
-  ---- `vim.str_byteindex()` 'rounds upwards to the end of that sequence'.
+  -- This returns the last byte inside character because `vim.str_byteindex()`
+  -- 'rounds upwards to the end of that sequence'.
   pos2[2] = vim.str_byteindex(
     line2,
     -- Use `math.min()` because it might lead to 'index out of range' error
@@ -540,7 +540,7 @@ function H.get_marks_pos(mode)
   }
 end
 
----- Work with cursor
+-- Work with cursor -----------------------------------------------------------
 function H.cursor_adjust(line, col)
   local cur_pos = vim.api.nvim_win_get_cursor(0)
 
@@ -591,17 +591,18 @@ function H.cursor_cycle(pos_array, dir)
   vim.api.nvim_win_set_cursor(0, { res_pos.line, res_pos.col - 1 })
 end
 
----- Work with user input
+-- Work with user input -------------------------------------------------------
 function H.notify(msg)
   vim.notify(string.format('(mini.surround) %s', msg))
 end
 
 function H.user_surround_id(sur_type)
   -- Get from user single character surrounding identifier
-  ---- Helper message needs to depend on surrounding type to work better in
-  ---- 'replace' case: when input surrounding was entered before needing a
-  ---- message but output wasn't. If this is a simple boolean, there will be
-  ---- two consecutive messages (even if first one already is not needed).
+
+  -- Helper message needs to depend on surrounding type to work better in
+  -- 'replace' case: when input surrounding was entered before needing a
+  -- message but output wasn't. If this is a simple boolean, there will be two
+  -- consecutive messages (even if first one already is not needed).
   H.needs_help_msg[sur_type] = true
   vim.defer_fn(function()
     if not H.needs_help_msg[sur_type] then
@@ -633,9 +634,9 @@ function H.user_input(msg, text)
   return vim.fn.input('(mini.surround) ' .. msg .. ': ', text or '')
 end
 
----- Work with line parts and text.
----- Line part - table with fields `line`, `from`, `to`. Represent part of line
----- from `from` character (inclusive) to `to` character (inclusive).
+-- Work with line parts and text ----------------------------------------------
+-- Line part - table with fields `line`, `from`, `to`. Represent part of line
+-- from `from` character (inclusive) to `to` character (inclusive).
 function H.new_linepart(pos_left, pos_right)
   if pos_left.line ~= pos_right.line then
     H.notify('Positions span over multiple lines.')
@@ -667,14 +668,13 @@ function H.insert_into_line(line_num, col, text)
   vim.fn.setline(line_num, new_line)
 end
 
----- Work with regular expressions
------- Find the smallest (with the smallest width) covering (left and right
------- offsets in `line`) which inclused `offset` and within which `pattern` is
------- matched. Output is a table with two numbers (or `nil` in case of no
------- covering match): indexes of left and right parts of match. They have two
------- properties:
------- - `left <= offset <= right`.
------- - `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
+-- Work with regular expressions ----------------------------------------------
+-- Find the smallest (with the smallest width) covering (left and right offsets
+-- in `line`) which inclused `offset` and within which `pattern` is matched.
+-- Output is a table with two numbers (or `nil` in case of no covering match):
+-- indexes of left and right parts of match. They have two properties:
+-- - `left <= offset <= right`.
+-- - `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
 function H.find_smallest_covering(line, pattern, offset)
   local left, right, match_left, match_right
   local stop = false
@@ -722,16 +722,19 @@ function H.find_smallest_covering(line, pattern, offset)
   return { left = left, right = right }
 end
 
------- Extend covering to capture possible whole groups with count modifiers.
------- Primar usage is to match whole function call with pattern
------- `[%w_%.]+%b()`. Example:
------- `covering = {left = 4, right = 10}, line = '(aaa(b()b))',
------- pattern = '%g+%b()', direction = 'left'` should return
------- `{left = 2, right = 10}`.
------- NOTE: when used for pattern without count modifiers, can remove
------- "smallest width" property. For example:
------- `covering = {left = 2, right = 5}, line = '((()))',
------- pattern = '%(%(.-%)%)', direction = 'left'`
+-- Extend covering to capture possible whole groups with count modifiers.
+-- Primar usage is to match whole function call with pattern
+-- `[%w_%.]+%b()`.
+--
+-- Example:
+-- `covering = {left = 4, right = 10}, line = '(aaa(b()b))',
+-- pattern = '%g+%b()', direction = 'left'` should return
+-- `{left = 2, right = 10}`.
+--
+-- NOTE: when used for pattern without count modifiers, can remove "smallest
+-- width" property. For example:
+-- `covering = {left = 2, right = 5}, line = '((()))',
+-- pattern = '%(%(.-%)%)', direction = 'left'`
 function H.extend_covering(covering, line, pattern, direction)
   local left, right = covering.left, covering.right
   local line_pattern = '^' .. pattern .. '$'
@@ -754,19 +757,19 @@ function H.extend_covering(covering, line, pattern, direction)
   return { left = left, right = right }
 end
 
----- Work with cursor neighborhood
+-- Work with cursor neighborhood ----------------------------------------------
 function H.get_cursor_neighborhood(n_neighbors)
   -- Cursor position
   local cur_pos = vim.api.nvim_win_get_cursor(0)
-  ---- Convert from 0-based column to 1-based
+  -- Convert from 0-based column to 1-based
   cur_pos = { line = cur_pos[1], col = cur_pos[2] + 1 }
 
   -- '2d neighborhood': position is determined by line and column
   local line_start = math.max(1, cur_pos.line - n_neighbors)
   local line_end = math.min(vim.api.nvim_buf_line_count(0), cur_pos.line + n_neighbors)
   local neigh2d = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
-  ---- Append 'newline' character to distinguish between lines in 1d case. This
-  ---- is crucial to not allow detecting surrounding spanning several lines
+  -- Append 'newline' character to distinguish between lines in 1d case. This
+  -- is crucial to not allow detecting surrounding spanning several lines
   for k, v in pairs(neigh2d) do
     neigh2d[k] = v .. '\n'
   end
@@ -807,8 +810,9 @@ function H.get_cursor_neighborhood(n_neighbors)
   }
 end
 
--- Get surround information
----- `sur_type` is one of 'input' or 'output'
+-- Get surround information ---------------------------------------------------
+---@param sur_type string One of 'input' or 'output'
+---@private
 function H.get_surround_info(sur_type, use_cache)
   local res
 
@@ -824,12 +828,13 @@ function H.get_surround_info(sur_type, use_cache)
   local char = H.user_surround_id(sur_type)
 
   -- Compute surround info
-  ---- Return `nil` in case of a bad identifier
+
+  -- Return `nil` in case of a bad identifier
   if char == nil then
     return nil
   end
 
-  ---- Handle special cases first
+  -- Handle special cases first
   if char == 'f' then
     res = H.special_funcall(sur_type)
   elseif char == 'i' then
@@ -840,12 +845,12 @@ function H.get_surround_info(sur_type, use_cache)
     res = H.surroundings[char]
   end
 
-  ---- Do nothing if supplied nothing
+  -- Do nothing if supplied nothing
   if res == nil then
     return nil
   end
 
-  ----- Add identifier
+  -- Add identifier
   res.id = char
 
   -- Cache result
@@ -915,7 +920,7 @@ function H.special_tag(sur_type)
   end
 end
 
--- Find surrounding in neighborhood
+-- Find surrounding in neighborhood -------------------------------------------
 function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   local neigh = H.get_cursor_neighborhood(n_neighbors)
   local cur_offset = neigh.pos_to_offset(neigh.cursor_pos)
@@ -925,14 +930,15 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   if covering == nil then
     return nil
   end
-  ---- Tweak covering for function call surrounding
+  -- Tweak covering for function call surrounding
   if surround_info.id == 'f' then
     covering = H.extend_covering(covering, neigh['1d'], surround_info.find, 'left')
   end
   local substring = neigh['1d']:sub(covering.left, covering.right)
 
   -- Compute lineparts for left and right surroundings
-  ---- If there is no `extract` pattern, extract one character from start and end
+
+  -- If there is no `extract` pattern, extract one character from start and end
   local extract = surround_info.extract or '^(.).*(.)$'
   local left, right = substring:match(extract)
   local l, r = covering.left, covering.right
@@ -952,7 +958,7 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   return { left = left_linepart, right = right_linepart }
 end
 
--- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.keymap(mode, keys, cmd, opts)
   if keys == '' then
     return

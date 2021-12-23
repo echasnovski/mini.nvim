@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast tabline module. General idea: show all listed
 --- buffers in readable way with minimal total width in case of one vim tab,
@@ -65,7 +66,7 @@
 ---@brief ]]
 ---@tag MiniTabline mini.tabline
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniTabline = {}
 local H = {}
 
@@ -119,7 +120,6 @@ function MiniTabline.setup(config)
   )
 end
 
--- Module config
 MiniTabline.config = {
   -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
   show_icons = true,
@@ -129,7 +129,7 @@ MiniTabline.config = {
   set_vim_settings = true,
 }
 
--- Module functionality
+-- Module functionality =======================================================
 --- Update |tabline|
 ---
 --- Designed to be used with |autocmd|. No need to use it directly,
@@ -154,27 +154,27 @@ function MiniTabline.make_tabline_string()
   return H.concat_tabs()
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniTabline.config
 
----- Table to keep track of tabs
+-- Table to keep track of tabs
 H.tabs = {}
 
----- Indicator of whether there is clickable support
+-- Indicator of whether there is clickable support
 H.tablineat = vim.fn.has('tablineat')
 
----- Keep track of initially unnamed buffers
+-- Keep track of initially unnamed buffers
 H.unnamed_buffers_seq_ids = {}
 
----- Separator of file path
+-- Separator of file path
 H.path_sep = package.config:sub(1, 1)
 
----- Buffer number of center buffer
+-- Buffer number of center buffer
 H.center_buf_id = vim.fn.winbufnr(0)
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -203,7 +203,8 @@ function H.is_disabled()
   return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true
 end
 
----- List tabs
+-- Work with tabs -------------------------------------------------------------
+-- List tabs
 function H.list_tabs()
   local tabs = {}
   for i = 1, vim.fn.bufnr('$') do
@@ -224,7 +225,7 @@ function H.is_buffer_in_minitabline(buf_id)
   return (vim.fn.buflisted(buf_id) > 0) and (vim.fn.getbufvar(buf_id, '&buftype') ~= 'quickfix')
 end
 
----- Tab's highlight group
+-- Tab's highlight group
 function H.construct_highlight(buf_id)
   local hl_type
   if buf_id == vim.fn.winbufnr(0) then
@@ -241,7 +242,7 @@ function H.construct_highlight(buf_id)
   return string.format('%%#MiniTabline%s#', hl_type)
 end
 
----- Tab's clickable action (if supported)
+-- Tab's clickable action (if supported)
 function H.construct_tabfunc(buf_id)
   if H.tablineat > 0 then
     return string.format([[%%%d@MiniTablineSwitchBuffer@]], buf_id)
@@ -250,7 +251,7 @@ function H.construct_tabfunc(buf_id)
   end
 end
 
----- Tab's label and label extender
+-- Tab's label and label extender
 function H.construct_label_data(buf_id)
   local label, label_extender
 
@@ -280,12 +281,13 @@ function H.make_path_extender(buf_id)
   end
 end
 
----- Work with unnamed buffers. They are tracked in `H.unnamed_buffers_seq_ids`
----- for disambiguation. This table is designed to store 'sequential' buffer
----- identifier. This approach allows to have the following behavior:
----- - Create three unnamed buffers.
----- - Delete second one.
----- - Tab label for third one remains the same.
+-- Work with unnamed buffers --------------------------------------------------
+-- Unnamed buffers are tracked in `H.unnamed_buffers_seq_ids` for
+-- disambiguation. This table is designed to store 'sequential' buffer
+-- identifier. This approach allows to have the following behavior:
+-- - Create three unnamed buffers.
+-- - Delete second one.
+-- - Tab label for third one remains the same.
 function H.make_unnamed_label(buf_id)
   local label = H.is_buffer_scratch(buf_id) and '!' or '*'
 
@@ -315,7 +317,7 @@ function H.get_unnamed_id(buf_id)
   return H.unnamed_buffers_seq_ids[buf_id]
 end
 
--- Finalize labels
+-- Work with labels -----------------------------------------------------------
 function H.finalize_labels()
   -- Deduplicate
   local nonunique_tab_ids = H.get_nonunique_tab_ids()
@@ -342,7 +344,7 @@ function H.finalize_labels()
   -- Postprocess: add file icons and padding
   local has_devicons, devicons
 
-  ---- Have this `require()` here to not depend on plugin initialization order
+  -- Have this `require()` here to not depend on plugin initialization order
   if MiniTabline.config.show_icons then
     has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   end
@@ -358,7 +360,8 @@ function H.finalize_labels()
   end
 end
 
---@return Array of `H.tabs` ids which have non-unique labels
+---@return integer[] Array of `H.tabs` ids which have non-unique labels
+---@private
 function H.get_nonunique_tab_ids()
   -- Collect tab-array-id per label
   local label_tab_ids = {}
@@ -377,7 +380,7 @@ function H.get_nonunique_tab_ids()
   end, label_tab_ids))
 end
 
----- Fit tabline to maximum displayed width
+-- Fit tabline to maximum displayed width -------------------------------------
 function H.fit_width()
   H.update_center_buf_id()
 
@@ -450,7 +453,7 @@ function H.truncate_tabs_display(display_interval)
   H.tabs = tabs
 end
 
----- Concatenate tabs into single tabline string
+-- Concatenate tabs into single tablien string --------------------------------
 function H.concat_tabs()
   -- NOTE: it is assumed that all padding is incorporated into labels
   local t = {}

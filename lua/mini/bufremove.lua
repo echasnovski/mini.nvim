@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Lua module for minimal buffer removing (unshow, delete, wipeout), which
 --- saves window layout (opposite to builtin Neovim's commands). This is mostly
@@ -38,7 +39,7 @@
 ---@brief ]]
 ---@tag MiniBufremove mini.bufremove
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniBufremove = {}
 local H = {}
 
@@ -57,13 +58,12 @@ function MiniBufremove.setup(config)
   H.apply_config(config)
 end
 
--- Module config
 MiniBufremove.config = {
   -- Whether to set Vim's settings for buffers
   set_vim_settings = true,
 }
 
--- Module functionality
+-- Module functionality =======================================================
 --- Delete buffer `buf_id` with |:bdelete| after unshowing it.
 ---
 ---@param buf_id number: Buffer identifier (see |bufnr()|) to use. Default: 0 for current.
@@ -149,12 +149,12 @@ function MiniBufremove.unshow_in_window(win_id)
   return true
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniBufremove.config
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -178,7 +178,7 @@ function H.is_disabled()
   return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true
 end
 
--- Removing implementation
+-- Removing implementation ----------------------------------------------------
 function H.unshow_and_cmd(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
   force = (force == nil) and false or force
@@ -197,12 +197,12 @@ function H.unshow_and_cmd(buf_id, force, cmd)
 
   -- Execute command
   local command = string.format('%s%s %d', cmd, force and '!' or '', buf_id)
-  ---- Use `pcall` here to take care of case where `unshow()` was enough.
-  ---- This can happen with 'bufhidden' option values:
-  ---- - If `delete` then `unshow()` already `bdelete`d buffer. Without `pcall`
-  ----   it gives E516 for `MiniBufremove.delete()` (`wipeout` works).
-  ---- - If `wipe` then `unshow()` already `bwipeout`ed buffer. Without `pcall`
-  ----   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
+  -- Use `pcall` here to take care of case where `unshow()` was enough. This
+  -- can happen with 'bufhidden' option values:
+  -- - If `delete` then `unshow()` already `bdelete`d buffer. Without `pcall`
+  --   it gives E516 for `MiniBufremove.delete()` (`wipeout` works).
+  -- - If `wipe` then `unshow()` already `bwipeout`ed buffer. Without `pcall`
+  --   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
   local ok, result = pcall(vim.cmd, command)
   if not (ok or result:find('E516') or result:find('E517')) then
     vim.notify('(mini.bufremove) ' .. result)
@@ -212,7 +212,7 @@ function H.unshow_and_cmd(buf_id, force, cmd)
   return true
 end
 
--- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.is_valid_id(x, type)
   local is_valid = false
   if type == 'buffer' then
@@ -227,7 +227,7 @@ function H.is_valid_id(x, type)
   return is_valid
 end
 
----- Check if buffer can be removed with `MiniBufremove.fun_name` function
+-- Check if buffer can be removed with `MiniBufremove.fun_name` function
 function H.can_remove(buf_id, force, fun_name)
   if force then
     return true
@@ -247,8 +247,8 @@ function H.can_remove(buf_id, force, fun_name)
   return true
 end
 
----- Compute 'true' buffer id (strictly positive integer). Treat `nil` and 0 as
----- current buffer.
+-- Compute 'true' buffer id (strictly positive integer). Treat `nil` and 0 as
+-- current buffer.
 function H.normalize_buf_id(buf_id)
   if buf_id == nil or buf_id == 0 then
     return vim.api.nvim_get_current_buf()

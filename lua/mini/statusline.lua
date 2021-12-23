@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast statusline module with opinionated default look.
 --- Special features: change color depending on current mode and compact
@@ -114,7 +115,7 @@
 ---@brief ]]
 ---@tag MiniStatusline mini.statusline
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniStatusline = {}
 local H = {}
 
@@ -159,7 +160,6 @@ function MiniStatusline.setup(config)
   )
 end
 
--- Module config
 MiniStatusline.config = {
   -- Content of statusline as functions which return statusline string. See `:h
   -- statusline` and code of default contents (used when `nil` is supplied).
@@ -174,7 +174,7 @@ MiniStatusline.config = {
   set_vim_settings = true,
 }
 
--- Module functionality
+-- Module functionality =======================================================
 --- Compute content for active window
 function MiniStatusline.active()
   if H.is_disabled() then
@@ -241,8 +241,9 @@ function MiniStatusline.is_truncated(trunc_width)
   return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
 end
 
--- Statusline sections. Should return output text without whitespace on sides
--- or empty string to omit section.
+-- Sections ===================================================================
+-- Functions should return output text without whitespace on sides or empty
+-- string to omit section
 
 -- Mode
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
@@ -458,11 +459,11 @@ function MiniStatusline.section_searchcount(args)
   return ('%s%d/%s%d'):format(current_sign, s_count.current, total_sign, s_count.total)
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniStatusline.config
 
----- Showed diagnostic levels
+-- Showed diagnostic levels
 H.diagnostic_levels = nil
 if vim.fn.has('nvim-0.6') == 1 then
   H.diagnostic_levels = {
@@ -480,8 +481,8 @@ else
   }
 end
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -512,7 +513,7 @@ function H.is_disabled()
   return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true
 end
 
----- Default content
+-- Default content ------------------------------------------------------------
 function H.default_content_active()
   -- stylua: ignore start
   local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
@@ -541,7 +542,7 @@ function H.default_content_inactive()
   return '%#MiniStatuslineInactive#%F%='
 end
 
----- Various helpers
+-- Utilities ------------------------------------------------------------------
 function H.isnt_normal_buffer()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ''

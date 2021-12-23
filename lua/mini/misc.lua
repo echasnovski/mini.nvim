@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Lua module with miscellaneous useful functions (can be used independently).
 ---
@@ -20,7 +21,7 @@
 ---@brief ]]
 ---@tag MiniMisc mini.misc
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniMisc = {}
 local H = {}
 
@@ -39,12 +40,12 @@ function MiniMisc.setup(config)
   H.apply_config(config)
 end
 
--- Module config
 MiniMisc.config = {
   -- Array of fields to make global (to be used as independent variables)
   make_global = { 'put', 'put_text' },
 }
 
+-- Module functionality =======================================================
 --- Execute `f` several times and time how long it took
 ---
 ---@param f function: Function which execution to benchmark.
@@ -69,18 +70,19 @@ end
 ---@param win_id number: Window identifier (see |win_getid()|) for which gutter width is computed. Default: 0 for current.
 function MiniMisc.get_gutter_width(win_id)
   -- Compute number of 'editable' columns in current window
-  ---- Store current window metadata
+
+  -- Store current window metadata
   local virtualedit = vim.opt.virtualedit
   local curpos = vim.api.nvim_win_get_cursor(win_id)
 
-  ---- Move cursor to the last visible column
+  -- Move cursor to the last visible column
   local last_col = vim.api.nvim_win_call(win_id, function()
     vim.opt.virtualedit = 'all'
     vim.cmd([[normal! g$]])
     return vim.fn.virtcol('.')
   end)
 
-  ---- Restore current window metadata
+  -- Restore current window metadata
   vim.opt.virtualedit = virtualedit
   vim.api.nvim_win_set_cursor(win_id, curpos)
 
@@ -322,15 +324,15 @@ function MiniMisc.zoom(buf_id, config)
   end
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniMisc.config
 
----- Window identifier of current zoom (for `zoom()`)
+-- Window identifier of current zoom (for `zoom()`)
 H.zoom_winid = nil
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config

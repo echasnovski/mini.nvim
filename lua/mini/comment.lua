@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast Lua module for code commenting. This is basically a
 --- reimplementation of "tpope/vim-commentary". Commenting in Normal mode
@@ -45,7 +46,7 @@
 ---@brief ]]
 ---@tag MiniComment mini.comment
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniComment = {}
 local H = {}
 
@@ -64,7 +65,6 @@ function MiniComment.setup(config)
   H.apply_config(config)
 end
 
--- Module config
 MiniComment.config = {
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
@@ -80,8 +80,7 @@ MiniComment.config = {
   },
 }
 
--- Module functionality
-
+-- Module functionality =======================================================
 --- Main function to be mapped
 ---
 --- It is meant to be used in expression mappings (see |map-<expr>|) to enable
@@ -204,11 +203,12 @@ function MiniComment.textobject()
   vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
 end
 
--- Helpers
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniComment.config
 
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -260,7 +260,7 @@ function H.is_disabled()
   return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true
 end
 
----- Core implementations
+-- Core implementations -------------------------------------------------------
 function H.make_comment_parts()
   local cs = vim.api.nvim_buf_get_option(0, 'commentstring')
 
@@ -362,7 +362,7 @@ function H.make_uncomment_function(comment_parts)
   end
 end
 
----- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.keymap(mode, keys, cmd, opts)
   if keys == '' then
     return

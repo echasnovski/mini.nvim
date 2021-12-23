@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast autopairs Lua module. It provides functionality
 --- to work with 'paired' characters conditional on cursor's neighborhood (two
@@ -84,7 +85,7 @@
 ---@brief ]]
 ---@tag MiniPairs mini.pairs
 
--- Module and its helper --
+-- Module definition ==========================================================
 local MiniPairs = {}
 local H = {}
 
@@ -113,7 +114,6 @@ function MiniPairs.setup(config)
   )
 end
 
--- Module config --
 MiniPairs.config = {
   -- In which modes mappings from this `config` should be created
   modes = { insert = true, command = false, terminal = false },
@@ -140,7 +140,7 @@ MiniPairs.config = {
   },
 }
 
--- Module functionality --
+-- Module functionality =======================================================
 --- Make global mapping
 ---
 --- This is similar to |nvim_set_keymap()| but instead of right hand side of
@@ -327,7 +327,7 @@ function MiniPairs.cr()
   return res
 end
 
--- Helpers --
+-- Helper data ================================================================
 -- Module default config
 H.default_config = MiniPairs.config
 
@@ -357,7 +357,8 @@ H.keys = {
 }
 -- stylua: ignore end
 
--- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -381,7 +382,7 @@ function H.apply_config(config)
 
   -- Setup mappings in supplied modes
   local mode_ids = { insert = 'i', command = 'c', terminal = 't' }
-  ---- Compute in which modes mapping should be set up
+  -- Compute in which modes mapping should be set up
   local mode_array = {}
   for name, to_set in pairs(config.modes) do
     if to_set then
@@ -405,7 +406,7 @@ function H.is_disabled()
   return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true
 end
 
--- Pair registration --
+-- Pair registration ----------------------------------------------------------
 function H.register_pair(pair_info, mode, buffer)
   -- Process new mode
   H.registered_pairs[mode] = H.registered_pairs[mode] or { all = { bs = {}, cr = {} } }
@@ -460,7 +461,7 @@ function H.is_pair_registered(pair, mode, buffer, key)
   return vim.tbl_contains(buf_pairs[key], pair)
 end
 
--- Work with pair_info --
+-- Work with pair_info --------------------------------------------------------
 function H.ensure_pair_info(pair_info)
   vim.validate({ pair_info = { pair_info, 'table' } })
   pair_info = vim.tbl_deep_extend('force', H.default_pair_info, pair_info)
@@ -485,7 +486,7 @@ function H.pair_info_to_map_rhs(pair_info)
   )
 end
 
--- Various helpers
+-- Utilities ------------------------------------------------------------------
 function H.map(mode, key, command)
   vim.api.nvim_set_keymap(mode, key, command, { expr = true, noremap = true })
 end

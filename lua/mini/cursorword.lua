@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast module for autohighlighting word under cursor with
 --- customizable delay. It is triggered only if current cursor character is a
@@ -37,7 +38,7 @@
 ---@brief ]]
 ---@tag MiniCursorword mini.cursorword
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniCursorword = {}
 local H = {}
 
@@ -71,12 +72,12 @@ function MiniCursorword.setup(config)
   vim.api.nvim_exec([[hi default MiniCursorword term=underline cterm=underline gui=underline]], false)
 end
 
--- Module config
 MiniCursorword.config = {
   -- Delay (in ms) between when cursor moved and when highlighting appeared
   delay = 100,
 }
 
+-- Module functionality =======================================================
 --- Auto highlight word under cursor
 ---
 --- Designed to be used with |autocmd|. No need to use it directly,
@@ -127,22 +128,22 @@ function MiniCursorword.auto_unhighlight()
   H.unhighlight()
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniCursorword.config
 
----- Delay timer
+-- Delay timer
 H.timer = vim.loop.new_timer()
 
----- Information about last match highlighting (stored *per window*):
----- - Key: windows' unique buffer identifiers.
----- - Value: table with:
-----     - `id` field for match id (from `vim.fn.matchadd()`).
-----     - `word` field for matched word.
+-- Information about last match highlighting (stored *per window*):
+-- - Key: windows' unique buffer identifiers.
+-- - Value: table with:
+--     - `id` field for match id (from `vim.fn.matchadd()`).
+--     - `word` field for matched word.
 H.window_matches = {}
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -162,7 +163,7 @@ function H.is_disabled()
   return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true
 end
 
----- Highlighting
+-- Highlighting ---------------------------------------------------------------
 function H.highlight()
   -- A modified version of https://stackoverflow.com/a/25233145
   -- Using `matchadd()` instead of a simpler `:match` to tweak priority of

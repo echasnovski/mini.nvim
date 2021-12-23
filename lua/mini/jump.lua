@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Minimal and fast module for smarter jumping to a single character. Inspired
 --- by 'rhysd/clever-f.vim'.
@@ -47,7 +48,7 @@
 ---@brief ]]
 ---@tag MiniJump mini.jump
 
--- Module and its helper --
+-- Module definition ==========================================================
 local MiniJump = {}
 local H = {}
 
@@ -73,7 +74,6 @@ function MiniJump.setup(config)
   vim.cmd([[hi default link MiniJump SpellRare]])
 end
 
--- Module config --
 MiniJump.config = {
   mappings = {
     forward = 'f',
@@ -88,7 +88,7 @@ MiniJump.config = {
   highlight_delay = 250,
 }
 
--- Module functionality --
+-- Module functionality =======================================================
 --- Jump to target
 ---
 --- Takes a string and jumps to its first occurrence in desrired direction.
@@ -212,7 +212,7 @@ function MiniJump.on_cursormoved()
   end
 end
 
--- Helper data --
+-- Helper data ================================================================
 -- Module default config
 H.default_config = MiniJump.config
 
@@ -235,7 +235,8 @@ H.timer = vim.loop.new_timer()
 --     - `pattern` field for highlighted pattern.
 H.window_matches = {}
 
--- Settings --
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -281,7 +282,7 @@ function H.is_disabled()
   return vim.g.minijump_disable == true or vim.b.minijump_disable == true
 end
 
--- Highlighting --
+-- Highlighting ---------------------------------------------------------------
 function H.highlight(pattern)
   local win_id = vim.api.nvim_get_current_win()
   local match_info = H.window_matches[win_id]
@@ -314,7 +315,7 @@ function H.unhighlight()
   end
 end
 
--- Various helpers --
+-- Various helpers ------------------------------------------------------------
 function H.update_cache(target, backward, till, n_times)
   H.cache.mode = vim.fn.mode(1)
 

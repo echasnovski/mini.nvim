@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- |mini.nvim| is a collection of minimal, independent, and fast Lua modules
 --- dedicated to improve Neovim (version 0.5 and higher) experience. Each

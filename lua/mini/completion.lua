@@ -1,5 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- Documentation ==============================================================
 ---@brief [[
 --- Custom somewhat minimal autocompletion Lua plugin. Key design ideas:
 --- - Have an async (with customizable 'debounce' delay) 'two-stage chain
@@ -176,7 +177,7 @@
 --       active parameter, it is highlighted with
 --       `MiniCompletionActiveParameter` highlight group.
 
--- Module and its helper
+-- Module definition ==========================================================
 local MiniCompletion = {}
 local H = {}
 
@@ -225,7 +226,6 @@ function MiniCompletion.setup(config)
   vim.api.nvim_exec([[hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline]], false)
 end
 
--- Module config
 MiniCompletion.config = {
   -- Delay (debounce type, in ms) between certain Neovim event and action.
   -- This can be used to (virtually) disable certain automatic actions by
@@ -285,7 +285,7 @@ MiniCompletion.config = {
   set_vim_settings = true,
 }
 
--- Module functionality
+-- Module functionality =======================================================
 --- Auto completion
 ---
 --- Designed to be used with |autocmd|. No need to use it directly, everything
@@ -538,27 +538,29 @@ function MiniCompletion.default_process_items(items, base)
   return H.default_config.lsp_completion.process_items(items, base)
 end
 
--- Helper data
----- Module default config
+-- Helper data ================================================================
+-- Module default config
 H.default_config = MiniCompletion.config
 
----- Track Insert mode changes
+-- Track Insert mode changes
 H.text_changed_id = 0
 
----- Commonly used key sequences
+-- Commonly used key sequences
 H.keys = {
   completefunc = vim.api.nvim_replace_termcodes('<C-x><C-u>', true, false, true),
   omnifunc = vim.api.nvim_replace_termcodes('<C-x><C-o>', true, false, true),
   ctrl_n = vim.api.nvim_replace_termcodes('<C-g><C-g><C-n>', true, false, true),
 }
 
----- Caches for different actions. Field `lsp` is a table describing state of
----- all used LSP requests. It has the following structure:
----- - id: identifier (consecutive numbers).
----- - status: status. One of 'sent', 'received', 'done', 'canceled'.
----- - result: result of request.
----- - cancel_fun: function which cancels current request.
------- Cache for completion
+-- Caches for different actions -----------------------------------------------
+-- Field `lsp` is a table describing state of all used LSP requests. It has the
+-- following structure:
+-- - id: identifier (consecutive numbers).
+-- - status: status. One of 'sent', 'received', 'done', 'canceled'.
+-- - result: result of request.
+-- - cancel_fun: function which cancels current request.
+
+-- Cache for completion
 H.completion = {
   fallback = true,
   force = false,
@@ -568,7 +570,7 @@ H.completion = {
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
 }
 
------- Cache for completion item info
+-- Cache for completion item info
 H.info = {
   bufnr = nil,
   event = nil,
@@ -578,7 +580,7 @@ H.info = {
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
 }
 
------- Cache for signature help
+-- Cache for signature help
 H.signature = {
   bufnr = nil,
   text = nil,
@@ -587,8 +589,8 @@ H.signature = {
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
 }
 
--- Helper functions
----- Settings
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
 function H.setup_config(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
@@ -666,7 +668,7 @@ function H.is_disabled()
   return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true
 end
 
----- Completion triggers
+-- Completion triggers --------------------------------------------------------
 function H.trigger_twostep()
   -- Trigger only in Insert mode and if text didn't change after trigger
   -- request, unless completion is forced
@@ -727,7 +729,7 @@ function H.trigger_fallback()
   end
 end
 
----- Stop actions
+-- Stop actions ---------------------------------------------------------------
 function H.stop_completion(keep_source)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
@@ -758,9 +760,10 @@ H.stop_actions = {
   signature = H.stop_signature,
 }
 
----- LSP
---@param capability string|nil: Capability to check (as in `resolved_capabilities` of `vim.lsp.buf_get_clients` output).
---@return boolean: Whether there is at least one LSP client that has resolved `capability`.
+-- LSP ------------------------------------------------------------------------
+---@param capability string|nil: Capability to check (as in `resolved_capabilities` of `vim.lsp.buf_get_clients` output).
+---@return boolean: Whether there is at least one LSP client that has resolved `capability`.
+---@private
 function H.has_lsp_clients(capability)
   local clients = vim.lsp.buf_get_clients()
   if vim.tbl_isempty(clients) then
@@ -830,12 +833,12 @@ function H.is_lsp_current(cache, id)
   return cache.lsp.id == id and cache.lsp.status == 'sent'
 end
 
----- Completion
------- This is a truncated version of
------- `vim.lsp.util.text_document_completion_list_to_complete_items` which
------- does not filter and sort items.
------- For extra information see 'Response' section:
------- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
+-- Completion -----------------------------------------------------------------
+-- This is a truncated version of
+-- `vim.lsp.util.text_document_completion_list_to_complete_items` which does
+-- not filter and sort items.
+-- For extra information see 'Response' section:
+-- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
 function H.lsp_completion_response_items_to_complete_items(items)
   if vim.tbl_count(items) == 0 then
     return {}
@@ -873,7 +876,7 @@ function H.get_completion_word(item)
   return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or item.label or ''
 end
 
----- Completion item info
+-- Completion item info -------------------------------------------------------
 function H.show_info_window()
   local event = H.info.event
   if not event then
@@ -945,8 +948,8 @@ function H.info_window_lines(info_id)
 
   -- Try to get documentation from LSP's initial completion result
   local lsp_completion_item = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'completion_item' })
-  ---- If there is no LSP's completion item, then there is no point to proceed
-  ---- as it should serve as parameters to LSP request
+  -- If there is no LSP's completion item, then there is no point to proceed as
+  -- it should serve as parameters to LSP request
   if not lsp_completion_item then
     return
   end
@@ -1027,7 +1030,7 @@ function H.info_window_options()
   }
 end
 
----- Signature help
+-- Signature help -------------------------------------------------------------
 function H.show_signature_window()
   -- If there is no received LSP result, make request and exit
   if H.signature.lsp.status ~= 'received' then
@@ -1140,8 +1143,8 @@ function H.process_signature_response(response)
 
   -- Get active signature (based on textDocument/signatureHelp specification)
   local signature_id = response.activeSignature or 0
-  ---- This is according to specification: "If ... value lies outside ...
-  ---- defaults to zero"
+  -- This is according to specification: "If ... value lies outside ...
+  -- defaults to zero"
   local n_signatures = vim.tbl_count(response.signatures or {})
   if signature_id < 0 or signature_id >= n_signatures then
     signature_id = 0
@@ -1156,17 +1159,17 @@ function H.process_signature_response(response)
   local n_params = vim.tbl_count(signature.parameters or {})
   local has_params = signature.parameters and n_params > 0
 
-  ---- Take values in this order because data inside signature takes priority
+  -- Take values in this order because data inside signature takes priority
   local parameter_id = signature.activeParameter or response.activeParameter or 0
   local param_id_inrange = 0 <= parameter_id and parameter_id < n_params
 
-  ---- Computing active parameter only when parameter id is inside bounds is not
-  ---- strictly based on specification, as currently (v3.16) it says to treat
-  ---- out-of-bounds value as first parameter. However, some clients seems to
-  ---- use those values to indicate that nothing needs to be highlighted.
-  ---- Sources:
-  ---- https://github.com/microsoft/pyright/pull/1876
-  ---- https://github.com/microsoft/language-server-protocol/issues/1271
+  -- Computing active parameter only when parameter id is inside bounds is not
+  -- strictly based on specification, as currently (v3.16) it says to treat
+  -- out-of-bounds value as first parameter. However, some clients seems to use
+  -- those values to indicate that nothing needs to be highlighted.
+  -- Sources:
+  -- https://github.com/microsoft/pyright/pull/1876
+  -- https://github.com/microsoft/language-server-protocol/issues/1271
   if has_params and param_id_inrange then
     local param_label = signature.parameters[parameter_id + 1].label
 
@@ -1234,7 +1237,7 @@ function H.signature_window_opts()
   }
 end
 
----- Helpers for floating windows
+-- Helpers for floating windows -----------------------------------------------
 function H.ensure_buffer(cache, name)
   if cache.bufnr then
     return
@@ -1246,7 +1249,8 @@ function H.ensure_buffer(cache, name)
   vim.fn.setbufvar(cache.bufnr, '&buftype', 'nofile')
 end
 
------- @return height, width
+---@return tuple: height, width
+---@private
 function H.floating_dimensions(lines, max_height, max_width)
   -- Simulate how lines will look in window with `wrap` and `linebreak`.
   -- This is not 100% accurate (mostly when multibyte characters are present
@@ -1269,8 +1273,8 @@ function H.floating_dimensions(lines, max_height, max_width)
       width = l_width
     end
   end
-  ---- It should already be less that that because of wrapping, so this is
-  ---- "just in case"
+  -- It should already be less that that because of wrapping, so this is "just
+  -- in case"
   width = math.min(width, max_width)
 
   return height, width
@@ -1299,7 +1303,7 @@ function H.close_action_window(cache, keep_timer)
   end
 end
 
----- Utilities
+-- Utilities ------------------------------------------------------------------
 function H.is_char_keyword(char)
   -- Using Vim's `match()` and `keyword` enables respecting Cyrillic letters
   return vim.fn.match(char, '[[:keyword:]]') >= 0
@@ -1332,8 +1336,8 @@ function H.is_whitespace(s)
   return false
 end
 
------- Simulate splitting single line `l` like how it would look inside window
------- with `wrap` and `linebreak` set to `true`
+-- Simulate splitting single line `l` like how it would look inside window with
+-- `wrap` and `linebreak` set to `true`
 function H.wrap_line(l, width)
   local breakat_pattern = '[' .. vim.o.breakat .. ']'
   local res = {}
