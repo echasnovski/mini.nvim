@@ -326,7 +326,11 @@ function H.make_comment_function(comment_parts, indent)
   local rpad = (r == '') and '' or ' '
 
   local empty_comment = indent .. l .. r
-  local nonempty_format = indent .. l .. lpad .. '%s' .. rpad .. r
+  -- Escape literal '%' symbols in comment parts (like in LaTeX) to be '%%'
+  -- because they have special meaning in `string.format` input. NOTE: don't
+  -- use `vim.pesc()` here because it also escapes other special characters
+  -- (like '-', '*', etc.).
+  local nonempty_format = indent .. l:gsub('%%', '%%%%') .. lpad .. '%s' .. rpad .. r:gsub('%%', '%%%%')
 
   return function(line)
     -- Line is empty if it doesn't have anything except whitespace
