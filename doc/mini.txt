@@ -67,7 +67,8 @@ can be considered as a separate sub-plugin.
   functionality for completion item info and function signature (both in
   floating window appearing after customizable delay).
 - |MiniCursorword| - automatic highlighting of word under cursor (displayed 
-  after customizable delay).
+  after customizable delay). Current word under cursor can be highlighted 
+  differently.
 - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has not only
   functions to perform fuzzy matching of one string to others, but also a
   sorter for |telescope.nvim|.
@@ -726,10 +727,10 @@ MiniCompletion.default_process_items() *MiniCompletion.default_process_items()*
                                               *MiniCursorword* *mini.cursorword*
 
 Custom minimal and fast module for autohighlighting word under cursor with
-customizable delay. It is triggered only if current cursor character is a
-|[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|: something
-user would get as 'iw' text object. Highlighting stops in insert and terminal
-modes.
+customizable delay. Current word under cursor can be highlighted differently.
+Highlighting is triggered only if current cursor character is a |[:keyword:]|.
+"Word under cursor" is meant as in Vim's |<cword>|: something user would get as
+'iw' text object. Highlighting stops in insert and terminal modes.
 
 # Setup
 
@@ -748,6 +749,11 @@ Default `config`:
 # Highlight groups
 
 1. `MiniCursorword` - highlight group of cursor word. Default: plain underline.
+2. `MiniCursorwordCurrent` - highlight group of a current word under cursor. It
+   will be displayed on top of `MiniCursorword` (so `:hi clear 
+   MiniCursorwordCurrent` will lead to showing `MiniCursorword` highlight 
+   group). Default: link to `MiniCursorword`. Note: To not highlight it, use
+   `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
 
 To change any highlight group, modify it directly with |:highlight|.
 

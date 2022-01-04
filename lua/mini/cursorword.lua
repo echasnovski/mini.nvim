@@ -3,8 +3,9 @@
 -- Documentation ==============================================================
 ---@brief [[
 --- Custom minimal and fast module for autohighlighting word under cursor with
---- customizable delay. It is triggered only if current cursor character is a
---- |[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|:
+--- customizable delay. Current word under cursor can be highlighted
+--- differently. Highlighting is triggered only if current cursor character is
+--- a |[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|:
 --- something user would get as 'iw' text object. Highlighting stops in insert
 --- and terminal modes.
 ---
@@ -26,6 +27,11 @@
 ---
 --- 1. `MiniCursorword` - highlight group of cursor word. Default: plain
 ---    underline.
+--- 2. `MiniCursorwordCurrent` - highlight group of a current word under
+---    cursor. It will be displayed on top of `MiniCursorword` (so `:hi clear
+---    MiniCursorwordCurrent` will lead to showing `MiniCursorword` highlight
+---    group). Default: link to `MiniCursorword`. Note: To not highlight it,
+---    use `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -69,7 +75,11 @@ function MiniCursorword.setup(config)
   )
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi default MiniCursorword term=underline cterm=underline gui=underline]], false)
+  vim.api.nvim_exec(
+    [[hi default MiniCursorword term=underline cterm=underline gui=underline
+      hi default link MiniCursorwordCurrent MiniCursorword]],
+    false
+  )
 end
 
 MiniCursorword.config = {
@@ -98,8 +108,11 @@ function MiniCursorword.auto_highlight()
   local win_match = H.window_matches[win_id] or {}
   local curword = H.get_cursor_word()
 
-  -- Don't do anything if currently highlighted word equals one under cursor
+  -- Only immediately update highlighting of current word under cursor if
+  -- currently highlighted word equals one under cursor
   if win_match.word == curword then
+    H.unhighlight(true)
+    H.highlight(true)
     return
   end
 
@@ -164,7 +177,10 @@ function H.is_disabled()
 end
 
 -- Highlighting ---------------------------------------------------------------
-function H.highlight()
+---@param only_current `boolean` Whether to forcefuly highlight only current
+---   word under cursor.
+---@private
+function H.highlight(only_current)
   -- A modified version of https://stackoverflow.com/a/25233145
   -- Using `matchadd()` instead of a simpler `:match` to tweak priority of
   -- 'current word' highlighting: with `:match` it is higher than for
@@ -174,8 +190,14 @@ function H.highlight()
     return
   end
 
-  -- Don't add match id on top of existing one
-  if H.window_matches[win_id] ~= nil then
+  H.window_matches[win_id] = H.window_matches[win_id] or {}
+
+  -- Add match highlight for current word under cursor with low priority
+  local match_id_current = vim.fn.matchadd('MiniCursorwordCurrent', [[\k*\%#\k*]], -1)
+  H.window_matches[win_id].id_current = match_id_current
+
+  -- Don't add main match id if not needed or if one is already present
+  if only_current or H.window_matches[win_id].id ~= nil then
     return
   end
 
@@ -184,12 +206,18 @@ function H.highlight()
   local curword = H.get_cursor_word()
   local curpattern = string.format([[\V\<%s\>]], curword)
 
-  -- Add match highlight with very low priority and store match information
-  local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -1)
-  H.window_matches[win_id] = { id = match_id, word = curword }
+  -- Add match highlight with even lower priority for current word to be on top
+  local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -2)
+
+  -- Store information about highlight
+  H.window_matches[win_id].id = match_id
+  H.window_matches[win_id].word = curword
 end
 
-function H.unhighlight()
+---@param only_current `boolean` Whether to remove highlighting only of current
+---   word under cursor.
+---@private
+function H.unhighlight(only_current)
   -- Don't do anything if there is no valid information to act upon
   local win_id = vim.api.nvim_get_current_win()
   local win_match = H.window_matches[win_id]
@@ -199,8 +227,13 @@ function H.unhighlight()
 
   -- Use `pcall` because there is an error if match id is not present. It can
   -- happen if something else called `clearmatches`.
-  pcall(vim.fn.matchdelete, win_match.id)
-  H.window_matches[win_id] = nil
+  pcall(vim.fn.matchdelete, win_match.id_current)
+  H.window_matches[win_id].id_current = nil
+
+  if not only_current then
+    pcall(vim.fn.matchdelete, win_match.id)
+    H.window_matches[win_id] = nil
+  end
 end
 
 function H.is_cursor_on_keyword()

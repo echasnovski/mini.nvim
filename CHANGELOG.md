@@ -1,5 +1,9 @@
 # Version 0.2.0.9000 (development)
 
+## mini.cursorword
+
+- Current word under cursor now can be highlighted differently.
+
 # Version 0.2.0
 
 ## mini.base16

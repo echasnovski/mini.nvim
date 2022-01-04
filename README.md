@@ -241,7 +241,7 @@ Plugins with similar functionality:
 
 ### mini.cursorword
 
-Automatic highlighting of word under cursor (displayed after customizable delay).
+Automatic highlighting of word under cursor (displayed after customizable delay). Current word under cursor can be highlighted differently.
 
 <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-cursorword.gif" height="400em"/>
 

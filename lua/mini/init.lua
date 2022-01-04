@@ -74,7 +74,8 @@
 ---   has functionality for completion item info and function signature (both
 ---   in floating window appearing after customizable delay).
 --- - |MiniCursorword| - automatic highlighting of word under cursor (displayed
----   after customizable delay).
+---   after customizable delay). Current word under cursor can be highlighted
+---   differently.
 --- - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
 ---   not only functions to perform fuzzy matching of one string to others, but
 ---   also a sorter for |telescope.nvim|.
