@@ -141,10 +141,10 @@ Default `config`:
     -- `setup()`.
     palette = nil,
 
-   -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
-   -- or table with cterm colors. See `setup()` documentation for more
-   -- information.
-    use_cterm = nil,
+    -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
+    -- or table with cterm colors. See `setup()` documentation for more
+    -- information.
+     use_cterm = nil,
   }
 <
 Example:

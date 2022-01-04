@@ -537,7 +537,8 @@ function H.apply_palette(palette, use_cterm)
   -- 'mini'
   hi('MiniCompletionActiveParameter', {fg=nil, bg=nil, attr='underline', sp=nil})
 
-  hi('MiniCursorword', {fg=nil, bg=nil, attr='underline', sp=nil})
+  hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
+  hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
 
   hi('MiniJump', {fg=nil, bg=nil, attr='undercurl', sp=p.base0E})
 
