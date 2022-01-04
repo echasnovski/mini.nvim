@@ -112,26 +112,27 @@ function MiniTrailspace.highlight()
   end
 
   -- Don't add match id on top of existing one
-  if H.window_matches[win_id] == nil then
-    local match_id = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
-    H.window_matches[win_id] = { id = match_id }
+  if H.window_matches[win_id] ~= nil then
+    return
   end
+
+  local match_id = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
+  H.window_matches[win_id] = { id = match_id }
 end
 
 --- Unhighlight trailing whitespace
 function MiniTrailspace.unhighlight()
+  -- Don't do anything if there is no valid information to act upon
   local win_id = vim.api.nvim_get_current_win()
-  if not vim.api.nvim_win_is_valid(win_id) then
+  local win_match = H.window_matches[win_id]
+  if not vim.api.nvim_win_is_valid(win_id) or win_match == nil then
     return
   end
 
-  local win_match = H.window_matches[win_id]
-  if win_match ~= nil then
-    -- Use `pcall` because there is an error if match id is not present. It can
-    -- happen if something else called `clearmatches`.
-    pcall(vim.fn.matchdelete, win_match.id)
-    H.window_matches[win_id] = nil
-  end
+  -- Use `pcall` because there is an error if match id is not present. It can
+  -- happen if something else called `clearmatches`.
+  pcall(vim.fn.matchdelete, win_match.id)
+  H.window_matches[win_id] = nil
 end
 
 --- Trim trailing whitespace

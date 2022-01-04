@@ -174,33 +174,33 @@ function H.highlight()
     return
   end
 
-  local curword = H.get_cursor_word()
-
-  -- Make highlighting pattern 'very nomagic' ('\V') and to match whole word
-  -- ('\<' and '\>')
-  local curpattern = string.format([[\V\<%s\>]], curword)
-
   -- Don't add match id on top of existing one
-  if H.window_matches[win_id] == nil then
-    -- Add match highlight with very low priority and store match information
-    local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -1)
-    H.window_matches[win_id] = { id = match_id, word = curword }
-  end
-end
-
-function H.unhighlight()
-  local win_id = vim.api.nvim_get_current_win()
-  if not vim.api.nvim_win_is_valid(win_id) then
+  if H.window_matches[win_id] ~= nil then
     return
   end
 
+  -- Make highlighting for cursor word with pattern being 'very nomagic' ('\V')
+  -- and matching whole word ('\<' and '\>')
+  local curword = H.get_cursor_word()
+  local curpattern = string.format([[\V\<%s\>]], curword)
+
+  -- Add match highlight with very low priority and store match information
+  local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -1)
+  H.window_matches[win_id] = { id = match_id, word = curword }
+end
+
+function H.unhighlight()
+  -- Don't do anything if there is no valid information to act upon
+  local win_id = vim.api.nvim_get_current_win()
   local win_match = H.window_matches[win_id]
-  if win_match ~= nil then
-    -- Use `pcall` because there is an error if match id is not present. It can
-    -- happen if something else called `clearmatches`.
-    pcall(vim.fn.matchdelete, win_match.id)
-    H.window_matches[win_id] = nil
+  if not vim.api.nvim_win_is_valid(win_id) or win_match == nil then
+    return
   end
+
+  -- Use `pcall` because there is an error if match id is not present. It can
+  -- happen if something else called `clearmatches`.
+  pcall(vim.fn.matchdelete, win_match.id)
+  H.window_matches[win_id] = nil
 end
 
 function H.is_cursor_on_keyword()
