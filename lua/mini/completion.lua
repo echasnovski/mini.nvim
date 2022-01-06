@@ -1339,7 +1339,6 @@ end
 -- Simulate splitting single line `l` like how it would look inside window with
 -- `wrap` and `linebreak` set to `true`
 function H.wrap_line(l, width)
-  local breakat_pattern = '[' .. vim.o.breakat .. ']'
   local res = {}
 
   local break_id, break_match, width_id
@@ -1347,7 +1346,7 @@ function H.wrap_line(l, width)
   while vim.fn.strdisplaywidth(l) > width do
     -- Simulate wrap by looking at breaking character from end of current break
     width_id = vim.str_byteindex(l, width)
-    break_match = vim.fn.match(l:sub(1, width_id):reverse(), breakat_pattern)
+    break_match = vim.fn.match(l:sub(1, width_id):reverse(), '[- \t.,;:!?]')
     -- If no breaking character found, wrap at whole width
     break_id = width_id - (break_match < 0 and 0 or break_match)
     table.insert(res, l:sub(1, break_id))
