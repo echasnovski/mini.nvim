@@ -308,13 +308,15 @@ function MiniStarter.on_vimenter()
   -- buffer or if at least one file was supplied on startup
   local is_something_shown = vim.fn.line2byte('$') > 0 or vim.fn.argc() > 0
   if MiniStarter.config.autoopen and not is_something_shown then
-    MiniStarter.open()
+    -- Use current buffer as it should be empty and not needed. This also
+    -- solves the issue of redundant buffer when opening a file from Starter.
+    MiniStarter.open(vim.api.nvim_get_current_buf())
   end
 end
 
 --- Open Starter buffer
 ---
---- - Create and move into buffer.
+--- - Create buffer if necessary and move into it.
 --- - Set buffer options. Note that settings are done with |noautocmd| to
 ---   achieve a massive speedup.
 --- - Set buffer mappings. Besides basic mappings (described inside "Lifecycle
@@ -325,7 +327,9 @@ end
 --- - Issue custom `MiniStarterOpened` event to allow acting upon opening
 ---   Starter buffer. Use it with
 ---   `autocmd User MiniStarterOpened <your command>`.
-function MiniStarter.open()
+---
+---@param buf_id number: Identifier of existing valid buffer (see |bufnr()|) to open inside. Default: create a new one.
+function MiniStarter.open(buf_id)
   if H.is_disabled() then
     return
   end
@@ -334,8 +338,11 @@ function MiniStarter.open()
   H.current_item_id = 1
   H.query = ''
 
-  -- Create and open buffer
-  H.buf_id = vim.api.nvim_create_buf(false, true)
+  -- Ensure proper buffer and open it
+  if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then
+    buf_id = vim.api.nvim_create_buf(false, true)
+  end
+  H.buf_id = buf_id
   vim.api.nvim_set_current_buf(H.buf_id)
 
   -- Setup buffer behavior
@@ -1189,6 +1196,8 @@ function H.apply_buffer_options()
     [[signcolumn=no]],
     [[synmaxcol&]],
     -- Differ from 'vim-startify'
+    [[buftype=nofile]],
+    [[nomodeline]],
     [[nomodifiable]],
     [[foldlevel=999]],
   }

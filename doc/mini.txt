@@ -1939,10 +1939,10 @@ MiniStarter.on_vimenter()                          *MiniStarter.on_vimenter()*
 
 
 
-MiniStarter.open()                                        *MiniStarter.open()*
+MiniStarter.open({buf_id})                                *MiniStarter.open()*
     Open Starter buffer
 
-    - Create and move into buffer.
+    - Create buffer if necessary and move into it.
     - Set buffer options. Note that settings are done with |noautocmd| to 
       achieve a massive speedup.
     - Set buffer mappings. Besides basic mappings (described inside "Lifecycle 
@@ -1954,6 +1954,11 @@ MiniStarter.open()                                        *MiniStarter.open()*
       Starter buffer. Use it with `autocmd User MiniStarterOpened <your
       command>`.
 
+
+
+    Parameters: ~
+        {buf_id} (number)  Identifier of existing valid buffer (see |bufnr()|)
+                           to open inside. Default: create a new one.
 
 
 MiniStarter.refresh()                                  *MiniStarter.refresh()*
