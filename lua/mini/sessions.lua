@@ -349,7 +349,7 @@ function H.detect_sessions(config)
 end
 
 function H.detect_sessions_global(global_dir)
-  global_dir = vim.fn.fnamemodify(global_dir, ':p')
+  global_dir = H.full_path(global_dir)
   if vim.fn.isdirectory(global_dir) ~= 1 then
     H.notify(('%s is not a directory path.'):format(vim.inspect(global_dir)))
     return {}
@@ -387,7 +387,7 @@ function H.new_session(session_path, session_type)
   return {
     modify_time = vim.fn.getftime(session_path),
     name = vim.fn.fnamemodify(session_path, ':t'),
-    path = vim.fn.fnamemodify(session_path, ':p'),
+    path = H.full_path(session_path),
     type = session_type or H.get_session_type(session_path),
   }
 end
@@ -397,8 +397,8 @@ function H.get_session_type(session_path)
     return 'local'
   end
 
-  local session_dir = vim.fn.fnamemodify(session_path, ':p')
-  local global_dir = vim.fn.fnamemodify(MiniSessions.config.directory, ':p')
+  local session_dir = H.full_path(session_path)
+  local global_dir = H.full_path(MiniSessions.config.directory)
   return session_dir == global_dir and 'global' or 'local'
 end
 
@@ -448,7 +448,7 @@ function H.name_to_path(session_name)
 
   local session_dir = (session_name == MiniSessions.config.file) and vim.fn.getcwd() or MiniSessions.config.directory
   local path = H.joinpath(session_dir, session_name)
-  return vim.fn.fnamemodify(path, ':p')
+  return H.full_path(path)
 end
 
 -- Utilities ------------------------------------------------------------------
@@ -466,6 +466,10 @@ end
 
 function H.joinpath(directory, filename)
   return ('%s%s%s'):format(directory, H.path_sep, tostring(filename))
+end
+
+function H.full_path(path)
+  return vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))
 end
 
 return MiniSessions
