@@ -305,8 +305,8 @@ MiniStarter.content = {}
 --- Act on |VimEnter|.
 function MiniStarter.on_vimenter()
   -- It is assumed that something is shown if there is something in 'current'
-  -- buffer or if at least one file was supplied on startup
-  local is_something_shown = vim.fn.line2byte('$') > 0 or vim.fn.argc() > 0
+  -- buffer or if more than one buffer was opened (even empty ones)
+  local is_something_shown = vim.fn.line2byte('$') > 0 or #vim.api.nvim_list_bufs() > 1
   if MiniStarter.config.autoopen and not is_something_shown then
     -- Use current buffer as it should be empty and not needed. This also
     -- solves the issue of redundant buffer when opening a file from Starter.
