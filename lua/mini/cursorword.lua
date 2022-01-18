@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast module for autohighlighting word under cursor with
 --- customizable delay. Current word under cursor can be highlighted
 --- differently. Highlighting is triggered only if current cursor character is
@@ -9,21 +8,16 @@
 --- something user would get as 'iw' text object. Highlighting stops in insert
 --- and terminal modes.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.cursorword').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniCursorword` which you can use for scripting or manually (with
 --- `:lua MiniCursorword.*`).
 ---
---- Default `config`:
---- <code>
----   {
----    -- Delay (in ms) between when cursor moved and when highlighting appeared
----    delay = 100,
----   }
---- </code>
---- # Highlight groups
+--- See |MiniCursorword.config| for `config` structure and default values.
+---
+--- # Highlight groups~
 ---
 --- 1. `MiniCursorword` - highlight group of cursor word. Default: plain
 ---    underline.
@@ -35,13 +29,12 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable core functionality, set `g:minicursorword_disable` (globally) or
 --- `b:minicursorword_disable` (for a buffer) to `v:true`. Note: after
 --- disabling there might be highlighting left; it will be removed after next
 --- highlighting update.
----@brief ]]
 ---@tag MiniCursorword mini.cursorword
 
 -- Module definition ==========================================================
@@ -50,7 +43,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniCursorword.config|.
+---
 ---@usage `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
 function MiniCursorword.setup(config)
   -- Export module
@@ -82,10 +76,15 @@ function MiniCursorword.setup(config)
   )
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniCursorword.config = {
   -- Delay (in ms) between when cursor moved and when highlighting appeared
   delay = 100,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Auto highlight word under cursor
@@ -177,8 +176,8 @@ function H.is_disabled()
 end
 
 -- Highlighting ---------------------------------------------------------------
----@param only_current `boolean` Whether to forcefuly highlight only current
----   word under cursor.
+---@param only_current boolean Whether to forcefuly highlight only current word
+---   under cursor.
 ---@private
 function H.highlight(only_current)
   -- A modified version of https://stackoverflow.com/a/25233145
@@ -214,7 +213,7 @@ function H.highlight(only_current)
   H.window_matches[win_id].word = curword
 end
 
----@param only_current `boolean` Whether to remove highlighting only of current
+---@param only_current boolean Whether to remove highlighting only of current
 ---   word under cursor.
 ---@private
 function H.unhighlight(only_current)

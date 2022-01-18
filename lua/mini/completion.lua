@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom somewhat minimal autocompletion Lua plugin. Key design ideas:
 --- - Have an async (with customizable 'debounce' delay) 'two-stage chain
 ---   completion': first try to get completion items from LSP client (if set
@@ -13,9 +12,9 @@
 --- - Two-stage chain completion:
 ---     - First stage is an LSP completion implemented via
 ---       |MiniCompletion.completefunc_lsp()|. It should be set up as either
----       |completefunc| or |omnifunc|. It tries to get completion items from LSP client
----       (via 'textDocument/completion' request). Custom preprocessing of
----       response items is possible (with
+---       |completefunc| or |omnifunc|. It tries to get completion items from
+---       LSP client (via 'textDocument/completion' request). Custom
+---       preprocessing of response items is possible (with
 ---       `MiniCompletion.config.lsp_completion.process_items`), for example
 ---       with fuzzy matching. By default items which are not snippets and
 ---       directly start with completed word are kept and sorted according to
@@ -23,11 +22,11 @@
 ---     - If first stage is not set up or resulted into no candidates, fallback
 ---       action is executed. The most tested actions are Neovim's built-in
 ---       insert completion (see |ins-completion|).
---- - Automatic display in floating window of completion item info and signature
----   help (with highlighting of active parameter if LSP server provides such
----   information). After opening, window for signature help is fixed and is
----   closed when there is nothing to show, text is different or when leaving
----   Insert mode.
+--- - Automatic display in floating window of completion item info and
+---   signature help (with highlighting of active parameter if LSP server
+---   provides such information). After opening, window for signature help is
+---   fixed and is closed when there is nothing to show, text is different or
+---   when leaving Insert mode.
 --- - Automatic actions are done after some configurable amount of delay. This
 ---   reduces computational load and allows fast typing (completion and
 ---   signature help) and item selection (item info)
@@ -41,70 +40,26 @@
 --- - Snippet expansion.
 --- - Many configurable sources.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.completion').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniCompletion` which you can use for scripting or manually (with
 --- `:lua MiniCompletion.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Delay (debounce type, in ms) between certain Neovim event and action.
----     -- This can be used to (virtually) disable certain automatic actions by
----     -- setting very high delay time (like 10^7).
----     delay = {completion = 100, info = 100, signature = 50},
+--- See |MiniCompletion.config| for `config` structure and default values.
 ---
----     -- Maximum dimensions of floating windows for certain actions. Action entry
----     -- should be a table with 'height' and 'width' fields.
----     window_dimensions = {
----       info = {height = 25, width = 80},
----       signature = {height = 25, width = 80}
----     },
+--- # Notes~
 ---
----     -- Way of how module does LSP completion:
----     -- - `source_func` should be one of 'completefunc' or 'omnifunc'.
----     -- - `auto_setup` should be boolean indicating if LSP completion is set up on
----     --   every `BufEnter` event.
----     -- - `process_items` should be a function which takes LSP
----     --   'textDocument/completion' response items and word to complete. Its
----     --   output should be a table of the same nature as input items. The most
----     --   common use-cases are custom filtering and sorting. You can use
----     --   default `process_items` as `MiniCompletion.default_process_items()`.
----     lsp_completion = {
----       source_func = 'completefunc',
----       auto_setup = true,
----       process_items = --<function: filters 'not snippets' by prefix and sorts by LSP specification>,
----     },
----
----     -- Fallback action. It will always be run in Insert mode. To use Neovim's
----     -- built-in completion (see `:h ins-completion`), supply its mapping as
----     -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
----     fallback_action = --<function equivalent to '<C-n>' completion>,
----
----     -- Module mappings. Use `''` (empty string) to disable one. Some of them
----     -- might conflict with system mappings.
----     mappings = {
----       force_twostep  = '<C-Space>', -- Force two-step completion
----       force_fallback = '<A-Space>'  -- Force fallback completion
----     }
----
----     -- Whether to set Vim's settings for better experience (modifies
----     -- `shortmess` and `completeopt`)
----     set_vim_settings = true
----   }
---- </code>
---- # Notes
 --- - More appropriate, albeit slightly advanced, LSP completion setup is to set
 ---   it not on every `BufEnter` event (default), but on every attach of LSP
 ---   client. To do that:
----     - Use in initial config: `lsp_completion = {source_func = 'omnifunc',
----       auto_setup = false}`.
+---     - Use in initial config:
+---     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
 ---     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
 ---       `v:lua.MiniCompletion.completefunc_lsp`.
 ---
---- # Comparisons
+--- # Comparisons~
 ---
 --- - 'nvim-cmp':
 ---     - More complex design which allows multiple sources each in form of
@@ -114,27 +69,24 @@
 ---     - Doesn't allow fallback action.
 ---     - Doesn't provide signature help.
 ---
---- # Helpful key mappings
+--- # Helpful key mappings~
 ---
 --- To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 --- these key mappings:
---- <pre>
 --- `vim.api.nvim_set_keymap('i', [[<Tab>]],   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { noremap = true, expr = true })`
 --- `vim.api.nvim_set_keymap('i', [[<S-Tab>]], [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })`
---- </pre>
 ---
---- # Highlight groups
+--- # Highlight groups~
 ---
 --- 1. `MiniCompletionActiveParameter` - highlighting of signature active
 --- parameter. Default: plain underline.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable, set `g:minicompletion_disable` (globally) or
 --- `b:minicompletion_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniCompletion mini.completion
 
 -- Overall implementation design:
@@ -183,7 +135,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniCompletion.config|.
+---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 function MiniCompletion.setup(config)
   -- Export module
@@ -226,14 +179,18 @@ function MiniCompletion.setup(config)
   vim.api.nvim_exec([[hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline]], false)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniCompletion.config = {
   -- Delay (debounce type, in ms) between certain Neovim event and action.
   -- This can be used to (virtually) disable certain automatic actions by
   -- setting very high delay time (like 10^7).
   delay = { completion = 100, info = 100, signature = 50 },
 
-  -- Maximum dimensions of floating windows for certain actions. Action entry
-  -- should be a table with 'height' and 'width' fields.
+  -- Maximum dimensions of floating windows for certain actions. Action
+  -- entry should be a table with 'height' and 'width' fields.
   window_dimensions = {
     info = { height = 25, width = 80 },
     signature = { height = 25, width = 80 },
@@ -244,15 +201,16 @@ MiniCompletion.config = {
     -- `source_func` should be one of 'completefunc' or 'omnifunc'.
     source_func = 'completefunc',
 
-    -- `auto_setup` should be boolean indicating if LSP completion is set up on
-    -- every `BufEnter` event.
+    -- `auto_setup` should be boolean indicating if LSP completion is set up
+    -- on every `BufEnter` event.
     auto_setup = true,
 
     -- `process_items` should be a function which takes LSP
     -- 'textDocument/completion' response items and word to complete. Its
     -- output should be a table of the same nature as input items. The most
-    -- common use-cases are custom filtering and sorting. You can use default
-    -- `process_items` as `MiniCompletion.default_process_items()`.
+    -- common use-cases are custom filtering and sorting. You can use
+    -- default `process_items` as `MiniCompletion.default_process_items()`.
+    --minidoc_replace_start process_items = --<function: filters out snippets; sorts by LSP specs>,
     process_items = function(items, base)
       local res = vim.tbl_filter(function(item)
         -- Keep items which match the base and are not snippets
@@ -265,14 +223,17 @@ MiniCompletion.config = {
 
       return res
     end,
+    --minidoc_replace_end
   },
 
   -- Fallback action. It will always be run in Insert mode. To use Neovim's
   -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
+  -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
+  --minidoc_replace_start fallback_action = --<function: like `<C-n>` completion>,
   fallback_action = function()
     vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false)
   end,
+  --minidoc_replace_end
 
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.
@@ -281,9 +242,11 @@ MiniCompletion.config = {
     force_fallback = '<A-Space>', -- Force fallback completion
   },
 
-  -- Whether to set Vim's settings for better experience
+  -- Whether to set Vim's settings for better experience (modifies
+  -- `shortmess` and `completeopt`)
   set_vim_settings = true,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Auto completion
@@ -334,8 +297,8 @@ end
 
 --- Run two-stage completion
 ---
----@param fallback boolean: Whether to use fallback completion.
----@param force boolean: Whether to force update of completion popup.
+---@param fallback boolean Whether to use fallback completion.
+---@param force boolean Whether to force update of completion popup.
 function MiniCompletion.complete_twostage(fallback, force)
   if H.is_disabled() then
     return
@@ -420,7 +383,8 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 ---
----@param actions table: Array containing any of 'completion', 'info', or 'signature' string.
+---@param actions table Array containing any of 'completion', 'info', or
+---   'signature' string.
 function MiniCompletion.stop(actions)
   actions = actions or { 'completion', 'info', 'signature' }
   for _, n in pairs(actions) do
@@ -533,7 +497,7 @@ function MiniCompletion.completefunc_lsp(findstart, base)
   end
 end
 
---- Default `MiniCompletion.config.lsp_completion.process_items`.
+--- Default `MiniCompletion.config.lsp_completion.process_items`
 function MiniCompletion.default_process_items(items, base)
   return H.default_config.lsp_completion.process_items(items, base)
 end
@@ -761,8 +725,11 @@ H.stop_actions = {
 }
 
 -- LSP ------------------------------------------------------------------------
----@param capability string|nil: Capability to check (as in `resolved_capabilities` of `vim.lsp.buf_get_clients` output).
----@return boolean: Whether there is at least one LSP client that has resolved `capability`.
+---@param capability string|`nil` Capability to check (as in
+---   `resolved_capabilities` of `vim.lsp.buf_get_clients` output).
+---
+---@return boolean Whether there is at least one LSP client that has resolved
+---   `capability`.
 ---@private
 function H.has_lsp_clients(capability)
   local clients = vim.lsp.buf_get_clients()
@@ -1249,8 +1216,7 @@ function H.ensure_buffer(cache, name)
   vim.fn.setbufvar(cache.bufnr, '&buftype', 'nofile')
 end
 
----@return tuple: height, width
----@private
+-- Returns tuple of height and width
 function H.floating_dimensions(lines, max_height, max_width)
   -- Simulate how lines will look in window with `wrap` and `linebreak`.
   -- This is not 100% accurate (mostly when multibyte characters are present

@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast statusline module with opinionated default look.
 --- Special features: change color depending on current mode and compact
 --- version of sections activated when window width is small enough.
@@ -16,7 +15,7 @@
 ---     - Compute string data for every section you want to be displayed.
 ---     - Combine them in groups with |MiniStatusline.combine_groups()|.
 ---
---- # Dependencies
+--- # Dependencies~
 ---
 --- Suggested dependencies (provide extra functionality, statusline will work
 --- without them):
@@ -26,67 +25,17 @@
 --- - Plugin 'kyazdani42/nvim-web-devicons' for filetype icons in
 ---   `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.statusline').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniStatusline` which you can use for scripting or manually (with
 --- `:lua MiniStatusline.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Content of statusline as functions which return statusline string. See `:h
----     -- statusline` and code of default contents (used when `nil` is supplied).
----     content = {
----       -- Content for active window
----       active = nil,
+--- See |MiniStatusline.config| for `config` structure and default values. For
+--- some content examples, see |MiniStatusline-example-content|.
 ---
----       -- Content for inactive window(s)
----       inactive = nil,
----     },
----
----     -- Whether to set Vim's settings for statusline (make it always shown)
----     set_vim_settings = true,
----   }
---- </code>
---- # Example content
----
---- ## Default content
----
---- This function is used as default value for active content:
---- <code>
----   function()
----     local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
----     local git           = MiniStatusline.section_git({ trunc_width = 75 })
----     local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
----     local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
----     local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
----     local location      = MiniStatusline.section_location({ trunc_width = 75 })
----
----     return MiniStatusline.combine_groups({
----       { hl = mode_hl,                  strings = { mode } },
----       { hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },
----       '%<', -- Mark general truncate point
----       { hl = 'MiniStatuslineFilename', strings = { filename } },
----       '%=', -- End left alignment
----       { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
----       { hl = mode_hl,                  strings = { location } },
----     })
----   end
---- </code>
---- ## Show boolean options
----
---- To compute section string for boolean option use variation of this code
---- snippet inside content function (you can modify option itself, truncation
---- width, short and long displayed names):
---- <code>
----   local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''
---- </code>
---- Here `x and y or z` is a common Lua way of doing ternary operator: if `x`
---- is `true`-ish then return `y`, if not - return `z`.
----
---- # Highlight groups
+--- # Highlight groups~
 ---
 --- 1. Highlighting depending on mode (returned as second value from
 ---    |MiniStatusline.section_mode|):
@@ -108,12 +57,51 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable (show empty statusline), set `g:ministatusline_disable`
 --- (globally) or `b:ministatusline_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniStatusline mini.statusline
+
+--- Example content
+---
+--- # Default content~
+---
+--- This function is used as default value for active content:
+--- >
+---   function()
+---     local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
+---     local git           = MiniStatusline.section_git({ trunc_width = 75 })
+---     local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
+---     local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
+---     local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
+---     local location      = MiniStatusline.section_location({ trunc_width = 75 })
+---
+---     return MiniStatusline.combine_groups({
+---       { hl = mode_hl,                  strings = { mode } },
+---       { hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },
+---       '%<', -- Mark general truncate point
+---       { hl = 'MiniStatuslineFilename', strings = { filename } },
+---       '%=', -- End left alignment
+---       { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+---       { hl = mode_hl,                  strings = { location } },
+---     })
+---   end
+--- <
+--- # Show boolean options~
+---
+--- To compute section string for boolean option use variation of this code
+--- snippet inside content function (you can modify option itself, truncation
+--- width, short and long displayed names):
+--- >
+---   local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''
+--- <
+--- Here `x and y or z` is a common Lua way of doing ternary operator: if `x`
+--- is `true`-ish then return `y`, if not - return `z`.
+---@tag MiniStatusline-example-content
+
+---@alias __args table Section arguments.
+---@alias __section string Section string.
 
 -- Module definition ==========================================================
 local MiniStatusline = {}
@@ -121,7 +109,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniStatusline.config|.
+---
 ---@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
 function MiniStatusline.setup(config)
   -- Export module
@@ -160,9 +149,13 @@ function MiniStatusline.setup(config)
   )
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniStatusline.config = {
-  -- Content of statusline as functions which return statusline string. See `:h
-  -- statusline` and code of default contents (used when `nil` is supplied).
+  -- Content of statusline as functions which return statusline string. See
+  -- `:h statusline` and code of default contents (used instead of `nil`).
   content = {
     -- Content for active window
     active = nil,
@@ -170,9 +163,10 @@ MiniStatusline.config = {
     inactive = nil,
   },
 
-  -- Whether to set Vim's settings for statusline
+  -- Whether to set Vim's settings for statusline (make it always shown)
   set_vim_settings = true,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Compute content for active window
@@ -204,8 +198,9 @@ end
 --- used). Non-empty strings inside group are separated by one space. Non-empty
 --- groups are separated by two spaces (one for each highlighting).
 ---
----@param groups table: Array of groups
----@return string: String suitable for 'statusline'.
+---@param groups table Array of groups
+---
+---@return string String suitable for 'statusline'.
 function MiniStatusline.combine_groups(groups)
   local t = vim.tbl_map(function(s)
     if not s then
@@ -234,8 +229,9 @@ end
 ---
 --- Use this to manually decide if section needs truncation or not.
 ---
----@param trunc_width number: Truncation width. If `nil`, output is `false`.
----@return boolean: Whether to truncate.
+---@param trunc_width number Truncation width. If `nil`, output is `false`.
+---
+---@return boolean Whether to truncate.
 function MiniStatusline.is_truncated(trunc_width)
   -- Use -1 to default to 'not truncated'
   return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
@@ -278,8 +274,9 @@ MiniStatusline.modes = setmetatable({
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
----@return tuple: Section string and mode's highlight group.
+---@param args __args
+---
+---@return ... Section string and mode's highlight group.
 function MiniStatusline.section_mode(args)
   local mode_info = MiniStatusline.modes[vim.fn.mode()]
 
@@ -296,8 +293,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments. Use `args.icon` to supply your own icon.
----@return string: Section string.
+---@param args __args Use `args.icon` to supply your own icon.
+---
+---@return __section
 function MiniStatusline.section_git(args)
   if H.isnt_normal_buffer() then
     return ''
@@ -324,8 +322,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments. Use `args.icon` to supply your own icon.
----@return string: Section string.
+---@param args __args Use `args.icon` to supply your own icon.
+---
+---@return __section
 function MiniStatusline.section_diagnostics(args)
   -- Assumption: there are no attached clients if table
   -- `vim.lsp.buf_get_clients()` is empty
@@ -358,8 +357,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
----@return string: Section string.
+---@param args __args
+---
+---@return __section
 function MiniStatusline.section_filename(args)
   -- In terminal always use plain name
   if vim.bo.buftype == 'terminal' then
@@ -379,8 +379,9 @@ end
 --- Short output contains only extension and is returned if window width is
 --- lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
----@return string: Section string.
+---@param args __args
+---
+---@return __section
 function MiniStatusline.section_fileinfo(args)
   local filetype = vim.bo.filetype
 
@@ -417,8 +418,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args table: Section arguments.
----@return string: Section string.
+---@param args __args
+---
+---@return __section
 function MiniStatusline.section_location(args)
   -- Use virtual column number to allow update when paste last column
   if MiniStatusline.is_truncated(args.trunc_width) then
@@ -439,8 +441,9 @@ end
 --- usually same order of magnitude as 0.1 ms). To prevent this, supply
 --- `args.options = {recompute = false}`.
 ---
----@param args table: Section arguments.
----@return string: Section string.
+---@param args __args
+---
+---@return __section
 function MiniStatusline.section_searchcount(args)
   if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then
     return ''

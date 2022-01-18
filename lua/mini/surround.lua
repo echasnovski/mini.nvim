@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 --- a reimplementation of the core features of 'machakann/vim-sandwich' with a
 --- couple more on top (find surrounding, highlight surrounding).
@@ -13,7 +12,8 @@
 ---     - Replace surrounding with `sr`.
 ---     - Find surrounding with `sf` or `sF` (move cursor right or left).
 ---     - Highlight surrounding with `sh`.
----     - Change number of neighbor lines with `sn` (see algorithm details).
+---     - Change number of neighbor lines with `sn` (see
+---       |MiniSurround-algorithm|).
 --- - Surrounding is identified by a single character as both 'input' (in
 ---   `delete` and `replace` start) and 'output' (in `add` and `replace` end):
 ---     - 'f' - function call (string of letters or '_' or '.' followed by
@@ -37,39 +37,16 @@
 ---   Overall it is pretty good, but certain cases won't work. Like self-nested
 ---   tags won't match correctly on both ends: '<a><a></a></a>'.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.surround').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniSurround` which you can use for scripting or manually (with
 --- `:lua MiniSurround.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Number of lines within which surrounding is searched
----     n_lines = 20,
+--- See |MiniSurround.config| for `config` structure and default values.
 ---
----     -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
----     highlight_duration = 500,
----
----     -- Pattern to match function name in 'function call' surrounding
----     -- By default it is a string of letters, '_' or '.'
----     funname_pattern = '[%w_%.]+',
----
----     -- Mappings. Use `''` (empty string) to disable one.
----     mappings = {
----       add = 'sa',           -- Add surrounding
----       delete = 'sd',        -- Delete surrounding
----       find = 'sf',          -- Find surrounding (to the right)
----       find_left = 'sF',     -- Find surrounding (to the left)
----       highlight = 'sh',     -- Highlight surrounding
----       replace = 'sr',       -- Replace surrounding
----       update_n_lines = 'sn' -- Update `n_lines`
----     }
----   }
---- </code>
---- # Example usage
+--- # Example usage~
 ---
 --- - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
 --- - `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
@@ -81,7 +58,19 @@
 --- - `sh}` - highlight (`sh`) for a brief period of time surrounding curly
 ---   brackets (`}`)
 ---
---- # Algorithm design
+--- # Highlight groups~
+---
+--- 1. `MiniSurround` - highlighting of requested surrounding.
+---
+--- To change any highlight group, modify it directly with |:highlight|.
+---
+--- # Disabling~
+---
+--- To disable, set `g:minisurround_disable` (globally) or
+--- `b:minisurround_disable` (for a buffer) to `v:true`.
+---@tag MiniSurround mini.surround
+
+--- Algorithm design
 ---
 --- - Adding 'output' surrounding has a fairly straightforward algorithm:
 ---     - Determine places for left and right parts (via `<>` or `[]` marks).
@@ -107,19 +96,7 @@
 ---     - Convert '1d offsets' of found parts to their positions in buffer.
 ---   Actual search is done firstly on cursor line (as it is the most frequent
 ---   usage) and only then searches in neighborhood.
----
---- # Highlight groups
----
---- 1. `MiniSurround` - highlighting of requested surrounding.
----
---- To change any highlight group, modify it directly with |:highlight|.
----
---- # Disabling
----
---- To disable, set `g:minisurround_disable` (globally) or
---- `b:minisurround_disable` (for a buffer) to `v:true`.
----@brief ]]
----@tag MiniSurround mini.surround
+---@tag MiniSurround-algorithm
 
 -- Module definition ==========================================================
 local MiniSurround = {}
@@ -127,7 +104,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniSurround.config|.
+---
 ---@usage `require('mini.surround').setup({})` (replace `{}` with your `config` table)
 function MiniSurround.setup(config)
   -- Export module
@@ -143,17 +121,22 @@ function MiniSurround.setup(config)
   vim.api.nvim_exec([[hi default link MiniSurround IncSearch]], false)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniSurround.config = {
   -- Number of lines within which surrounding is searched
   n_lines = 20,
 
-  -- Duration of highlight when calling `MiniSurround.highlight()`
+  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
   highlight_duration = 500,
 
   -- Pattern to match function name in 'function call' surrounding
+  -- By default it is a string of letters, '_' or '.'
   funname_pattern = '[%w_%.]+',
 
-  -- Mappings
+  -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     add = 'sa', -- Add surrounding
     delete = 'sd', -- Delete surrounding
@@ -164,6 +147,7 @@ MiniSurround.config = {
     update_n_lines = 'sn', -- Update `n_lines`
   },
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Surround operator
@@ -171,8 +155,8 @@ MiniSurround.config = {
 --- Main function to be used in expression mappings. No need to use it
 --- directly, everything is setup in |MiniSurround.setup|.
 ---
----@param task string: Name of surround task.
----@param cache table: Task cache.
+---@param task string Name of surround task.
+---@param cache table Task cache.
 function MiniSurround.operator(task, cache)
   if H.is_disabled() then
     return ''
@@ -188,7 +172,7 @@ end
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 ---
----@param mode string: Mapping mode (normal by default).
+---@param mode string Mapping mode (normal by default).
 function MiniSurround.add(mode)
   -- Needed to disable in visual mode
   if H.is_disabled() then
@@ -811,7 +795,7 @@ function H.get_cursor_neighborhood(n_neighbors)
 end
 
 -- Get surround information ---------------------------------------------------
----@param sur_type string One of 'input' or 'output'
+---@param sur_type string One of 'input' or 'output'.
 ---@private
 function H.get_surround_info(sur_type, use_cache)
   local res

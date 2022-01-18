@@ -1,12 +1,11 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- |mini.nvim| is a collection of minimal, independent, and fast Lua modules
 --- dedicated to improve Neovim (version 0.5 and higher) experience. Each
 --- module can be considered as a separate sub-plugin.
 ---
---- # General principles
+--- # General principles~
 ---
 --- - <Design>. Each module is designed to solve a particular problem targeting
 ---   balance between feature-richness (handling as many edge-cases as
@@ -43,13 +42,13 @@
 --- - <Disabling>. Each module's core functionality can be disabled globally or
 ---   buffer-locally by creating appropriate global or buffer-scoped variables
 ---   with |v:true| value. For example:
---- <pre>
----     - To disable `MiniSurround` globally run `:let g:minisurround_disable=v:true`.
----     - To disable `MiniSurround` for current buffer run `:let b:minisurround_disable=v:true`.
+---     - To disable `MiniSurround` globally run
+---       `:let g:minisurround_disable=v:true`.
+---     - To disable `MiniSurround` for current buffer run
+---       `:let b:minisurround_disable=v:true`.
 ---     - To toggle `MiniSurround` globally (disable if enabled, enable if
 ---       disabled) use of Lua is more appropriate:
 ---       `:lua vim.g.minisurround_disable = not vim.g.minisurround_disable`.
---- </pre>
 --- - <Highlight groups>. Appearance of module's output is controlled by
 ---   certain highlight group (see |highlight-groups|). To customize them, use
 ---   |highlight| command. Note: currently not many Neovim themes support this
@@ -61,7 +60,7 @@
 ---   non-bugfix backward-incompatible change will be released gradually as
 ---   much as possible.
 ---
---- # List of modules
+--- # List of modules~
 ---
 --- - |MiniBase16| - fast implementation of base16 theme for manually supplied
 ---   palette. Has unique palette generator which needs only background and
@@ -111,7 +110,7 @@
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.
 ---
---- # Plugin colorscheme
+--- # Plugin colorscheme~
 ---
 --- This plugin comes with an official colorscheme named `minischeme`. This is
 --- a |MiniBase16| theme created with faster version of the following Lua code:
@@ -121,7 +120,6 @@
 --- - For light 'background': `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 ---
 --- Activate it as a regular |colorscheme|.
----@brief ]]
 ---@tag mini.nvim
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])

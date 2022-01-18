@@ -1,24 +1,16 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Lua module with miscellaneous useful functions (can be used independently).
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.misc').setup({})` (replace `{}` with your
 --- `config` table). It will create global Lua table `MiniMisc` which you can
 --- use for scripting or manually (with `:lua MiniMisc.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Array of fields to make global (to be used as independent variables)
----     make_global = { 'put', 'put_text' },
----   }
---- </code>
----@brief ]]
+--- See |MiniMisc.config| for `config` structure and default values.
 ---@tag MiniMisc mini.misc
 
 -- Module definition ==========================================================
@@ -27,7 +19,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniMisc.config|.
+---
 ---@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
 function MiniMisc.setup(config)
   -- Export module
@@ -40,18 +33,25 @@ function MiniMisc.setup(config)
   H.apply_config(config)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniMisc.config = {
   -- Array of fields to make global (to be used as independent variables)
   make_global = { 'put', 'put_text' },
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Execute `f` several times and time how long it took
 ---
----@param f function: Function which execution to benchmark.
----@param n number: Number of times to execute `f(...)`. Default: 1.
----@param ... vararg: Arguments when calling `f`.
----@return tuple: Table with durations (in seconds; up to microseconds) and output of (last) function execution.
+---@param f function Function which execution to benchmark.
+---@param n number Number of times to execute `f(...)`. Default: 1.
+---@param ... any Arguments when calling `f`.
+---
+---@return ... Table with durations (in seconds; up to microseconds) and
+---   output of (last) function execution.
 function MiniMisc.bench_time(f, n, ...)
   n = n or 1
   local durations, output = {}, nil
@@ -67,7 +67,8 @@ end
 
 --- Compute width of gutter (info column on the left of the window)
 ---
----@param win_id number: Window identifier (see |win_getid()|) for which gutter width is computed. Default: 0 for current.
+---@param win_id number Window identifier (see |win_getid()|) for which gutter
+---   width is computed. Default: 0 for current.
 function MiniMisc.get_gutter_width(win_id)
   -- Compute number of 'editable' columns in current window
 
@@ -92,7 +93,7 @@ end
 
 --- Print Lua objects in command line
 ---
----@param ... vararg: Any number of objects to be printed each on separate line.
+---@param ... any Any number of objects to be printed each on separate line.
 function MiniMisc.put(...)
   local objects = {}
   -- Not using `{...}` because it removes `nil` input
@@ -108,7 +109,7 @@ end
 
 --- Print Lua objects in current buffer
 ---
----@param ... vararg: Any number of objects to be printed each on separate line.
+---@param ... any Any number of objects to be printed each on separate line.
 function MiniMisc.put_text(...)
   local objects = {}
   -- Not using `{...}` because it removes `nil` input
@@ -126,8 +127,11 @@ end
 
 --- Resize window to have exact number of editable columns
 ---
----@param win_id number: Window identifier (see |win_getid()|) to be resized. Default: 0 for current.
----@param text_width number: Number of editable columns resized window will display. Default: first element of 'colorcolumn' or otherwise 'textwidth' (using screen width as its default but not more than 79).
+---@param win_id number Window identifier (see |win_getid()|) to be resized.
+---   Default: 0 for current.
+---@param text_width number Number of editable columns resized window will
+---   display. Default: first element of 'colorcolumn' or otherwise 'textwidth'
+---   (using screen width as its default but not more than 79).
 function MiniMisc.resize_window(win_id, text_width)
   win_id = win_id or 0
   text_width = text_width or H.default_text_width(win_id)
@@ -160,8 +164,11 @@ end
 --- This might be useful to compute summary of time benchmarking with
 --- |MiniMisc.bench_time|.
 ---
----@param t table: Array (table suitable for `ipairs`) of numbers.
----@return table: Table with summary values under following keys (may be extended in the future): `maximum`, `mean`, `median`, `minimum`, `n` (number of elements), `sd` (sample standard deviation).
+---@param t table Array (table suitable for `ipairs`) of numbers.
+---
+---@return table Table with summary values under following keys (may be
+---   extended in the future): <maximum>, <mean>, <median>, <minimum>, <n>
+---   (number of elements), <sd> (sample standard deviation).
 function MiniMisc.stat_summary(t)
   if type(t) ~= 'table' then
     vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be an array of numbers.]])
@@ -208,9 +215,10 @@ end
 ---
 --- Note: order of elements might vary.
 ---
----@param t table
----@param n number: Maximum number of first elements. Default: 5.
----@return table: Table with at most `n` first elements of `t` (with same keys).
+---@param t table Input table.
+---@param n number Maximum number of first elements. Default: 5.
+---
+---@return table Table with at most `n` first elements of `t` (with same keys).
 function MiniMisc.tbl_head(t, n)
   n = n or 5
   local res, n_res = {}, 0
@@ -232,9 +240,10 @@ end
 ---
 --- Note: order of elements might vary.
 ---
----@param t table
----@param n number: Maximum number of last elements. Default: 5.
----@return table: Table with at most `n` last elements of `t` (with same keys).
+---@param t table Input table.
+---@param n number Maximum number of last elements. Default: 5.
+---
+---@return table Table with at most `n` last elements of `t` (with same keys).
 function MiniMisc.tbl_tail(t, n)
   n = n or 5
 
@@ -256,7 +265,7 @@ function MiniMisc.tbl_tail(t, n)
   return res
 end
 
---- Add possibility of nested comment leader.
+--- Add possibility of nested comment leader
 ---
 --- This works by parsing 'commentstring' buffer option, extracting
 --- non-whitespace comment leader (symbols on the left of commented line), and
@@ -276,7 +285,8 @@ end
 --- with this filetype is entered, so using non-current `buf_id` can not lead
 --- to desired effect.
 ---
----@param buf_id number: Buffer identifier (see |bufnr()|) in which function will operate. Default: 0 for current.
+---@param buf_id number Buffer identifier (see |bufnr()|) in which function
+---   will operate. Default: 0 for current.
 function MiniMisc.use_nested_comments(buf_id)
   buf_id = buf_id or 0
 
@@ -309,8 +319,9 @@ end
 --- needing to zoom into one to see more of the code from that buffer. Call it
 --- again (without arguments) to zoom out.
 ---
----@param buf_id number: Buffer identifier (see |bufnr()|) to be zoomed. Default: 0 for current.
----@param config table: Optional config for window (as for |nvim_open_win()|).
+---@param buf_id number Buffer identifier (see |bufnr()|) to be zoomed.
+---   Default: 0 for current.
+---@param config table Optional config for window (as for |nvim_open_win()|).
 function MiniMisc.zoom(buf_id, config)
   if H.zoom_winid and vim.api.nvim_win_is_valid(H.zoom_winid) then
     vim.api.nvim_win_close(H.zoom_winid, true)

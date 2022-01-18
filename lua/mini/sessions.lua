@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Lua module for minimal session management (read, write, delete), which
 --- works using |mksession| (meaning 'sessionoptions' is fully respected).
 --- This is intended as a drop-in Lua replacement for session management part
@@ -28,40 +27,19 @@
 --- - Autowrite current session before quitting Neovim.
 --- - Configurable severity level of all actions.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.sessions').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniSessions` which you can use for scripting or manually (with
 --- `:lua MiniSessions.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Whether to autoread latest session if Neovim was called without file arguments
----     autoread = false,
+--- See |MiniSessions.config| for `config` structure and default values.
 ---
----     -- Whether to write current session before quitting Neovim
----     autowrite = true,
----
----     -- Directory where global sessions are stored (use `''` to disable)
----     directory = --<"session" subdirectory of user data directory from |stdpath()|>,
----
----     -- File for local session (use `''` to disable)
----     file = 'Session.vim',
----
----     -- Whether to force possibly harmful actions (meaning depends on function)
----     force = { read = false, write = true, delete = false },
----
----     -- Whether to print session path after action
----     verbose = { read = false, write = true, delete = true },
----   }
---- </code>
---- # Disabling
+--- # Disabling~
 ---
 --- To disable core functionality, set `g:minisessions_disable` (globally) or
 --- `b:minisessions_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniSessions mini.sessions
 
 -- Module definition ==========================================================
@@ -70,7 +48,8 @@ local H = { path_sep = package.config:sub(1, 1) }
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniSessions.config|.
+---
 ---@usage `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
 function MiniSessions.setup(config)
   -- Export module
@@ -90,15 +69,21 @@ function MiniSessions.setup(config)
   end
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniSessions.config = {
-  -- Whether to read latest session if Neovim was called without file arguments
+  -- Whether to read latest session if Neovim opened without file arguments
   autoread = false,
 
   -- Whether to write current session before quitting Neovim
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)
+  --minidoc_replace_start directory = --<"session" subdir of user data directory from |stdpath()|>,
   directory = ('%s%ssession'):format(vim.fn.stdpath('data'), H.path_sep),
+  --minidoc_replace_end
 
   -- File for local session (use `''` to disable)
   file = 'Session.vim',
@@ -109,14 +94,16 @@ MiniSessions.config = {
   -- Whether to print session path after action
   verbose = { read = false, write = true, delete = true },
 }
+--minidoc_afterlines_end
 
 -- Module data ================================================================
----@class MiniSessions.detected @Table of detected sessions. Keys represent session name. Values are tables with session information that currently has these fields (but subject to change):
----@field modify_time number: modification time (see |getftime|) of session file.
----@field name string: name of session (should be equal to table value).
----@field path string: full path to session file.
----@field type string: type of session ('global' or 'local').
-
+--- Table of detected sessions. Keys represent session name. Values are tables
+--- with session information that currently has these fields (but subject to
+--- change):
+--- - <modify_time> `(number)` modification time (see |getftime|) of session file.
+--- - <name> `(string)` name of session (should be equal to table value).
+--- - <path> `(string)` full path to session file.
+--- - <type> `(string)` type of session ('global' or 'local').
 MiniSessions.detected = {}
 
 -- Module functionality =======================================================
@@ -128,8 +115,14 @@ MiniSessions.detected = {}
 ---   beforehand for unsaved buffers and stops if there is any.
 --- - Source session with supplied name.
 ---
----@param session_name string: Name of detected session file to read. Default: `nil` for default session: local (if detected) or latest session (see |MiniSessions.get_latest|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to delete unsaved buffers; default: `MiniSessions.config.force.read`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.read`).
+---@param session_name string Name of detected session file to read. Default:
+---   `nil` for default session: local (if detected) or latest session (see
+---   |MiniSessions.get_latest|).
+---@param opts table Table with options. Current allowed keys:
+---   - <force> (whether to delete unsaved buffers; default:
+---     `MiniSessions.config.force.read`).
+---   - <verbose> (whether to print session path after action; default
+---     `MiniSessions.config.verbose.read`).
 function MiniSessions.read(session_name, opts)
   if H.is_disabled() then
     return
@@ -179,8 +172,13 @@ end
 ---       session).
 --- - Update |MiniSessions.detected|.
 ---
----@param session_name string: Name of session file to write. Default: `nil` for current session (|v:this_session|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to ignore existence of session file; default: `MiniSessions.config.force.write`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.write`).
+---@param session_name string Name of session file to write. Default: `nil` for
+---   current session (|v:this_session|).
+---@param opts table Table with options. Current allowed keys:
+---   - <force> (whether to ignore existence of session file; default:
+---     `MiniSessions.config.force.write`).
+---   - <verbose> (whether to print session path after action; default
+---     `MiniSessions.config.verbose.write`).
 function MiniSessions.write(session_name, opts)
   if H.is_disabled() then
     return
@@ -223,8 +221,13 @@ end
 --- - Delete session.
 --- - Update |MiniSessions.detected|.
 ---
----@param session_name string: Name of detected session file to delete. Default: `nil` for name of current session (taken from |v:this_session|).
----@param opts table: Table with options. Current allowed keys: `force` (whether to ignore deletion of current session; default: `MiniSessions.config.force.delete`), `verbose` (whether to print session path after action; default `MiniSessions.config.verbose.delete`).
+---@param session_name string Name of detected session file to delete. Default:
+---   `nil` for name of current session (taken from |v:this_session|).
+---@param opts table Table with options. Current allowed keys:
+---   - <force> (whether to ignore deletion of current session; default:
+---     `MiniSessions.config.force.delete`).
+---   - <verbose> (whether to print session path after action; default
+---     `MiniSessions.config.verbose.delete`).
 function MiniSessions.delete(session_name, opts)
   if H.is_disabled() then
     return
@@ -271,7 +274,7 @@ end
 --- Latest session is the session with the latest modification time determined
 --- by |getftime|.
 ---
----@return string|nil: Name of latest session or `nil` if there is no sessions.
+---@return string|nil Name of latest session or `nil` if there is no sessions.
 function MiniSessions.get_latest()
   if vim.tbl_count(MiniSessions.detected) == 0 then
     return

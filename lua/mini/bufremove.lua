@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Lua module for minimal buffer removing (unshow, delete, wipeout), which
 --- saves window layout (opposite to builtin Neovim's commands). This is mostly
 --- a Lua implementation of
@@ -10,21 +9,17 @@
 --- - [vim-bbye](https://github.com/moll/vim-bbye)
 --- - [vim-sayonara](https://github.com/mhinz/vim-sayonara)
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.bufremove').setup({})` (replace `{}` with your
 --- `config` table). It will create global Lua table `MiniBufremove` which you
 --- can use for scripting or manually (with `:lua MiniBufremove.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Whether to set Vim's settings for buffers (allow hidden buffers)
----     set_vim_settings = true,
----   }
---- </code>
---- # Notes
+--- See |MiniBufremove.config| for `config` structure and default values.
+---
+--- # Notes~
+---
 --- 1. Which buffer to show in window(s) after its current buffer is removed is
 ---    decided by the algorithm:
 ---    - If alternate buffer (see |CTRL-^|) is listed (see |buflisted()|), use it.
@@ -32,11 +27,10 @@
 ---    - Otherwise create a scratch one with `nvim_create_buf(true, true)` and use
 ---      it.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable core functionality, set `g:minibufremove_disable` (globally) or
 --- `b:minibufremove_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniBufremove mini.bufremove
 
 -- Module definition ==========================================================
@@ -45,7 +39,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniBufremove.config|.
+---
 ---@usage `require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
 function MiniBufremove.setup(config)
   -- Export module
@@ -58,17 +53,25 @@ function MiniBufremove.setup(config)
   H.apply_config(config)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniBufremove.config = {
-  -- Whether to set Vim's settings for buffers
+  -- Whether to set Vim's settings for buffers (allow hidden buffers)
   set_vim_settings = true,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Delete buffer `buf_id` with |:bdelete| after unshowing it.
+--- Delete buffer `buf_id` with |:bdelete| after unshowing it
 ---
----@param buf_id number: Buffer identifier (see |bufnr()|) to use. Default: 0 for current.
----@param force boolean: Whether to ignore unsaved changes (using `!` version of command). Default: `false`.
----@return boolean: Whether operation was successful.
+---@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
+---   0 for current.
+---@param force boolean Whether to ignore unsaved changes (using `!` version of
+---   command). Default: `false`.
+---
+---@return boolean Whether operation was successful.
 function MiniBufremove.delete(buf_id, force)
   if H.is_disabled() then
     return
@@ -77,11 +80,14 @@ function MiniBufremove.delete(buf_id, force)
   return H.unshow_and_cmd(buf_id, force, 'bdelete')
 end
 
---- Wipeout buffer `buf_id` with |:bwipeout| after unshowing it.
+--- Wipeout buffer `buf_id` with |:bwipeout| after unshowing it
 ---
----@param buf_id number: Buffer identifier (see |bufnr()|) to use. Default: 0 for current.
----@param force boolean: Whether to ignore unsaved changes (using `!` version of command). Default: `false`.
----@return boolean: Whether operation was successful.
+---@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
+---   0 for current.
+---@param force boolean Whether to ignore unsaved changes (using `!` version of
+---   command). Default: `false`.
+---
+---@return boolean Whether operation was successful.
 function MiniBufremove.wipeout(buf_id, force)
   if H.is_disabled() then
     return
@@ -92,8 +98,10 @@ end
 
 --- Stop showing buffer `buf_id` in all windows
 ---
----@param buf_id number: Buffer identifier (see |bufnr()|) to use. Default: 0 for current.
----@return boolean: Whether operation was successful.
+---@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
+---   0 for current.
+---
+---@return boolean Whether operation was successful.
 function MiniBufremove.unshow(buf_id)
   if H.is_disabled() then
     return
@@ -111,8 +119,10 @@ function MiniBufremove.unshow(buf_id)
 end
 
 --- Stop showing current buffer of window `win_id`
----@param win_id number: Window identifier (see |win_getid()|) to use. Default: 0 for current.
----@return boolean: Whether operation was successful.
+---@param win_id number Window identifier (see |win_getid()|) to use.
+---   Default: 0 for current.
+---
+---@return boolean Whether operation was successful.
 function MiniBufremove.unshow_in_window(win_id)
   if H.is_disabled() then
     return nil

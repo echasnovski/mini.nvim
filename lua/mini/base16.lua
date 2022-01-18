@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast Lua module which implements
 --- [base16](http://chriskempson.com/projects/base16/) color scheme (with
 --- Copyright (C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua
@@ -10,29 +9,17 @@
 --- - Opinionated palette generator based only on background and foreground
 ---   colors.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.base16').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
 --- `MiniBase16` which you can use for scripting or manually (with
 --- `:lua MiniBase16.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Table with names from `base00` to `base0F` and values being strings of HEX
----     -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
----     -- `setup()`.
----     palette = nil,
+--- See |MiniBase16.config| for `config` structure and default values.
 ---
----     -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
----     -- or table with cterm colors. See `setup()` documentation for more
----     -- information.
----      use_cterm = nil,
----   }
---- </code>
 --- Example:
---- <code>
+--- >
 ---   require('mini.base16').setup({
 ---     palette = {
 ---       base00 = '#112641',
@@ -54,8 +41,9 @@
 ---     },
 ---     use_cterm = true,
 ---   })
---- </code>
---- # Notes
+--- <
+--- # Notes~
+---
 --- 1. This module is used for creating plugin's official colorscheme named
 ---    `minischeme` (see |mini.nvim|).
 --- 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
@@ -65,8 +53,6 @@
 ---       your Neovim config directory is usually enough).
 ---     - Inside "myscheme.lua" call `require('mini.base16').setup()` with your
 ---       palette and only after that set |g:colors_name| to "myscheme".
----
----@brief ]]
 ---@tag MiniBase16 mini.base16
 
 -- Module definition ==========================================================
@@ -88,8 +74,10 @@ local H = {}
 --- - Table with similar structure to `palette` but having terminal colors
 ---   (integers from 0 to 255) instead of hex strings.
 ---
----@param config table: Module config table.
----@usage `require('mini.base16').setup({})` (replace `{}` with your `config` table; `config.palette` should be a table with colors)
+---@param config table Module config table. See |MiniBase16.config|.
+---
+---@usage `require('mini.base16').setup({})` (replace `{}` with your `config`
+---   table; `config.palette` should be a table with colors)
 function MiniBase16.setup(config)
   -- Export module
   _G.MiniBase16 = MiniBase16
@@ -101,25 +89,32 @@ function MiniBase16.setup(config)
   H.apply_config(config)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniBase16.config = {
-  -- Table with names from `base00` to `base0F` and values being strings of HEX
-  -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
-  -- `setup()`.
+  -- Table with names from `base00` to `base0F` and values being strings of
+  -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
+  -- supplied in `setup()`.
   palette = nil,
 
-  -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
-  -- or table with cterm colors. See `setup()` documentation for more
-  -- information.
+  -- Whether to support cterm colors. Can be boolean, `nil` (same as
+  -- `false`), or table with cterm colors. See `setup()` documentation for
+  -- more information.
   use_cterm = nil,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Create 'mini' palette
 ---
---- Create base16 palette based on the HEX (string '#RRGGBB') colors of main background and
---- foreground with optional setting of accent chroma (see details).
+--- Create base16 palette based on the HEX (string '#RRGGBB') colors of main
+--- background and foreground with optional setting of accent chroma (see
+--- details).
 ---
---- # Algorithm design
+--- # Algorithm design~
+---
 --- - Main operating color space is
 ---   [CIELCh(uv)](https://en.wikipedia.org/wiki/CIELUV#Cylindrical_representation_(CIELCh))
 ---   which is a cylindrical representation of a perceptually uniform CIELUV
@@ -154,12 +149,15 @@ MiniBase16.config = {
 ---   `base0D` and `base0F` have same hues because they usually represent
 ---   functions and delimiter (brackets included).
 ---
----@param background string: Background HEX color (formatted as `#RRGGBB`).
----@param foreground string: Foreground HEX color (formatted as `#RRGGBB`).
----@param accent_chroma number: Optional positive number (usually between 0 and 100). Default: chroma of foreground color.
----@return table: Table with base16 palette.
+---@param background string Background HEX color (formatted as `#RRGGBB`).
+---@param foreground string Foreground HEX color (formatted as `#RRGGBB`).
+---@param accent_chroma number Optional positive number (usually between 0
+---   and 100). Default: chroma of foreground color.
+---
+---@return table Table with base16 palette.
+---
 ---@usage `local palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
----@usage `require('mini.base16').setup({palette = palette})`
+--- `require('mini.base16').setup({palette = palette})`
 function MiniBase16.mini_palette(background, foreground, accent_chroma)
   H.validate_hex(background, 'background')
   H.validate_hex(foreground, 'foreground')
@@ -231,8 +229,10 @@ end
 ---
 --- Useful for caching `use_cterm` variable to increase speed.
 ---
----@param palette table: Table with base16 palette (same as in `MiniBase16.config.palette`).
----@return table: Table with base16 palette using |highlight-cterm|.
+---@param palette table Table with base16 palette (same as in
+---   `MiniBase16.config.palette`).
+---
+---@return table Table with base16 palette using |highlight-cterm|.
 function MiniBase16.rgb_palette_to_cterm_palette(palette)
   H.validate_base16_palette(palette, 'palette')
 

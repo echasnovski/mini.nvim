@@ -1,31 +1,26 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Lua module which implements minimal and fast fuzzy matching.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.fuzzy').setup({})` (replace `{}` with your
 --- `config` table). It will create global Lua table `MiniFuzzy` which you can
 --- use for scripting or manually (with `:lua MiniFuzzy.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Maximum allowed value of match features (width and first match). All
----     -- feature values greater than cutoff can be considered "equally bad".
----     cutoff = 100,
----   }
---- </code>
---- # Notes
+--- See |MiniFuzzy.config| for `config` structure and default values.
+---
+--- # Notes~
+---
 --- 1. Currently there is no explicit design to work with multibyte symbols,
 ---    but simple examples should work.
 --- 2. Smart case is used: case insensitive if input word (which is usually a
 ---     user input) is all lower ase. Case sensitive otherwise.
----
---- # Algorithm design
+---@tag MiniFuzzy mini.fuzzy
+
+--- # Algorithm design~
 ---
 --- General design uses only width of found match and index of first letter
 --- match. No special characters or positions (like in fzy and fzf) are used.
@@ -51,8 +46,7 @@
 ---       (width 4, first 3).
 --- - Final matched positions are those which minimize score among all possible
 ---   matched positions of `word` and `candidate`.
----@brief ]]
----@tag MiniFuzzy mini.fuzzy
+---@tag MiniFuzzy-algorithm
 
 -- Module definition ==========================================================
 local MiniFuzzy = {}
@@ -60,7 +54,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniFuzzy.config|.
+---
 ---@usage `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
 function MiniFuzzy.setup(config)
   -- Export module
@@ -73,11 +68,16 @@ function MiniFuzzy.setup(config)
   H.apply_config(config)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniFuzzy.config = {
   -- Maximum allowed value of match features (width and first match). All
   -- feature values greater than cutoff can be considered "equally bad".
   cutoff = 100,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Compute match data of input `word` and `candidate` strings
@@ -89,9 +89,10 @@ MiniFuzzy.config = {
 --- - `score` - positive number representing how good the match is (lower is
 ---   better). Or `-1` if no match.
 ---
----@param word string: Input word (usually user input).
----@param candidate string: Target word (usually with which matching is done).
----@return table: Table with matching information (see function's description).
+---@param word string Input word (usually user input).
+---@param candidate string Target word (usually with which matching is done).
+---
+---@return table Table with matching information (see function's description).
 function MiniFuzzy.match(word, candidate)
   -- Use 'smart case'
   candidate = (word == word:lower()) and candidate:lower() or candidate
@@ -106,9 +107,11 @@ end
 --- and sorts from best to worst matches (based on score and index in original
 --- array, both lower is better).
 ---
----@param word string: String which will be searched.
----@param candidate_array table: Lua array of strings inside which word will be searched.
----@return tuple: Arrays of matched candidates and their indexes in original input.
+---@param word string String which will be searched.
+---@param candidate_array table Lua array of strings inside which word will be
+---   searched.
+---
+---@return ... Arrays of matched candidates and their indexes in original input.
 function MiniFuzzy.filtersort(word, candidate_array)
   -- Use 'smart case'. Create new array to preserve input for later filtering
   local cand_array
@@ -126,8 +129,8 @@ end
 
 --- Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
 ---
----@param items table: Lua array with LSP 'textDocument/completion' response items.
----@param base string: Word to complete.
+---@param items table Lua array with LSP 'textDocument/completion' response items.
+---@param base string Word to complete.
 function MiniFuzzy.process_lsp_items(items, base)
   -- Extract completion words from items
   local words = vim.tbl_map(function(x)
@@ -149,8 +152,14 @@ end
 --- Designed to be used as value for |telescope.defaults.file_sorter| and
 --- |telescope.defaults.generic_sorter| inside `setup()` call.
 ---
----@param opts table: Options (currently not used).
----@usage `require('telescope').setup({defaults = {generic_sorter = require('mini.fuzzy').get_telescope_sorter}})`
+---@param opts table Options (currently not used).
+---
+---@usage >
+---   require('telescope').setup({
+---     defaults = {
+---       generic_sorter = require('mini.fuzzy').get_telescope_sorter
+---     }
+---   })
 function MiniFuzzy.get_telescope_sorter(opts)
   opts = opts or {}
 
@@ -220,11 +229,11 @@ function H.apply_config(config)
 end
 
 -- Fuzzy matching -------------------------------------------------------------
----@param letters string[] Array of letters from input word
+---@param letters table Array of letters from input word
 ---@param candidate string String of interest
 ---
 ---@return table Table with matched positions (in `candidate`) if there is a
----  match, `nil` otherwise.
+---   match, `nil` otherwise.
 ---@private
 function H.find_best_positions(letters, candidate)
   local n_candidate, n_letters = #candidate, #letters

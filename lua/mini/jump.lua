@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
 -- Documentation ==============================================================
----@brief [[
 --- Minimal and fast module for smarter jumping to a single character. Inspired
 --- by 'rhysd/clever-f.vim'.
 ---
@@ -13,40 +12,30 @@
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.jump').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniJump` which you can use for scripting or manually (with
 --- `:lua MiniJump.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Mappings. Use `''` (empty string) to disable one.
----     mappings = {
----       forward = 'f',
----       backward = 'F',
----       forward_till = 't',
----       backward_till = 'T',
----       repeat_jump = ';',
----     },
+--- See |MiniJump.config| for `config` structure and default values.
 ---
----     -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
----     -- very big number (like 10^7) to virtually disable highlighting.
----     highlight_delay = 250,
----   }
---- </code>
---- #Highlight groups
+--- # Highlight groups~
 ---
 --- - `MiniJump` - all possible cursor positions.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable core functionality, set `g:minijump_disable` (globally) or
 --- `b:minijump_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniJump mini.jump
+
+---@alias __till boolean Whether to jump just before/after the match instead of
+---   exactly on target. Also ignore matches that don't have anything
+---   before/after them. Default: latest used value or `false`.
+---@alias __backward boolean Whether to jump backward. Default: latest used
+---   value or `false`.
 
 -- Module definition ==========================================================
 local MiniJump = {}
@@ -54,7 +43,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniJump.config|.
+---
 ---@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
 function MiniJump.setup(config)
   -- Export module
@@ -74,7 +64,12 @@ function MiniJump.setup(config)
   vim.cmd([[hi default link MiniJump SpellRare]])
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniJump.config = {
+  -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     forward = 'f',
     backward = 'F',
@@ -83,20 +78,22 @@ MiniJump.config = {
     repeat_jump = ';',
   },
 
-  -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
-  -- very big number (like 10^7) to virtually disable highlighting.
+  -- Delay (in ms) between jump and highlighting all possible jumps. Set to
+  -- a very big number (like 10^7) to virtually disable highlighting.
   highlight_delay = 250,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Jump to target
 ---
 --- Takes a string and jumps to its first occurrence in desrired direction.
 ---
----@param target string: The string to jump to.
----@param backward boolean: Whether to jump backward. Default: latest used value or `false`.
----@param till boolean: Whether to jump just before/after the match instead of exactly on target. Also ignore matches that don't have anything before/after them. Default: latest used value or `false`.
----@param n_times number: Number of times to perform a jump. Default: latest used value or 1.
+---@param target string The string to jump to.
+---@param backward __backward
+---@param till __till
+---@param n_times number Number of times to perform a jump. Default: latest
+---   used value or 1.
 function MiniJump.jump(target, backward, till, n_times)
   if H.is_disabled() then
     return
@@ -146,8 +143,8 @@ end
 --- If the last movement was a jump, perform another jump with the same target.
 --- Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
 ---
----@param backward boolean: Whether to jump backward. Default: latest used value or `false`.
----@param till boolean: Whether to jump just before/after the match instead of exactly on target. Also ignore matches that don't have anything before/after them. Default: latest used value or `false`.
+---@param backward __backward
+---@param till __till
 function MiniJump.smart_jump(backward, till)
   if H.is_disabled() then
     return
@@ -176,8 +173,8 @@ end
 --- jump. Designed to be used inside Operator-pending mapping (see
 --- |omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
 ---
----@param backward boolean: Whether to jump backward. Default: latest used value or `false`.
----@param till boolean: Whether to jump just before/after the match instead of exactly on target. Also ignore matches that don't have anything before/after them. Default: latest used value or `false`.
+---@param backward __backward
+---@param till __till
 function MiniJump.expr_jump(backward, till)
   if H.is_disabled() then
     return ''
@@ -200,7 +197,7 @@ function MiniJump.stop_jumping()
   H.unhighlight()
 end
 
---- Act on |CursorMoved|.
+--- Act on |CursorMoved|
 function MiniJump.on_cursormoved()
   -- Check `H.jumping` to avoid unneccessary actions on every CursorMoved
   if H.jumping then

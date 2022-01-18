@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast autopairs Lua module. It provides functionality
 --- to work with 'paired' characters conditional on cursor's neighborhood (two
 --- characters to its left and right). Its usage should be through making
@@ -20,70 +19,49 @@
 ---       unregistering `<pair>` pair in current buffer.
 ---     - Disable module for buffer (see 'Disabling' section).
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.pairs').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniPairs` which you can use for scripting or manually (with
 --- `:lua MiniPairs.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- In which modes mappings from this `config` should be created
----     modes = {insert = true, command = false, terminal = false}
+--- See |MiniPairs.config| for `config` structure and default values.
 ---
----     -- Global mappings. Each right hand side should be a pair information, a
----     -- table with at least these fields (see more in |MiniPairs.map|):
----     -- - `action` - one of 'open', 'close', 'closeopen'.
----     -- - `pair` - two character string for pair to be used.
----     -- By default pair is not inserted after `\`, quotes are not recognized by
----     -- `<CR>`, `'` does not insert pair after a letter.
----     -- Only parts of the tables can be tweaked (others will use these defaults).
----     mappings = {
----       ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
----       ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
----       ['{'] = { action = 'open', pair = '{}', neigh_pattern = '[^\\].' },
+--- # Example mappings~
 ---
----       [')'] = { action = 'close', pair = '()', neigh_pattern = '[^\\].' },
----       [']'] = { action = 'close', pair = '[]', neigh_pattern = '[^\\].' },
----       ['}'] = { action = 'close', pair = '{}', neigh_pattern = '[^\\].' },
----
----       ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].', register = { cr = false } },
----       ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } },
----       ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
----     },
+--- - Register quotes inside `config` of |MiniPairs.setup|: >
+---   mappings = {
+---     ['"'] = { register = { cr = true } },
+---     ["'"] = { register = { cr = true } },
 ---   }
---- </code>
+--- <
+--- - Insert `<>` pair if `<` is typed at line start, don't register for `<CR>`: >
+---   lua MiniPairs.map('i', '<', { action = 'open', pair = '<>', neigh_pattern = '\r.', register = { cr = false } })
+---   lua MiniPairs.map('i', '>', { action = 'close', pair = '<>', register = { cr = false } })
+--- <
+--- - Create symmetrical `$$` pair only in Tex files: >
+---   au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})
+--- <
+--- # Notes~
 ---
---- # Example mappings
----
---- <pre>
---- - Register quotes inside `config` of |MiniPairs.setup|:
----   `mappings = {`
----   `  ['"'] = { register = { cr = true } },`
----   `  ["'"] = { register = { cr = true } },`
----   `}`
---- - Insert `<>` pair if `<` is typed as first character in line, don't register for `<CR>`:
----   `lua MiniPairs.map('i', '<', { action = 'open', pair = '<>', neigh_pattern = '\r.', register = { cr = false } })`
----   `lua MiniPairs.map('i', '>', { action = 'close', pair = '<>', register = { cr = false } })`
---- - Create symmetrical `$$` pair only in Tex files:
----   `au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})`
---- </pre>
----
---- # Notes
 --- - Make sure to make proper mapping of `<CR>` in order to support completion
 ---   plugin of your choice.
 --- - Having mapping in terminal mode can conflict with:
 ---     - Autopairing capabilities of interpretators (`ipython`, `radian`).
 ---     - Vim mode of terminal itself.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable, set `g:minipairs_disable` (globally) or `b:minipairs_disable`
 --- (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniPairs mini.pairs
+
+---@alias __neigh_pattern string Pattern for two neighborhood characters ("\r" line
+---   start, "\n" - line end).
+---@alias __pair string String with two characters representing pair.
+---@alias __unregister_pair string Pair which should be unregistered. Supply `''` to not
+---   unregister pair.
 
 -- Module definition ==========================================================
 local MiniPairs = {}
@@ -91,7 +69,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniPairs.config|.
+---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 function MiniPairs.setup(config)
   -- Export module
@@ -114,17 +93,21 @@ function MiniPairs.setup(config)
   )
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniPairs.config = {
   -- In which modes mappings from this `config` should be created
   modes = { insert = true, command = false, terminal = false },
 
   -- Global mappings. Each right hand side should be a pair information, a
   -- table with at least these fields (see more in |MiniPairs.map|):
-  -- - `action` - one of 'open', 'close', 'closeopen'.
-  -- - `pair` - two character string for pair to be used.
+  -- - <action> - one of "open", "close", "closeopen".
+  -- - <pair> - two character string for pair to be used.
   -- By default pair is not inserted after `\`, quotes are not recognized by
   -- `<CR>`, `'` does not insert pair after a letter.
-  -- Only parts of the tables can be tweaked (others will use these defaults).
+  -- Only parts of tables can be tweaked (others will use these defaults).
   mappings = {
     ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
     ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
@@ -139,14 +122,15 @@ MiniPairs.config = {
     ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
   },
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Make global mapping
 ---
 --- This is similar to |nvim_set_keymap()| but instead of right hand side of
 --- mapping (as string) it expects table with pair information:
---- - `action` - one of 'open' (for |MiniPairs.open|), 'close' (for
----   |MiniPairs.close|), or 'closeopen' (for |MiniPairs.closeopen|).
+--- - `action` - one of "open" (for |MiniPairs.open|), "close" (for
+---   |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
 --- - `pair` - two character string to be used as argument for action function.
 --- - `neigh_pattern` - optional 'two character' neighborhood pattern to be
 ---   used as argument for action function. Default: '..' (no restriction from
@@ -159,10 +143,11 @@ MiniPairs.config = {
 --- Using this function instead of |nvim_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
 ---
----@param mode string: `mode` for |nvim_set_keymap()|.
----@param lhs string: `lhs` for |nvim_set_keymap()|.
----@param pair_info table: Table with pair information.
----@param opts table: Optional table `opts` for |nvim_set_keymap()|. Elements `expr` and `noremap` won't be recognized (`true` by default).
+---@param mode string `mode` for |nvim_set_keymap()|.
+---@param lhs string `lhs` for |nvim_set_keymap()|.
+---@param pair_info table Table with pair information.
+---@param opts table Optional table `opts` for |nvim_set_keymap()|. Elements
+---   `expr` and `noremap` won't be recognized (`true` by default).
 function MiniPairs.map(mode, lhs, pair_info, opts)
   pair_info = H.ensure_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
@@ -179,10 +164,12 @@ end
 --- Using this function instead of |nvim_buf_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
 ---
----@param mode string: `mode` for |nvim_buf_set_keymap()|.
----@param lhs string: `lhs` for |nvim_buf_set_keymap()|.
----@param pair_info table: Table with pair information.
----@param opts table: Optional table `opts` for |nvim_buf_set_keymap()|. Elements `expr` and `noremap` won't be recognized (`true` by default).
+---@param buffer number `buffer` for |nvim_buf_set_keymap()|.
+---@param mode string `mode` for |nvim_buf_set_keymap()|.
+---@param lhs string `lhs` for |nvim_buf_set_keymap()|.
+---@param pair_info table Table with pair information.
+---@param opts table Optional table `opts` for |nvim_buf_set_keymap()|.
+---   Elements `expr` and `noremap` won't be recognized (`true` by default).
 function MiniPairs.map_buf(buffer, mode, lhs, pair_info, opts)
   pair_info = H.ensure_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
@@ -194,9 +181,9 @@ end
 ---
 --- Uses |nvim_del_keymap()| together with unregistering supplied `pair`.
 ---
----@param mode string: `mode` for |nvim_del_keymap()|.
----@param lhs string: `lhs` for |nvim_del_keymap()|.
----@param pair string: pair which should be unregistered. Supply `''` to not unregister pair.
+---@param mode string `mode` for |nvim_del_keymap()|.
+---@param lhs string `lhs` for |nvim_del_keymap()|.
+---@param pair __unregister_pair
 function MiniPairs.unmap(mode, lhs, pair)
   vim.api.nvim_del_keymap(mode, lhs)
   if pair == nil then
@@ -211,9 +198,10 @@ end
 ---
 --- Uses |nvim_buf_del_keymap()| together with unregistering supplied `pair`.
 ---
----@param mode string: `mode` for |nvim_buf_del_keymap()|.
----@param lhs string: `lhs` for |nvim_buf_del_keymap()|.
----@param pair string: pair which should be unregistered. Supply `''` to not unregister pair.
+---@param buffer number `buffer` for |nvim_buf_del_keymap()|.
+---@param mode string `mode` for |nvim_buf_del_keymap()|.
+---@param lhs string `lhs` for |nvim_buf_del_keymap()|.
+---@param pair __unregister_pair
 function MiniPairs.unmap_buf(buffer, mode, lhs, pair)
   vim.api.nvim_buf_del_keymap(buffer, mode, lhs)
   if pair == nil then
@@ -224,17 +212,17 @@ function MiniPairs.unmap_buf(buffer, mode, lhs, pair)
   end
 end
 
---- Process 'open' symbols
+--- Process "open" symbols
 ---
---- Used as |map-expr| mapping for 'open' symbols in asymmetric pair ('(', '[',
+--- Used as |map-expr| mapping for "open" symbols in asymmetric pair ('(', '[',
 --- etc.). If neighborhood doesn't match supplied pattern, function results
---- into 'open' symbol. Otherwise, it pastes whole pair and moves inside pair
+--- into "open" symbol. Otherwise, it pastes whole pair and moves inside pair
 --- with |<Left>|.
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair string: String with two characters representing pair.
----@param neigh_pattern string: Pattern for two neighborhood characters ("\r" line start, "\n" - line end).
+---@param pair __pair
+---@param neigh_pattern __neigh_pattern
 function MiniPairs.open(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then
     return pair:sub(1, 1)
@@ -243,18 +231,18 @@ function MiniPairs.open(pair, neigh_pattern)
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
 end
 
---- Process 'close' symbols
+--- Process "close" symbols
 ---
---- Used as |map-expr| mapping for 'close' symbols in asymmetric pair (')',
+--- Used as |map-expr| mapping for "close" symbols in asymmetric pair (')',
 --- ']', etc.). If neighborhood doesn't match supplied pattern, function
---- results into 'close' symbol. Otherwise it jumps over symbol to the right of
---- cursor (with |<Right>|) if it is equal to 'close' one and inserts it
+--- results into "close" symbol. Otherwise it jumps over symbol to the right of
+--- cursor (with |<Right>|) if it is equal to "close" one and inserts it
 --- otherwise.
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair string: String with two characters representing pair.
----@param neigh_pattern string: Pattern for two neighborhood characters ("\r" line start, "\n" - line end).
+---@param pair __pair
+---@param neigh_pattern __neigh_pattern
 function MiniPairs.close(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then
     return pair:sub(2, 2)
@@ -268,7 +256,7 @@ function MiniPairs.close(pair, neigh_pattern)
   end
 end
 
---- Process 'closeopen' symbols
+--- Process "closeopen" symbols
 ---
 --- Used as |map-expr| mapping for 'symmetrical' symbols (from pairs '""',
 --- '\'\'', '``').  It tries to perform 'closeopen action': move over right
@@ -277,8 +265,8 @@ end
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair string: String with two characters representing pair.
----@param neigh_pattern string: Pattern for two neighborhood characters ("\r" line start, "\n" - line end).
+---@param pair __pair
+---@param neigh_pattern __neigh_pattern
 function MiniPairs.closeopen(pair, neigh_pattern)
   if H.is_disabled() or not (H.get_cursor_neigh(1, 1) == pair:sub(2, 2)) then
     return MiniPairs.open(pair, neigh_pattern)

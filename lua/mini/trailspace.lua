@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast module for working with trailing whitespace.
 ---
 --- Features:
@@ -9,34 +8,27 @@
 ---   mode; stops in Insert mode and when leaving window.
 --- - Trim all trailing whitespace with |MiniTrailspace.trim()| function.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.trailspace').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniTrailspace` which you can use for scripting or manually (with
 --- `:lua MiniTrailspace.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Highlight only in normal buffers (ones with empty 'buftype'). This is
----     -- useful to not show trailing whitespace where it usually doesn't matter.
----     only_in_normal_buffers = true,
----   }
---- </code>
---- # Highlight groups
+--- See |MiniTrailspace.config| for `config` structure and default values.
+---
+--- # Highlight groups~
 ---
 --- 1. `MiniTrailspace` - highlight group for trailing space.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling
+--- # Disabling~
 ---
 --- To disable, set `g:minitrailspace_disable` (globally) or
 --- `b:minitrailspace_disable` (for a buffer) to `v:true`.  Note: after
 --- disabling there might be highlighting left; it will be removed after next
 --- highlighting update (see |events| and `MiniTrailspace` |augroup|).
----@brief ]]
 ---@tag MiniTrailspace mini.trailspace
 
 -- Module definition ==========================================================
@@ -45,7 +37,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniTrailspace.config|.
+---
 ---@usage `require('mini.trailspace').setup({})` (replace `{}` with your `config` table)
 function MiniTrailspace.setup(config)
   -- Export module
@@ -87,11 +80,16 @@ function MiniTrailspace.setup(config)
   vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniTrailspace.config = {
   -- Highlight only in normal buffers (ones with empty 'buftype'). This is
   -- useful to not show trailing whitespace where it usually doesn't matter.
   only_in_normal_buffers = true,
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Highlight trailing whitespace

@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
----@brief [[
 --- Custom minimal and fast Lua module for code commenting. This is basically a
 --- reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 --- respects |count| and is dot-repeatable. Comment structure is inferred
@@ -15,35 +14,19 @@
 --- - Handle indentation with mixed tab and space.
 --- - Preserve trailing whitespace in empty lines.
 ---
---- # Setup
+--- # Setup~
 ---
 --- This module needs a setup with `require('mini.comment').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
 --- `MiniComment` which you can use for scripting or manually (with
 --- `:lua MiniComment.*`).
 ---
---- Default `config`:
---- <code>
----   {
----     -- Module mappings. Use `''` (empty string) to disable one.
----     mappings = {
----       -- Toggle comment (like `gcip` - comment inner paragraph) for both
----       -- Normal and Visual modes
----       comment = 'gc',
+--- See |MiniComment.config| for `config` structure and default values.
 ---
----       -- Toggle comment on current line
----       comment_line = 'gcc',
----
----       -- Define 'comment' textobject (like `dgc` - delete whole comment block)
----       textobject = 'gc',
----     }
----   }
---- </code>
---- # Disabling
+--- # Disabling~
 ---
 --- To disable core functionality, set `g:minicomment_disable` (globally) or
 --- `b:minicomment_disable` (for a buffer) to `v:true`.
----@brief ]]
 ---@tag MiniComment mini.comment
 
 -- Module definition ==========================================================
@@ -52,7 +35,8 @@ local H = {}
 
 --- Module setup
 ---
----@param config table: Module config table.
+---@param config table Module config table. See |MiniComment.config|.
+---
 ---@usage `require('mini.comment').setup({})` (replace `{}` with your `config` table)
 function MiniComment.setup(config)
   -- Export module
@@ -65,11 +49,15 @@ function MiniComment.setup(config)
   H.apply_config(config)
 end
 
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniComment.config = {
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
-    -- Toggle comment (like `gcip` - comment inner paragraph) for both Normal
-    -- and Visual modes
+    -- Toggle comment (like `gcip` - comment inner paragraph) for both
+    -- Normal and Visual modes
     comment = 'gc',
 
     -- Toggle comment on current line
@@ -79,6 +67,7 @@ MiniComment.config = {
     textobject = 'gc',
   },
 }
+--minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Main function to be mapped
@@ -91,8 +80,10 @@ MiniComment.config = {
 --- dot-repeatability works): it should be called without arguments inside
 --- expression mapping and with argument when action should be performed.
 ---
----@param mode string: Optional string with 'operatorfunc' mode (see |g@|).
----@return string: 'g@' if called without argument, '' otherwise (but after performing action).
+---@param mode string Optional string with 'operatorfunc' mode (see |g@|).
+---
+---@return string 'g@' if called without argument, '' otherwise (but after
+---   performing action).
 function MiniComment.operator(mode)
   if H.is_disabled() then
     return ''
@@ -137,12 +128,13 @@ end
 --- whitespace. Toggle commenting not in visual mode is also dot-repeatable
 --- and respects |count|.
 ---
---- # Notes
+--- # Notes~
+---
 --- 1. Currently call to this function will remove marks inside written range.
 ---    Use |lockmarks| to preserve marks.
 ---
----@param line_start number: Start line number.
----@param line_end number: End line number.
+---@param line_start number Start line number.
+---@param line_end number End line number.
 function MiniComment.toggle_lines(line_start, line_end)
   if H.is_disabled() then
     return
@@ -172,8 +164,9 @@ function MiniComment.toggle_lines(line_start, line_end)
 end
 
 --- Comment textobject
---- This selects all commented lines adjacent to cursor line (if it itself is commented).
---- Designed to be used with operator mode mappings (see |mapmode-o|).
+---
+--- This selects all commented lines adjacent to cursor line (if it itself is
+--- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 function MiniComment.textobject()
   if H.is_disabled() then
     return
