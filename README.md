@@ -103,14 +103,14 @@ Default `config`:
 
 ```lua
 {
-  -- Table with names from `base00` to `base0F` and values being strings of HEX
-  -- colors with format "#RRGGBB". NOTE: this should be explicitly supplied in
-  -- `setup()`.
+  -- Table with names from `base00` to `base0F` and values being strings of
+  -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
+  -- supplied in `setup()`.
   palette = nil,
 
- -- Whether to support cterm colors. Can be boolean, `nil` (same as `false`),
- -- or table with cterm colors. See `setup()` documentation for more
- -- information.
+  -- Whether to support cterm colors. Can be boolean, `nil` (same as
+  -- `false`), or table with cterm colors. See `setup()` documentation for
+  -- more information.
   use_cterm = nil,
 }
 ```
@@ -164,7 +164,7 @@ Default `config`:
 
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
     textobject = 'gc',
-  }
+  },
 }
 ```
 
@@ -190,45 +190,47 @@ Default `config`:
   -- Delay (debounce type, in ms) between certain Neovim event and action.
   -- This can be used to (virtually) disable certain automatic actions by
   -- setting very high delay time (like 10^7).
-  delay = {completion = 100, info = 100, signature = 50},
+  delay = { completion = 100, info = 100, signature = 50 },
 
-  -- Maximum dimensions of floating windows for certain actions. Action entry
-  -- should be a table with 'height' and 'width' fields.
+  -- Maximum dimensions of floating windows for certain actions. Action
+  -- entry should be a table with 'height' and 'width' fields.
   window_dimensions = {
-    info = {height = 25, width = 80},
-    signature = {height = 25, width = 80}
+    info = { height = 25, width = 80 },
+    signature = { height = 25, width = 80 },
   },
 
-  -- Way of how module does LSP completion:
-  -- - `source_func` should be one of 'completefunc' or 'omnifunc'.
-  -- - `auto_setup` should be boolean indicating if LSP completion is set up on
-  --   every `BufEnter` event.
-  -- - `process_items` should be a function which takes LSP
-  --   'textDocument/completion' response items and word to complete. Its
-  --   output should be a table of the same nature as input items. The most
-  --   common use-cases are custom filtering and sorting. You can use
-  --   default `process_items` as `MiniCompletion.default_process_items()`.
+  -- Way of how module does LSP completion
   lsp_completion = {
+    -- `source_func` should be one of 'completefunc' or 'omnifunc'.
     source_func = 'completefunc',
+
+    -- `auto_setup` should be boolean indicating if LSP completion is set up
+    -- on every `BufEnter` event.
     auto_setup = true,
-    process_items = --<function: filters 'not snippets' by prefix and sorts by LSP specification>,
+
+    -- `process_items` should be a function which takes LSP
+    -- 'textDocument/completion' response items and word to complete. Its
+    -- output should be a table of the same nature as input items. The most
+    -- common use-cases are custom filtering and sorting. You can use
+    -- default `process_items` as `MiniCompletion.default_process_items()`.
+    process_items = --<function: filters out snippets; sorts by LSP specs>,
   },
 
   -- Fallback action. It will always be run in Insert mode. To use Neovim's
   -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. For example, to use 'whole lines' completion, supply '<C-x><C-l>'.
-  fallback_action = --<function equivalent to '<C-n>' completion>,
+  -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
+  fallback_action = --<function: like `<C-n>` completion>,
 
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.
   mappings = {
-    force_twostep  = '<C-Space>', -- Force two-step completion
-    force_fallback = '<A-Space>'  -- Force fallback completion
-  }
+    force_twostep = '<C-Space>', -- Force two-step completion
+    force_fallback = '<A-Space>', -- Force fallback completion
+  },
 
   -- Whether to set Vim's settings for better experience (modifies
   -- `shortmess` and `completeopt`)
-  set_vim_settings = true
+  set_vim_settings = true,
 }
 ```
 
@@ -249,8 +251,8 @@ Default `config`:
 
 ```lua
 {
- -- Delay (in ms) between when cursor moved and when highlighting appeared
- delay = 100,
+  -- Delay (in ms) between when cursor moved and when highlighting appeared
+  delay = 100,
 }
 ```
 
@@ -292,7 +294,7 @@ Default `config`:
 
 ```lua
 {
-  -- Mappings. Use `''` (empty string) to disable one.
+  -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     forward = 'f',
     backward = 'F',
@@ -301,8 +303,8 @@ Default `config`:
     repeat_jump = ';',
   },
 
-  -- Delay (in ms) between jump and highlighting all possible jumps. Set to a
-  -- very big number (like 10^7) to virtually disable highlighting.
+  -- Delay (in ms) between jump and highlighting all possible jumps. Set to
+  -- a very big number (like 10^7) to virtually disable highlighting.
   highlight_delay = 250,
 }
 ```
@@ -344,15 +346,15 @@ Default `config`:
 ```lua
 {
   -- In which modes mappings from this `config` should be created
-  modes = {insert = true, command = false, terminal = false}
+  modes = { insert = true, command = false, terminal = false },
 
   -- Global mappings. Each right hand side should be a pair information, a
-  -- table with at least these fields (see more in `:h MiniPairs.map`):
-  -- - `action` - one of 'open', 'close', 'closeopen'.
-  -- - `pair` - two character string for pair to be used.
+  -- table with at least these fields (see more in |MiniPairs.map|):
+  -- - <action> - one of 'open', 'close', 'closeopen'.
+  -- - <pair> - two character string for pair to be used.
   -- By default pair is not inserted after `\`, quotes are not recognized by
   -- `<CR>`, `'` does not insert pair after a letter.
-  -- Only parts of the tables can be tweaked (others will use these defaults).
+  -- Only parts of tables can be tweaked (others will use these defaults).
   mappings = {
     ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
     ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
@@ -386,14 +388,14 @@ Default `config`:
 
 ```lua
 {
-  -- Whether to autoread latest session if Neovim was called without file arguments
+  -- Whether to read latest session if Neovim opened without file arguments
   autoread = false,
 
   -- Whether to write current session before quitting Neovim
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)
-  directory = --<"session" subdirectory of user data directory from |stdpath()|>,
+  directory = --<"session" subdir of user data directory from |stdpath()|>,
 
   -- File for local session (use `''` to disable)
   file = 'Session.vim',
@@ -431,23 +433,23 @@ Default `config`:
   evaluate_single = false,
 
   -- Items to be displayed. Should be an array with the following elements:
-  -- - Item: table with `action`, `name`, and `section` keys.
+  -- - Item: table with <action>, <name>, and <section> keys.
   -- - Function: should return one of these three categories.
   -- - Array: elements of these three types (i.e. item, array, function).
-  -- If `nil`, default items will be used (see |mini.starter|).
+  -- If `nil` (default), default items will be used (see |mini.starter|).
   items = nil,
 
   -- Header to be displayed before items. Should be a string or function
-  -- evaluating to single string (use `\n` for new lines). If `nil` (default),
-  -- polite greeting will be used.
+  -- evaluating to single string (use `\n` for new lines).
+  -- If `nil` (default), polite greeting will be used.
   header = nil,
 
   -- Footer to be displayed after items. Should be a string or function
-  -- evaluating to string. If `nil`, default usage instructions will be used.
+  -- evaluating to string. If `nil`, default usage help will be shown.
   footer = nil,
 
-  -- Array  of functions to be applied consecutively to initial content. Each
-  -- function should take and return content for 'Starter' buffer (see
+  -- Array  of functions to be applied consecutively to initial content.
+  -- Each function should take and return content for 'Starter' buffer (see
   -- |mini.starter| for more details).
   content_hooks = nil,
 
@@ -476,12 +478,11 @@ Default `config`:
 
 ```lua
 {
-  -- Content of statusline as functions which return statusline string. See `:h
-  -- statusline` and code of default contents (used when `nil` is supplied).
+  -- Content of statusline as functions which return statusline string. See
+  -- `:h statusline` and code of default contents (used instead of `nil`).
   content = {
     -- Content for active window
     active = nil,
-
     -- Content for inactive window(s)
     inactive = nil,
   },
@@ -519,16 +520,16 @@ Default `config`:
   -- By default it is a string of letters, '_' or '.'
   funname_pattern = '[%w_%.]+',
 
-  -- Mappings. Use `''` (empty string) to disable one.
+  -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
-    add = 'sa',           -- Add surrounding
-    delete = 'sd',        -- Delete surrounding
-    find = 'sf',          -- Find surrounding (to the right)
-    find_left = 'sF',     -- Find surrounding (to the left)
-    highlight = 'sh',     -- Highlight surrounding
-    replace = 'sr',       -- Replace surrounding
-    update_n_lines = 'sn' -- Update `n_lines`
-  }
+    add = 'sa', -- Add surrounding
+    delete = 'sd', -- Delete surrounding
+    find = 'sf', -- Find surrounding (to the right)
+    find_left = 'sF', -- Find surrounding (to the left)
+    highlight = 'sh', -- Highlight surrounding
+    replace = 'sr', -- Replace surrounding
+    update_n_lines = 'sn', -- Update `n_lines`
+  },
 }
 ```
 
@@ -554,7 +555,7 @@ Default `config`:
 
   -- Whether to set Vim's settings for tabline (make it always shown and
   -- allow hidden buffers)
-  set_vim_settings = true
+  set_vim_settings = true,
 }
 ```
 
