@@ -1,3 +1,6 @@
-local doc = require('mini.doc')
+local minidoc = require('mini.doc')
 
-doc.generate(nil, nil, { hooks = doc.default_hooks })
+if _G.MiniDoc == nil then
+  minidoc.setup()
+end
+minidoc.generate(nil, nil, { hooks = minidoc.default_hooks })
