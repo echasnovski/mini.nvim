@@ -75,6 +75,9 @@
 --- - |MiniCursorword| - automatic highlighting of word under cursor (displayed
 ---   after customizable delay). Current word under cursor can be highlighted
 ---   differently.
+--- - |MiniDoc| - generation of help files from EmmyLua-like annotations.
+---   Allows flexible customization of output via hook functions. Used for
+---   documenting this plugin.
 --- - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
 ---   not only functions to perform fuzzy matching of one string to others, but
 ---   also a sorter for |telescope.nvim|.

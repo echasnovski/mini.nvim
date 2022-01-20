@@ -9,7 +9,7 @@ You can make contributions in the following ways:
     - **Feature request**. A concise and justified description of what one or several modules should be able to do. Before making one, please make your best efforts to make sure that it is not a feature that won't get implemented (these should be described in documentation; for example: block comments in 'mini.comment').
 - **Create a pull request (PR)**. It can be one of two types:
     - **Code related**. For example, fix a bug or implement a feature. Before even starting one, please make sure that it is aligned with project vision and goals. The best way to do it is to receive a positive feedback from maintainer on your initiative in one of the GitHub issues (existing one or created by you otherwise).
-    - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation). Feel free to make these without creating a GitHub issue.
+    - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation; run `require('mini.doc').generate()` with current directory being project root). Feel free to make these without creating a GitHub issue.
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
 

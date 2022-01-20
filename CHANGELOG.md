@@ -1,8 +1,14 @@
 # Version 0.2.0.9000 (development)
 
+- Update all modules to have annotations formatted for 'mini.doc'.
+
 ## mini.cursorword
 
 - Current word under cursor now can be highlighted differently.
+
+## mini.doc
+
+Introduction of new module.
 
 # Version 0.2.0
 

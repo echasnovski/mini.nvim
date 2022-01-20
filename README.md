@@ -19,6 +19,7 @@ Collection of minimal, independent, and fast Lua modules dedicated to improve [N
     - [mini.comment](#minicomment)
     - [mini.completion](#minicompletion)
     - [mini.cursorword](#minicursorword)
+    - [mini.doc](#minidoc)
     - [mini.fuzzy](#minifuzzy)
     - [mini.jump](#minijump)
     - [mini.misc](#minimisc)
@@ -261,6 +262,79 @@ For more information, read 'mini.cursorword' section of [help file](doc/mini.txt
 Plugins with similar functionality:
 
 - [itchyny/vim-cursorword](https://github.com/itchyny/vim-cursorword)
+
+### mini.doc
+
+Generation of help files from EmmyLua-like annotations. Allows flexible customization of output via hook functions. Used for documenting this plugin.
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-doc.gif" height="400em"/>
+
+Default `config`:
+
+```lua
+{
+  -- Lua string pattern to determine if line has documentation annotation.
+  -- First capture group should describe possible section id. Default value
+  -- means that annotation line should:
+  -- - Start with `---` at first column.
+  -- - Any non-whitespace after `---` will be treated as new section id.
+  -- - Single whitespace at the start of main text will be ignored.
+  annotation_pattern = '^%-%-%-(%S*) ?',
+
+  -- Identifier of block annotation lines until first captured identifier
+  default_section_id = '@text',
+
+  -- Hooks to be applied at certain stage of document life cycle. Should
+  -- modify its input in place (and not return new one).
+  hooks = {
+    -- Applied to block before anything else
+    block_pre = --<function: infers header sections (tag and/or signature)>,
+
+    -- Applied to section before anything else
+    section_pre = --<function: replaces current aliases>,
+
+    -- Applied if section has specified captured id
+    sections = {
+      ['@alias'] = --<function: registers alias in MiniDoc.current.aliases>,
+      ['@class'] = --<function>,
+      -- For most typical usage see |MiniDoc.afterlines_to_code|
+      ['@eval'] = --<function: evaluates lines; replaces with their return>,
+      ['@field'] = --<function>,
+      ['@param'] = --<function>,
+      ['@private'] = --<function: registers block for removal>,
+      ['@return'] = --<function>,
+      ['@seealso'] = --<function>,
+      ['@signature'] = --<function: formats signature of documented object>,
+      ['@tag'] = --<function: turns its line in proper tag lines>,
+      ['@text'] = --<function: purposefully does nothing>,
+      ['@type'] = --<function>,
+      ['@usage'] = --<function>,
+    },
+
+    -- Applied to section after all previous steps
+    section_post = --<function: currently does nothing>,
+
+    -- Applied to block after all previous steps
+    block_post = --<function: does many things>,
+
+    -- Applied to file after all previous steps
+    file = --<function: adds separator>,
+
+    -- Applied to doc after all previous steps
+    doc = --<function: adds modeline>,
+  },
+
+  -- Path (relative to current directory) to script which handles project
+  -- specific help file generation (like custom input files, hooks, etc.).
+  script_path = 'scripts/minidoc.lua',
+}
+```
+
+For more information, read 'mini.doc' section of [help file](doc/mini.txt) (which is created with this module).
+
+Plugins with similar functionality:
+
+- [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua)
 
 ### mini.fuzzy
 
