@@ -62,10 +62,21 @@ function MiniSessions.setup(config)
   H.apply_config(config)
 
   -- Module behavior
-  vim.cmd([[au VimEnter * ++nested ++once lua MiniSessions.on_vimenter()]])
+  vim.api.nvim_exec(
+    [[augroup MiniSessions
+        au!
+        au VimEnter * ++nested ++once lua MiniSessions.on_vimenter()
+      augroup END]],
+    false
+  )
 
   if config.autowrite then
-    vim.cmd([[au VimLeavePre * lua if vim.v.this_session ~= '' then MiniSessions.write(nil, {force = true}) end]])
+    vim.api.nvim_exec(
+      [[augroup MiniSessions
+          au VimLeavePre * lua if vim.v.this_session ~= '' then MiniSessions.write(nil, {force = true}) end
+        augroup END]],
+      false
+    )
   end
 end
 

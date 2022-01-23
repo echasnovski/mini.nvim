@@ -77,12 +77,12 @@ function MiniTabline.setup(config)
   -- Module behavior
   vim.api.nvim_exec(
     [[augroup MiniTabline
-        autocmd!
-        autocmd VimEnter   * lua MiniTabline.update_tabline()
-        autocmd TabEnter   * lua MiniTabline.update_tabline()
-        autocmd BufAdd     * lua MiniTabline.update_tabline()
-        autocmd FileType  qf lua MiniTabline.update_tabline()
-        autocmd BufDelete  * lua MiniTabline.update_tabline()
+        au!
+        au VimEnter   * lua MiniTabline.update_tabline()
+        au TabEnter   * lua MiniTabline.update_tabline()
+        au BufAdd     * lua MiniTabline.update_tabline()
+        au FileType  qf lua MiniTabline.update_tabline()
+        au BufDelete  * lua MiniTabline.update_tabline()
       augroup END]],
     false
   )

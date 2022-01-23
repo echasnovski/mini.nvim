@@ -57,8 +57,14 @@ function MiniJump.setup(config)
   H.apply_config(config)
 
   -- Module behavior
-  vim.cmd([[autocmd CursorMoved * lua MiniJump.on_cursormoved()]])
-  vim.cmd([[autocmd BufLeave,InsertEnter * lua MiniJump.stop_jumping()]])
+  vim.api.nvim_exec(
+    [[augroup MiniJump
+        au!
+        au CursorMoved * lua MiniJump.on_cursormoved()
+        au BufLeave,InsertEnter * lua MiniJump.stop_jumping()
+      augroup END]],
+    false
+  )
 
   -- Highlight groups
   vim.cmd([[hi default link MiniJump SpellRare]])
@@ -199,7 +205,7 @@ end
 
 --- Act on |CursorMoved|
 function MiniJump.on_cursormoved()
-  -- Check `H.jumping` to avoid unneccessary actions on every CursorMoved
+  -- Check `H.jumping` to avoid unnecessary actions on every CursorMoved
   if H.jumping then
     H.n_cursor_moved = H.n_cursor_moved + 1
     -- Stop jumping only if `CursorMoved` was not a result of smart jump
