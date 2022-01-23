@@ -128,7 +128,7 @@
 
 -- Module definition ==========================================================
 local MiniDoc = {}
-H = {}
+local H = {}
 
 --- Module setup
 ---
@@ -497,11 +497,12 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---
 --- # Project specific script~
 ---
---- If no arguments are supplied, first there is an attempt to source project
---- specific script. This is basically a `luafile <MiniDoc.config.script_path>`
---- with current Lua runtime while caching and restoring current
---- `MiniDoc.config`. Its successful execution stops any further generation
---- actions while error means proceeding generation as if no script was found.
+--- If all arguments have default `nil` values, first there is an attempt to
+--- source project specific script. This is basically a `luafile
+--- <MiniDoc.config.script_path>` with current Lua runtime while caching and
+--- restoring current `MiniDoc.config`. Its successful execution stops any
+--- further generation actions while error means proceeding generation as if no
+--- script was found.
 ---
 --- Typical script content might include definition of custom hooks, input and
 --- output files with eventual call to `require('mini.doc').generate()` (with
@@ -517,23 +518,13 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---@param config table Configuration overriding parts of |MiniDoc.config|.
 ---
 ---@return table Document structure which was generated and used for output
----   help file or `nil` in case `MiniDoc.config.script_path` was successfully
----   used.
+---   help file. In case `MiniDoc.config.script_path` was successfully used,
+---   this is a return from the latest call of this function.
 function MiniDoc.generate(input, output, config)
-  -- Try sourcing 'MiniDoc.config.script_path' first (if not already doing it)
-  if not H.generate_is_active and input == nil and output == nil and config == nil then
-    local config_cache = MiniDoc.config
-    -- Prevent recursion
-    H.generate_is_active = true
-
-    local success = pcall(vim.cmd, 'luafile ' .. MiniDoc.config.script_path)
-
-    MiniDoc.config = config_cache
-    H.generate_is_active = nil
-
-    if success then
-      return
-    end
+  -- Try sourcing project specific script first
+  local success = H.execute_project_script(input, output, config)
+  if success then
+    return H.generate_recent_output
   end
 
   input = input or H.default_input()
@@ -548,10 +539,7 @@ function MiniDoc.generate(input, output, config)
   for _, path in ipairs(input) do
     local lines = H.file_read(path)
     local block_arr = H.lines_to_block_arr(lines, config)
-    local file = H.new_struct('file', { path = path })
-    for _, b in ipairs(block_arr) do
-      file:insert(b)
-    end
+    local file = H.as_struct(block_arr, 'file', { path = path })
 
     doc:insert(file)
   end
@@ -570,6 +558,9 @@ function MiniDoc.generate(input, output, config)
 
   -- Clear current information
   MiniDoc.current = {}
+
+  -- Stash output to allow returning value even when called from script
+  H.generate_recent_output = doc
 
   return doc
 end
@@ -739,6 +730,35 @@ end
 
 function H.is_disabled()
   return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true
+end
+
+-- Work with project specific script ==========================================
+function H.execute_project_script(input, output, config)
+  -- Don't process script if there are more than one active `generate` calls
+  if H.generate_is_active then
+    return
+  end
+
+  -- Don't process script if at least one argument is not default
+  if not (input == nil and output == nil and config == nil) then
+    return
+  end
+
+  -- Store information
+  local config_cache = MiniDoc.config
+
+  -- Pass information to a possible `generate()` call inside script
+  H.generate_is_active = true
+  H.generate_recent_output = nil
+
+  -- Execute script
+  local success = pcall(vim.cmd, 'luafile ' .. MiniDoc.config.script_path)
+
+  -- Restore information
+  MiniDoc.config = config_cache
+  H.generate_is_active = nil
+
+  return success
 end
 
 -- Default documentation targets ----------------------------------------------

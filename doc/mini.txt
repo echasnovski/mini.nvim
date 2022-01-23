@@ -1142,11 +1142,12 @@ Generate help file
 
 # Project specific script~
 
-If no arguments are supplied, first there is an attempt to source project
-specific script. This is basically a `luafile <MiniDoc.config.script_path>`
-with current Lua runtime while caching and restoring current
-`MiniDoc.config`. Its successful execution stops any further generation
-actions while error means proceeding generation as if no script was found.
+If all arguments have default `nil` values, first there is an attempt to
+source project specific script. This is basically a `luafile
+<MiniDoc.config.script_path>` with current Lua runtime while caching and
+restoring current `MiniDoc.config`. Its successful execution stops any
+further generation actions while error means proceeding generation as if no
+script was found.
 
 Typical script content might include definition of custom hooks, input and
 output files with eventual call to `require('mini.doc').generate()` (with
@@ -1164,8 +1165,8 @@ Parameters~
 
 Return~
 `(table)` Document structure which was generated and used for output
-  help file or `nil` in case `MiniDoc.config.script_path` was successfully
-  used.
+  help file. In case `MiniDoc.config.script_path` was successfully used,
+  this is a return from the latest call of this function.
 
 ------------------------------------------------------------------------------
                                                   *MiniDoc.afterlines_to_code()*
