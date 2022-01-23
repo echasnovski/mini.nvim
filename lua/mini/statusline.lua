@@ -317,8 +317,8 @@ end
 --- Section for Neovim's builtin diagnostics
 ---
 --- Shows nothing if there is no attached LSP clients or for short output.
---- Otherwise uses |vim.lsp.diagnostic.get_count()| to show number of errors
---- ('E'), warnings ('W'), information ('I'), and hints ('H').
+--- Otherwise uses builtin Neovim capabilities to compute and show number of
+--- errors ('E'), warnings ('W'), information ('I'), and hints ('H').
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
@@ -467,7 +467,6 @@ end
 H.default_config = MiniStatusline.config
 
 -- Showed diagnostic levels
-H.diagnostic_levels = nil
 if vim.fn.has('nvim-0.6') == 1 then
   H.diagnostic_levels = {
     { id = vim.diagnostic.severity.ERROR, sign = 'E' },
@@ -573,7 +572,6 @@ function H.get_filetype_icon()
   return devicons.get_icon(file_name, file_ext, { default = true })
 end
 
-H.get_diagnostic_count = nil
 if vim.fn.has('nvim-0.6') == 1 then
   H.get_diagnostic_count = function(id)
     return #vim.diagnostic.get(0, { severity = id })
