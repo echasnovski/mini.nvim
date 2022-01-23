@@ -19,7 +19,7 @@ module can be considered as a separate sub-plugin.
   As later will be explained, this plugin can also be referred to
   as "MiniSurround".
 - <Setup>:
-    - Each module (if needed) should be setup separately with<br>
+    - Each module (if needed) should be setup separately with
       `require(<name of module>).setup({})`
       (possibly replace {} with your config table or omit to use defaults).
       You can supply only values which differ from defaults, which will be
@@ -113,14 +113,20 @@ module can be considered as a separate sub-plugin.
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
 
+------------------------------------------------------------------------------
+                                              *minischeme* *mini.nvim-colorscheme*
 # Plugin colorscheme~
 
 This plugin comes with an official colorscheme named `minischeme`. This is
-a |MiniBase16| theme created with faster version of the following Lua code:
-`require('mini.base16').setup({palette = palette, name = 'minischeme', use_cterm = true})`
+a |MiniBase16| theme created with faster version of the following Lua code: >
+  require('mini.base16').setup({
+    palette = palette, name = 'minischeme', use_cterm = true
+  })
 where `palette` is:
-- For dark 'background': `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
-- For light 'background': `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
+- For dark 'background':
+    `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
+- For light 'background':
+    `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 
 Activate it as a regular |colorscheme|.
 
@@ -171,8 +177,7 @@ Example:
 <
 # Notes~
 
-1. This module is used for creating plugin's official colorscheme named
-   `minischeme` (see |mini.nvim|).
+1. This module is used to create plugin's colorscheme (see |minischeme|).
 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
    creates a coordinated set of |highlight|s. To create your own theme:
     - Put "myscheme.lua" file (name after your chosen theme name) inside
@@ -1647,7 +1652,7 @@ nested comments. For example, have in Lua "first-level" comments with '--'
 and "second-level" comments with '----'. With nested comment leader second
 type can be formatted with `gq` in the same way as first one.
 
-Recommended usage is with |autocmd|:<br>
+Recommended usage is with |autocmd|:
 `autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
 
 Note: for most filetypes 'commentstring' option is added only when buffer

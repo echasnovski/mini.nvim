@@ -278,7 +278,7 @@ end
 --- and "second-level" comments with '----'. With nested comment leader second
 --- type can be formatted with `gq` in the same way as first one.
 ---
---- Recommended usage is with |autocmd|:<br>
+--- Recommended usage is with |autocmd|:
 --- `autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
 ---
 --- Note: for most filetypes 'commentstring' option is added only when buffer

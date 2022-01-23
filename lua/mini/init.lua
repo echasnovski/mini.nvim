@@ -19,7 +19,7 @@
 ---   As later will be explained, this plugin can also be referred to
 ---   as "MiniSurround".
 --- - <Setup>:
----     - Each module (if needed) should be setup separately with<br>
+---     - Each module (if needed) should be setup separately with
 ---       `require(<name of module>).setup({})`
 ---       (possibly replace {} with your config table or omit to use defaults).
 ---       You can supply only values which differ from defaults, which will be
@@ -112,18 +112,23 @@
 ---   [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.
----
+---@tag mini.nvim
+
 --- # Plugin colorscheme~
 ---
 --- This plugin comes with an official colorscheme named `minischeme`. This is
---- a |MiniBase16| theme created with faster version of the following Lua code:
---- `require('mini.base16').setup({palette = palette, name = 'minischeme', use_cterm = true})`
+--- a |MiniBase16| theme created with faster version of the following Lua code: >
+---   require('mini.base16').setup({
+---     palette = palette, name = 'minischeme', use_cterm = true
+---   })
 --- where `palette` is:
---- - For dark 'background': `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
---- - For light 'background': `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
+--- - For dark 'background':
+---     `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
+--- - For light 'background':
+---     `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 ---
 --- Activate it as a regular |colorscheme|.
----@tag mini.nvim
+---@tag minischeme mini.nvim-colorscheme
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])
 
