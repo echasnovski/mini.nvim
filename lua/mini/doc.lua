@@ -372,6 +372,34 @@ MiniDoc.config = {
       )
     end,
     --minidoc_replace_end
+
+    -- Applied to after output help file is written. Takes doc as argument.
+    --minidoc_replace_start write_post = --<function: various convenience actions>,
+    write_post = function(d)
+      local output = d.info.output
+
+      -- Generate help tags for directory of output file
+      vim.cmd('helptags ' .. vim.fn.fnamemodify(output, ':h'))
+
+      -- Reload buffer with output file (helps during writing annotations)
+      local output_path = H.full_path(output)
+      for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+        local buf_path = H.full_path(vim.api.nvim_buf_get_name(buf_id))
+        if buf_path == output_path then
+          vim.api.nvim_buf_call(buf_id, function()
+            vim.cmd('noautocmd silent edit | set ft=help')
+          end)
+        end
+      end
+
+      -- Notify
+      local msg = ('Help file %s is successfully generated (%s).'):format(
+        vim.inspect(output),
+        vim.fn.strftime('%Y-%m-%d %H:%M:%S')
+      )
+      H.notify(msg)
+    end,
+    --minidoc_replace_end
   },
 
   -- Path (relative to current directory) to script which handles project
@@ -413,6 +441,11 @@ MiniDoc.current = {}
 ---   work with present allowed type annotation. For allowed types see
 ---   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
 ---   or, better yet, look in source code of this module.
+--- - The `write_post` hook executes some actions convenient for iterative
+---   annotations writing:
+---     - Generate `:helptags` for directory containing output file.
+---     - Silently reload buffer containing output file (if such exists).
+---     - Display notification message about result.
 MiniDoc.default_hooks = MiniDoc.config.hooks
 
 -- Module functionality =======================================================
@@ -434,8 +467,8 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---     block lines are allowed to not specify section id; by default it is
 ---     `@text`). All subsequent lines without captured section id go into
 ---     "current section".
---- - Apply hooks (they should modify its input in place, which is possible due
----   to 'table nature' of all possible inputs):
+--- - Apply structure hooks (they should modify its input in place, which is
+---   possible due to 'table nature' of all inputs):
 ---     - Each block is processed by `MiniDoc.config.hooks.block_pre`. This is a
 ---       designated step for auto-generation of sections from descibed
 ---       annotation subject (like sections with id `@tag`, `@type`).
@@ -458,6 +491,9 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---   nested "for all files -> for all blocks -> for all sections -> for all
 ---   strings -> add string to output") and write them to output file. Strings
 ---   can have `\n` character indicating start of new line.
+--- - Execute `MiniDoc.config.write_post` hook. This is useful for showing some
+---   feedback and making actions involving newly updated help file (like
+---   generate tags, etc.).
 ---
 --- # Project specific script~
 ---
@@ -521,13 +557,16 @@ function MiniDoc.generate(input, output, config)
   end
 
   -- Apply hooks
-  H.apply_hooks(doc, config.hooks)
+  H.apply_structure_hooks(doc, config.hooks)
 
   -- Gather string lines in depth-first fashion
   local help_lines = H.collect_strings(doc)
 
   -- Write helpfile
   H.file_write(output, help_lines)
+
+  -- Execute post-write hook
+  MiniDoc.config.hooks.write_post(doc)
 
   -- Clear current information
   MiniDoc.current = {}
@@ -686,6 +725,7 @@ function H.setup_config(config)
     ['hooks.block_post'] = { config.hooks.block_post, 'function' },
     ['hooks.file'] = { config.hooks.file, 'function' },
     ['hooks.doc'] = { config.hooks.doc, 'function' },
+    ['hooks.write_post'] = { config.hooks.write_post, 'function' },
 
     ['script_path'] = { config.script_path, 'string' },
   })
@@ -823,7 +863,7 @@ function H.raw_block_to_block(block_raw, config)
 end
 
 -- Hooks ----------------------------------------------------------------------
-function H.apply_hooks(doc, hooks)
+function H.apply_structure_hooks(doc, hooks)
   for _, file in ipairs(doc) do
     for _, block in ipairs(file) do
       hooks.block_pre(block)
@@ -1178,6 +1218,10 @@ function H.file_write(path, lines)
 
   -- Write to file
   vim.fn.writefile(lines, path, 'b')
+end
+
+function H.full_path(path)
+  return vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))
 end
 
 function H.notify(msg)

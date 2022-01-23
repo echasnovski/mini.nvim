@@ -1031,6 +1031,9 @@ Default values:
 
       -- Applied to doc after all previous steps
       doc = --<function: adds modeline>,
+
+      -- Applied to after output help file is written. Takes doc as argument.
+      write_post = --<function: various convenience actions>,
     },
 
     -- Path (relative to current directory) to script which handles project
@@ -1082,6 +1085,11 @@ Some more insight about their behavior:
   work with present allowed type annotation. For allowed types see
   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
   or, better yet, look in source code of this module.
+- The `write_post` hook executes some actions convenient for iterative
+  annotations writing:
+    - Generate `:helptags` for directory containing output file.
+    - Silently reload buffer containing output file (if such exists).
+    - Display notification message about result.
 
 ------------------------------------------------------------------------------
                                                             *MiniDoc.generate()*
@@ -1104,8 +1112,8 @@ Generate help file
     block lines are allowed to not specify section id; by default it is
     `@text`). All subsequent lines without captured section id go into
     "current section".
-- Apply hooks (they should modify its input in place, which is possible due
-  to 'table nature' of all possible inputs):
+- Apply structure hooks (they should modify its input in place, which is
+  possible due to 'table nature' of all inputs):
     - Each block is processed by `MiniDoc.config.hooks.block_pre`. This is a
       designated step for auto-generation of sections from descibed
       annotation subject (like sections with id `@tag`, `@type`).
@@ -1128,6 +1136,9 @@ Generate help file
   nested "for all files -> for all blocks -> for all sections -> for all
   strings -> add string to output") and write them to output file. Strings
   can have `\n` character indicating start of new line.
+- Execute `MiniDoc.config.write_post` hook. This is useful for showing some
+  feedback and making actions involving newly updated help file (like
+  generate tags, etc.).
 
 # Project specific script~
 
