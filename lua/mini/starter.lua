@@ -278,13 +278,7 @@ MiniStarter.content = {}
 -- Module functionality =======================================================
 --- Act on |VimEnter|.
 function MiniStarter.on_vimenter()
-  -- Don't open Starter buffer if Neovim is opened with intent to show
-  -- something. That is when at least one of the following is true:
-  -- - Current buffer has any lines (something opened explicitly).
-  -- - Several buffers are opened (like session with placeholder buffers).
-  -- - There are files in arguments (like `nvim foo.txt` with new file).
-  local is_something_shown = vim.fn.line2byte('$') > 0 or #vim.api.nvim_list_bufs() > 1 or vim.fn.argc() > 0
-  if MiniStarter.config.autoopen and not is_something_shown then
+  if MiniStarter.config.autoopen and not H.is_to_autoopen() then
     -- Use current buffer as it should be empty and not needed. This also
     -- solves the issue of redundant buffer when opening a file from Starter.
     MiniStarter.open(vim.api.nvim_get_current_buf())
@@ -1264,6 +1258,19 @@ function H.is_item(x)
     and H.is_fun_or_string(x['action'], false)
     and type(x['name']) == 'string'
     and type(x['section']) == 'string'
+end
+
+function H.is_to_autoopen()
+  -- Don't open Starter buffer if Neovim is opened to show something. That is
+  -- when at least one of the following is true:
+  -- - Current buffer has any lines (something opened explicitly).
+  -- - Several buffers are listed (like session with placeholder buffers). That
+  --   means unlisted buffers (like from `nvim-tree`) don't affect decision.
+  -- - There are files in arguments (like `nvim foo.txt` with new file).
+  local listed_buffers = vim.tbl_filter(function(buf_id)
+    return vim.fn.buflisted(buf_id) == 1
+  end, vim.api.nvim_list_bufs())
+  return vim.fn.line2byte('$') > 0 or #listed_buffers > 1 or vim.fn.argc() > 0
 end
 
 -- Utilities ------------------------------------------------------------------
