@@ -422,12 +422,13 @@ end
 ---
 ---@return __section
 function MiniStatusline.section_location(args)
-  -- Use virtual column number to allow update when paste last column
+  -- Use virtual column number to allow update when past last column
   if MiniStatusline.is_truncated(args.trunc_width) then
     return '%l│%2v'
   end
 
-  return '%l|%L│%2v|%-2{col("$") - 1}'
+  -- Use `virtcol()` to correctly handle multi-byte characters
+  return '%l|%L│%2v|%-2{virtcol("$") - 1}'
 end
 
 --- Section for current search count
