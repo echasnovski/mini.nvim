@@ -152,18 +152,27 @@ end
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 ---@text # Notes ~
 ---
+--- - `annotation_extractor` takes single string line as input. Output
+---   describes what makes an input to be an annotation (if anything). It
+---   should be similar to `string.find` with one capture group: start and end
+---   of annotation indicator (whole part will be removed from help line) with
+---   third value being string of section id (if input describes first line of
+---   section; `nil` or empty string otherwise). Output should be `nil` if line
+---   is not part of annotation.
+---   Default value means that annotation line should:
+---     - Start with `---` at first column.
+---     - Any non-whitespace after `---` will be treated as new section id.
+---     - Single whitespace at the start of main text will be ignored.
 --- - Hooks are expected to be functions. Their default values might do many
 ---   things which might change over time, so for more information please look
 ---   at source code. Some more information can be found in
 ---   |MiniDoc.default_hooks|.
 MiniDoc.config = {
-  -- Lua string pattern to determine if line has documentation annotation.
-  -- First capture group should describe possible section id. Default value
-  -- means that annotation line should:
-  -- - Start with `---` at first column.
-  -- - Any non-whitespace after `---` will be treated as new section id.
-  -- - Single whitespace at the start of main text will be ignored.
-  annotation_pattern = '^%-%-%-(%S*) ?',
+  -- Function which extracts part of line used to denote annotation.
+  -- For more information see 'Notes' in |MiniDoc.config|.
+  annotation_extractor = function(l)
+    return string.find(l, '^%-%-%-(%S*) ?')
+  end,
 
   -- Identifier of block annotation lines until first captured identifier
   default_section_id = '@text',
@@ -494,11 +503,11 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---   path to output help file.
 --- - Parse all inputs:
 ---   - For each file, lines are processed top to bottom in order to create an
----     array of documentation blocks. Each line is tested on match to certain
----     pattern (`MiniDoc.config.annotation_pattern`) to determine if line is a
----     part of annotation (goes to "current block" after removing matched
----     characters) or not (goes to afterlines of "current block"). Also each
----     matching pattern should provide one capture group extracting section id.
+---     array of documentation blocks. Each line is tested whether it is an
+---     annotation by applying `MiniDoc.config.annotation_extractor`: if
+---     anything is extracted, it is considered to be an annotation. Annotation
+---     line goes to "current block" after removing extracted annotation
+---     indicator, otherwise - to afterlines of "current block".
 ---   - Each block's annotation lines are processed top to bottom. If line had
 ---     captured section id, it is a first line of "current section" (first
 ---     block lines are allowed to not specify section id; by default it is
@@ -729,7 +738,7 @@ function H.setup_config(config)
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
   vim.validate({
-    ['annotation_pattern'] = { config.default_section_id, 'string' },
+    ['annotation_extractor'] = { config.annotation_extractor, 'function' },
     ['default_section_id'] = { config.default_section_id, 'string' },
 
     hooks = { config.hooks, 'table' },
@@ -847,7 +856,7 @@ function H.lines_to_block_arr(lines, config)
   local block_raw = { annotation = {}, section_id = {}, afterlines = {}, line_begin = 1 }
 
   for i, l in ipairs(lines) do
-    local from, to, section_id = string.find(l, config.annotation_pattern)
+    local from, to, section_id = config.annotation_extractor(l)
     matched_prev, matched_cur = matched_cur, from ~= nil
 
     if matched_cur then
