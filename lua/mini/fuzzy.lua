@@ -18,7 +18,9 @@
 ---    but simple examples should work.
 --- 2. Smart case is used: case insensitive if input word (which is usually a
 ---     user input) is all lower ase. Case sensitive otherwise.
----@tag MiniFuzzy mini.fuzzy
+---@tag mini.fuzzy
+---@tag MiniFuzzy
+---@toc_entry Fuzzy matching
 
 --- # Algorithm design~
 ---

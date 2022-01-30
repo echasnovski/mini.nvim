@@ -1,10 +1,18 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
+--- *mini.txt*  Collection of minimal, independent and fast Lua modules
+---
+--- Author:  Evgeni Chasnovski
+--- License: MIT
+---
 --- |mini.nvim| is a collection of minimal, independent, and fast Lua modules
 --- dedicated to improve Neovim (version 0.5 and higher) experience. Each
 --- module can be considered as a separate sub-plugin.
 ---
+--- Table of contents:
+---@toc
+---@text
 --- # General principles~
 ---
 --- - <Design>. Each module is designed to solve a particular problem targeting
@@ -113,6 +121,7 @@
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.
 ---@tag mini.nvim
+---@toc_entry General overview
 
 --- # Plugin colorscheme~
 ---
@@ -128,7 +137,8 @@
 ---     `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 ---
 --- Activate it as a regular |colorscheme|.
----@tag minischeme mini.nvim-colorscheme
+---@tag minischeme
+---@toc_entry Plugin colorscheme
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])
 

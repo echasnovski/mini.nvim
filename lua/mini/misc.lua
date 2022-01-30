@@ -11,7 +11,9 @@
 --- use for scripting or manually (with `:lua MiniMisc.*`).
 ---
 --- See |MiniMisc.config| for `config` structure and default values.
----@tag MiniMisc mini.misc
+---@tag mini.misc
+---@tag MiniMisc
+---@toc_entry Miscellaneous functions
 
 -- Module definition ==========================================================
 local MiniMisc = {}

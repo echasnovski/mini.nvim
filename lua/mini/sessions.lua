@@ -40,7 +40,9 @@
 ---
 --- To disable core functionality, set `g:minisessions_disable` (globally) or
 --- `b:minisessions_disable` (for a buffer) to `v:true`.
----@tag MiniSessions mini.sessions
+---@tag mini.sessions
+---@tag MiniSessions
+---@toc_entry Session management
 
 -- Module definition ==========================================================
 local MiniSessions = {}

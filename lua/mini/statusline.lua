@@ -61,7 +61,9 @@
 ---
 --- To disable (show empty statusline), set `g:ministatusline_disable`
 --- (globally) or `b:ministatusline_disable` (for a buffer) to `v:true`.
----@tag MiniStatusline mini.statusline
+---@tag mini.statusline
+---@tag MiniStatusline
+---@toc_entry Statusline
 
 --- Example content
 ---

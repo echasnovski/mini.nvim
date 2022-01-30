@@ -52,7 +52,9 @@
 ---       your Neovim config directory is usually enough).
 ---     - Inside "myscheme.lua" call `require('mini.base16').setup()` with your
 ---       palette and only after that set |g:colors_name| to "myscheme".
----@tag MiniBase16 mini.base16
+---@tag mini.base16
+---@tag MiniBase16
+---@toc_entry Base16 colorscheme creation
 
 -- Module definition ==========================================================
 local MiniBase16 = {}

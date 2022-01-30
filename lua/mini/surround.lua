@@ -68,7 +68,9 @@
 ---
 --- To disable, set `g:minisurround_disable` (globally) or
 --- `b:minisurround_disable` (for a buffer) to `v:true`.
----@tag MiniSurround mini.surround
+---@tag mini.surround
+---@tag MiniSurround
+---@toc_entry Surround
 
 --- Algorithm design
 ---

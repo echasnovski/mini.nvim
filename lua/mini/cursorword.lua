@@ -35,7 +35,9 @@
 --- `b:minicursorword_disable` (for a buffer) to `v:true`. Note: after
 --- disabling there might be highlighting left; it will be removed after next
 --- highlighting update.
----@tag MiniCursorword mini.cursorword
+---@tag mini.cursorword
+---@tag MiniCursorword
+---@toc_entry Highlight word under cursor
 
 -- Module definition ==========================================================
 local MiniCursorword = {}

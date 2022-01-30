@@ -31,7 +31,9 @@
 ---
 --- To disable core functionality, set `g:minibufremove_disable` (globally) or
 --- `b:minibufremove_disable` (for a buffer) to `v:true`.
----@tag MiniBufremove mini.bufremove
+---@tag mini.bufremove
+---@tag MiniBufremove
+---@toc_entry Remove buffers
 
 -- Module definition ==========================================================
 local MiniBufremove = {}

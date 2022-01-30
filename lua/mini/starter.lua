@@ -58,7 +58,9 @@
 ---
 --- To disable core functionality, set `g:ministarter_disable` (globally) or
 --- `b:ministarter_disable` (for a buffer) to `v:true`.
----@tag MiniStarter mini.starter
+---@tag mini.starter
+---@tag MiniStarter
+---@toc_entry Start screen
 
 --- Example configurations
 ---

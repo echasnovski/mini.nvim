@@ -53,7 +53,9 @@
 --- `b:minitabline_disable` (for a buffer) to `v:true`. Note: after
 --- disabling tabline is not updated right away, but rather after dedicated
 --- event (see |events| and `MiniTabline` |augroup|).
----@tag MiniTabline mini.tabline
+---@tag mini.tabline
+---@tag MiniTabline
+---@toc_entry Tabline
 
 -- Module definition ==========================================================
 local MiniTabline = {}

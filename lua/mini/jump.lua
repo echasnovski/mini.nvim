@@ -29,7 +29,9 @@
 ---
 --- To disable core functionality, set `g:minijump_disable` (globally) or
 --- `b:minijump_disable` (for a buffer) to `v:true`.
----@tag MiniJump mini.jump
+---@tag mini.jump
+---@tag MiniJump
+---@toc_entry Jump cursor
 
 ---@alias __till boolean Whether to jump just before/after the match instead of
 ---   exactly on target. Also ignore matches that don't have anything

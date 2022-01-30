@@ -55,7 +55,9 @@
 ---
 --- To disable, set `g:minipairs_disable` (globally) or `b:minipairs_disable`
 --- (for a buffer) to `v:true`.
----@tag MiniPairs mini.pairs
+---@tag mini.pairs
+---@tag MiniPairs
+---@toc_entry Autopairs
 
 ---@alias __neigh_pattern string Pattern for two neighborhood characters ("\r" line
 ---   start, "\n" - line end).

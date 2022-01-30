@@ -29,7 +29,9 @@
 --- `b:minitrailspace_disable` (for a buffer) to `v:true`.  Note: after
 --- disabling there might be highlighting left; it will be removed after next
 --- highlighting update (see |events| and `MiniTrailspace` |augroup|).
----@tag MiniTrailspace mini.trailspace
+---@tag mini.trailspace
+---@tag MiniTrailspace
+---@toc_entry Trailspace (highlight and remove)
 
 -- Module definition ==========================================================
 local MiniTrailspace = {}

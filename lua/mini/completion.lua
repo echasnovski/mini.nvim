@@ -87,7 +87,9 @@
 ---
 --- To disable, set `g:minicompletion_disable` (globally) or
 --- `b:minicompletion_disable` (for a buffer) to `v:true`.
----@tag MiniCompletion mini.completion
+---@tag mini.completion
+---@tag MiniCompletion
+---@toc_entry Completion and signature help
 
 -- Overall implementation design:
 -- - Completion:

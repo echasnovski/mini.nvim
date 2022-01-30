@@ -63,7 +63,9 @@
 ---
 --- To disable, set `g:minidoc_disable` (globally) or `b:minidoc_disable` (for
 --- a buffer) to `v:true`.
----@tag MiniDoc mini.doc
+---@tag mini.doc
+---@tag MiniDoc
+---@toc_entry Generate help files
 
 --- Data structures
 ---

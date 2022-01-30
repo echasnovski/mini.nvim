@@ -27,7 +27,9 @@
 ---
 --- To disable core functionality, set `g:minicomment_disable` (globally) or
 --- `b:minicomment_disable` (for a buffer) to `v:true`.
----@tag MiniComment mini.comment
+---@tag mini.comment
+---@tag MiniComment
+---@toc_entry Comment
 
 -- Module definition ==========================================================
 local MiniComment = {}

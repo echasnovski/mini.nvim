@@ -1,9 +1,34 @@
 ==============================================================================
 ------------------------------------------------------------------------------
                                                                      *mini.nvim*
+*mini.txt*  Collection of minimal, independent and fast Lua modules
+
+Author:  Evgeni Chasnovski
+License: MIT
+
 |mini.nvim| is a collection of minimal, independent, and fast Lua modules
 dedicated to improve Neovim (version 0.5 and higher) experience. Each
 module can be considered as a separate sub-plugin.
+
+Table of contents:
+  General overview.................................................|mini.nvim|
+  Plugin colorscheme..............................................|minischeme|
+  Base16 colorscheme creation....................................|mini.base16|
+  Remove buffers..............................................|mini.bufremove|
+  Comment.......................................................|mini.comment|
+  Completion and signature help..............................|mini.completion|
+  Highlight word under cursor................................|mini.cursorword|
+  Generate help files...............................................|mini.doc|
+  Fuzzy matching..................................................|mini.fuzzy|
+  Jump cursor......................................................|mini.jump|
+  Miscellaneous functions..........................................|mini.misc|
+  Autopairs.......................................................|mini.pairs|
+  Session management...........................................|mini.sessions|
+  Start screen..................................................|mini.starter|
+  Statusline.................................................|mini.statusline|
+  Surround.....................................................|mini.surround|
+  Tabline.......................................................|mini.tabline|
+  Trailspace (highlight and remove)..........................|mini.trailspace|
 
 # General principles~
 
@@ -114,7 +139,7 @@ module can be considered as a separate sub-plugin.
   functionality to remove it.
 
 ------------------------------------------------------------------------------
-                                              *minischeme* *mini.nvim-colorscheme*
+                                                                    *minischeme*
 # Plugin colorscheme~
 
 This plugin comes with an official colorscheme named `minischeme`. This is
@@ -133,7 +158,8 @@ Activate it as a regular |colorscheme|.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                        *MiniBase16* *mini.base16*
+                                                                   *mini.base16*
+                                                                    *MiniBase16*
 Custom minimal and fast Lua module which implements
 [base16](http://chriskempson.com/projects/base16/) color scheme (with
 Copyright (C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua
@@ -306,7 +332,8 @@ Return~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                  *MiniBufremove* *mini.bufremove*
+                                                                *mini.bufremove*
+                                                                 *MiniBufremove*
 Lua module for minimal buffer removing (unshow, delete, wipeout), which
 saves window layout (opposite to builtin Neovim's commands). This is mostly
 a Lua implementation of
@@ -416,7 +443,8 @@ Return~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                      *MiniComment* *mini.comment*
+                                                                  *mini.comment*
+                                                                   *MiniComment*
 Custom minimal and fast Lua module for code commenting. This is basically a
 reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 respects |count| and is dot-repeatable. Comment structure is inferred
@@ -528,7 +556,8 @@ commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                *MiniCompletion* *mini.completion*
+                                                               *mini.completion*
+                                                                *MiniCompletion*
 Custom somewhat minimal autocompletion Lua plugin. Key design ideas:
 - Have an async (with customizable 'debounce' delay) 'two-stage chain
   completion': first try to get completion items from LSP client (if set
@@ -763,7 +792,8 @@ Default `MiniCompletion.config.lsp_completion.process_items`
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                *MiniCursorword* *mini.cursorword*
+                                                               *mini.cursorword*
+                                                                *MiniCursorword*
 Custom minimal and fast module for autohighlighting word under cursor with
 customizable delay. Current word under cursor can be highlighted
 differently. Highlighting is triggered only if current cursor character is
@@ -842,7 +872,8 @@ is setup in |MiniCursorword.setup|.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                              *MiniDoc* *mini.doc*
+                                                                      *mini.doc*
+                                                                       *MiniDoc*
 Generation of help files from EmmyLua-like annotations
 
 Key design ideas:
@@ -1256,7 +1287,8 @@ Return~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                          *MiniFuzzy* *mini.fuzzy*
+                                                                    *mini.fuzzy*
+                                                                     *MiniFuzzy*
 Lua module which implements minimal and fast fuzzy matching.
 
 # Setup~
@@ -1396,7 +1428,8 @@ Usage~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                            *MiniJump* *mini.jump*
+                                                                     *mini.jump*
+                                                                      *MiniJump*
 Minimal and fast module for smarter jumping to a single character. Inspired
 by 'rhysd/clever-f.vim'.
 
@@ -1524,7 +1557,8 @@ Act on |CursorMoved|
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                            *MiniMisc* *mini.misc*
+                                                                     *mini.misc*
+                                                                      *MiniMisc*
 Lua module with miscellaneous useful functions (can be used independently).
 
 # Setup~
@@ -1703,7 +1737,8 @@ Parameters~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                          *MiniPairs* *mini.pairs*
+                                                                    *mini.pairs*
+                                                                     *MiniPairs*
 Custom minimal and fast autopairs Lua module. It provides functionality
 to work with 'paired' characters conditional on cursor's neighborhood (two
 characters to its left and right). Its usage should be through making
@@ -1960,7 +1995,8 @@ Mapped by default inside |MiniPairs.setup|.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                    *MiniSessions* *mini.sessions*
+                                                                 *mini.sessions*
+                                                                  *MiniSessions*
 Lua module for minimal session management (read, write, delete), which
 works using |mksession| (meaning 'sessionoptions' is fully respected).
 This is intended as a drop-in Lua replacement for session management part
@@ -2138,7 +2174,8 @@ Act on |VimEnter|
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                      *MiniStarter* *mini.starter*
+                                                                  *mini.starter*
+                                                                   *MiniStarter*
 Lua module for minimal, fast, and flexible start screen. Displayed items
 are fully customizable both in terms of what they do and how they look
 (with reasonable defaults). Item selection can be done using prefix query
@@ -2682,7 +2719,8 @@ Act on |CursorMoved| by repositioning cursor in fixed place.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                *MiniStatusline* *mini.statusline*
+                                                               *mini.statusline*
+                                                                *MiniStatusline*
 Custom minimal and fast statusline module with opinionated default look.
 Special features: change color depending on current mode and compact
 version of sections activated when window width is small enough.
@@ -2978,7 +3016,8 @@ Return~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                    *MiniSurround* *mini.surround*
+                                                                 *mini.surround*
+                                                                  *MiniSurround*
 Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 a reimplementation of the core features of 'machakann/vim-sandwich' with a
 couple more on top (find surrounding, highlight surrounding).
@@ -3179,7 +3218,8 @@ default one is not appropriate.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                      *MiniTabline* *mini.tabline*
+                                                                  *mini.tabline*
+                                                                   *MiniTabline*
 Custom minimal and fast tabline module. General idea: show all listed
 buffers in readable way with minimal total width in case of one vim tab,
 fall back for deafult otherwise. Inspired by
@@ -3276,7 +3316,8 @@ Make string for |tabline| in case of single tab
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                *MiniTrailspace* *mini.trailspace*
+                                                               *mini.trailspace*
+                                                                *MiniTrailspace*
 Custom minimal and fast module for working with trailing whitespace.
 
 Features:
