@@ -205,6 +205,11 @@ MiniDoc.config = {
         H.add_section_heading(s, 'Class')
       end,
       --minidoc_replace_end
+      --minidoc_replace_start ['@diagnostic'] = --<function: ignores any section content>,
+      ['@diagnostic'] = function(s)
+        s:clear_lines()
+      end,
+      --minidoc_replace_end
       -- For most typical usage see |MiniDoc.afterlines_to_code|
       --minidoc_replace_start ['@eval'] = --<function: evaluates lines; replaces with their return>,
       ['@eval'] = function(s)
@@ -241,13 +246,19 @@ MiniDoc.config = {
       --minidoc_replace_start ['@field'] = --<function>,
       ['@field'] = function(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, s[1]:find('%s'))
+        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
+      end,
+      --minidoc_replace_end
+      --minidoc_replace_start ['@overload'] = --<function>,
+      ['@overload'] = function(s)
+        H.enclose_type(s, '`%1`', 1)
+        H.add_section_heading(s, 'Overload')
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@param'] = --<function>,
       ['@param'] = function(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, s[1]:find('%s'))
+        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@private'] = --<function: registers block for removal>,
@@ -257,7 +268,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@return'] = --<function>,
       ['@return'] = function(s)
-        H.enclose_type(s, 1)
+        H.enclose_type(s, '`%(%1%)`', 1)
         H.add_section_heading(s, 'Return')
       end,
       --minidoc_replace_end
@@ -293,7 +304,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@type'] = --<function>,
       ['@type'] = function(s)
-        H.enclose_type(s, 1)
+        H.enclose_type(s, '`%(%1%)`', 1)
         H.add_section_heading(s, 'Type')
       end,
       --minidoc_replace_end
@@ -699,8 +710,10 @@ function H.setup_config(config)
     ['hooks.sections'] = { config.hooks.sections, 'table' },
     ['hooks.sections.@alias'] = { config.hooks.sections['@alias'], 'function' },
     ['hooks.sections.@class'] = { config.hooks.sections['@class'], 'function' },
+    ['hooks.sections.@diagnostic'] = { config.hooks.sections['@diagnostic'], 'function' },
     ['hooks.sections.@eval'] = { config.hooks.sections['@eval'], 'function' },
     ['hooks.sections.@field'] = { config.hooks.sections['@field'], 'function' },
+    ['hooks.sections.@overload'] = { config.hooks.sections['@overload'], 'function' },
     ['hooks.sections.@param'] = { config.hooks.sections['@param'], 'function' },
     ['hooks.sections.@private'] = { config.hooks.sections['@private'], 'function' },
     ['hooks.sections.@return'] = { config.hooks.sections['@return'], 'function' },
@@ -957,10 +970,11 @@ end
 ---@param init number Start of searching for first "type-like" string. It is
 ---   needed to not detect type early. Like in `@param a_function function`.
 ---@private
-function H.enclose_type(s, init)
+function H.enclose_type(s, enclosure, init)
   if #s == 0 or s.type ~= 'section' then
     return
   end
+  enclosure = enclosure or '`%(%1%)`'
   init = init or 1
 
   local cur_type = H.match_first_pattern(s[1], H.pattern_sets['types'], init)
@@ -974,7 +988,7 @@ function H.enclose_type(s, init)
 
   -- Avoid replacing possible match before `init`
   local l_start = s[1]:sub(1, init - 1)
-  local l_end = s[1]:sub(init):gsub(type_pattern, '`%(%1%)`', 1)
+  local l_end = s[1]:sub(init):gsub(type_pattern, enclosure, 1)
   s[1] = ('%s%s'):format(l_start, l_end)
 end
 

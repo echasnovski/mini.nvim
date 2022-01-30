@@ -1011,9 +1011,11 @@ Default values:
       sections = {
         ['@alias'] = --<function: registers alias in MiniDoc.current.aliases>,
         ['@class'] = --<function>,
+        ['@diagnostic'] = --<function: ignores any section content>,
         -- For most typical usage see |MiniDoc.afterlines_to_code|
         ['@eval'] = --<function: evaluates lines; replaces with their return>,
         ['@field'] = --<function>,
+        ['@overload'] = --<function>,
         ['@param'] = --<function>,
         ['@private'] = --<function: registers block for removal>,
         ['@return'] = --<function>,
