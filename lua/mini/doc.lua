@@ -252,7 +252,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@private'] = --<function: registers block for removal>,
       ['@private'] = function(s)
-        s.parent.info._is_private = true
+        s.parent:clear_lines()
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@return'] = --<function>,
@@ -312,9 +312,7 @@ MiniDoc.config = {
     -- Applied to block after all previous steps
     --minidoc_replace_start block_post = --<function: does many things>,
     block_post = function(b)
-      -- Remove block if it is private
-      if b.info._is_private then
-        b:clear_lines()
+      if not b:has_lines() then
         return
       end
 
@@ -344,20 +342,20 @@ MiniDoc.config = {
         end
       end, b)
 
-      if b:has_lines() then
-        b:insert(1, H.as_struct({ H.separator_block }, 'section'))
-        b:insert(H.as_struct({ '' }, 'section'))
-      end
+      b:insert(1, H.as_struct({ H.separator_block }, 'section'))
+      b:insert(H.as_struct({ '' }, 'section'))
     end,
     --minidoc_replace_end
 
     -- Applied to file after all previous steps
     --minidoc_replace_start file = --<function: adds separator>,
     file = function(f)
-      if f:has_lines() then
-        f:insert(1, H.as_struct({ H.as_struct({ H.separator_file }, 'section') }, 'block'))
-        f:insert(H.as_struct({ H.as_struct({ '' }, 'section') }, 'block'))
+      if not f:has_lines() then
+        return
       end
+
+      f:insert(1, H.as_struct({ H.as_struct({ H.separator_file }, 'section') }, 'block'))
+      f:insert(H.as_struct({ H.as_struct({ '' }, 'section') }, 'block'))
     end,
     --minidoc_replace_end
 
@@ -632,7 +630,7 @@ function MiniDoc.afterlines_to_code(struct)
   src = src:match('^(.-)\n%s*%-%-minidoc_afterlines_end') or src
 
   -- Make replacements
-  src = src:gsub('%-%-minidoc_replace_start%s*(.-)\n.-%-%-minidoc_replace_end', '%1')
+  src = src:gsub('%-%-minidoc_replace_start ?(.-)\n.-%-%-minidoc_replace_end', '%1')
 
   -- Convert to a standalone code. NOTE: indent is needed because of how `>`
   -- and `<` work (any line starting in column 1 stops code block).
