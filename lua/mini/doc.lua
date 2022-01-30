@@ -997,6 +997,10 @@ function H.toc_register(s)
 end
 
 function H.toc_insert(s)
+  if MiniDoc.current.toc == nil then
+    return
+  end
+
   -- Render table of contents
   local toc_lines = {}
   for _, toc_entry in ipairs(MiniDoc.current.toc) do
