@@ -1023,6 +1023,8 @@ Default values:
         ['@signature'] = --<function: formats signature of documented object>,
         ['@tag'] = --<function: turns its line in proper tag lines>,
         ['@text'] = --<function: purposefully does nothing>,
+        ['@toc'] = --<function: clears all section lines>,
+        ['@toc_entry'] = --<function: registers lines for table of contents>,
         ['@type'] = --<function>,
         ['@usage'] = --<function>,
       },
@@ -1067,6 +1069,8 @@ At least these keys are supported:
   description and single string (using `\n` to separate lines).
 - {eval_section} - input section of `@eval` section hook. Can be used for
   information about current block, etc.
+- {toc} - array with table of contents entries. Each entry is a whole
+  `@toc_entry` section.
 
 ------------------------------------------------------------------------------
                                                          *MiniDoc.default_hooks*
@@ -1092,6 +1096,14 @@ Some more insight about their behavior:
   work with present allowed type annotation. For allowed types see
   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
   or, better yet, look in source code of this module.
+- Automated creation of table of contents (TOC) is done in the following way:
+    - Put section with `@toc_entry` id in the annotation block. Section's
+      lines will be registered as TOC entry.
+    - Put `@toc` section where you want to insert rendered table of
+      contents. TOC entries will be inserted on the left, references for
+      their respective tag section (only first, if present) on the right.
+      Render is done in default `doc` hook (because it should be done after
+      processing all files).
 - The `write_post` hook executes some actions convenient for iterative
   annotations writing:
     - Generate `:helptags` for directory containing output file.

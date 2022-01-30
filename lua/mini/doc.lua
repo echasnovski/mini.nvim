@@ -184,7 +184,7 @@ MiniDoc.config = {
     -- Applied to section before anything else
     --minidoc_replace_start section_pre = --<function: replaces current aliases>,
     section_pre = function(s)
-      H.replace_aliases(s)
+      H.alias_replace(s)
     end,
     --minidoc_replace_end
 
@@ -192,7 +192,7 @@ MiniDoc.config = {
     sections = {
       --minidoc_replace_start ['@alias'] = --<function: registers alias in MiniDoc.current.aliases>,
       ['@alias'] = function(s)
-        H.register_alias(s)
+        H.alias_register(s)
         -- NOTE: don't use `s.parent:remove(s.parent_index)` here because it
         -- disrupts iteration over block's section during hook application
         -- (skips next section).
@@ -302,6 +302,16 @@ MiniDoc.config = {
       --minidoc_replace_start ['@text'] = --<function: purposefully does nothing>,
       ['@text'] = function() end,
       --minidoc_replace_end
+      --minidoc_replace_start ['@toc'] = --<function: clears all section lines>,
+      ['@toc'] = function(s)
+        s:clear_lines()
+      end,
+      --minidoc_replace_end
+      --minidoc_replace_start ['@toc_entry'] = --<function: registers lines for table of contents>,
+      ['@toc_entry'] = function(s)
+        H.toc_register(s)
+      end,
+      --minidoc_replace_end
       --minidoc_replace_start ['@type'] = --<function>,
       ['@type'] = function(s)
         H.enclose_type(s, '`%(%1%)`', 1)
@@ -328,6 +338,7 @@ MiniDoc.config = {
       end
 
       local found_param, found_field = false, false
+      local n_tag_sections = 0
       H.apply_recursively(function(x)
         if not (type(x) == 'table' and x.type == 'section') then
           return
@@ -344,12 +355,10 @@ MiniDoc.config = {
           found_field = true
         end
 
-        -- Move all tag sections in the beginning. NOTE: due to depth-first
-        -- nature, this approach will reverse order of tag sections if there
-        -- are more than one; doesn't seem to be a big deal.
         if x.info.id == '@tag' then
           x.parent:remove(x.parent_index)
-          x.parent:insert(1, x)
+          n_tag_sections = n_tag_sections + 1
+          x.parent:insert(n_tag_sections, x)
         end
       end, b)
 
@@ -373,6 +382,15 @@ MiniDoc.config = {
     -- Applied to doc after all previous steps
     --minidoc_replace_start doc = --<function: adds modeline>,
     doc = function(d)
+      -- Render table of contents
+      H.apply_recursively(function(x)
+        if not (type(x) == 'table' and x.type == 'section' and x.info.id == '@toc') then
+          return
+        end
+        H.toc_insert(x)
+      end, d)
+
+      -- Insert modeline
       d:insert(
         H.as_struct(
           { H.as_struct({ H.as_struct({ ' vim:tw=78:ts=8:noet:ft=help:norl:' }, 'section') }, 'block') },
@@ -427,7 +445,9 @@ MiniDoc.config = {
 ---   description and single string (using `\n` to separate lines).
 --- - {eval_section} - input section of `@eval` section hook. Can be used for
 ---   information about current block, etc.
-MiniDoc.current = {}
+--- - {toc} - array with table of contents entries. Each entry is a whole
+---   `@toc_entry` section.
+MiniDoc.current = { aliases = {}, toc = {} }
 
 --- Default hooks
 ---
@@ -450,6 +470,14 @@ MiniDoc.current = {}
 ---   work with present allowed type annotation. For allowed types see
 ---   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
 ---   or, better yet, look in source code of this module.
+--- - Automated creation of table of contents (TOC) is done in the following way:
+---     - Put section with `@toc_entry` id in the annotation block. Section's
+---       lines will be registered as TOC entry.
+---     - Put `@toc` section where you want to insert rendered table of
+---       contents. TOC entries will be inserted on the left, references for
+---       their respective tag section (only first, if present) on the right.
+---       Render is done in default `doc` hook (because it should be done after
+---       processing all files).
 --- - The `write_post` hook executes some actions convenient for iterative
 ---   annotations writing:
 ---     - Generate `:helptags` for directory containing output file.
@@ -721,6 +749,8 @@ function H.setup_config(config)
     ['hooks.sections.@signature'] = { config.hooks.sections['@signature'], 'function' },
     ['hooks.sections.@tag'] = { config.hooks.sections['@tag'], 'function' },
     ['hooks.sections.@text'] = { config.hooks.sections['@text'], 'function' },
+    ['hooks.sections.@toc'] = { config.hooks.sections['@toc'], 'function' },
+    ['hooks.sections.@toc_entry'] = { config.hooks.sections['@toc_entry'], 'function' },
     ['hooks.sections.@type'] = { config.hooks.sections['@type'], 'function' },
     ['hooks.sections.@usage'] = { config.hooks.sections['@usage'], 'function' },
 
@@ -919,7 +949,7 @@ function H.apply_structure_hooks(doc, hooks)
   hooks.doc(doc)
 end
 
-function H.register_alias(s)
+function H.alias_register(s)
   if #s == 0 then
     return
   end
@@ -938,7 +968,7 @@ function H.register_alias(s)
   MiniDoc.current.aliases[alias_name] = table.concat(s, '\n')
 end
 
-function H.replace_aliases(s)
+function H.alias_replace(s)
   if MiniDoc.current.aliases == nil then
     return
   end
@@ -947,6 +977,43 @@ function H.replace_aliases(s)
     for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
       s[i] = s[i]:gsub(vim.pesc(alias_name), vim.pesc(alias_desc))
     end
+  end
+end
+
+function H.toc_register(s)
+  MiniDoc.current.toc = MiniDoc.current.toc or {}
+  table.insert(MiniDoc.current.toc, s)
+end
+
+function H.toc_insert(s)
+  -- Render table of contents
+  local toc_lines = {}
+  for _, toc_entry in ipairs(MiniDoc.current.toc) do
+    local _, tag_section = toc_entry.parent:has_descendant(function(x)
+      return type(x) == 'table' and x.type == 'section' and x.info.id == '@tag'
+    end)
+    tag_section = tag_section or {}
+
+    local lines = {}
+    for i = 1, math.max(#toc_entry, #tag_section) do
+      local left = toc_entry[i] or ''
+      -- Use tag refernce instead of tag enclosure
+      local right = vim.trim((tag_section[i] or ''):gsub('%*', '|'))
+      -- Add visual line only at first entry
+      local filler = i == 1 and '.' or (right == '' and '' or ' ')
+      -- Make padding of 2 spaces at both left and right
+      local n_filler = math.max(74 - H.visual_text_width(left) - H.visual_text_width(right), 3)
+      table.insert(lines, ('  %s%s%s'):format(left, filler:rep(n_filler), right))
+    end
+
+    table.insert(toc_lines, lines)
+
+    -- Don't show `toc_entry` lines in output
+    toc_entry:clear_lines()
+  end
+
+  for _, l in ipairs(vim.tbl_flatten(toc_lines)) do
+    s:insert(l)
   end
 end
 
@@ -1178,14 +1245,18 @@ function H.align_text(text, width, direction)
     return text
   end
 
-  -- Ignore concealed characters (usually "invisible" in 'help' filetype)
-  local _, n_concealed_chars = text:gsub('([*|`])', '%1')
-  local n_left = math.max(0, 78 - vim.fn.strdisplaywidth(text) + n_concealed_chars)
+  local n_left = math.max(0, 78 - H.visual_text_width(text))
   if direction == 'center' then
     n_left = math.floor(0.5 * n_left)
   end
 
   return (' '):rep(n_left) .. text
+end
+
+function H.visual_text_width(text)
+  -- Ignore concealed characters (usually "invisible" in 'help' filetype)
+  local _, n_concealed_chars = text:gsub('([*|`])', '%1')
+  return vim.fn.strdisplaywidth(text) - n_concealed_chars
 end
 
 --- Return earliest match among many patterns
