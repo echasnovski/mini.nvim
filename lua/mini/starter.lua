@@ -1206,9 +1206,11 @@ function H.apply_buffer_options()
   -- Vim's `setlocal` is currently more robust comparing to `opt_local`
   vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
 
-  -- Hide tabline (but not statusline as it weirdly feels 'naked' without it)
-  vim.cmd(('au BufLeave <buffer> set showtabline=%s'):format(vim.o.showtabline))
-  vim.o.showtabline = 0
+  -- Hide tabline on single tab by setting `showtabline` to default value (but
+  -- not statusline as it weirdly feels 'naked' without it). Restore previous
+  -- value on buffer leave if wasn't changed (like in tabline plugin to 2).
+  vim.cmd(('au BufLeave <buffer> if &showtabline==1 | set showtabline=%s | endif'):format(vim.o.showtabline))
+  vim.o.showtabline = 1
 
   -- Disable 'mini.cursorword'
   vim.b.minicursorword_disable = true
