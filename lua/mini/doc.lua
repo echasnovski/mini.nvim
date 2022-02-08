@@ -965,9 +965,9 @@ function H.alias_register(s)
     return
   end
 
-  -- Remove first word (and its surrounding whitespace) while capturing it
+  -- Remove first word (with bits of surrounding whitespace) while capturing it
   local alias_name
-  s[1] = s[1]:gsub('%s*(%S+)%s*', function(x)
+  s[1] = s[1]:gsub('%s*(%S+) ?', function(x)
     alias_name = x
     return ''
   end, 1)
@@ -986,7 +986,13 @@ function H.alias_replace(s)
 
   for i, _ in ipairs(s) do
     for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
-      s[i] = s[i]:gsub(vim.pesc(alias_name), vim.pesc(alias_desc))
+      -- Escape special characters. This is done here and not while registering
+      -- alias to allow user to refer to aliases by its original name.
+      -- Store escaped words in separate variables because `vim.pesc()` returns
+      -- two values which might conflict if outputs are used as arguments.
+      local name_escaped = vim.pesc(alias_name)
+      local desc_escaped = vim.pesc(alias_desc)
+      s[i] = s[i]:gsub(name_escaped, desc_escaped)
     end
   end
 end
