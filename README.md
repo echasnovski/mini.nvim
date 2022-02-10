@@ -21,6 +21,7 @@ Collection of minimal, independent, and fast Lua modules dedicated to improve [N
     - [mini.cursorword](#minicursorword)
     - [mini.doc](#minidoc)
     - [mini.fuzzy](#minifuzzy)
+    - [mini.indentscope](#miniindentscope)
     - [mini.jump](#minijump)
     - [mini.misc](#minimisc)
     - [mini.pairs](#minipairs)
@@ -358,6 +359,67 @@ Plugins with similar functionality:
 
 - [nvim-telescope/telescope-fzy-native.nvim](https://github.com/nvim-telescope/telescope-fzy-native.nvim)
 
+### mini.indentscope
+
+Visualize and operate on indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-indentscope.gif" height="800em"/>
+
+Default `config`:
+
+```lua
+{
+  draw = {
+    -- Delay (in ms) between event and start of drawing scope indicator
+    delay = 100,
+
+    -- Animation rule for scope's first drawing. A function which, given next
+    -- and total step numbers, returns wait time (in ms). See
+    -- |MiniIndentscope.gen_animation()| for builtin options. To not use
+    -- animation, supply `require('mini.indentscope').gen_animation('none')`.
+    animation = --<function: implements constant 20ms between steps>,
+  },
+
+  -- Module mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    -- Textobjects
+    object_scope = 'ii',
+    object_scope_with_border = 'ai',
+
+    -- Motions (jump to respective border line; if not present - body line)
+    goto_top = '[i',
+    goto_bottom = ']i',
+  },
+
+  -- Options which control computation of scope. Buffer local values can be
+  -- supplied in buffer variable `vim.b.miniindentscope_options`.
+  options = {
+    -- Type of scope's border: which line(s) with smaller indent to
+    -- categorize as border. Can be one of: 'both', 'top', 'bottom', 'none'.
+    border = 'both',
+
+    -- Whether to use cursor column when computing reference indent. Useful to
+    -- see incremental scopes with horizontal cursor movements.
+    indent_at_cursor = true,
+
+    -- Whether to first check input line to be a border of adjacent scope.
+    -- Use it if you want to place cursor on function header to get scope of
+    -- its body.
+    try_as_border = false,
+  },
+
+  -- Which character to use for drawing scope indicator
+  symbol = '╎',
+}
+```
+
+For more information, read 'mini.indentscope' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [lukas-reineke/indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
+- [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object)
+
 ### mini.jump
 
 Minimal and fast module for smarter jumping to a single character. Initial idea and implementation by [Adam Blažek](https://github.com/xigoi).
@@ -666,8 +728,6 @@ Plugins with similar functionality:
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow):
 
-- 'mini.doc' - automatic generation of (Neo)Vim help files from EmmyLua-like annotations next to source code. Something like similar functionality of [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua).
-- 'mini.indentscope' - show (with vertical line) indent scope under cursor after customizable delay.
 - 'mini.align' - fast text alignment. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
 - 'mini.terminal' (or 'mini.repl') - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
 - 'mini.exchange' (or 'mini.swap') - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).

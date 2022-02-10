@@ -541,6 +541,9 @@ function H.apply_palette(palette, use_cterm)
   hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
   hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
 
+  hi('MiniIndentscopeSymbol', {fg=p.base0F, bg=nil, attr=nil,         sp=nil})
+  hi('MiniIndentscopePrefix', {fg=nil,      bg=nil, attr='nocombine', sp=nil})
+
   hi('MiniJump', {fg=nil, bg=nil, attr='undercurl', sp=p.base0E})
 
   hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil, sp=nil})

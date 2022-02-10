@@ -10,6 +10,10 @@
 
 Introduction of new module.
 
+## mini.indentscope
+
+Introduction of new module.
+
 # Version 0.2.0
 
 ## mini.base16
