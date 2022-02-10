@@ -878,6 +878,20 @@ function MiniStarter.add_to_query(char)
   H.make_query()
 end
 
+--- Set current query
+---
+---@param query string|nil Query to be set. Default: `nil` for setting query to
+---   empty string, which essentially resets query.
+function MiniStarter.set_query(query)
+  query = query or ''
+  if type(query) ~= 'string' then
+    H.notify('`query` should be either `nil` or string.')
+  end
+
+  H.query = query
+  H.make_query()
+end
+
 --- Act on |CursorMoved| by repositioning cursor in fixed place.
 function MiniStarter.on_cursormoved()
   H.position_cursor_on_current_item()
@@ -912,6 +926,7 @@ end
 H.default_footer = [[
 Type query to filter items
 <BS> deletes latest character from query
+<Esc> resets current query
 <Down>/<Up> and <M-j>/<M-k> move current item
 <CR> executes action of current item
 <C-c> closes this buffer]]
@@ -1229,6 +1244,7 @@ function H.apply_buffer_mappings()
     H.buf_keymap(key, ([[MiniStarter.add_to_query('%s')]]):format(key))
   end
 
+  H.buf_keymap('<Esc>', [[MiniStarter.set_query('')]])
   H.buf_keymap('<BS>', [[MiniStarter.add_to_query()]])
   H.buf_keymap('<C-c>', [[MiniStarter.close()]])
 end

@@ -2712,6 +2712,15 @@ Parameters~
   latest character from query.
 
 ------------------------------------------------------------------------------
+                                                       *MiniStarter.set_query()*
+                        `MiniStarter.set_query`({query})
+Set current query
+
+Parameters~
+{query} `(string|nil)` Query to be set. Default: `nil` for setting query to
+  empty string, which essentially resets query.
+
+------------------------------------------------------------------------------
                                                   *MiniStarter.on_cursormoved()*
                          `MiniStarter.on_cursormoved`()
 Act on |CursorMoved| by repositioning cursor in fixed place.
