@@ -268,6 +268,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@param'] = --<function>,
       ['@param'] = function(s)
+        H.mark_optional(s)
         H.enclose_var_name(s)
         H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
       end,
@@ -279,6 +280,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@return'] = --<function>,
       ['@return'] = function(s)
+        H.mark_optional(s)
         H.enclose_type(s, '`%(%1%)`', 1)
         H.add_section_heading(s, 'Return')
       end,
@@ -1045,6 +1047,12 @@ function H.add_section_heading(s, heading)
 
   -- Add heading
   s:insert(1, ('%s~'):format(heading))
+end
+
+function H.mark_optional(s)
+  -- Treat question mark at end of first word as "optional" indicator. See:
+  -- https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#optional-params
+  s[1] = s[1]:gsub('^(%s-%S-)%?', '%1 `(optional)`', 1)
 end
 
 function H.enclose_var_name(s)
