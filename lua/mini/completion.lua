@@ -1309,16 +1309,21 @@ end
 function H.wrap_line(l, width)
   local res = {}
 
-  local break_id, break_match, width_id
-  -- Use `strdisplaywidth()` to account for 'non-UTF8' characters
-  while vim.fn.strdisplaywidth(l) > width do
+  local success, width_id = true, nil
+  -- Use `strdisplaywidth()` to account for multibyte characters
+  while success and vim.fn.strdisplaywidth(l) > width do
     -- Simulate wrap by looking at breaking character from end of current break
-    width_id = vim.str_byteindex(l, width)
-    break_match = vim.fn.match(l:sub(1, width_id):reverse(), '[- \t.,;:!?]')
-    -- If no breaking character found, wrap at whole width
-    break_id = width_id - (break_match < 0 and 0 or break_match)
-    table.insert(res, l:sub(1, break_id))
-    l = l:sub(break_id + 1)
+    -- Use `pcall()` to handle complicated multibyte characters (like Chinese)
+    -- for which even `strdisplaywidth()` seems to return incorrect values.
+    success, width_id = pcall(vim.str_byteindex, l, width)
+
+    if success then
+      local break_match = vim.fn.match(l:sub(1, width_id):reverse(), '[- \t.,;:!?]')
+      -- If no breaking character found, wrap at whole width
+      local break_id = width_id - (break_match < 0 and 0 or break_match)
+      table.insert(res, l:sub(1, break_id))
+      l = l:sub(break_id + 1)
+    end
   end
   table.insert(res, l)
 
