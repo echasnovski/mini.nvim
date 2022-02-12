@@ -145,8 +145,8 @@ function MiniIndentscope.setup(config)
         au CursorMoved,CursorMovedI             * lua MiniIndentscope.auto_draw({ lazy = true })
         au TextChanged,TextChangedI,WinScrolled * lua MiniIndentscope.auto_draw()
 
-        au TermEnter * let b:miniindentscope_disable=v:true
-        au TermLeave * let b:miniindentscope_disable=v:false
+        au TermEnter * lua vim.b.miniindentscope_disable=true; MiniIndentscope.undraw()
+        au TermLeave * lua vim.b.miniindentscope_disable=false
       augroup END]],
     false
   )
@@ -992,6 +992,11 @@ function H.make_draw_function(indicator, opts)
   return function(l)
     -- Don't draw if outdated
     if H.current.event_id ~= current_event_id and current_event_id ~= nil then
+      return false
+    end
+
+    -- Don't draw if disabled
+    if H.is_disabled() then
       return false
     end
 
