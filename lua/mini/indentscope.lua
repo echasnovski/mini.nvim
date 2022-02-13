@@ -51,12 +51,6 @@
 ---
 --- To disable autodrawing, set `g:miniindentscope_disable` (globally) or
 --- `b:miniindentscope_disable` (for a buffer) to `v:true`.
----
---- To disable autodrawing in Insert mode, use these autocommands:
---- >
----   au InsertEnter * lua vim.b.miniindentscope_disable = true; MiniIndentscope.undraw()
----   au InsertLeave * lua vim.b.miniindentscope_disable = false; MiniIndentscope.draw()
---- <
 ---@tag mini.indentscope
 ---@tag MiniIndentscope
 ---@toc_entry Visualize and operate on indent scope
@@ -140,13 +134,11 @@ function MiniIndentscope.setup(config)
 
   -- Module behavior
   vim.api.nvim_exec(
+    -- Call `auto_draw` on mode change to respect `miniindentscope_disable`
     [[augroup MiniIndentscope
         au!
-        au CursorMoved,CursorMovedI             * lua MiniIndentscope.auto_draw({ lazy = true })
+        au CursorMoved,CursorMovedI,ModeChanged * lua MiniIndentscope.auto_draw({ lazy = true })
         au TextChanged,TextChangedI,WinScrolled * lua MiniIndentscope.auto_draw()
-
-        au TermEnter * lua vim.b.miniindentscope_disable=true; MiniIndentscope.undraw()
-        au TermLeave * lua vim.b.miniindentscope_disable=false
       augroup END]],
     false
   )
