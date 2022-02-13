@@ -38,6 +38,29 @@
 --- |mini.nvim-disabling-recipes| for common recipes. Note: after disabling
 --- there might be highlighting left; it will be removed after next
 --- highlighting update.
+---
+--- Module-specific disabling:
+--- - Don't show highlighting if cursor is on the word that is in a blocklist
+---   of current filetype. In this example, blocklist for "lua" is "local" and
+---   "require" words, for "javascript" - "import":
+--- >
+---   _G.cursorword_blocklist = function()
+---     local curword = vim.fn.expand('<cword>')
+---     local filetype = vim.api.nvim_buf_get_option(0, 'filetype')
+---
+---     -- Add any disabling global or filetype-specific logic here
+---     local blocklist = {}
+---     if filetype == 'lua' then
+---       blocklist = { 'local', 'require' }
+---     elseif filetype == 'javascript' then
+---       blocklist = { 'import' }
+---     end
+---
+---     vim.b.minicursorword_disable = vim.tbl_contains(blocklist, curword)
+---   end
+---
+---   -- Make sure to add this autocommand *before* calling module's `setup()`.
+---   vim.cmd([[au CursorMoved * lua _G.cursorword_blocklist()]])
 ---@tag mini.cursorword
 ---@tag MiniCursorword
 ---@toc_entry Highlight word under cursor
@@ -63,10 +86,12 @@ function MiniCursorword.setup(config)
 
   -- Module behavior
   vim.api.nvim_exec(
+    -- Call `auto_highlight` on mode change to respect `minicursorword_disable`
     [[augroup MiniCursorword
         au!
-        au CursorMoved                   * lua MiniCursorword.auto_highlight()
-        au InsertEnter,TermEnter,QuitPre * lua MiniCursorword.auto_unhighlight()
+        au CursorMoved                   *      lua MiniCursorword.auto_highlight()
+        au ModeChanged                   *:[^i] lua MiniCursorword.auto_highlight()
+        au InsertEnter,TermEnter,QuitPre *      lua MiniCursorword.auto_unhighlight()
 
         au FileType TelescopePrompt let b:minicursorword_disable=v:true
       augroup END]],
@@ -75,7 +100,7 @@ function MiniCursorword.setup(config)
 
   -- Create highlighting
   vim.api.nvim_exec(
-    [[hi default MiniCursorword term=underline cterm=underline gui=underline
+    [[hi default MiniCursorword cterm=underline gui=underline
       hi default link MiniCursorwordCurrent MiniCursorword]],
     false
   )
