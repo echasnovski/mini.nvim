@@ -139,8 +139,8 @@ function MiniIndentscope.setup(config)
   vim.api.nvim_exec(
     [[augroup MiniIndentscope
         au!
-        au CursorMoved,CursorMovedI             * lua MiniIndentscope.auto_draw({ lazy = true })
-        au TextChanged,TextChangedI,WinScrolled * lua MiniIndentscope.auto_draw()
+        au CursorMoved,CursorMovedI                          * lua MiniIndentscope.auto_draw({ lazy = true })
+        au TextChanged,TextChangedI,TextChangedP,WinScrolled * lua MiniIndentscope.auto_draw()
       augroup END]],
     false
   )
