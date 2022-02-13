@@ -21,8 +21,8 @@
 ---   (for example, Python or plain text).
 --- - Customizable way of line to be considered "border first". This is useful
 ---   if you want to place cursor on function header and get scope of its body.
---- - There are textobjects and motions to operate on scope. Supports
----   dot-repeat and |count| in operator pending mode.
+--- - There are textobjects and motions to operate on scope. Support |count|
+---   and dot-repeat (in operator pending mode).
 ---
 --- # Setup~
 ---
@@ -540,9 +540,9 @@ end
 
 --- Function for motion mappings
 ---
---- Move to a certain side of border. Respects dot-repeat and |count| in
---- operator-pending mode. Doesn't move cursor for scope that is not shown (
---- drawing indent less that zero).
+--- Move to a certain side of border. Respects |count| and dot-repeat (in
+--- operator-pending mode). Doesn't move cursor for scope that is not shown
+--- (drawing indent less that zero).
 ---
 ---@param side string One of "top" or "bottom".
 ---@param add_to_jumplist boolean Whether to add movement to jump list. It is
@@ -557,13 +557,13 @@ function MiniIndentscope.operator(side, add_to_jumplist)
 
   -- Add movement to jump list. Needs remembering `count1` before that because
   -- it seems to reset it to 1.
-  local count1 = vim.v.count1
+  local count = vim.v.count1
   if add_to_jumplist then
     vim.cmd('normal! m`')
   end
 
   -- Make sequence of jumps
-  for _ = 1, count1 do
+  for _ = 1, count do
     MiniIndentscope.move_cursor(side, true, scope)
     -- Use `try_as_border = false` to enable chaining
     scope = MiniIndentscope.get_scope(nil, nil, { try_as_border = false })
@@ -577,7 +577,8 @@ end
 
 --- Function for textobject mappings
 ---
---- Doesn't work for scope that is not shown (drawing indent less that zero).
+--- Respects |count| and dot-repeat (in operator-pending mode). Doesn't work
+--- for scope that is not shown (drawing indent less that zero).
 ---
 ---@param use_border boolean Whether to include border in textobject. When
 ---   `true` and `try_as_border` option is `false`, allows "chaining" calls for
@@ -590,16 +591,29 @@ function MiniIndentscope.textobject(use_border)
     return
   end
 
-  H.exit_visual_mode()
+  -- Allow chaining only if using border
+  local count = use_border and vim.v.count1 or 1
 
-  if not use_border or (use_border and scope.border.bottom ~= nil) then
-    MiniIndentscope.move_cursor('top', use_border, scope)
+  -- Make sequence of incremental selections
+  for _ = 1, count do
+    -- Try finish cursor on border
+    local start, finish = 'top', 'bottom'
+    if use_border and scope.border.bottom == nil then
+      start, finish = 'bottom', 'top'
+    end
+
+    H.exit_visual_mode()
+    MiniIndentscope.move_cursor(start, use_border, scope)
     vim.cmd('normal! V')
-    MiniIndentscope.move_cursor('bottom', use_border, scope)
-  else
-    MiniIndentscope.move_cursor('bottom', use_border, scope)
-    vim.cmd('normal! V')
-    MiniIndentscope.move_cursor('top', use_border, scope)
+    MiniIndentscope.move_cursor(finish, use_border, scope)
+
+    -- Use `try_as_border = false` to enable chaining
+    scope = MiniIndentscope.get_scope(nil, nil, { try_as_border = false })
+
+    -- Don't support scope that can't be shown
+    if H.scope_get_draw_indent(scope) < 0 then
+      return
+    end
   end
 end
 

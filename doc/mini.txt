@@ -1454,8 +1454,8 @@ Features:
   (for example, Python or plain text).
 - Customizable way of line to be considered "border first". This is useful
   if you want to place cursor on function header and get scope of its body.
-- There are textobjects and motions to operate on scope. Supports
-  dot-repeat and |count| in operator pending mode.
+- There are textobjects and motions to operate on scope. Support |count|
+  and dot-repeat (in operator pending mode).
 
 # Setup~
 
@@ -1800,9 +1800,9 @@ Parameters~
              `MiniIndentscope.operator`({side}, {add_to_jumplist})
 Function for motion mappings
 
-Move to a certain side of border. Respects dot-repeat and |count| in
-operator-pending mode. Doesn't move cursor for scope that is not shown (
-drawing indent less that zero).
+Move to a certain side of border. Respects |count| and dot-repeat (in
+operator-pending mode). Doesn't move cursor for scope that is not shown
+(drawing indent less that zero).
 
 Parameters~
 {side} `(string)` One of "top" or "bottom".
@@ -1814,7 +1814,8 @@ Parameters~
                    `MiniIndentscope.textobject`({use_border})
 Function for textobject mappings
 
-Doesn't work for scope that is not shown (drawing indent less that zero).
+Respects |count| and dot-repeat (in operator-pending mode). Doesn't work
+for scope that is not shown (drawing indent less that zero).
 
 Parameters~
 {use_border} `(boolean)` Whether to include border in textobject. When
