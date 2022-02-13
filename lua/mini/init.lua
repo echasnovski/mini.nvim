@@ -154,7 +154,7 @@
 --- - Enable only for certain filetypes (for example, "lua" and "python"):
 ---   `au FileType * if index(['lua', 'python'], &ft) < 0 | let b:minicursorword_disable=v:true | endif`
 --- - Disable in Insert mode (use similar pattern for Terminal mode or indeed
----   any other mode change with |ModeChanged|):
+---   any other mode change with |ModeChanged| starting from Neovim 0.7.0):
 ---   `au InsertEnter * lua vim.b.minicursorword_disable = true`
 ---   `au InsertLeave * lua vim.b.minicursorword_disable = false`
 --- - Disable in Terminal buffer:

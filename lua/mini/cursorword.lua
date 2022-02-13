@@ -86,17 +86,25 @@ function MiniCursorword.setup(config)
 
   -- Module behavior
   vim.api.nvim_exec(
-    -- Call `auto_highlight` on mode change to respect `minicursorword_disable`
     [[augroup MiniCursorword
         au!
-        au CursorMoved                   *      lua MiniCursorword.auto_highlight()
-        au ModeChanged                   *:[^i] lua MiniCursorword.auto_highlight()
-        au InsertEnter,TermEnter,QuitPre *      lua MiniCursorword.auto_unhighlight()
+        au CursorMoved                   * lua MiniCursorword.auto_highlight()
+        au InsertEnter,TermEnter,QuitPre * lua MiniCursorword.auto_unhighlight()
 
         au FileType TelescopePrompt let b:minicursorword_disable=v:true
       augroup END]],
     false
   )
+
+  if vim.fn.has('nvim-0.7.0') == 1 then
+    vim.api.nvim_exec(
+      -- Call `auto_highlight` on mode change to respect `minicursorword_disable`
+      [[augroup MiniCursorword
+          au ModeChanged *:[^i] lua MiniCursorword.auto_highlight()
+        augroup END]],
+      false
+    )
+  end
 
   -- Create highlighting
   vim.api.nvim_exec(
