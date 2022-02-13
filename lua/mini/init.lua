@@ -49,14 +49,7 @@
 ---       created once during `setup()`).
 --- - <Disabling>. Each module's core functionality can be disabled globally or
 ---   buffer-locally by creating appropriate global or buffer-scoped variables
----   with |v:true| value. For example:
----     - To disable `MiniSurround` globally run
----       `:let g:minisurround_disable=v:true`.
----     - To disable `MiniSurround` for current buffer run
----       `:let b:minisurround_disable=v:true`.
----     - To toggle `MiniSurround` globally (disable if enabled, enable if
----       disabled) use of Lua is more appropriate:
----       `:lua vim.g.minisurround_disable = not vim.g.minisurround_disable`.
+---   equal to |v:true|. See |mini.nvim-disabling-recipes| for common recipes.
 --- - <Highlight groups>. Appearance of module's output is controlled by
 ---   certain highlight group (see |highlight-groups|). To customize them, use
 ---   |highlight| command. Note: currently not many Neovim themes support this
@@ -125,6 +118,48 @@
 ---   functionality to remove it.
 ---@tag mini.nvim
 ---@toc_entry General overview
+
+--- Common recipes for disabling functionality
+---
+--- Each module's core functionality can be disabled globally or buffer-locally
+--- by creating appropriate global or buffer-scoped variables equal to
+--- |v:true|. Functionality is disabled if at least one of `g:` or `b:`
+--- variables is equal to `v:true`.
+---
+--- Variable names have the same structure: `{g,b}:mini*_disable` where `*` is
+--- module's lowercase name. For example, `g:minicursorword_disable` disables
+--- |mini.cursorword| globally and `b:minicursorword_disable` - for
+--- corresponding buffer. Note: in this section disabling 'mini.cursorword' is
+--- used as example; everything holds for other module variables.
+---
+--- Considering high number of different scenarios and customization intentions,
+--- writing exact rules for disabling module's functionality is left to user.
+---
+--- # Manual disabling~
+---
+--- - Disable globally:
+---   Lua       - `:lua vim.g.minicursorword_disable=true`
+---   Vimscript - `:let g:minicursorword_disable=v:true`
+--- - Disable for current buffer:
+---   Lua       - `:lua vim.b.minicursorword_disable=true`
+---   Vimscript - `:let b:minicursorword_disable=v:true`
+--- - Toggle (disable if enabled, enable if disabled):
+---   Globally   - `:lua vim.g.minicursorword_disable = not vim.g.minicursorword_disable`
+---   For buffer - `:lua vim.b.minicursorword_disable = not vim.b.minicursorword_disable`
+---
+--- # Automated disabling~
+---
+--- - Disable for a certain |filetype| (for example, "markdown"):
+---   `autocmd Filetype markdown lua vim.b.minicursorword_disable = true`
+--- - Enable only for certain filetypes (for example, "lua" and "python"):
+---   `au FileType * if index(['lua', 'python'], &ft) < 0 | let b:minicursorword_disable=v:true | endif`
+--- - Disable in Insert mode (use similar pattern for Terminal mode or indeed
+---   any other mode change with |ModeChanged|):
+---   `au InsertEnter * lua vim.b.minicursorword_disable = true`
+---   `au InsertLeave * lua vim.b.minicursorword_disable = false`
+--- - Disable in Terminal buffer:
+---   `au TermOpen * lua vim.b.minicursorword_disable = true`
+---@tag mini.nvim-disabling-recipes
 
 --- # Plugin colorscheme~
 ---

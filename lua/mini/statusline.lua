@@ -61,6 +61,9 @@
 ---
 --- To disable (show empty statusline), set `g:ministatusline_disable`
 --- (globally) or `b:ministatusline_disable` (for a buffer) to `v:true`.
+--- Considering high number of different scenarios and customization
+--- intentions, writing exact rules for disabling module's functionality is
+--- left to user. See |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.statusline
 ---@tag MiniStatusline
 ---@toc_entry Statusline

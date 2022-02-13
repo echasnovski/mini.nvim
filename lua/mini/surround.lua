@@ -67,7 +67,10 @@
 --- # Disabling~
 ---
 --- To disable, set `g:minisurround_disable` (globally) or
---- `b:minisurround_disable` (for a buffer) to `v:true`.
+--- `b:minisurround_disable` (for a buffer) to `v:true`. Considering high
+--- number of different scenarios and customization intentions, writing exact
+--- rules for disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.surround
 ---@tag MiniSurround
 ---@toc_entry Surround

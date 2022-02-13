@@ -28,7 +28,10 @@
 --- # Disabling~
 ---
 --- To disable core functionality, set `g:minijump_disable` (globally) or
---- `b:minijump_disable` (for a buffer) to `v:true`.
+--- `b:minijump_disable` (for a buffer) to `v:true`. Considering high number of
+--- different scenarios and customization intentions, writing exact rules for
+--- disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.jump
 ---@tag MiniJump
 ---@toc_entry Jump cursor

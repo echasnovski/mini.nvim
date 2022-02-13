@@ -67,14 +67,7 @@ Table of contents:
       created once during `setup()`).
 - <Disabling>. Each module's core functionality can be disabled globally or
   buffer-locally by creating appropriate global or buffer-scoped variables
-  with |v:true| value. For example:
-    - To disable `MiniSurround` globally run
-      `:let g:minisurround_disable=v:true`.
-    - To disable `MiniSurround` for current buffer run
-      `:let b:minisurround_disable=v:true`.
-    - To toggle `MiniSurround` globally (disable if enabled, enable if
-      disabled) use of Lua is more appropriate:
-      `:lua vim.g.minisurround_disable = not vim.g.minisurround_disable`.
+  equal to |v:true|. See |mini.nvim-disabling-recipes| for common recipes.
 - <Highlight groups>. Appearance of module's output is controlled by
   certain highlight group (see |highlight-groups|). To customize them, use
   |highlight| command. Note: currently not many Neovim themes support this
@@ -141,6 +134,49 @@ Table of contents:
   [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
+
+------------------------------------------------------------------------------
+                                                   *mini.nvim-disabling-recipes*
+Common recipes for disabling functionality
+
+Each module's core functionality can be disabled globally or buffer-locally
+by creating appropriate global or buffer-scoped variables equal to
+|v:true|. Functionality is disabled if at least one of `g:` or `b:`
+variables is equal to `v:true`.
+
+Variable names have the same structure: `{g,b}:mini*_disable` where `*` is
+module's lowercase name. For example, `g:minicursorword_disable` disables
+|mini.cursorword| globally and `b:minicursorword_disable` - for
+corresponding buffer. Note: in this section disabling 'mini.cursorword' is
+used as example; everything holds for other module variables.
+
+Considering high number of different scenarios and customization intentions,
+writing exact rules for disabling module's functionality is left to user.
+
+# Manual disabling~
+
+- Disable globally:
+  Lua       - `:lua vim.g.minicursorword_disable=true`
+  Vimscript - `:let g:minicursorword_disable=v:true`
+- Disable for current buffer:
+  Lua       - `:lua vim.b.minicursorword_disable=true`
+  Vimscript - `:let b:minicursorword_disable=v:true`
+- Toggle (disable if enabled, enable if disabled):
+  Globally   - `:lua vim.g.minicursorword_disable = not vim.g.minicursorword_disable`
+  For buffer - `:lua vim.b.minicursorword_disable = not vim.b.minicursorword_disable`
+
+# Automated disabling~
+
+- Disable for a certain |filetype| (for example, "markdown"):
+  `autocmd Filetype markdown lua vim.b.minicursorword_disable = true`
+- Enable only for certain filetypes (for example, "lua" and "python"):
+  `au FileType * if index(['lua', 'python'], &ft) < 0 | let b:minicursorword_disable=v:true | endif`
+- Disable in Insert mode (use similar pattern for Terminal mode or indeed
+  any other mode change with |ModeChanged|):
+  `au InsertEnter * lua vim.b.minicursorword_disable = true`
+  `au InsertLeave * lua vim.b.minicursorword_disable = false`
+- Disable in Terminal buffer:
+  `au TermOpen * lua vim.b.minicursorword_disable = true`
 
 ------------------------------------------------------------------------------
                                                                     *minischeme*
@@ -367,7 +403,10 @@ See |MiniBufremove.config| for `config` structure and default values.
 # Disabling~
 
 To disable core functionality, set `g:minibufremove_disable` (globally) or
-`b:minibufremove_disable` (for a buffer) to `v:true`.
+`b:minibufremove_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                          *MiniBufremove.setup()*
@@ -474,7 +513,10 @@ See |MiniComment.config| for `config` structure and default values.
 # Disabling~
 
 To disable core functionality, set `g:minicomment_disable` (globally) or
-`b:minicomment_disable` (for a buffer) to `v:true`.
+`b:minicomment_disable` (for a buffer) to `v:true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                            *MiniComment.setup()*
@@ -647,7 +689,10 @@ To change any highlight group, modify it directly with |:highlight|.
 # Disabling~
 
 To disable, set `g:minicompletion_disable` (globally) or
-`b:minicompletion_disable` (for a buffer) to `v:true`.
+`b:minicompletion_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                         *MiniCompletion.setup()*
@@ -829,8 +874,11 @@ To change any highlight group, modify it directly with |:highlight|.
 # Disabling~
 
 To disable core functionality, set `g:minicursorword_disable` (globally) or
-`b:minicursorword_disable` (for a buffer) to `v:true`. Note: after
-disabling there might be highlighting left; it will be removed after next
+`b:minicursorword_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes. Note: after disabling
+there might be highlighting left; it will be removed after next
 highlighting update.
 
 ------------------------------------------------------------------------------
@@ -939,7 +987,10 @@ which you can use for scripting or manually (with `:lua MiniDoc.*`). See
 # Disabling~
 
 To disable, set `g:minidoc_disable` (globally) or `b:minidoc_disable` (for
-a buffer) to `v:true`.
+a buffer) to `v:true`. Considering high number of different scenarios and
+customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
 
 ------------------------------------------------------------------------------
                                                        *MiniDoc-data-structures*
@@ -1483,7 +1534,10 @@ settings.
 # Disabling~
 
 To disable autodrawing, set `g:miniindentscope_disable` (globally) or
-`b:miniindentscope_disable` (for a buffer) to `v:true`.
+`b:miniindentscope_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                        *MiniIndentscope-drawing*
@@ -1848,7 +1902,10 @@ See |MiniJump.config| for `config` structure and default values.
 # Disabling~
 
 To disable core functionality, set `g:minijump_disable` (globally) or
-`b:minijump_disable` (for a buffer) to `v:true`.
+`b:minijump_disable` (for a buffer) to `v:true`. Considering high number of
+different scenarios and customization intentions, writing exact rules for
+disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                               *MiniJump.setup()*
@@ -2183,7 +2240,10 @@ See |MiniPairs.config| for `config` structure and default values.
 # Disabling~
 
 To disable, set `g:minipairs_disable` (globally) or `b:minipairs_disable`
-(for a buffer) to `v:true`.
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
 
 ------------------------------------------------------------------------------
                                                              *MiniPairs.setup()*
@@ -2426,7 +2486,10 @@ See |MiniSessions.config| for `config` structure and default values.
 # Disabling~
 
 To disable core functionality, set `g:minisessions_disable` (globally) or
-`b:minisessions_disable` (for a buffer) to `v:true`.
+`b:minisessions_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                           *MiniSessions.setup()*
@@ -2623,7 +2686,10 @@ some configuration examples (including one similar to 'vim-startify' and
 # Disabling~
 
 To disable core functionality, set `g:ministarter_disable` (globally) or
-`b:ministarter_disable` (for a buffer) to `v:true`.
+`b:ministarter_disable` (for a buffer) to `v:true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                     *MiniStarter-example-config*
@@ -3181,6 +3247,9 @@ To change any highlight group, modify it directly with |:highlight|.
 
 To disable (show empty statusline), set `g:ministatusline_disable`
 (globally) or `b:ministatusline_disable` (for a buffer) to `v:true`.
+Considering high number of different scenarios and customization
+intentions, writing exact rules for disabling module's functionality is
+left to user. See |mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                 *MiniStatusline-example-content*
@@ -3484,7 +3553,10 @@ To change any highlight group, modify it directly with |:highlight|.
 # Disabling~
 
 To disable, set `g:minisurround_disable` (globally) or
-`b:minisurround_disable` (for a buffer) to `v:true`.
+`b:minisurround_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
                                                         *MiniSurround-algorithm*
@@ -3669,9 +3741,12 @@ To change any highlight group, modify it directly with |:highlight|.
 # Disabling~
 
 To disable (show empty tabline), set `g:minitabline_disable` (globally) or
-`b:minitabline_disable` (for a buffer) to `v:true`. Note: after
-disabling tabline is not updated right away, but rather after dedicated
-event (see |events| and `MiniTabline` |augroup|).
+`b:minitabline_disable` (for a buffer) to `v:true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes. Note: after disabling,
+tabline is not updated right away, but rather after dedicated event (see
+|events| and `MiniTabline` |augroup|).
 
 ------------------------------------------------------------------------------
                                                            *MiniTabline.setup()*
@@ -3743,8 +3818,11 @@ To change any highlight group, modify it directly with |:highlight|.
 # Disabling~
 
 To disable, set `g:minitrailspace_disable` (globally) or
-`b:minitrailspace_disable` (for a buffer) to `v:true`.  Note: after
-disabling there might be highlighting left; it will be removed after next
+`b:minitrailspace_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes. Note: after disabling
+there might be highlighting left; it will be removed after next
 highlighting update (see |events| and `MiniTrailspace` |augroup|).
 
 ------------------------------------------------------------------------------

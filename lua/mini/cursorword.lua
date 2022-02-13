@@ -32,8 +32,11 @@
 --- # Disabling~
 ---
 --- To disable core functionality, set `g:minicursorword_disable` (globally) or
---- `b:minicursorword_disable` (for a buffer) to `v:true`. Note: after
---- disabling there might be highlighting left; it will be removed after next
+--- `b:minicursorword_disable` (for a buffer) to `v:true`. Considering high
+--- number of different scenarios and customization intentions, writing exact
+--- rules for disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes. Note: after disabling
+--- there might be highlighting left; it will be removed after next
 --- highlighting update.
 ---@tag mini.cursorword
 ---@tag MiniCursorword

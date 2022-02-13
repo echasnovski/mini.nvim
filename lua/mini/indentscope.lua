@@ -50,7 +50,10 @@
 --- # Disabling~
 ---
 --- To disable autodrawing, set `g:miniindentscope_disable` (globally) or
---- `b:miniindentscope_disable` (for a buffer) to `v:true`.
+--- `b:miniindentscope_disable` (for a buffer) to `v:true`. Considering high
+--- number of different scenarios and customization intentions, writing exact
+--- rules for disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.indentscope
 ---@tag MiniIndentscope
 ---@toc_entry Visualize and operate on indent scope

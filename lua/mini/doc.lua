@@ -62,7 +62,10 @@
 --- # Disabling~
 ---
 --- To disable, set `g:minidoc_disable` (globally) or `b:minidoc_disable` (for
---- a buffer) to `v:true`.
+--- a buffer) to `v:true`. Considering high number of different scenarios and
+--- customization intentions, writing exact rules for disabling module's
+--- functionality is left to user. See |mini.nvim-disabling-recipes| for common
+--- recipes.
 ---@tag mini.doc
 ---@tag MiniDoc
 ---@toc_entry Generate help files
