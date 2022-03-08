@@ -1190,14 +1190,15 @@ function H.make_query(query)
   vim.api.nvim_buf_clear_namespace(H.buf_id, H.ns.activity, 0, -1)
   H.add_hl_activity(query)
 
-  -- Notify about new query. Use `echo` because it doesn't write to `:messages`.
-  local msg = ('Query: %s'):format(H.query)
-  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
-
   -- Possibly evaluate single active item
   if MiniStarter.config.evaluate_single and n_active == 1 then
     MiniStarter.eval_current_item()
+    return
   end
+
+  -- Notify about new query. Use `echo` because it doesn't write to `:messages`.
+  local msg = ('Query: %s'):format(H.query)
+  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
 end
 
 -- Work with starter buffer ---------------------------------------------------
