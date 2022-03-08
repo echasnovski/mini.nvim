@@ -1,4 +1,4 @@
-# Version 0.2.0.9000 (development)
+# Version 0.3.0
 
 - Update all modules to have annotations formatted for 'mini.doc'.
 
