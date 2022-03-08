@@ -14,6 +14,11 @@ Introduction of new module.
 
 Introduction of new module.
 
+## mini.starter
+
+- Implement `MiniStarter.set_query()` and make `<Esc>` mapping for resetting query.
+
+
 # Version 0.2.0
 
 ## mini.base16
@@ -46,6 +51,7 @@ Introduction of new module.
 
 - Implement new section `MiniStatusline.section_searchcount()`.
 - Update `section_diagnostics` to use `vim.diagnostic` in Neovim 0.6.0.
+
 
 # Version 0.1.0
 
