@@ -863,8 +863,8 @@ end
 
 --- Add character to current query
 ---
---- - Update current query by appending `char` to its end or delete latest
----   character if `char` is `nil`.
+--- - Update current query by appending `char` to its end (only if it results
+---   into at least one active item) or delete latest character if `char` is `nil`.
 --- - Recompute status of items: "active" if its name starts with new query,
 ---   "inactive" otherwise.
 --- - Update highlighting: whole strings for "inactive" items, current query
@@ -873,26 +873,27 @@ end
 ---@param char string Single character to be added to query. If `nil`, deletes
 ---   latest character from query.
 function MiniStarter.add_to_query(char)
+  local new_query
   if char == nil then
-    H.query = H.query:sub(0, H.query:len() - 1)
+    new_query = H.query:sub(0, H.query:len() - 1)
   else
-    H.query = ('%s%s'):format(H.query, char)
+    new_query = ('%s%s'):format(H.query, char)
   end
-  H.make_query()
+  H.make_query(new_query)
 end
 
 --- Set current query
 ---
----@param query string|nil Query to be set. Default: `nil` for setting query to
----   empty string, which essentially resets query.
+---@param query string|nil Query to be set (only if it results into at least one
+---   active item). Default: `nil` for setting query to empty string, which
+---   essentially resets query.
 function MiniStarter.set_query(query)
   query = query or ''
   if type(query) ~= 'string' then
     H.notify('`query` should be either `nil` or string.')
   end
 
-  H.query = query
-  H.make_query()
+  H.make_query(query)
 end
 
 --- Act on |CursorMoved| by repositioning cursor in fixed place.
@@ -1151,17 +1152,32 @@ function H.position_cursor_on_current_item()
   vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos)
 end
 
+function H.item_is_active(item, query)
+  -- Item is active = item's name starts with query (ignoring case) and item's
+  -- action is non-empty
+  return vim.startswith(item.name:lower(), query) and item.action ~= ''
+end
+
 -- Work with queries ----------------------------------------------------------
 function H.make_query(query)
   -- Ignore case
   query = (query or H.query):lower()
 
-  -- Item is active = item's name starts with query (ignoring case) and item's
-  -- action is non-empty
+  -- Don't make query if it results into no active items
   local n_active = 0
   for _, item in ipairs(H.items) do
-    item._active = vim.startswith(item.name:lower(), query) and item.action ~= ''
-    n_active = n_active + (item._active and 1 or 0)
+    n_active = n_active + (H.item_is_active(item, query) and 1 or 0)
+  end
+
+  if n_active == 0 then
+    H.notify(('Query %s results into no active items. Current query: %s'):format(vim.inspect(query), H.query))
+    return
+  end
+
+  -- Update current query and active items
+  H.query = query
+  for _, item in ipairs(H.items) do
+    item._active = H.item_is_active(item, query)
   end
 
   -- Move to next active item if current is not active
@@ -1174,19 +1190,14 @@ function H.make_query(query)
   vim.api.nvim_buf_clear_namespace(H.buf_id, H.ns.activity, 0, -1)
   H.add_hl_activity(query)
 
+  -- Notify about new query. Use `echo` because it doesn't write to `:messages`.
+  local msg = ('Query: %s'):format(H.query)
+  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
+
   -- Possibly evaluate single active item
   if MiniStarter.config.evaluate_single and n_active == 1 then
     MiniStarter.eval_current_item()
-    return
   end
-
-  -- Notify about new query
-  local msg = ('Query: %s'):format(H.query)
-  if n_active == 0 then
-    msg = ('%s . There is no active items. Use <BS> to delete symbols from query.'):format(msg)
-  end
-  -- Use `echo` because it doesn't write to `:messages`
-  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
 end
 
 -- Work with starter buffer ---------------------------------------------------

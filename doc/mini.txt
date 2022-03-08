@@ -3180,8 +3180,8 @@ Parameters~
                        `MiniStarter.add_to_query`({char})
 Add character to current query
 
-- Update current query by appending `char` to its end or delete latest
-  character if `char` is `nil`.
+- Update current query by appending `char` to its end (only if it results
+  into at least one active item) or delete latest character if `char` is `nil`.
 - Recompute status of items: "active" if its name starts with new query,
   "inactive" otherwise.
 - Update highlighting: whole strings for "inactive" items, current query
@@ -3197,8 +3197,9 @@ Parameters~
 Set current query
 
 Parameters~
-{query} `(string|nil)` Query to be set. Default: `nil` for setting query to
-  empty string, which essentially resets query.
+{query} `(string|nil)` Query to be set (only if it results into at least one
+  active item). Default: `nil` for setting query to empty string, which
+  essentially resets query.
 
 ------------------------------------------------------------------------------
                                                   *MiniStarter.on_cursormoved()*
