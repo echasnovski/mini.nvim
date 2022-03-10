@@ -1,5 +1,14 @@
 # Version 0.3.0.9000 (development)
 
+## mini.sessions
+
+- Implement `MiniSessions.select()` to select session interactively and perform action on it.
+
+## mini.starter
+
+- Update query logic to not allow queries which result into no items.
+
+
 # Version 0.3.0
 
 - Update all modules to have annotations formatted for 'mini.doc'.
