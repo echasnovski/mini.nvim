@@ -329,6 +329,7 @@ function MiniMisc.zoom(buf_id, config)
     vim.api.nvim_win_close(H.zoom_winid, true)
     H.zoom_winid = nil
   else
+    buf_id = buf_id or 0
     -- Currently very big `width` and `height` get truncated to maximum allowed
     local default_config = { relative = 'editor', row = 0, col = 0, width = 1000, height = 1000 }
     config = vim.tbl_deep_extend('force', default_config, config or {})
