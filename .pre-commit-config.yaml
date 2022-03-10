@@ -3,6 +3,11 @@ repos:
     hooks:
       - id: stylua
         name: StyLua
-        language: rust
+        language: system
         entry: stylua
         types: [lua]
+      - id: gendocs
+        name: Gendocs
+        language: system
+        entry: make --silent documentation
+        types: []

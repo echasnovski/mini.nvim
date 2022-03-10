@@ -15,11 +15,10 @@ All well-intentioned, polite, and respectful contributions are always welcome! T
 
 ## Generating help file
 
-If your contribution updates annotations used to generate help file, please regenerate it. To do this, run the following snippet with current directory (`:h pwd` and `:h cd`) being project root:
+If your contribution updates annotations used to generate help file, please regenerate it. You can make this with one of the following (assuming current directory being project root):
 
-```
-luafile scripts/minidoc.lua
-```
+- From command line execute `make documentation`.
+- Inside Neovim instance run `:luafile scripts/minidoc.lua`.
 
 ## Formatting
 
