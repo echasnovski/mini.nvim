@@ -285,6 +285,34 @@ function MiniSessions.delete(session_name, opts)
   end
 end
 
+--- Select session interactively and perform action
+---
+--- Note: this uses |vim.ui.select| function, which is present in Neovim
+--- starting from 0.6 version. For more user-friendly experience, override it
+--- (for example, with external plugins like "stevearc/dressing.nvim").
+---
+---@param action string Action to perform. Should be one of "read" (default),
+---   "write", or "delete".
+---@param opts table Options for specified action.
+function MiniSessions.select(action, opts)
+  if vim.ui == nil or vim.ui.select == nil then
+    H.notify('`MiniSessions.select()` requires `vim.ui.select()` function.')
+  end
+
+  action = action or 'read'
+  if not vim.tbl_contains({ 'read', 'write', 'delete' }, action) then
+    H.notify("`action` should be one of 'read', 'write', or 'delete'.")
+    return
+  end
+
+  vim.ui.select(vim.tbl_keys(MiniSessions.detected), { prompt = 'Select session to ' .. action }, function(item, idx)
+    if item == nil then
+      return
+    end
+    MiniSessions[action](item, opts)
+  end)
+end
+
 --- Get name of latest detected session
 ---
 --- Latest session is the session with the latest modification time determined
