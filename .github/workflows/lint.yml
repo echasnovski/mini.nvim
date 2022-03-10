@@ -13,3 +13,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           # CLI arguments
           args: --color always --check .
+  gendoc:
+    name: gendoc
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        id: neovim
+        with:
+          neovim: true
+      - uses: actions/checkout@v2
+      - name: Generate documentation
+        run: make --silent documentation
+      - name: Check for changes
+        run: if [[ -n $(git status -s) ]]; then exit 1; fi
