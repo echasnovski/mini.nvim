@@ -1587,9 +1587,9 @@ Special cases~
   visible one (at process or finished drawing), drawing is done immediately
   without animation. With most common example being typing new text, this
   feels more natural.
-- Scope for the whole is not drawn as it is isually redundant. Technically,
-  it can be thought as drawn at column 0 (because border indent is -1)
-  which is not visible.
+- Scope for the whole buffer is not drawn as it is isually redundant.
+  Technically, it can be thought as drawn at column 0 (because border
+  indent is -1) which is not visible.
 
 ------------------------------------------------------------------------------
                                                        *MiniIndentscope.setup()*
