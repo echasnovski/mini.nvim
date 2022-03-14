@@ -1,5 +1,6 @@
 local helpers = {}
 
+-- Work with 'mini.nvim' modules ==============================================
 function helpers.mini_load(name, config)
   require(('mini.%s'):format(name)).setup(config)
 end
@@ -16,10 +17,11 @@ function helpers.mini_unload(name)
 
   -- Remove autocmd group
   if vim.fn.exists('#' .. tbl_name) == 1 then
-    vim.cmd('augroup! ' .. tbl_name)
+    vim.cmd('silent augroup! ' .. tbl_name)
   end
 end
 
+-- Convenience wrappers =======================================================
 function helpers.set_cursor(line, column, win_id)
   vim.api.nvim_win_set_cursor(win_id or 0, { line, column })
 
@@ -29,8 +31,95 @@ function helpers.set_cursor(line, column, win_id)
   else
     vim.cmd([[doautocmd CursorMoved]])
   end
+
+  -- Advance event loop (not sure if needed)
+  vim.wait(0)
 end
 
+function helpers.get_cursor(win_id)
+  return vim.api.nvim_win_get_cursor(win_id or 0)
+end
+
+function helpers.set_lines(lines, buf_id)
+  vim.api.nvim_buf_set_lines(buf_id or 0, 0, -1, true, lines)
+end
+
+function helpers.get_lines(buf_id)
+  return vim.api.nvim_buf_get_lines(buf_id or 0, 0, -1, true)
+end
+
+function helpers.feedkeys(keys, replace_termcodes)
+  replace_termcodes = replace_termcodes or true
+  if replace_termcodes then
+    keys = vim.api.nvim_replace_termcodes(keys, true, true, true)
+  end
+
+  -- Use `xt` to emulate user key press
+  vim.api.nvim_feedkeys(keys, 'xt', false)
+end
+
+function helpers.exit_visual_mode()
+  local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
+  local cur_mode = vim.fn.mode()
+  if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then
+    vim.cmd('normal! ' .. cur_mode)
+  end
+end
+
+-- Custom assertions ==========================================================
+--- Assert equal effect of keys
+---
+--- Usual usage is to test equivalence of mapping in operator pending mode and
+--- similar one using Visual mode first.
+---
+---@param keys_1 string First sequence of keys.
+---@param keys_2 string Second sequence of keys.
+---@param actions table Table with keys:
+---   - <before> - perform before applying keys.
+---   - <effect> - get effect of applying keys. Outputs will be compared. By
+---     default tests eventual cursor position and buffer text.
+---   - <after> - perform after applying keys.
+---@private
+function helpers.assert_equal_keys_effect(keys_1, keys_2, actions)
+  actions = actions or {}
+  local before = actions.before or function() end
+  local effect = actions.effect
+    or function()
+      return { cursor = helpers.get_cursor(), text = vim.api.nvim_buf_get_lines(0, 0, -1, true) }
+    end
+  local after = actions.after or function() end
+
+  before()
+  helpers.feedkeys(keys_1)
+  local result_1 = effect()
+  after()
+
+  before()
+  helpers.feedkeys(keys_2)
+  local result_2 = effect()
+  after()
+
+  assert.are.same(result_1, result_2)
+end
+
+--- Assert visual marks
+---
+--- Useful to validate visual selection
+---
+---@param first number|table Table with start position or number to check linewise.
+---@param last number|table Table with finish position or number to check linewise.
+---@private
+function helpers.assert_visual_marks(first, last)
+  helpers.exit_visual_mode()
+
+  first = type(first) == 'number' and { first, 0 } or first
+  last = type(last) == 'number' and { last, 2147483647 } or last
+
+  assert.are.same(vim.api.nvim_buf_get_mark(0, '<'), first)
+  assert.are.same(vim.api.nvim_buf_get_mark(0, '>'), last)
+end
+
+-- Work with child Neovim process =============================================
 --- Generate child Neovim process
 ---
 --- This was initially assumed to be used for all testing, but at this stage
