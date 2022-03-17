@@ -145,11 +145,11 @@ function MiniIndentscope.setup(config)
     false
   )
 
-  if vim.fn.has('nvim-0.7.0') == 1 then
+  if vim.fn.exists('##ModeChanged') == 1 then
     vim.api.nvim_exec(
       -- Call `auto_draw` on mode change to respect `miniindentscope_disable`
       [[augroup MiniIndentscope
-          au ModeChanged * lua MiniIndentscope.auto_draw({ lazy = true })
+          au ModeChanged *:* lua MiniIndentscope.auto_draw({ lazy = true })
         augroup END]],
       false
     )

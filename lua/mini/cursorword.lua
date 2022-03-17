@@ -96,7 +96,7 @@ function MiniCursorword.setup(config)
     false
   )
 
-  if vim.fn.has('nvim-0.7.0') == 1 then
+  if vim.fn.exists('##ModeChanged') == 1 then
     vim.api.nvim_exec(
       -- Call `auto_highlight` on mode change to respect `minicursorword_disable`
       [[augroup MiniCursorword
