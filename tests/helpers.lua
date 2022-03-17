@@ -1,4 +1,4 @@
-helpers = {}
+local helpers = {}
 
 -- Work with 'mini.nvim' modules ==============================================
 function helpers.mini_load(name, config)
@@ -97,17 +97,29 @@ function helpers.new_child_neovim()
 
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
   -- because they don't provide full functionality)
-  function child.start(extra_args, connection_timeout)
-    connection_timeout = connection_timeout or 5000
+  function child.start(extra_args, opts)
     extra_args = extra_args or {}
+    opts = vim.tbl_deep_extend('force', { connection_timeout = 5000, nvim_executable = 'nvim' }, opts or {})
 
-    local args = { 'nvim', '--clean', '--listen', child.address }
+    local args = { '--clean', '--listen', child.address }
     vim.list_extend(args, extra_args)
 
-    child.job_channel = vim.fn.jobstart(args)
+    -- Using 'libuv' for creating a job is crucial for getting this to work in
+    -- Github Actions. Other approaches:
+    -- - Use built-in `vim.fn.jobstart(args)`. Works locally but doesn't work
+    --   in Github Action.
+    -- - Use `plenary.job`. Works fine both locally and in Github Action, but
+    --   needs a 'plenary.nvim' dependency (not exactly bad, but undesirable).
+    local job = {}
+    job.stdin, job.stdout, job.stderr = vim.loop.new_pipe(false), vim.loop.new_pipe(false), vim.loop.new_pipe(false)
+    job.handle, job.pid = vim.loop.spawn(opts.nvim_executable, {
+      stdio = { job.stdin, job.stdout, job.stderr },
+      args = args,
+    }, function() end)
+    child.job = job
 
     local step = 10
-    local connected, i, max_tries = nil, 0, math.floor(connection_timeout / step)
+    local connected, i, max_tries = nil, 0, math.floor(opts.connection_timeout / step)
     repeat
       i = i + 1
       vim.loop.sleep(step)
@@ -118,12 +130,23 @@ function helpers.new_child_neovim()
       vim.notify('Failed to make connection to child Neovim.')
       pcall(vim.fn.chanclose, child.job_channel)
     end
+
+    -- Enable method chaining
+    return child
   end
 
   function child.stop()
-    pcall(vim.rpcrequest, child.channel, 'nvim_command', 'qa!')
     pcall(vim.fn.chanclose, child.channel)
-    pcall(vim.fn.chanclose, child.job_channel)
+
+    child.job.stdin:close()
+    child.job.stdout:close()
+    child.job.stderr:close()
+
+    child.job.handle:kill()
+    child.job.handle:close()
+
+    -- Enable method chaining
+    return child
   end
 
   child.api = setmetatable({}, {
