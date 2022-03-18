@@ -1,27 +1,27 @@
 local helpers = require('tests.helpers')
 
--- Initiate child process
 local child = helpers.new_child_neovim()
-child.start({ '-u', 'scripts/minimal_init.vim' })
-
--- Make helpers
-local set_cursor, get_cursor, set_lines, type_keys =
-  child.set_cursor, child.get_cursor, child.set_lines, child.type_keys
-
 local eq = assert.are.same
 
+-- Helpers with child processes
 --stylua: ignore start
 local load_module = function(config) child.mini_load('indentscope', config) end
 local unload_module = function() child.mini_unload('indentscope') end
 local reload_module = function(config) unload_module(); load_module(config) end
+local set_cursor = function(...) return child.set_cursor(...) end
+local get_cursor = function(...) return child.get_cursor(...) end
+local set_lines = function(...) return child.set_lines(...) end
+local type_keys = function(...) return child.type_keys(...) end
+local sleep = function(ms) vim.loop.sleep(ms); child.loop.update_time() end
 --stylua: ignore end
 
+-- Make helpers
 local get_visual_marks = function()
   local ns_id = child.api.nvim_get_namespaces()['MiniIndentscope']
   local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
 
   -- Elements of extmarks: [id, row, col, details]
-  return vim.tbl_map(function(x)
+  local res = vim.tbl_map(function(x)
     local virt_text = x[4].virt_text
     local prefix = ''
     if #virt_text > 1 then
@@ -31,6 +31,12 @@ local get_visual_marks = function()
 
     return { line = x[2], prefix = prefix, symbol = symbol }
   end, extmarks)
+
+  -- Ensure increasing order of lines
+  table.sort(res, function(a, b)
+    return a.line < b.line
+  end)
+  return res
 end
 
 -- Data =======================================================================
@@ -64,16 +70,11 @@ local example_lines = {
 -- aa
 local example_lines_nested = { 'aa', ' aa', '  aa', '   aa', '   aa', '   aa', '  aa', ' aa', 'aa' }
 
--- Test buffer
-local test_buf_id = child.api.nvim_create_buf(true, false)
-child.api.nvim_set_current_buf(test_buf_id)
-
 -- Unit tests =================================================================
 describe('MiniIndentscope.setup()', function()
-  before_each(function()
-    load_module()
-    child.api.nvim_set_current_buf(test_buf_id)
-  end)
+  child.setup()
+
+  before_each(load_module)
   after_each(unload_module)
 
   it('creates side effects', function()
@@ -134,20 +135,20 @@ describe('MiniIndentscope.setup()', function()
   end)
 end)
 
-load_module()
-
 describe('MiniIndentscope.get_scope()', function()
+  child.setup()
+  load_module()
+
+  before_each(function()
+    set_lines(example_lines)
+  end)
+
   local get_scope = function(...)
     return child.lua_get('MiniIndentscope.get_scope(...)', { ... })
   end
   local get_cursor_scope = function(opts)
     return child.lua_get('MiniIndentscope.get_scope(nil, nil, ...)', { opts })
   end
-
-  before_each(function()
-    child.api.nvim_set_current_buf(test_buf_id)
-    set_lines(example_lines)
-  end)
 
   it('returns correct structure', function()
     set_cursor(3, 4)
@@ -240,14 +241,12 @@ describe('MiniIndentscope.get_scope()', function()
 
     eq(get_cursor_scope({ border = 'none' }).border, {})
   end)
-
-  -- Cleanup
-  set_lines({})
-  child.lua('vim.b.miniindentscope_options = nil')
-  reload_module()
 end)
 
 describe('MiniIndentscope.gen_animation()', function()
+  child.setup()
+  load_module()
+
   local assert_easing = function(easing, target, opts, tolerance)
     opts = opts or {}
     tolerance = tolerance or 0.1
@@ -310,15 +309,16 @@ describe('MiniIndentscope.gen_animation()', function()
 end)
 
 describe('MiniIndentscope.move_cursor()', function()
+  child.setup()
+  load_module()
+
+  before_each(function()
+    set_lines(example_lines_nested)
+  end)
+
   local move_cursor = function(...)
     child.lua('MiniIndentscope.move_cursor(...)', { ... })
   end
-
-  before_each(function()
-    reload_module()
-    child.api.nvim_set_current_buf(test_buf_id)
-    set_lines(example_lines_nested)
-  end)
 
   it('works', function()
     set_cursor(5, 4)
@@ -367,95 +367,240 @@ end)
 -- Functional tests ===========================================================
 describe('MiniIndentscope.draw()', function()
   before_each(function()
-    unload_module()
-    child.lua([[require('mini.indentscope').setup({ draw = { delay = 0, animation = function() return 0 end } })]])
-    -- Don't auto draw
-    child.cmd('augroup MiniIndentscope | au! | augroup END')
+    -- Set up child Neovim in every subtest to avoid asynchronous drawing issues
+    child.setup()
 
-    child.api.nvim_set_current_buf(test_buf_id)
+    -- Virtually disable autodrawing
+    load_module({ draw = { delay = 100000 } })
+
     set_lines(example_lines_nested)
   end)
 
   it('works', function()
-    -- TODO
-    -- set_cursor(5, 4)
-    -- child.lua('MiniIndentscope.draw()')
-    --
-    -- eq(
-    --   get_visual_marks(),
-    --   {
-    --     { line = 3, prefix = '  ', symbol = '╎' },
-    --     { line = 4, prefix = '  ', symbol = '╎' },
-    --     { line = 5, prefix = '  ', symbol = '╎' },
-    --   }
-    -- )
+    set_cursor(6, 1)
+    child.lua('MiniIndentscope.draw()')
+
+    -- Symbol at cursor line should be drawn immediately
+    eq(get_visual_marks(), { { line = 5, prefix = ' ', symbol = '╎' } })
+
+    -- Then should be drawn step by step with upward and downward rays
+    sleep(20)
+    eq(get_visual_marks(), {
+      { line = 4, prefix = ' ', symbol = '╎' },
+      { line = 5, prefix = ' ', symbol = '╎' },
+      { line = 6, prefix = ' ', symbol = '╎' },
+    })
+    sleep(20)
+    eq(get_visual_marks(), {
+      { line = 3, prefix = ' ', symbol = '╎' },
+      { line = 4, prefix = ' ', symbol = '╎' },
+      { line = 5, prefix = ' ', symbol = '╎' },
+      { line = 6, prefix = ' ', symbol = '╎' },
+    })
+    sleep(20)
+    eq(get_visual_marks(), {
+      { line = 2, prefix = ' ', symbol = '╎' },
+      { line = 3, prefix = ' ', symbol = '╎' },
+      { line = 4, prefix = ' ', symbol = '╎' },
+      { line = 5, prefix = ' ', symbol = '╎' },
+      { line = 6, prefix = ' ', symbol = '╎' },
+    })
   end)
 
-  it('respects `config.symbol`', function() end)
+  it('respects `config.draw.animation`', function()
+    unload_module()
+    child.lua([[require('mini.indentscope').setup({ draw = { animation = function() return 50 end } })]])
+
+    set_cursor(5, 4)
+
+    child.lua('MiniIndentscope.draw()')
+    eq(#get_visual_marks(), 1)
+    sleep(20)
+    eq(#get_visual_marks(), 1)
+    sleep(30)
+    eq(#get_visual_marks(), 3)
+  end)
+
+  it('respects `config.symbol`', function()
+    child.lua([[MiniIndentscope.config.symbol = 'a']])
+    set_cursor(5, 4)
+    child.lua('MiniIndentscope.draw()')
+
+    eq(get_visual_marks()[1]['symbol'], 'a')
+  end)
 end)
 
-describe('MiniIndentscope.undraw()', function() end)
-
-describe('MiniIndentscope drawing', function()
+describe('MiniIndentscope.undraw()', function()
   before_each(function()
-    reload_module()
-    child.api.nvim_set_current_buf(test_buf_id)
-    set_lines(example_lines_nested)
+    -- Set up child Neovim in every subtest to avoid asynchronous drawing issues
+    child.setup()
 
-    -- local ns_id = child.api.nvim_get_namespaces()['MiniIndentscope']
-    -- child.api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
+    -- Virtually disable autodrawing
+    load_module({ draw = { delay = 100000 } })
+
+    set_lines(example_lines_nested)
+  end)
+
+  it('works', function()
+    set_cursor(5, 4)
+    child.lua('MiniIndentscope.draw()')
+    assert.True(#get_visual_marks() > 0)
+
+    child.lua('MiniIndentscope.undraw()')
+    eq(#get_visual_marks(), 0)
+  end)
+end)
+
+describe('MiniIndentscope auto drawing', function()
+  before_each(function()
+    -- Set up child Neovim in every subtest to avoid asynchronous drawing issues
+    child.setup()
+
+    load_module()
+
+    set_lines(example_lines_nested)
   end)
 
   after_each(function()
     child.exit_visual_mode()
   end)
 
-  it('works in Normal mode', function() end)
+  it('works in Normal mode', function()
+    set_cursor(5, 4)
 
-  it('works in Insert mode', function() end)
+    -- Check default delay of 100
+    sleep(90)
+    eq(#get_visual_marks(), 0)
+    sleep(10)
+    -- Symbol at cursor line should be drawn immediately
+    eq(#get_visual_marks(), 1)
+    sleep(20)
+    eq(#get_visual_marks(), 3)
+  end)
 
-  it('respects `config.draw.delay`', function() end)
+  local validate_event = function(event_name)
+    set_cursor(5, 4)
+    sleep(100 + 20 * 1 + 1)
 
-  it('respects `config.draw.animation`', function() end)
+    child.lua('MiniIndentscope.undraw()')
+    eq(#get_visual_marks(), 0)
 
-  it('respects `vim.b.miniindentscope_disable`', function() end)
+    child.cmd('doautocmd ' .. event_name)
+    sleep(100 + 20 * 1 + 1)
+    eq(get_visual_marks(), {
+      { line = 3, prefix = '  ', symbol = '╎' },
+      { line = 4, prefix = '  ', symbol = '╎' },
+      { line = 5, prefix = '  ', symbol = '╎' },
+    })
+  end
 
-  it('updates immediately when typing', function() end)
+  it('respects CursorMoved', function()
+    validate_event('CursorMoved')
+  end)
+
+  it('respects CursorMovedI', function()
+    validate_event('CursorMovedI')
+  end)
+
+  it('respects TextChanged', function()
+    validate_event('TextChanged')
+  end)
+
+  it('respects TextChangedI', function()
+    validate_event('TextChangedI')
+  end)
+
+  it('respects TextChangedP', function()
+    validate_event('TextChangedP')
+  end)
 
   it('respects ModeChanged', function()
-    -- TODO
-    -- if child.fn.exists('##ModeChanged') ~= 1 then
-    --   return
-    -- end
-    --
-    -- -- Add disabling in Visual mode
-    -- unload_module()
-    -- child.cmd([[au ModeChanged *:[vV\x16]* lua vim.b.miniindentscope_disable = true]])
-    -- child.cmd([[au ModeChanged [vV\x16]*:* lua vim.b.miniindentscope_disable = false]])
-    -- child.lua([[require('mini.indentscope').setup({ draw = { delay = 0, animation = function() return 0 end } })]])
-    --
-    -- set_cursor(5, 4)
-    -- eq(#get_visual_marks(), 3)
-    --
-    -- type_keys('v')
-    -- eq(#get_visual_marks(), 0)
-    --
-    -- type_keys('<Esc>')
-    -- eq(#get_visual_marks(), 3)
+    if child.fn.exists('##ModeChanged') ~= 1 then
+      return
+    end
+
+    -- Add disabling in Insert mode
+    unload_module()
+    child.cmd([[
+      augroup InsertDisable
+        au!
+        au ModeChanged *:i lua vim.b.miniindentscope_disable = true
+        au ModeChanged i:* lua vim.b.miniindentscope_disable = false
+      augroup END
+    ]])
+    child.lua([[require('mini.indentscope').setup({ draw = { delay = 0, animation = function() return 0 end } })]])
+
+    set_cursor(5, 4)
+    sleep(10)
+    eq(#get_visual_marks(), 3)
+
+    type_keys('i')
+    sleep(10)
+    eq(#get_visual_marks(), 0)
+
+    type_keys('<Esc>')
+    sleep(10)
+    eq(#get_visual_marks(), 3)
+  end)
+
+  it('respects `config.draw.delay`', function()
+    reload_module({ draw = { delay = 20 } })
+    set_cursor(5, 4)
+
+    sleep(10)
+    eq(#get_visual_marks(), 0)
+    sleep(10)
+    assert.True(#get_visual_marks() > 0)
+  end)
+
+  it('respects `vim.b.miniindentscope_disable`', function()
+    child.lua('vim.b.miniindentscope_disable = true')
+    set_cursor(5, 4)
+    sleep(110)
+    eq(#get_visual_marks(), 0)
+
+    child.lua('vim.b.miniindentscope_disable = false')
+    set_cursor(5, 3)
+    sleep(100)
+    assert.True(#get_visual_marks() > 0)
+  end)
+
+  it('works in Insert mode', function()
+    set_cursor(5, 4)
+    type_keys('i')
+
+    -- Check default delay of 100
+    sleep(90)
+    eq(#get_visual_marks(), 0)
+    sleep(10)
+    eq(#get_visual_marks(), 1)
+    sleep(20)
+    eq(#get_visual_marks(), 3)
+  end)
+
+  it('updates immediately when scopes intersect', function()
+    set_cursor(5, 4)
+    sleep(130)
+    eq(#get_visual_marks(), 3)
+
+    type_keys('o')
+    sleep(1)
+    eq(#get_visual_marks(), 4)
   end)
 end)
 
 describe('MiniIndentscope motion', function()
+  child.setup()
+  load_module()
+
   before_each(function()
-    reload_module()
-    child.api.nvim_set_current_buf(test_buf_id)
     set_lines(example_lines_nested)
   end)
 
   it('works in Normal mode', function()
     local validate = function(keys, final_cursor_pos)
       set_cursor(5, 4)
-      type_keys(keys)
+      type_keys(vim.split(keys, ''))
 
       eq(get_cursor(), final_cursor_pos)
     end
@@ -474,7 +619,7 @@ describe('MiniIndentscope motion', function()
   it('works in Visual mode', function()
     local validate = function(keys, final_cursor_pos)
       set_cursor(5, 4)
-      type_keys(keys)
+      type_keys(vim.split(keys, ''))
 
       eq(get_cursor(), final_cursor_pos)
       eq(child.fn.mode(1), 'v')
@@ -524,19 +669,19 @@ describe('MiniIndentscope motion', function()
 
     -- `goto_top`
     set_cursor(5, 4)
-    type_keys('[I')
+    type_keys({ '[', 'I' })
     eq(get_cursor(), { 3, 2 })
 
     -- `goto_bottom`
     set_cursor(5, 4)
-    type_keys(']I')
+    type_keys({ ']', 'I' })
     eq(get_cursor(), { 7, 2 })
   end)
 
   it('allows not immediate dot-repeat', function()
     -- `goto_top`
     set_cursor(5, 4)
-    type_keys('dv[i')
+    type_keys({ 'd', 'v', '[', 'i' })
     set_cursor(2, 2)
     type_keys('.')
 
@@ -547,7 +692,7 @@ describe('MiniIndentscope motion', function()
 
     -- `goto_bottom`
     set_cursor(5, 4)
-    type_keys('dv]i')
+    type_keys({ 'd', 'v', ']', 'i' })
     set_cursor(6, 2)
     type_keys('.')
 
@@ -561,56 +706,57 @@ describe('MiniIndentscope motion', function()
     -- Should move to respective body edge if border is not present
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     set_cursor(5, 4)
-    type_keys('[i')
+    type_keys({ '[', 'i' })
     eq(get_cursor(), { 4, 3 })
 
     child.lua([[MiniIndentscope.config.options.border = 'top']])
     set_cursor(5, 4)
-    type_keys(']i')
+    type_keys({ ']', 'i' })
     eq(get_cursor(), { 6, 3 })
 
     child.lua([[MiniIndentscope.config.options.border = 'none']])
     set_cursor(5, 4)
-    type_keys('[i')
+    type_keys({ '[', 'i' })
     eq(get_cursor(), { 4, 3 })
     set_cursor(5, 4)
-    type_keys(']i')
+    type_keys({ ']', 'i' })
     eq(get_cursor(), { 6, 3 })
   end)
 
   it('handles `v:count` when `try_as_border=true`', function()
     reload_module({ options = { try_as_border = true } })
     set_cursor(5, 4)
-    type_keys('100[i')
+    type_keys(vim.split('100[i', ''))
     eq(get_cursor(), { 1, 0 })
   end)
 
   it('updates jumplist only in Normal mode', function()
     -- Normal mode
     set_cursor(5, 4)
-    type_keys(']i')
+    type_keys({ ']', 'i' })
     type_keys('<C-o>')
     eq(get_cursor(), { 5, 4 })
 
     -- Visual mode
     set_cursor(2, 1)
-    type_keys('v]i<Esc>')
+    type_keys(vim.split('v]i<Esc>', ''))
     type_keys('<C-o>')
     assert.are.not_same(get_cursor(), { 2, 1 })
   end)
 end)
 
 describe('MiniIndentscope textobject', function()
+  child.setup()
+  load_module()
+
   before_each(function()
-    reload_module()
-    child.api.nvim_set_current_buf(test_buf_id)
     set_lines(example_lines_nested)
   end)
 
   it('works in Visual mode', function()
     local validate = function(keys, start_line, end_line)
       set_cursor(5, 4)
-      type_keys(keys)
+      type_keys(vim.split(keys, ''))
       child.exit_visual_mode()
       child.assert_visual_marks(start_line, end_line)
     end
@@ -654,19 +800,19 @@ describe('MiniIndentscope textobject', function()
 
     -- `object_scope`
     set_cursor(5, 4)
-    type_keys('vII<Esc>')
+    type_keys({ 'v', 'I', 'I', '<Esc>' })
     child.assert_visual_marks(4, 6)
 
     -- `object_scope_with_border`
     set_cursor(5, 4)
-    type_keys('vAI<Esc>')
+    type_keys({ 'v', 'A', 'I', '<Esc>' })
     child.assert_visual_marks(3, 7)
   end)
 
   it('allows not immediate dot-repeat', function()
     -- `object_scope`
     set_cursor(5, 4)
-    type_keys('dii')
+    type_keys({ 'd', 'i', 'i' })
     set_cursor(2, 2)
     type_keys('.')
 
@@ -676,7 +822,7 @@ describe('MiniIndentscope textobject', function()
 
     -- `object_scope_with_border`
     set_cursor(5, 4)
-    type_keys('dai')
+    type_keys({ 'd', 'a', 'i' })
     set_cursor(2, 2)
     type_keys('.')
 
@@ -689,24 +835,24 @@ describe('MiniIndentscope textobject', function()
     -- Should select up to respective body edge if border is not present
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     set_cursor(5, 4)
-    type_keys('vai<Esc>')
+    type_keys({ 'v', 'a', 'i', '<Esc>' })
     child.assert_visual_marks(4, 7)
 
     child.lua([[MiniIndentscope.config.options.border = 'top']])
     set_cursor(5, 4)
-    type_keys('vai<Esc>')
+    type_keys({ 'v', 'a', 'i', '<Esc>' })
     child.assert_visual_marks(3, 6)
 
     child.lua([[MiniIndentscope.config.options.border = 'none']])
     set_cursor(5, 4)
-    type_keys('vai<Esc>')
+    type_keys({ 'v', 'a', 'i', '<Esc>' })
     child.assert_visual_marks(4, 6)
   end)
 
   it('handles `v:count` when `try_as_border=true`', function()
     reload_module({ options = { try_as_border = true } })
     set_cursor(5, 4)
-    type_keys('v100ai<Esc>')
+    type_keys({ 'v', '1', '0', '0', 'a', 'i', '<Esc>' })
     child.assert_visual_marks(1, 9)
   end)
 end)

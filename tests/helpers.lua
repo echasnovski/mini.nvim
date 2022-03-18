@@ -97,12 +97,11 @@ function helpers.new_child_neovim()
 
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
   -- because they don't provide full functionality)
-  function child.start(extra_args, opts)
-    extra_args = extra_args or {}
-    opts = vim.tbl_deep_extend('force', { connection_timeout = 5000, nvim_executable = 'nvim' }, opts or {})
+  function child.start(opts)
+    opts = vim.tbl_deep_extend('force', { args = {}, connection_timeout = 5000, nvim_executable = 'nvim' }, opts or {})
 
     local args = { '--clean', '--listen', child.address }
-    vim.list_extend(args, extra_args)
+    vim.list_extend(args, opts.args)
 
     -- Using 'libuv' for creating a job is crucial for getting this to work in
     -- Github Actions. Other approaches:
@@ -116,7 +115,9 @@ function helpers.new_child_neovim()
       stdio = { job.stdin, job.stdout, job.stderr },
       args = args,
     }, function() end)
+
     child.job = job
+    child.start_opts = opts
 
     local step = 10
     local connected, i, max_tries = nil, 0, math.floor(opts.connection_timeout / step)
@@ -128,7 +129,7 @@ function helpers.new_child_neovim()
 
     if not connected then
       vim.notify('Failed to make connection to child Neovim.')
-      pcall(vim.fn.chanclose, child.job_channel)
+      child.stop()
     end
 
     -- Enable method chaining
@@ -147,6 +148,37 @@ function helpers.new_child_neovim()
 
     -- Enable method chaining
     return child
+  end
+
+  function child.restart()
+    child.stop()
+    child.address = vim.fn.tempname()
+    child.start(child.start_opts)
+  end
+
+  function child.setup(opts)
+    opts = vim.tbl_deep_extend(
+      'force',
+      { args = { '-u', 'scripts/minimal_init.vim' }, before = function() end, after = function() end },
+      opts or {}
+    )
+
+    -- Execute `before` hook
+    opts.before()
+
+    -- Ensure fresh job
+    if child.job == nil then
+      child.start({ args = opts.args })
+    else
+      child.restart()
+    end
+
+    -- Ensure empty buffer
+    local test_buf_id = child.api.nvim_create_buf(true, false)
+    child.api.nvim_set_current_buf(test_buf_id)
+
+    -- Execute `after` hook
+    opts.after()
   end
 
   child.api = setmetatable({}, {
@@ -175,9 +207,9 @@ function helpers.new_child_neovim()
 
   function child.type_keys(keys, wait)
     wait = wait or 0
-    local keys_list = vim.split(vim.api.nvim_replace_termcodes(keys, true, true, true), '')
+    keys = type(keys) == 'string' and { keys } or keys
 
-    for _, k in ipairs(keys_list) do
+    for _, k in ipairs(keys) do
       child.api.nvim_input(k)
       if wait > 0 then
         child.sleep(wait)
@@ -296,7 +328,13 @@ function helpers.new_child_neovim()
 
     -- Remove autocmd group
     if child.fn.exists('#' .. tbl_name) == 1 then
-      child.cmd(('augroup %s | au! | augroup END'):format(tbl_name))
+      -- NOTE: having this in one line as `'augroup %s | au! | augroup END'`
+      -- for some reason seemed to sometimes not execute `augroup END` part.
+      -- That lead to a subsequent bare `au ...` calls to be inside `tbl_name`
+      -- group, which gets empty after every `require(<module_name>)` call.
+      child.cmd(('augroup %s'):format(tbl_name))
+      child.cmd('au!')
+      child.cmd('augroup END')
     end
   end
 
