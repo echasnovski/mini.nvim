@@ -362,11 +362,15 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     n_lines = { config.n_lines, 'number' },
     highlight_duration = { config.highlight_duration, 'number' },
     funname_pattern = { config.funname_pattern, 'string' },
     mappings = { config.mappings, 'table' },
+  })
+
+  vim.validate({
     ['mappings.add'] = { config.mappings.add, 'string' },
     ['mappings.delete'] = { config.mappings.delete, 'string' },
     ['mappings.find'] = { config.mappings.find, 'string' },

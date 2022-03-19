@@ -566,13 +566,27 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     delay = { config.delay, 'table' },
+    window_dimensions = { config.window_dimensions, 'table' },
+    lsp_completion = { config.lsp_completion, 'table' },
+    fallback_action = {
+      config.fallback_action,
+      function(x)
+        return type(x) == 'function' or type(x) == 'string'
+      end,
+      'function or string',
+    },
+    mappings = { config.mappings, 'table' },
+    set_vim_settings = { config.set_vim_settings, 'boolean' },
+  })
+
+  vim.validate({
     ['delay.completion'] = { config.delay.completion, 'number' },
     ['delay.info'] = { config.delay.info, 'number' },
     ['delay.signature'] = { config.delay.signature, 'number' },
 
-    window_dimensions = { config.window_dimensions, 'table' },
     ['window_dimensions.info'] = { config.window_dimensions.info, 'table' },
     ['window_dimensions.info.height'] = { config.window_dimensions.info.height, 'number' },
     ['window_dimensions.info.width'] = { config.window_dimensions.info.width, 'number' },
@@ -580,7 +594,6 @@ function H.setup_config(config)
     ['window_dimensions.signature.height'] = { config.window_dimensions.signature.height, 'number' },
     ['window_dimensions.signature.width'] = { config.window_dimensions.signature.width, 'number' },
 
-    lsp_completion = { config.lsp_completion, 'table' },
     ['lsp_completion.source_func'] = {
       config.lsp_completion.source_func,
       function(x)
@@ -591,19 +604,8 @@ function H.setup_config(config)
     ['lsp_completion.auto_setup'] = { config.lsp_completion.auto_setup, 'boolean' },
     ['lsp_completion.process_items'] = { config.lsp_completion.process_items, 'function' },
 
-    fallback_action = {
-      config.fallback_action,
-      function(x)
-        return type(x) == 'function' or type(x) == 'string'
-      end,
-      'function or string',
-    },
-
-    mappings = { config.mappings, 'table' },
     ['mappings.force_twostep'] = { config.mappings.force_twostep, 'string' },
     ['mappings.force_fallback'] = { config.mappings.force_fallback, 'string' },
-
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
   })
 
   return config

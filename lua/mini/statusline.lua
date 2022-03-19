@@ -499,12 +499,15 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     content = { config.content, 'table' },
+    set_vim_settings = { config.set_vim_settings, 'boolean' },
+  })
+
+  vim.validate({
     ['content.active'] = { config.content.active, 'function', true },
     ['content.inactive'] = { config.content.inactive, 'function', true },
-
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
   })
 
   return config

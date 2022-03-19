@@ -251,14 +251,17 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     mappings = { config.mappings, 'table' },
+    highlight_delay = { config.highlight_delay, 'number' },
+  })
+
+  vim.validate({
     ['mappings.forward'] = { config.mappings.forward, 'string' },
     ['mappings.backward'] = { config.mappings.backward, 'string' },
     ['mappings.forward_till'] = { config.mappings.forward_till, 'string' },
     ['mappings.backward_till'] = { config.mappings.backward_till, 'string' },
-
-    highlight_delay = { config.highlight_delay, 'number' },
   })
 
   return config

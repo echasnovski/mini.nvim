@@ -744,14 +744,24 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
-    ['annotation_extractor'] = { config.annotation_extractor, 'function' },
-    ['default_section_id'] = { config.default_section_id, 'string' },
-
+    annotation_extractor = { config.annotation_extractor, 'function' },
+    default_section_id = { config.default_section_id, 'string' },
     hooks = { config.hooks, 'table' },
-    ['hooks.block_pre'] = { config.hooks.block_pre, 'function' },
+    script_path = { config.script_path, 'string' },
+  })
 
+  vim.validate({
+    ['hooks.block_pre'] = { config.hooks.block_pre, 'function' },
     ['hooks.sections'] = { config.hooks.sections, 'table' },
+    ['hooks.block_post'] = { config.hooks.block_post, 'function' },
+    ['hooks.file'] = { config.hooks.file, 'function' },
+    ['hooks.doc'] = { config.hooks.doc, 'function' },
+    ['hooks.write_post'] = { config.hooks.write_post, 'function' },
+  })
+
+  vim.validate({
     ['hooks.sections.@alias'] = { config.hooks.sections['@alias'], 'function' },
     ['hooks.sections.@class'] = { config.hooks.sections['@class'], 'function' },
     ['hooks.sections.@diagnostic'] = { config.hooks.sections['@diagnostic'], 'function' },
@@ -769,13 +779,6 @@ function H.setup_config(config)
     ['hooks.sections.@toc_entry'] = { config.hooks.sections['@toc_entry'], 'function' },
     ['hooks.sections.@type'] = { config.hooks.sections['@type'], 'function' },
     ['hooks.sections.@usage'] = { config.hooks.sections['@usage'], 'function' },
-
-    ['hooks.block_post'] = { config.hooks.block_post, 'function' },
-    ['hooks.file'] = { config.hooks.file, 'function' },
-    ['hooks.doc'] = { config.hooks.doc, 'function' },
-    ['hooks.write_post'] = { config.hooks.write_post, 'function' },
-
-    ['script_path'] = { config.script_path, 'string' },
   })
 
   return config

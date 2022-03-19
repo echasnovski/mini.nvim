@@ -719,22 +719,26 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     draw = { config.draw, 'table' },
+    mappings = { config.mappings, 'table' },
+    options = { config.options, 'table' },
+    symbol = { config.symbol, 'string' },
+  })
+
+  vim.validate({
     ['draw.delay'] = { config.draw.delay, 'number' },
     ['draw.animation'] = { config.draw.animation, 'function' },
 
-    mappings = { config.options, 'table' },
     ['mappings.object_scope'] = { config.mappings.object_scope, 'string' },
     ['mappings.object_scope_with_border'] = { config.mappings.object_scope_with_border, 'string' },
     ['mappings.goto_top'] = { config.mappings.goto_top, 'string' },
     ['mappings.goto_bottom'] = { config.mappings.goto_bottom, 'string' },
 
-    options = { config.options, 'table' },
     ['options.border'] = { config.options.border, 'string' },
+    ['options.indent_at_cursor'] = { config.options.indent_at_cursor, 'boolean' },
     ['options.try_as_border'] = { config.options.try_as_border, 'boolean' },
-
-    symbol = { config.symbol, 'string' },
   })
   return config
 end

@@ -356,18 +356,21 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     autoread = { config.autoread, 'boolean' },
     autowrite = { config.autowrite, 'boolean' },
     directory = { config.directory, 'string' },
     file = { config.file, 'string' },
-
     force = { config.force, 'table' },
+    verbose = { config.verbose, 'table' },
+  })
+
+  vim.validate({
     ['force.read'] = { config.force.read, 'boolean' },
     ['force.write'] = { config.force.write, 'boolean' },
     ['force.delete'] = { config.force.delete, 'boolean' },
 
-    verbose = { config.verbose, 'table' },
     ['verbose.read'] = { config.verbose.read, 'boolean' },
     ['verbose.write'] = { config.verbose.write, 'boolean' },
     ['verbose.delete'] = { config.verbose.delete, 'boolean' },

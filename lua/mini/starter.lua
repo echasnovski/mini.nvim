@@ -969,13 +969,10 @@ function H.setup_config(config)
   vim.validate({
     autoopen = { config.autoopen, 'boolean' },
     evaluate_single = { config.evaluate_single, 'boolean' },
-
     items = { config.items, 'table', true },
     header = { config.header, H.is_fun_or_string, 'function or string' },
     footer = { config.footer, H.is_fun_or_string, 'function or string' },
-
     content_hooks = { config.content_hooks, 'table', true },
-
     query_updaters = { config.query_updaters, 'string' },
   })
 

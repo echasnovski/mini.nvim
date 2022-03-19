@@ -213,8 +213,12 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     mappings = { config.mappings, 'table' },
+  })
+
+  vim.validate({
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
     ['mappings.textobject'] = { config.mappings.textobject, 'string' },

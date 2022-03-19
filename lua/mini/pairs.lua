@@ -358,13 +358,16 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- Validate per nesting level to produce correct error message
   vim.validate({
     modes = { config.modes, 'table' },
+    mappings = { config.mappings, 'table' },
+  })
+
+  vim.validate({
     ['modes.insert'] = { config.modes.insert, 'boolean' },
     ['modes.command'] = { config.modes.command, 'boolean' },
     ['modes.terminal'] = { config.modes.terminal, 'boolean' },
-
-    mappings = { config.mappings, 'table' },
   })
 
   return config
