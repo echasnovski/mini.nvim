@@ -72,10 +72,10 @@ local example_lines_nested = { 'aa', ' aa', '  aa', '   aa', '   aa', '   aa', '
 
 -- Unit tests =================================================================
 describe('MiniIndentscope.setup()', function()
-  child.setup()
-
-  before_each(load_module)
-  after_each(unload_module)
+  before_each(function()
+    child.setup()
+    load_module()
+  end)
 
   it('creates side effects', function()
     -- Global variable
@@ -90,8 +90,8 @@ describe('MiniIndentscope.setup()', function()
     end
 
     -- Highlight groups
-    eq(child.fn.hlexists('MiniIndentscopeSymbol'), 1)
-    eq(child.fn.hlexists('MiniIndentscopePrefix'), 1)
+    assert.truthy(child.cmd_capture('hi MiniIndentscopeSymbol'):find('links to Delimiter'))
+    assert.truthy(child.cmd_capture('hi MiniIndentscopePrefix'):find('gui=nocombine'))
   end)
 
   it('creates `config` field', function()
@@ -118,6 +118,31 @@ describe('MiniIndentscope.setup()', function()
     unload_module()
     load_module({ symbol = 'a' })
     assert.True(child.lua_get([[MiniIndentscope.config.symbol == 'a']]))
+  end)
+
+  it('validates `config` argument', function()
+    unload_module()
+
+    local assert_config_error = function(config, name, target_type)
+      assert.error_matches(function()
+        load_module(config)
+      end, vim.pesc(name) .. '.*' .. vim.pesc(target_type))
+    end
+
+    assert_config_error('a', 'config', 'table')
+    assert_config_error({ draw = 'a' }, 'draw', 'table')
+    assert_config_error({ draw = { delay = 'a' } }, 'draw.delay', 'number')
+    assert_config_error({ draw = { animation = 'a' } }, 'draw.animation', 'function')
+    assert_config_error({ mappings = 'a' }, 'mappings', 'table')
+    assert_config_error({ mappings = { object_scope = 1 } }, 'mappings.object_scope', 'string')
+    assert_config_error({ mappings = { object_scope_with_border = 1 } }, 'mappings.object_scope_with_border', 'string')
+    assert_config_error({ mappings = { goto_top = 1 } }, 'mappings.goto_top', 'string')
+    assert_config_error({ mappings = { goto_bottom = 1 } }, 'mappings.goto_bottom', 'string')
+    assert_config_error({ options = 'a' }, 'options', 'table')
+    assert_config_error({ options = { border = 1 } }, 'options.border', 'string')
+    assert_config_error({ options = { indent_at_cursor = 1 } }, 'options.indent_at_cursor', 'boolean')
+    assert_config_error({ options = { try_as_border = 1 } }, 'options.try_as_border', 'boolean')
+    assert_config_error({ symbol = 1 }, 'symbol', 'string')
   end)
 
   it('properly handles `config.mappings`', function()
@@ -676,6 +701,8 @@ describe('MiniIndentscope motion', function()
     set_cursor(5, 4)
     type_keys({ ']', 'I' })
     eq(get_cursor(), { 7, 2 })
+
+    reload_module()
   end)
 
   it('allows not immediate dot-repeat', function()
@@ -728,6 +755,8 @@ describe('MiniIndentscope motion', function()
     set_cursor(5, 4)
     type_keys(vim.split('100[i', ''))
     eq(get_cursor(), { 1, 0 })
+
+    reload_module()
   end)
 
   it('updates jumplist only in Normal mode', function()
@@ -807,6 +836,8 @@ describe('MiniIndentscope textobject', function()
     set_cursor(5, 4)
     type_keys({ 'v', 'A', 'I', '<Esc>' })
     child.assert_visual_marks(3, 7)
+
+    reload_module()
   end)
 
   it('allows not immediate dot-repeat', function()
@@ -854,6 +885,8 @@ describe('MiniIndentscope textobject', function()
     set_cursor(5, 4)
     type_keys({ 'v', '1', '0', '0', 'a', 'i', '<Esc>' })
     child.assert_visual_marks(1, 9)
+
+    reload_module()
   end)
 end)
 
