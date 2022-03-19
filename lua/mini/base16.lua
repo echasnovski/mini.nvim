@@ -301,7 +301,7 @@ function H.validate_base16_palette(x, x_name)
       local msg = string.format('(mini.base16) `%s` does not have value %s.', x_name, color_name)
       error(msg)
     end
-    H.validate_hex(c, string.format('config.palette[%s]', color_name))
+    H.validate_hex(c, string.format('%s.%s', x_name, color_name))
   end
 
   return true
