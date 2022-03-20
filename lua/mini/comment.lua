@@ -138,11 +138,19 @@ end
 --- 1. Currently call to this function will remove marks inside written range.
 ---    Use |lockmarks| to preserve marks.
 ---
----@param line_start number Start line number.
----@param line_end number End line number.
+---@param line_start number Start line number (inclusive from 1 to number of lines).
+---@param line_end number End line number (inclusive from 1 to number of lines).
 function MiniComment.toggle_lines(line_start, line_end)
   if H.is_disabled() then
     return
+  end
+
+  local n_lines = vim.api.nvim_buf_line_count(0)
+  if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
+    error(('(mini.comment) `line_start` and `line_end` should be within range [1; %s].'):format(n_lines))
+  end
+  if not (line_start <= line_end) then
+    error('(mini.comment) `line_start` should be less than or equal to `line_end`.')
   end
 
   local comment_parts = H.make_comment_parts()
@@ -352,7 +360,7 @@ function H.make_uncomment_function(comment_parts)
 
   -- Usage of `lpad` and `rpad` as possbile single space enables uncommenting
   -- of commented empty lines without trailing whitespace (like '  #').
-  local uncomment_regex = string.format([[^(%%s-)%s%s(.-)%s%s%%s-$]], vim.pesc(l), lpad, rpad, vim.pesc(r))
+  local uncomment_regex = string.format([[^(%%s*)%s%s(.-)%s%s%%s-$]], vim.pesc(l), lpad, rpad, vim.pesc(r))
 
   return function(line)
     local indent, new_line = string.match(line, uncomment_regex)

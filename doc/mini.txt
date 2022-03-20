@@ -589,8 +589,8 @@ and respects |count|.
    Use |lockmarks| to preserve marks.
 
 Parameters~
-{line_start} `(number)` Start line number.
-{line_end} `(number)` End line number.
+{line_start} `(number)` Start line number (inclusive from 1 to number of lines).
+{line_end} `(number)` End line number (inclusive from 1 to number of lines).
 
 ------------------------------------------------------------------------------
                                                       *MiniComment.textobject()*
