@@ -3035,8 +3035,12 @@ Return~
 
 ------------------------------------------------------------------------------
                                               *MiniStarter.sections.telescope()*
-                       `MiniStarter.sections.telescope`()
+                       `MiniStarter.sections.telescope`({actions})
 Section with basic Telescope pickers relevant to start screen
+
+Parameters~
+{actions} `table` strings of telescope commands to be executed.
+  Defaults: {'file_browser', 'command_history', 'find_files', 'help_tags', 'live_grep', 'oldfiles'}
 
 Return~
 `(function)` Function which returns array of items.

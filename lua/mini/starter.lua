@@ -547,9 +547,16 @@ end
 --- Section with basic Telescope pickers relevant to start screen
 ---
 ---@return __section_fun
-function MiniStarter.sections.telescope()
-  return function()
-    return {
+function MiniStarter.sections.telescope(actions)
+
+  local action_tables = {}
+  if actions ~= nil then
+      for key, val in pairs(actions) do
+        table.insert(action_tables,
+            {action = 'Telescope ' .. val, name = val, section = 'Telescope'})
+      end
+  else
+    action_tables = {
       {action = 'Telescope file_browser',    name = 'Browser',         section = 'Telescope'},
       {action = 'Telescope command_history', name = 'Command history', section = 'Telescope'},
       {action = 'Telescope find_files',      name = 'Files',           section = 'Telescope'},
@@ -557,6 +564,9 @@ function MiniStarter.sections.telescope()
       {action = 'Telescope live_grep',       name = 'Live grep',       section = 'Telescope'},
       {action = 'Telescope oldfiles',        name = 'Old files',       section = 'Telescope'},
     }
+  end
+  return function()
+    return action_tables
   end
 end
 -- stylua: ignore end
