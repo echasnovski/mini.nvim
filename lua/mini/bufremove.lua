@@ -124,6 +124,7 @@ function MiniBufremove.unshow(buf_id)
 end
 
 --- Stop showing current buffer of window `win_id`
+---
 ---@param win_id number Window identifier (see |win_getid()|) to use.
 ---   Default: 0 for current.
 ---
@@ -196,9 +197,16 @@ end
 -- Removing implementation ----------------------------------------------------
 function H.unshow_and_cmd(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
-  force = (force == nil) and false or force
-
   if not H.is_valid_id(buf_id, 'buffer') then
+    H.notify(buf_id .. ' is not a valid buffer id.')
+    return false
+  end
+
+  if force == nil then
+    force = false
+  end
+  if type(force) ~= 'boolean' then
+    H.notify('`force` should be boolean.')
     return false
   end
 
@@ -220,7 +228,7 @@ function H.unshow_and_cmd(buf_id, force, cmd)
   --   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
   local ok, result = pcall(vim.cmd, command)
   if not (ok or result:find('E516') or result:find('E517')) then
-    vim.notify('(mini.bufremove) ' .. result)
+    H.notify(result)
     return false
   end
 
