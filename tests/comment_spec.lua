@@ -410,3 +410,5 @@ describe('Comment textobject', function()
     eq(get_lines(), { 'aa', 'aa' })
   end)
 end)
+
+child.stop()

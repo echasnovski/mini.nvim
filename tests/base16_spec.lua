@@ -245,3 +245,5 @@ describe('minischeme colorscheme', function()
     validate_hl_group('Normal', 'ctermfg=18 ctermbg=254 guifg=#002a83 guibg=#e2e5ca')
   end)
 end)
+
+child.stop()

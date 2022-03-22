@@ -375,3 +375,5 @@ describe('MiniBufremove.wipeout()', function()
     validate_bufhidden_option('wipeout', 'wipe')
   end)
 end)
+
+child.stop()
