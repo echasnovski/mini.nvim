@@ -604,11 +604,11 @@ function H.user_surround_id(sur_type)
     local msg = string.format('Enter %s surrounding identifier (single character) ', sur_type)
     H.notify(msg)
   end, 1000)
-  local char = vim.fn.getchar()
+  local ok, char = pcall(vim.fn.getchar)
   H.needs_help_msg = {}
 
-  -- Terminate if input is `<Esc>`
-  if char == 27 then
+  -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
+  if not ok or char == 27 then
     return nil
   end
 
