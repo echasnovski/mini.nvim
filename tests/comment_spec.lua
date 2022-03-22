@@ -369,8 +369,27 @@ describe('Comment textobject', function()
   end)
 
   it('does nothing when not inside textobject', function()
+    -- Builtin operators
     type_keys({ 'd', 'g', 'c' })
     eq(get_lines(), example_lines)
+
+    -- Comment operator
+    -- Main problem here at time of writing happened while calling `gc` on
+    -- comment textobject when not on comment line. This sets `]` mark right to
+    -- the left of `[` (but not when cursor in (1, 0)).
+    local validate_no_action = function(line, col)
+      set_lines(example_lines)
+      set_cursor(line, col)
+      type_keys({ 'g', 'c', 'g', 'c' })
+      eq(get_lines(), example_lines)
+    end
+
+    validate_no_action(1, 1)
+    validate_no_action(2, 2)
+
+    -- Doesn't work (but should) because both `[` and `]` are set to (1, 0)
+    -- (instead of more reasonable (1, -1) or (0, 2147483647)).
+    -- validate_no_action(1, 0)
   end)
 
   it('works with different mapping', function()

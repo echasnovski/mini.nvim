@@ -109,20 +109,24 @@ function MiniComment.operator(mode)
 
   -- If called with non-nil `mode`, get target region and perform comment
   -- toggling over it.
-  local mark1, mark2
+  local mark_left, mark_right = '[', ']'
   if mode == 'visual' then
-    mark1, mark2 = '<', '>'
-  else
-    mark1, mark2 = '[', ']'
+    mark_left, mark_right = '<', '>'
   end
 
-  local l1 = vim.api.nvim_buf_get_mark(0, mark1)[1]
-  local l2 = vim.api.nvim_buf_get_mark(0, mark2)[1]
+  local line_left, col_left = unpack(vim.api.nvim_buf_get_mark(0, mark_left))
+  local line_right, col_right = unpack(vim.api.nvim_buf_get_mark(0, mark_right))
+
+  -- Do nothing if "left" mark is not on the left (earlier in text) of "right"
+  -- mark (indicating that there is nothing to do, like in comment textobject).
+  if (line_left > line_right) or (line_left == line_right and col_left > col_right) then
+    return
+  end
 
   -- Using `vim.cmd()` wrapper to allow usage of `lockmarks` command, because
   -- raw execution will delete marks inside region (due to
   -- `vim.api.nvim_buf_set_lines()`).
-  vim.cmd(string.format('lockmarks lua MiniComment.toggle_lines(%d, %d)', l1, l2))
+  vim.cmd(string.format('lockmarks lua MiniComment.toggle_lines(%d, %d)', line_left, line_right))
   return ''
 end
 
