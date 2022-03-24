@@ -7,7 +7,7 @@
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
 --- - Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
----   as a result of not jumping.
+---   as a result of not jumping or timeout after idle time (duration customizable).
 --- - Highlight (after customizable delay) of all possible target characters.
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
@@ -92,6 +92,10 @@ MiniJump.config = {
   -- Delay (in ms) between jump and highlighting all possible jumps. Set to
   -- a very big number (like 10^7) to virtually disable highlighting.
   highlight_delay = 250,
+
+  -- Timeout value (in ms) to stop jumping automatically after idle. Set to
+  -- a very big number (like 10^7) to virtually disable timeout.
+  idle_timeout = 1000000,
 }
 --minidoc_afterlines_end
 
@@ -129,12 +133,22 @@ function MiniJump.jump(target, backward, till, n_times)
   pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(escaped_target)
 
   -- Delay highlighting after stopping previous one
-  H.timer:stop()
-  H.timer:start(
+  H.highlight_timer:stop()
+  H.highlight_timer:start(
     MiniJump.config.highlight_delay,
     0,
     vim.schedule_wrap(function()
       H.highlight(hl_pattern)
+    end)
+  )
+
+  -- Start idle timer after stopping previous one
+  H.idle_timer:stop()
+  H.idle_timer:start(
+    MiniJump.config.idle_timeout,
+    0,
+    vim.schedule_wrap(function()
+      MiniJump.stop_jumping()
     end)
   )
 
@@ -203,7 +217,8 @@ end
 --- Removes highlights (if any) and forces the next smart jump to prompt for
 --- the target. Automatically called on appropriate Neovim |events|.
 function MiniJump.stop_jumping()
-  H.timer:stop()
+  H.highlight_timer:stop()
+  H.idle_timer:stop()
   H.jumping = false
   H.unhighlight()
 end
@@ -234,7 +249,10 @@ H.jumping = false
 H.n_cursor_moved = 0
 
 -- Highlight delay timer
-H.timer = vim.loop.new_timer()
+H.highlight_timer = vim.loop.new_timer()
+
+-- Idle Timeout timer
+H.idle_timer = vim.loop.new_timer()
 
 -- Information about last match highlighting (stored *per window*):
 -- - Key: windows' unique buffer identifiers.
