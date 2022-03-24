@@ -98,7 +98,7 @@ MiniJump.config = {
 -- Module functionality =======================================================
 --- Jump to target
 ---
---- Takes a string and jumps to its first occurrence in desrired direction.
+--- Takes a string and jumps to its first occurrence in desired direction.
 ---
 ---@param target string The string to jump to.
 ---@param backward __backward
