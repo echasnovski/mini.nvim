@@ -1,5 +1,10 @@
 # Version 0.3.0.9000 (development)
 
+## mini.jump
+
+- Implement idle timeout to stop jumping automatically (@annenpolka, #56).
+- BREAKING: Soft deprecate `highlight_delay` in favor of `delay.highlight`.
+
 ## mini.sessions
 
 - Implement `MiniSessions.select()` to select session interactively and perform action on it.
