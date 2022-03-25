@@ -7,8 +7,8 @@
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
 --- - Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
----   as a result of not jumping or timeout after idle time
----   (duration customizable).
+---   as a result of not jumping or timeout after idle time (duration
+---   customizable).
 --- - Highlight (after customizable delay) of all possible target characters.
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
@@ -90,18 +90,18 @@ MiniJump.config = {
     repeat_jump = ';',
   },
 
+  -- Delay values (in ms) for different functionalities. Set any of them to
+  -- a very big number (like 10^7) to virtually disable.
   delay = {
-    -- Delay (in ms) between jump and highlighting all possible jumps. Set to
-    -- a very big number (like 10^7) to virtually disable highlighting.
+    -- Delay between jump and highlighting all possible jumps
     highlight = 250,
 
-    -- Timeout value (in ms) to stop jumping automatically after idle. Set to
-    -- a very big number (like 10^7) to virtually disable timeout.
+    -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 1000000,
   },
 
-  -- DEPRECATION NOTICE:
-  -- `highlight_delay` is now deprecated, please use `delay.highlight` instead.
+  -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
+  -- `delay.highlight` instead
 }
 --minidoc_afterlines_end
 
@@ -139,8 +139,8 @@ function MiniJump.jump(target, backward, till, n_times)
   pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(escaped_target)
 
   -- Delay highlighting after stopping previous one
-  H.highlight_timer:stop()
-  H.highlight_timer:start(
+  H.timers.highlight:stop()
+  H.timers.highlight:start(
     MiniJump.config.delay.highlight,
     0,
     vim.schedule_wrap(function()
@@ -149,8 +149,8 @@ function MiniJump.jump(target, backward, till, n_times)
   )
 
   -- Start idle timer after stopping previous one
-  H.idle_timer:stop()
-  H.idle_timer:start(
+  H.timers.idle_stop:stop()
+  H.timers.idle_stop:start(
     MiniJump.config.delay.idle_stop,
     0,
     vim.schedule_wrap(function()
@@ -223,8 +223,8 @@ end
 --- Removes highlights (if any) and forces the next smart jump to prompt for
 --- the target. Automatically called on appropriate Neovim |events|.
 function MiniJump.stop_jumping()
-  H.highlight_timer:stop()
-  H.idle_timer:stop()
+  H.timers.highlight:stop()
+  H.timers.idle_stop:stop()
   H.jumping = false
   H.unhighlight()
 end
@@ -254,11 +254,8 @@ H.jumping = false
 -- Counter of number of CursorMoved events
 H.n_cursor_moved = 0
 
--- Highlight delay timer
-H.highlight_timer = vim.loop.new_timer()
-
--- Idle Timeout timer
-H.idle_timer = vim.loop.new_timer()
+-- Timers for different delay-related functionalities
+H.timers = { highlight = vim.loop.new_timer(), idle_stop = vim.loop.new_timer() }
 
 -- Information about last match highlighting (stored *per window*):
 -- - Key: windows' unique buffer identifiers.
@@ -275,10 +272,9 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
-  -- notify `highlight_delay` deprecation if user supplied it, then fallback
-  -- its value to `delay.highlight`.
+  -- Soft deprecate `config.highlight_delay`
   if config.highlight_delay then
-    vim.notify([[(mini.jump) `highlight_delay` is now deprecated, please use `delay.highlight` instead.]])
+    vim.notify([[(mini.jump) `highlight_delay` is now deprecated. Please use `delay.highlight` instead.]])
     config.delay.highlight = config.highlight_delay
   end
 
@@ -289,15 +285,13 @@ function H.setup_config(config)
   })
 
   vim.validate({
+    ['delay.highlight'] = { config.delay.highlight, 'number' },
+    ['delay.idle_stop'] = { config.delay.idle_stop, 'number' },
+
     ['mappings.forward'] = { config.mappings.forward, 'string' },
     ['mappings.backward'] = { config.mappings.backward, 'string' },
     ['mappings.forward_till'] = { config.mappings.forward_till, 'string' },
     ['mappings.backward_till'] = { config.mappings.backward_till, 'string' },
-  })
-
-  vim.validate({
-    ['delay.highlight'] = { config.delay.highlight, 'number' },
-    ['delay.idle_stop'] = { config.delay.idle_stop, 'number' },
   })
 
   return config

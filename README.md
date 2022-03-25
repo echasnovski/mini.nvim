@@ -436,9 +436,18 @@ Default `config`:
     repeat_jump = ';',
   },
 
-  -- Delay (in ms) between jump and highlighting all possible jumps. Set to
-  -- a very big number (like 10^7) to virtually disable highlighting.
-  highlight_delay = 250,
+  -- Delay values (in ms) for different functionalities. Set any of them to
+  -- a very big number (like 10^7) to virtually disable.
+  delay = {
+    -- Delay between jump and highlighting all possible jumps
+    highlight = 250,
+
+    -- Delay between jump and automatic stop if idle (no jump is done)
+    idle_stop = 1000000,
+  },
+
+  -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
+  -- `delay.highlight` instead
 }
 ```
 
