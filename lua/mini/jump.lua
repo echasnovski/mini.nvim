@@ -7,7 +7,8 @@
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
 --- - Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
----   as a result of not jumping.
+---   as a result of not jumping or timeout after idle time
+---   (duration customizable).
 --- - Highlight (after customizable delay) of all possible target characters.
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
@@ -89,16 +90,25 @@ MiniJump.config = {
     repeat_jump = ';',
   },
 
-  -- Delay (in ms) between jump and highlighting all possible jumps. Set to
-  -- a very big number (like 10^7) to virtually disable highlighting.
-  highlight_delay = 250,
+  delay = {
+    -- Delay (in ms) between jump and highlighting all possible jumps. Set to
+    -- a very big number (like 10^7) to virtually disable highlighting.
+    highlight = 250,
+
+    -- Timeout value (in ms) to stop jumping automatically after idle. Set to
+    -- a very big number (like 10^7) to virtually disable timeout.
+    idle_stop = 1000000,
+  },
+
+  -- DEPRECATION NOTICE:
+  -- `highlight_delay` is now deprecated, please use `delay.highlight` instead.
 }
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
 --- Jump to target
 ---
---- Takes a string and jumps to its first occurrence in desrired direction.
+--- Takes a string and jumps to its first occurrence in desired direction.
 ---
 ---@param target string The string to jump to.
 ---@param backward __backward
@@ -129,12 +139,22 @@ function MiniJump.jump(target, backward, till, n_times)
   pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(escaped_target)
 
   -- Delay highlighting after stopping previous one
-  H.timer:stop()
-  H.timer:start(
-    MiniJump.config.highlight_delay,
+  H.highlight_timer:stop()
+  H.highlight_timer:start(
+    MiniJump.config.delay.highlight,
     0,
     vim.schedule_wrap(function()
       H.highlight(hl_pattern)
+    end)
+  )
+
+  -- Start idle timer after stopping previous one
+  H.idle_timer:stop()
+  H.idle_timer:start(
+    MiniJump.config.delay.idle_stop,
+    0,
+    vim.schedule_wrap(function()
+      MiniJump.stop_jumping()
     end)
   )
 
@@ -203,7 +223,8 @@ end
 --- Removes highlights (if any) and forces the next smart jump to prompt for
 --- the target. Automatically called on appropriate Neovim |events|.
 function MiniJump.stop_jumping()
-  H.timer:stop()
+  H.highlight_timer:stop()
+  H.idle_timer:stop()
   H.jumping = false
   H.unhighlight()
 end
@@ -234,7 +255,10 @@ H.jumping = false
 H.n_cursor_moved = 0
 
 -- Highlight delay timer
-H.timer = vim.loop.new_timer()
+H.highlight_timer = vim.loop.new_timer()
+
+-- Idle Timeout timer
+H.idle_timer = vim.loop.new_timer()
 
 -- Information about last match highlighting (stored *per window*):
 -- - Key: windows' unique buffer identifiers.
@@ -251,10 +275,17 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- notify `highlight_delay` deprecation if user supplied it, then fallback
+  -- its value to `delay.highlight`.
+  if config.highlight_delay then
+    vim.notify([[(mini.jump) `highlight_delay` is now deprecated, please use `delay.highlight` instead.]])
+    config.delay.highlight = config.highlight_delay
+  end
+
   -- Validate per nesting level to produce correct error message
   vim.validate({
     mappings = { config.mappings, 'table' },
-    highlight_delay = { config.highlight_delay, 'number' },
+    delay = { config.delay, 'table' },
   })
 
   vim.validate({
@@ -262,6 +293,11 @@ function H.setup_config(config)
     ['mappings.backward'] = { config.mappings.backward, 'string' },
     ['mappings.forward_till'] = { config.mappings.forward_till, 'string' },
     ['mappings.backward_till'] = { config.mappings.backward_till, 'string' },
+  })
+
+  vim.validate({
+    ['delay.highlight'] = { config.delay.highlight, 'number' },
+    ['delay.idle_stop'] = { config.delay.idle_stop, 'number' },
   })
 
   return config
