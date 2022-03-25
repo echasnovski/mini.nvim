@@ -295,6 +295,14 @@ function MiniCompletion.auto_completion()
   -- after inserting character.
   H.completion.text_changed_id = H.text_changed_id + 1
 
+  -- If completion was requested after 'lsp' source exhausted itself (there
+  -- were matches on typing start, but they disappeared during filtering), call
+  -- fallback immediately.
+  if H.completion.source == 'lsp' then
+    H.trigger_fallback()
+    return
+  end
+
   -- Using delay (of debounce type) actually improves user experience
   -- as it allows fast typing without many popups.
   H.completion.timer:start(MiniCompletion.config.delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
@@ -349,7 +357,7 @@ function MiniCompletion.auto_info()
   H.info.event = vim.v.event
   H.info.id = H.info.id + 1
 
-  -- Don't event try to show info if nothing is selected in popup
+  -- Don't even try to show info if nothing is selected in popup
   if vim.tbl_isempty(H.info.event.completed_item) then
     return
   end
@@ -443,10 +451,10 @@ function MiniCompletion.completefunc_lsp(findstart, base)
     -- 'complete-function' (as in Vim's help). This is due to the fact that
     -- cursor line and position are different on the first and second calls to
     -- 'complete-function'. For example, when calling this function at the end
-    -- of the line '  he', cursor position on the second call will be
+    -- of the line '  he', cursor position on the first call will be
     -- (<linenum>, 4) and line will be '  he' but on the second call -
     -- (<linenum>, 2) and '  ' (because 2 is a column of completion start).
-    -- This request is executed only on first call because it returns `-3` on
+    -- This request is executed only on second call because it returns `-3` on
     -- first call (which means cancel and leave completion mode).
     -- NOTE: using `buf_request_all()` (instead of `buf_request()`) to easily
     -- handle possible fallback and to have all completion suggestions be
@@ -513,6 +521,9 @@ H.default_config = MiniCompletion.config
 
 -- Track Insert mode changes
 H.text_changed_id = 0
+
+-- Namespace for highlighting
+H.ns_id = vim.api.nvim_create_namespace('MiniCompletion')
 
 -- Commonly used key sequences
 H.keys = {
@@ -588,11 +599,7 @@ function H.setup_config(config)
     ['delay.signature'] = { config.delay.signature, 'number' },
 
     ['window_dimensions.info'] = { config.window_dimensions.info, 'table' },
-    ['window_dimensions.info.height'] = { config.window_dimensions.info.height, 'number' },
-    ['window_dimensions.info.width'] = { config.window_dimensions.info.width, 'number' },
     ['window_dimensions.signature'] = { config.window_dimensions.signature, 'table' },
-    ['window_dimensions.signature.height'] = { config.window_dimensions.signature.height, 'number' },
-    ['window_dimensions.signature.width'] = { config.window_dimensions.signature.width, 'number' },
 
     ['lsp_completion.source_func'] = {
       config.lsp_completion.source_func,
@@ -606,6 +613,13 @@ function H.setup_config(config)
 
     ['mappings.force_twostep'] = { config.mappings.force_twostep, 'string' },
     ['mappings.force_fallback'] = { config.mappings.force_fallback, 'string' },
+  })
+
+  vim.validate({
+    ['window_dimensions.info.height'] = { config.window_dimensions.info.height, 'number' },
+    ['window_dimensions.info.width'] = { config.window_dimensions.info.width, 'number' },
+    ['window_dimensions.signature.height'] = { config.window_dimensions.signature.height, 'number' },
+    ['window_dimensions.signature.width'] = { config.window_dimensions.signature.width, 'number' },
   })
 
   return config
@@ -1063,7 +1077,7 @@ function H.show_signature_window()
     if not vim.tbl_isempty(hl_range) and hl_range.first and hl_range.last then
       vim.api.nvim_buf_add_highlight(
         H.signature.bufnr,
-        -1,
+        H.ns_id,
         'MiniCompletionActiveParameter',
         i - 1,
         hl_range.first,
@@ -1340,7 +1354,7 @@ function H.table_get(t, id)
     return H.table_get(t, { id })
   end
   local success, res = true, t
-  for _, i in pairs(id) do
+  for _, i in ipairs(id) do
     success, res = pcall(function()
       return res[i]
     end)
