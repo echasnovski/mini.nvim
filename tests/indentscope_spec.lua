@@ -489,10 +489,6 @@ describe('MiniIndentscope auto drawing', function()
     set_lines(example_lines_nested)
   end)
 
-  after_each(function()
-    child.exit_visual_mode()
-  end)
-
   it('works in Normal mode', function()
     set_cursor(5, 4)
 
@@ -575,6 +571,18 @@ describe('MiniIndentscope auto drawing', function()
     set_cursor(5, 4)
 
     sleep(10)
+    eq(#get_visual_marks(), 0)
+    sleep(10)
+    assert.True(#get_visual_marks() > 0)
+  end)
+
+  it('implements debounce-style delay', function()
+    set_cursor(5, 4)
+    sleep(test_times.delay - 10)
+    eq(#get_visual_marks(), 0)
+
+    set_cursor(2, 0)
+    sleep(test_times.delay - 10)
     eq(#get_visual_marks(), 0)
     sleep(10)
     assert.True(#get_visual_marks() > 0)
