@@ -272,7 +272,9 @@ describe('Autocompletion', function()
 
   it('works without LSP clients', function()
     -- Mock absence of LSP
-    child.lua([[vim.lsp.buf_get_clients = function() return {} end]])
+    child.lsp.buf_get_clients = function()
+      return {}
+    end
 
     type_keys('i')
     type_keys(vim.split('aa ab a', ''))
@@ -360,12 +362,12 @@ describe('Autocompletion', function()
 
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
-      child.lua(('vim.%s.minicompletion_disable = true'):format(var_type))
+      child[var_type].minicompletion_disable = true
       type_keys({ 'i', 'J' })
       sleep(test_times.completion + 1)
       eq(get_completion(), {})
 
-      child.lua(('vim.%s.minicompletion_disable = nil'):format(var_type))
+      child[var_type].minicompletion_disable = nil
     end
 
     validate_disable('g')
@@ -413,7 +415,7 @@ describe('Manual completion', function()
 
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
-      child.lua(('vim.%s.minicompletion_disable = true'):format(var_type))
+      child[var_type].minicompletion_disable = true
       type_keys({ 'i', '<C-Space>' })
       poke_eventloop()
       eq(get_completion(), {})
@@ -422,7 +424,7 @@ describe('Manual completion', function()
       poke_eventloop()
       eq(get_completion(), {})
 
-      child.lua(('vim.%s.minicompletion_disable = nil'):format(var_type))
+      child[var_type].minicompletion_disable = nil
     end
 
     validate_disable('g')
@@ -499,7 +501,7 @@ describe('Information window', function()
 
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
-      child.lua(('vim.%s.minicompletion_disable = true'):format(var_type))
+      child[var_type].minicompletion_disable = true
 
       set_lines({ 'aa ab ', '' })
       set_cursor(2, 0)
@@ -508,7 +510,7 @@ describe('Information window', function()
       sleep(test_times.info + 1)
       eq(#get_floating_windows(), 0)
 
-      child.lua(('vim.%s.minicompletion_disable = nil'):format(var_type))
+      child[var_type].minicompletion_disable = nil
     end
 
     validate_disable('g')
@@ -604,13 +606,13 @@ describe('Signature help', function()
 
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
-      child.lua(('vim.%s.minicompletion_disable = true'):format(var_type))
+      child[var_type].minicompletion_disable = true
 
       type_keys({ 'i', 'a', 'b', 'c', '(' })
       sleep(test_times.signature + 1)
       eq(#get_floating_windows(), 0)
 
-      child.lua(('vim.%s.minicompletion_disable = nil'):format(var_type))
+      child[var_type].minicompletion_disable = nil
     end
 
     validate_disable('g')

@@ -261,7 +261,7 @@ describe('MiniIndentscope.get_scope()', function()
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     eq(get_cursor_scope().border, { top = nil, bottom = 7, indent = 2 })
 
-    child.lua([[vim.b.miniindentscope_options = { border = 'top' }]])
+    child.b.miniindentscope_options = {border = 'top'}
     eq(get_cursor_scope().border, { top = 1, bottom = nil, indent = 0 })
 
     eq(get_cursor_scope({ border = 'none' }).border, {})
@@ -578,23 +578,23 @@ describe('MiniIndentscope auto drawing', function()
     assert.True(#get_visual_marks() > 0)
   end)
 
-  it('respects `vim.{g,b}.miniindentscope_disable`', function()
+  it('respects vim.{g,b}.miniindentscope_disable', function()
     local validate_disable = function(var_type)
-      child.lua(('vim.%s.miniindentscope_disable = true'):format(var_type))
+      child[var_type].miniindentscope_disable = true
       set_cursor(5, 4)
       sleep(110)
       eq(#get_visual_marks(), 0)
 
-      child.lua(('vim.%s.miniindentscope_disable = false'):format(var_type))
+      child[var_type].miniindentscope_disable = false
       set_cursor(5, 3)
       sleep(100)
       assert.True(#get_visual_marks() > 0)
 
-      child.lua(('vim.%s.miniindentscope_disable = nil'):format(var_type))
+      child[var_type].miniindentscope_disable = nil
     end
 
-    validate_disable('b')
     validate_disable('g')
+    validate_disable('b')
   end)
 
   it('works in Insert mode', function()

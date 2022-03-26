@@ -75,19 +75,29 @@ local neovim_children = {}
 --- proved to be more inconvenience than benefits. Should be helpful for
 --- certain cases (like testing startup behavior).
 ---
+--- Methods:
+--- - Job-related: `start`, `stop`, `restart`, etc.
+--- - Wrappers for executing Lua inside child process: `api`, `fn`, `lsp`, `loop`, etc.
+--- - Wrappers: `type_keys`, `set_lines()`, etc.
+---
 ---@usage
 --- -- Initiate
 --- local child = helpers.new_child_neovim()
 --- child.start()
----
---- -- Use API functions
---- child.api.nvim_buf_set_lines(0, 0, -1, true, { 'This is inside child Neovim' })
 ---
 --- -- Execute Lua code, commands, etc.
 --- child.lua('_G.n = 0')
 --- child.cmd('au CursorMoved * lua _G.n = _G.n + 1')
 --- child.cmd('normal! l')
 --- print(child.lua_get('_G.n')) -- Should be 1
+---
+--- -- Use API functions
+--- child.api.nvim_buf_set_lines(0, 0, -1, true, { 'This is inside child Neovim' })
+---
+--- -- Use other `vim.xxx` Lua wrappers (get executed inside child process)
+--- vim.b.aaa = 'current process'
+--- child.b.aaa = 'child process'
+--- print(child.lua_get('vim.b.aaa')) -- Should be 'child process'
 ---
 --- -- Stop
 --- child.stop()
@@ -139,32 +149,29 @@ function helpers.new_child_neovim()
   function child.stop()
     pcall(vim.fn.chanclose, child.channel)
 
-    child.job.stdin:close()
-    child.job.stdout:close()
-    child.job.stderr:close()
+    if child.job ~= nil then
+      child.job.stdin:close()
+      child.job.stdout:close()
+      child.job.stderr:close()
 
-    child.job.handle:kill()
-    child.job.handle:close()
+      child.job.handle:kill()
+      child.job.handle:close()
+
+      child.job = nil
+    end
 
     -- Enable method chaining
     return child
   end
 
-  function child.restart()
+  function child.restart(opts)
     child.stop()
     child.address = vim.fn.tempname()
-    child.start(child.start_opts)
+    child.start(child.start_opts or opts or {})
   end
 
   function child.setup(opts)
-    opts = vim.tbl_deep_extend(
-      'force',
-      { args = { '-u', 'scripts/minimal_init.vim' }, before = function() end, after = function() end },
-      opts or {}
-    )
-
-    -- Execute `before` hook
-    opts.before()
+    opts = vim.tbl_deep_extend('force', { args = { '-u', 'scripts/minimal_init.vim' } }, opts or {})
 
     -- Ensure fresh job
     if child.job == nil then
@@ -176,34 +183,7 @@ function helpers.new_child_neovim()
     -- Ensure empty buffer
     local test_buf_id = child.api.nvim_create_buf(true, false)
     child.api.nvim_set_current_buf(test_buf_id)
-
-    -- Execute `after` hook
-    opts.after()
   end
-
-  child.api = setmetatable({}, {
-    __index = function(t, key)
-      return function(...)
-        return vim.rpcrequest(child.channel, key, ...)
-      end
-    end,
-  })
-
-  child.fn = setmetatable({}, {
-    __index = function(t, key)
-      return function(...)
-        return vim.rpcrequest(child.channel, 'nvim_call_function', key, { ... })
-      end
-    end,
-  })
-
-  child.loop = setmetatable({}, {
-    __index = function(t, key)
-      return function(...)
-        return vim.rpcrequest(child.channel, 'nvim_exec_lua', ([[return vim.loop['%s'](...)]]):format(key), { ... })
-      end
-    end,
-  })
 
   function child.type_keys(keys, wait)
     wait = wait or 0
@@ -212,7 +192,7 @@ function helpers.new_child_neovim()
     for _, k in ipairs(keys) do
       child.api.nvim_input(k)
       if wait > 0 then
-        child.sleep(wait)
+        child.loop.sleep(wait)
       end
     end
   end
@@ -231,10 +211,6 @@ function helpers.new_child_neovim()
 
   function child.lua_get(str, args)
     return child.api.nvim_exec_lua('return ' .. str, args or {})
-  end
-
-  function child.sleep(ms)
-    child.lua(('vim.loop.sleep(%s)'):format(ms))
   end
 
   function child.set_lines(arr, start, finish)
@@ -345,6 +321,65 @@ function helpers.new_child_neovim()
     if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then
       child.cmd('normal! ' .. cur_mode)
     end
+  end
+
+  -- Wrappers for common `vim.xxx` objects (will get executed inside child)
+  child.api = setmetatable({}, {
+    __index = function(t, key)
+      return function(...)
+        return vim.rpcrequest(child.channel, key, ...)
+      end
+    end,
+  })
+
+  ---@return table Emulates `vim.xxx` table (like `vim.fn`)
+  ---@private
+  local forward_to_child = function(tbl_name)
+    -- TODO: try to figure out the best way to operate on tables with function
+    -- values (needs "deep encode/decode" of function objects)
+    return setmetatable({}, {
+      __index = function(_, key)
+        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
+        local value_type = child.api.nvim_exec_lua(('return type(%s)'):format(obj_name), {})
+
+        if value_type == 'function' then
+          -- This allows syntax like `child.fn.mode(1)`
+          return function(...)
+            return child.api.nvim_exec_lua(([[return %s(...)]]):format(obj_name), { ... })
+          end
+        end
+
+        -- This allows syntax like `child.bo.buftype`
+        return child.api.nvim_exec_lua(([[return %s]]):format(obj_name), {})
+      end,
+      __newindex = function(_, key, value)
+        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
+        -- This allows syntax like `child.b.aaa = function(x) return x + 1 end`
+        -- (inherits limitations of `string.dump`: no upvalues, etc.)
+        if type(value) == 'function' then
+          local dumped = vim.inspect(string.dump(value))
+          value = ('loadstring(%s)'):format(dumped)
+        else
+          value = vim.inspect(value)
+        end
+
+        child.api.nvim_exec_lua(('%s = %s'):format(obj_name, value), {})
+      end,
+    })
+  end
+
+  --stylua: ignore start
+  local supported_vim_tables = {
+    -- Collections
+    'diagnostic', 'fn', 'highlight', 'json', 'loop', 'lsp', 'mpack', 'treesitter', 'ui',
+    -- Variables
+    'g', 'b', 'w', 't', 'v', 'env',
+    -- Options (no 'opt' becuase not really usefult due to use of metatables)
+    'o', 'go', 'bo', 'wo',
+  }
+  --stylua: ignore end
+  for _, v in ipairs(supported_vim_tables) do
+    child[v] = forward_to_child(v)
   end
 
   table.insert(neovim_children, child)

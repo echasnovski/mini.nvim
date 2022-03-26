@@ -94,7 +94,7 @@ end
 local validate_force_argument = function(fun_name, layout)
   child.api.nvim_buf_set_lines(layout['buf'], 0, -1, true, { 'aaa' })
   -- Avoid hit-enter prompt due to long message
-  child.cmd('set cmdheight=10')
+  child.o.cmdheight = 10
 
   local output = child.lua_get(('MiniBufremove.%s()'):format(fun_name))
   eq(output, false)
@@ -111,7 +111,7 @@ local validate_force_argument = function(fun_name, layout)
 end
 
 local validate_disable = function(var_type, fun_name, layout)
-  child.lua(('vim.%s.minibufremove_disable = true'):format(var_type))
+  child[var_type].minibufremove_disable = true
   local output = child.lua_get(('MiniBufremove.%s()'):format(fun_name))
   eq(output, vim.NIL)
 
@@ -120,7 +120,7 @@ local validate_disable = function(var_type, fun_name, layout)
   eq(win_get_buf(layout['win_right']), layout['buf'])
 
   -- Cleanup
-  child.lua(('vim.%s.minibufremove_disable = nil'):format(var_type))
+  child[var_type].minibufremove_disable = nil
 end
 
 local validate_bufhidden_option = function(fun_name, bufhidden_value)
