@@ -76,11 +76,6 @@ local get_floating_windows = function()
   end, child.api.nvim_list_wins())
 end
 
-local win_get_lines = function(win_id, start, finish)
-  local buf_id = child.api.nvim_win_get_buf(win_id)
-  return child.api.nvim_buf_get_lines(buf_id, start or 0, finish or -1, true)
-end
-
 local validate_single_floating_win = function(opts)
   opts = opts or {}
   local wins = get_floating_windows()
@@ -88,7 +83,9 @@ local validate_single_floating_win = function(opts)
 
   local win_id = wins[1]
   if opts.lines ~= nil then
-    eq(win_get_lines(win_id), opts.lines)
+    local buf_id = child.api.nvim_win_get_buf(win_id)
+    local lines = child.api.nvim_buf_get_lines(buf_id, 0, -1, true)
+    eq(lines, opts.lines)
   end
   if opts.config ~= nil then
     local true_config = child.api.nvim_win_get_config(win_id)

@@ -12,7 +12,8 @@ local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) vim.loop.sleep(ms); child.loop.update_time() end
+local poke_eventloop = function() child.api.nvim_eval('1') end
+local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
 -- Make helpers
@@ -69,6 +70,8 @@ local example_lines = {
 --  aa
 -- aa
 local example_lines_nested = { 'aa', ' aa', '  aa', '   aa', '   aa', '   aa', '  aa', ' aa', 'aa' }
+
+local test_times = { delay = 100, animation_step = 20 }
 
 -- Unit tests =================================================================
 describe('MiniIndentscope.setup()', function()
@@ -261,7 +264,7 @@ describe('MiniIndentscope.get_scope()', function()
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     eq(get_cursor_scope().border, { top = nil, bottom = 7, indent = 2 })
 
-    child.b.miniindentscope_options = {border = 'top'}
+    child.b.miniindentscope_options = { border = 'top' }
     eq(get_cursor_scope().border, { top = 1, bottom = nil, indent = 0 })
 
     eq(get_cursor_scope({ border = 'none' }).border, {})
@@ -409,20 +412,20 @@ describe('MiniIndentscope.draw()', function()
     eq(get_visual_marks(), { { line = 5, prefix = ' ', symbol = '╎' } })
 
     -- Then should be drawn step by step with upward and downward rays
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(get_visual_marks(), {
       { line = 4, prefix = ' ', symbol = '╎' },
       { line = 5, prefix = ' ', symbol = '╎' },
       { line = 6, prefix = ' ', symbol = '╎' },
     })
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(get_visual_marks(), {
       { line = 3, prefix = ' ', symbol = '╎' },
       { line = 4, prefix = ' ', symbol = '╎' },
       { line = 5, prefix = ' ', symbol = '╎' },
       { line = 6, prefix = ' ', symbol = '╎' },
     })
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(get_visual_marks(), {
       { line = 2, prefix = ' ', symbol = '╎' },
       { line = 3, prefix = ' ', symbol = '╎' },
@@ -440,7 +443,7 @@ describe('MiniIndentscope.draw()', function()
 
     child.lua('MiniIndentscope.draw()')
     eq(#get_visual_marks(), 1)
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(#get_visual_marks(), 1)
     sleep(30)
     eq(#get_visual_marks(), 3)
@@ -493,25 +496,24 @@ describe('MiniIndentscope auto drawing', function()
   it('works in Normal mode', function()
     set_cursor(5, 4)
 
-    -- Check default delay of 100
-    sleep(90)
+    sleep(test_times.delay - 10)
     eq(#get_visual_marks(), 0)
     sleep(10)
     -- Symbol at cursor line should be drawn immediately
     eq(#get_visual_marks(), 1)
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(#get_visual_marks(), 3)
   end)
 
   local validate_event = function(event_name)
     set_cursor(5, 4)
-    sleep(100 + 20 * 1 + 1)
+    sleep(test_times.delay + test_times.animation_step * 1 + 1)
 
     child.lua('MiniIndentscope.undraw()')
     eq(#get_visual_marks(), 0)
 
     child.cmd('doautocmd ' .. event_name)
-    sleep(100 + 20 * 1 + 1)
+    sleep(test_times.delay + test_times.animation_step * 1 + 1)
     eq(get_visual_marks(), {
       { line = 3, prefix = '  ', symbol = '╎' },
       { line = 4, prefix = '  ', symbol = '╎' },
@@ -582,12 +584,12 @@ describe('MiniIndentscope auto drawing', function()
     local validate_disable = function(var_type)
       child[var_type].miniindentscope_disable = true
       set_cursor(5, 4)
-      sleep(110)
+      sleep(test_times.delay + 10)
       eq(#get_visual_marks(), 0)
 
       child[var_type].miniindentscope_disable = false
       set_cursor(5, 3)
-      sleep(100)
+      sleep(test_times.delay)
       assert.True(#get_visual_marks() > 0)
 
       child[var_type].miniindentscope_disable = nil
@@ -601,12 +603,11 @@ describe('MiniIndentscope auto drawing', function()
     set_cursor(5, 4)
     type_keys('i')
 
-    -- Check default delay of 100
-    sleep(90)
+    sleep(test_times.delay - 10)
     eq(#get_visual_marks(), 0)
     sleep(10)
     eq(#get_visual_marks(), 1)
-    sleep(20)
+    sleep(test_times.animation_step)
     eq(#get_visual_marks(), 3)
   end)
 
