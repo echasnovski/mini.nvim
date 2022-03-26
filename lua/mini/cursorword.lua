@@ -141,7 +141,7 @@ function MiniCursorword.auto_highlight()
   end
 
   -- Get current information
-  local win_id = vim.fn.win_getid()
+  local win_id = vim.api.nvim_get_current_win()
   local win_match = H.window_matches[win_id] or {}
   local curword = H.get_cursor_word()
 
@@ -275,7 +275,7 @@ end
 
 function H.is_cursor_on_keyword()
   local col = vim.fn.col('.')
-  local curchar = vim.fn.getline('.'):sub(col, col)
+  local curchar = vim.api.nvim_get_current_line():sub(col, col)
 
   return vim.fn.match(curchar, '[[:keyword:]]') >= 0
 end
