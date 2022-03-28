@@ -1063,16 +1063,20 @@ Description of `info` fields per structure type:
 - `Section`:
     - `id` - captured section identifier. Can be empty string meaning no
       identifier is captured.
-    - `line_begin` - line number inside file at which section begins.
-    - `line_end` - line number inside file at which section ends.
+    - `line_begin` - line number inside file at which section begins (-1 if
+      not generated from file).
+    - `line_end` - line number inside file at which section ends (-1 if not
+      generated from file).
 - `Block`:
     - `afterlines` - array of strings which were parsed from file after
       this annotation block (up until the next block or end of file).
       Useful for making automated decisions about what is being documented.
-    - `line_begin` - line number inside file at which block begins.
-    - `line_end` - line number inside file at which block ends.
+    - `line_begin` - line number inside file at which block begins  (-1 if
+      not generated from file).
+    - `line_end` - line number inside file at which block ends  (-1 if not
+      generated from file).
 - `File`:
-    - `path` - absolute path to a file.
+    - `path` - absolute path to a file (`''` if not generated from file).
 - `Doc`:
     - `input` - array of input file paths (as in |MiniDoc.generate|).
     - `output` - output path (as in |MiniDoc.generate|).

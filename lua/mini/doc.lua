@@ -115,16 +115,20 @@
 --- - `Section`:
 ---     - `id` - captured section identifier. Can be empty string meaning no
 ---       identifier is captured.
----     - `line_begin` - line number inside file at which section begins.
----     - `line_end` - line number inside file at which section ends.
+---     - `line_begin` - line number inside file at which section begins (-1 if
+---       not generated from file).
+---     - `line_end` - line number inside file at which section ends (-1 if not
+---       generated from file).
 --- - `Block`:
 ---     - `afterlines` - array of strings which were parsed from file after
 ---       this annotation block (up until the next block or end of file).
 ---       Useful for making automated decisions about what is being documented.
----     - `line_begin` - line number inside file at which block begins.
----     - `line_end` - line number inside file at which block ends.
+---     - `line_begin` - line number inside file at which block begins  (-1 if
+---       not generated from file).
+---     - `line_end` - line number inside file at which block ends  (-1 if not
+---       generated from file).
 --- - `File`:
----     - `path` - absolute path to a file.
+---     - `path` - absolute path to a file (`''` if not generated from file).
 --- - `Doc`:
 ---     - `input` - array of input file paths (as in |MiniDoc.generate|).
 ---     - `output` - output path (as in |MiniDoc.generate|).
@@ -378,7 +382,7 @@ MiniDoc.config = {
         end
       end, b)
 
-      b:insert(1, H.as_struct({ H.separator_block }, 'section'))
+      b:insert(1, H.as_struct({ string.rep('-', 78) }, 'section'))
       b:insert(H.as_struct({ '' }, 'section'))
     end,
     --minidoc_replace_end
@@ -390,7 +394,7 @@ MiniDoc.config = {
         return
       end
 
-      f:insert(1, H.as_struct({ H.as_struct({ H.separator_file }, 'section') }, 'block'))
+      f:insert(1, H.as_struct({ H.as_struct({ string.rep('=', 78) }, 'section') }, 'block'))
       f:insert(H.as_struct({ H.as_struct({ '' }, 'section') }, 'block'))
     end,
     --minidoc_replace_end
@@ -701,10 +705,6 @@ H.default_config = MiniDoc.config
 -- description with '\n' separating output lines.
 H.alias_registry = {}
 
--- Structure separators
-H.separator_block = string.rep('-', 78)
-H.separator_file = string.rep('=', 78)
-
 --stylua: ignore start
 H.pattern_sets = {
   -- Patterns for working with afterlines. At the moment deliberately crafted
@@ -754,7 +754,9 @@ function H.setup_config(config)
 
   vim.validate({
     ['hooks.block_pre'] = { config.hooks.block_pre, 'function' },
+    ['hooks.section_pre'] = { config.hooks.section_pre, 'function' },
     ['hooks.sections'] = { config.hooks.sections, 'table' },
+    ['hooks.section_post'] = { config.hooks.section_post, 'function' },
     ['hooks.block_post'] = { config.hooks.block_post, 'function' },
     ['hooks.file'] = { config.hooks.file, 'function' },
     ['hooks.doc'] = { config.hooks.doc, 'function' },
@@ -1028,7 +1030,7 @@ function H.toc_insert(s)
       local left = toc_entry[i] or ''
       -- Use tag refernce instead of tag enclosure
       local right = vim.trim((tag_section[i] or ''):gsub('%*', '|'))
-      -- Add visual line only at first entry
+      -- Add visual line only at first entry (while not adding trailing space)
       local filler = i == 1 and '.' or (right == '' and '' or ' ')
       -- Make padding of 2 spaces at both left and right
       local n_filler = math.max(74 - H.visual_text_width(left) - H.visual_text_width(right), 3)
@@ -1170,6 +1172,7 @@ function H.new_struct(struct_type, info)
   }
 
   output.insert = function(self, index, child)
+    -- Allow both `x:insert(child)` and `x:insert(1, child)`
     if child == nil then
       child, index = index, #self + 1
     end
@@ -1232,6 +1235,15 @@ end
 
 -- Converter (this ensures that children have proper parent-related data)
 function H.as_struct(array, struct_type, info)
+  -- Make default info `info` for cases when structure is created manually
+  local default_info = ({
+    section = { id = '@text', line_begin = -1, line_end = -1 },
+    block = { afterlines = {}, line_begin = -1, line_end = -1 },
+    file = { path = '' },
+    doc = { input = {}, output = '', config = MiniDoc.config },
+  })[struct_type]
+  info = vim.tbl_deep_extend('force', default_info, info or {})
+
   local res = H.new_struct(struct_type, info)
   for _, x in ipairs(array) do
     res:insert(x)

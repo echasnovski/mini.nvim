@@ -1,0 +1,246 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                        *M.User*
+                                    `M.User`
+Test for `@class`, `@field`, and `@type`
+
+Class~
+{User}
+
+Fields~
+{login} `(string)` User login.
+{password} `(string)` User password.
+
+Type~
+`(table)`
+
+------------------------------------------------------------------------------
+                                                                           *f()*
+                                 `f`({x}, {y})
+Test `@diagnostic` (should be ignored in output) and `@overload`
+
+Parameters~
+{x} `(string)` Variable.
+
+Overload~
+`fun(x: string)`
+
+------------------------------------------------------------------------------
+                                                                       *M.fun()*
+                               `M.fun`({a}, {b})
+Test for `@seealso` and `@usage`
+
+Usage~
+`M.fun(1, 2)`
+
+See also~
+|test-f| |f-test-different-line|
+
+------------------------------------------------------------------------------
+                                                                 *test-f* *f-test*
+                                                         *f-test-different-line*
+Test for `@signature` and `@tag`
+
+`@signature` should override default title inference where it is placed.
+`@tag` should enclose non-whitespace group separately.
+
+                                `fun`({x}, {y})
+
+
+------------------------------------------------------------------------------
+Test for `@text`
+
+Parameters~
+{a} `(string)`
+
+This illustrates some code:
+>
+  require('mini.doc').setup()
+<
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Test `@alias` section
+
+------------------------------------------------------------------------------
+Parameters~
+{x}   `(fun(type: string, data: any))`
+{y} Another data structure.
+  Its description spans over multiple lines.
+{z} var_three
+
+------------------------------------------------------------------------------
+Aliases also expand inside text:   fun(type: string, data: any)
+
+------------------------------------------------------------------------------
+Test of `MiniDoc.current.aliases`
+
+{
+  ["%bad_name*"] = "This alias has bad name and should still work.",
+  var_one = "  fun(type: string, data: any)",
+  var_three = "This alias shouldn't be applied to previous line as it is defined after it.",
+  var_two = "Another data structure.\n  Its description spans over multiple lines."
+}
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Tests of `@eval` section
+
+Generic case
+
+This string is evaluated using local variable. 1 + 1 = 2
+
+------------------------------------------------------------------------------
+                                                                         *M.tab*
+                                    `M.tab`
+Usage of `MiniDoc.afterlines_to_code()` and `MiniDoc.current.eval_section`
+>
+  M.tab = {
+    -- Some functional setting
+        a = <function; should be padded>,
+    -- A very important setting
+    b = 2,
+    c = {
+      d = 3,
+      e = 4,
+    },
+    
+  }
+<
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Tests for `@param` section
+
+------------------------------------------------------------------------------
+Test for general cases
+
+Parameters~
+{b} `(number)` Number.
+{a} `(string)` Some string. Multiline description:
+  - Item 1.
+  - Item 2.
+{c} `(table)`
+{d}
+{x} %%%bad_name!!
+
+------------------------------------------------------------------------------
+Test for expanding `?` to `(optional)`
+
+Parameters~
+{x} `(optional)` `(string)` This should add `(optional)`
+{y} `(string?)` This should not add `(optional)` as `?` is not after first word.
+{abc} `(string)` Having ? inside comment shouldn't trigger `(optional)`.
+
+------------------------------------------------------------------------------
+Test for enclosing type
+
+Parameters~
+{a} `(number)` Should work.
+{b} `(number[])` Should work.
+{c} `(number|nil)` Should work.
+{d} `(table<string, number>)` Should work.
+{e} `(fun(a: string, b:number))` Should work.
+{f} `(fun(a: string, b:number): table)` Should work.
+{g} NUMBER Shouldn't work.
+{a_function} `(function)` Should enclose second `function`.
+{function_a} `(function)` Should enclose second `function`.
+{a_function_a} `(function)` Should enclose second `function`.
+{afunction} `(function)` Should enclose second `function`.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Tests for `@return` section
+
+------------------------------------------------------------------------------
+Test for general cases
+
+Return~
+`(number)` Some number.
+
+------------------------------------------------------------------------------
+Test for expanding `?` to `(optional)`
+
+Return~
+`(number)` `(optional)`
+Return~
+`(boolean)` `(optional)` Second ? shouldn't trigger anything.
+
+------------------------------------------------------------------------------
+Test for enclosing type
+
+Return~
+`(number)` Should work.
+Return~
+`(number[])` Should work.
+Return~
+`(number|nil)` Should work.
+Return~
+`(table<string, number>)` Should work.
+Return~
+`(fun(a: string, b:number))` Should work.
+Return~
+`(fun(a: string, b:number): table)` Should work.
+Return~
+NUMBER Shouldn't work.
+Return~
+`(function)` Should not enclose second time: function .
+Return~
+`(...)` Should work.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Test `@toc` and `@toc_entry` sections
+
+Table of contents:
+      Entry #1..............................................................
+  Entry #2:.................................................................
+  This time it is
+  multiline
+  Entry #3....................................................|toc-entry-with|
+                                                               |multiline-tag|
+  Entry #4:............................................|toc-second-entry-with|
+  Multiline with                                             |multiline-tag-2|
+  three lines
+  .............................................|toc-entry-without-description|
+  Entry #6 (without tag)....................................................
+  Entry #7: A very-very-very-very-very-very-very-very-very-very long description...
+
+------------------------------------------------------------------------------
+TOC entry with leading spaces
+
+------------------------------------------------------------------------------
+Multiline TOC entry
+
+------------------------------------------------------------------------------
+                                                                *toc-entry-with*
+                                                                 *multiline-tag*
+TOC entry with multiline tag
+
+------------------------------------------------------------------------------
+                                                         *toc-second-entry-with*
+                                                               *multiline-tag-2*
+TOC entry with multiline tag and entry
+
+------------------------------------------------------------------------------
+                                                 *toc-entry-without-description*
+TOC entry without description
+
+------------------------------------------------------------------------------
+TOC entry without tag
+
+------------------------------------------------------------------------------
+TOC entry with very long description
+
+------------------------------------------------------------------------------
+Test of `MiniDoc.current.toc`
+
+Number of current TOC entries: 7
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

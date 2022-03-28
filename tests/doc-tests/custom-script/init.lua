@@ -1,0 +1,1 @@
+--- File inside test for usage of custom script

@@ -1,0 +1,74 @@
+==============================================================================
+------------------------------------------------------------------------------
+Tests for inferring from afterline
+
+------------------------------------------------------------------------------
+                                                                         *M.a()*
+                                `M.a`({x}, {y})
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+This function definition should not be inferred (not from first column)
+
+------------------------------------------------------------------------------
+                                                                           *b()*
+                                 `b`({x}, {y})
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+This function definition should not be inferred (not from first column)
+
+------------------------------------------------------------------------------
+                                                                         *M.c()*
+                                `M.c`({x}, {y})
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+                                                                       *M.c_1()*
+                                   `M.c_1`()
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+This function definition should not be inferred (not from first column)
+
+------------------------------------------------------------------------------
+                                                                           *d()*
+                                 `d`({x}, {y})
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+                                                                         *d_1()*
+                                    `d_1`()
+This function definition should be inferred
+
+------------------------------------------------------------------------------
+This function definition should not be inferred (not from first column)
+
+------------------------------------------------------------------------------
+                                                                           *M.A*
+                                     `M.A`
+This assignment should be inferred
+
+------------------------------------------------------------------------------
+                                                                         *M.A_1*
+                                    `M.A_1`
+This assignment should be inferred
+
+------------------------------------------------------------------------------
+This assignment should not be inferred (not from first column)
+
+------------------------------------------------------------------------------
+                                                                             *B*
+                                      `B`
+This assignment should be inferred
+
+------------------------------------------------------------------------------
+                                                                           *B_1*
+                                     `B_1`
+This assignment should be inferred
+
+------------------------------------------------------------------------------
+This assignment should not be inferred (not from first column)
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

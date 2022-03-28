@@ -1,0 +1,31 @@
+--- Tests for `@param` section
+
+--- Test for general cases
+---
+---@param b number Number.
+---@param a string Some string. Multiline description:
+---   - Item 1.
+---   - Item 2.
+---@param c table
+---@param d
+---@param x %%%bad_name!!
+
+--- Test for expanding `?` to `(optional)`
+---
+---@param x? string This should add `(optional)`
+---@param y string? This should not add `(optional)` as `?` is not after first word.
+---@param abc string Having ? inside comment shouldn't trigger `(optional)`.
+
+--- Test for enclosing type
+---
+---@param a number Should work.
+---@param b number[] Should work.
+---@param c number|nil Should work.
+---@param d table<string, number> Should work.
+---@param e fun(a: string, b:number) Should work.
+---@param f fun(a: string, b:number): table Should work.
+---@param g NUMBER Shouldn't work.
+---@param a_function function Should enclose second `function`.
+---@param function_a function Should enclose second `function`.
+---@param a_function_a function Should enclose second `function`.
+---@param afunction function Should enclose second `function`.
