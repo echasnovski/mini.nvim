@@ -1402,7 +1402,7 @@ Given input `word` and target `candidate`:
   `candidate`, which minimizes certain score. It is assumed that order of
   letters in `word` and those matched in `candidate` should be the same.
 - Matching is represented by matched positions: an array `positions` of
-  integers with length equal to number of letter in `word`. The following
+  integers with length equal to number of letters in `word`. The following
   should be always true in case of a match: `candidate`'s letter at index
   `positions[i]` is letters[i]` for all valid `i`.
 - Matched positions are evaluated based only on two features: their width

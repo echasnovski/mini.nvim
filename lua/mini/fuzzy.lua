@@ -32,7 +32,7 @@
 ---   `candidate`, which minimizes certain score. It is assumed that order of
 ---   letters in `word` and those matched in `candidate` should be the same.
 --- - Matching is represented by matched positions: an array `positions` of
----   integers with length equal to number of letter in `word`. The following
+---   integers with length equal to number of letters in `word`. The following
 ---   should be always true in case of a match: `candidate`'s letter at index
 ---   `positions[i]` is letters[i]` for all valid `i`.
 --- - Matched positions are evaluated based only on two features: their width
@@ -117,7 +117,7 @@ end
 function MiniFuzzy.filtersort(word, candidate_array)
   -- Use 'smart case'. Create new array to preserve input for later filtering
   local cand_array
-  if word ~= word:lower() then
+  if word == word:lower() then
     cand_array = vim.tbl_map(string.lower, candidate_array)
   else
     cand_array = candidate_array
@@ -136,10 +136,16 @@ end
 function MiniFuzzy.process_lsp_items(items, base)
   -- Extract completion words from items
   local words = vim.tbl_map(function(x)
-    if type(x.textEdit) == 'table' and x.textEdit.newText then
+    if type(x.textEdit) == 'table' and type(x.textEdit.newText) == 'string' then
       return x.textEdit.newText
     end
-    return x.insertText or x.label or ''
+    if type(x.insertText) == 'string' then
+      return x.insertText
+    end
+    if type(x.label) == 'string' then
+      return x.label
+    end
+    return ''
   end, items)
 
   -- Fuzzy match
