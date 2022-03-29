@@ -191,6 +191,10 @@ function MiniJump.smart_jump(backward, till)
   local target
   if not H.jumping or H.cache.target == nil then
     target = H.get_target()
+    -- Stop if user supplied invalid target
+    if target == nil then
+      return
+    end
   end
 
   H.update_cache(target, backward, till, vim.v.count1)
@@ -213,7 +217,12 @@ function MiniJump.expr_jump(backward, till)
 
   -- Always ask for `target` as this will be used only in operator-pending
   -- mode. Dot-repeat will be implemented via expression-mapping.
-  H.update_cache(H.get_target(), backward, till, vim.v.count1)
+  local target = H.get_target()
+  -- Stop if user supplied invalid target
+  if target == nil then
+    return
+  end
+  H.update_cache(target, backward, till, vim.v.count1)
 
   return vim.api.nvim_replace_termcodes('v:<C-u>lua MiniJump.jump()<CR>', true, true, true)
 end
@@ -274,7 +283,7 @@ function H.setup_config(config)
 
   -- Soft deprecate `config.highlight_delay`
   if config.highlight_delay then
-    vim.notify([[(mini.jump) `highlight_delay` is now deprecated. Please use `delay.highlight` instead.]])
+    H.notify('`highlight_delay` is now deprecated. Please use `delay.highlight` instead.')
     config.delay.highlight = config.highlight_delay
   end
 
@@ -356,7 +365,11 @@ function H.unhighlight()
   end
 end
 
--- Various helpers ------------------------------------------------------------
+-- Utilities ------------------------------------------------------------------
+function H.notify(msg)
+  vim.notify(('(mini.jump) %s'):format(msg))
+end
+
 function H.update_cache(target, backward, till, n_times)
   H.cache.mode = vim.fn.mode(1)
 
@@ -376,13 +389,25 @@ function H.update_cache(target, backward, till, n_times)
 end
 
 function H.get_target()
-  local char = vim.fn.getchar()
-  -- Allow `<Esc>` to early exit
-  if char == 27 then
+  local needs_help_msg = true
+  vim.defer_fn(function()
+    if not needs_help_msg then
+      return
+    end
+    H.notify('Enter target single character ')
+  end, 1000)
+  local ok, char = pcall(vim.fn.getchar)
+  needs_help_msg = false
+
+  -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
+  if not ok or char == 27 then
     return
   end
 
-  return vim.fn.nr2char(char)
+  if type(char) == 'number' then
+    char = vim.fn.nr2char(char)
+  end
+  return char
 end
 
 function H.map(mode, key, rhs, opts)
