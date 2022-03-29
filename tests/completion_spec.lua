@@ -1,5 +1,5 @@
--- NOTE: These are basic tests which cover. A lot of nuances are not tested to
--- meet "complexity-necessity" trade-off
+-- NOTE: These are basic tests which cover basic functionliaty. A lot of
+-- nuances are not tested to meet "complexity-necessity" trade-off.
 local helpers = require('tests.helpers')
 
 local child = helpers.new_child_neovim()

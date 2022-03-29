@@ -1,7 +1,7 @@
 local helpers = require('tests.helpers')
 
 local child = helpers.new_child_neovim()
-local eq, not_eq = assert.are.same, assert.are.not_same
+local eq = assert.are.same
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -239,3 +239,5 @@ describe('Cursorword autohighlighting', function()
     validate_disable('b')
   end)
 end)
+
+child.stop()

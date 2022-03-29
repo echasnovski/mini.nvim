@@ -209,6 +209,10 @@ function helpers.new_child_neovim()
     return child.api.nvim_exec_lua(str, args or {})
   end
 
+  function child.lua_notify(str, args)
+    return child.api_notify.nvim_exec_lua(str, args or {})
+  end
+
   function child.lua_get(str, args)
     return child.api.nvim_exec_lua('return ' .. str, args or {})
   end
@@ -328,6 +332,16 @@ function helpers.new_child_neovim()
     __index = function(t, key)
       return function(...)
         return vim.rpcrequest(child.channel, key, ...)
+      end
+    end,
+  })
+
+  -- Variant of `api` functions called with `vim.rpcnotify`. Useful for
+  -- making blocking requests (like `getchar()`).
+  child.api_notify = setmetatable({}, {
+    __index = function(t, key)
+      return function(...)
+        return vim.rpcnotify(child.channel, key, ...)
       end
     end,
   })
