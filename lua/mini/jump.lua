@@ -97,7 +97,7 @@ MiniJump.config = {
     highlight = 250,
 
     -- Delay between jump and automatic stop if idle (no jump is done)
-    idle_stop = 1000000,
+    idle_stop = 10000000,
   },
 
   -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
@@ -122,6 +122,11 @@ function MiniJump.jump(target, backward, till, n_times)
 
   -- Cache inputs for future use
   H.update_cache(target, backward, till, n_times)
+
+  if H.cache.target == nil then
+    H.notify('Can not jump because there is no recent `target`.')
+    return
+  end
 
   -- Construct search and highlight patterns
   local flags = H.cache.backward and 'Wb' or 'W'
@@ -301,6 +306,7 @@ function H.setup_config(config)
     ['mappings.backward'] = { config.mappings.backward, 'string' },
     ['mappings.forward_till'] = { config.mappings.forward_till, 'string' },
     ['mappings.backward_till'] = { config.mappings.backward_till, 'string' },
+    ['mappings.repeat_jump'] = { config.mappings.repeat_jump, 'string' },
   })
 
   return config

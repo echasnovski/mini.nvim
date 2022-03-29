@@ -1971,7 +1971,7 @@ Default values:
       highlight = 250,
 
       -- Delay between jump and automatic stop if idle (no jump is done)
-      idle_stop = 1000000,
+      idle_stop = 10000000,
     },
 
     -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
