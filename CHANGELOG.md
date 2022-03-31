@@ -2,8 +2,10 @@
 
 ## mini.jump
 
+- BREAKING: Soft deprecate `config.highlight_delay` in favor of `config.delay.highlight`.
 - Implement idle timeout to stop jumping automatically (@annenpolka, #56).
-- BREAKING: Soft deprecate `highlight_delay` in favor of `delay.highlight`.
+- Update process of querying target symbol: show help message after delay, allow `<C-c>` to stop selecting target.
+- Implement `MiniJump.state`: table with useful model-related information.
 
 ## mini.sessions
 
