@@ -72,9 +72,9 @@ end
 ---@param win_id number Window identifier (see |win_getid()|) for which gutter
 ---   width is computed. Default: 0 for current.
 function MiniMisc.get_gutter_width(win_id)
-  -- Compute number of 'editable' columns in current window
+  win_id = win_id or 0
 
-  -- Store current window metadata
+  -- Store window metadata
   local virtualedit = vim.opt.virtualedit
   local curpos = vim.api.nvim_win_get_cursor(win_id)
 
@@ -307,7 +307,7 @@ function MiniMisc.use_nested_comments(buf_id)
     return
   end
 
-  -- Get comment leader. Remove whitespace and escape 'dangerous' characters
+  -- Get comment leader by removing whitespace
   local leader = vim.trim(comment_parts[1])
 
   local comments = vim.api.nvim_buf_get_option(buf_id, 'comments')
@@ -376,6 +376,8 @@ function H.setup_config(config)
 end
 
 function H.apply_config(config)
+  MiniMisc.config = config
+
   for _, v in pairs(config.make_global) do
     _G[v] = MiniMisc[v]
   end
