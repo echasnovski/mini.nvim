@@ -37,11 +37,11 @@
 ---@tag MiniJump
 ---@toc_entry Jump cursor
 
+---@alias __target string The string to jump to.
+---@alias __backward boolean Whether to jump backward.
 ---@alias __till boolean Whether to jump just before/after the match instead of
----   exactly on target. Also ignore matches that don't have anything
----   before/after them. Default: latest used value or `false`.
----@alias __backward boolean Whether to jump backward. Default: latest used
----   value or `false`.
+---   exactly on target. Also ignore matches that have nothing before/after them.
+---@alias __n_times number Number of times to perform consecutive jumps.
 
 -- Module definition ==========================================================
 local MiniJump = {}
@@ -105,32 +105,62 @@ MiniJump.config = {
 }
 --minidoc_afterlines_end
 
+-- Module data ================================================================
+--- Data about jumping state
+---
+--- It stores various information used in this module. All elements, except
+--- `jumping`, is about the latest jump. They are used as default values for
+--- similar arguments.
+---
+---@class JumpingState
+---
+---@field target __target
+---@field backward __backward
+---@field till __till
+---@field n_times __n_times
+---@field mode string Mode of latest jump (output of |mode()| with non-zero argument).
+---@field jumping boolean Whether module is currently in "jumping mode": usage of
+---   |MiniJump.smart_jump| and all mappings won't require target.
+---@text
+--- Initial values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+MiniJump.state = {
+  target = nil,
+  backward = false,
+  till = false,
+  n_times = 1,
+  mode = nil,
+  jumping = false,
+}
+--minidoc_afterlines_end
+
 -- Module functionality =======================================================
 --- Jump to target
 ---
 --- Takes a string and jumps to its first occurrence in desired direction.
 ---
----@param target string The string to jump to.
+--- All default values are taken from |MiniJump.state| to emulate latest jump.
+---
+---@param target __target
 ---@param backward __backward
 ---@param till __till
----@param n_times number Number of times to perform a jump. Default: latest
----   used value or 1.
+---@param n_times __n_times
 function MiniJump.jump(target, backward, till, n_times)
   if H.is_disabled() then
     return
   end
 
   -- Cache inputs for future use
-  H.update_cache(target, backward, till, n_times)
+  H.update_state(target, backward, till, n_times)
 
-  if H.cache.target == nil then
+  if MiniJump.state.target == nil then
     H.notify('Can not jump because there is no recent `target`.')
     return
   end
 
   -- Determine if target is present anywhere in order to correctly enter
   -- jumping mode. If not, jumping mode is not possible.
-  local escaped_target = vim.fn.escape(H.cache.target, [[\]])
+  local escaped_target = vim.fn.escape(MiniJump.state.target, [[\]])
   local search_pattern = ([[\V%s]]):format(escaped_target)
   local target_is_present = vim.fn.search(search_pattern, 'wn') ~= 0
   if not target_is_present then
@@ -138,10 +168,10 @@ function MiniJump.jump(target, backward, till, n_times)
   end
 
   -- Construct search and highlight patterns
-  local flags = H.cache.backward and 'Wb' or 'W'
+  local flags = MiniJump.state.backward and 'Wb' or 'W'
   local pattern, hl_pattern = [[\V%s]], [[\V%s]]
-  if H.cache.till then
-    if H.cache.backward then
+  if MiniJump.state.till then
+    if MiniJump.state.backward then
       pattern, hl_pattern = [[\V\(%s\)\@<=\.]], [[\V%s\.\@=]]
       flags = ('%se'):format(flags)
     else
@@ -174,8 +204,8 @@ function MiniJump.jump(target, backward, till, n_times)
 
   -- Make jump(s)
   H.n_cursor_moved = 0
-  H.jumping = true
-  for _ = 1, H.cache.n_times do
+  MiniJump.state.jumping = true
+  for _ = 1, MiniJump.state.n_times do
     vim.fn.search(pattern, flags)
   end
 
@@ -188,6 +218,8 @@ end
 --- If the last movement was a jump, perform another jump with the same target.
 --- Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
 ---
+--- All default values are taken from |MiniJump.state| to emulate latest jump.
+---
 ---@param backward __backward
 ---@param till __till
 function MiniJump.smart_jump(backward, till)
@@ -197,13 +229,13 @@ function MiniJump.smart_jump(backward, till)
 
   -- Jumping should stop after mode change. Use `mode(1)` to track 'omap' case.
   local cur_mode = vim.fn.mode(1)
-  if H.cache.mode ~= cur_mode then
+  if MiniJump.state.mode ~= cur_mode then
     MiniJump.stop_jumping()
   end
 
   -- Ask for target only when needed
   local target
-  if not H.jumping or H.cache.target == nil then
+  if not MiniJump.state.jumping or MiniJump.state.target == nil then
     target = H.get_target()
     -- Stop if user supplied invalid target
     if target == nil then
@@ -211,7 +243,7 @@ function MiniJump.smart_jump(backward, till)
     end
   end
 
-  H.update_cache(target, backward, till, vim.v.count1)
+  H.update_state(target, backward, till, vim.v.count1)
 
   MiniJump.jump()
 end
@@ -221,6 +253,8 @@ end
 --- Cache information about the jump and return string with command to perform
 --- jump. Designed to be used inside Operator-pending mapping (see
 --- |omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
+---
+--- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
 ---@param backward __backward
 ---@param till __till
@@ -236,7 +270,7 @@ function MiniJump.expr_jump(backward, till)
   if target == nil then
     return
   end
-  H.update_cache(target, backward, till, vim.v.count1)
+  H.update_state(target, backward, till, vim.v.count1)
 
   return vim.api.nvim_replace_termcodes('v:<C-u>lua MiniJump.jump()<CR>', true, true, true)
 end
@@ -248,14 +282,14 @@ end
 function MiniJump.stop_jumping()
   H.timers.highlight:stop()
   H.timers.idle_stop:stop()
-  H.jumping = false
+  MiniJump.state.jumping = false
   H.unhighlight()
 end
 
 --- Act on |CursorMoved|
 function MiniJump.on_cursormoved()
-  -- Check `H.jumping` to avoid unnecessary actions on every CursorMoved
-  if H.jumping then
+  -- Check if jumping to avoid unnecessary actions on every CursorMoved
+  if MiniJump.state.jumping then
     H.n_cursor_moved = H.n_cursor_moved + 1
     -- Stop jumping only if `CursorMoved` was not a result of smart jump
     if H.n_cursor_moved > 1 then
@@ -267,12 +301,6 @@ end
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniJump.config
-
--- Cache for the latest jump
-H.cache = { mode = nil, target = nil, backward = false, till = false, n_times = 1 }
-
--- Indicator of whether inside smart jumping
-H.jumping = false
 
 -- Counter of number of CursorMoved events
 H.n_cursor_moved = 0
@@ -394,21 +422,21 @@ function H.notify(msg)
   vim.notify(('(mini.jump) %s'):format(msg))
 end
 
-function H.update_cache(target, backward, till, n_times)
-  H.cache.mode = vim.fn.mode(1)
+function H.update_state(target, backward, till, n_times)
+  MiniJump.state.mode = vim.fn.mode(1)
 
   -- Don't use `? and <1> or <2>` because it doesn't work when `<1>` is `false`
   if target ~= nil then
-    H.cache.target = target
+    MiniJump.state.target = target
   end
   if backward ~= nil then
-    H.cache.backward = backward
+    MiniJump.state.backward = backward
   end
   if till ~= nil then
-    H.cache.till = till
+    MiniJump.state.till = till
   end
   if n_times ~= nil then
-    H.cache.n_times = n_times
+    MiniJump.state.n_times = n_times
   end
 end
 

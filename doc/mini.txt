@@ -1980,21 +1980,54 @@ Default values:
 <
 
 ------------------------------------------------------------------------------
+                                                                *MiniJump.state*
+                                `MiniJump.state`
+Data about jumping state
+
+It stores various information used in this module. All elements, except
+`jumping`, is about the latest jump. They are used as default values for
+similar arguments.
+
+Class~
+{JumpingState}
+
+Fields~
+{target} `(string)` The string to jump to.
+{backward} `(boolean)` Whether to jump backward.
+{till} `(boolean)` Whether to jump just before/after the match instead of
+  exactly on target. Also ignore matches that have nothing before/after them.
+{n_times} `(number)` Number of times to perform consecutive jumps.
+{mode} `(string)` Mode of latest jump (output of |mode()| with non-zero argument).
+{jumping} `(boolean)` Whether module is currently in "jumping mode": usage of
+  |MiniJump.smart_jump| and all mappings won't require target.
+
+Initial values:
+>
+  MiniJump.state = {
+    target = nil,
+    backward = false,
+    till = false,
+    n_times = 1,
+    mode = nil,
+    jumping = false,
+  }
+<
+
+------------------------------------------------------------------------------
                                                                *MiniJump.jump()*
             `MiniJump.jump`({target}, {backward}, {till}, {n_times})
 Jump to target
 
 Takes a string and jumps to its first occurrence in desired direction.
 
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
 Parameters~
 {target} `(string)` The string to jump to.
-{backward} `(boolean)` Whether to jump backward. Default: latest used
-  value or `false`.
+{backward} `(boolean)` Whether to jump backward.
 {till} `(boolean)` Whether to jump just before/after the match instead of
-  exactly on target. Also ignore matches that don't have anything
-  before/after them. Default: latest used value or `false`.
-{n_times} `(number)` Number of times to perform a jump. Default: latest
-  used value or 1.
+  exactly on target. Also ignore matches that have nothing before/after them.
+{n_times} `(number)` Number of times to perform consecutive jumps.
 
 ------------------------------------------------------------------------------
                                                          *MiniJump.smart_jump()*
@@ -2004,12 +2037,12 @@ Make smart jump
 If the last movement was a jump, perform another jump with the same target.
 Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
 
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
 Parameters~
-{backward} `(boolean)` Whether to jump backward. Default: latest used
-  value or `false`.
+{backward} `(boolean)` Whether to jump backward.
 {till} `(boolean)` Whether to jump just before/after the match instead of
-  exactly on target. Also ignore matches that don't have anything
-  before/after them. Default: latest used value or `false`.
+  exactly on target. Also ignore matches that have nothing before/after them.
 
 ------------------------------------------------------------------------------
                                                           *MiniJump.expr_jump()*
@@ -2020,12 +2053,12 @@ Cache information about the jump and return string with command to perform
 jump. Designed to be used inside Operator-pending mapping (see
 |omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
 
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
 Parameters~
-{backward} `(boolean)` Whether to jump backward. Default: latest used
-  value or `false`.
+{backward} `(boolean)` Whether to jump backward.
 {till} `(boolean)` Whether to jump just before/after the match instead of
-  exactly on target. Also ignore matches that don't have anything
-  before/after them. Default: latest used value or `false`.
+  exactly on target. Also ignore matches that have nothing before/after them.
 
 ------------------------------------------------------------------------------
                                                        *MiniJump.stop_jumping()*
