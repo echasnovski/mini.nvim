@@ -128,6 +128,15 @@ function MiniJump.jump(target, backward, till, n_times)
     return
   end
 
+  -- Determine if target is present anywhere in order to correctly enter
+  -- jumping mode. If not, jumping mode is not possible.
+  local escaped_target = vim.fn.escape(H.cache.target, [[\]])
+  local search_pattern = ([[\V%s]]):format(escaped_target)
+  local target_is_present = vim.fn.search(search_pattern, 'wn') ~= 0
+  if not target_is_present then
+    return
+  end
+
   -- Construct search and highlight patterns
   local flags = H.cache.backward and 'Wb' or 'W'
   local pattern, hl_pattern = [[\V%s]], [[\V%s]]
@@ -140,7 +149,6 @@ function MiniJump.jump(target, backward, till, n_times)
     end
   end
 
-  local escaped_target = vim.fn.escape(H.cache.target, [[\]])
   pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(escaped_target)
 
   -- Delay highlighting after stopping previous one
