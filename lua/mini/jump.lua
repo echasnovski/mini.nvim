@@ -154,7 +154,8 @@ function MiniJump.jump(target, backward, till, n_times)
   -- Delay highlighting after stopping previous one
   H.timers.highlight:stop()
   H.timers.highlight:start(
-    MiniJump.config.delay.highlight,
+    -- Update highlighting immediately if any highlighting is already present
+    H.is_highlighting() and 0 or MiniJump.config.delay.highlight,
     0,
     vim.schedule_wrap(function()
       H.highlight(hl_pattern)
@@ -348,11 +349,8 @@ end
 
 -- Highlighting ---------------------------------------------------------------
 function H.highlight(pattern)
-  local win_id = vim.api.nvim_get_current_win()
-  local match_info = H.window_matches[win_id]
-
   -- Don't do anything if already highlighting input pattern
-  if match_info and match_info.pattern == pattern then
+  if H.is_highlighting(pattern) then
     return
   end
 
@@ -363,7 +361,7 @@ function H.highlight(pattern)
   H.unhighlight()
 
   local match_id = vim.fn.matchadd('MiniJump', pattern)
-  H.window_matches[win_id] = { id = match_id, pattern = pattern }
+  H.window_matches[vim.api.nvim_get_current_win()] = { id = match_id, pattern = pattern }
 end
 
 function H.unhighlight()
@@ -377,6 +375,18 @@ function H.unhighlight()
       H.window_matches[win_id] = nil
     end
   end
+end
+
+---@param pattern string Highlight pattern to check for. If `nil`, checks for
+---   any highlighting registered in current window.
+---@private
+function H.is_highlighting(pattern)
+  local win_id = vim.api.nvim_get_current_win()
+  local match_info = H.window_matches[win_id]
+  if match_info == nil then
+    return false
+  end
+  return pattern == nil or match_info.pattern == pattern
 end
 
 -- Utilities ------------------------------------------------------------------
