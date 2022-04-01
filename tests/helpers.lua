@@ -1,71 +1,5 @@
 local helpers = {}
 
--- Work with 'mini.nvim' modules ==============================================
-function helpers.mini_load(name, config)
-  require(('mini.%s'):format(name)).setup(config)
-end
-
-function helpers.mini_unload(name)
-  local tbl_name = 'Mini' .. name:sub(1, 1):upper() .. name:sub(2)
-  local module_name = ('mini.%s'):format(name)
-
-  -- Unload Lua module
-  package.loaded[module_name] = nil
-
-  -- Remove global table
-  _G[tbl_name] = nil
-
-  -- Remove autocmd group
-  if vim.fn.exists('#' .. tbl_name) == 1 then
-    vim.cmd('silent augroup! ' .. tbl_name)
-  end
-end
-
--- Convenience wrappers =======================================================
-function helpers.set_cursor(line, column, win_id)
-  vim.api.nvim_win_set_cursor(win_id or 0, { line, column })
-
-  -- Emulate autocommand
-  if vim.fn.mode(1) == 'i' and vim.fn.pumvisible() == 0 then
-    vim.cmd([[doautocmd CursorMovedI]])
-  else
-    vim.cmd([[doautocmd CursorMoved]])
-  end
-
-  -- Advance event loop (not sure if needed)
-  vim.wait(0)
-end
-
-function helpers.get_cursor(win_id)
-  return vim.api.nvim_win_get_cursor(win_id or 0)
-end
-
-function helpers.set_lines(lines, buf_id)
-  vim.api.nvim_buf_set_lines(buf_id or 0, 0, -1, true, lines)
-end
-
-function helpers.get_lines(buf_id)
-  return vim.api.nvim_buf_get_lines(buf_id or 0, 0, -1, true)
-end
-
-function helpers.feedkeys(keys, replace_termcodes)
-  replace_termcodes = replace_termcodes or true
-  if replace_termcodes then
-    keys = vim.api.nvim_replace_termcodes(keys, true, true, true)
-  end
-
-  -- Use `xt` to emulate user key press
-  vim.api.nvim_feedkeys(keys, 'xt', false)
-end
-
-function helpers.exit_visual_mode()
-  local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
-  local cur_mode = vim.fn.mode()
-  if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then
-    vim.cmd('normal! ' .. cur_mode)
-  end
-end
-
 -- Work with child Neovim process =============================================
 local neovim_children = {}
 
@@ -281,7 +215,7 @@ function helpers.new_child_neovim()
   ---@param last number|table Table with finish position or number to check linewise.
   ---@private
   function child.assert_visual_marks(first, last)
-    child.exit_visual_mode()
+    child.ensure_normal_mode()
 
     first = type(first) == 'number' and { first, 0 } or first
     last = type(last) == 'number' and { last, 2147483647 } or last
@@ -319,12 +253,24 @@ function helpers.new_child_neovim()
   end
 
   -- Various wrappers
-  function child.exit_visual_mode()
+  function child.ensure_normal_mode()
+    local cur_mode = child.fn.mode()
+
+    -- Exit from Visual mode
     local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
-    local cur_mode = child.fn.mode(1)
     if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then
-      child.cmd('normal! ' .. cur_mode)
+      child.type_keys(cur_mode)
+      return
     end
+
+    -- Exit from Terminal mode
+    if cur_mode == 't' then
+      child.type_keys({ [[<C-\>]], '<C-n>' })
+      return
+    end
+
+    -- Exit from other modes
+    child.type_keys('<Esc>')
   end
 
   -- Wrappers for common `vim.xxx` objects (will get executed inside child)

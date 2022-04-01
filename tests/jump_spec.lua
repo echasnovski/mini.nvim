@@ -185,7 +185,7 @@ describe('MiniJump.state', function()
 
     type_keys({ 'V', 't', 'e' })
     eq(get_state().mode, 'V')
-    child.exit_visual_mode()
+    child.ensure_normal_mode()
 
     type_keys({ 'd', 't', 'e' })
     eq(get_state().mode, 'nov')
@@ -363,7 +363,7 @@ describe('Jumping with f/t/F/T', function()
         end
 
         validate(key, pos)
-        child.exit_visual_mode()
+        child.ensure_normal_mode()
       end
     end
   end)
@@ -544,7 +544,8 @@ describe('Jumping with f/t/F/T', function()
       set_lines({ 'abcd' })
       set_cursor(1, 0)
       -- Here 'o' should act just like Normal mode 'o'
-      type_keys({ key, test_key, 'o' })
+      -- Wait after every key to poke eventloop
+      type_keys({ key, test_key, 'o' }, 1)
       eq(get_lines(), { 'abcd', '' })
 
       -- Cleanup from Insert mode
@@ -699,7 +700,7 @@ describe('Repeat jump with ;', function()
     type_keys('v')
     eq(child.fn.mode(), 'v')
     validate()
-    child.exit_visual_mode()
+    child.ensure_normal_mode()
   end)
 
   it('works in Operator-pending mode', function()
@@ -836,7 +837,7 @@ describe('Stop jumping after idle', function()
     eq(get_cursor(), { 1, 3 })
 
     -- It implements debounce-style delay
-    sleep(delay)
+    sleep(delay + 1)
     -- It should have stopped jumping and this should initiate new jump
     type_keys({ 'f', 'f' })
     eq(get_cursor(), { 2, 0 })
