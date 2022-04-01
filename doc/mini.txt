@@ -2419,8 +2419,9 @@ Uses |nvim_del_keymap()| together with unregistering supplied `pair`.
 Parameters~
 {mode} `(string)` `mode` for |nvim_del_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_del_keymap()|.
-{pair} `(string)` Pair which should be unregistered. Supply `''` to not
-  unregister pair.
+{pair} `(string)` Pair which should be unregistered from both
+  `<BS>` and `<CR>`. Should be explicitly supplied to avoid confusion.
+  Supply `''` to not unregister pair.
 
 ------------------------------------------------------------------------------
                                                          *MiniPairs.unmap_buf()*
@@ -2433,8 +2434,9 @@ Parameters~
 {buffer} `(number)` `buffer` for |nvim_buf_del_keymap()|.
 {mode} `(string)` `mode` for |nvim_buf_del_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_buf_del_keymap()|.
-{pair} `(string)` Pair which should be unregistered. Supply `''` to not
-  unregister pair.
+{pair} `(string)` Pair which should be unregistered from both
+  `<BS>` and `<CR>`. Should be explicitly supplied to avoid confusion.
+  Supply `''` to not unregister pair.
 
 ------------------------------------------------------------------------------
                                                               *MiniPairs.open()*

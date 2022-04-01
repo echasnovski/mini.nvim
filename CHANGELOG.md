@@ -7,6 +7,10 @@
 - Update process of querying target symbol: show help message after delay, allow `<C-c>` to stop selecting target.
 - Implement `MiniJump.state`: table with useful model-related information.
 
+## mini.pairs
+
+- Create mappings for `<BS>` and `<CR>` in certain mode only after some pair is registered in that mode.
+
 ## mini.sessions
 
 - Implement `MiniSessions.select()` to select session interactively and perform action on it.

@@ -65,8 +65,9 @@
 ---@alias __neigh_pattern string Pattern for two neighborhood characters ("\r" line
 ---   start, "\n" - line end).
 ---@alias __pair string String with two characters representing pair.
----@alias __unregister_pair string Pair which should be unregistered. Supply `''` to not
----   unregister pair.
+---@alias __unregister_pair string Pair which should be unregistered from both
+---   `<BS>` and `<CR>`. Should be explicitly supplied to avoid confusion.
+---   Supply `''` to not unregister pair.
 
 -- Module definition ==========================================================
 local MiniPairs = {}
@@ -154,10 +155,14 @@ MiniPairs.config = {
 ---@param opts table Optional table `opts` for |nvim_set_keymap()|. Elements
 ---   `expr` and `noremap` won't be recognized (`true` by default).
 function MiniPairs.map(mode, lhs, pair_info, opts)
-  pair_info = H.ensure_pair_info(pair_info)
+  pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
+
   vim.api.nvim_set_keymap(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, 'all')
+
+  -- Ensure that `<BS>` and `<CR>` are mapped for input mode
+  H.ensure_cr_bs(mode)
 end
 
 --- Make buffer mapping
@@ -176,10 +181,14 @@ end
 ---@param opts table Optional table `opts` for |nvim_buf_set_keymap()|.
 ---   Elements `expr` and `noremap` won't be recognized (`true` by default).
 function MiniPairs.map_buf(buffer, mode, lhs, pair_info, opts)
-  pair_info = H.ensure_pair_info(pair_info)
+  pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
+
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
+
+  -- Ensure that `<BS>` and `<CR>` are mapped for inpu mode
+  H.ensure_cr_bs(mode)
 end
 
 --- Remove global mapping
@@ -190,13 +199,15 @@ end
 ---@param lhs string `lhs` for |nvim_del_keymap()|.
 ---@param pair __unregister_pair
 function MiniPairs.unmap(mode, lhs, pair)
-  vim.api.nvim_del_keymap(mode, lhs)
-  if pair == nil then
-    vim.notify([[(mini.pairs) Supply `pair` argument to `MiniPairs.unmap`.]])
+  -- `pair` should be supplied explicitly
+  vim.validate({ pair = { pair, 'string' } })
+
+  -- Use `pcall` to allow 'deleting' already deleted mapping
+  pcall(vim.api.nvim_del_keymap, mode, lhs)
+  if pair == '' then
+    return
   end
-  if (pair or '') ~= '' then
-    H.unregister_pair(pair, mode, 'all')
-  end
+  H.unregister_pair(pair, mode, 'all')
 end
 
 --- Remove buffer mapping
@@ -208,13 +219,15 @@ end
 ---@param lhs string `lhs` for |nvim_buf_del_keymap()|.
 ---@param pair __unregister_pair
 function MiniPairs.unmap_buf(buffer, mode, lhs, pair)
-  vim.api.nvim_buf_del_keymap(buffer, mode, lhs)
-  if pair == nil then
-    vim.notify([[(mini.pairs) Supply `pair` argument to `MiniPairs.unmap_buf`.]])
+  -- `pair` should be supplied explicitly
+  vim.validate({ pair = { pair, 'string' } })
+
+  -- Use `pcall` to allow 'deleting' already deleted mapping
+  pcall(vim.api.nvim_buf_del_keymap, buffer, mode, lhs)
+  if pair == '' then
+    return
   end
-  if (pair or '') ~= '' then
-    H.unregister_pair(pair, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
-  end
+  H.unregister_pair(pair, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
 end
 
 --- Process "open" symbols
@@ -273,7 +286,7 @@ end
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
 function MiniPairs.closeopen(pair, neigh_pattern)
-  if H.is_disabled() or not (H.get_cursor_neigh(1, 1) == pair:sub(2, 2)) then
+  if H.is_disabled() or H.get_cursor_neigh(1, 1) ~= pair:sub(2, 2) then
     return MiniPairs.open(pair, neigh_pattern)
   else
     return H.get_arrow_key('right')
@@ -370,6 +383,16 @@ function H.setup_config(config)
     ['modes.terminal'] = { config.modes.terminal, 'boolean' },
   })
 
+  H.validate_pair_info(config.mappings['('], "mappings['(']")
+  H.validate_pair_info(config.mappings['['], "mappings['[']")
+  H.validate_pair_info(config.mappings['{'], "mappings['{']")
+  H.validate_pair_info(config.mappings[')'], "mappings[')']")
+  H.validate_pair_info(config.mappings[']'], "mappings[']']")
+  H.validate_pair_info(config.mappings['}'], "mappings['}']")
+  H.validate_pair_info(config.mappings['"'], "mappings['\"']")
+  H.validate_pair_info(config.mappings["'"], 'mappings["\'"]')
+  H.validate_pair_info(config.mappings['`'], "mappings['`']")
+
   return config
 end
 
@@ -388,12 +411,8 @@ function H.apply_config(config)
 
   for _, mode in pairs(mode_array) do
     for key, pair_info in pairs(config.mappings) do
+      -- This also should take care of mapping `<BS>` and `<CR>`
       MiniPairs.map(mode, key, pair_info)
-    end
-
-    vim.api.nvim_set_keymap(mode, '<BS>', [[v:lua.MiniPairs.bs()]], { expr = true, noremap = true })
-    if mode == 'i' then
-      vim.api.nvim_set_keymap('i', '<CR>', [[v:lua.MiniPairs.cr()]], { expr = true, noremap = true })
     end
   end
 end
@@ -432,7 +451,6 @@ function H.unregister_pair(pair, mode, buffer)
     for i, p in ipairs(buf_pairs[key]) do
       if p == pair then
         table.remove(buf_pairs[key], i)
-        break
       end
     end
   end
@@ -457,18 +475,41 @@ function H.is_pair_registered(pair, mode, buffer, key)
   return vim.tbl_contains(buf_pairs[key], pair)
 end
 
+--stylua: ignore start
+function H.ensure_cr_bs(mode)
+  local has_any_cr_pair, has_any_bs_pair = false, false
+  for _, pair_tbl in pairs(H.registered_pairs[mode]) do
+    has_any_cr_pair = has_any_cr_pair or not vim.tbl_isempty(pair_tbl.cr)
+    has_any_bs_pair = has_any_bs_pair or not vim.tbl_isempty(pair_tbl.bs)
+  end
+
+  -- NOTE: this doesn't distinguish between global and buffer mappings. Both
+  -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
+  if has_any_bs_pair then
+    H.map(mode, '<BS>', [[v:lua.MiniPairs.bs()]])
+  end
+  if mode == 'i' and has_any_cr_pair then
+    H.map(mode, '<CR>', [[v:lua.MiniPairs.cr()]])
+  end
+end
+--stylua: ignore start
+
 -- Work with pair_info --------------------------------------------------------
-function H.ensure_pair_info(pair_info)
-  vim.validate({ pair_info = { pair_info, 'table' } })
+function H.validate_pair_info(pair_info, prefix)
+  prefix = prefix or 'pair_info'
+  vim.validate({ [prefix] = { pair_info, 'table' } })
   pair_info = vim.tbl_deep_extend('force', H.default_pair_info, pair_info)
 
   vim.validate({
-    action = { pair_info.action, 'string' },
-    pair = { pair_info.pair, 'string' },
-    neigh_pattern = { pair_info.neigh_pattern, 'string' },
-    register = { pair_info.register, 'table' },
-    ['register.bs'] = { pair_info.register.bs, 'boolean' },
-    ['register.cr'] = { pair_info.register.cr, 'boolean' },
+    [prefix .. '.action'] = { pair_info.action, 'string' },
+    [prefix .. '.pair'] = { pair_info.pair, 'string' },
+    [prefix .. '.neigh_pattern'] = { pair_info.neigh_pattern, 'string' },
+    [prefix .. '.register'] = { pair_info.register, 'table' },
+  })
+
+  vim.validate({
+    [prefix .. '.register.bs'] = { pair_info.register.bs, 'boolean' },
+    [prefix .. '.register.cr'] = { pair_info.register.cr, 'boolean' },
   })
 
   return pair_info
