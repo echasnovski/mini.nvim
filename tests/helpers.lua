@@ -124,7 +124,8 @@ function helpers.new_child_neovim()
     keys = type(keys) == 'string' and { keys } or keys
 
     for _, k in ipairs(keys) do
-      child.api.nvim_input(k)
+      -- Need to escape bare `<` (see `:h nvim_input`)
+      child.api.nvim_input(k == '<' and '<LT>' or k)
       if wait > 0 then
         child.loop.sleep(wait)
       end
