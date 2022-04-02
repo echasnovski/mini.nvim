@@ -6,7 +6,7 @@
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
 <!-- badges: end -->
 
-Collection of minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Each module can be considered as a separate sub-plugin.
+Collection of minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
 
 ## Table of contents
 
