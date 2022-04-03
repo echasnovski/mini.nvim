@@ -2610,7 +2610,7 @@ Table of detected sessions. Keys represent session name. Values are tables
 with session information that currently has these fields (but subject to
 change):
 - <modify_time> `(number)` modification time (see |getftime|) of session file.
-- <name> `(string)` name of session (should be equal to table value).
+- <name> `(string)` name of session (should be equal to table key).
 - <path> `(string)` full path to session file.
 - <type> `(string)` type of session ('global' or 'local').
 

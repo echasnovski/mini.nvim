@@ -117,7 +117,7 @@ MiniSessions.config = {
 --- with session information that currently has these fields (but subject to
 --- change):
 --- - <modify_time> `(number)` modification time (see |getftime|) of session file.
---- - <name> `(string)` name of session (should be equal to table value).
+--- - <name> `(string)` name of session (should be equal to table key).
 --- - <path> `(string)` full path to session file.
 --- - <type> `(string)` type of session ('global' or 'local').
 MiniSessions.detected = {}
@@ -336,10 +336,7 @@ end
 
 --- Act on |VimEnter|
 function MiniSessions.on_vimenter()
-  -- It is assumed that something is shown if there is something in 'current'
-  -- buffer or if at least one file was supplied on startup
-  local is_something_shown = vim.fn.line2byte('$') > 0 or vim.fn.argc() > 0
-  if MiniSessions.config.autoread and not is_something_shown then
+  if MiniSessions.config.autoread and not H.is_something_shown() then
     MiniSessions.read()
   end
 end
@@ -520,6 +517,36 @@ end
 
 function H.full_path(path)
   return vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))
+end
+
+function H.is_something_shown()
+  -- Don't autoread session if Neovim is opened to show something. That is
+  -- when at least one of the following is true:
+  -- - Current buffer has any lines (something opened explicitly).
+  -- NOTE: Usage of `line2byte(line('$') + 1) > 0` seemed to be fine, but it
+  -- doesn't work if some automated changed was made to buffer while leaving it
+  -- empty (returns 2 instead of -1). This was also the reason of not being
+  -- able to test with child Neovim process from 'tests/helpers'.
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then
+    return true
+  end
+
+  -- - Several buffers are listed (like session with placeholder buffers). That
+  --   means unlisted buffers (like from `nvim-tree`) don't affect decision.
+  local listed_buffers = vim.tbl_filter(function(buf_id)
+    return vim.fn.buflisted(buf_id) == 1
+  end, vim.api.nvim_list_bufs())
+  if #listed_buffers > 1 then
+    return true
+  end
+
+  -- - There are files in arguments (like `nvim foo.txt` with new file).
+  if vim.fn.argc() > 0 then
+    return true
+  end
+
+  return false
 end
 
 return MiniSessions
