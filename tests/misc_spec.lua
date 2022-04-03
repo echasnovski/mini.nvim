@@ -64,11 +64,24 @@ describe('MiniMisc.bench_time()', function()
     return unpack(child.lua_get('{ MiniMisc.bench_time(_G.f, ...) }', { ... }))
   end
 
+  -- Validate that benchmark is within tolerable error from target. This is
+  -- needed due to random nature of benchmarks.
+  local validate_benchmark = function(time_tbl, target, error)
+    error = error or 0.2
+    local s, n = 0, 0
+    for _, x in ipairs(time_tbl) do
+      s, n = s + x, n + 1
+    end
+
+    assert.True(n * target * (1 - error) < s)
+    assert.True(s < target * (1 + error) * n)
+  end
+
   it('works', function()
     local b, res = bench_time()
     -- By default should run function once
     eq(#b, 1)
-    assert.True(0.009 < b[1] and b[1] < 0.011)
+    validate_benchmark(b, 0.01)
     -- Second value is function output
     eq(res, 10)
   end)
@@ -77,14 +90,12 @@ describe('MiniMisc.bench_time()', function()
     local b, _ = bench_time(5)
     -- By default should run function once
     eq(#b, 5)
-    for _, x in ipairs(b) do
-      assert.True(0.009 < x and x < 0.011)
-    end
+    validate_benchmark(b, 0.01)
   end)
 
   it('respects `...` as benched time arguments', function()
     local b, res = bench_time(1, 50)
-    assert.True(0.049 < b[1] and b[1] < 0.051)
+    validate_benchmark(b, 0.05)
     -- Second value is function output
     eq(res, 50)
   end)
