@@ -167,6 +167,7 @@ function MiniSessions.read(session_name, opts)
 
   local session_path = MiniSessions.detected[session_name].path
   vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
+  vim.v.this_session = session_path
 
   if opts.verbose then
     H.notify(('Read session %s'):format(session_path))
@@ -197,10 +198,6 @@ end
 ---     `MiniSessions.config.verbose.write`).
 function MiniSessions.write(session_name, opts)
   if H.is_disabled() then
-    return
-  end
-  if type(session_name) == 'string' and #session_name == 0 then
-    H.notify([[Supply non-empty session name to write.]])
     return
   end
 
@@ -240,7 +237,7 @@ end
 ---@param session_name string Name of detected session file to delete. Default:
 ---   `nil` for name of current session (taken from |v:this_session|).
 ---@param opts table Table with options. Current allowed keys:
----   - <force> (whether to ignore deletion of current session; default:
+---   - <force> (whether to allow deletion of current session; default:
 ---     `MiniSessions.config.force.delete`).
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.delete`).
@@ -489,7 +486,7 @@ function H.wipeout_all_buffers(force)
 
   -- Check for unsaved buffers and do nothing if they are present
   local unsaved_buffers = vim.tbl_filter(function(buf_id)
-    vim.api.nvim_buf_get_option(buf_id, 'modified')
+    return vim.api.nvim_buf_get_option(buf_id, 'modified')
   end, vim.api.nvim_list_bufs())
 
   if #unsaved_buffers > 0 then
@@ -513,6 +510,12 @@ function H.name_to_path(session_name)
       return
     end
     return vim.v.this_session
+  end
+
+  session_name = tostring(session_name)
+  if session_name == '' then
+    H.notify('Supply non-empty session name.')
+    return
   end
 
   local session_dir = (session_name == MiniSessions.config.file) and vim.fn.getcwd() or MiniSessions.config.directory

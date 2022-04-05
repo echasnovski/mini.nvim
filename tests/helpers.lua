@@ -42,7 +42,7 @@ function helpers.new_child_neovim()
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
   -- because they don't provide full functionality)
   function child.start(opts)
-    opts = vim.tbl_deep_extend('force', { args = {}, connection_timeout = 5000, nvim_executable = 'nvim' }, opts or {})
+    opts = vim.tbl_deep_extend('force', { nvim_executable = 'nvim', args = {}, connection_timeout = 5000 }, opts or {})
 
     local args = { '--clean', '--listen', child.address }
     vim.list_extend(args, opts.args)
@@ -88,6 +88,8 @@ function helpers.new_child_neovim()
       child.job.stdout:close()
       child.job.stderr:close()
 
+      -- Use `pcall` to not error with `channel closed by client`
+      pcall(child.cmd, 'qall!')
       child.job.handle:kill()
       child.job.handle:close()
 
@@ -99,26 +101,95 @@ function helpers.new_child_neovim()
   end
 
   function child.restart(opts)
-    child.stop()
-    child.address = vim.fn.tempname()
-    child.start(child.start_opts or opts or {})
-  end
+    opts = vim.tbl_deep_extend('force', child.start_opts or {}, opts or {})
 
-  function child.setup(opts)
-    opts = vim.tbl_deep_extend('force', { args = { '-u', 'scripts/minimal_init.vim' } }, opts or {})
-
-    -- Ensure fresh job
-    if child.job == nil then
-      child.start({ args = opts.args })
-    else
-      child.restart()
+    if child.job ~= nil then
+      child.stop()
+      child.address = vim.fn.tempname()
     end
 
-    -- Ensure empty buffer
-    local test_buf_id = child.api.nvim_create_buf(true, false)
-    child.api.nvim_set_current_buf(test_buf_id)
+    child.start(opts)
   end
 
+  function child.setup()
+    child.restart({ args = { '-u', 'scripts/minimal_init.vim' } })
+
+    -- Ensure sinle empty readable buffer
+    -- NOTE: for some unimaginable reason this also speeds up test execution by
+    -- factor of almost two (was 4:40 minutes; became 2:40 minutes)
+    child.cmd('enew')
+  end
+
+  -- Wrappers for common `vim.xxx` objects (will get executed inside child)
+  child.api = setmetatable({}, {
+    __index = function(t, key)
+      return function(...)
+        return vim.rpcrequest(child.channel, key, ...)
+      end
+    end,
+  })
+
+  -- Variant of `api` functions called with `vim.rpcnotify`. Useful for
+  -- making blocking requests (like `getchar()`).
+  child.api_notify = setmetatable({}, {
+    __index = function(t, key)
+      return function(...)
+        return vim.rpcnotify(child.channel, key, ...)
+      end
+    end,
+  })
+
+  ---@return table Emulates `vim.xxx` table (like `vim.fn`)
+  ---@private
+  local forward_to_child = function(tbl_name)
+    -- TODO: try to figure out the best way to operate on tables with function
+    -- values (needs "deep encode/decode" of function objects)
+    return setmetatable({}, {
+      __index = function(_, key)
+        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
+        local value_type = child.api.nvim_exec_lua(('return type(%s)'):format(obj_name), {})
+
+        if value_type == 'function' then
+          -- This allows syntax like `child.fn.mode(1)`
+          return function(...)
+            return child.api.nvim_exec_lua(([[return %s(...)]]):format(obj_name), { ... })
+          end
+        end
+
+        -- This allows syntax like `child.bo.buftype`
+        return child.api.nvim_exec_lua(([[return %s]]):format(obj_name), {})
+      end,
+      __newindex = function(_, key, value)
+        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
+        -- This allows syntax like `child.b.aaa = function(x) return x + 1 end`
+        -- (inherits limitations of `string.dump`: no upvalues, etc.)
+        if type(value) == 'function' then
+          local dumped = vim.inspect(string.dump(value))
+          value = ('loadstring(%s)'):format(dumped)
+        else
+          value = vim.inspect(value)
+        end
+
+        child.api.nvim_exec_lua(('%s = %s'):format(obj_name, value), {})
+      end,
+    })
+  end
+
+  --stylua: ignore start
+  local supported_vim_tables = {
+    -- Collections
+    'diagnostic', 'fn', 'highlight', 'json', 'loop', 'lsp', 'mpack', 'treesitter', 'ui',
+    -- Variables
+    'g', 'b', 'w', 't', 'v', 'env',
+    -- Options (no 'opt' becuase not really usefult due to use of metatables)
+    'o', 'go', 'bo', 'wo',
+  }
+  --stylua: ignore end
+  for _, v in ipairs(supported_vim_tables) do
+    child[v] = forward_to_child(v)
+  end
+
+  -- Convenience wrappers
   function child.type_keys(keys, wait)
     wait = wait or 0
     keys = type(keys) == 'string' and { keys } or keys
@@ -274,75 +345,7 @@ function helpers.new_child_neovim()
     child.type_keys('<Esc>')
   end
 
-  -- Wrappers for common `vim.xxx` objects (will get executed inside child)
-  child.api = setmetatable({}, {
-    __index = function(t, key)
-      return function(...)
-        return vim.rpcrequest(child.channel, key, ...)
-      end
-    end,
-  })
-
-  -- Variant of `api` functions called with `vim.rpcnotify`. Useful for
-  -- making blocking requests (like `getchar()`).
-  child.api_notify = setmetatable({}, {
-    __index = function(t, key)
-      return function(...)
-        return vim.rpcnotify(child.channel, key, ...)
-      end
-    end,
-  })
-
-  ---@return table Emulates `vim.xxx` table (like `vim.fn`)
-  ---@private
-  local forward_to_child = function(tbl_name)
-    -- TODO: try to figure out the best way to operate on tables with function
-    -- values (needs "deep encode/decode" of function objects)
-    return setmetatable({}, {
-      __index = function(_, key)
-        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
-        local value_type = child.api.nvim_exec_lua(('return type(%s)'):format(obj_name), {})
-
-        if value_type == 'function' then
-          -- This allows syntax like `child.fn.mode(1)`
-          return function(...)
-            return child.api.nvim_exec_lua(([[return %s(...)]]):format(obj_name), { ... })
-          end
-        end
-
-        -- This allows syntax like `child.bo.buftype`
-        return child.api.nvim_exec_lua(([[return %s]]):format(obj_name), {})
-      end,
-      __newindex = function(_, key, value)
-        local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))
-        -- This allows syntax like `child.b.aaa = function(x) return x + 1 end`
-        -- (inherits limitations of `string.dump`: no upvalues, etc.)
-        if type(value) == 'function' then
-          local dumped = vim.inspect(string.dump(value))
-          value = ('loadstring(%s)'):format(dumped)
-        else
-          value = vim.inspect(value)
-        end
-
-        child.api.nvim_exec_lua(('%s = %s'):format(obj_name, value), {})
-      end,
-    })
-  end
-
-  --stylua: ignore start
-  local supported_vim_tables = {
-    -- Collections
-    'diagnostic', 'fn', 'highlight', 'json', 'loop', 'lsp', 'mpack', 'treesitter', 'ui',
-    -- Variables
-    'g', 'b', 'w', 't', 'v', 'env',
-    -- Options (no 'opt' becuase not really usefult due to use of metatables)
-    'o', 'go', 'bo', 'wo',
-  }
-  --stylua: ignore end
-  for _, v in ipairs(supported_vim_tables) do
-    child[v] = forward_to_child(v)
-  end
-
+  -- Register child
   table.insert(neovim_children, child)
 
   return child

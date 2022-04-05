@@ -2677,7 +2677,7 @@ Parameters~
 {session_name} `(string)` Name of detected session file to delete. Default:
   `nil` for name of current session (taken from |v:this_session|).
 {opts} `(table)` Table with options. Current allowed keys:
-  - <force> (whether to ignore deletion of current session; default:
+  - <force> (whether to allow deletion of current session; default:
     `MiniSessions.config.force.delete`).
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.delete`).
