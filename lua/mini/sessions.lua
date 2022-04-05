@@ -295,8 +295,9 @@ end
 ---   "write", or "delete".
 ---@param opts table Options for specified action.
 function MiniSessions.select(action, opts)
-  if vim.ui == nil or vim.ui.select == nil then
+  if not (type(vim.ui) == 'table' and type(vim.ui.select) == 'function') then
     H.notify('`MiniSessions.select()` requires `vim.ui.select()` function.')
+    return
   end
 
   action = action or 'read'
@@ -305,7 +306,28 @@ function MiniSessions.select(action, opts)
     return
   end
 
-  vim.ui.select(vim.tbl_keys(MiniSessions.detected), { prompt = 'Select session to ' .. action }, function(item, idx)
+  -- Ensure consistent order of items
+  local detected = {}
+  for _, session in pairs(MiniSessions.detected) do
+    table.insert(detected, session)
+  end
+  local sort_fun = function(a, b)
+    -- Put local session first, others - increasing alphabetically
+    local a_name = a.type == 'local' and '' or a.name
+    local b_name = b.type == 'local' and '' or b.name
+    return a_name < b_name
+  end
+  table.sort(detected, sort_fun)
+  local detected_names = vim.tbl_map(function(x)
+    return x.name
+  end, detected)
+
+  vim.ui.select(detected_names, {
+    prompt = 'Select session to ' .. action,
+    format_item = function(x)
+      return ('%s (%s)'):format(x, MiniSessions.detected[x].type)
+    end,
+  }, function(item, idx)
     if item == nil then
       return
     end
