@@ -519,6 +519,8 @@ describe('Signature help', function()
   before_each(function()
     child.setup()
     load_module()
+    -- Ensure completion is set up
+    new_buffer()
     -- See mocking of 'textDocument/signatureHelp' request
     mock_lsp()
   end)
@@ -553,6 +555,7 @@ describe('Signature help', function()
       end
     ]])
     local calls
+    child.cmd('startinsert')
 
     type_keys({ 'a', 'b', 'c', '(' })
     sleep(test_times.signature + 1)
@@ -575,7 +578,7 @@ describe('Signature help', function()
 
   local validate_dimensions = function(keys, dimensions)
     reload_module({ window_dimensions = { signature = { height = 20, width = 40 } } })
-    type_keys('i')
+    child.cmd('startinsert')
     type_keys(keys)
     sleep(test_times.signature + 2)
     validate_single_floating_win({ config = dimensions })
@@ -590,7 +593,8 @@ describe('Signature help', function()
   end)
 
   it('implements debounce-style delay', function()
-    type_keys({ 'i', 'a', 'b', 'c', '(' })
+    child.cmd('startinsert')
+    type_keys({ 'a', 'b', 'c', '(' })
     sleep(test_times.signature - 10)
     type_keys('d')
     sleep(test_times.signature + 1)
