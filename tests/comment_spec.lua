@@ -297,6 +297,21 @@ describe('Commenting', function()
     type_keys({ 'g', 'c', 'i', 'p' })
     child.assert_visual_marks(2, 2)
   end)
+
+  it('respects vim.{g,b}.minicomment_disable', function()
+    local validate_disable = function(var_type)
+      child[var_type].minicomment_disable = true
+      set_cursor(2, 2)
+      local lines = get_lines()
+      type_keys({ 'g', 'c', 'j' })
+      eq(get_lines(), lines)
+
+      child[var_type].minicomment_disable = nil
+    end
+
+    validate_disable('g')
+    validate_disable('b')
+  end)
 end)
 
 describe('Commenting current line', function()
@@ -408,6 +423,22 @@ describe('Comment textobject', function()
     set_cursor(3, 0)
     type_keys('.')
     eq(get_lines(), { 'aa', 'aa' })
+  end)
+
+  it('respects vim.{g,b}.minicomment_disable', function()
+    local validate_disable = function(var_type)
+      child[var_type].minicomment_disable = true
+      local lines = { 'aa', '# aa', '# aa', 'aa' }
+      set_lines(lines)
+      set_cursor(2, 0)
+      type_keys({ 'd', 'g', 'c' })
+      eq(get_lines(), lines)
+
+      child[var_type].minicomment_disable = nil
+    end
+
+    validate_disable('g')
+    validate_disable('b')
   end)
 end)
 

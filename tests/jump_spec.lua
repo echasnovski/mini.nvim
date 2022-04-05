@@ -643,6 +643,23 @@ describe('Jumping with f/t/F/T', function()
     type_keys({ '1', '0', 'T', 'e' })
     eq(get_cursor(), { 1, 3 })
   end)
+
+  it('respects vim.{g,b}.minijump_disable', function()
+    local validate_disable = function(var_type)
+      child[var_type].minijump_disable = true
+      set_lines({ '1e2e3e4e' })
+      set_cursor(1, 0)
+      type_keys({ 'f', 'e' })
+      -- `f` does nothing, while `e` jumps to end of word (otherwise it would
+      -- have been `{1, 1}`)
+      eq(get_cursor(), { 1, 7 })
+
+      child[var_type].minijump_disable = nil
+    end
+
+    validate_disable('g')
+    validate_disable('b')
+  end)
 end)
 
 describe('Repeat jump with ;', function()
@@ -740,6 +757,23 @@ describe('Repeat jump with ;', function()
     set_cursor(1, 0)
     type_keys(';')
     eq(get_cursor(), { 2, 0 })
+  end)
+
+  it('respects vim.{g,b}.minijump_disable', function()
+    local validate_disable = function(var_type)
+      set_lines({ '1e2e3e4e' })
+      set_cursor(1, 0)
+      type_keys({ 'f', 'e' })
+
+      child[var_type].minijump_disable = true
+      type_keys(';')
+      eq(get_cursor(), { 1, 1 })
+
+      child[var_type].minijump_disable = nil
+    end
+
+    validate_disable('g')
+    validate_disable('b')
   end)
 end)
 

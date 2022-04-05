@@ -223,6 +223,16 @@ local validate_no = function(action, ...)
   assert.False(ok)
 end
 
+local validate_disable = function(var_type, key)
+  child[var_type].minipairs_disable = true
+  set_lines({})
+  child.cmd('startinsert')
+  type_keys(key)
+  eq(get_lines(), { key })
+
+  child[var_type].minipairs_disable = nil
+end
+
 -- Unit tests =================================================================
 describe('MiniPairs.setup()', function()
   before_each(function()
@@ -681,6 +691,15 @@ describe('Open action', function()
     reload_module({ mappings = { ['('] = { action = 'open', pair = '()', neigh_pattern = '..' } } })
     validate_no('neigh_disable', [[\]], '(')
   end)
+
+  it('respects vim.{g,b}.minipairs_disable', function()
+    validate_disable('g', '(')
+    validate_disable('g', '[')
+    validate_disable('g', '{')
+    validate_disable('b', '(')
+    validate_disable('b', '[')
+    validate_disable('b', '{')
+  end)
 end)
 
 describe('Close action', function()
@@ -730,6 +749,15 @@ describe('Close action', function()
     assert.error(function()
       validate_slash_close(')', '()')
     end)
+  end)
+
+  it('respects vim.{g,b}.minipairs_disable', function()
+    validate_disable('g', ')')
+    validate_disable('g', ']')
+    validate_disable('g', '}')
+    validate_disable('b', ')')
+    validate_disable('b', ']')
+    validate_disable('b', '}')
   end)
 end)
 
@@ -781,6 +809,15 @@ describe('Closeopen action', function()
     child.api.nvim_del_keymap('i', '"')
     reload_module({ mappings = { ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '..' } } })
     validate_no('neigh_disable', [[\]], '"')
+  end)
+
+  it('respects vim.{g,b}.minipairs_disable', function()
+    validate_disable('g', '"')
+    validate_disable('g', "'")
+    validate_disable('g', '`')
+    validate_disable('b', '"')
+    validate_disable('b', "'")
+    validate_disable('b', '`')
   end)
 end)
 
@@ -844,6 +881,22 @@ describe('<BS> action', function()
     eq(get_lines(), { ')' })
     eq(get_cursor(), { 1, 0 })
   end)
+
+  it('respects vim.{g,b}.minipairs_disable', function()
+    local validate_disable_bs = function(var_type)
+      child[var_type].minipairs_disable = true
+      set_lines({ '()' })
+      set_cursor(1, 1)
+      child.cmd('startinsert')
+      type_keys('<BS>')
+      eq(get_lines(), { ')' })
+
+      child[var_type].minipairs_disable = nil
+    end
+
+    validate_disable_bs('g')
+    validate_disable_bs('b')
+  end)
 end)
 
 describe('<CR> action', function()
@@ -904,6 +957,22 @@ describe('<CR> action', function()
     type_keys('<CR>')
     eq(get_lines(), { '(', ')' })
     eq(get_cursor(), { 2, 0 })
+  end)
+
+  it('respects vim.{g,b}.minipairs_disable', function()
+    local validate_disable_cr = function(var_type)
+      child[var_type].minipairs_disable = true
+      set_lines({ '()' })
+      set_cursor(1, 1)
+      child.cmd('startinsert')
+      type_keys('<CR>')
+      eq(get_lines(), { '(', ')' })
+
+      child[var_type].minipairs_disable = nil
+    end
+
+    validate_disable_cr('g')
+    validate_disable_cr('b')
   end)
 end)
 
