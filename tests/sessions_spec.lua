@@ -26,6 +26,20 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
+-- Make helpers
+local cleanup_directories = function()
+  -- Cleanup files for directories to have invariant properties
+  -- Ensure 'empty' directory doesn't exist
+  child.fn.delete(empty_dir_path, 'rf')
+
+  -- Ensure 'global' does not contain file 'Session.vim'
+  local files = { 'tests/sessions-tests/global/Session.vim' }
+
+  for _, f in ipairs(files) do
+    child.fn.delete(f)
+  end
+end
+
 local common_setup = function()
   child.setup()
 
@@ -40,21 +54,10 @@ local common_setup = function()
   -- process can't find "stdpath('data')/session".
   child.o.cmdheight = 10
 
+  -- Ensure directory structure invariants
+  cleanup_directories()
+
   load_module()
-end
-
--- Make helpers
-local cleanup_directories = function()
-  -- Cleanup files for directories to have invariant properties
-  -- Ensure 'empty' directory doesn't exist
-  child.fn.delete(empty_dir_path, 'rf')
-
-  -- Ensure 'global' does not contain file 'Session.vim'
-  local files = { 'tests/sessions-tests/global/Session.vim' }
-
-  for _, f in ipairs(files) do
-    child.fn.delete(f)
-  end
 end
 
 local get_latest_message = function()
@@ -117,7 +120,6 @@ end
 -- Unit tests =================================================================
 describe('MiniSessions.setup()', function()
   before_each(common_setup)
-  after_each(cleanup_directories)
 
   it('creates side effects', function()
     -- Global variable
@@ -220,6 +222,11 @@ describe('MiniSessions.setup()', function()
     eq(child.lua_get('MiniSessions.detected'), {})
   end)
 
+  it('gives feedback about absent `config.directory`', function()
+    reload_module({ directory = 'aaa' })
+    assert.truthy(get_latest_message():find('%(mini%.sessions%).*aaa.*is not a directory path'))
+  end)
+
   it('respects `config.file`', function()
     cd('tests', 'sessions-tests', 'local')
 
@@ -239,63 +246,8 @@ describe('MiniSessions.setup()', function()
   end)
 end)
 
-describe('Autoreading sessions', function()
-  before_each(function()
-    cd(project_root)
-  end)
-
-  it('works', function()
-    child.restart({ args = { '-u', 'tests/sessions-tests/init-files/autoread.lua' } })
-    validate_session_loaded('local/Session.vim')
-  end)
-
-  it('does not autoread if Neovim started to show something', function()
-    local init_autoread = 'tests/sessions-tests/init-files/autoread.lua'
-
-    -- Current buffer has any lines (something opened explicitly)
-    child.restart({ args = { '-u', init_autoread, '-c', [[call setline(1, 'a')]] } })
-    validate_no_session_loaded()
-
-    -- Several buffers are listed (like session with placeholder buffers)
-    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set buflisted | e bar | set buflisted' } })
-    validate_no_session_loaded()
-
-    -- Unlisted buffers (like from `nvim-tree`) don't affect decision
-    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set nobuflisted | e bar | set buflisted' } })
-    validate_session_loaded('local/Session.vim')
-
-    -- There are files in arguments (like `nvim foo.txt` with new file).
-    child.restart({ args = { '-u', init_autoread, 'new-file.txt' } })
-    validate_no_session_loaded()
-  end)
-end)
-
-describe('Autowriting sessions', function()
-  before_each(function()
-    cd(project_root)
-  end)
-
-  it('works', function()
-    local init_autowrite = 'tests/sessions-tests/init-files/autowrite.lua'
-    child.restart({ args = { '-u', init_autowrite } })
-
-    -- Create session with one buffer, expect to autowrite it to have second
-    child.fn.mkdir(empty_dir_path)
-    cd(empty_dir_path)
-    child.cmd('e aaa | w | mksession')
-    local path_local = make_path(empty_dir_path, 'Session.vim')
-    eq(child.fn.filereadable(path_local), 1)
-
-    child.cmd('e bbb | w')
-    child.restart()
-    child.cmd('source ' .. path_local)
-    compare_buffer_names(get_buf_names(), { 'aaa', 'bbb' })
-  end)
-end)
-
 describe('MiniSessions.detected', function()
   before_each(common_setup)
-  after_each(cleanup_directories)
 
   it('is present', function()
     cd('tests', 'sessions-tests')
@@ -310,7 +262,6 @@ end)
 
 describe('MiniSessions.read()', function()
   before_each(common_setup)
-  after_each(cleanup_directories)
 
   it('works', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
@@ -430,7 +381,6 @@ end)
 
 describe('MiniSessions.write()', function()
   before_each(common_setup)
-  after_each(cleanup_directories)
 
   it('works', function()
     child.fn.mkdir(empty_dir_path)
@@ -587,7 +537,6 @@ end)
 
 describe('MiniSessions.delete()', function()
   before_each(common_setup)
-  after_each(cleanup_directories)
 
   it('works', function()
     local session_dir = populate_sessions()
@@ -753,7 +702,6 @@ describe('MiniSessions.select()', function()
     -- Cleanup of current directory
     cd(project_root)
   end)
-  after_each(cleanup_directories)
 
   it('works', function()
     child.lua('MiniSessions.select()')
@@ -828,6 +776,64 @@ describe('MiniSessions.get_latest()', function()
   it('works if there is no detected sessions', function()
     reload_module({ directory = '', file = '' })
     eq(child.lua_get('MiniSessions.get_latest()'), vim.NIL)
+  end)
+end)
+
+-- Functional tests ===========================================================
+
+describe('Autoreading sessions', function()
+  before_each(function()
+    cd(project_root)
+    cleanup_directories()
+  end)
+
+  it('works', function()
+    child.restart({ args = { '-u', 'tests/sessions-tests/init-files/autoread.lua' } })
+    validate_session_loaded('local/Session.vim')
+  end)
+
+  it('does not autoread if Neovim started to show something', function()
+    local init_autoread = 'tests/sessions-tests/init-files/autoread.lua'
+
+    -- Current buffer has any lines (something opened explicitly)
+    child.restart({ args = { '-u', init_autoread, '-c', [[call setline(1, 'a')]] } })
+    validate_no_session_loaded()
+
+    -- Several buffers are listed (like session with placeholder buffers)
+    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set buflisted | e bar | set buflisted' } })
+    validate_no_session_loaded()
+
+    -- Unlisted buffers (like from `nvim-tree`) don't affect decision
+    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set nobuflisted | e bar | set buflisted' } })
+    validate_session_loaded('local/Session.vim')
+
+    -- There are files in arguments (like `nvim foo.txt` with new file).
+    child.restart({ args = { '-u', init_autoread, 'new-file.txt' } })
+    validate_no_session_loaded()
+  end)
+end)
+
+describe('Autowriting sessions', function()
+  before_each(function()
+    cd(project_root)
+    cleanup_directories()
+  end)
+
+  it('works', function()
+    local init_autowrite = 'tests/sessions-tests/init-files/autowrite.lua'
+    child.restart({ args = { '-u', init_autowrite } })
+
+    -- Create session with one buffer, expect to autowrite it to have second
+    child.fn.mkdir(empty_dir_path)
+    cd(empty_dir_path)
+    child.cmd('e aaa | w | mksession')
+    local path_local = make_path(empty_dir_path, 'Session.vim')
+    eq(child.fn.filereadable(path_local), 1)
+
+    child.cmd('e bbb | w')
+    child.restart()
+    child.cmd('source ' .. path_local)
+    compare_buffer_names(get_buf_names(), { 'aaa', 'bbb' })
   end)
 end)
 
