@@ -17,6 +17,7 @@
 
 ## mini.sessions
 
+- BREAKING: All feedback about incorrect behavior is now an error instead of message notifications.
 - Implement `MiniSessions.select()` to select session interactively and perform action on it.
 
 ## mini.starter

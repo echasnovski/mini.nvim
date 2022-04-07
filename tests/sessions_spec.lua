@@ -321,21 +321,17 @@ describe('MiniSessions.read()', function()
   it('works with no detected sessions', function()
     reload_module({ directory = '', file = '' })
     eq(child.lua_get('MiniSessions.detected'), {})
-    child.lua('MiniSessions.read()')
-
-    -- Should give message
-    assert.truthy(get_latest_message():find('There is no detected sessions'))
+    assert.error_matches(function()
+      child.lua('MiniSessions.read()')
+    end, '%(mini%.sessions%) There is no detected sessions')
   end)
 
   it('accepts only name of detected session', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
-    child.lua([[MiniSessions.read('session-absent')]])
+    assert.error_matches(function()
+      child.lua([[MiniSessions.read('session-absent')]])
+    end, '%(mini%.sessions%) "session%-absent" is not a name for detected session')
     validate_no_session_loaded()
-
-    -- Message should be given
-    local last_msg = get_latest_message()
-    local pattern = vim.pesc('(mini.sessions) "session-absent" is not a name for detected session.')
-    assert.truthy(last_msg:find(pattern))
   end)
 
   local setup_unsaved_buffers = function()
@@ -358,15 +354,13 @@ describe('MiniSessions.read()', function()
     local unsaved_buffers = setup_unsaved_buffers()
 
     -- Session should not be sourced
-    child.lua([[MiniSessions.read('session1')]])
-    validate_no_session_loaded()
-
-    -- Message should be given
-    local last_msg = get_latest_message()
-    local pattern = vim.pesc(
+    local error_pattern = vim.pesc(
       '(mini.sessions) There are unsaved buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.'
     )
-    assert.truthy(last_msg:find(pattern))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.read('session1')]])
+    end, error_pattern)
+    validate_no_session_loaded()
   end)
 
   it('uses by default local session', function()
@@ -397,7 +391,9 @@ describe('MiniSessions.read()', function()
     -- Should prefer `opts` over `config`
     setup_unsaved_buffers()
     reset_session_indicator()
-    child.lua([[MiniSessions.read('session2.vim', { force = false })]])
+    assert.error_matches(function()
+      child.lua([[MiniSessions.read('session2.vim', { force = false })]])
+    end, '%(mini%.sessions%) There are unsaved buffers')
     validate_no_session_loaded()
   end)
 
@@ -487,8 +483,9 @@ describe('MiniSessions.write()', function()
 
   it('validates `session_name`', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
-    child.lua([[MiniSessions.write('')]])
-    assert.truthy(get_latest_message():find('non%-empty'))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.write('')]])
+    end, '%(mini%.sessions%) Supply non%-empty session name')
   end)
 
   it('writes by default to `v:this_session`', function()
@@ -540,9 +537,10 @@ describe('MiniSessions.write()', function()
     local path = make_path(empty_dir_path, 'existing-file')
     child.fn.writefile({}, path)
 
-    child.lua([[MiniSessions.write('existing-file')]])
+    assert.error_matches(function()
+      child.lua([[MiniSessions.write('existing-file')]])
+    end, [[%(mini%.sessions%) Can't write to existing]])
     eq(child.fn.readfile(path), {})
-    assert.truthy(get_latest_message():find([[Can't write to existing]]))
 
     -- Should prefer `opts` over `config`
     child.lua([[MiniSessions.write('existing-file', { force = true })]])
@@ -604,8 +602,16 @@ describe('MiniSessions.delete()', function()
   it('validates presence of detected sessions', function()
     reload_module({ file = '', directory = '' })
 
-    child.lua([[MiniSessions.delete('aaa')]])
-    assert.truthy(get_latest_message():find('no detected sessions'))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.delete('aaa')]])
+    end, '%(mini%.sessions%) There is no detected sessions')
+  end)
+
+  it('validates `session_name`', function()
+    reload_module({ directory = 'tests/sessions-tests/global' })
+    assert.error_matches(function()
+      child.lua([[MiniSessions.delete('')]])
+    end, '%(mini%.sessions%) Supply non%-empty session name')
   end)
 
   it('deletes by default `v:this_session`', function()
@@ -657,8 +663,9 @@ describe('MiniSessions.delete()', function()
     assert.True(child.lua_get([[MiniSessions.detected['Session.vim'] == nil]]))
 
     -- Shouldn't delete `Session.vim` because it is not detected
-    child.lua([[MiniSessions.delete('Session.vim')]])
-    assert.truthy(get_latest_message():find('%(mini%.sessions%) "Session%.vim" is not a name for detected session'))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.delete('Session.vim')]])
+    end, '%(mini%.sessions%) "Session%.vim" is not a name for detected session')
   end)
 
   it('respects `force` from `config` and `opts` argument', function()
@@ -679,9 +686,10 @@ describe('MiniSessions.delete()', function()
     path = make_path(session_dir, 'session_b')
     eq(child.v.this_session, path)
 
-    child.lua([[MiniSessions.delete('session_b', { force = false })]])
+    assert.error_matches(function()
+      child.lua([[MiniSessions.delete('session_b', { force = false })]])
+    end, [[%(mini%.sessions%) Can't delete current session]])
     assert.True(child.fn.filereadable(path) == 1)
-    assert.truthy(get_latest_message():find([[Can't delete current session]]))
   end)
 
   it('respects `verbose` from `config` and `opts` argument', function()
@@ -768,19 +776,20 @@ describe('MiniSessions.select()', function()
 
   it('verifies presense of `vim.ui` and `vim.ui.select`', function()
     child.lua('vim.ui = 1')
-    child.lua([[MiniSessions.select()]])
-    assert.truthy(get_latest_message():find('vim%.ui'))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.select()]])
+    end, '%(mini%.sessions%).*vim%.ui')
 
     child.lua('vim.ui = {}')
-    child.lua([[MiniSessions.select()]])
-    assert.truthy(get_latest_message():find('vim%.ui%.select'))
+    assert.error_matches(function()
+      child.lua([[MiniSessions.select()]])
+    end, '%(mini%.sessions%).*vim%.ui%.select')
   end)
 
   it('validates `action` argument', function()
-    child.lua([[MiniSessions.select('aaa')]])
-    assert.truthy(
-      get_latest_message():find([[%(mini%.sessions%) `action` should be one of 'read', 'write', or 'delete'.]])
-    )
+    assert.error_matches(function()
+      child.lua([[MiniSessions.select('aaa')]])
+    end, [[%(mini%.sessions%) `action` should be one of 'read', 'write', or 'delete'.]])
   end)
 
   it('respects `action` argument', function()

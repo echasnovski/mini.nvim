@@ -144,8 +144,7 @@ function MiniSessions.read(session_name, opts)
     return
   end
   if vim.tbl_count(MiniSessions.detected) == 0 then
-    H.notify([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
-    return
+    H.error([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
   end
 
   if session_name == nil then
@@ -161,9 +160,8 @@ function MiniSessions.read(session_name, opts)
   if not H.validate_detected(session_name) then
     return
   end
-  if not H.wipeout_all_buffers(opts.force) then
-    return
-  end
+
+  H.wipeout_all_buffers(opts.force)
 
   local session_path = MiniSessions.detected[session_name].path
   vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
@@ -204,13 +202,9 @@ function MiniSessions.write(session_name, opts)
   opts = vim.tbl_deep_extend('force', H.default_opts('write'), opts or {})
 
   local session_path = H.name_to_path(session_name)
-  if session_path == nil then
-    return
-  end
 
   if not opts.force and H.is_readable_file(session_path) then
-    H.notify([[Can't write to existing session when `opts.force` is not `true`.]])
-    return
+    H.error([[Can't write to existing session when `opts.force` is not `true`.]])
   end
 
   -- Make session file
@@ -246,16 +240,12 @@ function MiniSessions.delete(session_name, opts)
     return
   end
   if vim.tbl_count(MiniSessions.detected) == 0 then
-    H.notify([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
-    return
+    H.error([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
   end
 
   opts = vim.tbl_deep_extend('force', H.default_opts('delete'), opts or {})
 
   local session_path = H.name_to_path(session_name)
-  if session_path == nil then
-    return
-  end
 
   -- Make sure to delete only detected session (matters for local session)
   session_name = vim.fn.fnamemodify(session_path, ':t')
@@ -266,8 +256,7 @@ function MiniSessions.delete(session_name, opts)
 
   local is_current_session = session_path == vim.v.this_session
   if not opts.force and is_current_session then
-    H.notify([[Can't delete current session when `opts.force` is not `true`.]])
-    return
+    H.error([[Can't delete current session when `opts.force` is not `true`.]])
   end
 
   -- Delete and update detected sessions
@@ -293,14 +282,12 @@ end
 ---@param opts table Options for specified action.
 function MiniSessions.select(action, opts)
   if not (type(vim.ui) == 'table' and type(vim.ui.select) == 'function') then
-    H.notify('`MiniSessions.select()` requires `vim.ui.select()` function.')
-    return
+    H.error('`MiniSessions.select()` requires `vim.ui.select()` function.')
   end
 
   action = action or 'read'
   if not vim.tbl_contains({ 'read', 'write', 'delete' }, action) then
-    H.notify("`action` should be one of 'read', 'write', or 'delete'.")
-    return
+    H.error("`action` should be one of 'read', 'write', or 'delete'.")
   end
 
   -- Ensure consistent order of items
@@ -474,8 +461,7 @@ function H.validate_detected(session_name)
     return true
   end
 
-  H.notify(('%s is not a name for detected session.'):format(vim.inspect(session_name)))
-  return false
+  H.error(('%s is not a name for detected session.'):format(vim.inspect(session_name)))
 end
 
 function H.wipeout_all_buffers(force)
@@ -491,8 +477,7 @@ function H.wipeout_all_buffers(force)
 
   if #unsaved_buffers > 0 then
     local buf_list = table.concat(unsaved_buffers, ', ')
-    H.notify(('There are unsaved buffers: %s.'):format(buf_list))
-    return false
+    H.error(('There are unsaved buffers: %s.'):format(buf_list))
   end
 
   vim.cmd([[%bwipeout]])
@@ -506,16 +491,14 @@ end
 function H.name_to_path(session_name)
   if session_name == nil then
     if vim.v.this_session == '' then
-      H.notify([[There is no active session. Supply non-nil session name.]])
-      return
+      H.error([[There is no active session. Supply non-nil session name.]])
     end
     return vim.v.this_session
   end
 
   session_name = tostring(session_name)
   if session_name == '' then
-    H.notify('Supply non-empty session name.')
-    return
+    H.error('Supply non-empty session name.')
   end
 
   local session_dir = (session_name == MiniSessions.config.file) and vim.fn.getcwd() or MiniSessions.config.directory
@@ -530,6 +513,10 @@ end
 
 function H.notify(msg)
   vim.notify(('(mini.sessions) %s'):format(msg))
+end
+
+function H.error(msg)
+  error(('(mini.sessions) %s'):format(msg))
 end
 
 function H.is_readable_file(path)
