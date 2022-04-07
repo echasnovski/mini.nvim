@@ -15,6 +15,22 @@ local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
+-- Make helpers
+local reload_with_hooks = function()
+  unload_module()
+  child.lua('_G.pre_n = 0; _G.post_n = 0')
+  child.lua([[require('mini.comment').setup({
+    hooks = {
+      pre = function()
+        _G.pre_n = _G.pre_n + 1
+        -- Allow this to successfully change 'commentstring' option
+        vim.bo.commentstring = vim.bo.commentstring == '# %s' and '// %s' or '# %s'
+      end,
+      post = function() _G.post_n = _G.post_n + 1 end,
+    },
+  })]])
+end
+
 -- Data =======================================================================
 -- Reference text
 -- aa
@@ -71,6 +87,9 @@ describe('MiniComment.setup()', function()
     assert_config_error({ mappings = { comment = 1 } }, 'mappings.comment', 'string')
     assert_config_error({ mappings = { comment_line = 1 } }, 'mappings.comment_line', 'string')
     assert_config_error({ mappings = { textobject = 1 } }, 'mappings.textobject', 'string')
+    assert_config_error({ hooks = 'a' }, 'hooks', 'table')
+    assert_config_error({ hooks = { pre = 1 } }, 'hooks.pre', 'function')
+    assert_config_error({ hooks = { post = 1 } }, 'hooks.post', 'function')
   end)
 
   it('properly handles `config.mappings`', function()
@@ -93,6 +112,7 @@ describe('MiniComment.toggle_lines()', function()
   load_module()
 
   before_each(function()
+    reload_module()
     set_lines(example_lines)
     child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
   end)
@@ -222,6 +242,18 @@ describe('MiniComment.toggle_lines()', function()
     child.lua('MiniComment.toggle_lines(1, 3)')
     eq(get_lines(), { 'aa', 'aa', '' })
   end)
+
+  it('applies hooks', function()
+    set_lines({ 'aa', 'aa' })
+    reload_with_hooks()
+    eq(child.bo.commentstring, '# %s')
+
+    child.lua('MiniComment.toggle_lines(1, 2)')
+    -- It should allow change of `commentstring` in `pre` hook
+    eq(get_lines(), { '// aa', '// aa' })
+    eq(child.lua_get('_G.pre_n'), 1)
+    eq(child.lua_get('_G.post_n'), 1)
+  end)
 end)
 
 -- Functional tests ===========================================================
@@ -230,6 +262,7 @@ describe('Commenting', function()
   load_module()
 
   before_each(function()
+    reload_module()
     set_lines(example_lines)
     child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
   end)
@@ -312,6 +345,25 @@ describe('Commenting', function()
     validate_disable('g')
     validate_disable('b')
   end)
+
+  it('applies hooks', function()
+    set_lines({ 'aa', 'aa' })
+    set_cursor(1, 0)
+    reload_with_hooks()
+    eq(child.bo.commentstring, '# %s')
+
+    type_keys({ 'g', 'c', 'i', 'p' })
+    -- It should allow change of `commentstring` in `pre` hook
+    eq(get_lines(), { '// aa', '// aa' })
+    eq(child.lua_get('_G.pre_n'), 1)
+    eq(child.lua_get('_G.post_n'), 1)
+
+    -- It should work with dot-repeat
+    type_keys('.')
+    eq(get_lines(), { '# // aa', '# // aa' })
+    eq(child.lua_get('_G.pre_n'), 2)
+    eq(child.lua_get('_G.post_n'), 2)
+  end)
 end)
 
 describe('Commenting current line', function()
@@ -319,6 +371,7 @@ describe('Commenting current line', function()
   load_module()
 
   before_each(function()
+    reload_module()
     set_lines(example_lines)
     child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
   end)
@@ -365,6 +418,25 @@ describe('Commenting current line', function()
     type_keys('.')
     eq(get_lines(6, 7), { '# aa' })
   end)
+
+  it('applies hooks', function()
+    set_lines({ 'aa', 'aa' })
+    set_cursor(1, 0)
+    reload_with_hooks()
+    eq(child.bo.commentstring, '# %s')
+
+    type_keys({ 'g', 'c', 'c' })
+    -- It should allow change of `commentstring` in `pre` hook
+    eq(get_lines(), { '// aa', 'aa' })
+    eq(child.lua_get('_G.pre_n'), 1)
+    eq(child.lua_get('_G.post_n'), 1)
+
+    -- It should work with dot-repeat
+    type_keys('.')
+    eq(get_lines(), { '# // aa', 'aa' })
+    eq(child.lua_get('_G.pre_n'), 2)
+    eq(child.lua_get('_G.post_n'), 2)
+  end)
 end)
 
 describe('Comment textobject', function()
@@ -372,6 +444,7 @@ describe('Comment textobject', function()
   load_module()
 
   before_each(function()
+    reload_module()
     set_lines(example_lines)
     child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
   end)
@@ -439,6 +512,36 @@ describe('Comment textobject', function()
 
     validate_disable('g')
     validate_disable('b')
+  end)
+
+  it('applies hooks', function()
+    -- It should allow change of `commentstring` in `pre` hook
+    set_lines({ '// aa', 'aa' })
+    set_cursor(1, 0)
+    reload_with_hooks()
+    eq(child.bo.commentstring, '# %s')
+
+    type_keys({ 'd', 'g', 'c' })
+    eq(get_lines(), { 'aa' })
+    eq(child.lua_get('_G.pre_n'), 1)
+    eq(child.lua_get('_G.post_n'), 1)
+
+    -- It should work with dot-repeat
+    set_lines({ '# aa', 'aa' })
+    set_cursor(1, 0)
+    type_keys('.')
+    eq(get_lines(), { 'aa' })
+    eq(child.lua_get('_G.pre_n'), 2)
+    eq(child.lua_get('_G.post_n'), 2)
+
+    -- Correctly not detecting absence of comment textobject should still be
+    -- considered a successful usage of a textobject
+    set_lines({ 'aa', 'aa' })
+    set_cursor(1, 0)
+    type_keys({ 'd', 'g', 'c' })
+    eq(get_lines(), { 'aa', 'aa' })
+    eq(child.lua_get('_G.pre_n'), 3)
+    eq(child.lua_get('_G.post_n'), 3)
   end)
 end)
 

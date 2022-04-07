@@ -1,5 +1,9 @@
 # Version 0.3.0.9000 (development)
 
+## mini.comment
+
+- Implement `config.hooks` with `pre` and `post` hooks (executed before and after successful commenting). Fixes #50, #59.
+
 ## mini.jump
 
 - BREAKING: Soft deprecate `config.highlight_delay` in favor of `config.delay.highlight`.

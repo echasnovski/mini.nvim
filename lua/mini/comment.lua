@@ -5,12 +5,14 @@
 --- reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 --- respects |count| and is dot-repeatable. Comment structure is inferred
 --- from 'commentstring'. Handles both tab and space indenting (but not when
---- they are mixed).
+--- they are mixed). Allows custom hooks before and after successful commeting.
 ---
 --- What it doesn't do:
 --- - Block and sub-line comments. This will only support per-line commenting.
 --- - Configurable (from module) comment structure. Modify |commentstring|
----   instead.
+---   instead. To enhance support for commenting in multi-language files, see
+---   "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
+---   option of this module (see |MiniComment.config|).
 --- - Handle indentation with mixed tab and space.
 --- - Preserve trailing whitespace in empty lines.
 ---
@@ -70,6 +72,13 @@ MiniComment.config = {
 
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
     textobject = 'gc',
+  },
+  -- Hook functions to be executed at certain stage of commenting
+  hooks = {
+    -- Before successful commenting. Does nothing by default.
+    pre = function() end,
+    -- After successful commenting. Does nothing by default.
+    post = function() end,
   },
 }
 --minidoc_afterlines_end
@@ -137,6 +146,9 @@ end
 --- whitespace. Toggle commenting not in visual mode is also dot-repeatable
 --- and respects |count|.
 ---
+--- Before successful commenting it executes `MiniComment.config.hooks.pre`.
+--- After successful commenting it executes `MiniComment.config.hooks.post`.
+---
 --- # Notes~
 ---
 --- 1. Currently call to this function will remove marks inside written range.
@@ -156,6 +168,8 @@ function MiniComment.toggle_lines(line_start, line_end)
   if not (line_start <= line_end) then
     error('(mini.comment) `line_start` should be less than or equal to `line_end`.')
   end
+
+  MiniComment.config.hooks.pre()
 
   local comment_parts = H.make_comment_parts()
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
@@ -178,39 +192,46 @@ function MiniComment.toggle_lines(line_start, line_end)
   -- - `vim.fn.setline(line_start, lines)`, but this is **considerably**
   --   slower: on 10000 lines 280ms compared to 40ms currently.
   vim.api.nvim_buf_set_lines(0, line_start - 1, line_end, false, lines)
+
+  MiniComment.config.hooks.post()
 end
 
 --- Comment textobject
 ---
 --- This selects all commented lines adjacent to cursor line (if it itself is
 --- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
+---
+--- Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
+--- After successful textobject usage it executes `MiniComment.config.hooks.post`.
 function MiniComment.textobject()
   if H.is_disabled() then
     return
   end
 
+  MiniComment.config.hooks.pre()
+
   local comment_parts = H.make_comment_parts()
   local comment_check = H.make_comment_check(comment_parts)
   local line_cur = vim.api.nvim_win_get_cursor(0)[1]
 
-  if not comment_check(vim.fn.getline(line_cur)) then
-    return
+  if comment_check(vim.fn.getline(line_cur)) then
+    local line_start = line_cur
+    while (line_start >= 2) and comment_check(vim.fn.getline(line_start - 1)) do
+      line_start = line_start - 1
+    end
+
+    local line_end = line_cur
+    local n_lines = vim.api.nvim_buf_line_count(0)
+    while (line_end <= n_lines - 1) and comment_check(vim.fn.getline(line_end + 1)) do
+      line_end = line_end + 1
+    end
+
+    -- This visual selection doesn't seem to change `'<` and `'>` marks when
+    -- executed as `onoremap` mapping
+    vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
   end
 
-  local line_start = line_cur
-  while (line_start >= 2) and comment_check(vim.fn.getline(line_start - 1)) do
-    line_start = line_start - 1
-  end
-
-  local line_end = line_cur
-  local n_lines = vim.api.nvim_buf_line_count(0)
-  while (line_end <= n_lines - 1) and comment_check(vim.fn.getline(line_end + 1)) do
-    line_end = line_end + 1
-  end
-
-  -- This visual selection doesn't seem to change `'<` and `'>` marks when
-  -- executed as `onoremap` mapping
-  vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
+  MiniComment.config.hooks.post()
 end
 
 -- Helper data ================================================================
@@ -228,12 +249,15 @@ function H.setup_config(config)
   -- Validate per nesting level to produce correct error message
   vim.validate({
     mappings = { config.mappings, 'table' },
+    hooks = { config.hooks, 'table' },
   })
 
   vim.validate({
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
     ['mappings.textobject'] = { config.mappings.textobject, 'string' },
+    ['hooks.pre'] = { config.hooks.pre, 'function' },
+    ['hooks.post'] = { config.hooks.post, 'function' },
   })
 
   return config

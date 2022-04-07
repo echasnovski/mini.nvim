@@ -493,12 +493,14 @@ Custom minimal and fast Lua module for code commenting. This is basically a
 reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 respects |count| and is dot-repeatable. Comment structure is inferred
 from 'commentstring'. Handles both tab and space indenting (but not when
-they are mixed).
+they are mixed). Allows custom hooks before and after successful commeting.
 
 What it doesn't do:
 - Block and sub-line comments. This will only support per-line commenting.
 - Configurable (from module) comment structure. Modify |commentstring|
-  instead.
+  instead. To enhance support for commenting in multi-language files, see
+  "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
+  option of this module (see |MiniComment.config|).
 - Handle indentation with mixed tab and space.
 - Preserve trailing whitespace in empty lines.
 
@@ -550,6 +552,13 @@ Default values:
       -- Define 'comment' textobject (like `dgc` - delete whole comment block)
       textobject = 'gc',
     },
+    -- Hook functions to be executed at certain stage of commenting
+    hooks = {
+      -- Before successful commenting. Does nothing by default.
+      pre = function() end,
+      -- After successful commenting. Does nothing by default.
+      post = function() end,
+    },
   }
 <
 
@@ -583,6 +592,9 @@ otherwise. It respects indentation and doesn't insert trailing
 whitespace. Toggle commenting not in visual mode is also dot-repeatable
 and respects |count|.
 
+Before successful commenting it executes `MiniComment.config.hooks.pre`.
+After successful commenting it executes `MiniComment.config.hooks.post`.
+
 # Notes~
 
 1. Currently call to this function will remove marks inside written range.
@@ -599,6 +611,9 @@ Comment textobject
 
 This selects all commented lines adjacent to cursor line (if it itself is
 commented). Designed to be used with operator mode mappings (see |mapmode-o|).
+
+Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
+After successful textobject usage it executes `MiniComment.config.hooks.post`.
 
 
 ==============================================================================
