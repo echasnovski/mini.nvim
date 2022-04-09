@@ -588,13 +588,14 @@ Default `config`:
   -- If `nil` (default), default items will be used (see |mini.starter|).
   items = nil,
 
-  -- Header to be displayed before items. Should be a string or function
-  -- evaluating to single string (use `\n` for new lines).
-  -- If `nil` (default), polite greeting will be used.
+  -- Header to be displayed before items. Converted to single string via
+  -- `tostring` (use `\n` to display several lines). If function, it is
+  -- evaluated first. If `nil` (default), polite greeting will be used.
   header = nil,
 
-  -- Footer to be displayed after items. Should be a string or function
-  -- evaluating to string. If `nil`, default usage help will be shown.
+  -- Footer to be displayed after items. Converted to single string via
+  -- `tostring` (use `\n` to display several lines). If function, it is
+  -- evaluated first. If `nil` (default), default usage help will be shown.
   footer = nil,
 
   -- Array  of functions to be applied consecutively to initial content.

@@ -2935,13 +2935,14 @@ Default values:
     -- If `nil` (default), default items will be used (see |mini.starter|).
     items = nil,
 
-    -- Header to be displayed before items. Should be a string or function
-    -- evaluating to single string (use `\n` for new lines).
-    -- If `nil` (default), polite greeting will be used.
+    -- Header to be displayed before items. Converted to single string via
+    -- `tostring` (use `\n` to display several lines). If function, it is
+    -- evaluated first. If `nil` (default), polite greeting will be used.
     header = nil,
 
-    -- Footer to be displayed after items. Should be a string or function
-    -- evaluating to string. If `nil`, default usage help will be shown.
+    -- Footer to be displayed after items. Converted to single string via
+    -- `tostring` (use `\n` to display several lines). If function, it is
+    -- evaluated first. If `nil` (default), default usage help will be shown.
     footer = nil,
 
     -- Array  of functions to be applied consecutively to initial content.
@@ -3020,7 +3021,7 @@ Refresh Starter buffer
     - Sort: order first by section and then by item id (both in order of
       appearance).
 - Normalize `MiniStarter.config.header` and `MiniStarter.config.footer` to
-  be a table of strings (per line). If function - evaluate it first.
+  be multiple lines by splitting at `\n`. If function - evaluate it first.
 - Make initial buffer content (see |MiniStarter.content| for a description
   of what a buffer content is). It consist from content lines with single
   content unit:

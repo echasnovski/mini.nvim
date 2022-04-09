@@ -236,13 +236,14 @@ MiniStarter.config = {
   -- If `nil` (default), default items will be used (see |mini.starter|).
   items = nil,
 
-  -- Header to be displayed before items. Should be a string or function
-  -- evaluating to single string (use `\n` for new lines).
-  -- If `nil` (default), polite greeting will be used.
+  -- Header to be displayed before items. Converted to single string via
+  -- `tostring` (use `\n` to display several lines). If function, it is
+  -- evaluated first. If `nil` (default), polite greeting will be used.
   header = nil,
 
-  -- Footer to be displayed after items. Should be a string or function
-  -- evaluating to string. If `nil`, default usage help will be shown.
+  -- Footer to be displayed after items. Converted to single string via
+  -- `tostring` (use `\n` to display several lines). If function, it is
+  -- evaluated first. If `nil` (default), default usage help will be shown.
   footer = nil,
 
   -- Array  of functions to be applied consecutively to initial content.
@@ -347,7 +348,7 @@ end
 ---     - Sort: order first by section and then by item id (both in order of
 ---       appearance).
 --- - Normalize `MiniStarter.config.header` and `MiniStarter.config.footer` to
----   be a table of strings (per line). If function - evaluate it first.
+---   be multiple lines by splitting at `\n`. If function - evaluate it first.
 --- - Make initial buffer content (see |MiniStarter.content| for a description
 ---   of what a buffer content is). It consist from content lines with single
 ---   content unit:
@@ -373,9 +374,9 @@ function MiniStarter.refresh()
   end
 
   -- Normalize certain config values
+  H.header = H.normalize_header_footer(MiniStarter.config.header or H.default_header)
   local items = H.normalize_items(MiniStarter.config.items or H.default_items)
-  H.header = H.normalize_header_footer(MiniStarter.config.header or H.default_header, 'header')
-  H.footer = H.normalize_header_footer(MiniStarter.config.footer or H.default_footer, 'footer')
+  H.footer = H.normalize_header_footer(MiniStarter.config.footer or H.default_footer)
 
   -- Evaluate content
   H.make_initial_content(items)
@@ -970,8 +971,7 @@ function H.setup_config(config)
     autoopen = { config.autoopen, 'boolean' },
     evaluate_single = { config.evaluate_single, 'boolean' },
     items = { config.items, 'table', true },
-    header = { config.header, H.is_fun_or_string, 'function or string' },
-    footer = { config.footer, H.is_fun_or_string, 'function or string' },
+    -- `header` and `footer` can have any type
     content_hooks = { config.content_hooks, 'table', true },
     query_updaters = { config.query_updaters, 'string' },
   })
@@ -996,12 +996,11 @@ function H.normalize_items(items)
   return H.items_sort(res)
 end
 
-function H.normalize_header_footer(x, x_name)
-  local res = H.eval_fun_or_string(x)
-  if type(res) ~= 'string' then
-    H.notify(('`config.%s` should be evaluated into string.'):format(x_name))
-    return {}
+function H.normalize_header_footer(x)
+  if type(x) == 'function' then
+    x = x()
   end
+  local res = tostring(x)
   if res == '' then
     return {}
   end
