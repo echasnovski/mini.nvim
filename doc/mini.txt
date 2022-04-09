@@ -2735,7 +2735,7 @@ Act on |VimEnter|
 Lua module for minimal, fast, and flexible start screen. Displayed items
 are fully customizable both in terms of what they do and how they look
 (with reasonable defaults). Item selection can be done using prefix query
-with instant visual feedback.This is mostly inspired by
+with instant visual feedback. This is mostly inspired by
 [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
 
 Key design ideas:
@@ -2947,7 +2947,7 @@ Default values:
 
     -- Array  of functions to be applied consecutively to initial content.
     -- Each function should take and return content for 'Starter' buffer (see
-    -- |mini.starter| for more details).
+    -- |mini.starter| and |MiniStarter.content| for more details).
     content_hooks = nil,
 
     -- Characters to update query. Each character will have special buffer

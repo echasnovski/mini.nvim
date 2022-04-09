@@ -4,7 +4,7 @@
 --- Lua module for minimal, fast, and flexible start screen. Displayed items
 --- are fully customizable both in terms of what they do and how they look
 --- (with reasonable defaults). Item selection can be done using prefix query
---- with instant visual feedback.This is mostly inspired by
+--- with instant visual feedback. This is mostly inspired by
 --- [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
 ---
 --- Key design ideas:
@@ -248,7 +248,7 @@ MiniStarter.config = {
 
   -- Array  of functions to be applied consecutively to initial content.
   -- Each function should take and return content for 'Starter' buffer (see
-  -- |mini.starter| for more details).
+  -- |mini.starter| and |MiniStarter.content| for more details).
   content_hooks = nil,
 
   -- Characters to update query. Each character will have special buffer
@@ -324,11 +324,9 @@ function MiniStarter.open(buf_id)
   vim.api.nvim_set_current_buf(H.buf_id)
 
   -- Setup buffer behavior
+  H.make_buffer_autocmd()
   H.apply_buffer_options()
   H.apply_buffer_mappings()
-  vim.cmd([[au VimResized <buffer> lua MiniStarter.refresh()]])
-  vim.cmd([[au CursorMoved <buffer> lua MiniStarter.on_cursormoved()]])
-  vim.cmd([[au BufLeave <buffer> echo '']])
 
   -- Populate buffer
   MiniStarter.refresh()
@@ -405,7 +403,8 @@ end
 
 --- Close Starter buffer
 function MiniStarter.close()
-  vim.api.nvim_buf_delete(H.buf_id, {})
+  -- Use `pcall` to allow calling for already non-existing buffer
+  pcall(vim.api.nvim_buf_delete, H.buf_id, {})
   H.buf_id = nil
 end
 
@@ -587,7 +586,10 @@ function MiniStarter.gen_hook.padding(left, top)
     -- Add left padding
     local left_pad = string.rep(' ', left)
     for _, line in ipairs(content) do
-      table.insert(line, 1, H.content_unit(left_pad, 'empty', nil))
+      local is_empty_line = #line == 0 or (#line == 1 and line[1].string == '')
+      if not is_empty_line then
+        table.insert(line, 1, H.content_unit(left_pad, 'empty', nil))
+      end
     end
 
     -- Add top padding
@@ -704,11 +706,11 @@ function MiniStarter.gen_hook.aligning(horizontal, vertical)
     local lines_width = vim.tbl_map(function(l)
       return vim.fn.strdisplaywidth(l)
     end, line_strings)
-    local min_right_space = vim.fn.winwidth(0) - math.max(unpack(lines_width))
+    local min_right_space = vim.api.nvim_win_get_width(0) - math.max(unpack(lines_width))
     local left_pad = math.max(math.floor(horiz_coef * min_right_space), 0)
 
     -- Align vertically
-    local bottom_space = vim.fn.winheight(0) - #line_strings
+    local bottom_space = vim.api.nvim_win_get_height(0) - #line_strings
     local top_pad = math.max(math.floor(vert_coef * bottom_space), 0)
 
     return MiniStarter.gen_hook.padding(left_pad, top_pad)(content)
@@ -734,6 +736,11 @@ end
 ---   `c`, use `content[c.line][c.unit]`.
 function MiniStarter.content_coords(content, predicate)
   content = content or MiniStarter.content
+  if predicate == nil then
+    predicate = function(unit)
+      return true
+    end
+  end
   if type(predicate) == 'string' then
     local pred_type = predicate
     predicate = function(unit)
@@ -744,7 +751,7 @@ function MiniStarter.content_coords(content, predicate)
   local res = {}
   for l_num, line in ipairs(content) do
     for u_num, unit in ipairs(line) do
-      if predicate == nil or predicate(unit) then
+      if predicate(unit) then
         table.insert(res, { line = l_num, unit = u_num })
       end
     end
@@ -891,7 +898,7 @@ end
 function MiniStarter.set_query(query)
   query = query or ''
   if type(query) ~= 'string' then
-    H.notify('`query` should be either `nil` or string.')
+    error('`query` should be either `nil` or string.')
   end
 
   H.make_query(query)
@@ -1073,20 +1080,20 @@ end
 function H.items_flatten(items)
   local res, f = {}, nil
   f = function(x)
-    if H.is_item(x) then
-      -- Use deepcopy to allow adding fields to items without changing original
-      table.insert(res, vim.deepcopy(x))
-      return
-    end
-
     -- Expand (possibly recursively) functions immediately
     local n_nested = 0
-    while type(x) == 'function' do
+    while type(x) == 'function' and n_nested <= 100 do
       n_nested = n_nested + 1
       if n_nested > 100 then
         H.notify('Too many nested functions in `config.items`.')
       end
       x = x()
+    end
+
+    if H.is_item(x) then
+      -- Use deepcopy to allow adding fields to items without changing original
+      table.insert(res, vim.deepcopy(x))
+      return
     end
 
     if type(x) ~= 'table' then
@@ -1165,7 +1172,7 @@ function H.make_query(query)
     n_active = n_active + (H.item_is_active(item, query) and 1 or 0)
   end
 
-  if n_active == 0 then
+  if n_active == 0 and query ~= '' then
     H.notify(('Query %s results into no active items. Current query: %s'):format(vim.inspect(query), H.query))
     return
   end
@@ -1182,7 +1189,7 @@ function H.make_query(query)
   end
 
   -- Update activity highlighting. This should go before `evaluate_single`
-  -- check because evaluation might not result into closing Starter buffer
+  -- check because evaluation might not result into closing Starter buffer.
   vim.api.nvim_buf_clear_namespace(H.buf_id, H.ns.activity, 0, -1)
   H.add_hl_activity(query)
 
@@ -1194,10 +1201,24 @@ function H.make_query(query)
 
   -- Notify about new query. Use `echo` because it doesn't write to `:messages`.
   local msg = ('Query: %s'):format(H.query)
-  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, [[']])))
+  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, "'")))
 end
 
 -- Work with starter buffer ---------------------------------------------------
+function H.make_buffer_autocmd()
+  local command = string.format(
+    [[augroup MiniStarterBuffer
+        au!
+        au VimResized <buffer> lua MiniStarter.refresh()
+        au CursorMoved <buffer> lua MiniStarter.on_cursormoved()
+        au BufLeave <buffer> echo ''
+        au BufLeave <buffer> if &showtabline==1 | set showtabline=%s | endif
+      augroup END]],
+    vim.o.showtabline
+  )
+  vim.cmd(command)
+end
+
 function H.apply_buffer_options()
   -- Force Normal mode
   vim.cmd([[normal! <ESC>]])
@@ -1233,9 +1254,7 @@ function H.apply_buffer_options()
   vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
 
   -- Hide tabline on single tab by setting `showtabline` to default value (but
-  -- not statusline as it weirdly feels 'naked' without it). Restore previous
-  -- value on buffer leave if wasn't changed (like in tabline plugin to 2).
-  vim.cmd(('au BufLeave <buffer> if &showtabline==1 | set showtabline=%s | endif'):format(vim.o.showtabline))
+  -- not statusline as it weirdly feels 'naked' without it).
   vim.o.showtabline = 1
 
   -- Disable 'mini.cursorword'
@@ -1252,7 +1271,8 @@ function H.apply_buffer_mappings()
 
   -- Make all special symbols to update query
   for _, key in ipairs(vim.split(MiniStarter.config.query_updaters, '')) do
-    H.buf_keymap(key, ([[MiniStarter.add_to_query('%s')]]):format(key))
+    local key_string = vim.inspect(tostring(key))
+    H.buf_keymap(key, ([[MiniStarter.add_to_query(%s)]]):format(key_string))
   end
 
   H.buf_keymap('<Esc>', [[MiniStarter.set_query('')]])
@@ -1280,7 +1300,9 @@ end
 
 -- Predicates -----------------------------------------------------------------
 function H.is_fun_or_string(x, allow_nil)
-  allow_nil = allow_nil == nil and true or allow_nil
+  if allow_nil == nil then
+    allow_nil = true
+  end
   return (allow_nil and x == nil) or type(x) == 'function' or type(x) == 'string'
 end
 

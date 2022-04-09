@@ -600,7 +600,7 @@ Default `config`:
 
   -- Array  of functions to be applied consecutively to initial content.
   -- Each function should take and return content for 'Starter' buffer (see
-  -- |mini.starter| for more details).
+  -- |mini.starter| and |MiniStarter.content| for more details).
   content_hooks = nil,
 
   -- Characters to update query. Each character will have special buffer
