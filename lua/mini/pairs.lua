@@ -16,7 +16,11 @@
 ---     - `lua MiniPairs.map_buf(0, 'i', <*>, <pair_info>)` : make new mapping
 ---       for '<*>' in current buffer.
 ---     - `lua MiniPairs.unmap_buf(0, 'i', <*>, <pair>)`: unmap key `<*>` while
----       unregistering `<pair>` pair in current buffer.
+---       unregistering `<pair>` pair in current buffer. Note: this reverts
+---       mapping done by |MiniPairs.map_buf|. If mapping was done with
+---       |MiniPairs.map|, unmap for buffer in usual Neovim manner:
+---       `inoremap <buffer> <*> <*>` (this maps `<*>` key to do the same it
+---       does by default).
 ---     - Disable module for buffer (see 'Disabling' section).
 ---
 --- # Setup~
@@ -133,7 +137,7 @@ MiniPairs.config = {
 -- Module functionality =======================================================
 --- Make global mapping
 ---
---- This is similar to |nvim_set_keymap()| but instead of right hand side of
+--- This is a wrapper for |nvim_set_keymap()| but instead of right hand side of
 --- mapping (as string) it expects table with pair information:
 --- - `action` - one of "open" (for |MiniPairs.open|), "close" (for
 ---   |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
@@ -167,9 +171,9 @@ end
 
 --- Make buffer mapping
 ---
---- This is similar to |nvim_buf_set_keymap()| but instead of string right hand
---- side of mapping it expects table with pair information similar to one in
---- |MiniPairs.map|.
+--- This is a wrapper for |nvim_buf_set_keymap()| but instead of string right
+--- hand side of mapping it expects table with pair information similar to one
+--- in |MiniPairs.map|.
 ---
 --- Using this function instead of |nvim_buf_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
@@ -193,7 +197,7 @@ end
 
 --- Remove global mapping
 ---
---- Uses |nvim_del_keymap()| together with unregistering supplied `pair`.
+--- A wrapper for |nvim_del_keymap()| which registers supplied `pair`.
 ---
 ---@param mode string `mode` for |nvim_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_del_keymap()|.
@@ -212,7 +216,12 @@ end
 
 --- Remove buffer mapping
 ---
---- Uses |nvim_buf_del_keymap()| together with unregistering supplied `pair`.
+--- Wrapper for |nvim_buf_del_keymap()| which also unregisters supplied `pair`.
+---
+--- Note: this only reverts mapping done by |MiniPairs.map_buf|. If mapping was
+--- done with |MiniPairs.map|, unmap for buffer in usual Neovim manner:
+--- `inoremap <buffer> <*> <*>` (this maps `<*>` key to do the same it does by
+--- default).
 ---
 ---@param buffer number `buffer` for |nvim_buf_del_keymap()|.
 ---@param mode string `mode` for |nvim_buf_del_keymap()|.
