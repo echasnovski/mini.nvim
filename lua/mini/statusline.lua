@@ -351,11 +351,11 @@ function MiniStatusline.section_diagnostics(args)
     end
   end
 
-  local icon = args.icon or 'ﯭ'
+  local icon = args.icon or ''
   if vim.tbl_count(t) == 0 then
     return ('%s -'):format(icon)
   end
-  return string.format('%s %s', icon, table.concat(t, ''))
+  return string.format('%s%s', icon, table.concat(t, ''))
 end
 
 --- Section for file name

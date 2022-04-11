@@ -25,6 +25,10 @@
 - Allow `config.header` and `config.footer` be any value, which will be converted to string via `tostring()`.
 - Update query logic to not allow queries which result into no items.
 
+## mini.statusline
+
+- BREAKING: change default icon for `MiniStatusline.section_diagnostics()` from ﯭ to  due to former having issues in some terminal emulators.
+
 
 # Version 0.3.0
 
