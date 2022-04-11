@@ -3455,14 +3455,15 @@ Combine groups of sections
 Each group can be either a string or a table with fields `hl` (group's
 highlight group) and `strings` (strings representing sections).
 
-General idea of this function is as follows. String group is used as is
-(useful for special strings like `%<` or `%=`). Each group defined by table
-has own highlighting (if not supplied explicitly, the previous one is
-used). Non-empty strings inside group are separated by one space. Non-empty
-groups are separated by two spaces (one for each highlighting).
+General idea of this function is as follows;
+- String group is used as is (useful for special strings like `%<` or `%=`).
+- Each table group has own highlighting in `hl` field (if missing, the
+  previous one is used) and string parts in `strings` field. Non-empty
+  strings from `strings` are separated by one space. Non-empty groups are
+  separated by two spaces (one for each highlighting).
 
 Parameters~
-{groups} `(table)` Array of groups
+{groups} `(string|table)` Array of groups.
 
 Return~
 `(string)` String suitable for 'statusline'.

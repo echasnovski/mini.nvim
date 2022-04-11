@@ -199,33 +199,40 @@ end
 --- Each group can be either a string or a table with fields `hl` (group's
 --- highlight group) and `strings` (strings representing sections).
 ---
---- General idea of this function is as follows. String group is used as is
---- (useful for special strings like `%<` or `%=`). Each group defined by table
---- has own highlighting (if not supplied explicitly, the previous one is
---- used). Non-empty strings inside group are separated by one space. Non-empty
---- groups are separated by two spaces (one for each highlighting).
+--- General idea of this function is as follows;
+--- - String group is used as is (useful for special strings like `%<` or `%=`).
+--- - Each table group has own highlighting in `hl` field (if missing, the
+---   previous one is used) and string parts in `strings` field. Non-empty
+---   strings from `strings` are separated by one space. Non-empty groups are
+---   separated by two spaces (one for each highlighting).
 ---
----@param groups table Array of groups
+---@param groups string|table Array of groups.
 ---
 ---@return string String suitable for 'statusline'.
 function MiniStatusline.combine_groups(groups)
-  local t = vim.tbl_map(function(s)
-    if not s then
-      return ''
+  local parts = vim.tbl_map(function(s)
+    --stylua: ignore start
+    if type(s) == 'string' then return s end
+    if type(s) ~= 'table' then return '' end
+
+    local string_arr = vim.tbl_filter(function(x) return type(x) == 'string' and x ~= '' end, s.strings or {})
+    local str = table.concat(string_arr, ' ')
+
+    -- Use previous highlight group
+    if s.hl == nil then
+      return (' %s '):format(str)
     end
-    if type(s) == 'string' then
-      return s
+
+    -- Allow using this highlight group later
+    if str:len() == 0 then
+      return string.format('%%#%s#', s.hl)
     end
-    local t = vim.tbl_filter(function(x)
-      return not (x == nil or x == '')
-    end, s.strings)
-    -- Return highlight group to allow inheritance from later sections
-    if vim.tbl_count(t) == 0 then
-      return string.format('%%#%s#', s.hl or '')
-    end
-    return string.format('%%#%s# %s ', s.hl or '', table.concat(t, ' '))
+
+    return string.format('%%#%s# %s ', s.hl, str)
+    --stylua: ignore end
   end, groups)
-  return table.concat(t, '')
+
+  return table.concat(parts, '')
 end
 
 --- Decide whether to truncate
@@ -245,37 +252,8 @@ function MiniStatusline.is_truncated(trunc_width)
 end
 
 -- Sections ===================================================================
--- Functions should return output text without whitespace on sides or empty
--- string to omit section
-
--- Mode
--- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
--- (otherwise those symbols are not displayed).
-local CTRL_S = vim.api.nvim_replace_termcodes('<C-S>', true, true, true)
-local CTRL_V = vim.api.nvim_replace_termcodes('<C-V>', true, true, true)
-
--- stylua: ignore start
-MiniStatusline.modes = setmetatable({
-  ['n']    = { long = 'Normal',   short = 'N',   hl = 'MiniStatuslineModeNormal' },
-  ['v']    = { long = 'Visual',   short = 'V',   hl = 'MiniStatuslineModeVisual' },
-  ['V']    = { long = 'V-Line',   short = 'V-L', hl = 'MiniStatuslineModeVisual' },
-  [CTRL_V] = { long = 'V-Block',  short = 'V-B', hl = 'MiniStatuslineModeVisual' },
-  ['s']    = { long = 'Select',   short = 'S',   hl = 'MiniStatuslineModeVisual' },
-  ['S']    = { long = 'S-Line',   short = 'S-L', hl = 'MiniStatuslineModeVisual' },
-  [CTRL_S] = { long = 'S-Block',  short = 'S-B', hl = 'MiniStatuslineModeVisual' },
-  ['i']    = { long = 'Insert',   short = 'I',   hl = 'MiniStatuslineModeInsert' },
-  ['R']    = { long = 'Replace',  short = 'R',   hl = 'MiniStatuslineModeReplace' },
-  ['c']    = { long = 'Command',  short = 'C',   hl = 'MiniStatuslineModeCommand' },
-  ['r']    = { long = 'Prompt',   short = 'P',   hl = 'MiniStatuslineModeOther' },
-  ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'MiniStatuslineModeOther' },
-  ['t']    = { long = 'Terminal', short = 'T',   hl = 'MiniStatuslineModeOther' },
-}, {
-  -- By default return 'Unknown' but this shouldn't be needed
-  __index = function()
-    return   { long = 'Unknown',  short = 'U',   hl = '%#MiniStatuslineModeOther#' }
-  end,
-})
--- stylua: ignore end
+-- Functions should return output text without whitespace on sides.
+-- Return empty string to omit section.
 
 --- Section for Vim |mode()|
 ---
@@ -285,7 +263,7 @@ MiniStatusline.modes = setmetatable({
 ---
 ---@return ... Section string and mode's highlight group.
 function MiniStatusline.section_mode(args)
-  local mode_info = MiniStatusline.modes[vim.fn.mode()]
+  local mode_info = H.modes[vim.fn.mode()]
 
   local mode = MiniStatusline.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
@@ -465,9 +443,10 @@ function MiniStatusline.section_searchcount(args)
     return '?/?'
   end
 
-  local total_sign = s_count.total > s_count.maxcount and '>' or ''
-  local current_sign = s_count.current > s_count.maxcount and '>' or ''
-  return ('%s%d/%s%d'):format(current_sign, s_count.current, total_sign, s_count.total)
+  local too_many = ('>%d'):format(s_count.maxcount)
+  local current = s_count.current > s_count.maxcount and too_many or s_count.current
+  local total = s_count.total > s_count.maxcount and too_many or s_count.total
+  return ('%s/%s'):format(current, total)
 end
 
 -- Helper data ================================================================
@@ -525,6 +504,35 @@ end
 function H.is_disabled()
   return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true
 end
+
+-- Mode -----------------------------------------------------------------------
+-- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
+-- (otherwise those symbols are not displayed).
+local CTRL_S = vim.api.nvim_replace_termcodes('<C-S>', true, true, true)
+local CTRL_V = vim.api.nvim_replace_termcodes('<C-V>', true, true, true)
+
+-- stylua: ignore start
+H.modes = setmetatable({
+  ['n']    = { long = 'Normal',   short = 'N',   hl = 'MiniStatuslineModeNormal' },
+  ['v']    = { long = 'Visual',   short = 'V',   hl = 'MiniStatuslineModeVisual' },
+  ['V']    = { long = 'V-Line',   short = 'V-L', hl = 'MiniStatuslineModeVisual' },
+  [CTRL_V] = { long = 'V-Block',  short = 'V-B', hl = 'MiniStatuslineModeVisual' },
+  ['s']    = { long = 'Select',   short = 'S',   hl = 'MiniStatuslineModeVisual' },
+  ['S']    = { long = 'S-Line',   short = 'S-L', hl = 'MiniStatuslineModeVisual' },
+  [CTRL_S] = { long = 'S-Block',  short = 'S-B', hl = 'MiniStatuslineModeVisual' },
+  ['i']    = { long = 'Insert',   short = 'I',   hl = 'MiniStatuslineModeInsert' },
+  ['R']    = { long = 'Replace',  short = 'R',   hl = 'MiniStatuslineModeReplace' },
+  ['c']    = { long = 'Command',  short = 'C',   hl = 'MiniStatuslineModeCommand' },
+  ['r']    = { long = 'Prompt',   short = 'P',   hl = 'MiniStatuslineModeOther' },
+  ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'MiniStatuslineModeOther' },
+  ['t']    = { long = 'Terminal', short = 'T',   hl = 'MiniStatuslineModeOther' },
+}, {
+  -- By default return 'Unknown' but this shouldn't be needed
+  __index = function()
+    return   { long = 'Unknown',  short = 'U',   hl = '%#MiniStatuslineModeOther#' }
+  end,
+})
+-- stylua: ignore end
 
 -- Default content ------------------------------------------------------------
 function H.default_content_active()
