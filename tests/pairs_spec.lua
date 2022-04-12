@@ -64,7 +64,7 @@ local validate_action = function(mode, test)
     test()
 
     -- Cleanup
-    type_keys({ [[<C-\>]], '<C-n>' })
+    type_keys([[<C-\>]], '<C-n>')
     child.cmd('bwipeout!')
   end
 end
@@ -88,7 +88,7 @@ local validate_open = function(mode, key, pair)
       -- Need to wait after each keystroke to allow shell to process it
       local wait = 10
       local first_line = get_lines()[1]
-      type_keys(key, wait)
+      type_keys(wait, key)
       eq(get_lines()[1], first_line .. ' ' .. pair)
     end,
   })[mode]
@@ -108,7 +108,7 @@ local validate_close = function(mode, key, pair)
       eq(get_cursor(), { 1, 2 })
     end,
     c = function()
-      type_keys({ '<C-v>', pair:sub(1, 1), '<C-v>', pair:sub(2, 2), '<Left>' })
+      type_keys('<C-v>', pair:sub(1, 1), '<C-v>', pair:sub(2, 2), '<Left>')
       type_keys(key)
       eq(child.fn.getcmdline(), pair)
       eq(child.fn.getcmdpos(), 3)
@@ -122,8 +122,8 @@ local validate_close = function(mode, key, pair)
       local first_line = get_lines()[1]
       child.fn.chansend(term_channel, pair)
       sleep(wait)
-      type_keys('<Left>', wait)
-      type_keys(key, wait)
+      type_keys(wait, '<Left>')
+      type_keys(wait, key)
       eq(get_lines()[1], first_line .. ' ' .. pair)
     end,
   })[mode]
@@ -142,7 +142,7 @@ local validate_bs = function(mode, pair)
       eq(get_lines(), { '' })
     end,
     c = function()
-      type_keys({ '<C-v>', pair:sub(1, 1), '<C-v>', pair:sub(2, 2), '<Left>' })
+      type_keys('<C-v>', pair:sub(1, 1), '<C-v>', pair:sub(2, 2), '<Left>')
       type_keys('<BS>')
       eq(child.fn.getcmdline(), '')
       eq(child.fn.getcmdpos(), 1)
@@ -155,8 +155,8 @@ local validate_bs = function(mode, pair)
       local first_line = get_lines()[1]
       child.fn.chansend(term_channel, pair)
       sleep(wait)
-      type_keys('<Left>', wait)
-      type_keys('<BS>', wait)
+      type_keys(wait, '<Left>')
+      type_keys(wait, '<BS>')
       eq(get_lines()[1], first_line .. ' ')
     end,
   })[mode]
@@ -184,7 +184,7 @@ local validate_cr = function(pair)
     set_cursor(1, 1)
 
     poke_eventloop()
-    type_keys({ 'i', '<CR>' })
+    type_keys('i', '<CR>')
     eq(get_lines(), ref_lines)
     eq(get_cursor(), ref_cursor)
     eq(child.fn.mode(), 'i')
@@ -461,12 +461,12 @@ local validate_map_function = function(fun_name)
       local wait = 1
 
       -- Shouldn't work in general
-      type_keys({ 'a', '<' }, wait)
+      type_keys(wait, 'a', '<')
       eq(get_lines(), { 'a<' })
 
       -- Should work only within specified pattern
       set_lines({})
-      type_keys({ ' ', 'a', '<Left>', '<' }, wait)
+      type_keys(wait, ' a', '<Left>', '<')
       eq(get_lines(), { ' <>a' })
     end
 
@@ -672,7 +672,7 @@ describe('Open action', function()
   end)
 
   it('does not break undo sequence in Insert mode', function()
-    type_keys({ 'i', '(', '(', '<Esc>' })
+    type_keys('i', '((', '<Esc>')
     eq(get_lines(), { '(())' })
     eq(get_cursor(), { 1, 1 })
 
@@ -721,7 +721,7 @@ describe('Close action', function()
     set_lines({ '(())' })
     set_cursor(1, 2)
 
-    type_keys({ 'i', ')', ')', ' ', '<Esc>' })
+    type_keys('i', ')) ', '<Esc>')
     type_keys('u')
     eq(get_lines(), { '(())' })
   end)
@@ -731,9 +731,8 @@ describe('Close action', function()
     set_cursor(1, 1)
     child.cmd('startinsert')
 
-    type_keys([[\]])
-    poke_eventloop()
-    type_keys(key)
+    -- Wait to poke eventloop to enable pattern check
+    type_keys(1, [[\]], key)
     eq(get_lines(), { pair:sub(1, 1) .. [[\]] .. key .. pair:sub(2, 2) })
   end
 
@@ -780,7 +779,7 @@ describe('Closeopen action', function()
     -- Open
     set_lines({})
 
-    type_keys({ 'i', '"', '"', '<Esc>' })
+    type_keys('i', '""', '<Esc>')
     type_keys('u')
     eq(get_lines(), { '' })
 
@@ -788,7 +787,7 @@ describe('Closeopen action', function()
     set_lines({ '""""' })
     set_cursor(1, 2)
 
-    type_keys({ 'i', '"', '"', ' ', '<Esc>' })
+    type_keys('i', '"" ', '<Esc>')
     type_keys('u')
     eq(get_lines(), { '""""' })
   end)
@@ -841,7 +840,7 @@ describe('<BS> action', function()
     set_cursor(1, 2)
     child.cmd('startinsert')
 
-    type_keys({ '<BS>', '<BS>', '<Esc>' })
+    type_keys('<BS><BS>', '<Esc>')
     eq(get_lines(), { '' })
     type_keys('u')
     eq(get_lines(), { 'a()' })
@@ -919,7 +918,7 @@ describe('<CR> action', function()
     set_cursor(1, 1)
     child.cmd('startinsert')
 
-    type_keys({ '<CR>', 'a', '<Esc>' })
+    type_keys('<CR>', 'a', '<Esc>')
     type_keys('u')
     eq(get_lines(), { '()' })
   end)

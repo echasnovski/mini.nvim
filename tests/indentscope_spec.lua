@@ -642,7 +642,7 @@ describe('MiniIndentscope motion', function()
   it('works in Normal mode', function()
     local validate = function(keys, final_cursor_pos)
       set_cursor(5, 4)
-      type_keys(vim.split(keys, ''))
+      type_keys(keys)
 
       eq(get_cursor(), final_cursor_pos)
     end
@@ -661,7 +661,7 @@ describe('MiniIndentscope motion', function()
   it('works in Visual mode', function()
     local validate = function(keys, final_cursor_pos)
       set_cursor(5, 4)
-      type_keys(vim.split(keys, ''))
+      type_keys(keys)
 
       eq(get_cursor(), final_cursor_pos)
       eq(child.fn.mode(1), 'v')
@@ -711,12 +711,12 @@ describe('MiniIndentscope motion', function()
 
     -- `goto_top`
     set_cursor(5, 4)
-    type_keys({ '[', 'I' })
+    type_keys('[I')
     eq(get_cursor(), { 3, 2 })
 
     -- `goto_bottom`
     set_cursor(5, 4)
-    type_keys({ ']', 'I' })
+    type_keys(']I')
     eq(get_cursor(), { 7, 2 })
 
     reload_module()
@@ -725,7 +725,7 @@ describe('MiniIndentscope motion', function()
   it('allows not immediate dot-repeat', function()
     -- `goto_top`
     set_cursor(5, 4)
-    type_keys({ 'd', 'v', '[', 'i' })
+    type_keys('dv', '[i')
     set_cursor(2, 2)
     type_keys('.')
 
@@ -736,7 +736,7 @@ describe('MiniIndentscope motion', function()
 
     -- `goto_bottom`
     set_cursor(5, 4)
-    type_keys({ 'd', 'v', ']', 'i' })
+    type_keys('dv', ']i')
     set_cursor(6, 2)
     type_keys('.')
 
@@ -750,27 +750,27 @@ describe('MiniIndentscope motion', function()
     -- Should move to respective body edge if border is not present
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     set_cursor(5, 4)
-    type_keys({ '[', 'i' })
+    type_keys('[i')
     eq(get_cursor(), { 4, 3 })
 
     child.lua([[MiniIndentscope.config.options.border = 'top']])
     set_cursor(5, 4)
-    type_keys({ ']', 'i' })
+    type_keys(']i')
     eq(get_cursor(), { 6, 3 })
 
     child.lua([[MiniIndentscope.config.options.border = 'none']])
     set_cursor(5, 4)
-    type_keys({ '[', 'i' })
+    type_keys('[i')
     eq(get_cursor(), { 4, 3 })
     set_cursor(5, 4)
-    type_keys({ ']', 'i' })
+    type_keys(']i')
     eq(get_cursor(), { 6, 3 })
   end)
 
   it('handles `v:count` when `try_as_border=true`', function()
     reload_module({ options = { try_as_border = true } })
     set_cursor(5, 4)
-    type_keys(vim.split('100[i', ''))
+    type_keys('100[i')
     eq(get_cursor(), { 1, 0 })
 
     reload_module()
@@ -779,13 +779,13 @@ describe('MiniIndentscope motion', function()
   it('updates jumplist only in Normal mode', function()
     -- Normal mode
     set_cursor(5, 4)
-    type_keys({ ']', 'i' })
+    type_keys(']i')
     type_keys('<C-o>')
     eq(get_cursor(), { 5, 4 })
 
     -- Visual mode
     set_cursor(2, 1)
-    type_keys(vim.split('v]i<Esc>', ''))
+    type_keys('v', ']i', '<Esc>')
     type_keys('<C-o>')
     assert.are.not_same(get_cursor(), { 2, 1 })
   end)
@@ -802,7 +802,7 @@ describe('MiniIndentscope textobject', function()
   it('works in Visual mode', function()
     local validate = function(keys, start_line, end_line)
       set_cursor(5, 4)
-      type_keys(vim.split(keys, ''))
+      type_keys(keys)
       child.ensure_normal_mode()
       child.assert_visual_marks(start_line, end_line)
     end
@@ -846,12 +846,12 @@ describe('MiniIndentscope textobject', function()
 
     -- `object_scope`
     set_cursor(5, 4)
-    type_keys({ 'v', 'I', 'I', '<Esc>' })
+    type_keys('v', 'II', '<Esc>')
     child.assert_visual_marks(4, 6)
 
     -- `object_scope_with_border`
     set_cursor(5, 4)
-    type_keys({ 'v', 'A', 'I', '<Esc>' })
+    type_keys('v', 'AI', '<Esc>')
     child.assert_visual_marks(3, 7)
 
     reload_module()
@@ -860,7 +860,7 @@ describe('MiniIndentscope textobject', function()
   it('allows not immediate dot-repeat', function()
     -- `object_scope`
     set_cursor(5, 4)
-    type_keys({ 'd', 'i', 'i' })
+    type_keys('d', 'ii')
     set_cursor(2, 2)
     type_keys('.')
 
@@ -870,7 +870,7 @@ describe('MiniIndentscope textobject', function()
 
     -- `object_scope_with_border`
     set_cursor(5, 4)
-    type_keys({ 'd', 'a', 'i' })
+    type_keys('d', 'ai')
     set_cursor(2, 2)
     type_keys('.')
 
@@ -883,24 +883,24 @@ describe('MiniIndentscope textobject', function()
     -- Should select up to respective body edge if border is not present
     child.lua([[MiniIndentscope.config.options.border = 'bottom']])
     set_cursor(5, 4)
-    type_keys({ 'v', 'a', 'i', '<Esc>' })
+    type_keys('v', 'ai', '<Esc>')
     child.assert_visual_marks(4, 7)
 
     child.lua([[MiniIndentscope.config.options.border = 'top']])
     set_cursor(5, 4)
-    type_keys({ 'v', 'a', 'i', '<Esc>' })
+    type_keys('v', 'ai', '<Esc>')
     child.assert_visual_marks(3, 6)
 
     child.lua([[MiniIndentscope.config.options.border = 'none']])
     set_cursor(5, 4)
-    type_keys({ 'v', 'a', 'i', '<Esc>' })
+    type_keys('v', 'ai', '<Esc>')
     child.assert_visual_marks(4, 6)
   end)
 
   it('handles `v:count` when `try_as_border=true`', function()
     reload_module({ options = { try_as_border = true } })
     set_cursor(5, 4)
-    type_keys({ 'v', '1', '0', '0', 'a', 'i', '<Esc>' })
+    type_keys('v', '100ai', '<Esc>')
     child.assert_visual_marks(1, 9)
 
     reload_module()

@@ -465,9 +465,6 @@ describe('MiniStatusline.section_mode()', function()
     type_keys('R')
     validate({ 'Replace', 'MiniStatuslineModeReplace' })
 
-    type_keys('R')
-    validate({ 'Replace', 'MiniStatuslineModeReplace' })
-
     child.cmd('terminal')
     child.cmd('startinsert')
     validate({ 'Terminal', 'MiniStatuslineModeOther' })
@@ -501,7 +498,7 @@ describe('MiniStatusline.section_searchcount()', function()
     -- Shows nothing if search is not initiated
     eq(section_searchcount(), '')
 
-    type_keys({ [[/]], 'a', '<CR>' })
+    type_keys([[/]], 'a', '<CR>')
     set_cursor(1, 0)
     eq(section_searchcount(), '0/3')
 
@@ -517,7 +514,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('works with many search matches', function()
     set_lines({ string.rep('a ', 101) })
-    type_keys({ [[/]], 'a', '<CR>' })
+    type_keys([[/]], 'a', '<CR>')
     set_cursor(1, 0)
     eq(section_searchcount(), '1/>99')
 
@@ -530,7 +527,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('respects `args.trunc_width`', function()
     set_lines({ '', 'a a a ' })
-    type_keys({ [[/]], 'a', '<CR>' })
+    type_keys([[/]], 'a', '<CR>')
     set_cursor(1, 0)
 
     set_width(100)
@@ -541,7 +538,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('respects `args.options`', function()
     set_lines({ '', 'a a a ' })
-    type_keys({ [[/]], 'a', '<CR>' })
+    type_keys([[/]], 'a', '<CR>')
 
     eq(section_searchcount({ options = { recompute = false } }), '1/3')
     set_cursor(2, 5)

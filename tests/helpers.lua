@@ -190,14 +190,26 @@ function helpers.new_child_neovim()
   end
 
   -- Convenience wrappers
-  function child.type_keys(keys, wait)
-    wait = wait or 0
-    keys = type(keys) == 'string' and { keys } or keys
+  --- Type keys
+  ---
+  ---@param wait? number Number of milliseconds to wait after each entries.
+  ---@param ... string|table<number, string> Separate entries for |nvim_input|, after
+  ---   which `wait` will be applied. Can be either string or array of strings.
+  ---
+  ---@private
+  function child.type_keys(wait, ...)
+    local has_wait = type(wait) == 'number'
+    local keys = has_wait and { ... } or { wait, ... }
+    keys = vim.tbl_flatten(keys)
 
     for _, k in ipairs(keys) do
+      if type(k) ~= 'string' then
+        error('In `type_keys()` each argument should be either string or array of strings.')
+      end
+
       -- Need to escape bare `<` (see `:h nvim_input`)
       child.api.nvim_input(k == '<' and '<LT>' or k)
-      if wait > 0 then
+      if has_wait and wait > 0 then
         child.loop.sleep(wait)
       end
     end
@@ -337,7 +349,7 @@ function helpers.new_child_neovim()
 
     -- Exit from Terminal mode
     if cur_mode == 't' then
-      child.type_keys({ [[<C-\>]], '<C-n>' })
+      child.type_keys([[<C-\>]], '<C-n>')
       return
     end
 

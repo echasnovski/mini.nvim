@@ -269,7 +269,7 @@ describe('Commenting', function()
 
   it('works in Normal mode', function()
     set_cursor(2, 2)
-    type_keys({ 'g', 'c', 'a', 'p' })
+    type_keys('gc', 'ap')
     eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
     -- Cursor moves to start line
     eq(get_cursor(), { 1, 0 })
@@ -277,13 +277,13 @@ describe('Commenting', function()
     -- Supports `v:count`
     set_lines(example_lines)
     set_cursor(2, 0)
-    type_keys({ '2', 'g', 'c', 'a', 'p' })
+    type_keys('2gc', 'ap')
     eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '#   aa', '#  aa', '# aa' })
   end)
 
   it('works in Visual mode', function()
     set_cursor(2, 2)
-    type_keys({ 'v', 'a', 'p', 'g', 'c' })
+    type_keys('v', 'ap', 'gc')
     eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
 
     -- Cursor moves to start line
@@ -294,14 +294,14 @@ describe('Commenting', function()
     reload_module({ mappings = { comment = 'gC' } })
 
     set_cursor(2, 2)
-    type_keys({ 'g', 'C', 'a', 'p' })
+    type_keys('gC', 'ap')
     eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
   end)
 
   it("respects 'commentstring'", function()
     child.api.nvim_buf_set_option(0, 'commentstring', '/*%s*/')
     set_cursor(2, 2)
-    type_keys({ 'g', 'c', 'a', 'p' })
+    type_keys('gc', 'ap')
     eq(get_lines(), { '/* aa */', '/*  aa */', '/*   aa */', '/**/', '  aa', ' aa', 'aa' })
   end)
 
@@ -310,14 +310,14 @@ describe('Commenting', function()
 
     set_lines(example_lines)
     set_cursor(2, 2)
-    type_keys({ 'g', 'c', 'a', 'p' })
+    type_keys('gc', 'ap')
     type_keys('.')
     eq(get_lines(), doubly_commented)
 
     -- Not immediate dot-repeat
     set_lines(example_lines)
     set_cursor(2, 2)
-    type_keys({ 'g', 'c', 'a', 'p' })
+    type_keys('gc', 'ap')
     set_cursor(7, 0)
     type_keys('.')
     eq(get_lines(), doubly_commented)
@@ -327,7 +327,7 @@ describe('Commenting', function()
     set_cursor(2, 0)
     -- Set '`<' and '`>' marks
     type_keys('VV')
-    type_keys({ 'g', 'c', 'i', 'p' })
+    type_keys('gc', 'ip')
     child.assert_visual_marks(2, 2)
   end)
 
@@ -336,7 +336,7 @@ describe('Commenting', function()
       child[var_type].minicomment_disable = true
       set_cursor(2, 2)
       local lines = get_lines()
-      type_keys({ 'g', 'c', 'j' })
+      type_keys('gc', 'j')
       eq(get_lines(), lines)
 
       child[var_type].minicomment_disable = nil
@@ -352,7 +352,7 @@ describe('Commenting', function()
     reload_with_hooks()
     eq(child.bo.commentstring, '# %s')
 
-    type_keys({ 'g', 'c', 'i', 'p' })
+    type_keys('gc', 'ip')
     -- It should allow change of `commentstring` in `pre` hook
     eq(get_lines(), { '// aa', '// aa' })
     eq(child.lua_get('_G.pre_n'), 1)
@@ -379,19 +379,19 @@ describe('Commenting current line', function()
   it('works', function()
     set_lines(example_lines)
     set_cursor(1, 1)
-    type_keys({ 'g', 'c', 'c' })
+    type_keys('gcc')
     eq(get_lines(0, 2), { '# aa', ' aa' })
 
     -- Works on empty line
     set_lines(example_lines)
     set_cursor(4, 0)
-    type_keys({ 'g', 'c', 'c' })
+    type_keys('gcc')
     eq(get_lines(2, 5), { '  aa', '#', '  aa' })
 
     -- Supports `v:count`
     set_lines(example_lines)
     set_cursor(2, 0)
-    type_keys({ '2', 'g', 'c', 'c' })
+    type_keys('2gcc')
     eq(get_lines(0, 3), { 'aa', ' # aa', ' #  aa' })
   end)
 
@@ -399,21 +399,21 @@ describe('Commenting current line', function()
     reload_module({ mappings = { comment_line = 'gCC' } })
 
     set_cursor(1, 0)
-    type_keys({ 'g', 'C', 'C' })
+    type_keys('gCC')
     eq(get_lines(0, 1), { '# aa' })
   end)
 
   it('allows dot-repeat', function()
     set_lines(example_lines)
     set_cursor(1, 1)
-    type_keys({ 'g', 'c', 'c' })
+    type_keys('gcc')
     type_keys('.')
     eq(get_lines(), example_lines)
 
     -- Not immediate dot-repeat
     set_lines(example_lines)
     set_cursor(1, 1)
-    type_keys({ 'g', 'c', 'c' })
+    type_keys('gcc')
     set_cursor(7, 0)
     type_keys('.')
     eq(get_lines(6, 7), { '# aa' })
@@ -425,7 +425,7 @@ describe('Commenting current line', function()
     reload_with_hooks()
     eq(child.bo.commentstring, '# %s')
 
-    type_keys({ 'g', 'c', 'c' })
+    type_keys('gcc')
     -- It should allow change of `commentstring` in `pre` hook
     eq(get_lines(), { '// aa', 'aa' })
     eq(child.lua_get('_G.pre_n'), 1)
@@ -452,13 +452,13 @@ describe('Comment textobject', function()
   it('works', function()
     set_lines({ 'aa', '# aa', '# aa', 'aa' })
     set_cursor(2, 0)
-    type_keys({ 'd', 'g', 'c' })
+    type_keys('d', 'gc')
     eq(get_lines(), { 'aa', 'aa' })
   end)
 
   it('does nothing when not inside textobject', function()
     -- Builtin operators
-    type_keys({ 'd', 'g', 'c' })
+    type_keys('d', 'gc')
     eq(get_lines(), example_lines)
 
     -- Comment operator
@@ -468,7 +468,7 @@ describe('Comment textobject', function()
     local validate_no_action = function(line, col)
       set_lines(example_lines)
       set_cursor(line, col)
-      type_keys({ 'g', 'c', 'g', 'c' })
+      type_keys('gc', 'gc')
       eq(get_lines(), example_lines)
     end
 
@@ -485,14 +485,14 @@ describe('Comment textobject', function()
 
     set_lines({ 'aa', '# aa', '# aa', 'aa' })
     set_cursor(2, 0)
-    type_keys({ 'd', 'g', 'C' })
+    type_keys('d', 'gC')
     eq(get_lines(), { 'aa', 'aa' })
   end)
 
   it('allows dot-repeat', function()
     set_lines({ 'aa', '# aa', '# aa', 'aa', '# aa' })
     set_cursor(2, 0)
-    type_keys({ 'd', 'g', 'C' })
+    type_keys('d', 'gC')
     set_cursor(3, 0)
     type_keys('.')
     eq(get_lines(), { 'aa', 'aa' })
@@ -504,7 +504,7 @@ describe('Comment textobject', function()
       local lines = { 'aa', '# aa', '# aa', 'aa' }
       set_lines(lines)
       set_cursor(2, 0)
-      type_keys({ 'd', 'g', 'c' })
+      type_keys('d', 'gc')
       eq(get_lines(), lines)
 
       child[var_type].minicomment_disable = nil
@@ -521,7 +521,7 @@ describe('Comment textobject', function()
     reload_with_hooks()
     eq(child.bo.commentstring, '# %s')
 
-    type_keys({ 'd', 'g', 'c' })
+    type_keys('d', 'gc')
     eq(get_lines(), { 'aa' })
     eq(child.lua_get('_G.pre_n'), 1)
     eq(child.lua_get('_G.post_n'), 1)
@@ -538,7 +538,7 @@ describe('Comment textobject', function()
     -- considered a successful usage of a textobject
     set_lines({ 'aa', 'aa' })
     set_cursor(1, 0)
-    type_keys({ 'd', 'g', 'c' })
+    type_keys('d', 'gc')
     eq(get_lines(), { 'aa', 'aa' })
     eq(child.lua_get('_G.pre_n'), 3)
     eq(child.lua_get('_G.post_n'), 3)

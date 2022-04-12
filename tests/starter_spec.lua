@@ -1268,7 +1268,7 @@ describe('Cursor positioning', function()
     type_keys('<Down>')
     eq(get_cursor(), { 6, 0 })
 
-    type_keys({ '<Down>', '<Down>' })
+    type_keys('<Down><Down>')
     eq(get_cursor(), { 2, 0 })
 
     type_keys('<Up>')

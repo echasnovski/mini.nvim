@@ -249,7 +249,7 @@ describe('Autocompletion', function()
   end)
 
   it('works with LSP client', function()
-    type_keys({ 'i', 'J' })
+    type_keys('i', 'J')
     eq(get_completion(), {})
 
     -- Shows completion only after delay
@@ -263,7 +263,7 @@ describe('Autocompletion', function()
     -- -- Completion menu is filtered after entering characters
     -- -- NOTE: this is currently not tested because couldn't find a way to get
     -- -- actually shown items (see annotation of `get_shown_completion_data()`).
-    -- type_keys({ 'u' })
+    -- type_keys( 'u' )
     -- eq(get_completion(), { 'June', 'July' })
   end)
 
@@ -273,8 +273,7 @@ describe('Autocompletion', function()
       return {}
     end
 
-    type_keys('i')
-    type_keys(vim.split('aa ab a', ''))
+    type_keys('i', 'aa ab a')
     eq(get_completion(), {})
     sleep(test_times.completion - 10)
     eq(get_completion(), {})
@@ -283,7 +282,7 @@ describe('Autocompletion', function()
   end)
 
   it('implements debounce-style delay', function()
-    type_keys({ 'i', 'J' })
+    type_keys('i', 'J')
 
     sleep(test_times.completion - 10)
     eq(get_completion(), {})
@@ -298,7 +297,7 @@ describe('Autocompletion', function()
     set_lines({ 'Jackpot', '' })
     set_cursor(2, 0)
 
-    type_keys({ 'i', 'J', 'a' })
+    type_keys('i', 'Ja')
     sleep(test_times.completion + 1)
     eq(get_completion(), { 'January' })
 
@@ -309,16 +308,16 @@ describe('Autocompletion', function()
     -- completion item list without reevaluating completion function). It is
     -- only after the next character completion function gets reevaluated
     -- leading to zero items from LSP which triggers fallback action.
-    type_keys({ 'c' })
+    type_keys('c')
     eq(child.fn.pumvisible(), 0)
-    type_keys({ 'k' })
+    type_keys('k')
     eq(get_completion(), { 'Jackpot' })
   end)
 
   it('respects `config.delay.completion`', function()
     reload_module({ delay = { completion = 300 } })
 
-    type_keys({ 'i', 'J' })
+    type_keys('i', 'J')
     sleep(300 - 10)
     sleep(10)
     eq(get_completion(), { 'January', 'June', 'July' })
@@ -335,7 +334,7 @@ describe('Autocompletion', function()
     unload_module()
     child.lua([[require('mini.completion').setup({ lsp_completion = { process_items = _G.process_items } })]])
 
-    type_keys({ 'i', 'J' })
+    type_keys('i', 'J')
     sleep(test_times.completion + 1)
     eq(get_completion(), { 'June', 'July' })
   end)
@@ -344,7 +343,7 @@ describe('Autocompletion', function()
     reload_module({ fallback_action = '<C-x><C-l>' })
     set_lines({ 'Line number 1', '' })
     set_cursor(2, 0)
-    type_keys({ 'i', 'L' })
+    type_keys('i', 'L')
     sleep(test_times.completion + 1)
     eq(get_completion(), { 'Line number 1' })
   end)
@@ -352,7 +351,7 @@ describe('Autocompletion', function()
   it('respects function `config.fallback_action`', function()
     unload_module()
     child.lua([[require('mini.completion').setup({ fallback_action = function() _G.inside_fallback = true end })]])
-    type_keys({ 'i', 'a' })
+    type_keys('i', 'a')
     sleep(test_times.completion + 1)
     eq(child.lua_get('_G.inside_fallback'), true)
   end)
@@ -360,7 +359,7 @@ describe('Autocompletion', function()
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
       child[var_type].minicompletion_disable = true
-      type_keys({ 'i', 'J' })
+      type_keys('i', 'J')
       sleep(test_times.completion + 1)
       eq(get_completion(), {})
 
@@ -387,10 +386,10 @@ describe('Manual completion', function()
   end)
 
   it('works with two-step completion', function()
-    type_keys({ 'i', 'J', '<C-Space>' })
+    type_keys('i', 'J', '<C-Space>')
     eq(get_completion(), { 'January', 'June', 'July' })
 
-    type_keys({ 'a', 'c' })
+    type_keys('ac')
     eq(child.fn.pumvisible(), 0)
 
     type_keys('<C-Space>')
@@ -398,13 +397,13 @@ describe('Manual completion', function()
   end)
 
   it('works with fallback action', function()
-    type_keys({ 'i', 'J', '<M-Space>' })
+    type_keys('i', 'J', '<M-Space>')
     eq(get_completion(), { 'Jackpot' })
   end)
 
   it('respects `config.mappings', function()
     reload_module({ mappings = { force_twostep = '<C-z>', force_fallback = '<C-x>' } })
-    type_keys({ 'i', 'J', '<C-z>' })
+    type_keys('i', 'J', '<C-z>')
     eq(get_completion(), { 'January', 'June', 'July' })
     type_keys('<C-x>')
     eq(get_completion(), { 'Jackpot' })
@@ -413,11 +412,11 @@ describe('Manual completion', function()
   it('respects vim.{g,b}.minicompletion_disable', function()
     local validate_disable = function(var_type)
       child[var_type].minicompletion_disable = true
-      type_keys({ 'i', '<C-Space>' })
+      type_keys('i', '<C-Space>')
       poke_eventloop()
       eq(get_completion(), {})
 
-      type_keys({ 'i', '<M-Space>' })
+      type_keys('i', '<M-Space>')
       poke_eventloop()
       eq(get_completion(), {})
 
@@ -440,7 +439,7 @@ describe('Information window', function()
   end)
 
   local validate_info_win = function(delay)
-    type_keys({ 'i', 'J', '<C-Space>' })
+    type_keys('i', 'J', '<C-Space>')
     eq(get_completion(), { 'January', 'June', 'July' })
 
     type_keys('<C-n>')
@@ -462,9 +461,7 @@ describe('Information window', function()
 
   local validate_dimensions = function(keys, completion_items, dimensions)
     reload_module({ window_dimensions = { info = { height = 20, width = 40 } } })
-    type_keys('i')
-    type_keys(keys)
-    type_keys('<C-Space>')
+    type_keys('i', keys, '<C-Space>')
     eq(get_completion(), completion_items)
 
     type_keys('<C-n>')
@@ -483,7 +480,7 @@ describe('Information window', function()
   end)
 
   it('implements debounce-style delay', function()
-    type_keys({ 'i', 'J', '<C-Space>' })
+    type_keys('i', 'J', '<C-Space>')
     eq(get_completion(), { 'January', 'June', 'July' })
 
     type_keys('<C-n>')
@@ -502,8 +499,7 @@ describe('Information window', function()
 
       set_lines({ 'aa ab ', '' })
       set_cursor(2, 0)
-      type_keys({ 'i', '<C-n>' })
-      type_keys('<C-n>')
+      type_keys('i', '<C-n>', '<C-n>')
       sleep(test_times.info + 1)
       eq(#get_floating_windows(), 0)
 
@@ -526,7 +522,7 @@ describe('Signature help', function()
   end)
 
   local validate_signature_win = function(delay)
-    type_keys({ 'i', 'a', 'b', 'c', '(' })
+    type_keys('i', 'abc(')
 
     eq(get_floating_windows(), {})
     sleep(delay - 10)
@@ -557,20 +553,20 @@ describe('Signature help', function()
     local calls
     child.cmd('startinsert')
 
-    type_keys({ 'a', 'b', 'c', '(' })
+    type_keys('abc(')
     sleep(test_times.signature + 1)
     calls = child.lua_get('_G.buf_highlighting_calls')
     eq(#calls, 1)
     eq({ calls[1][3], calls[1][5], calls[1][6] }, { 'MiniCompletionActiveParameter', 4, 10 })
 
-    type_keys({ '1', ',' })
+    type_keys('1,')
     sleep(test_times.signature + 1)
     calls = child.lua_get('_G.buf_highlighting_calls')
     eq(#calls, 2)
     eq({ calls[2][3], calls[2][5], calls[2][6] }, { 'MiniCompletionActiveParameter', 12, 18 })
 
     -- As there are only two parameters, nothing should be highlighted
-    type_keys({ '2', ',' })
+    type_keys('2,')
     sleep(test_times.signature + 1)
     calls = child.lua_get('_G.buf_highlighting_calls')
     eq(#calls, 2)
@@ -594,7 +590,7 @@ describe('Signature help', function()
 
   it('implements debounce-style delay', function()
     child.cmd('startinsert')
-    type_keys({ 'a', 'b', 'c', '(' })
+    type_keys('abc(')
     sleep(test_times.signature - 10)
     type_keys('d')
     sleep(test_times.signature + 1)
@@ -609,7 +605,7 @@ describe('Signature help', function()
     local validate_disable = function(var_type)
       child[var_type].minicompletion_disable = true
 
-      type_keys({ 'i', 'a', 'b', 'c', '(' })
+      type_keys('i', 'abc(')
       sleep(test_times.signature + 1)
       eq(#get_floating_windows(), 0)
 

@@ -148,7 +148,7 @@ describe('MiniJump.state', function()
   end)
 
   it('updates `target`', function()
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     eq(get_state().target, 'e')
 
     child.lua('MiniJump.stop_jumping()')
@@ -158,42 +158,42 @@ describe('MiniJump.state', function()
 
   it('updates `backward`', function()
     set_cursor(1, 7)
-    type_keys({ 'F', 'e' })
+    type_keys('F', 'e')
     eq(get_state().backward, true)
 
-    type_keys({ 'f' })
+    type_keys('f')
     eq(get_state().backward, false)
   end)
 
   it('updates `till`', function()
-    type_keys({ 't', 'e' })
+    type_keys('t', 'e')
     eq(get_state().till, true)
 
-    type_keys({ 'f' })
+    type_keys('f')
     eq(get_state().till, false)
   end)
 
   it('updates `n_times`', function()
-    type_keys({ '2', 'f', 'e' })
+    type_keys('2f', 'e')
     eq(get_state().n_times, 2)
   end)
 
   it('updates `mode`', function()
-    type_keys({ 't', 'e' })
+    type_keys('t', 'e')
     eq(get_state().mode, 'n')
     child.lua('MiniJump.stop_jumping()')
 
-    type_keys({ 'V', 't', 'e' })
+    type_keys('V', 't', 'e')
     eq(get_state().mode, 'V')
     child.ensure_normal_mode()
 
-    type_keys({ 'd', 't', 'e' })
+    type_keys('d', 't', 'e')
     eq(get_state().mode, 'nov')
     child.lua('MiniJump.stop_jumping()')
   end)
 
   it('updates `jumping`', function()
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     eq(get_state().jumping, true)
 
     child.lua('MiniJump.stop_jumping()')
@@ -287,8 +287,8 @@ describe('MiniJump.jump()', function()
 
     -- Manually create two nested closed folds
     set_cursor(3, 0)
-    type_keys({ 'z', 'f', 'G' })
-    type_keys({ 'z', 'f', 'g', 'g' })
+    type_keys('zf', 'G')
+    type_keys('zf', 'gg')
     eq(child.fn.foldlevel(1), 1)
     eq(child.fn.foldlevel(3), 2)
     eq(child.fn.foldclosed(2), 1)
@@ -326,19 +326,19 @@ describe('Jumping with f/t/F/T', function()
   it('works in Normal and Visual modes', function()
     local validate = function(key, positions)
       -- First time should jump and start "jumping" mode
-      type_keys({ key, 'e' })
+      type_keys(key, 'e')
       eq(get_cursor(), positions[1])
 
       -- Typing same key should repeat jump
-      type_keys({ key })
+      type_keys(key)
       eq(get_cursor(), positions[2])
 
       -- Prepending with `count` should work
-      type_keys({ '2', key })
+      type_keys('2', key)
       eq(get_cursor(), positions[3])
 
       -- Typing same key should ignore previous `count`
-      type_keys({ key })
+      type_keys(key)
       eq(get_cursor(), positions[4])
     end
 
@@ -371,15 +371,15 @@ describe('Jumping with f/t/F/T', function()
   it('works in Operator-pending mode', function()
     local validate = function(key, line_seq)
       -- Apply once
-      type_keys({ 'd', key, 'e' })
+      type_keys('d', key, 'e')
       eq(get_lines(), { line_seq[1] })
 
       -- Prepending with `count` should work
-      type_keys({ '2', 'd', key, 'e' })
+      type_keys('2d', key, 'e')
       eq(get_lines(), { line_seq[2] })
 
       -- Another prepending with `count` should work
-      type_keys({ 'd', '2', key, 'e' })
+      type_keys('d', '2', key, 'e')
       eq(get_lines(), { line_seq[3] })
 
       -- Just typing `key` shouldn't repeat action
@@ -418,14 +418,14 @@ describe('Jumping with f/t/F/T', function()
       local start_col = key == key:lower() and 0 or lines[1]:len()
       set_cursor(1, start_col)
 
-      type_keys({ '2', 'd', key, 'e' })
+      type_keys('2d', key, 'e')
 
       -- Immediate dot-repeat
       type_keys('.')
 
       -- Not immediate dot-repeat
       set_cursor(2, start_col)
-      type_keys({ '.', '.' })
+      type_keys('.', '.')
 
       -- Check equal effect
       lines = get_lines()
@@ -445,19 +445,19 @@ describe('Jumping with f/t/F/T', function()
     -- twice. Can't test once because it should ask for user input and make an
     -- actual movement to `key` letter.
     set_cursor(2, 0)
-    type_keys({ 'f', 'e', 'l', 'f', 'f' })
+    type_keys('f', 'e', 'l', 'f', 'f')
     eq(get_cursor(), { 3, 0 })
 
     set_cursor(2, 0)
-    type_keys({ 't', 'e', 'l', 't', 't' })
+    type_keys('t', 'e', 'l', 't', 't')
     eq(get_cursor(), { 3, 0 })
 
     set_cursor(2, 7)
-    type_keys({ 'F', 'e', 'l', 'F', 'F' })
+    type_keys('F', 'e', 'l', 'F', 'F')
     eq(get_cursor(), { 1, 1 })
 
     set_cursor(2, 7)
-    type_keys({ 'T', 'e', 'l', 'T', 'T' })
+    type_keys('T', 'e', 'l', 'T', 'T')
     eq(get_cursor(), { 1, 1 })
   end)
 
@@ -469,19 +469,19 @@ describe('Jumping with f/t/F/T', function()
     set_lines({ ' 1e2e3e_ ' })
 
     set_cursor(1, 0)
-    type_keys({ 'g', 'f', 'e' })
+    type_keys('gf', 'e')
     eq(get_cursor(), { 1, 2 })
 
     set_cursor(1, 0)
-    type_keys({ 'g', 't', 'e' })
+    type_keys('gt', 'e')
     eq(get_cursor(), { 1, 1 })
 
     set_cursor(1, 8)
-    type_keys({ 'g', 'F', 'e' })
+    type_keys('gF', 'e')
     eq(get_cursor(), { 1, 6 })
 
     set_cursor(1, 8)
-    type_keys({ 'g', 'T', 'e' })
+    type_keys('gT', 'e')
     eq(get_cursor(), { 1, 7 })
   end)
 
@@ -492,23 +492,23 @@ describe('Jumping with f/t/F/T', function()
     -- which typing any of the five jump keys (including `;`) jumps around
     -- present targets.
     set_cursor(1, 0)
-    type_keys({ 'f', 'e', 't' })
+    type_keys('f', 'e', 't')
     eq(get_cursor(), { 1, 3 })
 
     set_cursor(1, 0)
-    type_keys({ '2', 'f', 'e', 'F' })
+    type_keys('2f', 'e', 'F')
     eq(get_cursor(), { 1, 2 })
 
     set_cursor(1, 8)
-    type_keys({ 'F', 'e', 'T' })
+    type_keys('F', 'e', 'T')
     eq(get_cursor(), { 1, 5 })
 
     set_cursor(1, 8)
-    type_keys({ '2', 'F', 'e', 't' })
+    type_keys('2F', 'e', 't')
     eq(get_cursor(), { 1, 5 })
 
     set_cursor(1, 0)
-    type_keys({ 'f', 'e', 'f', 'T', 't', 'F' })
+    type_keys('f', 'e', 'f', 'T', 't', 'F')
     eq(get_cursor(), { 1, 4 })
   end)
 
@@ -517,10 +517,10 @@ describe('Jumping with f/t/F/T', function()
     set_cursor(1, 0)
 
     -- There is no target in backward direction...
-    type_keys({ 'F', 'e' })
+    type_keys('F', 'e')
 
     -- ...but it still should enter jumping mode because target is present
-    type_keys({ 'f', 'f' })
+    type_keys('f', 'f')
     eq(get_cursor(), { 1, 3 })
   end)
 
@@ -530,7 +530,7 @@ describe('Jumping with f/t/F/T', function()
     for _, key in ipairs({ 'f', 't', 'F', 'T' }) do
       local start_col = key == key:lower() and 0 or 6
       set_cursor(1, start_col)
-      type_keys({ key, 'e' })
+      type_keys(key, 'e')
       -- It shouldn't move anywhere
       eq(get_cursor(), { 1, start_col })
       -- If implemented incorrectly, this can also fail because of consecutive
@@ -545,7 +545,7 @@ describe('Jumping with f/t/F/T', function()
       set_cursor(1, 0)
       -- Here 'o' should act just like Normal mode 'o'
       -- Wait after every key to poke eventloop
-      type_keys({ key, test_key, 'o' }, 1)
+      type_keys(1, key, test_key, 'o')
       eq(get_lines(), { 'abcd', '' })
 
       -- Cleanup from Insert mode
@@ -564,19 +564,19 @@ describe('Jumping with f/t/F/T', function()
     set_lines({ 'xxxx' })
 
     set_cursor(1, 0)
-    type_keys({ 'f', 'x' })
+    type_keys('f', 'x')
     eq(get_cursor(), { 1, 1 })
 
     set_cursor(1, 0)
-    type_keys({ 't', 'x' })
+    type_keys('t', 'x')
     eq(get_cursor(), { 1, 1 })
 
     set_cursor(1, 3)
-    type_keys({ 'F', 'x' })
+    type_keys('F', 'x')
     eq(get_cursor(), { 1, 2 })
 
     set_cursor(1, 3)
-    type_keys({ 'T', 'x' })
+    type_keys('T', 'x')
     eq(get_cursor(), { 1, 2 })
   end)
 
@@ -584,11 +584,11 @@ describe('Jumping with f/t/F/T', function()
     set_lines({ 'exx', 'e', 'e', 'xxe' })
 
     set_cursor(1, 1)
-    type_keys({ 't', 'e' })
+    type_keys('t', 'e')
     eq(get_cursor(), { 4, 1 })
 
     set_cursor(4, 0)
-    type_keys({ 'T', 'e' })
+    type_keys('T', 'e')
     eq(get_cursor(), { 1, 1 })
   end)
 
@@ -601,7 +601,7 @@ describe('Jumping with f/t/F/T', function()
 
     -- Execute one time to test if 'needs help message' flag is set per call
     set_cursor(1, 0)
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     sleep(200)
 
     type_keys('f')
@@ -620,7 +620,7 @@ describe('Jumping with f/t/F/T', function()
     for _, key in ipairs({ 'f', 't', 'F', 'T' }) do
       local start_col = key == key:lower() and 0 or 3
       set_cursor(1, start_col)
-      type_keys({ key, 'e', key, 'o' })
+      type_keys(key, 'e', key, 'o')
       eq(get_cursor(), { 1, 1 })
       -- Ensure no jumping mode
       child.lua('MiniJump.stop_jumping()')
@@ -631,19 +631,19 @@ describe('Jumping with f/t/F/T', function()
     set_lines({ ' 1e2e3e4e_ ' })
 
     set_cursor(1, 0)
-    type_keys({ '1', '0', 'f', 'e' })
+    type_keys('10f', 'e')
     eq(get_cursor(), { 1, 8 })
 
     set_cursor(1, 0)
-    type_keys({ '1', '0', 't', 'e' })
+    type_keys('10t', 'e')
     eq(get_cursor(), { 1, 7 })
 
     set_cursor(1, 10)
-    type_keys({ '1', '0', 'F', 'e' })
+    type_keys('10F', 'e')
     eq(get_cursor(), { 1, 2 })
 
     set_cursor(1, 10)
-    type_keys({ '1', '0', 'T', 'e' })
+    type_keys('10T', 'e')
     eq(get_cursor(), { 1, 3 })
   end)
 
@@ -652,7 +652,7 @@ describe('Jumping with f/t/F/T', function()
       child[var_type].minijump_disable = true
       set_lines({ '1e2e3e4e' })
       set_cursor(1, 0)
-      type_keys({ 'f', 'e' })
+      type_keys('f', 'e')
       -- `f` does nothing, while `e` jumps to end of word (otherwise it would
       -- have been `{1, 1}`)
       eq(get_cursor(), { 1, 7 })
@@ -675,19 +675,19 @@ describe('Repeat jump with ;', function()
     set_lines({ ' 1e2e3e4e_ ' })
 
     set_cursor(1, 0)
-    type_keys({ 'f', 'e', ';' })
+    type_keys('f', 'e', ';')
     eq(get_cursor(), { 1, 4 })
 
     set_cursor(1, 0)
-    type_keys({ 't', 'e', ';' })
+    type_keys('t', 'e', ';')
     eq(get_cursor(), { 1, 3 })
 
     set_cursor(1, 10)
-    type_keys({ 'F', 'e', ';' })
+    type_keys('F', 'e', ';')
     eq(get_cursor(), { 1, 6 })
 
     set_cursor(1, 10)
-    type_keys({ 'T', 'e', ';' })
+    type_keys('T', 'e', ';')
     eq(get_cursor(), { 1, 7 })
   end)
 
@@ -698,7 +698,7 @@ describe('Repeat jump with ;', function()
     local validate = function()
       -- Repeats simple motion
       set_cursor(1, 0)
-      type_keys({ 'f', 'e', ';' })
+      type_keys('f', 'e', ';')
       eq(get_cursor(), { 1, 3 })
 
       -- Repeats not immediately
@@ -708,7 +708,7 @@ describe('Repeat jump with ;', function()
 
       -- Repeats with `count`
       set_cursor(1, 0)
-      type_keys({ '2', 'f', 'e', ';' })
+      type_keys('2f', 'e', ';')
       eq(get_cursor(), { 1, 7 })
     end
 
@@ -728,7 +728,7 @@ describe('Repeat jump with ;', function()
     set_lines({ '1e2e3e4e5e' })
     set_cursor(1, 0)
 
-    type_keys({ 'd', 'f', 'e', ';' })
+    type_keys('d', 'f', 'e', ';')
     eq(get_lines(), { '2e3e4e5e' })
     eq(get_cursor(), { 1, 1 })
 
@@ -736,7 +736,7 @@ describe('Repeat jump with ;', function()
     set_lines({ '1e2e3e4e5e' })
     set_cursor(1, 0)
 
-    type_keys({ 'd', '2', 'f', 'e', ';' })
+    type_keys('d', '2f', 'e', ';')
     eq(get_lines(), { '3e4e5e' })
     eq(get_cursor(), { 1, 3 })
   end)
@@ -746,14 +746,14 @@ describe('Repeat jump with ;', function()
     reload_module({ mappings = { repeat_jump = 'g;' } })
 
     set_lines({ '1e2e' })
-    type_keys({ 'f', 'e', 'g', ';' })
+    type_keys('f', 'e', 'g;')
     eq(get_cursor(), { 1, 3 })
   end)
 
   it('works not immediately after failed first jump', function()
     set_lines({ 'aaa' })
     set_cursor(1, 0)
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     eq(get_cursor(), { 1, 0 })
 
     set_lines({ 'aaa', 'eee' })
@@ -766,7 +766,7 @@ describe('Repeat jump with ;', function()
     local validate_disable = function(var_type)
       set_lines({ '1e2e3e4e' })
       set_cursor(1, 0)
-      type_keys({ 'f', 'e' })
+      type_keys('f', 'e')
 
       child[var_type].minijump_disable = true
       type_keys(';')
@@ -791,7 +791,7 @@ describe('Delayed highlighting', function()
     local backward = ({ f = false, t = false, F = true, T = true })[key]
     local till = ({ f = false, t = true, F = false, T = true })[key]
 
-    type_keys({ key, 'e' })
+    type_keys(key, 'e')
     eq(child.fn.getmatches(), {})
     sleep(delay - 10)
     eq(child.fn.getmatches(), {})
@@ -820,11 +820,11 @@ describe('Delayed highlighting', function()
   it('implements debounce-style delay', function()
     set_lines('1e2e3e')
     set_cursor(1, 0)
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     sleep(test_times.highlight - 10)
     eq(highlights_target('e', false, false), false)
 
-    type_keys({ 'f' })
+    type_keys('f')
     sleep(test_times.highlight - 10)
     eq(highlights_target('e', false, false), false)
     sleep(10)
@@ -832,7 +832,7 @@ describe('Delayed highlighting', function()
   end)
 
   it('stops immediately when not jumping', function()
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     sleep(test_times.highlight)
     eq(highlights_target('e', false, false), true)
     type_keys('l')
@@ -843,13 +843,13 @@ describe('Delayed highlighting', function()
     set_lines({ '1e2e', 'ee' })
 
     set_cursor(1, 0)
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
 
     sleep(test_times.highlight)
     eq(highlights_target('e', false, false), true)
-    type_keys({ 't' })
+    type_keys('t')
     eq(highlights_target('e', false, true), true)
-    type_keys({ 'T' })
+    type_keys('T')
     eq(highlights_target('e', true, true), true)
   end)
 end)
@@ -865,7 +865,7 @@ describe('Stop jumping after idle', function()
   end)
 
   it('works', function()
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     eq(get_cursor(), { 1, 1 })
 
     -- It works
@@ -876,14 +876,14 @@ describe('Stop jumping after idle', function()
     -- It implements debounce-style delay
     sleep(delay + 1)
     -- It should have stopped jumping and this should initiate new jump
-    type_keys({ 'f', 'f' })
+    type_keys('f', 'f')
     eq(get_cursor(), { 2, 0 })
   end)
 
   it('works if should be done before target highlighting', function()
     reload_module({ delay = { idle_stop = test_times.highlight - 50 } })
 
-    type_keys({ 'f', 'e' })
+    type_keys('f', 'e')
     eq(get_cursor(), { 1, 1 })
     sleep(test_times.highlight + 1)
     eq(highlights_target('e', false, false), false)
