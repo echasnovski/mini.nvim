@@ -267,31 +267,16 @@ function H.apply_config(config)
   MiniComment.config = config
 
   -- Make mappings
-  H.keymap('n', config.mappings.comment, 'v:lua.MiniComment.operator()', {
-    expr = true,
-    noremap = true,
-    silent = true,
-  })
-  H.keymap(
+  H.map('n', config.mappings.comment, 'v:lua.MiniComment.operator()', { expr = true })
+  H.map(
     'x',
     config.mappings.comment,
     -- Using `:<c-u>` instead of `<cmd>` as latter results into executing before
     -- proper update of `'<` and `'>` marks which is needed to work correctly.
-    [[:<c-u>lua MiniComment.operator('visual')<cr>]],
-    { noremap = true, silent = true }
+    [[:<c-u>lua MiniComment.operator('visual')<cr>]]
   )
-  H.keymap(
-    'n',
-    config.mappings.comment_line,
-    'v:lua.MiniComment.operator() . "_"',
-    { expr = true, noremap = true, silent = true }
-  )
-  H.keymap(
-    'o',
-    config.mappings.textobject,
-    [[<cmd>lua MiniComment.textobject()<cr>]],
-    { noremap = true, silent = true }
-  )
+  H.map('n', config.mappings.comment_line, 'v:lua.MiniComment.operator() . "_"', { expr = true })
+  H.map('o', config.mappings.textobject, [[<cmd>lua MiniComment.textobject()<cr>]])
 end
 
 function H.is_disabled()
@@ -405,11 +390,13 @@ function H.make_uncomment_function(comment_parts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.keymap(mode, keys, cmd, opts)
-  if keys == '' then
+function H.map(mode, key, rhs, opts)
+  if key == '' then
     return
   end
-  vim.api.nvim_set_keymap(mode, keys, cmd, opts)
+
+  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+  vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
 return MiniComment

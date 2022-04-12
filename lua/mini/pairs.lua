@@ -484,7 +484,6 @@ function H.is_pair_registered(pair, mode, buffer, key)
   return vim.tbl_contains(buf_pairs[key], pair)
 end
 
---stylua: ignore start
 function H.ensure_cr_bs(mode)
   local has_any_cr_pair, has_any_bs_pair = false, false
   for _, pair_tbl in pairs(H.registered_pairs[mode]) do
@@ -495,13 +494,12 @@ function H.ensure_cr_bs(mode)
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
   if has_any_bs_pair then
-    H.map(mode, '<BS>', [[v:lua.MiniPairs.bs()]])
+    vim.api.nvim_set_keymap(mode, '<BS>', [[v:lua.MiniPairs.bs()]], { expr = true, noremap = true })
   end
   if mode == 'i' and has_any_cr_pair then
-    H.map(mode, '<CR>', [[v:lua.MiniPairs.cr()]])
+    vim.api.nvim_set_keymap(mode, '<CR>', [[v:lua.MiniPairs.cr()]], { expr = true, noremap = true })
   end
 end
---stylua: ignore start
 
 -- Work with pair_info --------------------------------------------------------
 function H.validate_pair_info(pair_info, prefix)
@@ -533,10 +531,6 @@ function H.pair_info_to_map_rhs(pair_info)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.map(mode, key, command)
-  vim.api.nvim_set_keymap(mode, key, command, { expr = true, noremap = true })
-end
-
 function H.get_cursor_neigh(start, finish)
   local line, col
   if vim.fn.mode() == 'c' then

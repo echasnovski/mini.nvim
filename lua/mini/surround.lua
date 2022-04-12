@@ -389,49 +389,24 @@ function H.apply_config(config)
   -- Make mappings
   -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
   -- It is used to enable dot-repeatability.
-  H.keymap(
-    'n',
-    config.mappings.add,
-    [[v:lua.MiniSurround.operator('add')]],
-    { expr = true, noremap = true, silent = true }
-  )
-  H.keymap('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]], { noremap = true, silent = true })
-  H.keymap(
-    'n',
-    config.mappings.delete,
-    [[v:lua.MiniSurround.operator('delete') . ' ']],
-    { expr = true, noremap = true, silent = true }
-  )
-  H.keymap(
-    'n',
-    config.mappings.replace,
-    [[v:lua.MiniSurround.operator('replace') . ' ']],
-    { expr = true, noremap = true, silent = true }
-  )
-  H.keymap(
+  H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true })
+  H.map('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]])
+  H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true })
+  H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true })
+  H.map(
     'n',
     config.mappings.find,
     [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']],
-    { expr = true, noremap = true, silent = true }
+    { expr = true }
   )
-  H.keymap(
+  H.map(
     'n',
     config.mappings.find_left,
     [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']],
-    { expr = true, noremap = true, silent = true }
+    { expr = true }
   )
-  H.keymap(
-    'n',
-    config.mappings.highlight,
-    [[v:lua.MiniSurround.operator('highlight') . ' ']],
-    { expr = true, noremap = true, silent = true }
-  )
-  H.keymap(
-    'n',
-    config.mappings.update_n_lines,
-    [[<cmd>lua MiniSurround.update_n_lines()<cr>]],
-    { noremap = true, silent = true }
-  )
+  H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true })
+  H.map('n', config.mappings.update_n_lines, [[<cmd>lua MiniSurround.update_n_lines()<cr>]])
 end
 
 function H.is_disabled()
@@ -952,11 +927,13 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.keymap(mode, keys, cmd, opts)
-  if keys == '' then
+function H.map(mode, key, rhs, opts)
+  if key == '' then
     return
   end
-  vim.api.nvim_set_keymap(mode, keys, cmd, opts)
+
+  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+  vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
 return MiniSurround

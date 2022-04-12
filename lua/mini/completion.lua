@@ -628,18 +628,8 @@ end
 function H.apply_config(config)
   MiniCompletion.config = config
 
-  H.keymap(
-    'i',
-    config.mappings.force_twostep,
-    '<cmd>lua MiniCompletion.complete_twostage()<cr>',
-    { noremap = true, silent = true }
-  )
-  H.keymap(
-    'i',
-    config.mappings.force_fallback,
-    '<cmd>lua MiniCompletion.complete_fallback()<cr>',
-    { noremap = true, silent = true }
-  )
+  H.map('i', config.mappings.force_twostep, '<cmd>lua MiniCompletion.complete_twostage()<cr>')
+  H.map('i', config.mappings.force_fallback, '<cmd>lua MiniCompletion.complete_fallback()<cr>')
 
   if config.set_vim_settings then
     -- Don't give ins-completion-menu messages
@@ -1372,11 +1362,13 @@ function H.get_left_char()
   return string.sub(line, col, col)
 end
 
-function H.keymap(mode, keys, cmd, opts)
-  if keys == '' then
+function H.map(mode, key, rhs, opts)
+  if key == '' then
     return
   end
-  vim.api.nvim_set_keymap(mode, keys, cmd, opts)
+
+  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+  vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
 return MiniCompletion
