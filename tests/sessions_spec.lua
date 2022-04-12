@@ -780,7 +780,6 @@ describe('MiniSessions.get_latest()', function()
 end)
 
 -- Functional tests ===========================================================
-
 describe('Autoreading sessions', function()
   before_each(function()
     cd(project_root)

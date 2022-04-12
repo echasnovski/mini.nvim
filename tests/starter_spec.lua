@@ -11,12 +11,9 @@ local eq = assert.are.same
 local load_module = function(config) child.mini_load('starter', config) end
 local unload_module = function() child.mini_unload('starter') end
 local reload_module = function(config) unload_module(); load_module(config) end
-local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
 -- Make helpers

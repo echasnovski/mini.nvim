@@ -230,7 +230,7 @@ describe('MiniCompletion.setup()', function()
     validate(true, 'completefunc')
   end)
 
-  it('uses `config.set_vim_settings`', function()
+  it('respects `config.set_vim_settings`', function()
     reload_module({ set_vim_settings = true })
     assert.truthy(child.api.nvim_get_option('shortmess'):find('c'))
     eq(child.api.nvim_get_option('completeopt'), 'menuone,noinsert,noselect')

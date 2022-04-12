@@ -597,11 +597,14 @@ describe('Jumping with f/t/F/T', function()
       local messages = vim.split(child.cmd_capture('messages'), '\n')
       return messages[#messages]
     end
+    child.cmd('messages clear')
 
+    -- Execute one time to test if 'needs help message' flag is set per call
     set_cursor(1, 0)
+    type_keys({ 'f', 'e' })
+    sleep(200)
+
     type_keys('f')
-    poke_eventloop()
-    eq(get_last_message(), '')
     sleep(1000 - 10)
     eq(get_last_message(), '')
     sleep(10)
