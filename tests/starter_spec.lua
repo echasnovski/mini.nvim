@@ -1127,24 +1127,30 @@ describe('Highlighting', function()
     child.setup()
     load_module({ items = example_items, content_hooks = {}, header = 'Hello', footer = 'World' })
 
-    -- Mock `vim.api.nvim_buf_add_highlight()`
+    -- Mock basic highlighting function
     child.lua('_G.hl_history = {}')
-    child.lua([[vim.api.nvim_buf_add_highlight = function(...) table.insert(_G.hl_history, { ... }) end]])
+    child.lua([[vim.highlight.range = function(...) table.insert(_G.hl_history, { ... }) end]])
   end)
 
   local get_hl_history = function(filter)
     filter = filter or {}
 
     local history = vim.tbl_map(function(x)
-      return { hl = x[3], line = x[4], col_start = x[5], col_end = x[6] }
+      return { hl = x[3], start = x[4], finish = x[5], priority = (x[6] or {}).priority }
     end, child.lua_get('_G.hl_history'))
 
     return vim.tbl_filter(function(x)
       for key, val in pairs(filter) do
-        if x[key] ~= val then
+        if not (x[key] == nil or x[key] == val) then
           return false
         end
       end
+
+      -- Use special `line` key to filter by line
+      if not (filter.line == nil or filter.line == x.start[1]) then
+        return false
+      end
+
       return true
     end, history)
   end
@@ -1153,39 +1159,53 @@ describe('Highlighting', function()
     child.lua('_G.hl_history = {}')
   end
 
+  local validate_hl_history = function(filter, expected)
+    local hl_history = get_hl_history(filter)
+    -- Don't test equality of `priority` values on Neovim<0.7 because it was
+    -- only introduced in Neovim 0.7 (and forced to be used in 'mini.starter'
+    -- due to regression bug in `vim.highlight.range`; see source code)
+    if vim.fn.has('nvim-0.7') == 0 then
+      for _, history_element in ipairs(expected) do
+        history_element.priority = nil
+      end
+    end
+
+    eq(hl_history, expected)
+  end
+
   it('works on open', function()
     child.lua('MiniStarter.open()')
     eq(get_lines(), { 'Hello', '', 'A', 'aaab', 'aaba', '', 'B', 'abaa', 'baaa', '', 'World' })
 
     --stylua: ignore start
-    eq(get_hl_history({ line = 0 }), { { hl = 'MiniStarterHeader', line = 0, col_start = 0, col_end = 5 } })
-    eq(get_hl_history({ line = 1 }), {})
-    eq(get_hl_history({ line = 2 }), { { hl = 'MiniStarterSection', line = 2, col_start = 0, col_end = 1 } })
-    eq(get_hl_history({ line = 3 }), {
-      { hl = 'MiniStarterItem',       line = 3, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemPrefix', line = 3, col_start = 0, col_end = 3 },
-      { hl = 'MiniStarterCurrent',    line = 3, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterQuery',      line = 3, col_start = 0, col_end = 0 },
+    validate_hl_history({ line = 0 }, { { hl = 'MiniStarterHeader',  start = { 0, 0 }, finish = { 0, 5 }, priority = 50 } })
+    validate_hl_history({ line = 1 }, {})
+    validate_hl_history({ line = 2 }, { { hl = 'MiniStarterSection', start = { 2, 0 }, finish = { 2, 1 }, priority = 50 } })
+    validate_hl_history({ line = 3 }, {
+      { hl = 'MiniStarterItem',       start = { 3, 0 }, finish = { 3, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemPrefix', start = { 3, 0 }, finish = { 3, 3 }, priority = 51 },
+      { hl = 'MiniStarterCurrent',    start = { 3, 0 }, finish = { 3, 4 }, priority = 52 },
+      { hl = 'MiniStarterQuery',      start = { 3, 0 }, finish = { 3, 0 }, priority = 53 },
     })
-    eq(get_hl_history({ line = 4 }), {
-      { hl = 'MiniStarterItem',       line = 4, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemPrefix', line = 4, col_start = 0, col_end = 3 },
-      { hl = 'MiniStarterQuery',      line = 4, col_start = 0, col_end = 0 },
+    validate_hl_history({ line = 4 }, {
+      { hl = 'MiniStarterItem',       start = { 4, 0 }, finish = { 4, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemPrefix', start = { 4, 0 }, finish = { 4, 3 }, priority = 51 },
+      { hl = 'MiniStarterQuery',      start = { 4, 0 }, finish = { 4, 0 }, priority = 53 },
     })
-    eq(get_hl_history({ line = 5 }), {})
-    eq(get_hl_history({ line = 6 }), { { hl = 'MiniStarterSection', line = 6, col_start = 0, col_end = 1 } })
-    eq(get_hl_history({ line = 7 }), {
-      { hl = 'MiniStarterItem',       line = 7, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemPrefix', line = 7, col_start = 0, col_end = 2 },
-      { hl = 'MiniStarterQuery',      line = 7, col_start = 0, col_end = 0 },
+    validate_hl_history({ line = 5 }, {})
+    validate_hl_history({ line = 6 }, { { hl = 'MiniStarterSection', start = { 6, 0 }, finish = { 6, 1 }, priority = 50 } })
+    validate_hl_history({ line = 7 }, {
+      { hl = 'MiniStarterItem',       start = { 7, 0 }, finish = { 7, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemPrefix', start = { 7, 0 }, finish = { 7, 2 }, priority = 51 },
+      { hl = 'MiniStarterQuery',      start = { 7, 0 }, finish = { 7, 0 }, priority = 53 },
     })
-    eq(get_hl_history({ line = 8 }), {
-      { hl = 'MiniStarterItem',       line = 8, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemPrefix', line = 8, col_start = 0, col_end = 1 },
-      { hl = 'MiniStarterQuery',      line = 8, col_start = 0, col_end = 0 },
+    validate_hl_history({ line = 8 }, {
+      { hl = 'MiniStarterItem',       start = { 8, 0 }, finish = { 8, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemPrefix', start = { 8, 0 }, finish = { 8, 1 }, priority = 51 },
+      { hl = 'MiniStarterQuery',      start = { 8, 0 }, finish = { 8, 0 }, priority = 53 },
     })
-    eq(get_hl_history({ line = 9 }), {})
-    eq(get_hl_history({ line = 10 }), { { hl = 'MiniStarterFooter', line = 10, col_start = 0, col_end = 5 } })
+    validate_hl_history({ line = 9 }, {})
+    validate_hl_history({ line = 10 }, { { hl = 'MiniStarterFooter', start = { 10, 0 }, finish = { 10, 5 }, priority = 50 } })
     --stylua: ignore end
   end)
 
@@ -1194,40 +1214,40 @@ describe('Highlighting', function()
 
     reset_hl_history()
     type_keys('a')
-    eq(get_hl_history({ hl = 'MiniStarterQuery' }), {
-      { hl = 'MiniStarterQuery', line = 3, col_start = 0, col_end = 1 },
-      { hl = 'MiniStarterQuery', line = 4, col_start = 0, col_end = 1 },
-      { hl = 'MiniStarterQuery', line = 7, col_start = 0, col_end = 1 },
+    validate_hl_history({ hl = 'MiniStarterQuery' }, {
+      { hl = 'MiniStarterQuery', start = { 3, 0 }, finish = { 3, 1 }, priority = 53 },
+      { hl = 'MiniStarterQuery', start = { 4, 0 }, finish = { 4, 1 }, priority = 53 },
+      { hl = 'MiniStarterQuery', start = { 7, 0 }, finish = { 7, 1 }, priority = 53 },
     })
-    eq(
-      get_hl_history({ hl = 'MiniStarterInactive' }),
-      { { hl = 'MiniStarterInactive', line = 8, col_start = 0, col_end = 4 } }
+    validate_hl_history(
+      { hl = 'MiniStarterInactive' },
+      { { hl = 'MiniStarterInactive', start = { 8, 0 }, finish = { 8, 4 }, priority = 53 } }
     )
 
     reset_hl_history()
     type_keys('b')
-    eq(get_hl_history({ hl = 'MiniStarterQuery' }), {
-      { hl = 'MiniStarterQuery', line = 7, col_start = 0, col_end = 2 },
+    validate_hl_history({ hl = 'MiniStarterQuery' }, {
+      { hl = 'MiniStarterQuery', start = { 7, 0 }, finish = { 7, 2 }, priority = 53 },
     })
-    eq(get_hl_history({ hl = 'MiniStarterInactive' }), {
-      { hl = 'MiniStarterInactive', line = 3, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterInactive', line = 4, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterInactive', line = 8, col_start = 0, col_end = 4 },
+    validate_hl_history({ hl = 'MiniStarterInactive' }, {
+      { hl = 'MiniStarterInactive', start = { 3, 0 }, finish = { 3, 4 }, priority = 53 },
+      { hl = 'MiniStarterInactive', start = { 4, 0 }, finish = { 4, 4 }, priority = 53 },
+      { hl = 'MiniStarterInactive', start = { 8, 0 }, finish = { 8, 4 }, priority = 53 },
     })
   end)
 
   it('works for current item', function()
     child.lua('MiniStarter.open()')
-    eq(
-      get_hl_history({ hl = 'MiniStarterCurrent' }),
-      { { hl = 'MiniStarterCurrent', line = 3, col_start = 0, col_end = 4 } }
+    validate_hl_history(
+      { hl = 'MiniStarterCurrent' },
+      { { hl = 'MiniStarterCurrent', start = { 3, 0 }, finish = { 3, 4 }, priority = 52 } }
     )
 
     reset_hl_history()
     type_keys('<Down>')
-    eq(
-      get_hl_history({ hl = 'MiniStarterCurrent' }),
-      { { hl = 'MiniStarterCurrent', line = 4, col_start = 0, col_end = 4 } }
+    validate_hl_history(
+      { hl = 'MiniStarterCurrent' },
+      { { hl = 'MiniStarterCurrent', start = { 4, 0 }, finish = { 4, 4 }, priority = 52 } }
     )
   end)
 
@@ -1242,11 +1262,11 @@ describe('Highlighting', function()
     eq(get_lines(), { 'A', '░ aaab', '░ aaba', '', 'B', '░ abaa', '░ baaa' })
 
     -- `col_end` shows byte column and '░' has 3 bytes
-    eq(get_hl_history({ hl = 'MiniStarterItemBullet' }), {
-      { hl = 'MiniStarterItemBullet', line = 1, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemBullet', line = 2, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemBullet', line = 5, col_start = 0, col_end = 4 },
-      { hl = 'MiniStarterItemBullet', line = 6, col_start = 0, col_end = 4 },
+    validate_hl_history({ hl = 'MiniStarterItemBullet' }, {
+      { hl = 'MiniStarterItemBullet', start = { 1, 0 }, finish = { 1, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemBullet', start = { 2, 0 }, finish = { 2, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemBullet', start = { 5, 0 }, finish = { 5, 4 }, priority = 50 },
+      { hl = 'MiniStarterItemBullet', start = { 6, 0 }, finish = { 6, 4 }, priority = 50 },
     })
   end)
 end)

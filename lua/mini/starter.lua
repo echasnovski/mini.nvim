@@ -1069,7 +1069,7 @@ function H.content_highlight()
     local start_col = 0
     for _, unit in ipairs(content_line) do
       if unit.hl ~= nil then
-        H.buf_hl(H.ns.general, unit.hl, l_num - 1, start_col, start_col + unit.string:len())
+        H.buf_hl(H.ns.general, unit.hl, l_num - 1, start_col, start_col + unit.string:len(), 50)
       end
       start_col = start_col + unit.string:len()
     end
@@ -1132,7 +1132,7 @@ end
 
 function H.items_highlight()
   for _, item in ipairs(H.items) do
-    H.buf_hl(H.ns.general, 'MiniStarterItemPrefix', item._line, item._start_col, item._start_col + item._nprefix)
+    H.buf_hl(H.ns.general, 'MiniStarterItemPrefix', item._line, item._start_col, item._start_col + item._nprefix, 51)
   end
 end
 
@@ -1286,16 +1286,16 @@ function H.add_hl_activity(query)
     local s = item._start_col
     local e = item._end_col
     if item._active then
-      H.buf_hl(H.ns.activity, 'MiniStarterQuery', l, s, s + query:len())
+      H.buf_hl(H.ns.activity, 'MiniStarterQuery', l, s, s + query:len(), 53)
     else
-      H.buf_hl(H.ns.activity, 'MiniStarterInactive', l, s, e)
+      H.buf_hl(H.ns.activity, 'MiniStarterInactive', l, s, e, 53)
     end
   end
 end
 
 function H.add_hl_current_item()
   local cur_item = H.items[H.current_item_id]
-  H.buf_hl(H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col)
+  H.buf_hl(H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col, 52)
 end
 
 -- Predicates -----------------------------------------------------------------
@@ -1361,8 +1361,16 @@ function H.buf_keymap(key, cmd)
   vim.api.nvim_buf_set_keymap(H.buf_id, 'n', key, ('<Cmd>lua %s<CR>'):format(cmd), { nowait = true, silent = true })
 end
 
-function H.buf_hl(ns_id, hl_group, line, col_start, col_end)
-  vim.api.nvim_buf_add_highlight(H.buf_id, ns_id, hl_group, line, col_start, col_end)
+-- Use `priority` in Neovim 0.7 because of the regression bug (highlights are
+-- not stacked properly): https://github.com/neovim/neovim/issues/17358
+if vim.fn.has('nvim-0.7') == 1 then
+  function H.buf_hl(ns_id, hl_group, line, col_start, col_end, priority)
+    vim.highlight.range(H.buf_id, ns_id, hl_group, { line, col_start }, { line, col_end }, { priority = priority })
+  end
+else
+  function H.buf_hl(ns_id, hl_group, line, col_start, col_end)
+    vim.highlight.range(H.buf_id, ns_id, hl_group, { line, col_start }, { line, col_end })
+  end
 end
 
 function H.notify(msg)
