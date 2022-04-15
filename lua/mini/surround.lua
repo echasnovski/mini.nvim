@@ -205,8 +205,8 @@ function MiniSurround.add(mode)
   H.insert_into_line(marks.second.line, marks.second.col + 1, surr_info.right)
   H.insert_into_line(marks.first.line, marks.first.col, surr_info.left)
 
-  -- Tweak cursor position
-  H.cursor_adjust(marks.first.line, marks.first.col + surr_info.left:len())
+  -- Set cursor to be on the right of left surrounding
+  H.set_cursor(marks.first.line, marks.first.col + surr_info.left:len())
 end
 
 --- Delete surrounding
@@ -223,8 +223,8 @@ function MiniSurround.delete()
   H.delete_linepart(surr.right)
   H.delete_linepart(surr.left)
 
-  -- Tweak cursor position
-  H.cursor_adjust(surr.left.line, surr.left.from)
+  -- Set cursor to be on the right of deleted left surrounding
+  H.set_cursor(surr.left.line, surr.left.from)
 end
 
 --- Replace surrounding
@@ -257,8 +257,8 @@ function MiniSurround.replace()
   H.insert_into_line(surr.right.line, surr.right.from - n_del_left, new_surr_info.right)
   H.insert_into_line(surr.left.line, surr.left.from, new_surr_info.left)
 
-  -- Tweak cursor position
-  H.cursor_adjust(surr.left.line, surr.left.from + new_surr_info.left:len())
+  -- Set cursor to be on the right of left surrounding
+  H.set_cursor(surr.left.line, surr.left.from + new_surr_info.left:len())
 end
 
 --- Find surrounding
@@ -509,14 +509,7 @@ function H.get_marks_pos(mode)
 end
 
 -- Work with cursor -----------------------------------------------------------
-function H.cursor_adjust(line, col)
-  local cur_pos = vim.api.nvim_win_get_cursor(0)
-
-  -- Only adjust cursor if it is on the same line
-  if cur_pos[1] ~= line then
-    return
-  end
-
+function H.set_cursor(line, col)
   vim.api.nvim_win_set_cursor(0, { line, col - 1 })
 end
 

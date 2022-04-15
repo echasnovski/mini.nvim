@@ -29,6 +29,10 @@
 
 - BREAKING: change default icon for `MiniStatusline.section_diagnostics()` from ﯭ to  due to former having issues in some terminal emulators.
 
+## mini.surround
+
+- BREAKING: always move cursor to the right of left surrounding in `add()`, `delete()`, and `replace()` (instead of moving only if it was on the same line as left surrounding).
+
 
 # Version 0.3.0
 
