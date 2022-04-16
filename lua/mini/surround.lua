@@ -164,7 +164,9 @@ MiniSurround.config = {
 ---@param cache table Task cache.
 function MiniSurround.operator(task, cache)
   if H.is_disabled() then
-    return ''
+    -- Using `<Esc>` helps to stop moving cursor caused by current
+    -- implementation detail of adding `' '` inside expression mapping
+    return [[\<Esc>]]
   end
 
   H.cache = cache or {}
@@ -181,7 +183,7 @@ end
 function MiniSurround.add(mode)
   -- Needed to disable in visual mode
   if H.is_disabled() then
-    return ''
+    return '<Esc>'
   end
 
   -- Get marks' positions based on current mode
@@ -196,11 +198,10 @@ function MiniSurround.add(mode)
     surr_info = H.get_surround_info('output', true)
   end
   if surr_info == nil then
-    return ''
+    return '<Esc>'
   end
 
-  -- Add surrounding. Begin insert with 'end' to not break column numbers
-
+  -- Add surrounding. Begin insert from right to not break column numbers
   -- Insert after the right mark (`+ 1` is for that)
   H.insert_into_line(marks.second.line, marks.second.col + 1, surr_info.right)
   H.insert_into_line(marks.first.line, marks.first.col, surr_info.left)
@@ -216,10 +217,10 @@ function MiniSurround.delete()
   -- Find input surrounding
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then
-    return ''
+    return '<Esc>'
   end
 
-  -- Delete surrounding. Begin with right to not break column numbers
+  -- Delete surrounding. Begin with right to not break column numbers.
   H.delete_linepart(surr.right)
   H.delete_linepart(surr.left)
 
@@ -234,27 +235,20 @@ function MiniSurround.replace()
   -- Find input surrounding
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then
-    return ''
+    return '<Esc>'
   end
 
   -- Get output surround info
   local new_surr_info = H.get_surround_info('output', true)
   if new_surr_info == nil then
-    return ''
+    return '<Esc>'
   end
 
-  -- Delete input surrounding. Begin with right to not break column numbers
+  -- Replace by parts starting from right to not break column numbers
   H.delete_linepart(surr.right)
+  H.insert_into_line(surr.right.line, surr.right.from, new_surr_info.right)
+
   H.delete_linepart(surr.left)
-
-  -- Compute adjustment for adding right surrounding
-  local n_del_left = 0
-  if surr.left.line == surr.right.line then
-    n_del_left = surr.left.to - surr.left.from + 1
-  end
-
-  -- Add output surrounding. Begin insert with 'end' to not break column numbers
-  H.insert_into_line(surr.right.line, surr.right.from - n_del_left, new_surr_info.right)
   H.insert_into_line(surr.left.line, surr.left.from, new_surr_info.left)
 
   -- Set cursor to be on the right of left surrounding
@@ -268,15 +262,12 @@ function MiniSurround.find()
   -- Find surrounding
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then
-    return ''
+    return '<Esc>'
   end
 
   -- Make array of positions to cycle through
   local pos_array = H.linepart_to_pos_table(surr.left)
-  local pos_table_right = H.linepart_to_pos_table(surr.right)
-  for _, v in pairs(pos_table_right) do
-    table.insert(pos_array, v)
-  end
+  vim.list_extend(pos_array, H.linepart_to_pos_table(surr.right))
 
   -- Cycle cursor through positions
   local dir = H.cache.direction or 'right'
@@ -293,16 +284,14 @@ function MiniSurround.highlight()
   -- Find surrounding
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then
-    return ''
+    return '<Esc>'
   end
 
   -- Highlight surrounding
-  vim.api.nvim_buf_add_highlight(0, H.ns_id, 'MiniSurround', surr.left.line - 1, surr.left.from - 1, surr.left.to)
-  vim.api.nvim_buf_add_highlight(0, H.ns_id, 'MiniSurround', surr.right.line - 1, surr.right.from - 1, surr.right.to)
-
-  vim.defer_fn(function()
-    vim.api.nvim_buf_clear_namespace(0, H.ns_id, surr.left.line - 1, surr.right.line)
-  end, MiniSurround.config.highlight_duration)
+  local buf_id = vim.api.nvim_get_current_buf()
+  H.highlight_surrounding(buf_id, surr)
+  --stylua: ignore
+  vim.defer_fn(function() H.unhighlight_surrounding(buf_id, surr) end, MiniSurround.config.highlight_duration)
 end
 
 --- Update `MiniSurround.config.n_lines`
@@ -311,7 +300,7 @@ end
 --- default one is not appropriate.
 function MiniSurround.update_n_lines()
   if H.is_disabled() then
-    return ''
+    return '<Esc>'
   end
 
   local n_lines = H.user_input('New number of neighbor lines', MiniSurround.config.n_lines)
@@ -338,7 +327,7 @@ H.surroundings = setmetatable({
   ['<'] = { find = '%b<>', left = '<', right = '>' },
   ['>'] = { find = '%b<>', left = '<', right = '>' },
 }, {
-  __index = function(table, key)
+  __index = function(_, key)
     local key_esc = vim.pesc(key)
     return { find = key_esc .. '.-' .. key_esc, left = key, right = key }
   end,
@@ -350,9 +339,6 @@ H.surroundings = setmetatable({
 -- - 'direction' - direction in which `MiniSurround.find()` should go. Used to
 --   enable same `operatorfunc` pattern for dot-repeatability.
 H.cache = {}
-
--- Helper table for `H.user_surround_id()` to keep track of help messages
-H.needs_help_msg = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -449,7 +435,12 @@ function H.find_surrounding(surround_info)
     or H.find_surrounding_in_neighborhood(surround_info, n_lines)
 
   if surr == nil then
-    H.notify(string.format([[No surrounding '%s' found within %d lines.]], surround_info.id, n_lines))
+    local msg = ([[No surrounding '%s' found within %d line%s.]]):format(
+      surround_info.id,
+      n_lines,
+      n_lines > 1 and 's' or ''
+    )
+    H.notify(msg)
   end
 
   return surr
@@ -559,21 +550,16 @@ end
 
 function H.user_surround_id(sur_type)
   -- Get from user single character surrounding identifier
-
-  -- Helper message needs to depend on surrounding type to work better in
-  -- 'replace' case: when input surrounding was entered before needing a
-  -- message but output wasn't. If this is a simple boolean, there will be two
-  -- consecutive messages (even if first one already is not needed).
-  H.needs_help_msg[sur_type] = true
+  local needs_help_msg = true
   vim.defer_fn(function()
-    if not H.needs_help_msg[sur_type] then
-      return
-    end
+    --stylua: ignore
+    if not needs_help_msg then return end
+
     local msg = string.format('Enter %s surrounding identifier (single character) ', sur_type)
     H.notify(msg)
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
-  H.needs_help_msg = {}
+  needs_help_msg = false
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == 27 then
@@ -592,7 +578,14 @@ function H.user_surround_id(sur_type)
 end
 
 function H.user_input(msg, text)
-  return vim.fn.input('(mini.surround) ' .. msg .. ': ', text or '')
+  -- TODO: update to use `vim.ui.input()` and, in case of implementing custom
+  -- surroundings, export as `MiniSurround.user_input()`.
+  -- Use `pcall` to allow `<C-c>` to cancel user input
+  local ok, res = pcall(vim.fn.input, '(mini.surround) ' .. msg .. ': ', text or '')
+  if not ok then
+    return ''
+  end
+  return res
 end
 
 -- Work with line parts and text ----------------------------------------------
@@ -631,28 +624,29 @@ end
 
 -- Work with regular expressions ----------------------------------------------
 -- Find the smallest (with the smallest width) covering (left and right offsets
--- in `line`) which inclused `offset` and within which `pattern` is matched.
+-- in `line`) which includes `offset` and within which `pattern` is matched.
 -- Output is a table with two numbers (or `nil` in case of no covering match):
 -- indexes of left and right parts of match. They have two properties:
 -- - `left <= offset <= right`.
 -- - `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
 function H.find_smallest_covering(line, pattern, offset)
-  local left, right, match_left, match_right
+  local left, right
   local stop = false
   local init = 1
   while not stop do
-    match_left, match_right = line:find(pattern, init)
+    local match_left, match_right = line:find(pattern, init)
     if (match_left == nil) or (match_left > offset) then
+      -- TODO: Allow `match_left > offset` branch to return value if covering
+      -- match was not found at that point (and if some `config` value is set).
       -- Stop if first match is gone over `offset` to the right
       stop = true
     elseif match_right < offset then
       -- Try find covering match. Originally this was `init = math.max(init +
-      -- 1, match_right)`.  Generally, this works fine, but there is an edge
-      -- case with tags.  Consider example: '<a>hello<b>world</a></b>' and
+      -- 1, match_right)`. Generally, this works fine, but there is an edge
+      -- case with tags. Consider example: '<a>hello<b>world</a></b>' and
       -- cursor inside '</b>'.  First match is '<a>...</a>'. It doesn't cover
-      -- cursor, this branch is
-      -- executed. If move to `match_right`, next iteration will match inside
-      -- '></b>' and will find no match.
+      -- cursor, this branch is executed. If move to `match_right`, next
+      -- iteration will match inside '></b>' and will find no match.
       -- This increases execution time, but tolerably so. On the plus side,
       -- this edge case currently gives wrong result even in 'vim-sandwich' :)
       init = match_left + 1
@@ -771,6 +765,21 @@ function H.get_cursor_neighborhood(n_neighbors)
   }
 end
 
+-- Work with highlighting -----------------------------------------------------
+function H.highlight_surrounding(buf_id, surr)
+  local l_line, l_from, l_to = surr.left.line - 1, surr.left.from - 1, surr.left.to
+  vim.highlight.range(buf_id, H.ns_id, 'MiniSurround', { l_line, l_from }, { l_line, l_to })
+
+  local r_line, r_from, r_to = surr.right.line - 1, surr.right.from - 1, surr.right.to
+  vim.highlight.range(buf_id, H.ns_id, 'MiniSurround', { r_line, r_from }, { r_line, r_to })
+end
+
+function H.unhighlight_surrounding(buf_id, surr)
+  -- Remove highlights from whole lines as it is the best available granularity
+  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id, surr.left.line - 1, surr.left.line)
+  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id, surr.right.line - 1, surr.right.line)
+end
+
 -- Get surround information ---------------------------------------------------
 ---@param sur_type string One of 'input' or 'output'.
 ---@private
@@ -789,7 +798,6 @@ function H.get_surround_info(sur_type, use_cache)
   local char = H.user_surround_id(sur_type)
 
   -- Compute surround info
-
   -- Return `nil` in case of a bad identifier
   if char == nil then
     return nil
@@ -870,14 +878,14 @@ function H.special_tag(sur_type)
     -- - Having group capture and backreference in 'find' pattern increases
     --   execution time. This is mostly visible when searching in a very big
     --   '1d neighborhood'.
-    return { find = '<(%a%w*)%f[^%w][^>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
+    return { find = '<(%a%w*)%f[^%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
   else
     local tag_name = H.user_input('Tag name')
     -- Don't add anything if user supplied empty string (or hit `<Esc>`)
     if tag_name == '' then
       return nil
     end
-    return { left = '<' .. tag_name .. '>', right = '</' .. tag_name .. '>' }
+    return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
   end
 end
 
@@ -892,6 +900,7 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
     return nil
   end
   -- Tweak covering for function call surrounding
+  -- TODO: try to not use this in favor of using frontier pattern `%f[]`
   if surround_info.id == 'f' then
     covering = H.extend_covering(covering, neigh['1d'], surround_info.find, 'left')
   end
