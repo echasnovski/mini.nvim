@@ -709,41 +709,6 @@ function H.find_smallest_covering(line, pattern, offset)
   return { left = left, right = right }
 end
 
--- Extend covering to capture possible whole groups with count modifiers.
--- Primar usage is to match whole function call with pattern
--- `[%w_%.]+%b()`.
---
--- Example:
--- `covering = {left = 4, right = 10}, line = '(aaa(b()b))',
--- pattern = '%g+%b()', direction = 'left'` should return
--- `{left = 2, right = 10}`.
---
--- NOTE: when used for pattern without count modifiers, can remove "smallest
--- width" property. For example:
--- `covering = {left = 2, right = 5}, line = '((()))',
--- pattern = '%(%(.-%)%)', direction = 'left'`
-function H.extend_covering(covering, line, pattern, direction)
-  local left, right = covering.left, covering.right
-  local line_pattern = '^' .. pattern .. '$'
-  local n = line:len()
-  local is_matched = function(l, r)
-    return l >= 1 and r <= n and line:sub(l, r):find(line_pattern) ~= nil
-  end
-
-  if direction ~= 'right' then
-    while is_matched(left - 1, right) do
-      left = left - 1
-    end
-  end
-  if direction ~= 'left' then
-    while is_matched(left, right + 1) do
-      right = right + 1
-    end
-  end
-
-  return { left = left, right = right }
-end
-
 -- Work with cursor neighborhood ----------------------------------------------
 function H.get_cursor_neighborhood(n_neighbors)
   -- Cursor position
@@ -870,12 +835,7 @@ function H.special_funcall(sur_type)
   -- Differentiate input and output because input doesn't need user action
   if sur_type == 'input' then
     -- Allowed symbols followed by a balanced parenthesis.
-    -- Can't use `%g` instead of allowed characters because of possible
-    -- '[(fun(10))]' case
-    return {
-      find = string.format('%s%%b()', MiniSurround.config.funname_pattern),
-      extract = string.format('^(%s%%().*(%%))$', MiniSurround.config.funname_pattern),
-    }
+    return { find = '%f[%w_%.][%w_%.]+%b()', extract = '^(.-%().*(%))$' }
   else
     local fun_name = H.user_input('Function name')
     if fun_name == nil then
@@ -913,7 +873,7 @@ function H.special_tag(sur_type)
     -- - Having group capture and backreference in 'find' pattern increases
     --   execution time. This is mostly visible when searching in a very big
     --   '1d neighborhood'.
-    return { find = '<(%a%w*)%f[^%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
+    return { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
   else
     local tag_name = H.user_input('Tag name')
     if tag_name == nil then
@@ -933,11 +893,7 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   if covering == nil then
     return nil
   end
-  -- Tweak covering for function call surrounding
-  -- TODO: try to not use this in favor of using frontier pattern `%f[]`
-  if surround_info.id == 'f' then
-    covering = H.extend_covering(covering, neigh['1d'], surround_info.find, 'left')
-  end
+
   local substring = neigh['1d']:sub(covering.left, covering.right)
 
   -- Compute lineparts for left and right surroundings

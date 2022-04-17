@@ -1129,6 +1129,9 @@ describe('Function call surrounding', function()
 
     -- Should work as output surrounding
     validate_edit({ '(aaa)' }, { 1, 2 }, { 'myfunc(aaa)' }, { 1, 7 }, type_keys, 'sr', ')', 'f', 'myfunc<CR>')
+
+    -- Should work with empty arguments
+    validate_edit({ 'myfunc()' }, { 1, 0 }, { '' }, { 1, 0 }, type_keys, 'sd', 'f')
   end)
 
   it('does not work in some cases', function()
@@ -1149,16 +1152,6 @@ describe('Function call surrounding', function()
     validate_edit({ 'my.func(aaa)' }, { 1, 9 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
     validate_edit({ 'big-new_my.func(aaa)' }, { 1, 17 }, { 'big-aaa' }, { 1, 4 }, type_keys, 'sd', 'f')
     validate_edit({ 'big new_my.func(aaa)' }, { 1, 17 }, { 'big aaa' }, { 1, 4 }, type_keys, 'sd', 'f')
-
-    validate_edit({ '[(myfun(aaa))]' }, { 1, 9 }, { '[(aaa)]' }, { 1, 2 }, type_keys, 'sd', 'f')
-  end)
-
-  it('respects `config.funname_pattern`', function()
-    reload_module({ funname_pattern = '[%w]+' })
-
-    validate_edit({ 'myfunc(aaa)' }, { 1, 8 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
-    validate_edit({ 'my_func(aaa)' }, { 1, 9 }, { 'my_aaa' }, { 1, 3 }, type_keys, 'sd', 'f')
-    validate_edit({ 'my.func(aaa)' }, { 1, 9 }, { 'my.aaa' }, { 1, 3 }, type_keys, 'sd', 'f')
 
     validate_edit({ '[(myfun(aaa))]' }, { 1, 9 }, { '[(aaa)]' }, { 1, 2 }, type_keys, 'sd', 'f')
   end)
@@ -1227,6 +1220,12 @@ describe('Tag surrounding', function()
 
     -- Should work as output surrounding
     validate_edit({ '(aaa)' }, { 1, 2 }, { '<x>aaa</x>' }, { 1, 3 }, type_keys, 'sr', ')', 't', 'x<CR>')
+
+    -- Should work with empty tag name
+    validate_edit({ '<>aaa</>' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 't')
+
+    -- Should work with empty inside content
+    validate_edit({ '<x></x>' }, { 1, 2 }, { '' }, { 1, 0 }, type_keys, 'sd', 't')
   end)
 
   it('does not work in some cases', function()
@@ -1286,6 +1285,9 @@ describe('Tag surrounding', function()
 
     -- `>` between tags
     validate_edit({ '<x>>aaa</x>' }, { 1, 5 }, { '_>aaa_' }, { 1, 1 }, f)
+
+    -- Similar but different names shouldn't match
+    validate_edit({ '<xy>aaa</x>' }, { 1, 5 }, { '<xy>aaa</x>' }, { 1, 5 }, type_keys, 'sd', 't')
   end)
 
   it('has limited support of multibyte characters', function()
