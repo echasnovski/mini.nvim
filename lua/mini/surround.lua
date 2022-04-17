@@ -137,10 +137,6 @@ MiniSurround.config = {
   -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
   highlight_duration = 500,
 
-  -- Pattern to match function name in 'function call' surrounding
-  -- By default it is a string of letters, '_' or '.'
-  funname_pattern = '[%w_%.]+',
-
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     add = 'sa', -- Add surrounding
@@ -351,11 +347,17 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  if config.funname_pattern ~= nil then
+    H.notify(
+      '`config.funname_pattern` is deprecated in favor of manually modifying `f` surrounding. '
+        .. 'See `:h MiniSurround-custom-surrounding`.'
+    )
+  end
+
   -- Validate per nesting level to produce correct error message
   vim.validate({
     n_lines = { config.n_lines, 'number' },
     highlight_duration = { config.highlight_duration, 'number' },
-    funname_pattern = { config.funname_pattern, 'string' },
     mappings = { config.mappings, 'table' },
   })
 
