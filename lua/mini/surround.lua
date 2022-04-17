@@ -312,8 +312,11 @@ end
 -- Module default config
 H.default_config = MiniSurround.config
 
--- Namespace for highlighting
-H.ns_id = vim.api.nvim_create_namespace('MiniSurround')
+-- Namespaces to be used withing module
+H.ns_id = {
+  highlight = vim.api.nvim_create_namespace('MiniSurroundHighlight'),
+  input = vim.api.nvim_create_namespace('MiniSurroundInput'),
+}
 
 -- Table of non-special surroundings
 H.surroundings = setmetatable({
@@ -578,12 +581,41 @@ function H.user_surround_id(sur_type)
 end
 
 function H.user_input(msg, text)
-  -- TODO: update to use `vim.ui.input()` and, in case of implementing custom
-  -- surroundings, export as `MiniSurround.user_input()`.
+  -- Major issue with both `vim.fn.input()` is that the only way to distinguish
+  -- cancelling with `<Esc>` and entering empty string with immediate `<CR>` is
+  -- through `cancelreturn` option (see `:h input()`). In that case the return
+  -- of `cancelreturn` will mean actual cancel, which removes possibility of
+  -- using that string. Although doable with very obscure string, this is not
+  -- very clean.
+  -- Overcome this by adding temporary keystroke listener.
+  local on_key = vim.on_key or vim.register_keystroke_callback
+  local was_cancelled = false
+  on_key(function(key)
+    if key == vim.api.nvim_replace_termcodes('<Esc>', true, true, true) then
+      was_cancelled = true
+    end
+  end, H.ns_id.input)
+
+  -- Ask for input
+  -- NOTE: it would be GREAT to make this work with `vim.ui.input()` but I
+  -- didn't find a way to make it work without major refactor of whole module.
+  -- The main issue is that `vim.ui.input()` is designed to perform action in
+  -- callback and current module design is to get output immediately. Although
+  -- naive approach of
+  -- `local res; vim.ui.input({...}, function(input) res = input end)`
+  -- works in default `vim.ui.input`, its reimplementations can return from it
+  -- immediately and proceed in main event loop. Couldn't find a relatively
+  -- simple way to stop execution of this current function until `ui.input()`'s
+  -- callback finished execution.
+  local opts = { prompt = '(mini.surround) ' .. msg .. ': ', default = text or '' }
   -- Use `pcall` to allow `<C-c>` to cancel user input
-  local ok, res = pcall(vim.fn.input, '(mini.surround) ' .. msg .. ': ', text or '')
-  if not ok then
-    return ''
+  local ok, res = pcall(vim.fn.input, opts)
+
+  -- Stop key listening
+  on_key(nil, H.ns_id.input)
+
+  if not ok or was_cancelled then
+    return
   end
   return res
 end
@@ -767,17 +799,21 @@ end
 
 -- Work with highlighting -----------------------------------------------------
 function H.highlight_surrounding(buf_id, surr)
+  local ns_id = H.ns_id.highlight
+
   local l_line, l_from, l_to = surr.left.line - 1, surr.left.from - 1, surr.left.to
-  vim.highlight.range(buf_id, H.ns_id, 'MiniSurround', { l_line, l_from }, { l_line, l_to })
+  vim.highlight.range(buf_id, ns_id, 'MiniSurround', { l_line, l_from }, { l_line, l_to })
 
   local r_line, r_from, r_to = surr.right.line - 1, surr.right.from - 1, surr.right.to
-  vim.highlight.range(buf_id, H.ns_id, 'MiniSurround', { r_line, r_from }, { r_line, r_to })
+  vim.highlight.range(buf_id, ns_id, 'MiniSurround', { r_line, r_from }, { r_line, r_to })
 end
 
 function H.unhighlight_surrounding(buf_id, surr)
+  local ns_id = H.ns_id.highlight
+
   -- Remove highlights from whole lines as it is the best available granularity
-  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id, surr.left.line - 1, surr.left.line)
-  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id, surr.right.line - 1, surr.right.line)
+  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, surr.left.line - 1, surr.left.line)
+  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, surr.right.line - 1, surr.right.line)
 end
 
 -- Get surround information ---------------------------------------------------
@@ -842,8 +878,7 @@ function H.special_funcall(sur_type)
     }
   else
     local fun_name = H.user_input('Function name')
-    -- Don't add anything if user supplied empty string (or hit `<Esc>`)
-    if fun_name == '' then
+    if fun_name == nil then
       return nil
     end
     return { left = fun_name .. '(', right = ')' }
@@ -853,11 +888,11 @@ end
 function H.special_interactive(sur_type)
   -- Prompt for surroundings. Empty surrounding is not allowed for input.
   local left = H.user_input('Left surrounding')
-  if sur_type == 'input' and left == '' then
+  if left == nil or (sur_type == 'input' and left == '') then
     return nil
   end
   local right = H.user_input('Right surrounding')
-  if sur_type == 'input' and right == '' then
+  if right == nil or (sur_type == 'input' and right == '') then
     return nil
   end
 
@@ -881,8 +916,7 @@ function H.special_tag(sur_type)
     return { find = '<(%a%w*)%f[^%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
   else
     local tag_name = H.user_input('Tag name')
-    -- Don't add anything if user supplied empty string (or hit `<Esc>`)
-    if tag_name == '' then
+    if tag_name == nil then
       return nil
     end
     return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }

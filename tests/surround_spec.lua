@@ -773,7 +773,7 @@ describe('Highlight surrounding', function()
   -- highlighting) is implemented with extmarks. NOTE: arguments are as in
   -- `*et_cursor()`: `line` is 1-based, `from` and `to` are 0-based inclusive.
   local is_highlighted = function(line, from, to, buf_id)
-    local ns_id = child.api.nvim_get_namespaces()['MiniSurround']
+    local ns_id = child.api.nvim_get_namespaces()['MiniSurroundHighlight']
     local extmarks = child.api.nvim_buf_get_extmarks(
       buf_id or 0,
       ns_id,
@@ -1210,11 +1210,7 @@ describe('Function call surrounding', function()
     validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 'f', '<C-c>')
 
     -- Should treat `<CR>` as empty string input
-    -- NOTE: at the moment it does nothing becuase `vim.fn.input()` can't
-    -- differentiate between `<Esc>` and `<CR>` (both return empty string)
-    assert.error(function()
-      validate_edit({ '[aaa]' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 'sr', ']', 'f', '<CR>')
-    end)
+    validate_edit({ '[aaa]' }, { 1, 2 }, { '(aaa)' }, { 1, 1 }, type_keys, 'sr', ']', 'f', '<CR>')
   end)
 end)
 
@@ -1310,11 +1306,7 @@ describe('Tag surrounding', function()
     validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 't', '<C-c>')
 
     -- Should treat `<CR>` as empty string input
-    -- NOTE: at the moment it does nothing becuase `vim.fn.input()` can't
-    -- differentiate between `<Esc>` and `<CR>` (both return empty string)
-    assert.error(function()
-      validate_edit({ '(aaa)' }, { 1, 2 }, { '<>aaa</>' }, { 1, 2 }, type_keys, 'sr', ')', 't', '<CR>')
-    end)
+    validate_edit({ '(aaa)' }, { 1, 2 }, { '<>aaa</>' }, { 1, 2 }, type_keys, 'sr', ')', 't', '<CR>')
   end)
 end)
 
@@ -1377,14 +1369,8 @@ describe('Interactive surrounding', function()
       validate_single('sr', ')', 'i', '*<CR>', key)
     end
 
-    -- NOTE: at the moment it does nothing becuase `vim.fn.input()` can't
-    -- differentiate between `<Esc>` and `<CR>` (both return empty string)
-    assert.error(function()
-      validate_nothing('<Esc>')
-    end)
-    assert.error(function()
-      validate_nothing('<C-c>')
-    end)
+    validate_nothing('<Esc>')
+    validate_nothing('<C-c>')
 
     -- Should treat `<CR>` as empty string in output surrounding
     validate_edit({ '(aaa)' }, { 1, 2 }, { '_aaa' }, { 1, 1 }, type_keys, 'sr', ')', 'i', '_<CR>', '<CR>')
