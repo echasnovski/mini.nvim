@@ -314,21 +314,79 @@ H.ns_id = {
   input = vim.api.nvim_create_namespace('MiniSurroundInput'),
 }
 
--- Table of non-special surroundings
-H.surroundings = setmetatable({
+-- Table of builtin surroundings
+H.builtin_surroundings = setmetatable({
   -- Brackets that need balancing
-  ['('] = { find = '%b()', left = '(', right = ')' },
-  [')'] = { find = '%b()', left = '(', right = ')' },
-  ['['] = { find = '%b[]', left = '[', right = ']' },
-  [']'] = { find = '%b[]', left = '[', right = ']' },
-  ['{'] = { find = '%b{}', left = '{', right = '}' },
-  ['}'] = { find = '%b{}', left = '{', right = '}' },
-  ['<'] = { find = '%b<>', left = '<', right = '>' },
-  ['>'] = { find = '%b<>', left = '<', right = '>' },
+  ['('] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
+  [')'] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
+  ['['] = { input = { find = '%b[]', extract = '^(.).*(.)$' }, output = { left = '[', right = ']' } },
+  [']'] = { input = { find = '%b[]', extract = '^(.).*(.)$' }, output = { left = '[', right = ']' } },
+  ['{'] = { input = { find = '%b{}', extract = '^(.).*(.)$' }, output = { left = '{', right = '}' } },
+  ['}'] = { input = { find = '%b{}', extract = '^(.).*(.)$' }, output = { left = '{', right = '}' } },
+  ['<'] = { input = { find = '%b<>', extract = '^(.).*(.)$' }, output = { left = '<', right = '>' } },
+  ['>'] = { input = { find = '%b<>', extract = '^(.).*(.)$' }, output = { left = '<', right = '>' } },
+  -- Function call
+  ['f'] = {
+    input = { find = '%f[%w_%.][%w_%.]+%b()', extract = '^(.-%().*(%))$' },
+    output = function()
+      local fun_name = H.user_input('Function name')
+      --stylua: ignore
+      if fun_name == nil then return nil end
+      return { left = ('%s('):format(fun_name), right = ')' }
+    end,
+  },
+  -- Interactive
+  ['i'] = {
+    input = function()
+      local left = H.user_input('Left surrounding')
+      -- TODO: experiment with allowing empty part here (should find from
+      -- cursor to corresponding part)
+      --stylua: ignore
+      if left == nil or left == '' then return end
+      local right = H.user_input('Right surrounding')
+      --stylua: ignore
+      if right == nil or right == '' then return end
+
+      local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
+      local find = ('%s.-%s'):format(left_esc, right_esc)
+      local extract = ('^(%s).-(%s)$'):format(left_esc, right_esc)
+      return { find = find, extract = extract }
+    end,
+    output = function()
+      local left = H.user_input('Left surrounding')
+      --stylua: ignore
+      if left == nil then return end
+      local right = H.user_input('Right surrounding')
+      --stylua: ignore
+      if right == nil then return end
+      return { left = left, right = right }
+    end,
+  },
+  -- Tag
+  ['t'] = {
+    -- NOTEs:
+    -- - Here `%f[^%w]` denotes 'end of word' and is needed to capture whole
+    --   tag id. This is needed to not match in case '<ab></a>'.
+    -- - This approach won't match in the end of 'self nested' tags like
+    --   '<a>_<a>_</a>_</a>'.
+    -- - Having group capture and backreference in 'find' pattern increases
+    --   execution time. This is mostly visible when searching in a very big
+    --   '1d neighborhood'.
+    input = { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' },
+    output = function()
+      local tag_name = H.user_input('Tag name')
+      --stylua: ignore
+      if tag_name == nil then return nil end
+      return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
+    end,
+  },
 }, {
   __index = function(_, key)
     local key_esc = vim.pesc(key)
-    return { find = key_esc .. '.-' .. key_esc, left = key, right = key }
+    return {
+      input = { find = ('%s.-%s'):format(key_esc, key_esc), extract = '^(.).*(.)$' },
+      output = { left = key, right = key },
+    }
   end,
 })
 
@@ -784,6 +842,7 @@ function H.unhighlight_surrounding(buf_id, surr)
 end
 
 -- Get surround information ---------------------------------------------------
+--stylua: ignore start
 ---@param sur_type string One of 'input' or 'output'.
 ---@private
 function H.get_surround_info(sur_type, use_cache)
@@ -792,37 +851,21 @@ function H.get_surround_info(sur_type, use_cache)
   -- Try using cache
   if use_cache then
     res = H.cache[sur_type]
-    if res ~= nil then
-      return res
-    end
+    if res ~= nil then return res end
   end
 
   -- Prompt user to enter identifier of surrounding
   local char = H.user_surround_id(sur_type)
+  if char == nil then return nil end
 
-  -- Compute surround info
-  -- Return `nil` in case of a bad identifier
-  if char == nil then
-    return nil
-  end
-
-  -- Handle special cases first
-  if char == 'f' then
-    res = H.special_funcall(sur_type)
-  elseif char == 'i' then
-    res = H.special_interactive(sur_type)
-  elseif char == 't' then
-    res = H.special_tag(sur_type)
-  else
-    res = H.surroundings[char]
-  end
+  -- Get surround info
+  res = H.builtin_surroundings[char][sur_type]
+  if type(res) == 'function' then res = res() end
 
   -- Do nothing if supplied nothing
-  if res == nil then
-    return nil
-  end
+  if res == nil then return nil end
 
-  -- Add identifier
+  -- Track identifier for possible messages
   res.id = char
 
   -- Cache result
@@ -832,58 +875,7 @@ function H.get_surround_info(sur_type, use_cache)
 
   return res
 end
-
-function H.special_funcall(sur_type)
-  -- Differentiate input and output because input doesn't need user action
-  if sur_type == 'input' then
-    -- Allowed symbols followed by a balanced parenthesis.
-    return { find = '%f[%w_%.][%w_%.]+%b()', extract = '^(.-%().*(%))$' }
-  else
-    local fun_name = H.user_input('Function name')
-    if fun_name == nil then
-      return nil
-    end
-    return { left = fun_name .. '(', right = ')' }
-  end
-end
-
-function H.special_interactive(sur_type)
-  -- Prompt for surroundings. Empty surrounding is not allowed for input.
-  local left = H.user_input('Left surrounding')
-  if left == nil or (sur_type == 'input' and left == '') then
-    return nil
-  end
-  local right = H.user_input('Right surrounding')
-  if right == nil or (sur_type == 'input' and right == '') then
-    return nil
-  end
-
-  local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
-  local find = string.format('%s.-%s', left_esc, right_esc)
-  local extract = string.format('^(%s).-(%s)$', left_esc, right_esc)
-  return { find = find, extract = extract, left = left, right = right }
-end
-
-function H.special_tag(sur_type)
-  -- Differentiate input and output because input doesn't need user action
-  if sur_type == 'input' then
-    -- NOTEs:
-    -- - Here `%f[^%w]` denotes 'end of word' and is needed to capture whole
-    --   tag id. This is needed to not match in case '<ab></a>'.
-    -- - This approach won't match in the end of 'self nested' tags like
-    -- '<a>_<a>_</a>_</a>'.
-    -- - Having group capture and backreference in 'find' pattern increases
-    --   execution time. This is mostly visible when searching in a very big
-    --   '1d neighborhood'.
-    return { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' }
-  else
-    local tag_name = H.user_input('Tag name')
-    if tag_name == nil then
-      return nil
-    end
-    return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
-  end
-end
+--stylua: ignore end
 
 -- Find surrounding in neighborhood -------------------------------------------
 function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
@@ -899,10 +891,7 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   local substring = neigh['1d']:sub(covering.left, covering.right)
 
   -- Compute lineparts for left and right surroundings
-
-  -- If there is no `extract` pattern, extract one character from start and end
-  local extract = surround_info.extract or '^(.).*(.)$'
-  local left, right = substring:match(extract)
+  local left, right = substring:match(surround_info.extract)
   local l, r = covering.left, covering.right
 
   local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
