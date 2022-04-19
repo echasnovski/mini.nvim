@@ -31,6 +31,7 @@
 
 ## mini.surround
 
+- FEATURE: implement `config.search_method`.
 - FEATURE: implement custom surroundings via `config.custom_surroundings`.
 - FEATURE: implement `MiniSurround.user_input()`.
 - BREAKING: deprecate `config.funname_pattern` option in favor of manually modifying `f` surrounding.

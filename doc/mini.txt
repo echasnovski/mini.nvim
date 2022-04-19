@@ -3639,26 +3639,25 @@ Features:
     - Replace surrounding with `sr`.
     - Find surrounding with `sf` or `sF` (move cursor right or left).
     - Highlight surrounding with `sh`.
-    - Change number of neighbor lines with `sn` (see
-      |MiniSurround-algorithm|).
-- Surrounding is identified by a single character as both 'input' (in
-  `delete` and `replace` start, `find`, and `highlight`) and 'output' (in
+    - Change number of neighbor lines with `sn` (see |MiniSurround-algorithm|).
+- Surrounding is identified by a single character as both "input" (in
+  `delete` and `replace` start, `find`, and `highlight`) and "output" (in
   `add` and `replace` end):
     - 'f' - function call (string of alphanumeric symbols or '_' or '.'
-      followed by balanced '()'). In 'input' finds function call, in
-      'output' prompts user to enter function name.
+      followed by balanced '()'). In "input" finds function call, in
+      "output" prompts user to enter function name.
     - 'i' - interactive. Prompts user to enter left and right parts.
-    - 't' - tag. In 'input' finds tab with same identifier, in 'output'
+    - 't' - tag. In "input" finds tab with same identifier, in "output"
       prompts user to enter tag name.
-    - All symbols in brackets '()', '[]', '{}', '<>'. In 'input' represents
-      balanced brackets, in 'output' - left and right parts of brackets.
+    - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
+      balanced brackets, in "output" - left and right parts of brackets.
     - All other alphanumeric, punctuation, or space characters represent
       surrounding with identical left and right parts.
 
 Known issues which won't be resolved:
 - Search for surrounding is done using Lua patterns (regex-like approach).
   So certain amount of false positives should be expected.
-- When searching for 'input' surrounding, there is no distinction if it is
+- When searching for "input" surrounding, there is no distinction if it is
   inside string or comment. So in this case there will be not proper match
   for a function call: 'f(a = ")", b = 1)'.
 - Tags are searched using regex-like methods, so issues are inevitable.
@@ -3704,39 +3703,46 @@ rules for disabling module's functionality is left to user. See
                                                         *MiniSurround-algorithm*
 Algorithm design
 
-- Adding 'output' surrounding has a fairly straightforward algorithm:
+- Adding "output" surrounding has a fairly straightforward algorithm:
     - Determine places for left and right parts (via `<>`/`[]` marks or by
       finding some other surrounding).
     - Determine left and right parts of surrounding via using custom and
       builtin surroundings (via `output` field of surrounding info see
       |MiniSurround.config|).
     - Properly add.
-- Finding 'input' surrounding is a lot more complicated and is a reason why
+- Finding "input" surrounding is a lot more complicated and is a reason why
   this implementation is only somewhat minimal. In a nutshell, current
   algorithm `searches in the neighborhood lines based on a certain pattern
-  a _smallest_ match that covers cursor`. More detailed:
+  and search method a best match`. More detailed:
     - Extract neighborhood of cursor line: no more than
       `MiniSurround.config.n_lines` before, cursor line itself, no more than
-      `MiniSurround.config.n_lines` after.
-    - Convert it to '1d neighborhood' by concatenating with '\n' delimiter.
+      `MiniSurround.config.n_lines` after. Note: actual search is done
+      firstly on cursor line (i.e. with `n_lines = 0`), as it is the most
+      frequent usage and only then searches in wholeneighborhood.
+    - Convert it to "1d neighborhood" by concatenating with '\n' delimiter.
       Compute location of current cursor position in this line.
-    - Given Lua pattern for an 'input' surrounding (`input.find` field of
-      surrounding info; see |MiniSurround.config|), search for a smallest
-      (with minimal width) match that covers cursor position. This is an
-      iterative procedure, duration of which heavily depends on the length
-      of '1d neighborhood' and frequency of pattern matching. If no match
-      is found, there is no surrounding. Note: with current approach
-      smallest width is ensured by checking match on covering substrings.
-      This may have unwanted consequences when using complex Lua patterns
-      (like `%f[]` at the pattern end, for example).
-    - Compute parts of '1d neighborhood' that represent left and right part
+    - Given Lua pattern for an "input" surrounding (`input.find` field of
+      surrounding info; see |MiniSurround.config|), search for best match.
+      That is:
+        - Match with span covering cursor position. If several, try to pick
+          one with smallest width.
+        - If no covering match, pick one of "previous" (nearest
+          non-covering to the left) or "next" (nearest non-covering to the
+          right) matches, depending on `config.search_method` (see
+          |MiniSurround.config| for more details).
+      This computation is an iterative procedure, duration of which heavily
+      depends on the length of "1d neighborhood" and frequency of pattern
+      matching. If no match is found, there is no surrounding. Note: with
+      current approach smallest width of covering match is ensured by
+      checking match on covering substrings. This may have unwanted
+      consequences when using complex Lua patterns (like `%f[]` at the
+      pattern end, for example).
+    - Compute parts of "1d neighborhood" that represent left and right part
       of found surrounding. This is done by using pattern from
       `input.extract` field of surrounding info; see |MiniSurround.config|.
       Note: pattern is used on a matched substring, so using `^` and `$` at
       start and end of pattern means start and end of substring.
-    - Convert '1d offsets' of found parts to their positions in buffer.
-  Actual search is done firstly on cursor line (as it is the most frequent
-  usage) and only then searches in neighborhood.
+    - Convert "1d offsets" of found parts to their positions in buffer.
 
 ------------------------------------------------------------------------------
                                                           *MiniSurround.setup()*
@@ -3777,6 +3783,11 @@ Default values:
 
     -- Number of lines within which surrounding is searched
     n_lines = 20,
+
+    -- How to search for surrounding (first inside current line, then inside
+    -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
+    -- 'cover_or_nearest'. For more details, see `:h MiniSurround.config`.
+    search_method = 'cover',
   }
 <
 # Options~
@@ -3787,18 +3798,19 @@ User can define own surroundings by supplying `config.custom_surroundings`.
 It should be a table with keys being single character surrounding identifier
 and values - surround info or function returning it. Surround info itself
 is a table with keys:
-- <input> - defines how to find and extract surrounding for 'input'
+- <input> - defines how to find and extract surrounding for "input"
   operations (like `delete`). A table with fields <find> (Lua pattern
   applied for search in neighborhood) and <extract> (Lua pattern applied
   for extracting left and right parts; should have two matches).
-- <output> - defines what to add on left and right for 'output' operations
-  (like `add`). A table with <left> (string) and <right> (string) fields.
+- <output> - defines what to add on left and right for "output" operations
+  (like `add`). A table with <left> (plain text string) and <right> (plain
+  text string) fields.
 
 Example of surround info for builtin `(` identifier:>
-{
-  input = { find = '%b()', extract = '^(.).*(.)$' },
-  output = { left = '(', right = ')' }
-}
+  {
+    input = { find = '%b()', extract = '^(.).*(.)$' },
+    output = { left = '(', right = ')' }
+  }
 <
 General recommendations:
 - In `config.custom_surroundings` only some data can be defined (like only
@@ -3865,6 +3877,37 @@ Example of using `config.custom_surroundings`:
     },
   })
 <
+## Search method~
+
+Value of `config.search_method` defines how best match search for "input"
+surrounding is done when there is no covering match (with span covering
+cursor position) found within searched neighborhood. Based on its value,
+one of "previous", "next", or neither match is used as output.
+Its possible values are:
+- `'cover'` (default) - don't use either "previous" or "next"; report that
+  there is no surrounding found.
+- `'cover_or_prev'` - use previous.
+- `'cover_or_next'` - use next.
+- `'cover_or_nearest'` - use nearest to current cursor position. Distance
+  is computed based on "1d neighborhood" using nearest part of
+  surroundings. Next is used in case of a tie.
+
+Note: search is first performed on the cursor line and only after failure -
+on the whole neighborhood defined by `config.n_lines`. This means that with
+`config.search_method` not equal to `'cover'`, "previous" or "next"
+surrounding will end up as search result if they present on current line
+although covering match might be found in bigger, whole neighborhood. This
+design is based on observation that most of the time operation involving
+surrounding is done withtin cursor line.
+
+Here is an example of how replacing `)` with `]` surrounding is done based
+on a value of `'config.search_method'` when cursor is inside `bbb` word:
+- `search_method = 'cover'`:         `(a) bbb (c)` -> `(a) bbb (c)` (with message)
+- `search_method = 'cover_or_prev'`: `(a) bbb (c)` -> `[a] bbb (c)`
+- `search_method = 'cover_or_next'`: `(a) bbb (c)` -> `(a) bbb [c]`
+- `search_method = 'cover_or_nearest'`: depends on cursor position.
+  For first `b` - as in `cover_or_prev` (as previous match is nearer), for
+  second and third - as in `cover_or_next` (as next match is nearer).
 
 ------------------------------------------------------------------------------
                                                        *MiniSurround.operator()*

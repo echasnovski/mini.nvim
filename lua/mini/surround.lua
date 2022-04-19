@@ -12,26 +12,25 @@
 ---     - Replace surrounding with `sr`.
 ---     - Find surrounding with `sf` or `sF` (move cursor right or left).
 ---     - Highlight surrounding with `sh`.
----     - Change number of neighbor lines with `sn` (see
----       |MiniSurround-algorithm|).
---- - Surrounding is identified by a single character as both 'input' (in
----   `delete` and `replace` start, `find`, and `highlight`) and 'output' (in
+---     - Change number of neighbor lines with `sn` (see |MiniSurround-algorithm|).
+--- - Surrounding is identified by a single character as both "input" (in
+---   `delete` and `replace` start, `find`, and `highlight`) and "output" (in
 ---   `add` and `replace` end):
 ---     - 'f' - function call (string of alphanumeric symbols or '_' or '.'
----       followed by balanced '()'). In 'input' finds function call, in
----       'output' prompts user to enter function name.
+---       followed by balanced '()'). In "input" finds function call, in
+---       "output" prompts user to enter function name.
 ---     - 'i' - interactive. Prompts user to enter left and right parts.
----     - 't' - tag. In 'input' finds tab with same identifier, in 'output'
+---     - 't' - tag. In "input" finds tab with same identifier, in "output"
 ---       prompts user to enter tag name.
----     - All symbols in brackets '()', '[]', '{}', '<>'. In 'input' represents
----       balanced brackets, in 'output' - left and right parts of brackets.
+---     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
+---       balanced brackets, in "output" - left and right parts of brackets.
 ---     - All other alphanumeric, punctuation, or space characters represent
 ---       surrounding with identical left and right parts.
 ---
 --- Known issues which won't be resolved:
 --- - Search for surrounding is done using Lua patterns (regex-like approach).
 ---   So certain amount of false positives should be expected.
---- - When searching for 'input' surrounding, there is no distinction if it is
+--- - When searching for "input" surrounding, there is no distinction if it is
 ---   inside string or comment. So in this case there will be not proper match
 ---   for a function call: 'f(a = ")", b = 1)'.
 --- - Tags are searched using regex-like methods, so issues are inevitable.
@@ -78,39 +77,46 @@
 
 --- Algorithm design
 ---
---- - Adding 'output' surrounding has a fairly straightforward algorithm:
+--- - Adding "output" surrounding has a fairly straightforward algorithm:
 ---     - Determine places for left and right parts (via `<>`/`[]` marks or by
 ---       finding some other surrounding).
 ---     - Determine left and right parts of surrounding via using custom and
 ---       builtin surroundings (via `output` field of surrounding info see
 ---       |MiniSurround.config|).
 ---     - Properly add.
---- - Finding 'input' surrounding is a lot more complicated and is a reason why
+--- - Finding "input" surrounding is a lot more complicated and is a reason why
 ---   this implementation is only somewhat minimal. In a nutshell, current
 ---   algorithm `searches in the neighborhood lines based on a certain pattern
----   a _smallest_ match that covers cursor`. More detailed:
+---   and search method a best match`. More detailed:
 ---     - Extract neighborhood of cursor line: no more than
 ---       `MiniSurround.config.n_lines` before, cursor line itself, no more than
----       `MiniSurround.config.n_lines` after.
----     - Convert it to '1d neighborhood' by concatenating with '\n' delimiter.
+---       `MiniSurround.config.n_lines` after. Note: actual search is done
+---       firstly on cursor line (i.e. with `n_lines = 0`), as it is the most
+---       frequent usage and only then searches in wholeneighborhood.
+---     - Convert it to "1d neighborhood" by concatenating with '\n' delimiter.
 ---       Compute location of current cursor position in this line.
----     - Given Lua pattern for an 'input' surrounding (`input.find` field of
----       surrounding info; see |MiniSurround.config|), search for a smallest
----       (with minimal width) match that covers cursor position. This is an
----       iterative procedure, duration of which heavily depends on the length
----       of '1d neighborhood' and frequency of pattern matching. If no match
----       is found, there is no surrounding. Note: with current approach
----       smallest width is ensured by checking match on covering substrings.
----       This may have unwanted consequences when using complex Lua patterns
----       (like `%f[]` at the pattern end, for example).
----     - Compute parts of '1d neighborhood' that represent left and right part
+---     - Given Lua pattern for an "input" surrounding (`input.find` field of
+---       surrounding info; see |MiniSurround.config|), search for best match.
+---       That is:
+---         - Match with span covering cursor position. If several, try to pick
+---           one with smallest width.
+---         - If no covering match, pick one of "previous" (nearest
+---           non-covering to the left) or "next" (nearest non-covering to the
+---           right) matches, depending on `config.search_method` (see
+---           |MiniSurround.config| for more details).
+---       This computation is an iterative procedure, duration of which heavily
+---       depends on the length of "1d neighborhood" and frequency of pattern
+---       matching. If no match is found, there is no surrounding. Note: with
+---       current approach smallest width of covering match is ensured by
+---       checking match on covering substrings. This may have unwanted
+---       consequences when using complex Lua patterns (like `%f[]` at the
+---       pattern end, for example).
+---     - Compute parts of "1d neighborhood" that represent left and right part
 ---       of found surrounding. This is done by using pattern from
 ---       `input.extract` field of surrounding info; see |MiniSurround.config|.
 ---       Note: pattern is used on a matched substring, so using `^` and `$` at
 ---       start and end of pattern means start and end of substring.
----     - Convert '1d offsets' of found parts to their positions in buffer.
----   Actual search is done firstly on cursor line (as it is the most frequent
----   usage) and only then searches in neighborhood.
+---     - Convert "1d offsets" of found parts to their positions in buffer.
 ---@tag MiniSurround-algorithm
 
 -- Module definition ==========================================================
@@ -148,18 +154,19 @@ end
 --- It should be a table with keys being single character surrounding identifier
 --- and values - surround info or function returning it. Surround info itself
 --- is a table with keys:
---- - <input> - defines how to find and extract surrounding for 'input'
+--- - <input> - defines how to find and extract surrounding for "input"
 ---   operations (like `delete`). A table with fields <find> (Lua pattern
 ---   applied for search in neighborhood) and <extract> (Lua pattern applied
 ---   for extracting left and right parts; should have two matches).
---- - <output> - defines what to add on left and right for 'output' operations
----   (like `add`). A table with <left> (string) and <right> (string) fields.
+--- - <output> - defines what to add on left and right for "output" operations
+---   (like `add`). A table with <left> (plain text string) and <right> (plain
+---   text string) fields.
 ---
 --- Example of surround info for builtin `(` identifier:>
---- {
----   input = { find = '%b()', extract = '^(.).*(.)$' },
----   output = { left = '(', right = ')' }
---- }
+---   {
+---     input = { find = '%b()', extract = '^(.).*(.)$' },
+---     output = { left = '(', right = ')' }
+---   }
 --- <
 --- General recommendations:
 --- - In `config.custom_surroundings` only some data can be defined (like only
@@ -226,6 +233,37 @@ end
 ---     },
 ---   })
 --- <
+--- ## Search method~
+---
+--- Value of `config.search_method` defines how best match search for "input"
+--- surrounding is done when there is no covering match (with span covering
+--- cursor position) found within searched neighborhood. Based on its value,
+--- one of "previous", "next", or neither match is used as output.
+--- Its possible values are:
+--- - `'cover'` (default) - don't use either "previous" or "next"; report that
+---   there is no surrounding found.
+--- - `'cover_or_prev'` - use previous.
+--- - `'cover_or_next'` - use next.
+--- - `'cover_or_nearest'` - use nearest to current cursor position. Distance
+---   is computed based on "1d neighborhood" using nearest part of
+---   surroundings. Next is used in case of a tie.
+---
+--- Note: search is first performed on the cursor line and only after failure -
+--- on the whole neighborhood defined by `config.n_lines`. This means that with
+--- `config.search_method` not equal to `'cover'`, "previous" or "next"
+--- surrounding will end up as search result if they present on current line
+--- although covering match might be found in bigger, whole neighborhood. This
+--- design is based on observation that most of the time operation involving
+--- surrounding is done withtin cursor line.
+---
+--- Here is an example of how replacing `)` with `]` surrounding is done based
+--- on a value of `'config.search_method'` when cursor is inside `bbb` word:
+--- - `search_method = 'cover'`:         `(a) bbb (c)` -> `(a) bbb (c)` (with message)
+--- - `search_method = 'cover_or_prev'`: `(a) bbb (c)` -> `[a] bbb (c)`
+--- - `search_method = 'cover_or_next'`: `(a) bbb (c)` -> `(a) bbb [c]`
+--- - `search_method = 'cover_or_nearest'`: depends on cursor position.
+---   For first `b` - as in `cover_or_prev` (as previous match is nearer), for
+---   second and third - as in `cover_or_next` (as next match is nearer).
 MiniSurround.config = {
   -- Add custom surroundings to be used on top of builtin ones. For more
   -- information with examples, see `:h MiniSurround.config`.
@@ -247,6 +285,11 @@ MiniSurround.config = {
 
   -- Number of lines within which surrounding is searched
   n_lines = 20,
+
+  -- How to search for surrounding (first inside current line, then inside
+  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
+  -- 'cover_or_nearest'. For more details, see `:h MiniSurround.config`.
+  search_method = 'cover',
 }
 --minidoc_afterlines_end
 
@@ -558,6 +601,7 @@ function H.setup_config(config)
     highlight_duration = { config.highlight_duration, 'number' },
     mappings = { config.mappings, 'table' },
     n_lines = { config.n_lines, 'number' },
+    search_method = { config.search_method, H.is_search_method },
   })
 
   vim.validate({
@@ -603,6 +647,24 @@ function H.is_disabled()
   return vim.g.minisurround_disable == true or vim.b.minisurround_disable == true
 end
 
+function H.is_search_method(x, x_name)
+  x = x or MiniSurround.config.search_method
+  x_name = x_name or '`config.search_method`'
+
+  if vim.tbl_contains({ 'cover', 'cover_or_prev', 'cover_or_next', 'cover_or_nearest' }, x) then
+    return true
+  end
+  local msg = ([[%s should be one of 'cover', 'cover_or_prev', 'cover_or_next', 'cover_or_nearest'.]]):format(x_name)
+  return false, msg
+end
+
+function H.validate_search_method(x, x_name)
+  local is_valid, msg = H.is_search_method(x, x_name)
+  --stylua: ignore
+  if not is_valid then H.error(msg) end
+end
+
+-- Work with finding surrounding ----------------------------------------------
 -- Find surrounding
 -- NOTE: more simple approach for `find_surrounding()` would have been to use
 -- combination of `searchpairpos()` (to search for balanced pair) and
@@ -639,15 +701,51 @@ function H.find_surrounding(surround_info)
     or H.find_surrounding_in_neighborhood(surround_info, n_lines)
 
   if surr == nil then
-    local msg = ([[No surrounding '%s' found within %d line%s.]]):format(
+    local msg = ([[No surrounding '%s' found within %d line%s and `config.search_method = '%s'`.]]):format(
       surround_info.id,
       n_lines,
-      n_lines > 1 and 's' or ''
+      n_lines > 1 and 's' or '',
+      MiniSurround.config.search_method
     )
     H.notify(msg)
   end
 
   return surr
+end
+
+function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
+  local neigh = H.get_cursor_neighborhood(n_neighbors)
+  local cur_offset = neigh.pos_to_offset(neigh.cursor_pos)
+
+  -- Find span of surrounding
+  local span = H.find_best_match(neigh['1d'], surround_info.find, cur_offset)
+  if span == nil then
+    return nil
+  end
+
+  -- Compute lineparts for left and right surroundings
+  local l, r = span.left, span.right
+  local left, right = neigh['1d']:sub(l, r):match(surround_info.extract)
+  if left == nil or right == nil then
+    H.error(
+      'Could not extract two surrounding parts. '
+        .. 'Does your `config.custom_surroundings.input.extract` pattern has two captures?'
+    )
+  end
+
+  local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
+  local right_from, right_to = neigh.offset_to_pos(r - right:len() + 1), neigh.offset_to_pos(r)
+
+  local left_linepart = H.new_linepart(left_from, left_to)
+  if left_linepart == nil then
+    return nil
+  end
+  local right_linepart = H.new_linepart(right_from, right_to)
+  if right_linepart == nil then
+    return nil
+  end
+
+  return { left = left_linepart, right = right_linepart }
 end
 
 -- Work with operator marks ---------------------------------------------------
@@ -748,10 +846,6 @@ function H.cursor_cycle(pos_array, dir)
 end
 
 -- Work with user input -------------------------------------------------------
-function H.notify(msg)
-  vim.notify(string.format('(mini.surround) %s', msg))
-end
-
 function H.user_surround_id(sur_type)
   -- Get from user single character surrounding identifier
   local needs_help_msg = true
@@ -816,24 +910,26 @@ function H.insert_into_line(line_num, col, text)
 end
 
 -- Work with Lua patterns -----------------------------------------------------
--- Find the smallest (with the smallest width) covering (left and right offsets
--- in `line`) which includes `offset` and within which `pattern` is matched.
--- Output is a table with two numbers (or `nil` in case of no covering match):
--- indexes of left and right parts of match. They have two properties:
--- - `left <= offset <= right`.
--- - `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
-function H.find_smallest_covering(line, pattern, offset)
-  local left, right
+-- Find the best match (left and right offsets in `line`). Here "best" is:
+-- - Covering (`left <= offset <= right`) with smallest width.
+-- - If no covering, one of "previous" or "next", depending on
+--   `config.search_method`.
+-- Output is a table with two numbers (or `nil` in case of no match):
+-- indexes of left and right parts of match. They have the following property:
+-- `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
+function H.find_best_match(line, pattern, offset)
+  H.validate_search_method()
+
+  local left_prev, right_prev, left, right, left_next, right_next
   local stop = false
   local init = 1
   while not stop do
     local match_left, match_right = line:find(pattern, init)
-    if (match_left == nil) or (match_left > offset) then
-      -- TODO: Allow `match_left > offset` branch to return value if covering
-      -- match was not found at that point (and if some `config` value is set).
+    if match_left == nil then
       -- Stop if first match is gone over `offset` to the right
       stop = true
     elseif match_right < offset then
+      left_prev, right_prev = match_left, match_right
       -- Try find covering match. Originally this was `init = math.max(init +
       -- 1, match_right)`. Generally, this works fine, but there is an edge
       -- case with tags. Consider example: '<a>hello<b>world</a></b>' and
@@ -843,6 +939,10 @@ function H.find_smallest_covering(line, pattern, offset)
       -- This increases execution time, but tolerably so. On the plus side,
       -- this edge case currently gives wrong result even in 'vim-sandwich' :)
       init = match_left + 1
+    elseif match_left > offset then
+      left_next, right_next = match_left, match_right
+      -- Stop searching because already went past offset
+      stop = true
     else
       -- Successful match: match_left <= offset <= match_right
       -- Update result only if current has smaller width. This ensures
@@ -856,12 +956,23 @@ function H.find_smallest_covering(line, pattern, offset)
     end
   end
 
+  -- If didn't find covering match, try to infer from previous and next
   if left == nil then
-    return nil
+    left, right = H.infer_match(
+      { left = left_prev, right = right_prev },
+      { left = left_next, right = right_next },
+      offset
+    )
   end
 
-  -- Try make match even smaller. Can happen if there are greedy quantifiers.
-  -- For example `line = '((()))', pattern = '%(.-%)+', offset = 3`.
+  -- If still didn't find anything, return nothing
+  if left == nil then
+    return
+  end
+
+  -- Try make covering match even smaller. Can happen if there are greedy
+  -- quantifiers. For example:
+  -- `line = '((()))', pattern = '%(.-%)+', offset = 3`.
   -- This approach has some non-working edge cases, but is quite better
   -- performance wise than bruteforce "find from current offset"
   local line_pattern = '^' .. pattern .. '$'
@@ -887,6 +998,29 @@ function H.find_smallest_covering(line, pattern, offset)
 
   return { left = left, right = right }
 end
+
+--stylua: ignore start
+function H.infer_match(prev, next, offset)
+  local has_prev = prev.left ~= nil and prev.right ~= nil
+  local has_next = next.left ~= nil and next.right ~= nil
+  local search_method = MiniSurround.config.search_method
+
+  if not (has_prev or has_next) or search_method == 'cover' then return end
+  if search_method == 'cover_or_prev' then return prev.left, prev.right end
+  if search_method == 'cover_or_next' then return next.left, next.right end
+
+  if search_method == 'cover_or_nearest' then
+    local dist_prev = has_prev and math.abs(offset - prev.right) or math.huge
+    local dist_next = has_next and math.abs(next.left - offset) or math.huge
+
+    if dist_next <= dist_prev then
+      return next.left, next.right
+    else
+      return prev.left, prev.right
+    end
+  end
+end
+--stylua: ignore end
 
 -- Work with cursor neighborhood ----------------------------------------------
 function H.get_cursor_neighborhood(n_neighbors)
@@ -1026,45 +1160,15 @@ function H.get_default_surrounding_info(char)
   }
 end
 
--- Find surrounding in neighborhood -------------------------------------------
-function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
-  local neigh = H.get_cursor_neighborhood(n_neighbors)
-  local cur_offset = neigh.pos_to_offset(neigh.cursor_pos)
-
-  -- Find covering of surrounding
-  local covering = H.find_smallest_covering(neigh['1d'], surround_info.find, cur_offset)
-  if covering == nil then
-    return nil
-  end
-
-  local substring = neigh['1d']:sub(covering.left, covering.right)
-
-  -- Compute lineparts for left and right surroundings
-  local left, right = substring:match(surround_info.extract)
-  if left == nil or right == nil then
-    error(
-      '(mini.surround) Could not extract two surrounding parts. '
-        .. 'Does your `config.custom_surroundings.input.extract` pattern has two captures?'
-    )
-  end
-  local l, r = covering.left, covering.right
-
-  local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
-  local right_from, right_to = neigh.offset_to_pos(r - right:len() + 1), neigh.offset_to_pos(r)
-
-  local left_linepart = H.new_linepart(left_from, left_to)
-  if left_linepart == nil then
-    return nil
-  end
-  local right_linepart = H.new_linepart(right_from, right_to)
-  if right_linepart == nil then
-    return nil
-  end
-
-  return { left = left_linepart, right = right_linepart }
+-- Utilities ------------------------------------------------------------------
+function H.notify(msg)
+  vim.notify(string.format('(mini.surround) %s', msg))
 end
 
--- Utilities ------------------------------------------------------------------
+function H.error(msg)
+  error(string.format('(mini.surround) %s', msg))
+end
+
 function H.map(mode, key, rhs, opts)
   if key == '' then
     return

@@ -23,13 +23,18 @@ local clear_messages = function()
 end
 
 local get_latest_message = function()
-  local messages = vim.split(child.cmd_capture('messages'), '\n')
-  return messages[#messages]
+  return child.cmd_capture('1messages')
 end
 
-local has_message_about_not_found = function(char, n_lines)
+local has_message_about_not_found = function(char, n_lines, search_method)
   n_lines = n_lines or 20
-  local msg = ([[(mini.surround) No surrounding '%s' found within %s lines.]]):format(char, n_lines)
+  search_method = search_method or 'cover'
+  local msg = string.format(
+    [[(mini.surround) No surrounding '%s' found within %s lines and `config.search_method = '%s'`.]],
+    char,
+    n_lines,
+    search_method
+  )
   eq(get_latest_message(), msg)
 end
 
@@ -101,6 +106,7 @@ describe('MiniSurround.setup()', function()
     assert_config('mappings.highlight', 'sh')
     assert_config('mappings.replace', 'sr')
     assert_config('mappings.update_n_lines', 'sn')
+    assert_config('search_method', 'cover')
   end)
 
   it('respects `config` argument', function()
@@ -130,6 +136,7 @@ describe('MiniSurround.setup()', function()
     assert_config_error({ mappings = { replace = 1 } }, 'mappings.replace', 'string')
     assert_config_error({ mappings = { update_n_lines = 1 } }, 'mappings.update_n_lines', 'string')
     assert_config_error({ n_lines = 'a' }, 'n_lines', 'number')
+    assert_config_error({ search_method = 1 }, 'search_method', 'one of')
   end)
 end)
 
@@ -339,6 +346,18 @@ describe('Delete surrounding', function()
     has_message_about_not_found(')', 2)
   end)
 
+  it('respects `config.search_method`', function()
+    local lines = { 'aaa (bbb)' }
+
+    -- By default uses 'cover'
+    validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sd', ')')
+    has_message_about_not_found(')')
+
+    -- Should change behavior according to `config.search_method`
+    reload_module({ search_method = 'cover_or_next' })
+    validate_edit(lines, { 1, 0 }, { 'aaa bbb' }, { 1, 4 }, type_keys, 'sd', ')')
+  end)
+
   it('places cursor to the right of left surrounding', function()
     --stylua: ignore
     local f = function() type_keys('sd', 'f') end
@@ -383,12 +402,6 @@ describe('Delete surrounding', function()
 
     validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { 'aaa', 'bbb', 'ccc' }, { 1, 0 }, f)
     validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { 'aaa', 'bbb', 'ccc' }, { 1, 0 }, f)
-  end)
-
-  it('works only for covering surrounding', function()
-    local lines = { 'aaa (bbb)' }
-    validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sd', ')')
-    has_message_about_not_found(')')
   end)
 
   it('allows cancelling with `<Esc> and <C-c>`', function()
@@ -472,6 +485,18 @@ describe('Replace surrounding', function()
     has_message_about_not_found(')', 2)
   end)
 
+  it('respects `config.search_method`', function()
+    local lines = { 'aaa (bbb)' }
+
+    -- By default uses 'cover'
+    validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sr', ')', '>')
+    has_message_about_not_found(')')
+
+    -- Should change behavior according to `config.search_method`
+    reload_module({ search_method = 'cover_or_next' })
+    validate_edit(lines, { 1, 0 }, { 'aaa <bbb>' }, { 1, 5 }, type_keys, 'sr', ')', '>')
+  end)
+
   it('places cursor to the right of left surrounding', function()
     --stylua: ignore
     local f = function() type_keys('sr', 'f', '>') end
@@ -524,12 +549,6 @@ describe('Replace surrounding', function()
 
     validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
     validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
-  end)
-
-  it('works only for covering surrounding', function()
-    local lines = { 'aaa (bbb)' }
-    validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sr', ')', '>')
-    has_message_about_not_found(')')
   end)
 
   it('allows cancelling with `<Esc> and <C-c>`', function()
@@ -657,6 +676,24 @@ describe('Find surrounding', function()
     has_message_about_not_found(')', 2)
   end)
 
+  it('respects `config.search_method`', function()
+    local lines = { 'aaa (bbb)' }
+
+    -- By default uses 'cover'
+    clear_messages()
+    validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sf', ')')
+    has_message_about_not_found(')')
+
+    clear_messages()
+    validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sF', ')')
+    has_message_about_not_found(')')
+
+    -- Should change behavior according to `config.search_method`
+    reload_module({ search_method = 'cover_or_next' })
+    validate_find(lines, { 1, 0 }, { { 1, 4 } }, type_keys, 'sf', ')')
+    validate_find(lines, { 1, 0 }, { { 1, 8 } }, type_keys, 'sF', ')')
+  end)
+
   it('prompts helper message after one idle second', function()
     clear_messages()
     set_lines({ '(aaa)' })
@@ -685,18 +722,6 @@ describe('Find surrounding', function()
   it('works on multiple lines', function()
     validate_find({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { { 3, 3 }, { 1, 0 } }, type_keys, 'sf', ')')
     validate_find({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { { 1, 0 }, { 3, 3 } }, type_keys, 'sF', ')')
-  end)
-
-  it('works only for covering surrounding', function()
-    local lines = { 'aaa (bbb)' }
-
-    clear_messages()
-    validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sf', ')')
-    has_message_about_not_found(')')
-
-    clear_messages()
-    validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sF', ')')
-    has_message_about_not_found(')')
   end)
 
   it('allows cancelling with `<Esc> and <C-c>`', function()
@@ -999,6 +1024,112 @@ describe('Update number of lines', function()
 
     validate_disable('g')
     validate_disable('b')
+  end)
+end)
+
+describe('Search method', function()
+  child.setup()
+  child.o.cmdheight = 10
+  load_module()
+  before_each(reload_module)
+
+  it('works with "cover_or_prev"', function()
+    reload_module({ search_method = 'cover_or_prev' })
+    --stylua: ignore
+    local f = function() type_keys('sr', ')', '>') end
+
+    -- Works (on same line and on multiple lines)
+    validate_edit({ '(aaa) bbb' }, { 1, 7 }, { '<aaa> bbb' }, { 1, 1 }, f)
+    validate_edit({ '(aaa)', 'bbb' }, { 2, 0 }, { '<aaa>', 'bbb' }, { 1, 1 }, f)
+
+    -- Should prefer covering surrounding if both are on the same line
+    validate_edit({ '(aaa) (bbb)' }, { 1, 8 }, { '(aaa) <bbb>' }, { 1, 7 }, f)
+    validate_edit({ '((aaa) bbb)' }, { 1, 8 }, { '<(aaa) bbb>' }, { 1, 1 }, f)
+
+    -- Should prefer covering surrounding if both are not on the same line
+    validate_edit({ '(aaa) (', 'bbb)' }, { 2, 0 }, { '(aaa) <', 'bbb>' }, { 1, 6 }, f)
+
+    -- Should prefer "previous" if it is on the same line, but covering is not
+    validate_edit({ '(aaa) (bbb', ')' }, { 1, 8 }, { '<aaa> (bbb', ')' }, { 1, 1 }, f)
+
+    -- Should ignore presence of "next" surrounding (even on same line)
+    validate_edit({ '(aaa) bbb (ccc)' }, { 1, 7 }, { '<aaa> bbb (ccc)' }, { 1, 1 }, f)
+    validate_edit({ '(aaa)', 'bbb (ccc)' }, { 2, 1 }, { '<aaa>', 'bbb (ccc)' }, { 1, 1 }, f)
+    validate_edit({ '(aaa) (', 'bbb (ccc))' }, { 2, 0 }, { '(aaa) <', 'bbb (ccc)>' }, { 1, 6 }, f)
+  end)
+
+  it('works with "cover_or_next"', function()
+    reload_module({ search_method = 'cover_or_next' })
+    --stylua: ignore
+    local f = function() type_keys('sr', ')', '>') end
+
+    -- Works (on same line and on multiple lines)
+    validate_edit({ 'aaa (bbb)' }, { 1, 0 }, { 'aaa <bbb>' }, { 1, 5 }, f)
+    validate_edit({ 'aaa', '(bbb)' }, { 1, 0 }, { 'aaa', '<bbb>' }, { 2, 1 }, f)
+
+    -- Should prefer covering surrounding if both are on the same line
+    validate_edit({ '(aaa) (bbb)' }, { 1, 2 }, { '<aaa> (bbb)' }, { 1, 1 }, f)
+    validate_edit({ '(aaa (bbb))' }, { 1, 2 }, { '<aaa (bbb)>' }, { 1, 1 }, f)
+
+    -- Should prefer covering surrounding if both are not on the same line
+    validate_edit({ '(aaa', ') (bbb)' }, { 1, 2 }, { '<aaa', '> (bbb)' }, { 1, 1 }, f)
+
+    -- Should prefer "next" if it is on the same line, but covering is not
+    validate_edit({ '(', 'aaa) (bbb)' }, { 2, 1 }, { '(', 'aaa) <bbb>' }, { 2, 6 }, f)
+
+    -- Should ignore presence of "previous" surrounding (even on same line)
+    validate_edit({ '(aaa) bbb (ccc)' }, { 1, 7 }, { '(aaa) bbb <ccc>' }, { 1, 11 }, f)
+    validate_edit({ '(aaa) bbb', '(ccc)' }, { 1, 7 }, { '(aaa) bbb', '<ccc>' }, { 2, 1 }, f)
+    validate_edit({ '(aaa) (', '(bbb) ccc)' }, { 2, 7 }, { '(aaa) <', '(bbb) ccc>' }, { 1, 6 }, f)
+  end)
+
+  it('works with "cover_or_nearest"', function()
+    reload_module({ search_method = 'cover_or_nearest' })
+    --stylua: ignore
+    local f = function() type_keys('sr', ')', '>') end
+
+    -- Works (on same line and on multiple lines)
+    validate_edit({ '(aaa) bbb (ccc)' }, { 1, 6 }, { '<aaa> bbb (ccc)' }, { 1, 1 }, f)
+    validate_edit({ '(aaa) bbb (ccc)' }, { 1, 7 }, { '(aaa) bbb <ccc>' }, { 1, 11 }, f)
+    validate_edit({ '(aaa) bbb (ccc)' }, { 1, 8 }, { '(aaa) bbb <ccc>' }, { 1, 11 }, f)
+
+    validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 0 }, { '<aaa>', 'bbb', '(ccc)' }, { 1, 1 }, f)
+    validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 1 }, { '(aaa)', 'bbb', '<ccc>' }, { 3, 1 }, f)
+    validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 2 }, { '(aaa)', 'bbb', '<ccc>' }, { 3, 1 }, f)
+
+    -- Should prefer covering surrounding if both are on the same line
+    validate_edit({ '(aaa) (bbb) (ccc)' }, { 1, 7 }, { '(aaa) <bbb> (ccc)' }, { 1, 7 }, f)
+    validate_edit({ '((aaa) bbb (ccc))' }, { 1, 7 }, { '<(aaa) bbb (ccc)>' }, { 1, 1 }, f)
+
+    -- Should prefer covering surrounding if both are not on the same line
+    validate_edit({ '(aaa) (', 'bbb', ') (ccc)' }, { 2, 0 }, { '(aaa) <', 'bbb', '> (ccc)' }, { 1, 6 }, f)
+
+    -- Should prefer "nearest" if it is on the same line, but covering is not
+    validate_edit({ '(aaa) (', 'bbb) (ccc)' }, { 2, 1 }, { '(aaa) (', 'bbb) <ccc>' }, { 2, 6 }, f)
+
+    -- Computes "nearest" based on closest part of candidate surroundings
+    validate_edit({ '(aaaa) b  (c)' }, { 1, 7 }, { '<aaaa> b  (c)' }, { 1, 1 }, f)
+    validate_edit({ '(a)  b (cccc)' }, { 1, 5 }, { '(a)  b <cccc>' }, { 1, 8 }, f)
+
+    -- If either "previous" or "next" is missing, should return the present one
+    validate_edit({ '(aaa) bbb' }, { 1, 7 }, { '<aaa> bbb' }, { 1, 1 }, f)
+    validate_edit({ '(aaa)', 'bbb' }, { 2, 0 }, { '<aaa>', 'bbb' }, { 1, 1 }, f)
+    validate_edit({ 'aaa (bbb)' }, { 1, 0 }, { 'aaa <bbb>' }, { 1, 5 }, f)
+    validate_edit({ 'aaa', '(bbb)' }, { 1, 0 }, { 'aaa', '<bbb>' }, { 2, 1 }, f)
+  end)
+
+  it('throws error on incorrect `config.search_method`', function()
+    child.lua([[MiniSurround.config.search_method = 'aaa']])
+    local lines = { 'aaa (bbb)' }
+    -- Account for a big error message
+    child.o.cmdheight = 40
+
+    set_lines(lines)
+    set_cursor(1, 0)
+    -- stylua: ignore
+    assert.error_matches(function() type_keys('sd', ')') end, 'one of')
+    eq(get_lines(), lines)
+    eq(get_cursor(), { 1, 0 })
   end)
 end)
 
