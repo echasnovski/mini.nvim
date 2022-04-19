@@ -12,7 +12,8 @@ local neovim_children = {}
 --- Methods:
 --- - Job-related: `start`, `stop`, `restart`, etc.
 --- - Wrappers for executing Lua inside child process: `api`, `fn`, `lsp`, `loop`, etc.
---- - Wrappers: `type_keys`, `set_lines()`, etc.
+--- - Wrappers: `type_keys()`, `is_blocking()` (also write about "blocking"
+---   concept),  `set_lines()`, etc.
 ---
 ---@usage
 --- -- Initiate
@@ -207,8 +208,29 @@ function helpers.new_child_neovim()
         error('In `type_keys()` each argument should be either string or array of strings.')
       end
 
+      -- From `nvim_input` docs: "On execution error: does not fail, but
+      -- updates v:errmsg.". So capture it manually.
+      local cur_errmsg
+      -- But do that only if Neovim is not "blocking". Otherwise, usage of
+      -- `child.v` will block execution.
+      if not child.is_blocking() then
+        cur_errmsg = child.v.errmsg
+        child.v.errmsg = ''
+      end
+
       -- Need to escape bare `<` (see `:h nvim_input`)
       child.api.nvim_input(k == '<' and '<LT>' or k)
+
+      -- Possibly throw error manually
+      if not child.is_blocking() then
+        if child.v.errmsg ~= '' then
+          error(child.v.errmsg, 2)
+        else
+          child.v.errmsg = cur_errmsg
+        end
+      end
+
+      -- Possibly wait
       if has_wait and wait > 0 then
         child.loop.sleep(wait)
       end
@@ -233,6 +255,10 @@ function helpers.new_child_neovim()
 
   function child.lua_get(str, args)
     return child.api.nvim_exec_lua('return ' .. str, args or {})
+  end
+
+  function child.is_blocking()
+    return child.api.nvim_get_mode()['blocking']
   end
 
   function child.set_lines(arr, start, finish)
