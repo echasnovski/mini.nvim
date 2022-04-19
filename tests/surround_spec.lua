@@ -91,6 +91,7 @@ describe('MiniSurround.setup()', function()
     end
 
     -- Check default values
+    assert_config('custom_surroundings', vim.NIL)
     assert_config('n_lines', 20)
     assert_config('highlight_duration', 500)
     assert_config('mappings.add', 'sa')
@@ -118,7 +119,7 @@ describe('MiniSurround.setup()', function()
     end
 
     assert_config_error('a', 'config', 'table')
-    assert_config_error({ n_lines = 'a' }, 'n_lines', 'number')
+    assert_config_error({ custom_surroundings = 'a' }, 'custom_surroundings', 'table')
     assert_config_error({ highlight_duration = 'a' }, 'highlight_duration', 'number')
     assert_config_error({ mappings = 'a' }, 'mappings', 'table')
     assert_config_error({ mappings = { add = 1 } }, 'mappings.add', 'string')
@@ -128,6 +129,7 @@ describe('MiniSurround.setup()', function()
     assert_config_error({ mappings = { highlight = 1 } }, 'mappings.highlight', 'string')
     assert_config_error({ mappings = { replace = 1 } }, 'mappings.replace', 'string')
     assert_config_error({ mappings = { update_n_lines = 1 } }, 'mappings.update_n_lines', 'string')
+    assert_config_error({ n_lines = 'a' }, 'n_lines', 'number')
   end)
 end)
 
@@ -1027,34 +1029,34 @@ describe('Balanced pair surrounding', function()
     validate('>', '<>')
   end)
 
-  -- All remaining tests are done with ')' and ']' in hope that others work
+  -- All remaining tests are done with ')' and '>' in hope that others work
   -- similarly
   it('does not work in some cases', function()
     -- Although, it would be great if it did
     --stylua: ignore
-    local f = function() type_keys('sr', ')', ']') end
+    local f = function() type_keys('sr', ')', '>') end
 
     -- It does not take into account that part is inside string
-    validate_edit({ [[(a, ')', b)]] }, { 1, 1 }, { "[a, ']', b)" }, { 1, 1 }, f)
+    validate_edit({ [[(a, ')', b)]] }, { 1, 1 }, { "<a, '>', b)" }, { 1, 1 }, f)
 
     -- It does not take into account that part is inside comment
     child.bo.commentstring = '# %s'
-    validate_edit({ '(a', '# )', 'b)' }, { 1, 1 }, { '[a', '# ]', 'b)' }, { 1, 1 }, f)
+    validate_edit({ '(a', '# )', 'b)' }, { 1, 1 }, { '<a', '# >', 'b)' }, { 1, 1 }, f)
   end)
 
   it('is indeed balanced', function()
     --stylua: ignore
-    local f = function() type_keys('sr', ')', ']') end
+    local f = function() type_keys('sr', ')', '>') end
 
-    validate_edit({ '(a())' }, { 1, 1 }, { '[a()]' }, { 1, 1 }, f)
-    validate_edit({ '(()a)' }, { 1, 3 }, { '[()a]' }, { 1, 1 }, f)
+    validate_edit({ '(a())' }, { 1, 1 }, { '<a()>' }, { 1, 1 }, f)
+    validate_edit({ '(()a)' }, { 1, 3 }, { '<()a>' }, { 1, 1 }, f)
 
-    validate_edit({ '((()))' }, { 1, 0 }, { '[(())]' }, { 1, 1 }, f)
-    validate_edit({ '((()))' }, { 1, 1 }, { '([()])' }, { 1, 2 }, f)
-    validate_edit({ '((()))' }, { 1, 2 }, { '(([]))' }, { 1, 3 }, f)
-    validate_edit({ '((()))' }, { 1, 3 }, { '(([]))' }, { 1, 3 }, f)
-    validate_edit({ '((()))' }, { 1, 4 }, { '([()])' }, { 1, 2 }, f)
-    validate_edit({ '((()))' }, { 1, 5 }, { '[(())]' }, { 1, 1 }, f)
+    validate_edit({ '((()))' }, { 1, 0 }, { '<(())>' }, { 1, 1 }, f)
+    validate_edit({ '((()))' }, { 1, 1 }, { '(<()>)' }, { 1, 2 }, f)
+    validate_edit({ '((()))' }, { 1, 2 }, { '((<>))' }, { 1, 3 }, f)
+    validate_edit({ '((()))' }, { 1, 3 }, { '((<>))' }, { 1, 3 }, f)
+    validate_edit({ '((()))' }, { 1, 4 }, { '(<()>)' }, { 1, 2 }, f)
+    validate_edit({ '((()))' }, { 1, 5 }, { '<(())>' }, { 1, 1 }, f)
   end)
 end)
 
@@ -1087,19 +1089,35 @@ describe('Default single character surrounding', function()
   it('does not work in some cases', function()
     -- Although, it would be great if it did
     --stylua: ignore
-    local f = function() type_keys('sr', '_', ']') end
+    local f = function() type_keys('sr', '_', '>') end
 
     -- It does not take into account that part is inside string
-    validate_edit({ [[_a, '_', b_]] }, { 1, 1 }, { "[a, ']', b_" }, { 1, 1 }, f)
+    validate_edit({ [[_a, '_', b_]] }, { 1, 1 }, { "<a, '>', b_" }, { 1, 1 }, f)
 
     -- It does not take into account that part is inside comment
     child.bo.commentstring = '# %s'
-    validate_edit({ '_a', '# _', 'b_' }, { 1, 1 }, { '[a', '# ]', 'b_' }, { 1, 1 }, f)
+    validate_edit({ '_a', '# _', 'b_' }, { 1, 1 }, { '<a', '# >', 'b_' }, { 1, 1 }, f)
   end)
 
   it('detects covering with smallest width', function()
-    validate_edit({ '"a"aa"' }, { 1, 2 }, { '(a)aa"' }, { 1, 1 }, type_keys, 'sr', '"', ')')
-    validate_edit({ '"aa"a"' }, { 1, 3 }, { '"aa(a)' }, { 1, 4 }, type_keys, 'sr', '"', ')')
+    --stylua: ignore
+    local f = function() type_keys('sr', '"', ')') end
+
+    validate_edit({ '"a"aa"' }, { 1, 2 }, { '(a)aa"' }, { 1, 1 }, f)
+    validate_edit({ '"aa"a"' }, { 1, 3 }, { '"aa(a)' }, { 1, 4 }, f)
+
+    validate_edit({ '"""a"""' }, { 1, 3 }, { '""(a)""' }, { 1, 3 }, f)
+  end)
+
+  it('works in edge cases', function()
+    --stylua: ignore
+    local f = function() type_keys('sr', '*', ')') end
+
+    -- Consecutive identical matching characters
+    validate_edit({ '****' }, { 1, 0 }, { '()**' }, { 1, 1 }, f)
+    validate_edit({ '****' }, { 1, 1 }, { '()**' }, { 1, 1 }, f)
+    validate_edit({ '****' }, { 1, 2 }, { '*()*' }, { 1, 2 }, f)
+    validate_edit({ '****' }, { 1, 3 }, { '**()' }, { 1, 3 }, f)
   end)
 
   it('has limited support of multibyte characters', function()
@@ -1135,14 +1153,14 @@ describe('Function call surrounding', function()
   it('does not work in some cases', function()
     -- Although, it would be great if it did
     --stylua: ignore
-    local f = function() type_keys('sr', 'f', ']') end
+    local f = function() type_keys('sr', 'f', '>') end
 
     -- It does not take into account that part is inside string
-    validate_edit({ [[myfunc(a, ')', b)]] }, { 1, 7 }, { "[a, ']', b)" }, { 1, 1 }, f)
+    validate_edit({ [[myfunc(a, ')', b)]] }, { 1, 7 }, { "<a, '>', b)" }, { 1, 1 }, f)
 
     -- It does not take into account that part is inside comment
     child.bo.commentstring = '# %s'
-    validate_edit({ 'myfunc(a', '# )', 'b)' }, { 1, 7 }, { '[a', '# ]', 'b)' }, { 1, 1 }, f)
+    validate_edit({ 'myfunc(a', '# )', 'b)' }, { 1, 7 }, { '<a', '# >', 'b)' }, { 1, 1 }, f)
   end)
 
   it('is detected with "_" and "." in name', function()
@@ -1229,14 +1247,14 @@ describe('Tag surrounding', function()
   it('does not work in some cases', function()
     -- Although, it would be great if it did
     --stylua: ignore
-    local f = function() type_keys('sr', 't', ']') end
+    local f = function() type_keys('sr', 't', '>') end
 
     -- It does not take into account that part is inside string
-    validate_edit({ [[<x>a, '</x>', b</x>]] }, { 1, 3 }, { "[a, ']', b</x>" }, { 1, 1 }, f)
+    validate_edit({ [[<x>a, '</x>', b</x>]] }, { 1, 3 }, { "<a, '>', b</x>" }, { 1, 1 }, f)
 
     -- It does not take into account that part is inside comment
     child.bo.commentstring = '# %s'
-    validate_edit({ '<x>a', '# </x>', 'b</x>' }, { 1, 3 }, { '[a', '# ]', 'b</x>' }, { 1, 1 }, f)
+    validate_edit({ '<x>a', '# </x>', 'b</x>' }, { 1, 3 }, { '<a', '# >', 'b</x>' }, { 1, 1 }, f)
 
     -- Tags are not "balanced"
     validate_edit({ '<x><x></x></x>' }, { 1, 1 }, { '_<x>_</x>' }, { 1, 1 }, type_keys, 'sr', 't', '_')
@@ -1268,6 +1286,9 @@ describe('Tag surrounding', function()
 
     -- Width should be from the left-most point to right-most
     validate_edit({ '<y><x bbb>a</y></x>' }, { 1, 10 }, { '_<x bbb>a_</x>' }, { 1, 1 }, f)
+
+    -- Works with identical nested tags
+    validate_edit({ '<x><x>aaa</x></x>' }, { 1, 7 }, { '<x>_aaa_</x>' }, { 1, 4 }, f)
   end)
 
   it('works in edge cases', function()
@@ -1328,14 +1349,20 @@ describe('Interactive surrounding', function()
   it('does not work in some cases', function()
     -- Although, it would be great if it did
     --stylua: ignore
-    local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', ']') end
+    local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', '>') end
 
     -- It does not take into account that part is inside string
-    validate_edit({ [[**a, '**', b**]] }, { 1, 2 }, { "[a, ']', b**" }, { 1, 1 }, f)
+    validate_edit({ [[**a, '**', b**]] }, { 1, 2 }, { "<a, '>', b**" }, { 1, 1 }, f)
 
     -- It does not take into account that part is inside comment
     child.bo.commentstring = '# %s'
-    validate_edit({ '**a', '# **', 'b**' }, { 1, 2 }, { '[a', '# ]', 'b**' }, { 1, 1 }, f)
+    validate_edit({ '**a', '# **', 'b**' }, { 1, 2 }, { '<a', '# >', 'b**' }, { 1, 1 }, f)
+
+    -- It does not work sometimes in presence of many identical valid parts
+    -- (basically because it is a `%(.-%)` and not `%(.*%)`).
+    validate_edit({ '((()))' }, { 1, 3 }, { '((()))' }, { 1, 3 }, f)
+    validate_edit({ '((()))' }, { 1, 4 }, { '((()))' }, { 1, 4 }, f)
+    validate_edit({ '((()))' }, { 1, 5 }, { '((()))' }, { 1, 5 }, f)
   end)
 
   it('detects covering with smallest width', function()
@@ -1344,6 +1371,16 @@ describe('Interactive surrounding', function()
 
     validate_edit({ '**a**aa**' }, { 1, 4 }, { '(a)aa**' }, { 1, 1 }, f)
     validate_edit({ '**aa**a**' }, { 1, 4 }, { '**aa(a)' }, { 1, 5 }, f)
+  end)
+
+  it('works in edge cases', function()
+    --stylua: ignore
+    local f = function() type_keys('sr', 'i', '(<CR>', ')<CR>', '>') end
+
+    -- This version of `()` should not be balanced
+    validate_edit({ '((()))' }, { 1, 0 }, { '<((>))' }, { 1, 1 }, f)
+    validate_edit({ '((()))' }, { 1, 1 }, { '(<(>))' }, { 1, 2 }, f)
+    validate_edit({ '((()))' }, { 1, 2 }, { '((<>))' }, { 1, 3 }, f)
   end)
 
   it('works with multibyte characters in parts', function()
@@ -1381,6 +1418,125 @@ describe('Interactive surrounding', function()
     -- string in pattern search
     validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', 'i', '<CR>')
     validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', 'i', '**<CR>', '<CR>')
+  end)
+end)
+
+describe('Custom surrounding', function()
+  before_each(function()
+    child.setup()
+    child.o.cmdheight = 10
+  end)
+
+  it('works', function()
+    load_module({
+      custom_surroundings = {
+        q = {
+          input = { find = '@.-#', extract = '^(.).*(.)$' },
+          output = { left = '@', right = '#' },
+        },
+      },
+    })
+
+    validate_edit({ '@aaa#' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'q')
+    validate_edit({ '(aaa)' }, { 1, 2 }, { '@aaa#' }, { 1, 1 }, type_keys, 'sr', ')', 'q')
+  end)
+
+  it('allows setting partial information', function()
+    -- Modifying present single character identifier (takes from present)
+    load_module({ custom_surroundings = { [')'] = { output = { left = '( ', right = ' )' } } } })
+
+    validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', ')')
+    validate_edit({ '<aaa>' }, { 1, 2 }, { '( aaa )' }, { 1, 2 }, type_keys, 'sr', '>', ')')
+
+    -- New single character identifier (takes from default)
+    reload_module({ custom_surroundings = { ['#'] = { input = { find = '#_.-_#' } } } })
+
+    -- Should find '#_' and '_#' but extract outer matched ones (as in default)
+    validate_edit({ '_#_aaa_#_' }, { 1, 4 }, { '__aaa__' }, { 1, 1 }, type_keys, 'sd', '#')
+    -- `output` should be taken from default
+    validate_edit({ '(aaa)' }, { 1, 2 }, { '#aaa#' }, { 1, 1 }, type_keys, 'sr', ')', '#')
+  end)
+
+  it('validates two captures in `input.extract`', function()
+    load_module({ custom_surroundings = { ['#'] = { input = { extract = '^#.*#$' } } } })
+
+    -- Avoid hit-enter-prompt on big error message
+    child.o.cmdheight = 40
+    assert.error(function()
+      validate_edit({ '#a#' }, { 1, 1 }, { 'a' }, { 1, 0 }, type_keys, 'sd', '#')
+    end)
+  end)
+
+  it('works with `.-`', function()
+    --stylua: ignore
+    local f = function() type_keys('sr', '#', '>') end
+
+    load_module({ custom_surroundings = { ['#'] = { input = { find = '#.-@' } } } })
+
+    validate_edit({ '###@@@' }, { 1, 0 }, { '<##>@@' }, { 1, 1 }, f)
+    validate_edit({ '###@@@' }, { 1, 1 }, { '#<#>@@' }, { 1, 2 }, f)
+    validate_edit({ '###@@@' }, { 1, 2 }, { '##<>@@' }, { 1, 3 }, f)
+  end)
+
+  it('has limited support for `+` quantifier', function()
+    load_module({ custom_surroundings = { ['#'] = { input = { find = '#+.-#+', extract = '^(#+).*(#+)$' } } } })
+
+    --stylua: ignore
+    local f = function() type_keys('sr', '#', ')') end
+
+    -- It should find only ones nearest to cursor as it has the smallest width
+    validate_edit({ '###aaa###' }, { 1, 4 }, { '##(aaa)##' }, { 1, 3 }, f)
+
+    -- "Working" edge cases
+    validate_edit({ '###' }, { 1, 0 }, { '()#' }, { 1, 1 }, f)
+    validate_edit({ '###' }, { 1, 1 }, { '#()' }, { 1, 2 }, f)
+    validate_edit({ '###' }, { 1, 2 }, { '#()' }, { 1, 2 }, f)
+
+    -- "Non-working" edge cases
+    -- Result should be `()a#`.
+    validate_edit({ '##a#' }, { 1, 0 }, { '(a)' }, { 1, 1 }, f)
+  end)
+
+  it('has limited support for `*` quantifier', function()
+    load_module({ custom_surroundings = { ['#'] = { input = { find = '#.*#' } } } })
+
+    --stylua: ignore
+    local f = function() type_keys('sr', '#', ')') end
+
+    validate_edit({ '###aaa###' }, { 1, 4 }, { '##(aaa)##' }, { 1, 3 }, f)
+
+    -- "Working" edge cases
+    validate_edit({ '###' }, { 1, 0 }, { '()#' }, { 1, 1 }, f)
+    validate_edit({ '###' }, { 1, 1 }, { '#()' }, { 1, 2 }, f)
+    validate_edit({ '###' }, { 1, 2 }, { '#()' }, { 1, 2 }, f)
+
+    -- "Non-working" edge cases
+    -- Result should be `()a#`.
+    validate_edit({ '##a#' }, { 1, 0 }, { '(#a)' }, { 1, 1 }, f)
+  end)
+
+  it('has limited support for frontier pattern `%f[]`', function()
+    --stylua: ignore
+    local f = function() type_keys('sr', 'w', ')') end
+
+    local validate = function()
+      validate_edit({ ' aaaa ' }, { 1, 1 }, { ' ()aa ' }, { 1, 2 }, f)
+      validate_edit({ ' aaaa ' }, { 1, 2 }, { ' ()aa ' }, { 1, 2 }, f)
+      validate_edit({ ' aaaa ' }, { 1, 3 }, { ' (a)a ' }, { 1, 2 }, f)
+      validate_edit({ ' aaaa ' }, { 1, 4 }, { ' (aa) ' }, { 1, 2 }, f)
+    end
+
+    -- In pattern start should work reasonably well
+    load_module({ custom_surroundings = { ['w'] = { input = { find = '%f[%w]%w+', extract = '^(%w).*(%w)$' } } } })
+    validate()
+
+    -- In pattern end has limited support. It should match whole word in all
+    -- cases but it does not because pattern match is checked on substring (for
+    -- which `%f[%W]` matches on all covering substrings).
+    reload_module({
+      custom_surroundings = { ['w'] = { input = { find = '%f[%w]%w+%f[%W]', extract = '^(%w).*(%w)$' } } },
+    })
+    validate()
   end)
 end)
 

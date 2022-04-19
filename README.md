@@ -662,8 +662,9 @@ Default `config`:
 
 ```lua
 {
-  -- Number of lines within which surrounding is searched
-  n_lines = 20,
+  -- Add custom surroundings to be used on top of builtin ones. For more
+  -- information with examples, see `:h MiniSurround.config`.
+  custom_surroundings = nil,
 
   -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
   highlight_duration = 500,
@@ -678,6 +679,9 @@ Default `config`:
     replace = 'sr', -- Replace surrounding
     update_n_lines = 'sn', -- Update `n_lines`
   },
+
+  -- Number of lines within which surrounding is searched
+  n_lines = 20,
 }
 ```
 

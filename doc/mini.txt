@@ -3642,10 +3642,11 @@ Features:
     - Change number of neighbor lines with `sn` (see
       |MiniSurround-algorithm|).
 - Surrounding is identified by a single character as both 'input' (in
-  `delete` and `replace` start) and 'output' (in `add` and `replace` end):
-    - 'f' - function call (string of letters or '_' or '.' followed by
-      balanced '()'). In 'input' finds function call, in 'output'
-      prompts user to enter function name.
+  `delete` and `replace` start, `find`, and `highlight`) and 'output' (in
+  `add` and `replace` end):
+    - 'f' - function call (string of alphanumeric symbols or '_' or '.'
+      followed by balanced '()'). In 'input' finds function call, in
+      'output' prompts user to enter function name.
     - 'i' - interactive. Prompts user to enter left and right parts.
     - 't' - tag. In 'input' finds tab with same identifier, in 'output'
       prompts user to enter tag name.
@@ -3704,8 +3705,11 @@ rules for disabling module's functionality is left to user. See
 Algorithm design
 
 - Adding 'output' surrounding has a fairly straightforward algorithm:
-    - Determine places for left and right parts (via `<>` or `[]` marks).
-    - Determine left and right parts of surrounding.
+    - Determine places for left and right parts (via `<>`/`[]` marks or by
+      finding some other surrounding).
+    - Determine left and right parts of surrounding via using custom and
+      builtin surroundings (via `output` field of surrounding info see
+      |MiniSurround.config|).
     - Properly add.
 - Finding 'input' surrounding is a lot more complicated and is a reason why
   this implementation is only somewhat minimal. In a nutshell, current
@@ -3716,14 +3720,20 @@ Algorithm design
       `MiniSurround.config.n_lines` after.
     - Convert it to '1d neighborhood' by concatenating with '\n' delimiter.
       Compute location of current cursor position in this line.
-    - Given Lua pattern for a 'input' surrounding, search for a smallest
+    - Given Lua pattern for an 'input' surrounding (`input.find` field of
+      surrounding info; see |MiniSurround.config|), search for a smallest
       (with minimal width) match that covers cursor position. This is an
       iterative procedure, duration of which heavily depends on the length
-      of '1d neighborhood' and frequency of pattern matching. If no match is
-      found, there is no surrounding.
+      of '1d neighborhood' and frequency of pattern matching. If no match
+      is found, there is no surrounding. Note: with current approach
+      smallest width is ensured by checking match on covering substrings.
+      This may have unwanted consequences when using complex Lua patterns
+      (like `%f[]` at the pattern end, for example).
     - Compute parts of '1d neighborhood' that represent left and right part
-      of found surrounding. This is done by using 'extract' pattern computed
-      for every type of surrounding.
+      of found surrounding. This is done by using pattern from
+      `input.extract` field of surrounding info; see |MiniSurround.config|.
+      Note: pattern is used on a matched substring, so using `^` and `$` at
+      start and end of pattern means start and end of substring.
     - Convert '1d offsets' of found parts to their positions in buffer.
   Actual search is done firstly on cursor line (as it is the most frequent
   usage) and only then searches in neighborhood.
@@ -3747,8 +3757,9 @@ Module config
 Default values:
 >
   MiniSurround.config = {
-    -- Number of lines within which surrounding is searched
-    n_lines = 20,
+    -- Add custom surroundings to be used on top of builtin ones. For more
+    -- information with examples, see `:h MiniSurround.config`.
+    custom_surroundings = nil,
 
     -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
     highlight_duration = 500,
@@ -3763,7 +3774,92 @@ Default values:
       replace = 'sr', -- Replace surrounding
       update_n_lines = 'sn', -- Update `n_lines`
     },
+
+    -- Number of lines within which surrounding is searched
+    n_lines = 20,
   }
+<
+# Options~
+
+## Custom surroundings~
+
+User can define own surroundings by supplying `config.custom_surroundings`.
+It should be a table with keys being single character surrounding identifier
+and values - surround info or function returning it. Surround info itself
+is a table with keys:
+- <input> - defines how to find and extract surrounding for 'input'
+  operations (like `delete`). A table with fields <find> (Lua pattern
+  applied for search in neighborhood) and <extract> (Lua pattern applied
+  for extracting left and right parts; should have two matches).
+- <output> - defines what to add on left and right for 'output' operations
+  (like `add`). A table with <left> (string) and <right> (string) fields.
+
+Example of surround info for builtin `(` identifier:>
+{
+  input = { find = '%b()', extract = '^(.).*(.)$' },
+  output = { left = '(', right = ')' }
+}
+<
+General recommendations:
+- In `config.custom_surroundings` only some data can be defined (like only
+  `input.find`). Other fields will be taken from builtin surroundings.
+- In input patterns try to use lazy quantifier instead of greedy ones (`.-`
+  instead of `.*` or `.+`). That is because the underlying algorithm of
+  finding smallest covering is better designed for lazy quantifier.
+- Usage of frontier pattern `%f[]` not at the end of pattern can be useful
+  to extend match to the left. Like `%f[%w]%w+%b()` matches simplified
+  function call while capturing whole function name instead of last symbol.
+- Usage of frontier pattern at the end of match is currently problematic
+  because output "smallest width" match is computed by checking the match
+  on substrings. And frontier pattern matches at the end of substring for
+  appropriate last character. So `%f[%w]%w+%f[%W]` won't match whole word.
+
+Present builtin surroundings by their single character identifier:
+- `(` and `)` - balanced pair of `()`.
+- `[` and `]` - balanced pair of `[]`.
+- `{` and `}` - balanced pair of `{}`.
+- `<` and `>` - balanced pair of `<>`.
+- `f` - function call. Maximum set of allowed symbols (alphanumeric, `_`
+  and `.`) followed by balanced pair of `()`.
+- `i` - interactive, prompts user to enter left and right parts.
+- `t` - HTML tags.
+- Any other non-recognized identifier represents surrounding with identical
+  left and right parts equal to identifier (like `_`, etc.).
+
+Example of using `config.custom_surroundings`:
+>
+  require('mini.surround').setup({
+    custom_surroundings = {
+      -- Make `)` insert parts with spaces. `input` pattern stays the same.
+      [')'] = { output = { left = '( ', right = ' )' } },
+
+      -- Modify `f` (function call) to find functions with only alphanumeric
+      -- characters in its name.
+      f = { input = { find = '%f[%w]%w+%b()' } },
+
+      -- Create custom surrouding for Lua's block string `[[...]]`
+      s = {
+        input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+        output = { left = '[[', right = ']]' },
+      },
+
+      -- Use function to compute surrounding info
+      ['*'] = {
+        input = function()
+          local n_star = vim.fn.input('Number of * to find: ')
+          local many_star = string.rep('%*', tonumber(n_star) or 1)
+          local find = string.format('%s.-%s', many_star, many_star)
+          local extract = string.format('^(%s).*(%s)$', many_star, many_star)
+          return { find = find, extract = extract }
+        end,
+        output = function()
+          local n_star = vim.fn.input('Number of * to output: ')
+          local many_star = string.rep('*', tonumber(n_star) or 1)
+          return { left = many_star, right = many_star }
+        end,
+      },
+    },
+  })
 <
 
 ------------------------------------------------------------------------------

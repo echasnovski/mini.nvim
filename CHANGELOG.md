@@ -31,8 +31,9 @@
 
 ## mini.surround
 
-- BREAKING: always move cursor to the right of left surrounding in `add()`, `delete()`, and `replace()` (instead of moving only if it was on the same line as left surrounding).
+- FEATURE: implement custom surroundings via `config.custom_surroundings`.
 - BREAKING: deprecate `config.funname_pattern` option in favor of manually modifying `f` surrounding.
+- BREAKING: always move cursor to the right of left surrounding in `add()`, `delete()`, and `replace()` (instead of moving only if it was on the same line as left surrounding).
 - Update process of getting user input: allow `<C-c>` to cancel and make empty string a valid input.
 
 

@@ -15,10 +15,11 @@
 ---     - Change number of neighbor lines with `sn` (see
 ---       |MiniSurround-algorithm|).
 --- - Surrounding is identified by a single character as both 'input' (in
----   `delete` and `replace` start) and 'output' (in `add` and `replace` end):
----     - 'f' - function call (string of letters or '_' or '.' followed by
----       balanced '()'). In 'input' finds function call, in 'output'
----       prompts user to enter function name.
+---   `delete` and `replace` start, `find`, and `highlight`) and 'output' (in
+---   `add` and `replace` end):
+---     - 'f' - function call (string of alphanumeric symbols or '_' or '.'
+---       followed by balanced '()'). In 'input' finds function call, in
+---       'output' prompts user to enter function name.
 ---     - 'i' - interactive. Prompts user to enter left and right parts.
 ---     - 't' - tag. In 'input' finds tab with same identifier, in 'output'
 ---       prompts user to enter tag name.
@@ -78,8 +79,11 @@
 --- Algorithm design
 ---
 --- - Adding 'output' surrounding has a fairly straightforward algorithm:
----     - Determine places for left and right parts (via `<>` or `[]` marks).
----     - Determine left and right parts of surrounding.
+---     - Determine places for left and right parts (via `<>`/`[]` marks or by
+---       finding some other surrounding).
+---     - Determine left and right parts of surrounding via using custom and
+---       builtin surroundings (via `output` field of surrounding info see
+---       |MiniSurround.config|).
 ---     - Properly add.
 --- - Finding 'input' surrounding is a lot more complicated and is a reason why
 ---   this implementation is only somewhat minimal. In a nutshell, current
@@ -90,14 +94,20 @@
 ---       `MiniSurround.config.n_lines` after.
 ---     - Convert it to '1d neighborhood' by concatenating with '\n' delimiter.
 ---       Compute location of current cursor position in this line.
----     - Given Lua pattern for a 'input' surrounding, search for a smallest
+---     - Given Lua pattern for an 'input' surrounding (`input.find` field of
+---       surrounding info; see |MiniSurround.config|), search for a smallest
 ---       (with minimal width) match that covers cursor position. This is an
 ---       iterative procedure, duration of which heavily depends on the length
----       of '1d neighborhood' and frequency of pattern matching. If no match is
----       found, there is no surrounding.
+---       of '1d neighborhood' and frequency of pattern matching. If no match
+---       is found, there is no surrounding. Note: with current approach
+---       smallest width is ensured by checking match on covering substrings.
+---       This may have unwanted consequences when using complex Lua patterns
+---       (like `%f[]` at the pattern end, for example).
 ---     - Compute parts of '1d neighborhood' that represent left and right part
----       of found surrounding. This is done by using 'extract' pattern computed
----       for every type of surrounding.
+---       of found surrounding. This is done by using pattern from
+---       `input.extract` field of surrounding info; see |MiniSurround.config|.
+---       Note: pattern is used on a matched substring, so using `^` and `$` at
+---       start and end of pattern means start and end of substring.
 ---     - Convert '1d offsets' of found parts to their positions in buffer.
 ---   Actual search is done firstly on cursor line (as it is the most frequent
 ---   usage) and only then searches in neighborhood.
@@ -130,9 +140,92 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+---@text # Options~
+---
+--- ## Custom surroundings~
+---
+--- User can define own surroundings by supplying `config.custom_surroundings`.
+--- It should be a table with keys being single character surrounding identifier
+--- and values - surround info or function returning it. Surround info itself
+--- is a table with keys:
+--- - <input> - defines how to find and extract surrounding for 'input'
+---   operations (like `delete`). A table with fields <find> (Lua pattern
+---   applied for search in neighborhood) and <extract> (Lua pattern applied
+---   for extracting left and right parts; should have two matches).
+--- - <output> - defines what to add on left and right for 'output' operations
+---   (like `add`). A table with <left> (string) and <right> (string) fields.
+---
+--- Example of surround info for builtin `(` identifier:>
+--- {
+---   input = { find = '%b()', extract = '^(.).*(.)$' },
+---   output = { left = '(', right = ')' }
+--- }
+--- <
+--- General recommendations:
+--- - In `config.custom_surroundings` only some data can be defined (like only
+---   `input.find`). Other fields will be taken from builtin surroundings.
+--- - In input patterns try to use lazy quantifier instead of greedy ones (`.-`
+---   instead of `.*` or `.+`). That is because the underlying algorithm of
+---   finding smallest covering is better designed for lazy quantifier.
+--- - Usage of frontier pattern `%f[]` not at the end of pattern can be useful
+---   to extend match to the left. Like `%f[%w]%w+%b()` matches simplified
+---   function call while capturing whole function name instead of last symbol.
+--- - Usage of frontier pattern at the end of match is currently problematic
+---   because output "smallest width" match is computed by checking the match
+---   on substrings. And frontier pattern matches at the end of substring for
+---   appropriate last character. So `%f[%w]%w+%f[%W]` won't match whole word.
+---
+--- Present builtin surroundings by their single character identifier:
+--- - `(` and `)` - balanced pair of `()`.
+--- - `[` and `]` - balanced pair of `[]`.
+--- - `{` and `}` - balanced pair of `{}`.
+--- - `<` and `>` - balanced pair of `<>`.
+--- - `f` - function call. Maximum set of allowed symbols (alphanumeric, `_`
+---   and `.`) followed by balanced pair of `()`.
+--- - `i` - interactive, prompts user to enter left and right parts.
+--- - `t` - HTML tags.
+--- - Any other non-recognized identifier represents surrounding with identical
+---   left and right parts equal to identifier (like `_`, etc.).
+---
+--- Example of using `config.custom_surroundings`:
+--- >
+---   require('mini.surround').setup({
+---     custom_surroundings = {
+---       -- Make `)` insert parts with spaces. `input` pattern stays the same.
+---       [')'] = { output = { left = '( ', right = ' )' } },
+---
+---       -- Modify `f` (function call) to find functions with only alphanumeric
+---       -- characters in its name.
+---       f = { input = { find = '%f[%w]%w+%b()' } },
+---
+---       -- Create custom surrouding for Lua's block string `[[...]]`
+---       s = {
+---         input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+---         output = { left = '[[', right = ']]' },
+---       },
+---
+---       -- Use function to compute surrounding info
+---       ['*'] = {
+---         input = function()
+---           local n_star = vim.fn.input('Number of * to find: ')
+---           local many_star = string.rep('%*', tonumber(n_star) or 1)
+---           local find = string.format('%s.-%s', many_star, many_star)
+---           local extract = string.format('^(%s).*(%s)$', many_star, many_star)
+---           return { find = find, extract = extract }
+---         end,
+---         output = function()
+---           local n_star = vim.fn.input('Number of * to output: ')
+---           local many_star = string.rep('*', tonumber(n_star) or 1)
+---           return { left = many_star, right = many_star }
+---         end,
+---       },
+---     },
+---   })
+--- <
 MiniSurround.config = {
-  -- Number of lines within which surrounding is searched
-  n_lines = 20,
+  -- Add custom surroundings to be used on top of builtin ones. For more
+  -- information with examples, see `:h MiniSurround.config`.
+  custom_surroundings = nil,
 
   -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
   highlight_duration = 500,
@@ -147,6 +240,9 @@ MiniSurround.config = {
     replace = 'sr', -- Replace surrounding
     update_n_lines = 'sn', -- Update `n_lines`
   },
+
+  -- Number of lines within which surrounding is searched
+  n_lines = 20,
 }
 --minidoc_afterlines_end
 
@@ -315,7 +411,7 @@ H.ns_id = {
 }
 
 -- Table of builtin surroundings
-H.builtin_surroundings = setmetatable({
+H.builtin_surroundings = {
   -- Brackets that need balancing
   ['('] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
   [')'] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
@@ -380,15 +476,7 @@ H.builtin_surroundings = setmetatable({
       return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
     end,
   },
-}, {
-  __index = function(_, key)
-    local key_esc = vim.pesc(key)
-    return {
-      input = { find = ('%s.-%s'):format(key_esc, key_esc), extract = '^(.).*(.)$' },
-      output = { left = key, right = key },
-    }
-  end,
-})
+}
 
 -- Cache for dot-repeatability. This table is currently used with these keys:
 -- - 'input' - surround info for searching (in 'delete' and 'replace' start).
@@ -405,18 +493,22 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
+  -- TODO: remove after 0.4.0 release
   if config.funname_pattern ~= nil then
     H.notify(
-      '`config.funname_pattern` is deprecated in favor of manually modifying `f` surrounding. '
-        .. 'See `:h MiniSurround-custom-surrounding`.'
+      '`config.funname_pattern` is deprecated. '
+        .. 'If you explicitly supply its default value, remove it from `config`. '
+        .. 'If not, manually modifying `f` surrounding in `config.custom_surroundings`. '
+        .. 'See `:h MiniSurround.config`.'
     )
   end
 
   -- Validate per nesting level to produce correct error message
   vim.validate({
-    n_lines = { config.n_lines, 'number' },
+    custom_surroundings = { config.custom_surroundings, 'table', true },
     highlight_duration = { config.highlight_duration, 'number' },
     mappings = { config.mappings, 'table' },
+    n_lines = { config.n_lines, 'number' },
   })
 
   vim.validate({
@@ -714,7 +806,7 @@ function H.insert_into_line(line_num, col, text)
   vim.fn.setline(line_num, new_line)
 end
 
--- Work with regular expressions ----------------------------------------------
+-- Work with Lua patterns -----------------------------------------------------
 -- Find the smallest (with the smallest width) covering (left and right offsets
 -- in `line`) which includes `offset` and within which `pattern` is matched.
 -- Output is a table with two numbers (or `nil` in case of no covering match):
@@ -759,12 +851,30 @@ function H.find_smallest_covering(line, pattern, offset)
     return nil
   end
 
-  -- Try make match even smaller. Can happen if there is `+` flag at the end.
+  -- Try make match even smaller. Can happen if there are greedy quantifiers.
   -- For example `line = '((()))', pattern = '%(.-%)+', offset = 3`.
+  -- This approach has some non-working edge cases, but is quite better
+  -- performance wise than bruteforce "find from current offset"
   local line_pattern = '^' .. pattern .. '$'
-  while left < right and line:sub(left, right - 1):find(line_pattern) do
+  while
+    -- Ensure covering
+    left <= offset
+    and offset <= (right - 1)
+    -- Ensure at least 2 symbols
+    and left < right - 1
+    -- Ensure match
+    and line:sub(left, right - 1):find(line_pattern)
+  do
     right = right - 1
   end
+
+  -- -- Alternative bruteforce approach
+  -- for i = math.max(offset, left + 1), right - 1 do
+  --   if line:sub(left, i):find(line_pattern) then
+  --     right = i
+  --     break
+  --   end
+  -- end
 
   return { left = left, right = right }
 end
@@ -841,7 +951,7 @@ function H.unhighlight_surrounding(buf_id, surr)
   vim.api.nvim_buf_clear_namespace(buf_id, ns_id, surr.right.line - 1, surr.right.line)
 end
 
--- Get surround information ---------------------------------------------------
+-- Work with surrounding info -------------------------------------------------
 --stylua: ignore start
 ---@param sur_type string One of 'input' or 'output'.
 ---@private
@@ -859,7 +969,7 @@ function H.get_surround_info(sur_type, use_cache)
   if char == nil then return nil end
 
   -- Get surround info
-  res = H.builtin_surroundings[char][sur_type]
+  res = H.make_surrounding_table()[char][sur_type]
   if type(res) == 'function' then res = res() end
 
   -- Do nothing if supplied nothing
@@ -877,6 +987,36 @@ function H.get_surround_info(sur_type, use_cache)
 end
 --stylua: ignore end
 
+function H.make_surrounding_table()
+  -- Use data from `config` and extend with builtins
+  local surroundings = vim.tbl_deep_extend(
+    'force',
+    H.builtin_surroundings,
+    MiniSurround.config.custom_surroundings or {}
+  )
+
+  -- Add possibly missing information from default surrounding info
+  for char, info in pairs(surroundings) do
+    local default = H.get_default_surrounding_info(char)
+    surroundings[char] = vim.tbl_deep_extend('force', default, info)
+  end
+
+  -- Use default surrounding info for not supplied single character identifier
+  --stylua: ignore start
+  return setmetatable(surroundings, {
+    __index = function(_, key) return H.get_default_surrounding_info(key) end,
+  })
+  --stylua: ignore end
+end
+
+function H.get_default_surrounding_info(char)
+  local char_esc = vim.pesc(char)
+  return {
+    input = { find = ('%s.-%s'):format(char_esc, char_esc), extract = '^(.).*(.)$' },
+    output = { left = char, right = char },
+  }
+end
+
 -- Find surrounding in neighborhood -------------------------------------------
 function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
   local neigh = H.get_cursor_neighborhood(n_neighbors)
@@ -892,6 +1032,12 @@ function H.find_surrounding_in_neighborhood(surround_info, n_neighbors)
 
   -- Compute lineparts for left and right surroundings
   local left, right = substring:match(surround_info.extract)
+  if left == nil or right == nil then
+    error(
+      '(mini.surround) Could not extract two surrounding parts. '
+        .. 'Does your `config.custom_surroundings.input.extract` pattern has two captures?'
+    )
+  end
   local l, r = covering.left, covering.right
 
   local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
