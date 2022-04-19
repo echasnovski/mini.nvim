@@ -323,7 +323,8 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
-  -- Soft deprecate `config.highlight_delay`
+  -- Soft deprecate `config.highlight_delay`.
+  -- TODO: remove after 0.4.0 release.
   if config.highlight_delay then
     H.notify('`highlight_delay` is now deprecated. Please use `delay.highlight` instead.')
     config.delay.highlight = config.highlight_delay

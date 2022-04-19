@@ -167,8 +167,8 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
----@text
---- Options ~
+---@text # Options ~
+---
 --- - Options can be supplied globally (from this `config`), locally to buffer
 ---   (via `vim.b.miniindentscope_options` buffer variable), or locally to call
 ---   (as argument to |MiniIndentscope.get_scope()|).

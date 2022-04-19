@@ -64,8 +64,7 @@ local validate_equal_starter = function(strconfig_1, strconfig_2)
 end
 
 local get_latest_message = function()
-  local messages = vim.split(child.cmd_capture('messages'), '\n')
-  return messages[#messages]
+  return child.cmd_capture('1messages')
 end
 
 local get_active_items_names = function()

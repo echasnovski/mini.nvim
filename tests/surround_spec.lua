@@ -1524,9 +1524,10 @@ describe('Interactive surrounding', function()
 
   it('handles <C-c>, <Esc>, <CR> in user input', function()
     local validate_single = function(...)
+      child.ensure_normal_mode()
       -- Wait before every keygroup because otherwise it seems to randomly
       -- break for `<C-c>`
-      validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, ...)
+      validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 10, ...)
     end
 
     local validate_nothing = function(key)

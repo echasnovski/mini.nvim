@@ -2,14 +2,14 @@
 
 ## mini.comment
 
-- Implement `config.hooks` with `pre` and `post` hooks (executed before and after successful commenting). Fixes #50, #59.
+- FEATURE: Implement `config.hooks` with `pre` and `post` hooks (executed before and after successful commenting). Fixes #50, #59.
 
 ## mini.jump
 
+- FEATURE: Implement idle timeout to stop jumping automatically (@annenpolka, #56).
+- FEATURE: Implement `MiniJump.state`: table with useful model-related information.
 - BREAKING: Soft deprecate `config.highlight_delay` in favor of `config.delay.highlight`.
-- Implement idle timeout to stop jumping automatically (@annenpolka, #56).
 - Update process of querying target symbol: show help message after delay, allow `<C-c>` to stop selecting target.
-- Implement `MiniJump.state`: table with useful model-related information.
 
 ## mini.pairs
 
@@ -17,8 +17,8 @@
 
 ## mini.sessions
 
+- FEATURE: Implement `MiniSessions.select()` to select session interactively and perform action on it.
 - BREAKING: All feedback about incorrect behavior is now an error instead of message notifications.
-- Implement `MiniSessions.select()` to select session interactively and perform action on it.
 
 ## mini.starter
 

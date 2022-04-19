@@ -61,8 +61,7 @@ local common_setup = function()
 end
 
 local get_latest_message = function()
-  local messages = vim.split(child.cmd_capture('messages'), '\n')
-  return messages[#messages]
+  return child.cmd_capture('1messages')
 end
 
 local get_buf_names = function()

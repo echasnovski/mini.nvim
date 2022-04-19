@@ -593,9 +593,8 @@ describe('Jumping with f/t/F/T', function()
   end)
 
   it('asks for target letter after one idle second', function()
-    local get_last_message = function()
-      local messages = vim.split(child.cmd_capture('messages'), '\n')
-      return messages[#messages]
+    local get_latest_message = function()
+      return child.cmd_capture('1messages')
     end
     child.cmd('messages clear')
 
@@ -606,9 +605,9 @@ describe('Jumping with f/t/F/T', function()
 
     type_keys('f')
     sleep(1000 - 10)
-    eq(get_last_message(), '')
+    eq(get_latest_message(), '')
     sleep(10)
-    eq(get_last_message(), '(mini.jump) Enter target single character ')
+    eq(get_latest_message(), '(mini.jump) Enter target single character ')
   end)
 
   it('stops jumping if no target is found', function()

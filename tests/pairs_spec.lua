@@ -86,7 +86,7 @@ local validate_open = function(mode, key, pair)
     end,
     t = function()
       -- Need to wait after each keystroke to allow shell to process it
-      local wait = 10
+      local wait = 50
       local first_line = get_lines()[1]
       type_keys(wait, key)
       eq(get_lines()[1], first_line .. ' ' .. pair)
@@ -115,7 +115,7 @@ local validate_close = function(mode, key, pair)
     end,
     t = function()
       -- Need to wait after each keystroke to allow shell to process it
-      local wait = 10
+      local wait = 50
       local term_channel = get_term_channel()
 
       -- Jumps over right hand side of `pair` if it is next
@@ -149,7 +149,7 @@ local validate_bs = function(mode, pair)
     end,
     t = function()
       -- Need to wait after each keystroke to allow shell to process it
-      local wait = 10
+      local wait = 50
       local term_channel = get_term_channel()
 
       local first_line = get_lines()[1]
