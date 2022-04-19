@@ -13,4 +13,5 @@ documentation:
 
 deps/plenary.nvim:
 	@mkdir -p deps
-	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim $@
+	git clone --depth 10 https://github.com/nvim-lua/plenary.nvim $@
+	cd deps/plenary.nvim; git checkout --detach 2a26cbe
