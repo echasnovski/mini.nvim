@@ -164,6 +164,10 @@ end
 --- General recommendations:
 --- - In `config.custom_surroundings` only some data can be defined (like only
 ---   `input.find`). Other fields will be taken from builtin surroundings.
+--- - Function returning table with surround info instead of table itself is
+---   helpful when user input is needed (like asking for function name). Use
+---   |input()| or |MiniSurround.user_inpu()|. Return `nil` to stop any current
+---   surround operation.
 --- - In input patterns try to use lazy quantifier instead of greedy ones (`.-`
 ---   instead of `.*` or `.+`). That is because the underlying algorithm of
 ---   finding smallest covering is better designed for lazy quantifier.
@@ -207,14 +211,14 @@ end
 ---       -- Use function to compute surrounding info
 ---       ['*'] = {
 ---         input = function()
----           local n_star = vim.fn.input('Number of * to find: ')
+---           local n_star = MiniSurround.user_input('Number of * to find: ')
 ---           local many_star = string.rep('%*', tonumber(n_star) or 1)
 ---           local find = string.format('%s.-%s', many_star, many_star)
 ---           local extract = string.format('^(%s).*(%s)$', many_star, many_star)
 ---           return { find = find, extract = extract }
 ---         end,
 ---         output = function()
----           local n_star = vim.fn.input('Number of * to output: ')
+---           local n_star = MiniSurround.user_input('Number of * to output: ')
 ---           local many_star = string.rep('*', tonumber(n_star) or 1)
 ---           return { left = many_star, right = many_star }
 ---         end,
@@ -395,9 +399,54 @@ function MiniSurround.update_n_lines()
     return '<Esc>'
   end
 
-  local n_lines = H.user_input('New number of neighbor lines', MiniSurround.config.n_lines)
+  local n_lines = MiniSurround.user_input('New number of neighbor lines', MiniSurround.config.n_lines)
   n_lines = math.floor(tonumber(n_lines) or MiniSurround.config.n_lines)
   MiniSurround.config.n_lines = n_lines
+end
+
+--- Ask user for input
+---
+--- This is mainly a wrapper for |input()| which allows empty string as input,
+--- cancelling with `<Esc>` and `<C-c>`, and slightly modifies prompt. Use it
+--- to ask for input inside function custom surrounding (see |MiniSurround.config|).
+function MiniSurround.user_input(prompt, text)
+  -- Major issue with both `vim.fn.input()` is that the only way to distinguish
+  -- cancelling with `<Esc>` and entering empty string with immediate `<CR>` is
+  -- through `cancelreturn` option (see `:h input()`). In that case the return
+  -- of `cancelreturn` will mean actual cancel, which removes possibility of
+  -- using that string. Although doable with very obscure string, this is not
+  -- very clean.
+  -- Overcome this by adding temporary keystroke listener.
+  local on_key = vim.on_key or vim.register_keystroke_callback
+  local was_cancelled = false
+  on_key(function(key)
+    if key == vim.api.nvim_replace_termcodes('<Esc>', true, true, true) then
+      was_cancelled = true
+    end
+  end, H.ns_id.input)
+
+  -- Ask for input
+  -- NOTE: it would be GREAT to make this work with `vim.ui.input()` but I
+  -- didn't find a way to make it work without major refactor of whole module.
+  -- The main issue is that `vim.ui.input()` is designed to perform action in
+  -- callback and current module design is to get output immediately. Although
+  -- naive approach of
+  -- `local res; vim.ui.input({...}, function(input) res = input end)`
+  -- works in default `vim.ui.input`, its reimplementations can return from it
+  -- immediately and proceed in main event loop. Couldn't find a relatively
+  -- simple way to stop execution of this current function until `ui.input()`'s
+  -- callback finished execution.
+  local opts = { prompt = '(mini.surround) ' .. prompt .. ': ', default = text or '' }
+  -- Use `pcall` to allow `<C-c>` to cancel user input
+  local ok, res = pcall(vim.fn.input, opts)
+
+  -- Stop key listening
+  on_key(nil, H.ns_id.input)
+
+  if not ok or was_cancelled then
+    return
+  end
+  return res
 end
 
 -- Helper data ================================================================
@@ -425,7 +474,7 @@ H.builtin_surroundings = {
   ['f'] = {
     input = { find = '%f[%w_%.][%w_%.]+%b()', extract = '^(.-%().*(%))$' },
     output = function()
-      local fun_name = H.user_input('Function name')
+      local fun_name = MiniSurround.user_input('Function name')
       --stylua: ignore
       if fun_name == nil then return nil end
       return { left = ('%s('):format(fun_name), right = ')' }
@@ -434,12 +483,12 @@ H.builtin_surroundings = {
   -- Interactive
   ['i'] = {
     input = function()
-      local left = H.user_input('Left surrounding')
+      local left = MiniSurround.user_input('Left surrounding')
       -- TODO: experiment with allowing empty part here (should find from
       -- cursor to corresponding part)
       --stylua: ignore
       if left == nil or left == '' then return end
-      local right = H.user_input('Right surrounding')
+      local right = MiniSurround.user_input('Right surrounding')
       --stylua: ignore
       if right == nil or right == '' then return end
 
@@ -449,10 +498,10 @@ H.builtin_surroundings = {
       return { find = find, extract = extract }
     end,
     output = function()
-      local left = H.user_input('Left surrounding')
+      local left = MiniSurround.user_input('Left surrounding')
       --stylua: ignore
       if left == nil then return end
-      local right = H.user_input('Right surrounding')
+      local right = MiniSurround.user_input('Right surrounding')
       --stylua: ignore
       if right == nil then return end
       return { left = left, right = right }
@@ -470,7 +519,7 @@ H.builtin_surroundings = {
     --   '1d neighborhood'.
     input = { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' },
     output = function()
-      local tag_name = H.user_input('Tag name')
+      local tag_name = MiniSurround.user_input('Tag name')
       --stylua: ignore
       if tag_name == nil then return nil end
       return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
@@ -730,46 +779,6 @@ function H.user_surround_id(sur_type)
   end
 
   return char
-end
-
-function H.user_input(msg, text)
-  -- Major issue with both `vim.fn.input()` is that the only way to distinguish
-  -- cancelling with `<Esc>` and entering empty string with immediate `<CR>` is
-  -- through `cancelreturn` option (see `:h input()`). In that case the return
-  -- of `cancelreturn` will mean actual cancel, which removes possibility of
-  -- using that string. Although doable with very obscure string, this is not
-  -- very clean.
-  -- Overcome this by adding temporary keystroke listener.
-  local on_key = vim.on_key or vim.register_keystroke_callback
-  local was_cancelled = false
-  on_key(function(key)
-    if key == vim.api.nvim_replace_termcodes('<Esc>', true, true, true) then
-      was_cancelled = true
-    end
-  end, H.ns_id.input)
-
-  -- Ask for input
-  -- NOTE: it would be GREAT to make this work with `vim.ui.input()` but I
-  -- didn't find a way to make it work without major refactor of whole module.
-  -- The main issue is that `vim.ui.input()` is designed to perform action in
-  -- callback and current module design is to get output immediately. Although
-  -- naive approach of
-  -- `local res; vim.ui.input({...}, function(input) res = input end)`
-  -- works in default `vim.ui.input`, its reimplementations can return from it
-  -- immediately and proceed in main event loop. Couldn't find a relatively
-  -- simple way to stop execution of this current function until `ui.input()`'s
-  -- callback finished execution.
-  local opts = { prompt = '(mini.surround) ' .. msg .. ': ', default = text or '' }
-  -- Use `pcall` to allow `<C-c>` to cancel user input
-  local ok, res = pcall(vim.fn.input, opts)
-
-  -- Stop key listening
-  on_key(nil, H.ns_id.input)
-
-  if not ok or was_cancelled then
-    return
-  end
-  return res
 end
 
 -- Work with line parts and text ----------------------------------------------

@@ -3803,6 +3803,10 @@ Example of surround info for builtin `(` identifier:>
 General recommendations:
 - In `config.custom_surroundings` only some data can be defined (like only
   `input.find`). Other fields will be taken from builtin surroundings.
+- Function returning table with surround info instead of table itself is
+  helpful when user input is needed (like asking for function name). Use
+  |input()| or |MiniSurround.user_inpu()|. Return `nil` to stop any current
+  surround operation.
 - In input patterns try to use lazy quantifier instead of greedy ones (`.-`
   instead of `.*` or `.+`). That is because the underlying algorithm of
   finding smallest covering is better designed for lazy quantifier.
@@ -3846,14 +3850,14 @@ Example of using `config.custom_surroundings`:
       -- Use function to compute surrounding info
       ['*'] = {
         input = function()
-          local n_star = vim.fn.input('Number of * to find: ')
+          local n_star = MiniSurround.user_input('Number of * to find: ')
           local many_star = string.rep('%*', tonumber(n_star) or 1)
           local find = string.format('%s.-%s', many_star, many_star)
           local extract = string.format('^(%s).*(%s)$', many_star, many_star)
           return { find = find, extract = extract }
         end,
         output = function()
-          local n_star = vim.fn.input('Number of * to output: ')
+          local n_star = MiniSurround.user_input('Number of * to output: ')
           local many_star = string.rep('*', tonumber(n_star) or 1)
           return { left = many_star, right = many_star }
         end,
@@ -3919,6 +3923,15 @@ Update `MiniSurround.config.n_lines`
 
 Convenient wrapper for updating `MiniSurround.config.n_lines` in case the
 default one is not appropriate.
+
+------------------------------------------------------------------------------
+                                                     *MiniSurround.user_input()*
+                  `MiniSurround.user_input`({prompt}, {text})
+Ask user for input
+
+This is mainly a wrapper for |input()| which allows empty string as input,
+cancelling with `<Esc>` and `<C-c>`, and slightly modifies prompt. Use it
+to ask for input inside function custom surrounding (see |MiniSurround.config|).
 
 
 ==============================================================================
