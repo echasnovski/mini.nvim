@@ -50,7 +50,11 @@
 --- # Notes~
 ---
 --- - Make sure to make proper mapping of `<CR>` in order to support completion
----   plugin of your choice.
+---   plugin of your choice:
+---     - For |MiniCompletion| see 'Helpful key mappings' section.
+---     - For current implementation of "hrsh7th/nvim-cmp" there is no need to
+---       make custom mapping. You can use default setup, which will confirm
+---       completion selection if popup is visible and expand pair otherwise.
 --- - Having mapping in terminal mode can conflict with:
 ---     - Autopairing capabilities of interpretators (`ipython`, `radian`).
 ---     - Vim mode of terminal itself.
