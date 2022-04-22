@@ -353,23 +353,25 @@ end
 function H.apply_config(config)
   MiniJump.config = config
 
-  H.map('n', config.mappings.forward, [[<Cmd>lua MiniJump.smart_jump(false, false)<CR>]])
-  H.map('n', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]])
-  H.map('n', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]])
-  H.map('n', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]])
-  H.map('n', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]])
+  --stylua: ignore start
+  H.map('n', config.mappings.forward, [[<Cmd>lua MiniJump.smart_jump(false, false)<CR>]], { desc = 'Jump forward' })
+  H.map('n', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]], { desc = 'Jump backward' })
+  H.map('n', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]], { desc = 'Jump forward till' })
+  H.map('n', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]], { desc = 'Jump backward till' })
+  H.map('n', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]], { desc = 'Repeat jump' })
 
-  H.map('x', config.mappings.forward, [[<Cmd>lua MiniJump.smart_jump(false, false)<CR>]])
-  H.map('x', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]])
-  H.map('x', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]])
-  H.map('x', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]])
-  H.map('x', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]])
+  H.map('x', config.mappings.forward, [[<Cmd>lua MiniJump.smart_jump(false, false)<CR>]], { desc = 'Jump forward' })
+  H.map('x', config.mappings.backward, [[<Cmd>lua MiniJump.smart_jump(true, false)<CR>]], { desc = 'Jump backward' })
+  H.map('x', config.mappings.forward_till, [[<Cmd>lua MiniJump.smart_jump(false, true)<CR>]], { desc = 'Jump forward till' })
+  H.map('x', config.mappings.backward_till, [[<Cmd>lua MiniJump.smart_jump(true, true)<CR>]], { desc = 'Jump backward till' })
+  H.map('x', config.mappings.repeat_jump, [[<Cmd>lua MiniJump.jump()<CR>]], { desc = 'Repeat jump' })
 
-  H.map('o', config.mappings.forward, [[v:lua.MiniJump.expr_jump(v:false, v:false)]], { expr = true })
-  H.map('o', config.mappings.backward, [[v:lua.MiniJump.expr_jump(v:true, v:false)]], { expr = true })
-  H.map('o', config.mappings.forward_till, [[v:lua.MiniJump.expr_jump(v:false, v:true)]], { expr = true })
-  H.map('o', config.mappings.backward_till, [[v:lua.MiniJump.expr_jump(v:true, v:true)]], { expr = true })
-  H.map('o', config.mappings.repeat_jump, [[v:lua.MiniJump.expr_jump()]], { expr = true })
+  H.map('o', config.mappings.forward, [[v:lua.MiniJump.expr_jump(v:false, v:false)]], { expr = true, desc = 'Jump forward' })
+  H.map('o', config.mappings.backward, [[v:lua.MiniJump.expr_jump(v:true, v:false)]], { expr = true, desc = 'Jump backward' })
+  H.map('o', config.mappings.forward_till, [[v:lua.MiniJump.expr_jump(v:false, v:true)]], { expr = true, desc = 'Jump forward till' })
+  H.map('o', config.mappings.backward_till, [[v:lua.MiniJump.expr_jump(v:true, v:true)]], { expr = true, desc = 'Jump backward till' })
+  H.map('o', config.mappings.repeat_jump, [[v:lua.MiniJump.expr_jump()]], { expr = true, desc = 'Repeat jump' })
+  --stylua: ignore end
 end
 
 function H.is_disabled()
@@ -464,11 +466,16 @@ function H.get_target()
 end
 
 function H.map(mode, key, rhs, opts)
-  if key == '' then
-    return
-  end
+  --stylua: ignore
+  if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

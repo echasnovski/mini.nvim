@@ -156,6 +156,7 @@ MiniPairs.config = {
 ---
 --- Using this function instead of |nvim_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
+--- For Neovim>=0.7 it also infers mapping description from `pair_info`.
 ---
 ---@param mode string `mode` for |nvim_set_keymap()|.
 ---@param lhs string `lhs` for |nvim_set_keymap()|.
@@ -165,8 +166,9 @@ MiniPairs.config = {
 function MiniPairs.map(mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
+  opts.desc = H.infer_mapping_description(pair_info)
 
-  vim.api.nvim_set_keymap(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
+  H.map(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, 'all')
 
   -- Ensure that `<BS>` and `<CR>` are mapped for input mode
@@ -181,6 +183,7 @@ end
 ---
 --- Using this function instead of |nvim_buf_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
+--- For Neovim>=0.7 it also infers mapping description from `pair_info`.
 ---
 ---@param buffer number `buffer` for |nvim_buf_set_keymap()|.
 ---@param mode string `mode` for |nvim_buf_set_keymap()|.
@@ -191,6 +194,9 @@ end
 function MiniPairs.map_buf(buffer, mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
+  if vim.fn.has('nvim-0.7') == 1 then
+    opts.desc = H.infer_mapping_description(pair_info)
+  end
 
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
@@ -498,10 +504,10 @@ function H.ensure_cr_bs(mode)
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
   if has_any_bs_pair then
-    vim.api.nvim_set_keymap(mode, '<BS>', [[v:lua.MiniPairs.bs()]], { expr = true, noremap = true })
+    H.map(mode, '<BS>', [[v:lua.MiniPairs.bs()]], { expr = true, desc = 'MiniPairs <BS>' })
   end
   if mode == 'i' and has_any_cr_pair then
-    vim.api.nvim_set_keymap(mode, '<CR>', [[v:lua.MiniPairs.cr()]], { expr = true, noremap = true })
+    H.map(mode, '<CR>', [[v:lua.MiniPairs.cr()]], { expr = true, desc = 'MiniPairs <CR>' })
   end
 end
 
@@ -532,6 +538,11 @@ function H.pair_info_to_map_rhs(pair_info)
     vim.inspect(pair_info.pair),
     vim.inspect(pair_info.neigh_pattern)
   )
+end
+
+function H.infer_mapping_description(pair_info)
+  local action_name = pair_info.action:sub(1, 1):upper() .. pair_info.action:sub(2)
+  return ([[%s action for %s pair]]):format(action_name, vim.inspect(pair_info.pair))
 end
 
 -- Utilities ------------------------------------------------------------------
@@ -565,6 +576,20 @@ function H.get_arrow_key(key)
   else
     return H.keys[key]
   end
+end
+
+function H.map(mode, key, rhs, opts)
+  --stylua: ignore
+  if key == '' then return end
+
+  opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
+  vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
 return MiniPairs

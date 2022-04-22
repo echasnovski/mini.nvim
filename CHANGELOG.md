@@ -1,5 +1,7 @@
 # Version 0.3.0.9000 (development)
 
+- Update all modules to supply mapping description for Neovim>=0.7.
+
 ## mini.comment
 
 - FEATURE: Implement `config.hooks` with `pre` and `post` hooks (executed before and after successful commenting). Fixes #50, #59.

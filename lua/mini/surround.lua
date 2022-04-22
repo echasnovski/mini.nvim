@@ -527,8 +527,6 @@ H.builtin_surroundings = {
   ['i'] = {
     input = function()
       local left = MiniSurround.user_input('Left surrounding')
-      -- TODO: experiment with allowing empty part here (should find from
-      -- cursor to corresponding part)
       --stylua: ignore
       if left == nil or left == '' then return end
       local right = MiniSurround.user_input('Right surrounding')
@@ -620,27 +618,19 @@ end
 function H.apply_config(config)
   MiniSurround.config = config
 
+  --stylua: ignore start
   -- Make mappings
   -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
   -- It is used to enable dot-repeatability.
-  H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true })
-  H.map('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]])
-  H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true })
-  H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true })
-  H.map(
-    'n',
-    config.mappings.find,
-    [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']],
-    { expr = true }
-  )
-  H.map(
-    'n',
-    config.mappings.find_left,
-    [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']],
-    { expr = true }
-  )
-  H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true })
-  H.map('n', config.mappings.update_n_lines, [[<cmd>lua MiniSurround.update_n_lines()<cr>]])
+  H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true, desc = 'Add surrounding' })
+  H.map('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]], { desc = 'Add surrounding' })
+  H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true, desc = 'Delete surrounding' })
+  H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true, desc = 'Replace surrounding' })
+  H.map('n', config.mappings.find, [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], { expr = true, desc = 'Find right surrounding' })
+  H.map('n', config.mappings.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']], { expr = true, desc = 'Find left surrounding' })
+  H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true, desc = 'Highlight surrounding' })
+  H.map('n', config.mappings.update_n_lines, [[<cmd>lua MiniSurround.update_n_lines()<cr>]], { desc = 'Update `MiniSurround.config.n_lines`' })
+  --stylua: ignore end
 end
 
 function H.is_disabled()
@@ -1170,11 +1160,16 @@ function H.error(msg)
 end
 
 function H.map(mode, key, rhs, opts)
-  if key == '' then
-    return
-  end
+  --stylua: ignore
+  if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

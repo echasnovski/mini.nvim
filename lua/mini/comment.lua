@@ -267,16 +267,17 @@ function H.apply_config(config)
   MiniComment.config = config
 
   -- Make mappings
-  H.map('n', config.mappings.comment, 'v:lua.MiniComment.operator()', { expr = true })
+  H.map('n', config.mappings.comment, 'v:lua.MiniComment.operator()', { expr = true, desc = 'Comment' })
   H.map(
     'x',
     config.mappings.comment,
     -- Using `:<c-u>` instead of `<cmd>` as latter results into executing before
     -- proper update of `'<` and `'>` marks which is needed to work correctly.
-    [[:<c-u>lua MiniComment.operator('visual')<cr>]]
+    [[:<c-u>lua MiniComment.operator('visual')<cr>]],
+    { desc = 'Comment selection' }
   )
-  H.map('n', config.mappings.comment_line, 'v:lua.MiniComment.operator() . "_"', { expr = true })
-  H.map('o', config.mappings.textobject, [[<cmd>lua MiniComment.textobject()<cr>]])
+  H.map('n', config.mappings.comment_line, 'v:lua.MiniComment.operator() . "_"', { expr = true, desc = 'Comment line' })
+  H.map('o', config.mappings.textobject, [[<cmd>lua MiniComment.textobject()<cr>]], { desc = 'Comment textobject' })
 end
 
 function H.is_disabled()
@@ -391,11 +392,16 @@ end
 
 -- Utilities ------------------------------------------------------------------
 function H.map(mode, key, rhs, opts)
-  if key == '' then
-    return
-  end
+  --stylua: ignore
+  if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

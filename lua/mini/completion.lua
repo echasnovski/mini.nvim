@@ -653,8 +653,10 @@ end
 function H.apply_config(config)
   MiniCompletion.config = config
 
-  H.map('i', config.mappings.force_twostep, '<cmd>lua MiniCompletion.complete_twostage()<cr>')
-  H.map('i', config.mappings.force_fallback, '<cmd>lua MiniCompletion.complete_fallback()<cr>')
+  --stylua: ignore start
+  H.map('i', config.mappings.force_twostep, '<cmd>lua MiniCompletion.complete_twostage()<cr>', { desc = 'Complete with two-stage' })
+  H.map('i', config.mappings.force_fallback, '<cmd>lua MiniCompletion.complete_fallback()<cr>', { desc = 'Complete with fallback' })
+  --stylua: ignore end
 
   if config.set_vim_settings then
     -- Don't give ins-completion-menu messages
@@ -1388,11 +1390,16 @@ function H.get_left_char()
 end
 
 function H.map(mode, key, rhs, opts)
-  if key == '' then
-    return
-  end
+  --stylua: ignore
+  if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

@@ -747,18 +747,20 @@ function H.apply_config(config)
   MiniIndentscope.config = config
   local maps = config.mappings
 
-  H.map('n', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top', true)<CR>]])
-  H.map('n', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom', true)<CR>]])
+  --stylua: ignore start
+  H.map('n', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top', true)<CR>]], { desc = 'Go to indent scope top' })
+  H.map('n', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom', true)<CR>]], { desc = 'Go to indent scope bottom' })
 
-  H.map('x', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], {})
-  H.map('x', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], {})
-  H.map('x', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], {})
-  H.map('x', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], {})
+  H.map('x', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], { desc = 'Go to indent scope top' })
+  H.map('x', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], { desc = 'Go to indent scope bottom' })
+  H.map('x', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], { desc = 'Object scope' })
+  H.map('x', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], { desc = 'Object scope with border' })
 
-  H.map('o', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], {})
-  H.map('o', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], {})
-  H.map('o', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], {})
-  H.map('o', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], {})
+  H.map('o', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], { desc = 'Go to indent scope top' })
+  H.map('o', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], { desc = 'Go to indent scope bottom' })
+  H.map('o', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], { desc = 'Object scope' })
+  H.map('o', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], { desc = 'Object scope with border' })
+  --stylua: ignore start
 end
 
 function H.is_disabled()
@@ -1170,11 +1172,16 @@ function H.notify(msg)
 end
 
 function H.map(mode, key, rhs, opts)
-  if key == '' then
-    return
-  end
+  --stylua: ignore
+  if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then
+    opts.desc = nil
+  end
+
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
