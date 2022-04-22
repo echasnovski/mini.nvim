@@ -1,8 +1,6 @@
 local helpers = {}
 
 -- Work with child Neovim process =============================================
-local neovim_children = {}
-
 --- Generate child Neovim process
 ---
 --- This was initially assumed to be used for all testing, but at this stage
@@ -90,7 +88,7 @@ function helpers.new_child_neovim()
       child.job.stderr:close()
 
       -- Use `pcall` to not error with `channel closed by client`
-      pcall(child.cmd, 'qall!')
+      pcall(child.cmd, '0cquit!')
       child.job.handle:kill()
       child.job.handle:close()
 
@@ -383,18 +381,7 @@ function helpers.new_child_neovim()
     child.type_keys('<Esc>')
   end
 
-  -- Register child
-  table.insert(neovim_children, child)
-
   return child
 end
-
-function _G.child_neovim_on_vimleavepre()
-  for _, child in ipairs(neovim_children) do
-    child.stop()
-  end
-end
-
-vim.cmd([[au VimLeavePre * _G.child_neovim_on_vimleavepre()]])
 
 return helpers
