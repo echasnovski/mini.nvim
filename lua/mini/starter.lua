@@ -285,9 +285,9 @@ MiniStarter.content = {}
 --- Act on |VimEnter|.
 function MiniStarter.on_vimenter()
   if MiniStarter.config.autoopen and not H.is_something_shown() then
-    -- Use current buffer as it should be empty and not needed. This also
-    -- solves the issue of redundant buffer when opening a file from Starter.
-    MiniStarter.open(vim.api.nvim_get_current_buf())
+    -- Set indicator used to make different decision on startup
+    H.is_in_vimenter = true
+    MiniStarter.open()
   end
 end
 
@@ -317,9 +317,16 @@ function MiniStarter.open(buf_id)
   H.query = ''
 
   -- Ensure proper buffer and open it
+  if H.is_in_vimenter then
+    -- Use current buffer as it should be empty and not needed. This also
+    -- solves the issue of redundant buffer when opening a file from Starter.
+    buf_id = vim.api.nvim_get_current_buf()
+  end
+
   if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then
     buf_id = vim.api.nvim_create_buf(false, true)
   end
+
   H.buf_id = buf_id
   vim.api.nvim_set_current_buf(H.buf_id)
 
@@ -333,6 +340,9 @@ function MiniStarter.open(buf_id)
 
   -- Issue custom event
   vim.cmd([[doautocmd User MiniStarterOpened]])
+
+  -- Ensure not being in VimEnter
+  H.is_in_vimenter = false
 end
 
 --- Refresh Starter buffer
@@ -1199,9 +1209,13 @@ function H.make_query(query)
     return
   end
 
-  -- Notify about new query. Use `echo` because it doesn't write to `:messages`.
-  local msg = ('Query: %s'):format(H.query)
-  vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, "'")))
+  -- Notify about new query if not in VimEnter, where it might lead to
+  -- unpleasant flickering due to startup process (lazy loading, etc.).
+  if not H.is_in_vimenter then
+    local msg = ('Query: %s'):format(H.query)
+    -- Use `echo` because it doesn't write to `:messages`.
+    vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, "'")))
+  end
 end
 
 -- Work with starter buffer ---------------------------------------------------
