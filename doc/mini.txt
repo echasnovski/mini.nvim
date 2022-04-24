@@ -3993,7 +3993,7 @@ fall back for deafult otherwise. Inspired by
 [ap/vim-buftabline](https://github.com/ap/vim-buftabline).
 
 Features:
-- Buffers are listed by their identifier (see |bufnr()|).
+- Buffers are listed in the order of their identifier (see |bufnr()|).
 - Different highlight groups for "states" of buffer affecting 'buffer tabs':
 - Buffer names are made unique by extending paths to files or appending
   unique identifier to buffers without name.

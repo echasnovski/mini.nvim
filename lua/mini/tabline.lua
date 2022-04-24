@@ -7,7 +7,7 @@
 --- [ap/vim-buftabline](https://github.com/ap/vim-buftabline).
 ---
 --- Features:
---- - Buffers are listed by their identifier (see |bufnr()|).
+--- - Buffers are listed in the order of their identifier (see |bufnr()|).
 --- - Different highlight groups for "states" of buffer affecting 'buffer tabs':
 --- - Buffer names are made unique by extending paths to files or appending
 ---   unique identifier to buffers without name.
@@ -80,6 +80,8 @@ function MiniTabline.setup(config)
   H.apply_config(config)
 
   -- Module behavior
+  -- TODO: squash into 2 autocommands OR BETTER remove to use only
+  -- `make_tabline_string`
   vim.api.nvim_exec(
     [[augroup MiniTabline
         au!
@@ -135,9 +137,10 @@ MiniTabline.config = {
 --- Designed to be used with |autocmd|. No need to use it directly,
 function MiniTabline.update_tabline()
   if vim.fn.tabpagenr('$') > 1 then
-    vim.o.tabline = [[]]
+    -- TODO: think about adding `Tab 1/2` prefix/suffix
+    vim.o.tabline = ''
   else
-    vim.o.tabline = [[%!v:lua.MiniTabline.make_tabline_string()]]
+    vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
   end
 end
 
@@ -171,7 +174,7 @@ H.unnamed_buffers_seq_ids = {}
 H.path_sep = package.config:sub(1, 1)
 
 -- Buffer number of center buffer
-H.center_buf_id = vim.fn.winbufnr(0)
+H.center_buf_id = nil
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -207,12 +210,12 @@ end
 -- List tabs
 function H.list_tabs()
   local tabs = {}
-  for i = 1, vim.fn.bufnr('$') do
-    if H.is_buffer_in_minitabline(i) then
-      local tab = { buf_id = i }
-      tab['hl'] = H.construct_highlight(i)
-      tab['tabfunc'] = H.construct_tabfunc(i)
-      tab['label'], tab['label_extender'] = H.construct_label_data(i)
+  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+    if H.is_buffer_in_minitabline(buf_id) then
+      local tab = { buf_id = buf_id }
+      tab['hl'] = H.construct_highlight(buf_id)
+      tab['tabfunc'] = H.construct_tabfunc(buf_id)
+      tab['label'], tab['label_extender'] = H.construct_label_data(buf_id)
 
       table.insert(tabs, tab)
     end
@@ -222,20 +225,20 @@ function H.list_tabs()
 end
 
 function H.is_buffer_in_minitabline(buf_id)
-  return (vim.fn.buflisted(buf_id) > 0) and (vim.fn.getbufvar(buf_id, '&buftype') ~= 'quickfix')
+  return vim.api.nvim_buf_get_option(buf_id, 'buflisted')
 end
 
 -- Tab's highlight group
 function H.construct_highlight(buf_id)
   local hl_type
-  if buf_id == vim.fn.winbufnr(0) then
+  if buf_id == vim.api.nvim_get_current_buf() then
     hl_type = 'Current'
   elseif vim.fn.bufwinnr(buf_id) > 0 then
     hl_type = 'Visible'
   else
     hl_type = 'Hidden'
   end
-  if vim.fn.getbufvar(buf_id, '&modified') > 0 then
+  if vim.api.nvim_buf_get_option(buf_id, 'modified') then
     hl_type = 'Modified' .. hl_type
   end
 
@@ -255,7 +258,7 @@ end
 function H.construct_label_data(buf_id)
   local label, label_extender
 
-  local bufpath = vim.fn.bufname(buf_id)
+  local bufpath = vim.api.nvim_buf_get_name(buf_id)
   if bufpath ~= '' then
     -- Process path buffer
     label = vim.fn.fnamemodify(bufpath, ':t')
@@ -263,20 +266,19 @@ function H.construct_label_data(buf_id)
   else
     -- Process unnamed buffer
     label = H.make_unnamed_label(buf_id)
-    label_extender = function(x)
-      return x
-    end
+    --stylua: ignore
+    label_extender = function(x) return x end
   end
 
   return label, label_extender
 end
 
 function H.make_path_extender(buf_id)
+  -- Add parent to current label (if possible)
   return function(label)
-    -- Add parent to current label
-    local full_path = vim.fn.fnamemodify(vim.fn.bufname(buf_id), ':p')
+    local full_path = vim.api.nvim_buf_get_name(buf_id)
     -- Using `vim.pesc` prevents effect of problematic characters (like '.')
-    local pattern = string.format('[^%s]+%s%s$', H.path_sep, H.path_sep, vim.pesc(label))
+    local pattern = string.format('[^%s]+%s%s$', vim.pesc(H.path_sep), vim.pesc(H.path_sep), vim.pesc(label))
     return string.match(full_path, pattern) or label
   end
 end
@@ -301,7 +303,7 @@ function H.make_unnamed_label(buf_id)
 end
 
 function H.is_buffer_scratch(buf_id)
-  local buftype = vim.fn.getbufvar(buf_id, '&buftype')
+  local buftype = vim.api.nvim_buf_get_option(buf_id, 'buftype')
   return (buftype == 'acwrite') or (buftype == 'nofile')
 end
 
@@ -343,14 +345,15 @@ function H.finalize_labels()
 
   -- Postprocess: add file icons and padding
   local has_devicons, devicons
+  local show_icons = MiniTabline.config.show_icons
 
   -- Have this `require()` here to not depend on plugin initialization order
-  if MiniTabline.config.show_icons then
+  if show_icons then
     has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   end
 
   for _, tab in pairs(H.tabs) do
-    if MiniTabline.config.show_icons and has_devicons then
+    if show_icons and has_devicons then
       local extension = vim.fn.fnamemodify(tab.label, ':e')
       local icon = devicons.get_icon(tab.label, extension, { default = true })
       tab.label = string.format(' %s %s ', icon, tab.label)
@@ -385,7 +388,7 @@ function H.fit_width()
   H.update_center_buf_id()
 
   -- Compute label width data
-  local center = 1
+  local center_offset = 1
   local tot_width = 0
   for _, tab in pairs(H.tabs) do
     -- Use `nvim_strwidth()` and not `:len()` to respect multibyte characters
@@ -395,25 +398,25 @@ function H.fit_width()
     tot_width = tot_width + tab.label_width
 
     if tab.buf_id == H.center_buf_id then
-      -- Make end of 'center tab' to be always displayed in center in case of
-      -- truncation
-      center = tot_width
+      -- Make right end of 'center tab' to be always displayed in center in
+      -- case of truncation
+      center_offset = tot_width
     end
   end
 
-  local display_interval = H.compute_display_interval(center, tot_width)
+  local display_interval = H.compute_display_interval(center_offset, tot_width)
 
   H.truncate_tabs_display(display_interval)
 end
 
 function H.update_center_buf_id()
-  local buf_displayed = vim.fn.winbufnr(0)
-  if H.is_buffer_in_minitabline(buf_displayed) then
-    H.center_buf_id = buf_displayed
+  local cur_buf = vim.api.nvim_get_current_buf()
+  if H.is_buffer_in_minitabline(cur_buf) then
+    H.center_buf_id = cur_buf
   end
 end
 
-function H.compute_display_interval(center, tabline_width)
+function H.compute_display_interval(center_offset, tabline_width)
   -- left - first character to be displayed (starts with 1)
   -- right - last character to be displayed
   -- Conditions to be satisfied:
