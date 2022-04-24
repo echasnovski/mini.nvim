@@ -291,7 +291,17 @@ end
 -- - Delete second one.
 -- - Tab label for third one remains the same.
 function H.make_unnamed_label(buf_id)
-  local label = H.is_buffer_scratch(buf_id) and '!' or '*'
+  local label
+  if vim.api.nvim_buf_get_option(buf_id, 'buftype') == 'quickfix' then
+    -- It would be great to differentiate for buffer `buf_id` between quickfix
+    -- and location lists but it seems there is no reliable way to do so.
+    -- The only one is to use `getwininfo(bufwinid(buf_id))` and look for
+    -- `quickfix` and `loclist` fields, but that fails if buffer `buf_id` is
+    -- not visible.
+    label = '*quickfix*'
+  else
+    label = H.is_buffer_scratch(buf_id) and '!' or '*'
+  end
 
   -- Possibly add tracking id
   local unnamed_id = H.get_unnamed_id(buf_id)
