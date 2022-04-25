@@ -33,15 +33,17 @@
 
 ## mini.surround
 
-- FEATURE: implement `config.search_method`.
-- FEATURE: implement custom surroundings via `config.custom_surroundings`.
-- FEATURE: implement `MiniSurround.user_input()`.
-- BREAKING: deprecate `config.funname_pattern` option in favor of manually modifying `f` surrounding.
-- BREAKING: always move cursor to the right of left surrounding in `add()`, `delete()`, and `replace()` (instead of moving only if it was on the same line as left surrounding).
+- FEATURE: Implement `config.search_method`.
+- FEATURE: Implement custom surroundings via `config.custom_surroundings`.
+- FEATURE: Implement `MiniSurround.user_input()`.
+- BREAKING: Deprecate `config.funname_pattern` option in favor of manually modifying `f` surrounding.
+- BREAKING: Always move cursor to the right of left surrounding in `add()`, `delete()`, and `replace()` (instead of moving only if it was on the same line as left surrounding).
 - Update process of getting user input: allow `<C-c>` to cancel and make empty string a valid input.
 
 ## mini.tabline
 
+- FEATURE: Implement `config.tabpage_section`.
+- BREAKING: Show listed buffers also in case of multiple tabpages (instead of using builtin behavior).
 - Show quickfix/loclist buffers with special `*quickfix*` label.
 
 

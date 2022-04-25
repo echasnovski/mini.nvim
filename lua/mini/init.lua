@@ -110,9 +110,9 @@
 ---   highlight surrounding (like pair of parenthesis, quotes, etc.). Has
 ---   special "function call", "tag", and "interactive" surroundings. Supports
 ---   dot-repeatability, textobject, motions.
---- - |MiniTabline| - minimal tabline which shows listed (see 'buflisted')
----   buffers in case of one tab and falls back to default otherwise. For full
----   experience needs
+--- - |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
+---   buffers. Allows showing extra information section in case of multiple vim
+---   tabpages. For full experience needs
 ---   [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.

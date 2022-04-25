@@ -699,7 +699,7 @@ Plugins with similar functionality:
 
 ### mini.tabline
 
-Minimal tabline which shows listed (see `:h buflisted`) buffers in case of one tab and falls back to default otherwise. For full experience needs [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
+Minimal tabline which always shows listed (see `:h buflisted`) buffers. Allows showing extra information section in case of multiple vim tabpages. For full experience needs [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 
 <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-tabline.gif" height="400em"/>
 
@@ -713,6 +713,10 @@ Default `config`:
   -- Whether to set Vim's settings for tabline (make it always shown and
   -- allow hidden buffers)
   set_vim_settings = true,
+
+  -- Where to show tabpage section in case of multiple vim tabpages.
+  -- One of 'left', 'right', 'none'.
+  tabpage_section = 'left',
 }
 ```
 

@@ -1,9 +1,9 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast tabline module. General idea: show all listed
---- buffers in readable way with minimal total width in case of one vim tab,
---- fall back for deafult otherwise. Inspired by
+--- Minimal and fast tabline module. General idea: show all listed buffers in
+--- readable way with minimal total width. Also allow showing extra information
+--- section in case of multiple vim tabpages. Inspired by
 --- [ap/vim-buftabline](https://github.com/ap/vim-buftabline).
 ---
 --- Features:
@@ -44,6 +44,7 @@
 --- 5. `MiniTablineModifiedVisible` - buffer is modified and visible.
 --- 6. `MiniTablineModifiedHidden` - buffer is modified and hidden.
 --- 7. `MiniTablineFill` - unused right space of tabline.
+--- 8. `MiniTablineTabpagesection` - section with tabpage information.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -79,21 +80,6 @@ function MiniTabline.setup(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  -- TODO: squash into 2 autocommands OR BETTER remove to use only
-  -- `make_tabline_string`
-  vim.api.nvim_exec(
-    [[augroup MiniTabline
-        au!
-        au VimEnter   * lua MiniTabline.update_tabline()
-        au TabEnter   * lua MiniTabline.update_tabline()
-        au BufAdd     * lua MiniTabline.update_tabline()
-        au FileType  qf lua MiniTabline.update_tabline()
-        au BufDelete  * lua MiniTabline.update_tabline()
-      augroup END]],
-    false
-  )
-
   -- Function to make tabs clickable
   vim.api.nvim_exec(
     [[function! MiniTablineSwitchBuffer(buf_id, clicks, button, mod)
@@ -112,6 +98,8 @@ function MiniTabline.setup(config)
       hi default link MiniTablineModifiedVisible StatusLine
       hi default link MiniTablineModifiedHidden  StatusLineNC
 
+      hi default link MiniTablineTabpagesection Search
+
       hi default MiniTablineFill NONE]],
     false
   )
@@ -128,28 +116,28 @@ MiniTabline.config = {
   -- Whether to set Vim's settings for tabline (make it always shown and
   -- allow hidden buffers)
   set_vim_settings = true,
+
+  -- Where to show tabpage section in case of multiple vim tabpages.
+  -- One of 'left', 'right', 'none'.
+  tabpage_section = 'left',
 }
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Update |tabline|
----
---- Designed to be used with |autocmd|. No need to use it directly,
+-- TODO: remove after 0.4.0 release.
 function MiniTabline.update_tabline()
-  if vim.fn.tabpagenr('$') > 1 then
-    -- TODO: think about adding `Tab 1/2` prefix/suffix
-    vim.o.tabline = ''
-  else
-    vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
-  end
+  H.notify('`MiniTabline.update_tabline()` is deprecated because it is obsolete.')
+
+  vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
 end
 
---- Make string for |tabline| in case of single tab
+--- Make string for |tabline|
 function MiniTabline.make_tabline_string()
   if H.is_disabled() then
     return ''
   end
 
+  H.make_tabpage_section()
   H.list_tabs()
   H.finalize_labels()
   H.fit_width()
@@ -173,6 +161,9 @@ H.unnamed_buffers_seq_ids = {}
 -- Separator of file path
 H.path_sep = package.config:sub(1, 1)
 
+-- String with tabpage prefix
+H.tabpage_section = ''
+
 -- Buffer number of center buffer
 H.center_buf_id = nil
 
@@ -187,6 +178,7 @@ function H.setup_config(config)
   vim.validate({
     show_icons = { config.show_icons, 'boolean' },
     set_vim_settings = { config.set_vim_settings, 'boolean' },
+    tabpage_section = { config.tabpage_section, 'string' },
   })
 
   return config
@@ -200,10 +192,25 @@ function H.apply_config(config)
     vim.o.showtabline = 2 -- Always show tabline
     vim.o.hidden = true -- Allow switching buffers without saving them
   end
+
+  -- Set tabline string
+  vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
 end
 
 function H.is_disabled()
   return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true
+end
+
+-- Work with tabpages ---------------------------------------------------------
+function H.make_tabpage_section()
+  local n_tabpages = vim.fn.tabpagenr('$')
+  if n_tabpages == 1 or MiniTabline.config.tabpage_section == 'none' then
+    H.tabpage_section = ''
+    return
+  end
+
+  local cur_tabpagenr = vim.fn.tabpagenr()
+  H.tabpage_section = (' Tab %s/%s '):format(cur_tabpagenr, n_tabpages)
 end
 
 -- Work with tabs -------------------------------------------------------------
@@ -433,7 +440,7 @@ function H.compute_display_interval(center_offset, tabline_width)
   -- 1) right - left + 1 = math.min(tot_width, tabline_width)
   -- 2) 1 <= left <= tabline_width; 1 <= right <= tabline_width
 
-  local tot_width = vim.o.columns
+  local tot_width = vim.o.columns - vim.api.nvim_strwidth(H.tabpage_section)
 
   -- Usage of `math.ceil` is crucial to avoid non-integer values which might
   -- affect total width of output tabline string
@@ -472,10 +479,33 @@ function H.concat_tabs()
   local t = {}
   for _, tab in ipairs(H.tabs) do
     -- Escape '%' in labels
-    table.insert(t, tab.hl .. tab.tabfunc .. tab.label:gsub('%%', '%%%%'))
+    table.insert(t, ('%s%s%s'):format(tab.hl, tab.tabfunc, tab.label:gsub('%%', '%%%%')))
   end
 
-  return table.concat(t, '') .. '%#MiniTablineFill#'
+  -- Usage of `%X` makes filled space to the right 'non-clickable'
+  local res = ('%s%%X%%#MiniTablineFill#'):format(table.concat(t, ''))
+
+  -- Add tabpage section
+  local position = MiniTabline.config.tabpage_section
+  if H.tabpage_section ~= '' then
+    if not vim.tbl_contains({ 'none', 'left', 'right' }, position) then
+      H.notify([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])
+    end
+    if position == 'left' then
+      res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res)
+    end
+    if position == 'right' then
+      -- Use `%=` to make it stick to right hand side
+      res = ('%s%%=%%#MiniTablineTabpagesection#%s'):format(res, H.tabpage_section)
+    end
+  end
+
+  return res
+end
+
+-- Utilities ------------------------------------------------------------------
+function H.notify(msg)
+  vim.notify(('(mini.tabline) %s'):format(msg))
 end
 
 return MiniTabline

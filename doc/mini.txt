@@ -128,9 +128,9 @@ Table of contents:
   highlight surrounding (like pair of parenthesis, quotes, etc.). Has
   special "function call", "tag", and "interactive" surroundings. Supports
   dot-repeatability, textobject, motions.
-- |MiniTabline| - minimal tabline which shows listed (see 'buflisted')
-  buffers in case of one tab and falls back to default otherwise. For full
-  experience needs
+- |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
+  buffers. Allows showing extra information section in case of multiple vim
+  tabpages. For full experience needs
   [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
@@ -3987,9 +3987,9 @@ to ask for input inside function custom surrounding (see |MiniSurround.config|).
 ------------------------------------------------------------------------------
                                                                   *mini.tabline*
                                                                    *MiniTabline*
-Custom minimal and fast tabline module. General idea: show all listed
-buffers in readable way with minimal total width in case of one vim tab,
-fall back for deafult otherwise. Inspired by
+Minimal and fast tabline module. General idea: show all listed buffers in
+readable way with minimal total width. Also allow showing extra information
+section in case of multiple vim tabpages. Inspired by
 [ap/vim-buftabline](https://github.com/ap/vim-buftabline).
 
 Features:
@@ -4030,6 +4030,7 @@ See |MiniTabline.config| for `config` structure and default values.
 5. `MiniTablineModifiedVisible` - buffer is modified and visible.
 6. `MiniTablineModifiedHidden` - buffer is modified and hidden.
 7. `MiniTablineFill` - unused right space of tabline.
+8. `MiniTablineTabpagesection` - section with tabpage information.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -4068,20 +4069,17 @@ Default values:
     -- Whether to set Vim's settings for tabline (make it always shown and
     -- allow hidden buffers)
     set_vim_settings = true,
+
+    -- Where to show tabpage section in case of multiple vim tabpages.
+    -- One of 'left', 'right', 'none'.
+    tabpage_section = 'left',
   }
 <
 
 ------------------------------------------------------------------------------
-                                                  *MiniTabline.update_tabline()*
-                         `MiniTabline.update_tabline`()
-Update |tabline|
-
-Designed to be used with |autocmd|. No need to use it directly,
-
-------------------------------------------------------------------------------
                                              *MiniTabline.make_tabline_string()*
                       `MiniTabline.make_tabline_string`()
-Make string for |tabline| in case of single tab
+Make string for |tabline|
 
 
 ==============================================================================
