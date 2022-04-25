@@ -442,9 +442,14 @@ function H.compute_display_interval(center_offset, tabline_width)
 
   local tot_width = vim.o.columns - vim.api.nvim_strwidth(H.tabpage_section)
 
-  -- Usage of `math.ceil` is crucial to avoid non-integer values which might
-  -- affect total width of output tabline string
-  local right = math.min(tabline_width, math.ceil(center + 0.5 * tot_width))
+  -- Usage of `math.floor` is crucial to avoid non-integer values which might
+  -- affect total width of output tabline string.
+  -- Using `floor` instead of `ceil` has effect when `tot_width` is odd:
+  -- - `floor` makes "true center" to be between second to last and last label
+  --   character (usually non-space and space).
+  -- - `ceil` - between last character of center label and first character of
+  --   next label (both whitespaces).
+  local right = math.min(tabline_width, math.floor(center_offset + 0.5 * tot_width))
   local left = math.max(1, right - tot_width + 1)
   right = left + math.min(tot_width, tabline_width) - 1
 
