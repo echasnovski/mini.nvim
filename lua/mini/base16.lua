@@ -575,6 +575,7 @@ function H.apply_palette(palette, use_cterm)
   hi('MiniTablineModifiedCurrent', {fg=p.base02, bg=p.base05, attr='bold', sp=nil})
   hi('MiniTablineModifiedHidden',  {fg=p.base01, bg=p.base04, attr=nil,    sp=nil})
   hi('MiniTablineModifiedVisible', {fg=p.base02, bg=p.base04, attr='bold', sp=nil})
+  hi('MiniTablineTabpagesection',  {fg=p.base01, bg=p.base0A, attr='bold', sp=nil})
   hi('MiniTablineVisible',         {fg=p.base05, bg=p.base01, attr='bold', sp=nil})
 
   hi('MiniTrailspace', {fg=p.base00, bg=p.base08, attr=nil, sp=nil})
