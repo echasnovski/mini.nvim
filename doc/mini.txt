@@ -4178,12 +4178,12 @@ Default values:
 ------------------------------------------------------------------------------
                                                     *MiniTrailspace.highlight()*
                           `MiniTrailspace.highlight`()
-Highlight trailing whitespace
+Highlight trailing whitespace in current window
 
 ------------------------------------------------------------------------------
                                                   *MiniTrailspace.unhighlight()*
                          `MiniTrailspace.unhighlight`()
-Unhighlight trailing whitespace
+Unhighlight trailing whitespace in current window
 
 ------------------------------------------------------------------------------
                                                          *MiniTrailspace.trim()*

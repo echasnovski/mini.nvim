@@ -56,13 +56,11 @@ function MiniTrailspace.setup(config)
   H.apply_config(config)
 
   -- Module behavior
-  -- Use `defer_fn` for `MiniTrailspace.highlight` to ensure that
-  -- 'modifiable' option is set to its final value.
   vim.api.nvim_exec(
     [[augroup MiniTrailspace
         au!
-        au WinEnter,BufEnter,InsertLeave * lua MiniTrailspace.highlight()
-        au WinLeave,BufLeave,InsertEnter * lua MiniTrailspace.unhighlight()
+        au WinEnter,InsertLeave * lua MiniTrailspace.highlight()
+        au WinLeave,InsertEnter * lua MiniTrailspace.unhighlight()
 
         au FileType TelescopePrompt let b:minitrailspace_disable=v:true
       augroup END]],
@@ -83,6 +81,9 @@ function MiniTrailspace.setup(config)
 
   -- Create highlighting
   vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
+
+  -- Initialize highlight (usually takes effect during startup)
+  vim.defer_fn(MiniTrailspace.highlight, 0)
 end
 
 --- Module config
@@ -97,7 +98,7 @@ MiniTrailspace.config = {
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Highlight trailing whitespace
+--- Highlight trailing whitespace in current window
 function MiniTrailspace.highlight()
   -- Highlight only in normal mode
   if H.is_disabled() or vim.fn.mode() ~= 'n' then
@@ -105,37 +106,23 @@ function MiniTrailspace.highlight()
     return
   end
 
+  -- Possibly work only in normal buffers
   if MiniTrailspace.config.only_in_normal_buffers and not H.is_buffer_normal() then
     return
   end
 
-  local win_id = vim.api.nvim_get_current_win()
-  if not vim.api.nvim_win_is_valid(win_id) then
-    return
-  end
-
   -- Don't add match id on top of existing one
-  if H.window_matches[win_id] ~= nil then
-    return
-  end
+  --stylua: ignore
+  if H.get_match_id() ~= nil then return end
 
-  local match_id = vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
-  H.window_matches[win_id] = { id = match_id }
+  vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
 end
 
---- Unhighlight trailing whitespace
+--- Unhighlight trailing whitespace in current window
 function MiniTrailspace.unhighlight()
-  -- Don't do anything if there is no valid information to act upon
-  local win_id = vim.api.nvim_get_current_win()
-  local win_match = H.window_matches[win_id]
-  if not vim.api.nvim_win_is_valid(win_id) or win_match == nil then
-    return
-  end
-
   -- Use `pcall` because there is an error if match id is not present. It can
   -- happen if something else called `clearmatches`.
-  pcall(vim.fn.matchdelete, win_match.id)
-  H.window_matches[win_id] = nil
+  pcall(vim.fn.matchdelete, H.get_match_id())
 end
 
 --- Trim trailing whitespace
@@ -168,11 +155,6 @@ end
 -- Module default config
 H.default_config = MiniTrailspace.config
 
--- Information about last match highlighting (stored *per window*):
--- - Key: windows' unique buffer identifiers.
--- - Value: table with `id` field for match id (from `vim.fn.matchadd()`).
-H.window_matches = {}
-
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 function H.setup_config(config)
@@ -196,6 +178,17 @@ end
 
 function H.is_buffer_normal(buf_id)
   return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == ''
+end
+
+function H.get_match_id()
+  -- NOTE: this can be replaced with more efficient custom tracking of id per
+  -- window but it will have more edge cases (like won't update on manual
+  -- `clearmatches()`)
+  for _, match in ipairs(vim.fn.getmatches()) do
+    if match.group == 'MiniTrailspace' then
+      return match.id
+    end
+  end
 end
 
 return MiniTrailspace
