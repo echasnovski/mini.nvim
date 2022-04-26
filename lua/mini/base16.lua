@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast Lua module which implements
+--- Minimal and fast Lua module which implements
 --- [base16](http://chriskempson.com/projects/base16/) color scheme (with
 --- Copyright (C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua
 --- plugins. Extra features:

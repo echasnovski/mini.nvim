@@ -1,8 +1,8 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast autopairs Lua module. It provides functionality
---- to work with 'paired' characters conditional on cursor's neighborhood (two
+--- Minimal and fast autopairs Lua module. It provides functionality to work
+--- with 'paired' characters conditional on cursor's neighborhood (two
 --- characters to its left and right). Its usage should be through making
 --- appropriate mappings using |MiniPairs.map| or in |MiniPairs.setup| (for
 --- global mapping), |MiniPairs.map_buf| (for buffer mapping). Pairs get

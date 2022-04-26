@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast statusline module with opinionated default look.
+--- Minimal and fast statusline module with opinionated default look.
 --- Special features: change color depending on current mode and compact
 --- version of sections activated when window width is small enough.
 ---

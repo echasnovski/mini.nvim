@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast module for working with trailing whitespace.
+--- Minimal and fast module for working with trailing whitespace.
 ---
 --- Features:
 --- - Highlighting is done only in modifiable buffer by default; only in Normal

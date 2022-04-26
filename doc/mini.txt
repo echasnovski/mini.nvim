@@ -200,7 +200,7 @@ Activate it as a regular |colorscheme|.
 ------------------------------------------------------------------------------
                                                                    *mini.base16*
                                                                     *MiniBase16*
-Custom minimal and fast Lua module which implements
+Minimal and fast Lua module which implements
 [base16](http://chriskempson.com/projects/base16/) color scheme (with
 Copyright (C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua
 plugins. Extra features:
@@ -489,7 +489,7 @@ Return~
 ------------------------------------------------------------------------------
                                                                   *mini.comment*
                                                                    *MiniComment*
-Custom minimal and fast Lua module for code commenting. This is basically a
+Minimal and fast Lua module for code commenting. This is basically a
 reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 respects |count| and is dot-repeatable. Comment structure is inferred
 from 'commentstring'. Handles both tab and space indenting (but not when
@@ -884,7 +884,7 @@ Default `MiniCompletion.config.lsp_completion.process_items`
 ------------------------------------------------------------------------------
                                                                *mini.cursorword*
                                                                 *MiniCursorword*
-Custom minimal and fast module for autohighlighting word under cursor with
+Minimal and fast module for autohighlighting word under cursor with
 customizable delay. Current word under cursor can be highlighted
 differently. Highlighting is triggered only if current cursor character is
 a |[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|:
@@ -2298,8 +2298,8 @@ Parameters~
 ------------------------------------------------------------------------------
                                                                     *mini.pairs*
                                                                      *MiniPairs*
-Custom minimal and fast autopairs Lua module. It provides functionality
-to work with 'paired' characters conditional on cursor's neighborhood (two
+Minimal and fast autopairs Lua module. It provides functionality to work
+with 'paired' characters conditional on cursor's neighborhood (two
 characters to its left and right). Its usage should be through making
 appropriate mappings using |MiniPairs.map| or in |MiniPairs.setup| (for
 global mapping), |MiniPairs.map_buf| (for buffer mapping). Pairs get
@@ -3331,7 +3331,7 @@ Act on |CursorMoved| by repositioning cursor in fixed place.
 ------------------------------------------------------------------------------
                                                                *mini.statusline*
                                                                 *MiniStatusline*
-Custom minimal and fast statusline module with opinionated default look.
+Minimal and fast statusline module with opinionated default look.
 Special features: change color depending on current mode and compact
 version of sections activated when window width is small enough.
 
@@ -4118,7 +4118,7 @@ Make string for |tabline|
 ------------------------------------------------------------------------------
                                                                *mini.trailspace*
                                                                 *MiniTrailspace*
-Custom minimal and fast module for working with trailing whitespace.
+Minimal and fast module for working with trailing whitespace.
 
 Features:
 - Highlighting is done only in modifiable buffer by default; only in Normal

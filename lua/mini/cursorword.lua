@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast module for autohighlighting word under cursor with
+--- Minimal and fast module for autohighlighting word under cursor with
 --- customizable delay. Current word under cursor can be highlighted
 --- differently. Highlighting is triggered only if current cursor character is
 --- a |[:keyword:]|. "Word under cursor" is meant as in Vim's |<cword>|:

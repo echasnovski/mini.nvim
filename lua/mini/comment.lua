@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom minimal and fast Lua module for code commenting. This is basically a
+--- Minimal and fast Lua module for code commenting. This is basically a
 --- reimplementation of "tpope/vim-commentary". Commenting in Normal mode
 --- respects |count| and is dot-repeatable. Comment structure is inferred
 --- from 'commentstring'. Handles both tab and space indenting (but not when
