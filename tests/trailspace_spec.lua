@@ -318,14 +318,12 @@ end)
 describe('Trailspace highlighting on startup', function()
   it('works', function()
     child.restart({
-      args = {
-        '-u',
-        'scripts/minimal_init.vim',
-        '-c',
-        [[lua require('mini.trailspace').setup()]],
-        '--',
-        'tests/trailspace-tests/file',
-      },
+      '-u',
+      'scripts/minimal_init.vim',
+      '-c',
+      [[lua require('mini.trailspace').setup()]],
+      '--',
+      'tests/trailspace-tests/file',
     })
     validate_highlighted()
   end)

@@ -40,11 +40,13 @@ function helpers.new_child_neovim()
 
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
   -- because they don't provide full functionality)
-  function child.start(opts)
-    opts = vim.tbl_deep_extend('force', { nvim_executable = 'nvim', args = {}, connection_timeout = 5000 }, opts or {})
+  function child.start(args, opts)
+    args = args or {}
+    opts = vim.tbl_deep_extend('force', { nvim_executable = 'nvim', connection_timeout = 5000 }, opts or {})
 
-    local args = { '--clean', '--listen', child.address }
-    vim.list_extend(args, opts.args)
+    local t = { '--clean', '--listen', child.address }
+    vim.list_extend(t, args)
+    args = t
 
     -- Using 'libuv' for creating a job is crucial for getting this to work in
     -- Github Actions. Other approaches:
@@ -60,7 +62,7 @@ function helpers.new_child_neovim()
     }, function() end)
 
     child.job = job
-    child.start_opts = opts
+    child.start_args, child.start_opts = args, opts
 
     local step = 10
     local connected, i, max_tries = nil, 0, math.floor(opts.connection_timeout / step)
@@ -99,24 +101,37 @@ function helpers.new_child_neovim()
     return child
   end
 
-  function child.restart(opts)
+  function child.restart(args, opts)
+    args = args or {}
     opts = vim.tbl_deep_extend('force', child.start_opts or {}, opts or {})
 
     if child.job ~= nil then
       child.stop()
-      child.address = vim.fn.tempname()
     end
 
-    child.start(opts)
+    child.address = vim.fn.tempname()
+    child.start(args, opts)
   end
 
   function child.setup()
-    child.restart({ args = { '-u', 'scripts/minimal_init.vim' } })
+    child.restart({ '-u', 'scripts/minimal_init.vim' })
 
-    -- Ensure sinle empty readable buffer
+    -- Ensure new empty readable buffer
     -- NOTE: for some unimaginable reason this also speeds up test execution by
     -- factor of almost two (was 4:40 minutes; became 2:40 minutes)
     child.cmd('enew')
+
+    -- Also work:
+    -- child.cmd('tabedit')
+    -- child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+    -- child.cmd('new')
+
+    -- Don't work:
+    -- - Having `enew` as last thing in 'scripts/minimal_init.vim'
+    -- child.api.nvim_eval('1')
+    -- vim.api.nvim_buf_set_lines(0, 0, -1, true, {})
+    -- child.api.nvim_buf_delete(child.api.nvim_create_buf(true, true), {})
+    -- child.cmd('vsplit')
   end
 
   -- Wrappers for common `vim.xxx` objects (will get executed inside child)

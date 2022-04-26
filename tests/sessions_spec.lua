@@ -786,7 +786,7 @@ describe('Autoreading sessions', function()
   end)
 
   it('works', function()
-    child.restart({ args = { '-u', 'tests/sessions-tests/init-files/autoread.lua' } })
+    child.restart({ '-u', 'tests/sessions-tests/init-files/autoread.lua' })
     validate_session_loaded('local/Session.vim')
   end)
 
@@ -794,19 +794,19 @@ describe('Autoreading sessions', function()
     local init_autoread = 'tests/sessions-tests/init-files/autoread.lua'
 
     -- Current buffer has any lines (something opened explicitly)
-    child.restart({ args = { '-u', init_autoread, '-c', [[call setline(1, 'a')]] } })
+    child.restart({ '-u', init_autoread, '-c', [[call setline(1, 'a')]] })
     validate_no_session_loaded()
 
     -- Several buffers are listed (like session with placeholder buffers)
-    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set buflisted | e bar | set buflisted' } })
+    child.restart({ '-u', init_autoread, '-c', 'e foo | set buflisted | e bar | set buflisted' })
     validate_no_session_loaded()
 
     -- Unlisted buffers (like from `nvim-tree`) don't affect decision
-    child.restart({ args = { '-u', init_autoread, '-c', 'e foo | set nobuflisted | e bar | set buflisted' } })
+    child.restart({ '-u', init_autoread, '-c', 'e foo | set nobuflisted | e bar | set buflisted' })
     validate_session_loaded('local/Session.vim')
 
     -- There are files in arguments (like `nvim foo.txt` with new file).
-    child.restart({ args = { '-u', init_autoread, 'new-file.txt' } })
+    child.restart({ '-u', init_autoread, 'new-file.txt' })
     validate_no_session_loaded()
   end)
 end)
@@ -819,7 +819,7 @@ describe('Autowriting sessions', function()
 
   it('works', function()
     local init_autowrite = 'tests/sessions-tests/init-files/autowrite.lua'
-    child.restart({ args = { '-u', init_autowrite } })
+    child.restart({ '-u', init_autowrite })
 
     -- Create session with one buffer, expect to autowrite it to have second
     child.fn.mkdir(empty_dir_path)

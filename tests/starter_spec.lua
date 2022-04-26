@@ -952,7 +952,7 @@ describe('Autoopening', function()
   end)
 
   it('works', function()
-    child.restart({ args = { '-u', 'tests/starter-tests/init-files/test-init.lua' } })
+    child.restart({ '-u', 'tests/starter-tests/init-files/test-init.lua' })
     validate_starter_shown()
 
     -- It should result into total single buffer
@@ -963,19 +963,19 @@ describe('Autoopening', function()
     local init_autoopen = 'tests/starter-tests/init-files/test-init.lua'
 
     -- Current buffer has any lines (something opened explicitly)
-    child.restart({ args = { '-u', init_autoopen, '-c', [[call setline(1, 'a')]] } })
+    child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
     validate_starter_not_shown()
 
     -- Several buffers are listed (like session with placeholder buffers)
-    child.restart({ args = { '-u', init_autoopen, '-c', 'e foo | set buflisted | e bar | set buflisted' } })
+    child.restart({ '-u', init_autoopen, '-c', 'e foo | set buflisted | e bar | set buflisted' })
     validate_starter_not_shown()
 
     -- Unlisted buffers (like from `nvim-tree`) don't affect decision
-    child.restart({ args = { '-u', init_autoopen, '-c', 'e foo | set nobuflisted | e bar | set buflisted' } })
+    child.restart({ '-u', init_autoopen, '-c', 'e foo | set nobuflisted | e bar | set buflisted' })
     validate_starter_shown()
 
     -- There are files in arguments (like `nvim foo.txt` with new file).
-    child.restart({ args = { '-u', init_autoopen, 'new-file.txt' } })
+    child.restart({ '-u', init_autoopen, 'new-file.txt' })
     validate_starter_not_shown()
   end)
 end)
