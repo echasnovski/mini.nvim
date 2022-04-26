@@ -3,7 +3,8 @@
 -- Documentation ==============================================================
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 --- a reimplementation of the core features of 'machakann/vim-sandwich' with a
---- couple more on top (find surrounding, highlight surrounding).
+--- couple more on top (find surrounding, highlight surrounding). Can be
+--- configured to have experience similar to 'tpope/vim-surround'.
 ---
 --- Features:
 --- - Actions (all of them are dot-repeatable out of the box):
@@ -44,7 +45,8 @@
 --- `MiniSurround` which you can use for scripting or manually (with
 --- `:lua MiniSurround.*`).
 ---
---- See |MiniSurround.config| for `config` structure and default values.
+--- See |MiniSurround.config| for `config` structure and default values. It
+--- also has example setup providing experience similar to 'tpope/vim-surround'.
 ---
 --- # Example usage~
 ---
@@ -146,7 +148,37 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
----@text # Options~
+---@text # Setup similar to 'tpope/vim-surround'~
+---
+--- This module is primarily designed after 'machakann/vim-sandwich'. To get
+--- behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
+--- >
+---   require('mini.surround').setup({
+---     custom_surroundings = {
+---       ['('] = { output = { left = '( ', right = ' )' } },
+---       ['['] = { output = { left = '[ ', right = ' ]' } },
+---       ['{'] = { output = { left = '{ ', right = ' }' } },
+---       ['<'] = { output = { left = '< ', right = ' >' } },
+---     },
+---     mappings = {
+---       add = 'ys',
+---       delete = 'ds',
+---       find = '',
+---       find_left = '',
+---       highlight = '',
+---       replace = 'cs',
+---       update_n_lines = '',
+---     },
+---     search_method = 'cover_or_next',
+---   })
+---
+---   -- Remap adding surrounding to Visual mode selection
+---   vim.api.nvim_set_keymap('x', 'S', [[:<C-u>lua MiniSurround.add('visual')<CR>]], { noremap = true })
+---
+---   -- Make special mapping for "add surrounding for line"
+---   vim.api.nvim_set_keymap('n', 'yss', 'ys_', { noremap = false })
+--- <
+--- # Options~
 ---
 --- ## Custom surroundings~
 ---
@@ -274,7 +306,7 @@ MiniSurround.config = {
 
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
-    add = 'sa', -- Add surrounding
+    add = 'sa', -- Add surrounding in Normal and Visual modes
     delete = 'sd', -- Delete surrounding
     find = 'sf', -- Find surrounding (to the right)
     find_left = 'sF', -- Find surrounding (to the left)
@@ -623,13 +655,13 @@ function H.apply_config(config)
   -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
   -- It is used to enable dot-repeatability.
   H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true, desc = 'Add surrounding' })
-  H.map('x', config.mappings.add, [[:<c-u>lua MiniSurround.add('visual')<cr>]], { desc = 'Add surrounding' })
+  H.map('x', config.mappings.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
   H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true, desc = 'Delete surrounding' })
   H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true, desc = 'Replace surrounding' })
   H.map('n', config.mappings.find, [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], { expr = true, desc = 'Find right surrounding' })
   H.map('n', config.mappings.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']], { expr = true, desc = 'Find left surrounding' })
   H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true, desc = 'Highlight surrounding' })
-  H.map('n', config.mappings.update_n_lines, [[<cmd>lua MiniSurround.update_n_lines()<cr>]], { desc = 'Update `MiniSurround.config.n_lines`' })
+  H.map('n', config.mappings.update_n_lines, [[<Cmd>lua MiniSurround.update_n_lines()<CR>]], { desc = 'Update `MiniSurround.config.n_lines`' })
   --stylua: ignore end
 end
 
