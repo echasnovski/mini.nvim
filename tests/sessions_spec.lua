@@ -19,6 +19,7 @@ local empty_dir_path = vim.fn.fnamemodify(empty_dir_relpath, ':p')
 local load_module = function(config) child.mini_load('sessions', config) end
 local unload_module = function() child.mini_unload('sessions') end
 local reload_module = function(config) unload_module(); load_module(config) end
+local reload_from_strconfig = function(strconfig) unload_module(); child.mini_load_strconfig('sessions', strconfig) end
 local set_lines = function(...) return child.set_lines(...) end
 local make_path = function(...) return table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep) end
 local cd = function(...) child.cmd('cd ' .. make_path(...)) end
@@ -117,18 +118,6 @@ local reset_session_indicator = function()
 end
 
 -- Helpers for testing hooks
-local reload_from_strconfig = function(strconfig)
-  local t = {}
-  for key, val in pairs(strconfig) do
-    table.insert(t, key .. ' = ' .. val)
-  end
-  local str = '{' .. table.concat(t, ', ') .. '}'
-
-  unload_module()
-  local command = ([[require('mini.sessions').setup(%s)]]):format(str)
-  child.lua(command)
-end
-
 --stylua: ignore start
 local make_hook_string = function(pre_post, action, hook_type)
   if hook_type == 'config' then

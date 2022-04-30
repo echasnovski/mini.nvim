@@ -11,6 +11,7 @@ local eq = assert.are.same
 local load_module = function(config) child.mini_load('starter', config) end
 local unload_module = function() child.mini_unload('starter') end
 local reload_module = function(config) unload_module(); load_module(config) end
+local reload_from_strconfig = function(strconfig) unload_module(); child.mini_load_strconfig('starter', strconfig) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
@@ -27,24 +28,6 @@ end
 
 local validate_starter_not_shown = function()
   eq(is_starter_shown(), false)
-end
-
--- Introduce a notion of `strconfig` (`config` but with values equal to
--- evaluatable strings) to overcome inability to pass functions to child
-local reload_from_strconfig = function(strconfig)
-  if is_starter_shown() then
-    child.cmd('bwipeout')
-  end
-
-  local t = {}
-  for key, val in pairs(strconfig) do
-    table.insert(t, key .. ' = ' .. val)
-  end
-  local str = '{' .. table.concat(t, ', ') .. '}'
-
-  unload_module()
-  local cmd = ([[lua require('mini.starter').setup(%s)]]):format(str)
-  child.cmd(cmd)
 end
 
 local validate_equal_starter = function(strconfig_1, strconfig_2)

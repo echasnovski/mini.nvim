@@ -347,10 +347,28 @@ function helpers.new_child_neovim()
     assert.are.same(child.api.nvim_buf_get_mark(0, '>'), last)
   end
 
-  -- Work with 'mini.nvim'
+  -- Work with 'mini.nvim':
+  -- - `mini_load` - load with "normal" table config
+  -- - `mini_load_strconfig` - load with "string" config, which is still a
+  --   table but with string values. Final loading is done by constructing
+  --   final string table. Needed to be used if one of the config entries is a
+  --   function (as currently there is no way to communicate a function object
+  --   through RPC).
+  -- - `mini_unload` - unload module and revert common side effects.
   function child.mini_load(name, config)
     local lua_cmd = ([[require('mini.%s').setup(...)]]):format(name)
     child.lua(lua_cmd, { config })
+  end
+
+  function child.mini_load_strconfig(name, strconfig)
+    local t = {}
+    for key, val in pairs(strconfig) do
+      table.insert(t, key .. ' = ' .. val)
+    end
+    local str = string.format('{ %s }', table.concat(t, ', '))
+
+    local command = ([[require('mini.%s').setup(%s)]]):format(name, str)
+    child.lua(command)
   end
 
   function child.mini_unload(name)
