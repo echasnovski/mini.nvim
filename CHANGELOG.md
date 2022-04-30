@@ -20,6 +20,7 @@
 ## mini.sessions
 
 - FEATURE: Implement `MiniSessions.select()` to select session interactively and perform action on it.
+- FEATURE: Implement `config.hooks` to execute hook functions before and after successful action.
 - BREAKING: All feedback about incorrect behavior is now an error instead of message notifications.
 
 ## mini.starter

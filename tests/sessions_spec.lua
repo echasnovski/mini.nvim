@@ -91,7 +91,7 @@ local populate_sessions = function(delay)
   end
 
   make_file('session_a')
-  -- Modification time is up to seconds, so wait it to ensure correct order
+  -- Modification time is up to seconds, so wait to ensure correct order
   sleep(delay)
   make_file('session_b')
 
@@ -114,6 +114,41 @@ end
 
 local reset_session_indicator = function()
   child.lua('_G.session_file = nil')
+end
+
+-- Helpers for testing hooks
+local reload_from_strconfig = function(strconfig)
+  local t = {}
+  for key, val in pairs(strconfig) do
+    table.insert(t, key .. ' = ' .. val)
+  end
+  local str = '{' .. table.concat(t, ', ') .. '}'
+
+  unload_module()
+  local command = ([[require('mini.sessions').setup(%s)]]):format(str)
+  child.lua(command)
+end
+
+--stylua: ignore start
+local make_hook_string = function(pre_post, action, hook_type)
+  if hook_type == 'config' then
+    return string.format(
+      [[{ %s = { %s = function() _G.hooks_%s_%s = 'config' end }}]],
+      pre_post, action, pre_post, action
+    )
+  end
+  if hook_type == 'opts' then
+    return string.format(
+      [[{ %s = function() _G.hooks_%s_%s = 'opts' end }]],
+      pre_post, pre_post, action
+    )
+  end
+end
+--stylua: ignore end
+
+local validate_executed_hook = function(pre_post, action, value)
+  local var_name = ('_G.hooks_%s_%s'):format(pre_post, action)
+  eq(child.lua_get(var_name), value)
 end
 
 -- Unit tests =================================================================
@@ -141,6 +176,8 @@ describe('MiniSessions.setup()', function()
     assert_config('directory', ('%s%ssession'):format(child.fn.stdpath('data'), path_sep))
     assert_config('file', 'Session.vim')
     assert_config('force', { read = false, write = true, delete = false })
+    assert_config('hooks.pre', { read = nil, write = nil, delete = nil })
+    assert_config('hooks.post', { read = nil, write = nil, delete = nil })
     assert_config('verbose', { read = false, write = true, delete = true })
   end)
 
@@ -167,6 +204,15 @@ describe('MiniSessions.setup()', function()
     assert_config_error({ force = { read = 'a' } }, 'force.read', 'boolean')
     assert_config_error({ force = { write = 'a' } }, 'force.write', 'boolean')
     assert_config_error({ force = { delete = 'a' } }, 'force.delete', 'boolean')
+    assert_config_error({ hooks = 'a' }, 'hooks', 'table')
+    assert_config_error({ hooks = { pre = 'a' } }, 'hooks.pre', 'table')
+    assert_config_error({ hooks = { pre = { read = 'a' } } }, 'hooks.pre.read', 'function')
+    assert_config_error({ hooks = { pre = { write = 'a' } } }, 'hooks.pre.write', 'function')
+    assert_config_error({ hooks = { pre = { delete = 'a' } } }, 'hooks.pre.delete', 'function')
+    assert_config_error({ hooks = { post = 'a' } }, 'hooks.post', 'table')
+    assert_config_error({ hooks = { post = { read = 'a' } } }, 'hooks.post.read', 'function')
+    assert_config_error({ hooks = { post = { write = 'a' } } }, 'hooks.post.write', 'function')
+    assert_config_error({ hooks = { post = { delete = 'a' } } }, 'hooks.post.delete', 'function')
     assert_config_error({ verbose = 'a' }, 'verbose', 'table')
     assert_config_error({ verbose = { read = 'a' } }, 'verbose.read', 'boolean')
     assert_config_error({ verbose = { write = 'a' } }, 'verbose.write', 'boolean')
@@ -347,6 +393,35 @@ describe('MiniSessions.read()', function()
     validate_no_session_loaded()
   end)
 
+  local validate_hook = function(pre_post)
+    -- Should use `config`
+    local hook_string_config = make_hook_string(pre_post, 'read', 'config')
+    reload_from_strconfig({
+      autowrite = 'false',
+      directory = [['tests/sessions-tests/global']],
+      hooks = hook_string_config,
+    })
+    child.lua([[MiniSessions.read('session1')]])
+
+    validate_session_loaded('global/session1')
+    validate_executed_hook(pre_post, 'read', 'config')
+
+    -- Should prefer `opts` over `config`
+    local hook_string_opts = make_hook_string(pre_post, 'read', 'opts')
+    child.lua(([[MiniSessions.read('session2.vim', { hooks = %s })]]):format(hook_string_opts))
+
+    validate_session_loaded('global/session2.vim')
+    validate_executed_hook(pre_post, 'read', 'opts')
+  end
+
+  it('respects `hooks.pre` from `config` and `opts` argument', function()
+    validate_hook('pre')
+  end)
+
+  it('respects `hooks.post` from `config` and `opts` argument', function()
+    validate_hook('post')
+  end)
+
   it('respects `verbose` from `config` and `opts` argument', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global', verbose = { read = true } })
 
@@ -496,6 +571,36 @@ describe('MiniSessions.write()', function()
     assert.True(#child.fn.readfile(path) > 0)
   end)
 
+  local validate_hook = function(pre_post)
+    child.fn.mkdir(empty_dir_path)
+    local path
+
+    -- Should use `config`
+    local hook_string_config = make_hook_string(pre_post, 'write', 'config')
+    reload_from_strconfig({ directory = vim.inspect(empty_dir_path), hooks = hook_string_config })
+    child.lua([[MiniSessions.write('file_01')]])
+
+    path = make_path(empty_dir_path, 'file_01')
+    assert.True(#child.fn.readfile(path) > 0)
+    validate_executed_hook(pre_post, 'write', 'config')
+
+    -- Should prefer `opts` over `config`
+    local hook_string_opts = make_hook_string(pre_post, 'write', 'opts')
+    child.lua(([[MiniSessions.write('file_02', { hooks = %s })]]):format(hook_string_opts))
+
+    path = make_path(empty_dir_path, 'file_02')
+    assert.True(#child.fn.readfile(path) > 0)
+    validate_executed_hook(pre_post, 'write', 'opts')
+  end
+
+  it('respects `hooks.pre` from `config` and `opts` argument', function()
+    validate_hook('pre')
+  end)
+
+  it('respects `hooks.post` from `config` and `opts` argument', function()
+    validate_hook('post')
+  end)
+
   it('respects `verbose` from `config` and `opts` argument', function()
     child.fn.mkdir(empty_dir_path)
     reload_module({ directory = empty_dir_path, verbose = { write = false } })
@@ -638,6 +743,36 @@ describe('MiniSessions.delete()', function()
       child.lua([[MiniSessions.delete('session_b', { force = false })]])
     end, [[%(mini%.sessions%) Can't delete current session]])
     assert.True(child.fn.filereadable(path) == 1)
+  end)
+
+  local validate_hook = function(pre_post)
+    local session_dir = populate_sessions()
+    local path
+
+    -- Should use `config`
+    local hook_string_config = make_hook_string(pre_post, 'delete', 'config')
+    reload_from_strconfig({ directory = vim.inspect(session_dir), hooks = hook_string_config })
+    child.lua([[MiniSessions.delete('session_a')]])
+
+    path = make_path(session_dir, 'session_a')
+    assert.True(child.fn.filereadable(path) == 0)
+    validate_executed_hook(pre_post, 'delete', 'config')
+
+    -- Should prefer `opts` over `config`
+    local hook_string_opts = make_hook_string(pre_post, 'delete', 'opts')
+    child.lua(([[MiniSessions.delete('session_b', { hooks = %s })]]):format(hook_string_opts))
+
+    path = make_path(session_dir, 'session_b')
+    assert.True(child.fn.filereadable(path) == 0)
+    validate_executed_hook(pre_post, 'delete', 'opts')
+  end
+
+  it('respects `hooks.pre` from `config` and `opts` argument', function()
+    validate_hook('pre')
+  end)
+
+  it('respects `hooks.post` from `config` and `opts` argument', function()
+    validate_hook('post')
   end)
 
   it('respects `verbose` from `config` and `opts` argument', function()

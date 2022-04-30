@@ -107,6 +107,14 @@ MiniSessions.config = {
   -- Whether to force possibly harmful actions (meaning depends on function)
   force = { read = false, write = true, delete = false },
 
+  -- Hook functions for actions. Default `nil` means 'do nothing'.
+  hooks = {
+    -- Before successful action
+    pre = { read = nil, write = nil, delete = nil },
+    -- After successful action
+    post = { read = nil, write = nil, delete = nil },
+  },
+
   -- Whether to print session path after action
   verbose = { read = false, write = true, delete = true },
 }
@@ -139,6 +147,10 @@ MiniSessions.detected = {}
 ---     `MiniSessions.config.force.read`).
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.read`).
+---   - <hooks> (a table with <pre> and <post> function hooks to be executed
+---     before and after successful read; overrides
+---     `MiniSessions.config.hooks.pre.read` and
+---     `MiniSessions.config.hooks.post.read`).
 function MiniSessions.read(session_name, opts)
   if H.is_disabled() then
     return
@@ -161,15 +173,34 @@ function MiniSessions.read(session_name, opts)
     return
   end
 
-  H.wipeout_all_buffers(opts.force)
+  -- Possibly check for unsaved buffers and do nothing if they are present
+  if not opts.force then
+    local unsaved_buffers = H.get_unsaved_buffers()
 
+    if #unsaved_buffers > 0 then
+      local buf_list = table.concat(unsaved_buffers, ', ')
+      H.error(('There are unsaved buffers: %s.'):format(buf_list))
+    end
+  end
+
+  -- Execute 'pre' hook
+  H.possibly_execute(opts.hooks.pre)
+
+  -- Wipeout all buffers
+  vim.cmd([[%bwipeout!]])
+
+  -- Read session file
   local session_path = MiniSessions.detected[session_name].path
   vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
   vim.v.this_session = session_path
 
+  -- Possibly notify
   if opts.verbose then
     H.notify(('Read session %s'):format(session_path))
   end
+
+  -- Execute 'post' hook
+  H.possibly_execute(opts.hooks.post)
 end
 
 --- Write session
@@ -194,6 +225,10 @@ end
 ---     `MiniSessions.config.force.write`).
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.write`).
+---   - <hooks> (a table with <pre> and <post> function hooks to be executed
+---     before and after successful write; overrides
+---     `MiniSessions.config.hooks.pre.write` and
+---     `MiniSessions.config.hooks.post.write`).
 function MiniSessions.write(session_name, opts)
   if H.is_disabled() then
     return
@@ -207,6 +242,9 @@ function MiniSessions.write(session_name, opts)
     H.error([[Can't write to existing session when `opts.force` is not `true`.]])
   end
 
+  -- Execute 'pre' hook
+  H.possibly_execute(opts.hooks.pre)
+
   -- Make session file
   local cmd = ('mksession%s'):format(opts.force and '!' or '')
   vim.cmd(('%s %s'):format(cmd, vim.fn.fnameescape(session_path)))
@@ -215,9 +253,13 @@ function MiniSessions.write(session_name, opts)
   local s = H.new_session(session_path)
   MiniSessions.detected[s.name] = s
 
+  -- Possibly notify
   if opts.verbose then
     H.notify(('Written session %s'):format(session_path))
   end
+
+  -- Execute 'post' hook
+  H.possibly_execute(opts.hooks.post)
 end
 
 --- Delete detected session
@@ -235,6 +277,10 @@ end
 ---     `MiniSessions.config.force.delete`).
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.delete`).
+---   - <hooks> (a table with <pre> and <post> function hooks to be executed
+---     before and after successful delete; overrides
+---     `MiniSessions.config.hooks.pre.delete` and
+---     `MiniSessions.config.hooks.post.delete`).
 function MiniSessions.delete(session_name, opts)
   if H.is_disabled() then
     return
@@ -259,6 +305,9 @@ function MiniSessions.delete(session_name, opts)
     H.error([[Can't delete current session when `opts.force` is not `true`.]])
   end
 
+  -- Execute 'pre' hook
+  H.possibly_execute(opts.hooks.pre)
+
   -- Delete and update detected sessions
   vim.fn.delete(session_path)
   MiniSessions.detected[session_name] = nil
@@ -266,9 +315,13 @@ function MiniSessions.delete(session_name, opts)
     vim.v.this_session = ''
   end
 
+  -- Possibly notify
   if opts.verbose then
     H.notify(('Deleted session %s'):format(session_path))
   end
+
+  -- Execute 'pre' hook
+  H.possibly_execute(opts.hooks.post)
 end
 
 --- Select session interactively and perform action
@@ -366,6 +419,7 @@ function H.setup_config(config)
     directory = { config.directory, 'string' },
     file = { config.file, 'string' },
     force = { config.force, 'table' },
+    hooks = { config.hooks, 'table' },
     verbose = { config.verbose, 'table' },
   })
 
@@ -374,9 +428,22 @@ function H.setup_config(config)
     ['force.write'] = { config.force.write, 'boolean' },
     ['force.delete'] = { config.force.delete, 'boolean' },
 
+    ['hooks.pre'] = { config.hooks.pre, 'table' },
+    ['hooks.post'] = { config.hooks.post, 'table' },
+
     ['verbose.read'] = { config.verbose.read, 'boolean' },
     ['verbose.write'] = { config.verbose.write, 'boolean' },
     ['verbose.delete'] = { config.verbose.delete, 'boolean' },
+  })
+
+  vim.validate({
+    ['hooks.pre.read'] = { config.hooks.pre.read, 'function', true },
+    ['hooks.pre.write'] = { config.hooks.pre.write, 'function', true },
+    ['hooks.pre.delete'] = { config.hooks.pre.delete, 'function', true },
+
+    ['hooks.post.read'] = { config.hooks.post.read, 'function', true },
+    ['hooks.post.write'] = { config.hooks.post.write, 'function', true },
+    ['hooks.post.delete'] = { config.hooks.post.delete, 'function', true },
   })
 
   return config
@@ -464,24 +531,10 @@ function H.validate_detected(session_name)
   H.error(('%s is not a name for detected session.'):format(vim.inspect(session_name)))
 end
 
-function H.wipeout_all_buffers(force)
-  if force then
-    vim.cmd([[%bwipeout!]])
-    return true
-  end
-
-  -- Check for unsaved buffers and do nothing if they are present
-  local unsaved_buffers = vim.tbl_filter(function(buf_id)
+function H.get_unsaved_buffers()
+  return vim.tbl_filter(function(buf_id)
     return vim.api.nvim_buf_get_option(buf_id, 'modified')
   end, vim.api.nvim_list_bufs())
-
-  if #unsaved_buffers > 0 then
-    local buf_list = table.concat(unsaved_buffers, ', ')
-    H.error(('There are unsaved buffers: %s.'):format(buf_list))
-  end
-
-  vim.cmd([[%bwipeout]])
-  return true
 end
 
 function H.get_current_session_name()
@@ -508,7 +561,12 @@ end
 
 -- Utilities ------------------------------------------------------------------
 function H.default_opts(action)
-  return { force = MiniSessions.config.force[action], verbose = MiniSessions.config.verbose[action] }
+  local config = MiniSessions.config
+  return {
+    force = config.force[action],
+    verbose = config.verbose[action],
+    hooks = { pre = config.hooks.pre[action], post = config.hooks.post[action] },
+  }
 end
 
 function H.notify(msg)
@@ -559,6 +617,12 @@ function H.is_something_shown()
   end
 
   return false
+end
+
+function H.possibly_execute(f)
+  --stylua: ignore
+  if f == nil then return end
+  return f()
 end
 
 return MiniSessions

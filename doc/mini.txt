@@ -2653,6 +2653,14 @@ Default values:
     -- Whether to force possibly harmful actions (meaning depends on function)
     force = { read = false, write = true, delete = false },
 
+    -- Hook functions for actions. Default `nil` means 'do nothing'.
+    hooks = {
+      -- Before successful action
+      pre = { read = nil, write = nil, delete = nil },
+      -- After successful action
+      post = { read = nil, write = nil, delete = nil },
+    },
+
     -- Whether to print session path after action
     verbose = { read = false, write = true, delete = true },
   }
@@ -2689,6 +2697,10 @@ Parameters~
     `MiniSessions.config.force.read`).
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.read`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    before and after successful read; overrides
+    `MiniSessions.config.hooks.pre.read` and
+    `MiniSessions.config.hooks.post.read`).
 
 ------------------------------------------------------------------------------
                                                           *MiniSessions.write()*
@@ -2716,6 +2728,10 @@ Parameters~
     `MiniSessions.config.force.write`).
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.write`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    before and after successful write; overrides
+    `MiniSessions.config.hooks.pre.write` and
+    `MiniSessions.config.hooks.post.write`).
 
 ------------------------------------------------------------------------------
                                                          *MiniSessions.delete()*
@@ -2736,6 +2752,10 @@ Parameters~
     `MiniSessions.config.force.delete`).
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.delete`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    before and after successful delete; overrides
+    `MiniSessions.config.hooks.pre.delete` and
+    `MiniSessions.config.hooks.post.delete`).
 
 ------------------------------------------------------------------------------
                                                          *MiniSessions.select()*
