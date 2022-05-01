@@ -60,6 +60,10 @@
 ---     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
 ---     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
 ---       `v:lua.MiniCompletion.completefunc_lsp`.
+--- - If you have trouble using custom (overriden) |vim.ui.input| (like from
+---   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
+---   for input buffer. For example, currently for 'dressing.nvim' it can be
+---   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
 ---
 --- # Comparisons~
 ---
