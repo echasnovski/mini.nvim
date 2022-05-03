@@ -434,8 +434,10 @@ function MiniStatusline.section_searchcount(args)
   if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then
     return ''
   end
-  local s_count = vim.fn.searchcount((args or {}).options or { recompute = true })
-  if s_count.current == nil or s_count.total == 0 then
+  -- `searchcount()` can return errors because it is evaluated very often in
+  -- statusline. For example, when typing `/` followed by `\(`, it gives E54.
+  local ok, s_count = pcall(vim.fn.searchcount, (args or {}).options or { recompute = true })
+  if not ok or s_count.current == nil or s_count.total == 0 then
     return ''
   end
 

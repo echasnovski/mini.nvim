@@ -479,9 +479,8 @@ describe('MiniStatusline.section_mode()', function()
 end)
 
 describe('MiniStatusline.section_searchcount()', function()
-  common_setup()
-
   before_each(function()
+    common_setup()
     mock_file(10)
     child.cmd('edit! ' .. mocked_filepath)
   end)
@@ -543,6 +542,16 @@ describe('MiniStatusline.section_searchcount()', function()
     eq(section_searchcount({ options = { recompute = false } }), '1/3')
     set_cursor(2, 5)
     eq(section_searchcount({ options = { recompute = false } }), '1/3')
+  end)
+
+  it('does not fail on `searchcount()` error', function()
+    -- This matters because it is assumed that `section_searchcount` will be
+    -- called on every statusline update, which will happen during typing `/\(`
+    -- to search for something like `\(\)`.
+    child.fn.setreg('/', [[\(]])
+    assert.no_error(function()
+      section_searchcount()
+    end)
   end)
 end)
 
