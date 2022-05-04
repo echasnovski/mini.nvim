@@ -5,12 +5,12 @@ local terminal_opened_win_id = -1
 local M = {}
 local config = {
   prefix = "",
-  pos = "bot"
+  pos = "bot",
   size = 20
 }
 
 function M.setup(user_config)
-  config = vim.tbl_deep_extend("force", config, user_config)
+  config = vim.tbl_deep_extend("force", config, user_config or {})
   config.prefix = string.format("%s %d new ", config.pos, config.size)
 end
 
@@ -52,3 +52,5 @@ function M.MiniTermSend(cmd)
     vim.fn.jobsend(jobid, cmd .. "\n")
   end
 end
+
+return M
