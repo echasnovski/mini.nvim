@@ -35,7 +35,7 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.jump
 ---@tag MiniJump
----@toc_entry Jump cursor
+---@toc_entry Jump cursor to a single character
 
 ---@alias __target string The string to jump to.
 ---@alias __backward boolean Whether to jump backward.

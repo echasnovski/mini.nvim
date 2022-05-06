@@ -87,6 +87,9 @@
 ---   granularity of options for scope computing algorithm.
 --- - |MiniJump| - minimal and fast module for smarter jumping to a single
 ---   character.
+--- - |MiniJump2d| - minimal and fast Lua plugin for jumping (moving cursor)
+---   within visible lines via iterative label filtering. Supports custom jump
+---   targets (spots), labels, hooks, allowed windows and lines, and more.
 --- - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
 ---   and `put_text()` which print Lua objects to command line and current
 ---   buffer respectively.

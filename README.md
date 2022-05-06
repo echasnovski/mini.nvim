@@ -23,6 +23,7 @@ Collection of minimal, independent, and fast Lua modules dedicated to improve [N
     - [mini.fuzzy](#minifuzzy)
     - [mini.indentscope](#miniindentscope)
     - [mini.jump](#minijump)
+    - [mini.jump2d](#minijump2d)
     - [mini.misc](#minimisc)
     - [mini.pairs](#minipairs)
     - [mini.sessions](#minisessions)
@@ -464,7 +465,60 @@ Plugins with similar functionality:
 
 - [rhysd/clever-f.vim](https://github.com/rhysd/clever-f.vim)
 - [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
-- [phaazon/hop.nvim](https://github.com/phaazon/hop.nvim)
+
+### mini.jump2d
+
+Minimal and fast Lua plugin for jumping (moving cursor) within visible lines via iterative label filtering. Supports custom jump targets (spots), labels, hooks, allowed windows and lines, and more.
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-jump2d.gif"/>
+
+*Note: demo gif is made on a very slow laptop which resulted in a frame loss. In reality any reaction to typed key is instantaneous.*
+
+Default `config`:
+
+```lua
+{
+  -- Function producing jump spots (byte indexed) for a particular line.
+  -- For more information see |MiniJump2d.start|.
+  -- If `nil` (default) - use |MiniJump2d.default_spotter|
+  spotter = nil,
+
+  -- Characters used for labels of jump spots (in supplied order)
+  labels = 'abcdefghijklmnopqrstuvwxyz',
+
+  -- Which lines are used for computing spots
+  allowed_lines = {
+    blank = true, -- Blank line (not sent to spotter even if `true`)
+    cursor_before = true, -- Lines before cursor line
+    cursor_at = true, -- Cursor line
+    cursor_after = true, -- Lines after cursor line
+    fold = true, -- Start of fold (not sent to spotter even if `true`)
+  },
+
+  -- Which windows from current tabpage are used for visible lines
+  allowed_windows = {
+    current = true,
+    not_current = true,
+  },
+
+  -- Functions to be executed at certain events
+  hooks = {
+    before_start = nil, -- Before jump start
+    after_jump = nil, -- After jump was actually done
+  },
+
+  -- Module mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    start_jumping = '<CR>',
+  },
+}
+```
+
+For more information, read 'mini.jump2d' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [phaazon/hop.nvim](https://github.com/phaazon/hop.nvim) (main inspiration behind this module)
 - [ggandor/lightspeed.nvim](https://github.com/ggandor/lightspeed.nvim)
 
 ### mini.misc

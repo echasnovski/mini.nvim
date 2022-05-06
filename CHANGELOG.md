@@ -1,6 +1,7 @@
 # Version 0.3.0.9000 (development)
 
 - Update all modules to supply mapping description for Neovim>=0.7.
+- Add new module 'mini.jump2d'.
 
 ## mini.comment
 
@@ -12,6 +13,10 @@
 - FEATURE: Implement `MiniJump.state`: table with useful model-related information.
 - BREAKING: Soft deprecate `config.highlight_delay` in favor of `config.delay.highlight`.
 - Update process of querying target symbol: show help message after delay, allow `<C-c>` to stop selecting target.
+
+## mini.jump2d
+
+Introduction of new module.
 
 ## mini.pairs
 
