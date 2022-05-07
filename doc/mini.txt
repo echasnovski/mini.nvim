@@ -2146,7 +2146,7 @@ Features:
     Example: user can configure to look for word starts only inside current
     window at or after cursor line with 'j' and 'k' labels performing some
     action after jump.
-- Works in Visual and Operator-pending modes with same command.
+- Works in Visual and Operator-pending (with dot-repeat) modes.
 - Preconfigured ways of computing jump spots (see |MiniJump2d.builtin_opts|).
 - Works with multibyte characters.
 
@@ -2202,7 +2202,7 @@ This module needs a setup with `require('mini.jump2d').setup({})` (replace
       shorter than the others (leading to fewer average keystrokes). They
       are put near cursor (by default) and highlighted differently. Final
       order of sequences is based on distance to the cursor.
-    - 'hop.nvim' also visualizes labels differently. It is designed to show
+    - 'hop.nvim' visualizes labels differently. It is designed to show
       whole sequences at once, while this module intentionally shows only
       current one at a time.
     - 'mini.jump2d' has opinionated default algorithm of computing jump
