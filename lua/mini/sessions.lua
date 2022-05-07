@@ -136,7 +136,7 @@ MiniSessions.detected = {}
 --- What it does:
 --- - Delete all current buffers with |bwipeout|. This is needed to correctly
 ---   restore buffers from target session. If `force` is not `true`, checks
----   beforehand for unsaved buffers and stops if there is any.
+---   beforehand for unsaved listed buffers and stops if there is any.
 --- - Source session with supplied name.
 ---
 ---@param session_name string Name of detected session file to read. Default:
@@ -173,13 +173,13 @@ function MiniSessions.read(session_name, opts)
     return
   end
 
-  -- Possibly check for unsaved buffers and do nothing if they are present
+  -- Possibly check for unsaved listed buffers and do nothing if present
   if not opts.force then
-    local unsaved_buffers = H.get_unsaved_buffers()
+    local unsaved_listed_buffers = H.get_unsaved_listed_buffers()
 
-    if #unsaved_buffers > 0 then
-      local buf_list = table.concat(unsaved_buffers, ', ')
-      H.error(('There are unsaved buffers: %s.'):format(buf_list))
+    if #unsaved_listed_buffers > 0 then
+      local buf_list = table.concat(unsaved_listed_buffers, ', ')
+      H.error(('There are unsaved listed buffers: %s.'):format(buf_list))
     end
   end
 
@@ -531,9 +531,9 @@ function H.validate_detected(session_name)
   H.error(('%s is not a name for detected session.'):format(vim.inspect(session_name)))
 end
 
-function H.get_unsaved_buffers()
+function H.get_unsaved_listed_buffers()
   return vim.tbl_filter(function(buf_id)
-    return vim.api.nvim_buf_get_option(buf_id, 'modified')
+    return vim.api.nvim_buf_get_option(buf_id, 'modified') and vim.api.nvim_buf_get_option(buf_id, 'buflisted')
   end, vim.api.nvim_list_bufs())
 end
 

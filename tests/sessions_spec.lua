@@ -332,7 +332,7 @@ describe('MiniSessions.read()', function()
     return res
   end
 
-  it('does not source if there are unsaved changes', function()
+  it('does not source if there are unsaved listed buffers', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
 
     -- Setup unsaved buffers
@@ -340,12 +340,23 @@ describe('MiniSessions.read()', function()
 
     -- Session should not be sourced
     local error_pattern = vim.pesc(
-      '(mini.sessions) There are unsaved buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.'
+      '(mini.sessions) There are unsaved listed buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.'
     )
     assert.error_matches(function()
       child.lua([[MiniSessions.read('session1')]])
     end, error_pattern)
     validate_no_session_loaded()
+  end)
+
+  it('ignores unsaved not listed buffers', function()
+    reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+    local buf_id = child.api.nvim_create_buf(false, false)
+    child.api.nvim_buf_set_lines(buf_id, 0, -1, true, { 'aaa' })
+    eq(child.api.nvim_buf_get_option(buf_id, 'modified'), true)
+    eq(child.api.nvim_buf_get_option(buf_id, 'buflisted'), false)
+
+    child.lua([[MiniSessions.read('session1')]])
+    validate_session_loaded('global/session1')
   end)
 
   it('uses by default local session', function()
@@ -378,7 +389,7 @@ describe('MiniSessions.read()', function()
     reset_session_indicator()
     assert.error_matches(function()
       child.lua([[MiniSessions.read('session2.vim', { force = false })]])
-    end, '%(mini%.sessions%) There are unsaved buffers')
+    end, '%(mini%.sessions%) There are unsaved listed buffers')
     validate_no_session_loaded()
   end)
 
