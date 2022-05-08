@@ -18,14 +18,16 @@
 ---       `MiniCompletion.config.lsp_completion.process_items`), for example
 ---       with fuzzy matching. By default items which are not snippets and
 ---       directly start with completed word are kept and sorted according to
----       LSP specification.
+---       LSP specification. Supports `additionalTextEdits`, like auto-import
+---       and others (see 'Notes').
 ---     - If first stage is not set up or resulted into no candidates, fallback
 ---       action is executed. The most tested actions are Neovim's built-in
 ---       insert completion (see |ins-completion|).
---- - Automatic display in floating window of completion item info and
----   signature help (with highlighting of active parameter if LSP server
----   provides such information). After opening, window for signature help is
----   fixed and is closed when there is nothing to show, text is different or
+--- - Automatic display in floating window of completion item info (via
+---   'completionItem/resolve' request) and signature help (with highlighting
+---   of active parameter if LSP server provides such information). After
+---   opening, window for signature help is fixed and is closed when there is
+---   nothing to show, text is different or
 ---   when leaving Insert mode.
 --- - Automatic actions are done after some configurable amount of delay. This
 ---   reduces computational load and allows fast typing (completion and
@@ -64,6 +66,14 @@
 ---   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
 ---   for input buffer. For example, currently for 'dressing.nvim' it can be
 ---   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
+--- - Support of `additionalTextEdits` tries to handle both types of servers:
+---     - When `additionalTextEdits` are supplied in response to
+---       'textDocument/completion' request (like currently in 'pyright').
+---     - When `additionalTextEdits` are supplied in response to
+---       'completionItem/resolve' request (like currently in
+---       'typescript-language-server'). In this case to apply edits user needs
+---       to trigger such request, i.e. select completion item and wait for
+---       `MiniCompletion.config.delay.info` time plus server response time.
 ---
 --- # Comparisons~
 ---
@@ -190,7 +200,7 @@ function MiniCompletion.setup(config)
         au CompleteChanged * lua MiniCompletion.auto_info()
         au CursorMovedI    * lua MiniCompletion.auto_signature()
         au InsertLeavePre  * lua MiniCompletion.stop()
-        au CompleteDonePre * lua MiniCompletion.stop({'completion', 'info'})
+        au CompleteDonePre * lua MiniCompletion.on_completedonepre()
         au TextChangedI    * lua MiniCompletion.on_text_changed_i()
         au TextChangedP    * lua MiniCompletion.on_text_changed_p()
 
@@ -434,6 +444,14 @@ function MiniCompletion.stop(actions)
   end
 end
 
+function MiniCompletion.on_completedonepre()
+  -- Try to apply additional text edits
+  H.apply_additional_text_edits()
+
+  -- Stop processes
+  MiniCompletion.stop({ 'completion', 'info' })
+end
+
 --- Act on every |TextChangedI|
 function MiniCompletion.on_text_changed_i()
   -- Track Insert mode changes
@@ -515,14 +533,14 @@ function MiniCompletion.completefunc_lsp(findstart, base)
       return H.get_completion_start()
     end
 
-    local words = H.process_lsp_response(H.completion.lsp.result, function(response)
+    local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then
         return {}
       end
       items = MiniCompletion.config.lsp_completion.process_items(items, base)
-      return H.lsp_completion_response_items_to_complete_items(items)
+      return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
 
     H.completion.lsp.status = 'done'
@@ -820,6 +838,9 @@ function H.cancel_lsp(caches)
       end
       c.lsp.status = 'canceled'
     end
+
+    c.lsp.result = nil
+    c.lsp.cancel_fun = nil
   end
 end
 
@@ -829,9 +850,9 @@ function H.process_lsp_response(request_result, processor)
   end
 
   local res = {}
-  for _, item in pairs(request_result) do
+  for client_id, item in pairs(request_result) do
     if not item.err and item.result then
-      vim.list_extend(res, processor(item.result) or {})
+      vim.list_extend(res, processor(item.result, client_id) or {})
     end
   end
 
@@ -848,7 +869,7 @@ end
 -- not filter and sort items.
 -- For extra information see 'Response' section:
 -- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
-function H.lsp_completion_response_items_to_complete_items(items)
+function H.lsp_completion_response_items_to_complete_items(items, client_id)
   if vim.tbl_count(items) == 0 then
     return {}
   end
@@ -873,7 +894,7 @@ function H.lsp_completion_response_items_to_complete_items(items)
       icase = 1,
       dup = 1,
       empty = 1,
-      user_data = { nvim = { lsp = { completion_item = item } } },
+      user_data = { nvim = { lsp = { completion_item = item, client_id = client_id } } },
     })
   end
   return res
@@ -883,6 +904,44 @@ function H.get_completion_word(item)
   -- Completion word (textEdit.newText > insertText > label). This doesn't
   -- support snippet expansion.
   return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or item.label or ''
+end
+
+function H.apply_additional_text_edits()
+  -- Code originally.inspired by https://github.com/neovim/neovim/issues/12310
+
+  -- Try to get `additionalTextEdits`. First from 'completionItem/resolve';
+  -- then - from selected item. The reason for this is inconsistency in how
+  -- servers provide `additionTextEdits`: on 'textDocument/completion' or
+  -- 'completionItem/resolve'.
+  local resolve_data = H.process_lsp_response(H.info.lsp.result, function(response, client_id)
+    -- Return nested table because this will be a second argument of
+    -- `vim.list_extend()` and the whole inner table is a target value here.
+    return { { edits = response.additionalTextEdits, client_id = client_id } }
+  end)
+  local edits, client_id
+  if #resolve_data >= 1 then
+    edits, client_id = resolve_data[1].edits, resolve_data[1].client_id
+  else
+    local lsp_data = H.table_get(vim.v.completed_item, { 'user_data', 'nvim', 'lsp' }) or {}
+    edits = H.table_get(lsp_data, { 'completion_item', 'additionalTextEdits' })
+    client_id = lsp_data.client_id
+  end
+
+  if edits == nil then
+    return
+  end
+  client_id = client_id or 0
+
+  -- Use extmark to track relevant cursor postion after text edits
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  local extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
+
+  local offset_encoding = vim.lsp.get_client_by_id(client_id).offset_encoding
+  vim.lsp.util.apply_text_edits(edits, vim.api.nvim_get_current_buf(), offset_encoding)
+
+  local extmark_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, extmark_id, {})
+  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, extmark_id)
+  pcall(vim.api.nvim_win_set_cursor, 0, { extmark_data[1] + 1, extmark_data[2] })
 end
 
 -- Completion item info -------------------------------------------------------
@@ -1376,12 +1435,10 @@ function H.table_get(t, id)
   end
   local success, res = true, t
   for _, i in ipairs(id) do
-    success, res = pcall(function()
-      return res[i]
-    end)
-    if not (success and res) then
-      return nil
-    end
+    --stylua: ignore start
+    success, res = pcall(function() return res[i] end)
+    if not success or res == nil then return end
+    --stylua: ignore end
   end
   return res
 end

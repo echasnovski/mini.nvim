@@ -11,11 +11,13 @@ local load_module = function(config) child.mini_load('completion', config) end
 local unload_module = function() child.mini_unload('completion') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_cursor = function(...) return child.set_cursor(...) end
+local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
+local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
-local mock_lsp = function() child.cmd('luafile tests/helper-mock-months-lsp.lua') end
+local mock_lsp = function() child.cmd('luafile tests/completion-tests/mock-months-lsp.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
@@ -407,6 +409,62 @@ describe('Manual completion', function()
     eq(get_completion(), { 'January', 'June', 'July' })
     type_keys('<C-x>')
     eq(get_completion(), { 'Jackpot' })
+  end)
+
+  it('applies `additionalTextEdits` from "textDocument/completion"', function()
+    local validate = function(confirm_key)
+      child.ensure_normal_mode()
+      set_lines({})
+      type_keys('i', 'Se', '<C-space>')
+      poke_eventloop()
+      type_keys('<C-n>', confirm_key)
+
+      eq(child.fn.mode(), 'i')
+      local is_explicit_confirm = confirm_key == '<C-y>'
+      eq(
+        get_lines(),
+        { 'from months.completion import September', 'September' .. (is_explicit_confirm and '' or confirm_key) }
+      )
+      -- Text edits shouldn't interfere with relative cursor position
+      eq(get_cursor(), { 2, 9 + (is_explicit_confirm and 0 or 1) })
+    end
+
+    -- 'Confirmation' should be either explicit ('<C-y>') or implicit
+    -- (continued typing)
+    validate('<C-y>')
+    validate(' ')
+  end)
+
+  it('applies `additionalTextEdits` from "completionItem/resolve"', function()
+    local validate = function(word_start, word)
+      child.ensure_normal_mode()
+      set_lines({})
+      type_keys('i', word_start, '<C-space>')
+      poke_eventloop()
+      type_keys('<C-n>')
+      -- Wait until `completionItem/resolve` request is sent
+      sleep(test_times.info + 1)
+      type_keys('<C-y>')
+
+      eq(child.fn.mode(), 'i')
+      eq(get_lines(), { 'from months.resolve import ' .. word, word })
+      -- Text edits shouldn't interfere with relative cursor position
+      eq(get_cursor(), { 2, word:len() })
+    end
+
+    -- Case when `textDocument/completion` doesn't have `additionalTextEdits`
+    validate('Oc', 'October')
+
+    -- Case when `textDocument/completion` does have `additionalTextEdits`
+    validate('No', 'November')
+
+    -- Should clear all possible cache for `additionalTextEdits`
+    child.ensure_normal_mode()
+    set_lines({})
+    type_keys('i', 'Ja', '<C-space>')
+    poke_eventloop()
+    type_keys('<C-n>', '<C-y>')
+    eq(get_lines(), { 'January' })
   end)
 
   it('respects vim.{g,b}.minicompletion_disable', function()

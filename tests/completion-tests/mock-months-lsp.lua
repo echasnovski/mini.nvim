@@ -32,11 +32,28 @@ Months.data = {
 }
 --stylua: ignore end
 
+local construct_additionTextEdits = function(id, name)
+  return {
+    {
+      newText = ('from months.%s import %s\n'):format(id, name),
+      range = {
+        start = { line = 0, character = 0 },
+        ['end'] = { line = 0, character = 0 },
+      },
+    },
+  }
+end
+
 Months.requests = {
   ['textDocument/completion'] = function(params)
     local items = {}
     for i, item in ipairs(Months.items) do
-      table.insert(items, { label = item.name, kind = item.kind, sortText = ('%03d'):format(i) })
+      local res = { label = item.name, kind = item.kind, sortText = ('%03d'):format(i) }
+      -- Mock additionalTextEdits as in `pyright`
+      if vim.tbl_contains({ 'September', 'November' }, item.name) then
+        res.additionalTextEdits = construct_additionTextEdits('completion', item.name)
+      end
+      table.insert(items, res)
     end
 
     return { { result = { items = items } } }
@@ -44,6 +61,10 @@ Months.requests = {
 
   ['completionItem/resolve'] = function(params)
     params.documentation = { kind = 'markdown', value = Months.data[params.label].documentation }
+    -- Mock additionalTextEdits as in `typescript-language-server`
+    if vim.tbl_contains({ 'October', 'November' }, params.label) then
+      params.additionalTextEdits = construct_additionTextEdits('resolve', params.label)
+    end
     return { { result = params } }
   end,
 
@@ -105,4 +126,8 @@ vim.lsp.buf_get_clients = function(bufnr)
       },
     },
   }
+end
+
+vim.lsp.get_client_by_id = function(client_id)
+  return vim.lsp.buf_get_clients(0)[client_id]
 end

@@ -641,14 +641,16 @@ Features:
       `MiniCompletion.config.lsp_completion.process_items`), for example
       with fuzzy matching. By default items which are not snippets and
       directly start with completed word are kept and sorted according to
-      LSP specification.
+      LSP specification. Supports `additionalTextEdits`, like auto-import
+      and others (see 'Notes').
     - If first stage is not set up or resulted into no candidates, fallback
       action is executed. The most tested actions are Neovim's built-in
       insert completion (see |ins-completion|).
-- Automatic display in floating window of completion item info and
-  signature help (with highlighting of active parameter if LSP server
-  provides such information). After opening, window for signature help is
-  fixed and is closed when there is nothing to show, text is different or
+- Automatic display in floating window of completion item info (via
+  'completionItem/resolve' request) and signature help (with highlighting
+  of active parameter if LSP server provides such information). After
+  opening, window for signature help is fixed and is closed when there is
+  nothing to show, text is different or
   when leaving Insert mode.
 - Automatic actions are done after some configurable amount of delay. This
   reduces computational load and allows fast typing (completion and
@@ -687,6 +689,14 @@ See |MiniCompletion.config| for `config` structure and default values.
   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
   for input buffer. For example, currently for 'dressing.nvim' it can be
   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
+- Support of `additionalTextEdits` tries to handle both types of servers:
+    - When `additionalTextEdits` are supplied in response to
+      'textDocument/completion' request (like currently in 'pyright').
+    - When `additionalTextEdits` are supplied in response to
+      'completionItem/resolve' request (like currently in
+      'typescript-language-server'). In this case to apply edits user needs
+      to trigger such request, i.e. select completion item and wait for
+      `MiniCompletion.config.delay.info` time plus server response time.
 
 # Comparisons~
 

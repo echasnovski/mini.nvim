@@ -7,6 +7,10 @@
 
 - FEATURE: Implement `config.hooks` with `pre` and `post` hooks (executed before and after successful commenting). Fixes #50, #59.
 
+## mini.completion
+
+- Implement support for `additionalTextEdits` (issue #61).
+
 ## mini.jump
 
 - FEATURE: Implement idle timeout to stop jumping automatically (@annenpolka, #56).
