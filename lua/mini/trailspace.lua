@@ -56,13 +56,14 @@ function MiniTrailspace.setup(config)
   H.apply_config(config)
 
   -- Module behavior
+  -- NOTE: Respecting both `WinEnter` and `BufEnter` seems to be useful to
+  -- account of different order of handling buffer opening in new window.
+  -- Notable example: 'nvim-tree' at commit a1600e5.
   vim.api.nvim_exec(
     [[augroup MiniTrailspace
         au!
-        au WinEnter,InsertLeave * lua MiniTrailspace.highlight()
-        au WinLeave,InsertEnter * lua MiniTrailspace.unhighlight()
-
-        au FileType TelescopePrompt let b:minitrailspace_disable=v:true
+        au WinEnter,BufEnter,InsertLeave * lua MiniTrailspace.highlight()
+        au WinLeave,BufLeave,InsertEnter * lua MiniTrailspace.unhighlight()
       augroup END]],
     false
   )

@@ -265,6 +265,17 @@ describe('Trailspace autohighlighting', function()
     validate_highlighted()
   end)
 
+  it('respects BufEnter/BufLeave', function()
+    child.lua('MiniTrailspace.highlight()')
+    validate_highlighted()
+
+    child.cmd('doautocmd BufLeave')
+    validate_not_highlighted()
+
+    child.cmd('doautocmd BufEnter')
+    validate_highlighted()
+  end)
+
   it('respects WinEnter/WinLeave', function()
     child.lua('MiniTrailspace.highlight()')
     child.cmd('vsplit')
