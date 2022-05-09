@@ -164,7 +164,7 @@
 ---     - Typing any character from `MiniStarter.config.query_updaters` leads
 ---       to updating query. Read more in |MiniStarter.add_to_query|.
 ---     - <BS> deletes latest character from query.
----     - <Down>/<Up> and <M-j>/<M-k> move current item.
+---     - <Down>/<Up>, <C-n>/<C-p>, <M-j>/<M-k> move current item.
 ---     - <CR> executes action of current item.
 ---     - <C-c> closes Starter buffer.
 --- - Evaluate current item when appropriate (after `<CR>` or when there is a
@@ -949,7 +949,7 @@ H.default_footer = [[
 Type query to filter items
 <BS> deletes latest character from query
 <Esc> resets current query
-<Down>/<Up> and <M-j>/<M-k> move current item
+<Down/Up>, <C-n/p>, <M-j/k> move current item
 <CR> executes action of current item
 <C-c> closes this buffer]]
 
@@ -1279,8 +1279,10 @@ function H.apply_buffer_mappings()
   H.buf_keymap('<CR>', [[MiniStarter.eval_current_item()]])
 
   H.buf_keymap('<Up>', [[MiniStarter.update_current_item('prev')]])
+  H.buf_keymap('<C-p>', [[MiniStarter.update_current_item('prev')]])
   H.buf_keymap('<M-k>', [[MiniStarter.update_current_item('prev')]])
   H.buf_keymap('<Down>', [[MiniStarter.update_current_item('next')]])
+  H.buf_keymap('<C-n>', [[MiniStarter.update_current_item('next')]])
   H.buf_keymap('<M-j>', [[MiniStarter.update_current_item('next')]])
 
   -- Make all special symbols to update query

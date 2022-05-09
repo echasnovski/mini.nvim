@@ -3361,7 +3361,7 @@ header/footer, and content hooks:
     - Typing any character from `MiniStarter.config.query_updaters` leads
       to updating query. Read more in |MiniStarter.add_to_query|.
     - <BS> deletes latest character from query.
-    - <Down>/<Up> and <M-j>/<M-k> move current item.
+    - <Down>/<Up>, <C-n>/<C-p>, <M-j>/<M-k> move current item.
     - <CR> executes action of current item.
     - <C-c> closes Starter buffer.
 - Evaluate current item when appropriate (after `<CR>` or when there is a

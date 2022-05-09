@@ -209,8 +209,10 @@ describe('MiniStarter.open()', function()
 
     has_map('<CR>', 'eval_current_item()')
     has_map('<Up>', [[update_current_item('prev')]])
+    has_map('<C-p>', [[update_current_item('prev')]])
     has_map('<M-k>', [[update_current_item('prev')]])
     has_map('<Down>', [[update_current_item('next')]])
+    has_map('<C-n>', [[update_current_item('next')]])
     has_map('<M-j>', [[update_current_item('next')]])
     has_map('<Esc>', [[set_query('')]])
     has_map('<BS>', 'add_to_query()')
@@ -534,7 +536,7 @@ describe('MiniStarter default content', function()
 
   it('has correct `footer`', function()
     local pattern = table.concat(
-      { 'Type query to filter items', '<BS>', '<Esc>', '<Down>/<Up> and <M%-j>/<M%-k>', '<CR>', '<C%-c>' },
+      { 'Type query to filter items', '<BS>', '<Esc>', '<Down/Up>, <C%-n/p>, <M%-j/k>', '<CR>', '<C%-c>' },
       '.*'
     )
     validate_starter_lines(pattern)
@@ -1080,6 +1082,10 @@ describe('Keybindings', function()
 
   it('have working <Down>/<Up>', function()
     validate_arrows({ down = '<Down>', up = '<Up>' })
+  end)
+
+  it('have working <C-n>/<C-p>', function()
+    validate_arrows({ down = '<C-n>', up = '<C-p>' })
   end)
 
   it('have working <M-j>/<M-k>', function()

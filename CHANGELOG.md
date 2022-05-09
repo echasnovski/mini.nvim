@@ -36,6 +36,7 @@ Introduction of new module.
 
 - Allow `config.header` and `config.footer` be any value, which will be converted to string via `tostring()`.
 - Update query logic to not allow queries which result into no items.
+- Add `<C-n>` and `<C-p>` to default mappings.
 
 ## mini.statusline
 
