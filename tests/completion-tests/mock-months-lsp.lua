@@ -119,9 +119,8 @@ vim.lsp.buf_get_clients = function(bufnr)
     {
       name = 'months-lsp',
       offset_encoding = 'utf-16',
-      resolved_capabilities = { completion = true, signature_help = true },
       server_capabilities = {
-        completionProvider = { triggerCharacters = { '.' } },
+        completionProvider = { resolveProvider = true, triggerCharacters = { '.' } },
         signatureHelpProvider = { triggerCharacters = { '(', ',' } },
       },
     },
