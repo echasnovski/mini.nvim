@@ -126,7 +126,7 @@ MiniTabline.config = {
 -- Module functionality =======================================================
 -- TODO: remove after 0.4.0 release.
 function MiniTabline.update_tabline()
-  H.notify('`MiniTabline.update_tabline()` is deprecated because it is obsolete.')
+  H.message('`MiniTabline.update_tabline()` is deprecated because it is obsolete.')
 
   vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
 end
@@ -494,7 +494,7 @@ function H.concat_tabs()
   local position = MiniTabline.config.tabpage_section
   if H.tabpage_section ~= '' then
     if not vim.tbl_contains({ 'none', 'left', 'right' }, position) then
-      H.notify([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])
+      H.message([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])
     end
     if position == 'left' then
       res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res)
@@ -509,8 +509,8 @@ function H.concat_tabs()
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.notify(msg)
-  vim.notify(('(mini.tabline) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.tabline) ' .. msg))
 end
 
 return MiniTabline

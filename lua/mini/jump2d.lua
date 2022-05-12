@@ -653,7 +653,7 @@ end
 function H.spots_show(spots, opts)
   spots = spots or H.current.spots or {}
   if #spots == 0 then
-    H.notify('No spots to show.')
+    H.message('No spots to show.')
     return
   end
 
@@ -804,8 +804,8 @@ function H.advance_jump(opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.notify(msg)
-  vim.notify(('(mini.jump2d) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg))
 end
 
 function H.is_operator_pending()
@@ -817,7 +817,7 @@ function H.getcharstr(msg)
   if msg ~= nil then
     vim.defer_fn(function()
       --stylua: ignore
-      if needs_help_msg then H.notify(msg) end
+      if needs_help_msg then H.message(msg) end
     end, 1000)
   end
 

@@ -154,7 +154,7 @@ function MiniJump.jump(target, backward, till, n_times)
   H.update_state(target, backward, till, n_times)
 
   if MiniJump.state.target == nil then
-    H.notify('Can not jump because there is no recent `target`.')
+    H.message('Can not jump because there is no recent `target`.')
     return
   end
 
@@ -326,7 +326,7 @@ function H.setup_config(config)
   -- Soft deprecate `config.highlight_delay`.
   -- TODO: remove after 0.4.0 release.
   if config.highlight_delay then
-    H.notify('`highlight_delay` is now deprecated. Please use `delay.highlight` instead.')
+    H.message('`highlight_delay` is now deprecated. Please use `delay.highlight` instead.')
     config.delay.highlight = config.highlight_delay
   end
 
@@ -421,8 +421,8 @@ function H.is_highlighting(pattern)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.notify(msg)
-  vim.notify(('(mini.jump) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg))
 end
 
 function H.update_state(target, backward, till, n_times)
@@ -449,7 +449,7 @@ function H.get_target()
     if not needs_help_msg then
       return
     end
-    H.notify('Enter target single character ')
+    H.message('Enter target single character ')
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false

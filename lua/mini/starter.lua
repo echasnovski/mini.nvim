@@ -1095,7 +1095,7 @@ function H.items_flatten(items)
     while type(x) == 'function' and n_nested <= 100 do
       n_nested = n_nested + 1
       if n_nested > 100 then
-        H.notify('Too many nested functions in `config.items`.')
+        H.message('Too many nested functions in `config.items`.')
       end
       x = x()
     end
@@ -1183,7 +1183,7 @@ function H.make_query(query)
   end
 
   if n_active == 0 and query ~= '' then
-    H.notify(('Query %s results into no active items. Current query: %s'):format(vim.inspect(query), H.query))
+    H.message(('Query %s results into no active items. Current query: %s'):format(vim.inspect(query), H.query))
     return
   end
 
@@ -1389,8 +1389,8 @@ else
   end
 end
 
-function H.notify(msg)
-  vim.notify(('(mini.starter) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg))
 end
 
 function H.unique_nprefix(strings)

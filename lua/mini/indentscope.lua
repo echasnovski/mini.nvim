@@ -490,7 +490,7 @@ function MiniIndentscope.gen_animation(easing, opts)
 
   opts = vim.tbl_deep_extend('force', { duration = 20, unit = 'step' }, opts or {})
   if not vim.tbl_contains({'total', 'step'}, opts.unit) then
-    H.notify([[`opts.unit` should be one of 'step' or 'total'. Using 'step'.]])
+    H.message([[`opts.unit` should be one of 'step' or 'total'. Using 'step'.]])
     opts.unit = 'step'
   end
 
@@ -513,7 +513,7 @@ function MiniIndentscope.gen_animation(easing, opts)
   table.sort(allowed_easing_types)
 
   if not vim.tbl_contains(allowed_easing_types, easing) then
-    H.notify(('`easing` should be one of: %s.'):format(table.concat(allowed_easing_types, ', ')))
+    H.message(('`easing` should be one of: %s.'):format(table.concat(allowed_easing_types, ', ')))
     return
   end
 
@@ -1167,8 +1167,8 @@ function H.animation_geometrical_powers(type, opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.notify(msg)
-  vim.notify(('(mini.indentscope) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.indentscope) ' .. msg))
 end
 
 function H.map(mode, key, rhs, opts)

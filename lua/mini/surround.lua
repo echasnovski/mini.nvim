@@ -617,7 +617,7 @@ function H.setup_config(config)
 
   -- TODO: remove after 0.4.0 release
   if config.funname_pattern ~= nil then
-    H.notify(
+    H.message(
       '`config.funname_pattern` is deprecated. '
         .. 'If you explicitly supply its default value, remove it from `config`. '
         .. 'If not, manually modifying `f` surrounding in `config.custom_surroundings`. '
@@ -729,7 +729,7 @@ function H.find_surrounding(surround_info)
       n_lines > 1 and 's' or '',
       MiniSurround.config.search_method
     )
-    H.notify(msg)
+    H.message(msg)
   end
 
   return surr
@@ -876,7 +876,7 @@ function H.user_surround_id(sur_type)
     if not needs_help_msg then return end
 
     local msg = string.format('Enter %s surrounding identifier (single character) ', sur_type)
-    H.notify(msg)
+    H.message(msg)
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false
@@ -890,7 +890,7 @@ function H.user_surround_id(sur_type)
     char = vim.fn.nr2char(char)
   end
   if char:find('^[%w%p%s]$') == nil then
-    H.notify([[Input must be single character: alphanumeric, punctuation, or space.]])
+    H.message([[Input must be single character: alphanumeric, punctuation, or space.]])
     return nil
   end
 
@@ -902,7 +902,7 @@ end
 -- from `from` character (inclusive) to `to` character (inclusive).
 function H.new_linepart(pos_left, pos_right)
   if pos_left.line ~= pos_right.line then
-    H.notify('Positions span over multiple lines.')
+    H.message('Positions span over multiple lines.')
     return nil
   end
 
@@ -1183,8 +1183,8 @@ function H.get_default_surrounding_info(char)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.notify(msg)
-  vim.notify(string.format('(mini.surround) %s', msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.surround) ' .. msg))
 end
 
 function H.error(msg)

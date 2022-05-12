@@ -173,7 +173,7 @@ end
 ---   (number of elements), <sd> (sample standard deviation).
 function MiniMisc.stat_summary(t)
   if type(t) ~= 'table' then
-    vim.notify([[(mini.misc) Input of `MiniMisc.stat_summary` should be an array of numbers.]])
+    H.message('Input of `MiniMisc.stat_summary` should be an array of numbers.')
     return
   end
 
@@ -381,6 +381,11 @@ function H.apply_config(config)
   for _, v in pairs(config.make_global) do
     _G[v] = MiniMisc[v]
   end
+end
+
+-- Utilities ------------------------------------------------------------------
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg))
 end
 
 return MiniMisc

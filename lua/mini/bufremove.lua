@@ -198,7 +198,7 @@ end
 function H.unshow_and_cmd(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
   if not H.is_valid_id(buf_id, 'buffer') then
-    H.notify(buf_id .. ' is not a valid buffer id.')
+    H.message(buf_id .. ' is not a valid buffer id.')
     return false
   end
 
@@ -206,7 +206,7 @@ function H.unshow_and_cmd(buf_id, force, cmd)
     force = false
   end
   if type(force) ~= 'boolean' then
-    H.notify('`force` should be boolean.')
+    H.message('`force` should be boolean.')
     return false
   end
 
@@ -228,7 +228,7 @@ function H.unshow_and_cmd(buf_id, force, cmd)
   --   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
   local ok, result = pcall(vim.cmd, command)
   if not (ok or result:find('E516') or result:find('E517')) then
-    H.notify(result)
+    H.message(result)
     return false
   end
 
@@ -245,7 +245,7 @@ function H.is_valid_id(x, type)
   end
 
   if not is_valid then
-    H.notify(string.format('%s is not a valid %s id.', tostring(x), type))
+    H.message(string.format('%s is not a valid %s id.', tostring(x), type))
   end
   return is_valid
 end
@@ -257,7 +257,7 @@ function H.can_remove(buf_id, force, fun_name)
   end
 
   if vim.api.nvim_buf_get_option(buf_id, 'modified') then
-    H.notify(
+    H.message(
       string.format(
         'Buffer %d has unsaved changes. Use `MiniBufremove.%s(%d, true)` to force.',
         buf_id,
@@ -279,8 +279,8 @@ function H.normalize_buf_id(buf_id)
   return buf_id
 end
 
-function H.notify(msg)
-  vim.notify(string.format('(mini.bufremove) %s', msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg))
 end
 
 return MiniBufremove

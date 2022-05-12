@@ -444,7 +444,7 @@ MiniDoc.config = {
         vim.inspect(output),
         vim.fn.strftime('%Y-%m-%d %H:%M:%S')
       )
-      H.notify(msg)
+      H.message(msg)
     end,
     --minidoc_replace_end
   },
@@ -675,7 +675,7 @@ end
 ---   afterlines as code block in help file.
 function MiniDoc.afterlines_to_code(struct)
   if not (type(struct) == 'table' and (struct.type == 'section' or struct.type == 'block')) then
-    H.notify('Input to `MiniDoc.afterlines_to_code()` should be either section or block.')
+    H.message('Input to `MiniDoc.afterlines_to_code()` should be either section or block.')
     return
   end
 
@@ -1374,8 +1374,8 @@ function H.full_path(path)
   return vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))
 end
 
-function H.notify(msg)
-  vim.notify(('(mini.doc) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg))
 end
 
 return MiniDoc

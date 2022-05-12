@@ -196,7 +196,7 @@ function MiniSessions.read(session_name, opts)
 
   -- Possibly notify
   if opts.verbose then
-    H.notify(('Read session %s'):format(session_path))
+    H.message(('Read session %s'):format(session_path))
   end
 
   -- Execute 'post' hook
@@ -255,7 +255,7 @@ function MiniSessions.write(session_name, opts)
 
   -- Possibly notify
   if opts.verbose then
-    H.notify(('Written session %s'):format(session_path))
+    H.message(('Written session %s'):format(session_path))
   end
 
   -- Execute 'post' hook
@@ -317,7 +317,7 @@ function MiniSessions.delete(session_name, opts)
 
   -- Possibly notify
   if opts.verbose then
-    H.notify(('Deleted session %s'):format(session_path))
+    H.message(('Deleted session %s'):format(session_path))
   end
 
   -- Execute 'pre' hook
@@ -471,7 +471,7 @@ end
 function H.detect_sessions_global(global_dir)
   global_dir = H.full_path(global_dir)
   if vim.fn.isdirectory(global_dir) ~= 1 then
-    H.notify(('%s is not a directory path.'):format(vim.inspect(global_dir)))
+    H.message(('%s is not a directory path.'):format(vim.inspect(global_dir)))
     return {}
   end
 
@@ -569,8 +569,8 @@ function H.default_opts(action)
   }
 end
 
-function H.notify(msg)
-  vim.notify(('(mini.sessions) %s'):format(msg))
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.sessions) ' .. msg))
 end
 
 function H.error(msg)

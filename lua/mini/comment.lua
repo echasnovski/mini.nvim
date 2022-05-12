@@ -289,7 +289,7 @@ function H.make_comment_parts()
   local cs = vim.api.nvim_buf_get_option(0, 'commentstring')
 
   if cs == '' then
-    vim.notify([[(mini.comment) Option 'commentstring' is empty.]])
+    H.message([[(mini.comment) Option 'commentstring' is empty.]])
     return { left = '', right = '' }
   end
 
@@ -403,6 +403,10 @@ function H.map(mode, key, rhs, opts)
   end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
+end
+
+function H.message(msg)
+  vim.cmd('echomsg ' .. vim.inspect('(mini.comment) ' .. msg))
 end
 
 return MiniComment
