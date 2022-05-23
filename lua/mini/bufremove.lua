@@ -152,7 +152,7 @@ function MiniBufremove.unshow_in_window(win_id)
     end
 
     -- Try using previous buffer
-    vim.cmd([[bprevious]])
+    vim.cmd('bprevious')
     if cur_buf ~= vim.api.nvim_win_get_buf(win_id) then
       return
     end

@@ -42,7 +42,7 @@ end
 
 -- Mocks
 local mock_devicons = function()
-  child.cmd([[set rtp+=tests/statusline-tests]])
+  child.cmd('set rtp+=tests/statusline-tests')
 end
 
 local mock_gitsigns = function(head, status)
@@ -54,11 +54,11 @@ local mock_gitsigns = function(head, status)
   child.cmd(cmd_status)
 
   -- Mock for future buffers
-  child.cmd([[augroup MockGitsigns]])
-  child.cmd([[au!]])
-  child.cmd(([[au BufEnter * %s]]):format(cmd_head))
-  child.cmd(([[au BufEnter * %s]]):format(cmd_status))
-  child.cmd([[augroup END]])
+  child.cmd('augroup MockGitsigns')
+  child.cmd('au!')
+  child.cmd(('au BufEnter * %s'):format(cmd_head))
+  child.cmd(('au BufEnter * %s'):format(cmd_status))
+  child.cmd('augroup END')
 end
 
 local mock_diagnostics = function()
@@ -256,12 +256,12 @@ describe('MiniStatusline.section_diagnostics()', function()
     eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
     -- Should return predefined string if no diagnostic output
-    child.lua([[vim.lsp.diagnostic.get_count = function(...) return 0 end]])
-    child.lua([[vim.diagnostic.get = function(...) return {} end]])
+    child.lua('vim.lsp.diagnostic.get_count = function(...) return 0 end')
+    child.lua('vim.diagnostic.get = function(...) return {} end')
     eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' -')
 
     -- Should return empty string if no LSP client attached
-    child.lua([[vim.lsp.buf_get_clients = function() return {} end]])
+    child.lua('vim.lsp.buf_get_clients = function() return {} end')
     eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
   end)
 
@@ -356,7 +356,7 @@ describe('MiniStatusline.section_filename()', function()
     eq(child.lua_get('MiniStatusline.section_filename({})'), '%F%m%r')
 
     -- Should work in terminal
-    child.cmd([[terminal]])
+    child.cmd('terminal')
     eq(child.lua_get('MiniStatusline.section_filename({})'), '%t')
   end)
 
@@ -497,7 +497,7 @@ describe('MiniStatusline.section_searchcount()', function()
     -- Shows nothing if search is not initiated
     eq(section_searchcount(), '')
 
-    type_keys([[/]], 'a', '<CR>')
+    type_keys('/', 'a', '<CR>')
     set_cursor(1, 0)
     eq(section_searchcount(), '0/3')
 
@@ -513,7 +513,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('works with many search matches', function()
     set_lines({ string.rep('a ', 101) })
-    type_keys([[/]], 'a', '<CR>')
+    type_keys('/', 'a', '<CR>')
     set_cursor(1, 0)
     eq(section_searchcount(), '1/>99')
 
@@ -526,7 +526,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('respects `args.trunc_width`', function()
     set_lines({ '', 'a a a ' })
-    type_keys([[/]], 'a', '<CR>')
+    type_keys('/', 'a', '<CR>')
     set_cursor(1, 0)
 
     set_width(100)
@@ -537,7 +537,7 @@ describe('MiniStatusline.section_searchcount()', function()
 
   it('respects `args.options`', function()
     set_lines({ '', 'a a a ' })
-    type_keys([[/]], 'a', '<CR>')
+    type_keys('/', 'a', '<CR>')
 
     eq(section_searchcount({ options = { recompute = false } }), '1/3')
     set_cursor(2, 5)

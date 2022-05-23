@@ -80,7 +80,7 @@ describe('MiniBase16.setup()', function()
   it('respects `config` argument', function()
     unload_module()
     load_module({ palette = minischeme_palette, use_cterm = true })
-    assert.True(child.lua_get([[MiniBase16.config.use_cterm == true]]))
+    assert.True(child.lua_get('MiniBase16.config.use_cterm == true'))
   end)
 
   it('validates `config` argument', function()
@@ -181,7 +181,7 @@ describe('MiniBase16.mini_palette()', function()
   it('validates arguments', function()
     local validate = function(args, error_pattern)
       assert.error_matches(function()
-        child.lua_get([[MiniBase16.mini_palette(...)]], args)
+        child.lua_get('MiniBase16.mini_palette(...)', args)
       end, error_pattern)
     end
 
@@ -211,7 +211,7 @@ describe('MiniBase16.rgb_palette_to_cterm_palette()', function()
   it('validates arguments', function()
     local validate = function(palette, error_pattern)
       assert.error_matches(function()
-        child.lua_get([[MiniBase16.rgb_palette_to_cterm_palette(...)]], { palette })
+        child.lua_get('MiniBase16.rgb_palette_to_cterm_palette(...)', { palette })
       end, error_pattern)
     end
 

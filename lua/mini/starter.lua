@@ -103,7 +103,7 @@
 --- header/footer, and content hooks:
 --- >
 ---   local my_items = {
----     { name = 'Echo random number', action = [[lua print(math.random())]], section = 'Section 1' },
+---     { name = 'Echo random number', action = 'lua print(math.random())', section = 'Section 1' },
 ---     function()
 ---       return {
 ---         { name = 'Item #1 from function', action = [[echo 'Item #1']], section = 'From function' },
@@ -117,7 +117,7 @@
 ---         end,
 ---       }
 ---     end,
----     { name = [[Another item in 'Section 1']], action = [[lua print(math.random() + 10)]], section = 'Section 1' },
+---     { name = [[Another item in 'Section 1']], action = 'lua print(math.random() + 10)', section = 'Section 1' },
 ---   }
 ---
 ---   local footer_n_seconds = (function()
@@ -254,7 +254,7 @@ MiniStarter.config = {
   -- Characters to update query. Each character will have special buffer
   -- mapping overriding your global ones. Be careful to not add `:` as it
   -- allows you to go into command mode.
-  query_updaters = [[abcdefghijklmnopqrstuvwxyz0123456789_-.]],
+  query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
 }
 --minidoc_afterlines_end
 
@@ -339,7 +339,7 @@ function MiniStarter.open(buf_id)
   MiniStarter.refresh()
 
   -- Issue custom event
-  vim.cmd([[doautocmd User MiniStarterOpened]])
+  vim.cmd('doautocmd User MiniStarterOpened')
 
   -- Ensure not being in VimEnter
   H.is_in_vimenter = false
@@ -512,7 +512,7 @@ function MiniStarter.sections.recent_files(n, current_dir, show_path)
   show_path = show_path == nil and true or show_path
 
   if current_dir then
-    vim.cmd([[au DirChanged * lua MiniStarter.refresh()]])
+    vim.cmd('au DirChanged * lua MiniStarter.refresh()')
   end
 
   return function()
@@ -524,7 +524,7 @@ function MiniStarter.sections.recent_files(n, current_dir, show_path)
     end, vim.v.oldfiles or {})
 
     if #files == 0 then
-      return { { name = [[There are no recent files (`v:oldfiles` is empty)]], action = '', section = section } }
+      return { { name = 'There are no recent files (`v:oldfiles` is empty)', action = '', section = section } }
     end
 
     -- Possibly filter files from current directory
@@ -537,7 +537,7 @@ function MiniStarter.sections.recent_files(n, current_dir, show_path)
     end
 
     if #files == 0 then
-      return { { name = [[There are no recent files in current directory]], action = '', section = section } }
+      return { { name = 'There are no recent files in current directory', action = '', section = section } }
     end
 
     -- Create items
@@ -1235,34 +1235,34 @@ end
 
 function H.apply_buffer_options()
   -- Force Normal mode
-  vim.cmd([[normal! <ESC>]])
+  vim.cmd('normal! <ESC>')
 
   vim.api.nvim_buf_set_name(H.buf_id, 'Starter')
   -- Having `noautocmd` is crucial for performance: ~9ms without it, ~1.6ms with it
-  vim.cmd([[noautocmd silent! set filetype=starter]])
+  vim.cmd('noautocmd silent! set filetype=starter')
 
   local options = {
     -- Taken from 'vim-startify'
-    [[bufhidden=wipe]],
-    [[colorcolumn=]],
-    [[foldcolumn=0]],
-    [[matchpairs=]],
-    [[nobuflisted]],
-    [[nocursorcolumn]],
-    [[nocursorline]],
-    [[nolist]],
-    [[nonumber]],
-    [[noreadonly]],
-    [[norelativenumber]],
-    [[nospell]],
-    [[noswapfile]],
-    [[signcolumn=no]],
-    [[synmaxcol&]],
+    'bufhidden=wipe',
+    'colorcolumn=',
+    'foldcolumn=0',
+    'matchpairs=',
+    'nobuflisted',
+    'nocursorcolumn',
+    'nocursorline',
+    'nolist',
+    'nonumber',
+    'noreadonly',
+    'norelativenumber',
+    'nospell',
+    'noswapfile',
+    'signcolumn=no',
+    'synmaxcol&',
     -- Differ from 'vim-startify'
-    [[buftype=nofile]],
-    [[nomodeline]],
-    [[nomodifiable]],
-    [[foldlevel=999]],
+    'buftype=nofile',
+    'nomodeline',
+    'nomodifiable',
+    'foldlevel=999',
   }
   -- Vim's `setlocal` is currently more robust comparing to `opt_local`
   vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
@@ -1276,7 +1276,7 @@ function H.apply_buffer_options()
 end
 
 function H.apply_buffer_mappings()
-  H.buf_keymap('<CR>', [[MiniStarter.eval_current_item()]])
+  H.buf_keymap('<CR>', 'MiniStarter.eval_current_item()')
 
   H.buf_keymap('<Up>', [[MiniStarter.update_current_item('prev')]])
   H.buf_keymap('<C-p>', [[MiniStarter.update_current_item('prev')]])
@@ -1288,12 +1288,12 @@ function H.apply_buffer_mappings()
   -- Make all special symbols to update query
   for _, key in ipairs(vim.split(MiniStarter.config.query_updaters, '')) do
     local key_string = vim.inspect(tostring(key))
-    H.buf_keymap(key, ([[MiniStarter.add_to_query(%s)]]):format(key_string))
+    H.buf_keymap(key, ('MiniStarter.add_to_query(%s)'):format(key_string))
   end
 
   H.buf_keymap('<Esc>', [[MiniStarter.set_query('')]])
-  H.buf_keymap('<BS>', [[MiniStarter.add_to_query()]])
-  H.buf_keymap('<C-c>', [[MiniStarter.close()]])
+  H.buf_keymap('<BS>', 'MiniStarter.add_to_query()')
+  H.buf_keymap('<C-c>', 'MiniStarter.close()')
 end
 
 function H.add_hl_activity(query)

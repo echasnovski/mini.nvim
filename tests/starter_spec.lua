@@ -123,7 +123,7 @@ describe('MiniStarter.setup()', function()
     assert_config('header', vim.NIL)
     assert_config('footer', vim.NIL)
     assert_config('content_hooks', vim.NIL)
-    assert_config('query_updaters', [[abcdefghijklmnopqrstuvwxyz0123456789_-.]])
+    assert_config('query_updaters', 'abcdefghijklmnopqrstuvwxyz0123456789_-.')
   end)
 
   it('respects `config` argument', function()
@@ -238,7 +238,7 @@ describe('MiniStarter.open()', function()
 
   it('respects `buf_id` argument', function()
     local cur_buf_id = child.api.nvim_get_current_buf()
-    child.lua(([[MiniStarter.open(%s)]]):format(cur_buf_id))
+    child.lua(('MiniStarter.open(%s)'):format(cur_buf_id))
     eq(child.api.nvim_get_current_buf(), cur_buf_id)
   end)
 
@@ -260,7 +260,7 @@ describe('MiniStarter.open()', function()
     local validate_disable = function(var_type)
       child[var_type].ministarter_disable = true
 
-      child.lua([[MiniStarter.open()]])
+      child.lua('MiniStarter.open()')
       validate_starter_not_shown()
 
       child[var_type].ministarter_disable = nil
@@ -280,11 +280,11 @@ describe('MiniStarter.refresh()', function()
   end)
 
   it('does `header` normalization', function()
-    validate_equal_starter({ header = [[100]] }, { header = [['100']] })
+    validate_equal_starter({ header = '100' }, { header = [['100']] })
     validate_equal_starter({ header = [[function() return 'aaa' end]] }, { header = [['aaa']] })
     validate_equal_starter({ header = [[function() return 'aaa\nbbb' end]] }, { header = [['aaa\nbbb']] })
-    validate_equal_starter({ header = [[function() return 100 end]] }, { header = [['100']] })
-    validate_equal_starter({ header = [[function() return end]] }, { header = [['nil']] })
+    validate_equal_starter({ header = 'function() return 100 end' }, { header = [['100']] })
+    validate_equal_starter({ header = 'function() return end' }, { header = [['nil']] })
   end)
 
   it('does `header` normalization for empty string', function()
@@ -295,11 +295,11 @@ describe('MiniStarter.refresh()', function()
   end)
 
   it('does `footer` normalization', function()
-    validate_equal_starter({ footer = [[100]] }, { footer = [['100']] })
+    validate_equal_starter({ footer = '100' }, { footer = [['100']] })
     validate_equal_starter({ footer = [[function() return 'aaa' end]] }, { footer = [['aaa']] })
     validate_equal_starter({ footer = [[function() return 'aaa\nbbb' end]] }, { footer = [['aaa\nbbb']] })
-    validate_equal_starter({ footer = [[function() return 100 end]] }, { footer = [['100']] })
-    validate_equal_starter({ footer = [[function() return end]] }, { footer = [['nil']] })
+    validate_equal_starter({ footer = 'function() return 100 end' }, { footer = [['100']] })
+    validate_equal_starter({ footer = 'function() return end' }, { footer = [['nil']] })
   end)
 
   it('does `footer` normalization for empty string', function()
@@ -347,7 +347,7 @@ describe('MiniStarter.refresh()', function()
 
   it('allows empty `items`', function()
     validate_equal_starter(
-      { items = [[{}]] },
+      { items = '{}' },
       { items = [[{ { name = '`MiniStarter.config.items` is empty', action = '', section = '' } }]] }
     )
     -- It shouldn't give any messages
@@ -374,9 +374,9 @@ describe('MiniStarter.refresh()', function()
     child.lua('_G.n = 0')
 
     local strconfig_1 = {
-      header = [[function() _G.n = _G.n + 1; return _G.n end]],
+      header = 'function() _G.n = _G.n + 1; return _G.n end',
       items = [[{ function() return { action = 'echo "a"', name = tostring(_G.n), section = 'Section a' } end }]],
-      footer = [[function() return _G.n end]],
+      footer = 'function() return _G.n end',
     }
     local strconfig_2 = {
       header = [['2']],
@@ -511,7 +511,7 @@ describe('MiniStarter default content', function()
     validate_starter_lines([[Sessions%s+░ There are no detected sessions in 'mini%.sessions']])
 
     -- Should show local (first and with `(local)` note) and global sessions
-    child.cmd([[cd tests/starter-tests/sessions]])
+    child.cmd('cd tests/starter-tests/sessions')
     child.lua([[require('mini.sessions').setup({ directory = '.' })]])
     local pattern = table.concat(
       { 'Sessions', '░ Session%.vim %(local%)', '░ session_global%.lua', 'Recent files' },
@@ -531,7 +531,7 @@ describe('MiniStarter default content', function()
   end)
 
   it("has 'Builtin actions' section", function()
-    validate_starter_lines([[Builtin actions%s+░ Edit new buffer%s+░ Quit Neovim]])
+    validate_starter_lines('Builtin actions%s+░ Edit new buffer%s+░ Quit Neovim')
   end)
 
   it('has correct `footer`', function()
@@ -568,7 +568,7 @@ describe('MiniStarter.content', function()
     validate_content()
 
     -- Should persist even outside of Starter buffer
-    child.cmd([[bwipeout]])
+    child.cmd('bwipeout')
     validate_starter_not_shown()
     validate_content()
   end)
@@ -593,7 +593,7 @@ describe('MiniStarter.content_coords()', function()
   end)
 
   it('works with no argument', function()
-    local coords = child.lua_get([[MiniStarter.content_coords(MiniStarter.content, nil)]])
+    local coords = child.lua_get('MiniStarter.content_coords(MiniStarter.content, nil)')
     for i = 1, 6 do
       eq(coords[i], { line = i, unit = 1 })
     end
@@ -704,7 +704,7 @@ describe('MiniStarter.gen_hook', function()
 
   local validate_aligning = function(args, pads)
     reload_from_strconfig({
-      content_hooks = ([[{ MiniStarter.gen_hook.aligning(%s) }]]):format(args),
+      content_hooks = ('{ MiniStarter.gen_hook.aligning(%s) }'):format(args),
       header = [['']],
       footer = [['']],
       items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
@@ -754,7 +754,7 @@ describe('MiniStarter.gen_hook', function()
       header = [['']],
       footer = [['']],
       items = '{ ' .. table.concat(itemstrings, ', ') .. '}',
-      content_hooks = ([[{ MiniStarter.gen_hook.indexing(%s) }]]):format(args),
+      content_hooks = ('{ MiniStarter.gen_hook.indexing(%s) }'):format(args),
     })
   end
 
@@ -778,7 +778,7 @@ describe('MiniStarter.gen_hook', function()
   end)
 
   it('indexing() respects `exclude_sections` argument', function()
-    reload_indexing([[nil, {}]])
+    reload_indexing('nil, {}')
     child.lua('MiniStarter.open()')
     eq(get_lines(), { 'AAA', '1. a', '2. aa', '', 'BBB', '3. b', '4. bb' })
     child.lua('MiniStarter.close()')
@@ -917,14 +917,14 @@ describe('MiniStarter.add_to_query()', function()
     child.lua([[MiniStarter.add_to_query('a')]])
     eq(get_active_items_names(), { 'aaab', 'aaba' })
 
-    child.lua([[MiniStarter.add_to_query()]])
+    child.lua('MiniStarter.add_to_query()')
     eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
 
-    child.lua([[MiniStarter.add_to_query()]])
+    child.lua('MiniStarter.add_to_query()')
     eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
 
     -- Works even when current query is already empty
-    child.lua([[MiniStarter.add_to_query()]])
+    child.lua('MiniStarter.add_to_query()')
     eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
   end)
 end)
@@ -1117,7 +1117,7 @@ describe('Highlighting', function()
 
     -- Mock basic highlighting function
     child.lua('_G.hl_history = {}')
-    child.lua([[vim.highlight.range = function(...) table.insert(_G.hl_history, { ... }) end]])
+    child.lua('vim.highlight.range = function(...) table.insert(_G.hl_history, { ... }) end')
   end)
 
   local get_hl_history = function(filter)

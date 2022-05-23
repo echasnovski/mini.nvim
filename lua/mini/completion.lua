@@ -220,7 +220,7 @@ function MiniCompletion.setup(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline]], false)
+  vim.api.nvim_exec('hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline', false)
 end
 
 --- Module config
@@ -682,9 +682,9 @@ function H.apply_config(config)
 
   if config.set_vim_settings then
     -- Don't give ins-completion-menu messages
-    vim.cmd([[set shortmess+=c]])
+    vim.cmd('set shortmess+=c')
     -- More common completion behavior
-    vim.cmd([[set completeopt=menuone,noinsert,noselect]])
+    vim.cmd('set completeopt=menuone,noinsert,noselect')
   end
 end
 

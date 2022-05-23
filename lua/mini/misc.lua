@@ -81,7 +81,7 @@ function MiniMisc.get_gutter_width(win_id)
   -- Move cursor to the last visible column
   local last_col = vim.api.nvim_win_call(win_id, function()
     vim.opt.virtualedit = 'all'
-    vim.cmd([[normal! g$]])
+    vim.cmd('normal! g$')
     return vim.fn.virtcol('.')
   end)
 
@@ -334,7 +334,7 @@ function MiniMisc.zoom(buf_id, config)
     local default_config = { relative = 'editor', row = 0, col = 0, width = 1000, height = 1000 }
     config = vim.tbl_deep_extend('force', default_config, config or {})
     H.zoom_winid = vim.api.nvim_open_win(buf_id, true, config)
-    vim.cmd([[normal! zz]])
+    vim.cmd('normal! zz')
   end
 end
 

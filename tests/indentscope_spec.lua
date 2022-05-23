@@ -252,7 +252,7 @@ describe('MiniIndentscope.get_scope()', function()
     -- non-blank line
     set_cursor(3, 4)
     local scope_nonblank = get_scope()
-    child.cmd([[normal! j]])
+    child.cmd('normal! j')
     local scope_blank = get_scope()
     eq(scope_blank.reference.indent, scope_nonblank.reference.indent)
     eq(scope_blank.body, scope_nonblank.body)
@@ -279,7 +279,7 @@ describe('MiniIndentscope.gen_animation()', function()
   local assert_easing = function(easing, target, opts, tolerance)
     opts = opts or {}
     tolerance = tolerance or 0.1
-    child.lua([[_G._f = MiniIndentscope.gen_animation(...)]], { easing, opts })
+    child.lua('_G._f = MiniIndentscope.gen_animation(...)', { easing, opts })
     local f = function(...)
       return child.lua_get('_G._f(...)', { ... })
     end

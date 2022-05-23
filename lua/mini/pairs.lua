@@ -504,10 +504,10 @@ function H.ensure_cr_bs(mode)
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
   if has_any_bs_pair then
-    H.map(mode, '<BS>', [[v:lua.MiniPairs.bs()]], { expr = true, desc = 'MiniPairs <BS>' })
+    H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', { expr = true, desc = 'MiniPairs <BS>' })
   end
   if mode == 'i' and has_any_cr_pair then
-    H.map(mode, '<CR>', [[v:lua.MiniPairs.cr()]], { expr = true, desc = 'MiniPairs <CR>' })
+    H.map(mode, '<CR>', 'v:lua.MiniPairs.cr()', { expr = true, desc = 'MiniPairs <CR>' })
   end
 end
 
@@ -542,7 +542,7 @@ end
 
 function H.infer_mapping_description(pair_info)
   local action_name = pair_info.action:sub(1, 1):upper() .. pair_info.action:sub(2)
-  return ([[%s action for %s pair]]):format(action_name, vim.inspect(pair_info.pair))
+  return ('%s action for %s pair'):format(action_name, vim.inspect(pair_info.pair))
 end
 
 -- Utilities ------------------------------------------------------------------

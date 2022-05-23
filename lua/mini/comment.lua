@@ -277,7 +277,7 @@ function H.apply_config(config)
     { desc = 'Comment selection' }
   )
   H.map('n', config.mappings.comment_line, 'v:lua.MiniComment.operator() . "_"', { expr = true, desc = 'Comment line' })
-  H.map('o', config.mappings.textobject, [[<cmd>lua MiniComment.textobject()<cr>]], { desc = 'Comment textobject' })
+  H.map('o', config.mappings.textobject, '<cmd>lua MiniComment.textobject()<cr>', { desc = 'Comment textobject' })
 end
 
 function H.is_disabled()
@@ -304,7 +304,7 @@ function H.make_comment_check(comment_parts)
   local l, r = comment_parts.left, comment_parts.right
   -- String is commented if it has structure:
   -- <space> <left> <anything> <right> <space>
-  local regex = string.format([[^%%s-%s.*%s%%s-$]], vim.pesc(l), vim.pesc(r))
+  local regex = string.format('^%%s-%s.*%s%%s-$', vim.pesc(l), vim.pesc(r))
 
   return function(line)
     return line:find(regex) ~= nil
@@ -374,7 +374,7 @@ function H.make_uncomment_function(comment_parts)
 
   -- Usage of `lpad` and `rpad` as possbile single space enables uncommenting
   -- of commented empty lines without trailing whitespace (like '  #').
-  local uncomment_regex = string.format([[^(%%s*)%s%s(.-)%s%s%%s-$]], vim.pesc(l), lpad, rpad, vim.pesc(r))
+  local uncomment_regex = string.format('^(%%s*)%s%s(.-)%s%s%%s-$', vim.pesc(l), lpad, rpad, vim.pesc(r))
 
   return function(line)
     local indent, new_line = string.match(line, uncomment_regex)

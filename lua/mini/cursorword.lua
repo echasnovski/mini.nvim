@@ -60,7 +60,7 @@
 ---   end
 ---
 ---   -- Make sure to add this autocommand *before* calling module's `setup()`.
----   vim.cmd([[au CursorMoved * lua _G.cursorword_blocklist()]])
+---   vim.cmd('au CursorMoved * lua _G.cursorword_blocklist()')
 ---@tag mini.cursorword
 ---@tag MiniCursorword
 ---@toc_entry Highlight word under cursor

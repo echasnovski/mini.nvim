@@ -255,7 +255,7 @@ end
 -- Tab's clickable action (if supported)
 function H.construct_tabfunc(buf_id)
   if H.tablineat > 0 then
-    return string.format([[%%%d@MiniTablineSwitchBuffer@]], buf_id)
+    return string.format('%%%d@MiniTablineSwitchBuffer@', buf_id)
   else
     return ''
   end

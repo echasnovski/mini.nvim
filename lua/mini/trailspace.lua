@@ -81,7 +81,7 @@ function MiniTrailspace.setup(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi default link MiniTrailspace Error]], false)
+  vim.api.nvim_exec('hi default link MiniTrailspace Error', false)
 
   -- Initialize highlight (usually takes effect during startup)
   vim.defer_fn(MiniTrailspace.highlight, 0)

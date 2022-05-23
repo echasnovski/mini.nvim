@@ -59,7 +59,7 @@ describe('MiniMisc.bench_time()', function()
   child.setup()
   load_module()
 
-  child.lua([[_G.f = function(ms) ms = ms or 10; vim.loop.sleep(ms); return ms end]])
+  child.lua('_G.f = function(ms) ms = ms or 10; vim.loop.sleep(ms); return ms end')
   local bench_time = function(...)
     return unpack(child.lua_get('{ MiniMisc.bench_time(_G.f, ...) }', { ... }))
   end
@@ -179,7 +179,7 @@ describe('MiniMisc.resize_window()', function()
 
     -- Prepare two windows
     initial_width = child.api.nvim_win_get_width(0)
-    child.cmd([[vsplit]])
+    child.cmd('vsplit')
     win_id = child.api.nvim_list_wins()[1]
   end)
 

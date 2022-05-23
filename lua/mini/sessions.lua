@@ -156,7 +156,7 @@ function MiniSessions.read(session_name, opts)
     return
   end
   if vim.tbl_count(MiniSessions.detected) == 0 then
-    H.error([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
+    H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
   end
 
   if session_name == nil then
@@ -187,7 +187,7 @@ function MiniSessions.read(session_name, opts)
   H.possibly_execute(opts.hooks.pre)
 
   -- Wipeout all buffers
-  vim.cmd([[%bwipeout!]])
+  vim.cmd('%bwipeout!')
 
   -- Read session file
   local session_path = MiniSessions.detected[session_name].path
@@ -286,7 +286,7 @@ function MiniSessions.delete(session_name, opts)
     return
   end
   if vim.tbl_count(MiniSessions.detected) == 0 then
-    H.error([[There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.]])
+    H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
   end
 
   opts = vim.tbl_deep_extend('force', H.default_opts('delete'), opts or {})
@@ -544,7 +544,7 @@ end
 function H.name_to_path(session_name)
   if session_name == nil then
     if vim.v.this_session == '' then
-      H.error([[There is no active session. Supply non-nil session name.]])
+      H.error('There is no active session. Supply non-nil session name.')
     end
     return vim.v.this_session
   end

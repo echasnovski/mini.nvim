@@ -166,12 +166,12 @@ function helpers.new_child_neovim()
         if value_type == 'function' then
           -- This allows syntax like `child.fn.mode(1)`
           return function(...)
-            return child.api.nvim_exec_lua(([[return %s(...)]]):format(obj_name), { ... })
+            return child.api.nvim_exec_lua(('return %s(...)'):format(obj_name), { ... })
           end
         end
 
         -- This allows syntax like `child.bo.buftype`
-        return child.api.nvim_exec_lua(([[return %s]]):format(obj_name), {})
+        return child.api.nvim_exec_lua(('return %s'):format(obj_name), {})
       end,
       __newindex = function(_, key, value)
         local obj_name = ('vim[%s][%s]'):format(vim.inspect(tbl_name), vim.inspect(key))

@@ -364,7 +364,7 @@ describe('MiniSessions.read()', function()
     reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
 
     eq(child.lua_get([[MiniSessions.detected['Session.vim'].type]]), 'local')
-    child.lua([[MiniSessions.read()]])
+    child.lua('MiniSessions.read()')
     validate_session_loaded('local/Session.vim')
   end)
 
@@ -372,7 +372,7 @@ describe('MiniSessions.read()', function()
     local session_dir = populate_sessions(1000)
 
     reload_module({ autowrite = false, directory = session_dir })
-    child.lua([[MiniSessions.read()]])
+    child.lua('MiniSessions.read()')
     validate_session_loaded('empty/session_b')
   end)
 
@@ -675,7 +675,7 @@ describe('MiniSessions.delete()', function()
     local path = make_path(session_dir, 'session_a')
     eq(child.v.this_session, path)
 
-    child.lua([[MiniSessions.delete()]])
+    child.lua('MiniSessions.delete()')
     assert.True(child.fn.filereadable(path) == 0)
 
     -- Should also update `v:this_session`
@@ -822,7 +822,7 @@ describe('MiniSessions.select()', function()
     common_setup()
 
     -- Mock `vim.ui.select`
-    child.lua([[vim.ui = { select = function(...) _G.ui_select_args = { ... } end }]])
+    child.lua('vim.ui = { select = function(...) _G.ui_select_args = { ... } end }')
 
     -- Load module with detected sessions
     session_dir = populate_sessions()
@@ -859,12 +859,12 @@ describe('MiniSessions.select()', function()
   it('verifies presense of `vim.ui` and `vim.ui.select`', function()
     child.lua('vim.ui = 1')
     assert.error_matches(function()
-      child.lua([[MiniSessions.select()]])
+      child.lua('MiniSessions.select()')
     end, '%(mini%.sessions%).*vim%.ui')
 
     child.lua('vim.ui = {}')
     assert.error_matches(function()
-      child.lua([[MiniSessions.select()]])
+      child.lua('MiniSessions.select()')
     end, '%(mini%.sessions%).*vim%.ui%.select')
   end)
 

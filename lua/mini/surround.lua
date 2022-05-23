@@ -141,7 +141,7 @@ function MiniSurround.setup(config)
   H.apply_config(config)
 
   -- Create highlighting
-  vim.api.nvim_exec([[hi default link MiniSurround IncSearch]], false)
+  vim.api.nvim_exec('hi default link MiniSurround IncSearch', false)
 end
 
 --- Module config
@@ -445,7 +445,7 @@ function MiniSurround.find()
   H.cursor_cycle(pos_array, dir)
 
   -- Open 'enough folds' to show cursor
-  vim.cmd([[normal! zv]])
+  vim.cmd('normal! zv')
 end
 
 --- Highlight surrounding
@@ -661,7 +661,7 @@ function H.apply_config(config)
   H.map('n', config.mappings.find, [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], { expr = true, desc = 'Find right surrounding' })
   H.map('n', config.mappings.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']], { expr = true, desc = 'Find left surrounding' })
   H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true, desc = 'Highlight surrounding' })
-  H.map('n', config.mappings.update_n_lines, [[<Cmd>lua MiniSurround.update_n_lines()<CR>]], { desc = 'Update `MiniSurround.config.n_lines`' })
+  H.map('n', config.mappings.update_n_lines, '<Cmd>lua MiniSurround.update_n_lines()<CR>', { desc = 'Update `MiniSurround.config.n_lines`' })
   --stylua: ignore end
 end
 
@@ -890,7 +890,7 @@ function H.user_surround_id(sur_type)
     char = vim.fn.nr2char(char)
   end
   if char:find('^[%w%p%s]$') == nil then
-    H.message([[Input must be single character: alphanumeric, punctuation, or space.]])
+    H.message('Input must be single character: alphanumeric, punctuation, or space.')
     return nil
   end
 

@@ -348,8 +348,8 @@ describe('MiniPairs.setup()', function()
     validate_map("'", [[v:lua.MiniPairs.closeopen("''", "[^%a\\].")]])
     validate_map('`', [[v:lua.MiniPairs.closeopen("``", "[^\\].")]])
 
-    validate_map('<CR>', [[v:lua.MiniPairs.cr()]])
-    validate_map('<BS>', [[v:lua.MiniPairs.bs()]])
+    validate_map('<CR>', 'v:lua.MiniPairs.cr()')
+    validate_map('<BS>', 'v:lua.MiniPairs.bs()')
   end)
 
   it('makes custom `config.mappings`', function()
@@ -357,7 +357,7 @@ describe('MiniPairs.setup()', function()
     validate_map('(', [[v:lua.MiniPairs.close("[]", "[^\\].")]])
 
     reload_module({ mappings = { ['*'] = { pair = '**', action = 'closeopen' } } })
-    validate_map('*', [[v:lua.MiniPairs.closeopen("**", "..")]])
+    validate_map('*', 'v:lua.MiniPairs.closeopen("**", "..")')
   end)
 
   it('makes mappings in supplied modes', function()

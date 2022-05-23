@@ -51,7 +51,7 @@ describe('MiniDoc.setup()', function()
       eq(child.lua_get('MiniDoc.config.' .. field), value)
     end
     local assert_config_function = function(field)
-      local command = ([[type(MiniDoc.config.%s)]]):format(field)
+      local command = ('type(MiniDoc.config.%s)'):format(field)
       eq(child.lua_get(command), 'function')
     end
     local assert_sections = function(section_names)
@@ -60,7 +60,7 @@ describe('MiniDoc.setup()', function()
       eq(t, section_names)
 
       for _, key in ipairs(t) do
-        local command = string.format([[type(MiniDoc.config.hooks.sections[%s])]], vim.inspect(key))
+        local command = string.format('type(MiniDoc.config.hooks.sections[%s])', vim.inspect(key))
         eq(child.lua_get(command), 'function')
       end
     end
@@ -191,7 +191,7 @@ describe('MiniDoc.generate()', function()
     unload_module()
 
     -- Add project root to runtimepath to be able to `require('mini.doc')`
-    child.cmd([[set rtp+=../..]])
+    child.cmd('set rtp+=../..')
     child.lua([[
       require('mini.doc').setup({
         hooks = {
@@ -230,7 +230,7 @@ describe('MiniDoc.generate()', function()
 
   it('uses custom script', function()
     -- Add project root to runtimepath to be able to `require('mini.doc')`
-    child.cmd([[set rtp+=../..]])
+    child.cmd('set rtp+=../..')
     reload_module({ script_path = 'gendoc/gendoc-script.lua' })
 
     cd('custom-script')

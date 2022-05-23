@@ -539,7 +539,7 @@ function MiniIndentscope.move_cursor(side, use_border, scope)
 
   vim.api.nvim_win_set_cursor(0, { target_line, 0 })
   -- Move to first non-blank character to allow chaining scopes
-  vim.cmd([[normal! ^]])
+  vim.cmd('normal! ^')
 end
 
 --- Function for motion mappings
@@ -753,13 +753,13 @@ function H.apply_config(config)
 
   H.map('x', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], { desc = 'Go to indent scope top' })
   H.map('x', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], { desc = 'Go to indent scope bottom' })
-  H.map('x', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], { desc = 'Object scope' })
-  H.map('x', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], { desc = 'Object scope with border' })
+  H.map('x', maps.object_scope, '<Cmd>lua MiniIndentscope.textobject(false)<CR>', { desc = 'Object scope' })
+  H.map('x', maps.object_scope_with_border, '<Cmd>lua MiniIndentscope.textobject(true)<CR>', { desc = 'Object scope with border' })
 
   H.map('o', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], { desc = 'Go to indent scope top' })
   H.map('o', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], { desc = 'Go to indent scope bottom' })
-  H.map('o', maps.object_scope, [[<Cmd>lua MiniIndentscope.textobject(false)<CR>]], { desc = 'Object scope' })
-  H.map('o', maps.object_scope_with_border, [[<Cmd>lua MiniIndentscope.textobject(true)<CR>]], { desc = 'Object scope with border' })
+  H.map('o', maps.object_scope, '<Cmd>lua MiniIndentscope.textobject(false)<CR>', { desc = 'Object scope' })
+  H.map('o', maps.object_scope_with_border, '<Cmd>lua MiniIndentscope.textobject(true)<CR>', { desc = 'Object scope with border' })
   --stylua: ignore start
 end
 

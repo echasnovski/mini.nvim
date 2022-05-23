@@ -794,7 +794,7 @@ function H.advance_jump(opts)
     vim.api.nvim_win_set_cursor(first_spot.win_id, { first_spot.line, first_spot.column - 1 })
 
     -- Possibly unfold to see cursor
-    vim.cmd([[normal! zv]])
+    vim.cmd('normal! zv')
 
     --stylua: ignore
     if opts.hooks.after_jump ~= nil then opts.hooks.after_jump() end

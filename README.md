@@ -668,7 +668,7 @@ Default `config`:
   -- Characters to update query. Each character will have special buffer
   -- mapping overriding your global ones. Be careful to not add `:` as it
   -- allows you to go into command mode.
-  query_updaters = [[abcdefghijklmnopqrstuvwxyz0123456789_-.]],
+  query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
 }
 ```
 

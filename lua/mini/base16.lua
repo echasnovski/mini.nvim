@@ -349,7 +349,7 @@ function H.apply_palette(palette, use_cterm)
   -- - Clear current highlight only if other theme was loaded previously.
   -- - No need to `syntax reset` because *all* syntax groups are defined later.
   if vim.g.colors_name then
-    vim.cmd([[highlight clear]])
+    vim.cmd('highlight clear')
   end
   -- As this doesn't create colorscheme, don't store any name. Not doing it
   -- might cause some issues with `syntax on`.
@@ -647,7 +647,7 @@ function H.highlight_gui(group, args)
   -- is faster. Crude estimate for this particular case: whole colorscheme
   -- loading decreased from ~3.6ms to ~3.0ms, i.e. by about 20%.
   local command = string.format(
-    [[highlight %s guifg=%s guibg=%s gui=%s guisp=%s]],
+    'highlight %s guifg=%s guibg=%s gui=%s guisp=%s',
     group,
     args.fg or 'NONE',
     args.bg or 'NONE',
@@ -659,7 +659,7 @@ end
 
 function H.highlight_both(group, args)
   local command = string.format(
-    [[highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s]],
+    'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s',
     group,
     args.fg and args.fg.gui or 'NONE',
     args.fg and args.fg.cterm or 'NONE',

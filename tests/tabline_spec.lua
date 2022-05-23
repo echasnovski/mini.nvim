@@ -13,7 +13,7 @@ local set_lines = function(...) return child.set_lines(...) end
 
 -- Make helpers
 local mock_devicons = function()
-  child.cmd([[set rtp+=tests/tabline-tests]])
+  child.cmd('set rtp+=tests/tabline-tests')
 end
 
 local edit = function(name)
@@ -102,7 +102,7 @@ describe('MiniTabline.setup()', function()
     -- Uses custom function in case of single and multiple tabpages
     eq(child.api.nvim_get_option('tabline'), '%!v:lua.MiniTabline.make_tabline_string()')
 
-    child.cmd([[tabedit]])
+    child.cmd('tabedit')
     eq(child.api.nvim_get_option('tabline'), '%!v:lua.MiniTabline.make_tabline_string()')
   end)
 

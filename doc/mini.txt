@@ -961,7 +961,7 @@ Module-specific disabling:
   end
 
   -- Make sure to add this autocommand *before* calling module's `setup()`.
-  vim.cmd([[au CursorMoved * lua _G.cursorword_blocklist()]])
+  vim.cmd('au CursorMoved * lua _G.cursorword_blocklist()')
 
 ------------------------------------------------------------------------------
                                                         *MiniCursorword.setup()*
@@ -3299,7 +3299,7 @@ Elaborated configuration showing capabilities of custom items,
 header/footer, and content hooks:
 >
   local my_items = {
-    { name = 'Echo random number', action = [[lua print(math.random())]], section = 'Section 1' },
+    { name = 'Echo random number', action = 'lua print(math.random())', section = 'Section 1' },
     function()
       return {
         { name = 'Item #1 from function', action = [[echo 'Item #1']], section = 'From function' },
@@ -3313,7 +3313,7 @@ header/footer, and content hooks:
         end,
       }
     end,
-    { name = [[Another item in 'Section 1']], action = [[lua print(math.random() + 10)]], section = 'Section 1' },
+    { name = [[Another item in 'Section 1']], action = 'lua print(math.random() + 10)', section = 'Section 1' },
   }
 
   local footer_n_seconds = (function()
@@ -3419,7 +3419,7 @@ Default values:
     -- Characters to update query. Each character will have special buffer
     -- mapping overriding your global ones. Be careful to not add `:` as it
     -- allows you to go into command mode.
-    query_updaters = [[abcdefghijklmnopqrstuvwxyz0123456789_-.]],
+    query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
   }
 <
 
