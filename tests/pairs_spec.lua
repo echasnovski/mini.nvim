@@ -87,9 +87,10 @@ local validate_open = function(mode, key, pair)
     t = function()
       -- Need to wait after each keystroke to allow shell to process it
       local wait = 50
-      local first_line = get_lines()[1]
       type_keys(wait, key)
-      eq(get_lines()[1], first_line .. ' ' .. pair)
+
+      local pair_pattern = vim.pesc(pair) .. '$'
+      assert.truthy(get_lines()[1]:find(pair_pattern))
     end,
   })[mode]
 
@@ -119,12 +120,13 @@ local validate_close = function(mode, key, pair)
       local term_channel = get_term_channel()
 
       -- Jumps over right hand side of `pair` if it is next
-      local first_line = get_lines()[1]
       child.fn.chansend(term_channel, pair)
       sleep(wait)
       type_keys(wait, '<Left>')
       type_keys(wait, key)
-      eq(get_lines()[1], first_line .. ' ' .. pair)
+
+      local pair_pattern = vim.pesc(pair) .. '$'
+      assert.truthy(get_lines()[1]:find(pair_pattern))
     end,
   })[mode]
 
@@ -152,12 +154,13 @@ local validate_bs = function(mode, pair)
       local wait = 50
       local term_channel = get_term_channel()
 
-      local first_line = get_lines()[1]
       child.fn.chansend(term_channel, pair)
       sleep(wait)
       type_keys(wait, '<Left>')
       type_keys(wait, '<BS>')
-      eq(get_lines()[1], first_line .. ' ')
+
+      local pair_pattern = vim.pesc(pair) .. '$'
+      assert.falsy(get_lines()[1]:find(pair_pattern))
     end,
   })[mode]
 
