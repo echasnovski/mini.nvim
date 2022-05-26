@@ -2,6 +2,7 @@
 
 - Update all modules to supply mapping description for Neovim>=0.7.
 - Add new module 'mini.jump2d'.
+- Cover all modules with extensive tests.
 
 ## mini.comment
 
