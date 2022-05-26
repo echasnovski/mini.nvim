@@ -1,4 +1,4 @@
-# Version 0.3.0.9000 (development)
+# Version 0.4.0
 
 - Update all modules to supply mapping description for Neovim>=0.7.
 - Add new module 'mini.jump2d'.
