@@ -1,3 +1,5 @@
+# Version 0.4.0.9000
+
 # Version 0.4.0
 
 - Update all modules to supply mapping description for Neovim>=0.7.
