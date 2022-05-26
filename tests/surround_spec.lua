@@ -1399,12 +1399,17 @@ describe('Tag surrounding', function()
     validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_')
   end)
 
-  it('allows extra symbols in opening tag', function()
+  it('allows extra symbols in opening tag on input', function()
     validate_edit({ '<x bbb cc_dd!>aaa</x>' }, { 1, 15 }, { '_aaa_' }, { 1, 1 }, type_keys, 'sr', 't', '_')
 
     -- Symbol `<` is not allowed
     validate_edit({ '<x <>aaa</x>' }, { 1, 6 }, { '<x <>aaa</x>' }, { 1, 6 }, type_keys, 'sr', 't')
     has_message_about_not_found('t')
+  end)
+
+  it('allows extra symbols in opening tag on output', function()
+    validate_edit({ 'aaa' }, { 1, 0 }, { '<a b>aaa</a>' }, { 1, 5 }, type_keys, 'sa', 'iw', 't', 'a b', '<CR>')
+    validate_edit({ '<a b>aaa</a>' }, { 1, 5 }, { '<a c>aaa</a>' }, { 1, 5 }, type_keys, 'sr', 't', 't', 'a c', '<CR>')
   end)
 
   it('detects covering with smallest width', function()

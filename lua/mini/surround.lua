@@ -592,10 +592,11 @@ H.builtin_surroundings = {
     --   '1d neighborhood'.
     input = { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' },
     output = function()
-      local tag_name = MiniSurround.user_input('Tag name')
+      local tag_full = MiniSurround.user_input('Tag name')
       --stylua: ignore
-      if tag_name == nil then return nil end
-      return { left = ('<%s>'):format(tag_name), right = ('</%s>'):format(tag_name) }
+      if tag_full == nil then return nil end
+      local tag_name = tag_full:match('^%S*')
+      return { left = ('<%s>'):format(tag_full), right = ('</%s>'):format(tag_name) }
     end,
   },
 }
