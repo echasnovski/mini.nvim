@@ -99,9 +99,6 @@ MiniJump.config = {
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
-
-  -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
-  -- `delay.highlight` instead
 }
 --minidoc_afterlines_end
 
@@ -322,13 +319,6 @@ function H.setup_config(config)
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
-
-  -- Soft deprecate `config.highlight_delay`.
-  -- TODO: remove after 0.4.0 release.
-  if config.highlight_delay then
-    H.message('`highlight_delay` is now deprecated. Please use `delay.highlight` instead.')
-    config.delay.highlight = config.highlight_delay
-  end
 
   -- Validate per nesting level to produce correct error message
   vim.validate({

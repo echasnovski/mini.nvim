@@ -453,9 +453,6 @@ Default `config`:
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
-
-  -- DEPRECATION NOTICE: `highlight_delay` is now deprecated, please use
-  -- `delay.highlight` instead
 }
 ```
 

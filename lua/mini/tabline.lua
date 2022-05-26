@@ -124,13 +124,6 @@ MiniTabline.config = {
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
--- TODO: remove after 0.4.0 release.
-function MiniTabline.update_tabline()
-  H.message('`MiniTabline.update_tabline()` is deprecated because it is obsolete.')
-
-  vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
-end
-
 --- Make string for |tabline|
 function MiniTabline.make_tabline_string()
   if H.is_disabled() then

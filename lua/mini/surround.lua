@@ -615,16 +615,6 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
-  -- TODO: remove after 0.4.0 release
-  if config.funname_pattern ~= nil then
-    H.message(
-      '`config.funname_pattern` is deprecated. '
-        .. 'If you explicitly supply its default value, remove it from `config`. '
-        .. 'If not, manually modifying `f` surrounding in `config.custom_surroundings`. '
-        .. 'See `:h MiniSurround.config`.'
-    )
-  end
-
   -- Validate per nesting level to produce correct error message
   vim.validate({
     custom_surroundings = { config.custom_surroundings, 'table', true },
