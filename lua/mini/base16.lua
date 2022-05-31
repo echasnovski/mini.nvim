@@ -598,9 +598,15 @@ function H.apply_palette(palette, use_cterm)
   hi('NvimTreeWindowPicker', { fg=p.base05, bg=p.base01, attr="bold",           sp=nil })
 
   -- lewis6991/gitsigns.nvim
-  hi('GitSignsAdd',    {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsChange', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsDelete', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsAdd',          {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsAddLn',        {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsAddInline',    {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsChange',       {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsChangeLn',     {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsChangeInline', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsDelete',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsDeleteLn',     {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsDeleteInline', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
 
   -- nvim-telescope/telescope.nvim
   hi('TelescopeBorder',         {fg=p.base0F, bg=nil,      attr=nil,    sp=nil}) -- as in 'Delimiter'
