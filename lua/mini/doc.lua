@@ -263,6 +263,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@field'] = --<function>,
       ['@field'] = function(s)
+        H.mark_optional(s)
         H.enclose_var_name(s)
         H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
       end,

@@ -6,6 +6,7 @@ local M = {}
 ---
 ---@field login string User login.
 ---@field password string User password.
+---@field address? string User address (should expand to optional).
 ---
 ---@type table
 M.User = {}

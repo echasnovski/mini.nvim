@@ -10,6 +10,7 @@ Class~
 Fields~
 {login} `(string)` User login.
 {password} `(string)` User password.
+{address} `(optional)` `(string)` User address (should expand to optional).
 
 Type~
 `(table)`
