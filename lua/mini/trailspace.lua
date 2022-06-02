@@ -19,7 +19,7 @@
 ---
 --- # Highlight groups~
 ---
---- 1. `MiniTrailspace` - highlight group for trailing space.
+--- * `MiniTrailspace` - highlight group for trailing space.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---

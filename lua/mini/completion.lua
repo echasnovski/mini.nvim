@@ -117,8 +117,8 @@
 --- <
 --- # Highlight groups~
 ---
---- 1. `MiniCompletionActiveParameter` - highlighting of signature active
---- parameter. Default: plain underline.
+--- * `MiniCompletionActiveParameter` - highlighting of signature active parameter.
+---   By default displayed as plain underline.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---

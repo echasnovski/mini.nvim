@@ -43,9 +43,11 @@
 ---
 --- # Highlight groups~
 ---
---- - `MiniIndentscopeSymbol` - symbol showing on every line of scope.
---- - `MiniIndentscopePrefix` - space before symbol. By default made so as to
+--- * `MiniIndentscopeSymbol` - symbol showing on every line of scope.
+--- * `MiniIndentscopePrefix` - space before symbol. By default made so as to
 ---   appear as nothing is displayed.
+---
+--- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling~
 ---

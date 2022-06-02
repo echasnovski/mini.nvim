@@ -19,13 +19,12 @@
 ---
 --- # Highlight groups~
 ---
---- 1. `MiniCursorword` - highlight group of cursor word. Default: plain
----    underline.
---- 2. `MiniCursorwordCurrent` - highlight group of a current word under
----    cursor. It will be displayed on top of `MiniCursorword` (so `:hi clear
----    MiniCursorwordCurrent` will lead to showing `MiniCursorword` highlight
----    group). Default: link to `MiniCursorword`. Note: To not highlight it,
----    use `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
+--- * `MiniCursorword` - highlight group of cursor word. Default: plain underline.
+--- * `MiniCursorwordCurrent` - highlight group of a current word under
+---   cursor. It will be displayed on top of `MiniCursorword`
+---   (so `:hi clear MiniCursorwordCurrent` will lead to showing
+---   `MiniCursorword` highlight group). Note: To not highlight it, use
+---   `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---

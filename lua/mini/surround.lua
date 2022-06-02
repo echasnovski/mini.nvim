@@ -62,7 +62,7 @@
 ---
 --- # Highlight groups~
 ---
---- 1. `MiniSurround` - highlighting of requested surrounding.
+--- * `MiniSurround` - highlighting of requested surrounding.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---

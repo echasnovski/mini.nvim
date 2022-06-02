@@ -24,7 +24,9 @@
 ---
 --- # Highlight groups~
 ---
---- - `MiniJump` - all possible cursor positions.
+--- * `MiniJump` - all possible cursor positions.
+---
+--- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling~
 ---

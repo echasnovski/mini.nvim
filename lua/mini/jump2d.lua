@@ -85,14 +85,17 @@
 ---
 --- # Highlight groups~
 ---
---- - `MiniJump2dSpot` - highlighting of jump spots. By default it uses label
----   with highest contrast while not being too visually demanding: white on black
----   for dark 'background', black on white for light. If it doesn't suit your
----   liking, try couple of these alternatives (or choose your own, of course):
----   - `hi MiniJump2dSpot gui=reverse` - reverse underlying highlighting (more
----     colorful while being visible in any colorscheme).
----   - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
----   - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+--- * `MiniJump2dSpot` - highlighting of jump spots. By default it uses label
+---   with highest contrast while not being too visually demanding: white on
+---   black for dark 'background', black on white for light. If it doesn't
+---   suit your liking, try couple of these alternatives (or choose your own,
+---   of course):
+---     - `hi MiniJump2dSpot gui=reverse` - reverse underlying highlighting (more
+---       colorful while being visible in any colorscheme).
+---     - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
+---     - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+---
+--- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling~
 ---

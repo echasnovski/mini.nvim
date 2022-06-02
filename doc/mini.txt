@@ -740,8 +740,8 @@ your 'init.lua' to make customized mapping: >
 <
 # Highlight groups~
 
-1. `MiniCompletionActiveParameter` - highlighting of signature active
-parameter. Default: plain underline.
+* `MiniCompletionActiveParameter` - highlighting of signature active parameter.
+  By default displayed as plain underline.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -920,13 +920,12 @@ See |MiniCursorword.config| for `config` structure and default values.
 
 # Highlight groups~
 
-1. `MiniCursorword` - highlight group of cursor word. Default: plain
-   underline.
-2. `MiniCursorwordCurrent` - highlight group of a current word under
-   cursor. It will be displayed on top of `MiniCursorword` (so `:hi clear
-   MiniCursorwordCurrent` will lead to showing `MiniCursorword` highlight
-   group). Default: link to `MiniCursorword`. Note: To not highlight it,
-   use `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
+* `MiniCursorword` - highlight group of cursor word. Default: plain underline.
+* `MiniCursorwordCurrent` - highlight group of a current word under
+  cursor. It will be displayed on top of `MiniCursorword`
+  (so `:hi clear MiniCursorwordCurrent` will lead to showing
+  `MiniCursorword` highlight group). Note: To not highlight it, use
+  `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -1613,9 +1612,11 @@ settings.
 
 # Highlight groups~
 
-- `MiniIndentscopeSymbol` - symbol showing on every line of scope.
-- `MiniIndentscopePrefix` - space before symbol. By default made so as to
+* `MiniIndentscopeSymbol` - symbol showing on every line of scope.
+* `MiniIndentscopePrefix` - space before symbol. By default made so as to
   appear as nothing is displayed.
+
+To change any highlight group, modify it directly with |:highlight|.
 
 # Disabling~
 
@@ -1984,7 +1985,9 @@ See |MiniJump.config| for `config` structure and default values.
 
 # Highlight groups~
 
-- `MiniJump` - all possible cursor positions.
+* `MiniJump` - all possible cursor positions.
+
+To change any highlight group, modify it directly with |:highlight|.
 
 # Disabling~
 
@@ -2217,14 +2220,17 @@ This module needs a setup with `require('mini.jump2d').setup({})` (replace
 
 # Highlight groups~
 
-- `MiniJump2dSpot` - highlighting of jump spots. By default it uses label
-  with highest contrast while not being too visually demanding: white on black
-  for dark 'background', black on white for light. If it doesn't suit your
-  liking, try couple of these alternatives (or choose your own, of course):
-  - `hi MiniJump2dSpot gui=reverse` - reverse underlying highlighting (more
-    colorful while being visible in any colorscheme).
-  - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
-  - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+* `MiniJump2dSpot` - highlighting of jump spots. By default it uses label
+  with highest contrast while not being too visually demanding: white on
+  black for dark 'background', black on white for light. If it doesn't
+  suit your liking, try couple of these alternatives (or choose your own,
+  of course):
+    - `hi MiniJump2dSpot gui=reverse` - reverse underlying highlighting (more
+      colorful while being visible in any colorscheme).
+    - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
+    - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+
+To change any highlight group, modify it directly with |:highlight|.
 
 # Disabling~
 
@@ -3238,15 +3244,17 @@ some configuration examples (including one similar to 'vim-startify' and
 
 # Highlight groups~
 
-- `MiniStarterCurrent` - current item.
-- `MiniStarterFooter` - footer units.
-- `MiniStarterHeader` - header units.
-- `MiniStarterInactive` - inactive item.
-- `MiniStarterItem` - item name.
-- `MiniStarterItemBullet` - units from |MiniStarter.gen_hook.adding_bullet|.
-- `MiniStarterItemPrefix` - unique query for item.
-- `MiniStarterSection` - section units.
-- `MiniStarterQuery` - current query in active items.
+* `MiniStarterCurrent` - current item.
+* `MiniStarterFooter` - footer units.
+* `MiniStarterHeader` - header units.
+* `MiniStarterInactive` - inactive item.
+* `MiniStarterItem` - item name.
+* `MiniStarterItemBullet` - units from |MiniStarter.gen_hook.adding_bullet|.
+* `MiniStarterItemPrefix` - unique query for item.
+* `MiniStarterSection` - section units.
+* `MiniStarterQuery` - current query in active items.
+
+To change any highlight group, modify it directly with |:highlight|.
 
 # Disabling~
 
@@ -3790,23 +3798,22 @@ some content examples, see |MiniStatusline-example-content|.
 
 # Highlight groups~
 
-1. Highlighting depending on mode (returned as second value from
-   |MiniStatusline.section_mode|):
-    - `MiniStatuslineModeNormal` - normal mode.
-    - `MiniStatuslineModeInsert` - insert mode.
-    - `MiniStatuslineModeVisual` - visual mode.
-    - `MiniStatuslineModeReplace` - replace mode.
-    - `MiniStatuslineModeCommand` - command mode.
-    - `MiniStatuslineModeOther` - other mode (like terminal, etc.).
-2. Highlight groups used in default statusline:
-    - `MiniStatuslineDevinfo` - highlighting of "dev info" group
-      (|MiniStatusline.section_git| and
-      |MiniStatusline.section_diagnostics|).
-    - `MiniStatuslineFilename` - highliting of
-      |MiniStatusline.section_filename| section.
-    - `MiniStatuslineFileinfo` - highliting of
-      |MiniStatusline.section_fileinfo| section.
-3. `MiniStatuslineInactive` - highliting in not focused window.
+Highlight depending on mode (second output from |MiniStatusline.section_mode|):
+* `MiniStatuslineModeNormal` - Normal mode.
+* `MiniStatuslineModeInsert` - Insert mode.
+* `MiniStatuslineModeVisual` - Visual mode.
+* `MiniStatuslineModeReplace` - Replace mode.
+* `MiniStatuslineModeCommand` - Command mode.
+* `MiniStatuslineModeOther` - other modes (like Terminal, etc.).
+
+Highlight used in default statusline:
+* `MiniStatuslineDevinfo` - for "dev info" group
+  (|MiniStatusline.section_git| and |MiniStatusline.section_diagnostics|).
+* `MiniStatuslineFilename` - for |MiniStatusline.section_filename| section.
+* `MiniStatuslineFileinfo` - for |MiniStatusline.section_fileinfo| section.
+
+Other groups:
+* `MiniStatuslineInactive` - highliting in not focused window.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -4118,7 +4125,7 @@ also has example setup providing experience similar to 'tpope/vim-surround'.
 
 # Highlight groups~
 
-1. `MiniSurround` - highlighting of requested surrounding.
+* `MiniSurround` - highlighting of requested surrounding.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -4478,14 +4485,14 @@ See |MiniTabline.config| for `config` structure and default values.
 
 # Highlight groups~
 
-1. `MiniTablineCurrent` - buffer is current (has cursor in it).
-2. `MiniTablineVisible` - buffer is visible (displayed in some window).
-3. `MiniTablineHidden` - buffer is hidden (not displayed).
-4. `MiniTablineModifiedCurrent` - buffer is modified and current.
-5. `MiniTablineModifiedVisible` - buffer is modified and visible.
-6. `MiniTablineModifiedHidden` - buffer is modified and hidden.
-7. `MiniTablineFill` - unused right space of tabline.
-8. `MiniTablineTabpagesection` - section with tabpage information.
+* `MiniTablineCurrent` - buffer is current (has cursor in it).
+* `MiniTablineVisible` - buffer is visible (displayed in some window).
+* `MiniTablineHidden` - buffer is hidden (not displayed).
+* `MiniTablineModifiedCurrent` - buffer is modified and current.
+* `MiniTablineModifiedVisible` - buffer is modified and visible.
+* `MiniTablineModifiedHidden` - buffer is modified and hidden.
+* `MiniTablineFill` - unused right space of tabline.
+* `MiniTablineTabpagesection` - section with tabpage information.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -4559,7 +4566,7 @@ See |MiniTrailspace.config| for `config` structure and default values.
 
 # Highlight groups~
 
-1. `MiniTrailspace` - highlight group for trailing space.
+* `MiniTrailspace` - highlight group for trailing space.
 
 To change any highlight group, modify it directly with |:highlight|.
 

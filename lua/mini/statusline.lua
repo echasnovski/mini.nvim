@@ -37,23 +37,22 @@
 ---
 --- # Highlight groups~
 ---
---- 1. Highlighting depending on mode (returned as second value from
----    |MiniStatusline.section_mode|):
----     - `MiniStatuslineModeNormal` - normal mode.
----     - `MiniStatuslineModeInsert` - insert mode.
----     - `MiniStatuslineModeVisual` - visual mode.
----     - `MiniStatuslineModeReplace` - replace mode.
----     - `MiniStatuslineModeCommand` - command mode.
----     - `MiniStatuslineModeOther` - other mode (like terminal, etc.).
---- 2. Highlight groups used in default statusline:
----     - `MiniStatuslineDevinfo` - highlighting of "dev info" group
----       (|MiniStatusline.section_git| and
----       |MiniStatusline.section_diagnostics|).
----     - `MiniStatuslineFilename` - highliting of
----       |MiniStatusline.section_filename| section.
----     - `MiniStatuslineFileinfo` - highliting of
----       |MiniStatusline.section_fileinfo| section.
---- 3. `MiniStatuslineInactive` - highliting in not focused window.
+--- Highlight depending on mode (second output from |MiniStatusline.section_mode|):
+--- * `MiniStatuslineModeNormal` - Normal mode.
+--- * `MiniStatuslineModeInsert` - Insert mode.
+--- * `MiniStatuslineModeVisual` - Visual mode.
+--- * `MiniStatuslineModeReplace` - Replace mode.
+--- * `MiniStatuslineModeCommand` - Command mode.
+--- * `MiniStatuslineModeOther` - other modes (like Terminal, etc.).
+---
+--- Highlight used in default statusline:
+--- * `MiniStatuslineDevinfo` - for "dev info" group
+---   (|MiniStatusline.section_git| and |MiniStatusline.section_diagnostics|).
+--- * `MiniStatuslineFilename` - for |MiniStatusline.section_filename| section.
+--- * `MiniStatuslineFileinfo` - for |MiniStatusline.section_fileinfo| section.
+---
+--- Other groups:
+--- * `MiniStatuslineInactive` - highliting in not focused window.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---

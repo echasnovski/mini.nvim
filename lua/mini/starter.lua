@@ -44,15 +44,17 @@
 ---
 --- # Highlight groups~
 ---
---- - `MiniStarterCurrent` - current item.
---- - `MiniStarterFooter` - footer units.
---- - `MiniStarterHeader` - header units.
---- - `MiniStarterInactive` - inactive item.
---- - `MiniStarterItem` - item name.
---- - `MiniStarterItemBullet` - units from |MiniStarter.gen_hook.adding_bullet|.
---- - `MiniStarterItemPrefix` - unique query for item.
---- - `MiniStarterSection` - section units.
---- - `MiniStarterQuery` - current query in active items.
+--- * `MiniStarterCurrent` - current item.
+--- * `MiniStarterFooter` - footer units.
+--- * `MiniStarterHeader` - header units.
+--- * `MiniStarterInactive` - inactive item.
+--- * `MiniStarterItem` - item name.
+--- * `MiniStarterItemBullet` - units from |MiniStarter.gen_hook.adding_bullet|.
+--- * `MiniStarterItemPrefix` - unique query for item.
+--- * `MiniStarterSection` - section units.
+--- * `MiniStarterQuery` - current query in active items.
+---
+--- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling~
 ---
