@@ -10,6 +10,9 @@ You can make contributions in the following ways:
 - **Create a pull request (PR)**. It can be one of two types:
     - **Code related**. For example, fix a bug or implement a feature. Before even starting one, please make sure that it is aligned with project vision and goals. The best way to do it is to receive a positive feedback from maintainer on your initiative in one of the GitHub issues (existing one or created by you otherwise).
     - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation; see later section). Feel free to make these without creating a GitHub issue.
+- **Add explicit support to colorschemes**. Any 'mini.nvim' module supports any colorscheme right out of the box. This is done by making most highlight groups be linked to a semantically similar builtin highlight group. Other groups are hard-coded based on personal preference. However, these choices might be out of tune with a particular colorscheme. Updating as many colorschemes as possible to have explicit 'mini.nvim' support is highly appreciated. For your convenience, there is a list of all highlight groups in later section of this file.
+- **Participate in [discussions](https://github.com/echasnovski/mini.nvim/discussions)**.
+- **Mention it** somehow to help reach broader audience.
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
 
@@ -28,3 +31,63 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) for formatti
 - Format with it. Currently there are two ways to do this:
     - Manually run `stylua .` from the root directory of this project.
     - [Install pre-commit](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.
+
+## List of highlight groups
+
+Here is a list of all highlight groups defined inside 'mini.nvim' modules. See documentation in 'doc' directory to find out what they are used for.
+
+- 'mini.completion':
+    - `MiniCompletionActiveParameter`
+
+- 'mini.cursorword':
+    - `MiniCursorword`
+    - `MiniCursorwordCurrent`
+
+- 'mini.indentscope':
+    - `MiniIndentscopeSymbol`
+    - `MiniIndentscopePrefix`
+
+- 'mini.jump':
+    - `MiniJump`
+
+- 'mini.jump2d':
+    - `MiniJump2dSpot`
+
+- 'mini.starter':
+    - `MiniStarterCurrent`
+    - `MiniStarterFooter`
+    - `MiniStarterHeader`
+    - `MiniStarterInactive`
+    - `MiniStarterItem`
+    - `MiniStarterItemBullet`
+    - `MiniStarterItemPrefix`
+    - `MiniStarterSection`
+    - `MiniStarterQuery`
+
+- 'mini.statusline':
+    - `MiniStatuslineDevinfo`
+    - `MiniStatuslineFileinfo`
+    - `MiniStatuslineFilename`
+    - `MiniStatuslineInactive`
+    - `MiniStatuslineModeCommand`
+    - `MiniStatuslineModeInsert`
+    - `MiniStatuslineModeNormal`
+    - `MiniStatuslineModeOther`
+    - `MiniStatuslineModeReplace`
+    - `MiniStatuslineModeVisual`
+
+- 'mini.surround':
+    - `MiniSurround`
+
+- 'mini.tabline':
+    - `MiniTablineCurrent`
+    - `MiniTablineFill`
+    - `MiniTablineHidden`
+    - `MiniTablineModifiedCurrent`
+    - `MiniTablineModifiedHidden`
+    - `MiniTablineModifiedVisible`
+    - `MiniTablineTabpagesection`
+    - `MiniTablineVisible`
+
+- 'mini.trailspace':
+    - `MiniTrailspace`
