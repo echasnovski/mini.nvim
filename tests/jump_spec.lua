@@ -851,6 +851,20 @@ describe('Delayed highlighting', function()
     type_keys('T')
     eq(highlights_target('e', true, true), true)
   end)
+
+  it('never highlights in Insert mode', function()
+    set_lines({ '1e2f' })
+
+    set_cursor(1, 0)
+    type_keys('f', 'e')
+
+    sleep(test_times.highlight)
+    eq(highlights_target('e', false, false), true)
+
+    type_keys('ct', 'f')
+    sleep(test_times.highlight)
+    eq(highlights_target('f', false, true), false)
+  end)
 end)
 
 describe('Stop jumping after idle', function()

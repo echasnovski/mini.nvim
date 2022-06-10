@@ -383,6 +383,11 @@ function H.highlight(pattern)
   -- `till = true`. If this character is first on line, highlighting should change
   H.unhighlight()
 
+  -- Never highlight in Insert mode
+  if vim.fn.mode() == 'i' then
+    return
+  end
+
   local match_id = vim.fn.matchadd('MiniJump', pattern)
   H.window_matches[vim.api.nvim_get_current_win()] = { id = match_id, pattern = pattern }
 end
