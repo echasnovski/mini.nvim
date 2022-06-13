@@ -281,6 +281,11 @@ describe('MiniStatusline.section_diagnostics()', function()
     child.cmd('help')
     eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
   end)
+
+  it('respects `config.nerdfonts`', function()
+    child.lua('MiniStatusline.config.nerdfonts = false')
+    eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'LSP E4 W3 I2 H1')
+  end)
 end)
 
 describe('MiniStatusline.section_fileinfo()', function()
@@ -410,6 +415,11 @@ describe('MiniStatusline.section_git()', function()
   it('is shown only in normal buffers', function()
     child.cmd('help')
     eq(child.lua_get('MiniStatusline.section_git({})'), '')
+  end)
+
+  it('respects `config.nerdfonts`', function()
+    child.lua('MiniStatusline.config.nerdfonts = false')
+    eq(child.lua_get([[MiniStatusline.section_git({})]]), 'Git main +1 ~2 -3')
   end)
 end)
 
