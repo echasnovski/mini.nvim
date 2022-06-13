@@ -167,7 +167,7 @@ MiniStatusline.config = {
     inactive = nil,
   },
   -- Whether to use Nert Fonts.
-  nerdfonts = true,
+  use_icons = true,
   -- Whether to set Vim's settings for statusline (make it always shown with
   -- 'laststatus' set to 2). To use global statusline in Neovim>=0.7.0, set
   -- this to `false` and 'laststatus' to 3.
@@ -288,7 +288,7 @@ function MiniStatusline.section_git(args)
 
   local head = vim.b.gitsigns_head or '-'
   local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
-  local icon = args.icon or (MiniStatusline.config.nerdfonts and '' or 'Git')
+  local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'Git')
 
   if signs == '' then
     if head == '-' or head == '' then
@@ -329,7 +329,7 @@ function MiniStatusline.section_diagnostics(args)
     end
   end
 
-  local icon = args.icon or (MiniStatusline.config.nerdfonts and '' or 'LSP')
+  local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'LSP')
   if vim.tbl_count(t) == 0 then
     return ('%s -'):format(icon)
   end
@@ -584,7 +584,7 @@ end
 
 function H.get_filetype_icon()
   -- Skip if NerdFonts is disabled
-  if not MiniStatusline.config.nerdfonts then
+  if not MiniStatusline.config.use_icons then
     return ''
   end
   -- Have this `require()` here to not depend on plugin initialization order
