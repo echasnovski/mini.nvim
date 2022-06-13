@@ -583,6 +583,10 @@ function H.get_filesize()
 end
 
 function H.get_filetype_icon()
+  -- Skip if NerdFonts is disabled
+  if not MiniStatusline.config.nerdfonts then
+    return ''
+  end
   -- Have this `require()` here to not depend on plugin initialization order
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if not has_devicons then
