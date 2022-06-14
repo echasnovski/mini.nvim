@@ -20,8 +20,8 @@
 --- you can use for scripting or manually (with `:lua MiniAutochdir.*`).
 ---
 --- # Example usage~
---- - Modify default patterns to find a project root: >
----   require('mini.autochdir').setup({ patterns = { '.git' }})
+--- - Modify default root_pattern to find a project root: >
+---   require('mini.autochdir').setup({ root_pattern = { '.git' }})
 --- - At the time changing a buffer, it also changes CWD.
 ---
 --- # Disabling~
@@ -64,8 +64,8 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniAutochdir.config = {
-  -- Array of glob patterns to find a project root.
-  patterns = {
+  -- Array of glob root_pattern to find a project root.
+  root_pattern = {
     '.svn',
     '.hg',
     '.bzr',
@@ -188,10 +188,10 @@ function MiniAutochdir.findroot()
   if vim.o.buftype ~= '' or bufname == '' or bufname:find('://') then
     return
   end
-  local patterns = MiniAutochdir.config.patterns
+  local root_pattern = MiniAutochdir.config.root_pattern
   local dir = vim.fn.fnamemodify(bufname, ':p:h:gs!\\!/!:gs!//!/!')
   dir = vim.fn.escape(dir, ' ')
-  dir = H.goup(dir, patterns)
+  dir = H.goup(dir, root_pattern)
   if not dir then
     return
   end
@@ -210,11 +210,11 @@ augroup END
 -- Directory walker -----------------------------------------------------------
 --
 -- This returns the path which matches the pattern. If not, it returns nil.
-function H.goup(path, patterns)
+function H.goup(path, root_pattern)
   -- General idea: go up directory from the given path.
-  -- It returns the path which matches the patterns.
+  -- It returns the path which matches the root_pattern.
   while true do
-    for _, pattern in ipairs(patterns) do
+    for _, pattern in ipairs(root_pattern) do
       local path_pattern = path .. '/' .. pattern
       if pattern:find('*') ~= nil and not vim.fn.glob(path_pattern, 1) == '' then
         return path
@@ -239,7 +239,7 @@ function H.setup_config(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
-  vim.validate({ patterns = { config.patterns, 'table' } })
+  vim.validate({ root_pattern = { config.root_pattern, 'table' } })
 
   return config
 end

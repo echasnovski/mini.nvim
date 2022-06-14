@@ -224,8 +224,8 @@ Setup with `require('mini.autochdir').setup({})` (replace `{}` with your
 you can use for scripting or manually (with `:lua MiniAutochdir.*`).
 
 # Example usage~
-- Modify default patterns to find a project root: >
-  require('mini.autochdir').setup({ patterns = { '.git' }})
+- Modify default root_pattern to find a project root: >
+  require('mini.autochdir').setup({ root_pattern = { '.git' }})
 - At the time changing a buffer, it also changes CWD.
 
 # Disabling~
@@ -234,6 +234,10 @@ To disable, set `g:miniautochdir_disable` (globally) or `b:miniautochdir_disable
 and customization intentions, writing exact rules for disabling module's
 functionality is left to user. See |mini.nvim-disabling-recipes| for common
 recipes.
+
+# Notice~
+https://github.com/mattn/vim-findroot is an OSS project licensed
+under the MIT License.
 
 
 ------------------------------------------------------------------------------
@@ -255,8 +259,8 @@ Module config
 Default values:
 >
   MiniAutochdir.config = {
-    -- Array of glob patterns to find a project root.
-    patterns = {
+    -- Array of glob root_pattern to find a project root.
+    root_pattern = {
       '.svn',
       '.hg',
       '.bzr',

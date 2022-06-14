@@ -33,13 +33,13 @@ describe('MiniAutochdir.setup()', function()
     end
 
     -- Check default values
-    assert_config('patterns', 105)
+    assert_config('root_pattern', 105)
   end)
 
   it('respects `config` argument', function()
     unload_module()
-    load_module({ patterns = {} })
-    eq(child.lua_get('MiniAutochdir.config.patterns'), {})
+    load_module({ root_pattern = {} })
+    eq(child.lua_get('MiniAutochdir.config.root_pattern'), {})
   end)
 
   it('validates `config` argument', function()
@@ -52,7 +52,7 @@ describe('MiniAutochdir.setup()', function()
     end
 
     assert_config_error('a', 'config', 'table')
-    assert_config_error({ patterns = 'a' }, 'patterns', 'table')
+    assert_config_error({ root_pattern = 'a' }, 'root_pattern', 'table')
   end)
 end)
 
