@@ -13,6 +13,7 @@ module can be considered as a separate sub-plugin.
 Table of contents:
   General overview.................................................|mini.nvim|
   Plugin colorscheme..............................................|minischeme|
+  better autochdir............................................|mini.autochdir|
   Base16 colorscheme creation....................................|mini.base16|
   Remove buffers..............................................|mini.bufremove|
   Comment.......................................................|mini.comment|
@@ -198,6 +199,180 @@ where `palette` is:
     `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 
 Activate it as a regular |colorscheme|.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                *mini.autochdir*
+                                                                 *MiniAutochdir*
+Automatically change directory to a project root.
+Main inspiration is a "mattn/vim-findroot" and "airblade/vim-rooter" plugin.
+
+Features:
+  Automatically change directory to a project root defined in
+  |MiniAutochdir.config|. The patterns are written in the glob pattern.
+
+General overview of how to find a project root:
+- Check whether the designated file or the directory
+  exists in current directory.
+- If not, move to the parent directory to find a project root.
+
+# Setup~
+This module doesn't need setup, but it can be done to improve usability.
+Setup with `require('mini.autochdir').setup({})` (replace `{}` with your
+`config` table). It will create global Lua table `MiniAutochdir` which
+you can use for scripting or manually (with `:lua MiniAutochdir.*`).
+
+# Example usage~
+- Modify default patterns to find a project root: >
+  require('mini.autochdir').setup({ patterns = { '.git' }})
+- At the time changing a buffer, it also changes CWD.
+
+# Disabling~
+To disable, set `g:miniautochdir_disable` (globally) or `b:miniautochdir_disable`
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+
+------------------------------------------------------------------------------
+                                                         *MiniAutochdir.setup()*
+                        `MiniAutochdir.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniAutochdir.config|.
+
+Usage~
+`require('mini.autochdir').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                          *MiniAutochdir.config*
+                             `MiniAutochdir.config`
+Module config
+
+Default values:
+>
+  MiniAutochdir.config = {
+    -- Array of glob patterns to find a project root.
+    patterns = {
+      '.svn',
+      '.hg',
+      '.bzr',
+      '*.adc',
+      'angular.json',
+      'bower.json',
+      'build',
+      'BUILD.bazel',
+      'build.boot',
+      'build.gradle',
+      'build.sbt',
+      'build.sc',
+      '*.cabal',
+      'cabal.config',
+      'cabal.project',
+      'Cargo.toml',
+      'compile_commands.json',
+      'composer.json',
+      '.csproj',
+      'deno.json',
+      'deno.jsonc',
+      'deps.edn',
+      'Dockerfile',
+      'dub.json',
+      'dub.sdl',
+      'dune-project',
+      'dune-workspace',
+      'elm.json',
+      'ember-cli-build.js',
+      'erlang.mk',
+      'esy.json',
+      'flake.nix',
+      '.flowconfig',
+      '.fortls',
+      'Gemfile',
+      '.git',
+      '.golangci.yaml',
+      'go.mod',
+      'go.work',
+      '*.gpr',
+      '.graphql.config.*',
+      'graphql.config.*',
+      '.graphqlrc*',
+      '.hhconfig',
+      'hie-bios',
+      'hiera.yaml',
+      'hie.yaml',
+      '*.hxml',
+      'jsconfig.json',
+      'jsonnetfile.json',
+      'lakefile.lean',
+      'leanpkg.toml',
+      'lean-toolchain',
+      '.luacheckrc',
+      '.luarc.json',
+      'Makefile',
+      'manifests',
+      '.marksman.toml',
+      'meson.build',
+      'mix.exs',
+      'node_modules',
+      'ols.json',
+      '*.opam',
+      'package.json',
+      'Package.swift',
+      'package.yaml',
+      'pom.xml',
+      'postcss.config.js',
+      'postcss.config.ts',
+      'project.clj',
+      'project.godot',
+      'psalm.xml',
+      'psalm.xml.dist',
+      'psc-package.json',
+      'pubspec.yaml',
+      '.puppet-lint.rc',
+      'pyproject.toml',
+      'rebar.config',
+      'requirements.txt',
+      'robotidy.toml',
+      'rust-project.json',
+      'selene.toml',
+      'settings.gradle',
+      'sfdx-project.json',
+      'shadow-cljs.edn',
+      'shard.yml',
+      'shell.nix',
+      '.sln',
+      'spago.dhall',
+      'stack.yaml',
+      'Steepfile',
+      '.stylelintrc',
+      '.stylua.toml',
+      '.svlangserver',
+      'tailwind.config.js',
+      'tailwind.config.ts',
+      '.terraform',
+      '.tflint.hcl',
+      'tlconfig.lua',
+      '*.toml',
+      'tsconfig.json',
+      'v.mod',
+      'vue.config.js',
+      '.zk',
+      'zls.json',
+    }
+  }
+<
+
+------------------------------------------------------------------------------
+                                                      *MiniAutochdir.findroot()*
+                           `MiniAutochdir.findroot`()
+Find a project root from the directory of current buffer.
+
+Return~
+`(...)` this function returns nothing.
 
 
 ==============================================================================
