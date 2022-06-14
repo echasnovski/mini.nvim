@@ -37,7 +37,7 @@
 ---
 ---@tag mini.autochdir
 ---@tag MiniAutochdir
----@toc_entry better autochdir
+---@toc_entry Smart autochdir
 -- Module definition ==========================================================
 
 local MiniAutochdir = {}
@@ -171,7 +171,7 @@ MiniAutochdir.config = {
     'vue.config.js',
     '.zk',
     'zls.json',
-  }
+  },
 }
 --minidoc_afterlines_end
 
@@ -199,12 +199,12 @@ function MiniAutochdir.findroot()
   print('cwd: ' .. dir)
 end
 
-vim.cmd[[
+vim.cmd([[
 augroup MiniAutochdir
   autocmd!
   autocmd BufEnter * :lua require('mini.autochdir').findroot()
 augroup END
-]]
+]])
 
 -- Helper functionality =======================================================
 -- Directory walker -----------------------------------------------------------
