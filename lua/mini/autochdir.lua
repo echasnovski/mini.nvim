@@ -31,6 +31,10 @@
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
 ---
+--- # Notice~
+--- https://github.com/mattn/vim-findroot is an OSS project licensed
+--- under the MIT License.
+---
 ---@tag mini.autochdir
 ---@tag MiniAutochdir
 ---@toc_entry better autochdir
