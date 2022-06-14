@@ -216,7 +216,7 @@ function H.goup(path, root_pattern)
   while true do
     for _, pattern in ipairs(root_pattern) do
       local path_pattern = path .. '/' .. pattern
-      if pattern:find('*') ~= nil and not vim.fn.glob(path_pattern, 1) == '' then
+      if pattern:find('*') ~= nil and vim.fn.glob(path_pattern, 1) ~= '' then
         return path
       elseif vim.fn.isdirectory(path_pattern) or vim.fn.filereadable(path_pattern) then
         return path
