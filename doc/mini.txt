@@ -13,7 +13,7 @@ module can be considered as a separate sub-plugin.
 Table of contents:
   General overview.................................................|mini.nvim|
   Plugin colorscheme..............................................|minischeme|
-  better autochdir............................................|mini.autochdir|
+  Smart autochdir.............................................|mini.autochdir|
   Base16 colorscheme creation....................................|mini.base16|
   Remove buffers..............................................|mini.bufremove|
   Comment.......................................................|mini.comment|
@@ -366,7 +366,7 @@ Default values:
       'vue.config.js',
       '.zk',
       'zls.json',
-    }
+    },
   }
 <
 
