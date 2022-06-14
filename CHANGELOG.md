@@ -1,5 +1,10 @@
 # Version 0.4.0.9000
 
+## mini.statusline
+
+- FEATURE: Implement `config.use_icons` which controls whether to use icons by default.
+
+
 # Version 0.4.0
 
 - Update all modules to supply mapping description for Neovim>=0.7.

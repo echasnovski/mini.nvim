@@ -140,6 +140,7 @@ describe('MiniStatusline.setup()', function()
     assert_config_error({ content = { active = 'a' } }, 'content.active', 'function')
     assert_config_error({ content = { inactive = 'a' } }, 'content.inactive', 'function')
     assert_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
+    assert_config_error({ use_icons = 'a' }, 'use_icons', 'boolean')
   end)
 
   it('sets proper autocommands', function()
@@ -277,14 +278,14 @@ describe('MiniStatusline.section_diagnostics()', function()
     eq(child.lua_get([[MiniStatusline.section_diagnostics({icon = 'AAA'})]]), 'AAA E4 W3 I2 H1')
   end)
 
-  it('is shown only in normal buffers', function()
-    child.cmd('help')
-    eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
-  end)
-
   it('respects `config.use_icons`', function()
     child.lua('MiniStatusline.config.use_icons = false')
     eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'LSP E4 W3 I2 H1')
+  end)
+
+  it('is shown only in normal buffers', function()
+    child.cmd('help')
+    eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
   end)
 end)
 
@@ -319,6 +320,14 @@ describe('MiniStatusline.section_fileinfo()', function()
     validate_fileinfo('trunc_width = 100', '^ lua...')
     set_width(99)
     validate_fileinfo('trunc_width = 100', '^ lua$')
+  end)
+
+  it('respects `config.use_icons`', function()
+    mock_file(10)
+    child.cmd('edit ' .. mocked_filepath)
+
+    child.lua('MiniStatusline.config.use_icons = false')
+    validate_fileinfo('', '^lua...')
   end)
 
   it("correctly asks 'nvim-web-devicons' for icon", function()
@@ -412,14 +421,14 @@ describe('MiniStatusline.section_git()', function()
     eq(child.lua_get([[MiniStatusline.section_git({icon = 'AAA'})]]), 'AAA main +1 ~2 -3')
   end)
 
-  it('is shown only in normal buffers', function()
-    child.cmd('help')
-    eq(child.lua_get('MiniStatusline.section_git({})'), '')
-  end)
-
   it('respects `config.use_icons`', function()
     child.lua('MiniStatusline.config.use_icons = false')
     eq(child.lua_get([[MiniStatusline.section_git({})]]), 'Git main +1 ~2 -3')
+  end)
+
+  it('is shown only in normal buffers', function()
+    child.cmd('help')
+    eq(child.lua_get('MiniStatusline.section_git({})'), '')
   end)
 end)
 

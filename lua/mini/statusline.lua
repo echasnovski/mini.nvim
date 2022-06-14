@@ -166,8 +166,10 @@ MiniStatusline.config = {
     -- Content for inactive window(s)
     inactive = nil,
   },
-  -- Whether to use Nert Fonts.
+
+  -- Whether to use icons by default
   use_icons = true,
+
   -- Whether to set Vim's settings for statusline (make it always shown with
   -- 'laststatus' set to 2). To use global statusline in Neovim>=0.7.0, set
   -- this to `false` and 'laststatus' to 3.
@@ -484,6 +486,7 @@ function H.setup_config(config)
   vim.validate({
     content = { config.content, 'table' },
     set_vim_settings = { config.set_vim_settings, 'boolean' },
+    use_icons = { config.use_icons, 'boolean' },
   })
 
   vim.validate({
