@@ -275,7 +275,7 @@ function MiniJump.expr_jump(backward, till)
   end
   H.update_state(target, backward, till, vim.v.count1)
 
-  return vim.api.nvim_replace_termcodes('v:<C-u>lua MiniJump.jump()<CR>', true, true, true)
+  return vim.api.nvim_replace_termcodes('v<Cmd>lua MiniJump.jump()<CR>', true, true, true)
 end
 
 --- Stop jumping
