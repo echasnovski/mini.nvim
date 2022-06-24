@@ -113,6 +113,11 @@
 ---   highlight surrounding (like pair of parenthesis, quotes, etc.). Has
 ---   special "function call", "tag", and "interactive" surroundings. Supports
 ---   dot-repeatability, textobject, motions.
+--- - |MiniTest| - framework for writing extensive Neovim plugin tests.
+---   Supports hierarchical tests, hooks, parametrization, filtering (like from
+---   current file or cursor position), screen tests, "busted-style" emulation,
+---   customizable reporters, and more. Designed to be used with provided
+---   wrapper for managing child Neovim processes.
 --- - |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
 ---   buffers. Allows showing extra information section in case of multiple vim
 ---   tabpages. For full experience needs

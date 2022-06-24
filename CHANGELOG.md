@@ -1,8 +1,14 @@
 # Version 0.4.0.9000
 
+- Update all tests to use new 'mini.test' module.
+
 ## mini.statusline
 
 - FEATURE: Implement `config.use_icons` which controls whether to use icons by default.
+
+## mini.test
+
+Introduction of new module.
 
 
 # Version 0.4.0
