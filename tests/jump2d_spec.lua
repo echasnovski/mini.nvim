@@ -224,13 +224,13 @@ describe('MiniJump2d.setup()', function()
     -- Highlight groups, depending on background
     child.o.background = 'dark'
     reload_module()
-    assert.truthy(child.cmd_capture('hi MiniJump2dSpot'):find('gui=bold,nocombine guifg=white guibg=black'))
+    assert.truthy(child.cmd_capture('hi MiniJump2dSpot'):find('gui=bold,nocombine guifg=[Ww]hite guibg=[Bb]lack'))
 
     child.cmd('hi clear MiniJump2dSpot')
 
     child.o.background = 'light'
     reload_module()
-    assert.truthy(child.cmd_capture('hi MiniJump2dSpot'):find('gui=bold,nocombine guifg=black guibg=white'))
+    assert.truthy(child.cmd_capture('hi MiniJump2dSpot'):find('gui=bold,nocombine guifg=[Bb]lack guibg=[Ww]hite'))
   end)
 
   it('creates `config` field', function()
