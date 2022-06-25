@@ -662,6 +662,54 @@ describe('Jumping with f/t/F/T', function()
     validate_disable('g')
     validate_disable('b')
   end)
+
+  it('respects vim.o.ignorecase', function()
+    child.cmd('set ignorecase')
+    set_lines({ ' 1e2E3E4e_ ' })
+
+    set_cursor(1, 0)
+    type_keys('2f', 'E')
+    eq(get_cursor(), { 1, 4 })
+
+    set_cursor(1, 0)
+    type_keys('2t', 'E')
+    eq(get_cursor(), { 1, 3 })
+
+    set_cursor(1, 10)
+    type_keys('2F', 'E')
+    eq(get_cursor(), { 1, 6 })
+
+    set_cursor(1, 10)
+    type_keys('2T', 'E')
+    eq(get_cursor(), { 1, 7 })
+
+    child.cmd('set noignorecase')
+  end)
+
+  it('respects vim.o.smartcase', function()
+    child.cmd('set ignorecase')
+    child.cmd('set smartcase')
+    set_lines({ ' 1e2E3E4e_ ' })
+
+    set_cursor(1, 0)
+    type_keys('2f', 'E')
+    eq(get_cursor(), { 1, 6 })
+
+    set_cursor(1, 0)
+    type_keys('2t', 'E')
+    eq(get_cursor(), { 1, 5 })
+
+    set_cursor(1, 10)
+    type_keys('2F', 'E')
+    eq(get_cursor(), { 1, 4 })
+
+    set_cursor(1, 10)
+    type_keys('2T', 'E')
+    eq(get_cursor(), { 1, 5 })
+
+    child.cmd('set nosmartcase')
+    child.cmd('set noignorecase')
+  end)
 end)
 
 describe('Repeat jump with ;', function()
@@ -864,6 +912,34 @@ describe('Delayed highlighting', function()
     type_keys('ct', 'f')
     sleep(test_times.highlight)
     eq(highlights_target('f', false, true), false)
+  end)
+
+  it('respects ignorecase', function()
+    child.cmd('set ignorecase')
+    set_lines({ '1e2E' })
+
+    set_cursor(1, 0)
+    type_keys('f', 'e')
+
+    sleep(test_times.highlight)
+    eq(highlights_target([[\ce]], false, false), true)
+
+    child.cmd('set noignorecase')
+  end)
+
+  it('respects smartcase', function()
+    child.cmd('set ignorecase')
+    child.cmd('set smartcase')
+    set_lines({ '1e2E3e4E' })
+
+    set_cursor(1, 0)
+    type_keys('f', 'E')
+
+    sleep(test_times.highlight)
+    eq(highlights_target([[E]], false, false), true)
+
+    child.cmd('set nosmartcase')
+    child.cmd('set noignorecase')
   end)
 end)
 

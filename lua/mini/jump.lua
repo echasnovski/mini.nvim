@@ -13,6 +13,11 @@
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
 ---
+--- This module follows vim's 'ignorecase' and 'smartcase' options. When
+--- 'ignorecase' is set, f, F, t, T will match case-insensitively. When
+--- 'smartcase' is also set, f, F, t, T will only match lowercase
+--- characters case-insensitively.
+---
 --- # Setup~
 ---
 --- This module needs a setup with `require('mini.jump').setup({})`
@@ -168,17 +173,21 @@ function MiniJump.jump(target, backward, till, n_times)
 
   -- Construct search and highlight patterns
   local flags = MiniJump.state.backward and 'Wb' or 'W'
-  local pattern, hl_pattern = [[\V%s]], [[\V%s]]
+  local hl_case = ''
+  if vim.o.ignorecase and (not vim.o.smartcase or escaped_target == escaped_target:lower()) then
+    hl_case = [[\c]]
+  end
+  local pattern, hl_pattern = [[\V%s]], [[\V%s%s]]
   if MiniJump.state.till then
     if MiniJump.state.backward then
-      pattern, hl_pattern = [[\V\(%s\)\@<=\.]], [[\V%s\.\@=]]
+      pattern, hl_pattern = [[\V\(%s\)\@<=\.]], [[\V%s%s\.\@=]]
       flags = ('%se'):format(flags)
     else
-      pattern, hl_pattern = [[\V\.\(%s\)\@=]], [[\V\.\@<=%s]]
+      pattern, hl_pattern = [[\V\.\(%s\)\@=]], [[\V%s\.\@<=%s]]
     end
   end
 
-  pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(escaped_target)
+  pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(hl_case, escaped_target)
 
   -- Delay highlighting after stopping previous one
   H.timers.highlight:stop()
@@ -271,7 +280,7 @@ function MiniJump.expr_jump(backward, till)
   end
   H.update_state(target, backward, till, vim.v.count1)
 
-  return vim.api.nvim_replace_termcodes('v:<C-u>lua MiniJump.jump()<CR>', true, true, true)
+  return vim.api.nvim_replace_termcodes('v<Cmd>lua MiniJump.jump()<CR>', true, true, true)
 end
 
 --- Stop jumping
