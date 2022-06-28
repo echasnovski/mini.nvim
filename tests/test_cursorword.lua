@@ -97,7 +97,39 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 -- Integration tests ==========================================================
-T['Cursorword autohighlighting'] = new_set({
+T['Highlighting'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.set_size(5, 12)
+      child.lua('MiniCursorword.config.delay = 0')
+      set_lines({ 'a aa aaa', 'aa aaa a', 'aaa a aa' })
+      set_cursor(1, 0)
+    end,
+  },
+})
+
+T['Highlighting']['works'] = function()
+  child.expect_screenshot()
+end
+
+T['Highlighting']['respects MiniCursorwordCurrent highlight group'] = function()
+  child.cmd('hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE')
+  child.expect_screenshot()
+end
+
+T['Highlighting']['works with multiple windows'] = function()
+  child.set_size(5, 40)
+  child.cmd('vsplit | wincmd =')
+  set_cursor(2, 0)
+  child.expect_screenshot()
+end
+
+T['Highlighting']['can stop'] = function()
+  type_keys('i')
+  child.expect_screenshot()
+end
+
+T['Autohighlighting'] = new_set({
   hooks = {
     pre_case = function()
       set_lines(example_lines)
@@ -114,16 +146,16 @@ local validate_cursorword = function(delay)
   eq(word_is_highlighted('aa'), true)
 end
 
-T['Cursorword autohighlighting']['works'] = function()
+T['Autohighlighting']['works'] = function()
   validate_cursorword(test_times.delay)
 end
 
-T['Cursorword autohighlighting']['respects `config.delay`'] = function()
+T['Autohighlighting']['respects `config.delay`'] = function()
   child.lua('MiniCursorword.config.delay = 200')
   validate_cursorword(200)
 end
 
-T['Cursorword autohighlighting']['removes highlight immediately after move'] = function()
+T['Autohighlighting']['removes highlight immediately after move'] = function()
   set_cursor(2, 0)
   sleep(test_times.delay)
   eq(word_is_highlighted('aa'), true)
@@ -145,15 +177,15 @@ local validate_immediate = function(move_command)
   eq(match_gen, get_match('MiniCursorword'))
 end
 
-T['Cursorword autohighlighting']['highlights immediately inside current word'] = function()
+T['Autohighlighting']['highlights immediately inside current word'] = function()
   validate_immediate('normal! l')
 end
 
-T['Cursorword autohighlighting']['highlights immediately same word in other place'] = function()
+T['Autohighlighting']['highlights immediately same word in other place'] = function()
   validate_immediate('normal! k')
 end
 
-T['Cursorword autohighlighting']['highlights only "keyword" symbols'] = function()
+T['Autohighlighting']['highlights only "keyword" symbols'] = function()
   local validate_highlighted = function(cursor_pos, hl_word)
     set_cursor(unpack(cursor_pos))
     if hl_word == nil then
@@ -177,16 +209,15 @@ T['Cursorword autohighlighting']['highlights only "keyword" symbols'] = function
   validate_highlighted({ 5, 0 }, nil)
 end
 
-T['Cursorword autohighlighting']['stops in Insert mode'] = function()
+T['Autohighlighting']['stops in Insert mode'] = function()
   set_cursor(2, 0)
   sleep(test_times.delay)
   eq(word_is_highlighted('aa'), true)
   type_keys('i')
-  poke_eventloop()
   eq(word_is_highlighted('aa'), false)
 end
 
-T['Cursorword autohighlighting']['stops in Terminal mode'] = function()
+T['Autohighlighting']['stops in Terminal mode'] = function()
   set_cursor(2, 0)
   sleep(test_times.delay)
   eq(word_is_highlighted('aa'), true)
@@ -194,7 +225,7 @@ T['Cursorword autohighlighting']['stops in Terminal mode'] = function()
   eq(word_is_highlighted('aa'), false)
 end
 
-T['Cursorword autohighlighting']['respects ModeChanged'] = function()
+T['Autohighlighting']['respects ModeChanged'] = function()
   if child.fn.exists('##ModeChanged') ~= 1 then
     return
   end
@@ -211,19 +242,16 @@ T['Cursorword autohighlighting']['respects ModeChanged'] = function()
   child.lua([[require('mini.cursorword').setup({ delay = 0 })]])
 
   set_cursor(2, 0)
-  poke_eventloop()
   eq(word_is_highlighted('aa'), true)
 
   type_keys('v')
-  poke_eventloop()
   eq(word_is_highlighted('aa'), false)
 
   type_keys('v')
-  poke_eventloop()
   eq(word_is_highlighted('aa'), true)
 end
 
-T['Cursorword autohighlighting']['respects `vim.{g,b}.minicursorword_disable`'] = new_set({
+T['Autohighlighting']['respects `vim.{g,b}.minicursorword_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
