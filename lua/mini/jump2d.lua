@@ -320,7 +320,7 @@ function MiniJump2d.start(opts)
 
   H.spots_show(spots, opts)
 
-  H.current.spots = spots
+  H.cache.spots = spots
 
   -- Defer advancing jump to allow drawing before invoking `getcharstr()`.
   -- This is much faster than having to call `vim.cmd('redraw')`.
@@ -336,15 +336,20 @@ end
 --- Stop jumping
 function MiniJump2d.stop()
   H.spots_unshow()
-  H.current.spots = nil
+  H.cache.spots = nil
+  vim.cmd('redraw')
+
+  if H.cache.is_in_getchar then
+    vim.api.nvim_input('<C-c>')
+  end
 end
 
 --- Generate spotter for Lua pattern
 ---
----@param pattern string Lua pattern. Default: `'[^%s%p]+'` which matches group
+---@param pattern string|nil Lua pattern. Default: `'[^%s%p]+'` which matches group
 ---   of "non-whitespace non-punctuation characters" (basically a way of saying
 ---   "group of alphanumeric characters" that works with multibyte characters).
----@param side string Which side of pattern match should be considered as
+---@param side string|nil Which side of pattern match should be considered as
 ---   jumping spot. Should be one of 'start' (start of match, default), 'end'
 ---   (inclusive end of match), or 'none' (match for spot is done manually
 ---   inside pattern with plain `()` matching group).
@@ -502,8 +507,8 @@ local function user_input_opts(input_fun)
   res.hooks = {
     before_start = function()
       local input = input_fun()
-      --stylua: ignore
       if input == nil then
+        --stylua: ignore
         res.spotter = function() return {} end
       else
         local pattern = vim.pesc(input)
@@ -541,8 +546,13 @@ H.ns_id = {
   input = vim.api.nvim_create_namespace('MiniJump2dInput'),
 }
 
--- Table with current relevalnt data:
-H.current = {}
+-- Table with current relevant data:
+H.cache = {
+  -- Array of shown spots
+  spots = nil,
+  -- Indicator of whether Neovim is currently in "getchar" mode
+  is_in_getchar = false,
+}
 
 -- Table with special keys
 H.keys = {
@@ -654,7 +664,7 @@ function H.spots_add_label(spots, opts)
 end
 
 function H.spots_show(spots, opts)
-  spots = spots or H.current.spots or {}
+  spots = spots or H.cache.spots or {}
   if #spots == 0 then
     H.message('No spots to show.')
     return
@@ -679,7 +689,7 @@ function H.spots_show(spots, opts)
 end
 
 function H.spots_unshow(spots)
-  spots = spots or H.current.spots or {}
+  spots = spots or H.cache.spots or {}
 
   -- Remove spot extmarks from all buffers they are present
   local buf_ids = {}
@@ -755,11 +765,11 @@ end
 function H.advance_jump(opts)
   local label_tbl = vim.split(opts.labels, '')
 
-  local spots = H.current.spots
+  local spots = H.cache.spots
 
   if type(spots) ~= 'table' or #spots < 1 then
     H.spots_unshow(spots)
-    H.current.spots = nil
+    H.cache.spots = nil
     return
   end
 
@@ -773,7 +783,7 @@ function H.advance_jump(opts)
     if #spots > 1 then
       spots = H.spots_add_label(spots, opts)
       H.spots_show(spots, opts)
-      H.current.spots = spots
+      H.cache.spots = spots
 
       -- Defer advancing jump to allow drawing before invoking `getcharstr()`.
       -- This is much faster than having to call `vim.cmd('redraw')`. Don't do that
@@ -826,7 +836,9 @@ function H.getcharstr(msg)
 
   -- Use `getchar()` because `getcharstr()` is present only in Neovim>=0.6
   -- Might want to remove if support for Neovim<0.6 is dropped
+  H.cache.is_in_getchar = true
   local ok, char = pcall(vim.fn.getchar)
+  H.cache.is_in_getchar = false
   needs_help_msg = false
 
   --stylua: ignore

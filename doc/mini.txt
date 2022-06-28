@@ -2432,10 +2432,10 @@ Stop jumping
 Generate spotter for Lua pattern
 
 Parameters~
-{pattern} `(string)` Lua pattern. Default: `'[^%s%p]+'` which matches group
+{pattern} `(string|nil)` Lua pattern. Default: `'[^%s%p]+'` which matches group
   of "non-whitespace non-punctuation characters" (basically a way of saying
   "group of alphanumeric characters" that works with multibyte characters).
-{side} `(string)` Which side of pattern match should be considered as
+{side} `(string|nil)` Which side of pattern match should be considered as
   jumping spot. Should be one of 'start' (start of match, default), 'end'
   (inclusive end of match), or 'none' (match for spot is done manually
   inside pattern with plain `()` matching group).
