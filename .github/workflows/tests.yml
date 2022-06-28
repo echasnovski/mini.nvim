@@ -6,6 +6,7 @@ jobs:
   build:
     name: Run tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         neovim_version: ['v0.5.1', 'v0.6.1', 'v0.7.0', 'nightly']
