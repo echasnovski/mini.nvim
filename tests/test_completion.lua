@@ -18,54 +18,19 @@ local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
-local mock_lsp = function() child.cmd('luafile tests/completion-tests/mock-months-lsp.lua') end
+local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-lsp.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
--- Helpers
---- Attempt at getting data about actually shown completion information
----
---- Main reason why it should exist is because there doesn't seem to be a
---- builtin way to get information about which completion items are actually
---- currently shown. `fn.complete_info()` (main function to get information
---- about completion popup) returns **all** items which were present on popup
---- creation and filtering seems to be done internally without any way to
---- externally get that information.
----
---- NOTE: DOES NOT WORK. Seems to be because information for `complete_info()`
+-- NOTE: this can't show "what filtered text is actually shown in window".
+-- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
 --- idea of "Type <C-n> -> get selected item" loop doesn't work (because
 --- "selected item" is not updated). Can't find a way to force its update.
 ---
---- TODO: Try to make this work. Mainly from possible replies at
---- https://github.com/vim/vim/issues/10007 .
+--- Using screen tests to get information about actually shown filtered items.
 ---
----@private
-local get_shown_completion_data = function(what)
-  what = what or 'word'
-
-  local complete_info = vim.fn.complete_info()
-  -- No words is shown if no popup is shown or there is no items
-  if complete_info.pum_visible ~= 1 or #complete_info.items == 0 then
-    return {}
-  end
-
-  local res = {}
-  local i, n_items = 0, #complete_info.items
-  local selected_init, selected_cur = complete_info.selected, nil
-  while i < n_items and selected_cur ~= selected_init do
-    i = i + 1
-    vim.api.nvim_input('<C-n>')
-    complete_info = vim.fn.complete_info()
-    selected_cur = complete_info.selected
-    if selected_cur >= 0 then
-      table.insert(res, complete_info.items[selected_cur + 1][what])
-    end
-  end
-
-  return res
-end
-
+--- More info: https://github.com/vim/vim/issues/10007
 local get_completion = function(what)
   what = what or 'word'
   return vim.tbl_map(function(x)
@@ -268,11 +233,10 @@ T['Autocompletion']['works with LSP client'] = function()
   eq(get_completion(), { 'January', 'June', 'July' })
   eq(get_completion('kind'), { 'Text', 'Function', 'Function' })
 
-  -- -- Completion menu is filtered after entering characters
-  -- -- NOTE: this is currently not tested because couldn't find a way to get
-  -- -- actually shown items (see annotation of `get_shown_completion_data()`).
-  -- type_keys( 'u' )
-  -- eq(get_completion(), { 'June', 'July' })
+  -- Completion menu is filtered after entering characters
+  type_keys('u')
+  child.set_size(10, 20)
+  child.expect_screenshot()
 end
 
 T['Autocompletion']['works without LSP clients'] = function()
@@ -281,12 +245,17 @@ T['Autocompletion']['works without LSP clients'] = function()
     return {}
   end
 
-  type_keys('i', 'aa ab a')
+  type_keys('i', 'aab aac aba a')
   eq(get_completion(), {})
   sleep(test_times.completion - 10)
   eq(get_completion(), {})
   sleep(10)
-  eq(get_completion(), { 'aa', 'ab' })
+  eq(get_completion(), { 'aab', 'aac', 'aba' })
+
+  -- Completion menu is filtered after entering characters
+  type_keys('a')
+  child.set_size(10, 20)
+  child.expect_screenshot()
 end
 
 T['Autocompletion']['implements debounce-style delay'] = function()
@@ -510,7 +479,9 @@ local validate_info_win = function(delay)
 end
 
 T['Information window']['works'] = function()
+  child.set_size(10, 40)
   validate_info_win(test_times.info)
+  child.expect_screenshot()
 end
 
 T['Information window']['respects `config.delay.info`'] = function()
@@ -519,7 +490,7 @@ T['Information window']['respects `config.delay.info`'] = function()
 end
 
 local validate_dimensions_info = function(keys, completion_items, dimensions)
-  reload_module({ window_dimensions = { info = { height = 20, width = 40 } } })
+  reload_module({ window_dimensions = { info = dimensions } })
   type_keys('i', keys, '<C-Space>')
   eq(get_completion(), completion_items)
 
@@ -531,11 +502,15 @@ local validate_dimensions_info = function(keys, completion_items, dimensions)
 end
 
 T['Information window']['respects `config.window_dimensions.info`'] = function()
+  child.set_size(25, 60)
   validate_dimensions_info('D', { 'December' }, { height = 20, width = 40 })
+  child.expect_screenshot()
 end
 
 T['Information window']['has minimal dimensions for small text'] = function()
+  child.set_size(10, 40)
   validate_dimensions_info('J', { 'January', 'June', 'July' }, { height = 1, width = 9 })
+  child.expect_screenshot()
 end
 
 T['Information window']['implements debounce-style delay'] = function()
@@ -588,7 +563,9 @@ local validate_signature_win = function(delay)
 end
 
 T['Signature help']['works'] = function()
+  child.set_size(5, 30)
   validate_signature_win(test_times.signature)
+  child.expect_screenshot()
 end
 
 T['Signature help']['respects `config.delay.signature`'] = function()
@@ -597,39 +574,25 @@ T['Signature help']['respects `config.delay.signature`'] = function()
 end
 
 T['Signature help']['updates highlighting of active parameter'] = function()
-  -- Mock `vim.api.nvim_buf_add_highlight()`
-  -- Elements of `_G.buf_highlighting_calls` should be tables with values:
-  -- {buffer}, {ns_id}, {hl_group}, {line}, {col_start}, {col_end}
-  child.lua([[
-      _G.buf_highlighting_calls = {}
-      vim.api.nvim_buf_add_highlight = function(...)
-        table.insert(_G.buf_highlighting_calls, {...})
-      end
-    ]])
-  local calls
+  child.set_size(5, 30)
   child.cmd('startinsert')
 
   type_keys('abc(')
   sleep(test_times.signature + 1)
-  calls = child.lua_get('_G.buf_highlighting_calls')
-  eq(#calls, 1)
-  eq({ calls[1][3], calls[1][5], calls[1][6] }, { 'MiniCompletionActiveParameter', 4, 10 })
+  child.expect_screenshot()
 
   type_keys('1,')
   sleep(test_times.signature + 1)
-  calls = child.lua_get('_G.buf_highlighting_calls')
-  eq(#calls, 2)
-  eq({ calls[2][3], calls[2][5], calls[2][6] }, { 'MiniCompletionActiveParameter', 12, 18 })
+  child.expect_screenshot()
 
   -- As there are only two parameters, nothing should be highlighted
   type_keys('2,')
   sleep(test_times.signature + 1)
-  calls = child.lua_get('_G.buf_highlighting_calls')
-  eq(#calls, 2)
+  child.expect_screenshot()
 end
 
 local validate_dimensions_signature = function(keys, dimensions)
-  reload_module({ window_dimensions = { signature = { height = 20, width = 40 } } })
+  reload_module({ window_dimensions = { signature = dimensions } })
   child.cmd('startinsert')
   type_keys(keys)
   sleep(test_times.signature + 2)
@@ -641,7 +604,9 @@ T['Signature help']['respects `config.window_dimensions.signature`'] = function(
 end
 
 T['Signature help']['has minimal dimensions for small text'] = function()
+  child.set_size(5, 30)
   validate_dimensions_signature({ 'a', 'b', 'c', '(' }, { height = 1, width = 19 })
+  child.expect_screenshot()
 end
 
 T['Signature help']['implements debounce-style delay'] = function()
