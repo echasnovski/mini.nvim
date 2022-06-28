@@ -12,7 +12,7 @@ local load_module = function(config) child.mini_load('doc', config) end
 local unload_module = function() child.mini_unload('doc') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local cd = function(path) child.cmd('cd ' .. path) end
-local source_helpers = function() child.cmd('luafile tests/doc-tests/helpers.lua') end
+local source_helpers = function() child.cmd('luafile tests/dir-doc/helpers.lua') end
 local remove_dir = function(path) child.lua('_G.remove_dir(...)', { path }) end
 --stylua: ignore end
 
@@ -136,7 +136,7 @@ end
 -- General overview of testing workflow:
 -- - Tests are organized per test scope: collection of source code file with
 --   annotations demonstating similar functionality. Every test scope organized
---   in separate subdirectory of 'tests/doc-tests'.
+--   in separate subdirectory of 'tests/dir-doc'.
 -- - Testing is performed by evaluating `MiniDoc.generate()` (with possibly
 --   non-default arguments) with current directory being equal to directory of
 --   tested scope (for example, 'default-collation'). It will produce some
@@ -156,7 +156,7 @@ T['generate()'] = new_set({
       source_helpers()
 
       -- Set current directory to one containing all input data for tests
-      cd('tests/doc-tests')
+      cd('tests/dir-doc')
 
       -- Set high height of command line to not encounter hit-enter-prompt
       child.o.cmdheight = 10
