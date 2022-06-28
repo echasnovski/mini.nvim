@@ -307,6 +307,10 @@ local get_floating_windows = function()
 end
 
 T['zoom()']['works'] = function()
+  child.set_size(5, 20)
+  set_lines({ 'aaa', 'bbb' })
+  child.o.statusline = 'Statusline should not be visible in floating window'
+
   local buf_id = child.api.nvim_get_current_buf()
   child.lua('MiniMisc.zoom()')
   local floating_wins = get_floating_windows()
@@ -316,6 +320,9 @@ T['zoom()']['works'] = function()
   eq(child.api.nvim_win_get_buf(win_id), buf_id)
   local config = child.api.nvim_win_get_config(win_id)
   eq({ config.height, config.width }, { 1000, 1000 })
+
+  -- No statusline should be present
+  child.expect_screenshot()
 end
 
 T['zoom()']['respects `buf_id` argument'] = function()
@@ -328,6 +335,8 @@ T['zoom()']['respects `buf_id` argument'] = function()
 end
 
 T['zoom()']['respects `config` argument'] = function()
+  child.set_size(5, 30)
+
   local custom_config = { width = 20 }
   child.lua('MiniMisc.zoom(...)', { 0, custom_config })
   local floating_wins = get_floating_windows()
@@ -335,6 +344,8 @@ T['zoom()']['respects `config` argument'] = function()
   eq(#floating_wins, 1)
   local config = child.api.nvim_win_get_config(floating_wins[1])
   eq({ config.height, config.width }, { 1000, 20 })
+
+  child.expect_screenshot()
 end
 
 return T
