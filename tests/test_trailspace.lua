@@ -16,25 +16,6 @@ local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
 -- Make helpers
-local get_match = function(win_id)
-  win_id = win_id or child.api.nvim_get_current_win()
-  return vim.tbl_filter(function(x)
-    return x.group == 'MiniTrailspace'
-  end, child.fn.getmatches(win_id))
-end
-
-local is_trailspace_highlighted = function(win_id)
-  return #get_match(win_id) > 0
-end
-
-local validate_highlighted = function(win_id)
-  eq(is_trailspace_highlighted(win_id), true)
-end
-
-local validate_not_highlighted = function(win_id)
-  eq(is_trailspace_highlighted(win_id), false)
-end
-
 local ensure_no_highlighting = function()
   child.fn.clearmatches()
 end
@@ -50,6 +31,8 @@ T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
+      child.set_size(10, 20)
+      child.o.hidden = true
       set_lines(example_lines)
       load_module()
     end,
@@ -98,85 +81,58 @@ end
 T['highlight()'] = new_set({ hooks = { pre_case = ensure_no_highlighting } })
 
 T['highlight()']['works'] = function()
-  validate_not_highlighted()
+  child.expect_screenshot()
   child.lua('MiniTrailspace.highlight()')
-  validate_highlighted()
+  child.expect_screenshot()
 end
 
-T['highlight()']['respects `config.only_in_normal_buffers`'] = function()
-  child.o.hidden = true
-  local validate_effect = function(not_normal_buf_id)
-    child.api.nvim_set_current_buf(not_normal_buf_id)
-    ensure_no_highlighting()
-
+T['highlight()']['respects `config.only_in_normal_buffers`'] = new_set({
+  parametrize = {
+    { true, '' },
+    { true, 'nofile' },
+    { true, 'help' },
+    { false, '' },
+    { false, 'nofile' },
+    { false, 'help' },
+  },
+}, {
+  test = function(option_value, buftype)
+    child.lua('MiniTrailspace.config.only_in_normal_buffers = ' .. tostring(option_value))
+    child.bo.buftype = buftype
     child.lua('MiniTrailspace.highlight()')
-    if child.lua_get('MiniTrailspace.config.only_in_normal_buffers') then
-      validate_not_highlighted()
-    else
-      validate_highlighted()
-    end
-  end
+    child.expect_screenshot()
+  end,
+})
 
-  local validate = function(not_normal_buf_id)
-    child.lua('MiniTrailspace.config.only_in_normal_buffers = true')
-    validate_effect(not_normal_buf_id)
-
-    child.lua('MiniTrailspace.config.only_in_normal_buffers = false')
-    validate_effect(not_normal_buf_id)
-
-    child.api.nvim_buf_delete(not_normal_buf_id, { force = true })
-  end
-
-  local buf_id
-
-  -- Check in scratch buffer (not normal)
-  buf_id = child.api.nvim_create_buf(true, true)
-  validate(buf_id)
-
-  -- Check in help buffer (not normal)
-  buf_id = child.api.nvim_create_buf(true, false)
-  child.api.nvim_buf_set_option(buf_id, 'buftype', 'help')
-  validate(buf_id)
-end
-
-T['highlight()']['works only in Normal mode'] = function()
-  -- Insert mode
-  child.cmd('startinsert')
-
-  ensure_no_highlighting()
-  child.lua('MiniTrailspace.highlight()')
-  validate_not_highlighted()
-
-  child.cmd('stopinsert')
-
-  -- Visual mode
-  type_keys('v')
-
-  ensure_no_highlighting()
-  child.lua('MiniTrailspace.highlight()')
-  validate_not_highlighted()
-
-  type_keys('v')
-end
+T['highlight()']['works only in Normal mode'] = new_set({
+  parametrize = { { 'i' }, { 'v' }, { 'R' }, { ':' } },
+}, {
+  test = function(mode_key)
+    type_keys(mode_key)
+    child.lua('MiniTrailspace.highlight()')
+    -- Should be no highlighting
+    child.expect_screenshot()
+  end,
+})
 
 T['highlight()']['does not unnecessarily create match entry'] = function()
   child.lua('MiniTrailspace.highlight()')
-  local match_1 = get_match()
-  eq(#match_1, 1)
+  local matches = child.fn.getmatches()
+  eq(#matches, 1)
 
   child.lua('MiniTrailspace.highlight()')
-  local match_2 = get_match()
-  eq(#match_2, 1)
-  eq(match_1.id, match_2.id)
+  eq(child.fn.getmatches(), matches)
 end
 
-T['highlight()']['works after `clearmatches()` called to remove highlight'] = function()
+T['highlight()']['works after `clearmatches()`'] = function()
   child.lua('MiniTrailspace.highlight()')
   child.fn.clearmatches()
-  validate_not_highlighted()
+  -- Should be no highlight
+  child.expect_screenshot()
 
   child.lua('MiniTrailspace.highlight()')
-  validate_highlighted()
+  -- Should be highlighted again
+  child.expect_screenshot()
 end
 
 T['highlight()']['respects `vim.{g,b}.minitrailspace_disable`'] = new_set({
@@ -184,9 +140,9 @@ T['highlight()']['respects `vim.{g,b}.minitrailspace_disable`'] = new_set({
 }, {
   test = function(var_type)
     child[var_type].minitrailspace_disable = true
-    validate_not_highlighted()
     child.lua('MiniTrailspace.highlight()')
-    validate_not_highlighted()
+    -- Should show no highlight
+    child.expect_screenshot()
   end,
 })
 
@@ -199,16 +155,15 @@ T['unhighlight()'] = new_set({
 })
 
 T['unhighlight()']['works'] = function()
-  validate_highlighted()
+  child.expect_screenshot()
   child.lua('MiniTrailspace.unhighlight()')
-  validate_not_highlighted()
+  child.expect_screenshot()
 end
 
-T['unhighlight()']['does not throw error if matches were manually cleared'] = function()
-  validate_highlighted()
+T['unhighlight()']['works after `clearmatches()`'] = function()
   child.fn.clearmatches()
   child.lua('MiniTrailspace.unhighlight()')
-  validate_not_highlighted()
+  child.expect_screenshot()
 end
 
 T['trim()'] = new_set()
@@ -235,71 +190,54 @@ T['Trailspace autohighlighting'] = new_set()
 
 T['Trailspace autohighlighting']['respects InsertEnter/InsertLeave'] = function()
   child.lua('MiniTrailspace.highlight()')
-  validate_highlighted()
+  child.expect_screenshot()
 
   child.cmd('startinsert')
-  validate_not_highlighted()
+  child.expect_screenshot()
 
   child.cmd('stopinsert')
-  validate_highlighted()
+  child.expect_screenshot()
 end
 
 T['Trailspace autohighlighting']['respects BufEnter/BufLeave'] = function()
   child.lua('MiniTrailspace.highlight()')
-  validate_highlighted()
+  child.expect_screenshot()
 
   child.cmd('doautocmd BufLeave')
-  validate_not_highlighted()
+  child.expect_screenshot()
 
   child.cmd('doautocmd BufEnter')
-  validate_highlighted()
+  child.expect_screenshot()
 end
 
 T['Trailspace autohighlighting']['respects WinEnter/WinLeave'] = function()
+  child.set_size(10, 40)
   child.lua('MiniTrailspace.highlight()')
-  child.cmd('vsplit')
+  child.cmd('edit bbb | vsplit | edit aaa')
+  for _, buf_id in ipairs(child.api.nvim_list_bufs()) do
+    child.api.nvim_buf_set_lines(buf_id, 0, -1, true, example_lines)
+  end
   local win_list = child.api.nvim_list_wins()
-  local cur_win_id = child.api.nvim_get_current_win()
-  local alt_win_id = win_list[1] == cur_win_id and win_list[2] or win_list[1]
 
-  validate_highlighted(cur_win_id)
-  validate_not_highlighted(alt_win_id)
+  child.api.nvim_set_current_win(win_list[1])
+  child.expect_screenshot()
 
-  child.api.nvim_set_current_win(alt_win_id)
+  child.api.nvim_set_current_win(win_list[2])
+  child.expect_screenshot()
 
-  validate_not_highlighted(cur_win_id)
-  validate_highlighted(alt_win_id)
-
-  child.api.nvim_set_current_win(cur_win_id)
-
-  validate_highlighted(cur_win_id)
-  validate_not_highlighted(alt_win_id)
+  child.api.nvim_set_current_win(win_list[1])
+  child.expect_screenshot()
 end
 
 T['Trailspace autohighlighting']['respects OptionSet'] = function()
   child.lua('MiniTrailspace.highlight()')
 
-  child.api.nvim_buf_set_option(0, 'buftype', 'nowrite')
-  validate_not_highlighted()
+  child.bo.buftype = 'nowrite'
+  child.expect_screenshot()
 
-  child.api.nvim_buf_set_option(0, 'buftype', '')
-  validate_highlighted()
+  child.bo.buftype = ''
+  child.expect_screenshot()
 end
-
-T['Trailspace autohighlighting']['respects `vim.{g,b}.minitrailspace_disable`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.lua('MiniTrailspace.highlight()')
-
-    child[var_type].minitrailspace_disable = true
-    -- Ensure "restarted" highlighting
-    child.cmd('startinsert')
-    child.cmd('stopinsert')
-
-    validate_not_highlighted()
-  end,
-})
 
 T['Trailspace highlighting on startup'] = new_set()
 
@@ -310,9 +248,10 @@ T['Trailspace highlighting on startup']['works'] = function()
     '-c',
     [[lua require('mini.trailspace').setup()]],
     '--',
-    'tests/trailspace-tests/file',
+    'tests/dir-trailspace/file',
   })
-  validate_highlighted()
+  child.set_size(5, 12)
+  child.expect_screenshot()
 end
 
 return T
