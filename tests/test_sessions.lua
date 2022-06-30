@@ -12,7 +12,7 @@ local new_set = MiniTest.new_set
 
 local path_sep = package.config:sub(1, 1)
 local project_root = vim.fn.getcwd()
-local empty_dir_relpath = 'tests/sessions-tests/empty'
+local empty_dir_relpath = 'tests/dir-sessions/empty'
 local empty_dir_path = vim.fn.fnamemodify(empty_dir_relpath, ':p')
 
 -- Helpers with child processes
@@ -35,7 +35,7 @@ local cleanup_directories = function()
   child.fn.delete(empty_dir_path, 'rf')
 
   -- Ensure 'global' does not contain file 'Session.vim'
-  local files = { 'tests/sessions-tests/global/Session.vim' }
+  local files = { 'tests/dir-sessions/global/Session.vim' }
 
   for _, f in ipairs(files) do
     child.fn.delete(f)
@@ -81,7 +81,7 @@ local populate_sessions = function(delay)
 end
 
 local validate_session_loaded = function(relative_path)
-  local path = make_path('tests/sessions-tests', relative_path)
+  local path = make_path('tests/dir-sessions', relative_path)
 
   -- It should actually source file
   eq(child.lua_get('_G.session_file'), path)
@@ -216,7 +216,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['detects sessions and respects `config.directory`'] = function()
-  cd('tests', 'sessions-tests')
+  cd('tests', 'dir-sessions')
 
   reload_module({ directory = 'global' })
   local detected = child.lua_get('MiniSessions.detected')
@@ -246,14 +246,14 @@ end
 
 T['setup()']['prefers local session file over global'] = function()
   -- Make file 'Session.vim' be in both `config.directory` and current one
-  local path_local = 'tests/sessions-tests/global/Session.vim'
+  local path_local = 'tests/dir-sessions/global/Session.vim'
   child.fn.writefile({ ([[lua _G.session_file = '%s']]):format(path_local) }, path_local)
 
-  cd('tests', 'sessions-tests')
+  cd('tests', 'dir-sessions')
 
   reload_module({ directory = 'global' })
   local detected = child.lua_get('MiniSessions.detected')
-  local expected_path = vim.fn.fnamemodify('.', ':p') .. 'tests/sessions-tests/Session.vim'
+  local expected_path = vim.fn.fnamemodify('.', ':p') .. 'tests/dir-sessions/Session.vim'
 
   eq(detected['Session.vim'].path, expected_path)
 end
@@ -269,7 +269,7 @@ T['setup()']['gives feedback about absent `config.directory`'] = function()
 end
 
 T['setup()']['respects `config.file`'] = function()
-  cd('tests', 'sessions-tests', 'local')
+  cd('tests', 'dir-sessions', 'local')
 
   reload_module({ autowrite = false, file = 'alternative-local-session' })
   local detected = child.lua_get('MiniSessions.detected')
@@ -279,7 +279,7 @@ T['setup()']['respects `config.file`'] = function()
 end
 
 T['setup()']['allows empty string for `config.file`'] = function()
-  cd('tests/sessions-tests')
+  cd('tests/dir-sessions')
   reload_module({ file = '' })
   local detected = child.lua_get('MiniSessions.detected')
   --stylua: ignore
@@ -289,7 +289,7 @@ end
 T['detected'] = new_set()
 
 T['detected']['is present'] = function()
-  cd('tests', 'sessions-tests')
+  cd('tests', 'dir-sessions')
   reload_module({ directory = 'global' })
   eq(child.lua_get('type(MiniSessions.detected)'), 'table')
 end
@@ -301,7 +301,7 @@ end
 T['read()'] = new_set()
 
 T['read()']['works'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
   child.lua([[MiniSessions.read('session1')]])
   validate_session_loaded('global/session1')
 end
@@ -315,7 +315,7 @@ T['read()']['works with no detected sessions'] = function()
 end
 
 T['read()']['accepts only name of detected session'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
   expect.error(function()
     child.lua([[MiniSessions.read('session-absent')]])
   end, '%(mini%.sessions%) "session%-absent" is not a name for detected session')
@@ -336,7 +336,7 @@ local setup_unsaved_buffers = function()
 end
 
 T['read()']['does not source if there are unsaved listed buffers'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
 
   -- Setup unsaved buffers
   local unsaved_buffers = setup_unsaved_buffers()
@@ -352,7 +352,7 @@ T['read()']['does not source if there are unsaved listed buffers'] = function()
 end
 
 T['read()']['ignores unsaved not listed buffers'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
   local buf_id = child.api.nvim_create_buf(false, false)
   child.api.nvim_buf_set_lines(buf_id, 0, -1, true, { 'aaa' })
   eq(child.api.nvim_buf_get_option(buf_id, 'modified'), true)
@@ -363,8 +363,8 @@ T['read()']['ignores unsaved not listed buffers'] = function()
 end
 
 T['read()']['uses by default local session'] = function()
-  cd('tests', 'sessions-tests', 'local')
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  cd('tests', 'dir-sessions', 'local')
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
 
   eq(child.lua_get([[MiniSessions.detected['Session.vim'].type]]), 'local')
   child.lua('MiniSessions.read()')
@@ -380,7 +380,7 @@ T['read()']['uses by default latest global session'] = function()
 end
 
 T['read()']['respects `force` from `config` and `opts` argument'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global', force = { read = true } })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global', force = { read = true } })
 
   -- Should overwrite unsaved buffers and load session if `force` is `true`
   setup_unsaved_buffers()
@@ -404,7 +404,7 @@ T['read()']['respects hook from `config` and `opts` argument'] = new_set({
     local hook_string_config = make_hook_string(pre_post, 'read', 'config')
     reload_from_strconfig({
       autowrite = 'false',
-      directory = [['tests/sessions-tests/global']],
+      directory = [['tests/dir-sessions/global']],
       hooks = hook_string_config,
     })
     child.lua([[MiniSessions.read('session1')]])
@@ -422,7 +422,7 @@ T['read()']['respects hook from `config` and `opts` argument'] = new_set({
 })
 
 T['read()']['respects `verbose` from `config` and `opts` argument'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global', verbose = { read = true } })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global', verbose = { read = true } })
 
   -- Should give message about read session
   child.lua([[MiniSessions.read('session1')]])
@@ -439,7 +439,7 @@ T['read()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
-    reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+    reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
     child[var_type].minisessions_disable = true
 
     reset_session_indicator()
@@ -500,7 +500,7 @@ T['write()']['updates `MiniSessions.detected` for present session'] = function()
 end
 
 T['write()']['validates `session_name`'] = function()
-  reload_module({ autowrite = false, directory = 'tests/sessions-tests/global' })
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
   expect.error(function()
     child.lua([[MiniSessions.write('')]])
   end, '%(mini%.sessions%) Supply non%-empty session name')
@@ -646,7 +646,7 @@ T['delete()']['validates presence of detected sessions'] = function()
 end
 
 T['delete()']['validates `session_name`'] = function()
-  reload_module({ directory = 'tests/sessions-tests/global' })
+  reload_module({ directory = 'tests/dir-sessions/global' })
   expect.error(function()
     child.lua([[MiniSessions.delete('')]])
   end, '%(mini%.sessions%) Supply non%-empty session name')
@@ -793,7 +793,6 @@ T['delete()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
   end,
 })
 
-local session_dir
 T['select()'] = new_set({
   hooks = {
     pre_case = function()
@@ -801,7 +800,7 @@ T['select()'] = new_set({
       child.lua('vim.ui = { select = function(...) _G.ui_select_args = { ... } end }')
 
       -- Load module with detected sessions
-      session_dir = populate_sessions()
+      local session_dir = populate_sessions()
 
       -- Add local session
       cd(session_dir)
@@ -853,6 +852,7 @@ T['select()']['validates `action` argument'] = function()
 end
 
 T['select()']['respects `action` argument'] = function()
+  local session_dir = child.lua_get('MiniSessions.config.directory')
   local path = make_path(session_dir, 'session_a')
   eq(child.fn.filereadable(path), 1)
 
@@ -888,12 +888,12 @@ end
 T['Autoreading sessions'] = new_set()
 
 T['Autoreading sessions']['works'] = function()
-  child.restart({ '-u', 'tests/sessions-tests/init-files/autoread.lua' })
+  child.restart({ '-u', 'tests/dir-sessions/init-files/autoread.lua' })
   validate_session_loaded('local/Session.vim')
 end
 
 T['Autoreading sessions']['does not autoread if Neovim started to show something'] = function()
-  local init_autoread = 'tests/sessions-tests/init-files/autoread.lua'
+  local init_autoread = 'tests/dir-sessions/init-files/autoread.lua'
 
   -- Current buffer has any lines (something opened explicitly)
   child.restart({ '-u', init_autoread, '-c', [[call setline(1, 'a')]] })
@@ -915,7 +915,7 @@ end
 T['Autowriting sessions'] = new_set()
 
 T['Autowriting sessions']['works'] = function()
-  local init_autowrite = 'tests/sessions-tests/init-files/autowrite.lua'
+  local init_autowrite = 'tests/dir-sessions/init-files/autowrite.lua'
   child.restart({ '-u', init_autowrite })
 
   -- Create session with one buffer, expect to autowrite it with second

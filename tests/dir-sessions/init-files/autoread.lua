@@ -4,4 +4,4 @@ vim.o.cmdheight = 10
 vim.o.swapfile = false
 
 vim.cmd('set rtp+=.')
-require('mini.sessions').setup({ autoread = true, autowrite = false, directory = 'tests/sessions-tests/local' })
+require('mini.sessions').setup({ autoread = true, autowrite = false, directory = 'tests/dir-sessions/local' })
