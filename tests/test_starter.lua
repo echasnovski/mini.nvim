@@ -20,7 +20,7 @@ local type_keys = function(...) return child.type_keys(...) end
 
 -- Make helpers
 local is_starter_shown = function()
-  return child.bo.filetype == 'starter'
+  return child.api.nvim_buf_get_option(0, 'filetype') == 'starter'
 end
 
 local validate_starter_shown = function()
@@ -61,6 +61,11 @@ local get_active_items_names = function()
   end, active_items)
 end
 
+local mock_user_and_time = function()
+  child.lua([[vim.loop.os_get_passwd = function() return { username = 'MINI' } end]])
+  child.lua([[vim.fn.strftime = function(x) return x == '%H' and '12' or '' end]])
+end
+
 local mock_item = function(name, section)
   return { name = name, action = ('lua _G.item_name = %s'):format(vim.inspect(name)), section = section }
 end
@@ -87,6 +92,7 @@ T = new_set({
     pre_case = function()
       child.setup()
       load_module()
+      mock_user_and_time()
     end,
     post_once = child.stop,
   },
@@ -202,34 +208,34 @@ local has_map = function(key, value)
   value = value or ''
   local cmd = 'nmap <buffer> ' .. key
   local pattern = vim.pesc('MiniStarter.' .. value)
-  expect.match(child.cmd_capture(cmd), pattern)
+  return child.cmd_capture(cmd):find(pattern) ~= nil
 end
 
 T['open()']['makes buffer mappings'] = function()
   child.lua('MiniStarter.open()')
 
-  has_map('<CR>', 'eval_current_item()')
-  has_map('<Up>', [[update_current_item('prev')]])
-  has_map('<C-p>', [[update_current_item('prev')]])
-  has_map('<M-k>', [[update_current_item('prev')]])
-  has_map('<Down>', [[update_current_item('next')]])
-  has_map('<C-n>', [[update_current_item('next')]])
-  has_map('<M-j>', [[update_current_item('next')]])
-  has_map('<Esc>', [[set_query('')]])
-  has_map('<BS>', 'add_to_query()')
-  has_map('<C-c>', 'close()')
+  eq(has_map('<CR>', 'eval_current_item()'), true)
+  eq(has_map('<Up>', [[update_current_item('prev')]]), true)
+  eq(has_map('<C-p>', [[update_current_item('prev')]]), true)
+  eq(has_map('<M-k>', [[update_current_item('prev')]]), true)
+  eq(has_map('<Down>', [[update_current_item('next')]]), true)
+  eq(has_map('<C-n>', [[update_current_item('next')]]), true)
+  eq(has_map('<M-j>', [[update_current_item('next')]]), true)
+  eq(has_map('<Esc>', [[set_query('')]]), true)
+  eq(has_map('<BS>', 'add_to_query()'), true)
+  eq(has_map('<C-c>', 'close()'), true)
 
   -- Defines query updaters
-  has_map('a', 'add_to_query("a")')
+  eq(has_map('a', 'add_to_query("a")'), true)
 end
 
 T['open()']['handles special query updaters'] = function()
   reload_module({ query_updaters = [["'\]] })
   child.lua('MiniStarter.open()')
 
-  has_map('"', [[add_to_query('"')]])
-  has_map("'", [[add_to_query("'")]])
-  has_map([[\]], [[add_to_query("\\")]])
+  eq(has_map('"', [[add_to_query('"')]]), true)
+  eq(has_map("'", [[add_to_query("'")]]), true)
+  eq(has_map([[\]], [[add_to_query("\\")]]), true)
 end
 
 T['open()']['makes buffer autocommands'] = function()
@@ -449,114 +455,87 @@ T['close()']['can be used when no Starter buffer is shown'] = function()
 end
 
 -- Work with content ----------------------------------------------------------
-T['Default content'] = new_set()
+T['Default content'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.set_size(24, 80)
+      -- Mock functions used to compute header
+      mock_user_and_time()
+    end,
+  },
+})
 
-local validate_starter_lines = function(pattern)
-  if is_starter_shown() then
-    child.lua('MiniStarter.close()')
-  end
+T['Default content']['works'] = function()
   child.lua('MiniStarter.open()')
-  local lines_string = table.concat(get_lines(), '\n')
-  child.cmd('bwipeout')
-  expect.match(lines_string, pattern)
+  child.expect_screenshot()
 end
 
-T['Default content']['has correct `header`'] = function()
-  -- Mock functions used to compute greeting
-  child.lua([[vim.loop.os_get_passwd = function() return { username = 'MINI' } end]])
-  local mock_time = function(time)
-    local cmd = ([[vim.fn.strftime = function(x) return x == '%%H' and '%s' or '' end]]):format(time)
+T['Default content']['computes `header` depending on time of day'] = new_set({
+  parametrize = { { '00' }, { '04' }, { '08' }, { '12' }, { '16' }, { '20' } },
+}, {
+  test = function(hour)
+    local cmd = ([[vim.fn.strftime = function(x) return x == '%%H' and '%s' or '' end]]):format(hour)
     child.lua(cmd)
-  end
+    child.lua('MiniStarter.open()')
+    child.expect_screenshot()
+  end,
+})
 
-  local test_values = {
-    ['00'] = 'Good evening, MINI',
-    ['04'] = 'Good morning, MINI',
-    ['08'] = 'Good morning, MINI',
-    ['12'] = 'Good afternoon, MINI',
-    ['16'] = 'Good afternoon, MINI',
-    ['20'] = 'Good evening, MINI',
-  }
+T['Default content']["'Sessions' section"] = new_set()
 
-  for time, pattern in pairs(test_values) do
-    mock_time(time)
-    validate_starter_lines(pattern)
-  end
-end
-
-T['Default content']['has correct item bullet'] = function()
-  validate_starter_lines('░ Quit Neovim')
-end
-
-T['Default content']["has 'Sessions' section"] = function()
-  -- Shouldn't be present if 'mini.sessions' is not set up
-  expect.error(function()
-    validate_starter_lines('Sessions')
-  end)
-
-  -- Should be present even if there is no detected sessions
-  child.lua([[require('mini.sessions').setup({ file = '', directory = '' })]])
-  validate_starter_lines([[Sessions%s+░ There are no detected sessions in 'mini%.sessions']])
-
+T['Default content']["'Sessions' section"]['works'] = function()
   -- Should show local (first and with `(local)` note) and global sessions
-  child.cmd('cd tests/starter-tests/sessions')
+  child.cmd('cd tests/dir-starter/sessions')
   child.lua([[require('mini.sessions').setup({ directory = '.' })]])
-  local pattern = table.concat(
-    { 'Sessions', '░ Session%.vim %(local%)', '░ session_global%.lua', 'Recent files' },
-    '%s+'
-  )
-  validate_starter_lines(pattern)
+
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 end
 
-T['Default content']["has 'Recent files' section"] = function()
-  -- It should display only readable files
-  child.v.oldfiles = { 'README.md', 'bbb.lua' }
-  validate_starter_lines('Recent files%s+░ README%.md%s+Builtin actions')
+T['Default content']["'Sessions' section"]['present even if no sessions detected'] = function()
+  child.lua([[require('mini.sessions').setup({ file = '', directory = '' })]])
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+end
 
-  -- Should still display section if there is no recent files
+T['Default content']["'Recent files' section"] = new_set()
+
+T['Default content']["'Recent files' section"]['displays only readable files'] = function()
+  child.v.oldfiles = { 'README.md', 'non-existent.lua' }
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+end
+
+T['Default content']["'Recent files' section"]['present even if no recent files'] = function()
   child.v.oldfiles = {}
-  validate_starter_lines('Recent files%s+░ There are no recent files')
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 end
 
-T['Default content']["has 'Builtin actions' section"] = function()
-  validate_starter_lines('Builtin actions%s+░ Edit new buffer%s+░ Quit Neovim')
-end
-
-T['Default content']['has correct `footer`'] = function()
-  local pattern = table.concat(
-    { 'Type query to filter items', '<BS>', '<Esc>', '<Down/Up>, <C%-n/p>, <M%-j/k>', '<CR>', '<C%-c>' },
-    '.*'
-  )
-  validate_starter_lines(pattern)
-end
-
-T['Content'] = new_set()
+--stylua: ignore
+T['Content'] = new_set({ hooks = { pre_case = function() child.set_size(10, 40) end } })
 
 T['Content']['works'] = function()
   local item = mock_item('a', 'Section a')
-  local validate_content = function()
-    -- Every element of array should contain conent for a particular line
-    local content = child.lua_get('MiniStarter.content')
-    eq(content[1], { { hl = 'MiniStarterHeader', string = 'Hello', type = 'header' } })
-    eq(content[2], { { string = '', type = 'empty' } })
-    eq(content[3], { { hl = 'MiniStarterSection', string = 'Section a', type = 'section' } })
-    eq(content[4], { { hl = 'MiniStarterItem', item = content[4][1].item, string = 'a', type = 'item' } })
-    eq(content[5], { { string = '', type = 'empty' } })
-    eq(content[6], { { hl = 'MiniStarterFooter', string = 'World', type = 'footer' } })
-
-    local content_item = content[4][1].item
-    eq({ name = content_item.name, action = content_item.action, section = content_item.section }, item)
-  end
-
   load_module({ content_hooks = {}, header = 'Hello', footer = 'World', items = { item } })
   child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'Hello', '', 'Section a', 'a', '', 'World' })
-  validate_content()
+  child.expect_screenshot()
 
   -- Should persist even outside of Starter buffer
   child.cmd('bwipeout')
   validate_starter_not_shown()
-  validate_content()
+
+  -- Every element of array should contain conent for a particular line
+  local content = child.lua_get('MiniStarter.content')
+  eq(content[1], { { hl = 'MiniStarterHeader', string = 'Hello', type = 'header' } })
+  eq(content[2], { { string = '', type = 'empty' } })
+  eq(content[3], { { hl = 'MiniStarterSection', string = 'Section a', type = 'section' } })
+  eq(content[4], { { hl = 'MiniStarterItem', item = content[4][1].item, string = 'a', type = 'item' } })
+  eq(content[5], { { string = '', type = 'empty' } })
+  eq(content[6], { { hl = 'MiniStarterFooter', string = 'World', type = 'footer' } })
+
+  local content_item = content[4][1].item
+  eq({ name = content_item.name, action = content_item.action, section = content_item.section }, item)
 end
 
 T['content_coords()'] = new_set({
@@ -570,9 +549,10 @@ T['content_coords()'] = new_set({
 })
 
 T['content_coords()']['works with function argument'] = function()
-  local coords = child.lua_get([[MiniStarter.content_coords(MiniStarter.content, function(x)
-        return vim.tbl_contains({'Hello', 'World'}, x.string)
-      end)]])
+  local coords = child.lua_get([[
+    MiniStarter.content_coords(MiniStarter.content, function(x)
+      return vim.tbl_contains({'Hello', 'World'}, x.string)
+    end)]])
   eq(coords, { { line = 1, unit = 1 }, { line = 6, unit = 1 } })
 end
 
@@ -613,9 +593,9 @@ T['content_to_items()']['works'] = function()
     eq({ name = item.name, action = item.action, section = item.section }, example_items[i])
   end
 
-    -- Should correctly compute length of minimum unique prefix
-    --stylua: ignore
-    eq( vim.tbl_map(function(x) return x._nprefix end, output), { 3, 3, 2, 1 })
+  -- Should correctly compute length of minimum unique prefix
+  --stylua: ignore
+  eq(vim.tbl_map(function(x) return x._nprefix end, output), { 3, 3, 2, 1 })
 end
 
 T['content_to_items()']["modifies `item`'s name to equal content unit's `string`"] = function()
@@ -630,20 +610,27 @@ T['content_to_items()']["modifies `item`'s name to equal content unit's `string`
   eq({ output[2].name, output[2].action }, { 'c c c', content[2][1].item.action })
 end
 
-T['gen_hook'] = new_set()
+T['gen_hook'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.set_size(20, 60)
+      mock_user_and_time()
+    end,
+  },
+})
 
-T['gen_hook']['has `adding_bullet()`'] = function()
+T['gen_hook']['adding_bullet()'] = new_set()
+
+T['gen_hook']['adding_bullet()']['works'] = function()
   reload_from_strconfig({ content_hooks = '{ MiniStarter.gen_hook.adding_bullet() }' })
   child.lua('MiniStarter.open()')
-  local lines_string = table.concat(get_lines(), '\n')
-  expect.match(lines_string, '%s+░ Quit Neovim%s+')
+  child.expect_screenshot()
 end
 
-T['gen_hook']['adding_bullet() respects `bullet` argument'] = function()
+T['gen_hook']['adding_bullet()']['respects `bullet` argument'] = function()
   reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.adding_bullet('> ') }]] })
   child.lua('MiniStarter.open()')
-  local lines_string = table.concat(get_lines(), '\n')
-  expect.match(lines_string, '%s+> Quit Neovim%s+')
+  child.expect_screenshot()
 end
 
 T['gen_hook']['adding_bullet() respects `place_cursor` argument'] = function()
@@ -665,65 +652,66 @@ T['gen_hook']['adding_bullet() respects `place_cursor` argument'] = function()
   eq(get_cursor(), { 2, 0 })
 end
 
-T['gen_hook']['has `aligning()`'] = function()
-  -- By default shouldn't do any aligning
-  validate_equal_starter({ content_hooks = '{}' }, { content_hooks = '{ MiniStarter.gen_hook.aligning() }' })
-end
+T['gen_hook']['aligning()'] = new_set()
 
-local has_horizontal_padding = function(lines, n)
-  -- Should add left padding only on non-empty lines
-  local pattern = '^' .. string.rep(' ', n) .. '%S'
-  for _, l in ipairs(lines) do
-    eq(l:find(pattern) ~= nil or l == '', true)
-  end
-end
-
-local has_vertical_padding = function(lines, n)
-  for i = 1, n do
-    eq(lines[i], '')
-  end
-  expect.no_equality(lines[n + 1], '')
-end
-
-local validate_aligning = function(args, pads)
-  reload_from_strconfig({
-    content_hooks = ('{ MiniStarter.gen_hook.aligning(%s) }'):format(args),
-    header = [['']],
-    footer = [['']],
-    items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
-  })
+T['gen_hook']['aligning()']['works'] = function()
+  reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.aligning() }]] })
   child.lua('MiniStarter.open()')
-
-  local lines = get_lines()
-  has_horizontal_padding(lines, pads[1])
-  has_vertical_padding(lines, pads[2])
-
-  -- Cleanup. Don't use `bwipeout` because it affects window layout.
-  child.cmd('bnext')
+  -- By default shouldn't do any aligning
+  child.expect_screenshot()
 end
 
-T['gen_hook']['aligning() respects `horizontal` argument'] = function()
-  child.cmd('vsplit | split')
-  child.api.nvim_win_set_width(0, 20)
-  child.api.nvim_win_set_height(0, 10)
+T['gen_hook']['aligning()']['respects arguments'] = new_set({
+  parametrize = {
+    { [['left', 'top']] },
+    { [['left', 'center']] },
+    { [['left', 'bottom']] },
+    { [['center', 'top']] },
+    { [['center', 'center']] },
+    { [['center', 'bottom']] },
+    { [['right', 'top']] },
+    { [['right', 'center']] },
+    { [['right', 'bottom']] },
+  },
+  hooks = {
+    pre_case = function()
+      child.set_size(10, 40)
+    end,
+  },
+}, {
+  test = function(args)
+    reload_from_strconfig({
+      content_hooks = ('{ MiniStarter.gen_hook.aligning(%s) }'):format(args),
+      header = [['']],
+      footer = [['']],
+      items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
+    })
+    child.lua('MiniStarter.open()')
+    child.expect_screenshot()
+  end,
+})
 
-  validate_aligning([['left', 'top']], { 0, 0 })
-  validate_aligning([['left', 'center']], { 0, 3 })
-  validate_aligning([['left', 'bottom']], { 0, 7 })
-  validate_aligning([['center', 'top']], { 8, 0 })
-  validate_aligning([['center', 'center']], { 8, 3 })
-  validate_aligning([['center', 'bottom']], { 8, 7 })
-  validate_aligning([['right', 'top']], { 17, 0 })
-  validate_aligning([['right', 'center']], { 17, 3 })
-  validate_aligning([['right', 'bottom']], { 17, 7 })
+T['gen_hook']['aligning()']['handles small windows'] = function()
+  child.cmd('vsplit | split')
+  child.api.nvim_win_set_width(0, 10)
+  child.api.nvim_win_set_height(0, 10)
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 end
 
 T['gen_hook']['aligning() handles small windows'] = function()
   child.cmd('vsplit | split')
   child.api.nvim_win_set_width(0, 2)
   child.api.nvim_win_set_height(0, 2)
+  reload_from_strconfig({
+    content_hooks = [[{ MiniStarter.gen_hook.aligning('right', 'bottom') }]],
+    header = [['']],
+    footer = [['']],
+    items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
+  })
 
-  validate_aligning([['right', 'bottom']], { 0, 0 })
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 end
 
 local reload_indexing = function(args)
@@ -741,62 +729,64 @@ local reload_indexing = function(args)
   })
 end
 
-T['gen_hook']['has `indexing()`'] = function()
+T['gen_hook']['indexing()'] = new_set({ hooks = {
+  pre_case = function()
+    child.set_size(15, 40)
+  end,
+} })
+
+T['gen_hook']['indexing()']['works'] = function()
   reload_indexing('')
   child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'AAA', '1. a', '2. aa', '', 'BBB', '3. b', '4. bb' })
+  child.expect_screenshot()
 end
 
-T['gen_hook']['indexing() respects `grouping` argument'] = function()
-  reload_indexing([['all', nil]])
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'AAA', '1. a', '2. aa', '', 'BBB', '3. b', '4. bb' })
-  child.lua('MiniStarter.close()')
+T['gen_hook']['indexing()']['respects arguments'] = new_set({
+  parametrize = { { [['all', nil]] }, { [['section', nil]] }, { 'nil, {}' }, { [[nil, { 'AAA' }]] } },
+}, {
+  test = function(args)
+    reload_indexing(args)
+    child.lua('MiniStarter.open()')
+    child.expect_screenshot()
+  end,
+})
 
-  -- With `'section'`, it should prepend with unique letter index per section
-  reload_indexing([['section', nil]])
+T['gen_hook']['padding()'] = new_set()
+
+T['gen_hook']['padding()']['works'] = function()
+  reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.padding() }]] })
   child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'AAA', 'a1. a', 'a2. aa', '', 'BBB', 'b1. b', 'b2. bb' })
-  child.lua('MiniStarter.close()')
+  -- By default shouldn't do any aligning
+  child.expect_screenshot()
 end
 
-T['gen_hook']['indexing() respects `exclude_sections` argument'] = function()
-  reload_indexing('nil, {}')
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'AAA', '1. a', '2. aa', '', 'BBB', '3. b', '4. bb' })
-  child.lua('MiniStarter.close()')
-
-  -- It should exclude from indexing sections from `exclude_sections`
-  reload_indexing([[nil, {'AAA'}]])
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'AAA', 'a', 'aa', '', 'BBB', '1. b', '2. bb' })
-  child.lua('MiniStarter.close()')
-end
-
-T['gen_hook']['has `padding()`'] = function()
-  -- By default shouldn't add any padding
-  validate_equal_starter({ content_hooks = '{}' }, { content_hooks = '{ MiniStarter.gen_hook.padding() }' })
-end
-
-T['gen_hook']['padding() respects `left` argument'] = function()
-  reload_from_strconfig({ content_hooks = '{ MiniStarter.gen_hook.padding(2, 0) }' })
-  child.lua('MiniStarter.open()')
-  local lines = get_lines()
-  has_horizontal_padding(lines, 2)
-  expect.no_equality(lines[1], '')
-end
-
-T['gen_hook']['padding() respects `top` argument'] = function()
-  reload_from_strconfig({ content_hooks = '{ MiniStarter.gen_hook.padding(0, 2) }' })
-  child.lua('MiniStarter.open()')
-  local lines = get_lines()
-  has_vertical_padding(lines, 2)
-  expect.no_equality(lines[3], '')
-end
+T['gen_hook']['padding()']['respects arguments'] = new_set({
+  parametrize = { { '2, 0' }, { '0, 2' }, { '2, 2' } },
+}, {
+  test = function(args)
+    local command = string.format('{ MiniStarter.gen_hook.padding(%s) }', args)
+    reload_from_strconfig({ content_hooks = command })
+    child.lua('MiniStarter.open()')
+    child.expect_screenshot()
+  end,
+})
 
 T['sections'] = new_set()
 
-T['gen_hook']['correctly present'] = function()
+T['sections']['works'] = function()
+  child.lua([[MiniStarter.config.items = {
+    MiniStarter.sections.builtin_actions,
+    MiniStarter.sections.recent_files,
+    MiniStarter.sections.sessions,
+    MiniStarter.sections.telescope,
+  }]])
+  child.lua([[MiniStarter.config.header = '']])
+  child.lua([[MiniStarter.config.footer = '']])
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+end
+
+T['sections']['has correct items'] = function()
   local types = child.lua_get('vim.tbl_map(type, MiniStarter.sections)')
   eq(types, { builtin_actions = 'function', recent_files = 'function', sessions = 'function', telescope = 'function' })
 end
@@ -907,7 +897,7 @@ end
 T['Autoopening'] = new_set()
 
 T['Autoopening']['works'] = function()
-  child.restart({ '-u', 'tests/starter-tests/init-files/test-init.lua' })
+  child.restart({ '-u', 'tests/dir-starter/init-files/test-init.lua' })
   validate_starter_shown()
 
   -- It should result into total single buffer
@@ -915,7 +905,7 @@ T['Autoopening']['works'] = function()
 end
 
 T['Autoopening']['does not autoopen if Neovim started to show something'] = function()
-  local init_autoopen = 'tests/starter-tests/init-files/test-init.lua'
+  local init_autoopen = 'tests/dir-starter/init-files/test-init.lua'
 
   -- Current buffer has any lines (something opened explicitly)
   child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
@@ -1067,144 +1057,36 @@ T['Keybindings']['have working <C-c>'] = function()
   validate_starter_not_shown()
 end
 
--- It would be great to test highlighting directly (if something is highlighted
--- as it should be), but currently mocking seems like the only way
 T['Highlighting'] = new_set({
   hooks = {
     pre_case = function()
       reload_module({ items = example_items, content_hooks = {}, header = 'Hello', footer = 'World' })
-
-      -- Mock basic highlighting function
-      child.lua('_G.hl_history = {}')
-      child.lua('vim.highlight.range = function(...) table.insert(_G.hl_history, { ... }) end')
+      child.set_size(15, 40)
     end,
   },
 })
 
-local get_hl_history = function(filter)
-  filter = filter or {}
-
-  local history = vim.tbl_map(function(x)
-    return { hl = x[3], start = x[4], finish = x[5], priority = (x[6] or {}).priority }
-  end, child.lua_get('_G.hl_history'))
-
-  return vim.tbl_filter(function(x)
-    for key, val in pairs(filter) do
-      if not (x[key] == nil or x[key] == val) then
-        return false
-      end
-    end
-
-    -- Use special `line` key to filter by line
-    if not (filter.line == nil or filter.line == x.start[1]) then
-      return false
-    end
-
-    return true
-  end, history)
-end
-
-local reset_hl_history = function()
-  child.lua('_G.hl_history = {}')
-end
-
-local validate_hl_history = function(filter, expected)
-  local hl_history = get_hl_history(filter)
-  -- Don't test equality of `priority` values on Neovim<0.7 because it was
-  -- only introduced in Neovim 0.7 (and forced to be used in 'mini.starter'
-  -- due to regression bug in `vim.highlight.range`; see source code)
-  if vim.fn.has('nvim-0.7') == 0 then
-    for _, history_element in ipairs(expected) do
-      history_element.priority = nil
-    end
-  end
-
-  eq(hl_history, expected)
-end
-
-T['Highlighting']['works on open'] = function()
-  MiniTest.add_note('Rework with screen tests')
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'Hello', '', 'A', 'aaab', 'aaba', '', 'B', 'abaa', 'baaa', '', 'World' })
-
-  --stylua: ignore start
-  validate_hl_history({ line = 0 }, { { hl = 'MiniStarterHeader',  start = { 0, 0 }, finish = { 0, 5 }, priority = 50 } })
-  validate_hl_history({ line = 1 }, {})
-  validate_hl_history({ line = 2 }, { { hl = 'MiniStarterSection', start = { 2, 0 }, finish = { 2, 1 }, priority = 50 } })
-  validate_hl_history({ line = 3 }, {
-    { hl = 'MiniStarterItem',       start = { 3, 0 }, finish = { 3, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemPrefix', start = { 3, 0 }, finish = { 3, 3 }, priority = 51 },
-    { hl = 'MiniStarterCurrent',    start = { 3, 0 }, finish = { 3, 4 }, priority = 52 },
-    { hl = 'MiniStarterQuery',      start = { 3, 0 }, finish = { 3, 0 }, priority = 53 },
-  })
-  validate_hl_history({ line = 4 }, {
-    { hl = 'MiniStarterItem',       start = { 4, 0 }, finish = { 4, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemPrefix', start = { 4, 0 }, finish = { 4, 3 }, priority = 51 },
-    { hl = 'MiniStarterQuery',      start = { 4, 0 }, finish = { 4, 0 }, priority = 53 },
-  })
-  validate_hl_history({ line = 5 }, {})
-  validate_hl_history({ line = 6 }, { { hl = 'MiniStarterSection', start = { 6, 0 }, finish = { 6, 1 }, priority = 50 } })
-  validate_hl_history({ line = 7 }, {
-    { hl = 'MiniStarterItem',       start = { 7, 0 }, finish = { 7, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemPrefix', start = { 7, 0 }, finish = { 7, 2 }, priority = 51 },
-    { hl = 'MiniStarterQuery',      start = { 7, 0 }, finish = { 7, 0 }, priority = 53 },
-  })
-  validate_hl_history({ line = 8 }, {
-    { hl = 'MiniStarterItem',       start = { 8, 0 }, finish = { 8, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemPrefix', start = { 8, 0 }, finish = { 8, 1 }, priority = 51 },
-    { hl = 'MiniStarterQuery',      start = { 8, 0 }, finish = { 8, 0 }, priority = 53 },
-  })
-  validate_hl_history({ line = 9 }, {})
-  validate_hl_history({ line = 10 }, { { hl = 'MiniStarterFooter', start = { 10, 0 }, finish = { 10, 5 }, priority = 50 } })
-  --stylua: ignore end
-end
-
 T['Highlighting']['works for querying'] = function()
-  MiniTest.add_note('Rework with screen tests')
   child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 
-  reset_hl_history()
   type_keys('a')
-  validate_hl_history({ hl = 'MiniStarterQuery' }, {
-    { hl = 'MiniStarterQuery', start = { 3, 0 }, finish = { 3, 1 }, priority = 53 },
-    { hl = 'MiniStarterQuery', start = { 4, 0 }, finish = { 4, 1 }, priority = 53 },
-    { hl = 'MiniStarterQuery', start = { 7, 0 }, finish = { 7, 1 }, priority = 53 },
-  })
-  validate_hl_history(
-    { hl = 'MiniStarterInactive' },
-    { { hl = 'MiniStarterInactive', start = { 8, 0 }, finish = { 8, 4 }, priority = 53 } }
-  )
+  child.expect_screenshot()
 
-  reset_hl_history()
   type_keys('b')
-  validate_hl_history({ hl = 'MiniStarterQuery' }, {
-    { hl = 'MiniStarterQuery', start = { 7, 0 }, finish = { 7, 2 }, priority = 53 },
-  })
-  validate_hl_history({ hl = 'MiniStarterInactive' }, {
-    { hl = 'MiniStarterInactive', start = { 3, 0 }, finish = { 3, 4 }, priority = 53 },
-    { hl = 'MiniStarterInactive', start = { 4, 0 }, finish = { 4, 4 }, priority = 53 },
-    { hl = 'MiniStarterInactive', start = { 8, 0 }, finish = { 8, 4 }, priority = 53 },
-  })
+  child.expect_screenshot()
 end
 
 T['Highlighting']['works for current item'] = function()
-  MiniTest.add_note('Rework with screen tests')
+  child.cmd('hi MiniStarterCurrent ctermbg=1')
   child.lua('MiniStarter.open()')
-  validate_hl_history(
-    { hl = 'MiniStarterCurrent' },
-    { { hl = 'MiniStarterCurrent', start = { 3, 0 }, finish = { 3, 4 }, priority = 52 } }
-  )
+  child.expect_screenshot()
 
-  reset_hl_history()
   type_keys('<Down>')
-  validate_hl_history(
-    { hl = 'MiniStarterCurrent' },
-    { { hl = 'MiniStarterCurrent', start = { 4, 0 }, finish = { 4, 4 }, priority = 52 } }
-  )
+  child.expect_screenshot()
 end
 
 T['Highlighting']['uses `MiniStarterItemBullet`'] = function()
-  MiniTest.add_note('Rework with screen tests')
   reload_from_strconfig({
     items = example_itemstring,
     content_hooks = '{ MiniStarter.gen_hook.adding_bullet() }',
@@ -1212,15 +1094,12 @@ T['Highlighting']['uses `MiniStarterItemBullet`'] = function()
     footer = [['']],
   })
   child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'A', '░ aaab', '░ aaba', '', 'B', '░ abaa', '░ baaa' })
+  child.expect_screenshot()
 
-  -- `col_end` shows byte column and '░' has 3 bytes
-  validate_hl_history({ hl = 'MiniStarterItemBullet' }, {
-    { hl = 'MiniStarterItemBullet', start = { 1, 0 }, finish = { 1, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemBullet', start = { 2, 0 }, finish = { 2, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemBullet', start = { 5, 0 }, finish = { 5, 4 }, priority = 50 },
-    { hl = 'MiniStarterItemBullet', start = { 6, 0 }, finish = { 6, 4 }, priority = 50 },
-  })
+  -- Should now show bullets same as prefix
+  child.cmd('hi! link MiniStarterItemBullet MiniStarterItemPrefix')
+  child.cmd('redraw')
+  child.expect_screenshot()
 end
 
 T['Cursor positioning'] = new_set({
@@ -1232,7 +1111,6 @@ T['Cursor positioning'] = new_set({
 })
 
 T['Cursor positioning']['reacts to keys'] = function()
-  MiniTest.add_note('Rework with screen tests')
   child.lua('MiniStarter.open()')
   eq(get_lines(), { 'A', 'aaab', 'aaba', '', 'B', 'abaa', 'baaa' })
   eq(get_cursor(), { 2, 0 })
@@ -1251,7 +1129,6 @@ T['Cursor positioning']['reacts to keys'] = function()
 end
 
 T['Cursor positioning']['updates when current item becomes inactive'] = function()
-  MiniTest.add_note('Rework with screen tests')
   child.lua('MiniStarter.open()')
   eq(get_cursor(), { 2, 0 })
 
@@ -1263,35 +1140,24 @@ T['Cursor positioning']['updates when current item becomes inactive'] = function
   eq(get_cursor(), { 7, 0 })
 end
 
-local reload_with_bullets = function(place_cursor)
-  reload_from_strconfig({
-    items = example_itemstring,
-    content_hooks = ('{ MiniStarter.gen_hook.adding_bullet(nil, %s) }'):format(place_cursor),
-    header = [['']],
-    footer = [['']],
-  })
-end
+T['Cursor positioning']['works with bullets'] = new_set({
+  parametrize = { { true, { 2, 0 }, { 3, 0 } }, { false, { 2, 4 }, { 3, 4 } } },
+}, {
+  test = function(place_cursor, cursor_start, cursor_finish)
+    reload_from_strconfig({
+      items = example_itemstring,
+      content_hooks = ('{ MiniStarter.gen_hook.adding_bullet(nil, %s) }'):format(place_cursor),
+      header = [['']],
+      footer = [['']],
+    })
 
-T['Cursor positioning']['works with bullets and `place_cursor=true`'] = function()
-  MiniTest.add_note('Rework with screen tests')
-  reload_with_bullets(true)
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'A', '░ aaab', '░ aaba', '', 'B', '░ abaa', '░ baaa' })
-  eq(get_cursor(), { 2, 0 })
+    child.lua('MiniStarter.open()')
+    eq(get_lines(), { 'A', '░ aaab', '░ aaba', '', 'B', '░ abaa', '░ baaa' })
+    eq(get_cursor(), cursor_start)
 
-  type_keys('<Down>')
-  eq(get_cursor(), { 3, 0 })
-end
-
-T['Cursor positioning']['works with bullets and `place_cursor=false`'] = function()
-  MiniTest.add_note('Rework with screen tests')
-  reload_with_bullets(false)
-  child.lua('MiniStarter.open()')
-  eq(get_lines(), { 'A', '░ aaab', '░ aaba', '', 'B', '░ abaa', '░ baaa' })
-  eq(get_cursor(), { 2, 4 })
-
-  type_keys('<Down>')
-  eq(get_cursor(), { 3, 4 })
-end
+    type_keys('<Down>')
+    eq(get_cursor(), cursor_finish)
+  end,
+})
 
 return T
