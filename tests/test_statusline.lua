@@ -32,9 +32,15 @@ local setup_windows = function()
   return { active = win_list[2], inactive = win_list[1] }
 end
 
+local get_two_windows = function()
+  local wins_tabpage = child.api.nvim_tabpage_list_wins(0)
+  local cur_win = child.api.nvim_get_current_win()
+  return { active = cur_win, inactive = cur_win == wins_tabpage[1] and wins_tabpage[2] or wins_tabpage[1] }
+end
+
 -- Mocks
 local mock_devicons = function()
-  child.cmd('set rtp+=tests/statusline-tests')
+  child.cmd('set rtp+=tests/dir-statusline')
 end
 
 local mock_gitsigns = function(head, status)
@@ -54,10 +60,10 @@ local mock_gitsigns = function(head, status)
 end
 
 local mock_diagnostics = function()
-  child.cmd('luafile tests/statusline-tests/mock-diagnostics.lua')
+  child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua')
 end
 
-local mocked_filepath = vim.fn.fnamemodify('tests/statusline-tests/mocked.lua', ':p')
+local mocked_filepath = vim.fn.fnamemodify('tests/dir-statusline/mocked.lua', ':p')
 local mock_file = function(bytes)
   -- Reduce one byte for '\n' at end
   local lines = { string.rep('a', bytes - 1) }
@@ -83,10 +89,6 @@ T = new_set({
     post_once = child.stop,
   },
 })
-
-T['note'] = function()
-  MiniTest.add_note('Rework hooks and setups')
-end
 
 -- Unit tests =================================================================
 T['setup()'] = new_set()
@@ -153,7 +155,8 @@ T['setup()']['sets proper autocommands'] = function()
     eq(child.api.nvim_win_get_option(win_id, 'statusline'), '%!v:lua.MiniStatusline.' .. field .. '()')
   end
 
-  local wins = setup_windows()
+  local wins = get_two_windows()
+
   validate(wins.active, 'active')
   validate(wins.inactive, 'inactive')
 
@@ -535,78 +538,40 @@ T['section_searchcount()']['does not fail on `searchcount()` error'] = function(
 end
 
 -- Integration tests ==========================================================
-local wins_content_active
-T['Default `active` content'] = new_set({
+T['Default content'] = new_set()
+
+T['Default content']['active'] = new_set({
   hooks = {
     pre_case = function()
-      wins_content_active = setup_windows()
+      child.set_size(5, 150)
 
       mock_devicons()
       mock_gitsigns()
       mock_diagnostics()
       mock_file(10)
 
-      child.cmd('edit ' .. mocked_filepath)
+      -- Mock filename section to use relative path for consistent screenshots
+      child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
+      child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
     end,
     post_case = unmock_file,
   },
+  -- There should also be test for 140, but it is for truncating in
+  -- `section_filename` from full to relative paths
+  parametrize = { { 120 }, { 75 }, { 74 } },
+}, {
+  test = function(window_width)
+    eq(child.api.nvim_win_get_option(0, 'statusline'), '%!v:lua.MiniStatusline.active()')
+    set_width(window_width)
+    child.expect_screenshot()
+  end,
 })
 
-T['Default `active` content']['works'] = function()
-  MiniTest.add_note('Rework with `parametrize` and screen tests')
+T['Default content']['inactive'] = function()
+  local wins = get_two_windows()
 
   -- Check that option is set correctly
-  eq(child.api.nvim_win_get_option(wins_content_active.active, 'statusline'), '%!v:lua.MiniStatusline.active()')
-
-  -- Validate
-  local validate = function(expected)
-    eq(child.lua_get('MiniStatusline.active()'), expected)
-  end
-
-  set_width(140)
-  validate(
-    '%#MiniStatuslineModeNormal# Normal %#MiniStatuslineDevinfo#  main +1 ~2 -3  E4 W3 I2 H1 %<%'
-      .. '#MiniStatuslineFilename# %F%m%r %=%#MiniStatuslineFileinfo#  lua utf-8[unix] 10B '
-      .. '%#MiniStatuslineModeNormal# %l|%L│%2v|%-2{virtcol("$") - 1} '
-  )
-
-  -- After 140 `section_filename` should be truncated
-  set_width(120)
-  validate(
-    '%#MiniStatuslineModeNormal# Normal %#MiniStatuslineDevinfo#  main +1 ~2 -3  E4 W3 I2 H1 %<%'
-      .. '#MiniStatuslineFilename# %f%m%r %=%#MiniStatuslineFileinfo#  lua utf-8[unix] 10B '
-      .. '%#MiniStatuslineModeNormal# %l|%L│%2v|%-2{virtcol("$") - 1} '
-  )
-
-  -- After 120 `section_mode` and `section_fileinfo` should be truncated
-  set_width(75)
-  validate(
-    '%#MiniStatuslineModeNormal# N %#MiniStatuslineDevinfo#  main +1 ~2 -3  E4 W3 I2 H1 %<%'
-      .. '#MiniStatuslineFilename# %f%m%r %=%#MiniStatuslineFileinfo#  lua '
-      .. '%#MiniStatuslineModeNormal# %l|%L│%2v|%-2{virtcol("$") - 1} '
-  )
-
-  -- After 75 all sections should truncated
-  set_width(74)
-  validate(
-    '%#MiniStatuslineModeNormal# N %#MiniStatuslineDevinfo#  main %<%'
-      .. '#MiniStatuslineFilename# %f%m%r %=%#MiniStatuslineFileinfo#  lua '
-      .. '%#MiniStatuslineModeNormal# %l│%2v '
-  )
-end
-
-local wins_content_inactive
-T['Default `inactive` content'] = new_set({
-  hooks = {
-    pre_case = function()
-      wins_content_inactive = setup_windows()
-    end,
-  },
-})
-
-T['Default `inactive` content']['works'] = function()
-  -- Check that option is set correctly
-  eq(child.api.nvim_win_get_option(wins_content_inactive.inactive, 'statusline'), '%!v:lua.MiniStatusline.inactive()')
+  eq(child.api.nvim_win_get_option(wins.inactive, 'statusline'), '%!v:lua.MiniStatusline.inactive()')
 
   -- Validate
   eq(child.lua_get('MiniStatusline.inactive()'), '%#MiniStatuslineInactive#%F%=')
