@@ -63,9 +63,6 @@ local validate_find = function(lines, start_pos, positions, f, ...)
   end
 end
 
--- Data =======================================================================
-local test_times = { highlight = 500 }
-
 -- Output test set ============================================================
 T = new_set({
   hooks = {
@@ -738,104 +735,53 @@ T['Find surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   end,
 })
 
-local test_duration = 50
+-- NOTE: most tests are done specifically for highlighting in hope that
+-- finding of surrounding is done properly
 T['Highlight surrounding'] = new_set({
   hooks = {
     pre_case = function()
       -- Reduce default highlight duration to speed up tests execution
-      child.lua('MiniSurround.config.highlight_duration = ' .. test_duration)
+      child.lua('MiniSurround.config.highlight_duration = 50')
+      child.set_size(5, 12)
+      child.o.cmdheight = 1
     end,
   },
 })
 
--- This validation depends on the fact that `vim.highlight.range()` (used for
--- highlighting) is implemented with extmarks. NOTE: arguments are as in
--- `*et_cursor()`: `line` is 1-based, `from` and `to` are 0-based inclusive.
-local is_highlighted = function(line, from, to, buf_id)
-  local ns_id = child.api.nvim_get_namespaces()['MiniSurroundHighlight']
-  local extmarks = child.api.nvim_buf_get_extmarks(
-    buf_id or 0,
-    ns_id,
-    { line - 1, 0 },
-    { line - 1, -1 },
-    { details = true }
-  )
-
-  -- io.stdout:write('\n\n' .. vim.inspect(extmarks) .. '\n\n')
-
-  for _, m in ipairs(extmarks) do
-    local has_hl = (m[2] == line - 1)
-      and (m[3] == from)
-      and (m[4].end_row == line - 1)
-      and (m[4].end_col == to + 1)
-      and (m[4].hl_group == 'MiniSurround')
-    --stylua: ignore
-    if has_hl then return true end
-  end
-  return false
-end
-
-local validate_hl_surrounding = function(left, right, buf_id)
-  local hl_left = is_highlighted(left[1], left[2], left[3], buf_id)
-  local hl_right = is_highlighted(right[1], right[2], right[3], buf_id)
-  eq(hl_left and hl_right, true)
-end
-
-local validate_hl_no_surrounding = function(left, right, buf_id)
-  local no_hl_left = not is_highlighted(left[1], left[2], left[3], buf_id)
-  local no_hl_right = not is_highlighted(right[1], right[2], right[3], buf_id)
-  eq(no_hl_left and no_hl_right, true)
-end
-
-local validate_hl = function(lines, cursor, f, expected, buf_id)
-  local left, right = expected.l, expected.r
-  local ms = expected.ms or test_duration
-
-  -- Setup
-  set_lines(lines)
-  set_cursor(unpack(cursor))
-
-  -- Envoke highlighting command which should highlight immediately
-  f()
+local activate_highlighting = function()
+  type_keys('sh)')
   poke_eventloop()
-  validate_hl_surrounding(left, right, buf_id)
-
-  -- Highlighting should still be visible before duration end
-  -- NOTE: using 20 instead of more common 10 because of some hardly tracked
-  -- "1 in 5 runs" failure
-  sleep(ms - 20)
-  poke_eventloop()
-  validate_hl_surrounding(left, right, buf_id)
-
-  -- Highlighting should disappear
-  sleep(20 + 2)
-  poke_eventloop()
-  validate_hl_no_surrounding(left, right, buf_id)
-
-  -- Content and cursor shouldn't change
-  eq(get_lines(), lines)
-  eq(get_cursor(), cursor)
 end
 
--- NOTE: most tests are done specifically for highlighting in hope that
--- finding of surrounding is done properly
 T['Highlight surrounding']['works with dot-repeat'] = function()
-  reload_module()
+  local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+  set_lines({ '(aaa) (bbb)' })
+  set_cursor(1, 2)
 
-  --stylua: ignore
-  local f = function() type_keys('sh', ')') end
-  local lines, left, right = { '(aaa)' }, { 1, 0, 0 }, { 1, 4, 4 }
-  local ms = test_times.highlight
+  -- Should show highlighting immediately
+  activate_highlighting()
+  child.expect_screenshot()
 
-  validate_hl(lines, { 1, 2 }, f, { l = left, r = right, ms = ms })
+  -- Should still highlight
+  sleep(test_duration - 10)
+  child.expect_screenshot()
 
-  -- Allows immediate dot-repeat
-  --stylua: ignore
-  local f_dot = function() type_keys('.') end
-  validate_hl(lines, { 1, 2 }, f_dot, { l = left, r = right, ms = ms })
+  -- Should stop highlighting
+  sleep(10)
+  child.expect_screenshot()
 
-  -- Allows not immediate dot-repeat
-  validate_hl({ 'aaa (bbb)' }, { 1, 5 }, f_dot, { l = { 1, 4, 4 }, r = { 1, 8, 8 }, ms = ms })
+  -- Should highlight with dot-repeat
+  type_keys('.')
+  child.expect_screenshot()
+
+  -- Should stop highlighting
+  sleep(test_duration)
+  child.expect_screenshot()
+
+  -- Should allow not immediate dot-repeat
+  set_cursor(1, 8)
+  type_keys('.')
+  child.expect_screenshot()
 end
 
 T['Highlight surrounding']['respects `config.highlight_duration`'] = function()
@@ -843,60 +789,62 @@ T['Highlight surrounding']['respects `config.highlight_duration`'] = function()
 end
 
 T['Highlight surrounding']['respects `config.n_lines`'] = function()
-  reload_module({ n_lines = 2 })
-  local lines = { '(', '', '', 'a', '', '', ')' }
-  set_lines(lines)
+  child.set_size(15, 40)
+  child.o.cmdheight = 3
+
+  child.lua('MiniSurround.config.n_lines = 2')
+  set_lines({ '(', '', '', 'a', '', '', ')' })
   set_cursor(4, 0)
-  type_keys('sh', ')')
-  poke_eventloop()
-  validate_hl_no_surrounding({ 1, 0, 0 }, { 1, 4, 4 })
+  activate_highlighting()
+
+  -- Shouldn't highlight anything
+  child.expect_screenshot()
   has_message_about_not_found(')', 2)
 end
 
 T['Highlight surrounding']['removes highlighting in correct buffer'] = function()
+  child.set_size(5, 60)
+  local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+
   set_lines({ '(aaa)' })
   set_cursor(1, 2)
-  local buf_id = child.api.nvim_get_current_buf()
-  local left, right = { 1, 0, 0 }, { 1, 4, 4 }
+  activate_highlighting()
 
-  type_keys('sh', ')')
-  poke_eventloop()
-  validate_hl_surrounding(left, right, buf_id)
+  child.cmd('vsplit current')
+  set_lines({ '(bbb)' })
+  set_cursor(1, 2)
+  sleep(0.5 * test_duration)
+  activate_highlighting()
 
-  -- Switch to new buffer and check that highlighting is correctly removed
-  child.cmd('enew!')
-  sleep(test_duration + 2)
-  validate_hl_no_surrounding(left, right, buf_id)
+  -- Highlighting should be removed only in previous buffer
+  child.expect_screenshot()
+  sleep(0.5 * test_duration + 2)
+  child.expect_screenshot()
 end
 
 T['Highlight surrounding']['removes highlighting per line'] = function()
+  local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+  local half_duration = 0.5 * test_duration
   set_lines({ '(aaa)', '(bbb)' })
-  local left_1, right_1 = { 1, 0, 0 }, { 1, 4, 4 }
-  local left_2, right_2 = { 2, 0, 0 }, { 2, 4, 4 }
 
   -- Create situation when there are two highlights simultaneously but on
   -- different lines. Check that they are properly and independently removed.
   set_cursor(1, 2)
-  type_keys('sh', ')')
-  poke_eventloop()
-  validate_hl_surrounding(left_1, right_1)
-
-  local half_duration = math.floor(0.5 * test_duration)
+  activate_highlighting()
   sleep(half_duration)
   set_cursor(2, 2)
-  type_keys('sh', ')')
-  poke_eventloop()
+  activate_highlighting()
 
-  validate_hl_surrounding(left_1, right_1)
-  validate_hl_surrounding(left_2, right_2)
+  -- Should highlight in both lines
+  child.expect_screenshot()
 
-  sleep(test_duration - half_duration + 1)
-  validate_hl_no_surrounding(left_1, right_1)
-  validate_hl_surrounding(left_2, right_2)
+  -- Should highlight only in second line
+  sleep(half_duration + 1)
+  child.expect_screenshot()
 
-  sleep(test_duration - half_duration + 1)
-  validate_hl_no_surrounding(left_1, right_1)
-  validate_hl_no_surrounding(left_2, right_2)
+  -- Should stop highlighting at all
+  sleep(half_duration + 1)
+  child.expect_screenshot()
 end
 
 T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
@@ -905,15 +853,13 @@ T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_se
   test = function(var_type)
     child[var_type].minisurround_disable = true
 
-    set_lines({ '<aaa>' })
-    set_cursor(1, 1)
+    set_lines({ '(aaa)', 'bbb' })
+    set_cursor(1, 2)
+    type_keys('sh', ')')
+    poke_eventloop()
 
-    -- It should ignore `sh`
-    type_keys('sh', '>')
-    sleep(1)
-    validate_hl_no_surrounding({ 1, 0, 0 }, { 1, 4, 4 })
-    eq(get_lines(), { '<aaa>' })
-    eq(get_cursor(), { 1, 1 })
+    -- Shouldn't highlight anything (instead moves cursor with `)` motion)
+    child.expect_screenshot()
   end,
 })
 
