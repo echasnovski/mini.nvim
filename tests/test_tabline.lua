@@ -14,7 +14,7 @@ local set_lines = function(...) return child.set_lines(...) end
 
 -- Make helpers
 local mock_devicons = function()
-  child.cmd('set rtp+=tests/tabline-tests')
+  child.cmd('set rtp+=tests/dir-tabline')
 end
 
 local edit = function(name)
@@ -22,7 +22,7 @@ local edit = function(name)
 end
 
 local edit_path = function(rel_path)
-  child.cmd('edit tests/tabline-tests/' .. rel_path)
+  child.cmd('edit tests/dir-tabline/' .. rel_path)
 end
 
 local eval_tabline = function(show_hl, show_action)
@@ -105,9 +105,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']["sets proper 'tabline' option"] = function()
-  -- Uses custom function in case of single and multiple tabpages
   eq(child.api.nvim_get_option('tabline'), '%!v:lua.MiniTabline.make_tabline_string()')
-
   child.cmd('tabedit')
   eq(child.api.nvim_get_option('tabline'), '%!v:lua.MiniTabline.make_tabline_string()')
 end
@@ -214,7 +212,7 @@ end
 
 T['make_tabline_string()']['works with "problematic" labels'] = function()
   -- Problematic characters: '.', '%'
-  child.cmd([[edit tests/tabline-tests/dir1/bad\%new.file.lua]])
+  child.cmd([[edit tests/dir-tabline/dir1/bad\%new.file.lua]])
 
   -- Should have double `%` to escape it and show properly
   eq(eval_tabline(), ' bad%%new.file.lua ')
@@ -294,7 +292,7 @@ T['make_tabline_string()']['deduplicates independent of current working director
   edit_path('dir1/aaa')
   edit_path('dir1/dir_nested/aaa')
 
-  child.cmd('cd tests/tabline-tests/dir1')
+  child.cmd('cd tests/dir-tabline/dir1')
   eq(eval_tabline(), ' dir1/aaa  dir_nested/aaa ')
 end
 
@@ -345,7 +343,7 @@ T['make_tabline_string()']['fits to display width'] = function()
   eq(eval_tabline(), ' bbb  ccc  ddd ')
 end
 
-T['make_tabline_string()']['fits to display width in case of multiple tabs'] = function()
+T['make_tabline_string()']['fits to display width in case of multiple tabpages'] = function()
   child.o.columns = 20
   edit('aaaaaaaa')
   child.cmd('tabedit')
@@ -526,8 +524,33 @@ T['make_tabline_string()']['respects `vim.{g,b}.minitabline_disable`'] = new_set
 })
 
 -- Integration tests ==========================================================
-T['Screen'] = function()
-  MiniTest.add_note('Add screen tests')
+T['Screen'] = new_set()
+
+T['Screen']['works'] = function()
+  child.set_size(5, 40)
+  child.cmd('edit aaa | edit bbb | edit ccc')
+
+  -- Initial screenshot
+  child.cmd('edit aaa')
+  child.expect_screenshot()
+
+  -- Change of current buffer
+  child.cmd('edit bbb')
+  child.expect_screenshot()
+
+  -- Modified other buffer
+  set_lines({ 'aaa' })
+  child.cmd('edit ccc')
+  child.expect_screenshot()
+
+  -- Multiple tabpages
+  child.cmd('tabedit ddd')
+  child.expect_screenshot()
+
+  -- Other visible buffer
+  child.cmd('hi MiniTablineVisible ctermbg=1')
+  child.cmd('vsplit eee')
+  child.expect_screenshot()
 end
 
 T['Mouse click'] = new_set()
@@ -569,7 +592,7 @@ T['Mouse click']['works'] = function()
   eq(child.fn.bufname(), 'aaa')
 end
 
-T['Mouse click']['works in case of multiple tabs'] = function()
+T['Mouse click']['works in case of multiple tabpages'] = function()
   edit('aaa')
   child.cmd('tabedit bbb')
 
