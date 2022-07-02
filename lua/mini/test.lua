@@ -78,6 +78,14 @@
 ---     - Allows making mocks, stubs, and spies, while 'mini.test' does not in
 ---       favor of manually overwriting functionality in child Neovim process.
 ---
+--- Although 'mini.test' supports emulation of "busted style" testing, it will
+--- be more stable to use its designed approach of defining tests (with
+--- `MiniTest.new_set()` and explicit table fields). Couple of reasons:
+--- - "Busted" syntax doesn't support full capabilities offered by 'mini.test'.
+---   Mainly it is about parametrization and supplying user data to test sets.
+--- - It is an emulation, not full support. So some subtle things might not
+---   work the way you expect.
+---
 --- Some hints for converting from 'plenary.nvim' tests to 'mini.test':
 --- - Rename files from "***_spec.lua" to "test_***.lua" and put them in
 ---   "tests" directory.
