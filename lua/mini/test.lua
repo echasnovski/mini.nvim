@@ -2094,6 +2094,10 @@ function H.buffer_reporter.set_lines(buf_id, lines, start, finish)
     table.insert(new_lines, new_l)
   end
 
+  -- Clear highlighting on updated lines. Crucial because otherwise it will
+  -- lead to A LOT of memory consumption.
+  vim.api.nvim_buf_clear_namespace(buf_id, H.buffer_reporter.ns_id, start, finish)
+
   -- Set lines
   vim.api.nvim_buf_set_lines(buf_id, start, finish, true, new_lines)
 
