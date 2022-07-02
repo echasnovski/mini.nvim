@@ -719,6 +719,29 @@ T['expect']['reference_screenshot()']['correctly infers reference path'] = funct
   eq(MiniTest.expect.reference_screenshot(child.get_screenshot()), true)
 end
 
+local validate_path_sanitize = function()
+  skip_screenshot()
+  child.set_size(5, 12)
+  set_lines({ 'Path should be correctly sanitized' })
+
+  eq(MiniTest.expect.reference_screenshot(child.get_screenshot()), true)
+end
+
+local useful_punctuation = [=[_-+{}()[]'"]=]
+local linux_forbidden = [[/]]
+local windows_forbidden = [[<>:"/\|?*]]
+local whitespace = '\t '
+local special_characters = string.char(0) .. string.char(1) .. string.char(31)
+local suffix = useful_punctuation .. linux_forbidden .. windows_forbidden .. whitespace .. special_characters
+T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = new_set(
+  { parametrize = { { suffix } } },
+  { test = validate_path_sanitize }
+)
+
+-- Paths should not end with whitespace or dot
+T['expect']['reference_screenshot()']['correctly sanitizes path for Windows '] = validate_path_sanitize
+T['expect']['reference_screenshot()']['correctly sanitizes path for Windows #2.'] = validate_path_sanitize
+
 T['expect']['reference_screenshot()']['creates refernce if it does not exist'] = function()
   skip_screenshot()
 

@@ -738,9 +738,21 @@ function MiniTest.expect.reference_screenshot(screenshot, path, opts)
   H.cache.n_screenshots = H.cache.n_screenshots + 1
 
   if path == nil then
-    -- Sanitize path
-    local name = H.case_to_stringid(MiniTest.current.case):gsub('[%s/]', '-')
+    -- Sanitize path. Replace any control characters, whitespace, OS specific
+    -- forbidden characters with '-' (with some usefule exception)
+    local linux_forbidden = [[/]]
+    local windows_forbidden = [[<>:"/\|?*]]
+    local pattern = string.format('[%%c%%s%s%s]', vim.pesc(linux_forbidden), vim.pesc(windows_forbidden))
+    --stylua: ignore
+    local replacements = setmetatable({ ['"'] = "'" }, { __index = function() return '-' end })
+    local name = H.case_to_stringid(MiniTest.current.case):gsub(pattern, replacements)
+
+    -- Don't end with whitespace or dot (forbidden on Windows)
+    name = name:gsub('[%s%.]$', '-')
+
     path = 'tests/screenshots/' .. name
+
+    -- Deal with multiple screenshots
     if H.cache.n_screenshots > 1 then
       path = path .. string.format('-%03d', H.cache.n_screenshots)
     end
