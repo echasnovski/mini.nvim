@@ -2045,6 +2045,9 @@ Default values:
       -- Delay between jump and automatic stop if idle (no jump is done)
       idle_stop = 10000000,
     },
+
+    -- Whether to search target characters only in the cursor line.
+    only_in_cursor_line = false,
   }
 <
 

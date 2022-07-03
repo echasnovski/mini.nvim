@@ -1,9 +1,11 @@
 <img src="logo.png" width="800em"/> <br>
 
 <!-- badges: start -->
+
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
 [![GitHub tag](https://badgen.net/github/tag/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/tags/)
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
+
 <!-- badges: end -->
 
 Collection of minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
@@ -16,25 +18,25 @@ If you want to help this project grow but don't know where to start, check out [
 - [General principles](#general-principles)
 - [Plugin colorscheme](#plugin-colorscheme)
 - [Modules](#modules)
-    - [mini.base16](#minibase16)
-    - [mini.bufremove](#minibufremove)
-    - [mini.comment](#minicomment)
-    - [mini.completion](#minicompletion)
-    - [mini.cursorword](#minicursorword)
-    - [mini.doc](#minidoc)
-    - [mini.fuzzy](#minifuzzy)
-    - [mini.indentscope](#miniindentscope)
-    - [mini.jump](#minijump)
-    - [mini.jump2d](#minijump2d)
-    - [mini.misc](#minimisc)
-    - [mini.pairs](#minipairs)
-    - [mini.sessions](#minisessions)
-    - [mini.starter](#ministarter)
-    - [mini.statusline](#ministatusline)
-    - [mini.surround](#minisurround)
-    - [mini.tabline](#minitabline)
-    - [mini.test](#minitest)
-    - [mini.trailspace](#minitrailspace)
+  - [mini.base16](#minibase16)
+  - [mini.bufremove](#minibufremove)
+  - [mini.comment](#minicomment)
+  - [mini.completion](#minicompletion)
+  - [mini.cursorword](#minicursorword)
+  - [mini.doc](#minidoc)
+  - [mini.fuzzy](#minifuzzy)
+  - [mini.indentscope](#miniindentscope)
+  - [mini.jump](#minijump)
+  - [mini.jump2d](#minijump2d)
+  - [mini.misc](#minimisc)
+  - [mini.pairs](#minipairs)
+  - [mini.sessions](#minisessions)
+  - [mini.starter](#ministarter)
+  - [mini.statusline](#ministatusline)
+  - [mini.surround](#minisurround)
+  - [mini.tabline](#minitabline)
+  - [mini.test](#minitest)
+  - [mini.trailspace](#minitrailspace)
 - [Planned modules](#planned-modules)
 
 ## Installation
@@ -48,23 +50,23 @@ There are at least the following ways to install this plugin:
 
 - Using [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
 
-    ```lua
-    -- Development
-    use 'echasnovski/mini.nvim'
+  ```lua
+  -- Development
+  use 'echasnovski/mini.nvim'
 
-    -- Stable
-    use { 'echasnovski/mini.nvim', branch = 'stable' }
-    ```
+  -- Stable
+  use { 'echasnovski/mini.nvim', branch = 'stable' }
+  ```
 
 - Using [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
-    ```vim
-    " Development
-    Plug 'echasnovski/mini.nvim'
+  ```vim
+  " Development
+  Plug 'echasnovski/mini.nvim'
 
-    " Stable
-    Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
-    ```
+  " Stable
+  Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
+  ```
 
 - Each module is independent and implemented within single file. You can copy corresponding file from 'lua/mini/' directory to your '.config/nvim/lua' directory and use it from there.
 
@@ -74,19 +76,20 @@ Don't forget to call module's `setup()` (if required) to enable its functionalit
 
 - **Design**. Each module is designed to solve a particular problem targeting balance between feature-richness (handling as many edge-cases as possible) and simplicity of implementation/support. Granted, not all of them ended up with the same balance, but it is the goal nevertheless.
 - **Independence**. Modules are independent of each other and can be run without external dependencies. Although some of them may need dependencies for full experience.
-- **Structure**. Each module is a submodule for a placeholder "mini" module. So, for example, "surround" module should be referred to as "mini.surround".  As later will be explained, this plugin can also be referred to as "MiniSurround".
+- **Structure**. Each module is a submodule for a placeholder "mini" module. So, for example, "surround" module should be referred to as "mini.surround". As later will be explained, this plugin can also be referred to as "MiniSurround".
 - **Setup**:
-    - Each module (if needed) should be setup separately with `require(<name of module>).setup({})` (possibly replace {} with your config table or omit to use defaults).  You can supply only values which differ from defaults, which will be used for the rest ones.
-    - Call to module's `setup()` always creates a global Lua object with coherent camel-case name: `require('mini.surround').setup()` creates `_G.MiniSurround`. This allows for a simpler usage of plugin functionality: instead of `require('mini.surround')` use `MiniSurround` (or manually `:lua MiniSurround.*` in command line); available from `v:lua` like `v:lua.MiniSurround`. Considering this, "module" and "Lua object" names can be used interchangeably: 'mini.surround' and 'MiniSurround' will mean the same thing.
-    - Each supplied `config` table (aft) is stored in `config` field of global object. Like `MiniSurround.config`.
-    - Values of `config`, which affect runtime activity, can be changed on the fly to have effect. For example, `MiniSurround.config.n_lines` can be changed during runtime; but changing `MiniSurround.config.mappings` won't have any effect (as mappings are created once during `setup()`).
+  - Each module (if needed) should be setup separately with `require(<name of module>).setup({})` (possibly replace {} with your config table or omit to use defaults). You can supply only values which differ from defaults, which will be used for the rest ones.
+  - Call to module's `setup()` always creates a global Lua object with coherent camel-case name: `require('mini.surround').setup()` creates `_G.MiniSurround`. This allows for a simpler usage of plugin functionality: instead of `require('mini.surround')` use `MiniSurround` (or manually `:lua MiniSurround.*` in command line); available from `v:lua` like `v:lua.MiniSurround`. Considering this, "module" and "Lua object" names can be used interchangeably: 'mini.surround' and 'MiniSurround' will mean the same thing.
+  - Each supplied `config` table (aft) is stored in `config` field of global object. Like `MiniSurround.config`.
+  - Values of `config`, which affect runtime activity, can be changed on the fly to have effect. For example, `MiniSurround.config.n_lines` can be changed during runtime; but changing `MiniSurround.config.mappings` won't have any effect (as mappings are created once during `setup()`).
 - **Disabling**. Each module's core functionality can be disabled globally or buffer-locally by creating appropriate global or buffer-scoped variables equal to `v:true`. See `mini.nvim-disabling-recipes` section in help file for common recipes.
-- **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
+- **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated. To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
 - **Stability**. Each module upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.
 
 ## Plugin colorscheme
 
 This plugin comes with an official colorscheme named `minischeme`. This is a MiniBase16 theme created with faster version of the following Lua code: `require('mini.base16').setup({palette = palette, name = 'minischeme', use_cterm = true})` where `palette` is:
+
 - For dark 'background': `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
 - For light 'background': `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
 
@@ -492,6 +495,9 @@ Default `config`:
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
+
+  -- Whether to search target characters only in the cursor line.
+  only_in_cursor_line = false,
 }
 ```
 
@@ -904,6 +910,7 @@ Default `config`:
 ```
 
 Further reading:
+
 - For more detailed information, read 'mini.test' section of [help file](doc/mini.txt).
 - For more hands-on introduction based on examples, see [TESTING.md](TESTING.md).
 - For more in-depth usage see [tests](tests) of this plugin.

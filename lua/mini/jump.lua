@@ -106,6 +106,9 @@ MiniJump.config = {
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
+
+  -- Whether to search target characters only in the cursor line.
+  only_in_cursor_line = false,
 }
 --minidoc_afterlines_end
 
@@ -214,7 +217,11 @@ function MiniJump.jump(target, backward, till, n_times)
   H.n_cursor_moved = 0
   MiniJump.state.jumping = true
   for _ = 1, MiniJump.state.n_times do
-    vim.fn.search(pattern, flags)
+    if MiniJump.config.only_in_cursor_line then
+      vim.fn.search(pattern, flags, vim.fn.line('.'))
+    else
+      vim.fn.search(pattern, flags)
+    end
   end
 
   -- Open enough folds to show jump
