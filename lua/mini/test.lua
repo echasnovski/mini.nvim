@@ -1099,7 +1099,7 @@ function MiniTest.new_child_neovim()
     end
 
     args = args or {}
-    opts = vim.tbl_deep_extend('force', { nvim_executable = 'nvim', connection_timeout = 5000 }, opts or {})
+    opts = vim.tbl_deep_extend('force', { nvim_executable = vim.v.progpath, connection_timeout = 5000 }, opts or {})
 
     -- Using 'libuv' for creating a job is crucial for getting this to work in
     -- Github Actions. Other approaches:
@@ -1494,7 +1494,7 @@ end
 ---@param args table Array with arguments for executable. Will be prepended
 ---   with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
 ---@param opts table Options:
----   - <nvim_executable> - name of Neovim executable. Default: `nvim`.
+---   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
 ---   - <connection_timeout> - stop trying to connect after this amount of
 ---     milliseconds. Default: 5000.
 ---

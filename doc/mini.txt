@@ -5345,7 +5345,7 @@ Parameters~
 {args} `(table)` Array with arguments for executable. Will be prepended
   with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
 {opts} `(table)` Options:
-  - <nvim_executable> - name of Neovim executable. Default: `nvim`.
+  - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
   - <connection_timeout> - stop trying to connect after this amount of
     milliseconds. Default: 5000.
 
