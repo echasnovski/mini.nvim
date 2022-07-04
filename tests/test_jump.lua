@@ -789,24 +789,35 @@ T['Delayed highlighting'] = new_set({
   },
 })
 
-T['Delayed highlighting']['works'] = new_set({ parametrize = { { 'f' }, { 't' }, { 'F' }, { 'T' } } }, {
-  test = function(key)
-    set_cursor(1, key == key:lower() and 0 or 3)
-    type_keys(key, 'e')
+-- NOTE: Don't use `'f', 't', 'F', 'T'` as parameters because this will lead to
+-- conflicting file names for reference screenshots in case-insensitive OS
+T['Delayed highlighting']['works'] = new_set(
+  { parametrize = { { 'forward' }, { 'forward_till' }, { 'backward' }, { 'backward_till' } } },
+  {
+    test = function(direction)
+      local key = vim.endswith(direction, '_till') and 't' or 'f'
+      key = vim.startswith(direction, 'backward') and key:upper() or key
 
-    sleep(test_times.highlight - 10)
-    -- Nothing should yet be shown
-    child.expect_screenshot()
-    sleep(10)
-    -- Everything should be shown
-    child.expect_screenshot()
-  end,
-})
+      set_cursor(1, key == key:lower() and 0 or 3)
+      type_keys(key, 'e')
+
+      sleep(test_times.highlight - 10)
+      -- Nothing should yet be shown
+      child.expect_screenshot()
+      sleep(10)
+      -- Everything should be shown
+      child.expect_screenshot()
+    end,
+  }
+)
 
 T['Delayed highlighting']['respects `config.delay.highlight`'] = new_set(
-  { parametrize = { { 'f' }, { 't' }, { 'F' }, { 'T' } } },
+  { parametrize = { { 'forward' }, { 'forward_till' }, { 'backward' }, { 'backward_till' } } },
   {
-    test = function(key)
+    test = function(direction)
+      local key = vim.endswith(direction, '_till') and 't' or 'f'
+      key = vim.startswith(direction, 'backward') and key:upper() or key
+
       child.lua('MiniJump.config.delay.highlight = 100')
 
       set_cursor(1, key == key:lower() and 0 or 3)
