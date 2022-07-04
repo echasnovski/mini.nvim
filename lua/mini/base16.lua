@@ -578,6 +578,10 @@ function H.apply_palette(palette, use_cterm)
   hi('MiniTablineTabpagesection',  {fg=p.base01, bg=p.base0A, attr='bold', sp=nil})
   hi('MiniTablineVisible',         {fg=p.base05, bg=p.base01, attr='bold', sp=nil})
 
+  hi('MiniTestEmphasis', {fg=nil,      bg=nil, attr='bold', sp=nil})
+  hi('MiniTestFail',     {fg=p.base08, bg=nil, attr='bold', sp=nil})
+  hi('MiniTestPass',     {fg=p.base0B, bg=nil, attr='bold', sp=nil})
+
   hi('MiniTrailspace', {fg=p.base00, bg=p.base08, attr=nil, sp=nil})
 
   -- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
