@@ -822,6 +822,7 @@ For more information, read 'mini.surround' section of [help file](doc/mini.txt).
 Plugins with similar functionality:
 
 - [tpope/vim-surround](https://github.com/tpope/vim-surround)
+- [kylechui/nvim-surround](https://github.com/kylechui/nvim-surround)
 - [machakann/vim-sandwich](https://github.com/machakann/vim-sandwich)
 
 ### mini.tabline
