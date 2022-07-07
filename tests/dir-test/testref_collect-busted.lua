@@ -9,7 +9,6 @@ describe('describe()/it()', function()
   it('Case 3', function() end)
 end)
 
---stylua: ignore
 describe('setup()/teardown()', function()
   local n = 0
 
@@ -22,7 +21,6 @@ describe('setup()/teardown()', function()
   it('teardown() works', function() eq(n, 2) end)
 end)
 
---stylua: ignore
 describe('before_each()/after_each()', function()
   local n, m = 0, 0
 
@@ -41,12 +39,9 @@ describe('before_each()/after_each()', function()
 end)
 
 describe('MiniTest.skip()', function()
-  it('works', function()
-    MiniTest.skip()
-  end)
+  it('works', function() MiniTest.skip() end)
 end)
 
---stylua: ignore
 describe('MiniTest.finally()', function()
   local n = 0
 
@@ -55,16 +50,12 @@ describe('MiniTest.finally()', function()
     eq(n, 0)
   end)
 
-  it('works with no error', function()
-    eq(n, 1)
-  end)
+  it('works with no error', function() eq(n, 1) end)
 
   it('with error', function()
     MiniTest.finally(function() n = n + 1 end)
     error('Some error')
   end)
 
-  it('works with error', function()
-    eq(n, 2)
-  end)
+  it('works with error', function() eq(n, 2) end)
 end)

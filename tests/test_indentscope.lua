@@ -74,9 +74,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniIndentscope'), 1)
 
   -- Autocommand on `ModeChanged` event
-  if child.fn.has('nvim-0.7.0') == 1 then
-    eq(child.fn.exists('#MiniIndentscope#ModeChanged'), 1)
-  end
+  if child.fn.has('nvim-0.7.0') == 1 then eq(child.fn.exists('#MiniIndentscope#ModeChanged'), 1) end
 
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniIndentscopeSymbol'), 'links to Delimiter')
@@ -87,9 +85,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniIndentscope.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniIndentscope.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniIndentscope.config.' .. field), value) end
 
   eq(child.lua_get('type(_G.MiniIndentscope.config.draw.animation)'), 'function')
   expect_config('draw.delay', 100)
@@ -133,9 +129,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs)
-    return child.cmd_capture('nmap ' .. lhs):find('MiniIndentscope') ~= nil
-  end
+  local has_map = function(lhs) return child.cmd_capture('nmap ' .. lhs):find('MiniIndentscope') ~= nil end
   eq(has_map('[i'), true)
 
   unload_module()
@@ -148,18 +142,12 @@ end
 
 T['get_scope()'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-    end,
+    pre_case = function() set_lines(example_lines) end,
   },
 })
 
-local get_scope = function(...)
-  return child.lua_get('MiniIndentscope.get_scope(...)', { ... })
-end
-local get_cursor_scope = function(opts)
-  return child.lua_get('MiniIndentscope.get_scope(nil, nil, ...)', { opts })
-end
+local get_scope = function(...) return child.lua_get('MiniIndentscope.get_scope(...)', { ... }) end
+local get_cursor_scope = function(opts) return child.lua_get('MiniIndentscope.get_scope(nil, nil, ...)', { opts }) end
 
 T['get_scope()']['returns correct structure'] = function()
   set_cursor(3, 4)
@@ -259,9 +247,7 @@ local expect_easing = function(easing, target, opts, tolerance)
   opts = opts or {}
   tolerance = tolerance or 0.1
   child.lua('_G._f = MiniIndentscope.gen_animation(...)', { easing, opts })
-  local f = function(...)
-    return child.lua_get('_G._f(...)', { ... })
-  end
+  local f = function(...) return child.lua_get('_G._f(...)', { ... }) end
   for i, _ in ipairs(target) do
     -- Expect approximate equality
     eq(math.abs(f(i, #target) - target[i]) <= tolerance, true)
@@ -318,15 +304,11 @@ end
 
 T['move_cursor()'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines_nested)
-    end,
+    pre_case = function() set_lines(example_lines_nested) end,
   },
 })
 
-local move_cursor = function(...)
-  child.lua('MiniIndentscope.move_cursor(...)', { ... })
-end
+local move_cursor = function(...) child.lua('MiniIndentscope.move_cursor(...)', { ... }) end
 
 T['move_cursor()']['works'] = function()
   set_cursor(5, 4)
@@ -492,9 +474,7 @@ T['Auto drawing']['respects common events'] = new_set({
 })
 
 T['Auto drawing']['respects ModeChanged event'] = function()
-  if child.fn.exists('##ModeChanged') ~= 1 then
-    return
-  end
+  if child.fn.exists('##ModeChanged') ~= 1 then return end
 
   -- Add disabling in Insert mode
   child.cmd([[
@@ -588,9 +568,7 @@ end
 
 T['Motion'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines_nested)
-    end,
+    pre_case = function() set_lines(example_lines_nested) end,
   },
 })
 
@@ -752,9 +730,7 @@ end
 
 T['Textobject'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines_nested)
-    end,
+    pre_case = function() set_lines(example_lines_nested) end,
   },
 })
 

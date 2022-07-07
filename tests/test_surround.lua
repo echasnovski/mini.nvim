@@ -19,13 +19,9 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
 -- Make helpers
-local clear_messages = function()
-  child.cmd('messages clear')
-end
+local clear_messages = function() child.cmd('messages clear') end
 
-local get_latest_message = function()
-  return child.cmd_capture('1messages')
-end
+local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local has_message_about_not_found = function(char, n_lines, search_method)
   n_lines = n_lines or 20
@@ -92,9 +88,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniSurround.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniSurround.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniSurround.config.' .. field), value) end
 
   -- Check default values
   expect_config('custom_surroundings', vim.NIL)
@@ -174,7 +168,6 @@ end
 T['Add surrounding']['works in line and block Visual mode'] = function()
   validate_edit({ 'aaa' }, { 1, 0 }, { '(aaa)' }, { 1, 1 }, type_keys, 'V', 'sa', ')')
 
-  --stylua: ignore
   validate_edit({ 'aaa', 'bbb' }, { 1, 0 }, { '(aaa', 'bbb)' }, { 1, 1 }, type_keys, '<C-v>j$', 'sa', ')')
 end
 
@@ -221,8 +214,7 @@ T['Add surrounding']['prompts helper message after one idle second'] = function(
 end
 
 T['Add surrounding']['works with multibyte characters'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sa', 'iw', ')' ) end
+  local f = function() type_keys('sa', 'iw', ')') end
 
   validate_edit({ '  ыыы  ' }, { 1, 2 }, { '  (ыыы)  ' }, { 1, 3 }, f)
   validate_edit({ 'ыыы ttt' }, { 1, 2 }, { '(ыыы) ttt' }, { 1, 1 }, f)
@@ -236,10 +228,8 @@ T['Add surrounding']['works on whole line'] = function()
 end
 
 T['Add surrounding']['works on multiple lines'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sa', 'ap', ')' ) end
-  --stylua: ignore
-  local f_vis = function() type_keys( 'Vap', 'sa', ')' ) end
+  local f = function() type_keys('sa', 'ap', ')') end
+  local f_vis = function() type_keys('Vap', 'sa', ')') end
 
   -- Should ignore indent at left mark but not whitespace at right
   validate_edit({ '  aaa ', 'bbb', ' ccc' }, { 1, 0 }, { '  (aaa ', 'bbb', ' ccc)' }, { 1, 3 }, f)
@@ -341,7 +331,6 @@ T['Delete surrounding']['respects `config.search_method`'] = function()
 end
 
 T['Delete surrounding']['places cursor to the right of left surrounding'] = function()
-  --stylua: ignore
   local f = function() type_keys('sd', 'f') end
 
   -- Same line
@@ -370,8 +359,7 @@ T['Delete surrounding']['prompts helper message after one idle second'] = functi
 end
 
 T['Delete surrounding']['works with multibyte characters'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sd', ')' ) end
+  local f = function() type_keys('sd', ')') end
 
   validate_edit({ '  (ыыы)  ' }, { 1, 3 }, { '  ыыы  ' }, { 1, 2 }, f)
   validate_edit({ '(ыыы) ttt' }, { 1, 1 }, { 'ыыы ttt' }, { 1, 0 }, f)
@@ -379,8 +367,7 @@ T['Delete surrounding']['works with multibyte characters'] = function()
 end
 
 T['Delete surrounding']['works on multiple lines'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sd', ')' ) end
+  local f = function() type_keys('sd', ')') end
 
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { 'aaa', 'bbb', 'ccc' }, { 1, 0 }, f)
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { 'aaa', 'bbb', 'ccc' }, { 1, 0 }, f)
@@ -469,7 +456,6 @@ T['Replace surrounding']['respects `config.search_method`'] = function()
 end
 
 T['Replace surrounding']['places cursor to the right of left surrounding'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 'f', '>') end
 
   -- Same line
@@ -506,8 +492,7 @@ T['Replace surrounding']['prompts helper message after one idle second'] = funct
 end
 
 T['Replace surrounding']['works with multibyte characters'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sr', ')', '>' ) end
+  local f = function() type_keys('sr', ')', '>') end
 
   validate_edit({ '  (ыыы)  ' }, { 1, 3 }, { '  <ыыы>  ' }, { 1, 3 }, f)
   validate_edit({ '(ыыы) ttt' }, { 1, 1 }, { '<ыыы> ttt' }, { 1, 1 }, f)
@@ -515,8 +500,7 @@ T['Replace surrounding']['works with multibyte characters'] = function()
 end
 
 T['Replace surrounding']['works on multiple lines'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sr', ')', '>' ) end
+  local f = function() type_keys('sr', ')', '>') end
 
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
@@ -671,8 +655,7 @@ T['Find surrounding']['prompts helper message after one idle second'] = function
 end
 
 T['Find surrounding']['works with multibyte characters'] = function()
-  --stylua: ignore
-  local f = function() type_keys( 'sf', ')' ) end
+  local f = function() type_keys('sf', ')') end
 
   validate_find({ '  (ыыы)  ' }, { 1, 5 }, { { 1, 9 }, { 1, 2 } }, f)
   validate_find({ '(ыыы) ttt' }, { 1, 3 }, { { 1, 7 }, { 1, 0 } }, f)
@@ -918,7 +901,6 @@ T['Search method'] = new_set()
 
 T['Search method']['works with "cover_or_prev"'] = function()
   reload_module({ search_method = 'cover_or_prev' })
-  --stylua: ignore
   local f = function() type_keys('sr', ')', '>') end
 
   -- Works (on same line and on multiple lines)
@@ -943,7 +925,6 @@ end
 
 T['Search method']['works with "cover_or_next"'] = function()
   reload_module({ search_method = 'cover_or_next' })
-  --stylua: ignore
   local f = function() type_keys('sr', ')', '>') end
 
   -- Works (on same line and on multiple lines)
@@ -968,7 +949,6 @@ end
 
 T['Search method']['works with "cover_or_nearest"'] = function()
   reload_module({ search_method = 'cover_or_nearest' })
-  --stylua: ignore
   local f = function() type_keys('sr', ')', '>') end
 
   -- Works (on same line and on multiple lines)
@@ -1009,8 +989,7 @@ T['Search method']['throws error on incorrect `config.search_method`'] = functio
 
   set_lines(lines)
   set_cursor(1, 0)
-    -- stylua: ignore
-    expect.error(function() type_keys('sd', ')') end, 'one of')
+  expect.error(function() type_keys('sd', ')') end, 'one of')
   eq(get_lines(), lines)
   eq(get_cursor(), { 1, 0 })
 end
@@ -1042,7 +1021,6 @@ end
 -- similarly
 T['Balanced pair surrounding']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  --stylua: ignore
   local f = function() type_keys('sr', ')', '>') end
 
   -- It does not take into account that part is inside string
@@ -1054,7 +1032,6 @@ T['Balanced pair surrounding']['does not work in some cases'] = function()
 end
 
 T['Balanced pair surrounding']['is indeed balanced'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', ')', '>') end
 
   validate_edit({ '(a())' }, { 1, 1 }, { '<a()>' }, { 1, 1 }, f)
@@ -1091,7 +1068,6 @@ end
 
 T['Default single character surrounding']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  --stylua: ignore
   local f = function() type_keys('sr', '_', '>') end
 
   -- It does not take into account that part is inside string
@@ -1103,7 +1079,6 @@ T['Default single character surrounding']['does not work in some cases'] = funct
 end
 
 T['Default single character surrounding']['detects covering with smallest width'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', '"', ')') end
 
   validate_edit({ '"a"aa"' }, { 1, 2 }, { '(a)aa"' }, { 1, 1 }, f)
@@ -1113,7 +1088,6 @@ T['Default single character surrounding']['detects covering with smallest width'
 end
 
 T['Default single character surrounding']['works in edge cases'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', '*', ')') end
 
   -- Consecutive identical matching characters
@@ -1126,12 +1100,8 @@ end
 T['Default single character surrounding']['has limited support of multibyte characters'] = function()
   -- At the moment, multibyte character doesn't pass validation of user
   -- single character input. It would be great to fix this.
-  expect.error(function()
-    validate_edit({ 'ыaaaы' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы')
-  end)
-  expect.error(function()
-    validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sr', ')', 'ы')
-  end)
+  expect.error(function() validate_edit({ 'ыaaaы' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы') end)
+  expect.error(function() validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sr', ')', 'ы') end)
 end
 
 T['Function call surrounding'] = new_set()
@@ -1149,7 +1119,6 @@ end
 
 T['Function call surrounding']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  --stylua: ignore
   local f = function() type_keys('sr', 'f', '>') end
 
   -- It does not take into account that part is inside string
@@ -1176,35 +1145,18 @@ T['Function call surrounding']['works in different parts of line and neighborhoo
   validate_edit({ 'myfunc(aaa) world' }, { 1, 8 }, { 'aaa world' }, { 1, 0 }, type_keys, 'sd', 'f')
   validate_edit({ 'Hello myfunc(aaa) world' }, { 1, 14 }, { 'Hello aaa world' }, { 1, 6 }, type_keys, 'sd', 'f')
 
-  --stylua: ignore
+  --stylua: ignore start
   validate_edit({ 'myfunc(aaa)', 'Hello', 'world' }, { 1, 8 }, { 'aaa', 'Hello', 'world' }, { 1, 0 }, type_keys, 'sd', 'f')
-  validate_edit(
-    { 'Hello', 'myfunc(aaa)', 'world' },
-    { 2, 8 },
-    { 'Hello', 'aaa', 'world' },
-    { 2, 0 },
-    type_keys,
-    'sd',
-    'f'
-  )
-  validate_edit(
-    { 'Hello', 'world', 'myfunc(aaa)' },
-    { 3, 8 },
-    { 'Hello', 'world', 'aaa' },
-    { 3, 0 },
-    type_keys,
-    'sd',
-    'f'
-  )
+  validate_edit({ 'Hello', 'myfunc(aaa)', 'world' }, { 2, 8 }, { 'Hello', 'aaa', 'world' }, { 2, 0 }, type_keys, 'sd', 'f')
+  validate_edit({ 'Hello', 'world', 'myfunc(aaa)' }, { 3, 8 }, { 'Hello', 'world', 'aaa' }, { 3, 0 }, type_keys, 'sd', 'f')
+  --stylua: ignore end
 end
 
 T['Function call surrounding']['has limited support of multibyte characters'] = function()
   -- Due to limitations of Lua patterns used for detecting surrounding, it
   -- currently doesn't support detecting function calls with multibyte
   -- character in name. It would be great to fix this.
-  expect.error(function()
-    validate_edit({ 'ыыы(aaa)' }, { 1, 8 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
-  end)
+  expect.error(function() validate_edit({ 'ыыы(aaa)' }, { 1, 8 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f') end)
 
   -- Should work in output surrounding
   validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыыы(aaa)' }, { 1, 7 }, type_keys, 'sr', ')', 'f', 'ыыы<CR>')
@@ -1237,7 +1189,6 @@ end
 
 T['Tag surrounding']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  --stylua: ignore
   local f = function() type_keys('sr', 't', '>') end
 
   -- It does not take into account that part is inside string
@@ -1255,9 +1206,8 @@ T['Tag surrounding']['does not work in some cases'] = function()
   has_message_about_not_found('t')
 end
 
-T['Tag surrounding']['detects tag with the same name'] = function()
-  validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_')
-end
+T['Tag surrounding']['detects tag with the same name'] =
+  function() validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_') end
 
 T['Tag surrounding']['allows extra symbols in opening tag on input'] = function()
   validate_edit({ '<x bbb cc_dd!>aaa</x>' }, { 1, 15 }, { '_aaa_' }, { 1, 1 }, type_keys, 'sr', 't', '_')
@@ -1273,7 +1223,6 @@ T['Tag surrounding']['allows extra symbols in opening tag on output'] = function
 end
 
 T['Tag surrounding']['detects covering with smallest width'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 't', '_') end
 
   -- In all cases width of `<y>...</y>` is smaller than of `<x>...</x>`
@@ -1288,7 +1237,6 @@ T['Tag surrounding']['detects covering with smallest width'] = function()
 end
 
 T['Tag surrounding']['works in edge cases'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 't', '_') end
 
   -- Nesting different tags
@@ -1309,9 +1257,7 @@ T['Tag surrounding']['has limited support of multibyte characters'] = function()
   -- Due to limitations of Lua patterns used for detecting surrounding, it
   -- currently doesn't support detecting tag with multibyte character in
   -- name. It would be great to fix this.
-  expect.error(function()
-    validate_edit({ '<ы>aaa</ы>' }, { 1, 5 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 't')
-  end)
+  expect.error(function() validate_edit({ '<ы>aaa</ы>' }, { 1, 5 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 't') end)
 
   -- Should work in output surrounding
   validate_edit({ '(aaa)' }, { 1, 8 }, { '<ы>aaa</ы>' }, { 1, 4 }, type_keys, 'sr', ')', 't', 'ы<CR>')
@@ -1338,7 +1284,6 @@ end
 
 T['Interactive surrounding']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  --stylua: ignore
   local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', '>') end
 
   -- It does not take into account that part is inside string
@@ -1356,7 +1301,6 @@ T['Interactive surrounding']['does not work in some cases'] = function()
 end
 
 T['Interactive surrounding']['detects covering with smallest width'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', ')') end
 
   validate_edit({ '**a**aa**' }, { 1, 4 }, { '(a)aa**' }, { 1, 1 }, f)
@@ -1364,7 +1308,6 @@ T['Interactive surrounding']['detects covering with smallest width'] = function(
 end
 
 T['Interactive surrounding']['works in edge cases'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 'i', '(<CR>', ')<CR>', '>') end
 
   -- This version of `()` should not be balanced
@@ -1448,13 +1391,10 @@ T['Custom surrounding']['validates two captures in `input.extract`'] = function(
 
   -- Avoid hit-enter-prompt on big error message
   child.o.cmdheight = 40
-  expect.error(function()
-    validate_edit({ '#a#' }, { 1, 1 }, { 'a' }, { 1, 0 }, type_keys, 'sd', '#')
-  end)
+  expect.error(function() validate_edit({ '#a#' }, { 1, 1 }, { 'a' }, { 1, 0 }, type_keys, 'sd', '#') end)
 end
 
 T['Custom surrounding']['works with `.-`'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', '#', '>') end
 
   reload_module({ custom_surroundings = { ['#'] = { input = { find = '#.-@' } } } })
@@ -1467,7 +1407,6 @@ end
 T['Custom surrounding']['has limited support for `+` quantifier'] = function()
   reload_module({ custom_surroundings = { ['#'] = { input = { find = '#+.-#+', extract = '^(#+).*(#+)$' } } } })
 
-  --stylua: ignore
   local f = function() type_keys('sr', '#', ')') end
 
   -- It should find only ones nearest to cursor as it has the smallest width
@@ -1486,7 +1425,6 @@ end
 T['Custom surrounding']['has limited support for `*` quantifier'] = function()
   reload_module({ custom_surroundings = { ['#'] = { input = { find = '#.*#' } } } })
 
-  --stylua: ignore
   local f = function() type_keys('sr', '#', ')') end
 
   validate_edit({ '###aaa###' }, { 1, 4 }, { '##(aaa)##' }, { 1, 3 }, f)
@@ -1502,7 +1440,6 @@ T['Custom surrounding']['has limited support for `*` quantifier'] = function()
 end
 
 T['Custom surrounding']['has limited support for frontier pattern `%f[]`'] = function()
-  --stylua: ignore
   local f = function() type_keys('sr', 'w', ')') end
 
   local validate = function()

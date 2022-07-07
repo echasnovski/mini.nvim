@@ -108,12 +108,9 @@ function MiniTrailspace.highlight()
   end
 
   -- Possibly work only in normal buffers
-  if MiniTrailspace.config.only_in_normal_buffers and not H.is_buffer_normal() then
-    return
-  end
+  if MiniTrailspace.config.only_in_normal_buffers and not H.is_buffer_normal() then return end
 
   -- Don't add match id on top of existing one
-  --stylua: ignore
   if H.get_match_id() ~= nil then return end
 
   vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
@@ -139,9 +136,7 @@ end
 ---
 --- Designed to be used with |autocmd|. No need to use it directly.
 function MiniTrailspace.track_normal_buffer()
-  if not MiniTrailspace.config.only_in_normal_buffers then
-    return
-  end
+  if not MiniTrailspace.config.only_in_normal_buffers then return end
 
   -- This should be used with 'OptionSet' event for 'buftype' option
   -- Empty 'buftype' means "normal buffer"
@@ -169,26 +164,18 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniTrailspace.config = config
-end
+function H.apply_config(config) MiniTrailspace.config = config end
 
-function H.is_disabled()
-  return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true
-end
+function H.is_disabled() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
 
-function H.is_buffer_normal(buf_id)
-  return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == ''
-end
+function H.is_buffer_normal(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end
 
 function H.get_match_id()
   -- NOTE: this can be replaced with more efficient custom tracking of id per
   -- window but it will have more edge cases (like won't update on manual
   -- `clearmatches()`)
   for _, match in ipairs(vim.fn.getmatches()) do
-    if match.group == 'MiniTrailspace' then
-      return match.id
-    end
+    if match.group == 'MiniTrailspace' then return match.id end
   end
 end
 

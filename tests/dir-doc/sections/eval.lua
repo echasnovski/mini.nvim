@@ -13,9 +13,7 @@ local M = {}
 M.tab = {
   -- Some functional setting
   --minidoc_replace_start     a = <function; should be padded>,
-  a = function()
-    return 1 + 1
-  end,
+  a = function() return 1 + 1 end,
   --minidoc_replace_end
   -- A very important setting
   b = 2,

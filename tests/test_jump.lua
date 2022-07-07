@@ -57,9 +57,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniJump.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniJump.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniJump.config.' .. field), value) end
 
   -- Check default values
   expect_config('delay.highlight', 250)
@@ -97,9 +95,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs)
-    return child.cmd_capture('nmap ' .. lhs):find('MiniJump') ~= nil
-  end
+  local has_map = function(lhs) return child.cmd_capture('nmap ' .. lhs):find('MiniJump') ~= nil end
   eq(has_map('f'), true)
 
   unload_module()
@@ -120,9 +116,7 @@ T['state'] = new_set({
   },
 })
 
-local get_state = function()
-  return child.lua_get('MiniJump.state')
-end
+local get_state = function() return child.lua_get('MiniJump.state') end
 
 T['state']['has correct initial values'] = function()
   eq(get_state(), {
@@ -265,9 +259,7 @@ T['jump()']['ignores matches with nothing before/after them `till=true`'] = func
   validate_jump([['b', true, true, 1]], { 1, 2 })
 end
 
-T['jump()']['does not jump if there is no place to jump'] = function()
-  validate_jump([['x']], { 1, 0 })
-end
+T['jump()']['does not jump if there is no place to jump'] = function() validate_jump([['x']], { 1, 0 }) end
 
 T['jump()']['opens enough folds'] = function()
   set_lines({ 'a', 'b', 'c', 'd' })
@@ -290,9 +282,7 @@ end
 
 T['smart_jump()'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-    end,
+    pre_case = function() set_lines(example_lines) end,
   },
 })
 
@@ -567,9 +557,7 @@ T['Jumping with f/t/F/T']['for t/T ignores matches with nothing before/after the
 end
 
 T['Jumping with f/t/F/T']['asks for target letter after one idle second'] = function()
-  local get_latest_message = function()
-    return child.cmd_capture('1messages')
-  end
+  local get_latest_message = function() return child.cmd_capture('1messages') end
   child.cmd('messages clear')
 
   -- Execute one time to test if 'needs help message' flag is set per call

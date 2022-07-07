@@ -77,9 +77,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniBase16.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniBase16.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniBase16.config.' .. field), value) end
 
   expect_config('palette', minischeme_palette)
   expect_config('use_cterm', vim.NIL)
@@ -118,9 +116,7 @@ T['setup()']['defines builtin highlight groups'] = function()
   validate_hl_group('SpellBad', ('ctermbg=9 gui=%s guisp=%s'):format('undercurl', p.base08))
 
   -- Don't test exact values on Neovim<=0.5.1 due to CI difficulties
-  if vim.fn.has('nvim-0.6.0') == 0 then
-    return
-  end
+  if vim.fn.has('nvim-0.6.0') == 0 then return end
 
   validate_hl_group('Comment', ('ctermfg=14 guifg=%s'):format(p.base03))
   validate_hl_group('Error', ('ctermfg=15 ctermbg=9 guifg=%s guibg=%s'):format(p.base00, p.base08))
@@ -175,9 +171,7 @@ T['mini_palette()'] = new_set()
 
 T['mini_palette()']['validates arguments'] = function()
   local validate = function(args, error_pattern)
-    expect.error(function()
-      child.lua_get('MiniBase16.mini_palette(...)', args)
-    end, error_pattern)
+    expect.error(function() child.lua_get('MiniBase16.mini_palette(...)', args) end, error_pattern)
   end
 
   validate({ 1, '#000000' }, 'background.*HEX')
@@ -194,17 +188,17 @@ T['mini_palette()']['validates arguments'] = function()
   validate({ '#000000', '#FFFFFF', -1 }, 'accent_chroma.*positive')
 end
 
-T['mini_palette()']['works'] = function()
-  eq(child.lua_get([[MiniBase16.mini_palette('#112641', '#e2e98f', 75)]]), minischeme_palette)
-end
+T['mini_palette()']['works'] =
+  function() eq(child.lua_get([[MiniBase16.mini_palette('#112641', '#e2e98f', 75)]]), minischeme_palette) end
 
 T['rgb_palette_to_cterm_palette()'] = new_set()
 
 T['rgb_palette_to_cterm_palette()']['validates arguments'] = function()
   local validate = function(palette, error_pattern)
-    expect.error(function()
-      child.lua_get('MiniBase16.rgb_palette_to_cterm_palette(...)', { palette })
-    end, error_pattern)
+    expect.error(
+      function() child.lua_get('MiniBase16.rgb_palette_to_cterm_palette(...)', { palette }) end,
+      error_pattern
+    )
   end
 
   validate('a', 'palette.*table')

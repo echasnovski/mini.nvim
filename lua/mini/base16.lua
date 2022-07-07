@@ -196,12 +196,8 @@ function MiniBase16.mini_palette(background, foreground, accent_chroma)
   -- Only try to avoid color if it has positive chroma, because with zero
   -- chroma hue is meaningless (as in polar coordinates)
   local present_hues = {}
-  if bg.c > 0 then
-    table.insert(present_hues, bg.h)
-  end
-  if fg.c > 0 then
-    table.insert(present_hues, fg.h)
-  end
+  if bg.c > 0 then table.insert(present_hues, bg.h) end
+  if fg.c > 0 then table.insert(present_hues, fg.h) end
   local hues = H.make_different_hues(present_hues, 4)
 
   -- stylua: ignore start
@@ -240,9 +236,7 @@ function MiniBase16.rgb_palette_to_cterm_palette(palette)
   -- Create cterm palette only when it is needed to decrease load time
   H.ensure_cterm_palette()
 
-  return vim.tbl_map(function(hex)
-    return H.nearest_rgb_id(H.hex2rgb(hex), H.cterm_palette)
-  end, palette)
+  return vim.tbl_map(function(hex) return H.nearest_rgb_id(H.hex2rgb(hex), H.cterm_palette) end, palette)
 end
 
 -- Helper data ================================================================
@@ -291,9 +285,7 @@ H.base16_names = {
 }
 
 function H.validate_base16_palette(x, x_name)
-  if type(x) ~= 'table' then
-    error(string.format('(mini.base16) `%s` is not a table.', x_name))
-  end
+  if type(x) ~= 'table' then error(string.format('(mini.base16) `%s` is not a table.', x_name)) end
 
   for _, color_name in pairs(H.base16_names) do
     local c = x[color_name]
@@ -308,9 +300,7 @@ function H.validate_base16_palette(x, x_name)
 end
 
 function H.validate_use_cterm(x, x_name)
-  if not x or type(x) == 'boolean' then
-    return true
-  end
+  if not x or type(x) == 'boolean' then return true end
 
   if type(x) ~= 'table' then
     local msg = string.format('(mini.base16) `%s` should be boolean or table with cterm colors.', x_name)
@@ -348,9 +338,7 @@ function H.apply_palette(palette, use_cterm)
   -- Prepare highlighting application. Notes:
   -- - Clear current highlight only if other theme was loaded previously.
   -- - No need to `syntax reset` because *all* syntax groups are defined later.
-  if vim.g.colors_name then
-    vim.cmd('highlight clear')
-  end
+  if vim.g.colors_name then vim.cmd('highlight clear') end
   -- As this doesn't create colorscheme, don't store any name. Not doing it
   -- might cause some issues with `syntax on`.
   vim.g.colors_name = nil
@@ -685,9 +673,7 @@ end
 -- Compound (gui and cterm) palette -------------------------------------------
 function H.make_compound_palette(palette, use_cterm)
   local cterm_table = use_cterm
-  if type(use_cterm) == 'boolean' then
-    cterm_table = MiniBase16.rgb_palette_to_cterm_palette(palette)
-  end
+  if type(use_cterm) == 'boolean' then cterm_table = MiniBase16.rgb_palette_to_cterm_palette(palette) end
 
   local res = {}
   for name, _ in pairs(palette) do
@@ -756,9 +742,7 @@ H.cterm_first16 = {
 H.cterm_basis = { 0, 95, 135, 175, 215, 255 }
 
 function H.cterm2rgb(i)
-  if i < 16 then
-    return H.cterm_first16[i + 1]
-  end
+  if i < 16 then return H.cterm_first16[i + 1] end
   if 16 <= i and i <= 231 then
     i = i - 16
     local r = H.cterm_basis[math.floor(i / 36) % 6 + 1]
@@ -773,9 +757,7 @@ function H.cterm2rgb(i)
 end
 
 function H.ensure_cterm_palette()
-  if H.cterm_palette then
-    return
-  end
+  if H.cterm_palette then return end
   H.cterm_palette = {}
   for i = 0, 255 do
     H.cterm_palette[i] = H.cterm2rgb(i)
@@ -873,9 +855,7 @@ H.ref_v = (9 * 100) / (95.047 + (15 * 100) + (3 * 108.883))
 
 function H.xyz2luv(xyz)
   local x, y, z = xyz.x, xyz.y, xyz.z
-  if x + y + z == 0 then
-    return { l = 0, u = 0, v = 0 }
-  end
+  if x + y + z == 0 then return { l = 0, u = 0, v = 0 } end
 
   local var_u = 4 * x / (x + 15 * y + 3 * z)
   local var_v = 9 * y / (x + 15 * y + 3 * z)
@@ -893,9 +873,7 @@ function H.xyz2luv(xyz)
 end
 
 function H.luv2xyz(luv)
-  if luv.l == 0 then
-    return { x = 0, y = 0, z = 0 }
-  end
+  if luv.l == 0 then return { x = 0, y = 0, z = 0 } end
 
   local var_y = (luv.l + 16) / 116
   if var_y ^ 3 > 0.008856 then
@@ -948,9 +926,7 @@ function H.dist_circle_set(set1, set2)
   for _, x in pairs(set1) do
     for _, y in pairs(set2) do
       d = H.dist_circle(x, y)
-      if dist > d then
-        dist = d
-      end
+      if dist > d then dist = d end
     end
   end
   return dist

@@ -88,13 +88,10 @@ T['match()']['uses smart case'] = function()
   validate_match('Ab', 'AB', nil)
 end
 
-T['match()']['respects order of letters'] = function()
-  validate_match('abc', 'bcacbac', { 3, 5, 7 })
-end
+T['match()']['respects order of letters'] = function() validate_match('abc', 'bcacbac', { 3, 5, 7 }) end
 
-T['match()']['handles special characters'] = function()
-  validate_match('(.+*%-)', 'a(a.a+a*a%a-a)', { 2, 4, 6, 8, 10, 12, 14 })
-end
+T['match()']['handles special characters'] =
+  function() validate_match('(.+*%-)', 'a(a.a+a*a%a-a)', { 2, 4, 6, 8, 10, 12, 14 }) end
 
 T['match()']['finds best match in presence of many'] = function()
   validate_match('ab', 'a__b_a__b_ab', { 11, 12 })
@@ -159,9 +156,7 @@ end
 
 T['filtersort()'] = new_set()
 
-local filtersort = function(...)
-  return child.lua_get('{ MiniFuzzy.filtersort(...) }', { ... })
-end
+local filtersort = function(...) return child.lua_get('{ MiniFuzzy.filtersort(...) }', { ... }) end
 
 local validate_filtersort = function(word, candidate_array, matched_candidates)
   local output = filtersort(word, candidate_array)
@@ -197,9 +192,7 @@ local new_item = function(newText, insertText, label)
   return { textEdit = { newText = newText }, insertText = insertText, label = label }
 end
 
-local process_lsp_items = function(...)
-  return child.lua_get('MiniFuzzy.process_lsp_items(...)', { ... })
-end
+local process_lsp_items = function(...) return child.lua_get('MiniFuzzy.process_lsp_items(...)', { ... }) end
 
 T['process_lsp_items()']['works'] = function()
   local items
@@ -230,8 +223,7 @@ end
 
 T['get_telescope_sorter()'] = new_set()
 
-T['get_telescope_sorter()']['is present'] = function()
-  eq(child.lua_get('MiniFuzzy.get_telescope_sorter ~= nil'), true)
-end
+T['get_telescope_sorter()']['is present'] =
+  function() eq(child.lua_get('MiniFuzzy.get_telescope_sorter ~= nil'), true) end
 
 return T

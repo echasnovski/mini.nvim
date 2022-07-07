@@ -13,24 +13,16 @@ local set_lines = function(...) return child.set_lines(...) end
 --stylua: ignore end
 
 -- Make helpers
-local mock_devicons = function()
-  child.cmd('set rtp+=tests/dir-tabline')
-end
+local mock_devicons = function() child.cmd('set rtp+=tests/dir-tabline') end
 
-local edit = function(name)
-  child.cmd('edit ' .. name)
-end
+local edit = function(name) child.cmd('edit ' .. name) end
 
-local edit_path = function(rel_path)
-  child.cmd('edit tests/dir-tabline/' .. rel_path)
-end
+local edit_path = function(rel_path) child.cmd('edit tests/dir-tabline/' .. rel_path) end
 
 local eval_tabline = function(show_hl, show_action)
   local res = child.lua_get('MiniTabline.make_tabline_string()')
 
-  if not show_hl then
-    res = res:gsub('%%#%w+#', '')
-  end
+  if not show_hl then res = res:gsub('%%#%w+#', '') end
 
   if not show_action then
     res = res:gsub('%%%d+@%w+@', '')
@@ -59,9 +51,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.lua_get('type(_G.MiniTabline)'), 'table')
 
   -- Highlight groups
-  local has_highlight = function(group, value)
-    expect.match(child.cmd_capture('hi ' .. group), value)
-  end
+  local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniTablineCurrent', 'links to TabLineSel')
   has_highlight('MiniTablineVisible', 'links to TabLineSel')
@@ -77,9 +67,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniTabline.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniTabline.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniTabline.config.' .. field), value) end
 
   expect_config('show_icons', true)
   expect_config('set_vim_settings', true)
@@ -555,9 +543,7 @@ end
 
 T['Mouse click'] = new_set()
 
-local click = function(column)
-  child.api.nvim_input_mouse('left', 'press', '', 0, 0, column)
-end
+local click = function(column) child.api.nvim_input_mouse('left', 'press', '', 0, 0, column) end
 
 T['Mouse click']['works'] = function()
   edit('aaa')

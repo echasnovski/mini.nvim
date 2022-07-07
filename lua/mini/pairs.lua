@@ -194,9 +194,7 @@ end
 function MiniPairs.map_buf(buffer, mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
-  if vim.fn.has('nvim-0.7') == 1 then
-    opts.desc = H.infer_mapping_description(pair_info)
-  end
+  if vim.fn.has('nvim-0.7') == 1 then opts.desc = H.infer_mapping_description(pair_info) end
 
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
@@ -218,9 +216,7 @@ function MiniPairs.unmap(mode, lhs, pair)
 
   -- Use `pcall` to allow 'deleting' already deleted mapping
   pcall(vim.api.nvim_del_keymap, mode, lhs)
-  if pair == '' then
-    return
-  end
+  if pair == '' then return end
   H.unregister_pair(pair, mode, 'all')
 end
 
@@ -243,9 +239,7 @@ function MiniPairs.unmap_buf(buffer, mode, lhs, pair)
 
   -- Use `pcall` to allow 'deleting' already deleted mapping
   pcall(vim.api.nvim_buf_del_keymap, buffer, mode, lhs)
-  if pair == '' then
-    return
-  end
+  if pair == '' then return end
   H.unregister_pair(pair, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
 end
 
@@ -261,9 +255,7 @@ end
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
 function MiniPairs.open(pair, neigh_pattern)
-  if H.is_disabled() or not H.neigh_match(neigh_pattern) then
-    return pair:sub(1, 1)
-  end
+  if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
 end
@@ -281,9 +273,7 @@ end
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
 function MiniPairs.close(pair, neigh_pattern)
-  if H.is_disabled() or not H.neigh_match(neigh_pattern) then
-    return pair:sub(2, 2)
-  end
+  if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(2, 2) end
 
   local close = pair:sub(2, 2)
   if H.get_cursor_neigh(1, 1) == close then
@@ -423,9 +413,7 @@ function H.apply_config(config)
   -- Compute in which modes mapping should be set up
   local mode_array = {}
   for name, to_set in pairs(config.modes) do
-    if to_set then
-      table.insert(mode_array, mode_ids[name])
-    end
+    if to_set then table.insert(mode_array, mode_ids[name]) end
   end
 
   for _, mode in pairs(mode_array) do
@@ -436,9 +424,7 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled()
-  return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true
-end
+function H.is_disabled() return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true end
 
 -- Pair registration ----------------------------------------------------------
 function H.register_pair(pair_info, mode, buffer)
@@ -461,35 +447,25 @@ end
 
 function H.unregister_pair(pair, mode, buffer)
   local mode_pairs = H.registered_pairs[mode]
-  if not (mode_pairs and mode_pairs[buffer]) then
-    return
-  end
+  if not (mode_pairs and mode_pairs[buffer]) then return end
 
   local buf_pairs = mode_pairs[buffer]
   for _, key in ipairs({ 'bs', 'cr' }) do
     for i, p in ipairs(buf_pairs[key]) do
-      if p == pair then
-        table.remove(buf_pairs[key], i)
-      end
+      if p == pair then table.remove(buf_pairs[key], i) end
     end
   end
 end
 
 function H.is_pair_registered(pair, mode, buffer, key)
   local mode_pairs = H.registered_pairs[mode]
-  if not mode_pairs then
-    return false
-  end
+  if not mode_pairs then return false end
 
-  if vim.tbl_contains(mode_pairs['all'][key], pair) then
-    return true
-  end
+  if vim.tbl_contains(mode_pairs['all'][key], pair) then return true end
 
   buffer = buffer == 0 and vim.api.nvim_get_current_buf() or buffer
   local buf_pairs = mode_pairs[buffer]
-  if not buf_pairs then
-    return false
-  end
+  if not buf_pairs then return false end
 
   return vim.tbl_contains(buf_pairs[key], pair)
 end
@@ -503,9 +479,7 @@ function H.ensure_cr_bs(mode)
 
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
-  if has_any_bs_pair then
-    H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', { expr = true, desc = 'MiniPairs <BS>' })
-  end
+  if has_any_bs_pair then H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', { expr = true, desc = 'MiniPairs <BS>' }) end
   if mode == 'i' and has_any_cr_pair then
     H.map(mode, '<CR>', 'v:lua.MiniPairs.cr()', { expr = true, desc = 'MiniPairs <CR>' })
   end
@@ -564,9 +538,7 @@ function H.get_cursor_neigh(start, finish)
   return string.sub(('%s%s%s'):format('\r', line, '\n'), col + 1 + start, col + 1 + finish)
 end
 
-function H.neigh_match(pattern)
-  return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil)
-end
+function H.neigh_match(pattern) return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil) end
 
 function H.get_arrow_key(key)
   if vim.fn.mode() == 'i' then
@@ -579,15 +551,12 @@ function H.get_arrow_key(key)
 end
 
 function H.map(mode, key, rhs, opts)
-  --stylua: ignore
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
 
   -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then
-    opts.desc = nil
-  end
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end

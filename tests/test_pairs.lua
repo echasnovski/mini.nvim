@@ -20,9 +20,7 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 
 -- Make helpers
 local get_term_channel = function()
-  local term_chans = vim.tbl_filter(function(x)
-    return x.mode == 'terminal'
-  end, child.api.nvim_list_chans())[1]['id']
+  local term_chans = vim.tbl_filter(function(x) return x.mode == 'terminal' end, child.api.nvim_list_chans())[1]['id']
   return term_chans[1]['id']
 end
 
@@ -208,9 +206,7 @@ local validate_neigh_disable = function(neigh, key)
   child.ensure_normal_mode()
 end
 
-local validate_slash = function(key)
-  validate_neigh_disable([[\]], key)
-end
+local validate_slash = function(key) validate_neigh_disable([[\]], key) end
 
 local validate_no = function(action, ...)
   local val_f = ({
@@ -285,9 +281,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniPairs.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniPairs.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniPairs.config.' .. field), value) end
 
   -- Check default values
   expect_config('modes', { insert = true, command = false, terminal = false })
@@ -506,9 +500,7 @@ end
 
 T['map()/map_buf()']['respect `opts` or `pair_info` argument'] = function(fun_name)
   -- Throws error because mapping `(` should already exist
-  expect.error(function()
-    apply_map(fun_name, [['i', '(', { action = 'open', pair = '()' }, { unique = true })]])
-  end)
+  expect.error(function() apply_map(fun_name, [['i', '(', { action = 'open', pair = '()' }, { unique = true })]]) end)
 end
 
 T['map()/map_buf()']['create mappings for `<BS>` in new mode'] = function(fun_name)
@@ -532,9 +524,7 @@ T['map()/map_buf()']['create mappings for `<CR>` in new mode'] = function(fun_na
   validate_cr('<>')
 end
 
-local make_test_map = function(fun_name)
-  apply_map(fun_name, [['i', '<', { action = 'open', pair = '<>' }]])
-end
+local make_test_map = function(fun_name) apply_map(fun_name, [['i', '<', { action = 'open', pair = '<>' }]]) end
 
 local has_test_map = function()
   validate_open('i', '<', '<>')
@@ -600,9 +590,7 @@ T['unmap()/unmap_buf()']['respect `mode` argument'] = function(fun_name)
 end
 
 T['unmap()/unmap_buf()']['require explicit `pair` argument'] = function(fun_name)
-  expect.error(function()
-    apply_unmap(fun_name, [['i', '(']])
-  end)
+  expect.error(function() apply_unmap(fun_name, [['i', '(']]) end)
 end
 
 T['unmap()/unmap_buf()']['allow empty string for `pair` argument to not unregister pair'] = function(fun_name)
@@ -616,9 +604,7 @@ T['unmap()/unmap_buf()']['allow empty string for `pair` argument to not unregist
 end
 
 T['unmap()/unmap_buf()']['work for already missing mapping'] = function(fun_name)
-  expect.no_error(function()
-    apply_unmap(fun_name, [['c', '%', '%%']])
-  end)
+  expect.no_error(function() apply_unmap(fun_name, [['c', '%', '%%']]) end)
 end
 
 -- Integration tests ==========================================================
@@ -700,9 +686,7 @@ end
 T['Close action']['is correctly initiated in `config.mappings`'] = function()
   child.api.nvim_del_keymap('i', ')')
   reload_module({ mappings = { [')'] = { action = 'close', pair = '()', neigh_pattern = '..' } } })
-  expect.error(function()
-    validate_slash_close(')', '()')
-  end)
+  expect.error(function() validate_slash_close(')', '()') end)
 end
 
 T['Close action']['respects `vim.{g,b}.minipairs_disable`'] = new_set({

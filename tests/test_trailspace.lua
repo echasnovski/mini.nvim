@@ -16,15 +16,11 @@ local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
 -- Make helpers
-local ensure_no_highlighting = function()
-  child.fn.clearmatches()
-end
+local ensure_no_highlighting = function() child.fn.clearmatches() end
 
 -- Data =======================================================================
 local example_lines = { 'aa ', 'aa  ', 'aa\t', 'aa\t\t', 'aa \t', 'aa\t ', '  aa', '\taa' }
-local example_trimmed_lines = vim.tbl_map(function(x)
-  return x:gsub('%s*$', '')
-end, example_lines)
+local example_trimmed_lines = vim.tbl_map(function(x) return x:gsub('%s*$', '') end, example_lines)
 
 -- Output test set ============================================================
 T = new_set({
@@ -148,9 +144,7 @@ T['highlight()']['respects `vim.{g,b}.minitrailspace_disable`'] = new_set({
 
 T['unhighlight()'] = new_set({
   hooks = {
-    pre_case = function()
-      child.lua('MiniTrailspace.highlight()')
-    end,
+    pre_case = function() child.lua('MiniTrailspace.highlight()') end,
   },
 })
 

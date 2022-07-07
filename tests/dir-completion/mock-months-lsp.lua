@@ -77,9 +77,7 @@ Months.requests = {
     local after_close_paren = line:match('%).*$') or line
 
     -- Stop showing signature help after closing bracket
-    if after_close_paren:len() < after_open_paren:len() then
-      return { {} }
-    end
+    if after_close_paren:len() < after_open_paren:len() then return { {} } end
 
     -- Compute active parameter id by counting number of ',' from latest '('
     local _, active_param_id = after_open_paren:gsub('%,', '%,')
@@ -108,9 +106,7 @@ Months.requests = {
 -- Replace builtin functions with custom testable ones ========================
 vim.lsp.buf_request_all = function(bufnr, method, params, callback)
   local requests = Months.requests[method]
-  if requests == nil then
-    return
-  end
+  if requests == nil then return end
   callback(requests(params))
 end
 
@@ -127,6 +123,4 @@ vim.lsp.buf_get_clients = function(bufnr)
   }
 end
 
-vim.lsp.get_client_by_id = function(client_id)
-  return vim.lsp.buf_get_clients(0)[client_id]
-end
+vim.lsp.get_client_by_id = function(client_id) return vim.lsp.buf_get_clients(0)[client_id] end

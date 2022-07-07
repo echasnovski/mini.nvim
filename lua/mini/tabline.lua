@@ -126,9 +126,7 @@ MiniTabline.config = {
 -- Module functionality =======================================================
 --- Make string for |tabline|
 function MiniTabline.make_tabline_string()
-  if H.is_disabled() then
-    return ''
-  end
+  if H.is_disabled() then return '' end
 
   H.make_tabpage_section()
   H.list_tabs()
@@ -190,9 +188,7 @@ function H.apply_config(config)
   vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
 end
 
-function H.is_disabled()
-  return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true
-end
+function H.is_disabled() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end
 
 -- Work with tabpages ---------------------------------------------------------
 function H.make_tabpage_section()
@@ -224,9 +220,7 @@ function H.list_tabs()
   H.tabs = tabs
 end
 
-function H.is_buffer_in_minitabline(buf_id)
-  return vim.api.nvim_buf_get_option(buf_id, 'buflisted')
-end
+function H.is_buffer_in_minitabline(buf_id) return vim.api.nvim_buf_get_option(buf_id, 'buflisted') end
 
 -- Tab's highlight group
 function H.construct_highlight(buf_id)
@@ -238,9 +232,7 @@ function H.construct_highlight(buf_id)
   else
     hl_type = 'Hidden'
   end
-  if vim.api.nvim_buf_get_option(buf_id, 'modified') then
-    hl_type = 'Modified' .. hl_type
-  end
+  if vim.api.nvim_buf_get_option(buf_id, 'modified') then hl_type = 'Modified' .. hl_type end
 
   return string.format('%%#MiniTabline%s#', hl_type)
 end
@@ -266,7 +258,6 @@ function H.construct_label_data(buf_id)
   else
     -- Process unnamed buffer
     label = H.make_unnamed_label(buf_id)
-    --stylua: ignore
     label_extender = function(x) return x end
   end
 
@@ -305,9 +296,7 @@ function H.make_unnamed_label(buf_id)
 
   -- Possibly add tracking id
   local unnamed_id = H.get_unnamed_id(buf_id)
-  if unnamed_id > 1 then
-    label = string.format('%s(%d)', label, unnamed_id)
-  end
+  if unnamed_id > 1 then label = string.format('%s(%d)', label, unnamed_id) end
 
   return label
 end
@@ -320,9 +309,7 @@ end
 function H.get_unnamed_id(buf_id)
   -- Use existing sequential id if possible
   local seq_id = H.unnamed_buffers_seq_ids[buf_id]
-  if seq_id ~= nil then
-    return seq_id
-  end
+  if seq_id ~= nil then return seq_id end
 
   -- Cache sequential id for currently unnamed buffer `buf_id`
   H.unnamed_buffers_seq_ids[buf_id] = vim.tbl_count(H.unnamed_buffers_seq_ids) + 1
@@ -341,14 +328,10 @@ function H.finalize_labels()
       local tab = H.tabs[buf_id]
       local old_label = tab.label
       tab.label = tab.label_extender(tab.label)
-      if old_label ~= tab.label then
-        nothing_changed = false
-      end
+      if old_label ~= tab.label then nothing_changed = false end
     end
 
-    if nothing_changed then
-      break
-    end
+    if nothing_changed then break end
 
     nonunique_tab_ids = H.get_nonunique_tab_ids()
   end
@@ -388,9 +371,7 @@ function H.get_nonunique_tab_ids()
   end
 
   -- Collect tab-array-ids with non-unique labels
-  return vim.tbl_flatten(vim.tbl_filter(function(x)
-    return #x > 1
-  end, label_tab_ids))
+  return vim.tbl_flatten(vim.tbl_filter(function(x) return #x > 1 end, label_tab_ids))
 end
 
 -- Fit tabline to maximum displayed width -------------------------------------
@@ -421,9 +402,7 @@ end
 
 function H.update_center_buf_id()
   local cur_buf = vim.api.nvim_get_current_buf()
-  if H.is_buffer_in_minitabline(cur_buf) then
-    H.center_buf_id = cur_buf
-  end
+  if H.is_buffer_in_minitabline(cur_buf) then H.center_buf_id = cur_buf end
 end
 
 function H.compute_display_interval(center_offset, tabline_width)
@@ -489,9 +468,7 @@ function H.concat_tabs()
     if not vim.tbl_contains({ 'none', 'left', 'right' }, position) then
       H.message([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])
     end
-    if position == 'left' then
-      res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res)
-    end
+    if position == 'left' then res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res) end
     if position == 'right' then
       -- Use `%=` to make it stick to right hand side
       res = ('%s%%=%%#MiniTablineTabpagesection#%s'):format(res, H.tabpage_section)
@@ -502,8 +479,6 @@ function H.concat_tabs()
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.tabline) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.tabline) ' .. msg)) end
 
 return MiniTabline

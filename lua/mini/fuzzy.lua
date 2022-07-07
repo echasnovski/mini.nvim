@@ -136,23 +136,15 @@ end
 function MiniFuzzy.process_lsp_items(items, base)
   -- Extract completion words from items
   local words = vim.tbl_map(function(x)
-    if type(x.textEdit) == 'table' and type(x.textEdit.newText) == 'string' then
-      return x.textEdit.newText
-    end
-    if type(x.insertText) == 'string' then
-      return x.insertText
-    end
-    if type(x.label) == 'string' then
-      return x.label
-    end
+    if type(x.textEdit) == 'table' and type(x.textEdit.newText) == 'string' then return x.textEdit.newText end
+    if type(x.insertText) == 'string' then return x.insertText end
+    if type(x.label) == 'string' then return x.label end
     return ''
   end, items)
 
   -- Fuzzy match
   local _, match_inds = MiniFuzzy.filtersort(base, words)
-  return vim.tbl_map(function(i)
-    return items[i]
-  end, match_inds)
+  return vim.tbl_map(function(i) return items[i] end, match_inds)
 end
 
 --- Custom getter for `telescope.nvim` sorter
@@ -185,9 +177,7 @@ function MiniFuzzy.get_telescope_sorter(opts)
     -- @param line (entry.ordinal)
     -- @param entry (the whole entry)
     scoring_function = function(self, _, line, _)
-      if #self.letters == 0 then
-        return 1
-      end
+      if #self.letters == 0 then return 1 end
       line = self.case_sensitive and line or line:lower()
       local positions = H.find_best_positions(self.letters, line)
       return H.score_positions(positions)
@@ -198,9 +188,7 @@ function MiniFuzzy.get_telescope_sorter(opts)
     -- `get_fzy_sorter`'s output). Besides, it seems that `display` and `line`
     -- arguments might be different. So, extra calls to `match` are made.
     highlighter = function(self, _, display)
-      if #self.letters == 0 or #display == 0 then
-        return {}
-      end
+      if #self.letters == 0 or #display == 0 then return {} end
       display = self.case_sensitive and display or display:lower()
       return H.find_best_positions(self.letters, display)
     end,
@@ -222,9 +210,7 @@ function H.setup_config(config)
   vim.validate({
     cutoff = {
       config.cutoff,
-      function(x)
-        return type(x) == 'number' and x >= 1
-      end,
+      function(x) return type(x) == 'number' and x >= 1 end,
       'number not less than 1',
     },
   })
@@ -232,9 +218,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniFuzzy.config = config
-end
+function H.apply_config(config) MiniFuzzy.config = config end
 
 -- Fuzzy matching -------------------------------------------------------------
 ---@param letters table Array of letters from input word
@@ -245,29 +229,21 @@ end
 ---@private
 function H.find_best_positions(letters, candidate)
   local n_candidate, n_letters = #candidate, #letters
-  if n_letters == 0 or n_candidate < n_letters then
-    return nil
-  end
+  if n_letters == 0 or n_candidate < n_letters then return nil end
 
   -- Search forward to find matching positions with left-most last letter match
   local pos_last = 0
   for let_i = 1, #letters do
     pos_last = candidate:find(letters[let_i], pos_last + 1)
-    if not pos_last then
-      break
-    end
+    if not pos_last then break end
   end
 
   -- Candidate is matched only if word's last letter is found
-  if not pos_last then
-    return nil
-  end
+  if not pos_last then return nil end
 
   -- If there is only one letter, it is already the best match (there will not
   -- be better width and it has lowest first match)
-  if n_letters == 1 then
-    return { pos_last }
-  end
+  if n_letters == 1 then return { pos_last } end
 
   -- Compute best match positions by iteratively checking all possible last
   -- letter matches (at and after initial one). At end of each iteration
@@ -328,9 +304,7 @@ end
 --
 -- Returns -1 if `positions` is `nil` or empty.
 function H.score_positions(positions)
-  if not positions or #positions == 0 then
-    return -1
-  end
+  if not positions or #positions == 0 then return -1 end
   local first, last = positions[1], positions[#positions]
   local cutoff = MiniFuzzy.config.cutoff
   return cutoff * math.min(last - first + 1, cutoff) + math.min(first, cutoff)
@@ -343,18 +317,14 @@ function H.make_filter_indexes(word, candidate_array)
   local res = {}
   for i, cand in ipairs(candidate_array) do
     local positions = H.find_best_positions(letters, cand)
-    if positions then
-      table.insert(res, { index = i, score = H.score_positions(positions) })
-    end
+    if positions then table.insert(res, { index = i, score = H.score_positions(positions) }) end
   end
 
   return res
 end
 
 function H.compare_filter_indexes(a, b)
-  if a.score < b.score then
-    return true
-  end
+  if a.score < b.score then return true end
 
   if a.score == b.score then
     -- Make sorting stable by preserving index order
@@ -375,8 +345,6 @@ function H.filter_by_indexes(candidate_array, ids)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.string_to_letters(s)
-  return vim.tbl_map(vim.pesc, vim.split(s, ''))
-end
+function H.string_to_letters(s) return vim.tbl_map(vim.pesc, vim.split(s, '')) end
 
 return MiniFuzzy

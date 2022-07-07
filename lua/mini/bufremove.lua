@@ -78,9 +78,7 @@ MiniBufremove.config = {
 ---
 ---@return boolean Whether operation was successful.
 function MiniBufremove.delete(buf_id, force)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   return H.unshow_and_cmd(buf_id, force, 'bdelete')
 end
@@ -94,9 +92,7 @@ end
 ---
 ---@return boolean Whether operation was successful.
 function MiniBufremove.wipeout(buf_id, force)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   return H.unshow_and_cmd(buf_id, force, 'bwipeout')
 end
@@ -108,15 +104,11 @@ end
 ---
 ---@return boolean Whether operation was successful.
 function MiniBufremove.unshow(buf_id)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   buf_id = H.normalize_buf_id(buf_id)
 
-  if not H.is_valid_id(buf_id, 'buffer') then
-    return false
-  end
+  if not H.is_valid_id(buf_id, 'buffer') then return false end
 
   vim.tbl_map(MiniBufremove.unshow_in_window, vim.fn.win_findbuf(buf_id))
 
@@ -130,15 +122,11 @@ end
 ---
 ---@return boolean Whether operation was successful.
 function MiniBufremove.unshow_in_window(win_id)
-  if H.is_disabled() then
-    return nil
-  end
+  if H.is_disabled() then return nil end
 
   win_id = (win_id == nil) and 0 or win_id
 
-  if not H.is_valid_id(win_id, 'window') then
-    return false
-  end
+  if not H.is_valid_id(win_id, 'window') then return false end
 
   local cur_buf = vim.api.nvim_win_get_buf(win_id)
 
@@ -153,9 +141,7 @@ function MiniBufremove.unshow_in_window(win_id)
 
     -- Try using previous buffer
     vim.cmd('bprevious')
-    if cur_buf ~= vim.api.nvim_win_get_buf(win_id) then
-      return
-    end
+    if cur_buf ~= vim.api.nvim_win_get_buf(win_id) then return end
 
     -- Create new listed scratch buffer
     local new_buf = vim.api.nvim_create_buf(true, true)
@@ -190,9 +176,7 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled()
-  return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true
-end
+function H.is_disabled() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
 
 -- Removing implementation ----------------------------------------------------
 function H.unshow_and_cmd(buf_id, force, cmd)
@@ -202,18 +186,14 @@ function H.unshow_and_cmd(buf_id, force, cmd)
     return false
   end
 
-  if force == nil then
-    force = false
-  end
+  if force == nil then force = false end
   if type(force) ~= 'boolean' then
     H.message('`force` should be boolean.')
     return false
   end
 
   local fun_name = ({ ['bdelete'] = 'delete', ['bwipeout'] = 'wipeout' })[cmd]
-  if not H.can_remove(buf_id, force, fun_name) then
-    return false
-  end
+  if not H.can_remove(buf_id, force, fun_name) then return false end
 
   -- Unshow buffer from all windows
   MiniBufremove.unshow(buf_id)
@@ -244,17 +224,13 @@ function H.is_valid_id(x, type)
     is_valid = vim.api.nvim_win_is_valid(x)
   end
 
-  if not is_valid then
-    H.message(string.format('%s is not a valid %s id.', tostring(x), type))
-  end
+  if not is_valid then H.message(string.format('%s is not a valid %s id.', tostring(x), type)) end
   return is_valid
 end
 
 -- Check if buffer can be removed with `MiniBufremove.fun_name` function
 function H.can_remove(buf_id, force, fun_name)
-  if force then
-    return true
-  end
+  if force then return true end
 
   if vim.api.nvim_buf_get_option(buf_id, 'modified') then
     H.message(
@@ -273,14 +249,10 @@ end
 -- Compute 'true' buffer id (strictly positive integer). Treat `nil` and 0 as
 -- current buffer.
 function H.normalize_buf_id(buf_id)
-  if buf_id == nil or buf_id == 0 then
-    return vim.api.nvim_get_current_buf()
-  end
+  if buf_id == nil or buf_id == 0 then return vim.api.nvim_get_current_buf() end
   return buf_id
 end
 
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg)) end
 
 return MiniBufremove

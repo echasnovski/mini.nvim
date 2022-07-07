@@ -150,9 +150,7 @@ MiniJump.state = {
 ---@param till __till
 ---@param n_times __n_times
 function MiniJump.jump(target, backward, till, n_times)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   -- Cache inputs for future use
   H.update_state(target, backward, till, n_times)
@@ -167,16 +165,12 @@ function MiniJump.jump(target, backward, till, n_times)
   local escaped_target = vim.fn.escape(MiniJump.state.target, [[\]])
   local search_pattern = ([[\V%s]]):format(escaped_target)
   local target_is_present = vim.fn.search(search_pattern, 'wn') ~= 0
-  if not target_is_present then
-    return
-  end
+  if not target_is_present then return end
 
   -- Construct search and highlight patterns
   local flags = MiniJump.state.backward and 'Wb' or 'W'
   local hl_case = ''
-  if vim.o.ignorecase and (not vim.o.smartcase or escaped_target == escaped_target:lower()) then
-    hl_case = [[\c]]
-  end
+  if vim.o.ignorecase and (not vim.o.smartcase or escaped_target == escaped_target:lower()) then hl_case = [[\c]] end
   local pattern, hl_pattern = [[\V%s]], [[\V%s%s]]
   if MiniJump.state.till then
     if MiniJump.state.backward then
@@ -195,9 +189,7 @@ function MiniJump.jump(target, backward, till, n_times)
     -- Update highlighting immediately if any highlighting is already present
     H.is_highlighting() and 0 or MiniJump.config.delay.highlight,
     0,
-    vim.schedule_wrap(function()
-      H.highlight(hl_pattern)
-    end)
+    vim.schedule_wrap(function() H.highlight(hl_pattern) end)
   )
 
   -- Start idle timer after stopping previous one
@@ -205,9 +197,7 @@ function MiniJump.jump(target, backward, till, n_times)
   H.timers.idle_stop:start(
     MiniJump.config.delay.idle_stop,
     0,
-    vim.schedule_wrap(function()
-      MiniJump.stop_jumping()
-    end)
+    vim.schedule_wrap(function() MiniJump.stop_jumping() end)
   )
 
   -- Make jump(s)
@@ -231,24 +221,18 @@ end
 ---@param backward __backward
 ---@param till __till
 function MiniJump.smart_jump(backward, till)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   -- Jumping should stop after mode change. Use `mode(1)` to track 'omap' case.
   local cur_mode = vim.fn.mode(1)
-  if MiniJump.state.mode ~= cur_mode then
-    MiniJump.stop_jumping()
-  end
+  if MiniJump.state.mode ~= cur_mode then MiniJump.stop_jumping() end
 
   -- Ask for target only when needed
   local target
   if not MiniJump.state.jumping or MiniJump.state.target == nil then
     target = H.get_target()
     -- Stop if user supplied invalid target
-    if target == nil then
-      return
-    end
+    if target == nil then return end
   end
 
   H.update_state(target, backward, till, vim.v.count1)
@@ -267,17 +251,13 @@ end
 ---@param backward __backward
 ---@param till __till
 function MiniJump.expr_jump(backward, till)
-  if H.is_disabled() then
-    return ''
-  end
+  if H.is_disabled() then return '' end
 
   -- Always ask for `target` as this will be used only in operator-pending
   -- mode. Dot-repeat will be implemented via expression-mapping.
   local target = H.get_target()
   -- Stop if user supplied invalid target
-  if target == nil then
-    return
-  end
+  if target == nil then return end
   H.update_state(target, backward, till, vim.v.count1)
 
   return vim.api.nvim_replace_termcodes('v<Cmd>lua MiniJump.jump()<CR>', true, true, true)
@@ -300,9 +280,7 @@ function MiniJump.on_cursormoved()
   if MiniJump.state.jumping then
     H.n_cursor_moved = H.n_cursor_moved + 1
     -- Stop jumping only if `CursorMoved` was not a result of smart jump
-    if H.n_cursor_moved > 1 then
-      MiniJump.stop_jumping()
-    end
+    if H.n_cursor_moved > 1 then MiniJump.stop_jumping() end
   end
 end
 
@@ -375,16 +353,12 @@ function H.apply_config(config)
   --stylua: ignore end
 end
 
-function H.is_disabled()
-  return vim.g.minijump_disable == true or vim.b.minijump_disable == true
-end
+function H.is_disabled() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
 
 -- Highlighting ---------------------------------------------------------------
 function H.highlight(pattern)
   -- Don't do anything if already highlighting input pattern
-  if H.is_highlighting(pattern) then
-    return
-  end
+  if H.is_highlighting(pattern) then return end
 
   -- Stop highlighting possible previous pattern. Needed to adjust highlighting
   -- when inside jumping but a different kind one. Example: first jump with
@@ -393,9 +367,7 @@ function H.highlight(pattern)
   H.unhighlight()
 
   -- Never highlight in Insert mode
-  if vim.fn.mode() == 'i' then
-    return
-  end
+  if vim.fn.mode() == 'i' then return end
 
   local match_id = vim.fn.matchadd('MiniJump', pattern)
   H.window_matches[vim.api.nvim_get_current_win()] = { id = match_id, pattern = pattern }
@@ -420,67 +392,46 @@ end
 function H.is_highlighting(pattern)
   local win_id = vim.api.nvim_get_current_win()
   local match_info = H.window_matches[win_id]
-  if match_info == nil then
-    return false
-  end
+  if match_info == nil then return false end
   return pattern == nil or match_info.pattern == pattern
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg)) end
 
 function H.update_state(target, backward, till, n_times)
   MiniJump.state.mode = vim.fn.mode(1)
 
   -- Don't use `? and <1> or <2>` because it doesn't work when `<1>` is `false`
-  if target ~= nil then
-    MiniJump.state.target = target
-  end
-  if backward ~= nil then
-    MiniJump.state.backward = backward
-  end
-  if till ~= nil then
-    MiniJump.state.till = till
-  end
-  if n_times ~= nil then
-    MiniJump.state.n_times = n_times
-  end
+  if target ~= nil then MiniJump.state.target = target end
+  if backward ~= nil then MiniJump.state.backward = backward end
+  if till ~= nil then MiniJump.state.till = till end
+  if n_times ~= nil then MiniJump.state.n_times = n_times end
 end
 
 function H.get_target()
   local needs_help_msg = true
   vim.defer_fn(function()
-    if not needs_help_msg then
-      return
-    end
+    if not needs_help_msg then return end
     H.message('Enter target single character ')
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
-  if not ok or char == 27 then
-    return
-  end
+  if not ok or char == 27 then return end
 
-  if type(char) == 'number' then
-    char = vim.fn.nr2char(char)
-  end
+  if type(char) == 'number' then char = vim.fn.nr2char(char) end
   return char
 end
 
 function H.map(mode, key, rhs, opts)
-  --stylua: ignore
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
 
   -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then
-    opts.desc = nil
-  end
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end

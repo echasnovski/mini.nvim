@@ -3,17 +3,17 @@ local Helpers = {}
 -- Add extra expectations
 Helpers.expect = vim.deepcopy(MiniTest.expect)
 
-Helpers.expect.match = MiniTest.new_expectation('string matching', function(str, pattern)
-  return str:find(pattern) ~= nil
-end, function(str, pattern)
-  return string.format('Pattern: %s\nObserved string: %s', vim.inspect(pattern), str)
-end)
+Helpers.expect.match = MiniTest.new_expectation(
+  'string matching',
+  function(str, pattern) return str:find(pattern) ~= nil end,
+  function(str, pattern) return string.format('Pattern: %s\nObserved string: %s', vim.inspect(pattern), str) end
+)
 
-Helpers.expect.no_match = MiniTest.new_expectation('no string matching', function(str, pattern)
-  return str:find(pattern) == nil
-end, function(str, pattern)
-  return string.format('Pattern: %s\nObserved string: %s', vim.inspect(pattern), str)
-end)
+Helpers.expect.no_match = MiniTest.new_expectation(
+  'no string matching',
+  function(str, pattern) return str:find(pattern) == nil end,
+  function(str, pattern) return string.format('Pattern: %s\nObserved string: %s', vim.inspect(pattern), str) end
+)
 
 -- Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 Helpers.new_child_neovim = function()
@@ -38,9 +38,7 @@ Helpers.new_child_neovim = function()
   function child.set_lines(arr, start, finish)
     prevent_hanging('set_lines')
 
-    if type(arr) == 'string' then
-      arr = vim.split(arr, '\n')
-    end
+    if type(arr) == 'string' then arr = vim.split(arr, '\n') end
 
     child.api.nvim_buf_set_lines(0, start or 0, finish or -1, false, arr)
   end
@@ -66,13 +64,9 @@ Helpers.new_child_neovim = function()
   function child.set_size(lines, columns)
     prevent_hanging('set_size')
 
-    if type(lines) == 'number' then
-      child.o.lines = lines
-    end
+    if type(lines) == 'number' then child.o.lines = lines end
 
-    if type(columns) == 'number' then
-      child.o.columns = columns
-    end
+    if type(columns) == 'number' then child.o.columns = columns end
   end
 
   function child.get_size()
@@ -145,9 +139,7 @@ Helpers.new_child_neovim = function()
   end
 
   function child.expect_screenshot(opts, path, screenshot_opts)
-    if child.fn.has('nvim-0.8') == 0 then
-      MiniTest.skip('Screenshots are tested for Neovim>=0.8 (for simplicity).')
-    end
+    if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Screenshots are tested for Neovim>=0.8 (for simplicity).') end
 
     MiniTest.expect.reference_screenshot(child.get_screenshot(screenshot_opts), path, opts)
   end
@@ -158,9 +150,7 @@ end
 -- Mark test failure as "flaky"
 function Helpers.mark_flaky()
   MiniTest.finally(function()
-    if #MiniTest.current.case.exec.fails > 0 then
-      MiniTest.add_note('This test is flaky.')
-    end
+    if #MiniTest.current.case.exec.fails > 0 then MiniTest.add_note('This test is flaky.') end
   end)
 end
 

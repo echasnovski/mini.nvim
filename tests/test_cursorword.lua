@@ -31,9 +31,7 @@ local word_is_highlighted = function(word)
 end
 
 local get_match = function(hl_group)
-  return vim.tbl_filter(function(x)
-    return x.group == hl_group
-  end, child.fn.getmatches())
+  return vim.tbl_filter(function(x) return x.group == hl_group end, child.fn.getmatches())
 end
 
 -- Data =======================================================================
@@ -63,9 +61,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniCursorword'), 1)
 
   -- Autocommand on `ModeChanged` event
-  if child.fn.has('nvim-0.7.0') == 1 then
-    eq(child.fn.exists('#MiniCursorword#ModeChanged'), 1)
-  end
+  if child.fn.has('nvim-0.7.0') == 1 then eq(child.fn.exists('#MiniCursorword#ModeChanged'), 1) end
 
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniCursorword'), 'gui=underline')
@@ -108,9 +104,7 @@ T['Highlighting'] = new_set({
   },
 })
 
-T['Highlighting']['works'] = function()
-  child.expect_screenshot()
-end
+T['Highlighting']['works'] = function() child.expect_screenshot() end
 
 T['Highlighting']['respects MiniCursorwordCurrent highlight group'] = function()
   child.cmd('hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE')
@@ -131,9 +125,7 @@ end
 
 T['Autohighlighting'] = new_set({
   hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-    end,
+    pre_case = function() set_lines(example_lines) end,
   },
 })
 
@@ -146,9 +138,7 @@ local validate_cursorword = function(delay)
   eq(word_is_highlighted('aa'), true)
 end
 
-T['Autohighlighting']['works'] = function()
-  validate_cursorword(test_times.delay)
-end
+T['Autohighlighting']['works'] = function() validate_cursorword(test_times.delay) end
 
 T['Autohighlighting']['respects `config.delay`'] = function()
   child.lua('MiniCursorword.config.delay = 200')
@@ -177,13 +167,10 @@ local validate_immediate = function(move_command)
   eq(match_gen, get_match('MiniCursorword'))
 end
 
-T['Autohighlighting']['highlights immediately inside current word'] = function()
-  validate_immediate('normal! l')
-end
+T['Autohighlighting']['highlights immediately inside current word'] = function() validate_immediate('normal! l') end
 
-T['Autohighlighting']['highlights immediately same word in other place'] = function()
-  validate_immediate('normal! k')
-end
+T['Autohighlighting']['highlights immediately same word in other place'] =
+  function() validate_immediate('normal! k') end
 
 T['Autohighlighting']['highlights only "keyword" symbols'] = function()
   local validate_highlighted = function(cursor_pos, hl_word)
@@ -226,9 +213,7 @@ T['Autohighlighting']['stops in Terminal mode'] = function()
 end
 
 T['Autohighlighting']['respects ModeChanged'] = function()
-  if child.fn.exists('##ModeChanged') ~= 1 then
-    return
-  end
+  if child.fn.exists('##ModeChanged') ~= 1 then return end
 
   -- Add disabling in Visual mode
   unload_module()

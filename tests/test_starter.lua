@@ -19,17 +19,11 @@ local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
 -- Make helpers
-local is_starter_shown = function()
-  return child.api.nvim_buf_get_option(0, 'filetype') == 'starter'
-end
+local is_starter_shown = function() return child.api.nvim_buf_get_option(0, 'filetype') == 'starter' end
 
-local validate_starter_shown = function()
-  eq(is_starter_shown(), true)
-end
+local validate_starter_shown = function() eq(is_starter_shown(), true) end
 
-local validate_starter_not_shown = function()
-  eq(is_starter_shown(), false)
-end
+local validate_starter_not_shown = function() eq(is_starter_shown(), false) end
 
 local validate_equal_starter = function(strconfig_1, strconfig_2)
   -- Reload with first config
@@ -47,18 +41,12 @@ local validate_equal_starter = function(strconfig_1, strconfig_2)
   reload_module()
 end
 
-local get_latest_message = function()
-  return child.cmd_capture('1messages')
-end
+local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local get_active_items_names = function()
   local items = child.lua_get('MiniStarter.content_to_items(MiniStarter.content)')
-  local active_items = vim.tbl_filter(function(x)
-    return x._active == true
-  end, items)
-  return vim.tbl_map(function(x)
-    return x.name
-  end, active_items)
+  local active_items = vim.tbl_filter(function(x) return x._active == true end, items)
+  return vim.tbl_map(function(x) return x.name end, active_items)
 end
 
 local mock_user_and_time = function()
@@ -109,9 +97,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniStarter'), 1)
 
   -- Highlight groups
-  local has_highlight = function(group, value)
-    expect.match(child.cmd_capture('hi ' .. group), value)
-  end
+  local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniStarterCurrent', 'cleared')
   has_highlight('MiniStarterFooter', 'links to Title')
@@ -128,9 +114,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniStarter.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniStarter.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniStarter.config.' .. field), value) end
 
   expect_config('autoopen', true)
   expect_config('evaluate_single', false)
@@ -449,9 +433,7 @@ end
 
 T['close()']['can be used when no Starter buffer is shown'] = function()
   validate_starter_not_shown()
-  expect.no_error(function()
-    child.lua('MiniStarter.close()')
-  end)
+  expect.no_error(function() child.lua('MiniStarter.close()') end)
 end
 
 -- Work with content ----------------------------------------------------------
@@ -512,7 +494,6 @@ T['Default content']["'Recent files' section"]['present even if no recent files'
   child.expect_screenshot()
 end
 
---stylua: ignore
 T['Content'] = new_set({ hooks = { pre_case = function() child.set_size(10, 40) end } })
 
 T['Content']['works'] = function()
@@ -570,15 +551,12 @@ end
 
 T['content_to_lines()'] = new_set({
   hooks = {
-    pre_case = function()
-      child.lua('MiniStarter.open()')
-    end,
+    pre_case = function() child.lua('MiniStarter.open()') end,
   },
 })
 
-T['content_to_lines()']['works'] = function()
-  eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.content)'), get_lines())
-end
+T['content_to_lines()']['works'] =
+  function() eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.content)'), get_lines()) end
 
 T['content_to_items()'] = new_set()
 
@@ -594,7 +572,6 @@ T['content_to_items()']['works'] = function()
   end
 
   -- Should correctly compute length of minimum unique prefix
-  --stylua: ignore
   eq(vim.tbl_map(function(x) return x._nprefix end, output), { 3, 3, 2, 1 })
 end
 
@@ -674,9 +651,7 @@ T['gen_hook']['aligning()']['respects arguments'] = new_set({
     { [['right', 'bottom']] },
   },
   hooks = {
-    pre_case = function()
-      child.set_size(10, 40)
-    end,
+    pre_case = function() child.set_size(10, 40) end,
   },
 }, {
   test = function(args)
@@ -730,9 +705,7 @@ local reload_indexing = function(args)
 end
 
 T['gen_hook']['indexing()'] = new_set({ hooks = {
-  pre_case = function()
-    child.set_size(15, 40)
-  end,
+  pre_case = function() child.set_size(15, 40) end,
 } })
 
 T['gen_hook']['indexing()']['works'] = function()
@@ -818,9 +791,7 @@ T['set_query()']['works'] = function()
 end
 
 T['set_query()']['validates argument'] = function()
-  expect.error(function()
-    child.lua('MiniStarter.set_query(1)')
-  end, '`query`.*`nil` or string')
+  expect.error(function() child.lua('MiniStarter.set_query(1)') end, '`query`.*`nil` or string')
 end
 
 T['set_query()']['does not allow query resulting in no active items'] = function()
@@ -1104,9 +1075,7 @@ end
 
 T['Cursor positioning'] = new_set({
   hooks = {
-    pre_case = function()
-      reload_module({ items = example_items, content_hooks = {}, header = '', footer = '' })
-    end,
+    pre_case = function() reload_module({ items = example_items, content_hooks = {}, header = '', footer = '' }) end,
   },
 })
 

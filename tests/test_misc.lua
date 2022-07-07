@@ -62,15 +62,11 @@ end
 
 T['bench_time()'] = new_set({
   hooks = {
-    pre_case = function()
-      child.lua('_G.f = function(ms) ms = ms or 10; vim.loop.sleep(ms); return ms end')
-    end,
+    pre_case = function() child.lua('_G.f = function(ms) ms = ms or 10; vim.loop.sleep(ms); return ms end') end,
   },
 })
 
-local bench_time = function(...)
-  return unpack(child.lua_get('{ MiniMisc.bench_time(_G.f, ...) }', { ... }))
-end
+local bench_time = function(...) return unpack(child.lua_get('{ MiniMisc.bench_time(_G.f, ...) }', { ... })) end
 
 -- Validate that benchmark is within tolerable error from target. This is
 -- needed due to random nature of benchmarks.
@@ -230,17 +226,14 @@ end
 
 T['stat_summary()'] = new_set()
 
-local stat_summary = function(...)
-  return child.lua_get('MiniMisc.stat_summary({ ... })', { ... })
-end
+local stat_summary = function(...) return child.lua_get('MiniMisc.stat_summary({ ... })', { ... }) end
 
 T['stat_summary()']['works'] = function()
   eq(stat_summary(10, 4, 3, 2, 1), { minimum = 1, mean = 4, median = 3, maximum = 10, n = 5, sd = math.sqrt(50 / 4) })
 end
 
-T['stat_summary()']['works with one number'] = function()
-  eq(stat_summary(10), { minimum = 10, mean = 10, median = 10, maximum = 10, n = 1, sd = 0 })
-end
+T['stat_summary()']['works with one number'] =
+  function() eq(stat_summary(10), { minimum = 10, mean = 10, median = 10, maximum = 10, n = 1, sd = 0 }) end
 
 T['stat_summary()']['handles even/odd number of elements for `median`'] = function()
   eq(stat_summary(1, 2).median, 1.5)
@@ -301,9 +294,10 @@ end
 T['zoom()'] = new_set()
 
 local get_floating_windows = function()
-  return vim.tbl_filter(function(x)
-    return child.api.nvim_win_get_config(x).relative ~= ''
-  end, child.api.nvim_list_wins())
+  return vim.tbl_filter(
+    function(x) return child.api.nvim_win_get_config(x).relative ~= '' end,
+    child.api.nvim_list_wins()
+  )
 end
 
 T['zoom()']['works'] = function()

@@ -201,9 +201,7 @@ T['unshow()']['creates a scratch buffer'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
 end
 
-T['unshow()']['validates arguments'] = function()
-  validate_args_validation('unshow', { 'buf_id' })
-end
+T['unshow()']['validates arguments'] = function() validate_args_validation('unshow', { 'buf_id' }) end
 
 T['unshow()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('unshow', layout)
@@ -213,9 +211,7 @@ end
 T['unshow()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
-  test = function(var_type)
-    validate_disable(var_type, 'unshow', layout)
-  end,
+  test = function(var_type) validate_disable(var_type, 'unshow', layout) end,
 })
 
 T['unshow_in_window()'] = new_set()
@@ -273,9 +269,7 @@ end
 T['unshow_in_window()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
-  test = function(var_type)
-    validate_disable(var_type, 'unshow_in_window', layout)
-  end,
+  test = function(var_type) validate_disable(var_type, 'unshow_in_window', layout) end,
 })
 
 T['delete()'] = new_set()
@@ -295,25 +289,19 @@ T['delete()']['creates a scratch buffer'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), false)
 end
 
-T['delete()']['validates arguments'] = function()
-  validate_args_validation('delete', { 'buf_id', 'force' })
-end
+T['delete()']['validates arguments'] = function() validate_args_validation('delete', { 'buf_id', 'force' }) end
 
 T['delete()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('delete', layout)
   eq(buf_get_option(layout['buf'], 'buflisted'), false)
 end
 
-T['delete()']['respects `force` argument'] = function()
-  validate_force_argument('delete', layout)
-end
+T['delete()']['respects `force` argument'] = function() validate_force_argument('delete', layout) end
 
 T['delete()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
-  test = function(var_type)
-    validate_disable(var_type, 'delete', layout)
-  end,
+  test = function(var_type) validate_disable(var_type, 'delete', layout) end,
 })
 
 T['delete()']["works with different 'bufhidden' options"] = function()
@@ -338,25 +326,19 @@ T['wipeout()']['creates a scratch buffer'] = function()
   eq(child.api.nvim_buf_is_valid(layout['buf']), false)
 end
 
-T['wipeout()']['validates arguments'] = function()
-  validate_args_validation('wipeout', { 'buf_id', 'force' })
-end
+T['wipeout()']['validates arguments'] = function() validate_args_validation('wipeout', { 'buf_id', 'force' }) end
 
 T['wipeout()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('wipeout', layout)
   eq(child.api.nvim_buf_is_valid(layout['buf']), false)
 end
 
-T['wipeout()']['respects `force` argument'] = function()
-  validate_force_argument('wipeout', layout)
-end
+T['wipeout()']['respects `force` argument'] = function() validate_force_argument('wipeout', layout) end
 
 T['wipeout()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
-  test = function(var_type)
-    validate_disable(var_type, 'wipeout', layout)
-  end,
+  test = function(var_type) validate_disable(var_type, 'wipeout', layout) end,
 })
 
 T['wipeout()']["works with different 'bufhidden' options"] = function()

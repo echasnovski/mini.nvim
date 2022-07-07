@@ -17,9 +17,7 @@ local remove_dir = function(path) child.lua('_G.remove_dir(...)', { path }) end
 --stylua: ignore end
 
 -- Make helpers
-local expect_equal_file_contents = function(file1, file2)
-  eq(child.fn.readfile(file1), child.fn.readfile(file2))
-end
+local expect_equal_file_contents = function(file1, file2) eq(child.fn.readfile(file1), child.fn.readfile(file2)) end
 
 -- Data =======================================================================
 --stylua: ignore start
@@ -55,9 +53,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniDoc.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniDoc.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniDoc.config.' .. field), value) end
   local expect_config_function = function(field)
     local command = ('type(MiniDoc.config.%s)'):format(field)
     eq(child.lua_get(command), 'function')
@@ -175,17 +171,11 @@ local validate_test_scope = function(test_scope_name)
   remove_dir('doc')
 end
 
-T['generate()']['uses correct default collation order'] = function()
-  validate_test_scope('default-collation')
-end
+T['generate()']['uses correct default collation order'] = function() validate_test_scope('default-collation') end
 
-T['generate()']['makes correct afterlines inference'] = function()
-  validate_test_scope('inference')
-end
+T['generate()']['makes correct afterlines inference'] = function() validate_test_scope('inference') end
 
-T['generate()']['handles sections correctly'] = function()
-  validate_test_scope('sections')
-end
+T['generate()']['handles sections correctly'] = function() validate_test_scope('sections') end
 
 T['generate()']['respects arguments'] = function()
   unload_module()
@@ -221,9 +211,7 @@ T['generate()']['returns correct data structure'] = function()
   child.cmd('luafile helpers.lua')
   cd('structure')
 
-  expect.no_error(function()
-    child.lua('_G.validate_doc_structure(MiniDoc.generate())')
-  end)
+  expect.no_error(function() child.lua('_G.validate_doc_structure(MiniDoc.generate())') end)
 
   remove_dir('doc')
 end
@@ -235,9 +223,7 @@ T['generate()']['uses custom script'] = function()
 
   cd('custom-script')
   -- This should execute 'gendoc/gendoc-script.lua' and return what it returns
-  expect.no_error(function()
-    child.lua('_G.validate_doc_structure(MiniDoc.generate())')
-  end)
+  expect.no_error(function() child.lua('_G.validate_doc_structure(MiniDoc.generate())') end)
   expect_equal_file_contents('output.txt', 'output_reference.txt')
 
   -- Script is executed only if all arguments are `nil` (default).

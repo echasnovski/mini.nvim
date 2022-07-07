@@ -204,9 +204,7 @@ end
 
 function H.compute_median(t)
   local n = #t
-  if n == 0 then
-    return 0
-  end
+  if n == 0 then return 0 end
 
   local t_sorted = vim.deepcopy(t)
   table.sort(t_sorted)
@@ -225,9 +223,7 @@ function MiniMisc.tbl_head(t, n)
   n = n or 5
   local res, n_res = {}, 0
   for k, val in pairs(t) do
-    if n_res >= n then
-      return res
-    end
+    if n_res >= n then return res end
     res[k] = val
     n_res = n_res + 1
   end
@@ -260,9 +256,7 @@ function MiniMisc.tbl_tail(t, n)
   local i, start_i = 0, n_all - n + 1
   for k, val in pairs(t) do
     i = i + 1
-    if i >= start_i then
-      res[k] = val
-    end
+    if i >= start_i then res[k] = val end
   end
   return res
 end
@@ -293,19 +287,13 @@ function MiniMisc.use_nested_comments(buf_id)
   buf_id = buf_id or 0
 
   local commentstring = vim.api.nvim_buf_get_option(buf_id, 'commentstring')
-  if commentstring == '' then
-    return
-  end
+  if commentstring == '' then return end
 
   -- Extract raw comment leader from 'commentstring' option
-  local comment_parts = vim.tbl_filter(function(x)
-    return x ~= ''
-  end, vim.split(commentstring, '%s', true))
+  local comment_parts = vim.tbl_filter(function(x) return x ~= '' end, vim.split(commentstring, '%s', true))
 
   -- Don't do anything if 'commentstring' is like '/*%s*/' (as in 'json')
-  if #comment_parts > 1 then
-    return
-  end
+  if #comment_parts > 1 then return end
 
   -- Get comment leader by removing whitespace
   local leader = vim.trim(comment_parts[1])
@@ -357,14 +345,10 @@ function H.setup_config(config)
     make_global = {
       config.make_global,
       function(x)
-        if type(x) ~= 'table' then
-          return false
-        end
+        if type(x) ~= 'table' then return false end
         local present_fields = vim.tbl_keys(MiniMisc)
         for _, v in pairs(x) do
-          if not vim.tbl_contains(present_fields, v) then
-            return false
-          end
+          if not vim.tbl_contains(present_fields, v) then return false end
         end
         return true
       end,
@@ -384,8 +368,6 @@ function H.apply_config(config)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg)) end
 
 return MiniMisc

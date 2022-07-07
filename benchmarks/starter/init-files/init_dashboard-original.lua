@@ -14,6 +14,4 @@ vim.api.nvim_set_keymap('n', '<Leader>fb', ':DashboardJumpMark<CR>', { noremap =
 vim.api.nvim_set_keymap('n', '<Leader>cn', ':DashboardNewFile<CR>', { noremap = true, silent = true })
 
 -- Close Neovim just after fully opening it. Randomize to make "more real".
-vim.defer_fn(function()
-  vim.cmd([[quit]])
-end, 100 + 200 * math.random())
+vim.defer_fn(function() vim.cmd([[quit]]) end, 100 + 200 * math.random())

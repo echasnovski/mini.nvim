@@ -298,18 +298,14 @@ MiniJump2d.config = {
 ---<
 ---@seealso |MiniJump2d.config|
 function MiniJump2d.start(opts)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   opts = opts or {}
 
   -- Apply `before_start` before `tbl_deep_extend` to allow it modify options
   -- inside it (notably `spotter`). Example: `builtins.single_character`.
   local before_start = (opts.hooks or {}).before_start or MiniJump2d.config.hooks.before_start
-  if before_start ~= nil then
-    before_start()
-  end
+  if before_start ~= nil then before_start() end
 
   opts = vim.tbl_deep_extend('force', MiniJump2d.config, opts)
   opts.spotter = opts.spotter or MiniJump2d.default_spotter
@@ -328,7 +324,6 @@ function MiniJump2d.start(opts)
   if H.is_operator_pending() then
     H.advance_jump(opts)
   else
-    --stylua: ignore
     vim.defer_fn(function() H.advance_jump(opts) end, 0)
   end
 end
@@ -339,9 +334,7 @@ function MiniJump2d.stop()
   H.cache.spots = nil
   vim.cmd('redraw')
 
-  if H.cache.is_in_getchar then
-    vim.api.nvim_input('<C-c>')
-  end
+  if H.cache.is_in_getchar then vim.api.nvim_input('<C-c>') end
 end
 
 --- Generate spotter for Lua pattern
@@ -396,9 +389,7 @@ function MiniJump2d.gen_pattern_spotter(pattern, side)
     -- For example: `string.find('  --', '%s*', 4)` returns `4 3`.
     for whole, spot in string.gmatch(line, pattern) do
       -- Possibly correct spot to be index of last matched position
-      if side == 'end' then
-        spot = spot + math.max(whole:len() - 1, 0)
-      end
+      if side == 'end' then spot = spot + math.max(whole:len() - 1, 0) end
 
       -- Ensure that index is strictly within line length (which can be not
       -- true in case of weird pattern, like when using frontier `%f[%W]`)
@@ -408,9 +399,7 @@ function MiniJump2d.gen_pattern_spotter(pattern, side)
       spot = vim.str_byteindex(line, vim.str_utfindex(line, spot))
 
       -- Add spot only if it referces new actually visible column
-      if spot ~= res[#res] then
-        table.insert(res, spot)
-      end
+      if spot ~= res[#res] then table.insert(res, spot) end
     end
     return res
   end
@@ -480,9 +469,7 @@ MiniJump2d.builtin_opts.default = { spotter = MiniJump2d.default_spotter }
 ---
 --- Defines `spotter` and `hooks.after_jump`.
 MiniJump2d.builtin_opts.line_start = {
-  spotter = function(line_num, args)
-    return { 1 }
-  end,
+  spotter = function(line_num, args) return { 1 } end,
   hooks = {
     after_jump = function()
       -- Move to first non-blank character
@@ -498,7 +485,6 @@ MiniJump2d.builtin_opts.word_start = { spotter = MiniJump2d.gen_pattern_spotter(
 
 -- Produce `opts` which modifies spotter based on user input
 local function user_input_opts(input_fun)
-  --stylua: ignore
   local res = {
     spotter = function() return {} end,
     allowed_lines = { blank = false, fold = false },
@@ -508,7 +494,6 @@ local function user_input_opts(input_fun)
     before_start = function()
       local input = input_fun()
       if input == nil then
-        --stylua: ignore
         res.spotter = function() return {} end
       else
         local pattern = vim.pesc(input)
@@ -524,17 +509,15 @@ end
 ---
 --- Defines `spotter`, `allowed_lines.blank`, `allowed_lines.fold`, and
 --- `hooks.before_start`.
-MiniJump2d.builtin_opts.single_character = user_input_opts(function()
-  return H.getcharstr('Enter single character to search')
-end)
+MiniJump2d.builtin_opts.single_character = user_input_opts(
+  function() return H.getcharstr('Enter single character to search') end
+)
 
 --- Jump to query taken from user input
 ---
 --- Defines `spotter`, `allowed_lines.blank`, `allowed_lines.fold`, and
 --- `hooks.before_start`.
-MiniJump2d.builtin_opts.query = user_input_opts(function()
-  return H.input('Enter query to search')
-end)
+MiniJump2d.builtin_opts.query = user_input_opts(function() return H.input('Enter query to search') end)
 
 -- Helper data ================================================================
 -- Module default config
@@ -606,17 +589,13 @@ function H.apply_config(config)
   H.map('o', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
 end
 
-function H.is_disabled()
-  return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true
-end
+function H.is_disabled() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
 
 -- Jump spots -----------------------------------------------------------------
 function H.spots_compute(opts)
   local win_id_init = vim.api.nvim_get_current_win()
   local win_id_arr = vim.tbl_filter(function(win_id)
-    if win_id == win_id_init then
-      return opts.allowed_windows.current
-    end
+    if win_id == win_id_init then return opts.allowed_windows.current end
     return opts.allowed_windows.not_current
   end, H.tabpage_list_wins(0))
 
@@ -683,9 +662,7 @@ function H.spots_show(spots, opts)
 
   -- Need to redraw in Operator-pending mode, because otherwise extmarks won't
   -- be shown and deferring disables this mode.
-  if H.is_operator_pending() then
-    vim.cmd('redraw')
-  end
+  if H.is_operator_pending() then vim.cmd('redraw') end
 end
 
 function H.spots_unshow(spots)
@@ -707,9 +684,7 @@ end
 --- This considerably increases performance in case of many spots.
 ---@private
 function H.spots_to_extmarks(spots)
-  if #spots == 0 then
-    return {}
-  end
+  if #spots == 0 then return {} end
 
   local res = {}
 
@@ -748,14 +723,10 @@ function H.spot_find_in_line(line_num, spotter_args, opts, cursor_pos)
 
   -- Process folds
   local fold_indicator = vim.fn.foldclosed(line_num)
-  if fold_indicator ~= -1 then
-    return (allowed.fold and fold_indicator == line_num) and { 1 } or {}
-  end
+  if fold_indicator ~= -1 then return (allowed.fold and fold_indicator == line_num) and { 1 } or {} end
 
   -- Process blank lines
-  if vim.fn.prevnonblank(line_num) ~= line_num then
-    return allowed.blank and { 1 } or {}
-  end
+  if vim.fn.prevnonblank(line_num) ~= line_num then return allowed.blank and { 1 } or {} end
 
   -- Finally apply spotter
   return opts.spotter(line_num, spotter_args)
@@ -777,7 +748,6 @@ function H.advance_jump(opts)
 
   if vim.tbl_contains(label_tbl, key) then
     H.spots_unshow(spots)
-    --stylua: ignore
     spots = vim.tbl_filter(function(x) return x.label == key end, spots)
 
     if #spots > 1 then
@@ -791,7 +761,6 @@ function H.advance_jump(opts)
       if H.is_operator_pending() then
         H.advance_jump(opts)
       else
-        --stylua: ignore
         vim.defer_fn(function() H.advance_jump(opts) end, 0)
         return
       end
@@ -809,7 +778,6 @@ function H.advance_jump(opts)
     -- Possibly unfold to see cursor
     vim.cmd('normal! zv')
 
-    --stylua: ignore
     if opts.hooks.after_jump ~= nil then opts.hooks.after_jump() end
   end
 
@@ -817,22 +785,15 @@ function H.advance_jump(opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg)) end
 
-function H.is_operator_pending()
-  return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1))
-end
+function H.is_operator_pending() return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1)) end
 
 function H.getcharstr(msg)
   local needs_help_msg = true
-  if msg ~= nil then
-    vim.defer_fn(function()
-      --stylua: ignore
-      if needs_help_msg then H.message(msg) end
-    end, 1000)
-  end
+  if msg ~= nil then vim.defer_fn(function()
+    if needs_help_msg then H.message(msg) end
+  end, 1000) end
 
   -- Use `getchar()` because `getcharstr()` is present only in Neovim>=0.6
   -- Might want to remove if support for Neovim<0.6 is dropped
@@ -841,12 +802,9 @@ function H.getcharstr(msg)
   H.cache.is_in_getchar = false
   needs_help_msg = false
 
-  --stylua: ignore
   if not ok then return end
 
-  if type(char) == 'number' then
-    char = vim.fn.nr2char(char)
-  end
+  if type(char) == 'number' then char = vim.fn.nr2char(char) end
   return char
 end
 
@@ -855,9 +813,7 @@ function H.input(prompt, text)
   local on_key = vim.on_key or vim.register_keystroke_callback
   local was_cancelled = false
   on_key(function(key)
-    if key == H.keys.esc then
-      was_cancelled = true
-    end
+    if key == H.keys.esc then was_cancelled = true end
   end, H.ns_id.input)
 
   -- Ask for input
@@ -868,9 +824,7 @@ function H.input(prompt, text)
   -- Stop key listening
   on_key(nil, H.ns_id.input)
 
-  if not ok or was_cancelled then
-    return
-  end
+  if not ok or was_cancelled then return end
   return res
 end
 
@@ -890,7 +844,6 @@ function H.tabpage_list_wins(tabpage_id)
   end
 
   -- Sort windows by their position: top to bottom, left to right, low to high
-  --stylua: ignore
   table.sort(wins, function(a, b)
     -- Put higher window further to have them processed later. This means that
     -- in case of same buffer in floating and underlying regular windows,
@@ -908,23 +861,18 @@ function H.tabpage_list_wins(tabpage_id)
 end
 
 function H.map(mode, key, rhs, opts)
-  --stylua: ignore
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
 
   -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then
-    opts.desc = nil
-  end
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
 function H.merge_unique(tbl_1, tbl_2)
-  if not (type(tbl_1) == 'table' and type(tbl_2) == 'table') then
-    return
-  end
+  if not (type(tbl_1) == 'table' and type(tbl_2) == 'table') then return end
 
   local n_1, n_2 = #tbl_1, #tbl_2
   local res, i, j = {}, 1, 1
@@ -937,23 +885,17 @@ function H.merge_unique(tbl_1, tbl_2)
       to_add = tbl_2[j]
       j = j + 1
     end
-    if res[#res] ~= to_add then
-      table.insert(res, to_add)
-    end
+    if res[#res] ~= to_add then table.insert(res, to_add) end
   end
 
   while i <= n_1 do
     to_add = tbl_1[i]
-    if res[#res] ~= to_add then
-      table.insert(res, to_add)
-    end
+    if res[#res] ~= to_add then table.insert(res, to_add) end
     i = i + 1
   end
   while j <= n_2 do
     to_add = tbl_2[j]
-    if res[#res] ~= to_add then
-      table.insert(res, to_add)
-    end
+    if res[#res] ~= to_add then table.insert(res, to_add) end
     j = j + 1
   end
 

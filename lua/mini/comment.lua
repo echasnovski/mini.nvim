@@ -99,9 +99,7 @@ MiniComment.config = {
 ---@return string 'g@' if called without argument, '' otherwise (but after
 ---   performing action).
 function MiniComment.operator(mode)
-  if H.is_disabled() then
-    return ''
-  end
+  if H.is_disabled() then return '' end
 
   -- If used without arguments inside expression mapping:
   -- - Set itself as `operatorfunc` to be called later to perform action.
@@ -128,9 +126,7 @@ function MiniComment.operator(mode)
 
   -- Do nothing if "left" mark is not on the left (earlier in text) of "right"
   -- mark (indicating that there is nothing to do, like in comment textobject).
-  if (line_left > line_right) or (line_left == line_right and col_left > col_right) then
-    return
-  end
+  if (line_left > line_right) or (line_left == line_right and col_left > col_right) then return end
 
   -- Using `vim.cmd()` wrapper to allow usage of `lockmarks` command, because
   -- raw execution will delete marks inside region (due to
@@ -157,9 +153,7 @@ end
 ---@param line_start number Start line number (inclusive from 1 to number of lines).
 ---@param line_end number End line number (inclusive from 1 to number of lines).
 function MiniComment.toggle_lines(line_start, line_end)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   local n_lines = vim.api.nvim_buf_line_count(0)
   if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
@@ -204,9 +198,7 @@ end
 --- Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
 --- After successful textobject usage it executes `MiniComment.config.hooks.post`.
 function MiniComment.textobject()
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   MiniComment.config.hooks.pre()
 
@@ -280,9 +272,7 @@ function H.apply_config(config)
   H.map('o', config.mappings.textobject, '<cmd>lua MiniComment.textobject()<cr>', { desc = 'Comment textobject' })
 end
 
-function H.is_disabled()
-  return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true
-end
+function H.is_disabled() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end
 
 -- Core implementations -------------------------------------------------------
 function H.make_comment_parts()
@@ -306,9 +296,7 @@ function H.make_comment_check(comment_parts)
   -- <space> <left> <anything> <right> <space>
   local regex = string.format('^%%s-%s.*%s%%s-$', vim.pesc(l), vim.pesc(r))
 
-  return function(line)
-    return line:find(regex) ~= nil
-  end
+  return function(line) return line:find(regex) ~= nil end
 end
 
 function H.get_lines_info(lines, comment_parts)
@@ -332,9 +320,7 @@ function H.get_lines_info(lines, comment_parts)
     end
 
     -- Update comment info: lines are comment if every single line is comment
-    if is_comment then
-      is_comment = comment_check(l)
-    end
+    if is_comment then is_comment = comment_check(l) end
   end
 
   -- `indent` can still be `nil` in case all `lines` are empty
@@ -379,34 +365,25 @@ function H.make_uncomment_function(comment_parts)
   return function(line)
     local indent, new_line = string.match(line, uncomment_regex)
     -- Return original if line is not commented
-    if new_line == nil then
-      return line
-    end
+    if new_line == nil then return line end
     -- Remove indent if line is a commented empty line
-    if new_line == '' then
-      indent = ''
-    end
+    if new_line == '' then indent = '' end
     return ('%s%s'):format(indent, new_line)
   end
 end
 
 -- Utilities ------------------------------------------------------------------
 function H.map(mode, key, rhs, opts)
-  --stylua: ignore
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
 
   -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then
-    opts.desc = nil
-  end
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.comment) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.comment) ' .. msg)) end
 
 return MiniComment

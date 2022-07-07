@@ -204,13 +204,9 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniCursorword.config = config
-end
+function H.apply_config(config) MiniCursorword.config = config end
 
-function H.is_disabled()
-  return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true
-end
+function H.is_disabled() return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true end
 
 -- Highlighting ---------------------------------------------------------------
 ---@param only_current boolean Whether to forcefuly highlight only current word
@@ -222,9 +218,7 @@ function H.highlight(only_current)
   -- 'current word' highlighting: with `:match` it is higher than for
   -- `incsearch` which is not convenient.
   local win_id = vim.api.nvim_get_current_win()
-  if not vim.api.nvim_win_is_valid(win_id) then
-    return
-  end
+  if not vim.api.nvim_win_is_valid(win_id) then return end
 
   H.window_matches[win_id] = H.window_matches[win_id] or {}
 
@@ -233,9 +227,7 @@ function H.highlight(only_current)
   H.window_matches[win_id].id_current = match_id_current
 
   -- Don't add main match id if not needed or if one is already present
-  if only_current or H.window_matches[win_id].id ~= nil then
-    return
-  end
+  if only_current or H.window_matches[win_id].id ~= nil then return end
 
   -- Make highlighting for cursor word with pattern being 'very nomagic' ('\V')
   -- and matching whole word ('\<' and '\>')
@@ -257,9 +249,7 @@ function H.unhighlight(only_current)
   -- Don't do anything if there is no valid information to act upon
   local win_id = vim.api.nvim_get_current_win()
   local win_match = H.window_matches[win_id]
-  if not vim.api.nvim_win_is_valid(win_id) or win_match == nil then
-    return
-  end
+  if not vim.api.nvim_win_is_valid(win_id) or win_match == nil then return end
 
   -- Use `pcall` because there is an error if match id is not present. It can
   -- happen if something else called `clearmatches`.
@@ -279,8 +269,6 @@ function H.is_cursor_on_keyword()
   return vim.fn.match(curchar, '[[:keyword:]]') >= 0
 end
 
-function H.get_cursor_word()
-  return vim.fn.escape(vim.fn.expand('<cword>'), [[\/]])
-end
+function H.get_cursor_word() return vim.fn.escape(vim.fn.expand('<cword>'), [[\/]]) end
 
 return MiniCursorword

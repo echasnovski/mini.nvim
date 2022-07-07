@@ -17,9 +17,7 @@ M.User = {}
 ---
 ---@overload fun(x: string)
 ---@diagnostic disable
-local f = function(x, y)
-  return x + 1
-end
+local f = function(x, y) return x + 1 end
 ---@diagnostic enable
 
 --- Test for `@private`
@@ -33,9 +31,7 @@ M._private_user = {}
 ---@usage `M.fun(1, 2)`
 ---
 ---@seealso |test-f| |f-test-different-line|
-function M.fun(a, b)
-  return true
-end
+function M.fun(a, b) return true end
 
 --- Test for `@signature` and `@tag`
 ---

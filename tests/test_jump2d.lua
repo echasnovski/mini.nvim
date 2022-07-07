@@ -21,9 +21,7 @@ local get_latest_message = function() return child.cmd_capture('1messages') end
 -- Make helpers
 -- Window setups
 local setup_windows = function()
-  if child.fn.has('nvim-0.6') == 0 then
-    child.o.hidden = true
-  end
+  if child.fn.has('nvim-0.6') == 0 then child.o.hidden = true end
 
   -- Current tabpage. Create four windows.
   local win_topleft = child.api.nvim_get_current_win()
@@ -65,9 +63,7 @@ local setup_windows = function()
 end
 
 local setup_two_windows = function()
-  if child.fn.has('nvim-0.6') == 0 then
-    child.o.hidden = true
-  end
+  if child.fn.has('nvim-0.6') == 0 then child.o.hidden = true end
 
   local win_left = child.api.nvim_get_current_win()
   child.cmd('rightbelow vsplit aaa')
@@ -126,9 +122,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniJump2d.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniJump2d.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniJump2d.config.' .. field), value) end
 
   expect_config('spotter', vim.NIL)
   expect_config('labels', 'abcdefghijklmnopqrstuvwxyz')
@@ -181,9 +175,7 @@ T['setup()']['applies `config.mappings`'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs)
-    return child.cmd_capture('nmap ' .. lhs):find('MiniJump2d') ~= nil
-  end
+  local has_map = function(lhs) return child.cmd_capture('nmap ' .. lhs):find('MiniJump2d') ~= nil end
   eq(has_map('<CR>'), true)
 
   unload_module()
@@ -551,19 +543,13 @@ T['start()']['does not call `hook.after_jump` on jump cancel'] = new_set({
   parametrize = {
     --stylua: ignore start
     {
-      function()
-        child.lua('MiniJump2d.stop()')
-      end,
+      function() child.lua('MiniJump2d.stop()') end,
     },
     {
-      function()
-        type_keys('<Esc>')
-      end,
+      function() type_keys('<Esc>') end,
     },
     {
-      function()
-        type_keys('<C-c>')
-      end,
+      function() type_keys('<C-c>') end,
     },
     --stylua: ignore end
   },
@@ -588,9 +574,7 @@ local validate_hl_group = function(hl_group)
 
   local all_correct_hl_group = true
   for _, e_mark in ipairs(extmarks) do
-    if e_mark[4].virt_text[1][2] ~= hl_group then
-      all_correct_hl_group = false
-    end
+    if e_mark[4].virt_text[1][2] ~= hl_group then all_correct_hl_group = false end
   end
 
   eq(all_correct_hl_group, true)
@@ -632,9 +616,7 @@ end
 T['stop()']['works even if not jumping'] = function()
   -- Shouldn't move
   local init_cursor = get_cursor()
-  expect.no_error(function()
-    child.lua('MiniJump2d.stop()')
-  end)
+  expect.no_error(function() child.lua('MiniJump2d.stop()') end)
   eq(get_cursor(), init_cursor)
 end
 
@@ -706,15 +688,11 @@ end
 
 T['default_spotter()'] = new_set({
   hooks = {
-    pre_case = function()
-      child.set_size(5, 25)
-    end,
+    pre_case = function() child.set_size(5, 25) end,
   },
 })
 
-local start_default_spotter = function()
-  child.lua('MiniJump2d.start({ spotter = MiniJump2d.default_spotter })')
-end
+local start_default_spotter = function() child.lua('MiniJump2d.start({ spotter = MiniJump2d.default_spotter })') end
 
 T['default_spotter()']['works'] = function()
   set_lines({ 'xxx x_x (x) xXXx xXXX' })
@@ -754,7 +732,6 @@ T['default_spotter()']['works (almost) with multibyte character'] = function()
   child.expect_screenshot()
 end
 
---stylua: ignore
 T['builtin_opts.line_start'] = new_set({ hooks = { pre_case = function() child.set_size(5, 12) end } })
 
 T['builtin_opts.line_start']['works'] = function()
@@ -767,7 +744,6 @@ T['builtin_opts.line_start']['works'] = function()
   eq(get_cursor(), { 2, 2 })
 end
 
---stylua: ignore
 T['builtin_opts.word_start'] = new_set({ hooks = { pre_case = function() child.set_size(5, 20) end } })
 
 T['builtin_opts.word_start']['works'] = function()
@@ -786,9 +762,7 @@ end
 -- involved. Test with moving cursor instead.
 T['builtin_opts.single_character'] = new_set()
 
-local start_single_char = function()
-  child.lua_notify('MiniJump2d.start(MiniJump2d.builtin_opts.single_character)')
-end
+local start_single_char = function() child.lua_notify('MiniJump2d.start(MiniJump2d.builtin_opts.single_character)') end
 
 T['builtin_opts.single_character']['works'] = function()
   set_lines({ 'x_x y_y yyy' })
@@ -861,9 +835,7 @@ T['builtin_opts.query'] = new_set({
   },
 })
 
-local start_query = function()
-  child.lua_notify('MiniJump2d.start(MiniJump2d.builtin_opts.query)')
-end
+local start_query = function() child.lua_notify('MiniJump2d.start(MiniJump2d.builtin_opts.query)') end
 
 T['builtin_opts.query']['works'] = function()
   set_lines({ 'xyzxy' })

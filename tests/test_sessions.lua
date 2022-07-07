@@ -42,13 +42,10 @@ local cleanup_directories = function()
   end
 end
 
-local get_latest_message = function()
-  return child.cmd_capture('1messages')
-end
+local get_latest_message = function() return child.cmd_capture('1messages') end
 
-local get_buf_names = function()
-  return child.lua_get('vim.tbl_map(function(x) return vim.fn.bufname(x) end, vim.api.nvim_list_bufs())')
-end
+local get_buf_names =
+  function() return child.lua_get('vim.tbl_map(function(x) return vim.fn.bufname(x) end, vim.api.nvim_list_bufs())') end
 
 local compare_buffer_names = function(x, y)
   -- Don't test exact equality because different Neovim versions create
@@ -90,13 +87,9 @@ local validate_session_loaded = function(relative_path)
   eq(child.v.this_session, make_path(project_root, path))
 end
 
-local validate_no_session_loaded = function()
-  eq(child.lua_get('type(_G.session_file)'), 'nil')
-end
+local validate_no_session_loaded = function() eq(child.lua_get('type(_G.session_file)'), 'nil') end
 
-local reset_session_indicator = function()
-  child.lua('_G.session_file = nil')
-end
+local reset_session_indicator = function() child.lua('_G.session_file = nil') end
 
 -- Helpers for testing hooks
 --stylua: ignore start
@@ -165,9 +158,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniSessions.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniSessions.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniSessions.config.' .. field), value) end
 
   expect_config('autoread', false)
   expect_config('autowrite', true)
@@ -282,7 +273,6 @@ T['setup()']['allows empty string for `config.file`'] = function()
   cd('tests/dir-sessions')
   reload_module({ file = '' })
   local detected = child.lua_get('MiniSessions.detected')
-  --stylua: ignore
   eq(vim.tbl_filter(function(x) return x.type == 'local' end, detected), {})
 end
 
@@ -294,9 +284,8 @@ T['detected']['is present'] = function()
   eq(child.lua_get('type(MiniSessions.detected)'), 'table')
 end
 
-T['detected']['is an empty table if no sessions are detected'] = function()
-  eq(child.lua_get('MiniSessions.detected'), {})
-end
+T['detected']['is an empty table if no sessions are detected'] =
+  function() eq(child.lua_get('MiniSessions.detected'), {}) end
 
 T['read()'] = new_set()
 
@@ -309,16 +298,15 @@ end
 T['read()']['works with no detected sessions'] = function()
   reload_module({ directory = '', file = '' })
   eq(child.lua_get('MiniSessions.detected'), {})
-  expect.error(function()
-    child.lua('MiniSessions.read()')
-  end, '%(mini%.sessions%) There is no detected sessions')
+  expect.error(function() child.lua('MiniSessions.read()') end, '%(mini%.sessions%) There is no detected sessions')
 end
 
 T['read()']['accepts only name of detected session'] = function()
   reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
-  expect.error(function()
-    child.lua([[MiniSessions.read('session-absent')]])
-  end, '%(mini%.sessions%) "session%-absent" is not a name for detected session')
+  expect.error(
+    function() child.lua([[MiniSessions.read('session-absent')]]) end,
+    '%(mini%.sessions%) "session%-absent" is not a name for detected session'
+  )
   validate_no_session_loaded()
 end
 
@@ -344,9 +332,7 @@ T['read()']['does not source if there are unsaved listed buffers'] = function()
   -- Session should not be sourced
   local error_pattern =
     vim.pesc('(mini.sessions) There are unsaved listed buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.')
-  expect.error(function()
-    child.lua([[MiniSessions.read('session1')]])
-  end, error_pattern)
+  expect.error(function() child.lua([[MiniSessions.read('session1')]]) end, error_pattern)
   validate_no_session_loaded()
 end
 
@@ -389,9 +375,10 @@ T['read()']['respects `force` from `config` and `opts` argument'] = function()
   -- Should prefer `opts` over `config`
   setup_unsaved_buffers()
   reset_session_indicator()
-  expect.error(function()
-    child.lua([[MiniSessions.read('session2.vim', { force = false })]])
-  end, '%(mini%.sessions%) There are unsaved listed buffers')
+  expect.error(
+    function() child.lua([[MiniSessions.read('session2.vim', { force = false })]]) end,
+    '%(mini%.sessions%) There are unsaved listed buffers'
+  )
   validate_no_session_loaded()
 end
 
@@ -500,9 +487,10 @@ end
 
 T['write()']['validates `session_name`'] = function()
   reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
-  expect.error(function()
-    child.lua([[MiniSessions.write('')]])
-  end, '%(mini%.sessions%) Supply non%-empty session name')
+  expect.error(
+    function() child.lua([[MiniSessions.write('')]]) end,
+    '%(mini%.sessions%) Supply non%-empty session name'
+  )
 end
 
 T['write()']['writes by default to `v:this_session`'] = function()
@@ -554,9 +542,10 @@ T['write()']['respects `force` from `config` and `opts` argument'] = function()
   local path = make_path(empty_dir_path, 'existing-file')
   child.fn.writefile({}, path)
 
-  expect.error(function()
-    child.lua([[MiniSessions.write('existing-file')]])
-  end, [[%(mini%.sessions%) Can't write to existing]])
+  expect.error(
+    function() child.lua([[MiniSessions.write('existing-file')]]) end,
+    [[%(mini%.sessions%) Can't write to existing]]
+  )
   eq(child.fn.readfile(path), {})
 
   -- Should prefer `opts` over `config`
@@ -639,16 +628,18 @@ end
 T['delete()']['validates presence of detected sessions'] = function()
   reload_module({ file = '', directory = '' })
 
-  expect.error(function()
-    child.lua([[MiniSessions.delete('aaa')]])
-  end, '%(mini%.sessions%) There is no detected sessions')
+  expect.error(
+    function() child.lua([[MiniSessions.delete('aaa')]]) end,
+    '%(mini%.sessions%) There is no detected sessions'
+  )
 end
 
 T['delete()']['validates `session_name`'] = function()
   reload_module({ directory = 'tests/dir-sessions/global' })
-  expect.error(function()
-    child.lua([[MiniSessions.delete('')]])
-  end, '%(mini%.sessions%) Supply non%-empty session name')
+  expect.error(
+    function() child.lua([[MiniSessions.delete('')]]) end,
+    '%(mini%.sessions%) Supply non%-empty session name'
+  )
 end
 
 T['delete()']['deletes by default `v:this_session`'] = function()
@@ -700,9 +691,10 @@ T['delete()']['deletes only detected session'] = function()
   eq(child.lua_get([=[MiniSessions.detected['Session.vim']]=]), vim.NIL)
 
   -- Shouldn't delete `Session.vim` because it is not detected
-  expect.error(function()
-    child.lua([[MiniSessions.delete('Session.vim')]])
-  end, '%(mini%.sessions%) "Session%.vim" is not a name for detected session')
+  expect.error(
+    function() child.lua([[MiniSessions.delete('Session.vim')]]) end,
+    '%(mini%.sessions%) "Session%.vim" is not a name for detected session'
+  )
 end
 
 T['delete()']['respects `force` from `config` and `opts` argument'] = function()
@@ -723,9 +715,10 @@ T['delete()']['respects `force` from `config` and `opts` argument'] = function()
   path = make_path(session_dir, 'session_b')
   eq(child.v.this_session, path)
 
-  expect.error(function()
-    child.lua([[MiniSessions.delete('session_b', { force = false })]])
-  end, [[%(mini%.sessions%) Can't delete current session]])
+  expect.error(
+    function() child.lua([[MiniSessions.delete('session_b', { force = false })]]) end,
+    [[%(mini%.sessions%) Can't delete current session]]
+  )
   eq(child.fn.filereadable(path), 1)
 end
 
@@ -784,9 +777,7 @@ T['delete()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
 
     child[var_type].minisessions_disable = true
 
-    if child.fn.filereadable(path) == 0 then
-      populate_sessions()
-    end
+    if child.fn.filereadable(path) == 0 then populate_sessions() end
     child.lua([[MiniSessions.delete('session_a')]])
     eq(child.fn.filereadable(path), 1)
   end,
@@ -834,20 +825,17 @@ end
 
 T['select()']['verifies presense of `vim.ui` and `vim.ui.select`'] = function()
   child.lua('vim.ui = 1')
-  expect.error(function()
-    child.lua('MiniSessions.select()')
-  end, '%(mini%.sessions%).*vim%.ui')
+  expect.error(function() child.lua('MiniSessions.select()') end, '%(mini%.sessions%).*vim%.ui')
 
   child.lua('vim.ui = {}')
-  expect.error(function()
-    child.lua('MiniSessions.select()')
-  end, '%(mini%.sessions%).*vim%.ui%.select')
+  expect.error(function() child.lua('MiniSessions.select()') end, '%(mini%.sessions%).*vim%.ui%.select')
 end
 
 T['select()']['validates `action` argument'] = function()
-  expect.error(function()
-    child.lua([[MiniSessions.select('aaa')]])
-  end, [[%(mini%.sessions%) `action` should be one of 'read', 'write', or 'delete'.]])
+  expect.error(
+    function() child.lua([[MiniSessions.select('aaa')]]) end,
+    [[%(mini%.sessions%) `action` should be one of 'read', 'write', or 'delete'.]]
+  )
 end
 
 T['select()']['respects `action` argument'] = function()

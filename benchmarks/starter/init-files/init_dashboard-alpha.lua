@@ -18,6 +18,4 @@ vim.api.nvim_set_keymap('n', '<Leader>fm', ':Telescope marks<CR>', { noremap = t
 vim.api.nvim_set_keymap('n', '<Leader>sl', ':Telescope command_history<CR>', { noremap = true, silent = true })
 
 -- Close Neovim just after fully opening it. Randomize to make "more real".
-vim.defer_fn(function()
-  vim.cmd([[quit]])
-end, 100 + 200 * math.random())
+vim.defer_fn(function() vim.cmd([[quit]]) end, 100 + 200 * math.random())

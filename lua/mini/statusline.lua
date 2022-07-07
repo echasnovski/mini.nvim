@@ -180,18 +180,14 @@ MiniStatusline.config = {
 -- Module functionality =======================================================
 --- Compute content for active window
 function MiniStatusline.active()
-  if H.is_disabled() then
-    return ''
-  end
+  if H.is_disabled() then return '' end
 
   return (MiniStatusline.config.content.active or H.default_content_active)()
 end
 
 --- Compute content for inactive window
 function MiniStatusline.inactive()
-  if H.is_disabled() then
-    return ''
-  end
+  if H.is_disabled() then return '' end
 
   return (MiniStatusline.config.content.inactive or H.default_content_inactive)()
 end
@@ -284,18 +280,14 @@ end
 ---
 ---@return __section
 function MiniStatusline.section_git(args)
-  if H.isnt_normal_buffer() then
-    return ''
-  end
+  if H.isnt_normal_buffer() then return '' end
 
   local head = vim.b.gitsigns_head or '-'
   local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
   local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'Git')
 
   if signs == '' then
-    if head == '-' or head == '' then
-      return ''
-    end
+    if head == '-' or head == '' then return '' end
     return string.format('%s %s', icon, head)
   end
   return string.format('%s %s %s', icon, head, signs)
@@ -317,24 +309,18 @@ function MiniStatusline.section_diagnostics(args)
   -- `vim.lsp.buf_get_clients()` is empty
   local hasnt_attached_client = next(vim.lsp.buf_get_clients()) == nil
   local dont_show_lsp = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or hasnt_attached_client
-  if dont_show_lsp then
-    return ''
-  end
+  if dont_show_lsp then return '' end
 
   -- Construct diagnostic info using predefined order
   local t = {}
   for _, level in ipairs(H.diagnostic_levels) do
     local n = H.get_diagnostic_count(level.id)
     -- Add level info only if diagnostic is present
-    if n > 0 then
-      table.insert(t, string.format(' %s%s', level.sign, n))
-    end
+    if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
   end
 
   local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'LSP')
-  if vim.tbl_count(t) == 0 then
-    return ('%s -'):format(icon)
-  end
+  if vim.tbl_count(t) == 0 then return ('%s -'):format(icon) end
   return string.format('%s%s', icon, table.concat(t, ''))
 end
 
@@ -374,20 +360,14 @@ function MiniStatusline.section_fileinfo(args)
 
   -- Don't show anything if can't detect file type or not inside a "normal
   -- buffer"
-  if (filetype == '') or H.isnt_normal_buffer() then
-    return ''
-  end
+  if (filetype == '') or H.isnt_normal_buffer() then return '' end
 
   -- Add filetype icon
   local icon = H.get_filetype_icon()
-  if icon ~= '' then
-    filetype = string.format('%s %s', icon, filetype)
-  end
+  if icon ~= '' then filetype = string.format('%s %s', icon, filetype) end
 
   -- Construct output string if truncated
-  if MiniStatusline.is_truncated(args.trunc_width) then
-    return filetype
-  end
+  if MiniStatusline.is_truncated(args.trunc_width) then return filetype end
 
   -- Construct output string with extra file info
   local encoding = vim.bo.fileencoding or vim.bo.encoding
@@ -410,9 +390,7 @@ end
 ---@return __section
 function MiniStatusline.section_location(args)
   -- Use virtual column number to allow update when past last column
-  if MiniStatusline.is_truncated(args.trunc_width) then
-    return '%l│%2v'
-  end
+  if MiniStatusline.is_truncated(args.trunc_width) then return '%l│%2v' end
 
   -- Use `virtcol()` to correctly handle multi-byte characters
   return '%l|%L│%2v|%-2{virtcol("$") - 1}'
@@ -433,19 +411,13 @@ end
 ---
 ---@return __section
 function MiniStatusline.section_searchcount(args)
-  if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then
-    return ''
-  end
+  if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then return '' end
   -- `searchcount()` can return errors because it is evaluated very often in
   -- statusline. For example, when typing `/` followed by `\(`, it gives E54.
   local ok, s_count = pcall(vim.fn.searchcount, (args or {}).options or { recompute = true })
-  if not ok or s_count.current == nil or s_count.total == 0 then
-    return ''
-  end
+  if not ok or s_count.current == nil or s_count.total == 0 then return '' end
 
-  if s_count.incomplete == 1 then
-    return '?/?'
-  end
+  if s_count.incomplete == 1 then return '?/?' end
 
   local too_many = ('>%d'):format(s_count.maxcount)
   local current = s_count.current > s_count.maxcount and too_many or s_count.current
@@ -506,9 +478,7 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled()
-  return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true
-end
+function H.is_disabled() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end
 
 -- Mode -----------------------------------------------------------------------
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
@@ -564,9 +534,7 @@ function H.default_content_active()
   -- stylua: ignore end
 end
 
-function H.default_content_inactive()
-  return '%#MiniStatuslineInactive#%F%='
-end
+function H.default_content_inactive() return '%#MiniStatuslineInactive#%F%=' end
 
 -- Utilities ------------------------------------------------------------------
 function H.isnt_normal_buffer()
@@ -587,27 +555,19 @@ end
 
 function H.get_filetype_icon()
   -- Skip if NerdFonts is disabled
-  if not MiniStatusline.config.use_icons then
-    return ''
-  end
+  if not MiniStatusline.config.use_icons then return '' end
   -- Have this `require()` here to not depend on plugin initialization order
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-  if not has_devicons then
-    return ''
-  end
+  if not has_devicons then return '' end
 
   local file_name, file_ext = vim.fn.expand('%:t'), vim.fn.expand('%:e')
   return devicons.get_icon(file_name, file_ext, { default = true })
 end
 
 if vim.fn.has('nvim-0.6') == 1 then
-  H.get_diagnostic_count = function(id)
-    return #vim.diagnostic.get(0, { severity = id })
-  end
+  H.get_diagnostic_count = function(id) return #vim.diagnostic.get(0, { severity = id }) end
 else
-  H.get_diagnostic_count = function(id)
-    return vim.lsp.diagnostic.get_count(0, id)
-  end
+  H.get_diagnostic_count = function(id) return vim.lsp.diagnostic.get_count(0, id) end
 end
 
 return MiniStatusline

@@ -66,9 +66,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniComment.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniComment.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniComment.config.' .. field), value) end
 
   expect_config('mappings.comment', 'gc')
   expect_config('mappings.comment_line', 'gcc')
@@ -99,9 +97,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs)
-    return child.cmd_capture('omap ' .. lhs):find('MiniComment') ~= nil
-  end
+  local has_map = function(lhs) return child.cmd_capture('omap ' .. lhs):find('MiniComment') ~= nil end
   eq(has_map('gc'), true)
 
   unload_module()

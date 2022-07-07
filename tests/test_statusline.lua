@@ -20,15 +20,11 @@ local setup_windows = function()
   child.cmd('%bwipeout!')
 
   -- Ensure only two windows
-  if #child.api.nvim_list_wins() > 1 then
-    child.cmd('only')
-  end
+  if #child.api.nvim_list_wins() > 1 then child.cmd('only') end
   child.cmd('vsplit')
 
   local win_list = child.api.nvim_list_wins()
-  if win_list[1] == child.api.nvim_get_current_win() then
-    return { active = win_list[1], inactive = win_list[2] }
-  end
+  if win_list[1] == child.api.nvim_get_current_win() then return { active = win_list[1], inactive = win_list[2] } end
   return { active = win_list[2], inactive = win_list[1] }
 end
 
@@ -39,9 +35,7 @@ local get_two_windows = function()
 end
 
 -- Mocks
-local mock_devicons = function()
-  child.cmd('set rtp+=tests/dir-statusline')
-end
+local mock_devicons = function() child.cmd('set rtp+=tests/dir-statusline') end
 
 local mock_gitsigns = function(head, status)
   local cmd_head = ([[lua vim.b.gitsigns_head = '%s']]):format(head or 'main')
@@ -59,9 +53,7 @@ local mock_gitsigns = function(head, status)
   child.cmd('augroup END')
 end
 
-local mock_diagnostics = function()
-  child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua')
-end
+local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua') end
 
 local mocked_filepath = vim.fn.fnamemodify('tests/dir-statusline/mocked.lua', ':p')
 local mock_file = function(bytes)
@@ -71,9 +63,7 @@ local mock_file = function(bytes)
   vim.fn.writefile(lines, mocked_filepath)
 end
 
-local unmock_file = function()
-  pcall(vim.fn.delete, mocked_filepath)
-end
+local unmock_file = function() pcall(vim.fn.delete, mocked_filepath) end
 
 -- Output test set ============================================================
 T = new_set({
@@ -101,9 +91,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniStatusline'), 1)
 
   -- Highlight groups
-  local has_highlight = function(group, value)
-    expect.match(child.cmd_capture('hi ' .. group), value)
-  end
+  local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniStatuslineModeNormal', 'links to Cursor')
   has_highlight('MiniStatuslineModeInsert', 'links to DiffChange')
@@ -121,9 +109,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniStatusline.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniStatusline.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniStatusline.config.' .. field), value) end
 
   expect_config('content.active', vim.NIL)
   expect_config('content.inactive', vim.NIL)
@@ -172,9 +158,7 @@ end
 
 T['combine_groups()'] = new_set()
 
-local combine_groups = function(...)
-  return child.lua_get('MiniStatusline.combine_groups(...)', { ... })
-end
+local combine_groups = function(...) return child.lua_get('MiniStatusline.combine_groups(...)', { ... }) end
 
 local example_groups = {
   { hl = 'AA', strings = { 'a1', 'a2' } },
@@ -183,9 +167,8 @@ local example_groups = {
   { hl = 'CC', strings = { 'c1' } },
 }
 
-T['combine_groups()']['works'] = function()
-  eq(combine_groups(example_groups), '%#AA# a1 a2 %#BB# b1 b2 %=%#CC# c1 ')
-end
+T['combine_groups()']['works'] =
+  function() eq(combine_groups(example_groups), '%#AA# a1 a2 %#BB# b1 b2 %=%#CC# c1 ') end
 
 T['combine_groups()']['handles non-table elements'] = function()
   -- Strings should be used as is, other non-table elements - filtered out
@@ -194,9 +177,8 @@ T['combine_groups()']['handles non-table elements'] = function()
   eq(combine_groups({ 'xxx', 'yyy' }), 'xxxyyy')
 end
 
-T['combine_groups()']['uses only non-empty strings from `strings` field'] = function()
-  eq(combine_groups({ { hl = 'AA', strings = { 'a', 1, {}, true, '', 'b' } } }), '%#AA# a b ')
-end
+T['combine_groups()']['uses only non-empty strings from `strings` field'] =
+  function() eq(combine_groups({ { hl = 'AA', strings = { 'a', 1, {}, true, '', 'b' } } }), '%#AA# a b ') end
 
 T['combine_groups()']['allows empty `hl` to use previous highlight group'] = function()
   eq(combine_groups({ { strings = { 'a' } }, { hl = 'BB', strings = { 'b' } } }), ' a %#BB# b ')
@@ -209,9 +191,7 @@ T['combine_groups()']['allows empty `strings` to start new highlight'] = functio
   eq(combine_groups({ { strings = { 'a1', 'a2' } }, { hl = 'BB' }, { strings = { 'c1' } } }), ' a1 a2 %#BB# c1 ')
 end
 
-local eval_content = function(field)
-  return child.lua_get(('MiniStatusline.%s()'):format(field))
-end
+local eval_content = function(field) return child.lua_get(('MiniStatusline.%s()'):format(field)) end
 
 T['active()/inactive()'] = new_set({
   parametrize = { { 'active' }, { 'inactive' } },
@@ -403,9 +383,8 @@ end
 
 T['section_location()'] = new_set()
 
-T['section_location()']['works'] = function()
-  eq(child.lua_get('MiniStatusline.section_location({})'), '%l|%L│%2v|%-2{virtcol("$") - 1}')
-end
+T['section_location()']['works'] =
+  function() eq(child.lua_get('MiniStatusline.section_location({})'), '%l|%L│%2v|%-2{virtcol("$") - 1}') end
 
 T['section_location()']['respects `args.trunc_width`'] = function()
   set_width(100)
@@ -416,13 +395,9 @@ end
 
 T['section_mode()'] = new_set()
 
-local section_mode = function(args)
-  return child.lua_get('{ MiniStatusline.section_mode(...) }', { args or {} })
-end
+local section_mode = function(args) return child.lua_get('{ MiniStatusline.section_mode(...) }', { args or {} }) end
 
-T['section_mode()']['works'] = function()
-  eq(section_mode(), { 'Normal', 'MiniStatuslineModeNormal' })
-end
+T['section_mode()']['works'] = function() eq(section_mode(), { 'Normal', 'MiniStatuslineModeNormal' }) end
 
 T['section_mode()']['shows correct mode'] = function()
   local validate = function(output)
@@ -470,9 +445,8 @@ T['section_searchcount()'] = new_set({
   },
 })
 
-local section_searchcount = function(args)
-  return child.lua_get('MiniStatusline.section_searchcount(...)', { args or {} })
-end
+local section_searchcount =
+  function(args) return child.lua_get('MiniStatusline.section_searchcount(...)', { args or {} }) end
 
 T['section_searchcount()']['works'] = function()
   set_lines({ '', 'a a a ' })

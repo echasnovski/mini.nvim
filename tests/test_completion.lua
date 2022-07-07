@@ -33,15 +33,14 @@ local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_crea
 --- More info: https://github.com/vim/vim/issues/10007
 local get_completion = function(what)
   what = what or 'word'
-  return vim.tbl_map(function(x)
-    return x[what]
-  end, child.fn.complete_info().items)
+  return vim.tbl_map(function(x) return x[what] end, child.fn.complete_info().items)
 end
 
 local get_floating_windows = function()
-  return vim.tbl_filter(function(x)
-    return child.api.nvim_win_get_config(x).relative ~= ''
-  end, child.api.nvim_list_wins())
+  return vim.tbl_filter(
+    function(x) return child.api.nvim_win_get_config(x).relative ~= '' end,
+    child.api.nvim_list_wins()
+  )
 end
 
 local validate_single_floating_win = function(opts)
@@ -97,9 +96,7 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniCompletion.config)'), 'table')
 
   -- Check default values
-  local expect_config = function(field, value)
-    eq(child.lua_get('MiniCompletion.config.' .. field), value)
-  end
+  local expect_config = function(field, value) eq(child.lua_get('MiniCompletion.config.' .. field), value) end
 
   expect_config('delay.completion', 100)
   expect_config('delay.info', 100)
@@ -166,9 +163,7 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs)
-    return child.cmd_capture('imap ' .. lhs):find('MiniCompletion') ~= nil
-  end
+  local has_map = function(lhs) return child.cmd_capture('imap ' .. lhs):find('MiniCompletion') ~= nil end
   eq(has_map('<C-Space>'), true)
 
   unload_module()
@@ -241,9 +236,7 @@ end
 
 T['Autocompletion']['works without LSP clients'] = function()
   -- Mock absence of LSP
-  child.lsp.buf_get_clients = function()
-    return {}
-  end
+  child.lsp.buf_get_clients = function() return {} end
 
   type_keys('i', 'aab aac aba a')
   eq(get_completion(), {})
@@ -599,9 +592,8 @@ local validate_dimensions_signature = function(keys, dimensions)
   validate_single_floating_win({ config = dimensions })
 end
 
-T['Signature help']['respects `config.window_dimensions.signature`'] = function()
-  validate_dimensions_signature({ 'l', 'o', 'n', 'g', '(' }, { height = 20, width = 40 })
-end
+T['Signature help']['respects `config.window_dimensions.signature`'] =
+  function() validate_dimensions_signature({ 'l', 'o', 'n', 'g', '(' }, { height = 20, width = 40 }) end
 
 T['Signature help']['has minimal dimensions for small text'] = function()
   child.set_size(5, 30)

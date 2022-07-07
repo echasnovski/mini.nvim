@@ -261,9 +261,7 @@ MiniCompletion.config = {
         return vim.startswith(H.get_completion_word(item), base) and item.kind ~= 15
       end, items)
 
-      table.sort(res, function(a, b)
-        return (a.sortText or a.label) < (b.sortText or b.label)
-      end)
+      table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
 
       return res
     end,
@@ -274,9 +272,7 @@ MiniCompletion.config = {
   -- built-in completion (see `:h ins-completion`), supply its mapping as
   -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
   --minidoc_replace_start fallback_action = --<function: like `<C-n>` completion>,
-  fallback_action = function()
-    vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false)
-  end,
+  fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false) end,
   --minidoc_replace_end
 
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
@@ -298,9 +294,7 @@ MiniCompletion.config = {
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 function MiniCompletion.auto_completion()
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   H.completion.timer:stop()
 
@@ -320,9 +314,7 @@ function MiniCompletion.auto_completion()
 
   -- If character is purely lsp trigger, make new LSP request without fallback
   -- and force new completion
-  if char_is_trigger then
-    H.cancel_lsp()
-  end
+  if char_is_trigger then H.cancel_lsp() end
   H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
 
   -- Cache id of Insert mode "text changed" event for a later tracking (reduces
@@ -352,9 +344,7 @@ end
 ---@param fallback boolean Whether to use fallback completion.
 ---@param force boolean Whether to force update of completion popup.
 function MiniCompletion.complete_twostage(fallback, force)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   H.stop_completion()
   H.completion.fallback, H.completion.force = fallback or true, force or true
@@ -363,9 +353,7 @@ end
 
 --- Run fallback completion
 function MiniCompletion.complete_fallback()
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   H.stop_completion()
   H.completion.fallback, H.completion.force = true, true
@@ -377,17 +365,13 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 function MiniCompletion.auto_info()
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   H.info.timer:stop()
 
   -- Defer execution because of textlock during `CompleteChanged` event
   -- Don't stop timer when closing info window because it is needed
-  vim.defer_fn(function()
-    H.close_action_window(H.info, true)
-  end, 0)
+  vim.defer_fn(function() H.close_action_window(H.info, true) end, 0)
 
   -- Stop current LSP request that tries to get not current data
   H.cancel_lsp({ H.info })
@@ -397,9 +381,7 @@ function MiniCompletion.auto_info()
   H.info.id = H.info.id + 1
 
   -- Don't even try to show info if nothing is selected in popup
-  if vim.tbl_isempty(H.info.event.completed_item) then
-    return
-  end
+  if vim.tbl_isempty(H.info.event.completed_item) then return end
 
   H.info.timer:start(MiniCompletion.config.delay.info, 0, vim.schedule_wrap(H.show_info_window))
 end
@@ -409,20 +391,14 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 function MiniCompletion.auto_signature()
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   H.signature.timer:stop()
-  if not H.has_lsp_clients('signatureHelpProvider') then
-    return
-  end
+  if not H.has_lsp_clients('signatureHelpProvider') then return end
 
   local left_char = H.get_left_char()
   local char_is_trigger = left_char == ')' or H.is_lsp_trigger(left_char, 'signature')
-  if not char_is_trigger then
-    return
-  end
+  if not char_is_trigger then return end
 
   H.signature.timer:start(MiniCompletion.config.delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
 end
@@ -508,9 +484,7 @@ function MiniCompletion.completefunc_lsp(findstart, base)
     -- filtered with one `base` in the other route of this function. Anyway,
     -- the most common situation is with one attached LSP client.
     local cancel_fun = vim.lsp.buf_request_all(bufnr, 'textDocument/completion', params, function(result)
-      if not H.is_lsp_current(H.completion, current_id) then
-        return
-      end
+      if not H.is_lsp_current(H.completion, current_id) then return end
 
       H.completion.lsp.status = 'received'
       H.completion.lsp.result = result
@@ -529,16 +503,12 @@ function MiniCompletion.completefunc_lsp(findstart, base)
       return {}
     end
   else
-    if findstart == 1 then
-      return H.get_completion_start()
-    end
+    if findstart == 1 then return H.get_completion_start() end
 
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
-      if type(items) ~= 'table' then
-        return {}
-      end
+      if type(items) ~= 'table' then return {} end
       items = MiniCompletion.config.lsp_completion.process_items(items, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
@@ -631,9 +601,7 @@ function H.setup_config(config)
     lsp_completion = { config.lsp_completion, 'table' },
     fallback_action = {
       config.fallback_action,
-      function(x)
-        return type(x) == 'function' or type(x) == 'string'
-      end,
+      function(x) return type(x) == 'function' or type(x) == 'string' end,
       'function or string',
     },
     mappings = { config.mappings, 'table' },
@@ -650,9 +618,7 @@ function H.setup_config(config)
 
     ['lsp_completion.source_func'] = {
       config.lsp_completion.source_func,
-      function(x)
-        return x == 'completefunc' or x == 'omnifunc'
-      end,
+      function(x) return x == 'completefunc' or x == 'omnifunc' end,
       'one of strings: "completefunc" or "omnifunc"',
     },
     ['lsp_completion.auto_setup'] = { config.lsp_completion.auto_setup, 'boolean' },
@@ -688,9 +654,7 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled()
-  return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true
-end
+function H.is_disabled() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
 
 -- Completion triggers --------------------------------------------------------
 function H.trigger_twostep()
@@ -702,9 +666,7 @@ function H.trigger_twostep()
   -- delay), these still match.
   local allow_trigger = (vim.fn.mode() == 'i')
     and (H.completion.force or (H.completion.text_changed_id == H.text_changed_id))
-  if not allow_trigger then
-    return
-  end
+  if not allow_trigger then return end
 
   if H.has_lsp_clients('completionProvider') and H.has_lsp_completion() then
     H.trigger_lsp()
@@ -758,9 +720,7 @@ function H.stop_completion(keep_source)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
   H.completion.fallback, H.completion.force = true, false
-  if not keep_source then
-    H.completion.source = nil
-  end
+  if not keep_source then H.completion.source = nil end
 end
 
 function H.stop_info()
@@ -792,18 +752,12 @@ H.stop_actions = {
 ---@private
 function H.has_lsp_clients(capability)
   local clients = vim.lsp.buf_get_clients()
-  if vim.tbl_isempty(clients) then
-    return false
-  end
-  if not capability then
-    return true
-  end
+  if vim.tbl_isempty(clients) then return false end
+  if not capability then return true end
 
   for _, c in pairs(clients) do
     local has_capability = H.table_get(c.server_capabilities, capability)
-    if has_capability then
-      return true
-    end
+    if has_capability then return true end
   end
   return false
 end
@@ -822,9 +776,7 @@ function H.is_lsp_trigger(char, type)
 
   for _, client in pairs(vim.lsp.buf_get_clients()) do
     triggers = H.table_get(client, { 'server_capabilities', providers[type], 'triggerCharacters' })
-    if vim.tbl_contains(triggers or {}, char) then
-      return true
-    end
+    if vim.tbl_contains(triggers or {}, char) then return true end
   end
   return false
 end
@@ -833,9 +785,7 @@ function H.cancel_lsp(caches)
   caches = caches or { H.completion, H.info, H.signature }
   for _, c in pairs(caches) do
     if vim.tbl_contains({ 'sent', 'received' }, c.lsp.status) then
-      if c.lsp.cancel_fun then
-        c.lsp.cancel_fun()
-      end
+      if c.lsp.cancel_fun then c.lsp.cancel_fun() end
       c.lsp.status = 'canceled'
     end
 
@@ -845,23 +795,17 @@ function H.cancel_lsp(caches)
 end
 
 function H.process_lsp_response(request_result, processor)
-  if not request_result then
-    return {}
-  end
+  if not request_result then return {} end
 
   local res = {}
   for client_id, item in pairs(request_result) do
-    if not item.err and item.result then
-      vim.list_extend(res, processor(item.result, client_id) or {})
-    end
+    if not item.err and item.result then vim.list_extend(res, processor(item.result, client_id) or {}) end
   end
 
   return res
 end
 
-function H.is_lsp_current(cache, id)
-  return cache.lsp.id == id and cache.lsp.status == 'sent'
-end
+function H.is_lsp_current(cache, id) return cache.lsp.id == id and cache.lsp.status == 'sent' end
 
 -- Completion -----------------------------------------------------------------
 -- This is a truncated version of
@@ -870,9 +814,7 @@ end
 -- For extra information see 'Response' section:
 -- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
 function H.lsp_completion_response_items_to_complete_items(items, client_id)
-  if vim.tbl_count(items) == 0 then
-    return {}
-  end
+  if vim.tbl_count(items) == 0 then return {} end
 
   local res = {}
   local docs, info
@@ -880,9 +822,7 @@ function H.lsp_completion_response_items_to_complete_items(items, client_id)
     -- Documentation info
     docs = item.documentation
     info = H.table_get(docs, { 'value' })
-    if not info and type(docs) == 'string' then
-      info = docs
-    end
+    if not info and type(docs) == 'string' then info = docs end
     info = info or ''
 
     table.insert(res, {
@@ -927,9 +867,7 @@ function H.apply_additional_text_edits()
     client_id = lsp_data.client_id
   end
 
-  if edits == nil then
-    return
-  end
+  if edits == nil then return end
   client_id = client_id or 0
 
   -- Use extmark to track relevant cursor postion after text edits
@@ -947,17 +885,13 @@ end
 -- Completion item info -------------------------------------------------------
 function H.show_info_window()
   local event = H.info.event
-  if not event then
-    return
-  end
+  if not event then return end
 
   -- Try first to take lines from LSP request result.
   local lines
   if H.info.lsp.status == 'received' then
     lines = H.process_lsp_response(H.info.lsp.result, function(response)
-      if not response.documentation then
-        return {}
-      end
+      if not response.documentation then return {} end
       local res = vim.lsp.util.convert_input_to_markdown_lines(response.documentation)
       return vim.lsp.util.trim_empty_lines(res)
     end)
@@ -968,9 +902,7 @@ function H.show_info_window()
   end
 
   -- Don't show anything if there is nothing to show
-  if not lines or H.is_whitespace(lines) then
-    return
-  end
+  if not lines or H.is_whitespace(lines) then return end
 
   -- If not already, create a permanent buffer where info will be
   -- displayed. For some reason, it is important to have it created not in
@@ -989,9 +921,7 @@ function H.show_info_window()
   -- Defer execution because of textlock during `CompleteChanged` event
   vim.defer_fn(function()
     -- Ensure that window doesn't open when it shouldn't be
-    if not (H.pumvisible() and vim.fn.mode() == 'i') then
-      return
-    end
+    if not (H.pumvisible() and vim.fn.mode() == 'i') then return end
     H.open_action_window(H.info, opts)
   end, 0)
 end
@@ -1010,17 +940,13 @@ function H.info_window_lines(info_id)
   end
 
   -- If popup is not from LSP then there is nothing more to do
-  if H.completion.source ~= 'lsp' then
-    return nil
-  end
+  if H.completion.source ~= 'lsp' then return nil end
 
   -- Try to get documentation from LSP's initial completion result
   local lsp_completion_item = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'completion_item' })
   -- If there is no LSP's completion item, then there is no point to proceed as
   -- it should serve as parameters to LSP request
-  if not lsp_completion_item then
-    return
-  end
+  if not lsp_completion_item then return end
   local doc = lsp_completion_item.documentation
   if doc then
     local lines = vim.lsp.util.convert_input_to_markdown_lines(doc)
@@ -1037,16 +963,12 @@ function H.info_window_lines(info_id)
 
   local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', params, function(result)
     -- Don't do anything if there is other LSP request in action
-    if not H.is_lsp_current(H.info, current_id) then
-      return
-    end
+    if not H.is_lsp_current(H.info, current_id) then return end
 
     H.info.lsp.status = 'received'
 
     -- Don't do anything if completion item was changed
-    if H.info.id ~= info_id then
-      return
-    end
+    if H.info.id ~= info_id then return end
 
     H.info.lsp.result = result
     H.show_info_window()
@@ -1110,9 +1032,7 @@ function H.show_signature_window()
     local params = vim.lsp.util.make_position_params()
 
     local cancel_fun = vim.lsp.buf_request_all(bufnr, 'textDocument/signatureHelp', params, function(result)
-      if not H.is_lsp_current(H.signature, current_id) then
-        return
-      end
+      if not H.is_lsp_current(H.signature, current_id) then return end
 
       H.signature.lsp.status = 'received'
       H.signature.lsp.result = result
@@ -1168,9 +1088,7 @@ function H.show_signature_window()
 
   -- If window is already opened and displays the same text, don't reopen it
   local cur_text = table.concat(lines, '\n')
-  if H.signature.winnr and cur_text == H.signature.text then
-    return
-  end
+  if H.signature.winnr and cur_text == H.signature.text then return end
 
   -- Cache lines for later checks if window should be reopened
   H.signature.text = cur_text
@@ -1182,9 +1100,7 @@ function H.show_signature_window()
   local opts = H.signature_window_opts()
 
   -- Ensure that window doesn't open when it shouldn't
-  if vim.fn.mode() == 'i' then
-    H.open_action_window(H.signature, opts)
-  end
+  if vim.fn.mode() == 'i' then H.open_action_window(H.signature, opts) end
 end
 
 function H.signature_window_lines()
@@ -1205,18 +1121,14 @@ function H.signature_window_lines()
 end
 
 function H.process_signature_response(response)
-  if not response.signatures or vim.tbl_isempty(response.signatures) then
-    return {}
-  end
+  if not response.signatures or vim.tbl_isempty(response.signatures) then return {} end
 
   -- Get active signature (based on textDocument/signatureHelp specification)
   local signature_id = response.activeSignature or 0
   -- This is according to specification: "If ... value lies outside ...
   -- defaults to zero"
   local n_signatures = vim.tbl_count(response.signatures or {})
-  if signature_id < 0 or signature_id >= n_signatures then
-    signature_id = 0
-  end
+  if signature_id < 0 or signature_id >= n_signatures then signature_id = 0 end
   local signature = response.signatures[signature_id + 1]
 
   -- Get displayed signature label
@@ -1254,9 +1166,7 @@ function H.process_signature_response(response)
     elseif type(param_label) == 'table' then
       first, last = unpack(param_label)
     end
-    if first then
-      hl_range = { first = first, last = last }
-    end
+    if first then hl_range = { first = first, last = last } end
   end
 
   -- Return nested table because this will be a second argument of
@@ -1307,9 +1217,7 @@ end
 
 -- Helpers for floating windows -----------------------------------------------
 function H.ensure_buffer(cache, name)
-  if cache.bufnr then
-    return
-  end
+  if cache.bufnr then return end
 
   cache.bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(cache.bufnr, name)
@@ -1336,9 +1244,7 @@ function H.floating_dimensions(lines, max_height, max_width)
   for i, l in ipairs(lines_wrap) do
     -- Use `strdisplaywidth()` to account for 'non-UTF8' characters
     l_width = vim.fn.strdisplaywidth(l)
-    if i <= height and width < l_width then
-      width = l_width
-    end
+    if i <= height and width < l_width then width = l_width end
   end
   -- It should already be less that that because of wrapping, so this is "just
   -- in case"
@@ -1355,19 +1261,13 @@ function H.open_action_window(cache, opts)
 end
 
 function H.close_action_window(cache, keep_timer)
-  if not keep_timer then
-    cache.timer:stop()
-  end
+  if not keep_timer then cache.timer:stop() end
 
-  if cache.winnr then
-    vim.api.nvim_win_close(cache.winnr, true)
-  end
+  if cache.winnr then vim.api.nvim_win_close(cache.winnr, true) end
   cache.winnr = nil
 
   -- For some reason 'buftype' might be reset. Ensure that buffer is scratch.
-  if cache.bufnr then
-    vim.fn.setbufvar(cache.bufnr, '&buftype', 'nofile')
-  end
+  if cache.bufnr then vim.fn.setbufvar(cache.bufnr, '&buftype', 'nofile') end
 end
 
 -- Utilities ------------------------------------------------------------------
@@ -1376,9 +1276,7 @@ function H.is_char_keyword(char)
   return vim.fn.match(char, '[[:keyword:]]') >= 0
 end
 
-function H.pumvisible()
-  return vim.fn.pumvisible() > 0
-end
+function H.pumvisible() return vim.fn.pumvisible() > 0 end
 
 function H.get_completion_start()
   -- Compute start position of latest keyword (as in `vim.lsp.omnifunc`)
@@ -1389,14 +1287,10 @@ function H.get_completion_start()
 end
 
 function H.is_whitespace(s)
-  if type(s) == 'string' then
-    return s:find('^%s*$')
-  end
+  if type(s) == 'string' then return s:find('^%s*$') end
   if type(s) == 'table' then
     for _, val in pairs(s) do
-      if not H.is_whitespace(val) then
-        return false
-      end
+      if not H.is_whitespace(val) then return false end
     end
     return true
   end
@@ -1430,9 +1324,7 @@ function H.wrap_line(l, width)
 end
 
 function H.table_get(t, id)
-  if type(id) ~= 'table' then
-    return H.table_get(t, { id })
-  end
+  if type(id) ~= 'table' then return H.table_get(t, { id }) end
   local success, res = true, t
   for _, i in ipairs(id) do
     --stylua: ignore start
@@ -1451,15 +1343,12 @@ function H.get_left_char()
 end
 
 function H.map(mode, key, rhs, opts)
-  --stylua: ignore
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
 
   -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then
-    opts.desc = nil
-  end
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end

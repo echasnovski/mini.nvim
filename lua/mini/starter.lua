@@ -310,9 +310,7 @@ end
 ---@param buf_id number Identifier of existing valid buffer (see |bufnr()|) to
 ---   open inside. Default: create a new one.
 function MiniStarter.open(buf_id)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   -- Reset helper data
   H.current_item_id = 1
@@ -325,9 +323,7 @@ function MiniStarter.open(buf_id)
     buf_id = vim.api.nvim_get_current_buf()
   end
 
-  if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then
-    buf_id = vim.api.nvim_create_buf(false, true)
-  end
+  if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then buf_id = vim.api.nvim_create_buf(false, true) end
 
   H.buf_id = buf_id
   vim.api.nvim_set_current_buf(H.buf_id)
@@ -379,9 +375,7 @@ end
 --- Note: this function is executed on every |VimResized| to allow more
 --- responsive behavior.
 function MiniStarter.refresh()
-  if H.is_disabled() or H.buf_id == nil or not vim.api.nvim_buf_is_valid(H.buf_id) then
-    return
-  end
+  if H.is_disabled() or H.buf_id == nil or not vim.api.nvim_buf_is_valid(H.buf_id) then return end
 
   -- Normalize certain config values
   H.header = H.normalize_header_footer(MiniStarter.config.header or H.default_header)
@@ -513,17 +507,13 @@ function MiniStarter.sections.recent_files(n, current_dir, show_path)
   current_dir = current_dir == nil and false or current_dir
   show_path = show_path == nil and true or show_path
 
-  if current_dir then
-    vim.cmd('au DirChanged * lua MiniStarter.refresh()')
-  end
+  if current_dir then vim.cmd('au DirChanged * lua MiniStarter.refresh()') end
 
   return function()
     local section = ('Recent files%s'):format(current_dir and ' (current directory)' or '')
 
     -- Use only actual readable files
-    local files = vim.tbl_filter(function(f)
-      return vim.fn.filereadable(f) == 1
-    end, vim.v.oldfiles or {})
+    local files = vim.tbl_filter(function(f) return vim.fn.filereadable(f) == 1 end, vim.v.oldfiles or {})
 
     if #files == 0 then
       return { { name = 'There are no recent files (`v:oldfiles` is empty)', action = '', section = section } }
@@ -533,9 +523,7 @@ function MiniStarter.sections.recent_files(n, current_dir, show_path)
     if current_dir then
       local cwd = vim.loop.cwd()
       local n_cwd = cwd:len()
-      files = vim.tbl_filter(function(f)
-        return f:sub(1, n_cwd) == cwd
-      end, files)
+      files = vim.tbl_filter(function(f) return f:sub(1, n_cwd) == cwd end, files)
     end
 
     if #files == 0 then
@@ -599,9 +587,7 @@ function MiniStarter.gen_hook.padding(left, top)
     local left_pad = string.rep(' ', left)
     for _, line in ipairs(content) do
       local is_empty_line = #line == 0 or (#line == 1 and line[1].string == '')
-      if not is_empty_line then
-        table.insert(line, 1, H.content_unit(left_pad, 'empty', nil))
-      end
+      if not is_empty_line then table.insert(line, 1, H.content_unit(left_pad, 'empty', nil)) end
     end
 
     -- Add top padding
@@ -715,9 +701,7 @@ function MiniStarter.gen_hook.aligning(horizontal, vertical)
 
     -- Align horizontally
     -- Don't use `string.len()` to account for multibyte characters
-    local lines_width = vim.tbl_map(function(l)
-      return vim.fn.strdisplaywidth(l)
-    end, line_strings)
+    local lines_width = vim.tbl_map(function(l) return vim.fn.strdisplaywidth(l) end, line_strings)
     local min_right_space = vim.api.nvim_win_get_width(0) - math.max(unpack(lines_width))
     local left_pad = math.max(math.floor(horiz_coef * min_right_space), 0)
 
@@ -748,24 +732,16 @@ end
 ---   `c`, use `content[c.line][c.unit]`.
 function MiniStarter.content_coords(content, predicate)
   content = content or MiniStarter.content
-  if predicate == nil then
-    predicate = function(unit)
-      return true
-    end
-  end
+  if predicate == nil then predicate = function(unit) return true end end
   if type(predicate) == 'string' then
     local pred_type = predicate
-    predicate = function(unit)
-      return unit.type == pred_type
-    end
+    predicate = function(unit) return unit.type == pred_type end
   end
 
   local res = {}
   for l_num, line in ipairs(content) do
     for u_num, unit in ipairs(line) do
-      if predicate(unit) then
-        table.insert(res, { line = l_num, unit = u_num })
-      end
+      if predicate(unit) then table.insert(res, { line = l_num, unit = u_num }) end
     end
   end
   return res
@@ -843,9 +819,7 @@ function MiniStarter.content_to_items(content)
   end
 
   -- Compute length of unique prefix for every item's name (ignoring case)
-  local strings = vim.tbl_map(function(x)
-    return x.name:lower()
-  end, items)
+  local strings = vim.tbl_map(function(x) return x.name:lower() end, items)
   local nprefix = H.unique_nprefix(strings)
   for i, n in ipairs(nprefix) do
     items[i]._nprefix = n
@@ -856,9 +830,7 @@ end
 
 -- Other exported functions ---------------------------------------------------
 --- Evaluate current item
-function MiniStarter.eval_current_item()
-  H.eval_fun_or_string(H.items[H.current_item_id].action, true)
-end
+function MiniStarter.eval_current_item() H.eval_fun_or_string(H.items[H.current_item_id].action, true) end
 
 --- Update current item
 ---
@@ -869,9 +841,7 @@ function MiniStarter.update_current_item(direction)
   -- Advance current item
   local prev_current = H.current_item_id
   H.current_item_id = H.next_active_item_id(H.current_item_id, direction)
-  if H.current_item_id == prev_current then
-    return
-  end
+  if H.current_item_id == prev_current then return end
 
   -- Update cursor position
   H.position_cursor_on_current_item()
@@ -909,17 +879,13 @@ end
 ---   essentially resets query.
 function MiniStarter.set_query(query)
   query = query or ''
-  if type(query) ~= 'string' then
-    error('`query` should be either `nil` or string.')
-  end
+  if type(query) ~= 'string' then error('`query` should be either `nil` or string.') end
 
   H.make_query(query)
 end
 
 --- Act on |CursorMoved| by repositioning cursor in fixed place.
-function MiniStarter.on_cursormoved()
-  H.position_cursor_on_current_item()
-end
+function MiniStarter.on_cursormoved() H.position_cursor_on_current_item() end
 
 -- Helper data ================================================================
 -- Module default config
@@ -928,9 +894,7 @@ H.default_config = MiniStarter.config
 -- Default config values
 H.default_items = {
   function()
-    if _G.MiniSessions == nil then
-      return {}
-    end
+    if _G.MiniSessions == nil then return {} end
     return MiniStarter.sections.sessions(5, true)()
   end,
   MiniStarter.sections.recent_files(5, false, false),
@@ -998,31 +962,21 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniStarter.config = config
-end
+function H.apply_config(config) MiniStarter.config = config end
 
-function H.is_disabled()
-  return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true
-end
+function H.is_disabled() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
 -- Normalize config elements --------------------------------------------------
 function H.normalize_items(items)
   local res = H.items_flatten(items)
-  if #res == 0 then
-    return { { name = '`MiniStarter.config.items` is empty', action = '', section = '' } }
-  end
+  if #res == 0 then return { { name = '`MiniStarter.config.items` is empty', action = '', section = '' } } end
   return H.items_sort(res)
 end
 
 function H.normalize_header_footer(x)
-  if type(x) == 'function' then
-    x = x()
-  end
+  if type(x) == 'function' then x = x() end
   local res = tostring(x)
-  if res == '' then
-    return {}
-  end
+  if res == '' then return {} end
   return vim.split(res, '\n')
 end
 
@@ -1050,9 +1004,7 @@ function H.content_unit(string, type, hl, extra)
   return vim.tbl_extend('force', { string = string, type = type, hl = hl }, extra or {})
 end
 
-function H.content_add_line(content_line)
-  table.insert(MiniStarter.content, content_line)
-end
+function H.content_add_line(content_line) table.insert(MiniStarter.content, content_line) end
 
 function H.content_add_empty_lines(n)
   for _ = 1, n do
@@ -1096,9 +1048,7 @@ function H.items_flatten(items)
     local n_nested = 0
     while type(x) == 'function' and n_nested <= 100 do
       n_nested = n_nested + 1
-      if n_nested > 100 then
-        H.message('Too many nested functions in `config.items`.')
-      end
+      if n_nested > 100 then H.message('Too many nested functions in `config.items`.') end
       x = x()
     end
 
@@ -1108,9 +1058,7 @@ function H.items_flatten(items)
       return
     end
 
-    if type(x) ~= 'table' then
-      return
-    end
+    if type(x) ~= 'table' then return end
     return vim.tbl_map(f, x)
   end
 
@@ -1163,9 +1111,7 @@ function H.next_active_item_id(item_id, direction)
   return id
 end
 
-function H.position_cursor_on_current_item()
-  vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos)
-end
+function H.position_cursor_on_current_item() vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos) end
 
 function H.item_is_active(item, query)
   -- Item is active = item's name starts with query (ignoring case) and item's
@@ -1196,9 +1142,7 @@ function H.make_query(query)
   end
 
   -- Move to next active item if current is not active
-  if not H.items[H.current_item_id]._active then
-    MiniStarter.update_current_item('next')
-  end
+  if not H.items[H.current_item_id]._active then MiniStarter.update_current_item('next') end
 
   -- Update activity highlighting. This should go before `evaluate_single`
   -- check because evaluation might not result into closing Starter buffer.
@@ -1318,9 +1262,7 @@ end
 
 -- Predicates -----------------------------------------------------------------
 function H.is_fun_or_string(x, allow_nil)
-  if allow_nil == nil then
-    allow_nil = true
-  end
+  if allow_nil == nil then allow_nil = true end
   return (allow_nil and x == nil) or type(x) == 'function' or type(x) == 'string'
 end
 
@@ -1340,32 +1282,25 @@ function H.is_something_shown()
   -- empty (returns 2 instead of -1). This was also the reason of not being
   -- able to test with child Neovim process from 'tests/helpers'.
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-  if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then
-    return true
-  end
+  if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
 
   -- - Several buffers are listed (like session with placeholder buffers). That
   --   means unlisted buffers (like from `nvim-tree`) don't affect decision.
-  local listed_buffers = vim.tbl_filter(function(buf_id)
-    return vim.fn.buflisted(buf_id) == 1
-  end, vim.api.nvim_list_bufs())
-  if #listed_buffers > 1 then
-    return true
-  end
+  local listed_buffers = vim.tbl_filter(
+    function(buf_id) return vim.fn.buflisted(buf_id) == 1 end,
+    vim.api.nvim_list_bufs()
+  )
+  if #listed_buffers > 1 then return true end
 
   -- - There are files in arguments (like `nvim foo.txt` with new file).
-  if vim.fn.argc() > 0 then
-    return true
-  end
+  if vim.fn.argc() > 0 then return true end
 
   return false
 end
 
 -- Utilities ------------------------------------------------------------------
 function H.eval_fun_or_string(x, string_as_cmd)
-  if type(x) == 'function' then
-    return x()
-  end
+  if type(x) == 'function' then return x() end
   if type(x) == 'string' then
     if string_as_cmd then
       vim.cmd(x)
@@ -1391,9 +1326,7 @@ else
   end
 end
 
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg)) end
 
 function H.unique_nprefix(strings)
   -- For every string compute minimum width of unique prefix. NOTE: this can be

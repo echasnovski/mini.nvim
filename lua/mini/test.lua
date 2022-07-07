@@ -349,9 +349,7 @@ end
 ---
 ---@param f function Callable to be executed after current callable is finished
 ---   executing (regardless of whether it ended with error or not).
-function MiniTest.finally(f)
-  H.cache.finally = f
-end
+function MiniTest.finally(f) H.cache.finally = f end
 
 --- Run tests
 ---
@@ -363,15 +361,11 @@ end
 ---@param opts table|nil Options with structure similar to |MiniTest.config|.
 ---   Absent values are inferred from there.
 function MiniTest.run(opts)
-  if H.is_disabled() then
-    return
-  end
+  if H.is_disabled() then return end
 
   -- Try sourcing project specific script first
   local success = H.execute_project_script(opts)
-  if success then
-    return
-  end
+  if success then return end
 
   -- Collect and execute
   opts = vim.tbl_deep_extend('force', MiniTest.config, opts or {})
@@ -388,7 +382,6 @@ end
 function MiniTest.run_file(file, opts)
   file = file or vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
 
-  --stylua: ignore
   local stronger_opts = { collect = { find_files = function() return { file } end } }
   opts = vim.tbl_deep_extend('force', opts or {}, stronger_opts)
 
@@ -416,9 +409,7 @@ function MiniTest.run_at_location(location, opts)
 
   local stronger_opts = {
     collect = {
-      find_files = function()
-        return { location.file }
-      end,
+      find_files = function() return { location.file } end,
       filter_cases = function(case)
         local info = debug.getinfo(case.test)
 
@@ -509,9 +500,7 @@ function MiniTest.collect(opts)
     end
 
     -- If output is test set, always use it (even if 'busted' tests were added)
-    if H.is_instance(t, 'testset') then
-      set[file] = t
-    end
+    if H.is_instance(t, 'testset') then set[file] = t end
   end
 
   H.busted_deemulate()
@@ -584,7 +573,6 @@ function MiniTest.execute(cases, opts)
   -- Start execution
   H.cache = { is_executing = true }
 
-  --stylua: ignore
   vim.schedule(function() H.exec_callable(reporter.start, cases) end)
 
   for case_num, cur_case in ipairs(cases) do
@@ -592,14 +580,12 @@ function MiniTest.execute(cases, opts)
     -- while tests are executed.
     local schedule_step = H.make_step_scheduler(cur_case, case_num, opts)
 
-    --stylua: ignore
     vim.schedule(function() MiniTest.current.case = cur_case end)
 
     for i, hook_pre in ipairs(cur_case.hooks.pre) do
       schedule_step(hook_pre, [[Executing 'pre' hook #]] .. i)
     end
 
-    --stylua: ignore
     schedule_step(function() cur_case.test(unpack(cur_case.args)) end, 'Executing test')
 
     for i, hook_post in ipairs(cur_case.hooks.post) do
@@ -607,7 +593,6 @@ function MiniTest.execute(cases, opts)
     end
 
     -- Finalize state
-    --stylua: ignore
     schedule_step(nil, function() return H.case_final_state(cur_case) end)
   end
 
@@ -630,7 +615,6 @@ function MiniTest.stop(opts)
   H.cache.should_stop_execution = true
 
   -- Possibly stop all child Neovim processes
-  --stylua: ignore
   if not opts.close_all_child_neovim then return end
 
   for _, child in ipairs(H.child_neovim_registry) do
@@ -642,9 +626,7 @@ end
 --- Check if tests are being executed
 ---
 ---@return boolean
-function MiniTest.is_executing()
-  return H.cache.is_executing == true
-end
+function MiniTest.is_executing() return H.cache.is_executing == true end
 
 -- Expectations ---------------------------------------------------------------
 --- Table with expectation functions
@@ -668,7 +650,6 @@ MiniTest.expect = {}
 ---@param left any First object.
 ---@param right any Second object.
 function MiniTest.expect.equality(left, right)
-  --stylua: ignore
   if vim.deep_equal(left, right) then return true end
 
   local context = string.format('Left: %s\nRight: %s', vim.inspect(left), vim.inspect(right))
@@ -682,7 +663,6 @@ end
 ---@param left any First object.
 ---@param right any Second object.
 function MiniTest.expect.no_equality(left, right)
-  --stylua: ignore
   if not vim.deep_equal(left, right) then return true end
 
   local context = string.format('Object: %s', vim.inspect(left))
@@ -701,7 +681,6 @@ function MiniTest.expect.error(f, pattern, ...)
   local ok, err = pcall(f, ...)
   err = err or ''
   local has_matched_error = not ok and string.find(err, pattern or '') ~= nil
-  --stylua: ignore
   if has_matched_error then return true end
 
   local matching_pattern = pattern == nil and '' or (' matching pattern %s'):format(vim.inspect(pattern))
@@ -718,7 +697,6 @@ end
 function MiniTest.expect.no_error(f, ...)
   local ok, err = pcall(f, ...)
   err = err or ''
-  --stylua: ignore
   if ok then return true end
 
   H.error_expect('*no* error', 'Observed error: ' .. err)
@@ -737,9 +715,7 @@ end
 ---   - <force> - whether to forcefuly create reference screenshot.
 ---     Temporary useful during test writing. Default: `false`.
 function MiniTest.expect.reference_screenshot(screenshot, path, opts)
-  if screenshot == nil then
-    return true
-  end
+  if screenshot == nil then return true end
 
   opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
 
@@ -751,7 +727,6 @@ function MiniTest.expect.reference_screenshot(screenshot, path, opts)
     local linux_forbidden = [[/]]
     local windows_forbidden = [[<>:"/\|?*]]
     local pattern = string.format('[%%c%%s%s%s]', vim.pesc(linux_forbidden), vim.pesc(windows_forbidden))
-    --stylua: ignore
     local replacements = setmetatable({ ['"'] = "'" }, { __index = function() return '-' end })
     local name = H.case_to_stringid(MiniTest.current.case):gsub(pattern, replacements)
 
@@ -761,9 +736,7 @@ function MiniTest.expect.reference_screenshot(screenshot, path, opts)
     path = 'tests/screenshots/' .. name
 
     -- Deal with multiple screenshots
-    if H.cache.n_screenshots > 1 then
-      path = path .. string.format('-%03d', H.cache.n_screenshots)
-    end
+    if H.cache.n_screenshots > 1 then path = path .. string.format('-%03d', H.cache.n_screenshots) end
   end
 
   -- If there is no readable screenshot file, create it. Pass with note.
@@ -781,7 +754,6 @@ function MiniTest.expect.reference_screenshot(screenshot, path, opts)
   -- Compare
   local are_same, cause = H.screenshot_compare(reference, screenshot)
 
-  --stylua: ignore
   if are_same then return true end
 
   local subject = 'screenshot equality to reference at ' .. vim.inspect(path)
@@ -811,9 +783,7 @@ end
 ---   )
 function MiniTest.new_expectation(subject, predicate, fail_context)
   return function(...)
-    if predicate(...) then
-      return true
-    end
+    if predicate(...) then return true end
 
     local cur_subject = vim.is_callable(subject) and subject(...) or subject
     local cur_context = vim.is_callable(fail_context) and fail_context(...) or fail_context
@@ -885,14 +855,11 @@ function MiniTest.gen_reporter.buffer(opts)
   )
 
   local buf_id, win_id
-  local is_valid_buf_win = function()
-    return vim.api.nvim_buf_is_valid(buf_id) and vim.api.nvim_win_is_valid(win_id)
-  end
+  local is_valid_buf_win = function() return vim.api.nvim_buf_is_valid(buf_id) and vim.api.nvim_win_is_valid(win_id) end
 
   -- Helpers
-  local set_cursor = function(line)
-    vim.api.nvim_win_set_cursor(win_id, { line or vim.api.nvim_buf_line_count(buf_id), 0 })
-  end
+  local set_cursor =
+    function(line) vim.api.nvim_win_set_cursor(win_id, { line or vim.api.nvim_buf_line_count(buf_id), 0 }) end
 
   -- Define "write from crusor line" function with throttled redraw
   local latest_draw_time = 0
@@ -927,7 +894,6 @@ function MiniTest.gen_reporter.buffer(opts)
   end
 
   res.update = function(case_num)
-    --stylua: ignore
     if not is_valid_buf_win() then return end
 
     local case, cur_group_name = all_cases[case_num], all_groups[case_num].name
@@ -945,7 +911,6 @@ function MiniTest.gen_reporter.buffer(opts)
   end
 
   res.finish = function()
-    --stylua: ignore
     if not is_valid_buf_win() then return end
 
     -- Cache final cursor position to overwrite 'Current case state' header
@@ -1008,17 +973,13 @@ function MiniTest.gen_reporter.stdout(opts)
     if cur_group_name ~= latest_group_name then
       write('\n')
       write(cur_group_name)
-      if cur_group_name ~= '' then
-        write(': ')
-      end
+      if cur_group_name ~= '' then write(': ') end
     end
 
     -- Possibly show new symbol
     local state = type(cur_case.exec) == 'table' and cur_case.exec.state or nil
     local cur_symbol = H.reporter_symbols[state]
-    if cur_symbol ~= default_symbol then
-      write(cur_symbol)
-    end
+    if cur_symbol ~= default_symbol then write(cur_symbol) end
 
     latest_group_name = cur_group_name
   end
@@ -1030,7 +991,6 @@ function MiniTest.gen_reporter.stdout(opts)
     write('\n')
 
     -- Possibly quit
-    --stylua: ignore
     if not opts.quit_on_finish then return end
     local command = string.format('silent! %scquit', H.has_fails(all_cases) and 1 or 0)
     vim.cmd(command)
@@ -1077,13 +1037,11 @@ function MiniTest.new_child_neovim()
   local start_args, start_opts
 
   local ensure_running = function()
-    --stylua: ignore
     if child.is_running() then return end
     H.error('Child process is not running. Did you call `child.start()`?')
   end
 
   local prevent_hanging = function(method)
-    -- stylua: ignore
     if not child.is_blocked() then return end
 
     local msg = string.format('Can not use `child.%s` because child process is blocked.', method)
@@ -1139,7 +1097,6 @@ function MiniTest.new_child_neovim()
   end
 
   function child.stop()
-    --stylua: ignore
     if not child.is_running() then return end
 
     -- It is important to close these because there is an upper limit on how
@@ -1177,9 +1134,7 @@ function MiniTest.new_child_neovim()
   child.api = setmetatable({}, {
     __index = function(_, key)
       ensure_running()
-      return function(...)
-        return vim.rpcrequest(child.job.channel, key, ...)
-      end
+      return function(...) return vim.rpcrequest(child.job.channel, key, ...) end
     end,
   })
 
@@ -1188,9 +1143,7 @@ function MiniTest.new_child_neovim()
   child.api_notify = setmetatable({}, {
     __index = function(_, key)
       ensure_running()
-      return function(...)
-        return vim.rpcnotify(child.job.channel, key, ...)
-      end
+      return function(...) return vim.rpcnotify(child.job.channel, key, ...) end
     end,
   })
 
@@ -1292,9 +1245,7 @@ function MiniTest.new_child_neovim()
       end
 
       -- Possibly wait
-      if has_wait and wait > 0 then
-        vim.loop.sleep(wait)
-      end
+      if has_wait and wait > 0 then vim.loop.sleep(wait) end
     end
   end
 
@@ -1332,9 +1283,7 @@ function MiniTest.new_child_neovim()
     return child.api.nvim_get_mode()['blocking']
   end
 
-  function child.is_running()
-    return child.job ~= nil
-  end
+  function child.is_running() return child.job ~= nil end
 
   -- Various wrappers
   function child.ensure_normal_mode()
@@ -1347,9 +1296,7 @@ function MiniTest.new_child_neovim()
     prevent_hanging('get_screenshot')
 
     -- Error if Neovim version is "too old"
-    if child.fn.has('nvim-0.6') == 0 then
-      error('`child.get_screenshot()` needs Neovim>=0.6', 0)
-    end
+    if child.fn.has('nvim-0.6') == 0 then error('`child.get_screenshot()` needs Neovim>=0.6', 0) end
 
     -- Add note if there is a visible floating window but `screen*()` functions
     -- don't support them (Neovim<0.8).
@@ -1652,13 +1599,9 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniTest.config = config
-end
+function H.apply_config(config) MiniTest.config = config end
 
-function H.is_disabled()
-  return vim.g.minitest_disable == true or vim.b.minitest_disable == true
-end
+function H.is_disabled() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 
 -- Work with collection -------------------------------------------------------
 function H.busted_emulate(set)
@@ -1672,9 +1615,7 @@ function H.busted_emulate(set)
     cur_set = cur_set_parent
   end
 
-  _G.it = function(name, f)
-    cur_set[name] = f
-  end
+  _G.it = function(name, f) cur_set[name] = f end
 
   local setting_hook = function(hook_name)
     return function(hook)
@@ -1700,14 +1641,10 @@ end
 -- Work with execution --------------------------------------------------------
 function H.execute_project_script(...)
   -- Don't process script if there are more than one active `run` calls
-  if H.is_inside_script then
-    return false
-  end
+  if H.is_inside_script then return false end
 
   -- Don't process script if at least one argument is not default (`nil`)
-  if #{ ... } > 0 then
-    return
-  end
+  if #{ ... } > 0 then return end
 
   -- Store information
   local config_cache = MiniTest.config
@@ -1726,9 +1663,7 @@ function H.execute_project_script(...)
 end
 
 function H.make_step_scheduler(case, case_num, opts)
-  local report_update_case = function()
-    H.exec_callable(opts.reporter.update, case_num)
-  end
+  local report_update_case = function() H.exec_callable(opts.reporter.update, case_num) end
 
   local on_err = function(e)
     if H.cache.error_is_from_skip then
@@ -1751,7 +1686,6 @@ function H.make_step_scheduler(case, case_num, opts)
     f = f or function() end
 
     vim.schedule(function()
-      --stylua: ignore
       if H.cache.should_stop_execution then return end
 
       H.cache.n_screenshots = 0
@@ -1789,9 +1723,7 @@ function H.set_to_testcases(set, template, hooks_once)
     return vim.is_callable(node) or H.is_instance(node, 'testset')
   end, key_order)
 
-  if #node_keys == 0 then
-    return {}, {}
-  end
+  if #node_keys == 0 then return {}, {} end
 
   -- Ensure that newly added hooks are represented by new functions.
   -- This is needed to count them later only within current set. Example: use
@@ -1806,9 +1738,7 @@ function H.set_to_testcases(set, template, hooks_once)
   for _, key in ipairs(node_keys) do
     local node = set[key]
     for _, args in ipairs(parametrize) do
-      if type(args) ~= 'table' then
-        H.error('`parametrize` should have only tables. Got ' .. vim.inspect(args))
-      end
+      if type(args) ~= 'table' then H.error('`parametrize` should have only tables. Got ' .. vim.inspect(args)) end
 
       local cur_template = H.extend_template(template, {
         args = args,
@@ -1900,26 +1830,18 @@ end
 
 function H.extend_hooks(hooks, layer, do_deepcopy)
   local res = hooks
-  if do_deepcopy == nil or do_deepcopy then
-    res = vim.deepcopy(hooks)
-  end
+  if do_deepcopy == nil or do_deepcopy then res = vim.deepcopy(hooks) end
 
   -- Closer (in terms of nesting) hooks should be closer to test callable
-  if vim.is_callable(layer.pre) then
-    table.insert(res.pre, layer.pre)
-  end
-  if vim.is_callable(layer.post) then
-    table.insert(res.post, 1, layer.post)
-  end
+  if vim.is_callable(layer.pre) then table.insert(res.pre, layer.pre) end
+  if vim.is_callable(layer.post) then table.insert(res.post, 1, layer.post) end
 
   return res
 end
 
 function H.case_to_stringid(case)
   local desc = table.concat(case.desc, ' | ')
-  if #case.args == 0 then
-    return desc
-  end
+  if #case.args == 0 then return desc end
   local args = vim.inspect(case.args, { newline = '', indent = '' })
   return ('%s + args %s'):format(desc, args)
 end
@@ -2054,9 +1976,7 @@ end
 function H.buffer_reporter.set_mappings(buf_id)
   local map_buf = function(key, rhs, opts)
     -- Use mapping description only in Neovim>=0.7
-    if vim.fn.has('nvim-0.7') == 0 then
-      opts.desc = nil
-    end
+    if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
     vim.api.nvim_buf_set_keymap(buf_id, 'n', key, rhs, opts)
   end
@@ -2111,7 +2031,6 @@ function H.buffer_reporter.update_step_lines(case_num, cases, groups)
 
   -- Don't show anything before empty group name (when `group_depth` is 0)
   local cur_group_suffix = cur_group == '' and '' or ': '
-  --stylua: ignore
   local cur_group_symbols = vim.tbl_map(
     function(g) return g.symbol end,
     vim.tbl_filter(function(g) return g.name == cur_group end, groups)
@@ -2148,7 +2067,6 @@ function H.is_instance(x, class)
 end
 
 function H.has_fails(cases)
-  --stylua: ignore
   for _, c in ipairs(cases) do
     local n_fails = c.exec == nil and 0 or #c.exec.fails
     if n_fails > 0 then return true end
@@ -2213,9 +2131,7 @@ function H.screenshot_new(t)
   end
 
   return setmetatable(t, {
-    __tostring = function(x)
-      return string.format('%s\n\n%s', process_screen(x.text), process_screen(x.attr))
-    end,
+    __tostring = function(x) return string.format('%s\n\n%s', process_screen(x.text), process_screen(x.attr)) end,
   })
 end
 
@@ -2276,9 +2192,7 @@ function H.screenshot_compare(screen_ref, screen_obs)
   return true, ''
 end
 
-function H.screenshot_write(screenshot, path)
-  vim.fn.writefile(vim.split(tostring(screenshot), '\n'), path)
-end
+function H.screenshot_write(screenshot, path) vim.fn.writefile(vim.split(tostring(screenshot), '\n'), path) end
 
 function H.screenshot_read(path)
   -- General structure of screenshot with `n` lines:
@@ -2291,27 +2205,20 @@ function H.screenshot_read(path)
   local n = 0.5 * (#lines - 3)
   local text_lines, attr_lines = vim.list_slice(lines, 2, n + 1), vim.list_slice(lines, n + 4, 2 * n + 3)
 
-  --stylua: ignore
   local f = function(x) return H.string_to_chars(x:gsub('^%d+|', '')) end
   return H.screenshot_new({ text = vim.tbl_map(f, text_lines), attr = vim.tbl_map(f, attr_lines) })
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.test) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.test) ' .. msg)) end
 
-function H.error(msg)
-  error(string.format('(mini.test) %s', msg))
-end
+function H.error(msg) error(string.format('(mini.test) %s', msg)) end
 
---stylua: ignore
 function H.wrap_callable(f)
   if not vim.is_callable(f) then return end
   return function(...) return f(...) end
 end
 
---stylua: ignore
 function H.exec_callable(f, ...)
   if not vim.is_callable(f) then return end
   return f(...)
@@ -2321,16 +2228,12 @@ function H.add_prefix(tbl, prefix)
   return vim.tbl_map(function(x)
     local p = prefix
     -- Do not create trailing whitespace
-    if x:sub(1, 1) == '\n' then
-      p = p:gsub('%s*$', '')
-    end
+    if x:sub(1, 1) == '\n' then p = p:gsub('%s*$', '') end
     return ('%s%s'):format(p, x)
   end, tbl)
 end
 
-function H.add_style(x, ansi_code)
-  return string.format('%s%s%s', H.ansi_codes[ansi_code], x, H.ansi_codes.reset)
-end
+function H.add_style(x, ansi_code) return string.format('%s%s%s', H.ansi_codes[ansi_code], x, H.ansi_codes.reset) end
 
 function H.string_to_chars(s)
   -- Can't use `vim.split(s, '')` because of multibyte characters

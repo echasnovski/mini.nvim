@@ -179,9 +179,7 @@ end
 MiniDoc.config = {
   -- Function which extracts part of line used to denote annotation.
   -- For more information see 'Notes' in |MiniDoc.config|.
-  annotation_extractor = function(l)
-    return string.find(l, '^%-%-%-(%S*) ?')
-  end,
+  annotation_extractor = function(l) return string.find(l, '^%-%-%-(%S*) ?') end,
 
   -- Identifier of block annotation lines until first captured identifier
   default_section_id = '@text',
@@ -193,17 +191,13 @@ MiniDoc.config = {
     --minidoc_replace_start block_pre = --<function: infers header sections (tag and/or signature)>,
     block_pre = function(b)
       -- Infer metadata based on afterlines
-      if b:has_lines() and #b.info.afterlines > 0 then
-        H.infer_header(b)
-      end
+      if b:has_lines() and #b.info.afterlines > 0 then H.infer_header(b) end
     end,
     --minidoc_replace_end
 
     -- Applied to section before anything else
     --minidoc_replace_start section_pre = --<function: replaces current aliases>,
-    section_pre = function(s)
-      H.alias_replace(s)
-    end,
+    section_pre = function(s) H.alias_replace(s) end,
     --minidoc_replace_end
 
     -- Applied if section has specified captured id
@@ -224,17 +218,13 @@ MiniDoc.config = {
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@diagnostic'] = --<function: ignores any section content>,
-      ['@diagnostic'] = function(s)
-        s:clear_lines()
-      end,
+      ['@diagnostic'] = function(s) s:clear_lines() end,
       --minidoc_replace_end
       -- For most typical usage see |MiniDoc.afterlines_to_code|
       --minidoc_replace_start ['@eval'] = --<function: evaluates lines; replaces with their return>,
       ['@eval'] = function(s)
         local src = table.concat(s, '\n')
-        local is_loaded, code = pcall(function()
-          return assert(loadstring(src))
-        end)
+        local is_loaded, code = pcall(function() return assert(loadstring(src)) end)
         local output
         if is_loaded then
           MiniDoc.current.eval_section = s
@@ -246,12 +236,8 @@ MiniDoc.config = {
 
         s:clear_lines()
 
-        if output == nil then
-          return
-        end
-        if type(output) == 'string' then
-          output = vim.split(output, '\n')
-        end
+        if output == nil then return end
+        if type(output) == 'string' then output = vim.split(output, '\n') end
         if type(output) ~= 'table' then
           s[1] = 'MINIDOC ERROR. Returned value should be `nil`, `string`, or `table`.'
           return
@@ -282,9 +268,7 @@ MiniDoc.config = {
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@private'] = --<function: registers block for removal>,
-      ['@private'] = function(s)
-        s.parent:clear_lines()
-      end,
+      ['@private'] = function(s) s.parent:clear_lines() end,
       --minidoc_replace_end
       --minidoc_replace_start ['@return'] = --<function>,
       ['@return'] = function(s)
@@ -294,9 +278,7 @@ MiniDoc.config = {
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@seealso'] = --<function>,
-      ['@seealso'] = function(s)
-        H.add_section_heading(s, 'See also')
-      end,
+      ['@seealso'] = function(s) H.add_section_heading(s, 'See also') end,
       --minidoc_replace_end
       --minidoc_replace_start ['@signature'] = --<function: formats signature of documented object>,
       ['@signature'] = function(s)
@@ -324,14 +306,10 @@ MiniDoc.config = {
       ['@text'] = function() end,
       --minidoc_replace_end
       --minidoc_replace_start ['@toc'] = --<function: clears all section lines>,
-      ['@toc'] = function(s)
-        s:clear_lines()
-      end,
+      ['@toc'] = function(s) s:clear_lines() end,
       --minidoc_replace_end
       --minidoc_replace_start ['@toc_entry'] = --<function: registers lines for table of contents>,
-      ['@toc_entry'] = function(s)
-        H.toc_register(s)
-      end,
+      ['@toc_entry'] = function(s) H.toc_register(s) end,
       --minidoc_replace_end
       --minidoc_replace_start ['@type'] = --<function>,
       ['@type'] = function(s)
@@ -340,9 +318,7 @@ MiniDoc.config = {
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@usage'] = --<function>,
-      ['@usage'] = function(s)
-        H.add_section_heading(s, 'Usage')
-      end,
+      ['@usage'] = function(s) H.add_section_heading(s, 'Usage') end,
       --minidoc_replace_end
     },
 
@@ -354,16 +330,12 @@ MiniDoc.config = {
     -- Applied to block after all previous steps
     --minidoc_replace_start block_post = --<function: does many things>,
     block_post = function(b)
-      if not b:has_lines() then
-        return
-      end
+      if not b:has_lines() then return end
 
       local found_param, found_field = false, false
       local n_tag_sections = 0
       H.apply_recursively(function(x)
-        if not (type(x) == 'table' and x.type == 'section') then
-          return
-        end
+        if not (type(x) == 'table' and x.type == 'section') then return end
 
         -- Add headings before first occurence of a section which type usually
         -- appear several times
@@ -391,9 +363,7 @@ MiniDoc.config = {
     -- Applied to file after all previous steps
     --minidoc_replace_start file = --<function: adds separator>,
     file = function(f)
-      if not f:has_lines() then
-        return
-      end
+      if not f:has_lines() then return end
 
       f:insert(1, H.as_struct({ H.as_struct({ string.rep('=', 78) }, 'section') }, 'block'))
       f:insert(H.as_struct({ H.as_struct({ '' }, 'section') }, 'block'))
@@ -405,9 +375,7 @@ MiniDoc.config = {
     doc = function(d)
       -- Render table of contents
       H.apply_recursively(function(x)
-        if not (type(x) == 'table' and x.type == 'section' and x.info.id == '@toc') then
-          return
-        end
+        if not (type(x) == 'table' and x.type == 'section' and x.info.id == '@toc') then return end
         H.toc_insert(x)
       end, d)
 
@@ -434,9 +402,7 @@ MiniDoc.config = {
       for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
         local buf_path = H.full_path(vim.api.nvim_buf_get_name(buf_id))
         if buf_path == output_path then
-          vim.api.nvim_buf_call(buf_id, function()
-            vim.cmd('noautocmd silent edit | set ft=help')
-          end)
+          vim.api.nvim_buf_call(buf_id, function() vim.cmd('noautocmd silent edit | set ft=help') end)
         end
       end
 
@@ -581,9 +547,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 function MiniDoc.generate(input, output, config)
   -- Try sourcing project specific script first
   local success = H.execute_project_script(input, output, config)
-  if success then
-    return H.generate_recent_output
-  end
+  if success then return H.generate_recent_output end
 
   input = input or H.default_input()
   output = output or H.default_output()
@@ -680,9 +644,7 @@ function MiniDoc.afterlines_to_code(struct)
     return
   end
 
-  if struct.type == 'section' then
-    struct = struct.parent
-  end
+  if struct.type == 'section' then struct = struct.parent end
   local src = table.concat(struct.info.afterlines, '\n')
 
   -- Process directives
@@ -787,25 +749,17 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
-  MiniDoc.config = config
-end
+function H.apply_config(config) MiniDoc.config = config end
 
-function H.is_disabled()
-  return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true
-end
+function H.is_disabled() return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true end
 
 -- Work with project specific script ==========================================
 function H.execute_project_script(input, output, config)
   -- Don't process script if there are more than one active `generate` calls
-  if H.generate_is_active then
-    return
-  end
+  if H.generate_is_active then return end
 
   -- Don't process script if at least one argument is not default
-  if not (input == nil and output == nil and config == nil) then
-    return
-  end
+  if not (input == nil and output == nil and config == nil) then return end
 
   -- Store information
   local config_cache = MiniDoc.config
@@ -833,19 +787,13 @@ function H.default_input()
     local files = vim.fn.globpath(dir_glob, '*.lua', false, true)
 
     -- Use full paths
-    files = vim.tbl_map(function(x)
-      return vim.fn.fnamemodify(x, ':p')
-    end, files)
+    files = vim.tbl_map(function(x) return vim.fn.fnamemodify(x, ':p') end, files)
 
     -- Put 'init.lua' first among files from same directory
     table.sort(files, function(a, b)
       if vim.fn.fnamemodify(a, ':h') == vim.fn.fnamemodify(b, ':h') then
-        if vim.fn.fnamemodify(a, ':t') == 'init.lua' then
-          return true
-        end
-        if vim.fn.fnamemodify(b, ':t') == 'init.lua' then
-          return false
-        end
+        if vim.fn.fnamemodify(a, ':t') == 'init.lua' then return true end
+        if vim.fn.fnamemodify(b, ':t') == 'init.lua' then return false end
       end
 
       return a < b
@@ -906,9 +854,7 @@ end
 --   captured as section id. Empty string of no section id was captured.
 -- - Everything else is used as block info (like `afterlines`, etc.).
 function H.raw_block_to_block(block_raw, config)
-  if #block_raw.annotation == 0 and #block_raw.afterlines == 0 then
-    return nil
-  end
+  if #block_raw.annotation == 0 and #block_raw.afterlines == 0 then return nil end
 
   local block = H.new_struct('block', {
     afterlines = block_raw.afterlines,
@@ -955,9 +901,7 @@ function H.apply_structure_hooks(doc, hooks)
         hooks.section_pre(section)
 
         local hook = hooks.sections[section.info.id]
-        if hook ~= nil then
-          hook(section)
-        end
+        if hook ~= nil then hook(section) end
 
         hooks.section_post(section)
       end
@@ -972,9 +916,7 @@ function H.apply_structure_hooks(doc, hooks)
 end
 
 function H.alias_register(s)
-  if #s == 0 then
-    return
-  end
+  if #s == 0 then return end
 
   -- Remove first word (with bits of surrounding whitespace) while capturing it
   local alias_name
@@ -982,18 +924,14 @@ function H.alias_register(s)
     alias_name = x
     return ''
   end, 1)
-  if alias_name == nil then
-    return
-  end
+  if alias_name == nil then return end
 
   MiniDoc.current.aliases = MiniDoc.current.aliases or {}
   MiniDoc.current.aliases[alias_name] = table.concat(s, '\n')
 end
 
 function H.alias_replace(s)
-  if MiniDoc.current.aliases == nil then
-    return
-  end
+  if MiniDoc.current.aliases == nil then return end
 
   for i, _ in ipairs(s) do
     for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
@@ -1014,16 +952,14 @@ function H.toc_register(s)
 end
 
 function H.toc_insert(s)
-  if MiniDoc.current.toc == nil then
-    return
-  end
+  if MiniDoc.current.toc == nil then return end
 
   -- Render table of contents
   local toc_lines = {}
   for _, toc_entry in ipairs(MiniDoc.current.toc) do
-    local _, tag_section = toc_entry.parent:has_descendant(function(x)
-      return type(x) == 'table' and x.type == 'section' and x.info.id == '@tag'
-    end)
+    local _, tag_section = toc_entry.parent:has_descendant(
+      function(x) return type(x) == 'table' and x.type == 'section' and x.info.id == '@tag' end
+    )
     tag_section = tag_section or {}
 
     local lines = {}
@@ -1050,9 +986,7 @@ function H.toc_insert(s)
 end
 
 function H.add_section_heading(s, heading)
-  if #s == 0 or s.type ~= 'section' then
-    return
-  end
+  if #s == 0 or s.type ~= 'section' then return end
 
   -- Add heading
   s:insert(1, ('%s~'):format(heading))
@@ -1065,9 +999,7 @@ function H.mark_optional(s)
 end
 
 function H.enclose_var_name(s)
-  if #s == 0 or s.type ~= 'section' then
-    return
-  end
+  if #s == 0 or s.type ~= 'section' then return end
 
   s[1] = s[1]:gsub('(%S+)', '{%1}', 1)
 end
@@ -1076,16 +1008,12 @@ end
 ---   needed to not detect type early. Like in `@param a_function function`.
 ---@private
 function H.enclose_type(s, enclosure, init)
-  if #s == 0 or s.type ~= 'section' then
-    return
-  end
+  if #s == 0 or s.type ~= 'section' then return end
   enclosure = enclosure or '`%(%1%)`'
   init = init or 1
 
   local cur_type = H.match_first_pattern(s[1], H.pattern_sets['types'], init)
-  if #cur_type == 0 then
-    return
-  end
+  if #cur_type == 0 then return end
 
   -- Add `%S*` to front and back of found pattern to support their combination
   -- with `|`. Also allows using `[]` and `?` prefixes.
@@ -1099,16 +1027,14 @@ end
 
 -- Infer data from afterlines -------------------------------------------------
 function H.infer_header(b)
-  local has_signature = b:has_descendant(function(x)
-    return type(x) == 'table' and x.type == 'section' and x.info.id == '@signature'
-  end)
-  local has_tag = b:has_descendant(function(x)
-    return type(x) == 'table' and x.type == 'section' and x.info.id == '@tag'
-  end)
+  local has_signature = b:has_descendant(
+    function(x) return type(x) == 'table' and x.type == 'section' and x.info.id == '@signature' end
+  )
+  local has_tag = b:has_descendant(
+    function(x) return type(x) == 'table' and x.type == 'section' and x.info.id == '@tag' end
+  )
 
-  if has_signature and has_tag then
-    return
-  end
+  if has_signature and has_tag then return end
 
   local l_all = table.concat(b.info.afterlines, ' ')
   local tag, signature
@@ -1129,14 +1055,10 @@ function H.infer_header(b)
 
   if tag ~= nil then
     -- First insert signature (so that it will appear after tag section)
-    if not has_signature then
-      b:insert(1, H.as_struct({ signature }, 'section', { id = '@signature' }))
-    end
+    if not has_signature then b:insert(1, H.as_struct({ signature }, 'section', { id = '@signature' })) end
 
     -- Insert tag
-    if not has_tag then
-      b:insert(1, H.as_struct({ tag }, 'section', { id = '@tag' }))
-    end
+    if not has_tag then b:insert(1, H.as_struct({ tag }, 'section', { id = '@tag' })) end
   end
 end
 
@@ -1146,9 +1068,7 @@ function H.format_signature(line)
   -- Otherwise pick first word
   name = name or line:match('(%S+)')
 
-  if not name then
-    return ''
-  end
+  if not name then return '' end
 
   -- Tidy arguments
   if args and args ~= '()' then
@@ -1207,9 +1127,7 @@ function H.new_struct(struct_type, info)
   end
 
   output.has_lines = function(self)
-    return self:has_descendant(function(x)
-      return type(x) == 'string'
-    end)
+    return self:has_descendant(function(x) return type(x) == 'string' end)
   end
 
   output.clear_lines = function(self)
@@ -1227,9 +1145,7 @@ end
 
 function H.sync_parent_index(x)
   for i, _ in ipairs(x) do
-    if type(x[i]) == 'table' then
-      x[i].parent_index = i
-    end
+    if type(x[i]) == 'table' then x[i].parent_index = i end
   end
   return x
 end
@@ -1263,40 +1179,30 @@ function H.ensure_indent(text, n_indent_target)
     if n_indent > 0 then
       _, n_indent_cur = l:find('^%s*')
       -- Condition "current n-indent equals line length" detects empty line
-      if (n_indent_cur < n_indent) and (n_indent_cur < l:len()) then
-        n_indent = n_indent_cur
-      end
+      if (n_indent_cur < n_indent) and (n_indent_cur < l:len()) then n_indent = n_indent_cur end
     end
   end
 
   -- Ensure indent
   local indent = string.rep(' ', n_indent_target)
   for i, l in ipairs(lines) do
-    if l ~= '' then
-      lines[i] = indent .. l:sub(n_indent + 1)
-    end
+    if l ~= '' then lines[i] = indent .. l:sub(n_indent + 1) end
   end
 
   return table.concat(lines, '\n')
 end
 
 function H.align_text(text, width, direction)
-  if type(text) ~= 'string' then
-    return
-  end
+  if type(text) ~= 'string' then return end
   text = vim.trim(text)
   width = width or 78
   direction = direction or 'left'
 
   -- Don't do anything if aligning left or line is a whitespace
-  if direction == 'left' or text:find('^%s*$') then
-    return text
-  end
+  if direction == 'left' or text:find('^%s*$') then return text end
 
   local n_left = math.max(0, 78 - H.visual_text_width(text))
-  if direction == 'center' then
-    n_left = math.floor(0.5 * n_left)
-  end
+  if direction == 'center' then n_left = math.floor(0.5 * n_left) end
 
   return (' '):rep(n_left) .. text
 end
@@ -1314,9 +1220,7 @@ end
 ---
 ---@private
 function H.match_first_pattern(text, pattern_set, init)
-  local start_tbl = vim.tbl_map(function(pattern)
-    return text:find(pattern, init) or math.huge
-  end, pattern_set)
+  local start_tbl = vim.tbl_map(function(pattern) return text:find(pattern, init) or math.huge end, pattern_set)
 
   local min_start, min_id = math.huge, nil
   for id, st in ipairs(start_tbl) do
@@ -1325,9 +1229,7 @@ function H.match_first_pattern(text, pattern_set, init)
     end
   end
 
-  if min_id == nil then
-    return {}
-  end
+  if min_id == nil then return {} end
   return { text:match(pattern_set[min_id], init) }
 end
 
@@ -1371,12 +1273,8 @@ function H.file_write(path, lines)
   vim.fn.writefile(lines, path, 'b')
 end
 
-function H.full_path(path)
-  return vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))
-end
+function H.full_path(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
 
-function H.message(msg)
-  vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg))
-end
+function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg)) end
 
 return MiniDoc
