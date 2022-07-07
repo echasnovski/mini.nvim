@@ -412,6 +412,11 @@ function H.apply_palette(palette, use_cterm)
   hi('WildMenu',     {fg=p.base08, bg=p.base0A, attr=nil,         sp=nil})
   hi('lCursor',      {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
 
+  if vim.fn.hlexists('WinBar') == 1 then
+    hi('WinBar',   {fg=p.base04, bg=p.base02, attr=nil, sp=nil})
+    hi('WinBarNC', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
+  end
+
   -- Standard syntax (affects treesitter)
   hi('Boolean',        {fg=p.base09, bg=nil,      attr=nil, sp=nil})
   hi('Character',      {fg=p.base08, bg=nil,      attr=nil, sp=nil})
