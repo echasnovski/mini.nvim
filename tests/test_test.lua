@@ -706,10 +706,30 @@ local windows_forbidden = [[<>:"/\|?*]]
 local whitespace = '\t '
 local special_characters = string.char(0) .. string.char(1) .. string.char(31)
 local suffix = useful_punctuation .. linux_forbidden .. windows_forbidden .. whitespace .. special_characters
-T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = new_set(
-  { parametrize = { { suffix } } },
-  { test = validate_path_sanitize }
-)
+
+-- Don't permanently create reference file because its name is very long. This
+-- might hurt Windows users which are not interested in testing this plugin.
+T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = new_set({ parametrize = { { suffix } } }, {
+  test = function()
+    local expected_filename = table.concat({
+      'tests/screenshots/',
+      'tests-test_test.lua---',
+      'expect---',
+      'reference_screenshot()---',
+      'correctly-sanitizes-path-',
+      [[_-+{}()[]''----'-------------]],
+      'test-+-args-',
+      [[{-'_-+{}()[]'-'-----'-------t--0-1-31'-}]],
+    }, '')
+    finally(function()
+      MiniTest.current.case.exec.notes = {}
+      vim.fn.delete(expected_filename)
+    end)
+    eq(vim.fn.filereadable(expected_filename), 0)
+    validate_path_sanitize()
+    eq(vim.fn.filereadable(expected_filename), 1)
+  end,
+})
 
 -- Paths should not end with whitespace or dot
 T['expect']['reference_screenshot()']['correctly sanitizes path for Windows '] = validate_path_sanitize
