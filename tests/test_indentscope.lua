@@ -403,10 +403,8 @@ end
 T['draw()']['respects `config.draw.animation`'] = function()
   mark_flaky()
 
-  local command = string.format(
-    'MiniIndentscope.config.draw.animation = function() return %d end',
-    2.5 * test_times.animation_step
-  )
+  local command =
+    string.format('MiniIndentscope.config.draw.animation = function() return %d end', 2.5 * test_times.animation_step)
   child.lua(command)
 
   set_cursor(5, 4)

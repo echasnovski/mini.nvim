@@ -36,9 +36,9 @@ If you have Windows or MacOS and want to contribute code related change, make yo
 
 ## Formatting
 
-This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) for formatting Lua code. Before making changes to code, please:
+This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14.0 for formatting Lua code. Before making changes to code, please:
 
-- [Install StyLua](https://github.com/JohnnyMorganz/StyLua#installation).
+- [Install StyLua](https://github.com/JohnnyMorganz/StyLua#installation). NOTE: use `v0.14.0`.
 - Format with it. Currently there are two ways to do this:
     - Manually run `stylua .` from the root directory of this project.
     - [Install pre-commit](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.

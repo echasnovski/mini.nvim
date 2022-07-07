@@ -286,9 +286,8 @@ T['run_file()'] = new_set()
 
 T['run_file()']['works'] = function()
   child.lua([[MiniTest.run_file(...)]], { get_ref_path('testref_run.lua') })
-  local last_desc = child.lua_get(
-    [[vim.tbl_map(function(case) return case.desc[#case.desc] end, MiniTest.current.all_cases)]]
-  )
+  local last_desc =
+    child.lua_get([[vim.tbl_map(function(case) return case.desc[#case.desc] end, MiniTest.current.all_cases)]])
   eq(last_desc, { 'run_at_location()', 'extra case' })
 end
 

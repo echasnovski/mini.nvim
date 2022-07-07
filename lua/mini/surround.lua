@@ -1145,11 +1145,8 @@ end
 
 function H.make_surrounding_table()
   -- Use data from `config` and extend with builtins
-  local surroundings = vim.tbl_deep_extend(
-    'force',
-    H.builtin_surroundings,
-    MiniSurround.config.custom_surroundings or {}
-  )
+  local surroundings =
+    vim.tbl_deep_extend('force', H.builtin_surroundings, MiniSurround.config.custom_surroundings or {})
 
   -- Add possibly missing information from default surrounding info
   for char, info in pairs(surroundings) do

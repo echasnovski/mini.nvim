@@ -342,9 +342,8 @@ T['read()']['does not source if there are unsaved listed buffers'] = function()
   local unsaved_buffers = setup_unsaved_buffers()
 
   -- Session should not be sourced
-  local error_pattern = vim.pesc(
-    '(mini.sessions) There are unsaved listed buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.'
-  )
+  local error_pattern =
+    vim.pesc('(mini.sessions) There are unsaved listed buffers: ' .. table.concat(unsaved_buffers, ', ') .. '.')
   expect.error(function()
     child.lua([[MiniSessions.read('session1')]])
   end, error_pattern)

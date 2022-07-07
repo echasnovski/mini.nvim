@@ -1798,10 +1798,8 @@ function H.set_to_testcases(set, template, hooks_once)
   -- the same function in several `_once` hooks. In `H.inject_hooks_once` it
   -- will be injected only once overall whereas it should be injected only once
   -- within corresponding test set.
-  hooks_once = H.extend_hooks(
-    hooks_once,
-    { pre = H.wrap_callable(hooks.pre_once), post = H.wrap_callable(hooks.post_once) }
-  )
+  hooks_once =
+    H.extend_hooks(hooks_once, { pre = H.wrap_callable(hooks.pre_once), post = H.wrap_callable(hooks.post_once) })
 
   local testcase_arr, hooks_once_arr = {}, {}
   -- Process nodes in order they were added as `T[...] = x`

@@ -219,10 +219,8 @@ T['active()/inactive()'] = new_set({
 
 T['active()/inactive()']['respects `config.content`'] = function(field)
   unload_module()
-  local command = string.format(
-    [[require('mini.statusline').setup({ content = { %s = function() return 'aaa' end } })]],
-    field
-  )
+  local command =
+    string.format([[require('mini.statusline').setup({ content = { %s = function() return 'aaa' end } })]], field)
   child.lua(command)
   eq(eval_content(field), 'aaa')
 end
