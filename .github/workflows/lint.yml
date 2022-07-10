@@ -4,8 +4,8 @@ on: [push, pull_request]
 
 jobs:
   stylua:
-    name: stylua
-    runs-on: ubuntu-20.04
+    name: Formatting
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: JohnnyMorganz/stylua-action@1.0.0
@@ -14,9 +14,10 @@ jobs:
           version: v0.14.0
           # CLI arguments
           args: --color always --check .
+
   gendoc:
-    name: gendoc
-    runs-on: ubuntu-20.04
+    name: Document generation
+    runs-on: ubuntu-latest
     steps:
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
@@ -28,3 +29,32 @@ jobs:
         run: make --silent documentation
       - name: Check for changes
         run: if [[ -n $(git status -s) ]]; then exit 1; fi
+
+  case-sensitivity:
+    name: File case sensitivity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check Case Sensitivity
+        uses: credfeto/action-case-checker@v1.2.1
+
+  checkout:
+    # Test possibility of checking out and setting up 'mini.nvim' on non-Linux
+    # This can guard from possible problems:
+    # - Long file names (particularly from reference screenshots).
+    name: Test checkout
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          # Uses latest stable by default
+          neovim: true
+      - name: Test setup
+        run: make basic_setup

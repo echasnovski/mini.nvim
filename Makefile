@@ -17,4 +17,7 @@ test_file:
 		-c "lua MiniTest.run_file('$(FILE)', { execute = { reporter = MiniTest.gen_reporter.stdout({ group_depth = $(GROUP_DEPTH) }) } })"
 
 documentation:
-	$(NVIM_EXEC) --headless --noplugin -u ./scripts/minimal_init.vim -c "lua require('mini.doc').generate()" -c "qa!"
+	$(NVIM_EXEC) --headless --noplugin -u ./scripts/minimal_init.lua -c "lua require('mini.doc').generate()" -c "qa!"
+
+basic_setup:
+	$(NVIM_EXEC) --headless --noplugin -u ./scripts/basic-setup_init.lua
