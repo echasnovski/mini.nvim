@@ -185,7 +185,7 @@ local H = {}
 ---@param config table Module config table. See |MiniStarter.config|.
 ---
 ---@usage `require('mini.starter').setup({})` (replace `{}` with your `config` table)
-function MiniStarter.setup(config)
+MiniStarter.setup = function(config)
   -- Export module
   _G.MiniStarter = MiniStarter
 
@@ -285,7 +285,7 @@ MiniStarter.content = {}
 
 -- Module functionality =======================================================
 --- Act on |VimEnter|.
-function MiniStarter.on_vimenter()
+MiniStarter.on_vimenter = function()
   if MiniStarter.config.autoopen and not H.is_something_shown() then
     -- Set indicator used to make different decision on startup
     H.is_in_vimenter = true
@@ -309,7 +309,7 @@ end
 ---
 ---@param buf_id number Identifier of existing valid buffer (see |bufnr()|) to
 ---   open inside. Default: create a new one.
-function MiniStarter.open(buf_id)
+MiniStarter.open = function(buf_id)
   if H.is_disabled() then return end
 
   -- Reset helper data
@@ -374,7 +374,7 @@ end
 ---
 --- Note: this function is executed on every |VimResized| to allow more
 --- responsive behavior.
-function MiniStarter.refresh()
+MiniStarter.refresh = function()
   if H.is_disabled() or H.buf_id == nil or not vim.api.nvim_buf_is_valid(H.buf_id) then return end
 
   -- Normalize certain config values
@@ -408,7 +408,7 @@ function MiniStarter.refresh()
 end
 
 --- Close Starter buffer
-function MiniStarter.close()
+MiniStarter.close = function()
   -- Use `pcall` to allow calling for already non-existing buffer
   pcall(vim.api.nvim_buf_delete, H.buf_id, {})
   H.buf_id = nil
@@ -421,7 +421,7 @@ MiniStarter.sections = {}
 --- Section with builtin actions
 ---
 ---@return table Array of items.
-function MiniStarter.sections.builtin_actions()
+MiniStarter.sections.builtin_actions = function()
   return {
     { name = 'Edit new buffer', action = 'enew', section = 'Builtin actions' },
     { name = 'Quit Neovim', action = 'qall', section = 'Builtin actions' },
@@ -444,7 +444,7 @@ end
 ---   alphabetically by name). Default: true.
 ---
 ---@return __section_fun
-function MiniStarter.sections.sessions(n, recent)
+MiniStarter.sections.sessions = function(n, recent)
   n = n or 5
   recent = recent == nil and true or recent
 
@@ -502,7 +502,7 @@ end
 ---   Default: `true`.
 ---
 ---@return __section_fun
-function MiniStarter.sections.recent_files(n, current_dir, show_path)
+MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   n = n or 5
   current_dir = current_dir == nil and false or current_dir
   show_path = show_path == nil and true or show_path
@@ -547,7 +547,7 @@ end
 --- Section with basic Telescope pickers relevant to start screen
 ---
 ---@return __section_fun
-function MiniStarter.sections.telescope()
+MiniStarter.sections.telescope = function()
   return function()
     return {
       {action = 'Telescope file_browser',    name = 'Browser',         section = 'Telescope'},
@@ -579,7 +579,7 @@ MiniStarter.gen_hook = {}
 ---   Default: 0.
 ---
 ---@return function Content hook.
-function MiniStarter.gen_hook.padding(left, top)
+MiniStarter.gen_hook.padding = function(left, top)
   left = math.max(left or 0, 0)
   top = math.max(top or 0, 0)
   return function(content)
@@ -612,7 +612,7 @@ end
 ---   of bullet when corresponding item becomes current. Default: true.
 ---
 ---@return function Content hook.
-function MiniStarter.gen_hook.adding_bullet(bullet, place_cursor)
+MiniStarter.gen_hook.adding_bullet = function(bullet, place_cursor)
   bullet = bullet or '░ '
   place_cursor = place_cursor == nil and true or place_cursor
   return function(content)
@@ -647,7 +647,7 @@ end
 ---   element of item) for which index won't be added. Default: `{}`.
 ---
 ---@return function Content hook.
-function MiniStarter.gen_hook.indexing(grouping, exclude_sections)
+MiniStarter.gen_hook.indexing = function(grouping, exclude_sections)
   grouping = grouping or 'all'
   exclude_sections = exclude_sections or {}
   local per_section = grouping == 'section'
@@ -689,7 +689,7 @@ end
 ---@param vertical string One of "top", "center", "bottom". Default: "top".
 ---
 ---@return function Content hook.
-function MiniStarter.gen_hook.aligning(horizontal, vertical)
+MiniStarter.gen_hook.aligning = function(horizontal, vertical)
   horizontal = horizontal == nil and 'left' or horizontal
   vertical = vertical == nil and 'top' or vertical
 
@@ -730,7 +730,7 @@ end
 ---@return table Array of resulting units' coordinates. Each coordinate is a
 ---   table with <line> and <unit> keys. To retrieve actual unit from coordinate
 ---   `c`, use `content[c.line][c.unit]`.
-function MiniStarter.content_coords(content, predicate)
+MiniStarter.content_coords = function(content, predicate)
   content = content or MiniStarter.content
   if predicate == nil then predicate = function(unit) return true end end
   if type(predicate) == 'string' then
@@ -756,7 +756,7 @@ end
 ---@param content table Content "2d array".
 ---
 ---@return table Array of strings for each buffer line.
-function MiniStarter.content_to_lines(content)
+MiniStarter.content_to_lines = function(content)
   return vim.tbl_map(
     function(content_line)
       return table.concat(
@@ -783,7 +783,7 @@ end
 ---@param content table Content "2d array".
 ---
 ---@return table Array of items.
-function MiniStarter.content_to_items(content)
+MiniStarter.content_to_items = function(content)
   content = content or MiniStarter.content
 
   -- NOTE: this havily utilizes 'modify by reference' nature of Lua tables
@@ -830,14 +830,14 @@ end
 
 -- Other exported functions ---------------------------------------------------
 --- Evaluate current item
-function MiniStarter.eval_current_item() H.eval_fun_or_string(H.items[H.current_item_id].action, true) end
+MiniStarter.eval_current_item = function() H.eval_fun_or_string(H.items[H.current_item_id].action, true) end
 
 --- Update current item
 ---
 --- This makes next (with respect to `direction`) active item to be current.
 ---
 ---@param direction string One of "next" or "previous".
-function MiniStarter.update_current_item(direction)
+MiniStarter.update_current_item = function(direction)
   -- Advance current item
   local prev_current = H.current_item_id
   H.current_item_id = H.next_active_item_id(H.current_item_id, direction)
@@ -862,7 +862,7 @@ end
 ---
 ---@param char string Single character to be added to query. If `nil`, deletes
 ---   latest character from query.
-function MiniStarter.add_to_query(char)
+MiniStarter.add_to_query = function(char)
   local new_query
   if char == nil then
     new_query = H.query:sub(0, H.query:len() - 1)
@@ -877,7 +877,7 @@ end
 ---@param query string|nil Query to be set (only if it results into at least one
 ---   active item). Default: `nil` for setting query to empty string, which
 ---   essentially resets query.
-function MiniStarter.set_query(query)
+MiniStarter.set_query = function(query)
   query = query or ''
   if type(query) ~= 'string' then error('`query` should be either `nil` or string.') end
 
@@ -885,7 +885,7 @@ function MiniStarter.set_query(query)
 end
 
 --- Act on |CursorMoved| by repositioning cursor in fixed place.
-function MiniStarter.on_cursormoved() H.position_cursor_on_current_item() end
+MiniStarter.on_cursormoved = function() H.position_cursor_on_current_item() end
 
 -- Helper data ================================================================
 -- Module default config
@@ -944,7 +944,7 @@ H.query = ''
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -962,18 +962,18 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniStarter.config = config end
+H.apply_config = function(config) MiniStarter.config = config end
 
-function H.is_disabled() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
+H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
 -- Normalize config elements --------------------------------------------------
-function H.normalize_items(items)
+H.normalize_items = function(items)
   local res = H.items_flatten(items)
   if #res == 0 then return { { name = '`MiniStarter.config.items` is empty', action = '', section = '' } } end
   return H.items_sort(res)
 end
 
-function H.normalize_header_footer(x)
+H.normalize_header_footer = function(x)
   if type(x) == 'function' then x = x() end
   local res = tostring(x)
   if res == '' then return {} end
@@ -981,7 +981,7 @@ function H.normalize_header_footer(x)
 end
 
 -- Work with buffer content ---------------------------------------------------
-function H.make_initial_content(items)
+H.make_initial_content = function(items)
   MiniStarter.content = {}
 
   -- Add header lines
@@ -1000,19 +1000,19 @@ function H.make_initial_content(items)
   end
 end
 
-function H.content_unit(string, type, hl, extra)
+H.content_unit = function(string, type, hl, extra)
   return vim.tbl_extend('force', { string = string, type = type, hl = hl }, extra or {})
 end
 
-function H.content_add_line(content_line) table.insert(MiniStarter.content, content_line) end
+H.content_add_line = function(content_line) table.insert(MiniStarter.content, content_line) end
 
-function H.content_add_empty_lines(n)
+H.content_add_empty_lines = function(n)
   for _ = 1, n do
     H.content_add_line({ H.content_unit('', 'empty', nil) })
   end
 end
 
-function H.content_add_items(items)
+H.content_add_items = function(items)
   local cur_section
   for _, item in ipairs(items) do
     -- Possibly add section line
@@ -1027,7 +1027,7 @@ function H.content_add_items(items)
   end
 end
 
-function H.content_highlight()
+H.content_highlight = function()
   for l_num, content_line in ipairs(MiniStarter.content) do
     -- Track 0-based starting column of current unit (using byte length)
     local start_col = 0
@@ -1041,7 +1041,7 @@ function H.content_highlight()
 end
 
 -- Work with items -----------------------------------------------------------
-function H.items_flatten(items)
+H.items_flatten = function(items)
   local res, f = {}, nil
   f = function(x)
     -- Expand (possibly recursively) functions immediately
@@ -1066,7 +1066,7 @@ function H.items_flatten(items)
   return res
 end
 
-function H.items_sort(items)
+H.items_sort = function(items)
   -- Order first by section and then by item id (both in order of appearence)
   -- Gather items grouped per section in order of their appearence
   local sections, section_order = {}, {}
@@ -1090,13 +1090,13 @@ function H.items_sort(items)
   return res
 end
 
-function H.items_highlight()
+H.items_highlight = function()
   for _, item in ipairs(H.items) do
     H.buf_hl(H.ns.general, 'MiniStarterItemPrefix', item._line, item._start_col, item._start_col + item._nprefix, 51)
   end
 end
 
-function H.next_active_item_id(item_id, direction)
+H.next_active_item_id = function(item_id, direction)
   -- Advance in cyclic fashion
   local id = item_id
   local n_items = vim.tbl_count(H.items)
@@ -1111,16 +1111,16 @@ function H.next_active_item_id(item_id, direction)
   return id
 end
 
-function H.position_cursor_on_current_item() vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos) end
+H.position_cursor_on_current_item = function() vim.api.nvim_win_set_cursor(0, H.items[H.current_item_id]._cursorpos) end
 
-function H.item_is_active(item, query)
+H.item_is_active = function(item, query)
   -- Item is active = item's name starts with query (ignoring case) and item's
   -- action is non-empty
   return vim.startswith(item.name:lower(), query) and item.action ~= ''
 end
 
 -- Work with queries ----------------------------------------------------------
-function H.make_query(query)
+H.make_query = function(query)
   -- Ignore case
   query = (query or H.query):lower()
 
@@ -1165,7 +1165,7 @@ function H.make_query(query)
 end
 
 -- Work with starter buffer ---------------------------------------------------
-function H.make_buffer_autocmd()
+H.make_buffer_autocmd = function()
   local command = string.format(
     [[augroup MiniStarterBuffer
         au!
@@ -1179,7 +1179,7 @@ function H.make_buffer_autocmd()
   vim.cmd(command)
 end
 
-function H.apply_buffer_options()
+H.apply_buffer_options = function()
   -- Force Normal mode
   vim.cmd('normal! <ESC>')
 
@@ -1221,7 +1221,7 @@ function H.apply_buffer_options()
   vim.b.minicursorword_disable = true
 end
 
-function H.apply_buffer_mappings()
+H.apply_buffer_mappings = function()
   H.buf_keymap('<CR>', 'MiniStarter.eval_current_item()')
 
   H.buf_keymap('<Up>', [[MiniStarter.update_current_item('prev')]])
@@ -1242,7 +1242,7 @@ function H.apply_buffer_mappings()
   H.buf_keymap('<C-c>', 'MiniStarter.close()')
 end
 
-function H.add_hl_activity(query)
+H.add_hl_activity = function(query)
   for _, item in ipairs(H.items) do
     local l = item._line
     local s = item._start_col
@@ -1255,25 +1255,25 @@ function H.add_hl_activity(query)
   end
 end
 
-function H.add_hl_current_item()
+H.add_hl_current_item = function()
   local cur_item = H.items[H.current_item_id]
   H.buf_hl(H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col, 52)
 end
 
 -- Predicates -----------------------------------------------------------------
-function H.is_fun_or_string(x, allow_nil)
+H.is_fun_or_string = function(x, allow_nil)
   if allow_nil == nil then allow_nil = true end
   return (allow_nil and x == nil) or type(x) == 'function' or type(x) == 'string'
 end
 
-function H.is_item(x)
+H.is_item = function(x)
   return type(x) == 'table'
     and H.is_fun_or_string(x['action'], false)
     and type(x['name']) == 'string'
     and type(x['section']) == 'string'
 end
 
-function H.is_something_shown()
+H.is_something_shown = function()
   -- Don't open Starter buffer if Neovim is opened to show something. That is
   -- when at least one of the following is true:
   -- - Current buffer has any lines (something opened explicitly).
@@ -1299,7 +1299,7 @@ function H.is_something_shown()
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.eval_fun_or_string(x, string_as_cmd)
+H.eval_fun_or_string = function(x, string_as_cmd)
   if type(x) == 'function' then return x() end
   if type(x) == 'string' then
     if string_as_cmd then
@@ -1310,25 +1310,25 @@ function H.eval_fun_or_string(x, string_as_cmd)
   end
 end
 
-function H.buf_keymap(key, cmd)
+H.buf_keymap = function(key, cmd)
   vim.api.nvim_buf_set_keymap(H.buf_id, 'n', key, ('<Cmd>lua %s<CR>'):format(cmd), { nowait = true, silent = true })
 end
 
 -- Use `priority` in Neovim 0.7 because of the regression bug (highlights are
 -- not stacked properly): https://github.com/neovim/neovim/issues/17358
 if vim.fn.has('nvim-0.7') == 1 then
-  function H.buf_hl(ns_id, hl_group, line, col_start, col_end, priority)
+  H.buf_hl = function(ns_id, hl_group, line, col_start, col_end, priority)
     vim.highlight.range(H.buf_id, ns_id, hl_group, { line, col_start }, { line, col_end }, { priority = priority })
   end
 else
-  function H.buf_hl(ns_id, hl_group, line, col_start, col_end)
+  H.buf_hl = function(ns_id, hl_group, line, col_start, col_end)
     vim.highlight.range(H.buf_id, ns_id, hl_group, { line, col_start }, { line, col_end })
   end
 end
 
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg)) end
 
-function H.unique_nprefix(strings)
+H.unique_nprefix = function(strings)
   -- For every string compute minimum width of unique prefix. NOTE: this can be
   -- done simpler but it would be O(n^2) which *will* have noticable effect
   -- when there are a) many items and b) some of them are identical and have

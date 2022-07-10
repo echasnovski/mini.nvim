@@ -144,7 +144,7 @@ local H = {}
 ---@param config table Module config table. See |MiniDoc.config|.
 ---
 ---@usage `require('mini.doc').setup({})` (replace `{}` with your `config` table)
-function MiniDoc.setup(config)
+MiniDoc.setup = function(config)
   -- Export module
   _G.MiniDoc = MiniDoc
 
@@ -544,7 +544,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---@return table Document structure which was generated and used for output
 ---   help file. In case `MiniDoc.config.script_path` was successfully used,
 ---   this is a return from the latest call of this function.
-function MiniDoc.generate(input, output, config)
+MiniDoc.generate = function(input, output, config)
   -- Try sourcing project specific script first
   local success = H.execute_project_script(input, output, config)
   if success then return H.generate_recent_output end
@@ -638,7 +638,7 @@ end
 ---
 ---@return string Single string (using `\n` to separate lines) describing
 ---   afterlines as code block in help file.
-function MiniDoc.afterlines_to_code(struct)
+MiniDoc.afterlines_to_code = function(struct)
   if not (type(struct) == 'table' and (struct.type == 'section' or struct.type == 'block')) then
     H.message('Input to `MiniDoc.afterlines_to_code()` should be either section or block.')
     return
@@ -701,7 +701,7 @@ H.pattern_sets = {
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -749,12 +749,12 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniDoc.config = config end
+H.apply_config = function(config) MiniDoc.config = config end
 
-function H.is_disabled() return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true end
+H.is_disabled = function() return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true end
 
 -- Work with project specific script ==========================================
-function H.execute_project_script(input, output, config)
+H.execute_project_script = function(input, output, config)
   -- Don't process script if there are more than one active `generate` calls
   if H.generate_is_active then return end
 
@@ -779,7 +779,7 @@ function H.execute_project_script(input, output, config)
 end
 
 -- Default documentation targets ----------------------------------------------
-function H.default_input()
+H.default_input = function()
   -- Search in current and recursively in other directories for files with
   -- 'lua' extension
   local res = {}
@@ -804,13 +804,13 @@ function H.default_input()
   return vim.tbl_flatten(res)
 end
 
-function H.default_output()
+H.default_output = function()
   local cur_dir = vim.fn.fnamemodify(vim.loop.cwd(), ':t:r')
   return ('doc/%s.txt'):format(cur_dir)
 end
 
 -- Parsing --------------------------------------------------------------------
-function H.lines_to_block_arr(lines, config)
+H.lines_to_block_arr = function(lines, config)
   local matched_prev, matched_cur
 
   local res = {}
@@ -853,7 +853,7 @@ end
 -- - `section_id` - array with length equal to `annotation` length with strings
 --   captured as section id. Empty string of no section id was captured.
 -- - Everything else is used as block info (like `afterlines`, etc.).
-function H.raw_block_to_block(block_raw, config)
+H.raw_block_to_block = function(block_raw, config)
   if #block_raw.annotation == 0 and #block_raw.afterlines == 0 then return nil end
 
   local block = H.new_struct('block', {
@@ -892,7 +892,7 @@ function H.raw_block_to_block(block_raw, config)
 end
 
 -- Hooks ----------------------------------------------------------------------
-function H.apply_structure_hooks(doc, hooks)
+H.apply_structure_hooks = function(doc, hooks)
   for _, file in ipairs(doc) do
     for _, block in ipairs(file) do
       hooks.block_pre(block)
@@ -915,7 +915,7 @@ function H.apply_structure_hooks(doc, hooks)
   hooks.doc(doc)
 end
 
-function H.alias_register(s)
+H.alias_register = function(s)
   if #s == 0 then return end
 
   -- Remove first word (with bits of surrounding whitespace) while capturing it
@@ -930,7 +930,7 @@ function H.alias_register(s)
   MiniDoc.current.aliases[alias_name] = table.concat(s, '\n')
 end
 
-function H.alias_replace(s)
+H.alias_replace = function(s)
   if MiniDoc.current.aliases == nil then return end
 
   for i, _ in ipairs(s) do
@@ -946,12 +946,12 @@ function H.alias_replace(s)
   end
 end
 
-function H.toc_register(s)
+H.toc_register = function(s)
   MiniDoc.current.toc = MiniDoc.current.toc or {}
   table.insert(MiniDoc.current.toc, s)
 end
 
-function H.toc_insert(s)
+H.toc_insert = function(s)
   if MiniDoc.current.toc == nil then return end
 
   -- Render table of contents
@@ -985,20 +985,20 @@ function H.toc_insert(s)
   end
 end
 
-function H.add_section_heading(s, heading)
+H.add_section_heading = function(s, heading)
   if #s == 0 or s.type ~= 'section' then return end
 
   -- Add heading
   s:insert(1, ('%s~'):format(heading))
 end
 
-function H.mark_optional(s)
+H.mark_optional = function(s)
   -- Treat question mark at end of first word as "optional" indicator. See:
   -- https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#optional-params
   s[1] = s[1]:gsub('^(%s-%S-)%?', '%1 `(optional)`', 1)
 end
 
-function H.enclose_var_name(s)
+H.enclose_var_name = function(s)
   if #s == 0 or s.type ~= 'section' then return end
 
   s[1] = s[1]:gsub('(%S+)', '{%1}', 1)
@@ -1007,7 +1007,7 @@ end
 ---@param init number Start of searching for first "type-like" string. It is
 ---   needed to not detect type early. Like in `@param a_function function`.
 ---@private
-function H.enclose_type(s, enclosure, init)
+H.enclose_type = function(s, enclosure, init)
   if #s == 0 or s.type ~= 'section' then return end
   enclosure = enclosure or '`%(%1%)`'
   init = init or 1
@@ -1026,7 +1026,7 @@ function H.enclose_type(s, enclosure, init)
 end
 
 -- Infer data from afterlines -------------------------------------------------
-function H.infer_header(b)
+H.infer_header = function(b)
   local has_signature = b:has_descendant(
     function(x) return type(x) == 'table' and x.type == 'section' and x.info.id == '@signature' end
   )
@@ -1062,7 +1062,7 @@ function H.infer_header(b)
   end
 end
 
-function H.format_signature(line)
+H.format_signature = function(line)
   -- Try capture function signature
   local name, args = line:match('(%S-)(%b())')
   -- Otherwise pick first word
@@ -1086,7 +1086,7 @@ end
 
 -- Work with structures -------------------------------------------------------
 -- Constructor
-function H.new_struct(struct_type, info)
+H.new_struct = function(struct_type, info)
   local output = {
     info = info or {},
     type = struct_type,
@@ -1143,7 +1143,7 @@ function H.new_struct(struct_type, info)
   return output
 end
 
-function H.sync_parent_index(x)
+H.sync_parent_index = function(x)
   for i, _ in ipairs(x) do
     if type(x[i]) == 'table' then x[i].parent_index = i end
   end
@@ -1151,7 +1151,7 @@ function H.sync_parent_index(x)
 end
 
 -- Converter (this ensures that children have proper parent-related data)
-function H.as_struct(array, struct_type, info)
+H.as_struct = function(array, struct_type, info)
   -- Make default info `info` for cases when structure is created manually
   local default_info = ({
     section = { id = '@text', line_begin = -1, line_end = -1 },
@@ -1169,7 +1169,7 @@ function H.as_struct(array, struct_type, info)
 end
 
 -- Work with text -------------------------------------------------------------
-function H.ensure_indent(text, n_indent_target)
+H.ensure_indent = function(text, n_indent_target)
   local lines = vim.split(text, '\n')
   local n_indent, n_indent_cur = math.huge, math.huge
 
@@ -1192,7 +1192,7 @@ function H.ensure_indent(text, n_indent_target)
   return table.concat(lines, '\n')
 end
 
-function H.align_text(text, width, direction)
+H.align_text = function(text, width, direction)
   if type(text) ~= 'string' then return end
   text = vim.trim(text)
   width = width or 78
@@ -1207,7 +1207,7 @@ function H.align_text(text, width, direction)
   return (' '):rep(n_left) .. text
 end
 
-function H.visual_text_width(text)
+H.visual_text_width = function(text)
   -- Ignore concealed characters (usually "invisible" in 'help' filetype)
   local _, n_concealed_chars = text:gsub('([*|`])', '%1')
   return vim.fn.strdisplaywidth(text) - n_concealed_chars
@@ -1219,7 +1219,7 @@ end
 --- return one with earliest match.
 ---
 ---@private
-function H.match_first_pattern(text, pattern_set, init)
+H.match_first_pattern = function(text, pattern_set, init)
   local start_tbl = vim.tbl_map(function(pattern) return text:find(pattern, init) or math.huge end, pattern_set)
 
   local min_start, min_id = math.huge, nil
@@ -1234,7 +1234,7 @@ function H.match_first_pattern(text, pattern_set, init)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.apply_recursively(f, x)
+H.apply_recursively = function(f, x)
   f(x)
 
   if type(x) == 'table' then
@@ -1244,7 +1244,7 @@ function H.apply_recursively(f, x)
   end
 end
 
-function H.collect_strings(x)
+H.collect_strings = function(x)
   local res = {}
   H.apply_recursively(function(y)
     if type(y) == 'string' then
@@ -1256,7 +1256,7 @@ function H.collect_strings(x)
   return vim.tbl_flatten(res)
 end
 
-function H.file_read(path)
+H.file_read = function(path)
   local file = assert(io.open(path))
   local contents = file:read('*all')
   file:close()
@@ -1264,7 +1264,7 @@ function H.file_read(path)
   return vim.split(contents, '\n')
 end
 
-function H.file_write(path, lines)
+H.file_write = function(path, lines)
   -- Ensure target directory exists
   local dir = vim.fn.fnamemodify(path, ':h')
   vim.fn.mkdir(dir, 'p')
@@ -1273,8 +1273,8 @@ function H.file_write(path, lines)
   vim.fn.writefile(lines, path, 'b')
 end
 
-function H.full_path(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
+H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
 
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg)) end
 
 return MiniDoc

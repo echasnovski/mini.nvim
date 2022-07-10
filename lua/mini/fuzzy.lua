@@ -59,7 +59,7 @@ local H = {}
 ---@param config table Module config table. See |MiniFuzzy.config|.
 ---
 ---@usage `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
-function MiniFuzzy.setup(config)
+MiniFuzzy.setup = function(config)
   -- Export module
   _G.MiniFuzzy = MiniFuzzy
 
@@ -95,7 +95,7 @@ MiniFuzzy.config = {
 ---@param candidate string Target word (usually with which matching is done).
 ---
 ---@return table Table with matching information (see function's description).
-function MiniFuzzy.match(word, candidate)
+MiniFuzzy.match = function(word, candidate)
   -- Use 'smart case'
   candidate = (word == word:lower()) and candidate:lower() or candidate
 
@@ -114,7 +114,7 @@ end
 ---   searched.
 ---
 ---@return ... Arrays of matched candidates and their indexes in original input.
-function MiniFuzzy.filtersort(word, candidate_array)
+MiniFuzzy.filtersort = function(word, candidate_array)
   -- Use 'smart case'. Create new array to preserve input for later filtering
   local cand_array
   if word == word:lower() then
@@ -133,7 +133,7 @@ end
 ---
 ---@param items table Lua array with LSP 'textDocument/completion' response items.
 ---@param base string Word to complete.
-function MiniFuzzy.process_lsp_items(items, base)
+MiniFuzzy.process_lsp_items = function(items, base)
   -- Extract completion words from items
   local words = vim.tbl_map(function(x)
     if type(x.textEdit) == 'table' and type(x.textEdit.newText) == 'string' then return x.textEdit.newText end
@@ -160,7 +160,7 @@ end
 ---       generic_sorter = require('mini.fuzzy').get_telescope_sorter
 ---     }
 ---   })
-function MiniFuzzy.get_telescope_sorter(opts)
+MiniFuzzy.get_telescope_sorter = function(opts)
   opts = opts or {}
 
   return require('telescope.sorters').Sorter:new({
@@ -201,7 +201,7 @@ H.default_config = MiniFuzzy.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -218,7 +218,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniFuzzy.config = config end
+H.apply_config = function(config) MiniFuzzy.config = config end
 
 -- Fuzzy matching -------------------------------------------------------------
 ---@param letters table Array of letters from input word
@@ -227,7 +227,7 @@ function H.apply_config(config) MiniFuzzy.config = config end
 ---@return table Table with matched positions (in `candidate`) if there is a
 ---   match, `nil` otherwise.
 ---@private
-function H.find_best_positions(letters, candidate)
+H.find_best_positions = function(letters, candidate)
   local n_candidate, n_letters = #candidate, #letters
   if n_letters == 0 or n_candidate < n_letters then return nil end
 
@@ -303,14 +303,14 @@ end
 -- - 'time_aa' is better than 'aa_time' (same width, first match is smaller).
 --
 -- Returns -1 if `positions` is `nil` or empty.
-function H.score_positions(positions)
+H.score_positions = function(positions)
   if not positions or #positions == 0 then return -1 end
   local first, last = positions[1], positions[#positions]
   local cutoff = MiniFuzzy.config.cutoff
   return cutoff * math.min(last - first + 1, cutoff) + math.min(first, cutoff)
 end
 
-function H.make_filter_indexes(word, candidate_array)
+H.make_filter_indexes = function(word, candidate_array)
   -- Precompute a table of word's letters
   local letters = H.string_to_letters(word)
 
@@ -323,7 +323,7 @@ function H.make_filter_indexes(word, candidate_array)
   return res
 end
 
-function H.compare_filter_indexes(a, b)
+H.compare_filter_indexes = function(a, b)
   if a.score < b.score then return true end
 
   if a.score == b.score then
@@ -334,7 +334,7 @@ function H.compare_filter_indexes(a, b)
   return false
 end
 
-function H.filter_by_indexes(candidate_array, ids)
+H.filter_by_indexes = function(candidate_array, ids)
   local res, res_ids = {}, {}
   for _, id in pairs(ids) do
     table.insert(res, candidate_array[id.index])
@@ -345,6 +345,6 @@ function H.filter_by_indexes(candidate_array, ids)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.string_to_letters(s) return vim.tbl_map(vim.pesc, vim.split(s, '')) end
+H.string_to_letters = function(s) return vim.tbl_map(vim.pesc, vim.split(s, '')) end
 
 return MiniFuzzy

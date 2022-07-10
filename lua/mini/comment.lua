@@ -45,7 +45,7 @@ local H = {}
 ---@param config table Module config table. See |MiniComment.config|.
 ---
 ---@usage `require('mini.comment').setup({})` (replace `{}` with your `config` table)
-function MiniComment.setup(config)
+MiniComment.setup = function(config)
   -- Export module
   _G.MiniComment = MiniComment
 
@@ -98,7 +98,7 @@ MiniComment.config = {
 ---
 ---@return string 'g@' if called without argument, '' otherwise (but after
 ---   performing action).
-function MiniComment.operator(mode)
+MiniComment.operator = function(mode)
   if H.is_disabled() then return '' end
 
   -- If used without arguments inside expression mapping:
@@ -152,7 +152,7 @@ end
 ---
 ---@param line_start number Start line number (inclusive from 1 to number of lines).
 ---@param line_end number End line number (inclusive from 1 to number of lines).
-function MiniComment.toggle_lines(line_start, line_end)
+MiniComment.toggle_lines = function(line_start, line_end)
   if H.is_disabled() then return end
 
   local n_lines = vim.api.nvim_buf_line_count(0)
@@ -197,7 +197,7 @@ end
 ---
 --- Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
 --- After successful textobject usage it executes `MiniComment.config.hooks.post`.
-function MiniComment.textobject()
+MiniComment.textobject = function()
   if H.is_disabled() then return end
 
   MiniComment.config.hooks.pre()
@@ -232,7 +232,7 @@ H.default_config = MiniComment.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -255,7 +255,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniComment.config = config
 
   -- Make mappings
@@ -272,10 +272,10 @@ function H.apply_config(config)
   H.map('o', config.mappings.textobject, '<cmd>lua MiniComment.textobject()<cr>', { desc = 'Comment textobject' })
 end
 
-function H.is_disabled() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end
+H.is_disabled = function() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end
 
 -- Core implementations -------------------------------------------------------
-function H.make_comment_parts()
+H.make_comment_parts = function()
   local cs = vim.api.nvim_buf_get_option(0, 'commentstring')
 
   if cs == '' then
@@ -290,7 +290,7 @@ function H.make_comment_parts()
   return { left = left, right = right }
 end
 
-function H.make_comment_check(comment_parts)
+H.make_comment_check = function(comment_parts)
   local l, r = comment_parts.left, comment_parts.right
   -- String is commented if it has structure:
   -- <space> <left> <anything> <right> <space>
@@ -299,7 +299,7 @@ function H.make_comment_check(comment_parts)
   return function(line) return line:find(regex) ~= nil end
 end
 
-function H.get_lines_info(lines, comment_parts)
+H.get_lines_info = function(lines, comment_parts)
   local n_indent, n_indent_cur = math.huge, math.huge
   local indent, indent_cur
 
@@ -327,7 +327,7 @@ function H.get_lines_info(lines, comment_parts)
   return indent or '', is_comment
 end
 
-function H.make_comment_function(comment_parts, indent)
+H.make_comment_function = function(comment_parts, indent)
   -- NOTE: this assumes that indent doesn't mix tabs with spaces
   local nonindent_start = indent:len() + 1
 
@@ -353,7 +353,7 @@ function H.make_comment_function(comment_parts, indent)
   end
 end
 
-function H.make_uncomment_function(comment_parts)
+H.make_uncomment_function = function(comment_parts)
   local l, r = comment_parts.left, comment_parts.right
   local lpad = (l == '') and '' or '[ ]?'
   local rpad = (r == '') and '' or '[ ]?'
@@ -373,7 +373,7 @@ function H.make_uncomment_function(comment_parts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.map(mode, key, rhs, opts)
+H.map = function(mode, key, rhs, opts)
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
@@ -384,6 +384,6 @@ function H.map(mode, key, rhs, opts)
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.comment) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.comment) ' .. msg)) end
 
 return MiniComment

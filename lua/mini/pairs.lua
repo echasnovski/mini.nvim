@@ -86,7 +86,7 @@ local H = {}
 ---@param config table Module config table. See |MiniPairs.config|.
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
-function MiniPairs.setup(config)
+MiniPairs.setup = function(config)
   -- Export module
   _G.MiniPairs = MiniPairs
 
@@ -163,7 +163,7 @@ MiniPairs.config = {
 ---@param pair_info table Table with pair information.
 ---@param opts table Optional table `opts` for |nvim_set_keymap()|. Elements
 ---   `expr` and `noremap` won't be recognized (`true` by default).
-function MiniPairs.map(mode, lhs, pair_info, opts)
+MiniPairs.map = function(mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
   opts.desc = H.infer_mapping_description(pair_info)
@@ -191,7 +191,7 @@ end
 ---@param pair_info table Table with pair information.
 ---@param opts table Optional table `opts` for |nvim_buf_set_keymap()|.
 ---   Elements `expr` and `noremap` won't be recognized (`true` by default).
-function MiniPairs.map_buf(buffer, mode, lhs, pair_info, opts)
+MiniPairs.map_buf = function(buffer, mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
   if vim.fn.has('nvim-0.7') == 1 then opts.desc = H.infer_mapping_description(pair_info) end
@@ -210,7 +210,7 @@ end
 ---@param mode string `mode` for |nvim_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_del_keymap()|.
 ---@param pair __unregister_pair
-function MiniPairs.unmap(mode, lhs, pair)
+MiniPairs.unmap = function(mode, lhs, pair)
   -- `pair` should be supplied explicitly
   vim.validate({ pair = { pair, 'string' } })
 
@@ -233,7 +233,7 @@ end
 ---@param mode string `mode` for |nvim_buf_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_buf_del_keymap()|.
 ---@param pair __unregister_pair
-function MiniPairs.unmap_buf(buffer, mode, lhs, pair)
+MiniPairs.unmap_buf = function(buffer, mode, lhs, pair)
   -- `pair` should be supplied explicitly
   vim.validate({ pair = { pair, 'string' } })
 
@@ -254,7 +254,7 @@ end
 ---
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
-function MiniPairs.open(pair, neigh_pattern)
+MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
@@ -272,7 +272,7 @@ end
 ---
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
-function MiniPairs.close(pair, neigh_pattern)
+MiniPairs.close = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(2, 2) end
 
   local close = pair:sub(2, 2)
@@ -294,7 +294,7 @@ end
 ---
 ---@param pair __pair
 ---@param neigh_pattern __neigh_pattern
-function MiniPairs.closeopen(pair, neigh_pattern)
+MiniPairs.closeopen = function(pair, neigh_pattern)
   if H.is_disabled() or H.get_cursor_neigh(1, 1) ~= pair:sub(2, 2) then
     return MiniPairs.open(pair, neigh_pattern)
   else
@@ -311,7 +311,7 @@ end
 --- calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
-function MiniPairs.bs()
+MiniPairs.bs = function()
   local res = H.keys.bs
 
   local neigh = H.get_cursor_neigh(0, 1)
@@ -331,7 +331,7 @@ end
 --- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
-function MiniPairs.cr()
+MiniPairs.cr = function()
   local res = H.keys.cr
 
   local neigh = H.get_cursor_neigh(0, 1)
@@ -374,7 +374,7 @@ H.keys = {
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -405,7 +405,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniPairs.config = config
 
   -- Setup mappings in supplied modes
@@ -424,10 +424,10 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled() return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true end
+H.is_disabled = function() return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true end
 
 -- Pair registration ----------------------------------------------------------
-function H.register_pair(pair_info, mode, buffer)
+H.register_pair = function(pair_info, mode, buffer)
   -- Process new mode
   H.registered_pairs[mode] = H.registered_pairs[mode] or { all = { bs = {}, cr = {} } }
   local mode_pairs = H.registered_pairs[mode]
@@ -445,7 +445,7 @@ function H.register_pair(pair_info, mode, buffer)
   end
 end
 
-function H.unregister_pair(pair, mode, buffer)
+H.unregister_pair = function(pair, mode, buffer)
   local mode_pairs = H.registered_pairs[mode]
   if not (mode_pairs and mode_pairs[buffer]) then return end
 
@@ -457,7 +457,7 @@ function H.unregister_pair(pair, mode, buffer)
   end
 end
 
-function H.is_pair_registered(pair, mode, buffer, key)
+H.is_pair_registered = function(pair, mode, buffer, key)
   local mode_pairs = H.registered_pairs[mode]
   if not mode_pairs then return false end
 
@@ -470,7 +470,7 @@ function H.is_pair_registered(pair, mode, buffer, key)
   return vim.tbl_contains(buf_pairs[key], pair)
 end
 
-function H.ensure_cr_bs(mode)
+H.ensure_cr_bs = function(mode)
   local has_any_cr_pair, has_any_bs_pair = false, false
   for _, pair_tbl in pairs(H.registered_pairs[mode]) do
     has_any_cr_pair = has_any_cr_pair or not vim.tbl_isempty(pair_tbl.cr)
@@ -486,7 +486,7 @@ function H.ensure_cr_bs(mode)
 end
 
 -- Work with pair_info --------------------------------------------------------
-function H.validate_pair_info(pair_info, prefix)
+H.validate_pair_info = function(pair_info, prefix)
   prefix = prefix or 'pair_info'
   vim.validate({ [prefix] = { pair_info, 'table' } })
   pair_info = vim.tbl_deep_extend('force', H.default_pair_info, pair_info)
@@ -506,7 +506,7 @@ function H.validate_pair_info(pair_info, prefix)
   return pair_info
 end
 
-function H.pair_info_to_map_rhs(pair_info)
+H.pair_info_to_map_rhs = function(pair_info)
   return ('v:lua.MiniPairs.%s(%s, %s)'):format(
     pair_info.action,
     vim.inspect(pair_info.pair),
@@ -514,13 +514,13 @@ function H.pair_info_to_map_rhs(pair_info)
   )
 end
 
-function H.infer_mapping_description(pair_info)
+H.infer_mapping_description = function(pair_info)
   local action_name = pair_info.action:sub(1, 1):upper() .. pair_info.action:sub(2)
   return ('%s action for %s pair'):format(action_name, vim.inspect(pair_info.pair))
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.get_cursor_neigh(start, finish)
+H.get_cursor_neigh = function(start, finish)
   local line, col
   if vim.fn.mode() == 'c' then
     line = vim.fn.getcmdline()
@@ -538,9 +538,9 @@ function H.get_cursor_neigh(start, finish)
   return string.sub(('%s%s%s'):format('\r', line, '\n'), col + 1 + start, col + 1 + finish)
 end
 
-function H.neigh_match(pattern) return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil) end
+H.neigh_match = function(pattern) return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil) end
 
-function H.get_arrow_key(key)
+H.get_arrow_key = function(key)
   if vim.fn.mode() == 'i' then
     -- Using left/right keys in insert mode breaks undo sequence and, more
     -- importantly, dot-repeat. To avoid this, use 'i_CTRL-G_U' mapping.
@@ -550,7 +550,7 @@ function H.get_arrow_key(key)
   end
 end
 
-function H.map(mode, key, rhs, opts)
+H.map = function(mode, key, rhs, opts)
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})

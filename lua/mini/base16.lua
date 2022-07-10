@@ -79,7 +79,7 @@ local H = {}
 ---
 ---@usage `require('mini.base16').setup({})` (replace `{}` with your `config`
 ---   table; `config.palette` should be a table with colors)
-function MiniBase16.setup(config)
+MiniBase16.setup = function(config)
   -- Export module
   _G.MiniBase16 = MiniBase16
 
@@ -159,7 +159,7 @@ MiniBase16.config = {
 ---
 ---@usage `local palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
 --- `require('mini.base16').setup({palette = palette})`
-function MiniBase16.mini_palette(background, foreground, accent_chroma)
+MiniBase16.mini_palette = function(background, foreground, accent_chroma)
   H.validate_hex(background, 'background')
   H.validate_hex(foreground, 'foreground')
   if accent_chroma and not (type(accent_chroma) == 'number' and accent_chroma >= 0) then
@@ -230,7 +230,7 @@ end
 ---   `MiniBase16.config.palette`).
 ---
 ---@return table Table with base16 palette using |highlight-cterm|.
-function MiniBase16.rgb_palette_to_cterm_palette(palette)
+MiniBase16.rgb_palette_to_cterm_palette = function(palette)
   H.validate_base16_palette(palette, 'palette')
 
   -- Create cterm palette only when it is needed to decrease load time
@@ -245,7 +245,7 @@ H.default_config = MiniBase16.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -258,7 +258,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniBase16.config = config
 
   H.apply_palette(config.palette, config.use_cterm)
@@ -284,7 +284,7 @@ H.base16_names = {
   'base0F',
 }
 
-function H.validate_base16_palette(x, x_name)
+H.validate_base16_palette = function(x, x_name)
   if type(x) ~= 'table' then error(string.format('(mini.base16) `%s` is not a table.', x_name)) end
 
   for _, color_name in pairs(H.base16_names) do
@@ -299,7 +299,7 @@ function H.validate_base16_palette(x, x_name)
   return true
 end
 
-function H.validate_use_cterm(x, x_name)
+H.validate_use_cterm = function(x, x_name)
   if not x or type(x) == 'boolean' then return true end
 
   if type(x) ~= 'table' then
@@ -322,7 +322,7 @@ function H.validate_use_cterm(x, x_name)
   return true
 end
 
-function H.validate_hex(x, x_name)
+H.validate_hex = function(x, x_name)
   local is_hex = type(x) == 'string' and x:len() == 7 and x:sub(1, 1) == '#' and (tonumber(x:sub(2), 16) ~= nil)
 
   if not is_hex then
@@ -334,7 +334,7 @@ function H.validate_hex(x, x_name)
 end
 
 -- Highlighting ---------------------------------------------------------------
-function H.apply_palette(palette, use_cterm)
+H.apply_palette = function(palette, use_cterm)
   -- Prepare highlighting application. Notes:
   -- - Clear current highlight only if other theme was loaded previously.
   -- - No need to `syntax reset` because *all* syntax groups are defined later.
@@ -645,7 +645,7 @@ function H.apply_palette(palette, use_cterm)
   end
 end
 
-function H.highlight_gui(group, args)
+H.highlight_gui = function(group, args)
   -- NOTE: using `string.format` instead of gradually growing string with `..`
   -- is faster. Crude estimate for this particular case: whole colorscheme
   -- loading decreased from ~3.6ms to ~3.0ms, i.e. by about 20%.
@@ -660,7 +660,7 @@ function H.highlight_gui(group, args)
   vim.cmd(command)
 end
 
-function H.highlight_both(group, args)
+H.highlight_both = function(group, args)
   local command = string.format(
     'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s',
     group,
@@ -676,7 +676,7 @@ function H.highlight_both(group, args)
 end
 
 -- Compound (gui and cterm) palette -------------------------------------------
-function H.make_compound_palette(palette, use_cterm)
+H.make_compound_palette = function(palette, use_cterm)
   local cterm_table = use_cterm
   if type(use_cterm) == 'boolean' then cterm_table = MiniBase16.rgb_palette_to_cterm_palette(palette) end
 
@@ -689,7 +689,7 @@ end
 
 -- Optimal scales. Make a set of equally spaced hues which are as different to
 -- present hues as possible
-function H.make_different_hues(present_hues, n)
+H.make_different_hues = function(present_hues, n)
   local max_offset = math.floor(360 / n + 0.5)
 
   local dist, best_dist = nil, -math.huge
@@ -710,7 +710,7 @@ function H.make_different_hues(present_hues, n)
   return best_hues
 end
 
-function H.make_hue_scale(n, offset)
+H.make_hue_scale = function(n, offset)
   local step = math.floor(360 / n + 0.5)
   local res = {}
   for i = 0, n - 1, 1 do
@@ -746,7 +746,7 @@ H.cterm_first16 = {
 
 H.cterm_basis = { 0, 95, 135, 175, 215, 255 }
 
-function H.cterm2rgb(i)
+H.cterm2rgb = function(i)
   if i < 16 then return H.cterm_first16[i + 1] end
   if 16 <= i and i <= 231 then
     i = i - 16
@@ -761,7 +761,7 @@ function H.cterm2rgb(i)
   end
 end
 
-function H.ensure_cterm_palette()
+H.ensure_cterm_palette = function()
   if H.cterm_palette then return end
   H.cterm_palette = {}
   for i = 0, 255 do
@@ -774,7 +774,7 @@ end
 -- Accuracy is usually around 2-3 decimal digits, which should be fine
 
 -- HEX <-> CIELCh(uv)
-function H.hex2lch(hex)
+H.hex2lch = function(hex)
   local res = hex
   for _, f in pairs({ H.hex2rgb, H.rgb2xyz, H.xyz2luv, H.luv2lch }) do
     res = f(res)
@@ -782,7 +782,7 @@ function H.hex2lch(hex)
   return res
 end
 
-function H.lch2hex(lch)
+H.lch2hex = function(lch)
   local res = lch
   for _, f in pairs({ H.lch2luv, H.luv2xyz, H.xyz2rgb, H.rgb2hex }) do
     res = f(res)
@@ -791,7 +791,7 @@ function H.lch2hex(lch)
 end
 
 -- HEX <-> RGB
-function H.hex2rgb(hex)
+H.hex2rgb = function(hex)
   local dec = tonumber(hex:sub(2), 16)
 
   local b = math.fmod(dec, 256)
@@ -801,7 +801,7 @@ function H.hex2rgb(hex)
   return { r = r, g = g, b = b }
 end
 
-function H.rgb2hex(rgb)
+H.rgb2hex = function(rgb)
   -- Round and trim values
   local t = vim.tbl_map(function(x)
     x = math.min(math.max(x, 0), 255)
@@ -812,7 +812,7 @@ function H.rgb2hex(rgb)
 end
 
 -- RGB <-> XYZ
-function H.rgb2xyz(rgb)
+H.rgb2xyz = function(rgb)
   local t = vim.tbl_map(function(c)
     c = c / 255
     if c > 0.04045 then
@@ -830,7 +830,7 @@ function H.rgb2xyz(rgb)
   return { x = x, y = y, z = z }
 end
 
-function H.xyz2rgb(xyz)
+H.xyz2rgb = function(xyz)
   -- Source of better matrix: http://brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
   -- stylua: ignore start
   local r =  3.24045 * xyz.x - 1.53713 * xyz.y - 0.49853 * xyz.z
@@ -858,7 +858,7 @@ end
 H.ref_u = (4 * 95.047) / (95.047 + (15 * 100) + (3 * 108.883))
 H.ref_v = (9 * 100) / (95.047 + (15 * 100) + (3 * 108.883))
 
-function H.xyz2luv(xyz)
+H.xyz2luv = function(xyz)
   local x, y, z = xyz.x, xyz.y, xyz.z
   if x + y + z == 0 then return { l = 0, u = 0, v = 0 } end
 
@@ -877,7 +877,7 @@ function H.xyz2luv(xyz)
   return { l = l, u = u, v = v }
 end
 
-function H.luv2xyz(luv)
+H.luv2xyz = function(luv)
   if luv.l == 0 then return { x = 0, y = 0, z = 0 } end
 
   local var_y = (luv.l + 16) / 116
@@ -899,7 +899,7 @@ end
 -- CIELuv <-> CIELCh(uv)
 H.tau = 2 * math.pi
 
-function H.luv2lch(luv)
+H.luv2lch = function(luv)
   local c = math.sqrt(luv.u ^ 2 + luv.v ^ 2)
   local h
   if c == 0 then
@@ -911,7 +911,7 @@ function H.luv2lch(luv)
   return { l = luv.l, c = c, h = h }
 end
 
-function H.lch2luv(lch)
+H.lch2luv = function(lch)
   local angle = lch.h * H.tau / 360
   local u = lch.c * math.cos(angle)
   local v = lch.c * math.sin(angle)
@@ -919,12 +919,12 @@ function H.lch2luv(lch)
 end
 
 -- Distances ------------------------------------------------------------------
-function H.dist_circle(x, y)
+H.dist_circle = function(x, y)
   local d = math.abs(x - y) % 360
   return d > 180 and (360 - d) or d
 end
 
-function H.dist_circle_set(set1, set2)
+H.dist_circle_set = function(set1, set2)
   -- Minimum distance between all pairs
   local dist = math.huge
   local d
@@ -937,7 +937,7 @@ function H.dist_circle_set(set1, set2)
   return dist
 end
 
-function H.nearest_rgb_id(rgb_target, rgb_palette)
+H.nearest_rgb_id = function(rgb_target, rgb_palette)
   local best_dist = math.huge
   local best_id, dist
   for id, rgb in pairs(rgb_palette) do

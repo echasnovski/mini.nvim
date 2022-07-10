@@ -116,7 +116,7 @@ local H = {}
 ---@param config table Module config table. See |MiniStatusline.config|.
 ---
 ---@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
-function MiniStatusline.setup(config)
+MiniStatusline.setup = function(config)
   -- Export module
   _G.MiniStatusline = MiniStatusline
 
@@ -179,14 +179,14 @@ MiniStatusline.config = {
 
 -- Module functionality =======================================================
 --- Compute content for active window
-function MiniStatusline.active()
+MiniStatusline.active = function()
   if H.is_disabled() then return '' end
 
   return (MiniStatusline.config.content.active or H.default_content_active)()
 end
 
 --- Compute content for inactive window
-function MiniStatusline.inactive()
+MiniStatusline.inactive = function()
   if H.is_disabled() then return '' end
 
   return (MiniStatusline.config.content.inactive or H.default_content_inactive)()
@@ -207,7 +207,7 @@ end
 ---@param groups string|table Array of groups.
 ---
 ---@return string String suitable for 'statusline'.
-function MiniStatusline.combine_groups(groups)
+MiniStatusline.combine_groups = function(groups)
   local parts = vim.tbl_map(function(s)
     --stylua: ignore start
     if type(s) == 'string' then return s end
@@ -244,7 +244,7 @@ end
 ---@param trunc_width number Truncation width. If `nil`, output is `false`.
 ---
 ---@return boolean Whether to truncate.
-function MiniStatusline.is_truncated(trunc_width)
+MiniStatusline.is_truncated = function(trunc_width)
   -- Use -1 to default to 'not truncated'
   return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
 end
@@ -260,7 +260,7 @@ end
 ---@param args __args
 ---
 ---@return ... Section string and mode's highlight group.
-function MiniStatusline.section_mode(args)
+MiniStatusline.section_mode = function(args)
   local mode_info = H.modes[vim.fn.mode()]
 
   local mode = MiniStatusline.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
@@ -279,7 +279,7 @@ end
 ---@param args __args Use `args.icon` to supply your own icon.
 ---
 ---@return __section
-function MiniStatusline.section_git(args)
+MiniStatusline.section_git = function(args)
   if H.isnt_normal_buffer() then return '' end
 
   local head = vim.b.gitsigns_head or '-'
@@ -304,7 +304,7 @@ end
 ---@param args __args Use `args.icon` to supply your own icon.
 ---
 ---@return __section
-function MiniStatusline.section_diagnostics(args)
+MiniStatusline.section_diagnostics = function(args)
   -- Assumption: there are no attached clients if table
   -- `vim.lsp.buf_get_clients()` is empty
   local hasnt_attached_client = next(vim.lsp.buf_get_clients()) == nil
@@ -333,7 +333,7 @@ end
 ---@param args __args
 ---
 ---@return __section
-function MiniStatusline.section_filename(args)
+MiniStatusline.section_filename = function(args)
   -- In terminal always use plain name
   if vim.bo.buftype == 'terminal' then
     return '%t'
@@ -355,7 +355,7 @@ end
 ---@param args __args
 ---
 ---@return __section
-function MiniStatusline.section_fileinfo(args)
+MiniStatusline.section_fileinfo = function(args)
   local filetype = vim.bo.filetype
 
   -- Don't show anything if can't detect file type or not inside a "normal
@@ -388,7 +388,7 @@ end
 ---@param args __args
 ---
 ---@return __section
-function MiniStatusline.section_location(args)
+MiniStatusline.section_location = function(args)
   -- Use virtual column number to allow update when past last column
   if MiniStatusline.is_truncated(args.trunc_width) then return '%l│%2v' end
 
@@ -410,7 +410,7 @@ end
 ---@param args __args
 ---
 ---@return __section
-function MiniStatusline.section_searchcount(args)
+MiniStatusline.section_searchcount = function(args)
   if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then return '' end
   -- `searchcount()` can return errors because it is evaluated very often in
   -- statusline. For example, when typing `/` followed by `\(`, it gives E54.
@@ -448,7 +448,7 @@ end
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -469,7 +469,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniStatusline.config = config
 
   -- Set settings to ensure statusline is displayed properly
@@ -478,7 +478,7 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end
+H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end
 
 -- Mode -----------------------------------------------------------------------
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
@@ -510,7 +510,7 @@ H.modes = setmetatable({
 -- stylua: ignore end
 
 -- Default content ------------------------------------------------------------
-function H.default_content_active()
+H.default_content_active = function()
   -- stylua: ignore start
   local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
   local git           = MiniStatusline.section_git({ trunc_width = 75 })
@@ -534,15 +534,15 @@ function H.default_content_active()
   -- stylua: ignore end
 end
 
-function H.default_content_inactive() return '%#MiniStatuslineInactive#%F%=' end
+H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' end
 
 -- Utilities ------------------------------------------------------------------
-function H.isnt_normal_buffer()
+H.isnt_normal_buffer = function()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ''
 end
 
-function H.get_filesize()
+H.get_filesize = function()
   local size = vim.fn.getfsize(vim.fn.getreg('%'))
   if size < 1024 then
     return string.format('%dB', size)
@@ -553,7 +553,7 @@ function H.get_filesize()
   end
 end
 
-function H.get_filetype_icon()
+H.get_filetype_icon = function()
   -- Skip if NerdFonts is disabled
   if not MiniStatusline.config.use_icons then return '' end
   -- Have this `require()` here to not depend on plugin initialization order

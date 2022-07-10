@@ -40,7 +40,7 @@ _G.validate_doc_structure = function(x)
 end
 
 -- Helper methods =============================================================
-function H.validate_structure(x, struct_type, parent)
+H.validate_structure = function(x, struct_type, parent)
   local type_string = vim.inspect(struct_type)
 
   if not H.is_structure(x, struct_type) then error(('Element is not %s structure.'):format(type_string)) end
@@ -63,7 +63,7 @@ H.info_fields = {
   doc = { input = 'table', output = 'string', config = 'table' },
 }
 
-function H.is_structure(x, struct_type)
+H.is_structure = function(x, struct_type)
   if not H.struct_has_elements(x) then return false end
   if not x.type == struct_type then return false end
 
@@ -74,7 +74,7 @@ function H.is_structure(x, struct_type)
   return true
 end
 
-function H.struct_has_elements(x)
+H.struct_has_elements = function(x)
   -- Fields
   if not (type(x.info) == 'table' and type(x.type) == 'string') then return false end
 

@@ -59,7 +59,7 @@ local H = {}
 ---@param config table Module config table. See |MiniJump.config|.
 ---
 ---@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
-function MiniJump.setup(config)
+MiniJump.setup = function(config)
   -- Export module
   _G.MiniJump = MiniJump
 
@@ -149,7 +149,7 @@ MiniJump.state = {
 ---@param backward __backward
 ---@param till __till
 ---@param n_times __n_times
-function MiniJump.jump(target, backward, till, n_times)
+MiniJump.jump = function(target, backward, till, n_times)
   if H.is_disabled() then return end
 
   -- Cache inputs for future use
@@ -220,7 +220,7 @@ end
 ---
 ---@param backward __backward
 ---@param till __till
-function MiniJump.smart_jump(backward, till)
+MiniJump.smart_jump = function(backward, till)
   if H.is_disabled() then return end
 
   -- Jumping should stop after mode change. Use `mode(1)` to track 'omap' case.
@@ -250,7 +250,7 @@ end
 ---
 ---@param backward __backward
 ---@param till __till
-function MiniJump.expr_jump(backward, till)
+MiniJump.expr_jump = function(backward, till)
   if H.is_disabled() then return '' end
 
   -- Always ask for `target` as this will be used only in operator-pending
@@ -267,7 +267,7 @@ end
 ---
 --- Removes highlights (if any) and forces the next smart jump to prompt for
 --- the target. Automatically called on appropriate Neovim |events|.
-function MiniJump.stop_jumping()
+MiniJump.stop_jumping = function()
   H.timers.highlight:stop()
   H.timers.idle_stop:stop()
   MiniJump.state.jumping = false
@@ -275,7 +275,7 @@ function MiniJump.stop_jumping()
 end
 
 --- Act on |CursorMoved|
-function MiniJump.on_cursormoved()
+MiniJump.on_cursormoved = function()
   -- Check if jumping to avoid unnecessary actions on every CursorMoved
   if MiniJump.state.jumping then
     H.n_cursor_moved = H.n_cursor_moved + 1
@@ -303,7 +303,7 @@ H.window_matches = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -329,7 +329,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniJump.config = config
 
   --stylua: ignore start
@@ -353,10 +353,10 @@ function H.apply_config(config)
   --stylua: ignore end
 end
 
-function H.is_disabled() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
+H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
 
 -- Highlighting ---------------------------------------------------------------
-function H.highlight(pattern)
+H.highlight = function(pattern)
   -- Don't do anything if already highlighting input pattern
   if H.is_highlighting(pattern) then return end
 
@@ -373,7 +373,7 @@ function H.highlight(pattern)
   H.window_matches[vim.api.nvim_get_current_win()] = { id = match_id, pattern = pattern }
 end
 
-function H.unhighlight()
+H.unhighlight = function()
   -- Remove highlighting from all windows as jumping is intended to work only
   -- in current window. This will work also from other (usually popup) window.
   for win_id, match_info in pairs(H.window_matches) do
@@ -389,7 +389,7 @@ end
 ---@param pattern string Highlight pattern to check for. If `nil`, checks for
 ---   any highlighting registered in current window.
 ---@private
-function H.is_highlighting(pattern)
+H.is_highlighting = function(pattern)
   local win_id = vim.api.nvim_get_current_win()
   local match_info = H.window_matches[win_id]
   if match_info == nil then return false end
@@ -397,9 +397,9 @@ function H.is_highlighting(pattern)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg)) end
 
-function H.update_state(target, backward, till, n_times)
+H.update_state = function(target, backward, till, n_times)
   MiniJump.state.mode = vim.fn.mode(1)
 
   -- Don't use `? and <1> or <2>` because it doesn't work when `<1>` is `false`
@@ -409,7 +409,7 @@ function H.update_state(target, backward, till, n_times)
   if n_times ~= nil then MiniJump.state.n_times = n_times end
 end
 
-function H.get_target()
+H.get_target = function()
   local needs_help_msg = true
   vim.defer_fn(function()
     if not needs_help_msg then return end
@@ -425,7 +425,7 @@ function H.get_target()
   return char
 end
 
-function H.map(mode, key, rhs, opts)
+H.map = function(mode, key, rhs, opts)
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})

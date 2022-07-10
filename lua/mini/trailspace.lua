@@ -45,7 +45,7 @@ local H = {}
 ---@param config table Module config table. See |MiniTrailspace.config|.
 ---
 ---@usage `require('mini.trailspace').setup({})` (replace `{}` with your `config` table)
-function MiniTrailspace.setup(config)
+MiniTrailspace.setup = function(config)
   -- Export module
   _G.MiniTrailspace = MiniTrailspace
 
@@ -100,7 +100,7 @@ MiniTrailspace.config = {
 
 -- Module functionality =======================================================
 --- Highlight trailing whitespace in current window
-function MiniTrailspace.highlight()
+MiniTrailspace.highlight = function()
   -- Highlight only in normal mode
   if H.is_disabled() or vim.fn.mode() ~= 'n' then
     MiniTrailspace.unhighlight()
@@ -117,14 +117,14 @@ function MiniTrailspace.highlight()
 end
 
 --- Unhighlight trailing whitespace in current window
-function MiniTrailspace.unhighlight()
+MiniTrailspace.unhighlight = function()
   -- Use `pcall` because there is an error if match id is not present. It can
   -- happen if something else called `clearmatches`.
   pcall(vim.fn.matchdelete, H.get_match_id())
 end
 
 --- Trim trailing whitespace
-function MiniTrailspace.trim()
+MiniTrailspace.trim = function()
   -- Save cursor position to later restore
   local curpos = vim.api.nvim_win_get_cursor(0)
   -- Search and replace trailing whitespace
@@ -135,7 +135,7 @@ end
 --- Track normal buffer
 ---
 --- Designed to be used with |autocmd|. No need to use it directly.
-function MiniTrailspace.track_normal_buffer()
+MiniTrailspace.track_normal_buffer = function()
   if not MiniTrailspace.config.only_in_normal_buffers then return end
 
   -- This should be used with 'OptionSet' event for 'buftype' option
@@ -153,7 +153,7 @@ H.default_config = MiniTrailspace.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -164,13 +164,13 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniTrailspace.config = config end
+H.apply_config = function(config) MiniTrailspace.config = config end
 
-function H.is_disabled() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
+H.is_disabled = function() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
 
-function H.is_buffer_normal(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end
+H.is_buffer_normal = function(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end
 
-function H.get_match_id()
+H.get_match_id = function()
   -- NOTE: this can be replaced with more efficient custom tracking of id per
   -- window but it will have more edge cases (like won't update on manual
   -- `clearmatches()`)

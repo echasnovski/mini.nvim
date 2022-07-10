@@ -6,12 +6,12 @@ local M = {}
 -- Functions
 
 --- This function definition should be inferred
-function M.a(x, y)
+M.a = function(x, y)
   print('M.a')
 end
 
 --- This function definition should not be inferred (not from first column)
-  function M.a_no() end
+  M.a_no = function() end
 
 --- This function definition should be inferred
 local function b(x, y)

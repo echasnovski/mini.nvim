@@ -27,7 +27,7 @@ Helpers.new_child_neovim = function()
     error(msg)
   end
 
-  function child.setup()
+  child.setup = function()
     child.restart({ '-u', 'scripts/minimal_init.lua' })
 
     -- Change initial buffer to be readonly. This not only increases execution
@@ -35,7 +35,7 @@ Helpers.new_child_neovim = function()
     child.bo.readonly = false
   end
 
-  function child.set_lines(arr, start, finish)
+  child.set_lines = function(arr, start, finish)
     prevent_hanging('set_lines')
 
     if type(arr) == 'string' then arr = vim.split(arr, '\n') end
@@ -43,25 +43,25 @@ Helpers.new_child_neovim = function()
     child.api.nvim_buf_set_lines(0, start or 0, finish or -1, false, arr)
   end
 
-  function child.get_lines(start, finish)
+  child.get_lines = function(start, finish)
     prevent_hanging('get_lines')
 
     return child.api.nvim_buf_get_lines(0, start or 0, finish or -1, false)
   end
 
-  function child.set_cursor(line, column, win_id)
+  child.set_cursor = function(line, column, win_id)
     prevent_hanging('set_cursor')
 
     child.api.nvim_win_set_cursor(win_id or 0, { line, column })
   end
 
-  function child.get_cursor(win_id)
+  child.get_cursor = function(win_id)
     prevent_hanging('get_cursor')
 
     return child.api.nvim_win_get_cursor(win_id or 0)
   end
 
-  function child.set_size(lines, columns)
+  child.set_size = function(lines, columns)
     prevent_hanging('set_size')
 
     if type(lines) == 'number' then child.o.lines = lines end
@@ -69,7 +69,7 @@ Helpers.new_child_neovim = function()
     if type(columns) == 'number' then child.o.columns = columns end
   end
 
-  function child.get_size()
+  child.get_size = function()
     prevent_hanging('get_size')
 
     return { child.o.lines, child.o.columns }
@@ -82,7 +82,7 @@ Helpers.new_child_neovim = function()
   ---@param first number|table Table with start position or number to check linewise.
   ---@param last number|table Table with finish position or number to check linewise.
   ---@private
-  function child.expect_visual_marks(first, last)
+  child.expect_visual_marks = function(first, last)
     child.ensure_normal_mode()
 
     first = type(first) == 'number' and { first, 0 } or first
@@ -100,12 +100,12 @@ Helpers.new_child_neovim = function()
   --   function (as currently there is no way to communicate a function object
   --   through RPC).
   -- - `mini_unload` - unload module and revert common side effects.
-  function child.mini_load(name, config)
+  child.mini_load = function(name, config)
     local lua_cmd = ([[require('mini.%s').setup(...)]]):format(name)
     child.lua(lua_cmd, { config })
   end
 
-  function child.mini_load_strconfig(name, strconfig)
+  child.mini_load_strconfig = function(name, strconfig)
     local t = {}
     for key, val in pairs(strconfig) do
       table.insert(t, key .. ' = ' .. val)
@@ -116,7 +116,7 @@ Helpers.new_child_neovim = function()
     child.lua(command)
   end
 
-  function child.mini_unload(name)
+  child.mini_unload = function(name)
     local module_name = 'mini.' .. name
     local tbl_name = 'Mini' .. name:sub(1, 1):upper() .. name:sub(2)
 
@@ -138,7 +138,7 @@ Helpers.new_child_neovim = function()
     end
   end
 
-  function child.expect_screenshot(opts, path, screenshot_opts)
+  child.expect_screenshot = function(opts, path, screenshot_opts)
     if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Screenshots are tested for Neovim>=0.8 (for simplicity).') end
 
     MiniTest.expect.reference_screenshot(child.get_screenshot(screenshot_opts), path, opts)
@@ -148,7 +148,7 @@ Helpers.new_child_neovim = function()
 end
 
 -- Mark test failure as "flaky"
-function Helpers.mark_flaky()
+Helpers.mark_flaky = function()
   MiniTest.finally(function()
     if #MiniTest.current.case.exec.fails > 0 then MiniTest.add_note('This test is flaky.') end
   end)

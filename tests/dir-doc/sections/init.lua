@@ -31,7 +31,7 @@ M._private_user = {}
 ---@usage `M.fun(1, 2)`
 ---
 ---@seealso |test-f| |f-test-different-line|
-function M.fun(a, b) return true end
+M.fun = function(a, b) return true end
 
 --- Test for `@signature` and `@tag`
 ---

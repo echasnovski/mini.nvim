@@ -73,7 +73,7 @@ local H = {}
 ---@param config table Module config table. See |MiniCursorword.config|.
 ---
 ---@usage `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
-function MiniCursorword.setup(config)
+MiniCursorword.setup = function(config)
   -- Export module
   _G.MiniCursorword = MiniCursorword
 
@@ -128,7 +128,7 @@ MiniCursorword.config = {
 ---
 --- Designed to be used with |autocmd|. No need to use it directly,
 --- everything is setup in |MiniCursorword.setup|.
-function MiniCursorword.auto_highlight()
+MiniCursorword.auto_highlight = function()
   -- Stop any possible previous delayed highlighting
   H.timer:stop()
 
@@ -171,7 +171,7 @@ end
 ---
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCursorword.setup|.
-function MiniCursorword.auto_unhighlight()
+MiniCursorword.auto_unhighlight = function()
   -- Stop any possible previous delayed highlighting
   H.timer:stop()
   H.unhighlight()
@@ -193,7 +193,7 @@ H.window_matches = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -204,15 +204,15 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniCursorword.config = config end
+H.apply_config = function(config) MiniCursorword.config = config end
 
-function H.is_disabled() return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true end
+H.is_disabled = function() return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true end
 
 -- Highlighting ---------------------------------------------------------------
 ---@param only_current boolean Whether to forcefuly highlight only current word
 ---   under cursor.
 ---@private
-function H.highlight(only_current)
+H.highlight = function(only_current)
   -- A modified version of https://stackoverflow.com/a/25233145
   -- Using `matchadd()` instead of a simpler `:match` to tweak priority of
   -- 'current word' highlighting: with `:match` it is higher than for
@@ -245,7 +245,7 @@ end
 ---@param only_current boolean Whether to remove highlighting only of current
 ---   word under cursor.
 ---@private
-function H.unhighlight(only_current)
+H.unhighlight = function(only_current)
   -- Don't do anything if there is no valid information to act upon
   local win_id = vim.api.nvim_get_current_win()
   local win_match = H.window_matches[win_id]
@@ -262,13 +262,13 @@ function H.unhighlight(only_current)
   end
 end
 
-function H.is_cursor_on_keyword()
+H.is_cursor_on_keyword = function()
   local col = vim.fn.col('.')
   local curchar = vim.api.nvim_get_current_line():sub(col, col)
 
   return vim.fn.match(curchar, '[[:keyword:]]') >= 0
 end
 
-function H.get_cursor_word() return vim.fn.escape(vim.fn.expand('<cword>'), [[\/]]) end
+H.get_cursor_word = function() return vim.fn.escape(vim.fn.expand('<cword>'), [[\/]]) end
 
 return MiniCursorword

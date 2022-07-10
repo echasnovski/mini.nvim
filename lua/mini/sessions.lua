@@ -56,7 +56,7 @@ local H = { path_sep = package.config:sub(1, 1) }
 ---@param config table Module config table. See |MiniSessions.config|.
 ---
 ---@usage `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
-function MiniSessions.setup(config)
+MiniSessions.setup = function(config)
   -- Export module
   _G.MiniSessions = MiniSessions
 
@@ -151,7 +151,7 @@ MiniSessions.detected = {}
 ---     before and after successful read; overrides
 ---     `MiniSessions.config.hooks.pre.read` and
 ---     `MiniSessions.config.hooks.post.read`).
-function MiniSessions.read(session_name, opts)
+MiniSessions.read = function(session_name, opts)
   if H.is_disabled() then return end
   if vim.tbl_count(MiniSessions.detected) == 0 then
     H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
@@ -223,7 +223,7 @@ end
 ---     before and after successful write; overrides
 ---     `MiniSessions.config.hooks.pre.write` and
 ---     `MiniSessions.config.hooks.post.write`).
-function MiniSessions.write(session_name, opts)
+MiniSessions.write = function(session_name, opts)
   if H.is_disabled() then return end
 
   opts = vim.tbl_deep_extend('force', H.default_opts('write'), opts or {})
@@ -271,7 +271,7 @@ end
 ---     before and after successful delete; overrides
 ---     `MiniSessions.config.hooks.pre.delete` and
 ---     `MiniSessions.config.hooks.post.delete`).
-function MiniSessions.delete(session_name, opts)
+MiniSessions.delete = function(session_name, opts)
   if H.is_disabled() then return end
   if vim.tbl_count(MiniSessions.detected) == 0 then
     H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
@@ -315,7 +315,7 @@ end
 ---@param action string Action to perform. Should be one of "read" (default),
 ---   "write", or "delete".
 ---@param opts table Options for specified action.
-function MiniSessions.select(action, opts)
+MiniSessions.select = function(action, opts)
   if not (type(vim.ui) == 'table' and type(vim.ui.select) == 'function') then
     H.error('`MiniSessions.select()` requires `vim.ui.select()` function.')
   end
@@ -354,7 +354,7 @@ end
 --- by |getftime|.
 ---
 ---@return string|nil Name of latest session or `nil` if there is no sessions.
-function MiniSessions.get_latest()
+MiniSessions.get_latest = function()
   if vim.tbl_count(MiniSessions.detected) == 0 then return end
 
   local latest_time, latest_name = -1, nil
@@ -368,7 +368,7 @@ function MiniSessions.get_latest()
 end
 
 --- Act on |VimEnter|
-function MiniSessions.on_vimenter()
+MiniSessions.on_vimenter = function()
   if MiniSessions.config.autoread and not H.is_something_shown() then MiniSessions.read() end
 end
 
@@ -378,7 +378,7 @@ H.default_config = MiniSessions.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -421,16 +421,16 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniSessions.config = config
 
   MiniSessions.detected = H.detect_sessions(config)
 end
 
-function H.is_disabled() return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true end
+H.is_disabled = function() return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true end
 
 -- Work with sessions ---------------------------------------------------------
-function H.detect_sessions(config)
+H.detect_sessions = function(config)
   local res_global = config.directory == '' and {} or H.detect_sessions_global(config.directory)
   local res_local = config.file == '' and {} or H.detect_sessions_local(config.file)
 
@@ -438,7 +438,7 @@ function H.detect_sessions(config)
   return vim.tbl_deep_extend('force', res_global, res_local)
 end
 
-function H.detect_sessions_global(global_dir)
+H.detect_sessions_global = function(global_dir)
   global_dir = H.full_path(global_dir)
   if vim.fn.isdirectory(global_dir) ~= 1 then
     H.message(('%s is not a directory path.'):format(vim.inspect(global_dir)))
@@ -458,7 +458,7 @@ function H.detect_sessions_global(global_dir)
   return res
 end
 
-function H.detect_sessions_local(local_file)
+H.detect_sessions_local = function(local_file)
   local f = H.joinpath(vim.fn.getcwd(), local_file)
 
   if not H.is_readable_file(f) then return {} end
@@ -469,7 +469,7 @@ function H.detect_sessions_local(local_file)
   return res
 end
 
-function H.new_session(session_path, session_type)
+H.new_session = function(session_path, session_type)
   return {
     modify_time = vim.fn.getftime(session_path),
     name = vim.fn.fnamemodify(session_path, ':t'),
@@ -478,7 +478,7 @@ function H.new_session(session_path, session_type)
   }
 end
 
-function H.get_session_type(session_path)
+H.get_session_type = function(session_path)
   if MiniSessions.config.directory == '' then return 'local' end
 
   local session_dir = H.full_path(session_path)
@@ -486,23 +486,23 @@ function H.get_session_type(session_path)
   return session_dir == global_dir and 'global' or 'local'
 end
 
-function H.validate_detected(session_name)
+H.validate_detected = function(session_name)
   local is_detected = vim.tbl_contains(vim.tbl_keys(MiniSessions.detected), session_name)
   if is_detected then return true end
 
   H.error(('%s is not a name for detected session.'):format(vim.inspect(session_name)))
 end
 
-function H.get_unsaved_listed_buffers()
+H.get_unsaved_listed_buffers = function()
   return vim.tbl_filter(
     function(buf_id) return vim.api.nvim_buf_get_option(buf_id, 'modified') and vim.api.nvim_buf_get_option(buf_id, 'buflisted') end,
     vim.api.nvim_list_bufs()
   )
 end
 
-function H.get_current_session_name() return vim.fn.fnamemodify(vim.v.this_session, ':t') end
+H.get_current_session_name = function() return vim.fn.fnamemodify(vim.v.this_session, ':t') end
 
-function H.name_to_path(session_name)
+H.name_to_path = function(session_name)
   if session_name == nil then
     if vim.v.this_session == '' then H.error('There is no active session. Supply non-nil session name.') end
     return vim.v.this_session
@@ -517,7 +517,7 @@ function H.name_to_path(session_name)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.default_opts(action)
+H.default_opts = function(action)
   local config = MiniSessions.config
   return {
     force = config.force[action],
@@ -526,17 +526,17 @@ function H.default_opts(action)
   }
 end
 
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.sessions) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.sessions) ' .. msg)) end
 
-function H.error(msg) error(('(mini.sessions) %s'):format(msg)) end
+H.error = function(msg) error(('(mini.sessions) %s'):format(msg)) end
 
-function H.is_readable_file(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
+H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 
-function H.joinpath(directory, filename) return ('%s%s%s'):format(directory, H.path_sep, tostring(filename)) end
+H.joinpath = function(directory, filename) return ('%s%s%s'):format(directory, H.path_sep, tostring(filename)) end
 
-function H.full_path(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
+H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
 
-function H.is_something_shown()
+H.is_something_shown = function()
   -- Don't autoread session if Neovim is opened to show something. That is
   -- when at least one of the following is true:
   -- - Current buffer has any lines (something opened explicitly).
@@ -561,7 +561,7 @@ function H.is_something_shown()
   return false
 end
 
-function H.possibly_execute(f)
+H.possibly_execute = function(f)
   if f == nil then return end
   return f()
 end

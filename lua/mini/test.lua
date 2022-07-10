@@ -125,7 +125,7 @@ local H = {}
 ---@param config table|nil Module config table. See |MiniTest.config|.
 ---
 ---@usage `require('mini.test').setup({})` (replace `{}` with your `config` table)
-function MiniTest.setup(config)
+MiniTest.setup = function(config)
   -- Export module
   _G.MiniTest = MiniTest
 
@@ -268,7 +268,7 @@ MiniTest.current = { all_cases = nil, case = nil }
 ---   T['nested']['works'] = function(x)
 ---     MiniTest.expect.equality(_G.x, x)
 ---   end
-function MiniTest.new_set(opts, tbl)
+MiniTest.new_set = function(opts, tbl)
   opts = opts or {}
   tbl = tbl or {}
 
@@ -326,7 +326,7 @@ end
 --- moment implemented as a specially handled type of error.
 ---
 ---@param msg string|nil Message to be added to current case notes.
-function MiniTest.skip(msg)
+MiniTest.skip = function(msg)
   H.cache.error_is_from_skip = true
   error(msg or 'Skip test', 0)
 end
@@ -336,7 +336,7 @@ end
 --- Appends `msg` to `exec.notes` field of |MiniTest.current.case|.
 ---
 ---@param msg string Note to add.
-function MiniTest.add_note(msg)
+MiniTest.add_note = function(msg)
   local case = MiniTest.current.case
   case.exec = case.exec or {}
   case.exec.notes = case.exec.notes or {}
@@ -349,7 +349,7 @@ end
 ---
 ---@param f function Callable to be executed after current callable is finished
 ---   executing (regardless of whether it ended with error or not).
-function MiniTest.finally(f) H.cache.finally = f end
+MiniTest.finally = function(f) H.cache.finally = f end
 
 --- Run tests
 ---
@@ -360,7 +360,7 @@ function MiniTest.finally(f) H.cache.finally = f end
 ---
 ---@param opts table|nil Options with structure similar to |MiniTest.config|.
 ---   Absent values are inferred from there.
-function MiniTest.run(opts)
+MiniTest.run = function(opts)
   if H.is_disabled() then return end
 
   -- Try sourcing project specific script first
@@ -379,7 +379,7 @@ end
 ---
 ---@param file string|nil Path to test file. By default a path of current buffer.
 ---@param opts table|nil Options for |MiniTest.run()|.
-function MiniTest.run_file(file, opts)
+MiniTest.run_file = function(file, opts)
   file = file or vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
 
   local stronger_opts = { collect = { find_files = function() return { file } end } }
@@ -400,7 +400,7 @@ end
 ---
 ---@param location table|nil Table with fields <file> (path to file) and <line>
 ---   (line number in that file). Default is taken from current cursor position.
-function MiniTest.run_at_location(location, opts)
+MiniTest.run_at_location = function(location, opts)
   if location == nil then
     local cur_file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
     local cur_pos = vim.api.nvim_win_get_cursor(0)
@@ -468,7 +468,7 @@ end
 ---     out; `true` otherwise.
 ---
 ---@return table Array of test cases ready to be used by |MiniTest.execute()|.
-function MiniTest.collect(opts)
+MiniTest.collect = function(opts)
   opts = vim.tbl_deep_extend('force', MiniTest.config.collect, opts or {})
 
   -- Make single test set
@@ -551,7 +551,7 @@ end
 ---     usage and |MiniTest.gen_reporter.stdout()| in headless usage.
 ---   - <stop_on_error> - whether to stop execution (see |MiniTest.stop()|)
 ---     after first error. Default: `false`.
-function MiniTest.execute(cases, opts)
+MiniTest.execute = function(cases, opts)
   vim.validate({ cases = { cases, 'table' } })
 
   MiniTest.current.all_cases = cases
@@ -608,7 +608,7 @@ end
 ---@param opts table|nil Options with fields:
 ---   - <close_all_child_neovim> - whether to close all child neovim processes
 ---     created with |MiniTest.new_child_neovim()|. Default: `true`.
-function MiniTest.stop(opts)
+MiniTest.stop = function(opts)
   opts = vim.tbl_deep_extend('force', { close_all_child_neovim = true }, opts or {})
 
   -- Register intention to stop execution
@@ -626,7 +626,7 @@ end
 --- Check if tests are being executed
 ---
 ---@return boolean
-function MiniTest.is_executing() return H.cache.is_executing == true end
+MiniTest.is_executing = function() return H.cache.is_executing == true end
 
 -- Expectations ---------------------------------------------------------------
 --- Table with expectation functions
@@ -649,7 +649,7 @@ MiniTest.expect = {}
 ---
 ---@param left any First object.
 ---@param right any Second object.
-function MiniTest.expect.equality(left, right)
+MiniTest.expect.equality = function(left, right)
   if vim.deep_equal(left, right) then return true end
 
   local context = string.format('Left: %s\nRight: %s', vim.inspect(left), vim.inspect(right))
@@ -662,7 +662,7 @@ end
 ---
 ---@param left any First object.
 ---@param right any Second object.
-function MiniTest.expect.no_equality(left, right)
+MiniTest.expect.no_equality = function(left, right)
   if not vim.deep_equal(left, right) then return true end
 
   local context = string.format('Object: %s', vim.inspect(left))
@@ -675,7 +675,7 @@ end
 ---@param pattern string|nil Pattern which error message should match.
 ---   Use `nil` or empty string to not test for pattern matching.
 ---@param ... any Extra arguments with which `f` will be called.
-function MiniTest.expect.error(f, pattern, ...)
+MiniTest.expect.error = function(f, pattern, ...)
   vim.validate({ pattern = { pattern, 'string', true } })
 
   local ok, err = pcall(f, ...)
@@ -694,7 +694,7 @@ end
 ---
 ---@param f function Function to be tested for raising error.
 ---@param ... any Extra arguments with which `f` will be called.
-function MiniTest.expect.no_error(f, ...)
+MiniTest.expect.no_error = function(f, ...)
   local ok, err = pcall(f, ...)
   err = err or ''
   if ok then return true end
@@ -714,7 +714,7 @@ end
 ---@param opts table|nil Options:
 ---   - <force> - whether to forcefuly create reference screenshot.
 ---     Temporary useful during test writing. Default: `false`.
-function MiniTest.expect.reference_screenshot(screenshot, path, opts)
+MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if screenshot == nil then return true end
 
   opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
@@ -781,7 +781,7 @@ end
 ---     function(x) return x end,
 ---     function(x) return 'Object: ' .. vim.inspect(x) end
 ---   )
-function MiniTest.new_expectation(subject, predicate, fail_context)
+MiniTest.new_expectation = function(subject, predicate, fail_context)
   return function(...)
     if predicate(...) then return true end
 
@@ -834,7 +834,7 @@ MiniTest.gen_reporter = {}
 ---         "normal" window (like `function() vim.cmd('vsplit') end`).
 ---       - Table. Used as `config` argument in |nvim_open_win()|.
 ---     Default: table for centered floating window.
-function MiniTest.gen_reporter.buffer(opts)
+MiniTest.gen_reporter.buffer = function(opts)
   -- NOTE: another choice of implementing this is to use terminal buffer
   -- `vim.api.nvim_open_term()`.
   -- Pros:
@@ -941,7 +941,7 @@ end
 ---     Default: 1.
 ---   - <quit_on_finish> - whether to quit after finishing test execution.
 ---     Default: `true`.
-function MiniTest.gen_reporter.stdout(opts)
+MiniTest.gen_reporter.stdout = function(opts)
   opts = vim.tbl_deep_extend('force', { group_depth = 1, quit_on_finish = true }, opts or {})
 
   local write = function(text)
@@ -1032,7 +1032,7 @@ end
 ---
 ---   -- Always stop process after it is not needed
 ---   child.stop()
-function MiniTest.new_child_neovim()
+MiniTest.new_child_neovim = function()
   local child = {}
   local start_args, start_opts
 
@@ -1050,7 +1050,7 @@ function MiniTest.new_child_neovim()
 
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
   -- because they don't provide full functionality)
-  function child.start(args, opts)
+  child.start = function(args, opts)
     if child.is_running() then
       H.message('Child process is already running. Use `child.restart()`.')
       return
@@ -1096,7 +1096,7 @@ function MiniTest.new_child_neovim()
     start_args, start_opts = args, opts
   end
 
-  function child.stop()
+  child.stop = function()
     if not child.is_running() then return end
 
     -- It is important to close these because there is an upper limit on how
@@ -1122,7 +1122,7 @@ function MiniTest.new_child_neovim()
     child.job = nil
   end
 
-  function child.restart(args, opts)
+  child.restart = function(args, opts)
     args = args or start_args
     opts = vim.tbl_deep_extend('force', start_opts or {}, opts or {})
 
@@ -1210,7 +1210,7 @@ function MiniTest.new_child_neovim()
   end
 
   -- Convenience wrappers
-  function child.type_keys(wait, ...)
+  child.type_keys = function(wait, ...)
     ensure_running()
 
     local has_wait = type(wait) == 'number'
@@ -1249,49 +1249,49 @@ function MiniTest.new_child_neovim()
     end
   end
 
-  function child.cmd(str)
+  child.cmd = function(str)
     ensure_running()
     prevent_hanging('cmd')
     return child.api.nvim_exec(str, false)
   end
 
-  function child.cmd_capture(str)
+  child.cmd_capture = function(str)
     ensure_running()
     prevent_hanging('cmd_capture')
     return child.api.nvim_exec(str, true)
   end
 
-  function child.lua(str, args)
+  child.lua = function(str, args)
     ensure_running()
     prevent_hanging('lua')
     return child.api.nvim_exec_lua(str, args or {})
   end
 
-  function child.lua_notify(str, args)
+  child.lua_notify = function(str, args)
     ensure_running()
     return child.api_notify.nvim_exec_lua(str, args or {})
   end
 
-  function child.lua_get(str, args)
+  child.lua_get = function(str, args)
     ensure_running()
     prevent_hanging('lua_get')
     return child.api.nvim_exec_lua('return ' .. str, args or {})
   end
 
-  function child.is_blocked()
+  child.is_blocked = function()
     ensure_running()
     return child.api.nvim_get_mode()['blocking']
   end
 
-  function child.is_running() return child.job ~= nil end
+  child.is_running = function() return child.job ~= nil end
 
   -- Various wrappers
-  function child.ensure_normal_mode()
+  child.ensure_normal_mode = function()
     ensure_running()
     child.type_keys([[<C-\>]], '<C-n>')
   end
 
-  function child.get_screenshot()
+  child.get_screenshot = function()
     ensure_running()
     prevent_hanging('get_screenshot')
 
@@ -1575,7 +1575,7 @@ H.reporter_symbols = setmetatable({
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -1599,12 +1599,12 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config) MiniTest.config = config end
+H.apply_config = function(config) MiniTest.config = config end
 
-function H.is_disabled() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
+H.is_disabled = function() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 
 -- Work with collection -------------------------------------------------------
-function H.busted_emulate(set)
+H.busted_emulate = function(set)
   local cur_set = set
 
   _G.describe = function(name, f)
@@ -1631,7 +1631,7 @@ function H.busted_emulate(set)
   _G.teardown = setting_hook('post_once')
 end
 
-function H.busted_deemulate()
+H.busted_deemulate = function()
   local fun_names = { 'describe', 'it', 'setup', 'before_each', 'after_each', 'teardown' }
   for _, f_name in ipairs(fun_names) do
     _G[f_name] = nil
@@ -1639,7 +1639,7 @@ function H.busted_deemulate()
 end
 
 -- Work with execution --------------------------------------------------------
-function H.execute_project_script(...)
+H.execute_project_script = function(...)
   -- Don't process script if there are more than one active `run` calls
   if H.is_inside_script then return false end
 
@@ -1662,7 +1662,7 @@ function H.execute_project_script(...)
   return success
 end
 
-function H.make_step_scheduler(case, case_num, opts)
+H.make_step_scheduler = function(case, case_num, opts)
   local report_update_case = function() H.exec_callable(opts.reporter.update, case_num) end
 
   local on_err = function(e)
@@ -1706,7 +1706,7 @@ end
 ---@return ... Tuple of aligned arrays: with test cases and hooks that should
 ---   be executed only once before corresponding item.
 ---@private
-function H.set_to_testcases(set, template, hooks_once)
+H.set_to_testcases = function(set, template, hooks_once)
   template = template or { args = {}, desc = {}, hooks = { pre = {}, post = {} }, data = {} }
   hooks_once = hooks_once or { pre = {}, post = {} }
 
@@ -1761,7 +1761,7 @@ function H.set_to_testcases(set, template, hooks_once)
   return testcase_arr, hooks_once_arr
 end
 
-function H.ensure_all_vals(arr_subset, arr_all)
+H.ensure_all_vals = function(arr_subset, arr_all)
   local vals_registry = {}
   for _, v in ipairs(arr_subset) do
     vals_registry[v] = true
@@ -1777,7 +1777,7 @@ function H.ensure_all_vals(arr_subset, arr_all)
   return arr_subset
 end
 
-function H.inject_hooks_once(cases, hooks_once)
+H.inject_hooks_once = function(cases, hooks_once)
   -- NOTE: this heavily relies on the equivalence of "have same object id" and
   -- "are same hooks"
   local already_injected = {}
@@ -1812,12 +1812,12 @@ function H.inject_hooks_once(cases, hooks_once)
   return cases
 end
 
-function H.new_testcase(template, test)
+H.new_testcase = function(template, test)
   template.test = test
   return template
 end
 
-function H.extend_template(template, layer)
+H.extend_template = function(template, layer)
   local res = vim.deepcopy(template)
 
   vim.list_extend(res.args, layer.args)
@@ -1828,7 +1828,7 @@ function H.extend_template(template, layer)
   return res
 end
 
-function H.extend_hooks(hooks, layer, do_deepcopy)
+H.extend_hooks = function(hooks, layer, do_deepcopy)
   local res = hooks
   if do_deepcopy == nil or do_deepcopy then res = vim.deepcopy(hooks) end
 
@@ -1839,14 +1839,14 @@ function H.extend_hooks(hooks, layer, do_deepcopy)
   return res
 end
 
-function H.case_to_stringid(case)
+H.case_to_stringid = function(case)
   local desc = table.concat(case.desc, ' | ')
   if #case.args == 0 then return desc end
   local args = vim.inspect(case.args, { newline = '', indent = '' })
   return ('%s + args %s'):format(desc, args)
 end
 
-function H.case_final_state(case)
+H.case_final_state = function(case)
   local pass_fail = #case.exec.fails == 0 and 'Pass' or 'Fail'
   local with_notes = #case.exec.notes == 0 and '' or ' with notes'
   return string.format('%s%s', pass_fail, with_notes)
@@ -1855,7 +1855,7 @@ end
 -- Dynamic overview reporter --------------------------------------------------
 H.overview_reporter = {}
 
-function H.overview_reporter.compute_groups(cases, group_depth)
+H.overview_reporter.compute_groups = function(cases, group_depth)
   local default_symbol = H.reporter_symbols[nil]
   return vim.tbl_map(function(c)
     local desc_trunc = vim.list_slice(c.desc, 1, group_depth)
@@ -1864,7 +1864,7 @@ function H.overview_reporter.compute_groups(cases, group_depth)
   end, cases)
 end
 
-function H.overview_reporter.start_lines(cases, groups)
+H.overview_reporter.start_lines = function(cases, groups)
   local unique_names = {}
   for _, g in ipairs(groups) do
     unique_names[g.name] = true
@@ -1878,7 +1878,7 @@ function H.overview_reporter.start_lines(cases, groups)
   }
 end
 
-function H.overview_reporter.finish_lines(cases)
+H.overview_reporter.finish_lines = function(cases)
   local res = {}
 
   -- Show all fails and notes
@@ -1916,7 +1916,7 @@ end
 -- Buffer reporter utilities --------------------------------------------------
 H.buffer_reporter = { ns_id = vim.api.nvim_create_namespace('MiniTestBuffer'), n_buffer = 0 }
 
-function H.buffer_reporter.setup_buf_and_win(window_opts)
+H.buffer_reporter.setup_buf_and_win = function(window_opts)
   local buf_id = vim.api.nvim_create_buf(true, true)
 
   local win_id
@@ -1934,7 +1934,7 @@ function H.buffer_reporter.setup_buf_and_win(window_opts)
   return buf_id, win_id
 end
 
-function H.buffer_reporter.default_window_opts()
+H.buffer_reporter.default_window_opts = function()
   return {
     relative = 'editor',
     width = math.floor(0.618 * vim.o.columns),
@@ -1944,7 +1944,7 @@ function H.buffer_reporter.default_window_opts()
   }
 end
 
-function H.buffer_reporter.set_options(buf_id, win_id)
+H.buffer_reporter.set_options = function(buf_id, win_id)
   -- Set unique name
   local n_buffer = H.buffer_reporter.n_buffer + 1
   local suffix = n_buffer == 1 and '' or (' ' .. n_buffer)
@@ -1973,7 +1973,7 @@ function H.buffer_reporter.set_options(buf_id, win_id)
   --stylua: ignore end
 end
 
-function H.buffer_reporter.set_mappings(buf_id)
+H.buffer_reporter.set_mappings = function(buf_id)
   local map_buf = function(key, rhs, opts)
     -- Use mapping description only in Neovim>=0.7
     if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
@@ -1986,7 +1986,7 @@ function H.buffer_reporter.set_mappings(buf_id)
   map_buf('q', rhs, { noremap = true, desc = 'Stop execution or close window' })
 end
 
-function H.buffer_reporter.set_lines(buf_id, lines, start, finish)
+H.buffer_reporter.set_lines = function(buf_id, lines, start, finish)
   local ns_id = H.buffer_reporter.ns_id
 
   local n_lines = vim.api.nvim_buf_line_count(buf_id)
@@ -2025,7 +2025,7 @@ function H.buffer_reporter.set_lines(buf_id, lines, start, finish)
   end
 end
 
-function H.buffer_reporter.update_step_lines(case_num, cases, groups)
+H.buffer_reporter.update_step_lines = function(case_num, cases, groups)
   local cur_case = cases[case_num]
   local cur_group = groups[case_num].name
 
@@ -2045,7 +2045,7 @@ function H.buffer_reporter.update_step_lines(case_num, cases, groups)
   }
 end
 
-function H.buffer_reporter.update_step_n_replace(latest_group_name, cur_group_name)
+H.buffer_reporter.update_step_n_replace = function(latest_group_name, cur_group_name)
   -- By default rewrite latest group symbol overview
   local res = 4
 
@@ -2061,12 +2061,12 @@ function H.buffer_reporter.update_step_n_replace(latest_group_name, cur_group_na
 end
 
 -- Predicates -----------------------------------------------------------------
-function H.is_instance(x, class)
+H.is_instance = function(x, class)
   local metatbl = getmetatable(x)
   return type(metatbl) == 'table' and metatbl.class == class
 end
 
-function H.has_fails(cases)
+H.has_fails = function(cases)
   for _, c in ipairs(cases) do
     local n_fails = c.exec == nil and 0 or #c.exec.fails
     if n_fails > 0 then return true end
@@ -2075,12 +2075,12 @@ function H.has_fails(cases)
 end
 
 -- Expectation utilities ------------------------------------------------------
-function H.error_expect(subject, ...)
+H.error_expect = function(subject, ...)
   local msg = string.format('Failed expectation for %s.', subject)
   H.error_with_traceback(msg, ...)
 end
 
-function H.error_with_traceback(msg, ...)
+H.error_with_traceback = function(msg, ...)
   local lines = { '\n' .. H.add_style(msg, 'emphasis'), ... }
 
   -- Add traceback
@@ -2092,7 +2092,7 @@ function H.error_with_traceback(msg, ...)
   error(error_msg, 0)
 end
 
-function H.traceback()
+H.traceback = function()
   local level, res = 1, {}
   local info = debug.getinfo(level, 'Snl')
   local this_short_src = info.short_src
@@ -2111,7 +2111,7 @@ function H.traceback()
 end
 
 -- Screenshots ----------------------------------------------------------------
-function H.screenshot_new(t)
+H.screenshot_new = function(t)
   local process_screen = function(arr_2d)
     local n_lines, n_cols = #arr_2d, #arr_2d[1]
 
@@ -2135,7 +2135,7 @@ function H.screenshot_new(t)
   })
 end
 
-function H.screenshot_encode_attr(attr)
+H.screenshot_encode_attr = function(attr)
   local attr_codes, res = {}, {}
   -- Use 48 so that codes start from `'0'`
   local cur_code_id = 48
@@ -2159,7 +2159,7 @@ function H.screenshot_encode_attr(attr)
   return res
 end
 
-function H.screenshot_compare(screen_ref, screen_obs)
+H.screenshot_compare = function(screen_ref, screen_obs)
   local compare = function(x, y, desc)
     if x ~= y then
       return false, ('Different %s. Reference: %s. Observed: %s.'):format(desc, vim.inspect(x), vim.inspect(y))
@@ -2192,9 +2192,9 @@ function H.screenshot_compare(screen_ref, screen_obs)
   return true, ''
 end
 
-function H.screenshot_write(screenshot, path) vim.fn.writefile(vim.split(tostring(screenshot), '\n'), path) end
+H.screenshot_write = function(screenshot, path) vim.fn.writefile(vim.split(tostring(screenshot), '\n'), path) end
 
-function H.screenshot_read(path)
+H.screenshot_read = function(path)
   -- General structure of screenshot with `n` lines:
   -- 1: ruler-separator
   -- 2, n+1: `prefix`|`text`
@@ -2210,21 +2210,21 @@ function H.screenshot_read(path)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.test) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.test) ' .. msg)) end
 
-function H.error(msg) error(string.format('(mini.test) %s', msg)) end
+H.error = function(msg) error(string.format('(mini.test) %s', msg)) end
 
-function H.wrap_callable(f)
+H.wrap_callable = function(f)
   if not vim.is_callable(f) then return end
   return function(...) return f(...) end
 end
 
-function H.exec_callable(f, ...)
+H.exec_callable = function(f, ...)
   if not vim.is_callable(f) then return end
   return f(...)
 end
 
-function H.add_prefix(tbl, prefix)
+H.add_prefix = function(tbl, prefix)
   return vim.tbl_map(function(x)
     local p = prefix
     -- Do not create trailing whitespace
@@ -2233,9 +2233,9 @@ function H.add_prefix(tbl, prefix)
   end, tbl)
 end
 
-function H.add_style(x, ansi_code) return string.format('%s%s%s', H.ansi_codes[ansi_code], x, H.ansi_codes.reset) end
+H.add_style = function(x, ansi_code) return string.format('%s%s%s', H.ansi_codes[ansi_code], x, H.ansi_codes.reset) end
 
-function H.string_to_chars(s)
+H.string_to_chars = function(s)
   -- Can't use `vim.split(s, '')` because of multibyte characters
   local res = {}
   for i = 1, vim.fn.strchars(s) do

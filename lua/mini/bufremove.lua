@@ -47,7 +47,7 @@ local H = {}
 ---@param config table Module config table. See |MiniBufremove.config|.
 ---
 ---@usage `require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
-function MiniBufremove.setup(config)
+MiniBufremove.setup = function(config)
   -- Export module
   _G.MiniBufremove = MiniBufremove
 
@@ -77,7 +77,7 @@ MiniBufremove.config = {
 ---   command). Default: `false`.
 ---
 ---@return boolean Whether operation was successful.
-function MiniBufremove.delete(buf_id, force)
+MiniBufremove.delete = function(buf_id, force)
   if H.is_disabled() then return end
 
   return H.unshow_and_cmd(buf_id, force, 'bdelete')
@@ -91,7 +91,7 @@ end
 ---   command). Default: `false`.
 ---
 ---@return boolean Whether operation was successful.
-function MiniBufremove.wipeout(buf_id, force)
+MiniBufremove.wipeout = function(buf_id, force)
   if H.is_disabled() then return end
 
   return H.unshow_and_cmd(buf_id, force, 'bwipeout')
@@ -103,7 +103,7 @@ end
 ---   0 for current.
 ---
 ---@return boolean Whether operation was successful.
-function MiniBufremove.unshow(buf_id)
+MiniBufremove.unshow = function(buf_id)
   if H.is_disabled() then return end
 
   buf_id = H.normalize_buf_id(buf_id)
@@ -121,7 +121,7 @@ end
 ---   Default: 0 for current.
 ---
 ---@return boolean Whether operation was successful.
-function MiniBufremove.unshow_in_window(win_id)
+MiniBufremove.unshow_in_window = function(win_id)
   if H.is_disabled() then return nil end
 
   win_id = (win_id == nil) and 0 or win_id
@@ -157,7 +157,7 @@ H.default_config = MiniBufremove.config
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -168,7 +168,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniBufremove.config = config
 
   if config.set_vim_settings then
@@ -176,10 +176,10 @@ function H.apply_config(config)
   end
 end
 
-function H.is_disabled() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
+H.is_disabled = function() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
 
 -- Removing implementation ----------------------------------------------------
-function H.unshow_and_cmd(buf_id, force, cmd)
+H.unshow_and_cmd = function(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
   if not H.is_valid_id(buf_id, 'buffer') then
     H.message(buf_id .. ' is not a valid buffer id.')
@@ -216,7 +216,7 @@ function H.unshow_and_cmd(buf_id, force, cmd)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.is_valid_id(x, type)
+H.is_valid_id = function(x, type)
   local is_valid = false
   if type == 'buffer' then
     is_valid = vim.api.nvim_buf_is_valid(x)
@@ -229,7 +229,7 @@ function H.is_valid_id(x, type)
 end
 
 -- Check if buffer can be removed with `MiniBufremove.fun_name` function
-function H.can_remove(buf_id, force, fun_name)
+H.can_remove = function(buf_id, force, fun_name)
   if force then return true end
 
   if vim.api.nvim_buf_get_option(buf_id, 'modified') then
@@ -248,11 +248,11 @@ end
 
 -- Compute 'true' buffer id (strictly positive integer). Treat `nil` and 0 as
 -- current buffer.
-function H.normalize_buf_id(buf_id)
+H.normalize_buf_id = function(buf_id)
   if buf_id == nil or buf_id == 0 then return vim.api.nvim_get_current_buf() end
   return buf_id
 end
 
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg)) end
 
 return MiniBufremove

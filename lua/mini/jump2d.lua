@@ -117,7 +117,7 @@ local H = {}
 ---@param config table Module config table. See |MiniJump2d.config|.
 ---
 ---@usage `require('mini.jump2d').setup({})` (replace `{}` with your `config` table)
-function MiniJump2d.setup(config)
+MiniJump2d.setup = function(config)
   -- Export module
   _G.MiniJump2d = MiniJump2d
 
@@ -297,7 +297,7 @@ MiniJump2d.config = {
 ---   })
 ---<
 ---@seealso |MiniJump2d.config|
-function MiniJump2d.start(opts)
+MiniJump2d.start = function(opts)
   if H.is_disabled() then return end
 
   opts = opts or {}
@@ -329,7 +329,7 @@ function MiniJump2d.start(opts)
 end
 
 --- Stop jumping
-function MiniJump2d.stop()
+MiniJump2d.stop = function()
   H.spots_unshow()
   H.cache.spots = nil
   vim.cmd('redraw')
@@ -356,7 +356,7 @@ end
 --- - Match letter followed by another letter (example of manual matching
 ---   inside pattern):
 ---   `MiniJump2d.gen_pattern_spotter('%a()%a', 'none')`
-function MiniJump2d.gen_pattern_spotter(pattern, side)
+MiniJump2d.gen_pattern_spotter = function(pattern, side)
   -- Don't use `%w` to account for multibyte characters
   pattern = pattern or '[^%s%p]+'
   side = side or 'start'
@@ -546,7 +546,7 @@ H.keys = {
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -579,7 +579,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniJump2d.config = config
 
   -- Apply mappings
@@ -589,10 +589,10 @@ function H.apply_config(config)
   H.map('o', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
 end
 
-function H.is_disabled() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
+H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
 
 -- Jump spots -----------------------------------------------------------------
-function H.spots_compute(opts)
+H.spots_compute = function(opts)
   local win_id_init = vim.api.nvim_get_current_win()
   local win_id_arr = vim.tbl_filter(function(win_id)
     if win_id == win_id_init then return opts.allowed_windows.current end
@@ -619,7 +619,7 @@ function H.spots_compute(opts)
   return res
 end
 
-function H.spots_add_label(spots, opts)
+H.spots_add_label = function(spots, opts)
   local label_tbl = vim.split(opts.labels, '')
 
   -- Example: with 3 label characters labels should evolve with progressing
@@ -642,7 +642,7 @@ function H.spots_add_label(spots, opts)
   return spots
 end
 
-function H.spots_show(spots, opts)
+H.spots_show = function(spots, opts)
   spots = spots or H.cache.spots or {}
   if #spots == 0 then
     H.message('No spots to show.')
@@ -665,7 +665,7 @@ function H.spots_show(spots, opts)
   if H.is_operator_pending() then vim.cmd('redraw') end
 end
 
-function H.spots_unshow(spots)
+H.spots_unshow = function(spots)
   spots = spots or H.cache.spots or {}
 
   -- Remove spot extmarks from all buffers they are present
@@ -683,7 +683,7 @@ end
 ---
 --- This considerably increases performance in case of many spots.
 ---@private
-function H.spots_to_extmarks(spots)
+H.spots_to_extmarks = function(spots)
   if #spots == 0 then return {} end
 
   local res = {}
@@ -708,7 +708,7 @@ function H.spots_to_extmarks(spots)
   return res
 end
 
-function H.spot_find_in_line(line_num, spotter_args, opts, cursor_pos)
+H.spot_find_in_line = function(line_num, spotter_args, opts, cursor_pos)
   local allowed = opts.allowed_lines
 
   -- Adjust for cursor line
@@ -733,7 +733,7 @@ function H.spot_find_in_line(line_num, spotter_args, opts, cursor_pos)
 end
 
 -- Jump state -----------------------------------------------------------------
-function H.advance_jump(opts)
+H.advance_jump = function(opts)
   local label_tbl = vim.split(opts.labels, '')
 
   local spots = H.cache.spots
@@ -785,11 +785,12 @@ function H.advance_jump(opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg)) end
 
-function H.is_operator_pending() return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1)) end
+H.is_operator_pending =
+  function() return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1)) end
 
-function H.getcharstr(msg)
+H.getcharstr = function(msg)
   local needs_help_msg = true
   if msg ~= nil then vim.defer_fn(function()
     if needs_help_msg then H.message(msg) end
@@ -808,7 +809,7 @@ function H.getcharstr(msg)
   return char
 end
 
-function H.input(prompt, text)
+H.input = function(prompt, text)
   -- Distinguish between `<C-c>`, `<Esc>`, and first `<CR>`
   local on_key = vim.on_key or vim.register_keystroke_callback
   local was_cancelled = false
@@ -834,7 +835,7 @@ end
 --- documented, so can break any time.
 ---
 ---@private
-function H.tabpage_list_wins(tabpage_id)
+H.tabpage_list_wins = function(tabpage_id)
   local wins = vim.api.nvim_tabpage_list_wins(tabpage_id)
   local wins_pos = {}
   for _, win_id in ipairs(wins) do
@@ -860,7 +861,7 @@ function H.tabpage_list_wins(tabpage_id)
   return wins
 end
 
-function H.map(mode, key, rhs, opts)
+H.map = function(mode, key, rhs, opts)
   if key == '' then return end
 
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
@@ -871,7 +872,7 @@ function H.map(mode, key, rhs, opts)
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 
-function H.merge_unique(tbl_1, tbl_2)
+H.merge_unique = function(tbl_1, tbl_2)
   if not (type(tbl_1) == 'table' and type(tbl_2) == 'table') then return end
 
   local n_1, n_2 = #tbl_1, #tbl_2

@@ -70,7 +70,7 @@ local H = {}
 ---@param config table Module config table. See |MiniTabline.config|.
 ---
 ---@usage `require('mini.tabline').setup({})` (replace `{}` with your `config` table)
-function MiniTabline.setup(config)
+MiniTabline.setup = function(config)
   -- Export module
   _G.MiniTabline = MiniTabline
 
@@ -125,7 +125,7 @@ MiniTabline.config = {
 
 -- Module functionality =======================================================
 --- Make string for |tabline|
-function MiniTabline.make_tabline_string()
+MiniTabline.make_tabline_string = function()
   if H.is_disabled() then return '' end
 
   H.make_tabpage_section()
@@ -160,7 +160,7 @@ H.center_buf_id = nil
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -175,7 +175,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniTabline.config = config
 
   -- Set settings to ensure tabline is displayed properly
@@ -188,10 +188,10 @@ function H.apply_config(config)
   vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
 end
 
-function H.is_disabled() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end
+H.is_disabled = function() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end
 
 -- Work with tabpages ---------------------------------------------------------
-function H.make_tabpage_section()
+H.make_tabpage_section = function()
   local n_tabpages = vim.fn.tabpagenr('$')
   if n_tabpages == 1 or MiniTabline.config.tabpage_section == 'none' then
     H.tabpage_section = ''
@@ -204,7 +204,7 @@ end
 
 -- Work with tabs -------------------------------------------------------------
 -- List tabs
-function H.list_tabs()
+H.list_tabs = function()
   local tabs = {}
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
     if H.is_buffer_in_minitabline(buf_id) then
@@ -220,10 +220,10 @@ function H.list_tabs()
   H.tabs = tabs
 end
 
-function H.is_buffer_in_minitabline(buf_id) return vim.api.nvim_buf_get_option(buf_id, 'buflisted') end
+H.is_buffer_in_minitabline = function(buf_id) return vim.api.nvim_buf_get_option(buf_id, 'buflisted') end
 
 -- Tab's highlight group
-function H.construct_highlight(buf_id)
+H.construct_highlight = function(buf_id)
   local hl_type
   if buf_id == vim.api.nvim_get_current_buf() then
     hl_type = 'Current'
@@ -238,7 +238,7 @@ function H.construct_highlight(buf_id)
 end
 
 -- Tab's clickable action (if supported)
-function H.construct_tabfunc(buf_id)
+H.construct_tabfunc = function(buf_id)
   if H.tablineat > 0 then
     return string.format('%%%d@MiniTablineSwitchBuffer@', buf_id)
   else
@@ -247,7 +247,7 @@ function H.construct_tabfunc(buf_id)
 end
 
 -- Tab's label and label extender
-function H.construct_label_data(buf_id)
+H.construct_label_data = function(buf_id)
   local label, label_extender
 
   local bufpath = vim.api.nvim_buf_get_name(buf_id)
@@ -264,7 +264,7 @@ function H.construct_label_data(buf_id)
   return label, label_extender
 end
 
-function H.make_path_extender(buf_id)
+H.make_path_extender = function(buf_id)
   -- Add parent to current label (if possible)
   return function(label)
     local full_path = vim.api.nvim_buf_get_name(buf_id)
@@ -281,7 +281,7 @@ end
 -- - Create three unnamed buffers.
 -- - Delete second one.
 -- - Tab label for third one remains the same.
-function H.make_unnamed_label(buf_id)
+H.make_unnamed_label = function(buf_id)
   local label
   if vim.api.nvim_buf_get_option(buf_id, 'buftype') == 'quickfix' then
     -- It would be great to differentiate for buffer `buf_id` between quickfix
@@ -301,12 +301,12 @@ function H.make_unnamed_label(buf_id)
   return label
 end
 
-function H.is_buffer_scratch(buf_id)
+H.is_buffer_scratch = function(buf_id)
   local buftype = vim.api.nvim_buf_get_option(buf_id, 'buftype')
   return (buftype == 'acwrite') or (buftype == 'nofile')
 end
 
-function H.get_unnamed_id(buf_id)
+H.get_unnamed_id = function(buf_id)
   -- Use existing sequential id if possible
   local seq_id = H.unnamed_buffers_seq_ids[buf_id]
   if seq_id ~= nil then return seq_id end
@@ -317,7 +317,7 @@ function H.get_unnamed_id(buf_id)
 end
 
 -- Work with labels -----------------------------------------------------------
-function H.finalize_labels()
+H.finalize_labels = function()
   -- Deduplicate
   local nonunique_tab_ids = H.get_nonunique_tab_ids()
   while #nonunique_tab_ids > 0 do
@@ -358,7 +358,7 @@ end
 
 ---@return table Array of `H.tabs` ids which have non-unique labels.
 ---@private
-function H.get_nonunique_tab_ids()
+H.get_nonunique_tab_ids = function()
   -- Collect tab-array-id per label
   local label_tab_ids = {}
   for i, tab in ipairs(H.tabs) do
@@ -375,7 +375,7 @@ function H.get_nonunique_tab_ids()
 end
 
 -- Fit tabline to maximum displayed width -------------------------------------
-function H.fit_width()
+H.fit_width = function()
   H.update_center_buf_id()
 
   -- Compute label width data
@@ -400,12 +400,12 @@ function H.fit_width()
   H.truncate_tabs_display(display_interval)
 end
 
-function H.update_center_buf_id()
+H.update_center_buf_id = function()
   local cur_buf = vim.api.nvim_get_current_buf()
   if H.is_buffer_in_minitabline(cur_buf) then H.center_buf_id = cur_buf end
 end
 
-function H.compute_display_interval(center_offset, tabline_width)
+H.compute_display_interval = function(center_offset, tabline_width)
   -- left - first character to be displayed (starts with 1)
   -- right - last character to be displayed
   -- Conditions to be satisfied:
@@ -428,7 +428,7 @@ function H.compute_display_interval(center_offset, tabline_width)
   return { left, right }
 end
 
-function H.truncate_tabs_display(display_interval)
+H.truncate_tabs_display = function(display_interval)
   local display_left, display_right = display_interval[1], display_interval[2]
 
   local tabs = {}
@@ -451,7 +451,7 @@ function H.truncate_tabs_display(display_interval)
 end
 
 -- Concatenate tabs into single tablien string --------------------------------
-function H.concat_tabs()
+H.concat_tabs = function()
   -- NOTE: it is assumed that all padding is incorporated into labels
   local t = {}
   for _, tab in ipairs(H.tabs) do
@@ -479,6 +479,6 @@ function H.concat_tabs()
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.tabline) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.tabline) ' .. msg)) end
 
 return MiniTabline

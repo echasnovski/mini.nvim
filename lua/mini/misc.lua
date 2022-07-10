@@ -24,7 +24,7 @@ local H = {}
 ---@param config table Module config table. See |MiniMisc.config|.
 ---
 ---@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
-function MiniMisc.setup(config)
+MiniMisc.setup = function(config)
   -- Export module
   _G.MiniMisc = MiniMisc
 
@@ -54,7 +54,7 @@ MiniMisc.config = {
 ---
 ---@return ... Table with durations (in seconds; up to microseconds) and
 ---   output of (last) function execution.
-function MiniMisc.bench_time(f, n, ...)
+MiniMisc.bench_time = function(f, n, ...)
   n = n or 1
   local durations, output = {}, nil
   for _ = 1, n do
@@ -71,7 +71,7 @@ end
 ---
 ---@param win_id number Window identifier (see |win_getid()|) for which gutter
 ---   width is computed. Default: 0 for current.
-function MiniMisc.get_gutter_width(win_id)
+MiniMisc.get_gutter_width = function(win_id)
   win_id = win_id or 0
 
   -- Store window metadata
@@ -96,7 +96,7 @@ end
 --- Print Lua objects in command line
 ---
 ---@param ... any Any number of objects to be printed each on separate line.
-function MiniMisc.put(...)
+MiniMisc.put = function(...)
   local objects = {}
   -- Not using `{...}` because it removes `nil` input
   for i = 1, select('#', ...) do
@@ -112,7 +112,7 @@ end
 --- Print Lua objects in current buffer
 ---
 ---@param ... any Any number of objects to be printed each on separate line.
-function MiniMisc.put_text(...)
+MiniMisc.put_text = function(...)
   local objects = {}
   -- Not using `{...}` because it removes `nil` input
   for i = 1, select('#', ...) do
@@ -134,14 +134,14 @@ end
 ---@param text_width number Number of editable columns resized window will
 ---   display. Default: first element of 'colorcolumn' or otherwise 'textwidth'
 ---   (using screen width as its default but not more than 79).
-function MiniMisc.resize_window(win_id, text_width)
+MiniMisc.resize_window = function(win_id, text_width)
   win_id = win_id or 0
   text_width = text_width or H.default_text_width(win_id)
 
   vim.api.nvim_win_set_width(win_id, text_width + MiniMisc.get_gutter_width(win_id))
 end
 
-function H.default_text_width(win_id)
+H.default_text_width = function(win_id)
   local buf = vim.api.nvim_win_get_buf(win_id)
   local textwidth = vim.api.nvim_buf_get_option(buf, 'textwidth')
   textwidth = (textwidth == 0) and math.min(vim.o.columns, 79) or textwidth
@@ -171,7 +171,7 @@ end
 ---@return table Table with summary values under following keys (may be
 ---   extended in the future): <maximum>, <mean>, <median>, <minimum>, <n>
 ---   (number of elements), <sd> (sample standard deviation).
-function MiniMisc.stat_summary(t)
+MiniMisc.stat_summary = function(t)
   if type(t) ~= 'table' then
     H.message('Input of `MiniMisc.stat_summary` should be an array of numbers.')
     return
@@ -202,7 +202,7 @@ function MiniMisc.stat_summary(t)
   }
 end
 
-function H.compute_median(t)
+H.compute_median = function(t)
   local n = #t
   if n == 0 then return 0 end
 
@@ -219,7 +219,7 @@ end
 ---@param n number Maximum number of first elements. Default: 5.
 ---
 ---@return table Table with at most `n` first elements of `t` (with same keys).
-function MiniMisc.tbl_head(t, n)
+MiniMisc.tbl_head = function(t, n)
   n = n or 5
   local res, n_res = {}, 0
   for k, val in pairs(t) do
@@ -242,7 +242,7 @@ end
 ---@param n number Maximum number of last elements. Default: 5.
 ---
 ---@return table Table with at most `n` last elements of `t` (with same keys).
-function MiniMisc.tbl_tail(t, n)
+MiniMisc.tbl_tail = function(t, n)
   n = n or 5
 
   -- Count number of elements on first pass
@@ -283,7 +283,7 @@ end
 ---
 ---@param buf_id number Buffer identifier (see |bufnr()|) in which function
 ---   will operate. Default: 0 for current.
-function MiniMisc.use_nested_comments(buf_id)
+MiniMisc.use_nested_comments = function(buf_id)
   buf_id = buf_id or 0
 
   local commentstring = vim.api.nvim_buf_get_option(buf_id, 'commentstring')
@@ -312,7 +312,7 @@ end
 ---@param buf_id number Buffer identifier (see |bufnr()|) to be zoomed.
 ---   Default: 0 for current.
 ---@param config table Optional config for window (as for |nvim_open_win()|).
-function MiniMisc.zoom(buf_id, config)
+MiniMisc.zoom = function(buf_id, config)
   if H.zoom_winid and vim.api.nvim_win_is_valid(H.zoom_winid) then
     vim.api.nvim_win_close(H.zoom_winid, true)
     H.zoom_winid = nil
@@ -335,7 +335,7 @@ H.zoom_winid = nil
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-function H.setup_config(config)
+H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
@@ -359,7 +359,7 @@ function H.setup_config(config)
   return config
 end
 
-function H.apply_config(config)
+H.apply_config = function(config)
   MiniMisc.config = config
 
   for _, v in pairs(config.make_global) do
@@ -368,6 +368,6 @@ function H.apply_config(config)
 end
 
 -- Utilities ------------------------------------------------------------------
-function H.message(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg)) end
+H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg)) end
 
 return MiniMisc
