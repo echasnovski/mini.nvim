@@ -3,6 +3,10 @@
 - Update all tests to use new 'mini.test' module.
 - FEATURE: Implement buffer local configuration. This is done with `vim.b.mini*_config` buffer variables.
 
+## mini.indentscope
+
+- BREAKING: Soft deprecate `vim.b.miniindentscope_options` in favor of using `options` field of `miniindentscope_config`.
+
 ## mini.statusline
 
 - FEATURE: Implement `config.use_icons` which controls whether to use icons by default.

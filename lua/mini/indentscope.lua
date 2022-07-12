@@ -738,6 +738,12 @@ end
 H.get_opts = function(opts)
   -- TODO: remove after 0.5.0 release
   if vim.b.miniindentscope_options ~= nil then
+    local msg = string.format(
+      '%s %s',
+      '(mini.indentscope) Usage of `vim.b.miniindentscope_options` is deprecated.',
+      'Use `options` field of `vim.b.miniindentscope_config`.'
+    )
+    vim.notify_once(msg)
     vim.b.miniindentscope_config =
       vim.tbl_deep_extend('force', { options = vim.b.miniindentscope_options }, vim.b.miniindentscope_config or {})
   end
