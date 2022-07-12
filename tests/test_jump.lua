@@ -821,6 +821,21 @@ T['Delayed highlighting']['respects `config.delay.highlight`'] = new_set(
   }
 )
 
+T['Delayed highlighting']['respects `vim.b.minijump_config`'] = function()
+  child.lua('MiniJump.config.delay.highlight = 100')
+  child.b.minijump_config = { delay = { highlight = 50 } }
+
+  set_cursor(1, 0)
+  type_keys('f', 'e')
+
+  sleep(50 - 10)
+  -- Nothing should yet be shown
+  child.expect_screenshot()
+  sleep(10)
+  -- Everything should be shown
+  child.expect_screenshot()
+end
+
 T['Delayed highlighting']['implements debounce-style delay'] = function()
   set_lines('1e2e3e')
   set_cursor(1, 0)
@@ -945,6 +960,16 @@ T['Stop jumping after idle']['works if should be done before target highlighting
   sleep(test_times.highlight + 1)
   -- Should also not trigger highlighting
   child.expect_screenshot()
+end
+
+T['Stop jumping after idle']['respects `vim.b.minijump_config`'] = function()
+  child.b.minijump_config = { delay = { idle_stop = 50 } }
+  type_keys('f', 'e')
+  sleep(50)
+
+  -- It should have stopped jumping and this should initiate new jump
+  type_keys('f', 'f')
+  eq(get_cursor(), { 2, 0 })
 end
 
 return T

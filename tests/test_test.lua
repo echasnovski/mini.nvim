@@ -174,17 +174,46 @@ end
 T['run()'] = new_set()
 
 T['run()']['respects `opts` argument'] = function()
-  child.lua([[MiniTest.run({ collect = { find_files = function() return {} end } })]])
+  child.lua('MiniTest.run({ collect = { find_files = function() return {} end } })')
   eq(#get_current_all_cases(), 0)
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  local general_file = get_ref_path('testref_general.lua')
+  local command = string.format(
+    [[vim.b.minitest_config = { collect = { find_files = function() return { '%s' } end } }]],
+    general_file
+  )
+  child.lua(command)
+  child.lua('MiniTest.run()')
+  eq(#get_current_all_cases() > 0, true)
 end
 
 T['run()']['tries to execute script if no arguments are supplied'] = function()
+  local validate = function()
+    local cache_local_config = child.b.minitest_config
+
+    eq(child.lua_get('_G.custom_script_result'), vim.NIL)
+    child.lua('MiniTest.run()')
+    eq(child.lua_get('_G.custom_script_result'), 'This actually ran')
+
+    -- Global and buffer local config should be restored
+    eq(child.lua_get('type(MiniTest.config.aaa)'), 'nil')
+    eq(child.b.minitest_config, cache_local_config)
+  end
+
   local script_path = get_ref_path('testref_custom-script.lua')
   child.lua('MiniTest.config.script_path = ' .. vim.inspect(script_path))
+  validate()
 
-  eq(child.lua_get('_G.custom_script_result'), vim.NIL)
-  child.lua('MiniTest.run()')
-  eq(child.lua_get('_G.custom_script_result'), 'This actually ran')
+  -- Should also use buffer local config
+  child.lua([[MiniTest.config.script_path = '']])
+  child.lua('_G.custom_script_result = nil')
+  child.b.minitest_config = { script_path = script_path }
+  validate()
 end
 
 T['run()']['handles `parametrize`'] = function()
@@ -349,6 +378,12 @@ T['collect()']['respects `emulate_busted` option'] = function()
   -- all_have_state(filter_by_desc(cases_finally, 3, 'works with no error'))
   expect_all_state(filter_by_desc(cases_finally, 3, 'works with no error'), 'Pass')
   expect_all_state(filter_by_desc(cases_finally, 3, 'works with error'), 'Pass')
+
+  -- Should also use buffer local config
+  child.lua([[vim.b.minitest_config = { collect = { emulate_busted = false } }]])
+  local busted_file = get_ref_path('testref_collect-busted.lua')
+  local command = string.format([[MiniTest.collect({ find_files = function() return { '%s' } end })]], busted_file)
+  expect.error(function() child.lua(command) end, 'attempt to call global')
 end
 
 T['collect()']['respects `find_files` option'] = function()
@@ -359,6 +394,15 @@ T['collect()']['respects `find_files` option'] = function()
   child.lua(command)
   eq(child.lua_get('#_G.cases'), 2)
   eq(child.lua_get('_G.cases[1].desc[1]'), 'tests/dir-test/testref_general.lua')
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.lua([[vim.b.minitest_config = { collect = { find_files = function() return {} end } }]])
+  child.lua('_G.cases = MiniTest.collect()')
+  eq(child.lua_get('#_G.cases'), 0)
 end
 
 T['collect()']['respects `filter_cases` option'] = function()
@@ -373,6 +417,15 @@ T['collect()']['respects `filter_cases` option'] = function()
 
   eq(child.lua_get('#_G.cases'), 1)
   eq(child.lua_get('_G.cases[1].desc[2]'), 'case 2')
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.lua([[vim.b.minitest_config = { collect = { filter_cases = function() return false end } }]])
+  child.lua('_G.cases = MiniTest.collect()')
+  eq(child.lua_get('#_G.cases'), 0)
 end
 
 T['execute()'] = new_set()
@@ -396,6 +449,15 @@ T['execute()']['respects `reporter` option']['partial'] = function()
 
   eq(child.lua_get('_G.was_in_start'), true)
   eq(child.lua_get('_G.was_in_finish'), true)
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.lua('vim.b.minitest_config = { execute = { reporter = { update = function() _G.was_in_update = true end } } }')
+  child.lua('MiniTest.execute(_G.cases)')
+  eq(child.lua_get('_G.was_in_update'), true)
 end
 
 T['execute()']['respects `stop_on_error` option'] = function()
@@ -407,6 +469,11 @@ T['execute()']['respects `stop_on_error` option'] = function()
   eq(child.lua_get('_G.cases[1].exec.state'), 'Fail')
 
   eq(child.lua_get('type(_G.cases[2].exec)'), 'nil')
+
+  -- Should also use buffer local config
+  child.lua('vim.b.minitest_config = { execute = { stop_on_error = false } }')
+  child.lua('MiniTest.execute(_G.cases)')
+  eq(child.lua_get('type(_G.cases[2].exec)'), 'table')
 end
 
 T['execute()']['properly calls `reporter` methods'] = function()

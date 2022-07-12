@@ -43,6 +43,10 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Manually run `stylua .` from the root directory of this project.
     - [Install pre-commit](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.
 
+## Implementation notes
+
+- Use module's `H.get_config()` helper to get its `config`. This way allows using buffer local configuration.
+
 ## List of highlight groups
 
 Here is a list of all highlight groups defined inside 'mini.nvim' modules. See documentation in 'doc' directory to find out what they are used for.

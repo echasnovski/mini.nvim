@@ -35,6 +35,10 @@
 ---
 --- See |MiniTabline.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minitabline_config` which should have same structure as
+--- `MiniTabline.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Highlight groups~
 ---
 --- * `MiniTablineCurrent` - buffer is current (has cursor in it).
@@ -190,10 +194,14 @@ end
 
 H.is_disabled = function() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniTabline.config, vim.b.minitabline_config or {}, config or {})
+end
+
 -- Work with tabpages ---------------------------------------------------------
 H.make_tabpage_section = function()
   local n_tabpages = vim.fn.tabpagenr('$')
-  if n_tabpages == 1 or MiniTabline.config.tabpage_section == 'none' then
+  if n_tabpages == 1 or H.get_config().tabpage_section == 'none' then
     H.tabpage_section = ''
     return
   end
@@ -338,7 +346,7 @@ H.finalize_labels = function()
 
   -- Postprocess: add file icons and padding
   local has_devicons, devicons
-  local show_icons = MiniTabline.config.show_icons
+  local show_icons = H.get_config().show_icons
 
   -- Have this `require()` here to not depend on plugin initialization order
   if show_icons then
@@ -463,7 +471,7 @@ H.concat_tabs = function()
   local res = ('%s%%X%%#MiniTablineFill#'):format(table.concat(t, ''))
 
   -- Add tabpage section
-  local position = MiniTabline.config.tabpage_section
+  local position = H.get_config().tabpage_section
   if H.tabpage_section ~= '' then
     if not vim.tbl_contains({ 'none', 'left', 'right' }, position) then
       H.message([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])

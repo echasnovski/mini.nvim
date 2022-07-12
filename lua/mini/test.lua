@@ -55,8 +55,13 @@
 ---
 --- This module needs a setup with `require('mini.test').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniTest`
---- which you can use for scripting or manually (with `:lua MiniTest.*`). See
---- |MiniTest.config| for available config settings.
+--- which you can use for scripting or manually (with `:lua MiniTest.*`).
+---
+--- See |MiniTest.config| for available config settings.
+---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minitest_config` which should have same structure as `MiniTest.config`.
+--- See |mini.nvim-buffer-local-config| for more details.
 ---
 --- # Comparisons~
 ---
@@ -368,7 +373,7 @@ MiniTest.run = function(opts)
   if success then return end
 
   -- Collect and execute
-  opts = vim.tbl_deep_extend('force', MiniTest.config, opts or {})
+  opts = H.get_config(opts)
   local cases = MiniTest.collect(opts.collect)
   MiniTest.execute(cases, opts.execute)
 end
@@ -469,7 +474,7 @@ end
 ---
 ---@return table Array of test cases ready to be used by |MiniTest.execute()|.
 MiniTest.collect = function(opts)
-  opts = vim.tbl_deep_extend('force', MiniTest.config.collect, opts or {})
+  opts = vim.tbl_deep_extend('force', H.get_config().collect, opts or {})
 
   -- Make single test set
   local set = MiniTest.new_set()
@@ -562,7 +567,7 @@ MiniTest.execute = function(cases, opts)
     return
   end
 
-  opts = vim.tbl_deep_extend('force', MiniTest.config.execute, opts or {})
+  opts = vim.tbl_deep_extend('force', H.get_config().execute, opts or {})
   local reporter = opts.reporter or (H.is_headless and MiniTest.gen_reporter.stdout() or MiniTest.gen_reporter.buffer())
   if type(reporter) ~= 'table' then
     H.message('`opts.reporter` should be table or `nil`.')
@@ -1603,6 +1608,9 @@ H.apply_config = function(config) MiniTest.config = config end
 
 H.is_disabled = function() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 
+H.get_config =
+  function(config) return vim.tbl_deep_extend('force', MiniTest.config, vim.b.minitest_config or {}, config or {}) end
+
 -- Work with collection -------------------------------------------------------
 H.busted_emulate = function(set)
   local cur_set = set
@@ -1647,16 +1655,18 @@ H.execute_project_script = function(...)
   if #{ ... } > 0 then return end
 
   -- Store information
-  local config_cache = MiniTest.config
+  local config_cache = vim.deepcopy(MiniTest.config)
+  local local_config_cache = vim.b.minitest_config
 
   -- Pass information to a possible `run()` call inside script
   H.is_inside_script = true
 
   -- Execute script
-  local success = pcall(vim.cmd, 'luafile ' .. MiniTest.config.script_path)
+  local success = pcall(vim.cmd, 'luafile ' .. H.get_config().script_path)
 
   -- Restore information
   MiniTest.config = config_cache
+  vim.b.minitest_config = local_config_cache
   H.is_inside_script = nil
 
   return success

@@ -207,6 +207,13 @@ T['generate()']['respects arguments'] = function()
   child.loop.fs_unlink('output.txt')
 end
 
+T['generate()']['respects `vim.b.minidoc_config`'] = function()
+  child.b.minidoc_config = { script_path = 'buffer-local_script.lua' }
+  child.lua('MiniDoc.generate()')
+  eq(child.lua_get('_G.is_inside_buffer_local_script'), true)
+  eq(child.b.minidoc_config, { script_path = 'buffer-local_script.lua' })
+end
+
 T['generate()']['returns correct data structure'] = function()
   child.cmd('luafile helpers.lua')
   cd('structure')
@@ -219,9 +226,9 @@ end
 T['generate()']['uses custom script'] = function()
   -- Add project root to runtimepath to be able to `require('mini.doc')`
   child.cmd('set rtp+=../..')
-  reload_module({ script_path = 'gendoc/gendoc-script.lua' })
-
   cd('custom-script')
+  child.lua([[MiniDoc.config.script_path = 'gendoc/gendoc-script.lua']])
+
   -- This should execute 'gendoc/gendoc-script.lua' and return what it returns
   expect.no_error(function() child.lua('_G.validate_doc_structure(MiniDoc.generate())') end)
   expect_equal_file_contents('output.txt', 'output_reference.txt')
@@ -229,6 +236,7 @@ T['generate()']['uses custom script'] = function()
   -- Script is executed only if all arguments are `nil` (default).
   child.lua([[MiniDoc.generate({ 'init.lua' })]])
   expect_equal_file_contents('doc/custom-script.txt', 'output_reference.txt')
+  eq(child.lua_get('type(MiniDoc.config.aaa)'), 'nil')
 
   -- Cleanup
   child.loop.fs_unlink('output.txt')

@@ -285,45 +285,84 @@ T['Autocompletion']['uses fallback'] = function()
 end
 
 T['Autocompletion']['respects `config.delay.completion`'] = function()
-  reload_module({ delay = { completion = 300 } })
+  child.lua('MiniCompletion.config.delay.completion = 300')
 
   type_keys('i', 'J')
   sleep(300 - 10)
+  eq(get_completion(), {})
+  sleep(10)
+  eq(get_completion(), { 'January', 'June', 'July' })
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  set_cursor(1, 0)
+  child.b.minicompletion_config = { delay = { completion = 50 } }
+  type_keys('i', 'J')
+  sleep(50 - 10)
+  eq(get_completion(), {})
   sleep(10)
   eq(get_completion(), { 'January', 'June', 'July' })
 end
 
 T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function()
-  child.lua([[
-      _G.process_items = function(items, base)
-        -- Don't show 'Text' kind
-        items = vim.tbl_filter(function(x) return x.kind ~= 1 end, items)
-        return MiniCompletion.default_process_items(items, base)
-      end
-    ]])
-  unload_module()
-  child.lua([[require('mini.completion').setup({ lsp_completion = { process_items = _G.process_items } })]])
+  child.lua('_G.process_items = function(items, base) return { items[2], items[3] } end')
+  child.lua('MiniCompletion.config.lsp_completion.process_items = _G.process_items')
 
   type_keys('i', 'J')
   sleep(test_times.completion + 1)
-  eq(get_completion(), { 'June', 'July' })
+  eq(get_completion(), { 'February', 'March' })
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  set_cursor(1, 0)
+  child.lua('_G.process_items_2 = function(items, base) return { items[4], items[5] } end')
+  child.lua('vim.b.minicompletion_config = { lsp_completion = { process_items = _G.process_items_2 } }')
+
+  type_keys('i', 'J')
+  sleep(test_times.completion + 1)
+  eq(get_completion(), { 'April', 'May' })
 end
 
 T['Autocompletion']['respects string `config.fallback_action`'] = function()
-  reload_module({ fallback_action = '<C-x><C-l>' })
+  child.lua([[MiniCompletion.config.fallback_action = '<C-x><C-l>']])
   set_lines({ 'Line number 1', '' })
   set_cursor(2, 0)
   type_keys('i', 'L')
   sleep(test_times.completion + 1)
   eq(get_completion(), { 'Line number 1' })
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  child.b.minicompletion_config = { fallback_action = '<C-p>' }
+  set_lines({ 'Line number 1', '' })
+  set_cursor(2, 0)
+  type_keys('i', 'L')
+  sleep(test_times.completion + 1)
+  eq(get_completion(), { 'Line' })
 end
 
 T['Autocompletion']['respects function `config.fallback_action`'] = function()
-  unload_module()
-  child.lua([[require('mini.completion').setup({ fallback_action = function() _G.inside_fallback = true end })]])
+  child.lua([[MiniCompletion.config.fallback_action = function() _G.inside_fallback = true end]])
   type_keys('i', 'a')
   sleep(test_times.completion + 1)
   eq(child.lua_get('_G.inside_fallback'), true)
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.ensure_normal_mode()
+  child.lua('vim.b.minicompletion_config = { fallback_action = function() _G.inside_local_fallback = true end }')
+  type_keys('i', 'a')
+  sleep(test_times.completion + 1)
+  eq(child.lua_get('_G.inside_local_fallback'), true)
 end
 
 T['Autocompletion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
@@ -478,12 +517,17 @@ T['Information window']['works'] = function()
 end
 
 T['Information window']['respects `config.delay.info`'] = function()
-  reload_module({ delay = { info = 300 } })
+  child.lua('MiniCompletion.config.delay.info = 300')
   validate_info_win(300)
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  child.b.minicompletion_config = { delay = { info = 50 } }
+  validate_info_win(50)
 end
 
 local validate_dimensions_info = function(keys, completion_items, dimensions)
-  reload_module({ window_dimensions = { info = dimensions } })
   type_keys('i', keys, '<C-Space>')
   eq(get_completion(), completion_items)
 
@@ -496,13 +540,24 @@ end
 
 T['Information window']['respects `config.window_dimensions.info`'] = function()
   child.set_size(25, 60)
-  validate_dimensions_info('D', { 'December' }, { height = 20, width = 40 })
+  local dimensions = { height = 20, width = 40 }
+  child.lua('MiniCompletion.config.window_dimensions.info = ' .. vim.inspect(dimensions))
+  validate_dimensions_info('D', { 'December' }, dimensions)
+  child.expect_screenshot()
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  child.b.minicompletion_config = { window_dimensions = { info = { height = 10, width = 20 } } }
+  validate_dimensions_info('D', { 'December' }, { height = 10, width = 20 })
   child.expect_screenshot()
 end
 
 T['Information window']['has minimal dimensions for small text'] = function()
   child.set_size(10, 40)
-  validate_dimensions_info('J', { 'January', 'June', 'July' }, { height = 1, width = 9 })
+  local dimensions = { height = 1, width = 9 }
+  child.lua('MiniCompletion.config.window_dimensions.info = ' .. vim.inspect(dimensions))
+  validate_dimensions_info('J', { 'January', 'June', 'July' }, dimensions)
   child.expect_screenshot()
 end
 
@@ -562,8 +617,14 @@ T['Signature help']['works'] = function()
 end
 
 T['Signature help']['respects `config.delay.signature`'] = function()
-  reload_module({ delay = { signature = 300 } })
+  child.lua('MiniCompletion.config.delay.signature = 300')
   validate_signature_win(300)
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  child.b.minicompletion_config = { delay = { signature = 50 } }
+  validate_signature_win(50)
 end
 
 T['Signature help']['updates highlighting of active parameter'] = function()
@@ -585,19 +646,33 @@ T['Signature help']['updates highlighting of active parameter'] = function()
 end
 
 local validate_dimensions_signature = function(keys, dimensions)
-  reload_module({ window_dimensions = { signature = dimensions } })
   child.cmd('startinsert')
   type_keys(keys)
   sleep(test_times.signature + 2)
   validate_single_floating_win({ config = dimensions })
 end
 
-T['Signature help']['respects `config.window_dimensions.signature`'] =
-  function() validate_dimensions_signature({ 'l', 'o', 'n', 'g', '(' }, { height = 20, width = 40 }) end
+T['Signature help']['respects `config.window_dimensions.signature`'] = function()
+  local keys = { 'l', 'o', 'n', 'g', '(' }
+  local dimensions = { height = 20, width = 40 }
+  child.lua('MiniCompletion.config.window_dimensions.signature = ' .. vim.inspect(dimensions))
+  validate_dimensions_signature(keys, dimensions)
+  child.expect_screenshot()
+
+  -- Should also use buffer local config
+  child.ensure_normal_mode()
+  set_lines({ '' })
+  child.b.minicompletion_config = { window_dimensions = { signature = { height = 10, width = 20 } } }
+  validate_dimensions_signature(keys, { height = 10, width = 20 })
+  child.expect_screenshot()
+end
 
 T['Signature help']['has minimal dimensions for small text'] = function()
   child.set_size(5, 30)
-  validate_dimensions_signature({ 'a', 'b', 'c', '(' }, { height = 1, width = 19 })
+  local keys = { 'a', 'b', 'c', '(' }
+  local dimensions = { height = 1, width = 19 }
+  child.lua('MiniCompletion.config.window_dimensions.signature = ' .. vim.inspect(dimensions))
+  validate_dimensions_signature(keys, dimensions)
   child.expect_screenshot()
 end
 

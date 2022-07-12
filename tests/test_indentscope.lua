@@ -235,7 +235,7 @@ T['get_scope()']['uses correct config source'] = function()
   child.lua([[MiniIndentscope.config.options.border = 'bottom']])
   eq(get_cursor_scope().border, { top = nil, bottom = 7, indent = 2 })
 
-  child.b.miniindentscope_options = { border = 'top' }
+  child.b.miniindentscope_config = { options = { border = 'top' } }
   eq(get_cursor_scope().border, { top = 1, bottom = nil, indent = 0 })
 
   eq(get_cursor_scope({ border = 'none' }).border, {})
@@ -385,18 +385,27 @@ end
 T['draw()']['respects `config.draw.animation`'] = function()
   mark_flaky()
 
-  local command =
-    string.format('MiniIndentscope.config.draw.animation = function() return %d end', 2.5 * test_times.animation_step)
+  local validate = function(duration)
+    set_cursor(5, 4)
+    child.lua('MiniIndentscope.draw()')
+
+    sleep(duration - 10)
+    -- Should still be one symbol
+    child.expect_screenshot()
+    sleep(10 + 1)
+    -- Should be two symbols
+    child.expect_screenshot()
+  end
+
+  local duration = 2.5 * test_times.animation_step
+  local command = string.format('MiniIndentscope.config.draw.animation = function() return %d end', duration)
   child.lua(command)
+  validate(duration)
 
-  set_cursor(5, 4)
-  child.lua('MiniIndentscope.draw()')
-
-  sleep(1.5 * test_times.animation_step)
-  -- Should still be one symbol
-  child.expect_screenshot()
-  sleep(test_times.animation_step)
-  child.expect_screenshot()
+  -- Should also use buffer local config
+  set_cursor(1, 0)
+  child.lua('vim.b.miniindentscope_config = { draw = { animation = function() return 30 end } }')
+  validate(30)
 end
 
 T['draw()']['respects `config.symbol`'] = function()
@@ -405,7 +414,13 @@ T['draw()']['respects `config.symbol`'] = function()
   child.lua([[MiniIndentscope.config.symbol = '-']])
   set_cursor(5, 4)
   child.lua('MiniIndentscope.draw()')
+  child.expect_screenshot()
 
+  -- Should also use buffer local config
+  set_cursor(1, 0)
+  child.b.miniindentscope_config = { symbol = '+' }
+  set_cursor(5, 4)
+  child.lua('MiniIndentscope.draw()')
   child.expect_screenshot()
 end
 
@@ -505,6 +520,13 @@ T['Auto drawing']['respects `config.draw.delay`'] = function()
   set_cursor(5, 4)
 
   sleep(0.5 * test_times.delay)
+  child.expect_screenshot()
+
+  -- Should also use buffer local config
+  set_cursor(1, 0)
+  child.b.miniindentscope_config = { draw = { delay = 30 } }
+  set_cursor(5, 4)
+  sleep(30)
   child.expect_screenshot()
 end
 
@@ -703,6 +725,12 @@ T['Motion']['respects `config.options.border`'] = function()
   set_cursor(5, 4)
   type_keys(']i')
   eq(get_cursor(), { 6, 3 })
+
+  -- Should also use buffer local config
+  child.b.miniindentscope_config = { options = { border = 'bottom' } }
+  set_cursor(5, 4)
+  type_keys('[i')
+  eq(get_cursor(), { 4, 3 })
 end
 
 T['Motion']['handles `v:count` when `try_as_border=true`'] = function()
@@ -832,6 +860,12 @@ T['Textobject']['respects `config.options.border`'] = function()
   set_cursor(5, 4)
   type_keys('v', 'ai', '<Esc>')
   child.expect_visual_marks(4, 6)
+
+  -- Should also use buffer local config
+  child.b.miniindentscope_config = { options = { border = 'bottom' } }
+  set_cursor(5, 4)
+  type_keys('v', 'ai', '<Esc>')
+  child.expect_visual_marks(4, 7)
 end
 
 T['Textobject']['handles `v:count` when `try_as_border=true`'] = function()

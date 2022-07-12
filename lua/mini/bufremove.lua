@@ -18,6 +18,9 @@
 ---
 --- See |MiniBufremove.config| for `config` structure and default values.
 ---
+--- This module doesn't have runtime options, so using `vim.b.minibufremove_config`
+--- will have no effect here.
+---
 --- # Notes~
 ---
 --- 1. Which buffer to show in window(s) after its current buffer is removed is

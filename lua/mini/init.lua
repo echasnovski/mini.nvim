@@ -47,6 +47,9 @@
 ---       can be changed during runtime; but changing
 ---       `MiniSurround.config.mappings` won't have any effect (as mappings are
 ---       created once during `setup()`).
+--- - <Buffer local configuration>. Each module can be additionally configured
+---   to use certain runtime config settings locally to buffer. See
+---   |mini.nvim-buffer-local-config| for more information.
 --- - <Disabling>. Each module's core functionality can be disabled globally or
 ---   buffer-locally by creating appropriate global or buffer-scoped variables
 ---   equal to |v:true|. See |mini.nvim-disabling-recipes| for common recipes.
@@ -168,6 +171,27 @@
 --- - Disable in Terminal buffer:
 ---   `au TermOpen * lua vim.b.minicursorword_disable = true`
 ---@tag mini.nvim-disabling-recipes
+
+--- Buffer local config
+---
+--- Each module can be additionally configured locally to buffer by creating
+--- appropriate buffer-scoped variable with values you want to override. It
+--- will affect only runtime options and not those used once during setup (like
+--- `mappings` or `set_vim_settings`).
+---
+--- Variable names have the same structure: `b:mini*_config` where `*` is
+--- module's lowercase name. For example, `b:minicursorword_config` can store
+--- information about how |mini.cursorword| will act inside current buffer. Its
+--- value should be a table with same structure as module's `config`.
+--- Continuing example, `vim.b.minicursorword_config = { delay = 500 }` will
+--- use delay 500 inside current buffer.
+---
+--- Considering high number of different scenarios and customization intentions,
+--- writing exact rules for module's buffer local configuration is left to
+--- user. It is done in similar fashion to |mini.nvim-disabling-recipes|.
+---
+--- Note: using function values inside buffer variables requires Neovim>=0.7.
+---@tag mini.nvim-buffer-local-config
 
 --- # Plugin colorscheme~
 ---

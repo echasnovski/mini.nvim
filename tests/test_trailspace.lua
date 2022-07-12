@@ -100,6 +100,14 @@ T['highlight()']['respects `config.only_in_normal_buffers`'] = new_set({
   end,
 })
 
+T['highlight()']['respects `vim.b.minitrailspace_config`'] = function()
+  child.b.minitrailspace_config = { only_in_normal_buffers = false }
+  child.bo.buftype = 'nofile'
+  child.lua('MiniTrailspace.highlight()')
+  -- Should highlight
+  child.expect_screenshot()
+end
+
 T['highlight()']['works only in Normal mode'] = new_set({
   parametrize = { { 'i' }, { 'v' }, { 'R' }, { ':' } },
 }, {

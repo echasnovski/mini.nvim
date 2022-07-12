@@ -11,6 +11,9 @@
 --- use for scripting or manually (with `:lua MiniMisc.*`).
 ---
 --- See |MiniMisc.config| for `config` structure and default values.
+---
+--- This module doesn't have runtime options, so using `vim.b.minimisc_config`
+--- will have no effect here.
 ---@tag mini.misc
 ---@tag MiniMisc
 ---@toc_entry Miscellaneous functions

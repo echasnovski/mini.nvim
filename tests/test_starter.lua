@@ -258,6 +258,13 @@ T['open()']['respects `vim.{g,b}.ministarter_disable`'] = new_set({
   end,
 })
 
+T['open()']['respects `vim.b.ministarter_config`'] = function()
+  -- Although this is defined inside current buffer, it should affect Starter buffer
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+end
+
 T['refresh()'] = new_set({
   hooks = {
     pre_case = function()
@@ -335,7 +342,7 @@ end
 T['refresh()']['allows empty `items`'] = function()
   validate_equal_starter(
     { items = '{}' },
-    { items = [[{ { name = '`MiniStarter.config.items` is empty', action = '', section = '' } }]] }
+    { items = [[{ { name = '`config.items` is empty', action = '', section = '' } }]] }
   )
   -- It shouldn't give any messages
   eq(get_latest_message(), '')
@@ -417,6 +424,21 @@ T['refresh()']['calls `content_hooks` on every call'] = function()
   child.lua('MiniStarter.open()')
   child.lua('MiniStarter.refresh()')
   eq(child.lua_get('_G.hooks_history'), { 'a', 'b', 'a', 'b' })
+end
+
+T['refresh()']['respects `vim.b.ministarter_config`'] = function()
+  child.o.cmdheight = 1
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+
+  child.b.ministarter_config = {
+    header = 'Hello',
+    footer = 'World',
+    content_hooks = {},
+    items = { { name = 'aaa', action = 'echo "aaa"', section = 'AAA' } },
+  }
+  child.lua('MiniStarter.refresh()')
+  child.expect_screenshot()
 end
 
 T['close()'] = new_set()
@@ -922,27 +944,47 @@ T['Querying']['works'] = function()
 end
 
 T['Querying']['respects `config.query_updaters`'] = function()
+  local validate = function()
+    child.lua('MiniStarter.open()')
+    eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+
+    type_keys('a')
+    eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
+
+    type_keys('b')
+    eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
+    eq(get_latest_message(), '')
+  end
+
   reload_module({ items = example_items, query_updaters = 'a' })
-  child.lua('MiniStarter.open()')
-  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+  validate()
 
-  type_keys('a')
-  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
-
-  type_keys('b')
-  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
-  eq(get_latest_message(), '')
+  -- Should also use buffer local config
+  child.lua('MiniStarter.close()')
+  reload_module()
+  child.b.ministarter_config = { items = example_items, query_updaters = 'a' }
+  validate()
 end
 
 T['Querying']['respects `config.evaluate_single`'] = function()
-  reload_module({ evaluate_single = true, items = example_items })
-  child.lua('MiniStarter.open()')
-  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
-  child.lua('_G.item_name = nil')
+  local validate = function()
+    child.lua('MiniStarter.open()')
+    eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+    child.lua('_G.item_name = nil')
 
-  type_keys('b')
-  eq(get_active_items_names(), { 'baaa' })
-  eq(child.lua_get('_G.item_name'), 'baaa')
+    type_keys('b')
+    eq(get_active_items_names(), { 'baaa' })
+    eq(child.lua_get('_G.item_name'), 'baaa')
+  end
+
+  reload_module({ evaluate_single = true, items = example_items })
+  validate()
+
+  -- Should also use buffer local config
+  child.lua('MiniStarter.close()')
+  reload_module()
+  child.b.ministarter_config = { evaluate_single = true, items = example_items }
+  validate()
 end
 
 T['Keybindings'] = new_set({

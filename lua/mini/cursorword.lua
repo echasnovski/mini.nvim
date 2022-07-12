@@ -17,6 +17,10 @@
 ---
 --- See |MiniCursorword.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minicursorword_config` which should have same structure as
+--- `MiniCursorword.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Highlight groups~
 ---
 --- * `MiniCursorword` - highlight group of cursor word. Default: plain underline.
@@ -157,7 +161,7 @@ MiniCursorword.auto_highlight = function()
 
   -- Delay highlighting
   H.timer:start(
-    MiniCursorword.config.delay,
+    H.get_config().delay,
     0,
     vim.schedule_wrap(function()
       -- Ensure that always only one word is highlighted
@@ -207,6 +211,10 @@ end
 H.apply_config = function(config) MiniCursorword.config = config end
 
 H.is_disabled = function() return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true end
+
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniCursorword.config, vim.b.minicursorword_config or {}, config or {})
+end
 
 -- Highlighting ---------------------------------------------------------------
 ---@param only_current boolean Whether to forcefuly highlight only current word

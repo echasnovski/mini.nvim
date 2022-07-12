@@ -388,6 +388,16 @@ end
 T['start()']['respects `spotter`'] = function()
   child.lua('MiniJump2d.start({ spotter = function() return { 1 } end })')
   child.expect_screenshot()
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.lua('MiniJump2d.stop()')
+  child.lua('vim.b.minijump2d_config = { spotter = function() return { 2 } end }')
+  child.lua('MiniJump2d.start()')
+  child.expect_screenshot()
 end
 
 T['start()']['uses `spotter` with correct arguments'] = function()
@@ -438,10 +448,22 @@ T['start()']['respects `labels`'] = function()
   child.expect_screenshot()
   type_keys('j', 'k')
   eq(get_cursor(), { 2, 0 })
+
+  -- Should also use buffer local config
+  child.lua('MiniJump2d.stop()')
+  child.b.minijump2d_config = { labels = 'ab' }
+  start()
+  child.expect_screenshot()
 end
 
 T['start()']['respects `allowed_lines.blank`'] = function()
   start({ allowed_lines = { blank = false } })
+  child.expect_screenshot()
+
+  -- Should also use buffer local config
+  child.lua('MiniJump2d.stop()')
+  child.b.minijump2d_config = { allowed_lines = { blank = true } }
+  start()
   child.expect_screenshot()
 end
 
@@ -457,6 +479,13 @@ T['start()']['respects `allowed_lines.cursor_*`'] = new_set({
     local opts = { allowed_lines = {} }
     opts.allowed_lines[option_name] = false
     start(opts)
+    child.expect_screenshot()
+
+    -- Should also use buffer local config
+    child.lua('MiniJump2d.stop()')
+    opts.allowed_lines[option_name] = true
+    child.b.minijump2d_config = opts
+    start()
     child.expect_screenshot()
   end,
 })
@@ -492,6 +521,12 @@ T['start()']['respects `allowed_lines.fold`'] = function()
   -- Validate
   start({ allowed_lines = { fold = false } })
   child.expect_screenshot()
+
+  -- Should also use buffer local config
+  child.lua('MiniJump2d.stop()')
+  child.b.minijump2d_config = { allowed_lines = { fold = true } }
+  start()
+  child.expect_screenshot()
 end
 
 T['start()']['respects `allowed_windows`'] = new_set({
@@ -509,6 +544,14 @@ T['start()']['respects `allowed_windows`'] = new_set({
     if allowed_windows_opts.current == false and allowed_windows_opts.not_current == false then
       eq(get_latest_message(), '(mini.jump2d) No spots to show.')
     end
+
+    -- Should also use buffer local config
+    child.lua('MiniJump2d.stop()')
+    local opts = vim.deepcopy(allowed_windows_opts)
+    opts.current, opts.not_current = not opts.current, not opts.not_current
+    child.b.minijump2d_config = opts
+    start()
+    child.expect_screenshot()
   end,
 })
 
@@ -524,6 +567,20 @@ T['start()']['respects `hooks`'] = function()
   eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 1, 0 })
   type_keys('<CR>')
   eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 1, 1 })
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  child.lua('MiniJump2d.stop()')
+  child.lua([[vim.b.minijump2d_config = {
+    hooks = { before_start = function() _G.n_before_start = _G.n_before_start + 10 end }
+  }]])
+  start()
+  eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 11, 1 })
+  type_keys('<CR>')
+  eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 11, 1 })
 end
 
 T['start()']['allows `hook.before_start` to modify spotter'] = function()

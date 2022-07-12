@@ -203,6 +203,15 @@ T['active()/inactive()']['respects `config.content`'] = function(field)
     string.format([[require('mini.statusline').setup({ content = { %s = function() return 'aaa' end } })]], field)
   child.lua(command)
   eq(eval_content(field), 'aaa')
+
+  -- Should also use buffer local config
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  command = string.format([[vim.b.ministatusline_config = { content = { %s = function() return 'bbb' end } }]], field)
+  child.lua(command)
+  eq(eval_content(field), 'bbb')
 end
 
 T['active()/inactive()']['respects `vim.{g,b}.ministatusline_disable`'] = new_set({
@@ -245,6 +254,10 @@ end
 T['section_diagnostics()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
   eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'LSP E4 W3 I2 H1')
+
+  -- Should also use buffer local config
+  child.b.ministatusline_config = { use_icons = true }
+  eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), ' E4 W3 I2 H1')
 end
 
 T['section_diagnostics()']['is shown only in normal buffers'] = function()
@@ -284,6 +297,10 @@ T['section_fileinfo()']['respects `config.use_icons`'] = function()
 
   child.lua('MiniStatusline.config.use_icons = false')
   validate_fileinfo('', '^lua...')
+
+  -- Should also use buffer local config
+  child.b.ministatusline_config = { use_icons = true }
+  validate_fileinfo('', ' lua...')
 end
 
 T['section_fileinfo()']["correctly asks 'nvim-web-devicons' for icon"] = function()
@@ -374,6 +391,10 @@ end
 T['section_git()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
   eq(child.lua_get([[MiniStatusline.section_git({})]]), 'Git main +1 ~2 -3')
+
+  -- Should also use buffer local config
+  child.b.ministatusline_config = { use_icons = true }
+  eq(child.lua_get([[MiniStatusline.section_git({})]]), ' main +1 ~2 -3')
 end
 
 T['section_git()']['is shown only in normal buffers'] = function()

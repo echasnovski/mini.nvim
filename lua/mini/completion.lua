@@ -53,6 +53,10 @@
 ---
 --- See |MiniCompletion.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minicompletion_config` which should have same structure as
+--- `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Notes~
 ---
 --- - More appropriate, albeit slightly advanced, LSP completion setup is to set
@@ -336,7 +340,7 @@ MiniCompletion.auto_completion = function()
 
   -- Using delay (of debounce type) actually improves user experience
   -- as it allows fast typing without many popups.
-  H.completion.timer:start(MiniCompletion.config.delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
+  H.completion.timer:start(H.get_config().delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
 end
 
 --- Run two-stage completion
@@ -383,7 +387,7 @@ MiniCompletion.auto_info = function()
   -- Don't even try to show info if nothing is selected in popup
   if vim.tbl_isempty(H.info.event.completed_item) then return end
 
-  H.info.timer:start(MiniCompletion.config.delay.info, 0, vim.schedule_wrap(H.show_info_window))
+  H.info.timer:start(H.get_config().delay.info, 0, vim.schedule_wrap(H.show_info_window))
 end
 
 --- Auto function signature
@@ -400,7 +404,7 @@ MiniCompletion.auto_signature = function()
   local char_is_trigger = left_char == ')' or H.is_lsp_trigger(left_char, 'signature')
   if not char_is_trigger then return end
 
-  H.signature.timer:start(MiniCompletion.config.delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
+  H.signature.timer:start(H.get_config().delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
 end
 
 --- Stop actions
@@ -505,11 +509,13 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
   else
     if findstart == 1 then return H.get_completion_start() end
 
+    local config = H.get_config()
+
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then return {} end
-      items = MiniCompletion.config.lsp_completion.process_items(items, base)
+      items = config.lsp_completion.process_items(items, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
 
@@ -655,6 +661,10 @@ end
 
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniCompletion.config, vim.b.minicompletion_config or {}, config or {})
+end
+
 -- Completion triggers --------------------------------------------------------
 H.trigger_twostep = function()
   -- Trigger only in Insert mode and if text didn't change after trigger
@@ -691,7 +701,7 @@ H.trigger_lsp = function()
   -- When `force` is `true` then presence of popup shouldn't matter.
   local no_popup = H.completion.force or (not H.pumvisible())
   if no_popup and vim.fn.mode() == 'i' then
-    local key = H.keys[MiniCompletion.config.lsp_completion.source_func]
+    local key = H.keys[H.get_config().lsp_completion.source_func]
     vim.api.nvim_feedkeys(key, 'n', false)
   end
 end
@@ -701,15 +711,16 @@ H.trigger_fallback = function()
   if no_popup and vim.fn.mode() == 'i' then
     -- Track from which source is current popup
     H.completion.source = 'fallback'
-    if type(MiniCompletion.config.fallback_action) == 'string' then
+    local config = H.get_config()
+    if type(config.fallback_action) == 'string' then
       -- Having `<C-g><C-g>` also (for some mysterious reason) helps to avoid
       -- some weird behavior. For example, if `keys = '<C-x><C-l>'` then Neovim
       -- starts new line when there is no suggestions.
-      local keys = string.format('<C-g><C-g>%s', MiniCompletion.config.fallback_action)
+      local keys = string.format('<C-g><C-g>%s', config.fallback_action)
       local trigger_keys = vim.api.nvim_replace_termcodes(keys, true, false, true)
       vim.api.nvim_feedkeys(trigger_keys, 'n', false)
     else
-      MiniCompletion.config.fallback_action()
+      config.fallback_action()
     end
   end
 end
@@ -762,7 +773,7 @@ H.has_lsp_clients = function(capability)
 end
 
 H.has_lsp_completion = function()
-  local func = vim.api.nvim_buf_get_option(0, MiniCompletion.config.lsp_completion.source_func)
+  local func = vim.api.nvim_buf_get_option(0, H.get_config().lsp_completion.source_func)
   return func == 'v:lua.MiniCompletion.completefunc_lsp'
 end
 
@@ -912,7 +923,7 @@ H.show_info_window = function()
 
   -- Add `lines` to info buffer. Use `wrap_at` to have proper width of
   -- 'non-UTF8' section separators.
-  vim.lsp.util.stylize_markdown(H.info.bufnr, lines, { wrap_at = MiniCompletion.config.window_dimensions.info.width })
+  vim.lsp.util.stylize_markdown(H.info.bufnr, lines, { wrap_at = H.get_config().window_dimensions.info.width })
 
   -- Compute floating window options
   local opts = H.info_window_options()
@@ -979,13 +990,12 @@ H.info_window_lines = function(info_id)
 end
 
 H.info_window_options = function()
+  local config = H.get_config()
+
   -- Compute dimensions based on lines to be displayed
   local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, {})
-  local info_height, info_width = H.floating_dimensions(
-    lines,
-    MiniCompletion.config.window_dimensions.info.height,
-    MiniCompletion.config.window_dimensions.info.width
-  )
+  local info_height, info_width =
+    H.floating_dimensions(lines, config.window_dimensions.info.height, config.window_dimensions.info.width)
 
   -- Compute position
   local event = H.info.event
@@ -1004,7 +1014,7 @@ H.info_window_options = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < info_width then
-    info_height, info_width = H.floating_dimensions(lines, MiniCompletion.config.window_dimensions.info.height, space)
+    info_height, info_width = H.floating_dimensions(lines, config.window_dimensions.info.height, space)
   end
 
   return {
@@ -1068,7 +1078,7 @@ H.show_signature_window = function()
   vim.lsp.util.stylize_markdown(
     H.signature.bufnr,
     lines,
-    { wrap_at = MiniCompletion.config.window_dimensions.signature.width }
+    { wrap_at = H.get_config().window_dimensions.signature.width }
   )
 
   -- Add highlighting of active parameter
@@ -1174,12 +1184,10 @@ H.process_signature_response = function(response)
 end
 
 H.signature_window_opts = function()
+  local config = H.get_config()
   local lines = vim.api.nvim_buf_get_lines(H.signature.bufnr, 0, -1, {})
-  local height, width = H.floating_dimensions(
-    lines,
-    MiniCompletion.config.window_dimensions.signature.height,
-    MiniCompletion.config.window_dimensions.signature.width
-  )
+  local height, width =
+    H.floating_dimensions(lines, config.window_dimensions.signature.height, config.window_dimensions.signature.width)
 
   -- Compute position
   local win_line = vim.fn.winline()
@@ -1194,7 +1202,7 @@ H.signature_window_opts = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < height then
-    height, width = H.floating_dimensions(lines, space, MiniCompletion.config.window_dimensions.signature.width)
+    height, width = H.floating_dimensions(lines, space, config.window_dimensions.signature.width)
   end
 
   -- Get zero-indexed current cursor position

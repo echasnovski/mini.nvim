@@ -36,6 +36,9 @@
 ---
 --- See |MiniSessions.config| for `config` structure and default values.
 ---
+--- This module doesn't benefit from buffer local configuration, so using
+--- `vim.b.minimisc_config` will have no effect here.
+---
 --- # Disabling~
 ---
 --- To disable core functionality, set `g:minisessions_disable` (globally) or

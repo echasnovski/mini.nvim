@@ -29,8 +29,13 @@
 ---
 --- This module needs a setup with `require('mini.doc').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniDoc`
---- which you can use for scripting or manually (with `:lua MiniDoc.*`). See
---- |MiniDoc.config| for available config settings.
+--- which you can use for scripting or manually (with `:lua MiniDoc.*`).
+---
+--- See |MiniDoc.config| for available config settings.
+---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minidoc_config` which should have same structure as `MiniDoc.config`.
+--- See |mini.nvim-buffer-local-config| for more details.
 ---
 --- # Tips~
 ---
@@ -551,7 +556,7 @@ MiniDoc.generate = function(input, output, config)
 
   input = input or H.default_input()
   output = output or H.default_output()
-  config = vim.tbl_deep_extend('force', MiniDoc.config, config or {})
+  config = H.get_config(config)
 
   -- Prepare table for current information
   MiniDoc.current = {}
@@ -576,7 +581,7 @@ MiniDoc.generate = function(input, output, config)
   H.file_write(output, help_lines)
 
   -- Execute post-write hook
-  MiniDoc.config.hooks.write_post(doc)
+  config.hooks.write_post(doc)
 
   -- Clear current information
   MiniDoc.current = {}
@@ -753,6 +758,9 @@ H.apply_config = function(config) MiniDoc.config = config end
 
 H.is_disabled = function() return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true end
 
+H.get_config =
+  function(config) return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {}) end
+
 -- Work with project specific script ==========================================
 H.execute_project_script = function(input, output, config)
   -- Don't process script if there are more than one active `generate` calls
@@ -762,17 +770,19 @@ H.execute_project_script = function(input, output, config)
   if not (input == nil and output == nil and config == nil) then return end
 
   -- Store information
-  local config_cache = MiniDoc.config
+  local global_config_cache = vim.deepcopy(MiniDoc.config)
+  local local_config_cache = vim.b.minidoc_config
 
   -- Pass information to a possible `generate()` call inside script
   H.generate_is_active = true
   H.generate_recent_output = nil
 
   -- Execute script
-  local success = pcall(vim.cmd, 'luafile ' .. MiniDoc.config.script_path)
+  local success = pcall(vim.cmd, 'luafile ' .. H.get_config(config).script_path)
 
   -- Restore information
-  MiniDoc.config = config_cache
+  MiniDoc.config = global_config_cache
+  vim.b.minidoc_config = local_config_cache
   H.generate_is_active = nil
 
   return success
@@ -1157,7 +1167,7 @@ H.as_struct = function(array, struct_type, info)
     section = { id = '@text', line_begin = -1, line_end = -1 },
     block = { afterlines = {}, line_begin = -1, line_end = -1 },
     file = { path = '' },
-    doc = { input = {}, output = '', config = MiniDoc.config },
+    doc = { input = {}, output = '', config = H.get_config() },
   })[struct_type]
   info = vim.tbl_deep_extend('force', default_info, info or {})
 

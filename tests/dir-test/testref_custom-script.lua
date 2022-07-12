@@ -6,3 +6,7 @@ MiniTest.run({
     find_files = function() return {} end,
   },
 })
+
+-- Buffer local and global configs should be later restored
+MiniTest.config.aaa = true
+vim.b.minitest_config = { aaa = true }

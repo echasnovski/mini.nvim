@@ -27,6 +27,10 @@
 ---
 --- See |MiniJump.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minijump_config` which should have same structure as
+--- `MiniJump.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Highlight groups~
 ---
 --- * `MiniJump` - all possible cursor positions.
@@ -184,21 +188,18 @@ MiniJump.jump = function(target, backward, till, n_times)
   pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(hl_case, escaped_target)
 
   -- Delay highlighting after stopping previous one
+  local config = H.get_config()
   H.timers.highlight:stop()
   H.timers.highlight:start(
     -- Update highlighting immediately if any highlighting is already present
-    H.is_highlighting() and 0 or MiniJump.config.delay.highlight,
+    H.is_highlighting() and 0 or config.delay.highlight,
     0,
     vim.schedule_wrap(function() H.highlight(hl_pattern) end)
   )
 
   -- Start idle timer after stopping previous one
   H.timers.idle_stop:stop()
-  H.timers.idle_stop:start(
-    MiniJump.config.delay.idle_stop,
-    0,
-    vim.schedule_wrap(function() MiniJump.stop_jumping() end)
-  )
+  H.timers.idle_stop:start(config.delay.idle_stop, 0, vim.schedule_wrap(function() MiniJump.stop_jumping() end))
 
   -- Make jump(s)
   H.n_cursor_moved = 0
@@ -354,6 +355,9 @@ H.apply_config = function(config)
 end
 
 H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
+
+H.get_config =
+  function(config) return vim.tbl_deep_extend('force', MiniJump.config, vim.b.minijump_config or {}, config or {}) end
 
 -- Highlighting ---------------------------------------------------------------
 H.highlight = function(pattern)

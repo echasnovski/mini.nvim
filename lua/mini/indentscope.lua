@@ -14,7 +14,7 @@
 ---   like moving cursor). You can customize debounce delay and animation rule.
 --- - Customization of scope computation options can be done on global level
 ---   (in |MiniIndentscope.config|), for a certain buffer (using
----   `vim.b.miniindentscope_options` buffer variable), or within a call (using
+---   `vim.b.miniindentscope_config` buffer variable), or within a call (using
 ---   `opts` variable in |MiniIndentscope.get_scope|).
 --- - Customizable notion of a border: which adjacent lines with strictly lower
 ---   indent are recognized as such. This is useful for a certain filetypes
@@ -29,8 +29,13 @@
 --- This module needs a setup with `require('mini.indentscope').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
 --- `MiniIndentscope` which you can use for scripting or manually (with `:lua
---- MiniIndentscope.*`). See |MiniIndentscope.config| for available config
---- settings.
+--- MiniIndentscope.*`).
+---
+--- See |MiniIndentscope.config| for available config settings.
+---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.miniindentscope_config` which should have same structure as
+--- `MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
 --- # Comparisons~
 ---
@@ -172,8 +177,8 @@ end
 ---@text # Options ~
 ---
 --- - Options can be supplied globally (from this `config`), locally to buffer
----   (via `vim.b.miniindentscope_options` buffer variable), or locally to call
----   (as argument to |MiniIndentscope.get_scope()|).
+---   (via `options` field of `vim.b.miniindentscope_config` buffer variable),
+---   or locally to call (as argument to |MiniIndentscope.get_scope()|).
 ---
 --- - Option `border` controls which line(s) with smaller indent to categorize
 ---   as border. This matters for textobjects and motions.
@@ -238,8 +243,7 @@ MiniIndentscope.config = {
     goto_bottom = ']i',
   },
 
-  -- Options which control computation of scope. Buffer local values can be
-  -- supplied in buffer variable `vim.b.miniindentscope_options`.
+  -- Options which control scope computation
   options = {
     -- Type of scope's border: which line(s) with smaller indent to
     -- categorize as border. Can be one of: 'both', 'top', 'bottom', 'none'.
@@ -273,8 +277,8 @@ MiniIndentscope.config = {
 ---
 --- Options controlling actual computation is taken from these places in order:
 --- - Argument `opts`. Use it to ensure independence from other sources.
---- - Buffer local variable `vim.b.miniindentscope_options`. Useful to define
----   behavior inside some autocommand (for example, for a certain filetype).
+--- - Buffer local variable `vim.b.miniindentscope_config` (`options` field).
+---   Useful to define local behavior (for example, for a certain filetype).
 --- - Global options from |MiniIndentscope.config|.
 ---
 --- Algorithm overview~
@@ -417,7 +421,7 @@ end
 ---      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation()|.
 MiniIndentscope.draw = function(scope, opts)
   scope = scope or MiniIndentscope.get_scope()
-  local draw_opts = vim.tbl_deep_extend('force', { animation_fun = MiniIndentscope.config.draw.animation }, opts or {})
+  local draw_opts = vim.tbl_deep_extend('force', { animation_fun = H.get_config().draw.animation }, opts or {})
 
   H.undraw_scope()
 
@@ -727,10 +731,18 @@ end
 
 H.is_disabled = function() return vim.g.miniindentscope_disable == true or vim.b.miniindentscope_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniIndentscope.config, vim.b.miniindentscope_config or {}, config or {})
+end
+
 H.get_opts = function(opts)
-  local opts_local = vim.b.miniindentscope_options
-  local opts_global = MiniIndentscope.config.options
-  return vim.tbl_deep_extend('force', opts_global, opts_local or {}, opts or {})
+  -- TODO: remove after 0.5.0 release
+  if vim.b.miniindentscope_options ~= nil then
+    vim.b.miniindentscope_config =
+      vim.tbl_deep_extend('force', { options = vim.b.miniindentscope_options }, vim.b.miniindentscope_config or {})
+  end
+
+  return H.get_config({ options = opts }).options
 end
 
 -- Scope ----------------------------------------------------------------------
@@ -820,7 +832,7 @@ H.indicator_compute = function(scope)
 
   -- Usage separate highlight groups for prefix and symbol allows cursor to be
   -- "natural" when on the left of indicator line (like on empty lines)
-  local virt_text = { { MiniIndentscope.config.symbol, 'MiniIndentscopeSymbol' } }
+  local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
   local prefix = string.rep(' ', indent - leftcol)
   -- Currently Neovim doesn't work when text for extmark is empty string
   if prefix:len() > 0 then table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' }) end
@@ -920,11 +932,12 @@ H.undraw_scope = function(opts)
 end
 
 H.make_autodraw_opts = function(scope)
+  local config = H.get_config()
   local res = {
     event_id = H.current.event_id,
     type = 'animation',
-    delay = MiniIndentscope.config.draw.delay,
-    animation_fun = MiniIndentscope.config.draw.animation,
+    delay = config.draw.delay,
+    animation_fun = config.draw.animation,
   }
 
   if H.current.draw_status == 'none' then return res end

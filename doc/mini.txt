@@ -67,6 +67,9 @@ Table of contents:
       can be changed during runtime; but changing
       `MiniSurround.config.mappings` won't have any effect (as mappings are
       created once during `setup()`).
+- <Buffer local configuration>. Each module can be additionally configured
+  to use certain runtime config settings locally to buffer. See
+  |mini.nvim-buffer-local-config| for more information.
 - <Disabling>. Each module's core functionality can be disabled globally or
   buffer-locally by creating appropriate global or buffer-scoped variables
   equal to |v:true|. See |mini.nvim-disabling-recipes| for common recipes.
@@ -189,6 +192,28 @@ writing exact rules for disabling module's functionality is left to user.
   `au TermOpen * lua vim.b.minicursorword_disable = true`
 
 ------------------------------------------------------------------------------
+                                                 *mini.nvim-buffer-local-config*
+Buffer local config
+
+Each module can be additionally configured locally to buffer by creating
+appropriate buffer-scoped variable with values you want to override. It
+will affect only runtime options and not those used once during setup (like
+`mappings` or `set_vim_settings`).
+
+Variable names have the same structure: `b:mini*_config` where `*` is
+module's lowercase name. For example, `b:minicursorword_config` can store
+information about how |mini.cursorword| will act inside current buffer. Its
+value should be a table with same structure as module's `config`.
+Continuing example, `vim.b.minicursorword_config = { delay = 500 }` will
+use delay 500 inside current buffer.
+
+Considering high number of different scenarios and customization intentions,
+writing exact rules for module's buffer local configuration is left to
+user. It is done in similar fashion to |mini.nvim-disabling-recipes|.
+
+Note: using function values inside buffer variables requires Neovim>=0.7.
+
+------------------------------------------------------------------------------
                                                                     *minischeme*
 # Plugin colorscheme~
 
@@ -226,6 +251,9 @@ This module needs a setup with `require('mini.base16').setup({})` (replace
 `:lua MiniBase16.*`).
 
 See |MiniBase16.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minibase16_config`
+will have no effect here.
 
 Example:
 >
@@ -401,6 +429,9 @@ can use for scripting or manually (with `:lua MiniBufremove.*`).
 
 See |MiniBufremove.config| for `config` structure and default values.
 
+This module doesn't have runtime options, so using `vim.b.minibufremove_config`
+will have no effect here.
+
 # Notes~
 
 1. Which buffer to show in window(s) after its current buffer is removed is
@@ -523,6 +554,10 @@ This module needs a setup with `require('mini.comment').setup({})` (replace
 
 See |MiniComment.config| for `config` structure and default values.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minicomment_config` which should have same structure as
+`MiniComment.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Disabling~
 
 To disable core functionality, set `g:minicomment_disable` (globally) or
@@ -602,8 +637,8 @@ otherwise. It respects indentation and doesn't insert trailing
 whitespace. Toggle commenting not in visual mode is also dot-repeatable
 and respects |count|.
 
-Before successful commenting it executes `MiniComment.config.hooks.pre`.
-After successful commenting it executes `MiniComment.config.hooks.post`.
+Before successful commenting it executes `config.hooks.pre`.
+After successful commenting it executes `config.hooks.post`.
 
 # Notes~
 
@@ -622,8 +657,8 @@ Comment textobject
 This selects all commented lines adjacent to cursor line (if it itself is
 commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 
-Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
-After successful textobject usage it executes `MiniComment.config.hooks.post`.
+Before successful textobject usage it executes `config.hooks.pre`.
+After successful textobject usage it executes `config.hooks.post`.
 
 
 ==============================================================================
@@ -681,6 +716,10 @@ This module needs a setup with `require('mini.completion').setup({})`
 `:lua MiniCompletion.*`).
 
 See |MiniCompletion.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minicompletion_config` which should have same structure as
+`MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 
 # Notes~
 
@@ -924,6 +963,10 @@ This module needs a setup with `require('mini.cursorword').setup({})`
 
 See |MiniCursorword.config| for `config` structure and default values.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minicursorword_config` which should have same structure as
+`MiniCursorword.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Highlight groups~
 
 * `MiniCursorword` - highlight group of cursor word. Default: plain underline.
@@ -1041,8 +1084,13 @@ What it doesn't do:
 
 This module needs a setup with `require('mini.doc').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniDoc`
-which you can use for scripting or manually (with `:lua MiniDoc.*`). See
-|MiniDoc.config| for available config settings.
+which you can use for scripting or manually (with `:lua MiniDoc.*`).
+
+See |MiniDoc.config| for available config settings.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minidoc_config` which should have same structure as `MiniDoc.config`.
+See |mini.nvim-buffer-local-config| for more details.
 
 # Tips~
 
@@ -1444,6 +1492,11 @@ use for scripting or manually (with `:lua MiniFuzzy.*`).
 
 See |MiniFuzzy.config| for `config` structure and default values.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minifuzzy_config` which should have same structure as
+`MiniFuzzy.config`.
+See |mini.nvim-buffer-local-config| for more details.
+
 # Notes~
 
 1. Currently there is no explicit design to work with multibyte symbols,
@@ -1587,7 +1640,7 @@ Features:
   like moving cursor). You can customize debounce delay and animation rule.
 - Customization of scope computation options can be done on global level
   (in |MiniIndentscope.config|), for a certain buffer (using
-  `vim.b.miniindentscope_options` buffer variable), or within a call (using
+  `vim.b.miniindentscope_config` buffer variable), or within a call (using
   `opts` variable in |MiniIndentscope.get_scope|).
 - Customizable notion of a border: which adjacent lines with strictly lower
   indent are recognized as such. This is useful for a certain filetypes
@@ -1602,8 +1655,13 @@ Features:
 This module needs a setup with `require('mini.indentscope').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
 `MiniIndentscope` which you can use for scripting or manually (with `:lua
-MiniIndentscope.*`). See |MiniIndentscope.config| for available config
-settings.
+MiniIndentscope.*`).
+
+See |MiniIndentscope.config| for available config settings.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.miniindentscope_config` which should have same structure as
+`MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more details.
 
 # Comparisons~
 
@@ -1700,8 +1758,7 @@ Default values:
       goto_bottom = ']i',
     },
 
-    -- Options which control computation of scope. Buffer local values can be
-    -- supplied in buffer variable `vim.b.miniindentscope_options`.
+    -- Options which control scope computation
     options = {
       -- Type of scope's border: which line(s) with smaller indent to
       -- categorize as border. Can be one of: 'both', 'top', 'bottom', 'none'.
@@ -1724,8 +1781,8 @@ Default values:
 # Options ~
 
 - Options can be supplied globally (from this `config`), locally to buffer
-  (via `vim.b.miniindentscope_options` buffer variable), or locally to call
-  (as argument to |MiniIndentscope.get_scope()|).
+  (via `options` field of `vim.b.miniindentscope_config` buffer variable),
+  or locally to call (as argument to |MiniIndentscope.get_scope()|).
 
 - Option `border` controls which line(s) with smaller indent to categorize
   as border. This matters for textobjects and motions.
@@ -1781,8 +1838,8 @@ movements within line.
 
 Options controlling actual computation is taken from these places in order:
 - Argument `opts`. Use it to ensure independence from other sources.
-- Buffer local variable `vim.b.miniindentscope_options`. Useful to define
-  behavior inside some autocommand (for example, for a certain filetype).
+- Buffer local variable `vim.b.miniindentscope_config` (`options` field).
+  Useful to define local behavior (for example, for a certain filetype).
 - Global options from |MiniIndentscope.config|.
 
 Algorithm overview~
@@ -1992,6 +2049,10 @@ This module needs a setup with `require('mini.jump').setup({})`
 
 See |MiniJump.config| for `config` structure and default values.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minijump_config` which should have same structure as
+`MiniJump.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Highlight groups~
 
 * `MiniJump` - all possible cursor positions.
@@ -2188,7 +2249,13 @@ General overview of how jump is intended to be performed:
 This module needs a setup with `require('mini.jump2d').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table
 `MiniJump2d` which you can use for scripting or manually (with
-`:lua MiniJump2d.*`). See |MiniJump2d.config| for available config settings.
+`:lua MiniJump2d.*`).
+
+See |MiniJump2d.config| for available config settings.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minijump2d_config` which should have same structure as
+`MiniJump2d.config`. See |mini.nvim-buffer-local-config| for more details.
 
 # Example usage~
 
@@ -2395,8 +2462,8 @@ With default 26 labels for most real-world cases 2 steps is enough for
 default spotter function. Rarely 3 steps are needed with several windows.
 
 Parameters~
-{opts} `(table)` Configuration of jumping, overriding values from
-  |MiniJump2d.config|. Has the same structure as |MiniJump2d.config|
+{opts} `(table)` Configuration of jumping, overriding global and buffer
+  local values.config|. Has the same structure as |MiniJump2d.config|
   without <mappings> field. Extra allowed fields:
     - <hl_group> - which highlight group to use (default: "MiniJump2dSpot").
 
@@ -2546,6 +2613,9 @@ Setup with `require('mini.misc').setup({})` (replace `{}` with your
 use for scripting or manually (with `:lua MiniMisc.*`).
 
 See |MiniMisc.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minimisc_config`
+will have no effect here.
 
 ------------------------------------------------------------------------------
                                                               *MiniMisc.setup()*
@@ -2746,6 +2816,9 @@ This module needs a setup with `require('mini.pairs').setup({})`
 `:lua MiniPairs.*`).
 
 See |MiniPairs.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minipairs_config`
+will have no effect here.
 
 # Example mappings~
 
@@ -3029,6 +3102,9 @@ This module needs a setup with `require('mini.sessions').setup({})`
 
 See |MiniSessions.config| for `config` structure and default values.
 
+This module doesn't benefit from buffer local configuration, so using
+`vim.b.minimisc_config` will have no effect here.
+
 # Disabling~
 
 To disable core functionality, set `g:minisessions_disable` (globally) or
@@ -3250,6 +3326,12 @@ This module needs a setup with `require('mini.starter').setup({})`
 See |MiniStarter.config| for `config` structure and default values. For
 some configuration examples (including one similar to 'vim-startify' and
 'dashboard-nvim'), see |MiniStarter-example-config|.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.ministarter_config` which should have same structure as
+`MiniStarter.config`. See |mini.nvim-buffer-local-config| for more details.
+Note: `vim.b.ministarter_config` is copied to Starter buffer from current
+buffer allowing full customization.
 
 # Highlight groups~
 
@@ -3805,6 +3887,10 @@ This module needs a setup with `require('mini.statusline').setup({})`
 See |MiniStatusline.config| for `config` structure and default values. For
 some content examples, see |MiniStatusline-example-content|.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.ministatusline_config` which should have same structure as
+`MiniStatusline.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Highlight groups~
 
 Highlight depending on mode (second output from |MiniStatusline.section_mode|):
@@ -4123,6 +4209,10 @@ This module needs a setup with `require('mini.surround').setup({})`
 See |MiniSurround.config| for `config` structure and default values. It
 also has example setup providing experience similar to 'tpope/vim-surround'.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minisurround_config` which should have same structure as
+`MiniSurround.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Example usage~
 
 - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
@@ -4322,7 +4412,7 @@ Present builtin surroundings by their single character identifier:
 - Any other non-recognized identifier represents surrounding with identical
   left and right parts equal to identifier (like `_`, etc.).
 
-Example of using `config.custom_surroundings`:
+Examples of using `config.custom_surroundings`:
 >
   require('mini.surround').setup({
     custom_surroundings = {
@@ -4332,12 +4422,6 @@ Example of using `config.custom_surroundings`:
       -- Modify `f` (function call) to find functions with only alphanumeric
       -- characters in its name.
       f = { input = { find = '%f[%w]%w+%b()' } },
-
-      -- Create custom surrouding for Lua's block string `[[...]]`
-      s = {
-        input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
-        output = { left = '[[', right = ']]' },
-      },
 
       -- Use function to compute surrounding info
       ['*'] = {
@@ -4356,6 +4440,17 @@ Example of using `config.custom_surroundings`:
       },
     },
   })
+
+  -- Create custom surrouding for Lua's block string `[[...]]`. Use this inside
+  -- autocommand or 'after/ftplugin/lua.lua' file.
+  vim.b.minisurround_config = {
+    custom_surroundings = {
+      s = {
+        input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+        output = { left = '[[', right = ']]' },
+      },
+    },
+  }
 <
 ## Search method~
 
@@ -4495,6 +4590,10 @@ This module needs a setup with `require('mini.tabline').setup({})`
 
 See |MiniTabline.config| for `config` structure and default values.
 
+You can override runtime config settings locally to buffer inside
+`vim.b.minitabline_config` which should have same structure as
+`MiniTabline.config`. See |mini.nvim-buffer-local-config| for more details.
+
 # Highlight groups~
 
 * `MiniTablineCurrent` - buffer is current (has cursor in it).
@@ -4614,8 +4713,13 @@ For more information see:
 
 This module needs a setup with `require('mini.test').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniTest`
-which you can use for scripting or manually (with `:lua MiniTest.*`). See
-|MiniTest.config| for available config settings.
+which you can use for scripting or manually (with `:lua MiniTest.*`).
+
+See |MiniTest.config| for available config settings.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minitest_config` which should have same structure as `MiniTest.config`.
+See |mini.nvim-buffer-local-config| for more details.
 
 # Comparisons~
 
@@ -5453,6 +5557,10 @@ This module needs a setup with `require('mini.trailspace').setup({})`
 `:lua MiniTrailspace.*`).
 
 See |MiniTrailspace.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minitrailspace_config` which should have same structure as
+`MiniTrailspace.config`. See |mini.nvim-buffer-local-config| for more details.
 
 # Highlight groups~
 

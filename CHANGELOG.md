@@ -1,6 +1,7 @@
 # Version 0.4.0.9000
 
 - Update all tests to use new 'mini.test' module.
+- FEATURE: Implement buffer local configuration. This is done with `vim.b.mini*_config` buffer variables.
 
 ## mini.statusline
 

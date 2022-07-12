@@ -18,6 +18,9 @@
 ---
 --- See |MiniBase16.config| for `config` structure and default values.
 ---
+--- This module doesn't have runtime options, so using `vim.b.minibase16_config`
+--- will have no effect here.
+---
 --- Example:
 --- >
 ---   require('mini.base16').setup({

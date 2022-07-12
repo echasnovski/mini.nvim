@@ -25,6 +25,10 @@
 ---
 --- See |MiniComment.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minicomment_config` which should have same structure as
+--- `MiniComment.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Disabling~
 ---
 --- To disable core functionality, set `g:minicomment_disable` (globally) or
@@ -142,8 +146,8 @@ end
 --- whitespace. Toggle commenting not in visual mode is also dot-repeatable
 --- and respects |count|.
 ---
---- Before successful commenting it executes `MiniComment.config.hooks.pre`.
---- After successful commenting it executes `MiniComment.config.hooks.post`.
+--- Before successful commenting it executes `config.hooks.pre`.
+--- After successful commenting it executes `config.hooks.post`.
 ---
 --- # Notes~
 ---
@@ -154,7 +158,6 @@ end
 ---@param line_end number End line number (inclusive from 1 to number of lines).
 MiniComment.toggle_lines = function(line_start, line_end)
   if H.is_disabled() then return end
-
   local n_lines = vim.api.nvim_buf_line_count(0)
   if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
     error(('(mini.comment) `line_start` and `line_end` should be within range [1; %s].'):format(n_lines))
@@ -163,7 +166,8 @@ MiniComment.toggle_lines = function(line_start, line_end)
     error('(mini.comment) `line_start` should be less than or equal to `line_end`.')
   end
 
-  MiniComment.config.hooks.pre()
+  local config = H.get_config()
+  config.hooks.pre()
 
   local comment_parts = H.make_comment_parts()
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
@@ -187,7 +191,7 @@ MiniComment.toggle_lines = function(line_start, line_end)
   --   slower: on 10000 lines 280ms compared to 40ms currently.
   vim.api.nvim_buf_set_lines(0, line_start - 1, line_end, false, lines)
 
-  MiniComment.config.hooks.post()
+  config.hooks.post()
 end
 
 --- Comment textobject
@@ -195,12 +199,13 @@ end
 --- This selects all commented lines adjacent to cursor line (if it itself is
 --- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 ---
---- Before successful textobject usage it executes `MiniComment.config.hooks.pre`.
---- After successful textobject usage it executes `MiniComment.config.hooks.post`.
+--- Before successful textobject usage it executes `config.hooks.pre`.
+--- After successful textobject usage it executes `config.hooks.post`.
 MiniComment.textobject = function()
   if H.is_disabled() then return end
 
-  MiniComment.config.hooks.pre()
+  local config = H.get_config()
+  config.hooks.pre()
 
   local comment_parts = H.make_comment_parts()
   local comment_check = H.make_comment_check(comment_parts)
@@ -223,7 +228,7 @@ MiniComment.textobject = function()
     vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
   end
 
-  MiniComment.config.hooks.post()
+  config.hooks.post()
 end
 
 -- Helper data ================================================================
@@ -273,6 +278,10 @@ H.apply_config = function(config)
 end
 
 H.is_disabled = function() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end
+
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniComment.config, vim.b.minicomment_config or {}, config or {})
+end
 
 -- Core implementations -------------------------------------------------------
 H.make_comment_parts = function()

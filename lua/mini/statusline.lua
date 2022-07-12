@@ -35,6 +35,10 @@
 --- See |MiniStatusline.config| for `config` structure and default values. For
 --- some content examples, see |MiniStatusline-example-content|.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.ministatusline_config` which should have same structure as
+--- `MiniStatusline.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Highlight groups~
 ---
 --- Highlight depending on mode (second output from |MiniStatusline.section_mode|):
@@ -182,14 +186,14 @@ MiniStatusline.config = {
 MiniStatusline.active = function()
   if H.is_disabled() then return '' end
 
-  return (MiniStatusline.config.content.active or H.default_content_active)()
+  return (H.get_config().content.active or H.default_content_active)()
 end
 
 --- Compute content for inactive window
 MiniStatusline.inactive = function()
   if H.is_disabled() then return '' end
 
-  return (MiniStatusline.config.content.inactive or H.default_content_inactive)()
+  return (H.get_config().content.inactive or H.default_content_inactive)()
 end
 
 --- Combine groups of sections
@@ -284,7 +288,7 @@ MiniStatusline.section_git = function(args)
 
   local head = vim.b.gitsigns_head or '-'
   local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
-  local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'Git')
+  local icon = args.icon or (H.get_config().use_icons and '' or 'Git')
 
   if signs == '' then
     if head == '-' or head == '' then return '' end
@@ -319,7 +323,7 @@ MiniStatusline.section_diagnostics = function(args)
     if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
   end
 
-  local icon = args.icon or (MiniStatusline.config.use_icons and '' or 'LSP')
+  local icon = args.icon or (H.get_config().use_icons and '' or 'LSP')
   if vim.tbl_count(t) == 0 then return ('%s -'):format(icon) end
   return string.format('%s%s', icon, table.concat(t, ''))
 end
@@ -480,6 +484,10 @@ end
 
 H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniStatusline.config, vim.b.ministatusline_config or {}, config or {})
+end
+
 -- Mode -----------------------------------------------------------------------
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
 -- (otherwise those symbols are not displayed).
@@ -555,7 +563,7 @@ end
 
 H.get_filetype_icon = function()
   -- Skip if NerdFonts is disabled
-  if not MiniStatusline.config.use_icons then return '' end
+  if not H.get_config().use_icons then return '' end
   -- Have this `require()` here to not depend on plugin initialization order
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if not has_devicons then return '' end

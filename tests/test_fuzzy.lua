@@ -138,8 +138,12 @@ T['match()']['computes correct score'] = function()
 end
 
 T['match()']['respects `config.cutoff`'] = function()
-  reload_module({ cutoff = 10 })
+  child.lua('MiniFuzzy.config.cutoff = 10')
   validate_score('ab', 'ab_', 21)
+
+  -- Should also use buffer local config
+  child.b.minifuzzy_config = { cutoff = 5 }
+  validate_score('ab', 'ab_', 11)
 end
 
 T['match()']['treats features bigger than `config.cutoff` the same'] = function()

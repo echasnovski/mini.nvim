@@ -42,6 +42,12 @@
 --- some configuration examples (including one similar to 'vim-startify' and
 --- 'dashboard-nvim'), see |MiniStarter-example-config|.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.ministarter_config` which should have same structure as
+--- `MiniStarter.config`. See |mini.nvim-buffer-local-config| for more details.
+--- Note: `vim.b.ministarter_config` is copied to Starter buffer from current
+--- buffer allowing full customization.
+---
 --- # Highlight groups~
 ---
 --- * `MiniStarterCurrent` - current item.
@@ -326,7 +332,9 @@ MiniStarter.open = function(buf_id)
   if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then buf_id = vim.api.nvim_create_buf(false, true) end
 
   H.buf_id = buf_id
+  local config_local = vim.b.ministarter_config
   vim.api.nvim_set_current_buf(H.buf_id)
+  vim.b.ministarter_config = config_local
 
   -- Setup buffer behavior
   H.make_buffer_autocmd()
@@ -377,18 +385,24 @@ end
 MiniStarter.refresh = function()
   if H.is_disabled() or H.buf_id == nil or not vim.api.nvim_buf_is_valid(H.buf_id) then return end
 
+  local config = H.get_config()
+
   -- Normalize certain config values
-  H.header = H.normalize_header_footer(MiniStarter.config.header or H.default_header)
-  local items = H.normalize_items(MiniStarter.config.items or H.default_items)
-  H.footer = H.normalize_header_footer(MiniStarter.config.footer or H.default_footer)
+  H.header = H.normalize_header_footer(config.header or H.default_header)
+  local items = H.normalize_items(config.items or H.default_items)
+  H.footer = H.normalize_header_footer(config.footer or H.default_footer)
 
   -- Evaluate content
   H.make_initial_content(items)
-  local hooks = MiniStarter.config.content_hooks or H.default_content_hooks
+  local hooks = config.content_hooks or H.default_content_hooks
   for _, f in ipairs(hooks) do
     MiniStarter.content = f(MiniStarter.content)
   end
+
+  -- Set items. Possibly reset current item id if items have changed.
+  local old_items = H.items
   H.items = MiniStarter.content_to_items()
+  if not vim.deep_equal(H.items, old_items) then H.current_item_id = 1 end
 
   -- Add content
   vim.api.nvim_buf_set_option(H.buf_id, 'modifiable', true)
@@ -966,10 +980,14 @@ H.apply_config = function(config) MiniStarter.config = config end
 
 H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniStarter.config, vim.b.ministarter_config or {}, config or {})
+end
+
 -- Normalize config elements --------------------------------------------------
 H.normalize_items = function(items)
   local res = H.items_flatten(items)
-  if #res == 0 then return { { name = '`MiniStarter.config.items` is empty', action = '', section = '' } } end
+  if #res == 0 then return { { name = '`config.items` is empty', action = '', section = '' } } end
   return H.items_sort(res)
 end
 
@@ -1150,7 +1168,7 @@ H.make_query = function(query)
   H.add_hl_activity(query)
 
   -- Possibly evaluate single active item
-  if MiniStarter.config.evaluate_single and n_active == 1 then
+  if H.get_config().evaluate_single and n_active == 1 then
     MiniStarter.eval_current_item()
     return
   end
@@ -1232,7 +1250,7 @@ H.apply_buffer_mappings = function()
   H.buf_keymap('<M-j>', [[MiniStarter.update_current_item('next')]])
 
   -- Make all special symbols to update query
-  for _, key in ipairs(vim.split(MiniStarter.config.query_updaters, '')) do
+  for _, key in ipairs(vim.split(H.get_config().query_updaters, '')) do
     local key_string = vim.inspect(tostring(key))
     H.buf_keymap(key, ('MiniStarter.add_to_query(%s)'):format(key_string))
   end

@@ -32,6 +32,9 @@
 ---
 --- See |MiniPairs.config| for `config` structure and default values.
 ---
+--- This module doesn't have runtime options, so using `vim.b.minipairs_config`
+--- will have no effect here.
+---
 --- # Example mappings~
 ---
 --- - Register quotes inside `config` of |MiniPairs.setup|: >

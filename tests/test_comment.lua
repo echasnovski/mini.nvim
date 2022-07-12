@@ -246,6 +246,20 @@ T['toggle_lines()']['applies hooks'] = function()
   eq(child.lua_get('_G.post_n'), 1)
 end
 
+T['toggle_lines()']['respects `vim.b.minicomment_config`'] = function()
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  set_lines({ 'aa', 'aa' })
+  reload_with_hooks()
+  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
+
+  child.lua('MiniComment.toggle_lines(1, 2)')
+  eq(child.lua_get('_G.pre_n'), 10)
+  eq(child.lua_get('_G.post_n'), 1)
+end
+
 -- Integration tests ==========================================================
 T['Commenting'] = new_set({
   hooks = {
@@ -351,6 +365,21 @@ T['Commenting']['applies hooks'] = function()
   eq(child.lua_get('_G.post_n'), 2)
 end
 
+T['Commenting']['respects `vim.b.minicomment_config`'] = function()
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  set_lines({ 'aa', 'aa' })
+  set_cursor(1, 0)
+  reload_with_hooks()
+  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
+
+  type_keys('gc', 'ip')
+  eq(child.lua_get('_G.pre_n'), 10)
+  eq(child.lua_get('_G.post_n'), 1)
+end
+
 T['Commenting current line'] = new_set({
   hooks = {
     pre_case = function()
@@ -420,6 +449,21 @@ T['Commenting current line']['applies hooks'] = function()
   eq(get_lines(), { '# // aa', 'aa' })
   eq(child.lua_get('_G.pre_n'), 2)
   eq(child.lua_get('_G.post_n'), 2)
+end
+
+T['Commenting current line']['respects `vim.b.minicomment_config`'] = function()
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  set_lines({ 'aa', 'aa' })
+  set_cursor(1, 0)
+  reload_with_hooks()
+  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
+
+  type_keys('gcc')
+  eq(child.lua_get('_G.pre_n'), 10)
+  eq(child.lua_get('_G.post_n'), 1)
 end
 
 T['Comment textobject'] = new_set({
@@ -521,6 +565,21 @@ T['Comment textobject']['applies hooks'] = function()
   eq(get_lines(), { 'aa', 'aa' })
   eq(child.lua_get('_G.pre_n'), 3)
   eq(child.lua_get('_G.post_n'), 3)
+end
+
+T['Comment textobject']['respects `vim.b.minicomment_config`'] = function()
+  if vim.fn.has('nvim-0.7') == 0 then
+    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
+  end
+
+  set_lines({ '// aa', 'aa' })
+  set_cursor(1, 0)
+  reload_with_hooks()
+  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
+
+  type_keys('d', 'gc')
+  eq(child.lua_get('_G.pre_n'), 10)
+  eq(child.lua_get('_G.post_n'), 1)
 end
 
 return T

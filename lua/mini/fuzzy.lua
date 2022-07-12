@@ -12,6 +12,11 @@
 ---
 --- See |MiniFuzzy.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minifuzzy_config` which should have same structure as
+--- `MiniFuzzy.config`.
+--- See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Notes~
 ---
 --- 1. Currently there is no explicit design to work with multibyte symbols,
@@ -220,6 +225,11 @@ end
 
 H.apply_config = function(config) MiniFuzzy.config = config end
 
+H.is_disabled = function() return vim.g.minifuzzy_disable == true or vim.b.minifuzzy_disable == true end
+
+H.get_config =
+  function(config) return vim.tbl_deep_extend('force', MiniFuzzy.config, vim.b.minifuzzy_config or {}, config or {}) end
+
 -- Fuzzy matching -------------------------------------------------------------
 ---@param letters table Array of letters from input word
 ---@param candidate string String of interest
@@ -252,6 +262,7 @@ H.find_best_positions = function(letters, candidate)
   local best_pos_last, best_width = pos_last, math.huge
   local rev_candidate = candidate:reverse()
 
+  local cutoff = H.get_config().cutoff
   while pos_last do
     -- Simulate computing best match positions ending exactly at `pos_last` by
     -- going backwards from current last letter match. This works because it
@@ -264,7 +275,7 @@ H.find_best_positions = function(letters, candidate)
       rev_first = rev_candidate:find(letters[i], rev_first + 1)
     end
     local first = n_candidate - rev_first + 1
-    local width = math.min(pos_last - first + 1, MiniFuzzy.config.cutoff)
+    local width = math.min(pos_last - first + 1, cutoff)
 
     -- Using strict sign is crucial because when two last letter matches result
     -- into positions with similar width, the one which was created earlier
@@ -306,7 +317,7 @@ end
 H.score_positions = function(positions)
   if not positions or #positions == 0 then return -1 end
   local first, last = positions[1], positions[#positions]
-  local cutoff = MiniFuzzy.config.cutoff
+  local cutoff = H.get_config().cutoff
   return cutoff * math.min(last - first + 1, cutoff) + math.min(first, cutoff)
 end
 

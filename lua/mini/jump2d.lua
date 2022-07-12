@@ -44,7 +44,13 @@
 --- This module needs a setup with `require('mini.jump2d').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
 --- `MiniJump2d` which you can use for scripting or manually (with
---- `:lua MiniJump2d.*`). See |MiniJump2d.config| for available config settings.
+--- `:lua MiniJump2d.*`).
+---
+--- See |MiniJump2d.config| for available config settings.
+---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minijump2d_config` which should have same structure as
+--- `MiniJump2d.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
 --- # Example usage~
 ---
@@ -276,8 +282,8 @@ MiniJump2d.config = {
 --- With default 26 labels for most real-world cases 2 steps is enough for
 --- default spotter function. Rarely 3 steps are needed with several windows.
 ---
----@param opts table Configuration of jumping, overriding values from
----   |MiniJump2d.config|. Has the same structure as |MiniJump2d.config|
+---@param opts table Configuration of jumping, overriding global and buffer
+---   local values.config|. Has the same structure as |MiniJump2d.config|
 ---   without <mappings> field. Extra allowed fields:
 ---     - <hl_group> - which highlight group to use (default: "MiniJump2dSpot").
 ---
@@ -304,10 +310,12 @@ MiniJump2d.start = function(opts)
 
   -- Apply `before_start` before `tbl_deep_extend` to allow it modify options
   -- inside it (notably `spotter`). Example: `builtins.single_character`.
-  local before_start = (opts.hooks or {}).before_start or MiniJump2d.config.hooks.before_start
+  local before_start = (opts.hooks or {}).before_start
+    or ((vim.b.minijump2d_config or {}).hooks or {}).before_start
+    or MiniJump2d.config.hooks.before_start
   if before_start ~= nil then before_start() end
 
-  opts = vim.tbl_deep_extend('force', MiniJump2d.config, opts)
+  opts = H.get_config(opts)
   opts.spotter = opts.spotter or MiniJump2d.default_spotter
   opts.hl_group = opts.hl_group or 'MiniJump2dSpot'
 
@@ -590,6 +598,10 @@ H.apply_config = function(config)
 end
 
 H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
+
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniJump2d.config, vim.b.minijump2d_config or {}, config or {})
+end
 
 -- Jump spots -----------------------------------------------------------------
 H.spots_compute = function(opts)

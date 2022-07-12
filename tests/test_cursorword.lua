@@ -143,6 +143,11 @@ T['Autohighlighting']['works'] = function() validate_cursorword(test_times.delay
 T['Autohighlighting']['respects `config.delay`'] = function()
   child.lua('MiniCursorword.config.delay = 200')
   validate_cursorword(200)
+
+  -- Should also use buffer local config
+  set_cursor(3, 0)
+  child.b.minicursorword_config = { delay = 50 }
+  validate_cursorword(50)
 end
 
 T['Autohighlighting']['removes highlight immediately after move'] = function()

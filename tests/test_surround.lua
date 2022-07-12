@@ -289,6 +289,11 @@ T['Add surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   end,
 })
 
+T['Add surrounding']['respects `vim.b.minisurround_config`'] = function()
+  child.b.minisurround_config = { custom_surroundings = { ['<'] = { output = { left = '>', right = '<' } } } }
+  validate_edit({ 'aaa' }, { 1, 1 }, { '>aaa<' }, { 1, 1 }, type_keys, 'sa', 'iw', '<')
+end
+
 T['Delete surrounding'] = new_set()
 
 T['Delete surrounding']['works with dot-repeat'] = function()
@@ -316,6 +321,10 @@ T['Delete surrounding']['respects `config.n_lines`'] = function()
   local lines = { '(', '', '', 'a', '', '', ')' }
   validate_edit(lines, { 4, 0 }, lines, { 4, 0 }, type_keys, 'sd', ')')
   has_message_about_not_found(')', 2)
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { n_lines = 10 }
+  validate_edit(lines, { 4, 0 }, { '', '', '', 'a', '', '', '' }, { 1, 0 }, type_keys, 'sd', ')')
 end
 
 T['Delete surrounding']['respects `config.search_method`'] = function()
@@ -328,6 +337,10 @@ T['Delete surrounding']['respects `config.search_method`'] = function()
   -- Should change behavior according to `config.search_method`
   reload_module({ search_method = 'cover_or_next' })
   validate_edit(lines, { 1, 0 }, { 'aaa bbb' }, { 1, 4 }, type_keys, 'sd', ')')
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { search_method = 'cover' }
+  validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sd', ')')
 end
 
 T['Delete surrounding']['places cursor to the right of left surrounding'] = function()
@@ -411,6 +424,12 @@ T['Delete surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   end,
 })
 
+T['Delete surrounding']['respects `vim.b.minisurround_config`'] = function()
+  child.b.minisurround_config =
+    { custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } } }
+  validate_edit({ '>aaa<' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '<')
+end
+
 T['Replace surrounding'] = new_set()
 
 -- NOTE: use `>` for replacement because it itself is not a blocking key.
@@ -441,6 +460,10 @@ T['Replace surrounding']['respects `config.n_lines`'] = function()
   local lines = { '(', '', '', 'a', '', '', ')' }
   validate_edit(lines, { 4, 0 }, lines, { 4, 0 }, type_keys, 'sr', ')', '>')
   has_message_about_not_found(')', 2)
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { n_lines = 10 }
+  validate_edit(lines, { 4, 0 }, { '<', '', '', 'a', '', '', '>' }, { 1, 0 }, type_keys, 'sr', ')', '>')
 end
 
 T['Replace surrounding']['respects `config.search_method`'] = function()
@@ -453,6 +476,10 @@ T['Replace surrounding']['respects `config.search_method`'] = function()
   -- Should change behavior according to `config.search_method`
   reload_module({ search_method = 'cover_or_next' })
   validate_edit(lines, { 1, 0 }, { 'aaa <bbb>' }, { 1, 5 }, type_keys, 'sr', ')', '>')
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { search_method = 'cover' }
+  validate_edit(lines, { 1, 0 }, lines, { 1, 0 }, type_keys, 'sr', ')', '>')
 end
 
 T['Replace surrounding']['places cursor to the right of left surrounding'] = function()
@@ -550,6 +577,11 @@ T['Replace surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set(
   end,
 })
 
+T['Replace surrounding']['respects `vim.b.minisurround_config`'] = function()
+  child.b.minisurround_config = { custom_surroundings = { ['<'] = { output = { left = '>', right = '<' } } } }
+  validate_edit({ '<aaa>' }, { 1, 2 }, { '>aaa<' }, { 1, 1 }, type_keys, 'sr', '>', '<')
+end
+
 T['Find surrounding'] = new_set()
 
 -- NOTE: most tests are done for `sf` ('find right') in hope that `sF` ('find
@@ -618,6 +650,10 @@ T['Find surrounding']['respects `config.n_lines`'] = function()
   local lines = { '(', '', '', 'a', '', '', ')' }
   validate_find(lines, { 4, 0 }, { { 4, 0 } }, type_keys, 'sf', ')')
   has_message_about_not_found(')', 2)
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { n_lines = 10 }
+  validate_find(lines, { 4, 0 }, { { 7, 0 } }, type_keys, 'sf', ')')
 end
 
 T['Find surrounding']['respects `config.search_method`'] = function()
@@ -636,6 +672,10 @@ T['Find surrounding']['respects `config.search_method`'] = function()
   reload_module({ search_method = 'cover_or_next' })
   validate_find(lines, { 1, 0 }, { { 1, 4 } }, type_keys, 'sf', ')')
   validate_find(lines, { 1, 0 }, { { 1, 8 } }, type_keys, 'sF', ')')
+
+  -- Should also use buffer local config
+  child.b.minisurround_config = { search_method = 'cover' }
+  validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sf', ')')
 end
 
 T['Find surrounding']['prompts helper message after one idle second'] = function()
@@ -717,6 +757,12 @@ T['Find surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
     eq(get_cursor(), { 1, 1 })
   end,
 })
+
+T['Find surrounding']['respects `vim.b.minisurround_config`'] = function()
+  child.b.minisurround_config =
+    { custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } } }
+  validate_edit({ '>aaa<' }, { 1, 2 }, { '>aaa<' }, { 1, 4 }, type_keys, 'sf', '<')
+end
 
 -- NOTE: most tests are done specifically for highlighting in hope that
 -- finding of surrounding is done properly
@@ -845,6 +891,25 @@ T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_se
     child.expect_screenshot()
   end,
 })
+
+T['Highlight surrounding']['respects `vim.b.minisurround_config`'] = function()
+  ---     input = { find = '%b()', extract = '^(.).*(.)$' },
+  child.b.minisurround_config = {
+    custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } },
+    highlight_duration = 50,
+  }
+  validate_edit({ '>aaa<' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '<')
+
+  set_lines({ '>aaa<', 'bbb' })
+  set_cursor(1, 2)
+  type_keys('sh', '<')
+  poke_eventloop()
+  child.expect_screenshot()
+
+  -- Should stop highlighting after duration from local config
+  sleep(50)
+  child.expect_screenshot()
+end
 
 T['Update number of lines'] = new_set()
 
@@ -992,6 +1057,11 @@ T['Search method']['throws error on incorrect `config.search_method`'] = functio
   expect.error(function() type_keys('sd', ')') end, 'one of')
   eq(get_lines(), lines)
   eq(get_cursor(), { 1, 0 })
+end
+
+T['Search method']['respects `vim.b.minisurround_config`'] = function()
+  child.b.minisurround_config = { search_method = 'cover_or_next' }
+  validate_edit({ 'aaa (bbb)' }, { 1, 0 }, { 'aaa <bbb>' }, { 1, 5 }, type_keys, 'sr', ')', '>')
 end
 
 -- Surroundings ---------------------------------------------------------------

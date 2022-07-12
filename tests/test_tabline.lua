@@ -10,6 +10,7 @@ local load_module = function(config) child.mini_load('tabline', config) end
 local unload_module = function() child.mini_unload('tabline') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_lines = function(...) return child.set_lines(...) end
+local poke_eventloop = function() child.api.nvim_eval('1') end
 --stylua: ignore end
 
 -- Make helpers
@@ -152,7 +153,7 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
   edit('aaa')
   child.cmd('tabedit bbb')
 
-  reload_module({ tabpage_section = 'left' })
+  child.lua([[MiniTabline.config.tabpage_section = 'left']])
   child.cmd('1tabnext')
   eq(
     eval_tabline(true),
@@ -164,7 +165,7 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
     '%#MiniTablineTabpagesection# Tab 2/2 %#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#'
   )
 
-  reload_module({ tabpage_section = 'right' })
+  child.lua([[MiniTabline.config.tabpage_section = 'right']])
   child.cmd('1tabnext')
   eq(
     eval_tabline(true),
@@ -176,11 +177,19 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
     '%#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#%=%#MiniTablineTabpagesection# Tab 2/2 '
   )
 
-  reload_module({ tabpage_section = 'none' })
+  child.lua([[MiniTabline.config.tabpage_section = 'none']])
   child.cmd('1tabnext')
   eq(eval_tabline(true), '%#MiniTablineCurrent# aaa %#MiniTablineHidden# bbb %#MiniTablineFill#')
   child.cmd('2tabnext')
   eq(eval_tabline(true), '%#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#')
+
+  -- Should also use buffer local config
+  child.b.minitabline_config = { tabpage_section = 'right' }
+  poke_eventloop()
+  eq(
+    eval_tabline(true),
+    '%#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#%=%#MiniTablineTabpagesection# Tab 2/2 '
+  )
 end
 
 T['make_tabline_string()']['validates `config.tabpage_section`'] = function()
@@ -247,9 +256,14 @@ T['make_tabline_string()']['respects `config.show_icons`'] = function()
   eq(eval_tabline(true), '%#MiniTablineHidden#  LICENSE %#MiniTablineCurrent#  aaa.lua %#MiniTablineFill#')
 
   -- If `false`, should not add icons
-  reload_module({ show_icons = false })
+  child.lua('MiniTabline.config.show_icons = false')
   child.cmd('bnext')
   eq(eval_tabline(true), '%#MiniTablineCurrent# LICENSE %#MiniTablineHidden# aaa.lua %#MiniTablineFill#')
+
+  -- Should also use buffer local config
+  child.b.minitabline_config = { show_icons = true }
+  poke_eventloop()
+  eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  aaa.lua %#MiniTablineFill#')
 end
 
 T['make_tabline_string()']['deduplicates named labels'] = function()

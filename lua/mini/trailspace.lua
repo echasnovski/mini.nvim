@@ -17,6 +17,10 @@
 ---
 --- See |MiniTrailspace.config| for `config` structure and default values.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minitrailspace_config` which should have same structure as
+--- `MiniTrailspace.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Highlight groups~
 ---
 --- * `MiniTrailspace` - highlight group for trailing space.
@@ -108,7 +112,7 @@ MiniTrailspace.highlight = function()
   end
 
   -- Possibly work only in normal buffers
-  if MiniTrailspace.config.only_in_normal_buffers and not H.is_buffer_normal() then return end
+  if H.get_config().only_in_normal_buffers and not H.is_buffer_normal() then return end
 
   -- Don't add match id on top of existing one
   if H.get_match_id() ~= nil then return end
@@ -136,7 +140,7 @@ end
 ---
 --- Designed to be used with |autocmd|. No need to use it directly.
 MiniTrailspace.track_normal_buffer = function()
-  if not MiniTrailspace.config.only_in_normal_buffers then return end
+  if not H.get_config().only_in_normal_buffers then return end
 
   -- This should be used with 'OptionSet' event for 'buftype' option
   -- Empty 'buftype' means "normal buffer"
@@ -167,6 +171,10 @@ end
 H.apply_config = function(config) MiniTrailspace.config = config end
 
 H.is_disabled = function() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
+
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniTrailspace.config, vim.b.minitrailspace_config or {}, config or {})
+end
 
 H.is_buffer_normal = function(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end
 

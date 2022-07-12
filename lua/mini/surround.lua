@@ -48,6 +48,10 @@
 --- See |MiniSurround.config| for `config` structure and default values. It
 --- also has example setup providing experience similar to 'tpope/vim-surround'.
 ---
+--- You can override runtime config settings locally to buffer inside
+--- `vim.b.minisurround_config` which should have same structure as
+--- `MiniSurround.config`. See |mini.nvim-buffer-local-config| for more details.
+---
 --- # Example usage~
 ---
 --- - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
@@ -230,7 +234,7 @@ end
 --- - Any other non-recognized identifier represents surrounding with identical
 ---   left and right parts equal to identifier (like `_`, etc.).
 ---
---- Example of using `config.custom_surroundings`:
+--- Examples of using `config.custom_surroundings`:
 --- >
 ---   require('mini.surround').setup({
 ---     custom_surroundings = {
@@ -240,12 +244,6 @@ end
 ---       -- Modify `f` (function call) to find functions with only alphanumeric
 ---       -- characters in its name.
 ---       f = { input = { find = '%f[%w]%w+%b()' } },
----
----       -- Create custom surrouding for Lua's block string `[[...]]`
----       s = {
----         input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
----         output = { left = '[[', right = ']]' },
----       },
 ---
 ---       -- Use function to compute surrounding info
 ---       ['*'] = {
@@ -264,6 +262,17 @@ end
 ---       },
 ---     },
 ---   })
+---
+---   -- Create custom surrouding for Lua's block string `[[...]]`. Use this inside
+---   -- autocommand or 'after/ftplugin/lua.lua' file.
+---   vim.b.minisurround_config = {
+---     custom_surroundings = {
+---       s = {
+---         input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+---         output = { left = '[[', right = ']]' },
+---       },
+---     },
+---   }
 --- <
 --- ## Search method~
 ---
@@ -445,9 +454,10 @@ MiniSurround.highlight = function()
   if surr == nil then return '<Esc>' end
 
   -- Highlight surrounding
+  local config = H.get_config()
   local buf_id = vim.api.nvim_get_current_buf()
   H.highlight_surrounding(buf_id, surr)
-  vim.defer_fn(function() H.unhighlight_surrounding(buf_id, surr) end, MiniSurround.config.highlight_duration)
+  vim.defer_fn(function() H.unhighlight_surrounding(buf_id, surr) end, config.highlight_duration)
 end
 
 --- Update `MiniSurround.config.n_lines`
@@ -631,8 +641,12 @@ end
 
 H.is_disabled = function() return vim.g.minisurround_disable == true or vim.b.minisurround_disable == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniSurround.config, vim.b.minisurround_config or {}, config or {})
+end
+
 H.is_search_method = function(x, x_name)
-  x = x or MiniSurround.config.search_method
+  x = x or H.get_config().search_method
   x_name = x_name or '`config.search_method`'
 
   if vim.tbl_contains({ 'cover', 'cover_or_prev', 'cover_or_next', 'cover_or_nearest' }, x) then return true end
@@ -673,7 +687,8 @@ H.find_surrounding = function(surround_info)
   -- needed, it should also have a `extract` field with extract pattern for two
   -- parts of surrounding assuming they are at the start and end of string.
   if surround_info == nil then return nil end
-  local n_lines = MiniSurround.config.n_lines
+  local config = H.get_config()
+  local n_lines = config.n_lines
 
   -- First try only current line as it is the most common use case
   local surr = H.find_surrounding_in_neighborhood(surround_info, 0)
@@ -684,7 +699,7 @@ H.find_surrounding = function(surround_info)
       surround_info.id,
       n_lines,
       n_lines > 1 and 's' or '',
-      MiniSurround.config.search_method
+      config.search_method
     )
     H.message(msg)
   end
@@ -955,7 +970,7 @@ end
 H.infer_match = function(prev, next, offset)
   local has_prev = prev.left ~= nil and prev.right ~= nil
   local has_next = next.left ~= nil and next.right ~= nil
-  local search_method = MiniSurround.config.search_method
+  local search_method = H.get_config().search_method
 
   if not (has_prev or has_next) or search_method == 'cover' then return end
   if search_method == 'cover_or_prev' then return prev.left, prev.right end
@@ -1083,9 +1098,8 @@ end
 --stylua: ignore end
 
 H.make_surrounding_table = function()
-  -- Use data from `config` and extend with builtins
-  local surroundings =
-    vim.tbl_deep_extend('force', H.builtin_surroundings, MiniSurround.config.custom_surroundings or {})
+  -- Extend builtins with data from `config`
+  local surroundings = vim.tbl_deep_extend('force', H.builtin_surroundings, H.get_config().custom_surroundings or {})
 
   -- Add possibly missing information from default surrounding info
   for char, info in pairs(surroundings) do
