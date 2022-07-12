@@ -46,6 +46,13 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
 ## Implementation notes
 
 - Use module's `H.get_config()` helper to get its `config`. This way allows using buffer local configuration.
+- Checklist for adding new config setting to an existing module:
+    - Add code which uses new setting.
+    - Update module's `H.setup_config()` with type check of new setting.
+    - Add default value to `Mini*.config` definition.
+    - Regenerate help file.
+    - Update respective module section in 'README.md'.
+    - Update 'CHANGELOG.md'. In module's section of current version add line starting with `- FEATURE: Implement ...`.
 
 ## List of highlight groups
 
