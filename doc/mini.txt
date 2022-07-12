@@ -5619,6 +5619,11 @@ Unhighlight trailing whitespace in current window
 Trim trailing whitespace
 
 ------------------------------------------------------------------------------
+                                              *MiniTrailspace.trim_last_lines()*
+                       `MiniTrailspace.trim_last_lines`()
+Trim last blank lines
+
+------------------------------------------------------------------------------
                                           *MiniTrailspace.track_normal_buffer()*
                      `MiniTrailspace.track_normal_buffer`()
 Track normal buffer

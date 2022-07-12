@@ -187,6 +187,39 @@ T['trim()']['does not update search pattern'] = function()
   eq(child.fn.getreg('/'), 'aa')
 end
 
+T['trim_last_lines()'] = new_set()
+
+local validate_last_lines = function(init_lines, expected_lines)
+  set_lines(init_lines)
+  child.lua('MiniTrailspace.trim_last_lines()')
+  eq(get_lines(), expected_lines)
+end
+
+T['trim_last_lines()']['works'] = function()
+  validate_last_lines({ 'aa', '' }, { 'aa' })
+  validate_last_lines({ 'aa', ' ' }, { 'aa' })
+  validate_last_lines({ 'aa', '\t' }, { 'aa' })
+
+  validate_last_lines({ 'aa' }, { 'aa' })
+  validate_last_lines({ '' }, { '' })
+  validate_last_lines({ 'aa ' }, { 'aa ' })
+
+  validate_last_lines({ 'aa', '', '' }, { 'aa' })
+  validate_last_lines({ 'aa', ' ', ' ' }, { 'aa' })
+  validate_last_lines({ 'aa', '', ' ', '' }, { 'aa' })
+
+  validate_last_lines({ '', 'aa', '' }, { '', 'aa' })
+  validate_last_lines({ ' ', 'aa', '' }, { ' ', 'aa' })
+
+  validate_last_lines({ ' aa', '' }, { ' aa' })
+  validate_last_lines({ 'aa ', '' }, { 'aa ' })
+
+  validate_last_lines({ 'aa', 'bb', '' }, { 'aa', 'bb' })
+  validate_last_lines({ 'aa', '', 'bb', '' }, { 'aa', '', 'bb' })
+  validate_last_lines({ 'aa', ' ', 'bb', ' ' }, { 'aa', ' ', 'bb' })
+  validate_last_lines({ '', 'aa', '', 'bb', '' }, { '', 'aa', '', 'bb' })
+end
+
 -- Integration tests ==========================================================
 T['Trailspace autohighlighting'] = new_set()
 

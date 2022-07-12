@@ -15,6 +15,10 @@
 
 Introduction of new module.
 
+## mini.trailspace
+
+- FEATURE: Implement `MiniTrailspace.trim_last_lines()`.
+
 
 # Version 0.4.0
 
