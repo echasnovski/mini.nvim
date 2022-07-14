@@ -187,9 +187,9 @@ end
 --- ## Custom surroundings~
 ---
 --- User can define own surroundings by supplying `config.custom_surroundings`.
---- It should be a table with keys being single character surrounding identifier
---- and values - surround info or function returning it. Surround info itself
---- is a table with keys:
+--- It should be a **table** with keys being single character surrounding
+--- identifier and values - surround info or **function** returning it.
+--- Surround info itself is a table with keys:
 --- - <input> - defines how to find and extract surrounding for "input"
 ---   operations (like `delete`). A table with fields <find> (Lua pattern
 ---   applied for search in neighborhood) and <extract> (Lua pattern applied
