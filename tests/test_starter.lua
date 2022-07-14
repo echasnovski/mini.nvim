@@ -43,8 +43,9 @@ end
 
 local get_latest_message = function() return child.cmd_capture('1messages') end
 
-local get_active_items_names = function()
-  local items = child.lua_get('MiniStarter.content_to_items(MiniStarter.content)')
+local get_active_items_names = function(buf_id)
+  buf_id = buf_id or child.api.nvim_get_current_buf()
+  local items = child.lua_get('MiniStarter.content_to_items(MiniStarter.get_content(...))', { buf_id })
   local active_items = vim.tbl_filter(function(x) return x._active == true end, items)
   return vim.tbl_map(function(x) return x.name end, active_items)
 end
@@ -245,6 +246,15 @@ T['open()']['issues an autocommand after finished opening'] = function()
   child.lua('_G.n = 0')
   child.lua('pcall(MiniStarter.open, "a")')
   eq(child.lua_get('_G.n'), 0)
+end
+
+T['open()']['creates unique buffer names'] = function()
+  child.lua('MiniStarter.open()')
+  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter')
+
+  child.lua('MiniStarter.close()')
+  child.lua('MiniStarter.open()')
+  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
 end
 
 T['open()']['respects `vim.{g,b}.ministarter_disable`'] = new_set({
@@ -516,20 +526,16 @@ T['Default content']["'Recent files' section"]['present even if no recent files'
   child.expect_screenshot()
 end
 
-T['Content'] = new_set({ hooks = { pre_case = function() child.set_size(10, 40) end } })
+T['get_content()'] = new_set({ hooks = { pre_case = function() child.set_size(10, 40) end } })
 
-T['Content']['works'] = function()
+T['get_content()']['works'] = function()
   local item = mock_item('a', 'Section a')
   load_module({ content_hooks = {}, header = 'Hello', footer = 'World', items = { item } })
   child.lua('MiniStarter.open()')
   child.expect_screenshot()
 
-  -- Should persist even outside of Starter buffer
-  child.cmd('bwipeout')
-  validate_starter_not_shown()
-
   -- Every element of array should contain conent for a particular line
-  local content = child.lua_get('MiniStarter.content')
+  local content = child.lua_get('MiniStarter.get_content()')
   eq(content[1], { { hl = 'MiniStarterHeader', string = 'Hello', type = 'header' } })
   eq(content[2], { { string = '', type = 'empty' } })
   eq(content[3], { { hl = 'MiniStarterSection', string = 'Section a', type = 'section' } })
@@ -553,19 +559,19 @@ T['content_coords()'] = new_set({
 
 T['content_coords()']['works with function argument'] = function()
   local coords = child.lua_get([[
-    MiniStarter.content_coords(MiniStarter.content, function(x)
+    MiniStarter.content_coords(MiniStarter.get_content(), function(x)
       return vim.tbl_contains({'Hello', 'World'}, x.string)
     end)]])
   eq(coords, { { line = 1, unit = 1 }, { line = 6, unit = 1 } })
 end
 
 T['content_coords()']['works with string argument'] = function()
-  local coords = child.lua_get([[MiniStarter.content_coords(MiniStarter.content, 'empty')]])
+  local coords = child.lua_get([[MiniStarter.content_coords(MiniStarter.get_content(), 'empty')]])
   eq(coords, { { line = 2, unit = 1 }, { line = 5, unit = 1 } })
 end
 
 T['content_coords()']['works with no argument'] = function()
-  local coords = child.lua_get('MiniStarter.content_coords(MiniStarter.content, nil)')
+  local coords = child.lua_get('MiniStarter.content_coords(MiniStarter.get_content(), nil)')
   for i = 1, 6 do
     eq(coords[i], { line = i, unit = 1 })
   end
@@ -578,7 +584,7 @@ T['content_to_lines()'] = new_set({
 })
 
 T['content_to_lines()']['works'] =
-  function() eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.content)'), get_lines()) end
+  function() eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.get_content())'), get_lines()) end
 
 T['content_to_items()'] = new_set()
 
@@ -586,7 +592,7 @@ T['content_to_items()']['works'] = function()
   reload_module({ content_hooks = {}, items = example_items })
   child.lua('MiniStarter.open()')
 
-  local output = child.lua_get('MiniStarter.content_to_items(MiniStarter.content)')
+  local output = child.lua_get('MiniStarter.content_to_items(MiniStarter.get_content())')
 
   -- Should contain all information from input items
   for i, item in ipairs(output) do
@@ -793,7 +799,7 @@ T['set_query()'] = new_set({
       -- Avoid hit-enter-prompt
       child.o.cmdheight = 10
 
-      reload_module({ items = example_items })
+      child.lua('MiniStarter.config.items = ' .. example_itemstring)
       child.lua('MiniStarter.open()')
     end,
   },
@@ -810,6 +816,14 @@ T['set_query()']['works'] = function()
 
   child.lua([[MiniStarter.set_query('aa')]])
   eq(get_active_items_names(), { 'aaab', 'aaba' })
+end
+
+T['set_query()']['uses `buf_id` argument'] = function()
+  child.lua('MiniStarter.open()')
+  local buf_id = child.api.nvim_get_current_buf()
+
+  child.lua('MiniStarter.set_query(...)', { 'aaa', buf_id })
+  eq(get_active_items_names(buf_id), { 'aaab' })
 end
 
 T['set_query()']['validates argument'] = function()
@@ -868,6 +882,14 @@ T['add_to_query()']['works'] = function()
   child.lua([[MiniStarter.add_to_query('c')]])
   eq(get_active_items_names(), { 'aaab' })
   expect.match(get_latest_message(), 'Query "aaabc".*no active items.*Current query: aaab')
+end
+
+T['add_to_query()']['uses `buf_id` argument'] = function()
+  child.lua('MiniStarter.open()')
+  local buf_id = child.api.nvim_get_current_buf()
+
+  child.lua('MiniStarter.add_to_query(...)', { 'a', buf_id })
+  eq(get_active_items_names(buf_id), { 'aaab', 'aaba', 'abaa' })
 end
 
 T['add_to_query()']['removes from query with no argument'] = function()
@@ -1170,5 +1192,30 @@ T['Cursor positioning']['works with bullets'] = new_set({
     eq(get_cursor(), cursor_finish)
   end,
 })
+
+T['Multiple buffers'] = new_set()
+
+T['Multiple buffers']['are allowed'] = function()
+  child.lua('MiniStarter.config.items = ' .. example_itemstring)
+  child.cmd('autocmd TabNewEntered * lua MiniStarter.open(vim.api.nvim_get_current_buf())')
+
+  child.lua('MiniStarter.open()')
+  local buf_id_1 = child.api.nvim_get_current_buf()
+  child.lua([[MiniStarter.set_query('aa')]])
+  eq(get_active_items_names(buf_id_1), { 'aaab', 'aaba' })
+
+  -- It should open new Starter buffer while keeping previous one
+  child.cmd('tabe')
+  validate_starter_shown()
+  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
+
+  eq(child.api.nvim_buf_is_valid(buf_id_1), true)
+  eq(child.api.nvim_buf_get_option(buf_id_1, 'filetype'), 'starter')
+  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+
+  -- State of first Starter buffer should not be affected by second one
+  child.cmd('tabc')
+  eq(get_active_items_names(), { 'aaab', 'aaba' })
+end
 
 return T

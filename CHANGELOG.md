@@ -7,6 +7,12 @@
 
 - BREAKING: Soft deprecate `vim.b.miniindentscope_options` in favor of using `options` field of `miniindentscope_config`.
 
+## mini.starter
+
+- FEATURE: Now it is possible to open multiple Starter buffers at the same time (#82). This comes with several changes which won't affect most users:
+    - BREAKING: `MiniStarter.content` is deprecated. Use `MiniStarter.get_content()`.
+    - All functions dealing with Starter buffer now have `buf_id` as argument (no breaking behavior).
+
 ## mini.statusline
 
 - FEATURE: Implement `config.use_icons` which controls whether to use icons by default.
