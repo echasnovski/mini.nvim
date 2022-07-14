@@ -7,6 +7,10 @@
 
 - BREAKING: Soft deprecate `vim.b.miniindentscope_options` in favor of using `options` field of `miniindentscope_config`.
 
+## mini.sessions
+
+- FEATURE: Hooks are now called with active session data as argument.
+
 ## mini.starter
 
 - FEATURE: Now it is possible to open multiple Starter buffers at the same time (#82). This comes with several changes which won't affect most users:

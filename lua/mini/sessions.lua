@@ -111,6 +111,7 @@ MiniSessions.config = {
   force = { read = false, write = true, delete = false },
 
   -- Hook functions for actions. Default `nil` means 'do nothing'.
+  -- Takes table with active session data as argument.
   hooks = {
     -- Before successful action
     pre = { read = nil, write = nil, delete = nil },
@@ -151,7 +152,7 @@ MiniSessions.detected = {}
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.read`).
 ---   - <hooks> (a table with <pre> and <post> function hooks to be executed
----     before and after successful read; overrides
+---     with session data argument before and after successful read; overrides
 ---     `MiniSessions.config.hooks.pre.read` and
 ---     `MiniSessions.config.hooks.post.read`).
 MiniSessions.read = function(session_name, opts)
@@ -172,6 +173,8 @@ MiniSessions.read = function(session_name, opts)
 
   if not H.validate_detected(session_name) then return end
 
+  local data = MiniSessions.detected[session_name]
+
   -- Possibly check for unsaved listed buffers and do nothing if present
   if not opts.force then
     local unsaved_listed_buffers = H.get_unsaved_listed_buffers()
@@ -183,13 +186,13 @@ MiniSessions.read = function(session_name, opts)
   end
 
   -- Execute 'pre' hook
-  H.possibly_execute(opts.hooks.pre)
+  H.possibly_execute(opts.hooks.pre, data)
 
   -- Wipeout all buffers
   vim.cmd('%bwipeout!')
 
   -- Read session file
-  local session_path = MiniSessions.detected[session_name].path
+  local session_path = data.path
   vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
   vim.v.this_session = session_path
 
@@ -197,7 +200,7 @@ MiniSessions.read = function(session_name, opts)
   if opts.verbose then H.message(('Read session %s'):format(session_path)) end
 
   -- Execute 'post' hook
-  H.possibly_execute(opts.hooks.post)
+  H.possibly_execute(opts.hooks.post, data)
 end
 
 --- Write session
@@ -223,7 +226,7 @@ end
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.write`).
 ---   - <hooks> (a table with <pre> and <post> function hooks to be executed
----     before and after successful write; overrides
+---     with session data argument before and after successful write; overrides
 ---     `MiniSessions.config.hooks.pre.write` and
 ---     `MiniSessions.config.hooks.post.write`).
 MiniSessions.write = function(session_name, opts)
@@ -237,22 +240,24 @@ MiniSessions.write = function(session_name, opts)
     H.error([[Can't write to existing session when `opts.force` is not `true`.]])
   end
 
+  local data = H.new_session(session_path)
+
   -- Execute 'pre' hook
-  H.possibly_execute(opts.hooks.pre)
+  H.possibly_execute(opts.hooks.pre, data)
 
   -- Make session file
   local cmd = ('mksession%s'):format(opts.force and '!' or '')
   vim.cmd(('%s %s'):format(cmd, vim.fn.fnameescape(session_path)))
+  data.modify_time = vim.fn.getftime(session_path)
 
   -- Update detected sessions
-  local s = H.new_session(session_path)
-  MiniSessions.detected[s.name] = s
+  MiniSessions.detected[data.name] = data
 
   -- Possibly notify
   if opts.verbose then H.message(('Written session %s'):format(session_path)) end
 
   -- Execute 'post' hook
-  H.possibly_execute(opts.hooks.post)
+  H.possibly_execute(opts.hooks.post, data)
 end
 
 --- Delete detected session
@@ -271,7 +276,7 @@ end
 ---   - <verbose> (whether to print session path after action; default
 ---     `MiniSessions.config.verbose.delete`).
 ---   - <hooks> (a table with <pre> and <post> function hooks to be executed
----     before and after successful delete; overrides
+---     with session data argument before and after successful delete; overrides
 ---     `MiniSessions.config.hooks.pre.delete` and
 ---     `MiniSessions.config.hooks.post.delete`).
 MiniSessions.delete = function(session_name, opts)
@@ -294,8 +299,10 @@ MiniSessions.delete = function(session_name, opts)
     H.error([[Can't delete current session when `opts.force` is not `true`.]])
   end
 
+  local data = MiniSessions.detected[session_name]
+
   -- Execute 'pre' hook
-  H.possibly_execute(opts.hooks.pre)
+  H.possibly_execute(opts.hooks.pre, data)
 
   -- Delete and update detected sessions
   vim.fn.delete(session_path)
@@ -306,7 +313,7 @@ MiniSessions.delete = function(session_name, opts)
   if opts.verbose then H.message(('Deleted session %s'):format(session_path)) end
 
   -- Execute 'pre' hook
-  H.possibly_execute(opts.hooks.post)
+  H.possibly_execute(opts.hooks.post, data)
 end
 
 --- Select session interactively and perform action
@@ -564,9 +571,9 @@ H.is_something_shown = function()
   return false
 end
 
-H.possibly_execute = function(f)
+H.possibly_execute = function(f, ...)
   if f == nil then return end
-  return f()
+  return f(...)
 end
 
 return MiniSessions

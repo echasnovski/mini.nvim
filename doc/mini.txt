@@ -3148,6 +3148,7 @@ Default values:
     force = { read = false, write = true, delete = false },
 
     -- Hook functions for actions. Default `nil` means 'do nothing'.
+    -- Takes table with active session data as argument.
     hooks = {
       -- Before successful action
       pre = { read = nil, write = nil, delete = nil },
@@ -3192,7 +3193,7 @@ Parameters~
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.read`).
   - <hooks> (a table with <pre> and <post> function hooks to be executed
-    before and after successful read; overrides
+    with session data argument before and after successful read; overrides
     `MiniSessions.config.hooks.pre.read` and
     `MiniSessions.config.hooks.post.read`).
 
@@ -3223,7 +3224,7 @@ Parameters~
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.write`).
   - <hooks> (a table with <pre> and <post> function hooks to be executed
-    before and after successful write; overrides
+    with session data argument before and after successful write; overrides
     `MiniSessions.config.hooks.pre.write` and
     `MiniSessions.config.hooks.post.write`).
 
@@ -3247,7 +3248,7 @@ Parameters~
   - <verbose> (whether to print session path after action; default
     `MiniSessions.config.verbose.delete`).
   - <hooks> (a table with <pre> and <post> function hooks to be executed
-    before and after successful delete; overrides
+    with session data argument before and after successful delete; overrides
     `MiniSessions.config.hooks.pre.delete` and
     `MiniSessions.config.hooks.post.delete`).
 

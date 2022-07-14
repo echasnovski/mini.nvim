@@ -96,13 +96,13 @@ local reset_session_indicator = function() child.lua('_G.session_file = nil') en
 local make_hook_string = function(pre_post, action, hook_type)
   if hook_type == 'config' then
     return string.format(
-      [[{ %s = { %s = function() _G.hooks_%s_%s = 'config' end }}]],
+      [[{ %s = { %s = function(...) _G.hooks_args = { ... }; _G.hooks_%s_%s = 'config' end }}]],
       pre_post, action, pre_post, action
     )
   end
   if hook_type == 'opts' then
     return string.format(
-      [[{ %s = function() _G.hooks_%s_%s = 'opts' end }]],
+      [[{ %s = function(...) _G.hooks_args = { ... }; _G.hooks_%s_%s = 'opts' end }]],
       pre_post, pre_post, action
     )
   end
@@ -112,6 +112,17 @@ end
 local validate_executed_hook = function(pre_post, action, value)
   local var_name = ('_G.hooks_%s_%s'):format(pre_post, action)
   eq(child.lua_get(var_name), value)
+
+  -- Only one argument should be passed
+  local hooks_args = child.lua_get('_G.hooks_args')
+  eq(vim.tbl_keys(hooks_args), { 1 })
+
+  -- It is a session data
+  local data = hooks_args[1]
+  local keys = vim.tbl_keys(data)
+  table.sort(keys)
+  eq(keys, { 'modify_time', 'name', 'path', 'type' })
+  eq(vim.tbl_map(function(x) return type(data[x]) end, keys), { 'number', 'string', 'string', 'string' })
 end
 
 -- Output test set ============================================================
@@ -382,10 +393,10 @@ T['read()']['respects `force` from `config` and `opts` argument'] = function()
   validate_no_session_loaded()
 end
 
-T['read()']['respects hook from `config` and `opts` argument'] = new_set({
+T['read()']['respects hooks from `config` and `opts` argument'] = new_set({
   parametrize = { { 'pre' }, { 'post' } },
 }, {
-  function(pre_post)
+  test = function(pre_post)
     -- Should use `config`
     local hook_string_config = make_hook_string(pre_post, 'read', 'config')
     reload_from_strconfig({
@@ -553,10 +564,10 @@ T['write()']['respects `force` from `config` and `opts` argument'] = function()
   eq(#child.fn.readfile(path) > 0, true)
 end
 
-T['write()']['respects hook from `config` and `opts` argument'] = new_set({
+T['write()']['respects hooks from `config` and `opts` argument'] = new_set({
   parametrize = { { 'pre' }, { 'post' } },
 }, {
-  function(pre_post)
+  test = function(pre_post)
     child.fn.mkdir(empty_dir_path)
     local path
 
@@ -722,10 +733,10 @@ T['delete()']['respects `force` from `config` and `opts` argument'] = function()
   eq(child.fn.filereadable(path), 1)
 end
 
-T['delete()']['respects hook from `config` and `opts` argument'] = new_set({
+T['delete()']['respects hooks from `config` and `opts` argument'] = new_set({
   parametrize = { { 'pre' }, { 'post' } },
 }, {
-  function(pre_post)
+  test = function(pre_post)
     local session_dir = populate_sessions()
     local path
 
