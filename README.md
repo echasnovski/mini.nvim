@@ -105,11 +105,7 @@ All examples use this colorscheme.
 
 Fast implementation of [chriskempson/base16](https://github.com/chriskempson/base16) theme for manually supplied palette. Has unique palette generator which needs only background and foreground colors.
 
-<details><summary><b>DEMO of 'mini.base16'</b></summary>
-
-<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_dark.png" width="400em"/> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_light.png" width="400em"/>
-
-</details>
+[**DEMO of 'mini.base16'**](DEMO.md#minibase16)
 
 Default `config`:
 
@@ -137,11 +133,7 @@ Plugins with similar functionality:
 
 Buffer removing (unshow, delete, wipeout) while saving window layout.
 
-<details><summary><b>DEMO of 'mini.bufremove'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044032-7874cf95-2e41-49fb-8abe-3aa73526972f.mp4
-
-</details>
+[**DEMO of 'mini.bufremove'**](DEMO.md#minibufremove)
 
 Default `config`:
 
@@ -163,11 +155,7 @@ Plugins with similar functionality:
 
 Fast and familiar per-line code commenting.
 
-<details><summary><b>DEMO of 'mini.comment'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044250-1a8bceae-8f14-40e2-a678-31aca0cd6c1a.mp4
-
-</details>
+[**DEMO of 'mini.comment'**](DEMO.md#minicomment)
 
 Default `config`:
 
@@ -208,11 +196,7 @@ Plugins with similar functionality:
 
 Async (with customizable 'debounce' delay) 'two-stage chain completion': first builtin LSP, then configurable fallback. Also has functionality for completion item info and function signature (both in floating window appearing after customizable delay).
 
-<details><summary><b>DEMO of 'mini.completion'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044355-90bfc230-70c4-4932-b66b-103284558994.mp4
-
-</details>
+[**DEMO of 'mini.completion'**](DEMO.md#minicompletion)
 
 Default `config`:
 
@@ -276,11 +260,7 @@ Plugins with similar functionality:
 
 Automatic highlighting of word under cursor (displayed after customizable delay). Current word under cursor can be highlighted differently.
 
-<details><summary><b>DEMO of 'mini.cursorword'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044454-0e4ab873-6e73-448d-838f-45f4b2be876b.mp4
-
-</details>
+[**DEMO of 'mini.cursorword'**](DEMO.md#minicursorword)
 
 Default `config`:
 
@@ -301,11 +281,7 @@ Plugins with similar functionality:
 
 Generation of help files from EmmyLua-like annotations. Allows flexible customization of output via hook functions. Used for documenting this plugin.
 
-<details><summary><b>DEMO of 'mini.doc'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044513-755dec35-4f6c-4a51-aa96-5e380f6d744f.mp4
-
-</details>
+[**DEMO of 'mini.doc'**](DEMO.md#minidoc)
 
 Default `config`:
 
@@ -378,11 +354,7 @@ Plugins with similar functionality:
 
 Functions for fast and simple fuzzy matching. It has not only functions to perform fuzzy matching of one string to others, but also a sorter for [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
-<details><summary><b>DEMO of 'mini.fuzzy'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044594-3599fcec-02d6-4bb7-a47d-23f8400f6656.mp4
-
-</details>
+[**DEMO of 'mini.fuzzy'**](DEMO.md#minifuzzy)
 
 Default `config`:
 
@@ -404,11 +376,7 @@ Plugins with similar functionality:
 
 Visualize and operate on indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
 
-<details><summary><b>DEMO of 'mini.indentscope'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044654-f5f0b928-6bd9-4064-a916-1f980044c7ad.mp4
-
-</details>
+[**DEMO of 'mini.indentscope'**](DEMO.md#miniindentscope)
 
 Default `config`:
 
@@ -469,11 +437,7 @@ Plugins with similar functionality:
 
 Minimal and fast module for smarter jumping to a single character. Initial idea and implementation by [Adam Blažek](https://github.com/xigoi).
 
-<details><summary><b>DEMO of 'mini.jump'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044762-f0f50a73-02df-4432-a79e-54b0ddaa1e48.mp4
-
-</details>
+[**DEMO of 'mini.jump'**](DEMO.md#minijump)
 
 Default `config`:
 
@@ -511,11 +475,7 @@ Plugins with similar functionality:
 
 Minimal and fast Lua plugin for jumping (moving cursor) within visible lines via iterative label filtering. Supports custom jump targets (spots), labels, hooks, allowed windows and lines, and more.
 
-<details><summary><b>DEMO of 'mini.jump2d'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044834-b7d428f5-1f5c-4ab5-8563-2c5b7abd3e10.mp4
-
-</details>
+[**DEMO of 'mini.jump2d'**](DEMO.md#minijump2d)
 
 Default `config`:
 
@@ -568,11 +528,7 @@ Plugins with similar functionality:
 
 Collection of miscellaneous useful functions. Like `put()` and `put_text()` which print Lua objects to command line and current buffer respectively.
 
-<details><summary><b>DEMO of 'mini.misc'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044891-69b0ccfd-3fe8-4639-bc70-f955bbf4a1a7.mp4
-
-</details>
+[**DEMO of 'mini.misc'**](DEMO.md#minimisc)
 
 Default `config`:
 
@@ -589,11 +545,7 @@ For more information, read 'mini.misc' section of [help file](doc/mini.txt).
 
 Autopairs plugin which has minimal defaults and functionality to do per-key expression mappings.
 
-<details><summary><b>DEMO of 'mini.pairs'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173044991-18653715-9b4e-444e-a4ba-14eb80bc4e38.mp4
-
-</details>
+[**DEMO of 'mini.pairs'**](DEMO.md#minipairs)
 
 Default `config`:
 
@@ -636,11 +588,7 @@ Plugins with similar functionality:
 
 Session management (read, write, delete) which works using |mksession|. It was heavily inspired by 'vim-startify' and should work out of the box with sessions created by it. Works with global (from configured directory) and local (from current directory) sessions.
 
-<details><summary><b>DEMO of 'mini.sessions'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045087-3d18affc-c76f-4d22-8afc-fef687166ef0.mp4
-
-</details>
+[**DEMO of 'mini.sessions'**](DEMO.md#minisessions)
 
 Default `config`:
 
@@ -685,11 +633,7 @@ Plugins with similar functionality:
 
 Minimal, fast, and flexible start screen. Displayed items are fully customizable both in terms of what they do and how they look (with reasonable defaults). Item selection can be done using prefix query with instant visual feedback.
 
-<details><summary><b>DEMO of 'mini.starter'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045153-19087983-0211-4ab9-8278-909616b53c7e.mp4
-
-</details>
+[**DEMO of 'mini.starter'**](DEMO.md#ministarter)
 
 Default `config`:
 
@@ -743,11 +687,7 @@ Plugins with similar functionality:
 
 Minimal and fast statusline. Has ability to use custom content supplied with concise function (using module's provided section functions) along with builtin default. For full experience needs [Nerd font](https://www.nerdfonts.com/), [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin (but works without any them).
 
-<details><summary><b>DEMO of 'mini.statusline'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045208-42463c8f-a2ac-488d-9d30-216891f4bb51.mp4
-
-</details>
+[**DEMO of 'mini.statusline'**](DEMO.md#ministatusline)
 
 Default `config`:
 
@@ -784,11 +724,7 @@ Plugins with similar functionality:
 
 Fast surround plugin. Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.). Has special "function call", "tag", and "interactive" surroundings. Supports dot-repeatability, textobject, motions.
 
-<details><summary><b>DEMO of 'mini.surround'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045302-cc4fd421-cc33-4924-a95b-207097973b48.mp4
-
-</details>
+[**DEMO of 'mini.surround'**](DEMO.md#minisurround)
 
 Default `config`:
 
@@ -834,11 +770,7 @@ Plugins with similar functionality:
 
 Minimal tabline which always shows listed (see `:h buflisted`) buffers. Allows showing extra information section in case of multiple vim tabpages. For full experience needs [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
 
-<details><summary><b>DEMO of 'mini.tabline'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045373-f5bdea82-fe3e-4488-8c9a-ebba062a373c.mp4
-
-</details>
+[**DEMO of 'mini.tabline'**](DEMO.md#minitabline)
 
 Default `config`:
 
@@ -868,11 +800,7 @@ Plugins with similar functionality:
 
 Framework for writing extensive Neovim plugin tests. Supports hierarchical tests, hooks, parametrization, filtering (like from current file or cursor position), screen tests, "busted-style" emulation, customizable reporters, and more. Designed to be used with provided wrapper for managing child Neovim processes.
 
-<details><summary><b>DEMO of 'mini.test'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/175773105-f33cd3bb-6f62-4a61-95b1-b175e11905bb.mp4
-
-</details>
+[**DEMO of 'mini.test'**](DEMO.md#minitest)
 
 Default `config`:
 
@@ -922,11 +850,7 @@ Plugins with similar functionality:
 
 Automatic highlighting of trailing whitespace with functionality to remove it.
 
-<details><summary><b>DEMO of 'mini.trailspace'</b></summary>
-
-https://user-images.githubusercontent.com/24854248/173045420-7aaf21b6-1d2e-4333-8a23-dea7e49c3a01.mp4
-
-</details>
+[**DEMO of 'mini.trailspace'**](DEMO.md#minitrailspace)
 
 Default `config`:
 
