@@ -1312,8 +1312,10 @@ H.apply_buffer_options = function(buf_id)
   -- not statusline as it weirdly feels 'naked' without it).
   vim.o.showtabline = 1
 
-  -- Disable 'mini.cursorword'
+  -- Make it a better user experience with other modules
   vim.b.minicursorword_disable = true
+  vim.b.minitrailspace_disable = true
+  if _G.MiniTrailspace ~= nil then _G.MiniTrailspace.unhighlight() end
 end
 
 H.apply_buffer_mappings = function(buf_id)
