@@ -3,7 +3,6 @@ NVIM_EXEC ?= nvim
 
 all: test documentation
 
-# Use sequential tests to save execution resources due to presence of timing tests
 test:
 	$(NVIM_EXEC) --version | head -n 1 && echo ''
 	$(NVIM_EXEC) --headless --noplugin -u ./scripts/minimal_init.lua \
