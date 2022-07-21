@@ -209,7 +209,7 @@ end
 ---   `input.find`). Other fields will be taken from builtin surroundings.
 --- - Function returning table with surround info instead of table itself is
 ---   helpful when user input is needed (like asking for function name). Use
----   |input()| or |MiniSurround.user_inpu()|. Return `nil` to stop any current
+---   |input()| or |MiniSurround.user_input()|. Return `nil` to stop any current
 ---   surround operation.
 --- - In input patterns try to use lazy quantifier instead of greedy ones (`.-`
 ---   instead of `.*` or `.+`). That is because the underlying algorithm of
