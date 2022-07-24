@@ -222,7 +222,7 @@ T['run()']['handles `parametrize`'] = function()
 
   local short_res = vim.tbl_map(function(c)
     local desc = vim.list_slice(c.desc, 2)
-    return { args = c.args, desc = desc, passed_args = c.exec.fails[1]:match('Passed arguments: (.*)$') }
+    return { args = c.args, desc = desc, passed_args = c.exec.fails[1]:match('Passed arguments: (.-)\n  Traceback.*$') }
   end, res)
 
   eq(short_res[1], { args = { 'a' }, desc = { 'parametrize', 'first level' }, passed_args = '"a"' })
@@ -265,16 +265,13 @@ end
 
 T['run()']['handles `hooks`'] = function()
   local res = testrun_ref_file('testref_run-hooks.lua')
-  local order_cases = vim.tbl_map(
-    function(c)
-      return {
-        desc = vim.list_slice(c.desc, 2),
-        fails = c.exec.fails,
-        n_hooks = { pre = #c.hooks.pre, post = #c.hooks.post },
-      }
-    end,
-    filter_by_desc(res, 2, 'order')
-  )
+  local order_cases = vim.tbl_map(function(c)
+    return {
+      desc = vim.list_slice(c.desc, 2),
+      fails = vim.tbl_map(function(x) return x:gsub('\n  Traceback.*$', '') end, c.exec.fails),
+      n_hooks = { pre = #c.hooks.pre, post = #c.hooks.post },
+    }
+  end, filter_by_desc(res, 2, 'order'))
 
   eq(order_cases[1], {
     desc = { 'order', 'first level' },
@@ -299,7 +296,22 @@ T['run()']['handles same function in `*_once` hooks'] = function()
 
   -- The fact that it was called 4 times indicates that using same function in
   -- `*_once` hooks leads to its correct multiple execution
-  eq(case.exec.fails, { 'Same function', 'Same function', 'Same hook test', 'Same function', 'Same function' })
+  local fails = vim.tbl_map(function(x) return x:gsub('\n  Traceback.*$', '') end, case.exec.fails)
+  eq(fails, { 'Same function', 'Same function', 'Same hook test', 'Same function', 'Same function' })
+end
+
+T['run()']['appends traceback to fails'] = function()
+  local res = testrun_ref_file('testref_general.lua')
+  local ref_path = get_ref_path('testref_general.lua')
+  local n = 0
+  for _, case in ipairs(res) do
+    if #case.exec.fails > 0 then
+      expect.match(case.exec.fails[1], 'Traceback:%s+' .. vim.pesc(ref_path))
+      n = n + 1
+    end
+  end
+
+  if n == 0 then error('No actual fails was tested', 0) end
 end
 
 T['run_file()'] = new_set()
@@ -579,7 +591,7 @@ T['expect']['equality()/no_equality()']['work when equal'] = function()
 
   local validate = function(x, y)
     expect.no_error(MiniTest.expect.equality, x, y)
-    expect.error(MiniTest.expect.no_equality, '%*no%* equality.*Object:.*Traceback:', x, y)
+    expect.error(MiniTest.expect.no_equality, '%*no%* equality.*Object:', x, y)
   end
 
   validate(1, 1)
@@ -597,7 +609,7 @@ end
 T['expect']['equality()/no_equality()']['work when not equal'] = function()
   local f = function() end
   local validate = function(x, y)
-    expect.error(MiniTest.expect.equality, 'equality.*Left:.*Right:.*Traceback:', x, y)
+    expect.error(MiniTest.expect.equality, 'equality.*Left:.*Right:', x, y)
     expect.no_error(MiniTest.expect.no_equality, x, y)
   end
 
@@ -625,16 +637,13 @@ T['expect']['error()'] = new_set()
 T['expect']['error()']['works'] = function()
   expect.error(function()
     MiniTest.expect.error(function() end)
-  end, 'error%..*Observed no error.*Traceback:')
+  end, 'error%..*Observed no error')
 
   expect.error(function()
     MiniTest.expect.error(function() end, 'aa')
-  end, 'error matching pattern "aa"%..*Observed no error.*Traceback:')
+  end, 'error matching pattern "aa"%..*Observed no error')
 
-  expect.error(
-    function() MiniTest.expect.error(error, 'bb') end,
-    'error matching pattern "bb"%..*Observed error:.*Traceback:'
-  )
+  expect.error(function() MiniTest.expect.error(error, 'bb') end, 'error matching pattern "bb"%..*Observed error:')
 end
 
 T['expect']['error()']['respects `pattern` argument'] = function()
@@ -660,7 +669,7 @@ T['expect']['error()']['returns `true` on success'] = function() eq(MiniTest.exp
 T['expect']['no_error()'] = new_set()
 
 T['expect']['no_error()']['works'] = function()
-  expect.error(function() MiniTest.expect.no_error(error) end, '%*no%* error%..*Observed error:.*Traceback:')
+  expect.error(function() MiniTest.expect.no_error(error) end, '%*no%* error%..*Observed error:')
 
   expect.no_error(function()
     MiniTest.expect.no_error(function() end)
@@ -695,7 +704,7 @@ T['expect']['reference_screenshot()']['works'] = function()
   set_lines({ 'bbb' })
   expect.error(
     function() MiniTest.expect.reference_screenshot(child.get_screenshot(), path) end,
-    'screenshot equality to reference at ' .. vim.pesc(vim.inspect(path)) .. '.*Reference:.*Observed:.*Traceback:'
+    'screenshot equality to reference at ' .. vim.pesc(vim.inspect(path)) .. '.*Reference:.*Observed:'
   )
 
   -- Should pass if supplied `nil` (like in case of no reasonable screenshot)
@@ -862,7 +871,7 @@ T['new_expectation()']['works'] = function()
     function(x) return 'Object: ' .. vim.inspect(x) end
   )
 
-  expect.error(expect_truthy, 'truthy%..*Object:.*Traceback:', false)
+  expect.error(expect_truthy, 'truthy%..*Object:', false)
   expect.no_error(expect_truthy, 1)
 end
 
@@ -873,7 +882,7 @@ T['new_expectation()']['allows string or function arguments'] = function()
     'Not truthy'
   )
 
-  expect.error(expect_truthy, 'func_truthy%..*Not truthy.*Traceback:', false)
+  expect.error(expect_truthy, 'func_truthy%..*Not truthy', false)
   expect.no_error(expect_truthy, 1)
 end
 
@@ -1287,7 +1296,7 @@ T['gen_reporter']['buffer'] = new_set({
   hooks = {
     pre_case = function()
       child.cmd('set termguicolors')
-      child.set_size(50, 120)
+      child.set_size(60, 120)
     end,
   },
   parametrize = {
@@ -1314,7 +1323,7 @@ T['gen_reporter']['stdout'] = new_set({
   hooks = {
     pre_case = function()
       child.cmd('set termguicolors')
-      child.set_size(25, 120)
+      child.set_size(35, 120)
       child.o.laststatus = 0
     end,
   },

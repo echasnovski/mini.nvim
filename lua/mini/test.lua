@@ -1050,7 +1050,7 @@ MiniTest.new_child_neovim = function()
     if not child.is_blocked() then return end
 
     local msg = string.format('Can not use `child.%s` because child process is blocked.', method)
-    H.error_with_traceback(msg)
+    H.error_with_emphasis(msg)
   end
 
   -- Start fully functional Neovim instance (not '--embed' or '--headless',
@@ -1683,7 +1683,10 @@ H.make_step_scheduler = function(case, case_num, opts)
       return
     end
 
-    table.insert(case.exec.fails, tostring(e))
+    -- Append traceback to error message and indent lines for pretty print
+    local error_lines = { tostring(e), 'Traceback:', unpack(H.traceback()) }
+    local error_msg = table.concat(error_lines, '\n'):gsub('\n', '\n  ')
+    table.insert(case.exec.fails, error_msg)
 
     if opts.stop_on_error then
       MiniTest.stop()
@@ -2087,19 +2090,12 @@ end
 -- Expectation utilities ------------------------------------------------------
 H.error_expect = function(subject, ...)
   local msg = string.format('Failed expectation for %s.', subject)
-  H.error_with_traceback(msg, ...)
+  H.error_with_emphasis(msg, ...)
 end
 
-H.error_with_traceback = function(msg, ...)
-  local lines = { '\n' .. H.add_style(msg, 'emphasis'), ... }
-
-  -- Add traceback
-  table.insert(lines, 'Traceback:')
-  vim.list_extend(lines, H.traceback())
-
-  -- Indent lines
-  local error_msg = table.concat(lines, '\n'):gsub('\n', '\n  ')
-  error(error_msg, 0)
+H.error_with_emphasis = function(msg, ...)
+  local lines = { '', H.add_style(msg, 'emphasis'), ... }
+  error(table.concat(lines, '\n'), 0)
 end
 
 H.traceback = function()
