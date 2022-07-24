@@ -8,7 +8,7 @@
 
 Collection of minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md).
+If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or simply star this project on Github.
 
 ## Table of contents
 
@@ -870,10 +870,11 @@ Plugins with similar functionality:
 
 ## Planned modules
 
-This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow):
+This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in no particular order:
 
-- 'mini.align' - fast text alignment. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
-- 'mini.terminal' (or 'mini.repl') - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
-- 'mini.exchange' (or 'mini.swap') - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
-- 'mini.arguments' - work with listed arguments. Something like [FooSoft/vim-argwrap](https://github.com/FooSoft/vim-argwrap) and [AndrewRadev/sideways.vim](https://github.com/AndrewRadev/sideways.vim).
-- 'mini.tree' - file tree explorer. Truncated version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
+- 'mini.align' - align text with respect to some separators. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
+- 'mini.clue' - show as you type floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
+- 'mini.filetree' - file tree explorer. Truncated version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
+- 'mini.root' - automatically change current working directory. Something like [airblade/vim-rooter](https://github.com/airblade/vim-rooter).
+- 'mini.swap' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
+- 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
