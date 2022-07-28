@@ -1,5 +1,9 @@
 This document contains demonstration of each module functionality.
 
+### mini.ai
+
+https://user-images.githubusercontent.com/24854248/181293719-84f43a30-9746-4d1b-a32e-c96fe8cc20eb.mp4
+
 ### mini.base16
 
 <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_dark.png" width="400em"/> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_light.png" width="400em"/>

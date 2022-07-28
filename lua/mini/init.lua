@@ -66,6 +66,14 @@
 ---
 --- # List of modules~
 ---
+--- - |MiniAi| - Extend and create `a`/`i` textobjects (like in `di(` or
+---   `va"`). It enhances some builtin |text-objects| (like |a(|, |a)|, |a'|,
+---   and more), creates new ones (like `a*`, `a<Space>`, `af`, `a?`, and
+---   more), and allows user to create their own. Supports dot-repeat,
+---   `v:count`, different search methods, consecutive application, and
+---   customization via Lua patterns or functions. Has builtins for brackets,
+---   quotes, function call, argument, tag, user prompt, and any
+---   punctuation/digit/whitespace character.
 --- - |MiniBase16| - fast implementation of base16 theme for manually supplied
 ---   palette. Has unique palette generator which needs only background and
 ---   foreground colors.

@@ -6,7 +6,7 @@
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
 <!-- badges: end -->
 
-Collection of minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
+Collection of 20+ minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
 
 If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or simply star this project on Github.
 
@@ -16,6 +16,7 @@ If you want to help this project grow but don't know where to start, check out [
 - [General principles](#general-principles)
 - [Plugin colorscheme](#plugin-colorscheme)
 - [Modules](#modules)
+    - [mini.ai](#miniai)
     - [mini.base16](#minibase16)
     - [mini.bufremove](#minibufremove)
     - [mini.comment](#minicomment)
@@ -100,6 +101,49 @@ Activate it as a regular `colorscheme`.
 All examples use this colorscheme.
 
 ## Modules
+
+### mini.ai
+
+Extend and create `a`/`i` textobjects (like in `di(` or `va"`). It enhances some builtin textobjects (like `a(`, `a)`, `a'`, and more), creates new ones (like `a*`, `a<Space>`, `af`, `a?`, and more), and allows user to create their own. Supports dot-repeat, `v:count`, different search methods, consecutive application, and customization via Lua patterns or functions. Has builtins for brackets, quotes, function call, argument, tag, user prompt, and any punctuation/digit/whitespace character.
+
+[**DEMO of 'mini.ai'**](DEMO.md#miniai)
+
+Default `config`:
+
+```lua
+{
+  -- Table with textobject id as fields, textobject specification as values.
+  -- Also use this to disable builtin textobjects. See |MiniAi.config|.
+  custom_textobjects = nil,
+
+  -- Module mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    -- Main textobject prefixes
+    around = 'a',
+    inside = 'i',
+
+    -- Move cursor to certain edge of `a` textobject
+    goto_left = 'g[',
+    goto_right = 'g]',
+  },
+
+  -- Number of lines within which textobject is searched
+  n_lines = 50,
+
+  -- How to search for object (first inside current line, then inside
+  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
+  -- 'cover_or_nearest'.
+  search_method = 'cover_or_next',
+}
+```
+
+For more information, read 'mini.ai' section of [help file](doc/mini.txt).
+
+Plugins with similar functionality:
+
+- [wellle/targets.vim](https://github.com/wellle/targets.vim)
+- [nvim-treesitter/nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)
+- [kana/vim-textobj-user](https://github.com/kana/vim-textobj-user)
 
 ### mini.base16
 
