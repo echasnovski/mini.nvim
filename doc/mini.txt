@@ -289,10 +289,6 @@ What it doesn't (and probably won't) do:
 - Have special operators to specially handle whitespace (like `I` and `A`
   in 'targets.vim'). Whitespace handling is assumed to be done inside
   textobject specification (like `i(` and `i)` handle whitespace differently).
-- Have "last" and "next" textobject modifiers (like `il` and `in` in
-  'targets.vim'). Either set and use appropriate `config.search_method` or
-  move to the next place and then use textobject. For a quicker movements,
-  see |mini.jump| and |mini.jump2d|.
 
 # Setup~
 
@@ -320,9 +316,6 @@ as `MiniAi.config`. See |mini.nvim-buffer-local-config| for more details.
       'mini.ai' relies on handful of 'config.search_method'.
     - Implements `A`, `I` operators. 'mini.ai' does not by design: it is
       assumed to be a property of textobject, not operator.
-    - Implements `il`, `al`, `in`, `an` operators. 'mini.ai' does not by
-      design: search method is controlled via `config.search_method` and
-      |v:count| is supported for `a` and `i` textobjects.
     - Doesn't implement "function call" and "user prompt" textobjects.
       'mini.ai' does (with `f` and `?` identifiers).
     - Has limited support for "argument" textobject. Although it works in
@@ -618,7 +611,13 @@ Default values:
       around = 'a',
       inside = 'i',
 
-      -- Move cursor to certain edge of `a` textobject
+      -- Next/last textobjects
+      around_next = 'an',
+      inside_next = 'in',
+      around_last = 'al',
+      inside_last = 'il',
+
+      -- Move cursor to corresponding edge of `a` textobject
       goto_left = 'g[',
       goto_right = 'g]',
     },
@@ -710,6 +709,11 @@ Here is an example of what `a)` textobject is based on a value of
 - `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
 - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 
+## Mappings~
+
+Mappings `around_next`/`inside_next` and `around_last`/`inside_last` are
+essentially `around`/`inside` but using search method `'next'` and `'prev'`.
+
 ------------------------------------------------------------------------------
                                                       *MiniAi.find_textobject()*
                `MiniAi.find_textobject`({ai_type}, {id}, {opts})
@@ -766,7 +770,7 @@ Parameters~
 
 ------------------------------------------------------------------------------
                                                       *MiniAi.expr_textobject()*
-                  `MiniAi.expr_textobject`({mode}, {ai_type})
+              `MiniAi.expr_textobject`({mode}, {ai_type}, {opts})
 Make expression to visually select textobject
 
 Designed to be used inside expression mapping. No need to use directly.
@@ -777,6 +781,7 @@ Default `n_times` option is taken from |v:count1|.
 Parameters~
 {mode} `(string)` One of 'x' (Visual) or 'o' (Operator-pending).
 {ai_type} `(string)` One of `'a'` or `'i'`.
+{opts} `(table|nil)` Same as in |MiniAi.select_textobject()|.
 
 ------------------------------------------------------------------------------
                                                           *MiniAi.expr_motion()*

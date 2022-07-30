@@ -115,9 +115,11 @@ T['setup()']['properly handles `config.mappings`'] = function()
 
   unload_module()
   child.api.nvim_del_keymap('x', 'a')
+  child.api.nvim_del_keymap('x', 'an')
+  child.api.nvim_del_keymap('x', 'al')
 
   -- Supplying empty string should mean "don't create keymap"
-  load_module({ mappings = { around = '' } })
+  load_module({ mappings = { around = '', around_next = '', around_last = '' } })
   eq(has_map('a'), false)
 end
 
@@ -1105,11 +1107,13 @@ T['Textobject']['works multibyte characters'] = function()
 end
 
 T['Textobject']['respects `v:count`'] = function()
+  avoid_hit_enter_prompt()
+
   validate_tobj1d('(aa)bb(cc)dd(ee)', 0, '2a)', { 7, 10 })
   validate_tobj1d('(aa)bb(cc)dd(ee)', 0, '3a)', { 13, 16 })
 
-  -- Don't anything if not big enough
-  validate_tobj1d('(aa)bb(cc)dd(ee)', 0, '3a)', { 13, 16 })
+  -- Don't do anything if not enough is present
+  validate_no_tobj1d('(aa)bb(cc)dd(ee)', 0, '4a)')
 end
 
 T['Textobject']['works with empty output region'] = function()
@@ -1146,12 +1150,11 @@ T['Textobject']['prompts helper message after one idle second'] = new_set({ para
     set_lines({ 'aaa' })
     set_cursor(1, 1)
 
-    -- The `a` mapping is applied only after `timeoutlen` milliseconds, because
-    -- there is mapping `a%` by default.
+    -- Both mappings are applied only after `timeoutlen` milliseconds, because
+    -- there are `an`/`in`/`al`/`il` mappings.
     -- Wait 1000 seconds after that.
     child.o.timeoutlen = 50
-    local total_wait_time = 1000
-    if key == 'a' then total_wait_time = 1000 + child.o.timeoutlen end
+    local total_wait_time = 1000 + child.o.timeoutlen
 
     type_keys('v', key)
     sleep(total_wait_time - 10)
@@ -1198,6 +1201,109 @@ T['Textobject']['respects `vim.{g,b}.miniai_disable`'] = new_set({
     validate_edit1d('*bb*', 1, '*bb*', 1, 'ci*')
   end,
 })
+
+T['Textobject next/last'] = new_set()
+
+T['Textobject next/last']['works in Visual mode'] = function()
+  local lines, cursor
+
+  -- Next
+  lines, cursor = { '(aa)(bb', 'cccc', 'dd)(ee)' }, { 1, 1 }
+  validate_tobj(lines, cursor, 'an)', { { 1, 5 }, { 3, 3 } }, 'v')
+  validate_tobj(lines, cursor, 'in)', { { 1, 6 }, { 3, 2 } }, 'v')
+  validate_tobj(lines, cursor, 'an)', { 1, 3 }, 'V')
+  validate_tobj(lines, cursor, 'in)', { 1, 3 }, 'V')
+  validate_tobj(lines, cursor, 'an)', { { 1, 5 }, { 3, 3 } }, '<C-v>')
+  validate_tobj(lines, cursor, 'in)', { { 1, 6 }, { 3, 2 } }, '<C-v>')
+
+  -- Last
+  lines, cursor = { '(aa)(bb', 'cccc', 'dd)(ee)' }, { 3, 5 }
+  validate_tobj(lines, cursor, 'al)', { { 1, 5 }, { 3, 3 } }, 'v')
+  validate_tobj(lines, cursor, 'il)', { { 1, 6 }, { 3, 2 } }, 'v')
+  validate_tobj(lines, cursor, 'al)', { 1, 3 }, 'V')
+  validate_tobj(lines, cursor, 'il)', { 1, 3 }, 'V')
+  validate_tobj(lines, cursor, 'al)', { { 1, 5 }, { 3, 3 } }, '<C-v>')
+  validate_tobj(lines, cursor, 'il)', { { 1, 6 }, { 3, 2 } }, '<C-v>')
+end
+
+T['Textobject next/last']['works in Operator-pending mode'] = function()
+  local lines, cursor
+
+  -- Next
+  lines, cursor = { '(aa)(bb', 'ccccc', 'dddd)ee' }, { 1, 0 }
+  validate_edit(lines, cursor, { '(aa)ee' }, { 1, 4 }, 'dan)')
+  validate_edit(lines, cursor, { '(aa)ee' }, { 1, 4 }, 'dvan)')
+  validate_edit(lines, cursor, { '' }, { 1, 0 }, 'dVan)')
+  validate_edit(lines, cursor, { '(aa)bb', 'cccc', 'ddddee' }, { 1, 4 }, 'd<C-v>an)')
+
+  -- Last
+  lines, cursor = { 'aa(bbbb', 'ccccc', 'dd)(ee)' }, { 3, 5 }
+  validate_edit(lines, cursor, { 'aa(ee)' }, { 1, 2 }, 'dal)')
+  validate_edit(lines, cursor, { 'aa(ee)' }, { 1, 2 }, 'dval)')
+  validate_edit(lines, cursor, { '' }, { 1, 0 }, 'dVal)')
+  validate_edit(lines, cursor, { 'aabbbb', 'cccc', 'dd(ee)' }, { 1, 2 }, 'd<C-v>al)')
+end
+
+T['Textobject next/last']['works with different mappings'] = function()
+  reload_module({ mappings = { around_next = 'An', around_last = 'Al', inside_next = 'In', inside_last = 'Il' } })
+
+  validate_tobj1d('(aa)(bb)', 1, 'An)', { 5, 8 })
+  validate_tobj1d('(aa)(bb)', 1, 'In)', { 6, 7 })
+  validate_tobj1d('(aa)(bb)', 5, 'Al)', { 1, 4 })
+  validate_tobj1d('(aa)(bb)', 5, 'Il)', { 2, 3 })
+end
+
+T['Textobject next/last']['allows dot-repeat'] = function()
+  -- Next
+  set_lines({ '(aa)(bb)', '(cc)(dd)' })
+  set_cursor(1, 1)
+
+  type_keys('dan)')
+  eq(get_lines(), { '(aa)', '(cc)(dd)' })
+  eq(get_cursor(), { 1, 3 })
+
+  type_keys('.')
+  eq(get_lines(), { '(aa)', '(dd)' })
+  eq(get_cursor(), { 2, 0 })
+
+  -- Allows not immediate dot-repeat
+  type_keys('k', '.')
+  eq(get_lines(), { '(aa)', '' })
+  eq(get_cursor(), { 2, 0 })
+
+  -- Last
+  set_lines({ '(aa)(bb)', '(cc)(dd)' })
+  set_cursor(2, 6)
+
+  type_keys('dal)')
+  eq(get_lines(), { '(aa)(bb)', '(dd)' })
+  eq(get_cursor(), { 2, 0 })
+
+  type_keys('.')
+  eq(get_lines(), { '(aa)', '(dd)' })
+  eq(get_cursor(), { 1, 3 })
+
+  -- Allows not immediate dot-repeat
+  type_keys('j', '.')
+  eq(get_lines(), { '', '(dd)' })
+  eq(get_cursor(), { 1, 0 })
+end
+
+T['Textobject next/last']['respects `v:count`'] = function()
+  avoid_hit_enter_prompt()
+
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '2an)', { 9, 12 })
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '2in)', { 10, 11 })
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '3an)', { 13, 16 })
+
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 14, '2al)', { 5, 8 })
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 14, '2il)', { 6, 7 })
+  validate_tobj1d('(aa)(bb)(cc)(dd)', 14, '3al)', { 1, 4 })
+
+  -- Don't do anything if not enough is present
+  validate_no_tobj1d('(aa)(bb)(cc)(dd)', 1, '4an)')
+  validate_no_tobj1d('(aa)(bb)(cc)(dd)', 14, '4al)')
+end
 
 local validate_motion = function(lines, cursor, keys, expected)
   set_lines(lines)
@@ -2392,11 +2498,11 @@ T['Custom textobject']['documented examples']['camel case word'] = function()
 end
 
 T['Custom textobject']['documented examples']['number'] = function()
-  set_custom_tobj({ n = { '%f[%d]%d+' } })
+  set_custom_tobj({ N = { '%f[%d]%d+' } })
 
-  validate_tobj1d(' 1 10_11', 0, 'an', { 2, 2 })
-  validate_tobj1d(' 1 10_11', 0, '2an', { 4, 5 })
-  validate_tobj1d(' 1 10_11', 0, '3an', { 7, 8 })
+  validate_tobj1d(' 1 10_11', 0, 'aN', { 2, 2 })
+  validate_tobj1d(' 1 10_11', 0, '2aN', { 4, 5 })
+  validate_tobj1d(' 1 10_11', 0, '3aN', { 7, 8 })
 end
 
 T['Custom textobject']['documented examples']['date'] = function()

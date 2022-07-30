@@ -46,10 +46,6 @@
 --- - Have special operators to specially handle whitespace (like `I` and `A`
 ---   in 'targets.vim'). Whitespace handling is assumed to be done inside
 ---   textobject specification (like `i(` and `i)` handle whitespace differently).
---- - Have "last" and "next" textobject modifiers (like `il` and `in` in
----   'targets.vim'). Either set and use appropriate `config.search_method` or
----   move to the next place and then use textobject. For a quicker movements,
----   see |mini.jump| and |mini.jump2d|.
 ---
 --- # Setup~
 ---
@@ -77,9 +73,6 @@
 ---       'mini.ai' relies on handful of 'config.search_method'.
 ---     - Implements `A`, `I` operators. 'mini.ai' does not by design: it is
 ---       assumed to be a property of textobject, not operator.
----     - Implements `il`, `al`, `in`, `an` operators. 'mini.ai' does not by
----       design: search method is controlled via `config.search_method` and
----       |v:count| is supported for `a` and `i` textobjects.
 ---     - Doesn't implement "function call" and "user prompt" textobjects.
 ---       'mini.ai' does (with `f` and `?` identifiers).
 ---     - Has limited support for "argument" textobject. Although it works in
@@ -446,6 +439,11 @@ end
 --- - `'next'`: `(a) bbb (c)` -> `(c)`. Same outcome for `(bbb)`.
 --- - `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
 --- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
+---
+--- ## Mappings~
+---
+--- Mappings `around_next`/`inside_next` and `around_last`/`inside_last` are
+--- essentially `around`/`inside` but using search method `'next'` and `'prev'`.
 MiniAi.config = {
   -- Table with textobject id as fields, textobject specification as values.
   -- Also use this to disable builtin textobjects. See |MiniAi.config|.
@@ -457,7 +455,13 @@ MiniAi.config = {
     around = 'a',
     inside = 'i',
 
-    -- Move cursor to certain edge of `a` textobject
+    -- Next/last textobjects
+    around_next = 'an',
+    inside_next = 'in',
+    around_last = 'al',
+    inside_last = 'il',
+
+    -- Move cursor to corresponding edge of `a` textobject
     goto_left = 'g[',
     goto_right = 'g]',
   },
@@ -644,19 +648,21 @@ end
 ---
 ---@param mode string One of 'x' (Visual) or 'o' (Operator-pending).
 ---@param ai_type string One of `'a'` or `'i'`.
-MiniAi.expr_textobject = function(mode, ai_type)
+---@param opts table|nil Same as in |MiniAi.select_textobject()|.
+MiniAi.expr_textobject = function(mode, ai_type, opts)
   local tobj_id = H.user_textobject_id(ai_type)
 
   if tobj_id == nil then return '' end
 
   -- Possibly fall back to builtin `a`/`i` textobjects
   if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then return ai_type .. tobj_id end
+  opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
 
   -- Clear cache
   H.cache = {}
 
   -- Construct call options based on mode
-  local reference_region_field, operator_pending, vis_mode = 'nil', 'nil', 'nil'
+  local reference_region_field, operator_pending_field, vis_mode_field = 'nil', 'nil', 'nil'
 
   if mode == 'x' then
     -- Use Visual selection as reference region for Visual mode mappings
@@ -665,23 +671,24 @@ MiniAi.expr_textobject = function(mode, ai_type)
 
   if mode == 'o' then
     -- Supply `operator_pending` flag in Operator-pending mode
-    operator_pending = 'true'
+    operator_pending_field = 'true'
 
     -- Take into account forced Operator-pending modes ('nov', 'noV', 'no<C-V>')
-    vis_mode = vim.fn.mode(1):gsub('^no', '')
-    vis_mode = vim.inspect(vis_mode == '' and 'v' or vis_mode)
+    vis_mode_field = vim.fn.mode(1):gsub('^no', '')
+    vis_mode_field = vim.inspect(vis_mode_field == '' and 'v' or vis_mode_field)
   end
 
   -- Make expression
   local res = '<Cmd>lua MiniAi.select_textobject('
     .. string.format(
-      [['%s', '%s', { n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s }]],
+      [['%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s }]],
       ai_type,
       vim.fn.escape(tobj_id, "'"),
+      opts.search_method,
       vim.v.count1,
       reference_region_field,
-      operator_pending,
-      vis_mode
+      operator_pending_field,
+      vis_mode_field
     )
     .. ')<CR>'
 
@@ -828,6 +835,15 @@ H.apply_config = function(config)
   H.map('x', maps.inside, [[v:lua.MiniAi.expr_textobject('x', 'i')]], { expr = true, desc = 'Inside textobject' })
   H.map('o', maps.around, [[v:lua.MiniAi.expr_textobject('o', 'a')]], { expr = true, desc = 'Around textobject' })
   H.map('o', maps.inside, [[v:lua.MiniAi.expr_textobject('o', 'i')]], { expr = true, desc = 'Inside textobject' })
+
+  H.map('x', maps.around_next, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'next'})]], { expr = true, desc = 'Around next textobject' })
+  H.map('x', maps.around_last, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'prev'})]], { expr = true, desc = 'Around last textobject' })
+  H.map('x', maps.inside_next, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'next'})]], { expr = true, desc = 'Inside next textobject' })
+  H.map('x', maps.inside_last, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'prev'})]], { expr = true, desc = 'Inside last textobject' })
+  H.map('o', maps.around_next, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'next'})]], { expr = true, desc = 'Around next textobject' })
+  H.map('o', maps.around_last, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'prev'})]], { expr = true, desc = 'Around last textobject' })
+  H.map('o', maps.inside_next, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'next'})]], { expr = true, desc = 'Inside next textobject' })
+  H.map('o', maps.inside_last, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'prev'})]], { expr = true, desc = 'Inside last textobject' })
 end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
