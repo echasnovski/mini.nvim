@@ -166,6 +166,7 @@ end
 ---     },
 ---     mappings = {
 ---       add = 'ys',
+---       visual_add = 'S',
 ---       delete = 'ds',
 ---       find = '',
 ---       find_left = '',
@@ -175,9 +176,6 @@ end
 ---     },
 ---     search_method = 'cover_or_next',
 ---   })
----
----   -- Remap adding surrounding to Visual mode selection
----   vim.api.nvim_set_keymap('x', 'S', [[:<C-u>lua MiniSurround.add('visual')<CR>]], { noremap = true })
 ---
 ---   -- Make special mapping for "add surrounding for line"
 ---   vim.api.nvim_set_keymap('n', 'yss', 'ys_', { noremap = false })
@@ -610,6 +608,7 @@ H.setup_config = function(config)
 
   vim.validate({
     ['mappings.add'] = { config.mappings.add, 'string' },
+    ['mappings.visual_add'] = { config.mappings.add, 'string', true },
     ['mappings.delete'] = { config.mappings.delete, 'string' },
     ['mappings.find'] = { config.mappings.find, 'string' },
     ['mappings.find_left'] = { config.mappings.find_left, 'string' },
@@ -629,7 +628,7 @@ H.apply_config = function(config)
   -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
   -- It is used to enable dot-repeatability.
   H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true, desc = 'Add surrounding' })
-  H.map('x', config.mappings.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
+  H.map('x', config.mappings.visual_add or config.mappings.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
   H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true, desc = 'Delete surrounding' })
   H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true, desc = 'Replace surrounding' })
   H.map('n', config.mappings.find, [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], { expr = true, desc = 'Find right surrounding' })
