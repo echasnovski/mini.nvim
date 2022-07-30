@@ -122,7 +122,13 @@ Default `config`:
     around = 'a',
     inside = 'i',
 
-    -- Move cursor to certain edge of `a` textobject
+    -- Next/last variants
+    around_next = 'an',
+    inside_next = 'in',
+    around_last = 'al',
+    inside_last = 'il',
+
+    -- Move cursor to corresponding edge of `a` textobject
     goto_left = 'g[',
     goto_right = 'g]',
   },
@@ -132,7 +138,7 @@ Default `config`:
 
   -- How to search for object (first inside current line, then inside
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest'.
+  -- 'cover_or_nearest', 'next', 'previous', 'nearest'.
   search_method = 'cover_or_next',
 }
 ```
@@ -914,11 +920,13 @@ Plugins with similar functionality:
 
 ## Planned modules
 
-This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in no particular order:
+This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
 - 'mini.align' - align text with respect to some separators. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
-- 'mini.clue' - show as you type floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
-- 'mini.filetree' - file tree explorer. Truncated version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
+- 'mini.basics' - configurable collection of options and mappings sets intended mostly for quick "up and running" Neovim config. Something like a combination of [tpope/vim-sensible](https://github.com/tpope/vim-sensible) and [tpope/vim-unimpaired](https://github.com/tpope/vim-unimpaired).
+- 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
+- 'mini.filetree' - file tree viewer. Simplified version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
 - 'mini.root' - automatically change current working directory. Something like [airblade/vim-rooter](https://github.com/airblade/vim-rooter).
+- 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
 - 'mini.swap' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
 - 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).

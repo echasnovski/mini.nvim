@@ -2,7 +2,7 @@ This document contains demonstration of each module functionality.
 
 ### mini.ai
 
-https://user-images.githubusercontent.com/24854248/181293719-84f43a30-9746-4d1b-a32e-c96fe8cc20eb.mp4
+https://user-images.githubusercontent.com/24854248/181909691-b6f6b677-c37f-468f-85db-8eb8b1e1314e.mp4
 
 ### mini.base16
 
