@@ -547,6 +547,54 @@ T['expr_motion()']['is present'] = function() eq(child.lua_get('type(MiniAi.expr
 
 T['Search method'] = new_set()
 
+T['Search method']['works with "cover"'] = function()
+  local validate = function(lines, cursor, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'cover' } }, expected)
+  end
+
+  local validate1d = function(line, column, expected)
+    validate_find1d(line, column, { 'a', ')', { search_method = 'cover' } }, expected)
+  end
+
+  -- Works (on same line and on multiple lines)
+  validate1d('aa (bb) cc', 4, { 4, 7 })
+  validate1d('aa (bb) cc', 0, nil)
+  validate1d('aa (bb) cc', 9, nil)
+  validate({ '(', 'a', ')' }, { 2, 0 }, { { 1, 1 }, { 3, 1 } })
+
+  -- Works when cursor is on edge
+  validate1d('aa(bb)', 2, { 3, 6 })
+  validate1d('aa(bb)', 5, { 3, 6 })
+
+  -- Should prefer smallest covering
+  validate1d('((a))', 2, { 2, 4 })
+
+  -- Should ignore any non-covering textobject on current line
+  validate({ '(', '(aa) bb (cc)', ')' }, { 2, 5 }, { { 1, 1 }, { 3, 1 } })
+
+  -- Works with `n_times`
+  local validate_n_times = function(lines, cursor, n_times, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'cover', n_times = n_times } }, expected)
+  end
+
+  local lines, cursor = { '(', '(aa (bb) (cc))', ')' }, { 2, 5 }
+  validate_n_times(lines, cursor, 1, { { 2, 5 }, { 2, 8 } })
+  validate_n_times(lines, cursor, 2, { { 2, 1 }, { 2, 14 } })
+  validate_n_times(lines, cursor, 3, { { 1, 1 }, { 3, 1 } })
+end
+
+T['Search method']['works with "cover" in Operator-pending mode'] = function()
+  child.lua([[MiniAi.config.search_method = 'cover']])
+
+  for i = 3, 6 do
+    validate_edit1d('(aa(bb))', i, '(aa)', 3, 'ca)')
+    validate_edit1d('(aa(bb))', i, '(aa)', 3, 'da)')
+
+    validate_edit1d('(aa(bb))', i, '(aa())', 4, 'ci)')
+    validate_edit1d('(aa(bb))', i, '(aa())', 4, 'di)')
+  end
+end
+
 T['Search method']['works with "cover_or_next"'] = function()
   local validate = function(lines, cursor, expected)
     validate_find(lines, cursor, { 'a', ')', { search_method = 'cover_or_next' } }, expected)
@@ -605,54 +653,6 @@ T['Search method']['works with "cover_or_next" in Operator-pending mode'] = func
   end
 end
 
-T['Search method']['works with "cover"'] = function()
-  local validate = function(lines, cursor, expected)
-    validate_find(lines, cursor, { 'a', ')', { search_method = 'cover' } }, expected)
-  end
-
-  local validate1d = function(line, column, expected)
-    validate_find1d(line, column, { 'a', ')', { search_method = 'cover' } }, expected)
-  end
-
-  -- Works (on same line and on multiple lines)
-  validate1d('aa (bb) cc', 4, { 4, 7 })
-  validate1d('aa (bb) cc', 0, nil)
-  validate1d('aa (bb) cc', 9, nil)
-  validate({ '(', 'a', ')' }, { 2, 0 }, { { 1, 1 }, { 3, 1 } })
-
-  -- Works when cursor is on edge
-  validate1d('aa(bb)', 2, { 3, 6 })
-  validate1d('aa(bb)', 5, { 3, 6 })
-
-  -- Should prefer smallest covering
-  validate1d('((a))', 2, { 2, 4 })
-
-  -- Should ignore any non-covering textobject on current line
-  validate({ '(', '(aa) bb (cc)', ')' }, { 2, 5 }, { { 1, 1 }, { 3, 1 } })
-
-  -- Works with `n_times`
-  local validate_n_times = function(lines, cursor, n_times, expected)
-    validate_find(lines, cursor, { 'a', ')', { search_method = 'cover', n_times = n_times } }, expected)
-  end
-
-  local lines, cursor = { '(', '(aa (bb) (cc))', ')' }, { 2, 5 }
-  validate_n_times(lines, cursor, 1, { { 2, 5 }, { 2, 8 } })
-  validate_n_times(lines, cursor, 2, { { 2, 1 }, { 2, 14 } })
-  validate_n_times(lines, cursor, 3, { { 1, 1 }, { 3, 1 } })
-end
-
-T['Search method']['works with "cover" in Operator-pending mode'] = function()
-  child.lua([[MiniAi.config.search_method = 'cover']])
-
-  for i = 3, 6 do
-    validate_edit1d('(aa(bb))', i, '(aa)', 3, 'ca)')
-    validate_edit1d('(aa(bb))', i, '(aa)', 3, 'da)')
-
-    validate_edit1d('(aa(bb))', i, '(aa())', 4, 'ci)')
-    validate_edit1d('(aa(bb))', i, '(aa())', 4, 'di)')
-  end
-end
-
 T['Search method']['works with "cover_or_prev"'] = function()
   local validate = function(lines, cursor, expected)
     validate_find(lines, cursor, { 'a', ')', { search_method = 'cover_or_prev' } }, expected)
@@ -671,8 +671,8 @@ T['Search method']['works with "cover_or_prev"'] = function()
   validate1d('aa(bb)', 5, { 3, 6 })
 
   -- Should prefer covering textobject if both are on the same line
-  validate1d('(aa) (bb)', 2, { 1, 4 })
-  validate1d('(aa (bb))', 2, { 1, 9 })
+  validate1d('(aa) (bb)', 6, { 6, 9 })
+  validate1d('((aa) bb)', 6, { 1, 9 })
 
   -- Should prefer covering textobject if both are not on the same line
   validate({ '((aa)', 'bb)' }, { 2, 0 }, { { 1, 1 }, { 2, 3 } })
@@ -794,6 +794,208 @@ T['Search method']['works with "cover_or_nearest" in Operator-pending mode'] = f
 
     validate_edit1d('(aa)bbb(cc)', i, '(aa)bbb()', 8, 'ci)')
     validate_edit1d('(aa)bbb(cc)', i, '(aa)bbb()', 8, 'di)')
+  end
+end
+
+T['Search method']['works with "next"'] = function()
+  local validate = function(lines, cursor, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'next' } }, expected)
+  end
+
+  local validate1d = function(line, column, expected)
+    validate_find1d(line, column, { 'a', ')', { search_method = 'next' } }, expected)
+  end
+
+  -- Works (on same line and on multiple lines)
+  validate1d('aa (bb)', 0, { 4, 7 })
+  validate({ 'aa', '(bb)' }, { 1, 0 }, { { 2, 1 }, { 2, 4 } })
+
+  -- Works when cursor is on edge (should prefer next one)
+  validate1d('aa(bb)(cc)', 2, { 7, 10 })
+  validate1d('aa(bb)(cc)', 5, { 7, 10 })
+
+  -- Should NOT prefer covering textobject if both are on the same line
+  validate1d('(aa) (bb)', 2, { 6, 9 })
+  validate1d('(aa (bb))', 2, { 5, 8 })
+
+  -- Should NOT prefer covering textobject if both are not on the same line
+  validate({ '(aa', ') (bb)' }, { 1, 1 }, { { 2, 3 }, { 2, 6 } })
+
+  -- Should prefer next textobject if covering is not on same line
+  validate({ '(a (bb)', ')' }, { 1, 1 }, { { 1, 4 }, { 1, 7 } })
+
+  -- Should ignore presence of "previous" textobject (even on same line)
+  validate({ '(aa) bb (cc)' }, { 1, 5 }, { { 1, 9 }, { 1, 12 } })
+  validate({ '(aa) bb', '(cc)' }, { 1, 5 }, { { 2, 1 }, { 2, 4 } })
+  validate({ '(aa) (', '(bb) cc)' }, { 2, 5 }, nil)
+
+  -- Should choose closest textobject based on distance between left edges
+  validate1d('aa(bb(cc)dddddddddd)', 0, { 3, 20 })
+
+  -- Works with `n_times`
+  local validate_n_times = function(lines, cursor, n_times, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'next', n_times = n_times } }, expected)
+  end
+
+  local lines, cursor = { '(', 'aa (bb) (cc) )' }, { 2, 0 }
+  validate_n_times(lines, cursor, 1, { { 2, 4 }, { 2, 7 } })
+  validate_n_times(lines, cursor, 2, { { 2, 9 }, { 2, 12 } })
+  validate_n_times(lines, cursor, 3, nil)
+end
+
+T['Search method']['works with "next" in Operator-pending mode'] = function()
+  child.lua([[MiniAi.config.search_method = 'next']])
+
+  for i = 4, 8 do
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)', 9, 'ca)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)', 8, 'da)')
+
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)()', 10, 'ci)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)()', 10, 'di)')
+  end
+end
+
+T['Search method']['works with "prev"'] = function()
+  local validate = function(lines, cursor, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'prev' } }, expected)
+  end
+
+  local validate1d = function(line, column, expected)
+    validate_find1d(line, column, { 'a', ')', { search_method = 'prev' } }, expected)
+  end
+
+  -- Works (on same line and on multiple lines)
+  validate1d('(aa) bb', 5, { 1, 4 })
+  validate({ '(aa)', 'bb' }, { 2, 0 }, { { 1, 1 }, { 1, 4 } })
+
+  -- Works when cursor is on edge
+  validate1d('(aa)(bb)', 4, { 1, 4 })
+  validate1d('(aa)(bb)', 7, { 1, 4 })
+
+  -- Should NOT prefer covering textobject if both are on the same line
+  validate1d('(aa) (bb)', 6, { 1, 4 })
+  validate1d('((aa) bb)', 6, { 2, 5 })
+
+  -- Should NOT prefer covering textobject if both are not on the same line
+  validate({ '((aa)', 'bb)' }, { 2, 0 }, { { 1, 2 }, { 1, 5 } })
+
+  -- Should ignore presence of "next" textobject (even on same line)
+  validate({ '(aa) bb (cc)' }, { 1, 5 }, { { 1, 1 }, { 1, 4 } })
+  validate({ '(aa)', 'bb (cc)' }, { 2, 0 }, { { 1, 1 }, { 1, 4 } })
+  validate({ '(aa) (', 'bb (cc))' }, { 2, 0 }, { { 1, 1 }, { 1, 4 } })
+
+  -- Should choose closest textobject based on distance between right edges
+  validate1d('(aaaaaaaaaa(bb)cc)dd', 19, { 1, 18 })
+
+  -- Works with `n_times`
+  local validate_n_times = function(lines, cursor, n_times, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'prev', n_times = n_times } }, expected)
+  end
+
+  local lines, cursor = { '(', '(aa) (bb) cc )' }, { 2, 10 }
+  validate_n_times(lines, cursor, 1, { { 2, 6 }, { 2, 9 } })
+  validate_n_times(lines, cursor, 2, { { 2, 1 }, { 2, 4 } })
+  validate_n_times(lines, cursor, 3, nil)
+end
+
+T['Search method']['works with "prev" in Operator-pending mode'] = function()
+  child.lua([[MiniAi.config.search_method = 'prev']])
+
+  for i = 4, 8 do
+    validate_edit1d('(aa)(bbb)(cc)', i, '(bbb)(cc)', 0, 'ca)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(bbb)(cc)', 0, 'da)')
+
+    validate_edit1d('(aa)(bbb)(cc)', i, '()(bbb)(cc)', 1, 'ci)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '()(bbb)(cc)', 1, 'di)')
+  end
+end
+
+T['Search method']['works with "nearest"'] = function()
+  local validate = function(lines, cursor, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'nearest' } }, expected)
+  end
+
+  local validate1d = function(line, column, expected)
+    validate_find1d(line, column, { 'a', ')', { search_method = 'nearest' } }, expected)
+  end
+
+  -- Works (on same line and on multiple lines)
+  validate1d('(aa) bbb (cc)', 5, { 1, 4 })
+  validate1d('(aa) bbb (cc)', 6, { 1, 4 })
+  validate1d('(aa) bbb (cc)', 7, { 10, 13 })
+
+  validate({ '(aa)', 'bbb', '(cc)' }, { 2, 0 }, { { 1, 1 }, { 1, 4 } })
+  validate({ '(aa)', 'bbb', '(cc)' }, { 2, 1 }, { { 1, 1 }, { 1, 4 } })
+  validate({ '(aa)', 'bbb', '(cc)' }, { 2, 2 }, { { 3, 1 }, { 3, 4 } })
+
+  -- Works when cursor is on edge
+  validate1d('(aa)(bb)(cc)', 4, { 1, 4 })
+  validate1d('(aa)(bb)(cc)', 7, { 9, 12 })
+
+  -- Should NOT prefer covering textobject if alternative is on the same line
+  validate1d('((aa)   (bb))', 5, { 2, 5 })
+  validate1d('((aa)   (bb))', 7, { 9, 12 })
+  -- Here is it still left because distance is measured for empty region at
+  -- cursor (for which left block is closer)
+  validate1d('((aa)  (bb))', 6, { 2, 5 })
+
+  -- Should NOT prefer covering textobject if both are not on the same line
+  validate({ '(aa', ') (bb)' }, { 1, 1 }, { { 2, 3 }, { 2, 6 } })
+  validate({ '((aa)', 'bb)' }, { 2, 0 }, { { 1, 2 }, { 1, 5 } })
+
+  -- Should prefer nearest textobject if covering is not on same line
+  validate({ '((aa) bbb (cc)', ')' }, { 1, 6 }, { { 1, 2 }, { 1, 5 } })
+  validate({ '((aa) bbb (cc)', ')' }, { 1, 7 }, { { 1, 2 }, { 1, 5 } })
+  validate({ '((aa) bbb (cc)', ')' }, { 1, 8 }, { { 1, 11 }, { 1, 14 } })
+
+  -- Should choose closest textobject based on minimum distance between
+  -- corresponding edges
+  local validate_distance = function(region_cols, expected)
+    local reference_region = { from = { line = 1, col = region_cols[1] }, to = { line = 1, col = region_cols[2] } }
+    validate_find1d(
+      '(aa)bbb(cc)',
+      0,
+      { 'a', ')', { search_method = 'nearest', reference_region = reference_region } },
+      expected
+    )
+  end
+
+  validate_distance({ 2, 5 }, { 1, 4 })
+  validate_distance({ 2, 9 }, { 1, 4 })
+  validate_distance({ 5, 6 }, { 1, 4 })
+  validate_distance({ 5, 7 }, { 1, 4 })
+  validate_distance({ 6, 7 }, { 8, 11 })
+  validate_distance({ 3, 10 }, { 8, 11 })
+  validate_distance({ 7, 10 }, { 8, 11 })
+
+  -- Works with `n_times`
+  local validate_n_times = function(lines, cursor, n_times, expected)
+    validate_find(lines, cursor, { 'a', ')', { search_method = 'nearest', n_times = n_times } }, expected)
+  end
+
+  local lines, cursor = { '(aaaaa', '(bb) cc (dd))' }, { 2, 5 }
+  validate_n_times(lines, cursor, 1, { { 2, 1 }, { 2, 4 } })
+  validate_n_times(lines, cursor, 2, { { 2, 9 }, { 2, 12 } })
+  -- It enters cycle because two textobjects are nearest to each other
+  validate_n_times(lines, cursor, 3, { { 2, 1 }, { 2, 4 } })
+end
+
+T['Search method']['works with "nearest" in Operator-pending mode'] = function()
+  child.lua([[MiniAi.config.search_method = 'nearest']])
+
+  for i = 4, 6 do
+    validate_edit1d('(aa)(bbb)(cc)', i, '(bbb)(cc)', 0, 'ca)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(bbb)(cc)', 0, 'da)')
+
+    validate_edit1d('(aa)(bbb)(cc)', i, '()(bbb)(cc)', 1, 'ci)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '()(bbb)(cc)', 1, 'di)')
+  end
+  for i = 7, 8 do
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)', 9, 'ca)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)', 8, 'da)')
+
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)()', 10, 'ci)')
+    validate_edit1d('(aa)(bbb)(cc)', i, '(aa)(bbb)()', 10, 'di)')
   end
 end
 

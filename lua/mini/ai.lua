@@ -408,17 +408,24 @@ end
 ---
 --- ## Search method~
 ---
---- Value of `config.search_method` defines how best match search is done when
---- there is no covering match (with span covering cursor position) found
---- within searched neighborhood. Based on its value, one of "previous",
---- "next", or neither match is used as output. Its possible values are:
---- - `'cover'` - don't use either "previous" or "next"; report that
----   there is no textobject found.
---- - `'cover_or_next'` (default) - use next.
---- - `'cover_or_prev'` - use previous.
---- - `'cover_or_nearest'` - use nearest to current cursor position. Distance
----   is computed based on "1d neighborhood" using minimum distance between
----   corresponding edges. Previous is used in case of a tie.
+--- Value of `config.search_method` defines how best match search is done.
+--- Based on its value, one of the following matches will be selected:
+--- - Covering match. Left/right edge is before/after left/right edge of
+---   reference region.
+--- - Previous match. Left/right edge is before left/right edge of reference
+---   region.
+--- - Next match. Left/right edge is after left/right edge of reference region.
+--- - Nearest match. Whichever is closest among previous and next matches.
+---
+--- Possible values are:
+--- - `'cover'` - use only covering match. Don't use either previous or
+---   next; report that there is no textobject found.
+--- - `'cover_or_next'` (default) - use covering match. If not found, use next.
+--- - `'cover_or_prev'` - use covering match. If not found, use previous.
+--- - `'cover_or_nearest'` - use covering match. If not found, use nearest.
+--- - `'next'` - use next match.
+--- - `'previous'` - use previous match.
+--- - `'nearest'` - use nearest match.
 ---
 --- Note: search is first performed on the reference region lines and only
 --- after failure - on the whole neighborhood defined by `config.n_lines`. This
@@ -426,16 +433,19 @@ end
 --- or "next" textobject will end up as search result if they are found on
 --- first stage although covering match might be found in bigger, whole
 --- neighborhood. This design is based on observation that most of the time
---- operation is done withtin reference region lines (usually cursor line).
+--- operation is done within reference region lines (usually cursor line).
 ---
 --- Here is an example of what `a)` textobject is based on a value of
 --- `'config.search_method'` when cursor is inside `bbb` word:
---- - `search_method = 'cover'`:         `(a) bbb (c)` -> none
---- - `search_method = 'cover_or_next'`: `(a) bbb (c)` -> `(c)`
---- - `search_method = 'cover_or_prev'`: `(a) bbb (c)` -> `(a)`
---- - `search_method = 'cover_or_nearest'`: depends on cursor position.
+--- - `'cover'`:         `(a) bbb (c)` -> none
+--- - `'cover_or_next'`: `(a) bbb (c)` -> `(c)`
+--- - `'cover_or_prev'`: `(a) bbb (c)` -> `(a)`
+--- - `'cover_or_nearest'`: depends on cursor position.
 ---   For first and second `b` - as in `cover_or_prev` (as previous match is
 ---   nearer), for third - as in `cover_or_next` (as next match is nearer).
+--- - `'next'`: `(a) bbb (c)` -> `(c)`. Same outcome for `(bbb)`.
+--- - `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
+--- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 MiniAi.config = {
   -- Table with textobject id as fields, textobject specification as values.
   -- Also use this to disable builtin textobjects. See |MiniAi.config|.
@@ -457,7 +467,7 @@ MiniAi.config = {
 
   -- How to search for object (first inside current line, then inside
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest'.
+  -- 'cover_or_nearest', 'next', 'previous', 'nearest'.
   search_method = 'cover_or_next',
 }
 --minidoc_afterlines_end
@@ -829,8 +839,12 @@ H.is_search_method = function(x, x_name)
   x = x or H.get_config().search_method
   x_name = x_name or '`config.search_method`'
 
-  if vim.tbl_contains({ 'cover_or_next', 'cover', 'cover_or_prev', 'cover_or_nearest' }, x) then return true end
-  local msg = ([[%s should be one of 'cover_or_next', 'cover', 'cover_or_prev', 'cover_or_nearest'.]]):format(x_name)
+  local allowed_methods = vim.tbl_keys(H.span_compare_methods)
+  if vim.tbl_contains(allowed_methods, x) then return true end
+
+  table.sort(allowed_methods)
+  local allowed_methods_string = table.concat(vim.tbl_map(vim.inspect, allowed_methods), ', ')
+  local msg = ([[%s should be one of %s.]]):format(x_name, allowed_methods_string)
   return false, msg
 end
 
@@ -1117,36 +1131,114 @@ H.new_span = function(from, to) return { from = from, to = to == nil and from or
 ---@param opts table Fields: <search_method>.
 ---@private
 H.is_better_span = function(candidate, current, reference, opts)
-  -- Candidate never equals reference to allow incrementing textobjects
-  if H.is_span_equal(candidate, reference) then return false end
+  -- Candidate should be never equal or nested inside reference
+  if H.is_span_covering(reference, candidate) or H.is_span_equal(candidate, reference) then return false end
 
-  -- Covering span is always better than not covering span
-  local is_candidate_covering = H.is_span_covering(candidate, reference)
-  local is_current_covering = H.is_span_covering(current, reference)
+  return H.span_compare_methods[opts.search_method](candidate, current, reference)
+end
 
-  if is_candidate_covering and not is_current_covering then return true end
-  if not is_candidate_covering and is_current_covering then return false end
+H.span_compare_methods = {
+  cover = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+    -- If both are not covering, `candidate` is not better (as it must cover)
+    return false
+  end,
 
-  if is_candidate_covering then
-    -- Covering candidate is better than covering current if it is narrower
-    return (candidate.to - candidate.from) < (current.to - current.from)
-  else
-    local search_method = opts.search_method
-    if search_method == 'cover' then return false end
-    -- Candidate never should be nested inside `span_to_cover`
-    if H.is_span_covering(reference, candidate) then return false end
+  cover_or_next = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
 
-    local is_good_candidate = (search_method == 'cover_or_next' and H.is_span_on_left(reference, candidate))
-      or (search_method == 'cover_or_prev' and H.is_span_on_left(candidate, reference))
-      or (search_method == 'cover_or_nearest')
-
-    if not is_good_candidate then return false end
+    -- If not covering, `candidate` must be "next" and closer to reference
+    if not H.is_span_on_left(reference, candidate) then return false end
     if current == nil then return true end
 
-    -- Non-covering good candidate is better than non-covering current if it is
-    -- closer to `span_to_cover`
-    return H.span_distance(candidate, reference, search_method) < H.span_distance(current, reference, search_method)
+    local dist = H.span_distance.next
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  cover_or_prev = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+
+    -- If not covering, `candidate` must be "previous" and closer to reference
+    if not H.is_span_on_left(candidate, reference) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.prev
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  cover_or_nearest = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+
+    -- If not covering, `candidate` must be closer to reference
+    if current == nil then return true end
+
+    local dist = H.span_distance.near
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  next = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be "next" and closer to reference
+    if not H.is_span_on_left(reference, candidate) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.next
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  prev = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be "previous" and closer to reference
+    if not H.is_span_on_left(candidate, reference) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.prev
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  nearest = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be closer to reference
+    if current == nil then return true end
+
+    local dist = H.span_distance.near
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+}
+
+H.span_distance = {
+  -- Other possible choices of distance between [a1, a2] and [b1, b2]:
+  -- - Hausdorff distance: max(|a1 - b1|, |a2 - b2|).
+  --   Source:
+  --   https://math.stackexchange.com/questions/41269/distance-between-two-ranges
+  -- - Minimum distance: min(|a1 - b1|, |a2 - b2|).
+
+  -- Distance is chosen so that "next span" in certain direction is the closest
+  next = function(span_1, span_2) return math.abs(span_1.from - span_2.from) end,
+  prev = function(span_1, span_2) return math.abs(span_1.to - span_2.to) end,
+  near = function(span_1, span_2) return math.min(math.abs(span_1.from - span_2.from), math.abs(span_1.to - span_2.to)) end,
+}
+
+H.is_better_covering_span = function(candidate, current, reference)
+  local candidate_is_covering = H.is_span_covering(candidate, reference)
+  local current_is_covering = H.is_span_covering(current, reference)
+
+  if candidate_is_covering and current_is_covering then
+    -- Covering candidate is better than covering current if it is narrower
+    return (candidate.to - candidate.from) < (current.to - current.from)
   end
+  if candidate_is_covering and not current_is_covering then return true end
+  if not candidate_is_covering and current_is_covering then return false end
+
+  -- Return `nil` if neither span is covering
+  return nil
 end
 
 --stylua: ignore
@@ -1170,21 +1262,6 @@ end
 H.is_span_on_left = function(span_1, span_2)
   if span_1 == nil or span_2 == nil then return false end
   return (span_1.from <= span_2.from) and (span_1.to <= span_2.to)
-end
-
-H.span_distance = function(span_1, span_2, search_method)
-  -- Other possible choices of distance between [a1, a2] and [b1, b2]:
-  -- - Hausdorff distance: max(|a1 - b1|, |a2 - b2|).
-  --   Source:
-  --   https://math.stackexchange.com/questions/41269/distance-between-two-ranges
-  -- - Minimum distance: min(|a1 - b1|, |a2 - b2|).
-
-  -- Distance is chosen so that "next span" in certain direction is the closest
-  if search_method == 'cover_or_next' then return math.abs(span_1.from - span_2.from) end
-  if search_method == 'cover_or_prev' then return math.abs(span_1.to - span_2.to) end
-  if search_method == 'cover_or_nearest' then
-    return math.min(math.abs(span_1.from - span_2.from), math.abs(span_1.to - span_2.to))
-  end
 end
 
 H.is_point_inside_spans = function(point, spans)

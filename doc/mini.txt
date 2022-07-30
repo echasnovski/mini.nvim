@@ -628,7 +628,7 @@ Default values:
 
     -- How to search for object (first inside current line, then inside
     -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-    -- 'cover_or_nearest'.
+    -- 'cover_or_nearest', 'next', 'previous', 'nearest'.
     search_method = 'cover_or_next',
   }
 <
@@ -671,17 +671,24 @@ There are more example specifications in |MiniAi-textobject-specification|.
 
 ## Search method~
 
-Value of `config.search_method` defines how best match search is done when
-there is no covering match (with span covering cursor position) found
-within searched neighborhood. Based on its value, one of "previous",
-"next", or neither match is used as output. Its possible values are:
-- `'cover'` - don't use either "previous" or "next"; report that
-  there is no textobject found.
-- `'cover_or_next'` (default) - use next.
-- `'cover_or_prev'` - use previous.
-- `'cover_or_nearest'` - use nearest to current cursor position. Distance
-  is computed based on "1d neighborhood" using minimum distance between
-  corresponding edges. Previous is used in case of a tie.
+Value of `config.search_method` defines how best match search is done.
+Based on its value, one of the following matches will be selected:
+- Covering match. Left/right edge is before/after left/right edge of
+  reference region.
+- Previous match. Left/right edge is before left/right edge of reference
+  region.
+- Next match. Left/right edge is after left/right edge of reference region.
+- Nearest match. Whichever is closest among previous and next matches.
+
+Possible values are:
+- `'cover'` - use only covering match. Don't use either previous or
+  next; report that there is no textobject found.
+- `'cover_or_next'` (default) - use covering match. If not found, use next.
+- `'cover_or_prev'` - use covering match. If not found, use previous.
+- `'cover_or_nearest'` - use covering match. If not found, use nearest.
+- `'next'` - use next match.
+- `'previous'` - use previous match.
+- `'nearest'` - use nearest match.
 
 Note: search is first performed on the reference region lines and only
 after failure - on the whole neighborhood defined by `config.n_lines`. This
@@ -689,16 +696,19 @@ means that with `config.search_method` not equal to `'cover'`, "previous"
 or "next" textobject will end up as search result if they are found on
 first stage although covering match might be found in bigger, whole
 neighborhood. This design is based on observation that most of the time
-operation is done withtin reference region lines (usually cursor line).
+operation is done within reference region lines (usually cursor line).
 
 Here is an example of what `a)` textobject is based on a value of
 `'config.search_method'` when cursor is inside `bbb` word:
-- `search_method = 'cover'`:         `(a) bbb (c)` -> none
-- `search_method = 'cover_or_next'`: `(a) bbb (c)` -> `(c)`
-- `search_method = 'cover_or_prev'`: `(a) bbb (c)` -> `(a)`
-- `search_method = 'cover_or_nearest'`: depends on cursor position.
+- `'cover'`:         `(a) bbb (c)` -> none
+- `'cover_or_next'`: `(a) bbb (c)` -> `(c)`
+- `'cover_or_prev'`: `(a) bbb (c)` -> `(a)`
+- `'cover_or_nearest'`: depends on cursor position.
   For first and second `b` - as in `cover_or_prev` (as previous match is
   nearer), for third - as in `cover_or_next` (as next match is nearer).
+- `'next'`: `(a) bbb (c)` -> `(c)`. Same outcome for `(bbb)`.
+- `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
+- `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 
 ------------------------------------------------------------------------------
                                                       *MiniAi.find_textobject()*
