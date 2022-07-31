@@ -198,7 +198,6 @@ T['Add surrounding']['places cursor to the right of left surrounding'] = functio
 end
 
 T['Add surrounding']['prompts helper message after one idle second'] = function()
-  clear_messages()
   set_lines({ ' aaa ' })
   set_cursor(1, 1)
 
@@ -356,7 +355,6 @@ T['Delete surrounding']['places cursor to the right of left surrounding'] = func
 end
 
 T['Delete surrounding']['prompts helper message after one idle second'] = function()
-  clear_messages()
   set_lines({ '((aaa))' })
   set_cursor(1, 1)
 
@@ -495,7 +493,6 @@ T['Replace surrounding']['places cursor to the right of left surrounding'] = fun
 end
 
 T['Replace surrounding']['prompts helper message after one idle second'] = function()
-  clear_messages()
   set_lines({ '((aaa))' })
   set_cursor(1, 1)
 
@@ -660,7 +657,6 @@ T['Find surrounding']['respects `config.search_method`'] = function()
   local lines = { 'aaa (bbb)' }
 
   -- By default uses 'cover'
-  clear_messages()
   validate_find(lines, { 1, 0 }, { { 1, 0 } }, type_keys, 'sf', ')')
   has_message_about_not_found(')')
 
@@ -679,7 +675,6 @@ T['Find surrounding']['respects `config.search_method`'] = function()
 end
 
 T['Find surrounding']['prompts helper message after one idle second'] = function()
-  clear_messages()
   set_lines({ '(aaa)' })
   set_cursor(1, 2)
 
@@ -1297,7 +1292,7 @@ T['Tag surrounding']['detects covering with smallest width'] = function()
 
   -- In all cases width of `<y>...</y>` is smaller than of `<x>...</x>`
   validate_edit({ '<x>  <y>a</x></y>' }, { 1, 8 }, { '<x>  _a</x>_' }, { 1, 6 }, f)
-  validate_edit({ '<y><x>a</y>  </x>' }, { 1, 8 }, { '_<x>a_  </x>' }, { 1, 1 }, f)
+  validate_edit({ '<y><x>a</y>  </x>' }, { 1, 6 }, { '_<x>a_  </x>' }, { 1, 1 }, f)
 
   -- Width should be from the left-most point to right-most
   validate_edit({ '<y><x bbb>a</y></x>' }, { 1, 10 }, { '_<x bbb>a_</x>' }, { 1, 1 }, f)
@@ -1365,7 +1360,8 @@ T['Interactive surrounding']['does not work in some cases'] = function()
 
   -- It does not work sometimes in presence of many identical valid parts
   -- (basically because it is a `%(.-%)` and not `%(.*%)`).
-  validate_edit({ '((()))' }, { 1, 3 }, { '((()))' }, { 1, 3 }, f)
+  f = function() type_keys('sr', 'i', '(<CR>', ')<CR>', '>') end
+  validate_edit({ '((()))' }, { 1, 3 }, { '((<>))' }, { 1, 3 }, f)
   validate_edit({ '((()))' }, { 1, 4 }, { '((()))' }, { 1, 4 }, f)
   validate_edit({ '((()))' }, { 1, 5 }, { '((()))' }, { 1, 5 }, f)
 end
