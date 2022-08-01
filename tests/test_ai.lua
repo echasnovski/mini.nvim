@@ -473,6 +473,118 @@ T['move_cursor()']['works with multibyte characters'] = function()
   validate_move1d(' (ыыы) ', 0, { 'right', 'a', ')' }, 8)
 end
 
+T['gen_spec'] = new_set()
+
+T['gen_spec']['pair()'] = new_set()
+
+T['gen_spec']['pair()']['works'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { x = MiniAi.gen_spec.pair('x', 'y') }]])
+
+  validate_find1d('aaxbbycc', 3, { 'a', 'x' }, { 3, 6 })
+  validate_find1d('aaxbbycc', 3, { 'i', 'x' }, { 4, 5 })
+end
+
+--stylua: ignore
+T['gen_spec']['pair()']['validates arguments'] = function()
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair(1, 'y')]]) end, '`left`.*string')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 1)]]) end, '`right`.*string')
+
+  -- For balanced and greedy types arguments should be single character
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
+
+  -- `opts.type` should be one of pre-defined characters
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'y', { type = 'aaa' })]]) end, 'opts.type.*one of')
+end
+
+T['gen_spec']['pair()']['respects `opts.type`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    _ = MiniAi.gen_spec.pair('_', '_', { type = 'non-balanced' }),
+    x = MiniAi.gen_spec.pair('_', '_', { type = 'balanced' }),
+    b = MiniAi.gen_spec.pair('(', ')', { type = 'balanced' }),
+    y = MiniAi.gen_spec.pair('_', '_', { type = 'greedy' }),
+  }]])
+
+  -- Non-balanced pair
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 1 } }, { 1, 3 })
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 2 } }, { 3, 5 })
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 3 } }, { 5, 7 })
+  validate_find1d('_a_b_c_', 0, { 'i', '_' }, { 2, 2 })
+
+  -- Balanced pair
+  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 1 } }, { 1, 3 })
+  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 2 } }, { 5, 7 })
+  validate_find1d('_a_b_c_', 0, { 'i', 'x' }, { 2, 2 })
+
+  -- Should also work with "special" characters
+  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 1 } }, { 2, 5 })
+  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 2 } }, { 1, 6 })
+
+  -- Greedy pair
+  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 1 } }, { 1, 5 })
+  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 2 } }, { 4, 7 })
+  validate_find1d('__a__b_', 0, { 'i', 'y' }, { 3, 3 })
+end
+
+T['gen_spec']['argument()'] = new_set()
+
+T['gen_spec']['argument()']['works'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { A = MiniAi.gen_spec.argument() }]])
+
+  validate_find1d('f(aa, bb)', 0, { 'a', 'A' }, { 3, 5 })
+  validate_find1d('f(aa, bb)', 0, { 'i', 'A' }, { 3, 4 })
+end
+
+T['gen_spec']['argument()']['respects `opts.brackets`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { A = MiniAi.gen_spec.argument({ brackets = { '%b()' } }) }]])
+
+  validate_find1d('(aa, bb)', 0, { 'a', 'A' }, { 2, 4 })
+  validate_find1d('[aa, bb]', 0, { 'a', 'A' }, nil)
+  validate_find1d('{aa, bb}', 0, { 'a', 'A' }, nil)
+end
+
+T['gen_spec']['argument()']['respects `opts.separators`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    A = MiniAi.gen_spec.argument({ separators = { ';' } }),
+    B = MiniAi.gen_spec.argument({ separators = { ',', ';' } }),
+  }]])
+
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 1 } }, { 2, 8 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 2 } }, { 8, 15 })
+
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 1 } }, { 2, 4 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 2 } }, { 4, 7 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 3 } }, { 8, 11 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 4 } }, { 12, 15 })
+end
+
+T['gen_spec']['argument()']['respects `opts.exclude_regions`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    A = MiniAi.gen_spec.argument({ exclude_regions = { '".-"' } }),
+  }]])
+
+  -- Comma inside `()` should not be excluded
+  validate_find1d('(aa, (bb, cc))', 4, { 'a', 'A' }, { 4, 8 })
+end
+
+T['gen_spec']['function_call()'] = new_set()
+
+T['gen_spec']['function_call()']['works'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { F = MiniAi.gen_spec.function_call() }]])
+
+  validate_find1d('f.g_h(x)', 0, { 'a', 'F' }, { 1, 8 })
+  validate_find1d('f.g_h(x)', 0, { 'i', 'F' }, { 7, 7 })
+end
+
+T['gen_spec']['function_call()']['respects `opts.name_pattern`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { F = MiniAi.gen_spec.function_call({ name_pattern = '[%w_]' }) }]])
+
+  validate_find1d('f.g_h(x)', 0, { 'a', 'F' }, { 3, 8 })
+  validate_find1d('f.g_h(x)', 0, { 'i', 'F' }, { 7, 7 })
+end
+
 local validate_select = function(lines, cursor, args, expected)
   child.ensure_normal_mode()
   set_lines(lines)
@@ -1716,8 +1828,11 @@ T['Builtin']['Argument']['ignores commas inside balanced brackets'] = function()
 end
 
 T['Builtin']['Argument']['ignores commas inside balanced quotes'] = function()
-  validate_tobj1d([[f(xx, 'yy, tt')]], 5, 'aa', { 5, 14 })
-  validate_tobj1d([[f(xx, "yy, tt")]], 5, 'aa', { 5, 14 })
+  validate_tobj1d([[f(xx, 'yy, tt', 'aa, bb')]], 5, 'aa', { 5, 14 })
+  validate_tobj1d([[f(xx, 'yy, tt', 'aa, bb')]], 15, 'aa', { 15, 24 })
+
+  validate_tobj1d([[f(xx, "yy, tt", "aa, bb")]], 5, 'aa', { 5, 14 })
+  validate_tobj1d([[f(xx, "yy, tt", "aa, bb")]], 15, 'aa', { 15, 24 })
 
   validate_tobj1d([[f('xx, yy' , tt)]], 10, 'aa', { 3, 12 })
   validate_tobj1d([[f("xx, yy" , tt)]], 10, 'aa', { 3, 12 })
@@ -2395,73 +2510,6 @@ T['Custom textobject']['balanced parenthesis with big enough width'] = function(
   child.lua('MiniAi.config.custom_textobjects = { p = _G.wide_parens_spec }')
 
   validate_tobj1d('() (a) (aa) (aaa)', 0, 'ap', { 13, 17 })
-end
-
-T['Custom textobject']['documented examples']['balanced pair'] = function()
-  set_custom_tobj({ ['|'] = { '%b||', '^.().*().$' } })
-
-  validate_tobj1d('|a|b|c|', 0, 'a|', { 1, 3 })
-  validate_tobj1d('|a|b|c|', 0, 'i|', { 2, 2 })
-  validate_tobj1d('|a|b|c|', 0, '2a|', { 5, 7 })
-  validate_tobj1d('|a|b|c|', 0, '2i|', { 6, 6 })
-end
-
-T['Custom textobject']['documented examples']['non-balanced pair'] = function()
-  set_custom_tobj({ ['|'] = { '|().-()|' } })
-
-  validate_tobj1d('|a|b|c|', 0, 'a|', { 1, 3 })
-  validate_tobj1d('|a|b|c|', 0, 'i|', { 2, 2 })
-  validate_tobj1d('|a|b|c|', 0, '2a|', { 3, 5 })
-  validate_tobj1d('|a|b|c|', 0, '2i|', { 4, 4 })
-  validate_tobj1d('|a|b|c|', 0, '3a|', { 5, 7 })
-  validate_tobj1d('|a|b|c|', 0, '3i|', { 6, 6 })
-end
-
-T['Custom textobject']['documented examples']['greedy pair'] = function()
-  local validate = function(key)
-    -- Reference: '_aa_ __bb_ _cc__ __dd__'
-    --stylua: ignore
-    local line = string.format(
-      '%saa%s %s%sbb%s %scc%s%s %s%sdd%s%s',
-      key, key, key, key, key, key,
-      key, key, key, key, key, key
-    )
-
-    -- Mostly works from inside assumed target
-    validate_tobj1d(line, 1, 'a' .. key, { 1, 4 })
-    validate_tobj1d(line, 1, 'i' .. key, { 2, 3 })
-    validate_tobj1d(line, 7, 'a' .. key, { 6, 10 })
-    validate_tobj1d(line, 7, 'i' .. key, { 8, 9 })
-    validate_tobj1d(line, 12, 'a' .. key, { 12, 16 })
-    validate_tobj1d(line, 12, 'i' .. key, { 13, 14 })
-    validate_tobj1d(line, 19, 'a' .. key, { 18, 23 })
-    validate_tobj1d(line, 19, 'i' .. key, { 20, 21 })
-
-    -- It is not balanced
-    validate_tobj1d(line, 1, '2a' .. key, { 4, 7 })
-
-    -- Empty region
-    validate_tobj1d('a__', 0, 'i_', { 3, 3 })
-    validate_edit1d('a__', 0, 'a__', 2, 'di_')
-    validate_edit1d('a__', 0, 'a__', 2, 'ci_')
-  end
-
-  set_custom_tobj({
-    ['$'] = { '%f[%$]%$+()[^%$]-()%$+%f[^%$]' },
-    ['*'] = { '%f[%*]%*+()[^%*]-()%*+%f[^%*]' },
-    ['_'] = { '%f[_]_+()[^_]-()_+%f[^_]' },
-  })
-
-  validate('*')
-  validate('_')
-  validate('$')
-end
-
-T['Custom textobject']['documented examples']['function call without dot in name'] = function()
-  set_custom_tobj({ f = { '%f[%w_][%w_]+%b()', '^.-%(().*()%)$' } })
-
-  validate_tobj1d('f.g_h(x)', 0, 'af', { 3, 8 })
-  validate_tobj1d('f.g_h(x)', 0, 'if', { 7, 7 })
 end
 
 T['Custom textobject']['documented examples']['word'] = function()

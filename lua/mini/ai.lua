@@ -22,6 +22,8 @@
 ---     - Derived from user prompt.
 ---     - Default for punctuation, digit, or whitespace single character.
 --- - Motions for jumping to left/right edge of textobject.
+--- - Set of specification generators to tweak some builtin textobjects (see
+---   |MiniAi.gen_spec|).
 ---
 --- This module works by defining mappings for both `a` and `i` in Visual and
 --- Operator-pending mode. After typing, they wait for single character user input
@@ -254,26 +256,11 @@
 ---         }
 --- >
 --- More examples:
---- - Textobject with `a` variant including both edges (assume `x` placeholder):
----     - Balanced pair (like quotes): `{ '%bxx', '^.().*().$' }` . In string
----       "xaxbxcx" it will consecutively match "xax" and "xcx". Examples:
----         - With `|` edges: `{ '%b||', '^.().*().$' }`
----
----     - Not balanced pair: `{ 'x().-()x' }` . In string "xaxbxcx" it will
----       consecutively match "xax", "xbx", and "xcx". Examples:
----         - With `|` edges: `{ '|().-()|' }`
----
----     - Greedy pair, left and right edges consist from as many same
----       characters as there is: `{ '%f[x]x+()[^x]-()x+%f[^x]' }`. Examples:
----         - LaTeX code block: `{ '%f[%$]%$+()[^%$]-()%$+%f[^%$]' }`
----         - Markdown `*` emphasis: `{ '%f[%*]%*+()[^%*]-()%*+%f[^%*]' }`
----         - Markdown `_` emphasis: `{ '%f[_]_+()[^_]-()_+%f[^_]' }`
+--- - See |MiniAi.gen_spec| for function wrappers to create commonly used
+---   textobject specifications.
 ---
 --- - Pair of balanced brackets from set (used for builtin `b` identifier):
 ---   `{ { '%b()', '%b[]', '%b{}' }, '^.().*().$' }`
----
---- - Function call, but name consists only from alphanumeric and "_":
----   `{ '%f[%w_][%w_]+%b()', '^.-%(().*()%)$' }`
 ---
 --- - Imitate word ignoring digits and punctuation (supports only Latin alphabet):
 ---   `{ '()()%f[%w]%w+()[ \t]*()' }`
@@ -369,12 +356,14 @@ end
 --- Each named entry of `config.custom_textobjects` is a textobject with
 --- that identifier and specification (see |MiniAi-textobject-specification|).
 --- They are also used to override builtin ones (|MiniAi-textobject-builtin|).
---- Supply non-table input to disable builting textobject. Examples:
+--- Supply non-table input to disable builtin textobject. Examples:
 --- >
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {
----       -- Disables argument textobject
----       a = false,
+---       -- Disables function call textobject
+---       f = false,
+---       -- Tweaks argument textobject
+---       a = require('mini.ai').gen_spec.argument({ brackets = { '%b()' } }),
 ---       -- Now `vax` should select `xxx` and `vix` - middle `x`
 ---       x = { 'x()x()x' },
 ---       -- Whole buffer
@@ -390,10 +379,11 @@ end
 ---
 ---   -- Use `vim.b.miniai_config` to customize per buffer
 ---   -- Example of specification useful for Markdown files:
+---   local spec_pair = require('mini.ai').gen_spec.pair
 ---   vim.b.miniai_config = {
 ---     custom_textobjects = {
----       ['*'] = { '%f[%*]%*+()[^%*]-()%*+%f[^%*]' },
----       ['_'] = { '%f[_]_+()[^_]-()_+%f[^_]' },
+---       ['*'] = spec_pair('*', '*', { type = 'greedy' }),
+---       ['_'] = spec_pair('_', '_', { type = 'greedy' }),
 ---     },
 ---   }
 --- <
@@ -502,10 +492,12 @@ MiniAi.find_textobject = function(ai_type, id, opts)
   opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
   H.validate_search_method(opts.search_method)
 
+  -- Get textobject specification
   local tobj_spec = H.get_textobject_spec(id, { ai_type, id, opts })
   if tobj_spec == nil then return end
   if H.is_region(tobj_spec) then return tobj_spec end
 
+  -- Find region
   local res = H.find_textobject_region(tobj_spec, ai_type, opts)
 
   if res == nil then
@@ -566,6 +558,146 @@ MiniAi.move_cursor = function(side, ai_type, id, opts)
   -- Move cursor and open enough folds
   vim.api.nvim_win_set_cursor(0, { pos.line, pos.col - 1 })
   vim.cmd('normal! zv')
+end
+
+--- Generate common textobject specifications
+---
+--- This is a table with function elements. Call to actually get specification.
+---
+--- Example: >
+---   local gen_spec = require('mini.ai').gen_spec
+---   require('mini.ai').setup({
+---     custom_textobjects = {
+---       -- Tweak argument to be recognized only inside `()` between `;`
+---       a = gen_spec.argument({ brackets = { '%b()' }, separators = { ';' } }),
+---
+---       -- Tweak function call to not detect dot in function name
+---       f = gen_spec.function_call({ name_pattern = '[%w_]' }),
+---
+---       -- Make `|` select both edges in non-balanced way
+---       ['|'] = gen_spec.pair('|', '|', { type = 'non-balanced' }),
+---     }
+---   })
+MiniAi.gen_spec = {}
+
+--- Argument specification
+---
+--- Argument textobject (has default `a` identifier) is a region inside
+--- balanced bracket between allowed not excluded separators. Use this function
+--- to tweak how it works.
+---
+--- Examples:
+--- - `argument({ brackets = { '%b()' } })` will search for an argument only
+---   inside balanced `()`.
+--- - `argument({ separators = { ',', ';' } })` will consider both `,` and `;`
+---   to be separators.
+--- - `argument({ exclude_regions = { '%b()' } })` will exclude separators
+---   which are inside balanced `()` (inside outer brackets).
+---
+---@param opts table|nil Options. Allowed fields:
+---   - <brackets> - table with patterns for outer balanced brackets.
+---     Default: `{ '%b()', '%b[]', '%b{}' }` (any `()`, `[]`, or `{}` can
+---     enclose arguments).
+---   - <separators> - table with single character separators.
+---     Default: `{ ',' }` (arguments are separated with `,`).
+---   - <exclude_regions> - table with patterns for regions inside which
+---     separators will be ignored.
+---     Default: `{ '%b""', "%b''", '%b()', '%b[]', '%b{}' }` (separators
+---     inside balanced quotes or brackets are ignored).
+MiniAi.gen_spec.argument = function(opts)
+  opts = vim.tbl_deep_extend('force', {
+    brackets = { '%b()', '%b[]', '%b{}' },
+    separators = { ',' },
+    exclude_regions = { '%b""', "%b''", '%b()', '%b[]', '%b{}' },
+  }, opts or {})
+  local brackets, separators, exclude_regions = opts.brackets, opts.separators, opts.exclude_regions
+
+  if type(opts.brackets) == 'string' then opts.brackets = { opts.brackets } end
+  local separators_esc = vim.tbl_map(vim.pesc, separators)
+  local sep_pattern = '[' .. table.concat(separators_esc, '') .. ']'
+
+  local res = {}
+  res[1] = brackets
+  res[2] = function(s, init)
+    -- Cache string separators per spec as they are used multiple times.
+    -- Storing per spec allows coexistence of several argument specifications.
+    H.cache.argument_seps = H.cache.argument_seps or {}
+    H.cache.argument_seps[res] = H.cache.argument_seps[res] or {}
+    local seps = H.cache.argument_seps[res][s] or H.get_arg_separators(s, sep_pattern, exclude_regions)
+    H.cache.argument_seps[res][s] = seps
+
+    return H.get_arg_next_span(init, seps)
+  end
+  res[3] = '^' .. sep_pattern .. '?%s*().-()%s*' .. sep_pattern .. '?$'
+
+  return res
+end
+
+--- Function call specification
+---
+--- Function call textobject (has default `f` identifier) is a region with some
+--- characters followed by balanced `()`. Use this function to tweak how it works.
+---
+--- Example:
+--- - `function_call({ name_pattern = '[%w_]' })` will recognize function name with
+---   only alphanumeric or underscore (not dot).
+---
+---@param opts table|nil Optsion. Allowed fields:
+---   - <name_pattern> - string pattern of character set allowed in function name.
+---     Default: `'[%w_%.]'` (alphanumeric, underscore, or dot).
+---     Note: should be enclosed in `[]`.
+MiniAi.gen_spec.function_call = function(opts)
+  opts = vim.tbl_deep_extend('force', { name_pattern = '[%w_%.]' }, opts or {})
+  -- Use frontier pattern to select widest possible name
+  return { '%f' .. opts.name_pattern .. opts.name_pattern .. '+%b()', '^.-%(().*()%)$' }
+end
+
+--- Pair specification
+---
+--- Use it to define textobject for region surrounded with `left` from left and
+--- `right` from right. The `a` textobject includes both edges, `i` - excludes them.
+---
+--- Region can be one of several types (controlled with `opts.type`). All
+--- examples are for default search method, `a` textobject, and use `'_'` as
+--- both `left` and `right`:
+--- - Non-balanced (`{ type = 'non-balanced' }`), default. Equivalent to using
+---   `x.-y` as first pattern. Example: on line '_a_b_c_' it consecutively
+---   matches '_a_', '_b_', '_c_'.
+--- - Balanced (`{ type = 'balanced' }`). Equivalent to using `%bxy` as first
+---   pattern. Example: on line '_a_b_c_' it consecutively matches '_a_', '_c_'.
+---   Note: both `left` and `right` should be single character.
+--- - Greedy (`{ type = 'greedy' }`). Like non-balanced but will select maximum
+---   consecutive `left` and `right` edges. Example: on line '__a__b_' it
+---   consecutively selects '__a__' and '__b_'. Note: both `left` and `right`
+---   should be single character.
+---
+---@param left string Left edge.
+---@param right string Right edge.
+---@param opts table|nil Options. Possible fields:
+---   - <type> - Type of a pair. One of `'non-balanced'` (default), `'balanced'`,
+---   `'greedy'`.
+MiniAi.gen_spec.pair = function(left, right, opts)
+  if not (type(left) == 'string' and type(right) == 'string') then
+    H.error('Both `left` and `right` should be strings.')
+  end
+  opts = vim.tbl_deep_extend('force', { type = 'non-balanced' }, opts or {})
+
+  if (opts.type == 'balanced' or opts.type == 'greedy') and not (left:len() == 1 and right:len() == 1) then
+    local msg =
+      string.format([[Both `left` and `right` should be single character for `opts.type == '%s'`.]], opts.type)
+    H.error(msg)
+  end
+
+  local left_esc = vim.pesc(left)
+  local right_esc = vim.pesc(right)
+
+  if opts.type == 'balanced' then return { string.format('%%b%s%s', left, right), '^.().*().$' } end
+  if opts.type == 'non-balanced' then return { string.format('%s().-()%s', left_esc, right_esc) } end
+  if opts.type == 'greedy' then
+    return { string.format('%%f[%s]%s+()[^%s]-()%s+%%f[^%s]', left_esc, left_esc, left_esc, right_esc, right_esc) }
+  end
+
+  H.error([[`opts.type` should be one of 'balanced', 'non-balanced', 'greedy'.]])
 end
 
 --- Visually select textobject region
@@ -764,23 +896,12 @@ H.builtin_textobjects = {
     H.cache.prompted_textobject = res
     return res
   end,
-  -- Argument. Probably better to use treesitter-based textobject.
-  ['a'] = {
-    { '%b()', '%b[]', '%b{}' },
-    function(s, init)
-      -- Cache separators for strings as they are used multiple times
-      H.cache.tobj_a_seps = H.cache.tobj_a_seps or {}
-      local seps = H.cache.tobj_a_seps[s] or H.get_arg_separators(s)
-      H.cache.tobj_a_seps[s] = seps
-
-      return H.get_arg_next_span(init, seps)
-    end,
-    '^,?%s*().-()%s*,?$',
-  },
+  -- Argument
+  ['a'] = MiniAi.gen_spec.argument(),
   -- Brackets
   ['b'] = { { '%b()', '%b[]', '%b{}' }, '^.().*().$' },
-  -- Function call. Probably better to use treesitter-based textobject.
-  ['f'] = { '%f[%w_%.][%w_%.]+%b()', '^.-%(().*()%)$' },
+  -- Function call
+  ['f'] = MiniAi.gen_spec.function_call(),
   -- Tag
   ['t'] = { '<(%w-)%f[^<%w][^<>]->.-</%1>', '^<.->().*()</[^/]->$' },
   -- Quotes
@@ -1016,30 +1137,25 @@ H.get_default_opts = function()
 end
 
 -- Work with argument textobject ----------------------------------------------
-H.get_arg_separators = function(s)
+H.get_arg_separators = function(s, sep_pattern, exclude_regions)
   if s:len() <= 2 then return {} end
 
-  -- Get all commas
-  local commas = {}
-  s:gsub('(),', function(x) table.insert(commas, x) end)
-  if #commas == 0 then return { 2, s:len() - 1 } end
+  -- Get all separators
+  local seps = {}
+  s:gsub('()' .. sep_pattern, function(x) table.insert(seps, x) end)
+  if #seps == 0 then return { 2, s:len() - 1 } end
 
-  -- Remove commas that are in "forbidden" spans: inside brackets or quotes
+  -- Remove separators that are in "excluded regions": by default, inside
+  -- brackets or quotes
   local inner_s, forbidden = s:sub(2, -2), {}
-  local add_to_forbidden = function(l, r)
-    if H.is_point_inside_spans(l + 1, forbidden) or H.is_point_inside_spans(r, forbidden) then return end
-    table.insert(forbidden, { l + 1, r })
+  local add_to_forbidden = function(l, r) table.insert(forbidden, { l + 1, r }) end
+
+  for _, pat in ipairs(exclude_regions) do
+    local capture_pat = string.format('()%s()', pat)
+    inner_s:gsub(capture_pat, add_to_forbidden)
   end
 
-  -- First check for quotes, then for brackets. This way false positive bracket
-  -- match with edge inside quotes won't be added.
-  inner_s:gsub('()".-"()', add_to_forbidden)
-  inner_s:gsub("()'.-'()", add_to_forbidden)
-  inner_s:gsub('()%b()()', add_to_forbidden)
-  inner_s:gsub('()%b[]()', add_to_forbidden)
-  inner_s:gsub('()%b{}()', add_to_forbidden)
-
-  local res = vim.tbl_filter(function(x) return not H.is_point_inside_spans(x, forbidden) end, commas)
+  local res = vim.tbl_filter(function(x) return not H.is_point_inside_spans(x, forbidden) end, seps)
 
   -- Append edge separators (assumes first and last characters are from
   -- brackets). This allows single argument and ensures at least 2 elements.
