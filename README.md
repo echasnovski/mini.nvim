@@ -6,16 +6,16 @@
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
 <!-- badges: end -->
 
-Collection of 20+ minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
+Family of 20+ independent Lua plugins dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience with minimal effort (both usage and implementation). They all share same configuration approaches and general design principles. Think about this project as "Swiss Army knife" among Neovim plugins: it has many different independent tools (plugins) suitable for most common tasks. Each plugin can be used separately without any startup and usage overhead.
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or simply star this project on Github.
+If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or leave a Github star for this project and/or any plugin(s) separately.
 
 ## Table of contents
 
 - [Installation](#installation)
 - [General principles](#general-principles)
 - [Plugin colorscheme](#plugin-colorscheme)
-- [Modules](#modules)
+- [Plugins](#plugins)
     - [mini.ai](#miniai)
     - [mini.base16](#minibase16)
     - [mini.bufremove](#minibufremove)
@@ -36,7 +36,7 @@ If you want to help this project grow but don't know where to start, check out [
     - [mini.tabline](#minitabline)
     - [mini.test](#minitest)
     - [mini.trailspace](#minitrailspace)
-- [Planned modules](#planned-modules)
+- [Planned plugins](#planned-plugins)
 
 ## Installation
 
@@ -67,9 +67,9 @@ There are at least the following ways to install this plugin:
     Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
     ```
 
-- Each module is independent and implemented within single file. You can copy corresponding file from 'lua/mini/' directory to your '.config/nvim/lua' directory and use it from there.
+- Each plugin is also distributed in separate repositories. You can see more information about it in [their description](#plugins).
 
-Don't forget to call module's `setup()` (if required) to enable its functionality.
+Don't forget to call plugin's `setup()` (if required) to enable its functionality.
 
 **Note**: if you are on Windows, there might be problems with too long file paths (like `error: unable to create file <some file name>: Filename too long`). Try doing one of the following:
 - Enable corresponding git global config value: `git config --system core.longpaths true`. Then try to reinstall.
@@ -77,18 +77,19 @@ Don't forget to call module's `setup()` (if required) to enable its functionalit
 
 ## General principles
 
-- **Design**. Each module is designed to solve a particular problem targeting balance between feature-richness (handling as many edge-cases as possible) and simplicity of implementation/support. Granted, not all of them ended up with the same balance, but it is the goal nevertheless.
-- **Independence**. Modules are independent of each other and can be run without external dependencies. Although some of them may need dependencies for full experience.
-- **Structure**. Each module is a submodule for a placeholder "mini" module. So, for example, "surround" module should be referred to as "mini.surround".  As later will be explained, this plugin can also be referred to as "MiniSurround".
+- **Design**. Each plugin is designed to solve a particular problem targeting balance between feature-richness (handling as many edge-cases as possible) and simplicity of implementation/support. Granted, not all of them ended up with the same balance, but it is the goal nevertheless.
+- **Independence**. Plugins are independent of each other and can be run without external dependencies. Although some of them may need dependencies for full experience.
+- **Structure**. Each plugin is a submodule for a placeholder "mini" module and implemented inside single file. So, for example, "surround" plugin should be referred to as "mini.surround".  As later will be explained, this plugin can also be referred to as "MiniSurround".
 - **Setup**:
-    - Each module (if needed) should be setup separately with `require(<name of module>).setup({})` (possibly replace {} with your config table or omit to use defaults).  You can supply only values which differ from defaults, which will be used for the rest ones.
-    - Call to module's `setup()` always creates a global Lua object with coherent camel-case name: `require('mini.surround').setup()` creates `_G.MiniSurround`. This allows for a simpler usage of plugin functionality: instead of `require('mini.surround')` use `MiniSurround` (or manually `:lua MiniSurround.*` in command line); available from `v:lua` like `v:lua.MiniSurround`. Considering this, "module" and "Lua object" names can be used interchangeably: 'mini.surround' and 'MiniSurround' will mean the same thing.
+    - Each plugin (if needed) should be setup separately with `require(<name of plugin>).setup({})` (possibly replace {} with your config table or omit to use defaults).  You can supply only values which differ from defaults, which will be used for the rest ones.
+    - Call to plugin's `setup()` always creates a global Lua object with coherent camel-case name: `require('mini.surround').setup()` creates `_G.MiniSurround`. This allows for a simpler usage of plugin functionality: instead of `require('mini.surround')` use `MiniSurround` (or manually `:lua MiniSurround.*` in command line); available from `v:lua` like `v:lua.MiniSurround`. Considering this, plugin and "Lua object" names can be used interchangeably: 'mini.surround' and 'MiniSurround' will mean the same thing.
     - Each supplied `config` table is stored in `config` field of global object. Like `MiniSurround.config`.
     - Values of `config`, which affect runtime activity, can be changed on the fly to have effect. For example, `MiniSurround.config.n_lines` can be changed during runtime; but changing `MiniSurround.config.mappings` won't have any effect (as mappings are created once during `setup()`).
-- **Buffer local configuration**. Each module can be additionally configured to use certain runtime config settings locally to buffer. See `mini.nvim-buffer-local-config` section in help file for more information.
-- **Disabling**. Each module's core functionality can be disabled globally or locally to buffer by creating appropriate global or buffer-scoped variables equal to `v:true`. See `mini.nvim-disabling-recipes` section in help file for common recipes.
-- **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
-- **Stability**. Each module upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.
+- **Buffer local configuration**. Each plugin can be additionally configured to use certain runtime config settings locally to buffer. See `mini.nvim-buffer-local-config` section in help file for more information.
+- **Disabling**. Each plugin's core functionality can be disabled globally or locally to buffer by creating appropriate global or buffer-scoped variables equal to `v:true`. See `mini.nvim-disabling-recipes` section in help file for common recipes.
+- **Highlight groups**. Appearance of plugin's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or provided colorschemes.
+- **Stability**. Each plugin upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.
+- **High test coverage**. Every plugin is thoroughly tested to ensure that it actually does what it is supposed to do.
 
 ## Plugin colorscheme
 
@@ -100,7 +101,7 @@ Activate it as a regular `colorscheme`.
 
 All examples use this colorscheme.
 
-## Modules
+## Plugins
 
 ### mini.ai
 
@@ -918,9 +919,9 @@ Plugins with similar functionality:
 
 - [ntpeters/vim-better-whitespace](https://github.com/ntpeters/vim-better-whitespace)
 
-## Planned modules
+## Planned plugins
 
-This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
+This is the list of plugins I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
 - 'mini.align' - align text with respect to some separators. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
 - 'mini.basics' - configurable collection of options and mappings sets intended mostly for quick "up and running" Neovim config. Something like a combination of [tpope/vim-sensible](https://github.com/tpope/vim-sensible) and [tpope/vim-unimpaired](https://github.com/tpope/vim-unimpaired).

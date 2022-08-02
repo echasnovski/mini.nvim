@@ -1,0 +1,2 @@
+git log $1 --output scripts/ai.patch --patch -- lua/mini/ai.lua tests/test_ai.lua
+git log $1 --output scripts/completion.patch --patch -- lua/mini/completion.lua tests/test_completion.lua
