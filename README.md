@@ -14,7 +14,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 - [Installation](#installation)
 - [General principles](#general-principles)
-- [Plugin colorscheme](#plugin-colorscheme)
+- [Plugin colorschemes](#plugin-colorschemes)
 - [Modules](#modules)
     - [mini.ai](#miniai)
     - [mini.base16](#minibase16)
@@ -90,15 +90,14 @@ Don't forget to call module's `setup()` (if required) to enable its functionalit
 - **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
 - **Stability**. Each module upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.
 
-## Plugin colorscheme
+## Plugin colorschemes
 
-This plugin comes with an official colorscheme named `minischeme`. This is a MiniBase16 theme created with faster version of the following Lua code: `require('mini.base16').setup({palette = palette, name = 'minischeme', use_cterm = true})` where `palette` is:
-- For dark 'background': `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
-- For light 'background': `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
+This plugin comes with several color schemes (all of them are made with 'mini.base16' and have both dark and light variants):
 
-Activate it as a regular `colorscheme`.
+- `minischeme` - blue and yellow main colors with high contrast and saturation palette. All examples use this colorscheme.
+- `minicyan` - cyan and grey main colors with moderate contrast and saturation palette.
 
-All examples use this colorscheme.
+Activate them as regular `colorscheme` (for example, `:colorscheme minicyan`). You can see how they look in [demo of 'mini.base16'](DEMO.md#minibase16).
 
 ## Modules
 

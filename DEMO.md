@@ -6,7 +6,13 @@ https://user-images.githubusercontent.com/24854248/181909691-b6f6b677-c37f-468f-
 
 ### mini.base16
 
-<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_dark.png" width="400em"/> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_light.png" width="400em"/>
+Using `minischeme` color scheme:
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_minischeme-dark.png" width="400em"/> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_minischeme-light.png" width="400em"/>
+
+Using `minicyan` color scheme:
+
+<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_minicyan-dark.png" width="400em"/> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/demo-base16_minicyan-light.png" width="400em"/>
 
 ### mini.bufremove
 

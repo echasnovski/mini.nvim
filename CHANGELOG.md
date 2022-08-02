@@ -2,6 +2,7 @@
 
 - Update all tests to use new 'mini.test' module.
 - FEATURE: Implement buffer local configuration. This is done with `vim.b.mini*_config` buffer variables.
+- Add new `minicyan` color scheme.
 
 ## mini.ai
 

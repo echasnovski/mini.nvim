@@ -57,8 +57,7 @@
 ---   certain highlight group (see |highlight-groups|). To customize them, use
 ---   |highlight| command. Note: currently not many Neovim themes support this
 ---   plugin's highlight groups; fixing this situation is highly appreciated.
----   To see a more calibrated look, use |MiniBase16| or plugin's colorscheme
----   `minischeme`.
+---   To see a more calibrated look, use |MiniBase16| or plugin's colorschemes.
 --- - <Stability>. Each module upon release is considered to be relatively
 ---   stable: both in terms of setup and functionality. Any
 ---   non-bugfix backward-incompatible change will be released gradually as
@@ -201,22 +200,32 @@
 --- Note: using function values inside buffer variables requires Neovim>=0.7.
 ---@tag mini.nvim-buffer-local-config
 
---- # Plugin colorscheme~
+--- # Plugin colorschemes~
 ---
---- This plugin comes with an official colorscheme named `minischeme`. This is
---- a |MiniBase16| theme created with faster version of the following Lua code: >
----   require('mini.base16').setup({
----     palette = palette, name = 'minischeme', use_cterm = true
----   })
---- where `palette` is:
+--- This plugin comes with several color schemes. All of them are a
+--- |MiniBase16| theme created with faster version of the following Lua code:
+---   `require('mini.base16').setup({ palette = palette, use_cterm = true })`
+--- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
+---
+--- ## minischeme~
+---
+--- Blue and yellow main colors with high contrast and saturation palette.
+--- Palettes are:
 --- - For dark 'background':
----     `require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
+---   `MiniBase16.mini_palette('#112641', '#e2e98f', 75)`
 --- - For light 'background':
----     `require('mini.base16').mini_palette('#e2e5ca', '#002a83', 75)`
+---   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
 ---
---- Activate it as a regular |colorscheme|.
----@tag minischeme
----@toc_entry Plugin colorscheme
+--- ## minicyan~
+---
+--- Cyan and grey main colors with moderate contrast and saturation palette.
+--- Palettes are:
+--- - For dark 'background':
+---   `MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)`
+--- - For light 'background':
+---   `MiniBase16.mini_palette('#C0D2D2', '#262626', 80)`
+---@tag mini.nvim-color-schemes
+---@toc_entry Plugin colorschemes
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])
 
