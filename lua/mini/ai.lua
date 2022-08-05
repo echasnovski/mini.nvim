@@ -214,19 +214,18 @@
 --- - Allows functions in certain places (enables more complex textobjects in
 ---   exchange of increase in configuration complexity and computations):
 ---     - If specification itself is a function, it will be called with the same
----       arguments as |MiniAi.find_textobject()| and should return either a
----       composed pattern or output region itself (useful for incorporating
----       other instruments, like treesitter).
----       Examples:
----         - Simplified variant of textobject for function call with name
----           taken from user prompt:
+---       arguments as |MiniAi.find_textobject()| and should return one of:
+---         - Composed pattern. Useful for implementing user input. Example of
+---           simplified variant of textobject for function call with name taken
+---           from user prompt:
 --- >
 ---           function()
 ---             local left_edge = vim.pesc(vim.fn.input('Function name: '))
 ---             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
 ---           end
 --- <
----         - Return all buffer:
+---         - Single output region. Useful to allow full control over
+---           textobject. Will be taken as is. Example of returning whole buffer:
 --- >
 ---           function()
 ---             local from = { line = 1, col = 1 }
@@ -235,6 +234,27 @@
 ---               col = math.max(vim.fn.getline('$'):len(), 1)
 ---             }
 ---             return { from = from, to = to }
+---           end
+--- <
+---         - Array of output region(s). Useful for incorporating other
+---           instruments, like treesitter. The best region will be picked in the
+---           same manner as with composed pattern (respecting options
+---           `n_lines`, `search_method`, etc.). Example of selecting "best"
+---           line with display width more than 80:
+--- >
+---           function(_, _, _)
+---             local res = {}
+---             for i = 1, vim.api.nvim_buf_line_count(0) do
+---               local cur_line = vim.fn.getline(i)
+---               if vim.fn.strdisplaywidth(cur_line) > 80 then
+---                 local region = {
+---                   from = { line = i, col = 1 },
+---                   to = { line = i, col = cur_line:len() },
+---                 }
+---                 table.insert(res, region)
+---               end
+---             end
+---             return res
 ---           end
 --- <
 ---     - If there is a function instead of assumed string pattern, it is
@@ -1025,7 +1045,7 @@ H.get_textobject_spec = function(id, args)
   -- Allow function returning spec or region
   if type(spec) == 'function' then spec = spec(unpack(args)) end
 
-  if not (H.is_composed_pattern(spec) or H.is_region(spec)) then return nil end
+  if not (H.is_composed_pattern(spec) or H.is_region(spec) or H.is_region_array(spec)) then return nil end
   return spec
 end
 
@@ -1043,6 +1063,14 @@ H.is_region = function(x)
     to_is_valid = type(x.to) == 'table' and type(x.to.line) == 'number' and type(x.to.col) == 'number'
   end
   return from_is_valid and to_is_valid
+end
+
+H.is_region_array = function(x)
+  if not vim.tbl_islist(x) then return false end
+  for _, v in ipairs(x) do
+    if not H.is_region(v) then return false end
+  end
+  return true
 end
 
 H.is_composed_pattern = function(x)
@@ -1070,7 +1098,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
   local reference_span = neigh.region_to_span(reference_region)
 
   local find_next = function(cur_reference_span)
-    local res = H.find_best_match(neigh['1d'], tobj_spec, cur_reference_span, opts)
+    local res = H.find_best_match(neigh, tobj_spec, cur_reference_span, opts)
 
     -- If didn't find in 0-neighborhood, possibly try extend one
     if res.span == nil then
@@ -1084,7 +1112,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
       cur_reference_span = neigh.region_to_span(cur_reference_region)
 
       -- Recompute based on new neighborhood
-      res = H.find_best_match(neigh['1d'], tobj_spec, cur_reference_span, opts)
+      res = H.find_best_match(neigh, tobj_spec, cur_reference_span, opts)
     end
 
     return res
@@ -1098,6 +1126,9 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
 
   -- Extract final span
   local extract = function(span, nested_pattern)
+    -- Allow `nil` nested span to deal with array of region as textobject spec
+    if nested_pattern == nil then return span end
+
     -- First extract local (with respect to best matched span) span
     local s = neigh['1d']:sub(span.from, span.to - 1)
     local extract_pattern = nested_pattern[#nested_pattern]
@@ -1191,12 +1222,12 @@ H.get_arg_next_span = function(init, seps)
 end
 
 -- Work with matching spans ---------------------------------------------------
----@param line string
----@param composed_pattern table
+---@param neighborhood table Output of `get_neighborhood()`.
+---@param tobj_spec table
 ---@param reference_span table Span to cover.
 ---@param opts table Fields: <search_method>.
 ---@private
-H.find_best_match = function(line, composed_pattern, reference_span, opts)
+H.find_best_match = function(neighborhood, tobj_spec, reference_span, opts)
   local best_span, best_nested_pattern, current_nested_pattern
   local f = function(span)
     if H.is_better_span(span, best_span, reference_span, opts) then
@@ -1205,9 +1236,18 @@ H.find_best_match = function(line, composed_pattern, reference_span, opts)
     end
   end
 
-  for _, nested_pattern in ipairs(H.cartesian_product(composed_pattern)) do
-    current_nested_pattern = nested_pattern
-    H.iterate_matched_spans(line, nested_pattern, f)
+  if H.is_region_array(tobj_spec) then
+    -- Iterate over all spans representing regions in array
+    for _, region in ipairs(tobj_spec) do
+      -- Consider region only if it is completely within neighborhood
+      if neighborhood.is_region_inside(region) then f(neighborhood.region_to_span(region)) end
+    end
+  else
+    -- Iterate over all matched spans
+    for _, nested_pattern in ipairs(H.cartesian_product(tobj_spec)) do
+      current_nested_pattern = nested_pattern
+      H.iterate_matched_spans(neighborhood['1d'], nested_pattern, f)
+    end
   end
 
   return { span = best_span, nested_pattern = best_nested_pattern }
@@ -1496,6 +1536,8 @@ H.get_neighborhood = function(reference_region, n_neighbors)
     return res
   end
 
+  local is_region_inside = function(region) return line_start <= region.from.line and region.to.line <= line_end end
+
   return {
     n_neighbors = n_neighbors,
     region = reference_region,
@@ -1505,6 +1547,7 @@ H.get_neighborhood = function(reference_region, n_neighbors)
     offset_to_pos = offset_to_pos,
     region_to_span = region_to_span,
     span_to_region = span_to_region,
+    is_region_inside = is_region_inside,
   }
 end
 

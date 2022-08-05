@@ -307,8 +307,9 @@ T['find_textobject()']['ensures that output is not covered by reference'] = func
   )
 end
 
-T['find_textobject()']['handles function as textobject spec'] = function()
-  -- Function which returns composed pattern
+T['find_textobject()']['handles function as textobject spec'] = new_set()
+
+T['find_textobject()']['handles function as textobject spec']['returns composed pattern'] = function()
   child.lua([[MiniAi.config.custom_textobjects = {
     x = function(...) _G.args = {...}; return {'x()x()x'} end
   }]])
@@ -328,9 +329,10 @@ T['find_textobject()']['handles function as textobject spec'] = function()
       },
     }
   )
+end
 
-  -- Function which returns region. Should take arguments from corresponding
-  -- `find_textobject()` call.
+T['find_textobject()']['handles function as textobject spec']['returns region'] = function()
+  -- Should take arguments from corresponding `find_textobject()` call
   child.lua([[_G.full_buffer = function(ai_type, id, opts)
     local from = { line = 1, col = 1 }
     local to = { line = vim.fn.line('$'), col = vim.fn.getline('$'):len() }
@@ -340,6 +342,38 @@ T['find_textobject()']['handles function as textobject spec'] = function()
   child.lua([[MiniAi.config.custom_textobjects = { g = _G.full_buffer }]])
   validate_find({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, { 'a', 'g' }, { { 1, 1 }, { 3, 3 } })
   validate_find({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, { 'i', 'g' }, { { 1, 1 }, { 3, 2 } })
+
+  -- Should return region as is (taking precedence over options)
+  child.lua('MiniAi.config.n_lines = 0')
+  child.lua([[MiniAi.config.search_method = 'next']])
+  validate_find({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, { 'a', 'g' }, { { 1, 1 }, { 3, 3 } })
+end
+
+T['find_textobject()']['handles function as textobject spec']['returns array of regions'] = function()
+  -- Should take arguments from corresponding `find_textobject()` call
+  child.lua([[_G.fixed_regions = function(_, _, _)
+    local res = {}
+    res[1] = { from = { line = 1, col = 1 }, to = { line = 1, col = 2 } }
+    res[2] = { from = { line = 1, col = 1 }, to = { line = 1, col = 4 } }
+    res[3] = { from = { line = 2, col = 1 }, to = { line = 2, col = 2 } }
+    res[4] = { from = { line = 2, col = 1 }, to = { line = 2, col = 4 } }
+    return res
+  end]])
+  child.lua([[MiniAi.config.custom_textobjects = { r = _G.fixed_regions }]])
+
+  local lines = { 'aaaaa', 'bbbb', 'ccc' }
+  validate_find(lines, { 1, 0 }, { 'a', 'r' }, { { 1, 1 }, { 1, 2 } })
+  validate_find(lines, { 1, 3 }, { 'a', 'r' }, { { 1, 1 }, { 1, 4 } })
+  validate_find(lines, { 1, 4 }, { 'a', 'r' }, { { 2, 1 }, { 2, 2 } })
+  validate_find(lines, { 3, 0 }, { 'a', 'r' }, nil)
+
+  -- Should pick best region according to options
+  child.lua([[MiniAi.config.n_lines = 0]])
+  validate_find(lines, { 1, 4 }, { 'a', 'r' }, nil)
+
+  child.lua([[MiniAi.config.n_lines = 10]])
+  child.lua([[MiniAi.config.search_method = 'cover']])
+  validate_find(lines, { 1, 4 }, { 'a', 'r' }, nil)
 end
 
 T['find_textobject()']['handles function as specification item'] = function()
@@ -2496,6 +2530,33 @@ T['Custom textobject']['full buffer'] = function()
 
   validate_tobj({ 'aaaa', 'bbb', 'cc' }, { 2, 0 }, 'ag', { { 1, 1 }, { 3, 2 } })
   validate_tobj({ '' }, { 1, 0 }, 'ag', { { 1, 1 }, { 1, 1 } })
+end
+
+T['Custom textobject']['long lines'] = function()
+  avoid_hit_enter_prompt()
+
+  child.lua([[_G.long_lines = function(_, _, _)
+    local res = {}
+    for i = 1, vim.api.nvim_buf_line_count(0) do
+      local cur_line = vim.fn.getline(i)
+      if vim.fn.strdisplaywidth(cur_line) > 80 then
+        local region = { from = { line = i, col = 1 }, to = { line = i, col = cur_line:len() } }
+        table.insert(res, region)
+      end
+    end
+    return res
+  end]])
+  child.lua('MiniAi.config.custom_textobjects = { L = _G.long_lines }')
+
+  local lines = { string.rep('a', 80), string.rep('b', 81), string.rep('c', 80), string.rep('d', 81) }
+  validate_tobj(lines, { 1, 0 }, 'aL', { { 2, 1 }, { 2, 81 } })
+  validate_tobj(lines, { 2, 0 }, 'aL', { { 2, 1 }, { 2, 81 } })
+
+  child.lua([[MiniAi.config.search_method = 'next']])
+  validate_tobj(lines, { 2, 0 }, 'aL', { { 4, 1 }, { 4, 81 } })
+
+  child.lua([[MiniAi.config.n_lines = 0]])
+  validate_no_tobj(lines, { 2, 0 }, 'aL')
 end
 
 T['Custom textobject']['balanced parenthesis with big enough width'] = function()

@@ -467,19 +467,18 @@ Textobject specification has a structure of composed pattern (see
 - Allows functions in certain places (enables more complex textobjects in
   exchange of increase in configuration complexity and computations):
     - If specification itself is a function, it will be called with the same
-      arguments as |MiniAi.find_textobject()| and should return either a
-      composed pattern or output region itself (useful for incorporating
-      other instruments, like treesitter).
-      Examples:
-        - Simplified variant of textobject for function call with name
-          taken from user prompt:
+      arguments as |MiniAi.find_textobject()| and should return one of:
+        - Composed pattern. Useful for implementing user input. Example of
+          simplified variant of textobject for function call with name taken
+          from user prompt:
 >
           function()
             local left_edge = vim.pesc(vim.fn.input('Function name: '))
             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
           end
 <
-        - Return all buffer:
+        - Single output region. Useful to allow full control over
+          textobject. Will be taken as is. Example of returning whole buffer:
 >
           function()
             local from = { line = 1, col = 1 }
@@ -488,6 +487,27 @@ Textobject specification has a structure of composed pattern (see
               col = math.max(vim.fn.getline('$'):len(), 1)
             }
             return { from = from, to = to }
+          end
+<
+        - Array of output region(s). Useful for incorporating other
+          instruments, like treesitter. The best region will be picked in the
+          same manner as with composed pattern (respecting options
+          `n_lines`, `search_method`, etc.). Example of selecting "best"
+          line with display width more than 80:
+>
+          function(_, _, _)
+            local res = {}
+            for i = 1, vim.api.nvim_buf_line_count(0) do
+              local cur_line = vim.fn.getline(i)
+              if vim.fn.strdisplaywidth(cur_line) > 80 then
+                local region = {
+                  from = { line = i, col = 1 },
+                  to = { line = i, col = cur_line:len() },
+                }
+                table.insert(res, region)
+              end
+            end
+            return res
           end
 <
     - If there is a function instead of assumed string pattern, it is
