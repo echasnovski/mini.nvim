@@ -1241,6 +1241,7 @@ H.make_query = function(buf_id, query)
   -- Possibly evaluate single active item
   if H.get_config().evaluate_single and n_active == 1 then
     MiniStarter.eval_current_item(buf_id)
+    MiniStarter.set_query(nil, buf_id)
     return
   end
 
