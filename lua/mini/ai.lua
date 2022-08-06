@@ -24,6 +24,7 @@
 --- - Motions for jumping to left/right edge of textobject.
 --- - Set of specification generators to tweak some builtin textobjects (see
 ---   |MiniAi.gen_spec|).
+--- - Treesitter textobjects (through |MiniAi.gen_spec.treesitter()| helper).
 ---
 --- This module works by defining mappings for both `a` and `i` in Visual and
 --- Operator-pending mode. After typing, they wait for single character user input
@@ -80,6 +81,16 @@
 ---     - Has limited support for "argument" textobject. Although it works in
 ---       most situations, it often misdetects commas as argument separator
 ---       (like if it is inside quotes or `{}`). 'mini.ai' deals with these cases.
+--- - 'nvim-treesitter/nvim-treesitter-textobjects':
+---     - Along with textobject functionality provides a curated and maintained
+---       set of popular textobject queries for many languages (which can power
+---       |MiniAi.gen_spec.treesitter()| functionality).
+---     - Operates with custome treesitter directives (see
+---       |lua-treesitter-directives|) allowing more fine-tuned textobjects.
+---     - Implements only textobjects based on treesitter.
+---     - Doesn't support |v:count|.
+---     - Doesn't support multiple search method (basically, only 'cover').
+---     - Doesn't support consecutive application of target textobject.
 ---
 --- # Disabling~
 ---
@@ -237,10 +248,10 @@
 ---           end
 --- <
 ---         - Array of output region(s). Useful for incorporating other
----           instruments, like treesitter. The best region will be picked in the
----           same manner as with composed pattern (respecting options
----           `n_lines`, `search_method`, etc.). Example of selecting "best"
----           line with display width more than 80:
+---           instruments, like treesitter (see |MiniAi.gen_spec.treesitter()|).
+---           The best region will be picked in the same manner as with composed
+---           pattern (respecting options `n_lines`, `search_method`, etc.).
+---           Example of selecting "best" line with display width more than 80:
 --- >
 ---           function(_, _, _)
 ---             local res = {}
@@ -594,6 +605,9 @@ end
 ---       -- Tweak function call to not detect dot in function name
 ---       f = gen_spec.function_call({ name_pattern = '[%w_]' }),
 ---
+---       -- Function definition (needs treesitter queries with these captures)
+---       F = gen_spec.treesitter({ a = '@function.outer', i = '@function.inner' }),
+---
 ---       -- Make `|` select both edges in non-balanced way
 ---       ['|'] = gen_spec.pair('|', '|', { type = 'non-balanced' }),
 ---     }
@@ -718,6 +732,106 @@ MiniAi.gen_spec.pair = function(left, right, opts)
   end
 
   H.error([[`opts.type` should be one of 'balanced', 'non-balanced', 'greedy'.]])
+end
+
+--- Treesitter specification
+---
+--- This is a specification in function form. When called with a pair of
+--- treesitter captures, it returns a specification function outputting an
+--- array of regions that match corresponding (`a` or `i`) capture.
+---
+--- In order for this to work, apart from working treesitter parser for desired
+--- language, user should have a reachable language-specific 'textobjects'
+--- query (see |get_query()|). The most straightforward way for this is to have
+--- 'textobjects.scm' query file with treesitter captures stored in some
+--- recognized path. This is primarily designed to be compatible with
+--- 'nvim-treesitter/nvim-treesitter-textobjects' plugin, but can be used
+--- without it.
+---
+--- Two most common approaches for having a query file:
+--- - Install 'nvim-treesitter/nvim-treesitter-textobjects'. It has curated and
+---   well maintained builtin query files for many languages with a standardized
+---   capture names, like `function.outer`, `function.inner`, etc.
+--- - Manually create file 'after/queries/<language name>/textobjects.scm' in
+---   your |$XDG_CONFIG_HOME| directory. It should contain queries with
+---   captures (later used to define textobjects). See |lua-treesitter-query|.
+--- To verify that query file is reachable, run (example for "lua" language)
+--- `:lua print(vim.inspect(vim.treesitter.get_query_files('lua', 'textobjects')))`
+--- (output should have at least an intended file).
+---
+--- Example configuration for function definition textobject with
+--- 'nvim-treesitter/nvim-treesitter-textobjects' captures:
+--- >
+---   local spec_treesitter = require('mini.ai').gen_spec.treesitter
+---   require('mini.ai').setup({
+---     custom_textobjects = {
+---       F = spec_treesitter({ a = '@function.outer', i = '@function.inner' }),
+---     }
+---   })
+--- >
+---
+--- Notes:
+--- - It uses buffer's |filetype| to determine query language.
+--- - On large files it is slower than pattern-based textobjects. Still very
+---   fast though (one search should be magnitude of milliseconds).
+--- - Queries from 'nvim-treesitter/nvim-treesitter-textobjects' use custom
+---   treesitter directives (see |lua-treesitter-directives|), like `make-range!`,
+---   which don't work outside of 'nvim-treesitter' framework.
+---
+---@param ai_captures table Captures for `a` and `i` textobjects: table with
+---   string <a> and <i> fields (should start with `'@'`).
+---
+---@return function Function with |MiniAi.find_textobject()| signature which
+---   returns array of current buffer regions representing matches for
+---   corresponding (`a` or `i`) treesitter capture.
+---
+---@seealso |MiniAi-textobject-specification| for how this type of textobject
+---   specification is processed.
+--- |get_query()| for how query is fetched.
+--- |Query:iter_captures()| for how all query captures are iterated.
+MiniAi.gen_spec.treesitter = function(ai_captures)
+  local is_capture = function(x) return type(x) == 'string' and x:sub(1, 1) == '@' end
+  if not (type(ai_captures) == 'table' and is_capture(ai_captures.a) and is_capture(ai_captures.i)) then
+    H.error('Wrong format for `ai_captures`. See `MiniAi.gen_spec.treesitter()` for details.')
+  end
+  ai_captures = { a = ai_captures.a:sub(2), i = ai_captures.i:sub(2) }
+
+  return function(ai_type, _, _)
+    local bufnr, ft_string = vim.api.nvim_get_current_buf(), vim.inspect(vim.bo.filetype)
+
+    -- Get parser for current buffer
+    local ok, parser = pcall(vim.treesitter.get_parser, 0, vim.bo.filetype)
+    if not ok then
+      local msg = string.format('Could not get parser for buffer %d and filetype %s.', bufnr, ft_string)
+      H.error(msg)
+    end
+
+    -- Get query for current language
+    local query = vim.treesitter.get_query(vim.bo.filetype, 'textobjects')
+    if query == nil then
+      local msg = string.format('Could not get query for buffer %d and filetype %s.', bufnr, ft_string)
+      H.error(msg)
+    end
+
+    -- Search for query matches in whole current buffer.
+    -- Return an array of matched regions.
+    local target_capture = ai_captures[ai_type]
+    local region_arr = {}
+    for _, tree in ipairs(parser:trees()) do
+      for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
+        if query.captures[capture_id] == target_capture then
+          local line_from, col_from, line_to, col_to = node:range()
+          table.insert(
+            region_arr,
+            -- `node:range()` returns 0-based numbers for end-exclusive region
+            { from = { line = line_from + 1, col = col_from + 1 }, to = { line = line_to + 1, col = col_to } }
+          )
+        end
+      end
+    end
+
+    return region_arr
+  end
 end
 
 --- Visually select textobject region

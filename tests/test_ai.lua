@@ -509,59 +509,6 @@ end
 
 T['gen_spec'] = new_set()
 
-T['gen_spec']['pair()'] = new_set()
-
-T['gen_spec']['pair()']['works'] = function()
-  child.lua([[MiniAi.config.custom_textobjects = { x = MiniAi.gen_spec.pair('x', 'y') }]])
-
-  validate_find1d('aaxbbycc', 3, { 'a', 'x' }, { 3, 6 })
-  validate_find1d('aaxbbycc', 3, { 'i', 'x' }, { 4, 5 })
-end
-
---stylua: ignore
-T['gen_spec']['pair()']['validates arguments'] = function()
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair(1, 'y')]]) end, '`left`.*string')
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 1)]]) end, '`right`.*string')
-
-  -- For balanced and greedy types arguments should be single character
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
-
-  -- `opts.type` should be one of pre-defined characters
-  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'y', { type = 'aaa' })]]) end, 'opts.type.*one of')
-end
-
-T['gen_spec']['pair()']['respects `opts.type`'] = function()
-  child.lua([[MiniAi.config.custom_textobjects = {
-    _ = MiniAi.gen_spec.pair('_', '_', { type = 'non-balanced' }),
-    x = MiniAi.gen_spec.pair('_', '_', { type = 'balanced' }),
-    b = MiniAi.gen_spec.pair('(', ')', { type = 'balanced' }),
-    y = MiniAi.gen_spec.pair('_', '_', { type = 'greedy' }),
-  }]])
-
-  -- Non-balanced pair
-  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 1 } }, { 1, 3 })
-  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 2 } }, { 3, 5 })
-  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 3 } }, { 5, 7 })
-  validate_find1d('_a_b_c_', 0, { 'i', '_' }, { 2, 2 })
-
-  -- Balanced pair
-  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 1 } }, { 1, 3 })
-  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 2 } }, { 5, 7 })
-  validate_find1d('_a_b_c_', 0, { 'i', 'x' }, { 2, 2 })
-
-  -- Should also work with "special" characters
-  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 1 } }, { 2, 5 })
-  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 2 } }, { 1, 6 })
-
-  -- Greedy pair
-  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 1 } }, { 1, 5 })
-  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 2 } }, { 4, 7 })
-  validate_find1d('__a__b_', 0, { 'i', 'y' }, { 3, 3 })
-end
-
 T['gen_spec']['argument()'] = new_set()
 
 T['gen_spec']['argument()']['works'] = function()
@@ -617,6 +564,129 @@ T['gen_spec']['function_call()']['respects `opts.name_pattern`'] = function()
 
   validate_find1d('f.g_h(x)', 0, { 'a', 'F' }, { 3, 8 })
   validate_find1d('f.g_h(x)', 0, { 'i', 'F' }, { 7, 7 })
+end
+
+T['gen_spec']['pair()'] = new_set()
+
+T['gen_spec']['pair()']['works'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { x = MiniAi.gen_spec.pair('x', 'y') }]])
+
+  validate_find1d('aaxbbycc', 3, { 'a', 'x' }, { 3, 6 })
+  validate_find1d('aaxbbycc', 3, { 'i', 'x' }, { 4, 5 })
+end
+
+--stylua: ignore
+T['gen_spec']['pair()']['validates arguments'] = function()
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair(1, 'y')]]) end, '`left`.*string')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 1)]]) end, '`right`.*string')
+
+  -- For balanced and greedy types arguments should be single character
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'balanced' })]]) end, '`left`.*single.*balanced')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('xx', 'y', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'yy', { type = 'greedy' })]]) end, '`left`.*single.*greedy')
+
+  -- `opts.type` should be one of pre-defined characters
+  expect.error(function() child.lua([[MiniAi.gen_spec.pair('x', 'y', { type = 'aaa' })]]) end, 'opts.type.*one of')
+end
+
+T['gen_spec']['pair()']['respects `opts.type`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    _ = MiniAi.gen_spec.pair('_', '_', { type = 'non-balanced' }),
+    x = MiniAi.gen_spec.pair('_', '_', { type = 'balanced' }),
+    b = MiniAi.gen_spec.pair('(', ')', { type = 'balanced' }),
+    y = MiniAi.gen_spec.pair('_', '_', { type = 'greedy' }),
+  }]])
+
+  -- Non-balanced pair
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 1 } }, { 1, 3 })
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 2 } }, { 3, 5 })
+  validate_find1d('_a_b_c_', 0, { 'a', '_', { n_times = 3 } }, { 5, 7 })
+  validate_find1d('_a_b_c_', 0, { 'i', '_' }, { 2, 2 })
+
+  -- Balanced pair
+  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 1 } }, { 1, 3 })
+  validate_find1d('_a_b_c_', 0, { 'a', 'x', { n_times = 2 } }, { 5, 7 })
+  validate_find1d('_a_b_c_', 0, { 'i', 'x' }, { 2, 2 })
+
+  -- Should also work with "special" characters
+  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 1 } }, { 2, 5 })
+  validate_find1d('((aa))', 2, { 'a', 'b', { n_times = 2 } }, { 1, 6 })
+
+  -- Greedy pair
+  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 1 } }, { 1, 5 })
+  validate_find1d('__a__b_', 0, { 'a', 'y', { n_times = 2 } }, { 4, 7 })
+  validate_find1d('__a__b_', 0, { 'i', 'y' }, { 3, 3 })
+end
+
+T['gen_spec']['treesitter()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Start editing reference file
+      child.cmd('edit tests/dir-ai/lua-file.lua')
+
+      -- Mock Lua treesitter for a reference file
+      child.cmd('source tests/dir-ai/mock-lua-treesitter.lua')
+
+      -- Defin "function definition" textobject
+      child.lua([[MiniAi.config.custom_textobjects = {
+        F = MiniAi.gen_spec.treesitter({ a = '@function.outer', i = '@function.inner' })
+      }]])
+    end,
+  },
+})
+
+T['gen_spec']['treesitter()']['works'] = function()
+  local lines = get_lines()
+  validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
+  validate_find(lines, { 1, 0 }, { 'i', 'F' }, { { 4, 3 }, { 4, 37 } })
+  validate_find(lines, { 13, 0 }, { 'a', 'F' }, nil)
+
+  -- Should prefer match on current line over multiline covering
+  validate_find(lines, { 4, 0 }, { 'a', 'F' }, { { 4, 10 }, { 4, 37 } })
+end
+
+T['gen_spec']['treesitter()']['respects textobject options'] = function()
+  local lines = get_lines()
+
+  -- `opts.n_lines`
+  child.lua('MiniAi.config.n_lines = 0')
+  validate_find(lines, { 9, 0 }, { 'a', 'F' }, nil)
+
+  -- `opts.search_method`
+  child.lua('MiniAi.config.n_lines = 50')
+  child.lua([[MiniAi.config.search_method = 'next']])
+  validate_find(lines, { 9, 0 }, { 'a', 'F' }, nil)
+end
+
+T['gen_spec']['treesitter()']['validates arguments'] = function()
+  local validate = function(args)
+    expect.error(function() child.lua([[MiniAi.gen_spec.treesitter(...)]], { args }) end, 'ai_captures')
+  end
+
+  validate('a')
+  validate({})
+  -- Each `a` and `i` should be a string starting with '@'
+  validate({ a = 1 })
+  validate({ a = 'function.outer' })
+  validate({ i = 1 })
+  validate({ i = 'function.outer' })
+end
+
+T['gen_spec']['treesitter()']['validates treesitter presence'] = function()
+  -- Query
+  child.lua('vim.treesitter.get_query = function() return nil end')
+  expect.error(
+    function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
+    vim.pesc('(mini.ai) Could not get query for buffer 1 and filetype "lua".')
+  )
+
+  -- Parser
+  child.bo.filetype = 'aaa'
+  expect.error(
+    function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
+    vim.pesc('(mini.ai) Could not get parser for buffer 1 and filetype "aaa".')
+  )
 end
 
 local validate_select = function(lines, cursor, args, expected)
