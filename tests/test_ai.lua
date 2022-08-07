@@ -646,6 +646,20 @@ T['gen_spec']['treesitter()']['works'] = function()
   validate_find(lines, { 4, 0 }, { 'a', 'F' }, { { 4, 10 }, { 4, 37 } })
 end
 
+T['gen_spec']['treesitter()']['allows array of captures'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    o = MiniAi.gen_spec.treesitter({ a = { '@function.outer', '@other' }, i = { '@function.inner', '@other' } })
+  }]])
+
+  local lines = get_lines()
+  validate_find(lines, { 1, 0 }, { 'a', 'o' }, { { 1, 1 }, { 1, 12 } })
+  validate_find(lines, { 1, 0 }, { 'i', 'o' }, { { 1, 1 }, { 1, 12 } })
+
+  validate_find(lines, { 1, 0 }, { 'a', 'o', { n_times = 2 } }, { { 3, 1 }, { 5, 3 } })
+  validate_find(lines, { 1, 0 }, { 'i', 'o', { n_times = 2 } }, { { 4, 3 }, { 4, 37 } })
+  validate_find(lines, { 13, 0 }, { 'a', 'o' }, { { 13, 1 }, { 13, 8 } })
+end
+
 T['gen_spec']['treesitter()']['respects textobject options'] = function()
   local lines = get_lines()
 
@@ -669,8 +683,12 @@ T['gen_spec']['treesitter()']['validates arguments'] = function()
   -- Each `a` and `i` should be a string starting with '@'
   validate({ a = 1 })
   validate({ a = 'function.outer' })
+  validate({ a = { 1 } })
+  validate({ a = { 'function.outer' } })
   validate({ i = 1 })
-  validate({ i = 'function.outer' })
+  validate({ i = 'function.inner' })
+  validate({ i = { 1 } })
+  validate({ i = { 'function.inner' } })
 end
 
 T['gen_spec']['treesitter()']['validates treesitter presence'] = function()

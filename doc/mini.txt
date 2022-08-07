@@ -919,6 +919,10 @@ Example configuration for function definition textobject with
   require('mini.ai').setup({
     custom_textobjects = {
       F = spec_treesitter({ a = '@function.outer', i = '@function.inner' }),
+      o = spec_treesitter({
+        a = { '@conditional.outer', '@loop.outer' },
+        i = { '@conditional.inner', '@loop.inner' },
+      })
     }
   })
 >
@@ -933,7 +937,9 @@ Notes:
 
 Parameters~
 {ai_captures} `(table)` Captures for `a` and `i` textobjects: table with
-  string <a> and <i> fields (should start with `'@'`).
+  <a> and <i> fields with captures for `a` and `i` textobjects respectively.
+  Each value can be either a string capture (should start with `'@'`) or an
+  array of such captures (best among all matches will be chosen).
 
 Return~
 `(function)` Function with |MiniAi.find_textobject()| signature which

@@ -766,6 +766,10 @@ end
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {
 ---       F = spec_treesitter({ a = '@function.outer', i = '@function.inner' }),
+---       o = spec_treesitter({
+---         a = { '@conditional.outer', '@loop.outer' },
+---         i = { '@conditional.inner', '@loop.inner' },
+---       })
 ---     }
 ---   })
 --- >
@@ -779,7 +783,9 @@ end
 ---   which don't work outside of 'nvim-treesitter' framework.
 ---
 ---@param ai_captures table Captures for `a` and `i` textobjects: table with
----   string <a> and <i> fields (should start with `'@'`).
+---   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
+---   Each value can be either a string capture (should start with `'@'`) or an
+---   array of such captures (best among all matches will be chosen).
 ---
 ---@return function Function with |MiniAi.find_textobject()| signature which
 ---   returns array of current buffer regions representing matches for
@@ -790,11 +796,7 @@ end
 --- |get_query()| for how query is fetched.
 --- |Query:iter_captures()| for how all query captures are iterated.
 MiniAi.gen_spec.treesitter = function(ai_captures)
-  local is_capture = function(x) return type(x) == 'string' and x:sub(1, 1) == '@' end
-  if not (type(ai_captures) == 'table' and is_capture(ai_captures.a) and is_capture(ai_captures.i)) then
-    H.error('Wrong format for `ai_captures`. See `MiniAi.gen_spec.treesitter()` for details.')
-  end
-  ai_captures = { a = ai_captures.a:sub(2), i = ai_captures.i:sub(2) }
+  ai_captures = H.prepare_ai_captures(ai_captures)
 
   return function(ai_type, _, _)
     local bufnr, ft_string = vim.api.nvim_get_current_buf(), vim.inspect(vim.bo.filetype)
@@ -815,11 +817,12 @@ MiniAi.gen_spec.treesitter = function(ai_captures)
 
     -- Search for query matches in whole current buffer.
     -- Return an array of matched regions.
-    local target_capture = ai_captures[ai_type]
+    local target_captures = ai_captures[ai_type]
     local region_arr = {}
     for _, tree in ipairs(parser:trees()) do
       for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
-        if query.captures[capture_id] == target_capture then
+        local capture = query.captures[capture_id]
+        if vim.tbl_contains(target_captures, capture) then
           local line_from, col_from, line_to, col_to = node:range()
           table.insert(
             region_arr,
@@ -1333,6 +1336,30 @@ H.get_arg_next_span = function(init, seps)
   if init <= seps[n - 1] then return seps[n - 1], seps[n] end
 
   return nil
+end
+
+-- Work with treesitter textobject --------------------------------------------
+H.prepare_ai_captures = function(ai_captures)
+  local is_capture = function(x)
+    if type(x) == 'string' then x = { x } end
+    if not vim.tbl_islist(x) then return false end
+
+    for _, v in ipairs(x) do
+      if not (type(v) == 'string' and v:sub(1, 1) == '@') then return false end
+    end
+    return true
+  end
+
+  if not (type(ai_captures) == 'table' and is_capture(ai_captures.a) and is_capture(ai_captures.i)) then
+    H.error('Wrong format for `ai_captures`. See `MiniAi.gen_spec.treesitter()` for details.')
+  end
+
+  local prepare = function(x)
+    if type(x) == 'string' then x = { x } end
+    return vim.tbl_map(function(s) return s:sub(2) end, x)
+  end
+
+  return { a = prepare(ai_captures.a), i = prepare(ai_captures.i) }
 end
 
 -- Work with matching spans ---------------------------------------------------
