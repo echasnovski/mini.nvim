@@ -931,9 +931,6 @@ Notes:
 - It uses buffer's |filetype| to determine query language.
 - On large files it is slower than pattern-based textobjects. Still very
   fast though (one search should be magnitude of milliseconds).
-- Queries from 'nvim-treesitter/nvim-treesitter-textobjects' use custom
-  treesitter directives (see |lua-treesitter-directives|), like `make-range!`,
-  which don't work outside of 'nvim-treesitter' framework.
 
 Parameters~
 {ai_captures} `(table)` Captures for `a` and `i` textobjects: table with

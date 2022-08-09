@@ -778,9 +778,6 @@ end
 --- - It uses buffer's |filetype| to determine query language.
 --- - On large files it is slower than pattern-based textobjects. Still very
 ---   fast though (one search should be magnitude of milliseconds).
---- - Queries from 'nvim-treesitter/nvim-treesitter-textobjects' use custom
----   treesitter directives (see |lua-treesitter-directives|), like `make-range!`,
----   which don't work outside of 'nvim-treesitter' framework.
 ---
 ---@param ai_captures table Captures for `a` and `i` textobjects: table with
 ---   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
@@ -808,21 +805,23 @@ MiniAi.gen_spec.treesitter = function(ai_captures)
       H.error(msg)
     end
 
-    -- Get query for current language
-    local query = vim.treesitter.get_query(vim.bo.filetype, 'textobjects')
-    if query == nil then
-      local msg = string.format('Could not get query for buffer %d and filetype %s.', bufnr, ft_string)
-      H.error(msg)
-    end
-
     -- Search for query matches in whole current buffer.
     -- Return an array of matched regions.
     local target_captures = ai_captures[ai_type]
     local region_arr = {}
-    for _, tree in ipairs(parser:trees()) do
-      for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
-        local capture = query.captures[capture_id]
-        if vim.tbl_contains(target_captures, capture) then
+    local has_nvim_treesitter, queries = pcall(require, 'nvim-treesitter.query')
+    if has_nvim_treesitter then
+      -- Get query for current language
+      local query = queries.get_query(vim.bo.filetype, 'textobjects')
+      if query == nil then
+        local msg = string.format('Could not get query for buffer %d and filetype %s.', bufnr, ft_string)
+        H.error(msg)
+      end
+
+      for _, cap in ipairs(target_captures) do
+        local matches = queries.get_capture_matches_recursively(bufnr, '@' .. cap, 'textobjects')
+        for _, m in ipairs(matches) do
+          local node = m.node
           local line_from, col_from, line_to, col_to = node:range()
           table.insert(
             region_arr,
@@ -831,8 +830,27 @@ MiniAi.gen_spec.treesitter = function(ai_captures)
           )
         end
       end
+    else
+      -- Get query for current language
+      local query = vim.treesitter.get_query(vim.bo.filetype, 'textobjects')
+      if query == nil then
+        local msg = string.format('Could not get query for buffer %d and filetype %s.', bufnr, ft_string)
+        H.error(msg)
+      end
+      for _, tree in ipairs(parser:trees()) do
+        for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
+          local capture = query.captures[capture_id]
+          if vim.tbl_contains(target_captures, capture) then
+            local line_from, col_from, line_to, col_to = node:range()
+            table.insert(
+              region_arr,
+              -- `node:range()` returns 0-based numbers for end-exclusive region
+              { from = { line = line_from + 1, col = col_from + 1 }, to = { line = line_to + 1, col = col_to } }
+            )
+          end
+        end
+      end
     end
-
     return region_arr
   end
 end
