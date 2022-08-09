@@ -1067,6 +1067,10 @@ H.setup_config = function(config)
   vim.validate({
     ['mappings.around'] = { config.mappings.around, 'string' },
     ['mappings.inside'] = { config.mappings.inside, 'string' },
+    ['mappings.around_next'] = { config.mappings.around_next, 'string' },
+    ['mappings.inside_next'] = { config.mappings.inside_next, 'string' },
+    ['mappings.around_last'] = { config.mappings.around_last, 'string' },
+    ['mappings.inside_last'] = { config.mappings.inside_last, 'string' },
     ['mappings.goto_left'] = { config.mappings.goto_left, 'string' },
     ['mappings.goto_right'] = { config.mappings.goto_right, 'string' },
   })
