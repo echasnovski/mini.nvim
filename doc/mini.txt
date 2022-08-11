@@ -886,7 +886,7 @@ Parameters~
 
 ------------------------------------------------------------------------------
                                                   *MiniAi.gen_spec.treesitter()*
-                  `MiniAi.gen_spec.treesitter`({ai_captures})
+              `MiniAi.gen_spec.treesitter`({ai_captures}, {opts})
 Treesitter specification
 
 This is a specification in function form. When called with a pair of
@@ -928,18 +928,25 @@ Example configuration for function definition textobject with
 >
 
 Notes:
+- By default query is done using 'nvim-treesitter' plugin if it is present
+  (falls back to builtin methods otherwise). This allows for a more
+  advanced features (like multiple buffer languages, custom directives, etc.).
+  See `opts.use_nvim_treesitter` for how to disable this.
 - It uses buffer's |filetype| to determine query language.
 - On large files it is slower than pattern-based textobjects. Still very
-  fast though (one search should be magnitude of milliseconds).
-- Queries from 'nvim-treesitter/nvim-treesitter-textobjects' use custom
-  treesitter directives (see |lua-treesitter-directives|), like `make-range!`,
-  which don't work outside of 'nvim-treesitter' framework.
+  fast though (one search should be magnitude of milliseconds or tens of
+  milliseconds on really large file).
 
 Parameters~
 {ai_captures} `(table)` Captures for `a` and `i` textobjects: table with
   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
   Each value can be either a string capture (should start with `'@'`) or an
   array of such captures (best among all matches will be chosen).
+{opts} `(table)` Options. Possible values:
+  - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
+    (if present) to do the query. It implements more advanced behavior at
+    cost of increased execution time. Provides more coherent experience if
+    'nvim-treesitter-textobjects' queries are used. Default: `true`.
 
 Return~
 `(function)` Function with |MiniAi.find_textobject()| signature which
@@ -949,8 +956,9 @@ Return~
 See also~
 |MiniAi-textobject-specification| for how this type of textobject
   specification is processed.
-|get_query()| for how query is fetched.
-|Query:iter_captures()| for how all query captures are iterated.
+|get_query()| for how query is fetched in case of no 'nvim-treesitter'.
+|Query:iter_captures()| for how all query captures are iterated in case of
+  no 'nvim-treesitter'.
 
 ------------------------------------------------------------------------------
                                                     *MiniAi.select_textobject()*

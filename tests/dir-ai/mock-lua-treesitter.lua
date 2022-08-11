@@ -6,6 +6,7 @@ vim.treesitter.get_parser = function(_, lang, _)
     trees = function(_)
       return { { root = function(_) return {} end } }
     end,
+    lang = function(_) return lang end,
   }
 end
 
@@ -46,16 +47,4 @@ vim.treesitter.get_query = function(lang, _)
   end
 
   return query
-end
-
-local t = { { 10, 'a' }, { 11, 'b' }, { 12, 'c' } }
-
-_G.new_generator = function()
-  local iterator = function(s, _)
-    s.i = s.i + 1
-    local res = t[s.i]
-    if res == nil then return nil end
-    return unpack(res)
-  end
-  return iterator, { i = 0 }
 end

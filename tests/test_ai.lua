@@ -50,6 +50,10 @@ local validate_next_region1d = function(keys, next_region)
   eq({ child.fn.col('.'), child.fn.col('v') }, next_region)
 end
 
+local mock_treesitter_builtin = function() child.cmd('source tests/dir-ai/mock-lua-treesitter.lua') end
+
+local mock_treesitter_plugin = function() child.cmd('set rtp+=tests/dir-ai') end
+
 -- Output test set
 T = new_set({
   hooks = {
@@ -633,9 +637,6 @@ T['gen_spec']['treesitter()'] = new_set({
       -- Start editing reference file
       child.cmd('edit tests/dir-ai/lua-file.lua')
 
-      -- Mock Lua treesitter for a reference file
-      child.cmd('source tests/dir-ai/mock-lua-treesitter.lua')
-
       -- Defin "function definition" textobject
       child.lua([[MiniAi.config.custom_textobjects = {
         F = MiniAi.gen_spec.treesitter({ a = '@function.outer', i = '@function.inner' })
@@ -645,6 +646,8 @@ T['gen_spec']['treesitter()'] = new_set({
 })
 
 T['gen_spec']['treesitter()']['works'] = function()
+  mock_treesitter_builtin()
+
   local lines = get_lines()
   validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
   validate_find(lines, { 1, 0 }, { 'i', 'F' }, { { 4, 3 }, { 4, 37 } })
@@ -655,6 +658,8 @@ T['gen_spec']['treesitter()']['works'] = function()
 end
 
 T['gen_spec']['treesitter()']['allows array of captures'] = function()
+  mock_treesitter_builtin()
+
   child.lua([[MiniAi.config.custom_textobjects = {
     o = MiniAi.gen_spec.treesitter({ a = { '@function.outer', '@other' }, i = { '@function.inner', '@other' } })
   }]])
@@ -668,7 +673,36 @@ T['gen_spec']['treesitter()']['allows array of captures'] = function()
   validate_find(lines, { 13, 0 }, { 'a', 'o' }, { { 13, 1 }, { 13, 8 } })
 end
 
-T['gen_spec']['treesitter()']['respects textobject options'] = function()
+T['gen_spec']['treesitter()']['respects `opts.use_nvim_treesitter`'] = function()
+  mock_treesitter_builtin()
+
+  child.lua([[MiniAi.config.custom_textobjects = {
+    F = MiniAi.gen_spec.treesitter({ a = '@function.outer', i = '@function.inner' }),
+    o = MiniAi.gen_spec.treesitter({ a = '@plugin_other', i = '@plugin_other' }),
+    O = MiniAi.gen_spec.treesitter(
+      { a = '@plugin_other', i = '@plugin_other' },
+      { use_nvim_treesitter = false }
+    )
+  }]])
+  local lines = get_lines()
+
+  -- By default it should be `true` but fall back to builtin if no
+  -- 'nvim-treesitter' is found
+  validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
+  validate_find(lines, { 1, 0 }, { 'a', 'o' }, nil)
+  validate_find(lines, { 1, 0 }, { 'a', 'O' }, nil)
+
+  mock_treesitter_plugin()
+  validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
+  validate_find(lines, { 1, 0 }, { 'a', 'o' }, { { 1, 1 }, { 1, 12 } })
+
+  -- Should respect `false` value
+  validate_find(lines, { 1, 0 }, { 'a', 'O' }, nil)
+end
+
+T['gen_spec']['treesitter()']['respects plugin options'] = function()
+  mock_treesitter_builtin()
+
   local lines = get_lines()
 
   -- `opts.n_lines`
@@ -681,7 +715,9 @@ T['gen_spec']['treesitter()']['respects textobject options'] = function()
   validate_find(lines, { 9, 0 }, { 'a', 'F' }, nil)
 end
 
-T['gen_spec']['treesitter()']['validates arguments'] = function()
+T['gen_spec']['treesitter()']['validates `ai_captures` argument'] = function()
+  mock_treesitter_builtin()
+
   local validate = function(args)
     expect.error(function() child.lua([[MiniAi.gen_spec.treesitter(...)]], { args }) end, 'ai_captures')
   end
@@ -699,19 +735,21 @@ T['gen_spec']['treesitter()']['validates arguments'] = function()
   validate({ i = { 'function.inner' } })
 end
 
-T['gen_spec']['treesitter()']['validates treesitter presence'] = function()
+T['gen_spec']['treesitter()']['validates builtin treesitter presence'] = function()
+  mock_treesitter_builtin()
+
   -- Query
   child.lua('vim.treesitter.get_query = function() return nil end')
   expect.error(
     function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
-    vim.pesc('(mini.ai) Could not get query for buffer 1 and filetype "lua".')
+    vim.pesc([[(mini.ai) Can not get query for buffer 1 and language 'lua'.]])
   )
 
   -- Parser
   child.bo.filetype = 'aaa'
   expect.error(
     function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
-    vim.pesc('(mini.ai) Could not get parser for buffer 1 and filetype "aaa".')
+    vim.pesc([[(mini.ai) Can not get parser for buffer 1 and language 'aaa'.]])
   )
 end
 

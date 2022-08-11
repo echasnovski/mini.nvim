@@ -775,17 +775,24 @@ end
 --- >
 ---
 --- Notes:
+--- - By default query is done using 'nvim-treesitter' plugin if it is present
+---   (falls back to builtin methods otherwise). This allows for a more
+---   advanced features (like multiple buffer languages, custom directives, etc.).
+---   See `opts.use_nvim_treesitter` for how to disable this.
 --- - It uses buffer's |filetype| to determine query language.
 --- - On large files it is slower than pattern-based textobjects. Still very
----   fast though (one search should be magnitude of milliseconds).
---- - Queries from 'nvim-treesitter/nvim-treesitter-textobjects' use custom
----   treesitter directives (see |lua-treesitter-directives|), like `make-range!`,
----   which don't work outside of 'nvim-treesitter' framework.
+---   fast though (one search should be magnitude of milliseconds or tens of
+---   milliseconds on really large file).
 ---
 ---@param ai_captures table Captures for `a` and `i` textobjects: table with
 ---   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
 ---   Each value can be either a string capture (should start with `'@'`) or an
 ---   array of such captures (best among all matches will be chosen).
+---@param opts table Options. Possible values:
+---   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
+---     (if present) to do the query. It implements more advanced behavior at
+---     cost of increased execution time. Provides more coherent experience if
+---     'nvim-treesitter-textobjects' queries are used. Default: `true`.
 ---
 ---@return function Function with |MiniAi.find_textobject()| signature which
 ---   returns array of current buffer regions representing matches for
@@ -793,47 +800,32 @@ end
 ---
 ---@seealso |MiniAi-textobject-specification| for how this type of textobject
 ---   specification is processed.
---- |get_query()| for how query is fetched.
---- |Query:iter_captures()| for how all query captures are iterated.
-MiniAi.gen_spec.treesitter = function(ai_captures)
+--- |get_query()| for how query is fetched in case of no 'nvim-treesitter'.
+--- |Query:iter_captures()| for how all query captures are iterated in case of
+---   no 'nvim-treesitter'.
+MiniAi.gen_spec.treesitter = function(ai_captures, opts)
+  opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = true }, opts or {})
   ai_captures = H.prepare_ai_captures(ai_captures)
 
   return function(ai_type, _, _)
-    local bufnr, ft_string = vim.api.nvim_get_current_buf(), vim.inspect(vim.bo.filetype)
-
-    -- Get parser for current buffer
-    local ok, parser = pcall(vim.treesitter.get_parser, 0, vim.bo.filetype)
-    if not ok then
-      local msg = string.format('Could not get parser for buffer %d and filetype %s.', bufnr, ft_string)
-      H.error(msg)
-    end
-
-    -- Get query for current language
-    local query = vim.treesitter.get_query(vim.bo.filetype, 'textobjects')
-    if query == nil then
-      local msg = string.format('Could not get query for buffer %d and filetype %s.', bufnr, ft_string)
-      H.error(msg)
-    end
-
-    -- Search for query matches in whole current buffer.
-    -- Return an array of matched regions.
+    -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
-    local region_arr = {}
-    for _, tree in ipairs(parser:trees()) do
-      for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
-        local capture = query.captures[capture_id]
-        if vim.tbl_contains(target_captures, capture) then
-          local line_from, col_from, line_to, col_to = node:range()
-          table.insert(
-            region_arr,
-            -- `node:range()` returns 0-based numbers for end-exclusive region
-            { from = { line = line_from + 1, col = col_from + 1 }, to = { line = line_to + 1, col = col_to } }
-          )
-        end
-      end
+    local has_nvim_treesitter, _ = pcall(require, 'nvim-treesitter')
+    _G.has_nvim_treesitter = has_nvim_treesitter
+    _G.opts_use_nvim_treesitter = opts.use_nvim_treesitter
+    local matched_nodes
+    if has_nvim_treesitter and opts.use_nvim_treesitter then
+      matched_nodes = H.get_matched_nodes_plugin(target_captures)
+    else
+      matched_nodes = H.get_matched_nodes_builtin(target_captures)
     end
 
-    return region_arr
+    -- Return array of regions
+    return vim.tbl_map(function(node)
+      local line_from, col_from, line_to, col_to = node:range()
+      -- `node:range()` returns 0-based numbers for end-exclusive region
+      return { from = { line = line_from + 1, col = col_from + 1 }, to = { line = line_to + 1, col = col_to } }
+    end, matched_nodes)
   end
 end
 
@@ -1359,11 +1351,47 @@ H.prepare_ai_captures = function(ai_captures)
   end
 
   local prepare = function(x)
-    if type(x) == 'string' then x = { x } end
-    return vim.tbl_map(function(s) return s:sub(2) end, x)
+    if type(x) == 'string' then return { x } end
+    return x
   end
 
   return { a = prepare(ai_captures.a), i = prepare(ai_captures.i) }
+end
+
+H.get_matched_nodes_plugin = function(captures)
+  -- Hope that 'nvim-treesitter.query' is stable enough
+  local ts_queries = require('nvim-treesitter.query')
+  return vim.tbl_map(
+    function(match) return match.node end,
+    -- This call should handle multiple languages in buffer
+    ts_queries.get_capture_matches_recursively(0, captures, 'textobjects')
+  )
+end
+
+H.get_matched_nodes_builtin = function(captures)
+  -- Fetch treesitter data for buffer
+  local lang = vim.bo.filetype
+  local ok, parser = pcall(vim.treesitter.get_parser, 0, lang)
+  if not ok then H.error_treesitter('parser', lang) end
+
+  local query = vim.treesitter.get_query(lang, 'textobjects')
+  if query == nil then H.error_treesitter('query', lang) end
+
+  -- Compute matched captures
+  captures = vim.tbl_map(function(x) return x:sub(2) end, captures)
+  local res = {}
+  for _, tree in ipairs(parser:trees()) do
+    for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
+      if vim.tbl_contains(captures, query.captures[capture_id]) then table.insert(res, node) end
+    end
+  end
+  return res
+end
+
+H.error_treesitter = function(failed_get, lang)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local msg = string.format([[Can not get %s for buffer %d and language '%s'.]], failed_get, bufnr, lang)
+  H.error(msg)
 end
 
 -- Work with matching spans ---------------------------------------------------
