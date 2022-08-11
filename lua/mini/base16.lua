@@ -353,6 +353,12 @@ H.apply_palette = function(palette, use_cterm)
     p, hi = palette, H.highlight_gui
   end
 
+  -- NOTE: recommendations for adding new highlight groups:
+  -- - Put all related groups (like for new plugin) in single paragraph.
+  -- - Sort within group alphabetically (by hl-group name) ignoring case.
+  -- - Link all repeated groups within paragraph (lowers execution time).
+  -- - Align by commas.
+
   -- stylua: ignore start
   -- Builtin highlighting groups. Some groups which are missing in 'base16-vim'
   -- are added based on groups to which they are linked.
@@ -373,6 +379,7 @@ H.apply_palette = function(palette, use_cterm)
   hi('FoldColumn',   {fg=p.base0C, bg=p.base01, attr=nil,         sp=nil})
   hi('Folded',       {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
   hi('IncSearch',    {fg=p.base01, bg=p.base09, attr=nil,         sp=nil})
+  hi('lCursor',      {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
   hi('LineNr',       {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
   -- Slight difference from base16, where `bg=base03` is used. This makes
   -- it possible to comfortably see this highlighting in comments.
@@ -413,7 +420,6 @@ H.apply_palette = function(palette, use_cterm)
   hi('WarningMsg',   {fg=p.base08, bg=nil,      attr=nil,         sp=nil})
   hi('Whitespace',   {fg=p.base03, bg=nil,      attr=nil,         sp=nil})
   hi('WildMenu',     {fg=p.base08, bg=p.base0A, attr=nil,         sp=nil})
-  hi('lCursor',      {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
 
   if vim.fn.hlexists('WinBar') == 1 then
     hi('WinBar',   {fg=p.base04, bg=p.base02, attr=nil, sp=nil})
@@ -455,36 +461,35 @@ H.apply_palette = function(palette, use_cterm)
   hi('Todo',           {fg=p.base0A, bg=p.base01, attr=nil, sp=nil})
   hi('Type',           {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
   hi('Typedef',        {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
-  hi('Underlined',     {fg=p.base08, bg=nil,      attr=nil, sp=nil})
 
   -- Other from 'base16-vim'
-  hi('Bold',       {fg=nil,      bg=nil, attr='bold', sp=nil})
-  hi('Italic',     {fg=nil,      bg=nil, attr=nil,    sp=nil})
-  hi('TooLong',    {fg=p.base08, bg=nil, attr=nil,    sp=nil})
-  hi('Underlined', {fg=p.base08, bg=nil, attr=nil,    sp=nil})
+  hi('Bold',       {fg=nil,      bg=nil, attr='bold',      sp=nil})
+  hi('Italic',     {fg=nil,      bg=nil, attr='italic',    sp=nil})
+  hi('TooLong',    {fg=p.base08, bg=nil, attr=nil,         sp=nil})
+  hi('Underlined', {fg=nil,      bg=nil, attr='underline', sp=nil})
 
   -- Git diff
   hi('DiffAdded',   {fg=p.base0B, bg=p.base00, attr=nil, sp=nil})
   hi('DiffFile',    {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
   hi('DiffLine',    {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
-  hi('DiffNewFile', {fg=p.base0B, bg=p.base00, attr=nil, sp=nil})
-  hi('DiffRemoved', {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
+  hi('DiffNewFile', {link='DiffAdded'})
+  hi('DiffRemoved', {link='DiffFile'})
 
   -- Git commit
   hi('gitcommitBranch',        {fg=p.base09, bg=nil, attr='bold', sp=nil})
-  hi('gitcommitComment',       {fg=p.base03, bg=nil, attr=nil,    sp=nil})
-  hi('gitcommitDiscarded',     {fg=p.base03, bg=nil, attr=nil,    sp=nil})
+  hi('gitcommitComment',       {link='Comment'})
+  hi('gitcommitDiscarded',     {link='Comment'})
   hi('gitcommitDiscardedFile', {fg=p.base08, bg=nil, attr='bold', sp=nil})
   hi('gitcommitDiscardedType', {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
   hi('gitcommitHeader',        {fg=p.base0E, bg=nil, attr=nil,    sp=nil})
   hi('gitcommitOverflow',      {fg=p.base08, bg=nil, attr=nil,    sp=nil})
-  hi('gitcommitSelected',      {fg=p.base03, bg=nil, attr=nil,    sp=nil})
+  hi('gitcommitSelected',      {link='Comment'})
   hi('gitcommitSelectedFile',  {fg=p.base0B, bg=nil, attr='bold', sp=nil})
-  hi('gitcommitSelectedType',  {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
+  hi('gitcommitSelectedType',  {link='gitcommitDiscardedType'})
   hi('gitcommitSummary',       {fg=p.base0B, bg=nil, attr=nil,    sp=nil})
-  hi('gitcommitUnmergedFile',  {fg=p.base08, bg=nil, attr='bold', sp=nil})
-  hi('gitcommitUnmergedType',  {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
-  hi('gitcommitUntracked',     {fg=p.base03, bg=nil, attr=nil,    sp=nil})
+  hi('gitcommitUnmergedFile',  {link='gitcommitDiscardedFile'})
+  hi('gitcommitUnmergedType',  {link='gitcommitDiscardedType'})
+  hi('gitcommitUntracked',     {link='Comment'})
   hi('gitcommitUntrackedFile', {fg=p.base0A, bg=nil, attr=nil,    sp=nil})
 
   -- Built-in diagnostic
@@ -499,10 +504,10 @@ H.apply_palette = function(palette, use_cterm)
     hi('DiagnosticFloatingInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
     hi('DiagnosticFloatingWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
 
-    hi('DiagnosticSignError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticSignHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticSignInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticSignWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+    hi('DiagnosticSignError', {link='DiagnosticFloatingError'})
+    hi('DiagnosticSignHint',  {link='DiagnosticFloatingHint'})
+    hi('DiagnosticSignInfo',  {link='DiagnosticFloatingInfo'})
+    hi('DiagnosticSignWarn',  {link='DiagnosticFloatingWarn'})
 
     hi('DiagnosticUnderlineError', {fg=nil, bg=nil, attr='underline', sp=p.base08})
     hi('DiagnosticUnderlineHint',  {fg=nil, bg=nil, attr='underline', sp=p.base0D})
@@ -519,10 +524,10 @@ H.apply_palette = function(palette, use_cterm)
     hi('LspDiagnosticsFloatingInformation', {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
     hi('LspDiagnosticsFloatingWarning',     {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
 
-    hi('LspDiagnosticsSignError',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsSignHint',        {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsSignInformation', {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsSignWarning',     {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+    hi('LspDiagnosticsSignError',       {link='LspDiagnosticsFloatingError'})
+    hi('LspDiagnosticsSignHint',        {link='LspDiagnosticsFloatingHint'})
+    hi('LspDiagnosticsSignInformation', {link='LspDiagnosticsFloatingInformation'})
+    hi('LspDiagnosticsSignWarning',     {link='LspDiagnosticsFloatingWarning'})
 
     hi('LspDiagnosticsUnderlineError',       {fg=nil, bg=nil, attr='underline', sp=p.base08})
     hi('LspDiagnosticsUnderlineHint',        {fg=nil, bg=nil, attr='underline', sp=p.base0D})
@@ -540,12 +545,12 @@ H.apply_palette = function(palette, use_cterm)
   hi('MiniIndentscopeSymbol', {fg=p.base0F, bg=nil, attr=nil,         sp=nil})
   hi('MiniIndentscopePrefix', {fg=nil,      bg=nil, attr='nocombine', sp=nil})
 
-  hi('MiniJump', {fg=nil, bg=nil, attr='undercurl', sp=p.base0E})
+  hi('MiniJump', {link='SpellRare'})
 
   hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil, sp=nil})
   hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
   hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterInactive',   {fg=p.base03, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterInactive',   {link='Comment'})
   hi('MiniStarterItem',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
   hi('MiniStarterItemBullet', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
   hi('MiniStarterItemPrefix', {fg=p.base08, bg=nil, attr=nil, sp=nil})
@@ -553,9 +558,9 @@ H.apply_palette = function(palette, use_cterm)
   hi('MiniStarterQuery',      {fg=p.base0B, bg=nil, attr=nil, sp=nil})
 
   hi('MiniStatuslineDevinfo',     {fg=p.base04, bg=p.base02, attr=nil,    sp=nil})
-  hi('MiniStatuslineFileinfo',    {fg=p.base04, bg=p.base02, attr=nil,    sp=nil})
+  hi('MiniStatuslineFileinfo',    {link='MiniStatuslineDevinfo'})
   hi('MiniStatuslineFilename',    {fg=p.base03, bg=p.base01, attr=nil,    sp=nil})
-  hi('MiniStatuslineInactive',    {fg=p.base03, bg=p.base01, attr=nil,    sp=nil})
+  hi('MiniStatuslineInactive',    {link='MiniStatuslineFilename'})
   hi('MiniStatuslineModeCommand', {fg=p.base00, bg=p.base08, attr='bold', sp=nil})
   hi('MiniStatuslineModeInsert',  {fg=p.base00, bg=p.base0D, attr='bold', sp=nil})
   hi('MiniStatuslineModeNormal',  {fg=p.base00, bg=p.base05, attr='bold', sp=nil})
@@ -563,7 +568,7 @@ H.apply_palette = function(palette, use_cterm)
   hi('MiniStatuslineModeReplace', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
   hi('MiniStatuslineModeVisual',  {fg=p.base00, bg=p.base0B, attr='bold', sp=nil})
 
-  hi('MiniSurround', {fg=p.base01, bg=p.base09, attr=nil, sp=nil})
+  hi('MiniSurround', {link='IncSearch'})
 
   hi('MiniTablineCurrent',         {fg=p.base05, bg=p.base02, attr='bold', sp=nil})
   hi('MiniTablineFill',            {fg=nil,      bg=nil,      attr=nil,    sp=nil})
@@ -578,41 +583,7 @@ H.apply_palette = function(palette, use_cterm)
   hi('MiniTestFail',     {fg=p.base08, bg=nil, attr='bold', sp=nil})
   hi('MiniTestPass',     {fg=p.base0B, bg=nil, attr='bold', sp=nil})
 
-  hi('MiniTrailspace', {fg=p.base00, bg=p.base08, attr=nil, sp=nil})
-
-  -- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
-  hi('NvimTreeExecFile',     { fg=p.base0B, bg=nil,      attr='bold',           sp=nil })
-  hi('NvimTreeFolderIcon',   { fg=p.base03, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitDeleted',   { fg=p.base08, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitDirty',     { fg=p.base08, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitMerge',     { fg=p.base0C, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitNew',       { fg=p.base0D, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitRenamed',   { fg=p.base0E, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeGitStaged',    { fg=p.base0B, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeImageFile',    { fg=p.base0E, bg=nil,      attr='bold',           sp=nil })
-  hi('NvimTreeIndentMarker', { fg=p.base03, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeOpenedFile',   { fg=p.base0B, bg=nil,      attr='bold',           sp=nil })
-  hi('NvimTreeRootFolder',   { fg=p.base0E, bg=nil,      attr=nil,              sp=nil })
-  hi('NvimTreeSpecialFile',  { fg=p.base0D, bg=nil,      attr='bold,underline', sp=nil })
-  hi('NvimTreeSymlink',      { fg=p.base0F, bg=nil,      attr='bold',           sp=nil })
-  hi('NvimTreeWindowPicker', { fg=p.base05, bg=p.base01, attr="bold",           sp=nil })
-
-  -- lewis6991/gitsigns.nvim
-  hi('GitSignsAdd',          {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsAddLn',        {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsAddInline',    {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsChange',       {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsChangeLn',     {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsChangeInline', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsDelete',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsDeleteLn',     {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-  hi('GitSignsDeleteInline', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-
-  -- nvim-telescope/telescope.nvim
-  hi('TelescopeBorder',         {fg=p.base0F, bg=nil,      attr=nil,    sp=nil}) -- as in 'Delimiter'
-  hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil}) -- as in 'Search'
-  hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
-  hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
+  hi('MiniTrailspace', {link='Error'})
 
   -- folke/which-key.nvim
   hi('WhichKey',          {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
@@ -621,6 +592,40 @@ H.apply_palette = function(palette, use_cterm)
   hi('WhichKeyGroup',     {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
   hi('WhichKeySeparator', {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
   hi('WhichKeyValue',     {fg=p.base03, bg=nil,      attr=nil, sp=nil})
+
+  -- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
+  hi('NvimTreeExecFile',     {fg=p.base0B, bg=nil,      attr='bold',           sp=nil})
+  hi('NvimTreeFolderIcon',   {fg=p.base03, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeGitDeleted',   {fg=p.base08, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeGitDirty',     {link='NvimTreeGitDirty'})
+  hi('NvimTreeGitMerge',     {fg=p.base0C, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeGitNew',       {fg=p.base0D, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeGitRenamed',   {fg=p.base0E, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeGitStaged',    {fg=p.base0B, bg=nil,      attr=nil,              sp=nil})
+  hi('NvimTreeImageFile',    {fg=p.base0E, bg=nil,      attr='bold',           sp=nil})
+  hi('NvimTreeIndentMarker', {link='NvimTreeFolderIcon'})
+  hi('NvimTreeOpenedFile',   {link='NvimTreeExecFile'})
+  hi('NvimTreeRootFolder',   {link='NvimTreeGitRenamed'})
+  hi('NvimTreeSpecialFile',  {fg=p.base0D, bg=nil,      attr='bold,underline', sp=nil})
+  hi('NvimTreeSymlink',      {fg=p.base0F, bg=nil,      attr='bold',           sp=nil})
+  hi('NvimTreeWindowPicker', {fg=p.base05, bg=p.base01, attr="bold",           sp=nil})
+
+  -- lewis6991/gitsigns.nvim
+  hi('GitSignsAdd',          {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsAddLn',        {link='GitSignsAdd'})
+  hi('GitSignsAddInline',    {link='GitSignsAdd'})
+  hi('GitSignsChange',       {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsChangeLn',     {link='GitSignsChange'})
+  hi('GitSignsChangeInline', {link='GitSignsChange'})
+  hi('GitSignsDelete',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+  hi('GitSignsDeleteLn',     {link='GitSignsDelete'})
+  hi('GitSignsDeleteInline', {link='GitSignsDelete'})
+
+  -- nvim-telescope/telescope.nvim
+  hi('TelescopeBorder',         {fg=p.base0F, bg=nil,      attr=nil,    sp=nil})
+  hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil})
+  hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
+  hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
   -- stylua: ignore end
 
   -- Terminal colors
@@ -652,29 +657,39 @@ H.highlight_gui = function(group, args)
   -- NOTE: using `string.format` instead of gradually growing string with `..`
   -- is faster. Crude estimate for this particular case: whole colorscheme
   -- loading decreased from ~3.6ms to ~3.0ms, i.e. by about 20%.
-  local command = string.format(
-    'highlight %s guifg=%s guibg=%s gui=%s guisp=%s',
-    group,
-    args.fg or 'NONE',
-    args.bg or 'NONE',
-    args.attr or 'NONE',
-    args.sp or 'NONE'
-  )
+  local command
+  if args.link ~= nil then
+    command = string.format('highlight! link %s %s', group, args.link)
+  else
+    command = string.format(
+      'highlight %s guifg=%s guibg=%s gui=%s guisp=%s',
+      group,
+      args.fg or 'NONE',
+      args.bg or 'NONE',
+      args.attr or 'NONE',
+      args.sp or 'NONE'
+    )
+  end
   vim.cmd(command)
 end
 
 H.highlight_both = function(group, args)
-  local command = string.format(
-    'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s',
-    group,
-    args.fg and args.fg.gui or 'NONE',
-    args.fg and args.fg.cterm or 'NONE',
-    args.bg and args.bg.gui or 'NONE',
-    args.bg and args.bg.cterm or 'NONE',
-    args.attr or 'NONE',
-    args.attr or 'NONE',
-    args.sp and args.sp.gui or 'NONE'
-  )
+  local command
+  if args.link ~= nil then
+    command = string.format('highlight! link %s %s', group, args.link)
+  else
+    command = string.format(
+      'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s',
+      group,
+      args.fg and args.fg.gui or 'NONE',
+      args.fg and args.fg.cterm or 'NONE',
+      args.bg and args.bg.gui or 'NONE',
+      args.bg and args.bg.cterm or 'NONE',
+      args.attr or 'NONE',
+      args.attr or 'NONE',
+      args.sp and args.sp.gui or 'NONE'
+    )
+  end
   vim.cmd(command)
 end
 

@@ -129,8 +129,8 @@ end
 
 T['setup()']['defines highlight groups for explicitly supported plugins'] = function()
   local p = child.lua_get('MiniBase16.config.palette')
-  validate_hl_group('MiniTrailspace', ('guifg=%s guibg=%s'):format(p.base00, p.base08))
-  validate_hl_group('NvimTreeRootFolder', ('guifg=%s'):format(p.base0E))
+  validate_hl_group('MiniCursorword', 'gui=underline')
+  validate_hl_group('NvimTreeFolderIcon', ('guifg=%s'):format(p.base03))
   validate_hl_group('GitSignsAdd', ('guifg=%s guibg=%s'):format(p.base0B, p.base01))
   validate_hl_group('TelescopeBorder', ('guifg=%s'):format(p.base0F))
   validate_hl_group('WhichKey', ('guifg=%s'):format(p.base0D))
