@@ -222,9 +222,10 @@
 ---     - Four captures define `a` textobject inside captures 1 and 4, `i` -
 ---       inside captures 2 and 3. Example: `x()()x()x()` defines `a`
 ---       textobject to be last `xx`, `i` - middle `x`.
---- - Allows functions in certain places (enables more complex textobjects in
----   exchange of increase in configuration complexity and computations):
----     - If specification itself is a function, it will be called with the same
+--- - Allows callable objects (see |vim.is_callable()|) in certain places
+---   (enables more complex textobjects in exchange of increase in configuration
+---   complexity and computations):
+---     - If specification itself is a callable, it will be called with the same
 ---       arguments as |MiniAi.find_textobject()| and should return one of:
 ---         - Composed pattern. Useful for implementing user input. Example of
 ---           simplified variant of textobject for function call with name taken
@@ -268,10 +269,10 @@
 ---             return res
 ---           end
 --- <
----     - If there is a function instead of assumed string pattern, it is
----       expected to have signature `(line, init)` and behave like
----       `pattern:find()`. It should return two numbers representing
----       span in `line` next after or at `init` (`nil` if there is no such span).
+---     - If there is a callable instead of assumed string pattern, it is expected
+---       to have signature `(line, init)` and behave like `pattern:find()`.
+---       It should return two numbers representing span in `line` next after
+---       or at `init` (`nil` if there is no such span).
 ---       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
 ---       to the left of `init` (it will lead to infinite loop). Not allowed as
 ---       last item (as it should be pattern with captures).
@@ -1156,9 +1157,13 @@ H.get_textobject_spec = function(id, args)
   local spec = textobject_tbl[id]
 
   -- Allow function returning spec or region
-  if type(spec) == 'function' then spec = spec(unpack(args)) end
+  if vim.is_callable(spec) then spec = spec(unpack(args)) end
 
-  if not (H.is_composed_pattern(spec) or H.is_region(spec) or H.is_region_array(spec)) then return nil end
+  -- Wrap callable tables to be an actual functions. Otherwise they might be
+  -- confused with list of patterns.
+  if H.is_composed_pattern(spec) then return vim.tbl_map(H.wrap_callable_table, spec) end
+
+  if not (H.is_region(spec) or H.is_region_array(spec)) then return nil end
   return spec
 end
 
@@ -1190,7 +1195,7 @@ H.is_composed_pattern = function(x)
   if not (vim.tbl_islist(x) and #x > 0) then return false end
   for _, val in ipairs(x) do
     local val_type = type(val)
-    if not (val_type == 'table' or val_type == 'string' or val_type == 'function') then return false end
+    if not (val_type == 'table' or val_type == 'string' or vim.is_callable(val)) then return false end
   end
   return true
 end
@@ -1436,7 +1441,7 @@ H.iterate_matched_spans = function(line, nested_pattern, f)
   process = function(level, level_line, level_offset)
     local pattern = nested_pattern[level]
     local next_span = function(s, init) return H.string_find(s, pattern, init) end
-    if type(pattern) == 'function' then next_span = pattern end
+    if vim.is_callable(pattern) then next_span = pattern end
 
     local is_same_balanced = type(pattern) == 'string' and pattern:match('^%%b(.)%1$') ~= nil
     local init = 1
@@ -1861,7 +1866,7 @@ H.cartesian_product = function(arr)
       table.insert(cur_item, arr[level][i])
       if level == #arr then
         -- Flatten array to allow tables as elements of step tables
-        table.insert(res, vim.tbl_flatten(vim.deepcopy(cur_item)))
+        table.insert(res, vim.tbl_flatten(cur_item))
       else
         process(level + 1)
       end
@@ -1871,6 +1876,11 @@ H.cartesian_product = function(arr)
 
   process(1)
   return res
+end
+
+H.wrap_callable_table = function(x)
+  if vim.is_callable(x) and type(x) == 'table' then return function(...) return x(...) end end
+  return x
 end
 
 return MiniAi

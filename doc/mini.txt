@@ -475,9 +475,10 @@ Textobject specification has a structure of composed pattern (see
     - Four captures define `a` textobject inside captures 1 and 4, `i` -
       inside captures 2 and 3. Example: `x()()x()x()` defines `a`
       textobject to be last `xx`, `i` - middle `x`.
-- Allows functions in certain places (enables more complex textobjects in
-  exchange of increase in configuration complexity and computations):
-    - If specification itself is a function, it will be called with the same
+- Allows callable objects (see |vim.is_callable()|) in certain places
+  (enables more complex textobjects in exchange of increase in configuration
+  complexity and computations):
+    - If specification itself is a callable, it will be called with the same
       arguments as |MiniAi.find_textobject()| and should return one of:
         - Composed pattern. Useful for implementing user input. Example of
           simplified variant of textobject for function call with name taken
@@ -521,10 +522,10 @@ Textobject specification has a structure of composed pattern (see
             return res
           end
 <
-    - If there is a function instead of assumed string pattern, it is
-      expected to have signature `(line, init)` and behave like
-      `pattern:find()`. It should return two numbers representing
-      span in `line` next after or at `init` (`nil` if there is no such span).
+    - If there is a callable instead of assumed string pattern, it is expected
+      to have signature `(line, init)` and behave like `pattern:find()`.
+      It should return two numbers representing span in `line` next after
+      or at `init` (`nil` if there is no such span).
       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
       to the left of `init` (it will lead to infinite loop). Not allowed as
       last item (as it should be pattern with captures).

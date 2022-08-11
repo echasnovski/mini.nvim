@@ -399,6 +399,27 @@ T['find_textobject()']['handles function as specification item'] = function()
   validate_find1d('aa(bb)', 0, { 'i', 'c' }, { 4, 5 })
 end
 
+T['find_textobject()']['handles callable table'] = new_set()
+
+T['find_textobject()']['handles callable table']['as textobject spec'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    x = setmetatable({}, {__call = function() return {'x()x()x'} end})
+  }]])
+
+  validate_find1d('aaxxxbb', 0, { 'a', 'x' }, { 3, 5 })
+end
+
+T['find_textobject()']['handles callable table']['as specification item'] = function()
+  child.lua([[_G.c_spec = {
+    '%b()',
+    setmetatable({}, {__call = function(_, s, init) if init > 1 then return end; return 2, s:len() end}),
+    '^().*().$'
+  }]])
+  child.lua([[MiniAi.config.custom_textobjects = { c = _G.c_spec }]])
+  validate_find1d('aa(bb)', 0, { 'a', 'c' }, { 4, 6 })
+  validate_find1d('aa(bb)', 0, { 'i', 'c' }, { 4, 5 })
+end
+
 T['find_textobject()']['shows message if no region is found'] = function()
   avoid_hit_enter_prompt()
 
