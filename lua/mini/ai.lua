@@ -649,21 +649,66 @@ MiniAi.gen_spec.argument = function(opts)
 
   if type(opts.brackets) == 'string' then opts.brackets = { opts.brackets } end
   local separators_esc = vim.tbl_map(vim.pesc, separators)
-  local sep_pattern = '[' .. table.concat(separators_esc, '') .. ']'
+  local sep_str = table.concat(separators_esc, '')
+  local sep_pattern, nosep_pattern = '[' .. sep_str .. ']', '[^' .. sep_str .. ']'
 
   local res = {}
+  -- Match brackets
   res[1] = brackets
+
+  -- Match argument with both left and right separators/brackets
   res[2] = function(s, init)
     -- Cache string separators per spec as they are used multiple times.
     -- Storing per spec allows coexistence of several argument specifications.
     H.cache.argument_seps = H.cache.argument_seps or {}
     H.cache.argument_seps[res] = H.cache.argument_seps[res] or {}
-    local seps = H.cache.argument_seps[res][s] or H.get_arg_separators(s, sep_pattern, exclude_regions)
+    local seps = H.cache.argument_seps[res][s] or H.arg_get_separators(s, sep_pattern, exclude_regions)
     H.cache.argument_seps[res][s] = seps
 
-    return H.get_arg_next_span(init, seps)
+    -- Return span fully on right of `init`, `nil` otherwise
+    -- For first argument returns left bracket; for last - right one.
+    for i = 1, #seps - 1 do
+      if init <= seps[i] then return seps[i], seps[i + 1] end
+    end
+
+    return nil
   end
-  res[3] = '^' .. sep_pattern .. '?%s*().-()%s*' .. sep_pattern .. '?$'
+
+  -- Make extraction part
+  local match_and_shrink = function(left, left_keep, right, right_keep)
+    local pattern = '^' .. left .. '.*' .. right .. '$'
+    return function(s, init)
+      if init > 1 then return nil end
+      if not s:find(pattern) then return nil end
+      return left_keep and 1 or 2, s:len() - (right_keep and 0 or 1)
+    end
+  end
+
+  -- `a` type depends on argument number, `i` - as `a` but without whitespace
+  -- The reason for this complex solution is the following requirements:
+  -- - Don't match argument region when cursor is on the outer bracket.
+  --   Example: `f(xxx)` should select argument only when cursor is on 'x'.
+  -- - Don't select edge whitespace for first and last argument BUT match when
+  --   cursor is on them. This is useful when working with padded brackets.
+  --   Example for `f(  xx  ,  yy  )`:
+  --     - `a` object should select 'xx  ,' when cursor is on all '  xx  ';
+  --       should select ',  yy' when cursor is on all '  yy  '.
+  --     - `i` object should select 'xx' when cursor is on all '  xx  ';
+  --       should select 'yy' when cursor is on all '  yy  '.
+  res[3] = {
+    -- Middle argument. Include only left separator.
+    { match_and_shrink(sep_pattern, true, sep_pattern, false), '^.%s*().-()%s*$' },
+
+    -- First argument. Include right separator, exclude left whitespace.
+    { match_and_shrink(nosep_pattern, false, sep_pattern, true), '^%s*()().-()%s*.()$' },
+
+    -- Last argument. Include left separator, exclude right whitespace.
+    -- NOTE: it misbehaves for whitespace argument. It's OK because it's rare.
+    { match_and_shrink(sep_pattern, true, nosep_pattern, false), '^().%s*().-()()%s*$' },
+
+    -- Single argument. Include both whitespace (makes `aa` and `ia` differ).
+    { match_and_shrink(nosep_pattern, false, nosep_pattern, false), '^%s*().-()%s*$' },
+  }
 
   return res
 end
@@ -1286,13 +1331,13 @@ H.get_default_opts = function()
 end
 
 -- Work with argument textobject ----------------------------------------------
-H.get_arg_separators = function(s, sep_pattern, exclude_regions)
+H.arg_get_separators = function(s, sep_pattern, exclude_regions)
   if s:len() <= 2 then return {} end
 
   -- Get all separators
   local seps = {}
   s:gsub('()' .. sep_pattern, function(x) table.insert(seps, x) end)
-  if #seps == 0 then return { 2, s:len() - 1 } end
+  if #seps == 0 then return { 1, s:len() } end
 
   -- Remove separators that are in "excluded regions": by default, inside
   -- brackets or quotes
@@ -1308,35 +1353,9 @@ H.get_arg_separators = function(s, sep_pattern, exclude_regions)
 
   -- Append edge separators (assumes first and last characters are from
   -- brackets). This allows single argument and ensures at least 2 elements.
-  table.insert(res, 1, 2)
-  table.insert(res, s:len() - 1)
+  table.insert(res, 1, 1)
+  table.insert(res, s:len())
   return res
-end
-
-H.get_arg_next_span = function(init, seps)
-  local n = #seps
-  if n < 2 then return nil end
-
-  -- Process no comma separators
-  if n == 2 then
-    if init > 1 then return nil end
-    return seps[1], seps[2]
-  end
-
-  -- Returns span fully on right of `init`, `nil` otherwise
-  -- For first argument return it with right comma (if it is not empty).
-  -- For all other - with left comma. Comma is included not the other way
-  -- around because there are problems with empty arguments and iterating over
-  -- spans (it gets next span by assigning `init` to `prev_from + 1`, which is
-  -- a problem if `prev_from == prev_to`).
-  -- Assumes `seps` is sorted increasingly.
-  if init <= seps[1] and seps[1] < seps[2] then return seps[1], seps[2] end
-  for i = 2, n - 2 do
-    if init <= seps[i] then return seps[i], seps[i + 1] - 1 end
-  end
-  if init <= seps[n - 1] then return seps[n - 1], seps[n] end
-
-  return nil
 end
 
 -- Work with treesitter textobject --------------------------------------------

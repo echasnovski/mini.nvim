@@ -2029,10 +2029,12 @@ end
 
 T['Builtin']['Argument']['ignores empty arguments'] = function()
   validate_tobj1d('f(,)', 0, 'aa', { 3, 3 })
-  validate_tobj1d('f(,)', 0, 'ia', { 4, 4 })
+  validate_tobj1d('f(,)', 0, 'ia', { 3, 3 })
 
-  validate_tobj1d('f(, xx)', 0, 'aa', { 3, 6 })
-  validate_tobj1d('f(, xx)', 0, 'ia', { 5, 6 })
+  validate_tobj1d('f(, xx)', 0, 'aa', { 3, 3 })
+  validate_tobj1d('f(, xx)', 0, 'ia', { 3, 3 })
+  validate_tobj1d('f(, xx)', 0, '2aa', { 3, 6 })
+  validate_tobj1d('f(, xx)', 0, '2ia', { 5, 6 })
 
   validate_tobj1d('f(,, xx)', 0, 'aa', { 3, 3 })
   validate_tobj1d('f(,, xx)', 0, 'ia', { 4, 4 })
@@ -2059,15 +2061,32 @@ T['Builtin']['Argument']['ignores empty arguments'] = function()
 end
 
 T['Builtin']['Argument']['works with whitespace argument'] = function()
-  validate_tobj1d('f( )', 0, 'aa', { 3, 3 })
+  -- Single argument
+  validate_tobj1d('f(  )', 0, 'aa', { 3, 4 })
 
-  validate_tobj1d('f( , )', 0, 'aa', { 3, 4 })
-  validate_tobj1d('f( , )', 0, 'ia', { 4, 4 })
-  validate_tobj1d('f( , )', 0, '2aa', { 4, 5 })
-  validate_tobj1d('f( , )', 0, '2ia', { 6, 6 })
+  -- First argument (should ignore whitespace)
+  validate_tobj1d('f(  ,x)', 0, 'aa', { 5, 5 })
+  validate_tobj1d('f(  ,x)', 0, 'ia', { 5, 5 })
 
-  validate_tobj1d('f(x, ,y)', 0, '2aa', { 4, 5 })
-  validate_tobj1d('f(x, ,y)', 0, '2ia', { 6, 6 })
+  -- Last argument (should ignore whitespace). It misbehaves (`aa` selects all
+  -- insteadd of only separator and `ia` goes to rightmost point instead of to
+  -- right of separator), but it is acceptable because it is a rare case.
+  validate_tobj1d('f(x,  )', 0, '2aa', { 4, 6 })
+  validate_tobj1d('f(x,  )', 0, '2ia', { 7, 7 })
+
+  -- Middle argument
+  validate_tobj1d('f(x,  ,y)', 0, '2aa', { 4, 6 })
+  validate_tobj1d('f(x,  ,y)', 0, '2ia', { 7, 7 })
+end
+
+T['Builtin']['Argument']['does not match with cursor on covering bracket'] = function()
+  avoid_hit_enter_prompt()
+  child.lua([[MiniAi.config.search_method = 'cover']])
+
+  validate_no_tobj1d('f(a)', 1, 'aa')
+  validate_no_tobj1d('f(a)', 1, 'ia')
+  validate_no_tobj1d('f(a)', 3, 'aa')
+  validate_no_tobj1d('f(a)', 3, 'ia')
 end
 
 T['Builtin']['Argument']['ignores empty brackets'] = function()
@@ -2078,7 +2097,38 @@ end
 
 T['Builtin']['Argument']['works with single argument'] = function()
   validate_tobj1d('f(x)', 0, 'aa', { 3, 3 })
+  validate_tobj1d('f(x)', 0, 'ia', { 3, 3 })
   validate_tobj1d('f(xx)', 0, 'aa', { 3, 4 })
+  validate_tobj1d('f(xx)', 0, 'ia', { 3, 4 })
+
+  -- Edge whitespace should be a part of `aa`
+  validate_tobj1d('f( x)', 0, 'aa', { 3, 4 })
+  validate_tobj1d('f( x)', 0, 'ia', { 4, 4 })
+  validate_tobj1d('f(x )', 0, 'aa', { 3, 4 })
+  validate_tobj1d('f(x )', 0, 'ia', { 3, 3 })
+  validate_tobj1d('f( x )', 0, 'aa', { 3, 5 })
+  validate_tobj1d('f( x )', 0, 'ia', { 4, 4 })
+end
+
+T['Builtin']['Argument']['handles first and last arguments'] = function()
+  -- `aa` should work on edge whitespace but ignore it in output (if more than
+  -- 2 arguments)
+
+  for i = 2, 7 do
+    validate_tobj1d('f(  xx  ,  yy  )', i, 'aa', { 5, 9 })
+    validate_tobj1d('f(  xx  ,  yy  )', i, 'ia', { 5, 6 })
+  end
+  for i = 9, 14 do
+    validate_tobj1d('f(  xx  ,  yy  )', i, 'aa', { 9, 13 })
+    validate_tobj1d('f(  xx  ,  yy  )', i, 'ia', { 12, 13 })
+  end
+
+  -- Newline character should also be ignored
+  local lines, cursor = { 'f(  ', '  aa,', '  bb', '  )' }, { 1, 0 }
+  validate_tobj(lines, cursor, 'aa', { { 2, 3 }, { 2, 5 } })
+  validate_tobj(lines, cursor, 'ia', { { 2, 3 }, { 2, 4 } })
+  validate_tobj(lines, cursor, '2aa', { { 2, 5 }, { 3, 4 } })
+  validate_tobj(lines, cursor, '2ia', { { 3, 3 }, { 3, 4 } })
 end
 
 T['Builtin']['Argument']['works in Operator-pending mode'] = function()
@@ -2112,11 +2162,11 @@ T['Builtin']['Argument']['works in Operator-pending mode'] = function()
   validate('f( )', 2, 'f()', 2, 'aa')
   validate('f( )', 2, 'f( )', 3, 'ia')
 
-  validate('f(, )', 2, 'f()', 2, 'aa')
-  validate('f(, )', 2, 'f(, )', 4, 'ia')
-
-  validate('f( ,)', 2, 'f()', 2, 'aa')
-  validate('f( ,)', 2, 'f( ,)', 3, 'ia')
+  validate('f(  ,x)', 0, 'f(  x)', 4, 'aa')
+  validate('f(  ,x)', 0, 'f(  ,x)', 4, 'ia')
+  -- Not ideal but acceptable behavior (see case for whitespace argument)
+  validate('f(x,  )', 0, 'f(x)', 3, '2aa')
+  validate('f(x,  )', 0, 'f(x,  )', 6, '2ia')
 
   validate('f(x,,)', 4, 'f(x,)', 4, 'aa')
   validate('f(x,,)', 4, 'f(x,,)', 5, 'ia')
