@@ -10,6 +10,13 @@
 
 Introduction of new module.
 
+## mini.base16
+
+- BREAKING: change some 'mini.nvim' highlights:
+    - `MiniCompletionActiveParameter` now highlights with background instead of underline.
+    - `MiniJump2dSpot` now explicitly defined to use plugin's palette.
+    - `MiniStarterItemPrefix` and `MiniStarterQuery` are now bold for better visibility.
+
 ## mini.comment
 
 - FEATURE: Now hooks can be used to terminate further actions by returning `false` (#108).

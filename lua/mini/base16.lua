@@ -536,8 +536,8 @@ H.apply_palette = function(palette, use_cterm)
   end
 
   -- Plugins
-  -- 'mini'
-  hi('MiniCompletionActiveParameter', {fg=nil, bg=nil, attr='underline', sp=nil})
+  -- echasnovski/mini.nvim
+  hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
 
   hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
   hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
@@ -547,15 +547,17 @@ H.apply_palette = function(palette, use_cterm)
 
   hi('MiniJump', {link='SpellRare'})
 
-  hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('MiniJump2dSpot', {fg=p.base07, bg=p.base01, attr='bold,nocombine', sp=nil})
+
+  hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil,    sp=nil})
+  hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
+  hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
   hi('MiniStarterInactive',   {link='Comment'})
-  hi('MiniStarterItem',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterItemBullet', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterItemPrefix', {fg=p.base08, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterSection',    {fg=p.base0F, bg=nil, attr=nil, sp=nil})
-  hi('MiniStarterQuery',      {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('MiniStarterItem',       {fg=p.base05, bg=nil, attr=nil,    sp=nil})
+  hi('MiniStarterItemBullet', {fg=p.base0F, bg=nil, attr=nil,    sp=nil})
+  hi('MiniStarterItemPrefix', {fg=p.base08, bg=nil, attr='bold', sp=nil})
+  hi('MiniStarterSection',    {fg=p.base0F, bg=nil, attr=nil,    sp=nil})
+  hi('MiniStarterQuery',      {fg=p.base0B, bg=nil, attr='bold', sp=nil})
 
   hi('MiniStatuslineDevinfo',     {fg=p.base04, bg=p.base02, attr=nil,    sp=nil})
   hi('MiniStatuslineFileinfo',    {link='MiniStatuslineDevinfo'})
