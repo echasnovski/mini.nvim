@@ -148,6 +148,7 @@ end
 ---
 --- Before successful commenting it executes `config.hooks.pre`.
 --- After successful commenting it executes `config.hooks.post`.
+--- If hook returns `false`, any further action is terminated.
 ---
 --- # Notes~
 ---
@@ -167,7 +168,7 @@ MiniComment.toggle_lines = function(line_start, line_end)
   end
 
   local config = H.get_config()
-  config.hooks.pre()
+  if config.hooks.pre() == false then return end
 
   local comment_parts = H.make_comment_parts()
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
@@ -191,7 +192,7 @@ MiniComment.toggle_lines = function(line_start, line_end)
   --   slower: on 10000 lines 280ms compared to 40ms currently.
   vim.api.nvim_buf_set_lines(0, line_start - 1, line_end, false, lines)
 
-  config.hooks.post()
+  if config.hooks.post() == false then return end
 end
 
 --- Comment textobject
@@ -201,11 +202,12 @@ end
 ---
 --- Before successful textobject usage it executes `config.hooks.pre`.
 --- After successful textobject usage it executes `config.hooks.post`.
+--- If hook returns `false`, any further action is terminated.
 MiniComment.textobject = function()
   if H.is_disabled() then return end
 
   local config = H.get_config()
-  config.hooks.pre()
+  if config.hooks.pre() == false then return end
 
   local comment_parts = H.make_comment_parts()
   local comment_check = H.make_comment_check(comment_parts)
@@ -228,7 +230,7 @@ MiniComment.textobject = function()
     vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
   end
 
-  config.hooks.post()
+  if config.hooks.post() == false then return end
 end
 
 -- Helper data ================================================================

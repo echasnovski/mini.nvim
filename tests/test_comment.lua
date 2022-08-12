@@ -246,6 +246,17 @@ T['toggle_lines()']['applies hooks'] = function()
   eq(child.lua_get('_G.post_n'), 1)
 end
 
+T['toggle_lines()']['stops when hook returns `false`'] = function()
+  local lines = { 'aa', 'aa' }
+  set_lines(lines)
+
+  child.lua('MiniComment.config.hooks.pre = function() return false end')
+  child.lua('MiniComment.toggle_lines(1, 2)')
+  eq(get_lines(), lines)
+
+  -- Currently can't really check for `hooks.post`
+end
+
 T['toggle_lines()']['respects `vim.b.minicomment_config`'] = function()
   if vim.fn.has('nvim-0.7') == 0 then
     MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
@@ -363,6 +374,18 @@ T['Commenting']['applies hooks'] = function()
   eq(get_lines(), { '# // aa', '# // aa' })
   eq(child.lua_get('_G.pre_n'), 2)
   eq(child.lua_get('_G.post_n'), 2)
+end
+
+T['toggle_lines()']['stops when hook returns `false`'] = function()
+  local lines = { 'aa', 'aa' }
+  set_lines(lines)
+  set_cursor(1, 0)
+
+  child.lua('MiniComment.config.hooks.pre = function() return false end')
+  type_keys('gc', 'ip')
+  eq(get_lines(), lines)
+
+  -- Currently can't really check for `hooks.post`
 end
 
 T['Commenting']['respects `vim.b.minicomment_config`'] = function()

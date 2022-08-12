@@ -1414,6 +1414,7 @@ and respects |count|.
 
 Before successful commenting it executes `config.hooks.pre`.
 After successful commenting it executes `config.hooks.post`.
+If hook returns `false`, any further action is terminated.
 
 # Notes~
 
@@ -1434,6 +1435,7 @@ commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 
 Before successful textobject usage it executes `config.hooks.pre`.
 After successful textobject usage it executes `config.hooks.post`.
+If hook returns `false`, any further action is terminated.
 
 
 ==============================================================================

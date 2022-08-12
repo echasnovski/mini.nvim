@@ -8,6 +8,10 @@
 
 Introduction of new module.
 
+## mini.comment
+
+- FEATURE: Now hooks can be used to terminate further actions by returning `false` (#108).
+
 ## mini.indentscope
 
 - BREAKING: Soft deprecate `vim.b.miniindentscope_options` in favor of using `options` field of `miniindentscope_config`.
