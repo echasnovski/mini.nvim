@@ -24,20 +24,20 @@ local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local get_mode = function() return child.api.nvim_get_mode()['mode'] end
 
-local validate_edit = function(before_lines, before_cursor, after_lines, after_cursor, keys)
+local validate_edit = function(before_lines, before_cursor, after_lines, after_cursor, ...)
   child.ensure_normal_mode()
 
   set_lines(before_lines)
   set_cursor(unpack(before_cursor))
 
-  type_keys(keys)
+  type_keys(...)
 
   eq(get_lines(), after_lines)
   eq(get_cursor(), after_cursor)
 end
 
-local validate_edit1d = function(before_line, before_column, after_line, after_column, keys)
-  validate_edit({ before_line }, { 1, before_column }, { after_line }, { 1, after_column }, keys)
+local validate_edit1d = function(before_line, before_column, after_line, after_column, ...)
+  validate_edit({ before_line }, { 1, before_column }, { after_line }, { 1, after_column }, ...)
 end
 
 local validate_next_region = function(keys, next_region)
@@ -1398,7 +1398,7 @@ T['Textobject']['collapses multiline textobject'] = function()
   validate_edit(lines, { 3, 0 }, { '()' }, { 1, 1 }, 'di)')
 end
 
-T['Textobject']['works multibyte characters'] = function()
+T['Textobject']['works with multibyte characters'] = function()
   -- Each multibyte character takes two column counts
   local line = '(ыы)ффф(ыы)'
   validate_edit1d(line, 1, 'ффф(ыы)', 0, 'da)')
@@ -1415,6 +1415,54 @@ T['Textobject']['respects `v:count`'] = function()
 
   -- Don't do anything if not enough is present
   validate_no_tobj1d('(aa)bb(cc)dd(ee)', 0, '4a)')
+end
+
+T['Textobject']['falls back in case of absent textobject id'] = function()
+  -- Set low `timeoutlen` to simulate its expiration
+  child.o.timeoutlen = 5
+
+  local validate = function(line, column, keys, expected)
+    child.ensure_normal_mode()
+    set_lines({ line })
+    set_cursor(1, column)
+    type_keys(10, 'v', keys[1], keys[2])
+
+    child.expect_visual_marks({ 1, expected[1] - 1 }, { 1, expected[2] - 1 })
+  end
+
+  -- Builtin textobject
+  -- Visual mode
+  expect.match(child.fn.maparg('a', 'x'), 'MiniAi')
+  validate('aaa bbb', 0, { 'a', 'w' }, { 1, 4 })
+
+  expect.match(child.fn.maparg('i', 'x'), 'MiniAi')
+  validate('aaa bbb', 0, { 'i', 'w' }, { 1, 3 })
+
+  -- Operator-pending mode
+  expect.match(child.fn.maparg('a', 'o'), 'MiniAi')
+  validate_edit1d('aaa bbb', 0, 'bbb', 0, 20, 'd', 'a', 'w')
+
+  expect.match(child.fn.maparg('i', 'o'), 'MiniAi')
+  validate_edit1d('aaa bbb', 0, ' bbb', 0, 10, 'd', 'i', 'w')
+
+  -- Custom textobject
+  local map = function(mode, lhs)
+    child.api.nvim_set_keymap(mode, lhs, '<Cmd>lua vim.api.nvim_win_set_cursor(0, { 1, 5 })<CR>', { noremap = true })
+  end
+
+  -- Visual mode
+  map('x', 'ac')
+  validate('aaa bbb', 0, { 'a', 'c' }, { 1, 6 })
+
+  map('x', 'ic')
+  validate('aaa bbb', 0, { 'i', 'c' }, { 1, 6 })
+
+  -- Operator-pending mode
+  map('o', 'ac')
+  validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'a', 'c')
+
+  map('o', 'ic')
+  validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'i', 'c')
 end
 
 T['Textobject']['works with empty output region'] = function()

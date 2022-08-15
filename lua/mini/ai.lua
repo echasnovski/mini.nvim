@@ -962,7 +962,14 @@ MiniAi.expr_textobject = function(mode, ai_type, opts)
   if tobj_id == nil then return '' end
 
   -- Possibly fall back to builtin `a`/`i` textobjects
-  if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then return ai_type .. tobj_id end
+  if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then
+    local res = ai_type .. tobj_id
+    -- If fallback is an existing user mapping, prepend it with '<Ignore>'.
+    -- This deals with `:h recursive_mapping`. Shouldn't prepend if it is a
+    -- builtin textobject. Also see https://github.com/vim/vim/issues/10907 .
+    if vim.fn.maparg(res, mode) ~= '' then res = H.keys.ignore .. res end
+    return res
+  end
   opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
 
   -- Clear cache
@@ -1090,6 +1097,7 @@ H.ns_id = {
 
 -- Commonly used keys
 H.keys = {
+  ignore = vim.api.nvim_replace_termcodes('<Ignore>', true, true, true),
   cmd_lua = vim.api.nvim_replace_termcodes('<Cmd>lua ', true, true, true),
   cr = vim.api.nvim_replace_termcodes('<CR>', true, true, true),
 }
@@ -1129,28 +1137,34 @@ H.apply_config = function(config)
 
   -- Make mappings
   local maps = config.mappings
+  local m = function(mode, lhs, rhs, opts)
+    opts.expr = true
+    -- Allow recursive mapping to support falling back on user defined mapping
+    opts.noremap = false
+    H.map(mode, lhs, rhs, opts)
+  end
 
   -- Usage of expression maps implements dot-repeat support
-  H.map('n', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { expr = true, desc = 'Move to left "around"' })
-  H.map('n', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { expr = true, desc = 'Move to right "around"' })
-  H.map('x', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { expr = true, desc = 'Move to left "around"' })
-  H.map('x', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { expr = true, desc = 'Move to right "around"' })
-  H.map('o', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { expr = true, desc = 'Move to left "around"' })
-  H.map('o', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { expr = true, desc = 'Move to right "around"' })
+  m('n', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
+  m('n', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
+  m('x', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
+  m('x', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
+  m('o', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
+  m('o', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
 
-  H.map('x', maps.around, [[v:lua.MiniAi.expr_textobject('x', 'a')]], { expr = true, desc = 'Around textobject' })
-  H.map('x', maps.inside, [[v:lua.MiniAi.expr_textobject('x', 'i')]], { expr = true, desc = 'Inside textobject' })
-  H.map('o', maps.around, [[v:lua.MiniAi.expr_textobject('o', 'a')]], { expr = true, desc = 'Around textobject' })
-  H.map('o', maps.inside, [[v:lua.MiniAi.expr_textobject('o', 'i')]], { expr = true, desc = 'Inside textobject' })
+  m('x', maps.around, [[v:lua.MiniAi.expr_textobject('x', 'a')]], { desc = 'Around textobject' })
+  m('x', maps.inside, [[v:lua.MiniAi.expr_textobject('x', 'i')]], { desc = 'Inside textobject' })
+  m('o', maps.around, [[v:lua.MiniAi.expr_textobject('o', 'a')]], { desc = 'Around textobject' })
+  m('o', maps.inside, [[v:lua.MiniAi.expr_textobject('o', 'i')]], { desc = 'Inside textobject' })
 
-  H.map('x', maps.around_next, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'next'})]], { expr = true, desc = 'Around next textobject' })
-  H.map('x', maps.around_last, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'prev'})]], { expr = true, desc = 'Around last textobject' })
-  H.map('x', maps.inside_next, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'next'})]], { expr = true, desc = 'Inside next textobject' })
-  H.map('x', maps.inside_last, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'prev'})]], { expr = true, desc = 'Inside last textobject' })
-  H.map('o', maps.around_next, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'next'})]], { expr = true, desc = 'Around next textobject' })
-  H.map('o', maps.around_last, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'prev'})]], { expr = true, desc = 'Around last textobject' })
-  H.map('o', maps.inside_next, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'next'})]], { expr = true, desc = 'Inside next textobject' })
-  H.map('o', maps.inside_last, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'prev'})]], { expr = true, desc = 'Inside last textobject' })
+  m('x', maps.around_next, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'next'})]], { desc = 'Around next textobject' })
+  m('x', maps.around_last, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'prev'})]], { desc = 'Around last textobject' })
+  m('x', maps.inside_next, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'next'})]], { desc = 'Inside next textobject' })
+  m('x', maps.inside_last, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'prev'})]], { desc = 'Inside last textobject' })
+  m('o', maps.around_next, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'next'})]], { desc = 'Around next textobject' })
+  m('o', maps.around_last, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'prev'})]], { desc = 'Around last textobject' })
+  m('o', maps.inside_next, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'next'})]], { desc = 'Inside next textobject' })
+  m('o', maps.inside_last, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'prev'})]], { desc = 'Inside last textobject' })
 end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
