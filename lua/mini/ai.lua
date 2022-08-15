@@ -986,9 +986,9 @@ MiniAi.expr_textobject = function(mode, ai_type, opts)
   end
 
   -- Make expression
-  local res = '<Cmd>lua MiniAi.select_textobject('
+  return H.keys.cmd_lua
     .. string.format(
-      [['%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s }]],
+      [[MiniAi.select_textobject('%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
       ai_type,
       vim.fn.escape(tobj_id, "'"),
       opts.search_method,
@@ -997,9 +997,7 @@ MiniAi.expr_textobject = function(mode, ai_type, opts)
       operator_pending_field,
       vis_mode_field
     )
-    .. ')<CR>'
-
-  return vim.api.nvim_replace_termcodes(res, true, true, true)
+    .. H.keys.cr
 end
 
 --- Make expression for moving cursor to edge of textobject
@@ -1024,13 +1022,14 @@ MiniAi.expr_motion = function(side)
   H.cache = {}
 
   -- Make expression for moving cursor
-  local res = string.format(
-    [[<Cmd>lua MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })<CR>]],
-    side,
-    vim.fn.escape(tobj_id, "'"),
-    vim.v.count1
-  )
-  return vim.api.nvim_replace_termcodes(res, true, true, true)
+  return H.keys.cmd_lua
+    .. string.format(
+      [[MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })]],
+      side,
+      vim.fn.escape(tobj_id, "'"),
+      vim.v.count1
+    )
+    .. H.keys.cr
 end
 
 -- Helper data ================================================================
@@ -1083,8 +1082,16 @@ H.builtin_textobjects = {
   ['q'] = { { "%b''", '%b""', '%b``' }, '^.().*().$' },
 }
 
+-- Module's namespaces
 H.ns_id = {
+  -- Track user input
   input = vim.api.nvim_create_namespace('MiniAiInput'),
+}
+
+-- Commonly used keys
+H.keys = {
+  cmd_lua = vim.api.nvim_replace_termcodes('<Cmd>lua ', true, true, true),
+  cr = vim.api.nvim_replace_termcodes('<CR>', true, true, true),
 }
 
 -- Helper functionality =======================================================
