@@ -17,6 +17,7 @@ Introduction of new module.
     - `MiniCompletionActiveParameter` now highlights with background instead of underline.
     - `MiniJump2dSpot` now explicitly defined to use plugin's palette.
     - `MiniStarterItemPrefix` and `MiniStarterQuery` are now bold for better visibility.
+- BREAKING: change highlight for changed git diff to be more visible and to comply more with general guidelines.
 
 ## mini.comment
 
