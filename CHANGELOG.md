@@ -12,6 +12,7 @@ Introduction of new module.
 
 ## mini.base16
 
+- FEATURE: add support for many plugin integrations.
 - BREAKING: change some 'mini.nvim' highlights:
     - `MiniCompletionActiveParameter` now highlights with background instead of underline.
     - `MiniJump2dSpot` now explicitly defined to use plugin's palette.

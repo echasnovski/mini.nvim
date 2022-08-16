@@ -1018,6 +1018,41 @@ plugins. Extra features:
 - Opinionated palette generator based only on background and foreground
   colors.
 
+Supported highlight groups:
+- Builtin-in Neovim LSP and diagnostic.
+- Plugins (either with explicit definition or by verification that default
+  highlighting works appropriately):
+    - 'echasnovski/mini.nvim'
+    - 'akinsho/bufferline.nvim'
+    - 'anuvyklack/hydra.nvim'
+    - 'DanilaMihailov/beacon.nvim'
+    - 'folke/todo-comments.nvim'
+    - 'folke/trouble.nvim'
+    - 'folke/which-key.nvim'
+    - 'ggandor/leap.nvim'
+    - 'ggandor/lightspeed.nvim'
+    - 'glepnir/dashboard-nvim'
+    - 'glepnir/lspsaga.nvim'
+    - 'hrsh7th/nvim-cmp'
+    - 'justinmk/vim-sneak'
+    - 'kyazdani42/nvim-tree.lua'
+    - 'lewis6991/gitsigns.nvim'
+    - 'lukas-reineke/indent-blankline.nvim'
+    - 'neoclide/coc.nvim'
+    - 'nvim-lualine/lualine.nvim'
+    - 'nvim-neo-tree/neo-tree.nvim'
+    - 'nvim-telescope/telescope.nvim'
+    - 'p00f/nvim-ts-rainbow'
+    - 'phaazon/hop.nvim'
+    - 'rcarriga/nvim-dap-ui'
+    - 'rcarriga/nvim-notify'
+    - 'rlane/pounce.nvim'
+    - 'romgrk/barbar.nvim'
+    - 'simrat39/symbols-outline.nvim'
+    - 'stevearc/aerial.nvim'
+    - 'TimUntersberger/neogit'
+    - 'williamboman/mason.nvim'
+
 # Setup~
 
 This module needs a setup with `require('mini.base16').setup({})` (replace

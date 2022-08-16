@@ -9,6 +9,41 @@
 --- - Opinionated palette generator based only on background and foreground
 ---   colors.
 ---
+--- Supported highlight groups:
+--- - Builtin-in Neovim LSP and diagnostic.
+--- - Plugins (either with explicit definition or by verification that default
+---   highlighting works appropriately):
+---     - 'echasnovski/mini.nvim'
+---     - 'akinsho/bufferline.nvim'
+---     - 'anuvyklack/hydra.nvim'
+---     - 'DanilaMihailov/beacon.nvim'
+---     - 'folke/todo-comments.nvim'
+---     - 'folke/trouble.nvim'
+---     - 'folke/which-key.nvim'
+---     - 'ggandor/leap.nvim'
+---     - 'ggandor/lightspeed.nvim'
+---     - 'glepnir/dashboard-nvim'
+---     - 'glepnir/lspsaga.nvim'
+---     - 'hrsh7th/nvim-cmp'
+---     - 'justinmk/vim-sneak'
+---     - 'kyazdani42/nvim-tree.lua'
+---     - 'lewis6991/gitsigns.nvim'
+---     - 'lukas-reineke/indent-blankline.nvim'
+---     - 'neoclide/coc.nvim'
+---     - 'nvim-lualine/lualine.nvim'
+---     - 'nvim-neo-tree/neo-tree.nvim'
+---     - 'nvim-telescope/telescope.nvim'
+---     - 'p00f/nvim-ts-rainbow'
+---     - 'phaazon/hop.nvim'
+---     - 'rcarriga/nvim-dap-ui'
+---     - 'rcarriga/nvim-notify'
+---     - 'rlane/pounce.nvim'
+---     - 'romgrk/barbar.nvim'
+---     - 'simrat39/symbols-outline.nvim'
+---     - 'stevearc/aerial.nvim'
+---     - 'TimUntersberger/neogit'
+---     - 'williamboman/mason.nvim'
+---
 --- # Setup~
 ---
 --- This module needs a setup with `require('mini.base16').setup({})` (replace
@@ -535,6 +570,16 @@ H.apply_palette = function(palette, use_cterm)
     hi('LspDiagnosticsUnderlineWarning',     {fg=nil, bg=nil, attr='underline', sp=p.base0E})
   end
 
+  -- Built-in LSP
+  hi('LspReferenceText',  {fg=nil, bg=p.base02, attr=nil, sp=nil})
+  hi('LspReferenceRead',  {link='LspReferenceText'})
+  hi('LspReferenceWrite', {link='LspReferenceText'})
+
+  hi('LspSignatureActiveParameter', {link='LspReferenceText'})
+
+  hi('LspCodeLens',          {link='Comment'})
+  hi('LspCodeLensSeparator', {link='Comment'})
+
   -- Plugins
   -- echasnovski/mini.nvim
   hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
@@ -587,6 +632,34 @@ H.apply_palette = function(palette, use_cterm)
 
   hi('MiniTrailspace', {link='Error'})
 
+  -- akinsho/bufferline.nvim
+  hi('BufferLineBuffer',              {fg=p.base04, bg=nil,      attr=nil,    sp=nil})
+  hi('BufferLineBufferSelected',      {fg=p.base05, bg=nil,      attr='bold', sp=nil})
+  hi('BufferLineBufferVisible',       {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
+  hi('BufferLineCloseButton',         {link='BufferLineBackground'})
+  hi('BufferLineCloseButtonSelected', {link='BufferLineBufferSelected'})
+  hi('BufferLineCloseButtonVisible',  {link='BufferLineBufferVisible'})
+  hi('BufferLineFill',                {link='Normal'})
+  hi('BufferLineTab',                 {fg=p.base00, bg=p.base0A, attr=nil,    sp=nil})
+  hi('BufferLineTabSelected',         {fg=p.base00, bg=p.base0A, attr='bold', sp=nil})
+
+  -- anuvyklack/hydra.nvim
+  hi('HydraRed',      {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('HydraBlue',     {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('HydraAmaranth', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+  hi('HydraTeal',     {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('HydraPink',     {fg=p.base09, bg=nil, attr=nil, sp=nil})
+  hi('HydraHint',     {link='NormalFloat'})
+
+  -- DanilaMihailov/beacon.nvim
+  hi('Beacon',     {fg=nil, bg=p.base07, attr=nil, sp=nil})
+
+  -- folke/trouble.nvim
+  -- Everything works correctly out of the box
+
+  -- folke/todo-comments.nvim
+  -- Everything works correctly out of the box
+
   -- folke/which-key.nvim
   hi('WhichKey',          {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
   hi('WhichKeyDesc',      {fg=p.base05, bg=nil,      attr=nil, sp=nil})
@@ -594,6 +667,110 @@ H.apply_palette = function(palette, use_cterm)
   hi('WhichKeyGroup',     {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
   hi('WhichKeySeparator', {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
   hi('WhichKeyValue',     {fg=p.base03, bg=nil,      attr=nil, sp=nil})
+
+  -- ggandor/leap.nvim
+  hi('LeapMatch',          {fg=p.base0E, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('LeapLabelPrimary',   {fg=p.base08, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('LeapLabelSecondary', {fg=p.base05, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('LeapLabelSelected',  {fg=p.base09, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('LeapBackdrop',       {link='Comment'})
+
+  -- ggandor/lightspeed.nvim
+  hi('LightspeedLabel',          {fg=p.base0E, bg=nil, attr='bold,underline', sp=nil})
+  hi('LightspeedLabelDistant',   {fg=p.base0D, bg=nil, attr='bold,underline', sp=nil})
+  hi('LightspeedShortcut',       {fg=p.base07, bg=nil, attr='bold', sp=nil})
+  hi('LightspeedMaskedChar',     {fg=p.base04, bg=nil, attr=nil, sp=nil})
+  hi('LightspeedUnlabeledMatch', {fg=p.base05, bg=nil, attr='bold', sp=nil})
+  hi('LightspeedGreyWash',       {link='Comment'})
+  hi('LightspeedUniqueChar',     {link='LightspeedUnlabeledMatch'})
+  hi('LightspeedOneCharMatch',   {link='LightspeedShortcut'})
+  hi('LightspeedPendingOpArea',  {link='IncSearch'})
+  hi('LightspeedCursor',         {link='Cursor'})
+
+  -- glepnir/dashboard-nvim
+  hi('DashboardCenter',   {link='Delimiter'})
+  hi('DashboardFooter',   {link='Title'})
+  hi('DashboardHeader',   {link='Title'})
+  hi('DashboardShortCut', {link='WarningMsg'})
+
+  -- glepnir/lspsaga.nvim
+  hi('LspSagaCodeActionBorder',  {fg=p.base0F, bg=nil, attr=nil,    sp=nil})
+  hi('LspSagaCodeActionContent', {fg=p.base05, bg=nil, attr=nil,    sp=nil})
+  hi('LspSagaCodeActionTitle',   {fg=p.base0D, bg=nil, attr='bold', sp=nil})
+
+  hi('Definitions',            {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('DefinitionsIcon',        {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('FinderParam',            {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('FinderVirtText',         {fg=p.base09, bg=nil, attr=nil, sp=nil})
+  hi('LspSagaAutoPreview',     {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('LspSagaFinderSelection', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
+  hi('LspSagaLspFinderBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('References',             {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('ReferencesIcon',         {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('TargetFileName',         {fg=p.base05, bg=nil, attr=nil, sp=nil})
+
+  hi('FinderSpinner',       {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('FinderSpinnerBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('FinderSpinnerTitle',  {link='Title'})
+
+  hi('LspSagaDefPreviewBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+
+  hi('LspSagaHoverBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+
+  hi('LspSagaRenameBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+
+  hi('LspSagaDiagnosticBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('LspSagaDiagnosticHeader', {link='Title'})
+  hi('LspSagaDiagnosticSource', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+
+  hi('LspSagaBorderTitle', {link='Title'})
+
+  hi('LspSagaSignatureHelpBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+
+  hi('LSOutlinePreviewBorder', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+  hi('OutlineDetail',          {fg=p.base03, bg=nil, attr=nil, sp=nil})
+  hi('OutlineFoldPrefix',      {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('OutlineIndentEvn',       {fg=p.base04, bg=nil, attr=nil, sp=nil})
+  hi('OutlineIndentOdd',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
+
+  -- 'hrsh7th/nvim-cmp'
+ 	hi('CmpItemAbbr',           {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
+ 	hi('CmpItemAbbrDeprecated', {fg=p.base03, bg=nil,      attr=nil,    sp=nil})
+ 	hi('CmpItemAbbrMatch',      {fg=p.base0A, bg=nil,      attr='bold', sp=nil})
+ 	hi('CmpItemAbbrMatchFuzzy', {fg=p.base0A, bg=nil,      attr='bold', sp=nil})
+ 	hi('CmpItemKind',           {fg=p.base0F, bg=p.base01, attr=nil,    sp=nil})
+ 	hi('CmpItemMenu',           {fg=p.base05, bg=p.base01, attr=nil,    sp=nil})
+
+ 	hi('CmpItemKindClass',         {link='Type'})
+ 	hi('CmpItemKindColor',         {link='Special'})
+ 	hi('CmpItemKindConstant',      {link='Constant'})
+ 	hi('CmpItemKindConstructor',   {link='Type'})
+ 	hi('CmpItemKindEnum',          {link='Structure'})
+ 	hi('CmpItemKindEnumMember',    {link='Structure'})
+ 	hi('CmpItemKindEvent',         {link='Exception'})
+ 	hi('CmpItemKindField',         {link='Structure'})
+ 	hi('CmpItemKindFile',          {link='Tag'})
+ 	hi('CmpItemKindFolder',        {link='Directory'})
+ 	hi('CmpItemKindFunction',      {link='Function'})
+ 	hi('CmpItemKindInterface',     {link='Structure'})
+ 	hi('CmpItemKindKeyword',       {link='Keyword'})
+ 	hi('CmpItemKindMethod',        {link='Function'})
+ 	hi('CmpItemKindModule',        {link='Structure'})
+ 	hi('CmpItemKindOperator',      {link='Operator'})
+ 	hi('CmpItemKindProperty',      {link='Structure'})
+ 	hi('CmpItemKindReference',     {link='Tag'})
+ 	hi('CmpItemKindSnippet',       {link='Special'})
+ 	hi('CmpItemKindStruct',        {link='Structure'})
+ 	hi('CmpItemKindText',          {link='Statement'})
+ 	hi('CmpItemKindTypeParameter', {link='Type'})
+ 	hi('CmpItemKindUnit',          {link='Special'})
+ 	hi('CmpItemKindValue',         {link='Identifier'})
+ 	hi('CmpItemKindVariable',      {link='Delimiter'})
+
+  -- justinmk/vim-sneak
+  hi('Sneak',      {fg=p.base00, bg=p.base0E, attr=nil,    sp=nil})
+  hi('SneakScope', {fg=p.base00, bg=p.base07, attr=nil,    sp=nil})
+  hi('SneakLabel', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
 
   -- kyazdani42/nvim-tree.lua (only unlinked highlight groups)
   hi('NvimTreeExecFile',     {fg=p.base0B, bg=nil,      attr='bold',           sp=nil})
@@ -623,11 +800,178 @@ H.apply_palette = function(palette, use_cterm)
   hi('GitSignsDeleteLn',     {link='GitSignsDelete'})
   hi('GitSignsDeleteInline', {link='GitSignsDelete'})
 
+  -- lukas-reineke/indent-blankline.nvim
+  hi('IndentBlanklineChar',         {fg=p.base02, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineContextChar',  {fg=p.base0F, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineContextStart', {fg=nil,      bg=nil, attr='underline,nocombine', sp=p.base0F})
+  hi('IndentBlanklineIndent1',      {fg=p.base08, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent2',      {fg=p.base09, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent3',      {fg=p.base0A, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent4',      {fg=p.base0B, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent5',      {fg=p.base0C, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent6',      {fg=p.base0D, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent7',      {fg=p.base0E, bg=nil, attr='nocombine',           sp=nil})
+  hi('IndentBlanklineIndent8',      {fg=p.base0F, bg=nil, attr='nocombine',           sp=nil})
+
+  -- neoclide/coc.nvim
+  hi('CocErrorHighlight',   {link='DiagnosticError'})
+  hi('CocHintHighlight',    {link='DiagnosticHint'})
+  hi('CocInfoHighlight',    {link='DiagnosticInfo'})
+  hi('CocWarningHighlight', {link='DiagnosticWarn'})
+
+  hi('CocErrorFloat',   {link='DiagnosticFloatingError'})
+  hi('CocHintFloat',    {link='DiagnosticFloatingHint'})
+  hi('CocInfoFloat',    {link='DiagnosticFloatingInfo'})
+  hi('CocWarningFloat', {link='DiagnosticFloatingWarn'})
+
+  hi('CocErrorSign',   {link='DiagnosticSignError'})
+  hi('CocHintSign',    {link='DiagnosticSignHint'})
+  hi('CocInfoSign',    {link='DiagnosticSignInfo'})
+  hi('CocWarningSign', {link='DiagnosticSignWarn'})
+
+  hi('CocCodeLens',             {link='LspCodeLens'})
+  hi('CocDisabled',             {link='Comment'})
+  hi('CocMarkdownLink',         {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
+  hi('CocMenuSel',              {fg=nil,      bg=p.base02, attr=nil, sp=nil})
+  hi('CocNotificationProgress', {link='CocMarkdownLink'})
+  hi('CocPumVirtualText',       {link='CocMarkdownLink'})
+  hi('CocSearch',               {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
+  hi('CocSelectedText',         {fg=p.base08, bg=nil,      attr=nil, sp=nil})
+
+  -- nvim-lualine/lualine.nvim
+  -- Everything works correctly out of the box
+
+  -- nvim-neo-tree/neo-tree.nvim
+  hi('NeoTreeDimText',              {fg=p.base03, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeDotfile',              {fg=p.base04, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeFadeText1',            {link='NeoTreeDimText'})
+  hi('NeoTreeFadeText2',            {fg=p.base02, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeGitAdded',             {fg=p.base0B, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeGitConflict',          {fg=p.base08, bg=nil,      attr='bold', sp=nil})
+  hi('NeoTreeGitDeleted',           {fg=p.base08, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeGitModified',          {fg=p.base0E, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeGitUnstaged',          {fg=p.base08, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeGitUntracked',         {fg=p.base0A, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeMessage',              {fg=p.base05, bg=p.base01, attr=nil,    sp=nil})
+  hi('NeoTreeModified',             {fg=p.base07, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeRootName',             {fg=p.base0D, bg=nil,      attr='bold', sp=nil})
+  hi('NeoTreeTabInactive',          {fg=p.base04, bg=nil,      attr=nil,    sp=nil})
+  hi('NeoTreeTabSeparatorActive',   {fg=p.base03, bg=p.base02, attr=nil,    sp=nil})
+  hi('NeoTreeTabSeparatorInactive', {fg=p.base01, bg=p.base01, attr=nil,    sp=nil})
+
   -- nvim-telescope/telescope.nvim
   hi('TelescopeBorder',         {fg=p.base0F, bg=nil,      attr=nil,    sp=nil})
   hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil})
   hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
   hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
+
+  -- p00f/nvim-ts-rainbow
+  hi('rainbowcol1', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol2', {fg=p.base09, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol3', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol4', {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol5', {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol6', {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('rainbowcol7', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+
+  -- phaazon/hop.nvim
+  hi('HopNextKey',   {fg=p.base0E, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('HopNextKey1',  {fg=p.base08, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('HopNextKey2',  {fg=p.base04, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('HopPreview',   {fg=p.base09, bg=nil, attr='bold,nocombine', sp=nil})
+  hi('HopUnmatched', {link='Comment'})
+
+  -- rcarriga/nvim-dap-ui
+  hi('DapUIScope',                   {link='Title'})
+  hi('DapUIType',                    {link='Type'})
+  hi('DapUIModifiedValue',           {fg=p.base0E, bg=nil, attr='bold', sp=nil})
+  hi('DapUIDecoration',              {link='Title'})
+  hi('DapUIThread',                  {link='String'})
+  hi('DapUIStoppedThread',           {link='Title'})
+  hi('DapUISource',                  {link='Directory'})
+  hi('DapUILineNumber',              {link='Title'})
+  hi('DapUIFloatBorder',             {link='SpecialChar'})
+  hi('DapUIWatchesEmpty',            {link='ErrorMsg'})
+  hi('DapUIWatchesValue',            {link='String'})
+  hi('DapUIWatchesError',            {link='DiagnosticError'})
+  hi('DapUIBreakpointsPath',         {link='Directory'})
+  hi('DapUIBreakpointsInfo',         {link='DiagnosticInfo'})
+  hi('DapUIBreakpointsCurrentLine',  {fg=p.base0B, bg=nil, attr='bold', sp=nil})
+  hi('DapUIBreakpointsDisabledLine', {link='Comment'})
+
+  -- rcarriga/nvim-notify
+  hi('NotifyDEBUGBorder', {fg=p.base03, bg=nil, attr=nil, sp=nil})
+  hi('NotifyDEBUGIcon',   {link='NotifyDEBUGBorder'})
+  hi('NotifyDEBUGTitle',  {link='NotifyDEBUGBorder'})
+  hi('NotifyERRORBorder', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('NotifyERRORIcon',   {link='NotifyERRORBorder'})
+  hi('NotifyERRORTitle',  {link='NotifyERRORBorder'})
+  hi('NotifyINFOBorder',  {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('NotifyINFOIcon',    {link='NotifyINFOBorder'})
+  hi('NotifyINFOTitle',   {link='NotifyINFOBorder'})
+  hi('NotifyTRACEBorder', {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('NotifyTRACEIcon',   {link='NotifyTRACEBorder'})
+  hi('NotifyTRACETitle',  {link='NotifyTRACEBorder'})
+  hi('NotifyWARNBorder',  {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+  hi('NotifyWARNIcon',    {link='NotifyWARNBorder'})
+  hi('NotifyWARNTitle',   {link='NotifyWARNBorder'})
+
+  -- rlane/pounce.nvim
+  hi('PounceMatch',      {fg=p.base00, bg=p.base05, attr='bold,nocombine', sp=nil})
+  hi('PounceGap',        {fg=p.base00, bg=p.base03, attr='bold,nocombine', sp=nil})
+  hi('PounceAccept',     {fg=p.base00, bg=p.base08, attr='bold,nocombine', sp=nil})
+  hi('PounceAcceptBest', {fg=p.base00, bg=p.base0B, attr='bold,nocombine', sp=nil})
+
+  -- 'romgrk/barbar.nvim'
+  hi('BufferCurrent',       {fg=p.base05, bg=p.base02, attr='bold', sp=nil})
+  hi('BufferCurrentIcon',   {fg=nil,      bg=p.base02, attr=nil,    sp=nil})
+  hi('BufferCurrentIndex',  {link='BufferCurrentIcon'})
+  hi('BufferCurrentMod',    {fg=p.base08, bg=p.base02, attr='bold', sp=nil})
+  hi('BufferCurrentSign',   {link='BufferCurrent'})
+  hi('BufferCurrentTarget', {fg=p.base0E, bg=p.base02, attr='bold', sp=nil})
+
+  hi('BufferInactive',       {fg=p.base04, bg=p.base01, attr=nil,    sp=nil})
+  hi('BufferInactiveIcon',   {fg=nil,      bg=p.base01, attr=nil,    sp=nil})
+  hi('BufferInactiveIndex',  {link='BufferInactiveIcon'})
+  hi('BufferInactiveMod',    {fg=p.base08, bg=p.base01, attr=nil,    sp=nil})
+  hi('BufferInactiveSign',   {link='BufferInactive'})
+  hi('BufferInactiveTarget', {fg=p.base0E, bg=p.base01, attr='bold', sp=nil})
+
+  hi('BufferOffset',      {link='Normal'})
+  hi('BufferTabpages',    {fg=p.base01, bg=p.base0A, attr='bold', sp=nil})
+  hi('BufferTabpageFill', {link='Normal'})
+
+  hi('BufferVisible',       {fg=p.base05, bg=p.base01, attr='bold', sp=nil})
+  hi('BufferVisibleIcon',   {fg=nil,      bg=p.base01, attr=nil,    sp=nil})
+  hi('BufferVisibleIndex',  {link='BufferVisibleIcon'})
+  hi('BufferVisibleMod',    {fg=p.base08, bg=p.base01, attr='bold', sp=nil})
+  hi('BufferVisibleSign',   {link='BufferVisible'})
+  hi('BufferVisibleTarget', {fg=p.base0E, bg=p.base01, attr='bold', sp=nil})
+
+  -- simrat39/symbols-outline.nvim
+  -- Everything works correctly out of the box
+
+  -- stevearc/aerial.nvim
+  -- Everything works correctly out of the box
+
+  -- TimUntersberger/neogit
+  -- Everything works correctly out of the box
+
+  -- williamboman/mason.nvim
+  hi('MasonError',                       {fg=p.base08, bg=nil,      attr=nil,    sp=nil})
+  hi('MasonHeader',                      {fg=p.base00, bg=p.base0D, attr='bold', sp=nil})
+  hi('MasonHeaderSecondary',             {fg=p.base00, bg=p.base0F, attr='bold', sp=nil})
+  hi('MasonHeading',                     {link='Bold'})
+  hi('MasonHighlight',                   {fg=p.base0F, bg=nil,      attr=nil,    sp=nil})
+  hi('MasonHighlightBlock',              {fg=p.base00, bg=p.base0F, attr=nil,    sp=nil})
+  hi('MasonHighlightBlockBold',          {link='MasonHeaderSecondary'})
+  hi('MasonHighlightBlockBoldSecondary', {link='MasonHeader'})
+  hi('MasonHighlightBlockSecondary',     {fg=p.base00, bg=p.base0D, attr=nil,    sp=nil})
+  hi('MasonHighlightSecondary',          {fg=p.base0D, bg=nil,      attr=nil,    sp=nil})
+  hi('MasonLink',                        {link='MasonHighlight'})
+  hi('MasonMuted',                       {link='Comment'})
+  hi('MasonMutedBlock',                  {fg=p.base00, bg=p.base03, attr=nil,    sp=nil})
+  hi('MasonMutedBlockBold',              {fg=p.base00, bg=p.base03, attr='bold', sp=nil})
   -- stylua: ignore end
 
   -- Terminal colors
