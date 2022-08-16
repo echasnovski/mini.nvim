@@ -74,8 +74,8 @@
 ---   Has builtins for brackets, quotes, function call, argument, tag, user
 ---   prompt, and any punctuation/digit/whitespace character.
 --- - |MiniBase16| - fast implementation of base16 theme for manually supplied
----   palette. Has unique palette generator which needs only background and
----   foreground colors.
+---   palette. Supports 30+ plugin integrations. Has unique palette generator
+---   which needs only background and foreground colors.
 --- - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
 ---   window layout.
 --- - |MiniComment| - fast and familiar per-line code commenting.
@@ -204,7 +204,9 @@
 ---
 --- This plugin comes with several color schemes. All of them are a
 --- |MiniBase16| theme created with faster version of the following Lua code:
----   `require('mini.base16').setup({ palette = palette, use_cterm = true })`
+--- >
+---   require('mini.base16').setup({ palette = palette, use_cterm = true })
+--- <
 --- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
 ---
 --- ## minischeme~

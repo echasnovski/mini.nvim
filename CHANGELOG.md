@@ -12,12 +12,13 @@ Introduction of new module.
 
 ## mini.base16
 
-- FEATURE: add support for many plugin integrations.
-- BREAKING: change some 'mini.nvim' highlights:
+- FEATURE: Add support for many plugin integrations.
+- FEATURE: Implement `MiniBase16.config.plugins` for configuring plugin integrations.
+- BREAKING: Change some 'mini.nvim' highlights:
     - `MiniCompletionActiveParameter` now highlights with background instead of underline.
     - `MiniJump2dSpot` now explicitly defined to use plugin's palette.
     - `MiniStarterItemPrefix` and `MiniStarterQuery` are now bold for better visibility.
-- BREAKING: change highlight for changed git diff to be more visible and to comply more with general guidelines.
+- BREAKING: Update highlight for changed git diff to be more visible and to comply more with general guidelines.
 
 ## mini.comment
 

@@ -152,7 +152,7 @@ Plugins with similar functionality:
 
 ### mini.base16
 
-Fast implementation of [chriskempson/base16](https://github.com/chriskempson/base16) theme for manually supplied palette. Has unique palette generator which needs only background and foreground colors.
+Fast implementation of [chriskempson/base16](https://github.com/chriskempson/base16) theme for manually supplied palette. Supports 30+ plugin integrations. Has unique palette generator which needs only background and foreground colors.
 
 [**DEMO of 'mini.base16'**](DEMO.md#minibase16)
 
@@ -169,6 +169,10 @@ Default `config`:
   -- `false`), or table with cterm colors. See `setup()` documentation for
   -- more information.
   use_cterm = nil,
+
+  -- Plugin integrations. Use `default = false` to disable all integrations.
+  -- Also can be set per plugin (see |MiniBase16.config|).
+  plugins = { default = true },
 }
 ```
 

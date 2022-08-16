@@ -10,6 +10,7 @@ You can make contributions in the following ways:
     - **Feature request**. A concise and justified description of what one or several modules should be able to do. Before making one, please make your best efforts to make sure that it is not a feature that won't get implemented (these should be described in documentation; for example: block comments in 'mini.comment').
 - **Create a pull request (PR)**. It can be one of two types:
     - **Code related**. For example, fix a bug or implement a feature. **Before even starting one, please make sure that it is aligned with project vision and goals**. The best way to do it is to receive a positive feedback from maintainer on your initiative in one of the GitHub issues (existing one or created by you otherwise). Please, make sure to regenerate latest help file and that all tests are passed (see later sections).
+    - **Add plugin integration to 'mini.base16' color scheme**. See [](#implementation-notes) for checklist.
     - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation; see later section). Feel free to make these without creating a GitHub issue.
 - **Add explicit support to colorschemes**. Any 'mini.nvim' module supports any colorscheme right out of the box. This is done by making most highlight groups be linked to a semantically similar builtin highlight group. Other groups are hard-coded based on personal preference. However, these choices might be out of tune with a particular colorscheme. Updating as many colorschemes as possible to have explicit 'mini.nvim' support is highly appreciated. For your convenience, there is a list of all highlight groups in later section of this file.
 - **Participate in [discussions](https://github.com/echasnovski/mini.nvim/discussions)**.
@@ -46,13 +47,18 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
 ## Implementation notes
 
 - Use module's `H.get_config()` helper to get its `config`. This way allows using buffer local configuration.
-- Checklist for adding new config setting to an existing module:
+- Checklist for adding new config setting:
     - Add code which uses new setting.
     - Update module's `H.setup_config()` with type check of new setting.
     - Add default value to `Mini*.config` definition.
     - Regenerate help file.
     - Update respective module section in 'README.md'.
     - Update 'CHANGELOG.md'. In module's section of current version add line starting with `- FEATURE: Implement ...`.
+- Checklist for adding new plugin integration:
+    - Update file 'lua/mini/base16.lua' in a way similar to other already added plugins:
+        - Add definitions for highlight groups.
+        - Add plugin entry in a list of supported plugins in help annotations.
+    - Regenerate documentation (see [](#generating-help-file)).
 
 ## List of highlight groups
 

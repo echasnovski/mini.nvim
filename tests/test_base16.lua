@@ -158,6 +158,29 @@ T['setup()']['respects `config.use_cterm`'] = function()
   )
 end
 
+T['setup()']['respects `config.plugins`'] = function()
+  local clear_highlight = function()
+    child.cmd('highlight clear')
+    expect.match(child.cmd_capture('hi MiniCursorword'), 'cleared')
+  end
+
+  -- By default it should load plugin integrations
+  clear_highlight()
+  reload_module({ palette = minischeme_palette })
+  validate_hl_group('MiniCursorword', 'gui=underline')
+
+  -- If supplied `false`, should not load plugin integration
+  clear_highlight()
+  reload_module({ palette = minischeme_palette, plugins = { ['echasnovski/mini.nvim'] = false } })
+  expect.match(child.cmd_capture('hi MiniCursorword'), 'cleared')
+
+  -- Should allow loading only chosen integrations
+  clear_highlight()
+  reload_module({ palette = minischeme_palette, plugins = { default = false, ['echasnovski/mini.nvim'] = true } })
+  validate_hl_group('MiniCursorword', 'gui=underline')
+  expect.match(child.cmd_capture('hi GitSignsAdd'), 'cleared')
+end
+
 T['mini_palette()'] = new_set()
 
 T['mini_palette()']['validates arguments'] = function()

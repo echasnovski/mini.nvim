@@ -95,8 +95,8 @@ Table of contents:
   Has builtins for brackets, quotes, function call, argument, tag, user
   prompt, and any punctuation/digit/whitespace character.
 - |MiniBase16| - fast implementation of base16 theme for manually supplied
-  palette. Has unique palette generator which needs only background and
-  foreground colors.
+  palette. Supports 30+ plugin integrations. Has unique palette generator
+  which needs only background and foreground colors.
 - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
   window layout.
 - |MiniComment| - fast and familiar per-line code commenting.
@@ -227,7 +227,9 @@ Note: using function values inside buffer variables requires Neovim>=0.7.
 
 This plugin comes with several color schemes. All of them are a
 |MiniBase16| theme created with faster version of the following Lua code:
-  `require('mini.base16').setup({ palette = palette, use_cterm = true })`
+>
+  require('mini.base16').setup({ palette = palette, use_cterm = true })
+<
 Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
 
 ## minischeme~
@@ -1087,6 +1089,10 @@ Example:
       base0F = '#00a5c5',
     },
     use_cterm = true,
+    plugins = {
+      default = false,
+      ['echasnovski/mini.nvim'] = true,
+    },
   })
 <
 # Notes~
@@ -1142,8 +1148,31 @@ Default values:
     -- `false`), or table with cterm colors. See `setup()` documentation for
     -- more information.
     use_cterm = nil,
+
+    -- Plugin integrations. Use `default = false` to disable all integrations.
+    -- Also can be set per plugin (see |MiniBase16.config|).
+    plugins = { default = true },
   }
 <
+# Options ~
+
+## Plugin integrations ~
+
+`config.plugins` defines for which supported plugins highlight groups will
+be created. Limiting number of integrations slightly decreases startup time.
+It is a table with boolean (`true`/`false`) values which are applied as follows:
+- If plugin name (as listed in |mini.base16|) has entry, it is used.
+- Otherwise `config.plugins.default` is used.
+
+Example which will load only "mini.nvim" integration:
+>
+  require('mini.base16').setup({
+    palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75),
+    plugins = {
+      default = false,
+      ['echasnovski/mini.nvim'] = true,
+    }
+  })
 
 ------------------------------------------------------------------------------
                                                      *MiniBase16.mini_palette()*
