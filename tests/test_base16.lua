@@ -124,16 +124,7 @@ T['setup()']['defines builtin highlight groups'] = function()
   validate_hl_group('Bold', 'gui=bold')
 
   local diagnostic_hl_group = vim.fn.has('nvim-0.6.0') == 1 and 'DiagnosticError' or 'LspDiagnosticsDefaultWarning'
-  validate_hl_group(diagnostic_hl_group, ('ctermfg=1 guifg=%s guibg=%s'):format(p.base08, p.base00))
-end
-
-T['setup()']['defines highlight groups for explicitly supported plugins'] = function()
-  local p = child.lua_get('MiniBase16.config.palette')
-  validate_hl_group('MiniCursorword', 'gui=underline')
-  validate_hl_group('NvimTreeFolderIcon', ('guifg=%s'):format(p.base03))
-  validate_hl_group('GitSignsAdd', ('guifg=%s guibg=%s'):format(p.base0B, p.base01))
-  validate_hl_group('TelescopeBorder', ('guifg=%s'):format(p.base0F))
-  validate_hl_group('WhichKey', ('guifg=%s'):format(p.base0D))
+  validate_hl_group(diagnostic_hl_group, ('ctermfg=1 guifg=%s'):format(p.base08))
 end
 
 T['setup()']['defines highlight groups for terminal colors'] = function()

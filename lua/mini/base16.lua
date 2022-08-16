@@ -82,7 +82,7 @@
 --- <
 --- # Notes~
 ---
---- 1. This module is used to create plugin's colorscheme (see |minischeme|).
+--- 1. This is used to create plugin's colorschemes (see |mini.nvim-color-schemes|).
 --- 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
 ---    creates a coordinated set of |highlight|s. To create your own theme:
 ---     - Put "myscheme.lua" file (name after your chosen theme name) inside
@@ -529,10 +529,10 @@ H.apply_palette = function(palette, use_cterm)
 
   -- Built-in diagnostic
   if vim.fn.has("nvim-0.6.0") == 1 then
-    hi('DiagnosticError', {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
-    hi('DiagnosticHint',  {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
-    hi('DiagnosticInfo',  {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
-    hi('DiagnosticWarn',  {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
+    hi('DiagnosticError', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+    hi('DiagnosticHint',  {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+    hi('DiagnosticInfo',  {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+    hi('DiagnosticWarn',  {fg=p.base0E, bg=nil, attr=nil, sp=nil})
 
     hi('DiagnosticFloatingError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
     hi('DiagnosticFloatingHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
@@ -549,10 +549,10 @@ H.apply_palette = function(palette, use_cterm)
     hi('DiagnosticUnderlineInfo',  {fg=nil, bg=nil, attr='underline', sp=p.base0C})
     hi('DiagnosticUnderlineWarn',  {fg=nil, bg=nil, attr='underline', sp=p.base0E})
   else
-    hi('LspDiagnosticsDefaultError',       {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultHint',        {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultInformation', {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultWarning',     {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultError',       {fg=p.base08, bg=nil, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultHint',        {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultInformation', {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+    hi('LspDiagnosticsDefaultWarning',     {fg=p.base0E, bg=nil, attr=nil, sp=nil})
 
     hi('LspDiagnosticsFloatingError',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
     hi('LspDiagnosticsFloatingHint',        {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})

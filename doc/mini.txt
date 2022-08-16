@@ -1091,7 +1091,7 @@ Example:
 <
 # Notes~
 
-1. This module is used to create plugin's colorscheme (see |minischeme|).
+1. This is used to create plugin's colorschemes (see |mini.nvim-color-schemes|).
 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
    creates a coordinated set of |highlight|s. To create your own theme:
     - Put "myscheme.lua" file (name after your chosen theme name) inside
