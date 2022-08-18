@@ -857,8 +857,6 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
     -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
     local has_nvim_treesitter, _ = pcall(require, 'nvim-treesitter')
-    _G.has_nvim_treesitter = has_nvim_treesitter
-    _G.opts_use_nvim_treesitter = opts.use_nvim_treesitter
     local matched_nodes
     if has_nvim_treesitter and opts.use_nvim_treesitter then
       matched_nodes = H.get_matched_nodes_plugin(target_captures)
