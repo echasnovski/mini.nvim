@@ -774,15 +774,19 @@ H.get_marks_pos = function(mode)
   -- - For the second mark we want last byte of symbol. To add surrounding to
   --   the right, use `pos2[2] + 1`.
   local line2 = vim.fn.getline(pos2[1])
-  -- This returns the last byte inside character because `vim.str_byteindex()`
-  -- 'rounds upwards to the end of that sequence'.
-  pos2[2] = vim.str_byteindex(
-    line2,
-    -- Use `math.min()` because it might lead to 'index out of range' error
-    -- when mark is positioned at the end of line (that extra space which is
-    -- selected when selecting with `v$`)
-    vim.str_utfindex(line2, math.min(#line2, pos2[2]))
-  )
+  if mode == 'visual' and vim.o.selection == 'exclusive' then
+    pos2[2] = pos2[2] - 1
+  else
+    -- This returns the last byte inside character because `vim.str_byteindex()`
+    -- 'rounds upwards to the end of that sequence'.
+    pos2[2] = vim.str_byteindex(
+      line2,
+      -- Use `math.min()` because it might lead to 'index out of range' error
+      -- when mark is positioned at the end of line (that extra space which is
+      -- selected when selecting with `v$`)
+      vim.str_utfindex(line2, math.min(#line2, pos2[2]))
+    )
+  end
 
   return {
     first = { line = pos1[1], col = pos1[2] },
