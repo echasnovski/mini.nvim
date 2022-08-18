@@ -1247,6 +1247,9 @@ H.make_query = function(buf_id, query)
   -- Notify about new query if not in VimEnter, where it might lead to
   -- unpleasant flickering due to startup process (lazy loading, etc.).
   if not H.is_in_vimenter then
+    -- Make sure that output of `echo` will be shown
+    vim.cmd('redraw')
+
     local msg = ('Query: %s'):format(query)
     -- Use `echo` because it doesn't write to `:messages`.
     vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, "'")))
