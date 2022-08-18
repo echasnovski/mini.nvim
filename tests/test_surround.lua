@@ -395,6 +395,38 @@ T['Delete surrounding']['works on multiple lines'] = function()
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { 'aaa', 'bbb', 'ccc' }, { 1, 0 }, f)
 end
 
+T['Delete surrounding']['works with multiline input surroundings'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
+    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
+    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
+    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+  }]])
+  local lines = { 'xxx(', 'aaa', ')xxx' }
+  local f
+
+  f = function() type_keys('sd', 'a') end
+  validate_edit(lines, { 1, 3 }, { 'xxxaxxx' }, { 1, 3 }, f)
+  validate_edit(lines, { 2, 1 }, { 'xxxaxxx' }, { 1, 3 }, f)
+  validate_edit(lines, { 3, 0 }, { 'xxxaxxx' }, { 1, 3 }, f)
+
+  f = function() type_keys('sd', 'b') end
+  validate_edit(lines, { 1, 3 }, { 'xxxaaaxxx' }, { 1, 3 }, f)
+  validate_edit(lines, { 2, 1 }, { 'xxxaaaxxx' }, { 1, 3 }, f)
+  validate_edit(lines, { 3, 0 }, { 'xxxaaaxxx' }, { 1, 3 }, f)
+
+  f = function() type_keys('sd', 'c') end
+  -- No case for first line because there is no covering match
+  validate_edit(lines, { 2, 1 }, { 'xxx(a)xxx' }, { 1, 4 }, f)
+  -- No case for third line because there is no covering match
+
+  f = function() type_keys('sd', 'd') end
+  -- No case for first line because there is no covering match
+  validate_edit(lines, { 2, 1 }, { 'xxx(aaa)xxx' }, { 1, 4 }, f)
+  -- There is a `\n` at the end of last line, so it is matched
+  validate_edit(lines, { 3, 0 }, { 'xxx(', 'aaa)xxx' }, { 2, 3 }, f)
+end
+
 T['Delete surrounding']['allows cancelling with `<Esc> and <C-c>`'] = function()
   local validate_cancel = function(key)
     child.ensure_normal_mode()
@@ -539,6 +571,38 @@ T['Replace surrounding']['works on multiple lines'] = function()
 
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
   validate_edit({ '(aaa', 'bbb', 'ccc)' }, { 2, 0 }, { '<aaa', 'bbb', 'ccc>' }, { 1, 1 }, f)
+end
+
+T['Replace surrounding']['works with multiline input surroundings'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
+    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
+    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
+    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+  }]])
+  local lines = { 'xxx(', 'aaa', ')xxx' }
+  local f
+
+  f = function() type_keys('sr', 'a', '>') end
+  validate_edit(lines, { 1, 3 }, { 'xxx<a>xxx' }, { 1, 4 }, f)
+  validate_edit(lines, { 2, 1 }, { 'xxx<a>xxx' }, { 1, 4 }, f)
+  validate_edit(lines, { 3, 0 }, { 'xxx<a>xxx' }, { 1, 4 }, f)
+
+  f = function() type_keys('sr', 'b', '>') end
+  validate_edit(lines, { 1, 3 }, { 'xxx<aaa>xxx' }, { 1, 4 }, f)
+  validate_edit(lines, { 2, 1 }, { 'xxx<aaa>xxx' }, { 1, 4 }, f)
+  validate_edit(lines, { 3, 0 }, { 'xxx<aaa>xxx' }, { 1, 4 }, f)
+
+  f = function() type_keys('sr', 'c', '>') end
+  -- No case for first line because there is no covering match
+  validate_edit(lines, { 2, 1 }, { 'xxx(<a>)xxx' }, { 1, 5 }, f)
+  -- No case for third line because there is no covering match
+
+  f = function() type_keys('sr', 'd', '>') end
+  -- No case for first line because there is no covering match
+  validate_edit(lines, { 2, 1 }, { 'xxx(<aaa>)xxx' }, { 1, 5 }, f)
+  -- There is a `\n` at the end of last line. It is matched but can't be replaced.
+  validate_edit(lines, { 3, 0 }, { 'xxx(', 'aaa<)xxx' }, { 2, 4 }, f)
 end
 
 T['Replace surrounding']['allows cancelling with `<Esc> and <C-c>`'] = function()
@@ -713,6 +777,30 @@ T['Find surrounding']['works on multiple lines'] = function()
   validate_find({ '(aaa', 'bbb', 'ccc)' }, { 1, 3 }, { { 1, 0 }, { 3, 3 } }, type_keys, 'sF', ')')
 end
 
+T['Find surrounding']['works with multiline input surroundings'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
+    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
+    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
+    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+  }]])
+  local lines = { 'xxx(', 'aaa', ')xxx' }
+
+  validate_find(lines, { 2, 1 }, { { 2, 2 }, { 3, 0 }, { 1, 3 }, { 2, 0 } }, type_keys, 'sf', 'a')
+  validate_find(lines, { 2, 1 }, { { 2, 0 }, { 1, 3 }, { 3, 0 }, { 2, 2 } }, type_keys, 'sF', 'a')
+
+  -- Same as `a` because new line characters are normalized "inside" surrounding
+  validate_find(lines, { 2, 1 }, { { 2, 2 }, { 3, 0 }, { 1, 3 }, { 2, 0 } }, type_keys, 'sf', 'b')
+  validate_find(lines, { 2, 1 }, { { 2, 0 }, { 1, 3 }, { 3, 0 }, { 2, 2 } }, type_keys, 'sF', 'b')
+
+  validate_find(lines, { 2, 1 }, { { 2, 2 }, { 2, 0 } }, type_keys, 'sf', 'c')
+  validate_find(lines, { 2, 1 }, { { 2, 0 }, { 2, 2 } }, type_keys, 'sF', 'c')
+
+  -- Same as `c` because new line characters are normalized "inside" surrounding
+  validate_find(lines, { 2, 1 }, { { 2, 2 }, { 2, 0 } }, type_keys, 'sf', 'd')
+  validate_find(lines, { 2, 1 }, { { 2, 0 }, { 2, 2 } }, type_keys, 'sF', 'd')
+end
+
 T['Find surrounding']['allows cancelling with `<Esc> and <C-c>`'] = function()
   local validate_cancel = function(key)
     child.ensure_normal_mode()
@@ -835,6 +923,33 @@ T['Highlight surrounding']['respects `config.n_lines`'] = function()
   -- Shouldn't highlight anything
   child.expect_screenshot()
   has_message_about_not_found(')', 2)
+end
+
+T['Highlight surrounding']['works with multiline input surroundings'] = function()
+  child.lua('MiniSurround.config.highlight_duration = 5')
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
+    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
+    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
+    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+  }]])
+  set_lines({ 'xxx(', 'aaa', ')xxx' })
+  set_cursor(2, 1)
+
+  type_keys('sh', 'a')
+  child.expect_screenshot()
+  sleep(10)
+
+  type_keys('sh', 'b')
+  child.expect_screenshot()
+  sleep(10)
+
+  type_keys('sh', 'c')
+  child.expect_screenshot()
+  sleep(10)
+
+  type_keys('sh', 'd')
+  child.expect_screenshot()
 end
 
 T['Highlight surrounding']['removes highlighting in correct buffer'] = function()

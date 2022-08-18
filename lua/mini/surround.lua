@@ -380,8 +380,8 @@ MiniSurround.add = function(mode)
 
   -- Add surrounding. Begin insert from right to not break column numbers
   -- Insert after the right mark (`+ 1` is for that)
-  H.insert_into_line(marks.second.line, marks.second.col + 1, surr_info.right)
-  H.insert_into_line(marks.first.line, marks.first.col, surr_info.left)
+  H.region_replace({ from = { line = marks.second.line, col = marks.second.col + 1 } }, surr_info.right)
+  H.region_replace({ from = marks.first }, surr_info.left)
 
   -- Set cursor to be on the right of left surrounding
   H.set_cursor(marks.first.line, marks.first.col + surr_info.left:len())
@@ -391,23 +391,24 @@ end
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.delete = function()
-  -- Find input surrounding
+  -- Find input surrounding region
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then return '<Esc>' end
 
-  -- Delete surrounding. Begin with right to not break column numbers.
-  H.delete_linepart(surr.right)
-  H.delete_linepart(surr.left)
+  -- Delete surrounding region. Begin with right to not break column numbers.
+  H.region_replace(surr.right, {})
+  H.region_replace(surr.left, {})
 
   -- Set cursor to be on the right of deleted left surrounding
-  H.set_cursor(surr.left.line, surr.left.from)
+  local from = surr.left.from
+  H.set_cursor(from.line, from.col)
 end
 
 --- Replace surrounding
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.replace = function()
-  -- Find input surrounding
+  -- Find input surrounding region
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then return '<Esc>' end
 
@@ -416,27 +417,24 @@ MiniSurround.replace = function()
   if new_surr_info == nil then return '<Esc>' end
 
   -- Replace by parts starting from right to not break column numbers
-  H.delete_linepart(surr.right)
-  H.insert_into_line(surr.right.line, surr.right.from, new_surr_info.right)
-
-  H.delete_linepart(surr.left)
-  H.insert_into_line(surr.left.line, surr.left.from, new_surr_info.left)
+  H.region_replace(surr.right, new_surr_info.right)
+  H.region_replace(surr.left, new_surr_info.left)
 
   -- Set cursor to be on the right of left surrounding
-  H.set_cursor(surr.left.line, surr.left.from + new_surr_info.left:len())
+  local from = surr.left.from
+  H.set_cursor(from.line, from.col + new_surr_info.left:len())
 end
 
 --- Find surrounding
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.find = function()
-  -- Find surrounding
+  -- Find surrounding region
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then return '<Esc>' end
 
-  -- Make array of positions to cycle through
-  local pos_array = H.linepart_to_pos_table(surr.left)
-  vim.list_extend(pos_array, H.linepart_to_pos_table(surr.right))
+  -- Make array of unique positions to cycle through
+  local pos_array = H.surr_to_pos_array(surr)
 
   -- Cycle cursor through positions
   local dir = H.cache.direction or 'right'
@@ -450,15 +448,21 @@ end
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.highlight = function()
-  -- Find surrounding
+  -- Find surrounding region
   local surr = H.find_surrounding(H.get_surround_info('input', true))
   if surr == nil then return '<Esc>' end
 
-  -- Highlight surrounding
+  -- Highlight surrounding region
   local config = H.get_config()
   local buf_id = vim.api.nvim_get_current_buf()
-  H.highlight_surrounding(buf_id, surr)
-  vim.defer_fn(function() H.unhighlight_surrounding(buf_id, surr) end, config.highlight_duration)
+
+  H.region_highlight(buf_id, surr.left)
+  H.region_highlight(buf_id, surr.right)
+
+  vim.defer_fn(function()
+    H.region_unhighlight(buf_id, surr.left)
+    H.region_unhighlight(buf_id, surr.right)
+  end, config.highlight_duration)
 end
 
 --- Update `MiniSurround.config.n_lines`
@@ -716,7 +720,7 @@ H.find_surrounding_in_neighborhood = function(surround_info, n_neighbors)
   local span = H.find_best_match(neigh['1d'], surround_info.find, cur_offset)
   if span == nil then return nil end
 
-  -- Compute lineparts for left and right surroundings
+  -- Compute regions for left and right surroundings
   local l, r = span.left, span.right
   local left, right = neigh['1d']:sub(l, r):match(surround_info.extract)
   if left == nil or right == nil then
@@ -729,12 +733,12 @@ H.find_surrounding_in_neighborhood = function(surround_info, n_neighbors)
   local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
   local right_from, right_to = neigh.offset_to_pos(r - right:len() + 1), neigh.offset_to_pos(r)
 
-  local left_linepart = H.new_linepart(left_from, left_to)
-  if left_linepart == nil then return nil end
-  local right_linepart = H.new_linepart(right_from, right_to)
-  if right_linepart == nil then return nil end
-
-  return { left = left_linepart, right = right_linepart }
+  --stylua: ignore
+  local res = {
+    left  = { from = { line = left_from.line,  col = left_from.col  }, to = { line = left_to.line,  col = left_to.col  } },
+    right = { from = { line = right_from.line, col = right_from.col }, to = { line = right_to.line, col = right_to.col } },
+  }
+  return res
 end
 
 -- Work with operator marks ---------------------------------------------------
@@ -766,9 +770,8 @@ H.get_marks_pos = function(mode)
   pos1[2], pos2[2] = pos1[2] + 1, pos2[2] + 1
 
   -- Tweak second position to respect multibyte characters. Reasoning:
-  -- - These positions will be used with 'insert_into_line(line, col, text)' to
-  --   add some text. Its logic is `line[1:(col - 1)] + text + line[col:]`,
-  --   where slicing is meant on byte level.
+  -- - These positions will be used with `region_replace()` to add some text,
+  --   which operates on byte columns.
   -- - For the first mark we want the first byte of symbol, then text will be
   --   insert to the left of the mark.
   -- - For the second mark we want last byte of symbol. To add surrounding to
@@ -824,7 +827,7 @@ H.cursor_cycle = function(pos_array, dir)
   end
 
   res_pos = res_pos or (dir == 'right' and pos_array[1] or pos_array[#pos_array])
-  vim.api.nvim_win_set_cursor(0, { res_pos.line, res_pos.col - 1 })
+  H.set_cursor(res_pos.line, res_pos.col)
 end
 
 -- Work with user input -------------------------------------------------------
@@ -852,36 +855,89 @@ H.user_surround_id = function(sur_type)
   return char
 end
 
--- Work with line parts and text ----------------------------------------------
--- Line part - table with fields `line`, `from`, `to`. Represent part of line
--- from `from` character (inclusive) to `to` character (inclusive).
-H.new_linepart = function(pos_left, pos_right)
-  if pos_left.line ~= pos_right.line then
-    H.message('Positions span over multiple lines.')
-    return nil
-  end
-
-  return { line = pos_left.line, from = pos_left.col, to = pos_right.col }
+-- Work with positions --------------------------------------------------------
+H.pos_to_left = function(pos)
+  if pos.line == 1 and pos.col == 1 then return { line = pos.line, col = pos.col } end
+  if pos.col == 1 then return { line = pos.line - 1, col = H.get_line_cols(pos.line - 1) } end
+  return { line = pos.line, col = pos.col - 1 }
 end
 
-H.linepart_to_pos_table = function(linepart)
-  local res = { { line = linepart.line, col = linepart.from } }
-  if linepart.from ~= linepart.to then table.insert(res, { line = linepart.line, col = linepart.to }) end
+H.pos_to_right = function(pos)
+  local n_cols = H.get_line_cols(pos.line)
+  if pos.line == vim.api.nvim_buf_line_count(0) and pos.col >= n_cols then return { line = pos.line, col = n_cols } end
+  if pos.col >= n_cols then return { line = pos.line + 1, col = 1 } end
+  return { line = pos.line, col = pos.col + 1 }
+end
+
+-- Work with regions ----------------------------------------------------------
+H.region_replace = function(region, text)
+  -- Compute start and end position for `vim.api.nvim_buf_set_text()`.
+  -- Indexing is zero-based. Rows - end-inclusive, columns - end-exclusive.
+  local start_row, start_col = region.from.line - 1, region.from.col - 1
+
+  local end_row, end_col
+  -- Allow empty region
+  if region.to == nil then
+    end_row, end_col = start_row, start_col
+  else
+    end_row, end_col = region.to.line - 1, region.to.col
+
+    -- Possibly correct to allow removing new line character
+    if end_row < vim.api.nvim_buf_line_count(0) and H.get_line_cols(end_row + 1) < end_col then
+      end_row, end_col = end_row + 1, 0
+    end
+  end
+
+  -- Allow single string as replacement
+  if type(text) == 'string' then text = { text } end
+
+  -- Allow `\n` in string to denote new liness
+  if #text > 0 then text = vim.split(table.concat(text, '\n'), '\n') end
+
+  -- Replace. Use `pcall()` to do nothing if some position is out of bounds.
+  pcall(vim.api.nvim_buf_set_text, 0, start_row, start_col, end_row, end_col, text)
+end
+
+H.surr_to_pos_array = function(surr)
+  local res = {}
+
+  local append_position = function(pos, correction_direction)
+    -- Don't go past the line if it is not empty
+    if H.get_line_cols(pos.line) < pos.col and pos.col > 1 then
+      pos = correction_direction == 'left' and H.pos_to_left(pos) or H.pos_to_right(pos)
+    end
+
+    -- Don't add duplicate. Assumes that positions are used increasingly.
+    local line, col = pos.line, pos.col
+    local last = res[#res]
+    if not (last ~= nil and last.line == line and last.col == col) then
+      table.insert(res, { line = line, col = col })
+    end
+  end
+
+  -- Possibly correct position towards inside of surrounding region
+  append_position(surr.left.from, 'right')
+  append_position(surr.left.to, 'right')
+  append_position(surr.right.from, 'left')
+  append_position(surr.right.to, 'left')
+
   return res
 end
 
-H.delete_linepart = function(linepart)
-  local line = vim.fn.getline(linepart.line)
-  local new_line = line:sub(1, linepart.from - 1) .. line:sub(linepart.to + 1)
-  vim.fn.setline(linepart.line, new_line)
+H.region_highlight = function(buf_id, region)
+  local ns_id = H.ns_id.highlight
+
+  -- Indexing is zero-based. Rows - end-inclusive, columns - end-exclusive.
+  local from_line, from_col, to_line, to_col =
+    region.from.line - 1, region.from.col - 1, region.to.line - 1, region.to.col
+  vim.highlight.range(buf_id, ns_id, 'MiniSurround', { from_line, from_col }, { to_line, to_col })
 end
 
-H.insert_into_line = function(line_num, col, text)
-  -- Important to remember when working with multibyte characters: `col` here
-  -- represents byte index, not character
-  local line = vim.fn.getline(line_num)
-  local new_line = line:sub(1, col - 1) .. text .. line:sub(col)
-  vim.fn.setline(line_num, new_line)
+H.region_unhighlight = function(buf_id, region)
+  local ns_id = H.ns_id.highlight
+
+  -- Remove highlights from whole lines as it is the best available granularity
+  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, region.from.line - 1, region.to.line)
 end
 
 -- Work with Lua patterns -----------------------------------------------------
@@ -1048,25 +1104,6 @@ H.get_cursor_neighborhood = function(n_neighbors)
   }
 end
 
--- Work with highlighting -----------------------------------------------------
-H.highlight_surrounding = function(buf_id, surr)
-  local ns_id = H.ns_id.highlight
-
-  local l_line, l_from, l_to = surr.left.line - 1, surr.left.from - 1, surr.left.to
-  vim.highlight.range(buf_id, ns_id, 'MiniSurround', { l_line, l_from }, { l_line, l_to })
-
-  local r_line, r_from, r_to = surr.right.line - 1, surr.right.from - 1, surr.right.to
-  vim.highlight.range(buf_id, ns_id, 'MiniSurround', { r_line, r_from }, { r_line, r_to })
-end
-
-H.unhighlight_surrounding = function(buf_id, surr)
-  local ns_id = H.ns_id.highlight
-
-  -- Remove highlights from whole lines as it is the best available granularity
-  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, surr.left.line - 1, surr.left.line)
-  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, surr.right.line - 1, surr.right.line)
-end
-
 -- Work with surrounding info -------------------------------------------------
 --stylua: ignore start
 ---@param sur_type string One of 'input' or 'output'.
@@ -1144,5 +1181,7 @@ H.map = function(mode, key, rhs, opts)
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
+
+H.get_line_cols = function(line_num) return vim.fn.getline(line_num):len() end
 
 return MiniSurround
