@@ -1,15 +1,5 @@
 # Version 0.5.0.9000
 
-# Version 0.5.0
-
-- Update all tests to use new 'mini.test' module.
-- FEATURE: Implement buffer local configuration. This is done with `vim.b.mini*_config` buffer variables.
-- Add new `minicyan` color scheme.
-
-## mini.ai
-
-Introduction of new module.
-
 ## mini.base16
 
 - FEATURE: Add support for many plugin integrations.
@@ -19,6 +9,17 @@ Introduction of new module.
     - `MiniJump2dSpot` now explicitly defined to use plugin's palette.
     - `MiniStarterItemPrefix` and `MiniStarterQuery` are now bold for better visibility.
 - BREAKING: Update highlight for changed git diff to be more visible and to comply more with general guidelines.
+
+
+# Version 0.5.0
+
+- Update all tests to use new 'mini.test' module.
+- FEATURE: Implement buffer local configuration. This is done with `vim.b.mini*_config` buffer variables.
+- Add new `minicyan` color scheme.
+
+## mini.ai
+
+Introduction of new module.
 
 ## mini.comment
 
