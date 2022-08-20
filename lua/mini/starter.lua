@@ -269,10 +269,6 @@ MiniStarter.config = {
 }
 --minidoc_afterlines_end
 
--- Module data ================================================================
--- TODO: remove after 0.5.0 release
-MiniStarter.content = {}
-
 -- Module functionality =======================================================
 --- Act on |VimEnter|.
 MiniStarter.on_vimenter = function()
