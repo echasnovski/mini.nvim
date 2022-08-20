@@ -171,21 +171,8 @@ MiniJump.jump = function(target, backward, till, n_times)
   local target_is_present = vim.fn.search(search_pattern, 'wn') ~= 0
   if not target_is_present then return end
 
-  -- Construct search and highlight patterns
-  local flags = MiniJump.state.backward and 'Wb' or 'W'
-  local hl_case = ''
-  if vim.o.ignorecase and (not vim.o.smartcase or escaped_target == escaped_target:lower()) then hl_case = [[\c]] end
-  local pattern, hl_pattern = [[\V%s]], [[\V%s%s]]
-  if MiniJump.state.till then
-    if MiniJump.state.backward then
-      pattern, hl_pattern = [[\V\(%s\)\@<=\.]], [[\V%s%s\.\@=]]
-      flags = ('%se'):format(flags)
-    else
-      pattern, hl_pattern = [[\V\.\(%s\)\@=]], [[\V%s\.\@<=%s]]
-    end
-  end
-
-  pattern, hl_pattern = pattern:format(escaped_target), hl_pattern:format(hl_case, escaped_target)
+  -- Construct search and highlight pattern data
+  local pattern, hl_pattern, flags = H.make_search_data()
 
   -- Delay highlighting after stopping previous one
   local config = H.get_config()
@@ -358,6 +345,39 @@ H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.miniju
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniJump.config, vim.b.minijump_config or {}, config or {}) end
+
+-- Pattern matching -----------------------------------------------------------
+H.make_search_data = function()
+  local target = vim.fn.escape(MiniJump.state.target, [[\]])
+  local backward, till = MiniJump.state.backward, MiniJump.state.till
+
+  local flags = backward and 'Wb' or 'W'
+  local pattern, hl_pattern
+
+  if till then
+    -- General logic: moving pattern should match just before/after target,
+    -- while highlight pattern should match target for every "movable" place.
+    if backward then
+      -- NOTE: use `\@<=` instead of `\zs` because it behaves better in case of
+      -- consecutive matches (like `xxxx` for target `x`)
+      pattern = target .. [[\@<=\.]]
+      hl_pattern = target .. [[\ze\.]]
+    else
+      pattern = [[\.\ze]] .. target
+      hl_pattern = [[\.\@<=]] .. target
+    end
+  else
+    pattern = target
+    hl_pattern = target
+  end
+
+  -- Enable 'very nomagic' mode and possibly case-insensitivity
+  local ignore_case = vim.o.ignorecase and (not vim.o.smartcase or target == target:lower())
+  local prefix = ignore_case and [[\V\c]] or [[\V]]
+  pattern, hl_pattern = prefix .. pattern, prefix .. hl_pattern
+
+  return pattern, hl_pattern, flags
+end
 
 -- Highlighting ---------------------------------------------------------------
 H.highlight = function(pattern)
