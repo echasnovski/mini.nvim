@@ -223,10 +223,10 @@ MiniIndentscope.config = {
     -- Delay (in ms) between event and start of drawing scope indicator
     delay = 100,
 
-    -- Animation rule for scope's first drawing. A function which, given next
-    -- and total step numbers, returns wait time (in ms). See
-    -- |MiniIndentscope.gen_animation()| for builtin options. To not use
-    -- animation, supply `require('mini.indentscope').gen_animation('none')`.
+    -- Animation rule for scope's first drawing. A function which, given
+    -- next and total step numbers, returns wait time (in ms). See
+    -- |MiniIndentscope.gen_animation()| for builtin options. To disable
+    -- animation, use `require('mini.indentscope').gen_animation('none')`.
     --minidoc_replace_start animation = --<function: implements constant 20ms between steps>,
     animation = function(s, n) return 20 end,
     --minidoc_replace_end
@@ -249,8 +249,8 @@ MiniIndentscope.config = {
     -- categorize as border. Can be one of: 'both', 'top', 'bottom', 'none'.
     border = 'both',
 
-    -- Whether to use cursor column when computing reference indent. Useful to
-    -- see incremental scopes with horizontal cursor movements.
+    -- Whether to use cursor column when computing reference indent.
+    -- Useful to see incremental scopes with horizontal cursor movements.
     indent_at_cursor = true,
 
     -- Whether to first check input line to be a border of adjacent scope.
@@ -330,7 +330,7 @@ MiniIndentscope.config = {
 ---   - <reference> - table with <line> (reference line), <column> (reference
 ---     column), and <indent> ("indent at column") keys.
 MiniIndentscope.get_scope = function(line, col, opts)
-  opts = H.get_opts(opts)
+  opts = H.get_config({ options = opts }).options
 
   -- Compute default `line` and\or `col`
   if not (line and col) then
@@ -733,22 +733,6 @@ H.is_disabled = function() return vim.g.miniindentscope_disable == true or vim.b
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniIndentscope.config, vim.b.miniindentscope_config or {}, config or {})
-end
-
-H.get_opts = function(opts)
-  -- TODO: remove after 0.5.0 release
-  if vim.b.miniindentscope_options ~= nil then
-    local msg = string.format(
-      '%s %s',
-      '(mini.indentscope) Usage of `vim.b.miniindentscope_options` is deprecated.',
-      'Use `options` field of `vim.b.miniindentscope_config`.'
-    )
-    vim.notify_once(msg)
-    vim.b.miniindentscope_config =
-      vim.tbl_deep_extend('force', { options = vim.b.miniindentscope_options }, vim.b.miniindentscope_config or {})
-  end
-
-  return H.get_config({ options = opts }).options
 end
 
 -- Scope ----------------------------------------------------------------------
