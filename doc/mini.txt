@@ -4666,6 +4666,9 @@ Return~
                    `MiniStarter.eval_current_item`({buf_id})
 Evaluate current item
 
+Note that it resets current query before evaluation, as it is rarely needed
+any more.
+
 Parameters~
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.

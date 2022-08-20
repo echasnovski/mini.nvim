@@ -468,6 +468,24 @@ T['close()']['can be used when no Starter buffer is shown'] = function()
   expect.no_error(function() child.lua('MiniStarter.close()') end)
 end
 
+T['eval_current_item()'] = new_set()
+
+T['eval_current_item()']['works'] = function()
+  reload_module({ items = example_items })
+  child.lua('MiniStarter.open()')
+  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+  child.lua('_G.item_name = nil')
+
+  type_keys('b')
+  eq(get_active_items_names(), { 'baaa' })
+  child.lua('_G.item_name = nil')
+
+  -- It should reset query along with evaluating item
+  child.lua('MiniStarter.eval_current_item()')
+  eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
+  eq(child.lua_get('_G.item_name'), 'baaa')
+end
+
 -- Work with content ----------------------------------------------------------
 T['Default content'] = new_set({
   hooks = {
@@ -995,7 +1013,8 @@ T['Querying']['respects `config.evaluate_single`'] = function()
     child.lua('_G.item_name = nil')
 
     type_keys('b')
-    eq(get_active_items_names(), { 'baaa' })
+    -- It should reset query along with evaluating item
+    eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
     eq(child.lua_get('_G.item_name'), 'baaa')
   end
 

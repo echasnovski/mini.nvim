@@ -867,10 +867,16 @@ end
 -- Other exported functions ---------------------------------------------------
 --- Evaluate current item
 ---
+--- Note that it resets current query before evaluation, as it is rarely needed
+--- any more.
+---
 ---@param buf_id __starter_buf_id
 MiniStarter.eval_current_item = function(buf_id)
   buf_id = buf_id or vim.api.nvim_get_current_buf()
   if not H.validate_starter_buf_id(buf_id, 'eval_current_item()') then return end
+
+  -- Reset query before evaluation without query echo (avoids hit-enter-prompt)
+  H.make_query(vim.api.nvim_get_current_buf(), '', false)
 
   local data = H.buffer_data[buf_id]
   H.eval_fun_or_string(data.items[data.current_item_id].action, true)
@@ -1204,7 +1210,9 @@ H.item_is_active = function(item, query)
 end
 
 -- Work with queries ----------------------------------------------------------
-H.make_query = function(buf_id, query)
+H.make_query = function(buf_id, query, echo_msg)
+  if echo_msg == nil then echo_msg = true end
+
   local data = H.buffer_data[buf_id]
   -- Ignore case
   query = (query or data.query):lower()
@@ -1242,7 +1250,7 @@ H.make_query = function(buf_id, query)
 
   -- Notify about new query if not in VimEnter, where it might lead to
   -- unpleasant flickering due to startup process (lazy loading, etc.).
-  if not H.is_in_vimenter then
+  if echo_msg and not H.is_in_vimenter then
     -- Make sure that output of `echo` will be shown
     vim.cmd('redraw')
 
