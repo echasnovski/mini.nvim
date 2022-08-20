@@ -274,7 +274,9 @@ H.is_cursor_on_keyword = function()
   local col = vim.fn.col('.')
   local curchar = vim.api.nvim_get_current_line():sub(col, col)
 
-  return vim.fn.match(curchar, '[[:keyword:]]') >= 0
+  -- Use `pcall()` to catch `E5108` (can happen in binary files, see #112)
+  local ok, match_res = pcall(vim.fn.match, curchar, '[[:keyword:]]')
+  return ok and match_res >= 0
 end
 
 H.get_cursor_word = function() return vim.fn.escape(vim.fn.expand('<cword>'), [[\/]]) end

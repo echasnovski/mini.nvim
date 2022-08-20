@@ -106,6 +106,16 @@ T['Highlighting'] = new_set({
 
 T['Highlighting']['works'] = function() child.expect_screenshot() end
 
+T['Highlighting']['works on multibyte character'] = function()
+  set_lines({ 'ы ыы ыыы', 'ыы ыыы ы', 'ыыы ы ыы' })
+  set_cursor(1, 0)
+  child.expect_screenshot()
+
+  set_lines({ '  ', '  ', '  ' })
+  set_cursor(1, 0)
+  child.expect_screenshot()
+end
+
 T['Highlighting']['respects MiniCursorwordCurrent highlight group'] = function()
   child.cmd('hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE')
   child.expect_screenshot()
