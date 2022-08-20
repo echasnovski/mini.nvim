@@ -271,6 +271,17 @@ T['Add surrounding']['works with different mapping'] = function()
   child.api.nvim_del_keymap('n', 'SA')
 end
 
+T['Add surrounding']['respects `selection=exclusive` option'] = function()
+  child.o.selection = 'exclusive'
+  local f = function() type_keys('v2l', 'sa', ')') end
+
+  -- Regular case
+  validate_edit({ ' aaa ' }, { 1, 1 }, { ' (aa)a ' }, { 1, 2 }, f)
+
+  -- Multibyte characters
+  validate_edit({ ' ыыы ' }, { 1, 1 }, { ' (ыы)ы ' }, { 1, 2 }, f)
+end
+
 T['Add surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
