@@ -371,8 +371,16 @@ H.make_search_data = function()
       hl_pattern = [[\_.\@<=]] .. target
     end
   else
-    pattern = target
-    hl_pattern = target
+    local is_visual = vim.tbl_contains({ 'v', 'V', '\22' }, vim.fn.mode())
+    local is_exclusive = vim.o.selection == 'exclusive'
+    if not backward and is_visual and is_exclusive then
+      -- Still select target in case of exclusive visual selection
+      pattern = target .. [[\zs\_.]]
+      hl_pattern = target .. [[\ze\_.]]
+    else
+      pattern = target
+      hl_pattern = target
+    end
   end
 
   -- Enable 'very nomagic' mode and possibly case-insensitivity

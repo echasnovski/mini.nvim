@@ -708,6 +708,18 @@ T['Jumping with f/t/F/T']["respects 'smartcase'"] = function()
   eq(get_cursor(), { 1, 5 })
 end
 
+T['Jumping with f/t/F/T']["respects 'selection=exclusive'"] = function()
+  child.o.selection = 'exclusive'
+  set_lines({ ' 1e2e' })
+
+  set_cursor(1, 0)
+  type_keys('v', 'f', 'e')
+  eq({ child.fn.col('v'), child.fn.col('.') }, { 1, 4 })
+
+  type_keys('d')
+  eq(get_lines(), { '2e' })
+end
+
 T['Repeat jump with ;'] = new_set()
 
 T['Repeat jump with ;']['works'] = function()
