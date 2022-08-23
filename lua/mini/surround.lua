@@ -1,5 +1,11 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
+-- TODOs:
+-- - Update documentation.
+-- - Implement `MiniSurround.gen_spec` (with <input> and <output>).
+-- - Write transition layer for custom surroundings.
+-- - Implement `last` and `next` mappings.
+
 -- Documentation ==============================================================
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 --- a reimplementation of the core features of 'machakann/vim-sandwich' with a
@@ -7,7 +13,8 @@
 --- configured to have experience similar to 'tpope/vim-surround'.
 ---
 --- Features:
---- - Actions (all of them are dot-repeatable out of the box):
+--- - Actions (all of them are dot-repeatable out of the box and respect
+---   |v:count| for finding surrounding):
 ---     - Add surrounding with `sa` (in visual mode or on motion).
 ---     - Delete surrounding with `sd`.
 ---     - Replace surrounding with `sr`.
@@ -57,12 +64,46 @@
 --- - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
 --- - `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
 ---   surrounding (`i`): `[[` for left and `]]` for right.
---- - `sdf` - delete (`sd`) surrounding function call (`f`).
+--- - `2sdf` - delete (`sd`) second (`2`) surrounding function call (`f`).
 --- - `sr)tdiv<CR>` - replace (`sr`) surrounding parenthesis (`)`) with tag
 ---   (`t`) with identifier 'div' (`div<CR>` in command line prompt).
 --- - `sff` - find right (`sf`) part of surrounding function call (`f`).
 --- - `sh}` - highlight (`sh`) for a brief period of time surrounding curly
 ---   brackets (`}`)
+---
+--- # Comparisons~
+---
+--- - 'tpope/vim-surround':
+---     - 'vim-surround' has completely different, with other focus set of
+---       default mappings, while 'mini.surround' has a more coherent set.
+---     - 'mini.surround' supports dot-repeat, customized search path (see
+---       |MiniSurround.config|), customized specifications (see
+---       |MiniSurround-surround-specification|) allowing usage of tree-sitter
+---       queries (see |MiniSurround.gen_spec.input.treesitter()|),
+---       highlighting and finding surrounding. While 'vim-surround' does not.
+--- - 'machakann/vim-sandwich':
+---     - Both have same keybindings for common actions (add, delete, replace).
+---     - Otherwise same differences as with 'tpop/vim-surround' (except
+---       dot-repeat because 'vim-sandwich' supports it).
+--- - 'kylechui/nvim-surround':
+---     - 'nvim-surround' is designed after 'tpope/vim-surround' with same
+---       default mappings and logic, while 'mini.surround' has mappings
+---       similar to 'machakann/vim-sandwich'.
+---     - 'mini.surround' has more flexible customization of input surrounding
+---       (with composed patterns, region pair(s), search methods).
+---     - 'mini.surround' supports |v:count| in input surrounding while
+---       'nvim-surround' doesn't.
+--- - |mini.ai|:
+---     - Both use similar logic for finding target: textobject in 'mini.ai'
+---       and surrounding pair in 'mini.surround'. While 'mini.ai' uses
+---       extraction pattern for separate `a` and `i` textobjects,
+---       'mini.surround' uses it to select left and right surroundings
+---       (basically a difference between `a` and `i` textobjects).
+---     - Some builtin specifications are slightly different:
+---         - Quotes in 'mini.ai' are balanced, in 'mini.surround' they are not.
+---         - The 'mini.surround' doesn't have argument surrounding.
+---         - Default behavior in 'mini.ai' selects one of the edges into `a`
+---           textobject, while 'mini.surround' - both.
 ---
 --- # Highlight groups~
 ---
@@ -81,49 +122,280 @@
 ---@tag MiniSurround
 ---@toc_entry Surround
 
---- Algorithm design
+--- Builtin surroundings~
 ---
---- - Adding "output" surrounding has a fairly straightforward algorithm:
----     - Determine places for left and right parts (via `<>`/`[]` marks or by
----       finding some other surrounding).
----     - Determine left and right parts of surrounding via using custom and
----       builtin surroundings (via `output` field of surrounding info see
----       |MiniSurround.config|).
----     - Properly add allowing multiline parts.
---- - Finding "input" surrounding is a lot more complicated and is a reason why
----   this implementation is only somewhat minimal. In a nutshell, current
----   algorithm `searches in the neighborhood lines based on a certain pattern
----   and search method a best match`. More detailed:
----     - Extract neighborhood of cursor line: no more than
----       `MiniSurround.config.n_lines` before, cursor line itself, no more than
----       `MiniSurround.config.n_lines` after. Note: actual search is done
----       firstly on cursor line (i.e. with `n_lines = 0`), as it is the most
----       frequent usage and only then searches in wholeneighborhood.
----     - Convert it to "1d neighborhood" by concatenating with '\n' delimiter.
----       Compute location of current cursor position in this line.
----     - Given Lua pattern for an "input" surrounding (`input.find` field of
----       surrounding info; see |MiniSurround.config|), search for best match.
----       That is:
----         - Match with span covering cursor position. If several, try to pick
----           one with smallest width.
----         - If no covering match, pick one of "previous" (nearest
----           non-covering to the left) or "next" (nearest non-covering to the
----           right) matches, depending on `config.search_method` (see
----           |MiniSurround.config| for more details).
----       This computation is an iterative procedure, duration of which heavily
----       depends on the length of "1d neighborhood" and frequency of pattern
----       matching. If no match is found, there is no surrounding. Note: with
----       current approach smallest width of covering match is ensured by
----       checking match on covering substrings. This may have unwanted
----       consequences when using complex Lua patterns (like `%f[]` at the
----       pattern end, for example).
----     - Compute parts of "1d neighborhood" that represent left and right part
----       of found surrounding. This is done by using pattern from
----       `input.extract` field of surrounding info; see |MiniSurround.config|.
----       Note: pattern is used on a matched substring, so using `^` and `$` at
----       start and end of pattern means start and end of substring.
----     - Convert "1d offsets" of found parts to their positions in buffer.
----@tag MiniSurround-algorithm
+--- This table describes all builtin surroundings along with what they
+--- represent. Explanation:
+--- - `Key` represents the surrounding identifier: single character which should
+---   be typed after action mappings (see |MiniSurround.config.mappings|).
+--- - `Name` is a description of surrounding.
+--- - `Example line` contains a string for which examples are constructed. The
+---   `*` denotes the cursor position over `a` character.
+--- - `Delete` shows the result of typing `sd` followed by surrounding identifier.
+---   It aims to demonstrate "input" surrounding which is also used in replace
+---   with `sr` (surrounding id is typed first), highlight with `sh`, find with
+---   `sf` and `sF`.
+--- - `Replace` shows the result of typing `sr!` followed by surrounding
+---   identifier (with possible follow up from user). It aims to demonstrate
+---   "output" surrounding which is also used in adding with `sa` (followed by
+---   textobject/motion or in Visual mode).
+---
+--- Example: typing `sd)` with cursor on `*` (covers `a` character) changes line
+--- `!( *a (bb) )!` into `! aa (bb) !`. Typing `sr!)` changes same initial line
+--- into `(( aa (bb) ))`.
+--- >
+---  |Key|     Name      |  Example line |    Delete   |     Replace     |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | ( |  Balanced ()  | !( *a (bb) )! |  !aa (bb)!  | ( ( aa (bb) ) ) |
+---  | [ |  Balanced []  | ![ *a [bb] ]! |  !aa [bb]!  | [ [ aa [bb] ] ] |
+---  | { |  Balanced {}  | !{ *a {bb} }! |  !aa {bb}!  | { { aa {bb} } } |
+---  | < |  Balanced <>  | !< *a <bb> >! |  !aa <bb>!  | < < aa <bb> > > |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | ) |  Balanced ()  | !( *a (bb) )! | ! aa (bb) ! | (( aa (bb) ))   |
+---  | ] |  Balanced []  | ![ *a [bb] ]! | ! aa [bb] ! | [[ aa [bb] ]]   |
+---  | } |  Balanced {}  | !{ *a {bb} }! | ! aa {bb} ! | {{ aa {bb} }}   |
+---  | > |  Balanced <>  | !< *a <bb> >! | ! aa <bb> ! | << aa <bb> >>   |
+---  | b |  Alias for    | !( *a {bb} )! | ! aa {bb} ! | (( aa {bb} ))   |
+---  |   |  ), ], or }   |               |             |                 |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | q |  Alias for    | !'aa'*a'aa'!  | !'aaaaaa'!  | "'aa'aa'aa'"    |
+---  |   |  ", ', or `   |               |             |                 |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | ? |  User prompt  | !e * o!       | ! a !       | ee a oo         |
+---  |   |(typed e and o)|               |             |                 |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | t |      Tag      | !<x>*</x>!    | !a!         | <y><x>a</x></y> |
+---  |   |               |               |             | (typed y)       |
+---  |---|---------------|---------------|-------------|-----------------|
+---  | f | Function call | !f(*a, bb)!   | !aa, bb!    | g(f(*a, bb))    |
+---  |   |               |               |             | (typed g)       |
+---  |---|---------------|---------------|-------------|-----------------|
+---  |   |    Default    | !_a*a_!       | !aaa!       | __aaa__         |
+---  |   |   (typed _)   |               |             |                 |
+---  |---|---------------|---------------|-------------|-----------------|
+--- <
+--- Notes:
+--- - All examples assume default `config.search_method`.
+--- - Open brackets differ from close brackets by how they treat inner edge
+---   whitespace: open includes it left and right parts, close does not.
+--- - Output value of `b` alias is same as `)`. For `q` alias - same as `"`.
+--- - Default surrounding is activated for all characters which are not
+---   configured surrounding identifiers.
+---@tag MiniSurround-surround-builtin
+
+--- Note: this is similar to |MiniAi-glossary|.
+---
+--- - REGION - table representing region in a buffer. Fields: <from> and
+---   <to> for inclusive start and end positions (<to> might be `nil` to
+---   describe empty region). Each position is also a table with line <line>
+---   and column <col> (both start at 1). Examples:
+---   - `{ from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }`
+---   - `{ from = { line = 10, col = 10 } }` - empty region.
+--- - REGION PAIR - table representing regions for left and right surroundings.
+---   Fields: <left> and <right> with regions. Examples:
+---   `{`
+---     `left  = { from = { line = 1, col = 1 }, to = { line = 1, col = 1 } },`
+---     `right = { from = { line = 1, col = 3 } },`
+---   `}`
+--- - PATTERN - string describing Lua pattern.
+--- - SPAN - interval inside a string (end-exclusive). Like [1, 5). Equal
+---   `from` and `to` edges describe empty span at that point.
+--- - SPAN `A = [a1, a2)` COVERS `B = [b1, b2)` if every element of
+---   `B` is within `A` (`a1 <= b < a2`).
+---   It also is described as B IS NESTED INSIDE A.
+--- - NESTED PATTERN - array of patterns aimed to describe nested spans.
+--- - SPAN MATCHES NESTED PATTERN if there is a sequence of consecutively
+---   nested spans each matching corresponding pattern within substring of
+---   previous span (or input string for first span). Example:
+---     Nested patterns: `{ '%b()', '^. .* .$' }` (balanced `()` with inner space)
+---     Input string: `( ( () ( ) ) )`
+---                   `123456789012345`
+---   Here are all matching spans [1, 15) and [3, 13). Both [5, 7) and [8, 10)
+---   match first pattern but not second. All other combinations of `(` and `)`
+---   don't match first pattern (not balanced).
+--- - COMPOSED PATTERN: array with each element describing possible pattern
+---   (or array of them) at that place. Composed pattern basically defines all
+---   possible combinations of nested pattern (their cartesian product).
+---   Examples:
+---     1. Composed pattern: `{ { '%b()', '%b[]' }, '^. .* .$' }`
+---        Composed pattern expanded into equivalent array of nested patterns:
+---         `{ '%b()', '^. .* .$' }` and `{ '%b[]', '^. .* .$' }`
+---        Description: either balanced `()` or balanced `[]` but both with
+---        inner edge space.
+---     2. Composed pattern:
+---        `{ { { '%b()', '^. .* .$' }, { '%b[]', '^.[^ ].*[^ ].$' } }, '.....' }`
+---        Composed pattern expanded into equivalent array of nested patterns:
+---        `{ '%b()', '^. .* .$', '.....' }` and
+---        `{ '%b[]', '^.[^ ].*[^ ].$', '.....' }`
+---        Description: either "balanced `()` with inner edge space" or
+---        "balanced `[]` with no inner edge space", both with 5 or more characters.
+--- - SPAN MATCHES COMPOSED PATTERN if it matches at least one nested pattern
+---   from expanded composed pattern.
+---@tag MiniSurround-glossary
+
+--- Surround specification is a table with keys:
+--- - <input> - defines how to find and extract surrounding for "input"
+---   operations (like `delete`). See more in 'Input surrounding' setction.
+--- - <output> - defines what to add on left and right for "output" operations
+---   (like `add`). See more in 'Output surrounding' section.
+---
+--- Example of surround info for builtin `(` identifier:>
+---   {
+---     input = { '%b()', '^(.).*(.)$' },
+---     output = { left = '(', right = ')' }
+---   }
+--- <
+--- # Input surrounding ~
+---
+--- Specification for input surrounding has a structure of composed pattern
+--- (see |MiniSurround-glossary|) with two differences:
+--- - Last pattern(s) should have two or four empty capture groups denoting
+---   how the last string should be processed to extract surrounding parts:
+---     - Two captures represent left part from start of string to first
+---       capture and right part - from second capture to end of string.
+---       Example: `a()b()c` defines left surrounding as 'a', right - 'c'.
+---     - Four captures define left part inside captures 1 and 2, right part -
+---       inside captures 3 and 4. Example: `a()()b()c()` defines left part as
+---       empty, right part as 'c'.
+--- - Allows callable objects (see |vim.is_callable()|) in certain places
+---   (enables more complex surroundings in exchange of increase in configuration
+---   complexity and computations):
+---     - If specification itself is a callable, it will be called without
+---       arguments and should return one of:
+---         - Composed pattern. Useful for implementing user input. Example of
+---           simplified variant of input surrounding for function call with
+---           name taken from user prompt:
+--- >
+---           function()
+---             local left_edge = vim.pesc(vim.fn.input('Function name: '))
+---             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
+---           end
+--- <
+---         - Single region pair (see |MiniSurround-glossary|). Useful to allow
+---           full control over surrounding. Will be taken as is. Example of
+---           returning first and last lines of a buffer:
+--- >
+---           function()
+---             local n_lines = vim.fn.line('$')
+---             return {
+---               left = {
+---                 from = { line = 1, col = 1 },
+---                 to = { line = 1, col = vim.fn.getline(1):len() },
+---               },
+---               right = {
+---                 from = { line = n_lines, col = 1 },
+---                 to = { line = n_lines, col = vim.fn.getline(n_lines):len() },
+---               },
+---             }
+---           end
+--- <
+---         - Array of region pairs. Useful for incorporating other instruments,
+---           like treesitter (see |MiniSurround.gen_spec.treesitter()|). The
+---           best region pair will be picked in the same manner as with composed
+---           pattern (respecting options `n_lines`, `search_method`, etc.) using
+---           output region (from start of left region to end of right region).
+---           Example using edges of "best" line with display width more than 80:
+--- >
+---           function()
+---             local make_line_region_pair = function(n)
+---               local left = { line = n, col = 1 }
+---               local right = { line = n, col = vim.fn.getline(n):len() }
+---               return {
+---                 left = { from = left, to = left },
+---                 right = { from = right, to = right },
+---               }
+---             end
+---
+---             local res = {}
+---             for i = 1, vim.fn.line('$') do
+---               if vim.fn.getline(i):len() > 80 then
+---                 table.insert(res, make_line_region_pair(i))
+---               end
+---             end
+---             return res
+---           end
+--- <
+---     - If there is a callable instead of assumed string pattern, it is expected
+---       to have signature `(line, init)` and behave like `pattern:find()`.
+---       It should return two numbers representing span in `line` next after
+---       or at `init` (`nil` if there is no such span).
+---       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
+---       to the left of `init` (it will lead to infinite loop). Not allowed as
+---       last item (as it should be pattern with captures).
+---       Example of matching only balanced parenthesis with big enough width:
+--- >
+---         {
+---           '%b()',
+---           function(s, init)
+---             if init > 1 or s:len() < 5 then return end
+---             return 1, s:len()
+---           end,
+---           '^.().*().$'
+---         }
+--- >
+--- More examples:
+--- - See |MiniSurround.gen_spec| for function wrappers to create commonly used
+---   surrounding specifications.
+---
+--- - Pair of balanced brackets from set (used for builtin `b` identifier):
+---   `{ { '%b()', '%b[]', '%b{}' }, '^.().*().$' }`
+---
+--- - Lua block string: `{ '%[%[().-()%]%]' }`
+---
+--- # Output surrounding ~
+---
+--- A table with <left> (plain text string) and <right> (plain text string)
+--- fields. Strings can contain new lines charater `\n` to add multiline parts.
+---
+--- Examples:
+--- - Lua block string: `{ left = '[[', right = ']]' }`
+--- - Brackets on separate lines (indentation is not preserved):
+---   `{ left = '(\n', right = '\n)' }`
+---
+---@tag MiniSurround-surround-specification
+
+--- Search algorithm design
+---
+--- Search for the input surrounding relies on these principles:
+--- - Input surrounding specification is constructed based on surrounding
+---   identifier (see |MiniSurround-surround-specification|).
+--- - General search is done by converting some 2d buffer region (neighborhood
+---   of reference region) into 1d string (each line is appended with `\n`).
+---   Then search for a best span matching specification is done inside string
+---   (see |MiniSurround-glossary|). After that, span is converted back into 2d
+---   region. Note: first search is done inside reference region lines, and
+---   only after that - inside its neighborhood within `config.n_lines` (see
+---   |MiniSurround.config|).
+--- - The best matching span is chosen by iterating over all spans matching
+---   surrounding specification and comparing them with "current best".
+---   Comparison also depends on reference region (tighter covering is better,
+---   otherwise closer is better) and search method (if span is even considered).
+--- - Extract pair of spans (for left and right regions in region pair) based
+---   on extraction pattern (last item in nested pattern).
+--- - For |v:count| greater than 1, steps are repeated with current best match
+---   becoming reference region. One such additional step is also done if final
+---   region is equal to reference region. Nore: |v:count| is not supported for
+---   output surroundings because it brings a lot of inconvenience (for adding
+---   it affects textobject/motion, for replacing it will be used for both
+---   input and output).
+---
+--- Notes:
+--- - Iteration over all matched spans is done in depth-first fashion with
+---   respect to nested pattern.
+--- - It is guaranteed that span is compared only once.
+--- - For the sake of increasing functionality, during iteration over all
+---   matching spans, some Lua patterns in composed pattern are handled
+---   specially.
+---     - `%bxx` (`xx` is two identical characters). It denotes balanced pair
+---       of identical characters and results into "paired" matches. For
+---       example, `%b""` for `"aa" "bb"` would match `"aa"` and `"bb"`, but
+---       not middle `" "`.
+---     - `x.-y` (`x` and `y` are different strings). It results only in matches with
+---       smallest width. For example, `e.-o` for `e e o o` will result only in
+---       middle `e o`. Note: it has some implications for when parts have
+---       quantifiers (like `+`, etc.), which usually can be resolved with
+---       frontier pattern `%f[]`.
+---@tag MiniSurround-search-algorithm
 
 -- Module definition ==========================================================
 local MiniSurround = {}
@@ -158,12 +430,6 @@ end
 --- behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
 --- >
 ---   require('mini.surround').setup({
----     custom_surroundings = {
----       ['('] = { output = { left = '( ', right = ' )' } },
----       ['['] = { output = { left = '[ ', right = ' ]' } },
----       ['{'] = { output = { left = '{ ', right = ' }' } },
----       ['<'] = { output = { left = '< ', right = ' >' } },
----     },
 ---     mappings = {
 ---       add = 'ys',
 ---       delete = 'ds',
@@ -189,72 +455,32 @@ end
 ---
 --- User can define own surroundings by supplying `config.custom_surroundings`.
 --- It should be a **table** with keys being single character surrounding
---- identifier and values - surround info or **function** returning it.
---- Surround info itself is a table with keys:
---- - <input> - defines how to find and extract surrounding for "input"
----   operations (like `delete`). A table with fields <find> (Lua pattern
----   applied for search in neighborhood) and <extract> (Lua pattern applied
----   for extracting left and right parts; should have two matches).
---- - <output> - defines what to add on left and right for "output" operations
----   (like `add`). A table with <left> (plain text string) and <right> (plain
----   text string) fields. Strings can contain new lines charater `\n` to add
----   multiline parts.
+--- identifier and values - surround specification (see
+--- |MiniSurround-surround-specification|).
 ---
---- Example of surround info for builtin `(` identifier:>
----   {
----     input = { find = '%b()', extract = '^(.).*(.)$' },
----     output = { left = '(', right = ')' }
----   }
---- <
 --- General recommendations:
 --- - In `config.custom_surroundings` only some data can be defined (like only
----   `input.find`). Other fields will be taken from builtin surroundings.
---- - Function returning table with surround info instead of table itself is
----   helpful when user input is needed (like asking for function name). Use
----   |input()| or |MiniSurround.user_input()|. Return `nil` to stop any current
----   surround operation.
---- - In input patterns try to use lazy quantifier instead of greedy ones (`.-`
----   instead of `.*` or `.+`). That is because the underlying algorithm of
----   finding smallest covering is better designed for lazy quantifier.
---- - Usage of frontier pattern `%f[]` not at the end of pattern can be useful
----   to extend match to the left. Like `%f[%w]%w+%b()` matches simplified
----   function call while capturing whole function name instead of last symbol.
---- - Usage of frontier pattern at the end of match is currently problematic
----   because output "smallest width" match is computed by checking the match
----   on substrings. And frontier pattern matches at the end of substring for
----   appropriate last character. So `%f[%w]%w+%f[%W]` won't match whole word.
+---   `output`). Other fields will be taken from builtin surroundings.
+--- - Function returning surround info at <input> or <output> fields of
+---   specification is helpful when user input is needed (like asking for
+---   function name). Use |input()| or |MiniSurround.user_input()|. Return
+---   `nil` to stop any current surround operation.
 ---
---- Present builtin surroundings by their single character identifier:
---- - `(` and `)` - balanced pair of `()`.
---- - `[` and `]` - balanced pair of `[]`.
---- - `{` and `}` - balanced pair of `{}`.
---- - `<` and `>` - balanced pair of `<>`.
---- - `f` - function call. Maximum set of allowed symbols (alphanumeric, `_`
----   and `.`) followed by balanced pair of `()`.
---- - `i` - interactive, prompts user to enter left and right parts.
---- - `t` - HTML tags.
---- - Any other non-recognized identifier represents surrounding with identical
----   left and right parts equal to identifier (like `_`, etc.).
----
---- Examples of using `config.custom_surroundings`:
+--- Examples of using `config.custom_surroundings` (see more examples at
+--- |MiniSurround.gen_spec|):
 --- >
----   require('mini.surround').setup({
+---   local surround = require('mini.surround')
+---   surround.setup({
 ---     custom_surroundings = {
 ---       -- Make `)` insert parts with spaces. `input` pattern stays the same.
 ---       [')'] = { output = { left = '( ', right = ' )' } },
----
----       -- Modify `f` (function call) to find functions with only alphanumeric
----       -- characters in its name.
----       f = { input = { find = '%f[%w]%w+%b()' } },
 ---
 ---       -- Use function to compute surrounding info
 ---       ['*'] = {
 ---         input = function()
 ---           local n_star = MiniSurround.user_input('Number of * to find: ')
 ---           local many_star = string.rep('%*', tonumber(n_star) or 1)
----           local find = string.format('%s.-%s', many_star, many_star)
----           local extract = string.format('^(%s).*(%s)$', many_star, many_star)
----           return { find = find, extract = extract }
+---           return { many_star .. '().-()' .. many_star }
 ---         end,
 ---         output = function()
 ---           local n_star = MiniSurround.user_input('Number of * to output: ')
@@ -270,7 +496,7 @@ end
 ---   vim.b.minisurround_config = {
 ---     custom_surroundings = {
 ---       s = {
----         input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+---         input = { '%[%[().-()%]%]' },
 ---         output = { left = '[[', right = ']]' },
 ---       },
 ---     },
@@ -278,35 +504,44 @@ end
 --- <
 --- ## Search method~
 ---
---- Value of `config.search_method` defines how best match search for "input"
---- surrounding is done when there is no covering match (with span covering
---- cursor position) found within searched neighborhood. Based on its value,
---- one of "previous", "next", or neither match is used as output.
---- Its possible values are:
---- - `'cover'` (default) - don't use either "previous" or "next"; report that
----   there is no surrounding found.
---- - `'cover_or_prev'` - use previous.
---- - `'cover_or_next'` - use next.
---- - `'cover_or_nearest'` - use nearest to current cursor position. Distance
----   is computed based on "1d neighborhood" using nearest part of
----   surroundings. Next is used in case of a tie.
+--- Value of `config.search_method` defines how best match search is done.
+--- Based on its value, one of the following matches will be selected:
+--- - Covering match. Left/right edge is before/after left/right edge of
+---   reference region.
+--- - Previous match. Left/right edge is before left/right edge of reference
+---   region.
+--- - Next match. Left/right edge is after left/right edge of reference region.
+--- - Nearest match. Whichever is closest among previous and next matches.
 ---
---- Note: search is first performed on the cursor line and only after failure -
---- on the whole neighborhood defined by `config.n_lines`. This means that with
---- `config.search_method` not equal to `'cover'`, "previous" or "next"
---- surrounding will end up as search result if they present on current line
---- although covering match might be found in bigger, whole neighborhood. This
---- design is based on observation that most of the time operation involving
---- surrounding is done withtin cursor line.
+--- Possible values are:
+--- - `'cover'` - use only covering match. Don't use either previous or
+---   next; report that there is no surrounding found.
+--- - `'cover_or_next'` (default) - use covering match. If not found, use next.
+--- - `'cover_or_prev'` - use covering match. If not found, use previous.
+--- - `'cover_or_nearest'` - use covering match. If not found, use nearest.
+--- - `'next'` - use next match.
+--- - `'previous'` - use previous match.
+--- - `'nearest'` - use nearest match.
+---
+--- Note: search is first performed on the reference region lines and only
+--- after failure - on the whole neighborhood defined by `config.n_lines`. This
+--- means that with `config.search_method` not equal to `'cover'`, "previous"
+--- or "next" surrounding will end up as search result if they are found on
+--- first stage although covering match might be found in bigger, whole
+--- neighborhood. This design is based on observation that most of the time
+--- operation is done within reference region lines (usually cursor line).
 ---
 --- Here is an example of how replacing `)` with `]` surrounding is done based
 --- on a value of `'config.search_method'` when cursor is inside `bbb` word:
---- - `search_method = 'cover'`:         `(a) bbb (c)` -> `(a) bbb (c)` (with message)
---- - `search_method = 'cover_or_prev'`: `(a) bbb (c)` -> `[a] bbb (c)`
---- - `search_method = 'cover_or_next'`: `(a) bbb (c)` -> `(a) bbb [c]`
---- - `search_method = 'cover_or_nearest'`: depends on cursor position.
----   For first `b` - as in `cover_or_prev` (as previous match is nearer), for
----   second and third - as in `cover_or_next` (as next match is nearer).
+--- - `'cover'`:         `(a) bbb (c)` -> `(a) bbb (c)` (with message)
+--- - `'cover_or_next'`: `(a) bbb (c)` -> `(a) bbb [c]`
+--- - `'cover_or_prev'`: `(a) bbb (c)` -> `[a] bbb (c)`
+--- - `'cover_or_nearest'`: depends on cursor position.
+---   For first and second `b` - as in `cover_or_prev` (as previous match is
+---   nearer), for third - as in `cover_or_next` (as next match is nearer).
+--- - `'next'`:          `(a) bbb (c)` -> `(a) bbb [c]`. Same outcome for `(bbb)`.
+--- - `'prev'`:          `(a) bbb (c)` -> `[a] bbb (c)`. Same outcome for `(bbb)`.
+--- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 MiniSurround.config = {
   -- Add custom surroundings to be used on top of builtin ones. For more
   -- information with examples, see `:h MiniSurround.config`.
@@ -331,7 +566,8 @@ MiniSurround.config = {
 
   -- How to search for surrounding (first inside current line, then inside
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest'. For more details, see `:h MiniSurround.config`.
+  -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
+  -- see `:h MiniSurround.config`.
   search_method = 'cover',
 }
 --minidoc_afterlines_end
@@ -373,9 +609,9 @@ MiniSurround.add = function(mode)
   -- is no intended dot-repeatability).
   local surr_info
   if mode == 'visual' then
-    surr_info = H.get_surround_info('output', false)
+    surr_info = H.get_surround_spec('output', false)
   else
-    surr_info = H.get_surround_info('output', true)
+    surr_info = H.get_surround_spec('output', true)
   end
   if surr_info == nil then return '<Esc>' end
 
@@ -393,7 +629,7 @@ end
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.delete = function()
   -- Find input surrounding region
-  local surr = H.find_surrounding(H.get_surround_info('input', true))
+  local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
   -- Delete surrounding region. Begin with right to not break column numbers.
@@ -410,11 +646,11 @@ end
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.replace = function()
   -- Find input surrounding region
-  local surr = H.find_surrounding(H.get_surround_info('input', true))
+  local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
   -- Get output surround info
-  local new_surr_info = H.get_surround_info('output', true)
+  local new_surr_info = H.get_surround_spec('output', true)
   if new_surr_info == nil then return '<Esc>' end
 
   -- Replace by parts starting from right to not break column numbers
@@ -431,7 +667,7 @@ end
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.find = function()
   -- Find surrounding region
-  local surr = H.find_surrounding(H.get_surround_info('input', true))
+  local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
   -- Make array of unique positions to cycle through
@@ -450,7 +686,7 @@ end
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
 MiniSurround.highlight = function()
   -- Find surrounding region
-  local surr = H.find_surrounding(H.get_surround_info('input', true))
+  local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
   -- Highlight surrounding region
@@ -529,38 +765,28 @@ H.ns_id = {
   input = vim.api.nvim_create_namespace('MiniSurroundInput'),
 }
 
--- Table of builtin surroundings
+--stylua: ignore
+-- Builtin surroundings
 H.builtin_surroundings = {
-  -- Brackets that need balancing
-  ['('] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
-  [')'] = { input = { find = '%b()', extract = '^(.).*(.)$' }, output = { left = '(', right = ')' } },
-  ['['] = { input = { find = '%b[]', extract = '^(.).*(.)$' }, output = { left = '[', right = ']' } },
-  [']'] = { input = { find = '%b[]', extract = '^(.).*(.)$' }, output = { left = '[', right = ']' } },
-  ['{'] = { input = { find = '%b{}', extract = '^(.).*(.)$' }, output = { left = '{', right = '}' } },
-  ['}'] = { input = { find = '%b{}', extract = '^(.).*(.)$' }, output = { left = '{', right = '}' } },
-  ['<'] = { input = { find = '%b<>', extract = '^(.).*(.)$' }, output = { left = '<', right = '>' } },
-  ['>'] = { input = { find = '%b<>', extract = '^(.).*(.)$' }, output = { left = '<', right = '>' } },
-  -- Function call
-  ['f'] = {
-    input = { find = '%f[%w_%.][%w_%.]+%b()', extract = '^(.-%().*(%))$' },
-    output = function()
-      local fun_name = MiniSurround.user_input('Function name')
-      if fun_name == nil then return nil end
-      return { left = ('%s('):format(fun_name), right = ')' }
-    end,
-  },
-  -- Interactive
-  ['i'] = {
+  -- Use balanced pair for brackets. Use opening ones to possibly
+  -- replace/delete innder edge whitespace.
+  ['('] = { input = { '%b()', '^.%s*().-()%s*.$' }, output = { left = '( ', right = ' )' } },
+  [')'] = { input = { '%b()', '^.().*().$' },       output = { left = '(',  right = ')' } },
+  ['['] = { input = { '%b[]', '^.%s*().-()%s*.$' }, output = { left = '[ ', right = ' ]' } },
+  [']'] = { input = { '%b[]', '^.().*().$' },       output = { left = '[',  right = ']' } },
+  ['{'] = { input = { '%b{}', '^.%s*().-()%s*.$' }, output = { left = '{ ', right = ' }' } },
+  ['}'] = { input = { '%b{}', '^.().*().$' },       output = { left = '{',  right = '}' } },
+  ['<'] = { input = { '%b<>', '^.%s*().-()%s*.$' }, output = { left = '< ', right = ' >' } },
+  ['>'] = { input = { '%b<>', '^.().*().$' },       output = { left = '<',  right = '>' } },
+  -- Derived from user prompt
+  ['?'] = {
     input = function()
       local left = MiniSurround.user_input('Left surrounding')
       if left == nil or left == '' then return end
       local right = MiniSurround.user_input('Right surrounding')
       if right == nil or right == '' then return end
 
-      local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
-      local find = ('%s.-%s'):format(left_esc, right_esc)
-      local extract = ('^(%s).-(%s)$'):format(left_esc, right_esc)
-      return { find = find, extract = extract }
+      return { vim.pesc(left) .. '().-()' .. vim.pesc(right) }
     end,
     output = function()
       local left = MiniSurround.user_input('Left surrounding')
@@ -570,24 +796,43 @@ H.builtin_surroundings = {
       return { left = left, right = right }
     end,
   },
+  -- Brackets
+  ['b'] = { input = { { '%b()', '%b[]', '%b{}' }, '^.().*().$' }, output = { left = '(', right = ')' } },
+  -- Function call
+  ['f'] = {
+    input = { '%f[%w_%.][%w_%.]+%b()', '^.-%(().*()%)$' },
+    output = function()
+      local fun_name = MiniSurround.user_input('Function name')
+      if fun_name == nil then return nil end
+      return { left = ('%s('):format(fun_name), right = ')' }
+    end,
+  },
   -- Tag
   ['t'] = {
-    -- NOTEs:
-    -- - Here `%f[^%w]` denotes 'end of word' and is needed to capture whole
-    --   tag id. This is needed to not match in case '<ab></a>'.
-    -- - This approach won't match in the end of 'self nested' tags like
-    --   '<a>_<a>_</a>_</a>'.
-    -- - Having group capture and backreference in 'find' pattern increases
-    --   execution time. This is mostly visible when searching in a very big
-    --   '1d neighborhood'.
-    input = { find = '<(%w-)%f[^<%w][^<>]->.-</%1>', extract = '^(<.->).*(</[^/]->)$' },
+    input = { '<(%w-)%f[^<%w][^<>]->.-</%1>', '^<.->().*()</[^/]->$' },
     output = function()
       local tag_full = MiniSurround.user_input('Tag name')
       if tag_full == nil then return nil end
       local tag_name = tag_full:match('^%S*')
-      return { left = ('<%s>'):format(tag_full), right = ('</%s>'):format(tag_name) }
+      return { left = '<' .. tag_full .. '>', right = '</' .. tag_name .. '>' }
     end,
   },
+  -- Quotes
+  ['q'] = { input = { { "'.-'", '".-"', '`.-`' }, '^.().*().$' }, output = { left = '"', right = '"' } },
+}
+
+-- TODO: Remove after 0.6.0
+H.builtin_surroundings.i = {
+  input = function()
+    H.message('Using `i` for interactive surrounding is deprecated and will be removed soon. Use `?`.')
+    vim.loop.sleep(2000)
+    return H.builtin_surroundings['?'].input()
+  end,
+  output = function()
+    H.message('Using `i` for interactive surrounding is deprecated and will be removed soon. Use `?`.')
+    vim.loop.sleep(2000)
+    return H.builtin_surroundings['?'].output()
+  end,
 }
 
 -- Cache for dot-repeatability. This table is currently used with these keys:
@@ -655,8 +900,12 @@ H.is_search_method = function(x, x_name)
   x = x or H.get_config().search_method
   x_name = x_name or '`config.search_method`'
 
-  if vim.tbl_contains({ 'cover', 'cover_or_prev', 'cover_or_next', 'cover_or_nearest' }, x) then return true end
-  local msg = ([[%s should be one of 'cover', 'cover_or_prev', 'cover_or_next', 'cover_or_nearest'.]]):format(x_name)
+  local allowed_methods = vim.tbl_keys(H.span_compare_methods)
+  if vim.tbl_contains(allowed_methods, x) then return true end
+
+  table.sort(allowed_methods)
+  local allowed_methods_string = table.concat(vim.tbl_map(vim.inspect, allowed_methods), ', ')
+  local msg = ([[%s should be one of %s.]]):format(x_name, allowed_methods_string)
   return false, msg
 end
 
@@ -665,81 +914,452 @@ H.validate_search_method = function(x, x_name)
   if not is_valid then H.error(msg) end
 end
 
+-- Work with surrounding info -------------------------------------------------
+H.get_surround_spec = function(sur_type, use_cache)
+  local res
+
+  -- Try using cache
+  if use_cache then
+    res = H.cache[sur_type]
+    if res ~= nil then return res end
+  end
+
+  -- Prompt user to enter identifier of surrounding
+  local char = H.user_surround_id(sur_type)
+  if char == nil then return nil end
+
+  -- Get surround specification
+  res = H.make_surrounding_table()[char][sur_type]
+
+  -- Allow function returning spec or surrounding region(s)
+  if vim.is_callable(res) then res = res() end
+
+  -- Do nothing if supplied not appropriate structure
+  if not H.is_surrounding_info(res, sur_type) then return nil end
+
+  -- Wrap callable tables to be an actual functions. Otherwise they might be
+  -- confused with list of patterns.
+  if H.is_composed_pattern(res) then res = vim.tbl_map(H.wrap_callable_table, res) end
+
+  -- Track identifier for possible messages. Use metatable to pass
+  -- `vim.tbl_islist()` check.
+  res = setmetatable(res, { __index = { id = char } })
+
+  -- Cache result
+  if use_cache then H.cache[sur_type] = res end
+
+  return res
+end
+
+H.make_surrounding_table = function()
+  -- Extend builtins with data from `config`
+  local surroundings = vim.tbl_deep_extend('force', H.builtin_surroundings, H.get_config().custom_surroundings or {})
+
+  -- Add possibly missing information from default surrounding info
+  for char, info in pairs(surroundings) do
+    local default = H.get_default_surrounding_info(char)
+    surroundings[char] = vim.tbl_deep_extend('force', default, info)
+  end
+
+  -- Use default surrounding info for not supplied single character identifier
+  --stylua: ignore start
+  return setmetatable(surroundings, {
+    __index = function(_, key) return H.get_default_surrounding_info(key) end,
+  })
+  --stylua: ignore end
+end
+
+H.get_default_surrounding_info = function(char)
+  local char_esc = vim.pesc(char)
+  return { input = { char_esc .. '().-()' .. char_esc }, output = { left = char, right = char } }
+end
+
+H.is_surrounding_info = function(x, sur_type)
+  if sur_type == 'input' then
+    return H.is_composed_pattern(x) or H.is_region_pair(x) or H.is_region_pair_array(x)
+  elseif sur_type == 'output' then
+    return (type(x) == 'table' and type(x.left) == 'string' and type(x.right) == 'string')
+  end
+end
+
+H.is_region = function(x)
+  if type(x) ~= 'table' then return false end
+  local from_is_valid = type(x.from) == 'table' and type(x.from.line) == 'number' and type(x.from.col) == 'number'
+  -- Allow `to` to be `nil` to describe empty regions
+  local to_is_valid = true
+  if x.to ~= nil then
+    to_is_valid = type(x.to) == 'table' and type(x.to.line) == 'number' and type(x.to.col) == 'number'
+  end
+  return from_is_valid and to_is_valid
+end
+
+H.is_region_pair = function(x)
+  if type(x) ~= 'table' then return false end
+  return H.is_region(x.left) and H.is_region(x.right)
+end
+
+H.is_region_pair_array = function(x)
+  if not vim.tbl_islist(x) then return false end
+  for _, v in ipairs(x) do
+    if not H.is_region_pair(v) then return false end
+  end
+  return true
+end
+
+H.is_composed_pattern = function(x)
+  if not (vim.tbl_islist(x) and #x > 0) then return false end
+  for _, val in ipairs(x) do
+    local val_type = type(val)
+    if not (val_type == 'table' or val_type == 'string' or vim.is_callable(val)) then return false end
+  end
+  return true
+end
+
 -- Work with finding surrounding ----------------------------------------------
--- Find surrounding
--- NOTE: more simple approach for `find_surrounding()` would have been to use
--- combination of `searchpairpos()` (to search for balanced pair) and
--- `searchpos()` (to search end of balanced search and for unbalanced pairs).
--- However, there are several problems with it:
--- - It is slower (around 2-5 times) than current Lua pattern approach.
--- - It has limitations when dealing with crucial 'function call' search.
---   Function call is defined as 'non-empty function name followed by balanced
---   pair of "(" and ")"'. Naive use of `searchpairpos()` is to use
---   `searchpairpos('\w\+(', '', ')')` which works most of the time. However,
---   in example `foo(a = (1 + 1), b = c(1, 2))` this will match
---   `o(a = (1 + 1)` when cursor is on 'a'. This is because '(' inside it is
---   not recognized for balancing because it doesn't match '\w\+('.
---
--- Vim's approach also has some upsides:
--- - `searchpairpos()` allows skipping of certain matches, like if it is inside
---   string or comment. It works decently well with example from help (with
---   `synIDattr`, etc.) but this only works when Vim's builtin highlighting is
---   used. When treesitter's highlighting is active, this doesn't work.
---
--- All in all, using Vim's builtin functions is doable, but leads to roughly
--- same efforts as Lua pattern approach.
-H.find_surrounding = function(surround_info)
-  -- `surround_info` should have `find` field with surrounding pattern. If
-  -- needed, it should also have a `extract` field with extract pattern for two
-  -- parts of surrounding assuming they are at the start and end of string.
-  if surround_info == nil then return nil end
-  local config = H.get_config()
-  local n_lines = config.n_lines
+---@param surr_spec table Composed pattern. Last item(s) - extraction template.
+---@param opts table Options.
+---@private
+H.find_surrounding = function(surr_spec, opts)
+  if surr_spec == nil then return end
+  if H.is_region_pair(surr_spec) then return surr_spec end
 
-  -- First try only current line as it is the most common use case
-  local surr = H.find_surrounding_in_neighborhood(surround_info, 0)
-    or H.find_surrounding_in_neighborhood(surround_info, n_lines)
+  opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
+  H.validate_search_method(opts.search_method, 'search_method')
 
-  if surr == nil then
-    local msg = ([[No surrounding '%s' found within %d line%s and `config.search_method = '%s'`.]]):format(
-      surround_info.id,
-      n_lines,
-      n_lines > 1 and 's' or '',
-      config.search_method
+  local regions = H.find_surrounding_regions(surr_spec, opts)
+  if regions == nil then
+    local msg = ([[No surrounding '%s%s' found within %d line%s and `config.search_method = '%s'`.]]):format(
+      opts.n_times > 1 and opts.n_times or '',
+      surr_spec.id,
+      opts.n_lines,
+      opts.n_lines > 1 and 's' or '',
+      opts.search_method
     )
     H.message(msg)
   end
 
-  return surr
+  return regions
 end
 
-H.find_surrounding_in_neighborhood = function(surround_info, n_neighbors)
-  local neigh = H.get_cursor_neighborhood(n_neighbors)
-  local cur_offset = neigh.pos_to_offset(neigh.cursor_pos)
+H.find_surrounding_regions = function(surr_spec, opts)
+  local reference_region, n_times, n_lines = opts.reference_region, opts.n_times, opts.n_lines
 
-  -- Find span of surrounding
-  local span = H.find_best_match(neigh['1d'], surround_info.find, cur_offset)
-  if span == nil then return nil end
+  if n_times == 0 then return end
 
-  -- Compute regions for left and right surroundings
-  local l, r = span.left, span.right
-  local left, right = neigh['1d']:sub(l, r):match(surround_info.extract)
-  if left == nil or right == nil then
-    H.error(
-      'Could not extract two surrounding parts. '
-        .. 'Does your `config.custom_surroundings.input.extract` pattern has two captures?'
-    )
+  -- Find `n_times` matching spans evolving from reference region span
+  -- First try to find inside 0-neighborhood
+  local neigh = H.get_neighborhood(reference_region, 0)
+  local reference_span = neigh.region_to_span(reference_region)
+
+  local find_next = function(cur_reference_span)
+    local res = H.find_best_match(neigh, surr_spec, cur_reference_span, opts)
+
+    -- If didn't find in 0-neighborhood, possibly try extend one
+    if res.span == nil then
+      -- Stop if no need to extend neighborhood
+      if n_lines == 0 or neigh.n_neighbors > 0 then return {} end
+
+      -- Update data with respect to new neighborhood
+      local cur_reference_region = neigh.span_to_region(cur_reference_span)
+      neigh = H.get_neighborhood(reference_region, n_lines)
+      reference_span = neigh.region_to_span(reference_region)
+      cur_reference_span = neigh.region_to_span(cur_reference_region)
+
+      -- Recompute based on new neighborhood
+      res = H.find_best_match(neigh, surr_spec, cur_reference_span, opts)
+    end
+
+    return res
   end
 
-  local left_from, left_to = neigh.offset_to_pos(l), neigh.offset_to_pos(l + left:len() - 1)
-  local right_from, right_to = neigh.offset_to_pos(r - right:len() + 1), neigh.offset_to_pos(r)
+  local find_res = { span = reference_span }
+  for _ = 1, n_times do
+    find_res = find_next(find_res.span)
+    if find_res.span == nil then return end
+  end
 
-  --stylua: ignore
-  local res = {
-    left  = { from = { line = left_from.line,  col = left_from.col  }, to = { line = left_to.line,  col = left_to.col  } },
-    right = { from = { line = right_from.line, col = right_from.col }, to = { line = right_to.line, col = right_to.col } },
+  -- Extract final span
+  local extract = function(span, extract_pattern)
+    -- Use table extract pattern to allow array of regions as surrounding spec
+    -- Pair of spans is constructed based on best region pair
+    if type(extract_pattern) == 'table' then return extract_pattern end
+
+    -- First extract local (with respect to best matched span) surrounding spans
+    local s = neigh['1d']:sub(span.from, span.to - 1)
+    local local_surr_spans = H.extract_surr_spans(s, extract_pattern)
+
+    -- Convert local spans to global
+    local off = span.from - 1
+    local left, right = local_surr_spans.left, local_surr_spans.right
+    return {
+      left = { from = left.from + off, to = left.to + off },
+      right = { from = right.from + off, to = right.to + off },
+    }
+  end
+
+  local final_spans = extract(find_res.span, find_res.extract_pattern)
+  local outer_span = { from = final_spans.left.from, to = final_spans.right.to }
+
+  -- Ensure that output region is different from reference.
+  if H.is_span_covering(reference_span, outer_span) then
+    find_res = find_next(find_res.span)
+    if find_res.span == nil then return end
+    final_spans = extract(find_res.span, find_res.extract_pattern)
+    outer_span = { from = final_spans.left.from, to = final_spans.right.to }
+    if H.is_span_covering(reference_span, outer_span) then return end
+  end
+
+  -- Convert to region pair
+  return { left = neigh.span_to_region(final_spans.left), right = neigh.span_to_region(final_spans.right) }
+end
+
+H.get_default_opts = function()
+  local config = H.get_config()
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  return {
+    n_lines = config.n_lines,
+    n_times = vim.v.count1,
+    -- Empty region at cursor position
+    reference_region = { from = { line = cur_pos[1], col = cur_pos[2] + 1 } },
+    search_method = config.search_method,
   }
-  return res
+end
+
+-- Work with matching spans ---------------------------------------------------
+---@param neighborhood table Output of `get_neighborhood()`.
+---@param surr_spec table
+---@param reference_span table Span to cover.
+---@param opts table Fields: <search_method>.
+---@private
+H.find_best_match = function(neighborhood, surr_spec, reference_span, opts)
+  local best_span, best_nested_pattern, current_nested_pattern
+  local f = function(span)
+    if H.is_better_span(span, best_span, reference_span, opts) then
+      best_span = span
+      best_nested_pattern = current_nested_pattern
+    end
+  end
+
+  if H.is_region_pair_array(surr_spec) then
+    -- Iterate over all spans representing outer regions in array
+    for _, region_pair in ipairs(surr_spec) do
+      -- Construct outer region used to find best region pair
+      local outer_region = { from = region_pair.left.from, to = region_pair.right.to }
+
+      -- Consider outer region only if it is completely within neighborhood
+      if neighborhood.is_region_inside(outer_region) then
+        -- Make future extract pattern based directly on region pair
+        current_nested_pattern = {
+          {
+            left = neighborhood.region_to_span(region_pair.left),
+            right = neighborhood.region_to_span(region_pair.right),
+          },
+        }
+
+        f(neighborhood.region_to_span(outer_region))
+      end
+    end
+  else
+    -- Iterate over all matched spans
+    for _, nested_pattern in ipairs(H.cartesian_product(surr_spec)) do
+      current_nested_pattern = nested_pattern
+      H.iterate_matched_spans(neighborhood['1d'], nested_pattern, f)
+    end
+  end
+
+  local extract_pattern
+  if best_nested_pattern ~= nil then extract_pattern = best_nested_pattern[#best_nested_pattern] end
+  return { span = best_span, extract_pattern = extract_pattern }
+end
+
+H.iterate_matched_spans = function(line, nested_pattern, f)
+  local max_level = #nested_pattern
+  -- Keep track of visited spans to ensure only one call of `f`.
+  -- Example: `((a) (b))`, `{'%b()', '%b()'}`
+  local visited = {}
+
+  local process
+  process = function(level, level_line, level_offset)
+    local pattern = nested_pattern[level]
+    local next_span = function(s, init) return H.string_find(s, pattern, init) end
+    if vim.is_callable(pattern) then next_span = pattern end
+
+    local is_same_balanced = type(pattern) == 'string' and pattern:match('^%%b(.)%1$') ~= nil
+    local init = 1
+    while init <= level_line:len() do
+      local from, to = next_span(level_line, init)
+      if from == nil then break end
+
+      if level == max_level then
+        local found_match = H.new_span(from + level_offset, to + level_offset)
+        local found_match_id = string.format('%s_%s', found_match.from, found_match.to)
+        if not visited[found_match_id] then
+          f(found_match)
+          visited[found_match_id] = true
+        end
+      else
+        local next_level_line = level_line:sub(from, to)
+        local next_level_offset = level_offset + from - 1
+        process(level + 1, next_level_line, next_level_offset)
+      end
+
+      -- Start searching from right end to implement "balanced" pair.
+      -- This doesn't work with regular balanced pattern because it doesn't
+      -- capture nested brackets.
+      init = (is_same_balanced and to or from) + 1
+    end
+  end
+
+  process(1, line, 0)
+end
+
+-- NOTE: spans are end-exclusive to allow empty spans via `from == to`
+H.new_span = function(from, to) return { from = from, to = to == nil and from or (to + 1) } end
+
+---@param candidate table Candidate span to test agains `current`.
+---@param current table|nil Current best span.
+---@param reference table Reference span to cover.
+---@param opts table Fields: <search_method>.
+---@private
+H.is_better_span = function(candidate, current, reference, opts)
+  -- Candidate should be never equal or nested inside reference
+  if H.is_span_covering(reference, candidate) or H.is_span_equal(candidate, reference) then return false end
+
+  return H.span_compare_methods[opts.search_method](candidate, current, reference)
+end
+
+H.span_compare_methods = {
+  cover = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+    -- If both are not covering, `candidate` is not better (as it must cover)
+    return false
+  end,
+
+  cover_or_next = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+
+    -- If not covering, `candidate` must be "next" and closer to reference
+    if not H.is_span_on_left(reference, candidate) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.next
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  cover_or_prev = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+
+    -- If not covering, `candidate` must be "previous" and closer to reference
+    if not H.is_span_on_left(candidate, reference) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.prev
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  cover_or_nearest = function(candidate, current, reference)
+    local res = H.is_better_covering_span(candidate, current, reference)
+    if res ~= nil then return res end
+
+    -- If not covering, `candidate` must be closer to reference
+    if current == nil then return true end
+
+    local dist = H.span_distance.near
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  next = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be "next" and closer to reference
+    if not H.is_span_on_left(reference, candidate) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.next
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  prev = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be "previous" and closer to reference
+    if not H.is_span_on_left(candidate, reference) then return false end
+    if current == nil then return true end
+
+    local dist = H.span_distance.prev
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+
+  nearest = function(candidate, current, reference)
+    if H.is_span_covering(candidate, reference) then return false end
+
+    -- `candidate` must be closer to reference
+    if current == nil then return true end
+
+    local dist = H.span_distance.near
+    return dist(candidate, reference) < dist(current, reference)
+  end,
+}
+
+H.span_distance = {
+  -- Other possible choices of distance between [a1, a2] and [b1, b2]:
+  -- - Hausdorff distance: max(|a1 - b1|, |a2 - b2|).
+  --   Source:
+  --   https://math.stackexchange.com/questions/41269/distance-between-two-ranges
+  -- - Minimum distance: min(|a1 - b1|, |a2 - b2|).
+
+  -- Distance is chosen so that "next span" in certain direction is the closest
+  next = function(span_1, span_2) return math.abs(span_1.from - span_2.from) end,
+  prev = function(span_1, span_2) return math.abs(span_1.to - span_2.to) end,
+  near = function(span_1, span_2) return math.min(math.abs(span_1.from - span_2.from), math.abs(span_1.to - span_2.to)) end,
+}
+
+H.is_better_covering_span = function(candidate, current, reference)
+  local candidate_is_covering = H.is_span_covering(candidate, reference)
+  local current_is_covering = H.is_span_covering(current, reference)
+
+  if candidate_is_covering and current_is_covering then
+    -- Covering candidate is better than covering current if it is narrower
+    return (candidate.to - candidate.from) < (current.to - current.from)
+  end
+  if candidate_is_covering and not current_is_covering then return true end
+  if not candidate_is_covering and current_is_covering then return false end
+
+  -- Return `nil` if neither span is covering
+  return nil
+end
+
+--stylua: ignore
+H.is_span_covering = function(span, span_to_cover)
+  if span == nil or span_to_cover == nil then return false end
+  if span.from == span.to then
+    return (span.from == span_to_cover.from) and (span_to_cover.to == span.to)
+  end
+  if span_to_cover.from == span_to_cover.to then
+    return (span.from <= span_to_cover.from) and (span_to_cover.to < span.to)
+  end
+
+  return (span.from <= span_to_cover.from) and (span_to_cover.to <= span.to)
+end
+
+H.is_span_equal = function(span_1, span_2)
+  if span_1 == nil or span_2 == nil then return false end
+  return (span_1.from == span_2.from) and (span_1.to == span_2.to)
+end
+
+H.is_span_on_left = function(span_1, span_2)
+  if span_1 == nil or span_2 == nil then return false end
+  return (span_1.from <= span_2.from) and (span_1.to <= span_2.to)
+end
+
+H.is_point_inside_spans = function(point, spans)
+  for _, span in ipairs(spans) do
+    if span[1] <= point and point <= span[2] then return true end
+  end
+  return false
 end
 
 -- Work with operator marks ---------------------------------------------------
@@ -942,129 +1562,39 @@ H.region_unhighlight = function(buf_id, region)
 end
 
 -- Work with Lua patterns -----------------------------------------------------
--- Find the best match (left and right offsets in `line`). Here "best" is:
--- - Covering (`left <= offset <= right`) with smallest width.
--- - If no covering, one of "previous" or "next", depending on
---   `config.search_method`.
--- Output is a table with two numbers (or `nil` in case of no match):
--- indexes of left and right parts of match. They have the following property:
--- `line:sub(left, right)` matches `'^' .. pattern .. '$'`.
-H.find_best_match = function(line, pattern, offset)
-  H.validate_search_method()
+H.extract_surr_spans = function(s, extract_pattern)
+  local positions = { s:match(extract_pattern) }
 
-  local left_prev, right_prev, left, right, left_next, right_next
-  local stop = false
-  local init = 1
-  while not stop do
-    local match_left, match_right = line:find(pattern, init)
-    if match_left == nil then
-      -- Stop if first match is gone over `offset` to the right
-      stop = true
-    elseif match_right < offset then
-      left_prev, right_prev = match_left, match_right
-      -- Try find covering match. Originally this was `init = math.max(init +
-      -- 1, match_right)`. Generally, this works fine, but there is an edge
-      -- case with tags. Consider example: '<a>hello<b>world</a></b>' and
-      -- cursor inside '</b>'.  First match is '<a>...</a>'. It doesn't cover
-      -- cursor, this branch is executed. If move to `match_right`, next
-      -- iteration will match inside '></b>' and will find no match.
-      -- This increases execution time, but tolerably so. On the plus side,
-      -- this edge case currently gives wrong result even in 'vim-sandwich' :)
-      init = match_left + 1
-    elseif match_left > offset then
-      left_next, right_next = match_left, match_right
-      -- Stop searching because already went past offset
-      stop = true
-    else
-      -- Successful match: match_left <= offset <= match_right
-      -- Update result only if current has smaller width. This ensures
-      -- "smallest width" condition. Useful when pattern is something like
-      -- `".-"` and `line = '"a"aa"', offset = 3`.
-      if (left == nil) or (match_right - match_left < right - left) then
-        left, right = match_left, match_right
-      end
-      -- Try find smaller match
-      init = match_left + 1
-    end
+  local is_all_numbers = true
+  for _, pos in ipairs(positions) do
+    if type(pos) ~= 'number' then is_all_numbers = false end
   end
 
-  -- If didn't find covering match, try to infer from previous and next
-  if left == nil then
-    left, right = H.infer_match(
-      { left = left_prev, right = right_prev },
-      { left = left_next, right = right_next },
-      offset
-    )
+  local is_valid_positions = is_all_numbers and (#positions == 2 or #positions == 4)
+  if not is_valid_positions then
+    local msg = 'Could not extract proper positions (two or four empty captures) from '
+      .. string.format([[string '%s' with extraction pattern '%s'.]], s, extract_pattern)
+    H.error(msg)
   end
 
-  -- If still didn't find anything, return nothing
-  if left == nil then return end
-
-  -- Try make covering match even smaller. Can happen if there are greedy
-  -- quantifiers. For example:
-  -- `line = '((()))', pattern = '%(.-%)+', offset = 3`.
-  -- This approach has some non-working edge cases, but is quite better
-  -- performance wise than bruteforce "find from current offset"
-  local line_pattern = '^' .. pattern .. '$'
-  while
-    -- Ensure covering
-    left <= offset
-    and offset <= (right - 1)
-    -- Ensure at least 2 symbols
-    and left < right - 1
-    -- Ensure match
-    and line:sub(left, right - 1):find(line_pattern)
-  do
-    right = right - 1
+  if #positions == 2 then
+    return { left = H.new_span(1, positions[1] - 1), right = H.new_span(positions[2], s:len()) }
   end
-
-  -- -- Alternative bruteforce approach
-  -- for i = math.max(offset, left + 1), right - 1 do
-  --   if line:sub(left, i):find(line_pattern) then
-  --     right = i
-  --     break
-  --   end
-  -- end
-
-  return { left = left, right = right }
+  return { left = H.new_span(positions[1], positions[2] - 1), right = H.new_span(positions[3], positions[4] - 1) }
 end
-
---stylua: ignore start
-H.infer_match = function(prev, next, offset)
-  local has_prev = prev.left ~= nil and prev.right ~= nil
-  local has_next = next.left ~= nil and next.right ~= nil
-  local search_method = H.get_config().search_method
-
-  if not (has_prev or has_next) or search_method == 'cover' then return end
-  if search_method == 'cover_or_prev' then return prev.left, prev.right end
-  if search_method == 'cover_or_next' then return next.left, next.right end
-
-  if search_method == 'cover_or_nearest' then
-    local dist_prev = has_prev and math.abs(offset - prev.right) or math.huge
-    local dist_next = has_next and math.abs(next.left - offset) or math.huge
-
-    if dist_next <= dist_prev then
-      return next.left, next.right
-    else
-      return prev.left, prev.right
-    end
-  end
-end
---stylua: ignore end
 
 -- Work with cursor neighborhood ----------------------------------------------
-H.get_cursor_neighborhood = function(n_neighbors)
-  -- Cursor position
-  local cur_pos = vim.api.nvim_win_get_cursor(0)
-  -- Convert from 0-based column to 1-based
-  cur_pos = { line = cur_pos[1], col = cur_pos[2] + 1 }
-
-  -- '2d neighborhood': position is determined by line and column
-  local line_start = math.max(1, cur_pos.line - n_neighbors)
-  local line_end = math.min(vim.api.nvim_buf_line_count(0), cur_pos.line + n_neighbors)
+---@param reference_region table Reference region.
+---@param n_neighbors number Maximum number of neighbors to include before
+---   start line and after end line.
+---@private
+H.get_neighborhood = function(reference_region, n_neighbors)
+  -- Compute '2d neighborhood' of (possibly empty) region
+  local from_line, to_line = reference_region.from.line, (reference_region.to or reference_region.from).line
+  local line_start = math.max(1, from_line - n_neighbors)
+  local line_end = math.min(vim.api.nvim_buf_line_count(0), to_line + n_neighbors)
   local neigh2d = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
-  -- Append 'newline' character to distinguish between lines in 1d case. This
-  -- is crucial to not allow detecting surrounding spanning several lines
+  -- Append 'newline' character to distinguish between lines in 1d case
   for k, v in pairs(neigh2d) do
     neigh2d[k] = v .. '\n'
   end
@@ -1072,8 +1602,9 @@ H.get_cursor_neighborhood = function(n_neighbors)
   -- '1d neighborhood': position is determined by offset from start
   local neigh1d = table.concat(neigh2d, '')
 
-  -- Convert from buffer position to 1d offset
+  -- Convert 2d buffer position to 1d offset
   local pos_to_offset = function(pos)
+    if pos == nil then return nil end
     local line_num = line_start
     local offset = 0
     while line_num < pos.line do
@@ -1084,8 +1615,9 @@ H.get_cursor_neighborhood = function(n_neighbors)
     return offset + pos.col
   end
 
-  -- Convert from 1d offset to buffer position
+  -- Convert 1d offset to 2d buffer position
   local offset_to_pos = function(offset)
+    if offset == nil then return nil end
     local line_num = 1
     local line_offset = 0
     while line_num <= #neigh2d and line_offset + neigh2d[line_num]:len() < offset do
@@ -1096,74 +1628,42 @@ H.get_cursor_neighborhood = function(n_neighbors)
     return { line = line_start + line_num - 1, col = offset - line_offset }
   end
 
+  -- Convert 2d region to 1d span
+  local region_to_span = function(region)
+    if region == nil then return nil end
+    local is_empty = region.to == nil
+    local to = region.to or region.from
+    return { from = pos_to_offset(region.from), to = pos_to_offset(to) + (is_empty and 0 or 1) }
+  end
+
+  -- Convert 1d span to 2d region
+  local span_to_region = function(span)
+    if span == nil then return nil end
+    -- NOTE: this might lead to outside of line positions due to added `\n` at
+    -- the end of lines in 1d-neighborhood.
+    local res = { from = offset_to_pos(span.from) }
+
+    -- Convert empty span to empty region
+    if span.from < span.to then res.to = offset_to_pos(span.to - 1) end
+    return res
+  end
+
+  local is_region_inside = function(region)
+    local res = line_start <= region.from.line
+    if region.to ~= nil then res = res and (region.to.line <= line_end) end
+    return res
+  end
+
   return {
-    cursor_pos = cur_pos,
+    n_neighbors = n_neighbors,
+    region = reference_region,
     ['1d'] = neigh1d,
     ['2d'] = neigh2d,
     pos_to_offset = pos_to_offset,
     offset_to_pos = offset_to_pos,
-  }
-end
-
--- Work with surrounding info -------------------------------------------------
---stylua: ignore start
----@param sur_type string One of 'input' or 'output'.
----@private
-H.get_surround_info = function(sur_type, use_cache)
-  local res
-
-  -- Try using cache
-  if use_cache then
-    res = H.cache[sur_type]
-    if res ~= nil then return res end
-  end
-
-  -- Prompt user to enter identifier of surrounding
-  local char = H.user_surround_id(sur_type)
-  if char == nil then return nil end
-
-  -- Get surround info
-  res = H.make_surrounding_table()[char][sur_type]
-  if type(res) == 'function' then res = res() end
-
-  -- Do nothing if supplied nothing
-  if res == nil then return nil end
-
-  -- Track identifier for possible messages
-  res.id = char
-
-  -- Cache result
-  if use_cache then
-    H.cache[sur_type] = res
-  end
-
-  return res
-end
---stylua: ignore end
-
-H.make_surrounding_table = function()
-  -- Extend builtins with data from `config`
-  local surroundings = vim.tbl_deep_extend('force', H.builtin_surroundings, H.get_config().custom_surroundings or {})
-
-  -- Add possibly missing information from default surrounding info
-  for char, info in pairs(surroundings) do
-    local default = H.get_default_surrounding_info(char)
-    surroundings[char] = vim.tbl_deep_extend('force', default, info)
-  end
-
-  -- Use default surrounding info for not supplied single character identifier
-  --stylua: ignore start
-  return setmetatable(surroundings, {
-    __index = function(_, key) return H.get_default_surrounding_info(key) end,
-  })
-  --stylua: ignore end
-end
-
-H.get_default_surrounding_info = function(char)
-  local char_esc = vim.pesc(char)
-  return {
-    input = { find = ('%s.-%s'):format(char_esc, char_esc), extract = '^(.).*(.)$' },
-    output = { left = char, right = char },
+    region_to_span = region_to_span,
+    span_to_region = span_to_region,
+    is_region_inside = is_region_inside,
   }
 end
 
@@ -1184,5 +1684,68 @@ H.map = function(mode, key, rhs, opts)
 end
 
 H.get_line_cols = function(line_num) return vim.fn.getline(line_num):len() end
+
+H.string_find = function(s, pattern, init)
+  init = init or 1
+
+  -- Match only start of full string if pattern says so.
+  -- This is needed because `string.find()` doesn't do this.
+  -- Example: `string.find('(aaa)', '^.*$', 4)` returns `4, 5`
+  if pattern:sub(1, 1) == '^' then
+    if init > 1 then return nil end
+    return string.find(s, pattern)
+  end
+
+  -- Handle patterns `x.-y` differently: make match as small as possible. This
+  -- doesn't allow `x` be present inside `.-` match, just as with `yyy`. Which
+  -- also leads to a behavior similar to punctuation id (like with `va_`): no
+  -- covering is possible, only next, previous, or nearest.
+  local check_left, _, prev = string.find(pattern, '(.)%.%-')
+  local is_pattern_special = check_left ~= nil and prev ~= '%'
+  if not is_pattern_special then return string.find(s, pattern, init) end
+
+  -- Make match as small as possible
+  local from, to = string.find(s, pattern, init)
+  if from == nil then return end
+
+  local cur_from, cur_to = from, to
+  while cur_to == to do
+    from, to = cur_from, cur_to
+    cur_from, cur_to = string.find(s, pattern, cur_from + 1)
+  end
+
+  return from, to
+end
+
+---@param arr table List of items. If item is list, consider as set for
+---   product. Else - make it single item list.
+---@private
+H.cartesian_product = function(arr)
+  if not (type(arr) == 'table' and #arr > 0) then return {} end
+  arr = vim.tbl_map(function(x) return vim.tbl_islist(x) and x or { x } end, arr)
+
+  local res, cur_item = {}, {}
+  local process
+  process = function(level)
+    for i = 1, #arr[level] do
+      table.insert(cur_item, arr[level][i])
+      if level == #arr then
+        -- Flatten array to allow tables as elements of step tables
+        table.insert(res, vim.tbl_flatten(cur_item))
+      else
+        process(level + 1)
+      end
+      table.remove(cur_item, #cur_item)
+    end
+  end
+
+  process(1)
+  return res
+end
+
+H.wrap_callable_table = function(x)
+  if vim.is_callable(x) and type(x) == 'table' then return function(...) return x(...) end end
+  return x
+end
 
 return MiniSurround

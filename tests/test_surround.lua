@@ -23,11 +23,13 @@ local clear_messages = function() child.cmd('messages clear') end
 
 local get_latest_message = function() return child.cmd_capture('1messages') end
 
-local has_message_about_not_found = function(char, n_lines, search_method)
+local has_message_about_not_found = function(char, n_lines, search_method, n_times)
   n_lines = n_lines or 20
   search_method = search_method or 'cover'
+  n_times = n_times or 1
   local msg = string.format(
-    [[(mini.surround) No surrounding '%s' found within %s lines and `config.search_method = '%s'`.]],
+    [[(mini.surround) No surrounding '%s%s' found within %s lines and `config.search_method = '%s'`.]],
+    n_times > 1 and n_times or '',
     char,
     n_lines,
     search_method
@@ -46,6 +48,10 @@ local validate_edit = function(before_lines, before_cursor, after_lines, after_c
 
   eq(get_lines(), after_lines)
   eq(get_cursor(), after_cursor)
+end
+
+local validate_edit1d = function(before_line, before_column, after_line, after_column, test_action, ...)
+  validate_edit({ before_line }, { 1, before_column }, { after_line }, { 1, after_column }, test_action, ...)
 end
 
 local validate_find = function(lines, start_pos, positions, f, ...)
@@ -177,11 +183,11 @@ T['Add surrounding']['validates single character user input'] = function()
 end
 
 T['Add surrounding']['places cursor to the right of left surrounding'] = function()
-  local f = function(textobject, visual_key)
+  local f = function(surrounding, visual_key)
     if visual_key == nil then
-      type_keys('sa', textobject)
+      type_keys('sa', surrounding)
     else
-      type_keys(visual_key, textobject, 'sa')
+      type_keys(visual_key, surrounding, 'sa')
     end
     type_keys('f', 'myfunc', '<CR>')
   end
@@ -257,7 +263,7 @@ T['Add surrounding']['allows cancelling with `<Esc> and <C-c>`'] = function()
     set_lines({ ' aaa ' })
     set_cursor(1, 1)
 
-    -- Cancel before textobject
+    -- Cancel before surrounding
     type_keys(1, 'sa', key)
     eq(get_lines(), { ' aaa ' })
     eq(get_cursor(), { 1, 1 })
@@ -405,10 +411,10 @@ end
 
 T['Delete surrounding']['works with multiline input surroundings'] = function()
   child.lua([[MiniSurround.config.custom_surroundings = {
-    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
-    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
-    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
-    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+    a = { input = { '%(\na().-()a\n%)' } },
+    b = { input = { '%(\n().-()\n%)' } },
+    c = { input = { '\na().-()a\n' } },
+    d = { input = { '\n().-()\n' } },
   }]])
   local lines = { 'xxx(', 'aaa', ')xxx' }
   local f
@@ -457,6 +463,18 @@ T['Delete surrounding']['works with different mapping'] = function()
   child.api.nvim_del_keymap('n', 'SD')
 end
 
+T['Delete surrounding']['respects `v:count` for input surrounding'] = function()
+  validate_edit({ '(a(b(c)b)a)' }, { 1, 5 }, { '(ab(c)ba)' }, { 1, 2 }, type_keys, '2sd', ')')
+
+  -- Should give informative message on failure
+  validate_edit({ '(a)' }, { 1, 0 }, { '(a)' }, { 1, 0 }, type_keys, '2sd', ')')
+  has_message_about_not_found(')', nil, nil, 2)
+
+  -- Should respect search method
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  validate_edit({ '(aa) (bb) (cc)' }, { 1, 1 }, { '(aa) bb (cc)' }, { 1, 5 }, type_keys, '2sd', ')')
+end
+
 T['Delete surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -474,8 +492,7 @@ T['Delete surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
 })
 
 T['Delete surrounding']['respects `vim.b.minisurround_config`'] = function()
-  child.b.minisurround_config =
-    { custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } } }
+  child.b.minisurround_config = { custom_surroundings = { ['<'] = { input = { '>().-()<' } } } }
   validate_edit({ '>aaa<' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '<')
 end
 
@@ -583,10 +600,10 @@ end
 
 T['Replace surrounding']['works with multiline input surroundings'] = function()
   child.lua([[MiniSurround.config.custom_surroundings = {
-    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
-    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
-    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
-    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+    a = { input = { '%(\na().-()a\n%)' } },
+    b = { input = { '%(\n().-()\n%)' } },
+    c = { input = { '\na().-()a\n' } },
+    d = { input = { '\n().-()\n' } },
   }]])
   local lines = { 'xxx(', 'aaa', ')xxx' }
   local f
@@ -647,6 +664,18 @@ T['Replace surrounding']['works with different mapping'] = function()
 
   validate_edit({ '(aaa)' }, { 1, 1 }, { '<aaa>' }, { 1, 1 }, type_keys, 'SR', ')', '>')
   child.api.nvim_del_keymap('n', 'SR')
+end
+
+T['Replace surrounding']['respects `v:count` for input surrounding'] = function()
+  validate_edit({ '(a(b(c)b)a)' }, { 1, 5 }, { '(a<b(c)b>a)' }, { 1, 3 }, type_keys, '2sr', ')', '>')
+
+  -- Should give informative message on failure
+  validate_edit({ '(a)' }, { 1, 0 }, { '(a)' }, { 1, 0 }, type_keys, '2sr', ')', '>')
+  has_message_about_not_found(')', nil, nil, 2)
+
+  -- Should respect search method
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  validate_edit({ '(aa) (bb) (cc)' }, { 1, 1 }, { '(aa) <bb> (cc)' }, { 1, 6 }, type_keys, '2sr', ')', '>')
 end
 
 T['Replace surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
@@ -719,17 +748,17 @@ T['Find surrounding']['works with "non single character" surroundings'] = functi
   -- Cursor is strictly inside surroundings
   validate_find({ 'myfunc(aaa)' }, { 1, 9 }, { {1,10}, {1,0}, {1,6}, {1,10} }, type_keys, 'sf', 'f')
   validate_find({ '<t>aaa</t>' }, { 1, 4 }, { {1,6}, {1,9}, {1,0}, {1,2}, {1,6} }, type_keys, 'sf', 't')
-  validate_find({ '_aaa*^' }, { 1, 2 }, { {1,4}, {1,5}, {1,0}, {1,4} }, type_keys, 'sf', 'i', '_<CR>', '*^<CR>')
+  validate_find({ '_aaa*^' }, { 1, 2 }, { {1,4}, {1,5}, {1,0}, {1,4} }, type_keys, 'sf', '?', '_<CR>', '*^<CR>')
 
   -- Cursor is inside one of the surrounding parts
   validate_find({ 'myfunc(aaa)' }, { 1, 2 }, { {1,6}, {1,10}, {1,0}, {1,6} }, type_keys, 'sf', 'f')
   validate_find({ '<t>aaa</t>' }, { 1, 1 }, { {1,2}, {1,6}, {1,9}, {1,0}, {1,2} }, type_keys, 'sf', 't')
-  validate_find({ '_aaa*^' }, { 1, 4 }, { {1,5}, {1,0}, {1,4}, {1,5} }, type_keys, 'sf', 'i', '_<CR>', '*^<CR>')
+  validate_find({ '_aaa*^' }, { 1, 4 }, { {1,5}, {1,0}, {1,4}, {1,5} }, type_keys, 'sf', '?', '_<CR>', '*^<CR>')
 
   -- Moving in left direction
   validate_find({ 'myfunc(aaa)' }, { 1, 8 }, { {1,6}, {1,0}, {1,10}, {1,6} }, type_keys, 'sF', 'f')
   validate_find({ '<t>aaa</t>' }, { 1, 4 }, { {1,2}, {1,0}, {1,9}, {1,6}, {1,2} }, type_keys, 'sF', 't')
-  validate_find({ '_aaa*^' }, { 1, 2 }, { {1,0}, {1,5}, {1,4}, {1,0} }, type_keys, 'sF', 'i', '_<CR>', '*^<CR>')
+  validate_find({ '_aaa*^' }, { 1, 2 }, { {1,0}, {1,5}, {1,4}, {1,0} }, type_keys, 'sF', '?', '_<CR>', '*^<CR>')
   --stylua: ignore end
 end
 
@@ -795,10 +824,10 @@ end
 
 T['Find surrounding']['works with multiline input surroundings'] = function()
   child.lua([[MiniSurround.config.custom_surroundings = {
-    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
-    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
-    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
-    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+    a = { input = { '%(\na().-()a\n%)' } },
+    b = { input = { '%(\n().-()\n%)' } },
+    c = { input = { '\na().-()a\n' } },
+    d = { input = { '\n().-()\n' } },
   }]])
   local lines = { 'xxx(', 'aaa', ')xxx' }
 
@@ -847,6 +876,22 @@ T['Find surrounding']['works with different mapping'] = function()
   child.api.nvim_del_keymap('n', 'Sf')
 end
 
+T['Find surrounding']['respects `v:count` for input surrounding'] = function()
+  validate_edit({ '(a(b(c)b)a)' }, { 1, 5 }, { '(a(b(c)b)a)' }, { 1, 8 }, type_keys, '2sf', ')')
+  validate_edit({ '(a(b(c)b)a)' }, { 1, 5 }, { '(a(b(c)b)a)' }, { 1, 2 }, type_keys, '2sF', ')')
+
+  -- Should give informative message on failure
+  validate_edit({ '(a)' }, { 1, 0 }, { '(a)' }, { 1, 0 }, type_keys, '2sf', ')')
+  has_message_about_not_found(')', nil, nil, 2)
+
+  -- Should respect search method
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  validate_edit({ '(aa) (bb) (cc)' }, { 1, 1 }, { '(aa) (bb) (cc)' }, { 1, 5 }, type_keys, '2sf', ')')
+
+  child.lua([[MiniSurround.config.search_method = 'cover_or_prev']])
+  validate_edit({ '(aa) (bb) (cc)' }, { 1, 13 }, { '(aa) (bb) (cc)' }, { 1, 8 }, type_keys, '2sF', ')')
+end
+
 T['Find surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -869,8 +914,7 @@ T['Find surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
 })
 
 T['Find surrounding']['respects `vim.b.minisurround_config`'] = function()
-  child.b.minisurround_config =
-    { custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } } }
+  child.b.minisurround_config = { custom_surroundings = { ['<'] = { input = { '>().-()<' } } } }
   validate_edit({ '>aaa<' }, { 1, 2 }, { '>aaa<' }, { 1, 4 }, type_keys, 'sf', '<')
 end
 
@@ -944,10 +988,10 @@ end
 T['Highlight surrounding']['works with multiline input surroundings'] = function()
   child.lua('MiniSurround.config.highlight_duration = 5')
   child.lua([[MiniSurround.config.custom_surroundings = {
-    a = { input = { find = '%(\na.-a\n%)', extract = '^(...).-(...)$' } },
-    b = { input = { find = '%(\n.-\n%)', extract = '^(..).-(..)$' } },
-    c = { input = { find = '\na.-a\n', extract = '^(..).-(..)$' } },
-    d = { input = { find = '\n.-\n', extract = '^(.).-(.)$' } },
+    a = { input = { '%(\na().-()a\n%)' } },
+    b = { input = { '%(\n().-()\n%)' } },
+    c = { input = { '\na().-()a\n' } },
+    d = { input = { '\n().-()\n' } },
   }]])
   set_lines({ 'xxx(', 'aaa', ')xxx' })
   set_cursor(2, 1)
@@ -1013,6 +1057,20 @@ T['Highlight surrounding']['removes highlighting per line'] = function()
   child.expect_screenshot()
 end
 
+T['Highlight surrounding']['respects `v:count` for input surrounding'] = function()
+  set_lines({ '(a(b(c)b)a)' })
+  set_cursor(1, 5)
+  type_keys('2sh', ')')
+  child.expect_screenshot()
+
+  -- Should give informative message on failure
+  child.o.cmdheight = 10
+  set_lines({ '(a)' })
+  set_cursor(1, 0)
+  type_keys('2sh', ')')
+  has_message_about_not_found(')', nil, nil, 2)
+end
+
 T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -1030,9 +1088,8 @@ T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_se
 })
 
 T['Highlight surrounding']['respects `vim.b.minisurround_config`'] = function()
-  ---     input = { find = '%b()', extract = '^(.).*(.)$' },
   child.b.minisurround_config = {
-    custom_surroundings = { ['<'] = { input = { find = '>.-<', extract = '^(.).*(.)$' } } },
+    custom_surroundings = { ['<'] = { input = { '>().-()<' } } },
     highlight_duration = 50,
   }
   validate_edit({ '>aaa<' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '<')
@@ -1155,11 +1212,11 @@ T['Search method']['works with "cover_or_nearest"'] = function()
 
   -- Works (on same line and on multiple lines)
   validate_edit({ '(aaa) bbb (ccc)' }, { 1, 6 }, { '<aaa> bbb (ccc)' }, { 1, 1 }, f)
-  validate_edit({ '(aaa) bbb (ccc)' }, { 1, 7 }, { '(aaa) bbb <ccc>' }, { 1, 11 }, f)
+  validate_edit({ '(aaa) bbb (ccc)' }, { 1, 7 }, { '<aaa> bbb (ccc)' }, { 1, 1 }, f)
   validate_edit({ '(aaa) bbb (ccc)' }, { 1, 8 }, { '(aaa) bbb <ccc>' }, { 1, 11 }, f)
 
   validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 0 }, { '<aaa>', 'bbb', '(ccc)' }, { 1, 1 }, f)
-  validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 1 }, { '(aaa)', 'bbb', '<ccc>' }, { 3, 1 }, f)
+  validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 1 }, { '<aaa>', 'bbb', '(ccc)' }, { 1, 1 }, f)
   validate_edit({ '(aaa)', 'bbb', '(ccc)' }, { 2, 2 }, { '(aaa)', 'bbb', '<ccc>' }, { 3, 1 }, f)
 
   -- Should prefer covering surrounding if both are on the same line
@@ -1172,9 +1229,10 @@ T['Search method']['works with "cover_or_nearest"'] = function()
   -- Should prefer "nearest" if it is on the same line, but covering is not
   validate_edit({ '(aaa) (', 'bbb) (ccc)' }, { 2, 1 }, { '(aaa) (', 'bbb) <ccc>' }, { 2, 6 }, f)
 
-  -- Computes "nearest" based on closest part of candidate surroundings
-  validate_edit({ '(aaaa) b  (c)' }, { 1, 7 }, { '<aaaa> b  (c)' }, { 1, 1 }, f)
-  validate_edit({ '(a)  b (cccc)' }, { 1, 5 }, { '(a)  b <cccc>' }, { 1, 8 }, f)
+  -- Computes "nearest" based on closest part of candidate surroundings (based
+  -- on distance between *left* part of current cell and span edges)
+  validate_edit({ '(aaaaaaa) b  (c)' }, { 1, 7 }, { '<aaaaaaa> b  (c)' }, { 1, 1 }, f)
+  validate_edit({ '(a)   b (ccccccc)' }, { 1, 6 }, { '(a)   b <ccccccc>' }, { 1, 9 }, f)
 
   -- If either "previous" or "next" is missing, should return the present one
   validate_edit({ '(aaa) bbb' }, { 1, 7 }, { '<aaa> bbb' }, { 1, 1 }, f)
@@ -1186,7 +1244,7 @@ end
 T['Search method']['throws error on incorrect `config.search_method`'] = function()
   child.lua([[MiniSurround.config.search_method = 'aaa']])
   local lines = { 'aaa (bbb)' }
-  -- Account for a big error message
+  -- Avoid hit-enter-prompt from three big error message
   child.o.cmdheight = 40
 
   set_lines(lines)
@@ -1202,31 +1260,47 @@ T['Search method']['respects `vim.b.minisurround_config`'] = function()
 end
 
 -- Surroundings ---------------------------------------------------------------
-T['Balanced pair surrounding'] = new_set()
+T['Builtin'] = new_set()
 
-T['Balanced pair surrounding']['works'] = function()
+T['Builtin']['Bracket'] = new_set()
+
+T['Builtin']['Bracket']['works with open character'] = function()
   local validate = function(key, pair)
-    local s = pair:sub(1, 1) .. 'aaa' .. pair:sub(2, 2)
-    -- Should work as input surrounding
-    validate_edit({ s }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', key)
+    -- Should work as input surrounding (by removing )
+    local input = pair:sub(1, 1) .. '  aaa  ' .. pair:sub(2, 2)
+    validate_edit({ input }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', key)
 
     -- Should work as output surrounding
-    validate_edit({ '(aaa)' }, { 1, 2 }, { s }, { 1, 1 }, type_keys, 'sr', ')', key)
+    local output = string.format('%s aaa %s', pair:sub(1, 1), pair:sub(2, 2))
+    validate_edit({ '_aaa_' }, { 1, 2 }, { output }, { 1, 2 }, type_keys, 'sr', '_', key)
   end
 
   validate('(', '()')
-  validate(')', '()')
   validate('[', '[]')
-  validate(']', '[]')
   validate('{', '{}')
-  validate('}', '{}')
   validate('<', '<>')
+end
+
+T['Builtin']['Bracket']['works with close character'] = function()
+  local validate = function(key, pair)
+    -- Should work as input surrounding (by removing )
+    local input = pair:sub(1, 1) .. '  aaa  ' .. pair:sub(2, 2)
+    validate_edit({ input }, { 1, 2 }, { '  aaa  ' }, { 1, 0 }, type_keys, 'sd', key)
+
+    -- Should work as output surrounding
+    local output = pair:sub(1, 1) .. 'aaa' .. pair:sub(2, 2)
+    validate_edit({ '_aaa_' }, { 1, 2 }, { output }, { 1, 1 }, type_keys, 'sr', '_', key)
+  end
+
+  validate(')', '()')
+  validate(']', '[]')
+  validate('}', '{}')
   validate('>', '<>')
 end
 
 -- All remaining tests are done with ')' and '>' in hope that others work
 -- similarly
-T['Balanced pair surrounding']['does not work in some cases'] = function()
+T['Builtin']['Bracket']['does not work in some cases'] = function()
   -- Although, it would be great if it did
   local f = function() type_keys('sr', ')', '>') end
 
@@ -1238,7 +1312,7 @@ T['Balanced pair surrounding']['does not work in some cases'] = function()
   validate_edit({ '(a', '# )', 'b)' }, { 1, 1 }, { '<a', '# >', 'b)' }, { 1, 1 }, f)
 end
 
-T['Balanced pair surrounding']['is indeed balanced'] = function()
+T['Builtin']['Bracket']['is indeed balanced'] = function()
   local f = function() type_keys('sr', ')', '>') end
 
   validate_edit({ '(a())' }, { 1, 1 }, { '<a()>' }, { 1, 1 }, f)
@@ -1252,9 +1326,53 @@ T['Balanced pair surrounding']['is indeed balanced'] = function()
   validate_edit({ '((()))' }, { 1, 5 }, { '<(())>' }, { 1, 1 }, f)
 end
 
-T['Default single character surrounding'] = new_set()
+T['Builtin']['Brackets alias'] = new_set()
 
-T['Default single character surrounding']['works'] = function()
+T['Builtin']['Brackets alias']['works'] = function()
+  local f
+
+  -- Input
+  f = function() type_keys('sd', 'b') end
+  validate_edit({ '(aa)' }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+  validate_edit({ '[aa]' }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+  validate_edit({ '{aa}' }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+
+  -- Output
+  f = function() type_keys('sr', '_', 'b') end
+  validate_edit({ '_aa_' }, { 1, 0 }, { '(aa)' }, { 1, 1 }, f)
+
+  -- Balanced
+  f = function() type_keys('sd', 'b') end
+  validate_edit({ '(aa())' }, { 1, 0 }, { 'aa()' }, { 1, 0 }, f)
+  validate_edit({ '[aa[]]' }, { 1, 0 }, { 'aa[]' }, { 1, 0 }, f)
+  validate_edit({ '{aa{}}' }, { 1, 0 }, { 'aa{}' }, { 1, 0 }, f)
+end
+
+T['Builtin']['Quotes alias'] = new_set()
+
+T['Builtin']['Quotes alias']['works'] = function()
+  local f
+
+  -- Input
+  f = function() type_keys('sd', 'q') end
+  validate_edit({ "'aa'" }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+  validate_edit({ '"aa"' }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+  validate_edit({ '`aa`' }, { 1, 0 }, { 'aa' }, { 1, 0 }, f)
+
+  -- Output
+  f = function() type_keys('sr', '_', 'q') end
+  validate_edit({ '_aa_' }, { 1, 0 }, { '"aa"' }, { 1, 1 }, f)
+
+  -- Not balanced
+  f = function() type_keys('sd', 'q') end
+  validate_edit({ "'aa'bb'cc'" }, { 1, 4 }, { "'aabbcc'" }, { 1, 3 }, f)
+  validate_edit({ '"aa"bb"cc"' }, { 1, 4 }, { '"aabbcc"' }, { 1, 3 }, f)
+  validate_edit({ '`aa`bb`cc`' }, { 1, 4 }, { '`aabbcc`' }, { 1, 3 }, f)
+end
+
+T['Builtin']['Default'] = new_set()
+
+T['Builtin']['Default']['works'] = function()
   local validate = function(key)
     local key_str = vim.api.nvim_replace_termcodes(key, true, true, true)
     local s = key_str .. 'aaa' .. key_str
@@ -1273,7 +1391,7 @@ T['Default single character surrounding']['works'] = function()
   validate("'")
 end
 
-T['Default single character surrounding']['does not work in some cases'] = function()
+T['Builtin']['Default']['does not work in some cases'] = function()
   -- Although, it would be great if it did
   local f = function() type_keys('sr', '_', '>') end
 
@@ -1285,7 +1403,7 @@ T['Default single character surrounding']['does not work in some cases'] = funct
   validate_edit({ '_a', '# _', 'b_' }, { 1, 1 }, { '<a', '# >', 'b_' }, { 1, 1 }, f)
 end
 
-T['Default single character surrounding']['detects covering with smallest width'] = function()
+T['Builtin']['Default']['detects covering with smallest width'] = function()
   local f = function() type_keys('sr', '"', ')') end
 
   validate_edit({ '"a"aa"' }, { 1, 2 }, { '(a)aa"' }, { 1, 1 }, f)
@@ -1294,7 +1412,7 @@ T['Default single character surrounding']['detects covering with smallest width'
   validate_edit({ '"""a"""' }, { 1, 3 }, { '""(a)""' }, { 1, 3 }, f)
 end
 
-T['Default single character surrounding']['works in edge cases'] = function()
+T['Builtin']['Default']['works in edge cases'] = function()
   local f = function() type_keys('sr', '*', ')') end
 
   -- Consecutive identical matching characters
@@ -1304,16 +1422,16 @@ T['Default single character surrounding']['works in edge cases'] = function()
   validate_edit({ '****' }, { 1, 3 }, { '**()' }, { 1, 3 }, f)
 end
 
-T['Default single character surrounding']['has limited support of multibyte characters'] = function()
+T['Builtin']['Default']['has limited support of multibyte characters'] = function()
   -- At the moment, multibyte character doesn't pass validation of user
   -- single character input. It would be great to fix this.
   expect.error(function() validate_edit({ 'ыaaaы' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы') end)
   expect.error(function() validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sr', ')', 'ы') end)
 end
 
-T['Function call surrounding'] = new_set()
+T['Builtin']['Function call'] = new_set()
 
-T['Function call surrounding']['works'] = function()
+T['Builtin']['Function call']['works'] = function()
   -- Should work as input surrounding
   validate_edit({ 'myfunc(aaa)' }, { 1, 8 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
 
@@ -1324,7 +1442,7 @@ T['Function call surrounding']['works'] = function()
   validate_edit({ 'myfunc()' }, { 1, 0 }, { '' }, { 1, 0 }, type_keys, 'sd', 'f')
 end
 
-T['Function call surrounding']['does not work in some cases'] = function()
+T['Builtin']['Function call']['does not work in some cases'] = function()
   -- Although, it would be great if it did
   local f = function() type_keys('sr', 'f', '>') end
 
@@ -1336,7 +1454,7 @@ T['Function call surrounding']['does not work in some cases'] = function()
   validate_edit({ 'myfunc(a', '# )', 'b)' }, { 1, 7 }, { '<a', '# >', 'b)' }, { 1, 1 }, f)
 end
 
-T['Function call surrounding']['is detected with "_" and "." in name'] = function()
+T['Builtin']['Function call']['is detected with "_" and "." in name'] = function()
   validate_edit({ 'my_func(aaa)' }, { 1, 9 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
   validate_edit({ 'my.func(aaa)' }, { 1, 9 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
   validate_edit({ 'big-new_my.func(aaa)' }, { 1, 17 }, { 'big-aaa' }, { 1, 4 }, type_keys, 'sd', 'f')
@@ -1345,7 +1463,7 @@ T['Function call surrounding']['is detected with "_" and "." in name'] = functio
   validate_edit({ '[(myfun(aaa))]' }, { 1, 9 }, { '[(aaa)]' }, { 1, 2 }, type_keys, 'sd', 'f')
 end
 
-T['Function call surrounding']['works in different parts of line and neighborhood'] = function()
+T['Builtin']['Function call']['works in different parts of line and neighborhood'] = function()
   -- This check is viable because of complex nature of Lua patterns
   validate_edit({ 'myfunc(aaa)' }, { 1, 8 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'f')
   validate_edit({ 'Hello myfunc(aaa)' }, { 1, 14 }, { 'Hello aaa' }, { 1, 6 }, type_keys, 'sd', 'f')
@@ -1359,7 +1477,7 @@ T['Function call surrounding']['works in different parts of line and neighborhoo
   --stylua: ignore end
 end
 
-T['Function call surrounding']['has limited support of multibyte characters'] = function()
+T['Builtin']['Function call']['has limited support of multibyte characters'] = function()
   -- Due to limitations of Lua patterns used for detecting surrounding, it
   -- currently doesn't support detecting function calls with multibyte
   -- character in name. It would be great to fix this.
@@ -1369,7 +1487,7 @@ T['Function call surrounding']['has limited support of multibyte characters'] = 
   validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыыы(aaa)' }, { 1, 7 }, type_keys, 'sr', ')', 'f', 'ыыы<CR>')
 end
 
-T['Function call surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = function()
+T['Builtin']['Function call']['handles <C-c>, <Esc>, <CR> in user input'] = function()
   -- Should do nothing on `<C-c>` and `<Esc>`
   validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 'f', '<Esc>')
   validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 'f', '<C-c>')
@@ -1378,9 +1496,9 @@ T['Function call surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = fun
   validate_edit({ '[aaa]' }, { 1, 2 }, { '(aaa)' }, { 1, 1 }, type_keys, 'sr', ']', 'f', '<CR>')
 end
 
-T['Tag surrounding'] = new_set()
+T['Builtin']['Tag'] = new_set()
 
-T['Tag surrounding']['works'] = function()
+T['Builtin']['Tag']['works'] = function()
   -- Should work as input surrounding
   validate_edit({ '<x>aaa</x>' }, { 1, 4 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 't')
 
@@ -1394,7 +1512,7 @@ T['Tag surrounding']['works'] = function()
   validate_edit({ '<x></x>' }, { 1, 2 }, { '' }, { 1, 0 }, type_keys, 'sd', 't')
 end
 
-T['Tag surrounding']['does not work in some cases'] = function()
+T['Builtin']['Tag']['does not work in some cases'] = function()
   -- Although, it would be great if it did
   local f = function() type_keys('sr', 't', '>') end
 
@@ -1405,18 +1523,22 @@ T['Tag surrounding']['does not work in some cases'] = function()
   child.bo.commentstring = '# %s'
   validate_edit({ '<x>a', '# </x>', 'b</x>' }, { 1, 3 }, { '<a', '# >', 'b</x>' }, { 1, 1 }, f)
 
-  -- Tags are not "balanced"
-  validate_edit({ '<x><x></x></x>' }, { 1, 1 }, { '_<x>_</x>' }, { 1, 1 }, type_keys, 'sr', 't', '_')
+  -- Tags result into smallest width
+  validate_edit({ '<x><x></x></x>' }, { 1, 1 }, { '<x><x></x></x>' }, { 1, 1 }, type_keys, 'sr', 't', '.')
+
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  validate_edit({ '<x><x></x></x>' }, { 1, 1 }, { '<x>..</x>' }, { 1, 4 }, type_keys, 'sr', 't', '.')
+  child.lua([[MiniSurround.config.search_method = 'cover']])
 
   -- Don't work at end of self-nesting tags
   validate_edit({ '<x><x></x></x>' }, { 1, 12 }, { '<x><x></x></x>' }, { 1, 12 }, type_keys, 'sr', 't')
   has_message_about_not_found('t')
 end
 
-T['Tag surrounding']['detects tag with the same name'] =
+T['Builtin']['Tag']['detects tag with the same name'] =
   function() validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_') end
 
-T['Tag surrounding']['allows extra symbols in opening tag on input'] = function()
+T['Builtin']['Tag']['allows extra symbols in opening tag on input'] = function()
   validate_edit({ '<x bbb cc_dd!>aaa</x>' }, { 1, 15 }, { '_aaa_' }, { 1, 1 }, type_keys, 'sr', 't', '_')
 
   -- Symbol `<` is not allowed
@@ -1424,12 +1546,12 @@ T['Tag surrounding']['allows extra symbols in opening tag on input'] = function(
   has_message_about_not_found('t')
 end
 
-T['Tag surrounding']['allows extra symbols in opening tag on output'] = function()
+T['Builtin']['Tag']['allows extra symbols in opening tag on output'] = function()
   validate_edit({ 'aaa' }, { 1, 0 }, { '<a b>aaa</a>' }, { 1, 5 }, type_keys, 'sa', 'iw', 't', 'a b', '<CR>')
   validate_edit({ '<a b>aaa</a>' }, { 1, 5 }, { '<a c>aaa</a>' }, { 1, 5 }, type_keys, 'sr', 't', 't', 'a c', '<CR>')
 end
 
-T['Tag surrounding']['detects covering with smallest width'] = function()
+T['Builtin']['Tag']['detects covering with smallest width'] = function()
   local f = function() type_keys('sr', 't', '_') end
 
   -- In all cases width of `<y>...</y>` is smaller than of `<x>...</x>`
@@ -1443,7 +1565,7 @@ T['Tag surrounding']['detects covering with smallest width'] = function()
   validate_edit({ '<x><x>aaa</x></x>' }, { 1, 7 }, { '<x>_aaa_</x>' }, { 1, 4 }, f)
 end
 
-T['Tag surrounding']['works in edge cases'] = function()
+T['Builtin']['Tag']['works in edge cases'] = function()
   local f = function() type_keys('sr', 't', '_') end
 
   -- Nesting different tags
@@ -1460,7 +1582,7 @@ T['Tag surrounding']['works in edge cases'] = function()
   validate_edit({ '<xy>aaa</x>' }, { 1, 5 }, { '<xy>aaa</x>' }, { 1, 5 }, type_keys, 'sd', 't')
 end
 
-T['Tag surrounding']['has limited support of multibyte characters'] = function()
+T['Builtin']['Tag']['has limited support of multibyte characters'] = function()
   -- Due to limitations of Lua patterns used for detecting surrounding, it
   -- currently doesn't support detecting tag with multibyte character in
   -- name. It would be great to fix this.
@@ -1470,7 +1592,7 @@ T['Tag surrounding']['has limited support of multibyte characters'] = function()
   validate_edit({ '(aaa)' }, { 1, 8 }, { '<ы>aaa</ы>' }, { 1, 4 }, type_keys, 'sr', ')', 't', 'ы<CR>')
 end
 
-T['Tag surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = function()
+T['Builtin']['Tag']['handles <C-c>, <Esc>, <CR> in user input'] = function()
   -- Should do nothing on `<C-c>` and `<Esc>`
   validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 't', '<Esc>')
   validate_edit({ '(aaa)' }, { 1, 2 }, { '(aaa)' }, { 1, 2 }, type_keys, 1, 'sr', ')', 't', '<C-c>')
@@ -1479,19 +1601,19 @@ T['Tag surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = function()
   validate_edit({ '(aaa)' }, { 1, 2 }, { '<>aaa</>' }, { 1, 2 }, type_keys, 'sr', ')', 't', '<CR>')
 end
 
-T['Interactive surrounding'] = new_set()
+T['Builtin']['User prompt'] = new_set()
 
-T['Interactive surrounding']['works'] = function()
+T['Builtin']['User prompt']['works'] = function()
   -- Should work as input surrounding
-  validate_edit({ '%*aaa*%' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'i', '%*<CR>', '*%<CR>')
+  validate_edit({ '%*aaa*%' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '?', '%*<CR>', '*%<CR>')
 
   -- Should work as output surrounding
-  validate_edit({ '(aaa)' }, { 1, 2 }, { '%*aaa*%' }, { 1, 2 }, type_keys, 'sr', ')', 'i', '%*<CR>', '*%<CR>')
+  validate_edit({ '(aaa)' }, { 1, 2 }, { '%*aaa*%' }, { 1, 2 }, type_keys, 'sr', ')', '?', '%*<CR>', '*%<CR>')
 end
 
-T['Interactive surrounding']['does not work in some cases'] = function()
+T['Builtin']['User prompt']['does not work in some cases'] = function()
   -- Although, it would be great if it did
-  local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', '>') end
+  local f = function() type_keys('sr', '?', '**<CR>', '**<CR>', '>') end
 
   -- It does not take into account that part is inside string
   validate_edit({ [[**a, '**', b**]] }, { 1, 2 }, { "<a, '>', b**" }, { 1, 1 }, f)
@@ -1502,37 +1624,36 @@ T['Interactive surrounding']['does not work in some cases'] = function()
 
   -- It does not work sometimes in presence of many identical valid parts
   -- (basically because it is a `%(.-%)` and not `%(.*%)`).
-  f = function() type_keys('sr', 'i', '(<CR>', ')<CR>', '>') end
+  f = function() type_keys('sr', '?', '(<CR>', ')<CR>', '>') end
   validate_edit({ '((()))' }, { 1, 3 }, { '((<>))' }, { 1, 3 }, f)
   validate_edit({ '((()))' }, { 1, 4 }, { '((()))' }, { 1, 4 }, f)
   validate_edit({ '((()))' }, { 1, 5 }, { '((()))' }, { 1, 5 }, f)
 end
 
-T['Interactive surrounding']['detects covering with smallest width'] = function()
-  local f = function() type_keys('sr', 'i', '**<CR>', '**<CR>', ')') end
+T['Builtin']['User prompt']['detects covering with smallest width'] = function()
+  local f = function() type_keys('sr', '?', '**<CR>', '**<CR>', ')') end
 
   validate_edit({ '**a**aa**' }, { 1, 4 }, { '(a)aa**' }, { 1, 1 }, f)
   validate_edit({ '**aa**a**' }, { 1, 4 }, { '**aa(a)' }, { 1, 5 }, f)
 end
 
-T['Interactive surrounding']['works in edge cases'] = function()
-  local f = function() type_keys('sr', 'i', '(<CR>', ')<CR>', '>') end
+T['Builtin']['User prompt']['works in edge cases'] = function()
+  local f = function() type_keys('sr', '?', '(<CR>', ')<CR>', '>') end
 
-  -- This version of `()` should not be balanced
-  validate_edit({ '((()))' }, { 1, 0 }, { '<((>))' }, { 1, 1 }, f)
-  validate_edit({ '((()))' }, { 1, 1 }, { '(<(>))' }, { 1, 2 }, f)
-  validate_edit({ '((()))' }, { 1, 2 }, { '((<>))' }, { 1, 3 }, f)
+  -- Having `.-` in pattern means the smallest matching span
+  validate_edit({ '(())' }, { 1, 0 }, { '(())' }, { 1, 0 }, f)
+  validate_edit({ '(())' }, { 1, 1 }, { '(<>)' }, { 1, 2 }, f)
 end
 
-T['Interactive surrounding']['works with multibyte characters in parts'] = function()
+T['Builtin']['User prompt']['works with multibyte characters in parts'] = function()
   -- Should work as input surrounding
-  validate_edit({ 'ыtttю' }, { 1, 3 }, { 'ttt' }, { 1, 0 }, type_keys, 'sd', 'i', 'ы<CR>', 'ю<CR>')
+  validate_edit({ 'ыtttю' }, { 1, 3 }, { 'ttt' }, { 1, 0 }, type_keys, 'sd', '?', 'ы<CR>', 'ю<CR>')
 
   -- Should work as output surrounding
-  validate_edit({ 'ыtttю' }, { 1, 3 }, { '(ttt)' }, { 1, 1 }, type_keys, 'sr', 'i', 'ы<CR>', 'ю<CR>', ')')
+  validate_edit({ 'ыtttю' }, { 1, 3 }, { '(ttt)' }, { 1, 1 }, type_keys, 'sr', '?', 'ы<CR>', 'ю<CR>', ')')
 end
 
-T['Interactive surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = function()
+T['Builtin']['User prompt']['handles <C-c>, <Esc>, <CR> in user input'] = function()
   local validate_single = function(...)
     child.ensure_normal_mode()
     -- Wait before every keygroup because otherwise it seems to randomly
@@ -1542,132 +1663,327 @@ T['Interactive surrounding']['handles <C-c>, <Esc>, <CR> in user input'] = funct
 
   local validate_nothing = function(key)
     -- Should do nothing on any `<C-c>` and `<Esc>` (in both input and output)
-    validate_single('sr', 'i', key)
-    validate_single('sr', 'i', '(<CR>', key)
-    validate_single('sr', ')', 'i', key)
-    validate_single('sr', ')', 'i', '*<CR>', key)
+    validate_single('sr', '?', key)
+    validate_single('sr', '?', '(<CR>', key)
+    validate_single('sr', ')', '?', key)
+    validate_single('sr', ')', '?', '*<CR>', key)
   end
 
   validate_nothing('<Esc>')
   validate_nothing('<C-c>')
 
   -- Should treat `<CR>` as empty string in output surrounding
-  validate_edit({ '(aaa)' }, { 1, 2 }, { '_aaa' }, { 1, 1 }, type_keys, 'sr', ')', 'i', '_<CR>', '<CR>')
-  validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa_' }, { 1, 0 }, type_keys, 'sr', ')', 'i', '<CR>', '_<CR>')
-  validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sr', ')', 'i', '<CR>', '<CR>')
+  validate_edit({ '(aaa)' }, { 1, 2 }, { '_aaa' }, { 1, 1 }, type_keys, 'sr', ')', '?', '_<CR>', '<CR>')
+  validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa_' }, { 1, 0 }, type_keys, 'sr', ')', '?', '<CR>', '_<CR>')
+  validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sr', ')', '?', '<CR>', '<CR>')
 
   -- Should stop on `<CR>` in input surrounding because can't use empty
   -- string in pattern search
-  validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', 'i', '<CR>')
-  validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', 'i', '**<CR>', '<CR>')
+  validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', '?', '<CR>')
+  validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', '?', '**<CR>', '<CR>')
 end
+
+local set_custom_surr = function(tbl) child.lua('MiniSurround.config.custom_surroundings = ' .. vim.inspect(tbl)) end
 
 T['Custom surrounding'] = new_set()
 
 T['Custom surrounding']['works'] = function()
-  reload_module({
-    custom_surroundings = {
-      q = {
-        input = { find = '@.-#', extract = '^(.).*(.)$' },
-        output = { left = '@', right = '#' },
-      },
-    },
-  })
+  set_custom_surr({ q = { input = { '@().-()#' }, output = { left = '@', right = '#' } } })
 
   validate_edit({ '@aaa#' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'q')
   validate_edit({ '(aaa)' }, { 1, 2 }, { '@aaa#' }, { 1, 1 }, type_keys, 'sr', ')', 'q')
 end
 
+T['Custom surrounding']['overrides builtins'] = function()
+  set_custom_surr({ ['('] = { input = { '%(%(().-()%)%)' }, output = { left = '((', right = '))' } } })
+
+  validate_edit({ '((aaa))' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '(')
+  validate_edit({ 'aaa' }, { 1, 0 }, { '((aaa))' }, { 1, 2 }, type_keys, 'sa', 'iw', '(')
+end
+
 T['Custom surrounding']['allows setting partial information'] = function()
   -- Modifying present single character identifier (takes from present)
-  reload_module({ custom_surroundings = { [')'] = { output = { left = '( ', right = ' )' } } } })
+  set_custom_surr({ [')'] = { output = { left = '( ', right = ' )' } } })
 
   validate_edit({ '(aaa)' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', ')')
   validate_edit({ '<aaa>' }, { 1, 2 }, { '( aaa )' }, { 1, 2 }, type_keys, 'sr', '>', ')')
 
   -- New single character identifier (takes from default)
-  reload_module({ custom_surroundings = { ['#'] = { input = { find = '#_.-_#' } } } })
+  set_custom_surr({ ['#'] = { input = { '#_().-()_#' } } })
 
-  -- Should find '#_' and '_#' but extract outer matched ones (as in default)
-  validate_edit({ '_#_aaa_#_' }, { 1, 4 }, { '__aaa__' }, { 1, 1 }, type_keys, 'sd', '#')
+  -- Should find '#_' and '_#' and extract first and last two characters
+  validate_edit({ '_#_aaa_#_' }, { 1, 4 }, { '_aaa_' }, { 1, 1 }, type_keys, 'sd', '#')
   -- `output` should be taken from default
   validate_edit({ '(aaa)' }, { 1, 2 }, { '#aaa#' }, { 1, 1 }, type_keys, 'sr', ')', '#')
 end
 
-T['Custom surrounding']['validates two captures in `input.extract`'] = function()
-  reload_module({ custom_surroundings = { ['#'] = { input = { extract = '^#.*#$' } } } })
-
-  -- Avoid hit-enter-prompt on big error message
+T['Custom surrounding']['validates captures in extract pattern'] = function()
+  -- Avoid hit-enter-prompt from three big error message
   child.o.cmdheight = 40
-  expect.error(function() validate_edit({ '#a#' }, { 1, 1 }, { 'a' }, { 1, 0 }, type_keys, 'sd', '#') end)
+
+  local validate = function(line, col, key)
+    set_lines({ line })
+    set_cursor(1, col)
+    expect.error(type_keys, 'two or four empty captures', 'sd', key)
+
+    -- Clear command line to error accumulation and hit-enter-prompt
+    type_keys(':<Esc>')
+  end
+
+  set_custom_surr({ ['#'] = { input = { '#.-#' } } })
+  validate('#a#', 1, '#')
+
+  set_custom_surr({ ['_'] = { input = { '_.-()_' } } })
+  validate('_a_', 1, '_')
+
+  set_custom_surr({ ['@'] = { input = { '(@).-(@)' } } })
+  validate('@a@', 1, '@')
 end
 
 T['Custom surrounding']['works with `.-`'] = function()
   local f = function() type_keys('sr', '#', '>') end
 
-  reload_module({ custom_surroundings = { ['#'] = { input = { find = '#.-@' } } } })
+  set_custom_surr({ ['#'] = { input = { '#().-()@' } } })
 
-  validate_edit({ '###@@@' }, { 1, 0 }, { '<##>@@' }, { 1, 1 }, f)
-  validate_edit({ '###@@@' }, { 1, 1 }, { '#<#>@@' }, { 1, 2 }, f)
-  validate_edit({ '###@@@' }, { 1, 2 }, { '##<>@@' }, { 1, 3 }, f)
+  -- Using `.-` results into match with smallest width
+  validate_edit({ '##@@' }, { 1, 0 }, { '##@@' }, { 1, 0 }, f)
+  validate_edit({ '##@@' }, { 1, 1 }, { '#<>@' }, { 1, 2 }, f)
+
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  validate_edit({ '##@@' }, { 1, 0 }, { '#<>@' }, { 1, 2 }, f)
 end
 
-T['Custom surrounding']['has limited support for `+` quantifier'] = function()
-  reload_module({ custom_surroundings = { ['#'] = { input = { find = '#+.-#+', extract = '^(#+).*(#+)$' } } } })
+T['Custom surrounding']['works with empty parts in input surrounding'] = function()
+  set_custom_surr({ x = { input = { 'x()().-()x()' } } })
+  validate_edit1d('axbbbxc', 3, 'axbbbc', 2, type_keys, 'sd', 'x')
+  validate_edit1d('axbbbxc', 3, 'ax<bbb>c', 3, type_keys, 'sr', 'x', '>')
 
-  local f = function() type_keys('sr', '#', ')') end
+  set_custom_surr({ y = { input = { '()y().-y()()' } } })
+  validate_edit1d('aybbbyc', 3, 'abbbyc', 1, type_keys, 'sd', 'y')
+  validate_edit1d('aybbbyc', 3, 'a<bbby>c', 2, type_keys, 'sr', 'y', '>')
 
-  -- It should find only ones nearest to cursor as it has the smallest width
-  validate_edit({ '###aaa###' }, { 1, 4 }, { '##(aaa)##' }, { 1, 3 }, f)
-
-  -- "Working" edge cases
-  validate_edit({ '###' }, { 1, 0 }, { '()#' }, { 1, 1 }, f)
-  validate_edit({ '###' }, { 1, 1 }, { '#()' }, { 1, 2 }, f)
-  validate_edit({ '###' }, { 1, 2 }, { '#()' }, { 1, 2 }, f)
-
-  -- "Non-working" edge cases
-  -- Result should be `()a#`.
-  validate_edit({ '##a#' }, { 1, 0 }, { '(a)' }, { 1, 1 }, f)
+  set_custom_surr({ t = { input = { '()()t.-t()()' } } })
+  validate_edit1d('atbbbtc', 3, 'atbbbtc', 1, type_keys, 'sd', 't')
+  validate_edit1d('atbbbtc', 3, 'a<tbbbt>c', 2, type_keys, 'sr', 't', '>')
 end
 
-T['Custom surrounding']['has limited support for `*` quantifier'] = function()
-  reload_module({ custom_surroundings = { ['#'] = { input = { find = '#.*#' } } } })
+T['Custom surrounding']['handles function as surrounding spec'] = function()
+  -- Function which returns composed pattern
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    x = { input = function(...) _G.args = {...}; return {'x()x()x'} end }
+  }]])
 
-  local f = function() type_keys('sr', '#', ')') end
+  validate_edit1d('aaxxxbb', 2, 'aa<x>bb', 3, type_keys, 'sr', 'x', '>')
+  -- Should be called without arguments
+  eq(child.lua_get('_G.args'), {})
 
-  validate_edit({ '###aaa###' }, { 1, 4 }, { '##(aaa)##' }, { 1, 3 }, f)
+  -- Function which returns region pair
+  child.lua([[_G.edge_lines = function()
+    local n_lines = vim.fn.line('$')
+    return {
+      left = {
+        from = { line = 1, col = 1 },
+        to = { line = 1, col = vim.fn.getline(1):len() },
+      },
+      right = {
+        from = { line = n_lines, col = 1 },
+        to = { line = n_lines, col = vim.fn.getline(n_lines):len() },
+      },
+    }
+  end]])
+  child.lua('MiniSurround.config.custom_surroundings = { e = { input = _G.edge_lines} }')
 
-  -- "Working" edge cases
-  validate_edit({ '###' }, { 1, 0 }, { '()#' }, { 1, 1 }, f)
-  validate_edit({ '###' }, { 1, 1 }, { '#()' }, { 1, 2 }, f)
-  validate_edit({ '###' }, { 1, 2 }, { '#()' }, { 1, 2 }, f)
+  set_lines({ 'aaa', '', 'bbb', '' })
+  set_cursor(3, 0)
+  validate_edit({ 'aa', 'bb', '' }, { 2, 0 }, { '(', 'bb', ')' }, { 1, 0 }, type_keys, 'sr', 'e', ')')
 
-  -- "Non-working" edge cases
-  -- Result should be `()a#`.
-  validate_edit({ '##a#' }, { 1, 0 }, { '(#a)' }, { 1, 1 }, f)
+  -- Function which returns array of region pairs
 end
 
-T['Custom surrounding']['has limited support for frontier pattern `%f[]`'] = function()
-  local f = function() type_keys('sr', 'w', ')') end
+T['Custom surrounding']['handles function as specification item'] = function()
+  child.lua([[_G.c_spec = {
+    '%b()',
+    function(s, init) if init > 1 then return end; return 2, s:len() end,
+    '^().*().$'
+  }]])
+  child.lua([[MiniSurround.config.custom_surroundings = { c = { input = _G.c_spec } }]])
+  validate_edit1d('aa(bb)', 3, 'aa(<bb>', 4, type_keys, 'sr', 'c', '>')
+end
 
-  local validate = function()
-    validate_edit({ ' aaaa ' }, { 1, 1 }, { ' ()aa ' }, { 1, 2 }, f)
-    validate_edit({ ' aaaa ' }, { 1, 2 }, { ' ()aa ' }, { 1, 2 }, f)
-    validate_edit({ ' aaaa ' }, { 1, 3 }, { ' (a)a ' }, { 1, 2 }, f)
-    validate_edit({ ' aaaa ' }, { 1, 4 }, { ' (aa) ' }, { 1, 2 }, f)
+T['Custom surrounding']['works with special patterns'] = new_set()
+
+T['Custom surrounding']['works with special patterns']['%bxx'] = function()
+  -- Avoid hit-enter-prompt from three big error message
+  child.o.cmdheight = 40
+
+  -- `%bxx` should represent balanced character
+  set_custom_surr({ e = { input = { '%bee', '^e().*()e$' } } })
+
+  local line = 'e e e e e'
+  local f = function() type_keys('sr', 'e', '>') end
+
+  for i = 0, 2 do
+    validate_edit1d(line, i, '< > e e e', 1, f)
+  end
+  for i = 4, 6 do
+    validate_edit1d(line, i, 'e e < > e', 5, f)
   end
 
-  -- In pattern start should work reasonably well
-  reload_module({ custom_surroundings = { ['w'] = { input = { find = '%f[%w]%w+', extract = '^(%w).*(%w)$' } } } })
-  validate()
+  for _, i in ipairs({ 3, 7, 8 }) do
+    validate_edit1d(line, i, 'e e e e e', i, f)
+  end
+end
 
-  -- In pattern end has limited support. It should match whole word in all
-  -- cases but it does not because pattern match is checked on substring (for
-  -- which `%f[%W]` matches on all covering substrings).
-  reload_module({
-    custom_surroundings = { ['w'] = { input = { find = '%f[%w]%w+%f[%W]', extract = '^(%w).*(%w)$' } } },
-  })
-  validate()
+T['Custom surrounding']['works with special patterns']['x.-y'] = function()
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+
+  -- `x.-y` should match the smallest possible width
+  set_custom_surr({ x = { input = { 'e.-o', '^.().*().$' } } })
+  validate_edit1d('e e o o e o', 0, 'e < > o e o', 3, type_keys, 'sr', 'x', '>')
+  validate_edit1d('e e o o e o', 0, 'e e o o < >', 9, type_keys, '2sr', 'x', '>')
+
+  -- `x.-y` should work with `a%.-a` and `a.%-a`
+  set_custom_surr({ y = { input = { 'y()%.-()y' } } })
+  validate_edit1d('y.y yay y..y', 0, '<.> yay y..y', 1, type_keys, 'sr', 'y', '>')
+  validate_edit1d('y.y yay y..y', 0, 'y.y yay <..>', 9, type_keys, '2sr', 'y', '>')
+
+  set_custom_surr({ c = { input = { 'c().%-()c' } } })
+  validate_edit1d('c_-c c__c c+-c', 0, '<_-> c__c c+-c', 1, type_keys, 'sr', 'c', '>')
+  validate_edit1d('c_-c c__c c+-c', 0, 'c_-c c__c <+->', 11, type_keys, '2sr', 'c', '>')
+
+  -- `x.-y` should allow patterns with `+` quantifiers
+  -- To improve, force other character in between (`%f[x]x+[^x]-x+%f[^x]`)
+  set_custom_surr({ r = { input = { 'r+().-()r+' } } })
+  validate_edit1d('rraarr', 0, 'rraa<>', 5, type_keys, 'sr', 'r', '>')
+  validate_edit1d('rrrr', 0, 'rr<>', 3, type_keys, 'sr', 'r', '>')
+end
+
+T['Custom surrounding']['works with quantifiers in patterns'] = function()
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+
+  set_custom_surr({ x = { input = { '%f[x]x+%f[^x]', '^x().*()x$' } } })
+  validate_edit1d('axxaxxx', 0, 'a<>axxx', 2, type_keys, 'sr', 'x', '>')
+  validate_edit1d('axxaxxx', 0, 'axxa<x>', 5, type_keys, '2sr', 'x', '>')
+end
+
+T['Custom surrounding']['works with multibyte characters'] = function()
+  set_custom_surr({ x = { input = { 'ыы фф', '^.-() ().-$' } } })
+  validate_edit1d('ыы ыы фф фф', 9, 'ыы < > фф', 6, type_keys, 'sr', 'x', '>')
+end
+
+T['Custom surrounding']['documented examples'] = new_set()
+
+T['Custom surrounding']['documented examples']['function call with name from user input'] = function()
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  child.lua([[_G.fun_prompt = function()
+    local left_edge = vim.pesc(vim.fn.input('Function name: '))
+    return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
+  end]])
+  child.lua('MiniSurround.config.custom_surroundings = { F = { input = _G.fun_prompt} }')
+
+  validate_edit1d('aa(xx) bb(xx)', 0, 'aa(xx) <xx>', 8, type_keys, 'sr', 'F', 'bb<CR>', '>')
+end
+
+T['Custom surrounding']['documented examples']['first and last buffer lines'] = function()
+  child.lua([[_G.edge_lines = function()
+    local n_lines = vim.fn.line('$')
+    return {
+      left = {
+        from = { line = 1, col = 1 },
+        to = { line = 1, col = vim.fn.getline(1):len() },
+      },
+      right = {
+        from = { line = n_lines, col = 1 },
+        to = { line = n_lines, col = vim.fn.getline(n_lines):len() },
+      },
+    }
+  end]])
+  child.lua('MiniSurround.config.custom_surroundings = { e = { input = _G.edge_lines} }')
+
+  set_lines({ 'aaa', '', 'bbb', '' })
+  set_cursor(3, 0)
+  validate_edit({ 'aa', 'bb', '' }, { 2, 0 }, { '(', 'bb', ')' }, { 1, 0 }, type_keys, 'sr', 'e', ')')
+end
+
+T['Custom surrounding']['documented examples']['edges of wide lines'] = function()
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+  child.lua([[_G.wide_line_edges = function()
+    local make_line_region_pair = function(n)
+      local left = { line = n, col = 1 }
+      local right = { line = n, col = vim.fn.getline(n):len() }
+      return { left = { from = left, to = left }, right = { from = right, to = right } }
+    end
+
+    local res = {}
+    for i = 1, vim.fn.line('$') do
+      if vim.fn.getline(i):len() > 80 then table.insert(res, make_line_region_pair(i)) end
+    end
+    return res
+  end]])
+  child.lua([[MiniSurround.config.custom_surroundings = { L = { input = _G.wide_line_edges } }]])
+
+  local lines = { string.rep('a', 80), string.rep('b', 81), string.rep('c', 80), string.rep('d', 81) }
+
+  local validate = function(start_line, target_line)
+    set_lines(lines)
+    set_cursor(start_line, 1)
+    type_keys('sr', 'L', '>')
+    local target = get_lines()[target_line]
+    eq(target:sub(1, 1), '<')
+    eq(target:sub(-1, -1), '>')
+  end
+
+  validate(1, 2)
+  validate(2, 2)
+
+  child.lua([[MiniSurround.config.search_method = 'next']])
+  validate(2, 4)
+
+  child.lua([[MiniSurround.config.n_lines = 0]])
+  set_lines(lines)
+  set_cursor(1, 1)
+  type_keys('sr', 'L', '>')
+  eq(get_lines(), lines)
+end
+
+T['Custom surrounding']['documented examples']['Lua block string'] = function()
+  child.lua([=[MiniSurround.config.custom_surroundings = {
+    s = { input = { '%[%[().-()%]%]' }, output = { left = '[[', right = ']]' } }
+  }]=])
+  validate_edit1d('aa[[bb]]cc', 2, 'aa<bb>cc', 3, type_keys, 'sr', 's', '>')
+  validate_edit1d('aa(bb)cc', 2, 'aa[[bb]]cc', 4, type_keys, 'sr', ')', 's')
+end
+
+T['Custom surrounding']['documented examples']['balanced parenthesis with big enough width'] = function()
+  child.lua([[_G.wide_parens_spec = {
+    '%b()',
+    function(s, init)
+      if init > 1 or s:len() < 5 then return end
+      return 1, s:len()
+    end,
+    '^.().*().$'
+  }]])
+  child.lua('MiniSurround.config.custom_surroundings = { p = { input = _G.wide_parens_spec } }')
+  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
+
+  validate_edit1d('() (a) (aa) (aaa)', 0, '() (a) (aa) <aaa>', 13, type_keys, 'sr', 'p', '>')
+end
+
+T['Custom surrounding']['documented examples']['handles function as specification item'] = function()
+  child.lua([[_G.c_spec = {
+    '%b()',
+    function(s, init) if init > 1 then return end; return 2, s:len() end,
+    '^().*().$'
+  }]])
+  child.lua([[MiniSurround.config.custom_surroundings = { c = { input = _G.c_spec } }]])
+  validate_edit1d('aa(bb)', 3, 'aa(<bb>', 4, type_keys, 'sr', 'c', '>')
+end
+
+T['Custom surrounding']['documented examples']['brackets with newlines'] = function()
+  child.lua([=[MiniSurround.config.custom_surroundings = {
+    x = { output = { left = '(\n', right = '\n)' } }
+  }]=])
+  validate_edit({ '  aaa' }, { 1, 2 }, { '  (', 'aaa', ')' }, { 1, 2 }, type_keys, 'sa', 'iw', 'x')
 end
 
 return T
