@@ -832,10 +832,25 @@ end
 
 T['select_textobject()']['works with empty region'] = function() validate_select1d('a()', 0, { 'i', ')' }, { 3, 3 }) end
 
-T['select_textobject()']['allow selecting past line end'] = function()
+T['select_textobject()']['allows selecting past line end'] = function()
   child.o.virtualedit = 'block'
   validate_select({ '(', 'a', ')' }, { 2, 0 }, { 'i', ')' }, { { 1, 2 }, { 2, 2 } })
   eq(child.o.virtualedit, 'block')
+end
+
+T['select_textobject()']["respects 'selection=exclusive'"] = function()
+  child.o.selection = 'exclusive'
+
+  local validate = function(ai_type, after)
+    set_lines({ ' (aaa) ' })
+    set_cursor(1, 3)
+    child.lua([[MiniAi.select_textobject(...)]], { ai_type, ')' })
+    type_keys('d')
+    eq(get_lines(), { after })
+  end
+
+  validate('i', ' () ')
+  validate('a', '  ')
 end
 
 -- Actual testing is done in 'Integration tests'
@@ -1415,6 +1430,20 @@ T['Textobject']['respects `v:count`'] = function()
 
   -- Don't do anything if not enough is present
   validate_no_tobj1d('(aa)bb(cc)dd(ee)', 0, '4a)')
+end
+
+T['Textobject']["respects 'selection=exclusive'"] = function()
+  child.o.selection = 'exclusive'
+
+  local validate = function(ai_type, after)
+    set_lines({ ' (aaa) ' })
+    set_cursor(1, 2)
+    type_keys('v', ai_type, ')', 'd')
+    eq(get_lines(), { after })
+  end
+
+  validate('i', ' () ')
+  validate('a', '  ')
 end
 
 T['Textobject']['falls back in case of absent textobject id'] = function()

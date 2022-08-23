@@ -925,6 +925,10 @@ MiniAi.select_textobject = function(ai_type, id, opts)
     set_cursor(tobj.to)
     vim.cmd('normal! zv')
 
+    -- Respect exclusive selection
+    if vim.o.selection == 'exclusive' then vim.cmd('normal! l') end
+
+    -- Start selection
     vim.cmd('normal! ' .. vis_mode)
     set_cursor(tobj.from)
 
