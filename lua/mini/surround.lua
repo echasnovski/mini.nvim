@@ -89,7 +89,7 @@
 ---     - Determine left and right parts of surrounding via using custom and
 ---       builtin surroundings (via `output` field of surrounding info see
 ---       |MiniSurround.config|).
----     - Properly add.
+---     - Properly add allowing multiline parts.
 --- - Finding "input" surrounding is a lot more complicated and is a reason why
 ---   this implementation is only somewhat minimal. In a nutshell, current
 ---   algorithm `searches in the neighborhood lines based on a certain pattern
@@ -197,7 +197,8 @@ end
 ---   for extracting left and right parts; should have two matches).
 --- - <output> - defines what to add on left and right for "output" operations
 ---   (like `add`). A table with <left> (plain text string) and <right> (plain
----   text string) fields.
+---   text string) fields. Strings can contain new lines charater `\n` to add
+---   multiline parts.
 ---
 --- Example of surround info for builtin `(` identifier:>
 ---   {

@@ -237,6 +237,14 @@ T['Add surrounding']['works on multiple lines'] = function()
   validate_edit({ '  aaa ', ' ' }, { 1, 0 }, { '  (aaa ', ' )' }, { 1, 3 }, f_vis)
 end
 
+T['Add surrounding']['works with multiline output surroundings'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { output = { left = '\n(\n', right = '\n)\n' } }
+  }]])
+  local lines = { '  xxx' }
+  validate_edit(lines, { 1, 3 }, { '  ', '(', 'xxx', ')', '' }, { 1, 1 }, type_keys, 'sa', 'iw', 'a')
+end
+
 T['Add surrounding']['works when using $ motion'] = function()
   -- It might not work because cursor column is outside of line width
   validate_edit({ 'aaa' }, { 1, 0 }, { '(aaa)' }, { 1, 1 }, type_keys, 'sa', '$', ')')
@@ -603,6 +611,14 @@ T['Replace surrounding']['works with multiline input surroundings'] = function()
   validate_edit(lines, { 2, 1 }, { 'xxx(<aaa>)xxx' }, { 1, 5 }, f)
   -- There is a `\n` at the end of last line. It is matched but can't be replaced.
   validate_edit(lines, { 3, 0 }, { 'xxx(', 'aaa<)xxx' }, { 2, 4 }, f)
+end
+
+T['Replace surrounding']['works with multiline output surroundings'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    a = { output = { left = '\n(\n', right = '\n)\n' } }
+  }]])
+  local lines = { '  [xxx]' }
+  validate_edit(lines, { 1, 3 }, { '  ', '(', 'xxx', ')', '' }, { 1, 1 }, type_keys, 'sr', ']', 'a')
 end
 
 T['Replace surrounding']['allows cancelling with `<Esc> and <C-c>`'] = function()
