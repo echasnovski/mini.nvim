@@ -251,12 +251,35 @@ T['jump()']['respects `n_times` argument'] = function()
   validate_jump([['m']], { 2, 46 })
 end
 
-T['jump()']['ignores matches with nothing before/after them `till=true`'] = function()
-  set_lines({ 'abc', 'b', 'b', 'abc' })
-  set_cursor(1, 2)
+T['jump()']['allows matches at end of line when `till=true`'] = function()
+  set_lines({ 'aaa', 'b', 'aaa' })
 
-  validate_jump([['b', false, true, 1]], { 4, 0 })
-  validate_jump([['b', true, true, 1]], { 1, 2 })
+  local validate_t = function(start_pos, end_pos)
+    set_cursor(unpack(start_pos))
+    validate_jump([['b', false, true, 1]], end_pos)
+  end
+  local validate_T = function(start_pos, end_pos)
+    set_cursor(unpack(start_pos))
+    validate_jump([['b', true, true, 1]], end_pos)
+  end
+
+  -- Normal mode when not allowed to put cursor on end of line
+  validate_t({ 1, 0 }, { 1, 2 })
+  validate_T({ 3, 2 }, { 2, 0 })
+
+  -- Visual mode (allowed to put cursor on end of line)
+  type_keys('v')
+  validate_t({ 1, 0 }, { 1, 3 })
+  child.ensure_normal_mode()
+
+  type_keys('v')
+  validate_T({ 3, 2 }, { 2, 1 })
+  child.ensure_normal_mode()
+
+  -- Normal mode when allowed to put cursor on end of line
+  child.o.virtualedit = 'onemore'
+  validate_t({ 1, 0 }, { 1, 3 })
+  validate_T({ 3, 2 }, { 2, 1 })
 end
 
 T['jump()']['does not jump if there is no place to jump'] = function() validate_jump([['x']], { 1, 0 }) end
@@ -544,16 +567,37 @@ T['Jumping with f/t/F/T']['ignores current position if it is acceptable target']
   end,
 })
 
-T['Jumping with f/t/F/T']['for t/T ignores matches with nothing before/after them'] = function()
-  set_lines({ 'exx', 'e', 'e', 'xxe' })
+T['Jumping with f/t/F/T']['for t/T allows matches on end of line'] = function()
+  set_lines({ 'aaa', 'b', 'aaa' })
 
-  set_cursor(1, 1)
-  type_keys('t', 'e')
-  eq(get_cursor(), { 4, 1 })
+  local validate_t = function(start_pos, end_pos)
+    set_cursor(unpack(start_pos))
+    type_keys('t', 'b')
+    eq(get_cursor(), end_pos)
+  end
+  local validate_T = function(start_pos, end_pos)
+    set_cursor(unpack(start_pos))
+    type_keys('T', 'b')
+    eq(get_cursor(), end_pos)
+  end
 
-  set_cursor(4, 0)
-  type_keys('T', 'e')
-  eq(get_cursor(), { 1, 1 })
+  -- Normal mode when not allowed to put cursor on end of line
+  validate_t({ 1, 0 }, { 1, 2 })
+  validate_T({ 3, 2 }, { 2, 0 })
+
+  -- Visual mode (allowed to put cursor on end of line)
+  type_keys('v')
+  validate_t({ 1, 0 }, { 1, 3 })
+  child.ensure_normal_mode()
+
+  type_keys('v')
+  validate_T({ 3, 2 }, { 2, 1 })
+  child.ensure_normal_mode()
+
+  -- Normal mode when allowed to put cursor on end of line
+  child.o.virtualedit = 'onemore'
+  validate_t({ 1, 0 }, { 1, 3 })
+  validate_T({ 3, 2 }, { 2, 1 })
 end
 
 T['Jumping with f/t/F/T']['asks for target letter after one idle second'] = function()
@@ -867,7 +911,7 @@ T['Delayed highlighting']['stops immediately when not jumping'] = function()
 end
 
 T['Delayed highlighting']['updates immediately within same jumping'] = function()
-  set_lines({ '1e2e', 'ee' })
+  set_lines({ 'e1e2', 'ee' })
 
   set_cursor(1, 0)
   type_keys('f', 'e')
@@ -877,6 +921,7 @@ T['Delayed highlighting']['updates immediately within same jumping'] = function(
   type_keys('t')
   child.expect_screenshot()
   type_keys('T')
+  -- Last `T` match is highlighted because there is an end of line after it
   child.expect_screenshot()
 end
 

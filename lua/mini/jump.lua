@@ -51,7 +51,9 @@
 ---@alias __target string The string to jump to.
 ---@alias __backward boolean Whether to jump backward.
 ---@alias __till boolean Whether to jump just before/after the match instead of
----   exactly on target. Also ignore matches that have nothing before/after them.
+---   exactly on target. This includes positioning cursor past the end of
+---   previous/current line. Note that with backward jump this might lead to
+---   cursor being on target if can't be put past the line.
 ---@alias __n_times number Number of times to perform consecutive jumps.
 
 -- Module definition ==========================================================
@@ -357,14 +359,16 @@ H.make_search_data = function()
   if till then
     -- General logic: moving pattern should match just before/after target,
     -- while highlight pattern should match target for every "movable" place.
+    -- Also allow checking for "just before/after" across lines by accepting
+    -- `\n` as possible match.
     if backward then
       -- NOTE: use `\@<=` instead of `\zs` because it behaves better in case of
       -- consecutive matches (like `xxxx` for target `x`)
-      pattern = target .. [[\@<=\.]]
-      hl_pattern = target .. [[\ze\.]]
+      pattern = target .. [[\@<=\_.]]
+      hl_pattern = target .. [[\ze\_.]]
     else
-      pattern = [[\.\ze]] .. target
-      hl_pattern = [[\.\@<=]] .. target
+      pattern = [[\_.\ze]] .. target
+      hl_pattern = [[\_.\@<=]] .. target
     end
   else
     pattern = target

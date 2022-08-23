@@ -10,6 +10,10 @@
     - `MiniStarterItemPrefix` and `MiniStarterQuery` are now bold for better visibility.
 - BREAKING: Update highlight for changed git diff to be more visible and to comply more with general guidelines.
 
+## mini.jump
+
+- BREAKING: Allow cursor to be positioned past the end of previous/current line (#113).
+
 ## mini.starter
 
 - Item evaluation is now prepended with query reset, as it is rarely needed any more (#105).
