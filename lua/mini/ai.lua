@@ -329,7 +329,7 @@
 ---   into 2d region. Note: first search is done inside reference region lines,
 ---   and only after that - inside its neighborhood within `config.n_lines`
 ---   (see |MiniAi.config|).
---- - The best matching span is done by iterating over all spans matching
+--- - The best matching span is chosen by iterating over all spans matching
 ---   textobject specification and comparing them with "current best".
 ---   Comparison also depends on reference region (tighter covering is better,
 ---   otherwise closer is better) and search method (if span is even considered).
@@ -857,12 +857,9 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
     -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
     local has_nvim_treesitter, _ = pcall(require, 'nvim-treesitter')
-    local matched_nodes
-    if has_nvim_treesitter and opts.use_nvim_treesitter then
-      matched_nodes = H.get_matched_nodes_plugin(target_captures)
-    else
-      matched_nodes = H.get_matched_nodes_builtin(target_captures)
-    end
+    local node_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_nodes_plugin
+      or H.get_matched_nodes_builtin
+    local matched_nodes = node_querier(target_captures)
 
     -- Return array of regions
     return vim.tbl_map(function(node)
@@ -1187,14 +1184,6 @@ H.is_search_method = function(x, x_name)
   return false, msg
 end
 
-H.validate_tobj_pattern = function(x)
-  local msg = string.format('%s is not a textobject pattern.', vim.inspect(x))
-  if type(x) ~= 'table' then H.error(msg) end
-  for _, val in ipairs(vim.tbl_flatten(x)) do
-    if type(val) ~= 'string' then H.error(msg) end
-  end
-end
-
 H.validate_search_method = function(x, x_name)
   local is_valid, msg = H.is_search_method(x, x_name)
   if not is_valid then H.error(msg) end
@@ -1224,7 +1213,7 @@ H.get_textobject_spec = function(id, args)
   local textobject_tbl = H.make_textobject_table()
   local spec = textobject_tbl[id]
 
-  -- Allow function returning spec or region
+  -- Allow function returning spec or region(s)
   if vim.is_callable(spec) then spec = spec(unpack(args)) end
 
   -- Wrap callable tables to be an actual functions. Otherwise they might be
@@ -1311,13 +1300,12 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
   end
 
   -- Extract final span
-  local extract = function(span, nested_pattern)
-    -- Allow `nil` nested span to deal with array of region as textobject spec
-    if nested_pattern == nil then return span end
+  local extract = function(span, extract_pattern)
+    -- Use `nil` extract pattern to allow array of regions as textobject spec
+    if extract_pattern == nil then return span end
 
     -- First extract local (with respect to best matched span) span
     local s = neigh['1d']:sub(span.from, span.to - 1)
-    local extract_pattern = nested_pattern[#nested_pattern]
     local local_span = H.extract_span(s, extract_pattern, ai_type)
 
     -- Convert local span to global
@@ -1325,7 +1313,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
     return { from = local_span.from + offset, to = local_span.to + offset }
   end
 
-  local final_span = extract(find_res.span, find_res.nested_pattern)
+  local final_span = extract(find_res.span, find_res.extract_pattern)
 
   -- Ensure that output region is different from reference. This is needed if
   -- final span was shrinked during extraction and resulted into equal to input
@@ -1333,7 +1321,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
   if H.is_span_covering(reference_span, final_span) then
     find_res = find_next(find_res.span)
     if find_res.span == nil then return end
-    final_span = extract(find_res.span, find_res.nested_pattern)
+    final_span = extract(find_res.span, find_res.extract_pattern)
     if H.is_span_covering(reference_span, final_span) then return end
   end
 
@@ -1346,7 +1334,7 @@ H.get_default_opts = function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   return {
     n_lines = config.n_lines,
-    n_times = 1,
+    n_times = vim.v.count1,
     -- Empty region at cursor position
     reference_region = { from = { line = cur_pos[1], col = cur_pos[2] + 1 } },
     search_method = config.search_method,
@@ -1470,7 +1458,9 @@ H.find_best_match = function(neighborhood, tobj_spec, reference_span, opts)
     end
   end
 
-  return { span = best_span, nested_pattern = best_nested_pattern }
+  local extract_pattern
+  if best_nested_pattern ~= nil then extract_pattern = best_nested_pattern[#best_nested_pattern] end
+  return { span = best_span, extract_pattern = extract_pattern }
 end
 
 H.iterate_matched_spans = function(line, nested_pattern, f)
@@ -1715,6 +1705,7 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 
   -- Convert 2d buffer position to 1d offset
   local pos_to_offset = function(pos)
+    if pos == nil then return nil end
     local line_num = line_start
     local offset = 0
     while line_num < pos.line do
@@ -1727,6 +1718,7 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 
   -- Convert 1d offset to 2d buffer position
   local offset_to_pos = function(offset)
+    if offset == nil then return nil end
     local line_num = 1
     local line_offset = 0
     while line_num <= #neigh2d and line_offset + neigh2d[line_num]:len() < offset do
@@ -1739,6 +1731,7 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 
   -- Convert 2d region to 1d span
   local region_to_span = function(region)
+    if region == nil then return nil end
     local is_empty = region.to == nil
     local to = region.to or region.from
     return { from = pos_to_offset(region.from), to = pos_to_offset(to) + (is_empty and 0 or 1) }
@@ -1746,6 +1739,7 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 
   -- Convert 1d span to 2d region
   local span_to_region = function(span)
+    if span == nil then return nil end
     -- NOTE: this might lead to outside of line positions due to added `\n` at
     -- the end of lines in 1d-neighborhood. However, this is crucial for
     -- allowing `i` textobjects to collapse multiline selections.
@@ -1756,7 +1750,11 @@ H.get_neighborhood = function(reference_region, n_neighbors)
     return res
   end
 
-  local is_region_inside = function(region) return line_start <= region.from.line and region.to.line <= line_end end
+  local is_region_inside = function(region)
+    local res = line_start <= region.from.line
+    if region.to ~= nil then res = res and (region.to.line <= line_end) end
+    return res
+  end
 
   return {
     n_neighbors = n_neighbors,
@@ -1898,7 +1896,7 @@ end
 ---   product. Else - make it single item list.
 ---@private
 H.cartesian_product = function(arr)
-  if not (vim.tbl_islist(arr) and #arr > 0) then return {} end
+  if not (type(arr) == 'table' and #arr > 0) then return {} end
   arr = vim.tbl_map(function(x) return vim.tbl_islist(x) and x or { x } end, arr)
 
   local res, cur_item = {}, {}

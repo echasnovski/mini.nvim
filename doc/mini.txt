@@ -585,7 +585,7 @@ Search for the textobjects relies on these principles:
   into 2d region. Note: first search is done inside reference region lines,
   and only after that - inside its neighborhood within `config.n_lines`
   (see |MiniAi.config|).
-- The best matching span is done by iterating over all spans matching
+- The best matching span is chosen by iterating over all spans matching
   textobject specification and comparing them with "current best".
   Comparison also depends on reference region (tighter covering is better,
   otherwise closer is better) and search method (if span is even considered).

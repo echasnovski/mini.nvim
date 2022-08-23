@@ -19,7 +19,7 @@ local matches = {
   },
   ['@function.inner'] = {
      new_match({ 3, 2,  3, 37 }) ,
-     new_match({ 3, 20, 3, 32 }) ,
+     new_match({ 3, 20, 3, 33 }) ,
      new_match({ 7, 2,  9, 13 }) ,
   },
   ['@plugin_other'] = {

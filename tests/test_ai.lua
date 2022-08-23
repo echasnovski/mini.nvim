@@ -2699,6 +2699,31 @@ T['Custom textobject']['handles function as textobject spec'] = function()
   child.lua([[MiniAi.config.custom_textobjects = { g = _G.full_buffer }]])
   validate_tobj({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, 'ag', { { 1, 1 }, { 3, 3 } })
   validate_tobj({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, 'ig', { { 1, 1 }, { 3, 2 } })
+
+  -- Function which returns region array
+  avoid_hit_enter_prompt()
+  child.lua([[_G.long_lines = function(_, _, _)
+    local res = {}
+    for i = 1, vim.api.nvim_buf_line_count(0) do
+      local cur_line = vim.fn.getline(i)
+      if vim.fn.strdisplaywidth(cur_line) > 80 then
+        local region = { from = { line = i, col = 1 }, to = { line = i, col = cur_line:len() } }
+        table.insert(res, region)
+      end
+    end
+    return res
+  end]])
+  child.lua('MiniAi.config.custom_textobjects = { L = _G.long_lines }')
+
+  local lines = { string.rep('a', 80), string.rep('b', 81), string.rep('c', 80), string.rep('d', 81) }
+  validate_tobj(lines, { 1, 0 }, 'aL', { { 2, 1 }, { 2, 81 } })
+  validate_tobj(lines, { 2, 0 }, 'aL', { { 2, 1 }, { 2, 81 } })
+
+  child.lua([[MiniAi.config.search_method = 'next']])
+  validate_tobj(lines, { 2, 0 }, 'aL', { { 4, 1 }, { 4, 81 } })
+
+  child.lua([[MiniAi.config.n_lines = 0]])
+  validate_no_tobj(lines, { 2, 0 }, 'aL')
 end
 
 T['Custom textobject']['handles function as specification item'] = function()
@@ -2791,7 +2816,7 @@ end
 
 T['Custom textobject']['documented examples'] = new_set()
 
-T['Custom textobject']['function call with name from user inpur'] = function()
+T['Custom textobject']['documented examples']['function call with name from user input'] = function()
   child.lua([[_G.fun_prompt = function()
     local left_edge = vim.pesc(vim.fn.input('Function name: '))
     return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
@@ -2802,7 +2827,7 @@ T['Custom textobject']['function call with name from user inpur'] = function()
   validate_tobj1d('aa(xx) bb(xx)', 0, 'iFbb<CR>', { 11, 12 })
 end
 
-T['Custom textobject']['full buffer'] = function()
+T['Custom textobject']['documented examples']['full buffer'] = function()
   child.lua([[_G.full_buffer = function()
     local from = { line = 1, col = 1 }
     local to = { line = vim.fn.line('$'), col = math.max(vim.fn.getline('$'):len(), 1) }
@@ -2814,7 +2839,7 @@ T['Custom textobject']['full buffer'] = function()
   validate_tobj({ '' }, { 1, 0 }, 'ag', { { 1, 1 }, { 1, 1 } })
 end
 
-T['Custom textobject']['long lines'] = function()
+T['Custom textobject']['documented examples']['wide lines'] = function()
   avoid_hit_enter_prompt()
 
   child.lua([[_G.long_lines = function(_, _, _)
@@ -2841,7 +2866,7 @@ T['Custom textobject']['long lines'] = function()
   validate_no_tobj(lines, { 2, 0 }, 'aL')
 end
 
-T['Custom textobject']['balanced parenthesis with big enough width'] = function()
+T['Custom textobject']['documented examples']['balanced parenthesis with big enough width'] = function()
   child.lua([[_G.wide_parens_spec = {
     '%b()',
     function(s, init)

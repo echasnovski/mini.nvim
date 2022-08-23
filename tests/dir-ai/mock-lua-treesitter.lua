@@ -30,7 +30,7 @@ vim.treesitter.get_query = function(lang, _)
     { 1, new_node({ 2,  0,  4,  3 }),  {} },
     { 2, new_node({ 3,  2,  3,  37 }), {} },
     { 1, new_node({ 3,  9,  3,  37 }), {} },
-    { 2, new_node({ 3,  20, 3,  32 }), {} },
+    { 2, new_node({ 3,  20, 3,  33 }), {} },
     { 1, new_node({ 6,  6,  10, 3 }),  {} },
     { 2, new_node({ 7,  2,  9,  13 }), {} },
     { 3, new_node({ 12, 0,  12, 8 }),  {} },
