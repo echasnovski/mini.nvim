@@ -1,10 +1,8 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- TODOs:
--- - Update documentation.
--- - Implement `MiniSurround.gen_spec` (with <input> and <output>).
--- - Write transition layer for custom surroundings.
 -- - Implement `last` and `next` mappings.
+-- - Write transition layer for custom surroundings.
 
 -- Documentation ==============================================================
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
@@ -755,6 +753,131 @@ MiniSurround.user_input = function(prompt, text)
   return res
 end
 
+--- Generate common surrounding specifications
+---
+--- This is a table with two sets of generator functions: <input> and <output>
+--- (currently empty). Each is a table with values being function generating
+--- corresponding surrounding specification.
+---
+--- Example: >
+---   local ts_input = require('mini.surround').gen_spec.input.treesitter
+---   require('mini.surround').setup({
+---     custom_surroundings = {
+---       -- Use tree-sitter to search for function call
+---       f = {
+---         input = ts_input({ outer = '@call.outer', inner = '@call.inner' })
+---       },
+---     }
+---   })
+---
+---@seealso |MiniAi.gen_spec|
+MiniSurround.gen_spec = { input = {}, output = {} }
+
+--- Treesitter specification for input surrounding
+---
+--- This is a specification in function form. When called with a pair of
+--- treesitter captures, it returns a specification function outputting an
+--- array of region pairs derived from <outer> and <inner> captures. It first
+--- searches for all matched nodes of outer capture and then completes each one
+--- with the biggest match of inner capture inside that node (if any). The result
+--- region pair is a difference between regions of outer and inner captures.
+---
+--- In order for this to work, apart from working treesitter parser for desired
+--- language, user should have a reachable language-specific 'textobjects'
+--- query (see |get_query()|). The most straightforward way for this is to have
+--- 'textobjects.scm' query file with treesitter captures stored in some
+--- recognized path. This is primarily designed to be compatible with
+--- 'nvim-treesitter/nvim-treesitter-textobjects' plugin, but can be used
+--- without it.
+---
+--- Two most common approaches for having a query file:
+--- - Install 'nvim-treesitter/nvim-treesitter-textobjects'. It has curated and
+---   well maintained builtin query files for many languages with a standardized
+---   capture names, like `call.outer`, `call.inner`, etc.
+--- - Manually create file 'after/queries/<language name>/textobjects.scm' in
+---   your |$XDG_CONFIG_HOME| directory. It should contain queries with
+---   captures (later used to define surrounding parts). See |lua-treesitter-query|.
+--- To verify that query file is reachable, run (example for "lua" language)
+--- `:lua print(vim.inspect(vim.treesitter.get_query_files('lua', 'textobjects')))`
+--- (output should have at least an intended file).
+---
+--- Example configuration for function definition textobject with
+--- 'nvim-treesitter/nvim-treesitter-textobjects' captures:
+--- >
+---   local ts_input = require('mini.surround').gen_spec.input.treesitter
+---   require('mini.surround').setup({
+---     custom_textobjects = {
+---       f = ts_input({ outer = '@call.outer', inner = '@call.inner' }),
+---     }
+---   })
+--- >
+---
+--- Notes:
+--- - By default query is done using 'nvim-treesitter' plugin if it is present
+---   (falls back to builtin methods otherwise). This allows for a more
+---   advanced features (like multiple buffer languages, custom directives, etc.).
+---   See `opts.use_nvim_treesitter` for how to disable this.
+--- - It uses buffer's |filetype| to determine query language.
+--- - On large files it is slower than pattern-based textobjects. Still very
+---   fast though (one search should be magnitude of milliseconds or tens of
+---   milliseconds on really large file).
+---
+---@param captures table Captures for outer and inner parts of region pair:
+---   table with <outer> and <inner> fields with captures for outer
+---   (`[left.form; right.to]`) and inner (`(left.to; right.from)` both edges
+---   exclusive, i.e. they won't be a part of surrounding) regions. Each value
+---   should be a string capture starting with `'@'`.
+---@param opts table Options. Possible values:
+---   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
+---     (if present) to do the query. It implements more advanced behavior at
+---     cost of increased execution time. Provides more coherent experience if
+---     'nvim-treesitter-textobjects' queries are used. Default: `true`.
+---
+---@return function Function which returns array of current buffer region pairs
+---   representing differences between outer and inner captures.
+---
+---@seealso |MiniSurround-surround-specification| for how this type of
+---   surrounding specification is processed.
+--- |get_query()| for how query is fetched in case of no 'nvim-treesitter'.
+--- |Query:iter_captures()| for how all query captures are iterated in case of
+---   no 'nvim-treesitter'.
+--- |MiniAi.gen_spec.treesitter()| for similar 'mini.ai' generator.
+MiniSurround.gen_spec.input.treesitter = function(captures, opts)
+  opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = true }, opts or {})
+  captures = H.prepare_captures(captures)
+
+  return function()
+    -- Get array of matched treesitter nodes
+    local has_nvim_treesitter, _ = pcall(require, 'nvim-treesitter')
+    local node_pair_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_node_pairs_plugin
+      or H.get_matched_node_pairs_builtin
+    local matched_node_pairs = node_pair_querier(captures)
+
+    -- Return array of region pairs
+    return vim.tbl_map(function(node_pair)
+      -- `node:range()` returns 0-based numbers for end-exclusive region
+      local left_from_line, left_from_col, right_to_line, right_to_col = node_pair.outer:range()
+      local left_from = { line = left_from_line + 1, col = left_from_col + 1 }
+      local right_to = { line = right_to_line + 1, col = right_to_col }
+
+      local left_to, right_from
+      if node_pair.inner == nil then
+        left_to = right_to
+        right_from = H.pos_to_right(right_to)
+        right_to = nil
+      else
+        local left_to_line, left_to_col, right_from_line, right_from_col = node_pair.inner:range()
+        left_to = { line = left_to_line + 1, col = left_to_col + 1 }
+        right_from = { line = right_from_line + 1, col = right_from_col }
+        -- Take into account that inner capture should be both edges exclusive
+        left_to, right_from = H.pos_to_left(left_to), H.pos_to_right(right_from)
+      end
+
+      return { left = { from = left_from, to = left_to }, right = { from = right_from, to = right_to } }
+    end, matched_node_pairs)
+  end
+end
+
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniSurround.config
@@ -1026,8 +1149,8 @@ H.find_surrounding = function(surr_spec, opts)
   opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
   H.validate_search_method(opts.search_method, 'search_method')
 
-  local regions = H.find_surrounding_regions(surr_spec, opts)
-  if regions == nil then
+  local region_pair = H.find_surrounding_region_pair(surr_spec, opts)
+  if region_pair == nil then
     local msg = ([[No surrounding '%s%s' found within %d line%s and `config.search_method = '%s'`.]]):format(
       opts.n_times > 1 and opts.n_times or '',
       surr_spec.id,
@@ -1038,10 +1161,10 @@ H.find_surrounding = function(surr_spec, opts)
     H.message(msg)
   end
 
-  return regions
+  return region_pair
 end
 
-H.find_surrounding_regions = function(surr_spec, opts)
+H.find_surrounding_region_pair = function(surr_spec, opts)
   local reference_region, n_times, n_lines = opts.reference_region, opts.n_times, opts.n_lines
 
   if n_times == 0 then return end
@@ -1125,6 +1248,104 @@ H.get_default_opts = function()
   }
 end
 
+-- Work with treesitter surrounding -------------------------------------------
+H.prepare_captures = function(captures)
+  local is_capture = function(x) return type(x) == 'string' and x:sub(1, 1) == '@' end
+
+  if not (type(captures) == 'table' and is_capture(captures.outer) and is_capture(captures.inner)) then
+    H.error('Wrong format for `captures`. See `MiniSurround.gen_spec.input.treesitter()` for details.')
+  end
+
+  return { outer = captures.outer, inner = captures.inner }
+end
+
+H.get_matched_node_pairs_plugin = function(captures)
+  -- Hope that 'nvim-treesitter.query' is stable enough
+  local ts_queries = require('nvim-treesitter.query')
+  local ts_parsers = require('nvim-treesitter.parsers')
+
+  -- This is a modifed version of `ts_queries.get_capture_matches_recursively`
+  -- source code which keeps track of match language
+  local matches = {}
+  local parser = ts_parsers.get_parser(0)
+  if parser then
+    parser:for_each_tree(function(tree, lang_tree)
+      local lang = lang_tree:lang()
+      local lang_matches = ts_queries.get_capture_matches(0, captures.outer, 'textobjects', tree:root(), lang)
+      for _, m in pairs(lang_matches) do
+        m.lang = lang
+      end
+      vim.list_extend(matches, lang_matches)
+    end)
+  end
+
+  return vim.tbl_map(
+    function(match)
+      local node_outer = match.node
+      -- Pick inner node as the biggest node matching inner query. This is
+      -- needed because query output is not quaranteed to come in order.
+      local matches_inner = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', node_outer, match.lang)
+      local nodes_inner = vim.tbl_map(function(x) return x.node end, matches_inner)
+      return { outer = node_outer, inner = H.get_biggest_node(nodes_inner) }
+    end,
+    -- This call should handle multiple languages in buffer
+    matches
+  )
+end
+
+H.get_matched_node_pairs_builtin = function(captures)
+  -- Fetch treesitter data for buffer
+  local lang = vim.bo.filetype
+  local ok, parser = pcall(vim.treesitter.get_parser, 0, lang)
+  if not ok then H.error_treesitter('parser', lang) end
+
+  local query = vim.treesitter.get_query(lang, 'textobjects')
+  if query == nil then H.error_treesitter('query', lang) end
+
+  -- Remove leading '@'
+  local capture_outer, capture_inner = captures.outer:sub(2), captures.inner:sub(2)
+
+  -- Compute nodes matching outer capture
+  local nodes_outer = {}
+  for _, tree in ipairs(parser:trees()) do
+    vim.list_extend(nodes_outer, H.get_builtin_matched_nodes(capture_outer, tree:root(), query))
+  end
+
+  -- Make node pairs with biggest node matching inner capture inside outer node
+  return vim.tbl_map(function(node_outer)
+    local nodes_inner = H.get_builtin_matched_nodes(capture_inner, node_outer, query)
+    return { outer = node_outer, inner = H.get_biggest_node(nodes_inner) }
+  end, nodes_outer)
+end
+
+H.get_builtin_matched_nodes = function(capture, root, query)
+  local res = {}
+  for capture_id, node, _ in query:iter_captures(root, 0) do
+    if query.captures[capture_id] == capture then table.insert(res, node) end
+  end
+  return res
+end
+
+H.get_biggest_node = function(node_arr)
+  local best_node, best_byte_count = nil, -math.huge
+  for _, node in ipairs(node_arr) do
+    local _, _, start_byte = node:start()
+    local _, _, end_byte = node:end_()
+    local byte_count = end_byte - start_byte + 1
+    if best_byte_count < byte_count then
+      best_node, best_byte_count = node, byte_count
+    end
+  end
+
+  return best_node
+end
+
+H.error_treesitter = function(failed_get, lang)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local msg = string.format([[Can not get %s for buffer %d and language '%s'.]], failed_get, bufnr, lang)
+  H.error(msg)
+end
+
 -- Work with matching spans ---------------------------------------------------
 ---@param neighborhood table Output of `get_neighborhood()`.
 ---@param surr_spec table
@@ -1144,7 +1365,7 @@ H.find_best_match = function(neighborhood, surr_spec, reference_span, opts)
     -- Iterate over all spans representing outer regions in array
     for _, region_pair in ipairs(surr_spec) do
       -- Construct outer region used to find best region pair
-      local outer_region = { from = region_pair.left.from, to = region_pair.right.to }
+      local outer_region = { from = region_pair.left.from, to = region_pair.right.to or region_pair.right.from }
 
       -- Consider outer region only if it is completely within neighborhood
       if neighborhood.is_region_inside(outer_region) then
@@ -1485,8 +1706,9 @@ end
 
 H.pos_to_right = function(pos)
   local n_cols = H.get_line_cols(pos.line)
-  if pos.line == vim.api.nvim_buf_line_count(0) and pos.col >= n_cols then return { line = pos.line, col = n_cols } end
-  if pos.col >= n_cols then return { line = pos.line + 1, col = 1 } end
+  -- Using `>` and not `>=` helps with removing '\n' and in the last line
+  if pos.line == vim.api.nvim_buf_line_count(0) and pos.col > n_cols then return { line = pos.line, col = n_cols } end
+  if pos.col > n_cols then return { line = pos.line + 1, col = 1 } end
   return { line = pos.line, col = pos.col + 1 }
 end
 
@@ -1498,7 +1720,7 @@ H.region_replace = function(region, text)
 
   local end_row, end_col
   -- Allow empty region
-  if region.to == nil then
+  if H.region_is_empty(region) then
     end_row, end_col = start_row, start_col
   else
     end_row, end_col = region.to.line - 1, region.to.col
@@ -1523,6 +1745,7 @@ H.surr_to_pos_array = function(surr)
   local res = {}
 
   local append_position = function(pos, correction_direction)
+    if pos == nil then return end
     -- Don't go past the line if it is not empty
     if H.get_line_cols(pos.line) < pos.col and pos.col > 1 then
       pos = correction_direction == 'left' and H.pos_to_left(pos) or H.pos_to_right(pos)
@@ -1537,15 +1760,22 @@ H.surr_to_pos_array = function(surr)
   end
 
   -- Possibly correct position towards inside of surrounding region
-  append_position(surr.left.from, 'right')
-  append_position(surr.left.to, 'right')
-  append_position(surr.right.from, 'left')
-  append_position(surr.right.to, 'left')
+  -- Also don't add positions from empty regions
+  if not H.region_is_empty(surr.left) then
+    append_position(surr.left.from, 'right')
+    append_position(surr.left.to, 'right')
+  end
+  if not H.region_is_empty(surr.right) then
+    append_position(surr.right.from, 'left')
+    append_position(surr.right.to, 'left')
+  end
 
   return res
 end
 
 H.region_highlight = function(buf_id, region)
+  -- Don't highlight empty region
+  if H.region_is_empty(region) then return end
   local ns_id = H.ns_id.highlight
 
   -- Indexing is zero-based. Rows - end-inclusive, columns - end-exclusive.
@@ -1558,8 +1788,10 @@ H.region_unhighlight = function(buf_id, region)
   local ns_id = H.ns_id.highlight
 
   -- Remove highlights from whole lines as it is the best available granularity
-  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, region.from.line - 1, region.to.line)
+  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, region.from.line - 1, (region.to or region.from).line)
 end
+
+H.region_is_empty = function(region) return region.to == nil end
 
 -- Work with Lua patterns -----------------------------------------------------
 H.extract_surr_spans = function(s, extract_pattern)

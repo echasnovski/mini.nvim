@@ -5666,6 +5666,105 @@ This is mainly a wrapper for |input()| which allows empty string as input,
 cancelling with `<Esc>` and `<C-c>`, and slightly modifies prompt. Use it
 to ask for input inside function custom surrounding (see |MiniSurround.config|).
 
+------------------------------------------------------------------------------
+                                                         *MiniSurround.gen_spec*
+                            `MiniSurround.gen_spec`
+Generate common surrounding specifications
+
+This is a table with two sets of generator functions: <input> and <output>
+(currently empty). Each is a table with values being function generating
+corresponding surrounding specification.
+
+Example: >
+  local ts_input = require('mini.surround').gen_spec.input.treesitter
+  require('mini.surround').setup({
+    custom_surroundings = {
+      -- Use tree-sitter to search for function call
+      f = {
+        input = ts_input({ outer = '@call.outer', inner = '@call.inner' })
+      },
+    }
+  })
+
+See also~
+|MiniAi.gen_spec|
+
+------------------------------------------------------------------------------
+                                      *MiniSurround.gen_spec.input.treesitter()*
+          `MiniSurround.gen_spec.input.treesitter`({captures}, {opts})
+Treesitter specification for input surrounding
+
+This is a specification in function form. When called with a pair of
+treesitter captures, it returns a specification function outputting an
+array of region pairs derived from <outer> and <inner> captures. It first
+searches for all matched nodes of outer capture and then completes each one
+with the biggest match of inner capture inside that node (if any). The result
+region pair is a difference between regions of outer and inner captures.
+
+In order for this to work, apart from working treesitter parser for desired
+language, user should have a reachable language-specific 'textobjects'
+query (see |get_query()|). The most straightforward way for this is to have
+'textobjects.scm' query file with treesitter captures stored in some
+recognized path. This is primarily designed to be compatible with
+'nvim-treesitter/nvim-treesitter-textobjects' plugin, but can be used
+without it.
+
+Two most common approaches for having a query file:
+- Install 'nvim-treesitter/nvim-treesitter-textobjects'. It has curated and
+  well maintained builtin query files for many languages with a standardized
+  capture names, like `call.outer`, `call.inner`, etc.
+- Manually create file 'after/queries/<language name>/textobjects.scm' in
+  your |$XDG_CONFIG_HOME| directory. It should contain queries with
+  captures (later used to define surrounding parts). See |lua-treesitter-query|.
+To verify that query file is reachable, run (example for "lua" language)
+`:lua print(vim.inspect(vim.treesitter.get_query_files('lua', 'textobjects')))`
+(output should have at least an intended file).
+
+Example configuration for function definition textobject with
+'nvim-treesitter/nvim-treesitter-textobjects' captures:
+>
+  local ts_input = require('mini.surround').gen_spec.input.treesitter
+  require('mini.surround').setup({
+    custom_textobjects = {
+      f = ts_input({ outer = '@call.outer', inner = '@call.inner' }),
+    }
+  })
+>
+
+Notes:
+- By default query is done using 'nvim-treesitter' plugin if it is present
+  (falls back to builtin methods otherwise). This allows for a more
+  advanced features (like multiple buffer languages, custom directives, etc.).
+  See `opts.use_nvim_treesitter` for how to disable this.
+- It uses buffer's |filetype| to determine query language.
+- On large files it is slower than pattern-based textobjects. Still very
+  fast though (one search should be magnitude of milliseconds or tens of
+  milliseconds on really large file).
+
+Parameters~
+{captures} `(table)` Captures for outer and inner parts of region pair:
+  table with <outer> and <inner> fields with captures for outer
+  (`[left.form; right.to]`) and inner (`(left.to; right.from)` both edges
+  exclusive, i.e. they won't be a part of surrounding) regions. Each value
+  should be a string capture starting with `'@'`.
+{opts} `(table)` Options. Possible values:
+  - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
+    (if present) to do the query. It implements more advanced behavior at
+    cost of increased execution time. Provides more coherent experience if
+    'nvim-treesitter-textobjects' queries are used. Default: `true`.
+
+Return~
+`(function)` Function which returns array of current buffer region pairs
+  representing differences between outer and inner captures.
+
+See also~
+|MiniSurround-surround-specification| for how this type of
+  surrounding specification is processed.
+|get_query()| for how query is fetched in case of no 'nvim-treesitter'.
+|Query:iter_captures()| for how all query captures are iterated in case of
+  no 'nvim-treesitter'.
+|MiniAi.gen_spec.treesitter()| for similar 'mini.ai' generator.
+
 
 ==============================================================================
 ------------------------------------------------------------------------------

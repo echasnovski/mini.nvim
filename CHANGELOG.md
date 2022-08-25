@@ -29,6 +29,7 @@
         - `b` for "brackets". Input - any of balanced `()`, `[]` `{}`. Output - `()`.
         - `q` for "quotes". Input - any of `"`, `'`, `````. Output - `""`.
     - Three new search methods `'prev'`, `'next'`, and `'nearest'` for finding non-covering previous and next surrounding.
+- FEATURE: Implement `MiniSurround.gen_spec` with generators of common surrounding specifications (like `MiniSurround.gen_spec.input.treesitter` for tree-sitter based input surrounding).
 
 
 # Version 0.5.0
