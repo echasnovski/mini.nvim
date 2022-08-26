@@ -1,7 +1,6 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- TODOs:
--- - Implement `last` and `next` mappings.
 -- - Write transition layer for custom surroundings.
 
 -- Documentation ==============================================================
@@ -25,13 +24,19 @@
 ---     - 'f' - function call (string of alphanumeric symbols or '_' or '.'
 ---       followed by balanced '()'). In "input" finds function call, in
 ---       "output" prompts user to enter function name.
----     - 'i' - interactive. Prompts user to enter left and right parts.
 ---     - 't' - tag. In "input" finds tab with same identifier, in "output"
 ---       prompts user to enter tag name.
 ---     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
----       balanced brackets, in "output" - left and right parts of brackets.
+---       balanced brackets (open - with whitespace pad, close - without), in
+---       "output" - left and right parts of brackets.
+---     - '?' - interactive. Prompts user to enter left and right parts.
 ---     - All other alphanumeric, punctuation, or space characters represent
 ---       surrounding with identical left and right parts.
+--- - Configurable search methods to find not only covering but possibly next,
+---   previous, or nearest surrounding. See more in |MiniSurround.config|.
+--- - All actions involving finding surrounding (delete, replace, find,
+---   highlight) can be used with suffix that changes search method to find
+---   previous/last. See more in |MiniSurround.config|.
 ---
 --- Known issues which won't be resolved:
 --- - Search for surrounding is done using Lua patterns (regex-like approach).
@@ -59,6 +64,7 @@
 ---
 --- # Example usage~
 ---
+--- Regular mappings:
 --- - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
 --- - `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
 ---   surrounding (`i`): `[[` for left and `]]` for right.
@@ -67,7 +73,14 @@
 ---   (`t`) with identifier 'div' (`div<CR>` in command line prompt).
 --- - `sff` - find right (`sf`) part of surrounding function call (`f`).
 --- - `sh}` - highlight (`sh`) for a brief period of time surrounding curly
----   brackets (`}`)
+---   brackets (`}`).
+---
+--- Extended mappings (temporary force "prev"/"next" search methods):
+--- - `sdnf` - delete (`sd`) next (`n`) function call (`f`).
+--- - `srlf(` - replace (`sd`) last (`l`) function call (`f`) with padded
+---   bracket (`(`).
+--- - `2sfnt` - find (`sf`) second (2) next (`n`) tag (`t`).
+--- - `shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
 ---
 --- # Comparisons~
 ---
@@ -78,7 +91,8 @@
 ---       |MiniSurround.config|), customized specifications (see
 ---       |MiniSurround-surround-specification|) allowing usage of tree-sitter
 ---       queries (see |MiniSurround.gen_spec.input.treesitter()|),
----       highlighting and finding surrounding. While 'vim-surround' does not.
+---       highlighting and finding surrounding, "last"/"next" extended
+---       mappings. While 'vim-surround' does not.
 --- - 'machakann/vim-sandwich':
 ---     - Both have same keybindings for common actions (add, delete, replace).
 ---     - Otherwise same differences as with 'tpop/vim-surround' (except
@@ -91,6 +105,7 @@
 ---       (with composed patterns, region pair(s), search methods).
 ---     - 'mini.surround' supports |v:count| in input surrounding while
 ---       'nvim-surround' doesn't.
+---     - 'mini.surround' supports "last"/"next" extended mappings.
 --- - |mini.ai|:
 ---     - Both use similar logic for finding target: textobject in 'mini.ai'
 ---       and surrounding pair in 'mini.surround'. While 'mini.ai' uses
@@ -436,6 +451,10 @@ end
 ---       highlight = '',
 ---       replace = 'cs',
 ---       update_n_lines = '',
+---
+---       -- Add this only if you don't want to use extended mappings
+---       suffix_last = '',
+---       suffix_next = '',
 ---     },
 ---     search_method = 'cover_or_next',
 ---   })
@@ -540,6 +559,27 @@ end
 --- - `'next'`:          `(a) bbb (c)` -> `(a) bbb [c]`. Same outcome for `(bbb)`.
 --- - `'prev'`:          `(a) bbb (c)` -> `[a] bbb (c)`. Same outcome for `(bbb)`.
 --- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
+---
+--- ## Search suffixes~
+---
+--- To provide more searching possibilities, 'mini.surround' creates extended
+--- mappings force "prev" and "next" methods for particular search. It does so
+--- by appending mapping with certain suffix: `config.mappings.suffix_last` for
+--- mappings which will use "prev" search method, `config.mappings.suffix_next`
+--- - "next" search method.
+---
+--- Notes:
+--- - It creates new mappings only for actions involving surrounding search:
+---   delete, replace, find (right and left), highlight.
+--- - All new mappings behave the same way as if `config.search_method` is set
+---   to certain search method. They are dot-repeatable, respect |v:count|, etc.
+--- - Supply empty string to disable creation of corresponding set of mappings.
+---
+--- Example with default values (`n` for `suffix_next`, `l` for `suffix_last`)
+--- and initial line `(aa) (bb) (cc)`.
+--- - Typing `sdn)` with cursor inside `(aa)` results into `(aa) bb (cc)`.
+--- - Typing `sdl)` with cursor inside `(cc)` results into `(aa) bb (cc)`.
+--- - Typing `2srn)]` with cursor inside `(aa)` results into `(aa) (bb) [cc]`.
 MiniSurround.config = {
   -- Add custom surroundings to be used on top of builtin ones. For more
   -- information with examples, see `:h MiniSurround.config`.
@@ -557,6 +597,9 @@ MiniSurround.config = {
     highlight = 'sh', -- Highlight surrounding
     replace = 'sr', -- Replace surrounding
     update_n_lines = 'sn', -- Update `n_lines`
+
+    suffix_last = 'l', -- Suffix to search with "prev" method
+    suffix_next = 'n', -- Suffix to search with "next" method
   },
 
   -- Number of lines within which surrounding is searched
@@ -963,6 +1006,7 @@ H.builtin_surroundings.i = {
 -- - 'output' - surround info for adding (in 'add' and 'replace' end).
 -- - 'direction' - direction in which `MiniSurround.find()` should go. Used to
 --   enable same `operatorfunc` pattern for dot-repeatability.
+-- - 'search_method' - search method.
 H.cache = {}
 
 -- Helper functionality =======================================================
@@ -990,6 +1034,9 @@ H.setup_config = function(config)
     ['mappings.highlight'] = { config.mappings.highlight, 'string' },
     ['mappings.replace'] = { config.mappings.replace, 'string' },
     ['mappings.update_n_lines'] = { config.mappings.update_n_lines, 'string' },
+
+    ['mappings.suffix_last'] = { config.mappings.suffix_last, 'string' },
+    ['mappings.suffix_next'] = { config.mappings.suffix_next, 'string' },
   })
 
   return config
@@ -998,18 +1045,47 @@ end
 H.apply_config = function(config)
   MiniSurround.config = config
 
+  local expr_map = function(lhs, rhs, desc) H.map('n', lhs, rhs, { expr = true, desc = desc }) end
   --stylua: ignore start
-  -- Make mappings
+  -- Make regular mappings
+  local m = config.mappings
+
   -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
   -- It is used to enable dot-repeatability.
-  H.map('n', config.mappings.add, [[v:lua.MiniSurround.operator('add')]], { expr = true, desc = 'Add surrounding' })
-  H.map('x', config.mappings.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
-  H.map('n', config.mappings.delete, [[v:lua.MiniSurround.operator('delete') . ' ']], { expr = true, desc = 'Delete surrounding' })
-  H.map('n', config.mappings.replace, [[v:lua.MiniSurround.operator('replace') . ' ']], { expr = true, desc = 'Replace surrounding' })
-  H.map('n', config.mappings.find, [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], { expr = true, desc = 'Find right surrounding' })
-  H.map('n', config.mappings.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']], { expr = true, desc = 'Find left surrounding' })
-  H.map('n', config.mappings.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']], { expr = true, desc = 'Highlight surrounding' })
-  H.map('n', config.mappings.update_n_lines, '<Cmd>lua MiniSurround.update_n_lines()<CR>', { desc = 'Update `MiniSurround.config.n_lines`' })
+  expr_map(m.add,       [[v:lua.MiniSurround.operator('add')]],                                'Add surrounding')
+  expr_map(m.delete,    [[v:lua.MiniSurround.operator('delete') . ' ']],                       'Delete surrounding')
+  expr_map(m.replace,   [[v:lua.MiniSurround.operator('replace') . ' ']],                      'Replace surrounding')
+  expr_map(m.find,      [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], 'Find right surrounding')
+  expr_map(m.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']],  'Find left surrounding')
+  expr_map(m.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']],                    'Highlight surrounding')
+
+  H.map('n', m.update_n_lines, '<Cmd>lua MiniSurround.update_n_lines()<CR>', { desc = 'Update `MiniSurround.config.n_lines`' })
+  H.map('x', m.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
+
+  -- Make extended mappings
+  local suffix_map = function(lhs, suffix, rhs, desc)
+    -- Don't create extended mapping if user chose not to create regular one
+    if lhs == '' then return end
+    expr_map(lhs .. suffix, rhs, desc)
+  end
+
+  if m.suffix_last ~= '' then
+    local suff = m.suffix_last
+    suffix_map(m.delete,    suff, [[v:lua.MiniSurround.operator('delete', {'search_method': 'prev'}) . ' ']],                     'Delete previous surrounding')
+    suffix_map(m.replace,   suff, [[v:lua.MiniSurround.operator('replace', {'search_method': 'prev'}) . ' ']],                    'Replace previous surrounding')
+    suffix_map(m.find,      suff, [[v:lua.MiniSurround.operator('find', {'direction': 'right', 'search_method': 'prev'}) . ' ']], 'Find previous right surrounding')
+    suffix_map(m.find_left, suff, [[v:lua.MiniSurround.operator('find', {'direction': 'left', 'search_method': 'prev'}) . ' ']],  'Find previous left surrounding')
+    suffix_map(m.highlight, suff, [[v:lua.MiniSurround.operator('highlight', {'search_method': 'prev'}) . ' ']],                  'Highlight previous surrounding')
+  end
+
+  if m.suffix_next ~= '' then
+    local suff = m.suffix_next
+    suffix_map(m.delete,    suff, [[v:lua.MiniSurround.operator('delete', {'search_method': 'next'}) . ' ']],                     'Delete next surrounding')
+    suffix_map(m.replace,   suff, [[v:lua.MiniSurround.operator('replace', {'search_method': 'next'}) . ' ']],                    'Replace next surrounding')
+    suffix_map(m.find,      suff, [[v:lua.MiniSurround.operator('find', {'direction': 'right', 'search_method': 'next'}) . ' ']], 'Find next right surrounding')
+    suffix_map(m.find_left, suff, [[v:lua.MiniSurround.operator('find', {'direction': 'left', 'search_method': 'next'}) . ' ']],  'Find next left surrounding')
+    suffix_map(m.highlight, suff, [[v:lua.MiniSurround.operator('highlight', {'search_method': 'next'}) . ' ']],                  'Highlight next surrounding')
+  end
   --stylua: ignore end
 end
 
@@ -1244,7 +1320,7 @@ H.get_default_opts = function()
     n_times = vim.v.count1,
     -- Empty region at cursor position
     reference_region = { from = { line = cur_pos[1], col = cur_pos[2] + 1 } },
-    search_method = config.search_method,
+    search_method = H.cache.search_method or config.search_method,
   }
 end
 

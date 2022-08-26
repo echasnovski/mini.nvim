@@ -5062,13 +5062,19 @@ Features:
     - 'f' - function call (string of alphanumeric symbols or '_' or '.'
       followed by balanced '()'). In "input" finds function call, in
       "output" prompts user to enter function name.
-    - 'i' - interactive. Prompts user to enter left and right parts.
     - 't' - tag. In "input" finds tab with same identifier, in "output"
       prompts user to enter tag name.
     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
-      balanced brackets, in "output" - left and right parts of brackets.
+      balanced brackets (open - with whitespace pad, close - without), in
+      "output" - left and right parts of brackets.
+    - '?' - interactive. Prompts user to enter left and right parts.
     - All other alphanumeric, punctuation, or space characters represent
       surrounding with identical left and right parts.
+- Configurable search methods to find not only covering but possibly next,
+  previous, or nearest surrounding. See more in |MiniSurround.config|.
+- All actions involving finding surrounding (delete, replace, find,
+  highlight) can be used with suffix that changes search method to find
+  previous/last. See more in |MiniSurround.config|.
 
 Known issues which won't be resolved:
 - Search for surrounding is done using Lua patterns (regex-like approach).
@@ -5096,6 +5102,7 @@ You can override runtime config settings locally to buffer inside
 
 # Example usage~
 
+Regular mappings:
 - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
 - `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
   surrounding (`i`): `[[` for left and `]]` for right.
@@ -5104,7 +5111,14 @@ You can override runtime config settings locally to buffer inside
   (`t`) with identifier 'div' (`div<CR>` in command line prompt).
 - `sff` - find right (`sf`) part of surrounding function call (`f`).
 - `sh}` - highlight (`sh`) for a brief period of time surrounding curly
-  brackets (`}`)
+  brackets (`}`).
+
+Extended mappings (temporary force "prev"/"next" search methods):
+- `sdnf` - delete (`sd`) next (`n`) function call (`f`).
+- `srlf(` - replace (`sd`) last (`l`) function call (`f`) with padded
+  bracket (`(`).
+- `2sfnt` - find (`sf`) second (2) next (`n`) tag (`t`).
+- `shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
 
 # Comparisons~
 
@@ -5115,7 +5129,8 @@ You can override runtime config settings locally to buffer inside
       |MiniSurround.config|), customized specifications (see
       |MiniSurround-surround-specification|) allowing usage of tree-sitter
       queries (see |MiniSurround.gen_spec.input.treesitter()|),
-      highlighting and finding surrounding. While 'vim-surround' does not.
+      highlighting and finding surrounding, "last"/"next" extended
+      mappings. While 'vim-surround' does not.
 - 'machakann/vim-sandwich':
     - Both have same keybindings for common actions (add, delete, replace).
     - Otherwise same differences as with 'tpop/vim-surround' (except
@@ -5128,6 +5143,7 @@ You can override runtime config settings locally to buffer inside
       (with composed patterns, region pair(s), search methods).
     - 'mini.surround' supports |v:count| in input surrounding while
       'nvim-surround' doesn't.
+    - 'mini.surround' supports "last"/"next" extended mappings.
 - |mini.ai|:
     - Both use similar logic for finding target: textobject in 'mini.ai'
       and surrounding pair in 'mini.surround'. While 'mini.ai' uses
@@ -5468,6 +5484,9 @@ Default values:
       highlight = 'sh', -- Highlight surrounding
       replace = 'sr', -- Replace surrounding
       update_n_lines = 'sn', -- Update `n_lines`
+
+      suffix_last = 'l', -- Suffix to search with "prev" method
+      suffix_next = 'n', -- Suffix to search with "next" method
     },
 
     -- Number of lines within which surrounding is searched
@@ -5494,6 +5513,10 @@ behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
       highlight = '',
       replace = 'cs',
       update_n_lines = '',
+
+      -- Add this only if you don't want to use extended mappings
+      suffix_last = '',
+      suffix_next = '',
     },
     search_method = 'cover_or_next',
   })
@@ -5598,6 +5621,27 @@ on a value of `'config.search_method'` when cursor is inside `bbb` word:
 - `'next'`:          `(a) bbb (c)` -> `(a) bbb [c]`. Same outcome for `(bbb)`.
 - `'prev'`:          `(a) bbb (c)` -> `[a] bbb (c)`. Same outcome for `(bbb)`.
 - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
+
+## Search suffixes~
+
+To provide more searching possibilities, 'mini.surround' creates extended
+mappings force "prev" and "next" methods for particular search. It does so
+by appending mapping with certain suffix: `config.mappings.suffix_last` for
+mappings which will use "prev" search method, `config.mappings.suffix_next`
+- "next" search method.
+
+Notes:
+- It creates new mappings only for actions involving surrounding search:
+  delete, replace, find (right and left), highlight.
+- All new mappings behave the same way as if `config.search_method` is set
+  to certain search method. They are dot-repeatable, respect |v:count|, etc.
+- Supply empty string to disable creation of corresponding set of mappings.
+
+Example with default values (`n` for `suffix_next`, `l` for `suffix_last`)
+and initial line `(aa) (bb) (cc)`.
+- Typing `sdn)` with cursor inside `(aa)` results into `(aa) bb (cc)`.
+- Typing `sdl)` with cursor inside `(cc)` results into `(aa) bb (cc)`.
+- Typing `2srn)]` with cursor inside `(aa)` results into `(aa) (bb) [cc]`.
 
 ------------------------------------------------------------------------------
                                                        *MiniSurround.operator()*

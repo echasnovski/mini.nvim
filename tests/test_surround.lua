@@ -118,6 +118,8 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.highlight', 'sh')
   expect_config('mappings.replace', 'sr')
   expect_config('mappings.update_n_lines', 'sn')
+  expect_config('mappings.suffix_last', 'l')
+  expect_config('mappings.suffix_next', 'n')
   expect_config('search_method', 'cover')
 end
 
@@ -145,8 +147,41 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { highlight = 1 } }, 'mappings.highlight', 'string')
   expect_config_error({ mappings = { replace = 1 } }, 'mappings.replace', 'string')
   expect_config_error({ mappings = { update_n_lines = 1 } }, 'mappings.update_n_lines', 'string')
+  expect_config_error({ mappings = { suffix_last = 1 } }, 'mappings.suffix_last', 'string')
+  expect_config_error({ mappings = { suffix_next = 1 } }, 'mappings.suffix_next', 'string')
   expect_config_error({ n_lines = 'a' }, 'n_lines', 'number')
   expect_config_error({ search_method = 1 }, 'search_method', 'one of')
+end
+
+T['setup()']['properly handles `config.mappings`'] = function()
+  local has_map = function(lhs, rhs) return child.cmd_capture('nmap ' .. lhs):find(rhs or 'MiniSurround') ~= nil end
+
+  -- Regular mappings
+  eq(has_map('sa'), true)
+
+  unload_module()
+  child.api.nvim_del_keymap('n', 'sa')
+
+  -- Supplying empty string should mean "don't create keymap"
+  load_module({ mappings = { add = '' } })
+  eq(has_map('sa'), false)
+
+  -- Extended mappings
+  eq(has_map('sdl', [['search_method': 'prev']]), true)
+  eq(has_map('sdn', [['search_method': 'next']]), true)
+
+  unload_module()
+  child.api.nvim_del_keymap('n', 'sd')
+  child.api.nvim_del_keymap('n', 'sdl')
+  child.api.nvim_del_keymap('n', 'sdn')
+  child.api.nvim_del_keymap('n', 'srl')
+  child.api.nvim_del_keymap('n', 'srn')
+
+  load_module({ mappings = { delete = '', suffix_last = '' } })
+  eq(has_map('sdl', [['search_method': 'prev']]), false)
+  eq(has_map('sdn', [['search_method': 'next']]), false)
+  eq(has_map('srl', [['search_method': 'prev']]), false)
+  eq(has_map('srn', [['search_method': 'next']]), true)
 end
 
 T['gen_spec'] = new_set()
@@ -519,6 +554,22 @@ T['Delete surrounding']['works with dot-repeat'] = function()
   eq(get_lines(), { 'aaa bbb' })
 end
 
+T['Delete surrounding']['works in extended mappings'] = function()
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) bb (cc)', 5, type_keys, 'sdn', ')')
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) cc', 10, type_keys, '2sdn', ')')
+
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) bb (cc)', 5, type_keys, 'sdl', ')')
+  validate_edit1d('(aa) (bb) (cc)', 11, 'aa (bb) (cc)', 0, type_keys, '2sdl', ')')
+
+  -- Dot-repeat
+  set_lines({ '(aa) (bb) (cc)' })
+  set_cursor(1, 0)
+  type_keys('sdn', ')')
+  type_keys('.')
+  eq(get_lines(), { '(aa) bb cc' })
+  eq(get_cursor(), { 1, 8 })
+end
+
 T['Delete surrounding']['respects `config.n_lines`'] = function()
   reload_module({ n_lines = 2 })
   local lines = { '(', '', '', 'a', '', '', ')' }
@@ -559,6 +610,11 @@ T['Delete surrounding']['places cursor to the right of left surrounding'] = func
 end
 
 T['Delete surrounding']['prompts helper message after one idle second'] = function()
+  -- Mapping is applied only after `timeoutlen` milliseconds, because
+  -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
+
   set_lines({ '((aaa))' })
   set_cursor(1, 1)
 
@@ -567,7 +623,7 @@ T['Delete surrounding']['prompts helper message after one idle second'] = functi
   sleep(200)
 
   type_keys('sd')
-  sleep(1000 - 10)
+  sleep(total_wait_time - 10)
   eq(get_latest_message(), '')
   sleep(10 + 2)
   eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
@@ -700,6 +756,22 @@ T['Replace surrounding']['works with dot-repeat'] = function()
   eq(get_lines(), { 'aaa <bbb>' })
 end
 
+T['Delete surrounding']['works in extended mappings'] = function()
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) <bb> (cc)', 6, type_keys, 'srn', ')', '>')
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) <cc>', 11, type_keys, '2srn', ')', '>')
+
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) <bb> (cc)', 6, type_keys, 'srl', ')', '>')
+  validate_edit1d('(aa) (bb) (cc)', 11, '<aa> (bb) (cc)', 1, type_keys, '2srl', ')', '>')
+
+  -- Dot-repeat
+  set_lines({ '(aa) (bb) (cc)' })
+  set_cursor(1, 0)
+  type_keys('srn', ')', '>')
+  type_keys('.')
+  eq(get_lines(), { '(aa) <bb> <cc>' })
+  eq(get_cursor(), { 1, 11 })
+end
+
 T['Replace surrounding']['respects `config.n_lines`'] = function()
   reload_module({ n_lines = 2 })
   local lines = { '(', '', '', 'a', '', '', ')' }
@@ -740,6 +812,11 @@ T['Replace surrounding']['places cursor to the right of left surrounding'] = fun
 end
 
 T['Replace surrounding']['prompts helper message after one idle second'] = function()
+  -- Mapping is applied only after `timeoutlen` milliseconds, because
+  -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
+
   set_lines({ '((aaa))' })
   set_cursor(1, 1)
 
@@ -748,7 +825,7 @@ T['Replace surrounding']['prompts helper message after one idle second'] = funct
   sleep(200)
 
   type_keys('sr')
-  sleep(1000 - 10)
+  sleep(total_wait_time - 10)
   eq(get_latest_message(), '')
   sleep(10 + 2)
   eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
@@ -756,6 +833,7 @@ T['Replace surrounding']['prompts helper message after one idle second'] = funct
   clear_messages()
   type_keys(')')
 
+  -- Here mapping collision doesn't matter any more
   sleep(1000 - 10)
   eq(get_latest_message(), '')
   sleep(10 + 2)
@@ -941,6 +1019,30 @@ T['Find surrounding']['works with "non single character" surroundings'] = functi
   --stylua: ignore end
 end
 
+T['Find surrounding']['works in extended mappings'] = function()
+  -- "Find right" when outside of outer surroundings puts cursor on left-most
+  -- position. If cursor is on the left, that is obvious. When on the right -
+  -- it behaves as on the right-most surrounding position.
+  -- "Find left" puts on right-most position for the same reasons.
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) (cc)', 5, type_keys, 'sfn', ')')
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) (cc)', 10, type_keys, '2sfn', ')')
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) (cc)', 8, type_keys, 'sFn', ')')
+  validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) (cc)', 13, type_keys, '2sFn', ')')
+
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 5, type_keys, 'sfl', ')')
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 0, type_keys, '2sfl', ')')
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 8, type_keys, 'sFl', ')')
+  validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 3, type_keys, '2sFl', ')')
+
+  -- Dot-repeat
+  set_lines({ '(aa) (bb) (cc)' })
+  set_cursor(1, 0)
+  type_keys('sfn', ')')
+  type_keys('.')
+  eq(get_lines(), { '(aa) (bb) (cc)' })
+  eq(get_cursor(), { 1, 10 })
+end
+
 T['Find surrounding']['respects `config.n_lines`'] = function()
   reload_module({ n_lines = 2 })
   local lines = { '(', '', '', 'a', '', '', ')' }
@@ -974,6 +1076,11 @@ T['Find surrounding']['respects `config.search_method`'] = function()
 end
 
 T['Find surrounding']['prompts helper message after one idle second'] = function()
+  -- Mapping is applied only after `timeoutlen` milliseconds, because
+  -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
+
   set_lines({ '(aaa)' })
   set_cursor(1, 2)
 
@@ -982,7 +1089,7 @@ T['Find surrounding']['prompts helper message after one idle second'] = function
   sleep(200)
 
   type_keys('sf')
-  sleep(1000 - 10)
+  sleep(total_wait_time - 10)
   eq(get_latest_message(), '')
   sleep(10 + 2)
   eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
@@ -1143,6 +1250,32 @@ T['Highlight surrounding']['works with dot-repeat'] = function()
   -- Should allow not immediate dot-repeat
   set_cursor(1, 8)
   type_keys('.')
+  child.expect_screenshot()
+end
+
+T['Highlight surrounding']['works in extended mappings'] = function()
+  child.set_size(5, 15)
+  local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+  set_lines({ '(aa) (bb) (cc)' })
+
+  set_cursor(1, 1)
+  type_keys('shn', ')')
+  poke_eventloop()
+  child.expect_screenshot()
+  sleep(test_duration + 1)
+
+  set_cursor(1, 12)
+  type_keys('shl', ')')
+  poke_eventloop()
+  child.expect_screenshot()
+  sleep(test_duration + 1)
+
+  -- Dot-repeat
+  set_cursor(1, 1)
+  type_keys('shn', ')')
+  sleep(test_duration + 1)
+  type_keys('.')
+  poke_eventloop()
   child.expect_screenshot()
 end
 
