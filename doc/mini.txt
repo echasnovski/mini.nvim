@@ -5291,9 +5291,9 @@ Surround specification is a table with keys:
 - <output> - defines what to add on left and right for "output" operations
   (like `add`). See more in 'Output surrounding' section.
 
-Example of surround info for builtin `(` identifier:>
+Example of surround info for builtin `)` identifier: >
   {
-    input = { '%b()', '^(.).*(.)$' },
+    input = { '%b()', '^.().*().$' },
     output = { left = '(', right = ')' }
   }
 <
@@ -5404,6 +5404,16 @@ Examples:
 - Brackets on separate lines (indentation is not preserved):
   `{ left = '(\n', right = '\n)' }`
 
+# Transition from previous specification ~
+
+Previous specification format for input surrounding was a table with <find>
+and <extract> fields. They are now replaced with composed pattern (see
+|MiniSurround-glossary|). Previous format will work until next release.
+
+To convert, remove `find = ` and `extract = ` while replacing left and right
+captures in `extract` with appropriate empty capture(s). Example:
+- Previous: `{ find = '%[%[.-%]%]', extract = '^(..).*(..)$' }`.
+  Current: `{ '%[%[().-()%]%]' }`
 
 ------------------------------------------------------------------------------
                                                  *MiniSurround-search-algorithm*

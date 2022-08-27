@@ -252,9 +252,9 @@
 --- - <output> - defines what to add on left and right for "output" operations
 ---   (like `add`). See more in 'Output surrounding' section.
 ---
---- Example of surround info for builtin `(` identifier:>
+--- Example of surround info for builtin `)` identifier: >
 ---   {
----     input = { '%b()', '^(.).*(.)$' },
+---     input = { '%b()', '^.().*().$' },
 ---     output = { left = '(', right = ')' }
 ---   }
 --- <
@@ -365,6 +365,16 @@
 --- - Brackets on separate lines (indentation is not preserved):
 ---   `{ left = '(\n', right = '\n)' }`
 ---
+--- # Transition from previous specification ~
+---
+--- Previous specification format for input surrounding was a table with <find>
+--- and <extract> fields. They are now replaced with composed pattern (see
+--- |MiniSurround-glossary|). Previous format will work until next release.
+---
+--- To convert, remove `find = ` and `extract = ` while replacing left and right
+--- captures in `extract` with appropriate empty capture(s). Example:
+--- - Previous: `{ find = '%[%[.-%]%]', extract = '^(..).*(..)$' }`.
+---   Current: `{ '%[%[().-()%]%]' }`
 ---@tag MiniSurround-surround-specification
 
 --- Search algorithm design
@@ -1132,6 +1142,25 @@ H.get_surround_spec = function(sur_type, use_cache)
 
   -- Allow function returning spec or surrounding region(s)
   if vim.is_callable(res) then res = res() end
+
+  -- Make non-breaking soft-deprecation of previous input surrounding spec
+  -- TODO: Remove after 0.6.0
+  -- TODO: Also remove documentation about transition
+  if sur_type == 'input' and (type(res) == 'table' and res.find ~= nil and res.extract ~= nil) then
+    H.message(
+      'Specification format of input surrounding has changed.'
+        .. ' Previous will work until next release (0.6.0). See `:h MiniSurround-surround-specification` '
+        .. '(section "Transition from previous specification") for more details.'
+    )
+    -- Replace extraction parenthesis `(aa)` with `()aa()`
+    local _, n_parens = res.extract:gsub('(%(.-%))', '%1')
+    local n = 0
+    local extract = res.extract:gsub('%(.-%)', function(x)
+      n = n + 1
+      if n == 1 or n == n_parens then return '()' .. x:sub(2, -2) .. '()' end
+    end)
+    res = { res.find, extract }
+  end
 
   -- Do nothing if supplied not appropriate structure
   if not H.is_surrounding_info(res, sur_type) then return nil end
