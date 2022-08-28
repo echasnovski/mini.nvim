@@ -119,10 +119,12 @@
 ---   [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and
 ---   [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons)
 ---   plugin (but works without any them).
---- - |MiniSurround| - fast surround plugin. Add, delete, replace, find,
----   highlight surrounding (like pair of parenthesis, quotes, etc.). Has
----   special "function call", "tag", and "interactive" surroundings. Supports
----   dot-repeatability, textobject, motions.
+--- - |MiniSurround| - fast and feature-rich surround plugin. Add, delete,
+---   replace, find, highlight surrounding (like pair of parenthesis, quotes,
+---   etc.). Supports dot-repeat, `v:count`, different search methods,
+---   "last"/"next" extended mappings, customization via Lua patterns or
+---   functions, and more. Has builtins for brackets, function call, tag, user
+---   prompt, and any alphanumeric/punctuation/whitespace character.
 --- - |MiniTest| - framework for writing extensive Neovim plugin tests.
 ---   Supports hierarchical tests, hooks, parametrization, filtering (like from
 ---   current file or cursor position), screen tests, "busted-style" emulation,

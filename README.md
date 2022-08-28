@@ -774,7 +774,7 @@ Plugins with similar functionality:
 
 ### mini.surround
 
-Fast surround plugin. Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.). Has special "function call", "tag", and "interactive" surroundings. Supports dot-repeatability, textobject, motions.
+Fast and feature-rich surround plugin. Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.). Supports dot-repeat, `v:count`, different search methods, "last"/"next" extended mappings, customization via Lua patterns or functions, and more. Has builtins for brackets, function call, tag, user prompt, and any alphanumeric/punctuation/whitespace character.
 
 [**DEMO of 'mini.surround'**](DEMO.md#minisurround)
 

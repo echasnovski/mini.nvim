@@ -1,8 +1,5 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
--- TODOs:
--- - Write transition layer for custom surroundings.
-
 -- Documentation ==============================================================
 --- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
 --- a reimplementation of the core features of 'machakann/vim-sandwich' with a
@@ -193,7 +190,9 @@
 ---   whitespace: open includes it left and right parts, close does not.
 --- - Output value of `b` alias is same as `)`. For `q` alias - same as `"`.
 --- - Default surrounding is activated for all characters which are not
----   configured surrounding identifiers.
+---   configured surrounding identifiers. Note: due to special handling of
+---   underlying `x.-x` Lua pattern (see |MiniSurround-search-algorithm|), it
+---   doesn't really support non-trivial `v:count` for "cover" search method.
 ---@tag MiniSurround-surround-builtin
 
 --- Note: this is similar to |MiniAi-glossary|.
@@ -397,7 +396,7 @@
 ---   on extraction pattern (last item in nested pattern).
 --- - For |v:count| greater than 1, steps are repeated with current best match
 ---   becoming reference region. One such additional step is also done if final
----   region is equal to reference region. Nore: |v:count| is not supported for
+---   region is equal to reference region. Note: |v:count| is not supported for
 ---   output surroundings because it brings a lot of inconvenience (for adding
 ---   it affects textobject/motion, for replacing it will be used for both
 ---   input and output).
