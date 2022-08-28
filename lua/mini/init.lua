@@ -11,8 +11,31 @@
 --- module can be considered as a separate sub-plugin.
 ---
 --- Table of contents:
----@toc
----@text
+---   General overview.................................................|mini.nvim|
+---   Disabling recepies.............................|mini.nvim-disabling-recipes|
+---   Buffer-local config..........................|mini.nvim-buffer-local-config|
+---   Plugin colorschemes.....................................|mini-color-schemes|
+---   Extended a/i textobjects...........................................|mini.ai|
+---   Base16 colorscheme creation....................................|mini.base16|
+---   Remove buffers..............................................|mini.bufremove|
+---   Comment.......................................................|mini.comment|
+---   Completion and signature help..............................|mini.completion|
+---   Autohighlight word under cursor............................|mini.cursorword|
+---   Generate help files...............................................|mini.doc|
+---   Fuzzy matching..................................................|mini.fuzzy|
+---   Visualize and operate on indent scope.....................|mini.indentscope|
+---   Jump forward/backward to a single character......................|mini.jump|
+---   Jump within visible lines......................................|mini.jump2d|
+---   Miscellaneous functions..........................................|mini.misc|
+---   Autopairs.......................................................|mini.pairs|
+---   Session management...........................................|mini.sessions|
+---   Start screen..................................................|mini.starter|
+---   Statusline.................................................|mini.statusline|
+---   Surround actions.............................................|mini.surround|
+---   Tabline.......................................................|mini.tabline|
+---   Test Neovim plugins..............................................|mini.test|
+---   Trailspace (highlight and remove)..........................|mini.trailspace|
+---
 --- # General principles~
 ---
 --- - <Design>. Each module is designed to solve a particular problem targeting
@@ -137,7 +160,6 @@
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.
 ---@tag mini.nvim
----@toc_entry General overview
 
 --- Common recipes for disabling functionality
 ---
@@ -201,35 +223,6 @@
 ---
 --- Note: using function values inside buffer variables requires Neovim>=0.7.
 ---@tag mini.nvim-buffer-local-config
-
---- # Plugin colorschemes~
----
---- This plugin comes with several color schemes. All of them are a
---- |MiniBase16| theme created with faster version of the following Lua code:
---- >
----   require('mini.base16').setup({ palette = palette, use_cterm = true })
---- <
---- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
----
---- ## minischeme~
----
---- Blue and yellow main colors with high contrast and saturation palette.
---- Palettes are:
---- - For dark 'background':
----   `MiniBase16.mini_palette('#112641', '#e2e98f', 75)`
---- - For light 'background':
----   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
----
---- ## minicyan~
----
---- Cyan and grey main colors with moderate contrast and saturation palette.
---- Palettes are:
---- - For dark 'background':
----   `MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)`
---- - For light 'background':
----   `MiniBase16.mini_palette('#C0D2D2', '#262626', 80)`
----@tag mini.nvim-color-schemes
----@toc_entry Plugin colorschemes
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])
 

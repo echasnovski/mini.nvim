@@ -2,8 +2,8 @@
 
 -- Documentation ==============================================================
 --- Module for extending and creating `a`/`i` textobjects. It enhances some builtin
---- |text-objects| (like |a(|, |a)|, |a'|, and more), creates new ones
---- (like `a*`, `a<Space>`, `af`, `a?`, and more), and allows user to create their own.
+--- |text-objects| (like |a(|, |a)|, |a'|, and more), creates new ones (like `a*`, `a<Space>`,
+--- `af`, `a?`, and more), and allows user to create their own.
 ---
 --- Features:
 --- - Customizable creation of `a`/`i` textobjects using Lua patterns and functions.
@@ -101,7 +101,6 @@
 --- recipes.
 ---@tag mini.ai
 ---@tag MiniAi
----@toc_entry Extended a/i textobjects
 
 --- Builtin textobjects~
 ---

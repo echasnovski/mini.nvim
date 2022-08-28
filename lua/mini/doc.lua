@@ -73,7 +73,6 @@
 --- recipes.
 ---@tag mini.doc
 ---@tag MiniDoc
----@toc_entry Generate help files
 
 --- Data structures
 ---

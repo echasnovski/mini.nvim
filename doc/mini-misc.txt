@@ -1,0 +1,184 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                     *mini.misc*
+                                                                      *MiniMisc*
+Miscellaneous useful functions.
+
+# Setup~
+
+This module doesn't need setup, but it can be done to improve usability.
+Setup with `require('mini.misc').setup({})` (replace `{}` with your
+`config` table). It will create global Lua table `MiniMisc` which you can
+use for scripting or manually (with `:lua MiniMisc.*`).
+
+See |MiniMisc.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minimisc_config`
+will have no effect here.
+
+------------------------------------------------------------------------------
+                                                              *MiniMisc.setup()*
+                           `MiniMisc.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniMisc.config|.
+
+Usage~
+`require('mini.misc').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                               *MiniMisc.config*
+                               `MiniMisc.config`
+Module config
+
+Default values:
+>
+  MiniMisc.config = {
+    -- Array of fields to make global (to be used as independent variables)
+    make_global = { 'put', 'put_text' },
+  }
+<
+
+------------------------------------------------------------------------------
+                                                         *MiniMisc.bench_time()*
+                     `MiniMisc.bench_time`({f}, {n}, {...})
+Execute `f` several times and time how long it took
+
+Parameters~
+{f} `(function)` Function which execution to benchmark.
+{n} `(number)` Number of times to execute `f(...)`. Default: 1.
+{...} `(any)` Arguments when calling `f`.
+
+Return~
+`(...)` Table with durations (in seconds; up to microseconds) and
+  output of (last) function execution.
+
+------------------------------------------------------------------------------
+                                                   *MiniMisc.get_gutter_width()*
+                     `MiniMisc.get_gutter_width`({win_id})
+Compute width of gutter (info column on the left of the window)
+
+Parameters~
+{win_id} `(number)` Window identifier (see |win_getid()|) for which gutter
+  width is computed. Default: 0 for current.
+
+------------------------------------------------------------------------------
+                                                                *MiniMisc.put()*
+                             `MiniMisc.put`({...})
+Print Lua objects in command line
+
+Parameters~
+{...} `(any)` Any number of objects to be printed each on separate line.
+
+------------------------------------------------------------------------------
+                                                           *MiniMisc.put_text()*
+                           `MiniMisc.put_text`({...})
+Print Lua objects in current buffer
+
+Parameters~
+{...} `(any)` Any number of objects to be printed each on separate line.
+
+------------------------------------------------------------------------------
+                                                      *MiniMisc.resize_window()*
+                `MiniMisc.resize_window`({win_id}, {text_width})
+Resize window to have exact number of editable columns
+
+Parameters~
+{win_id} `(number)` Window identifier (see |win_getid()|) to be resized.
+  Default: 0 for current.
+{text_width} `(number)` Number of editable columns resized window will
+  display. Default: first element of 'colorcolumn' or otherwise 'textwidth'
+  (using screen width as its default but not more than 79).
+
+------------------------------------------------------------------------------
+                                                       *MiniMisc.stat_summary()*
+                          `MiniMisc.stat_summary`({t})
+Compute summary statistics of numerical array
+
+This might be useful to compute summary of time benchmarking with
+|MiniMisc.bench_time|.
+
+Parameters~
+{t} `(table)` Array (table suitable for `ipairs`) of numbers.
+
+Return~
+`(table)` Table with summary values under following keys (may be
+  extended in the future): <maximum>, <mean>, <median>, <minimum>, <n>
+  (number of elements), <sd> (sample standard deviation).
+
+------------------------------------------------------------------------------
+                                                           *MiniMisc.tbl_head()*
+                         `MiniMisc.tbl_head`({t}, {n})
+Return "first" elements of table as decided by `pairs`
+
+Note: order of elements might vary.
+
+Parameters~
+{t} `(table)` Input table.
+{n} `(number)` Maximum number of first elements. Default: 5.
+
+Return~
+`(table)` Table with at most `n` first elements of `t` (with same keys).
+
+------------------------------------------------------------------------------
+                                                           *MiniMisc.tbl_tail()*
+                         `MiniMisc.tbl_tail`({t}, {n})
+Return "last" elements of table as decided by `pairs`
+
+This function makes two passes through elements of `t`:
+- First to count number of elements.
+- Second to construct result.
+
+Note: order of elements might vary.
+
+Parameters~
+{t} `(table)` Input table.
+{n} `(number)` Maximum number of last elements. Default: 5.
+
+Return~
+`(table)` Table with at most `n` last elements of `t` (with same keys).
+
+------------------------------------------------------------------------------
+                                                *MiniMisc.use_nested_comments()*
+                    `MiniMisc.use_nested_comments`({buf_id})
+Add possibility of nested comment leader
+
+This works by parsing 'commentstring' buffer option, extracting
+non-whitespace comment leader (symbols on the left of commented line), and
+locally modifying 'comments' option (by prepending `n:<leader>`). Does
+nothing if 'commentstring' is empty or has comment symbols both in front
+and back (like "/*%s*/").
+
+Nested comment leader added with this function is useful for formatting
+nested comments. For example, have in Lua "first-level" comments with '--'
+and "second-level" comments with '----'. With nested comment leader second
+type can be formatted with `gq` in the same way as first one.
+
+Recommended usage is with |autocmd|:
+`autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
+
+Note: for most filetypes 'commentstring' option is added only when buffer
+with this filetype is entered, so using non-current `buf_id` can not lead
+to desired effect.
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) in which function
+  will operate. Default: 0 for current.
+
+------------------------------------------------------------------------------
+                                                               *MiniMisc.zoom()*
+                      `MiniMisc.zoom`({buf_id}, {config})
+Zoom in and out of a buffer, making it full screen in a floating window
+
+This function is useful when working with multiple windows but temporarily
+needing to zoom into one to see more of the code from that buffer. Call it
+again (without arguments) to zoom out.
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) to be zoomed.
+  Default: 0 for current.
+{config} `(table)` Optional config for window (as for |nvim_open_win()|).
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

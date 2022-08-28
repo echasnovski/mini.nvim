@@ -1,12 +1,11 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Lua module for minimal session management (read, write, delete), which
---- works using |mksession| (meaning 'sessionoptions' is fully respected).
---- This is intended as a drop-in Lua replacement for session management part
---- of [mhinz/vim-startify](https://github.com/mhinz/vim-startify) (works out
---- of the box with sessions created by it). Implements both global (from
---- configured directory) and local (from current directory) sessions.
+--- Session management (read, write, delete), which works using |mksession|
+--- (meaning 'sessionoptions' is fully respected). This is intended as a
+--- drop-in Lua replacement for session management part of 'mhinz/vim-startify'
+--- (works out of the box with sessions created by it). Implements both global
+--- (from configured directory) and local (from current directory) sessions.
 ---
 --- Key design ideas:
 --- - Sessions are represented by readable files (results of applying
@@ -48,7 +47,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.sessions
 ---@tag MiniSessions
----@toc_entry Session management
 
 -- Module definition ==========================================================
 local MiniSessions = {}

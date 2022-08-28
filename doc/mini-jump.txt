@@ -1,0 +1,192 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                     *mini.jump*
+                                                                      *MiniJump*
+Smarter forward/backward jumping to a single character.
+
+Features:
+- Extend f, F, t, T to work on multiple lines.
+- Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
+  as a result of not jumping or timeout after idle time (duration
+  customizable).
+- Highlight (after customizable delay) all possible target characters and
+  stop it after some (customizable) idle time.
+- Normal, Visual, and Operator-pending (with full dot-repeat) modes are
+  supported.
+
+This module follows vim's 'ignorecase' and 'smartcase' options. When
+'ignorecase' is set, f, F, t, T will match case-insensitively. When
+'smartcase' is also set, f, F, t, T will only match lowercase
+characters case-insensitively.
+
+# Setup~
+
+This module needs a setup with `require('mini.jump').setup({})`
+(replace `{}` with your `config` table). It will create global Lua table
+`MiniJump` which you can use for scripting or manually (with
+`:lua MiniJump.*`).
+
+See |MiniJump.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minijump_config` which should have same structure as
+`MiniJump.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Highlight groups~
+
+* `MiniJump` - all possible cursor positions.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling~
+
+To disable core functionality, set `g:minijump_disable` (globally) or
+`b:minijump_disable` (for a buffer) to `v:true`. Considering high number of
+different scenarios and customization intentions, writing exact rules for
+disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                              *MiniJump.setup()*
+                           `MiniJump.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniJump.config|.
+
+Usage~
+`require('mini.jump').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                               *MiniJump.config*
+                               `MiniJump.config`
+Module config
+
+Default values:
+>
+  MiniJump.config = {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      forward = 'f',
+      backward = 'F',
+      forward_till = 't',
+      backward_till = 'T',
+      repeat_jump = ';',
+    },
+
+    -- Delay values (in ms) for different functionalities. Set any of them to
+    -- a very big number (like 10^7) to virtually disable.
+    delay = {
+      -- Delay between jump and highlighting all possible jumps
+      highlight = 250,
+
+      -- Delay between jump and automatic stop if idle (no jump is done)
+      idle_stop = 10000000,
+    },
+  }
+<
+
+------------------------------------------------------------------------------
+                                                                *MiniJump.state*
+                                `MiniJump.state`
+Data about jumping state
+
+It stores various information used in this module. All elements, except
+`jumping`, is about the latest jump. They are used as default values for
+similar arguments.
+
+Class~
+{JumpingState}
+
+Fields~
+{target} `(string)` The string to jump to.
+{backward} `(boolean)` Whether to jump backward.
+{till} `(boolean)` Whether to jump just before/after the match instead of
+  exactly on target. This includes positioning cursor past the end of
+  previous/current line. Note that with backward jump this might lead to
+  cursor being on target if can't be put past the line.
+{n_times} `(number)` Number of times to perform consecutive jumps.
+{mode} `(string)` Mode of latest jump (output of |mode()| with non-zero argument).
+{jumping} `(boolean)` Whether module is currently in "jumping mode": usage of
+  |MiniJump.smart_jump| and all mappings won't require target.
+
+Initial values:
+>
+  MiniJump.state = {
+    target = nil,
+    backward = false,
+    till = false,
+    n_times = 1,
+    mode = nil,
+    jumping = false,
+  }
+<
+
+------------------------------------------------------------------------------
+                                                               *MiniJump.jump()*
+            `MiniJump.jump`({target}, {backward}, {till}, {n_times})
+Jump to target
+
+Takes a string and jumps to its first occurrence in desired direction.
+
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
+Parameters~
+{target} `(string)` The string to jump to.
+{backward} `(boolean)` Whether to jump backward.
+{till} `(boolean)` Whether to jump just before/after the match instead of
+  exactly on target. This includes positioning cursor past the end of
+  previous/current line. Note that with backward jump this might lead to
+  cursor being on target if can't be put past the line.
+{n_times} `(number)` Number of times to perform consecutive jumps.
+
+------------------------------------------------------------------------------
+                                                         *MiniJump.smart_jump()*
+                   `MiniJump.smart_jump`({backward}, {till})
+Make smart jump
+
+If the last movement was a jump, perform another jump with the same target.
+Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
+
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
+Parameters~
+{backward} `(boolean)` Whether to jump backward.
+{till} `(boolean)` Whether to jump just before/after the match instead of
+  exactly on target. This includes positioning cursor past the end of
+  previous/current line. Note that with backward jump this might lead to
+  cursor being on target if can't be put past the line.
+
+------------------------------------------------------------------------------
+                                                          *MiniJump.expr_jump()*
+                    `MiniJump.expr_jump`({backward}, {till})
+Make expression jump
+
+Cache information about the jump and return string with command to perform
+jump. Designed to be used inside Operator-pending mapping (see
+|omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
+
+All default values are taken from |MiniJump.state| to emulate latest jump.
+
+Parameters~
+{backward} `(boolean)` Whether to jump backward.
+{till} `(boolean)` Whether to jump just before/after the match instead of
+  exactly on target. This includes positioning cursor past the end of
+  previous/current line. Note that with backward jump this might lead to
+  cursor being on target if can't be put past the line.
+
+------------------------------------------------------------------------------
+                                                       *MiniJump.stop_jumping()*
+                           `MiniJump.stop_jumping`()
+Stop jumping
+
+Removes highlights (if any) and forces the next smart jump to prompt for
+the target. Automatically called on appropriate Neovim |events|.
+
+------------------------------------------------------------------------------
+                                                     *MiniJump.on_cursormoved()*
+                          `MiniJump.on_cursormoved`()
+Act on |CursorMoved|
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

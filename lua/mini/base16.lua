@@ -1,10 +1,9 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast Lua module which implements
---- [base16](http://chriskempson.com/projects/base16/) color scheme (with
---- Copyright (C) 2012 Chris Kempson) adapated for modern Neovim 0.5 Lua
---- plugins. Extra features:
+--- Fast implementation of 'chriskempson/base16' color scheme (with Copyright
+--- (C) 2012 Chris Kempson) adapted for modern Neovim Lua plugins.
+--- Extra features:
 --- - Configurable automatic support of cterm colors (see |highlight-cterm|).
 --- - Opinionated palette generator based only on background and foreground
 ---   colors.
@@ -96,7 +95,34 @@
 ---       palette and only after that set |g:colors_name| to "myscheme".
 ---@tag mini.base16
 ---@tag MiniBase16
----@toc_entry Base16 colorscheme creation
+
+--- # Plugin colorschemes~
+---
+--- This plugin comes with several color schemes. All of them are a
+--- |MiniBase16| theme created with faster version of the following Lua code:
+--- >
+---   require('mini.base16').setup({ palette = palette, use_cterm = true })
+--- <
+--- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
+---
+--- ## minischeme~
+---
+--- Blue and yellow main colors with high contrast and saturation palette.
+--- Palettes are:
+--- - For dark 'background':
+---   `MiniBase16.mini_palette('#112641', '#e2e98f', 75)`
+--- - For light 'background':
+---   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
+---
+--- ## minicyan~
+---
+--- Cyan and grey main colors with moderate contrast and saturation palette.
+--- Palettes are:
+--- - For dark 'background':
+---   `MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)`
+--- - For light 'background':
+---   `MiniBase16.mini_palette('#C0D2D2', '#262626', 80)`
+---@tag mini-color-schemes
 
 -- Module definition ==========================================================
 local MiniBase16 = {}

@@ -1,11 +1,9 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Lua module for minimal, fast, and flexible start screen. Displayed items
---- are fully customizable both in terms of what they do and how they look
---- (with reasonable defaults). Item selection can be done using prefix query
---- with instant visual feedback. This is mostly inspired by
---- [mhinz/vim-startify](https://github.com/mhinz/vim-startify).
+--- Fast and flexible start screen. Displayed items are fully customizable both
+--- in terms of what they do and how they look (with reasonable defaults). Item
+--- selection can be done using prefix query with instant visual feedback.
 ---
 --- Key design ideas:
 --- - All available actions are defined inside items. Each item should have the
@@ -72,7 +70,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.starter
 ---@tag MiniStarter
----@toc_entry Start screen
 
 --- Example configurations
 ---

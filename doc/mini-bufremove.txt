@@ -1,0 +1,114 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                *mini.bufremove*
+                                                                 *MiniBufremove*
+Buffer removing (unshow, delete, wipeout), which saves window layout
+(opposite to builtin Neovim's commands).
+
+# Setup~
+
+This module doesn't need setup, but it can be done to improve usability.
+Setup with `require('mini.bufremove').setup({})` (replace `{}` with your
+`config` table). It will create global Lua table `MiniBufremove` which you
+can use for scripting or manually (with `:lua MiniBufremove.*`).
+
+See |MiniBufremove.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minibufremove_config`
+will have no effect here.
+
+# Notes~
+
+1. Which buffer to show in window(s) after its current buffer is removed is
+   decided by the algorithm:
+   - If alternate buffer (see |CTRL-^|) is listed (see |buflisted()|), use it.
+   - If previous listed buffer (see |bprevious|) is different, use it.
+   - Otherwise create a scratch one with `nvim_create_buf(true, true)` and use
+     it.
+
+# Disabling~
+
+To disable core functionality, set `g:minibufremove_disable` (globally) or
+`b:minibufremove_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                         *MiniBufremove.setup()*
+                        `MiniBufremove.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniBufremove.config|.
+
+Usage~
+`require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                          *MiniBufremove.config*
+                             `MiniBufremove.config`
+Module config
+
+Default values:
+>
+  MiniBufremove.config = {
+    -- Whether to set Vim's settings for buffers (allow hidden buffers)
+    set_vim_settings = true,
+  }
+<
+
+------------------------------------------------------------------------------
+                                                        *MiniBufremove.delete()*
+                   `MiniBufremove.delete`({buf_id}, {force})
+Delete buffer `buf_id` with |:bdelete| after unshowing it
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) to use. Default:
+  0 for current.
+{force} `(boolean)` Whether to ignore unsaved changes (using `!` version of
+  command). Default: `false`.
+
+Return~
+`(boolean)` Whether operation was successful.
+
+------------------------------------------------------------------------------
+                                                       *MiniBufremove.wipeout()*
+                   `MiniBufremove.wipeout`({buf_id}, {force})
+Wipeout buffer `buf_id` with |:bwipeout| after unshowing it
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) to use. Default:
+  0 for current.
+{force} `(boolean)` Whether to ignore unsaved changes (using `!` version of
+  command). Default: `false`.
+
+Return~
+`(boolean)` Whether operation was successful.
+
+------------------------------------------------------------------------------
+                                                        *MiniBufremove.unshow()*
+                        `MiniBufremove.unshow`({buf_id})
+Stop showing buffer `buf_id` in all windows
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) to use. Default:
+  0 for current.
+
+Return~
+`(boolean)` Whether operation was successful.
+
+------------------------------------------------------------------------------
+                                              *MiniBufremove.unshow_in_window()*
+                   `MiniBufremove.unshow_in_window`({win_id})
+Stop showing current buffer of window `win_id`
+
+Parameters~
+{win_id} `(number)` Window identifier (see |win_getid()|) to use.
+  Default: 0 for current.
+
+Return~
+`(boolean)` Whether operation was successful.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

@@ -1,15 +1,15 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
 -- Documentation ==============================================================
---- Minimal and fast module for smarter jumping to a single character. Inspired
---- by 'rhysd/clever-f.vim'.
+--- Smarter forward/backward jumping to a single character.
 ---
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
 --- - Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
 ---   as a result of not jumping or timeout after idle time (duration
 ---   customizable).
---- - Highlight (after customizable delay) of all possible target characters.
+--- - Highlight (after customizable delay) all possible target characters and
+---   stop it after some (customizable) idle time.
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
 ---
@@ -46,7 +46,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.jump
 ---@tag MiniJump
----@toc_entry Jump cursor to a single character
 
 ---@alias __target string The string to jump to.
 ---@alias __backward boolean Whether to jump backward.

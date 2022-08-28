@@ -1,0 +1,109 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                               *mini.cursorword*
+                                                                *MiniCursorword*
+Autohighlight word under cursor with customizable delay. Current word under
+cursor can be highlighted differently. Highlighting is triggered only if
+current cursor character is a |[:keyword:]|. "Word under cursor" is meant
+as in Vim's |<cword>|: something user would get as 'iw' text object.
+Highlighting stops in insert and terminal modes.
+
+# Setup~
+
+This module needs a setup with `require('mini.cursorword').setup({})`
+(replace `{}` with your `config` table). It will create global Lua table
+`MiniCursorword` which you can use for scripting or manually (with
+`:lua MiniCursorword.*`).
+
+See |MiniCursorword.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minicursorword_config` which should have same structure as
+`MiniCursorword.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Highlight groups~
+
+* `MiniCursorword` - highlight group of cursor word. Default: plain underline.
+* `MiniCursorwordCurrent` - highlight group of a current word under
+  cursor. It will be displayed on top of `MiniCursorword`
+  (so `:hi clear MiniCursorwordCurrent` will lead to showing
+  `MiniCursorword` highlight group). Note: To not highlight it, use
+  `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling~
+
+To disable core functionality, set `g:minicursorword_disable` (globally) or
+`b:minicursorword_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes. Note: after disabling
+there might be highlighting left; it will be removed after next
+highlighting update.
+
+Module-specific disabling:
+- Don't show highlighting if cursor is on the word that is in a blocklist
+  of current filetype. In this example, blocklist for "lua" is "local" and
+  "require" words, for "javascript" - "import":
+>
+  _G.cursorword_blocklist = function()
+    local curword = vim.fn.expand('<cword>')
+    local filetype = vim.api.nvim_buf_get_option(0, 'filetype')
+
+    -- Add any disabling global or filetype-specific logic here
+    local blocklist = {}
+    if filetype == 'lua' then
+      blocklist = { 'local', 'require' }
+    elseif filetype == 'javascript' then
+      blocklist = { 'import' }
+    end
+
+    vim.b.minicursorword_disable = vim.tbl_contains(blocklist, curword)
+  end
+
+  -- Make sure to add this autocommand *before* calling module's `setup()`.
+  vim.cmd('au CursorMoved * lua _G.cursorword_blocklist()')
+
+------------------------------------------------------------------------------
+                                                        *MiniCursorword.setup()*
+                        `MiniCursorword.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniCursorword.config|.
+
+Usage~
+`require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                         *MiniCursorword.config*
+                            `MiniCursorword.config`
+Module config
+
+Default values:
+>
+  MiniCursorword.config = {
+    -- Delay (in ms) between when cursor moved and when highlighting appeared
+    delay = 100,
+  }
+<
+
+------------------------------------------------------------------------------
+                                               *MiniCursorword.auto_highlight()*
+                       `MiniCursorword.auto_highlight`()
+Auto highlight word under cursor
+
+Designed to be used with |autocmd|. No need to use it directly,
+everything is setup in |MiniCursorword.setup|.
+
+------------------------------------------------------------------------------
+                                             *MiniCursorword.auto_unhighlight()*
+                      `MiniCursorword.auto_unhighlight`()
+Auto unhighlight word under cursor
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniCursorword.setup|.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

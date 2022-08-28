@@ -1,0 +1,147 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                    *mini.fuzzy*
+                                                                     *MiniFuzzy*
+Minimal and fast fuzzy matching.
+
+# Setup~
+
+This module doesn't need setup, but it can be done to improve usability.
+Setup with `require('mini.fuzzy').setup({})` (replace `{}` with your
+`config` table). It will create global Lua table `MiniFuzzy` which you can
+use for scripting or manually (with `:lua MiniFuzzy.*`).
+
+See |MiniFuzzy.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minifuzzy_config` which should have same structure as
+`MiniFuzzy.config`.
+See |mini.nvim-buffer-local-config| for more details.
+
+# Notes~
+
+1. Currently there is no explicit design to work with multibyte symbols,
+   but simple examples should work.
+2. Smart case is used: case insensitive if input word (which is usually a
+    user input) is all lower ase. Case sensitive otherwise.
+
+------------------------------------------------------------------------------
+                                                           *MiniFuzzy-algorithm*
+# Algorithm design~
+
+General design uses only width of found match and index of first letter
+match. No special characters or positions (like in fzy and fzf) are used.
+
+Given input `word` and target `candidate`:
+- The goal is to find matching between `word`'s letters and letters in
+  `candidate`, which minimizes certain score. It is assumed that order of
+  letters in `word` and those matched in `candidate` should be the same.
+- Matching is represented by matched positions: an array `positions` of
+  integers with length equal to number of letters in `word`. The following
+  should be always true in case of a match: `candidate`'s letter at index
+  `positions[i]` is letters[i]` for all valid `i`.
+- Matched positions are evaluated based only on two features: their width
+  (number of indexes between first and last positions) and first match
+  (index of first letter match). There is a global setting `cutoff` for
+  which all feature values greater than it can be considered "equally bad".
+- Score of matched positions is computed with following explicit formula:
+  `cutoff * min(width, cutoff) + min(first, cutoff)`. It is designed to be
+  equivalent to first comparing widths (lower is better) and then comparing
+  first match (lower is better). For example, if `word = 'time'`:
+    - '_time' (width 4) will have a better match than 't_ime' (width 5).
+    - 'time_a' (width 4, first 1) will have a better match than 'a_time'
+      (width 4, first 3).
+- Final matched positions are those which minimize score among all possible
+  matched positions of `word` and `candidate`.
+
+------------------------------------------------------------------------------
+                                                             *MiniFuzzy.setup()*
+                          `MiniFuzzy.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniFuzzy.config|.
+
+Usage~
+`require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                              *MiniFuzzy.config*
+                               `MiniFuzzy.config`
+Module config
+
+Default values:
+>
+  MiniFuzzy.config = {
+    -- Maximum allowed value of match features (width and first match). All
+    -- feature values greater than cutoff can be considered "equally bad".
+    cutoff = 100,
+  }
+<
+
+------------------------------------------------------------------------------
+                                                             *MiniFuzzy.match()*
+                     `MiniFuzzy.match`({word}, {candidate})
+Compute match data of input `word` and `candidate` strings
+
+It tries to find best match for input string `word` (usually user input)
+and string `candidate`. Returns table with elements:
+- `positions` - array with letter indexes inside `candidate` which
+  matched to corresponding letters in `word`. Or `nil` if no match.
+- `score` - positive number representing how good the match is (lower is
+  better). Or `-1` if no match.
+
+Parameters~
+{word} `(string)` Input word (usually user input).
+{candidate} `(string)` Target word (usually with which matching is done).
+
+Return~
+`(table)` Table with matching information (see function's description).
+
+------------------------------------------------------------------------------
+                                                        *MiniFuzzy.filtersort()*
+               `MiniFuzzy.filtersort`({word}, {candidate_array})
+Filter string array
+
+This leaves only those elements of input array which matched with `word`
+and sorts from best to worst matches (based on score and index in original
+array, both lower is better).
+
+Parameters~
+{word} `(string)` String which will be searched.
+{candidate_array} `(table)` Lua array of strings inside which word will be
+  searched.
+
+Return~
+`(...)` Arrays of matched candidates and their indexes in original input.
+
+------------------------------------------------------------------------------
+                                                 *MiniFuzzy.process_lsp_items()*
+                 `MiniFuzzy.process_lsp_items`({items}, {base})
+Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
+
+Parameters~
+{items} `(table)` Lua array with LSP 'textDocument/completion' response items.
+{base} `(string)` Word to complete.
+
+------------------------------------------------------------------------------
+                                              *MiniFuzzy.get_telescope_sorter()*
+                    `MiniFuzzy.get_telescope_sorter`({opts})
+Custom getter for `telescope.nvim` sorter
+
+Designed to be used as value for |telescope.defaults.file_sorter| and
+|telescope.defaults.generic_sorter| inside `setup()` call.
+
+Parameters~
+{opts} `(table)` Options (currently not used).
+
+Usage~
+>
+  require('telescope').setup({
+    defaults = {
+      generic_sorter = require('mini.fuzzy').get_telescope_sorter
+    }
+  })
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

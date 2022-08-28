@@ -1,13 +1,8 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Lua module for minimal buffer removing (unshow, delete, wipeout), which
---- saves window layout (opposite to builtin Neovim's commands). This is mostly
---- a Lua implementation of
---- [bclose.vim](https://vim.fandom.com/wiki/Deleting_a_buffer_without_closing_the_window).
---- Other alternatives:
---- - [vim-bbye](https://github.com/moll/vim-bbye)
---- - [vim-sayonara](https://github.com/mhinz/vim-sayonara)
+--- Buffer removing (unshow, delete, wipeout), which saves window layout
+--- (opposite to builtin Neovim's commands).
 ---
 --- # Setup~
 ---
@@ -39,7 +34,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.bufremove
 ---@tag MiniBufremove
----@toc_entry Remove buffers
 
 -- Module definition ==========================================================
 local MiniBufremove = {}

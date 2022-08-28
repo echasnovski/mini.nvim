@@ -1,14 +1,13 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast tabline module. General idea: show all listed buffers in
---- readable way with minimal total width. Also allow showing extra information
---- section in case of multiple vim tabpages. Inspired by
---- [ap/vim-buftabline](https://github.com/ap/vim-buftabline).
+--- Minimal and fast tabline showing listed buffers. General idea: show all
+--- listed buffers in readable way with minimal total width. Also allow showing
+--- extra information section in case of multiple vim tabpages.
 ---
 --- Features:
 --- - Buffers are listed in the order of their identifier (see |bufnr()|).
---- - Different highlight groups for "states" of buffer affecting 'buffer tabs':
+--- - Different highlight groups for "states" of buffer affecting 'buffer tabs'.
 --- - Buffer names are made unique by extending paths to files or appending
 ---   unique identifier to buffers without name.
 --- - Current buffer is displayed "optimally centered" (in center of screen
@@ -63,7 +62,6 @@
 --- |events| and `MiniTabline` |augroup|).
 ---@tag mini.tabline
 ---@tag MiniTabline
----@toc_entry Tabline
 
 -- Module definition ==========================================================
 local MiniTabline = {}

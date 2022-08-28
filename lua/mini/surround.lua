@@ -1,14 +1,14 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom somewhat minimal and fast surrounding Lua plugin. This is mostly
---- a reimplementation of the core features of 'machakann/vim-sandwich' with a
---- couple more on top (find surrounding, highlight surrounding). Can be
+--- Fast and feature-rich surrounding. This is mostly a reimplementation of the
+--- core features of 'machakann/vim-sandwich' with more on top (find
+--- surrounding, highlight surrounding, flexible customization). Can be
 --- configured to have experience similar to 'tpope/vim-surround'.
 ---
 --- Features:
 --- - Actions (all of them are dot-repeatable out of the box and respect
----   |v:count| for finding surrounding):
+---   |v:count| for searching surrounding) with configurable keymappings:
 ---     - Add surrounding with `sa` (in visual mode or on motion).
 ---     - Delete surrounding with `sd`.
 ---     - Replace surrounding with `sr`.
@@ -130,7 +130,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.surround
 ---@tag MiniSurround
----@toc_entry Surround
 
 --- Builtin surroundings~
 ---

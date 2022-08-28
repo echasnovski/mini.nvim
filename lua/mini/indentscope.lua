@@ -9,7 +9,7 @@
 --- default: minimum between cursor column and indent of cursor line).
 ---
 --- Features:
---- - Visualize scope with vertical line. It is very fast and done
+--- - Visualize scope with animated vertical line. It is very fast and done
 ---   automatically in a non-blocking way (other operations can be performed,
 ---   like moving cursor). You can customize debounce delay and animation rule.
 --- - Customization of scope computation options can be done on global level
@@ -63,7 +63,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.indentscope
 ---@tag MiniIndentscope
----@toc_entry Visualize and operate on indent scope
 
 --- Drawing of scope indicator
 ---

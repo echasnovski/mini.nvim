@@ -1,10 +1,7 @@
 -- MIT License Copyright (c) 2022 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast Lua plugin for jumping (moving cursor) within
---- visible lines via iterative label filtering. Main inspiration is a
---- "phaazon/hop.nvim" plugin, but this module has a slightly different idea
---- about how target jump spot is chosen.
+--- Jump within visible lines via iterative label filtering.
 ---
 --- Features:
 --- - Make jump by iterative filtering of possible, equally considered jump
@@ -112,7 +109,6 @@
 --- recipes.
 ---@tag mini.jump2d
 ---@tag MiniJump2d
----@toc_entry Jump within visible lines
 
 -- Module definition ==========================================================
 local MiniJump2d = {}

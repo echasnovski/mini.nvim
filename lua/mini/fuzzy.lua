@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Lua module which implements minimal and fast fuzzy matching.
+--- Minimal and fast fuzzy matching.
 ---
 --- # Setup~
 ---
@@ -25,7 +25,6 @@
 ---     user input) is all lower ase. Case sensitive otherwise.
 ---@tag mini.fuzzy
 ---@tag MiniFuzzy
----@toc_entry Fuzzy matching
 
 --- # Algorithm design~
 ---

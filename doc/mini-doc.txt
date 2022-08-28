@@ -1,0 +1,426 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                      *mini.doc*
+                                                                       *MiniDoc*
+Generation of help files from EmmyLua-like annotations
+
+Key design ideas:
+- Keep documentation next to code by writing EmmyLua-like annotation
+  comments. They will be parsed as is, so formatting should follow built-in
+  guide in |help-writing|. However, custom hooks are allowed at many
+  generation stages for more granular management of output help file.
+- Generation is done by processing a set of ordered files line by line.
+  Each line can either be considered as a part of documentation block (if
+  it matches certain configurable pattern) or not (considered to be an
+  "afterline" of documentation block). See |MiniDoc.generate()| for more
+  details.
+- Processing is done by using nested data structures (section, block, file,
+  doc) describing certain parts of help file. See |MiniDoc-data-structures|
+  for more details.
+- Project specific script can be written as plain Lua file with
+  configuratble path. See |MiniDoc.generate()| for more details.
+
+What it doesn't do:
+- It doesn't support markdown or other markup language inside annotations.
+- It doesn't use treesitter in favor of Lua string manipulation for basic
+  tasks (parsing annotations, formatting, auto-generating tags, etc.). This
+  is done to manage complexity and be dependency free.
+
+# Setup~
+
+This module needs a setup with `require('mini.doc').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniDoc`
+which you can use for scripting or manually (with `:lua MiniDoc.*`).
+
+See |MiniDoc.config| for available config settings.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minidoc_config` which should have same structure as `MiniDoc.config`.
+See |mini.nvim-buffer-local-config| for more details.
+
+# Tips~
+
+- Some settings tips that might make writing annotation comments easier:
+    - Set up appropriate 'comments' for `lua` file type to respect
+      EmmyLua-like's `---` comment leader. Value `:---,:--` seems to work.
+    - Set up appropriate 'formatoptions' (see also |fo-table|). Consider
+      adding `j`, `n`, `q`, and `r` flags.
+    - Set up appropriate 'formatlistpat' to help auto-formatting lists (if
+      `n` flag is added to 'formatoptions'). One suggestion (not entirely
+      ideal) is a value `^\s*[0-9\-\+\*]\+[\.\)]*\s\+`. This reads as 'at
+      least one special character (digit, `-`, `+`, `*`) possibly followed
+      by some punctuation (`.` or `)`) followed by at least one space is a
+      start of list item'.
+- Probably one of the most reliable resources for what is considered to be
+  best practice when using this module is this whole plugin. Look at source
+  code for the reference.
+
+# Comparisons~
+
+- 'tjdevries/tree-sitter-lua':
+    - Its key design is to use treesitter grammar to parse both Lua code
+      and annotation comments. This makes it not easy to install,
+      customize, and support.
+    - It takes more care about automating output formatting (like auto
+      indentation and line width fit). This plugin leans more to manual
+      formatting with option to supply customized post-processing hooks.
+
+# Disabling~
+
+To disable, set `g:minidoc_disable` (globally) or `b:minidoc_disable` (for
+a buffer) to `v:true`. Considering high number of different scenarios and
+customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+------------------------------------------------------------------------------
+                                                       *MiniDoc-data-structures*
+Data structures
+
+Data structures are basically arrays of other structures accompanied with
+some fields (keys with data values) and methods (keys with function
+values):
+- `Section structure` is an array of string lines describing one aspect
+  (determined by section id like '@param', '@return', '@text') of an
+  annotation subject. All lines will be used directly in help file.
+- `Block structure` is an array of sections describing one annotation
+  subject like function, table, concept.
+- `File structure` is an array of blocks describing certain file on disk.
+  Basically, file is split into consecutive blocks: annotation lines go
+  inside block, non-annotation - inside `block_afterlines` element of info.
+- `Doc structure` is an array of files describing a final help file. Each
+  string line from section (when traversed in depth-first fashion) goes
+  directly into output file.
+
+All structures have these keys:
+- Fields:
+    - `info` - contains additional information about current structure.
+      For more details see next section.
+    - `parent` - table of parent structure (if exists).
+    - `parent_index` - index of this structure in its parent's array. Useful
+      for adding to parent another structure near current one.
+    - `type` - string with structure type (section, block, file, doc).
+- Methods (use them as `x:method(args)`):
+    - `insert(self, [index,] child)` - insert `child` to `self` at position
+      `index` (optional; if not supplied, child will be appended to end).
+      Basically, a `table.insert()`, but adds `parent` and `parent_index`
+      fields to `child` while properly updating `self`.
+    - `remove(self [,index])` - remove from `self` element at position
+      `index`. Basically, a `table.remove()`, but properly updates `self`.
+    - `has_descendant(self, predicate)` - whether there is a descendant
+      (structure or string) for which `predicate` returns `true`. In case of
+      success also returns the first such descendant as second value.
+    - `has_lines(self)` - whether structure has any lines (even empty ones)
+      to be put in output file. For section structures this is equivalent to
+      `#self`, but more useful for higher order structures.
+    - `clear_lines(self)` - remove all lines from structure. As a result,
+      this structure won't contribute to output help file.
+
+Description of `info` fields per structure type:
+- `Section`:
+    - `id` - captured section identifier. Can be empty string meaning no
+      identifier is captured.
+    - `line_begin` - line number inside file at which section begins (-1 if
+      not generated from file).
+    - `line_end` - line number inside file at which section ends (-1 if not
+      generated from file).
+- `Block`:
+    - `afterlines` - array of strings which were parsed from file after
+      this annotation block (up until the next block or end of file).
+      Useful for making automated decisions about what is being documented.
+    - `line_begin` - line number inside file at which block begins  (-1 if
+      not generated from file).
+    - `line_end` - line number inside file at which block ends  (-1 if not
+      generated from file).
+- `File`:
+    - `path` - absolute path to a file (`''` if not generated from file).
+- `Doc`:
+    - `input` - array of input file paths (as in |MiniDoc.generate|).
+    - `output` - output path (as in |MiniDoc.generate|).
+    - `config` - configuration used (as in |MiniDoc.generate|).
+
+------------------------------------------------------------------------------
+                                                               *MiniDoc.setup()*
+                           `MiniDoc.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniDoc.config|.
+
+Usage~
+`require('mini.doc').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                                *MiniDoc.config*
+                                `MiniDoc.config`
+Module config
+
+Default values:
+>
+  MiniDoc.config = {
+    -- Function which extracts part of line used to denote annotation.
+    -- For more information see 'Notes' in |MiniDoc.config|.
+    annotation_extractor = function(l) return string.find(l, '^%-%-%-(%S*) ?') end,
+
+    -- Identifier of block annotation lines until first captured identifier
+    default_section_id = '@text',
+
+    -- Hooks to be applied at certain stage of document life cycle. Should
+    -- modify its input in place (and not return new one).
+    hooks = {
+      -- Applied to block before anything else
+      block_pre = --<function: infers header sections (tag and/or signature)>,
+
+      -- Applied to section before anything else
+      section_pre = --<function: replaces current aliases>,
+
+      -- Applied if section has specified captured id
+      sections = {
+        ['@alias'] = --<function: registers alias in MiniDoc.current.aliases>,
+        ['@class'] = --<function>,
+        ['@diagnostic'] = --<function: ignores any section content>,
+        -- For most typical usage see |MiniDoc.afterlines_to_code|
+        ['@eval'] = --<function: evaluates lines; replaces with their return>,
+        ['@field'] = --<function>,
+        ['@overload'] = --<function>,
+        ['@param'] = --<function>,
+        ['@private'] = --<function: registers block for removal>,
+        ['@return'] = --<function>,
+        ['@seealso'] = --<function>,
+        ['@signature'] = --<function: formats signature of documented object>,
+        ['@tag'] = --<function: turns its line in proper tag lines>,
+        ['@text'] = --<function: purposefully does nothing>,
+        ['@toc'] = --<function: clears all section lines>,
+        ['@toc_entry'] = --<function: registers lines for table of contents>,
+        ['@type'] = --<function>,
+        ['@usage'] = --<function>,
+      },
+
+      -- Applied to section after all previous steps
+      section_post = --<function: currently does nothing>,
+
+      -- Applied to block after all previous steps
+      block_post = --<function: does many things>,
+
+      -- Applied to file after all previous steps
+      file = --<function: adds separator>,
+
+      -- Applied to doc after all previous steps
+      doc = --<function: adds modeline>,
+
+      -- Applied to after output help file is written. Takes doc as argument.
+      write_post = --<function: various convenience actions>,
+    },
+
+    -- Path (relative to current directory) to script which handles project
+    -- specific help file generation (like custom input files, hooks, etc.).
+    script_path = 'scripts/minidoc.lua',
+  }
+<
+# Notes ~
+
+- `annotation_extractor` takes single string line as input. Output
+  describes what makes an input to be an annotation (if anything). It
+  should be similar to `string.find` with one capture group: start and end
+  of annotation indicator (whole part will be removed from help line) with
+  third value being string of section id (if input describes first line of
+  section; `nil` or empty string otherwise). Output should be `nil` if line
+  is not part of annotation.
+  Default value means that annotation line should:
+    - Start with `---` at first column.
+    - Any non-whitespace after `---` will be treated as new section id.
+    - Single whitespace at the start of main text will be ignored.
+- Hooks are expected to be functions. Their default values might do many
+  things which might change over time, so for more information please look
+  at source code. Some more information can be found in
+  |MiniDoc.default_hooks|.
+
+------------------------------------------------------------------------------
+                                                               *MiniDoc.current*
+                               `MiniDoc.current`
+Table with information about current state of auto-generation
+
+It is reset at the beginning and end of `MiniDoc.generate()`.
+
+At least these keys are supported:
+- {aliases} - table with keys being alias name and values - alias
+  description and single string (using `\n` to separate lines).
+- {eval_section} - input section of `@eval` section hook. Can be used for
+  information about current block, etc.
+- {toc} - array with table of contents entries. Each entry is a whole
+  `@toc_entry` section.
+
+------------------------------------------------------------------------------
+                                                         *MiniDoc.default_hooks*
+                            `MiniDoc.default_hooks`
+Default hooks
+
+This is default value of `MiniDoc.config.hooks`. Use it if only a little
+tweak is needed.
+
+Some more insight about their behavior:
+- Default inference of documented object metadata (tag and object signature
+  at the moment) is done in `block_pre`. Inference is based on string
+  pattern matching, so can lead to false results, although works in most
+  cases. It intentionally works only if first line after block has no
+  indentation and contains all necessary information to determine if
+  inference should happen.
+- Hooks for sections describing some "variable-like" object ('@class',
+  '@field', '@param') automatically enclose first word in '{}'.
+- Hooks for sections which supposed to have "type-like" data ('@field',
+  '@param', '@return', '@type') automatically enclose *first found*
+  "type-like" word and its neighbor characters in '`(<type>)`' (expect
+  false positives). Algoritm is far from being 100% correct, but seems to
+  work with present allowed type annotation. For allowed types see
+  https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
+  or, better yet, look in source code of this module.
+- Automated creation of table of contents (TOC) is done in the following way:
+    - Put section with `@toc_entry` id in the annotation block. Section's
+      lines will be registered as TOC entry.
+    - Put `@toc` section where you want to insert rendered table of
+      contents. TOC entries will be inserted on the left, references for
+      their respective tag section (only first, if present) on the right.
+      Render is done in default `doc` hook (because it should be done after
+      processing all files).
+- The `write_post` hook executes some actions convenient for iterative
+  annotations writing:
+    - Generate `:helptags` for directory containing output file.
+    - Silently reload buffer containing output file (if such exists).
+    - Display notification message about result.
+
+------------------------------------------------------------------------------
+                                                            *MiniDoc.generate()*
+                `MiniDoc.generate`({input}, {output}, {config})
+Generate help file
+
+# Algoritm~
+
+- Main parameters for help generation are an array of input file paths and
+  path to output help file.
+- Parse all inputs:
+  - For each file, lines are processed top to bottom in order to create an
+    array of documentation blocks. Each line is tested whether it is an
+    annotation by applying `MiniDoc.config.annotation_extractor`: if
+    anything is extracted, it is considered to be an annotation. Annotation
+    line goes to "current block" after removing extracted annotation
+    indicator, otherwise - to afterlines of "current block".
+  - Each block's annotation lines are processed top to bottom. If line had
+    captured section id, it is a first line of "current section" (first
+    block lines are allowed to not specify section id; by default it is
+    `@text`). All subsequent lines without captured section id go into
+    "current section".
+- Apply structure hooks (they should modify its input in place, which is
+  possible due to 'table nature' of all inputs):
+    - Each block is processed by `MiniDoc.config.hooks.block_pre`. This is a
+      designated step for auto-generation of sections from descibed
+      annotation subject (like sections with id `@tag`, `@type`).
+    - Each section is processed by `MiniDoc.config.hooks.section_pre`.
+    - Each section is processed by corresponding
+      `MiniDoc.config.hooks.sections` function (table key equals to section
+      id). This is a step where most of formatting should happen (like
+      wrap first word of `@param` section with `{` and `}`, append empty
+      line to section, etc.).
+    - Each section is processed by `MiniDoc.config.hooks.section_post`.
+    - Each block is processed by `MiniDoc.config.hooks.block_post`. This is
+      a step for processing block after formatting is done (like add first
+      line with `----` delimiter).
+    - Each file is processed by `MiniDoc.config.hooks.file`. This is a step
+      for adding any file-related data (like add first line with `====`
+      delimiter).
+    - Doc is processed by `MiniDoc.config.hooks.doc`. This is a step for
+      adding any helpfile-related data (maybe like table of contents).
+- Collect all strings from sections in depth-first fashion (equivalent to
+  nested "for all files -> for all blocks -> for all sections -> for all
+  strings -> add string to output") and write them to output file. Strings
+  can have `\n` character indicating start of new line.
+- Execute `MiniDoc.config.write_post` hook. This is useful for showing some
+  feedback and making actions involving newly updated help file (like
+  generate tags, etc.).
+
+# Project specific script~
+
+If all arguments have default `nil` values, first there is an attempt to
+source project specific script. This is basically a `luafile
+<MiniDoc.config.script_path>` with current Lua runtime while caching and
+restoring current `MiniDoc.config`. Its successful execution stops any
+further generation actions while error means proceeding generation as if no
+script was found.
+
+Typical script content might include definition of custom hooks, input and
+output files with eventual call to `require('mini.doc').generate()` (with
+or without arguments).
+
+Parameters~
+{input} `(table)` Array of file paths which will be processed in supplied
+  order. Default: all '.lua' files from current directory following by all
+  such files in these subdirectories: 'lua/', 'after/', 'colors/'. Note:
+  any 'init.lua' file is placed before other files from the same directory.
+{output} `(string)` Path for output help file. Default:
+  `doc/<current_directory>.txt` (designed to be used for generating help
+  file for plugin).
+{config} `(table)` Configuration overriding parts of |MiniDoc.config|.
+
+Return~
+`(table)` Document structure which was generated and used for output
+  help file. In case `MiniDoc.config.script_path` was successfully used,
+  this is a return from the latest call of this function.
+
+------------------------------------------------------------------------------
+                                                  *MiniDoc.afterlines_to_code()*
+                     `MiniDoc.afterlines_to_code`({struct})
+Convert afterlines to code
+
+This function is designed to be used together with `@eval` section to
+automate documentation of certain values (notable default values of a
+table). It processes afterlines based on certain directives and makes
+output looking like a code block.
+
+Most common usage is by adding the following section in your annotation:
+`@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)`
+
+# Directives ~
+Directives are special comments that are processed using Lua string pattern
+capabilities (so beware of false positives). Each directive should be put
+on its separate line. Supported directives:
+- `--minidoc_afterlines_end` denotes a line at afterlines end. Only all
+  lines before it will be considered as afterlines. Useful if there is
+  extra code in afterlines which shouldn't be used.
+- `--minidoc_replace_start <replacement>` and `--minidoc_replace_end`
+  denote lines between them which should be replaced with `<replacement>`.
+  Useful for manually changing what should be placed in output like in case
+  of replacing function body with something else.
+
+Here is an example. Suppose having these afterlines:
+>
+  --minidoc_replace_start {
+  M.config = {
+    --minidoc_replace_end
+    param_one = 1,
+    --minidoc_replace_start param_fun = --<function>
+    param_fun = function(x)
+      return x + 1
+    end
+    --minidoc_replace_end
+  }
+  --minidoc_afterlines_end
+
+  return M
+<
+
+After adding `@eval` section those will be formatted as:
+>
+  {
+    param_one = 1,
+    param_fun = --<function>
+  }
+<
+Parameters~
+{struct} `(table)` Block or section structure which after lines will be
+  converted to code.
+
+Return~
+`(string)` Single string (using `\n` to separate lines) describing
+  afterlines as code block in help file.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

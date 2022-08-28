@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2022 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Module for writing extensive Neovim plugin tests.
+--- Write and use extensive neovim plugin tests
 ---
 --- Features:
 --- - Test action is defined as a named callable entry of a table.
@@ -119,7 +119,6 @@
 --- recipes.
 ---@tag mini.test
 ---@tag MiniTest
----@toc_entry Test Neovim plugins
 
 -- Module definition ==========================================================
 local MiniTest = {}

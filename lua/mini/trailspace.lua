@@ -1,12 +1,13 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast module for working with trailing whitespace.
+--- Work with trailing whitespace
 ---
 --- Features:
---- - Highlighting is done only in modifiable buffer by default; only in Normal
----   mode; stops in Insert mode and when leaving window.
---- - Trim all trailing whitespace with |MiniTrailspace.trim()| function.
+--- - Highlighting is done only in modifiable buffer by default, only in Normal
+---   mode, and stops in Insert mode and when leaving window.
+--- - Trim all trailing whitespace with |MiniTrailspace.trim()|.
+--- - Trim all trailing empty lines with |MiniTrailspace.trim_last_lines()|.
 ---
 --- # Setup~
 ---
@@ -38,7 +39,6 @@
 --- highlighting update (see |events| and `MiniTrailspace` |augroup|).
 ---@tag mini.trailspace
 ---@tag MiniTrailspace
----@toc_entry Trailspace (highlight and remove)
 
 -- Module definition ==========================================================
 local MiniTrailspace = {}

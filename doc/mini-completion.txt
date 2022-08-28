@@ -1,0 +1,282 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                               *mini.completion*
+                                                                *MiniCompletion*
+Autocompletion and signature help plugin. Key design ideas:
+- Have an async (with customizable "debounce" delay) "two-stage chain
+  completion": first try to get completion items from LSP client (if set
+  up) and if no result, fallback to custom action.
+- Managing completion is done as much with Neovim's built-in tools as
+  possible.
+
+Features:
+- Two-stage chain completion:
+    - First stage is an LSP completion implemented via
+      |MiniCompletion.completefunc_lsp()|. It should be set up as either
+      |completefunc| or |omnifunc|. It tries to get completion items from
+      LSP client (via 'textDocument/completion' request). Custom
+      preprocessing of response items is possible (with
+      `MiniCompletion.config.lsp_completion.process_items`), for example
+      with fuzzy matching. By default items which are not snippets and
+      directly start with completed word are kept and sorted according to
+      LSP specification. Supports `additionalTextEdits`, like auto-import
+      and others (see 'Notes').
+    - If first stage is not set up or resulted into no candidates, fallback
+      action is executed. The most tested actions are Neovim's built-in
+      insert completion (see |ins-completion|).
+- Automatic display in floating window of completion item info (via
+  'completionItem/resolve' request) and signature help (with highlighting
+  of active parameter if LSP server provides such information). After
+  opening, window for signature help is fixed and is closed when there is
+  nothing to show, text is different or
+  when leaving Insert mode.
+- Automatic actions are done after some configurable amount of delay. This
+  reduces computational load and allows fast typing (completion and
+  signature help) and item selection (item info)
+- User can force two-stage completion via
+  |MiniCompletion.complete_twostage()| (by default is mapped to
+  `<C-Space>`) or fallback completion via
+  |MiniCompletion.complete_fallback()| (maped to `<M-Space>`).
+
+What it doesn't do:
+- Snippet expansion.
+- Many configurable sources.
+- Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
+  variable user expectations. See 'Helpful key mappings' for suggestions.
+
+# Setup~
+
+This module needs a setup with `require('mini.completion').setup({})`
+(replace `{}` with your `config` table). It will create global Lua table
+`MiniCompletion` which you can use for scripting or manually (with
+`:lua MiniCompletion.*`).
+
+See |MiniCompletion.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minicompletion_config` which should have same structure as
+`MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Notes~
+
+- More appropriate, albeit slightly advanced, LSP completion setup is to set
+  it not on every `BufEnter` event (default), but on every attach of LSP
+  client. To do that:
+    - Use in initial config:
+    `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
+    - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
+      `v:lua.MiniCompletion.completefunc_lsp`.
+- If you have trouble using custom (overriden) |vim.ui.input| (like from
+  'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
+  for input buffer. For example, currently for 'dressing.nvim' it can be
+  with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
+- Support of `additionalTextEdits` tries to handle both types of servers:
+    - When `additionalTextEdits` are supplied in response to
+      'textDocument/completion' request (like currently in 'pyright').
+    - When `additionalTextEdits` are supplied in response to
+      'completionItem/resolve' request (like currently in
+      'typescript-language-server'). In this case to apply edits user needs
+      to trigger such request, i.e. select completion item and wait for
+      `MiniCompletion.config.delay.info` time plus server response time.
+
+# Comparisons~
+
+- 'nvim-cmp':
+    - More complex design which allows multiple sources each in form of
+      separate plugin. `MiniCompletion` has two built in: LSP and fallback.
+    - Supports snippet expansion.
+    - Doesn't have customizable delays for basic actions.
+    - Doesn't allow fallback action.
+    - Doesn't provide signature help.
+
+# Helpful key mappings~
+
+To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
+these key mappings:
+`vim.api.nvim_set_keymap('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { noremap = true, expr = true })`
+`vim.api.nvim_set_keymap('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })`
+
+To get more consistent behavior of `<CR>`, you can use this template in
+your 'init.lua' to make customized mapping: >
+  local keys = {
+    ['cr']        = vim.api.nvim_replace_termcodes('<CR>', true, true, true),
+    ['ctrl-y']    = vim.api.nvim_replace_termcodes('<C-y>', true, true, true),
+    ['ctrl-y_cr'] = vim.api.nvim_replace_termcodes('<C-y><CR>', true, true, true),
+  }
+
+  _G.cr_action = function()
+    if vim.fn.pumvisible() ~= 0 then
+      -- If popup is visible, confirm selected item or add new line otherwise
+      local item_selected = vim.fn.complete_info()['selected'] ~= -1
+      return item_selected and keys['ctrl-y'] or keys['ctrl-y_cr']
+    else
+      -- If popup is not visible, use plain `<CR>`. You might want to customize
+      -- according to other plugins. For example, to use 'mini.pairs', replace
+      -- next line with `return require('mini.pairs').cr()`
+      return keys['cr']
+    end
+  end
+
+  vim.api.nvim_set_keymap('i', '<CR>', 'v:lua._G.cr_action()', { noremap = true, expr = true })
+<
+# Highlight groups~
+
+* `MiniCompletionActiveParameter` - highlighting of signature active parameter.
+  By default displayed as plain underline.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling~
+
+To disable, set `g:minicompletion_disable` (globally) or
+`b:minicompletion_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                        *MiniCompletion.setup()*
+                        `MiniCompletion.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniCompletion.config|.
+
+Usage~
+`require('mini.completion').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                         *MiniCompletion.config*
+                            `MiniCompletion.config`
+Module config
+
+Default values:
+>
+  MiniCompletion.config = {
+    -- Delay (debounce type, in ms) between certain Neovim event and action.
+    -- This can be used to (virtually) disable certain automatic actions by
+    -- setting very high delay time (like 10^7).
+    delay = { completion = 100, info = 100, signature = 50 },
+
+    -- Maximum dimensions of floating windows for certain actions. Action
+    -- entry should be a table with 'height' and 'width' fields.
+    window_dimensions = {
+      info = { height = 25, width = 80 },
+      signature = { height = 25, width = 80 },
+    },
+
+    -- Way of how module does LSP completion
+    lsp_completion = {
+      -- `source_func` should be one of 'completefunc' or 'omnifunc'.
+      source_func = 'completefunc',
+
+      -- `auto_setup` should be boolean indicating if LSP completion is set up
+      -- on every `BufEnter` event.
+      auto_setup = true,
+
+      -- `process_items` should be a function which takes LSP
+      -- 'textDocument/completion' response items and word to complete. Its
+      -- output should be a table of the same nature as input items. The most
+      -- common use-cases are custom filtering and sorting. You can use
+      -- default `process_items` as `MiniCompletion.default_process_items()`.
+      process_items = --<function: filters out snippets; sorts by LSP specs>,
+    },
+
+    -- Fallback action. It will always be run in Insert mode. To use Neovim's
+    -- built-in completion (see `:h ins-completion`), supply its mapping as
+    -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
+    fallback_action = --<function: like `<C-n>` completion>,
+
+    -- Module mappings. Use `''` (empty string) to disable one. Some of them
+    -- might conflict with system mappings.
+    mappings = {
+      force_twostep = '<C-Space>', -- Force two-step completion
+      force_fallback = '<A-Space>', -- Force fallback completion
+    },
+
+    -- Whether to set Vim's settings for better experience (modifies
+    -- `shortmess` and `completeopt`)
+    set_vim_settings = true,
+  }
+<
+
+------------------------------------------------------------------------------
+                                              *MiniCompletion.auto_completion()*
+                       `MiniCompletion.auto_completion`()
+Auto completion
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniCompletion.setup|.
+
+------------------------------------------------------------------------------
+                                            *MiniCompletion.complete_twostage()*
+            `MiniCompletion.complete_twostage`({fallback}, {force})
+Run two-stage completion
+
+Parameters~
+{fallback} `(boolean)` Whether to use fallback completion.
+{force} `(boolean)` Whether to force update of completion popup.
+
+------------------------------------------------------------------------------
+                                            *MiniCompletion.complete_fallback()*
+                      `MiniCompletion.complete_fallback`()
+Run fallback completion
+
+------------------------------------------------------------------------------
+                                                    *MiniCompletion.auto_info()*
+                          `MiniCompletion.auto_info`()
+Auto completion entry information
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniCompletion.setup|.
+
+------------------------------------------------------------------------------
+                                               *MiniCompletion.auto_signature()*
+                       `MiniCompletion.auto_signature`()
+Auto function signature
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniCompletion.setup|.
+
+------------------------------------------------------------------------------
+                                                         *MiniCompletion.stop()*
+                        `MiniCompletion.stop`({actions})
+Stop actions
+
+This stops currently active (because of module delay or LSP answer delay)
+actions.
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniCompletion.setup|.
+
+Parameters~
+{actions} `(table)` Array containing any of 'completion', 'info', or
+  'signature' string.
+
+------------------------------------------------------------------------------
+                                            *MiniCompletion.on_text_changed_i()*
+                      `MiniCompletion.on_text_changed_i`()
+Act on every |TextChangedI|
+
+------------------------------------------------------------------------------
+                                            *MiniCompletion.on_text_changed_p()*
+                      `MiniCompletion.on_text_changed_p`()
+Act on every |TextChangedP|
+
+------------------------------------------------------------------------------
+                                             *MiniCompletion.completefunc_lsp()*
+             `MiniCompletion.completefunc_lsp`({findstart}, {base})
+Module's |complete-function|
+
+This is the main function which enables two-stage completion. It should be
+set as one of |completefunc| or |omnifunc|.
+
+No need to use it directly, everything is setup in |MiniCompletion.setup|.
+
+------------------------------------------------------------------------------
+                                        *MiniCompletion.default_process_items()*
+            `MiniCompletion.default_process_items`({items}, {base})
+Default `MiniCompletion.config.lsp_completion.process_items`
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

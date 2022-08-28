@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Lua module with miscellaneous useful functions (can be used independently).
+--- Miscellaneous useful functions.
 ---
 --- # Setup~
 ---
@@ -16,7 +16,6 @@
 --- will have no effect here.
 ---@tag mini.misc
 ---@tag MiniMisc
----@toc_entry Miscellaneous functions
 
 -- Module definition ==========================================================
 local MiniMisc = {}

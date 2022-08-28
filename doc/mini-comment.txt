@@ -1,0 +1,137 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                  *mini.comment*
+                                                                   *MiniComment*
+Fast and familiar per-line commenting. Commenting in Normal mode respects
+|count| and is dot-repeatable. Comment structure is inferred from
+'commentstring'. Handles both tab and space indenting (but not when they
+are mixed). Allows custom hooks before and after successful commenting.
+
+What it doesn't do:
+- Block and sub-line comments. This will only support per-line commenting.
+- Configurable (from module) comment structure. Modify |commentstring|
+  instead. To enhance support for commenting in multi-language files, see
+  "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
+  option of this module (see |MiniComment.config|).
+- Handle indentation with mixed tab and space.
+- Preserve trailing whitespace in empty lines.
+
+# Setup~
+
+This module needs a setup with `require('mini.comment').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table
+`MiniComment` which you can use for scripting or manually (with
+`:lua MiniComment.*`).
+
+See |MiniComment.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.minicomment_config` which should have same structure as
+`MiniComment.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Disabling~
+
+To disable core functionality, set `g:minicomment_disable` (globally) or
+`b:minicomment_disable` (for a buffer) to `v:true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                           *MiniComment.setup()*
+                         `MiniComment.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniComment.config|.
+
+Usage~
+`require('mini.comment').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                            *MiniComment.config*
+                              `MiniComment.config`
+Module config
+
+Default values:
+>
+  MiniComment.config = {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      -- Toggle comment (like `gcip` - comment inner paragraph) for both
+      -- Normal and Visual modes
+      comment = 'gc',
+
+      -- Toggle comment on current line
+      comment_line = 'gcc',
+
+      -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+      textobject = 'gc',
+    },
+    -- Hook functions to be executed at certain stage of commenting
+    hooks = {
+      -- Before successful commenting. Does nothing by default.
+      pre = function() end,
+      -- After successful commenting. Does nothing by default.
+      post = function() end,
+    },
+  }
+<
+
+------------------------------------------------------------------------------
+                                                        *MiniComment.operator()*
+                         `MiniComment.operator`({mode})
+Main function to be mapped
+
+It is meant to be used in expression mappings (see |map-<expr>|) to enable
+dot-repeatability and commenting on range. There is no need to do this
+manually, everything is done inside |MiniComment.setup()|.
+
+It has a somewhat unintuitive logic (because of how expression mapping with
+dot-repeatability works): it should be called without arguments inside
+expression mapping and with argument when action should be performed.
+
+Parameters~
+{mode} `(string)` Optional string with 'operatorfunc' mode (see |g@|).
+
+Return~
+`(string)` 'g@' if called without argument, '' otherwise (but after
+  performing action).
+
+------------------------------------------------------------------------------
+                                                    *MiniComment.toggle_lines()*
+              `MiniComment.toggle_lines`({line_start}, {line_end})
+Toggle comments between two line numbers
+
+It uncomments if lines are comment (every line is a comment) and comments
+otherwise. It respects indentation and doesn't insert trailing
+whitespace. Toggle commenting not in visual mode is also dot-repeatable
+and respects |count|.
+
+Before successful commenting it executes `config.hooks.pre`.
+After successful commenting it executes `config.hooks.post`.
+If hook returns `false`, any further action is terminated.
+
+# Notes~
+
+1. Currently call to this function will remove marks inside written range.
+   Use |lockmarks| to preserve marks.
+
+Parameters~
+{line_start} `(number)` Start line number (inclusive from 1 to number of lines).
+{line_end} `(number)` End line number (inclusive from 1 to number of lines).
+
+------------------------------------------------------------------------------
+                                                      *MiniComment.textobject()*
+                           `MiniComment.textobject`()
+Comment textobject
+
+This selects all commented lines adjacent to cursor line (if it itself is
+commented). Designed to be used with operator mode mappings (see |mapmode-o|).
+
+Before successful textobject usage it executes `config.hooks.pre`.
+After successful textobject usage it executes `config.hooks.post`.
+If hook returns `false`, any further action is terminated.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

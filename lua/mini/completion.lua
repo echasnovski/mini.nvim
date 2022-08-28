@@ -1,9 +1,9 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Custom somewhat minimal autocompletion Lua plugin. Key design ideas:
---- - Have an async (with customizable 'debounce' delay) 'two-stage chain
----   completion': first try to get completion items from LSP client (if set
+--- Autocompletion and signature help plugin. Key design ideas:
+--- - Have an async (with customizable "debounce" delay) "two-stage chain
+---   completion": first try to get completion items from LSP client (if set
 ---   up) and if no result, fallback to custom action.
 --- - Managing completion is done as much with Neovim's built-in tools as
 ---   possible.
@@ -32,7 +32,6 @@
 --- - Automatic actions are done after some configurable amount of delay. This
 ---   reduces computational load and allows fast typing (completion and
 ---   signature help) and item selection (item info)
---- - Autoactions are triggered on Neovim's built-in events.
 --- - User can force two-stage completion via
 ---   |MiniCompletion.complete_twostage()| (by default is mapped to
 ---   `<C-Space>`) or fallback completion via
@@ -135,7 +134,6 @@
 --- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.completion
 ---@tag MiniCompletion
----@toc_entry Completion and signature help
 
 -- Overall implementation design:
 -- - Completion:

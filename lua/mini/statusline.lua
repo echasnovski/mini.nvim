@@ -1,19 +1,17 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast statusline module with opinionated default look.
---- Special features: change color depending on current mode and compact
---- version of sections activated when window width is small enough.
+--- Minimal and fast statusline with opinionated default look.
 ---
 --- Features:
---- - Built-in active mode indicator with colors.
---- - Sections can hide information when window is too narrow (specific window
----   width is configurable per section).
 --- - Define own custom statusline structure for active and inactive windows.
 ---   This is done with a function which should return string appropriate for
 ---   |statusline|. Its code should be similar to default one with structure:
 ---     - Compute string data for every section you want to be displayed.
 ---     - Combine them in groups with |MiniStatusline.combine_groups()|.
+--- - Built-in active mode indicator with colors.
+--- - Sections can hide information when window is too narrow (specific window
+---   width is configurable per section).
 ---
 --- # Dependencies~
 ---
@@ -69,7 +67,6 @@
 --- left to user. See |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.statusline
 ---@tag MiniStatusline
----@toc_entry Statusline
 
 --- Example content
 ---

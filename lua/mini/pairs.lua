@@ -1,12 +1,15 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Minimal and fast autopairs Lua module. It provides functionality to work
---- with 'paired' characters conditional on cursor's neighborhood (two
---- characters to its left and right). Its usage should be through making
---- appropriate mappings using |MiniPairs.map| or in |MiniPairs.setup| (for
---- global mapping), |MiniPairs.map_buf| (for buffer mapping). Pairs get
---- automatically registered to be recognized by `<BS>` and `<CR>`.
+--- Minimal and fast autopairs.
+---
+--- Features:
+--- - Functionality to work with 'paired' characters conditional on cursor's
+---   neighborhood (two characters to its left and right).
+--- - Usage should be through making appropriate mappings using |MiniPairs.map|
+---   or in |MiniPairs.setup| (for global mapping), |MiniPairs.map_buf| (for
+---   buffer mapping).
+--- - Pairs get automatically registered to be recognized by `<BS>` and `<CR>`.
 ---
 --- What it doesn't do:
 --- - It doesn't support multiple characters as "open" and "close" symbols. Use
@@ -71,7 +74,6 @@
 --- recipes.
 ---@tag mini.pairs
 ---@tag MiniPairs
----@toc_entry Autopairs
 
 ---@alias __neigh_pattern string Pattern for two neighborhood characters ("\r" line
 ---   start, "\n" - line end).

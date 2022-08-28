@@ -1,0 +1,220 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                 *mini.sessions*
+                                                                  *MiniSessions*
+Session management (read, write, delete), which works using |mksession|
+(meaning 'sessionoptions' is fully respected). This is intended as a
+drop-in Lua replacement for session management part of 'mhinz/vim-startify'
+(works out of the box with sessions created by it). Implements both global
+(from configured directory) and local (from current directory) sessions.
+
+Key design ideas:
+- Sessions are represented by readable files (results of applying
+  |mksession|). There are two kinds of sessions:
+    - Global: any file inside a configurable directory.
+    - Local: configurable file inside current working directory (|getcwd|).
+- All session files are detected during `MiniSessions.setup()` with session
+  names being file names (including their possible extension).
+- Store information about detected sessions in separate table
+  (|MiniSessions.detected|) and operate only on it. Meaning if this
+  information changes, there will be no effect until next detection. So to
+  avoid confusion, don't directly use |mksession| and |source| for writing
+  and reading sessions files.
+
+Features:
+- Autoread default session (local if detected, latest otherwise) if Neovim
+  was called without intention to show something else.
+- Autowrite current session before quitting Neovim.
+- Configurable severity level of all actions.
+
+# Setup~
+
+This module needs a setup with `require('mini.sessions').setup({})`
+(replace `{}` with your `config` table). It will create global Lua table
+`MiniSessions` which you can use for scripting or manually (with
+`:lua MiniSessions.*`).
+
+See |MiniSessions.config| for `config` structure and default values.
+
+This module doesn't benefit from buffer local configuration, so using
+`vim.b.minimisc_config` will have no effect here.
+
+# Disabling~
+
+To disable core functionality, set `g:minisessions_disable` (globally) or
+`b:minisessions_disable` (for a buffer) to `v:true`. Considering high
+number of different scenarios and customization intentions, writing exact
+rules for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                          *MiniSessions.setup()*
+                         `MiniSessions.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table)` Module config table. See |MiniSessions.config|.
+
+Usage~
+`require('mini.sessions').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                           *MiniSessions.config*
+                             `MiniSessions.config`
+Module config
+
+Default values:
+>
+  MiniSessions.config = {
+    -- Whether to read latest session if Neovim opened without file arguments
+    autoread = false,
+
+    -- Whether to write current session before quitting Neovim
+    autowrite = true,
+
+    -- Directory where global sessions are stored (use `''` to disable)
+    directory = --<"session" subdir of user data directory from |stdpath()|>,
+
+    -- File for local session (use `''` to disable)
+    file = 'Session.vim',
+
+    -- Whether to force possibly harmful actions (meaning depends on function)
+    force = { read = false, write = true, delete = false },
+
+    -- Hook functions for actions. Default `nil` means 'do nothing'.
+    -- Takes table with active session data as argument.
+    hooks = {
+      -- Before successful action
+      pre = { read = nil, write = nil, delete = nil },
+      -- After successful action
+      post = { read = nil, write = nil, delete = nil },
+    },
+
+    -- Whether to print session path after action
+    verbose = { read = false, write = true, delete = true },
+  }
+<
+
+------------------------------------------------------------------------------
+                                                         *MiniSessions.detected*
+                            `MiniSessions.detected`
+Table of detected sessions. Keys represent session name. Values are tables
+with session information that currently has these fields (but subject to
+change):
+- <modify_time> `(number)` modification time (see |getftime|) of session file.
+- <name> `(string)` name of session (should be equal to table key).
+- <path> `(string)` full path to session file.
+- <type> `(string)` type of session ('global' or 'local').
+
+------------------------------------------------------------------------------
+                                                           *MiniSessions.read()*
+                  `MiniSessions.read`({session_name}, {opts})
+Read detected session
+
+What it does:
+- Delete all current buffers with |bwipeout|. This is needed to correctly
+  restore buffers from target session. If `force` is not `true`, checks
+  beforehand for unsaved listed buffers and stops if there is any.
+- Source session with supplied name.
+
+Parameters~
+{session_name} `(string)` Name of detected session file to read. Default:
+  `nil` for default session: local (if detected) or latest session (see
+  |MiniSessions.get_latest|).
+{opts} `(table)` Table with options. Current allowed keys:
+  - <force> (whether to delete unsaved buffers; default:
+    `MiniSessions.config.force.read`).
+  - <verbose> (whether to print session path after action; default
+    `MiniSessions.config.verbose.read`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    with session data argument before and after successful read; overrides
+    `MiniSessions.config.hooks.pre.read` and
+    `MiniSessions.config.hooks.post.read`).
+
+------------------------------------------------------------------------------
+                                                          *MiniSessions.write()*
+                  `MiniSessions.write`({session_name}, {opts})
+Write session
+
+What it does:
+- Check if file for supplied session name already exists. If it does and
+  `force` is not `true`, then stop.
+- Write session with |mksession| to a file named `session_name`. Its
+  directory is determined based on type of session:
+    - It is at location |v:this_session| if `session_name` is `nil` and
+      there is current session.
+    - It is current working directory (|getcwd|) if `session_name` is equal
+      to `MiniSessions.config.file` (represents local session).
+    - It is `MiniSessions.config.directory` otherwise (represents global
+      session).
+- Update |MiniSessions.detected|.
+
+Parameters~
+{session_name} `(string)` Name of session file to write. Default: `nil` for
+  current session (|v:this_session|).
+{opts} `(table)` Table with options. Current allowed keys:
+  - <force> (whether to ignore existence of session file; default:
+    `MiniSessions.config.force.write`).
+  - <verbose> (whether to print session path after action; default
+    `MiniSessions.config.verbose.write`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    with session data argument before and after successful write; overrides
+    `MiniSessions.config.hooks.pre.write` and
+    `MiniSessions.config.hooks.post.write`).
+
+------------------------------------------------------------------------------
+                                                         *MiniSessions.delete()*
+                 `MiniSessions.delete`({session_name}, {opts})
+Delete detected session
+
+What it does:
+- Check if session name is a current one. If yes and `force` is not `true`,
+  then stop.
+- Delete session.
+- Update |MiniSessions.detected|.
+
+Parameters~
+{session_name} `(string)` Name of detected session file to delete. Default:
+  `nil` for name of current session (taken from |v:this_session|).
+{opts} `(table)` Table with options. Current allowed keys:
+  - <force> (whether to allow deletion of current session; default:
+    `MiniSessions.config.force.delete`).
+  - <verbose> (whether to print session path after action; default
+    `MiniSessions.config.verbose.delete`).
+  - <hooks> (a table with <pre> and <post> function hooks to be executed
+    with session data argument before and after successful delete; overrides
+    `MiniSessions.config.hooks.pre.delete` and
+    `MiniSessions.config.hooks.post.delete`).
+
+------------------------------------------------------------------------------
+                                                         *MiniSessions.select()*
+                    `MiniSessions.select`({action}, {opts})
+Select session interactively and perform action
+
+Note: this uses |vim.ui.select| function, which is present in Neovim
+starting from 0.6 version. For more user-friendly experience, override it
+(for example, with external plugins like "stevearc/dressing.nvim").
+
+Parameters~
+{action} `(string)` Action to perform. Should be one of "read" (default),
+  "write", or "delete".
+{opts} `(table)` Options for specified action.
+
+------------------------------------------------------------------------------
+                                                     *MiniSessions.get_latest()*
+                          `MiniSessions.get_latest`()
+Get name of latest detected session
+
+Latest session is the session with the latest modification time determined
+by |getftime|.
+
+Return~
+`(string|nil)` Name of latest session or `nil` if there is no sessions.
+
+------------------------------------------------------------------------------
+                                                    *MiniSessions.on_vimenter()*
+                          `MiniSessions.on_vimenter`()
+Act on |VimEnter|
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
