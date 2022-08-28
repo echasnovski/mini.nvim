@@ -52,13 +52,21 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Update module's `H.setup_config()` with type check of new setting.
     - Add default value to `Mini*.config` definition.
     - Regenerate help file.
-    - Update respective module section in 'README.md'.
+    - Update module's README in 'readmes' directory.
     - Update 'CHANGELOG.md'. In module's section of current version add line starting with `- FEATURE: Implement ...`.
 - Checklist for adding new plugin integration:
     - Update file 'lua/mini/base16.lua' in a way similar to other already added plugins:
         - Add definitions for highlight groups.
         - Add plugin entry in a list of supported plugins in help annotations.
     - Regenerate documentation (see [](#generating-help-file)).
+- Checklist for adding new module:
+    - Add Lua source code in 'lua' directory.
+    - Add tests in 'tests' directory. Use 'tests/dir-xxx' name for module-specific non-test helpers.
+    - Update 'lua/init.lua' to mention new module: both in initial table of contents and list of modules.
+    - Update 'scripts/minidoc.lua' to generate separate help file.
+    - Generate help files.
+    - Add README to 'readmes' directory.
+    - Update 'CHANGELOG.md' to mention introduction of new module.
 
 ## List of highlight groups
 

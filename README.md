@@ -6,74 +6,254 @@
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
 <!-- badges: end -->
 
-Collection of 20+ minimal, independent, and fast Lua modules dedicated to improve [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience. Think about it as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used as a separate sub-plugin without any startup and usage overhead.
+Library of 20+ independent Lua modules improving overall [Neovim](https://github.com/neovim/neovim) (version 0.5 and higher) experience with minimal effort. They all share same configuration approaches and general design principles.
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or simply star this project on Github.
+Think about this project as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used separately without any startup and usage overhead.
+
+If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or leave a Github star.
 
 ## Table of contents
 
 - [Installation](#installation)
+- [Modules](#modules)
 - [General principles](#general-principles)
 - [Plugin colorschemes](#plugin-colorschemes)
-- [Modules](#modules)
-    - [mini.ai](#miniai)
-    - [mini.base16](#minibase16)
-    - [mini.bufremove](#minibufremove)
-    - [mini.comment](#minicomment)
-    - [mini.completion](#minicompletion)
-    - [mini.cursorword](#minicursorword)
-    - [mini.doc](#minidoc)
-    - [mini.fuzzy](#minifuzzy)
-    - [mini.indentscope](#miniindentscope)
-    - [mini.jump](#minijump)
-    - [mini.jump2d](#minijump2d)
-    - [mini.misc](#minimisc)
-    - [mini.pairs](#minipairs)
-    - [mini.sessions](#minisessions)
-    - [mini.starter](#ministarter)
-    - [mini.statusline](#ministatusline)
-    - [mini.surround](#minisurround)
-    - [mini.tabline](#minitabline)
-    - [mini.test](#minitest)
-    - [mini.trailspace](#minitrailspace)
 - [Planned modules](#planned-modules)
 
 ## Installation
 
-This plugin offers two branches to install from:
+There are two branches to install from:
 
-- `main` (default) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled).
+- `main` (default, **recommended**) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled).
 - `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch.
 
-There are at least the following ways to install this plugin:
+Here are code snippets for some common installation methods:
 
 - Using [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
 
-    ```lua
-    -- Development
-    use 'echasnovski/mini.nvim'
-
-    -- Stable
-    use { 'echasnovski/mini.nvim', branch = 'stable' }
-    ```
+| Branch | Code snippet                                         |
+|--------|------------------------------------------------------|
+| Main   | `use 'echasnovski/mini.nvim'`                        |
+| Stable | `use { 'echasnovski/mini.nvim', branch = 'stable' }` |
 
 - Using [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
-    ```vim
-    " Development
-    Plug 'echasnovski/mini.nvim'
+| Branch | Code snippet                                           |
+|--------|--------------------------------------------------------|
+| Main   | `Plug 'echasnovski/mini.nvim'`                         |
+| Stable | `Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }` |
 
-    " Stable
-    Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
-    ```
+- Every module is also distributed as a standalone Git repository. Check out module's information for more details.
 
-- Each module is independent and implemented within single file. You can copy corresponding file from 'lua/mini/' directory to your '.config/nvim/lua' directory and use it from there.
-
-Don't forget to call module's `setup()` (if required) to enable its functionality.
+**Important**: don't forget to call module's `setup()` (if required) to enable its functionality.
 
 **Note**: if you are on Windows, there might be problems with too long file paths (like `error: unable to create file <some file name>: Filename too long`). Try doing one of the following:
 - Enable corresponding git global config value: `git config --system core.longpaths true`. Then try to reinstall.
 - Install plugin in other place with shorter path.
+
+## Modules
+
+---
+
+<a name='mini.ai'></a>
+### mini.ai
+
+Extend and create `a`/`i` textobjects (like in `di(` or `va"`).
+
+- It enhances some builtin textobjects (like `a(`, `a)`, `a'`, and more), creates new ones (like `a*`, `a<Space>`, `af`, `a?`, and more), and allows user to create their own (like based on treesitter, and more).
+- Supports dot-repeat, `v:count`, different search methods, consecutive application, and customization via Lua patterns or functions.
+- Has builtins for brackets, quotes, function call, argument, tag, user prompt, and any punctuation/digit/whitespace character.
+
+For video demo and quick overview see its [README](readmes/mini-ai.md). For more details see its [help file](doc/mini-ai.txt).
+
+---
+
+<a name='mini.base16'></a>
+### mini.base16
+
+Fast implementation of [chriskempson/base16](https://github.com/chriskempson/base16) theme for manually supplied palette.
+
+- Supports 30+ plugin integrations.
+- Has unique palette generator which needs only background and foreground colors.
+- Comes with several hand-picked color schemes.
+
+For video demo and quick overview see its [README](readmes/mini-base16.md). For more details see its [help file](doc/mini-base16.txt).
+
+---
+
+<a name='mini.bufremove'></a>
+### mini.bufremove
+
+Buffer removing (unshow, delete, wipeout), which saves window layout.
+
+For video demo and quick overview see its [README](readmes/mini-bufremove.md). For more details see its [help file](doc/mini-bufremove.txt).
+
+---
+
+<a name='mini.comment'></a>
+### mini.comment
+
+Fast and familiar per-line commenting.
+
+For video demo and quick overview see its [README](readmes/mini-comment.md). For more details see its [help file](doc/mini-comment.txt).
+
+---
+
+<a name='mini.completion'></a>
+### mini.completion
+
+Autocompletion and signature help plugin.
+
+- Async (with customizable 'debounce' delay) 'two-stage chain completion': first builtin LSP, then configurable fallback.
+- Has functionality for completion item info and function signature (both in floating window appearing after customizable delay).
+
+For video demo and quick overview see its [README](readmes/mini-completion.md). For more details see its [help file](doc/mini-completion.txt).
+
+---
+
+<a name='mini.cursorword'></a>
+### mini.cursorword
+
+Automatic highlighting of word under cursor (displayed after customizable delay).
+
+For video demo and quick overview see its [README](readmes/mini-cursorword.md). For more details see its [help file](doc/mini-cursorword.txt).
+
+---
+
+<a name='mini.doc'></a>
+### mini.doc
+
+Generation of help files from EmmyLua-like annotations. Allows flexible customization of output via hook functions. Used for documenting this plugin.
+
+For video demo and quick overview see its [README](readmes/mini-doc.md). For more details see its [help file](doc/mini-doc.txt).
+
+---
+
+<a name='mini.fuzzy'></a>
+### mini.fuzzy
+
+Minimal and fast fuzzy matching.
+
+For video demo and quick overview see its [README](readmes/mini-fuzzy.md). For more details see its [help file](doc/mini-fuzzy.txt).
+
+---
+
+<a name='mini.indentscope'></a>
+### mini.indentscope
+
+Visualize and operate on indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
+
+- Customizable debounce delay, animation style, and scope computation options.
+- Implements scope-related motions and textobjects.
+
+For video demo and quick overview see its [README](readmes/mini-indentscope.md). For more details see its [help file](doc/mini-indentscope.txt).
+
+---
+
+<a name='mini.jump'></a>
+### mini.jump
+
+Smarter forward/backward jumping to a single character.
+
+For video demo and quick overview see its [README](readmes/mini-jump.md). For more details see its [help file](doc/mini-jump.txt).
+
+---
+
+<a name='mini.jump2d'></a>
+### mini.jump2d
+
+Jump  within visible lines via iterative label filtering.
+
+For video demo and quick overview see its [README](readmes/mini-jump2d.md). For more details see its [help file](doc/mini-jump2d.txt).
+
+---
+
+<a name='mini.misc'></a>
+### mini.misc
+
+Miscellaneous useful functions.
+
+For video demo and quick overview see its [README](readmes/mini-misc.md). For more details see its [help file](doc/mini-misc.txt).
+
+---
+
+<a name='mini.pairs'></a>
+### mini.pairs
+
+Minimal and fast autopairs.
+
+For video demo and quick overview see its [README](readmes/mini-pairs.md). For more details see its [help file](doc/mini-pairs.txt).
+
+---
+
+<a name='mini.sessions'></a>
+### mini.sessions
+
+Session management (read, write, delete).
+
+For video demo and quick overview see its [README](readmes/mini-sessions.md). For more details see its [help file](doc/mini-sessions.txt).
+
+---
+
+<a name='mini.starter'></a>
+### mini.starter
+
+Fast and flexible start screen
+
+For video demo and quick overview see its [README](readmes/mini-starter.md). For more details see its [help file](doc/mini-starter.txt).
+
+---
+
+<a name='mini.statusline'></a>
+### mini.statusline
+
+Minimal and fast statusline module with opinionated default look.
+
+For video demo and quick overview see its [README](readmes/mini-statusline.md). For more details see its [help file](doc/mini-statusline.txt).
+
+---
+
+<a name='mini.surround'></a>
+### mini.surround
+
+Fast and feature-rich surround plugin
+
+- Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.).
+- Supports dot-repeat, `v:count`, different search methods, "last"/"next" extended mappings, customization via Lua patterns or functions, and more.
+- Has builtins for brackets, function call, tag, user prompt, and any alphanumeric/punctuation/whitespace character.
+- Has maintained configuration of setup similar to 'tpope/vim-surround'.
+
+For video demo and quick overview see its [README](readmes/mini-surround.md). For more details see its [help file](doc/mini-surround.txt).
+
+---
+
+<a name='mini.tabline'></a>
+### mini.tabline
+
+Minimal and fast tabline showing listed buffers
+
+For video demo and quick overview see its [README](readmes/mini-tabline.md). For more details see its [help file](doc/mini-tabline.txt).
+
+---
+
+<a name='mini.test'></a>
+### mini.test
+
+Write and use extensive Neovim plugin tests
+
+- Supports hierarchical tests, hooks, parametrization, filtering (like from current file or cursor position), screen tests, "busted-style" emulation, customizable reporters, and more.
+- Designed to be used with provided wrapper for managing child Neovim processes.
+
+For video demo and quick overview see its [README](readmes/mini-test.md). For more details see its [help file](doc/mini-test.txt).
+
+---
+
+<a name='mini.trailspace'></a>
+### mini.trailspace
+
+Work with trailing whitespace
+
+For video demo and quick overview see its [README](readmes/mini-trailspace.md). For more details see its [help file](doc/mini-trailspace.txt).
 
 ## General principles
 
@@ -97,838 +277,13 @@ This plugin comes with several color schemes (all of them are made with 'mini.ba
 - `minischeme` - blue and yellow main colors with high contrast and saturation palette. All examples use this colorscheme.
 - `minicyan` - cyan and grey main colors with moderate contrast and saturation palette.
 
-Activate them as regular `colorscheme` (for example, `:colorscheme minicyan`). You can see how they look in [demo of 'mini.base16'](DEMO.md#minibase16).
-
-## Modules
-
-### mini.ai
-
-Extend and create `a`/`i` textobjects (like in `di(` or `va"`). It enhances some builtin textobjects (like `a(`, `a)`, `a'`, and more), creates new ones (like `a*`, `a<Space>`, `af`, `a?`, and more), and allows user to create their own (like based on treesitter, and more). Supports dot-repeat, `v:count`, different search methods, consecutive application, and customization via Lua patterns or functions. Has builtins for brackets, quotes, function call, argument, tag, user prompt, and any punctuation/digit/whitespace character.
-
-[**DEMO of 'mini.ai'**](DEMO.md#miniai)
-
-Default `config`:
-
-```lua
-{
-  -- Table with textobject id as fields, textobject specification as values.
-  -- Also use this to disable builtin textobjects. See |MiniAi.config|.
-  custom_textobjects = nil,
-
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    -- Main textobject prefixes
-    around = 'a',
-    inside = 'i',
-
-    -- Next/last variants
-    around_next = 'an',
-    inside_next = 'in',
-    around_last = 'al',
-    inside_last = 'il',
-
-    -- Move cursor to corresponding edge of `a` textobject
-    goto_left = 'g[',
-    goto_right = 'g]',
-  },
-
-  -- Number of lines within which textobject is searched
-  n_lines = 50,
-
-  -- How to search for object (first inside current line, then inside
-  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest', 'next', 'previous', 'nearest'.
-  search_method = 'cover_or_next',
-}
-```
-
-For more information, read 'mini.ai' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [wellle/targets.vim](https://github.com/wellle/targets.vim)
-- [nvim-treesitter/nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)
-- [kana/vim-textobj-user](https://github.com/kana/vim-textobj-user)
-
-### mini.base16
-
-Fast implementation of [chriskempson/base16](https://github.com/chriskempson/base16) theme for manually supplied palette. Supports 30+ plugin integrations. Has unique palette generator which needs only background and foreground colors.
-
-[**DEMO of 'mini.base16'**](DEMO.md#minibase16)
-
-Default `config`:
-
-```lua
-{
-  -- Table with names from `base00` to `base0F` and values being strings of
-  -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
-  -- supplied in `setup()`.
-  palette = nil,
-
-  -- Whether to support cterm colors. Can be boolean, `nil` (same as
-  -- `false`), or table with cterm colors. See `setup()` documentation for
-  -- more information.
-  use_cterm = nil,
-
-  -- Plugin integrations. Use `default = false` to disable all integrations.
-  -- Also can be set per plugin (see |MiniBase16.config|).
-  plugins = { default = true },
-}
-```
-
-For more information, read 'mini.base16' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [chriskempson/base16-vim](https://github.com/chriskempson/base16-vim)
-
-### mini.bufremove
-
-Buffer removing (unshow, delete, wipeout) while saving window layout.
-
-[**DEMO of 'mini.bufremove'**](DEMO.md#minibufremove)
-
-Default `config`:
-
-```lua
-{
-  -- Whether to set Vim's settings for buffers (allow hidden buffers)
-  set_vim_settings = true,
-}
-```
-
-For more information, read 'mini.bufremove' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [mhinz/vim-sayonara](https://github.com/mhinz/vim-sayonara)
-- [moll/vim-bbye](https://github.com/moll/vim-bbye)
-
-### mini.comment
-
-Fast and familiar per-line code commenting.
-
-[**DEMO of 'mini.comment'**](DEMO.md#minicomment)
-
-Default `config`:
-
-```lua
-{
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    -- Toggle comment (like `gcip` - comment inner paragraph) for both
-    -- Normal and Visual modes
-    comment = 'gc',
-
-    -- Toggle comment on current line
-    comment_line = 'gcc',
-
-    -- Define 'comment' textobject (like `dgc` - delete whole comment block)
-    textobject = 'gc',
-  },
-  -- Hook functions to be executed at certain stage of commenting
-  hooks = {
-    -- Before successful commenting. Does nothing by default.
-    pre = function() end,
-    -- After successful commenting. Does nothing by default.
-    post = function() end,
-  },
-}
-```
-
-For more information, read 'mini.comment' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [tpope/vim-commentary](https://github.com/tpope/vim-commentary)
-- [preservim/nerdcommenter](https://github.com/preservim/nerdcommenter)
-- [b3nj5m1n/kommentary](https://github.com/b3nj5m1n/kommentary)
-- [numToStr/Comment.nvim](https://github.com/numToStr/Comment.nvim)
-
-### mini.completion
-
-Async (with customizable 'debounce' delay) 'two-stage chain completion': first builtin LSP, then configurable fallback. Also has functionality for completion item info and function signature (both in floating window appearing after customizable delay).
-
-[**DEMO of 'mini.completion'**](DEMO.md#minicompletion)
-
-Default `config`:
-
-```lua
-{
-  -- Delay (debounce type, in ms) between certain Neovim event and action.
-  -- This can be used to (virtually) disable certain automatic actions by
-  -- setting very high delay time (like 10^7).
-  delay = { completion = 100, info = 100, signature = 50 },
-
-  -- Maximum dimensions of floating windows for certain actions. Action
-  -- entry should be a table with 'height' and 'width' fields.
-  window_dimensions = {
-    info = { height = 25, width = 80 },
-    signature = { height = 25, width = 80 },
-  },
-
-  -- Way of how module does LSP completion
-  lsp_completion = {
-    -- `source_func` should be one of 'completefunc' or 'omnifunc'.
-    source_func = 'completefunc',
-
-    -- `auto_setup` should be boolean indicating if LSP completion is set up
-    -- on every `BufEnter` event.
-    auto_setup = true,
-
-    -- `process_items` should be a function which takes LSP
-    -- 'textDocument/completion' response items and word to complete. Its
-    -- output should be a table of the same nature as input items. The most
-    -- common use-cases are custom filtering and sorting. You can use
-    -- default `process_items` as `MiniCompletion.default_process_items()`.
-    process_items = --<function: filters out snippets; sorts by LSP specs>,
-  },
-
-  -- Fallback action. It will always be run in Insert mode. To use Neovim's
-  -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
-  fallback_action = --<function: like `<C-n>` completion>,
-
-  -- Module mappings. Use `''` (empty string) to disable one. Some of them
-  -- might conflict with system mappings.
-  mappings = {
-    force_twostep = '<C-Space>', -- Force two-step completion
-    force_fallback = '<A-Space>', -- Force fallback completion
-  },
-
-  -- Whether to set Vim's settings for better experience (modifies
-  -- `shortmess` and `completeopt`)
-  set_vim_settings = true,
-}
-```
-
-For more information, read 'mini.completion' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
-- [Shougo/ddc.vim](https://github.com/Shougo/ddc.vim)
-
-### mini.cursorword
-
-Automatic highlighting of word under cursor (displayed after customizable delay). Current word under cursor can be highlighted differently.
-
-[**DEMO of 'mini.cursorword'**](DEMO.md#minicursorword)
-
-Default `config`:
-
-```lua
-{
-  -- Delay (in ms) between when cursor moved and when highlighting appeared
-  delay = 100,
-}
-```
-
-For more information, read 'mini.cursorword' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [itchyny/vim-cursorword](https://github.com/itchyny/vim-cursorword)
-
-### mini.doc
-
-Generation of help files from EmmyLua-like annotations. Allows flexible customization of output via hook functions. Used for documenting this plugin.
-
-[**DEMO of 'mini.doc'**](DEMO.md#minidoc)
-
-Default `config`:
-
-```lua
-{
-  -- Lua string pattern to determine if line has documentation annotation.
-  -- First capture group should describe possible section id. Default value
-  -- means that annotation line should:
-  -- - Start with `---` at first column.
-  -- - Any non-whitespace after `---` will be treated as new section id.
-  -- - Single whitespace at the start of main text will be ignored.
-  annotation_pattern = '^%-%-%-(%S*) ?',
-
-  -- Identifier of block annotation lines until first captured identifier
-  default_section_id = '@text',
-
-  -- Hooks to be applied at certain stage of document life cycle. Should
-  -- modify its input in place (and not return new one).
-  hooks = {
-    -- Applied to block before anything else
-    block_pre = --<function: infers header sections (tag and/or signature)>,
-
-    -- Applied to section before anything else
-    section_pre = --<function: replaces current aliases>,
-
-    -- Applied if section has specified captured id
-    sections = {
-      ['@alias'] = --<function: registers alias in MiniDoc.current.aliases>,
-      ['@class'] = --<function>,
-      -- For most typical usage see |MiniDoc.afterlines_to_code|
-      ['@eval'] = --<function: evaluates lines; replaces with their return>,
-      ['@field'] = --<function>,
-      ['@param'] = --<function>,
-      ['@private'] = --<function: registers block for removal>,
-      ['@return'] = --<function>,
-      ['@seealso'] = --<function>,
-      ['@signature'] = --<function: formats signature of documented object>,
-      ['@tag'] = --<function: turns its line in proper tag lines>,
-      ['@text'] = --<function: purposefully does nothing>,
-      ['@type'] = --<function>,
-      ['@usage'] = --<function>,
-    },
-
-    -- Applied to section after all previous steps
-    section_post = --<function: currently does nothing>,
-
-    -- Applied to block after all previous steps
-    block_post = --<function: does many things>,
-
-    -- Applied to file after all previous steps
-    file = --<function: adds separator>,
-
-    -- Applied to doc after all previous steps
-    doc = --<function: adds modeline>,
-  },
-
-  -- Path (relative to current directory) to script which handles project
-  -- specific help file generation (like custom input files, hooks, etc.).
-  script_path = 'scripts/minidoc.lua',
-}
-```
-
-For more information, read 'mini.doc' section of [help file](doc/mini.txt) (which is created with this module).
-
-Plugins with similar functionality:
-
-- [tjdevries/tree-sitter-lua](https://github.com/tjdevries/tree-sitter-lua)
-
-### mini.fuzzy
-
-Functions for fast and simple fuzzy matching. It has not only functions to perform fuzzy matching of one string to others, but also a sorter for [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
-
-[**DEMO of 'mini.fuzzy'**](DEMO.md#minifuzzy)
-
-Default `config`:
-
-```lua
-{
-  -- Maximum allowed value of match features (width and first match). All
-  -- feature values greater than cutoff can be considered "equally bad".
-  cutoff = 100,
-}
-```
-
-For more information, read 'mini.fuzzy' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [nvim-telescope/telescope-fzy-native.nvim](https://github.com/nvim-telescope/telescope-fzy-native.nvim)
-
-### mini.indentscope
-
-Visualize and operate on indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
-
-[**DEMO of 'mini.indentscope'**](DEMO.md#miniindentscope)
-
-Default `config`:
-
-```lua
-{
-  draw = {
-    -- Delay (in ms) between event and start of drawing scope indicator
-    delay = 100,
-
-    -- Animation rule for scope's first drawing. A function which, given
-    -- next and total step numbers, returns wait time (in ms). See
-    -- |MiniIndentscope.gen_animation()| for builtin options. To disable
-    -- animation, use `require('mini.indentscope').gen_animation('none')`.
-    animation = --<function: implements constant 20ms between steps>,
-  },
-
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    -- Textobjects
-    object_scope = 'ii',
-    object_scope_with_border = 'ai',
-
-    -- Motions (jump to respective border line; if not present - body line)
-    goto_top = '[i',
-    goto_bottom = ']i',
-  },
-
-  -- Options which control scope computation
-  options = {
-    -- Type of scope's border: which line(s) with smaller indent to
-    -- categorize as border. Can be one of: 'both', 'top', 'bottom', 'none'.
-    border = 'both',
-
-    -- Whether to use cursor column when computing reference indent.
-    -- Useful to see incremental scopes with horizontal cursor movements.
-    indent_at_cursor = true,
-
-    -- Whether to first check input line to be a border of adjacent scope.
-    -- Use it if you want to place cursor on function header to get scope of
-    -- its body.
-    try_as_border = false,
-  },
-
-  -- Which character to use for drawing scope indicator
-  symbol = '╎',
-}
-```
-
-For more information, read 'mini.indentscope' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [lukas-reineke/indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
-- [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object)
-
-### mini.jump
-
-Minimal and fast module for smarter jumping to a single character. Initial idea and implementation by [Adam Blažek](https://github.com/xigoi).
-
-[**DEMO of 'mini.jump'**](DEMO.md#minijump)
-
-Default `config`:
-
-```lua
-{
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    forward = 'f',
-    backward = 'F',
-    forward_till = 't',
-    backward_till = 'T',
-    repeat_jump = ';',
-  },
-
-  -- Delay values (in ms) for different functionalities. Set any of them to
-  -- a very big number (like 10^7) to virtually disable.
-  delay = {
-    -- Delay between jump and highlighting all possible jumps
-    highlight = 250,
-
-    -- Delay between jump and automatic stop if idle (no jump is done)
-    idle_stop = 10000000,
-  },
-}
-```
-
-For more information, read 'mini.jump' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [rhysd/clever-f.vim](https://github.com/rhysd/clever-f.vim)
-- [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
-
-### mini.jump2d
-
-Minimal and fast Lua plugin for jumping (moving cursor) within visible lines via iterative label filtering. Supports custom jump targets (spots), labels, hooks, allowed windows and lines, and more.
-
-[**DEMO of 'mini.jump2d'**](DEMO.md#minijump2d)
-
-Default `config`:
-
-```lua
-{
-  -- Function producing jump spots (byte indexed) for a particular line.
-  -- For more information see |MiniJump2d.start|.
-  -- If `nil` (default) - use |MiniJump2d.default_spotter|
-  spotter = nil,
-
-  -- Characters used for labels of jump spots (in supplied order)
-  labels = 'abcdefghijklmnopqrstuvwxyz',
-
-  -- Which lines are used for computing spots
-  allowed_lines = {
-    blank = true, -- Blank line (not sent to spotter even if `true`)
-    cursor_before = true, -- Lines before cursor line
-    cursor_at = true, -- Cursor line
-    cursor_after = true, -- Lines after cursor line
-    fold = true, -- Start of fold (not sent to spotter even if `true`)
-  },
-
-  -- Which windows from current tabpage are used for visible lines
-  allowed_windows = {
-    current = true,
-    not_current = true,
-  },
-
-  -- Functions to be executed at certain events
-  hooks = {
-    before_start = nil, -- Before jump start
-    after_jump = nil, -- After jump was actually done
-  },
-
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    start_jumping = '<CR>',
-  },
-}
-```
-
-For more information, read 'mini.jump2d' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [phaazon/hop.nvim](https://github.com/phaazon/hop.nvim) (main inspiration behind this module)
-- [ggandor/lightspeed.nvim](https://github.com/ggandor/lightspeed.nvim)
-
-### mini.misc
-
-Collection of miscellaneous useful functions. Like `put()` and `put_text()` which print Lua objects to command line and current buffer respectively.
-
-[**DEMO of 'mini.misc'**](DEMO.md#minimisc)
-
-Default `config`:
-
-```lua
-{
-  -- Array of fields to make global (to be used as independent variables)
-  make_global = { 'put', 'put_text' },
-}
-```
-
-For more information, read 'mini.misc' section of [help file](doc/mini.txt).
-
-### mini.pairs
-
-Autopairs plugin which has minimal defaults and functionality to do per-key expression mappings.
-
-[**DEMO of 'mini.pairs'**](DEMO.md#minipairs)
-
-Default `config`:
-
-```lua
-{
-  -- In which modes mappings from this `config` should be created
-  modes = { insert = true, command = false, terminal = false },
-
-  -- Global mappings. Each right hand side should be a pair information, a
-  -- table with at least these fields (see more in |MiniPairs.map|):
-  -- - <action> - one of 'open', 'close', 'closeopen'.
-  -- - <pair> - two character string for pair to be used.
-  -- By default pair is not inserted after `\`, quotes are not recognized by
-  -- `<CR>`, `'` does not insert pair after a letter.
-  -- Only parts of tables can be tweaked (others will use these defaults).
-  mappings = {
-    ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
-    ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
-    ['{'] = { action = 'open', pair = '{}', neigh_pattern = '[^\\].' },
-
-    [')'] = { action = 'close', pair = '()', neigh_pattern = '[^\\].' },
-    [']'] = { action = 'close', pair = '[]', neigh_pattern = '[^\\].' },
-    ['}'] = { action = 'close', pair = '{}', neigh_pattern = '[^\\].' },
-
-    ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].', register = { cr = false } },
-    ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } },
-    ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
-  },
-}
-```
-
-For more information, read 'mini.pairs' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [jiangmiao/auto-pairs](https://github.com/jiangmiao/auto-pairs)
-- [windwp/nvim-autopairs](https://github.com/windwp/nvim-autopairs)
-
-### mini.sessions
-
-Session management (read, write, delete) which works using |mksession|. It was heavily inspired by 'vim-startify' and should work out of the box with sessions created by it. Works with global (from configured directory) and local (from current directory) sessions.
-
-[**DEMO of 'mini.sessions'**](DEMO.md#minisessions)
-
-Default `config`:
-
-```lua
-{
-  -- Whether to read latest session if Neovim opened without file arguments
-  autoread = false,
-
-  -- Whether to write current session before quitting Neovim
-  autowrite = true,
-
-  -- Directory where global sessions are stored (use `''` to disable)
-  directory = --<"session" subdir of user data directory from |stdpath()|>,
-
-  -- File for local session (use `''` to disable)
-  file = 'Session.vim',
-
-  -- Whether to force possibly harmful actions (meaning depends on function)
-  force = { read = false, write = true, delete = false },
-
-  -- Hook functions for actions. Default `nil` means 'do nothing'.
-  hooks = {
-    -- Before successful action
-    pre = { read = nil, write = nil, delete = nil },
-    -- After successful action
-    post = { read = nil, write = nil, delete = nil },
-  },
-
-  -- Whether to print session path after action
-  verbose = { read = false, write = true, delete = true },
-}
-```
-
-For more information, read 'mini.sessions' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [mhinz/vim-startify](https://github.com/mhinz/vim-startify)
-- [Shatur/neovim-session-manager](https://github.com/Shatur/neovim-session-manager)
-
-### mini.starter
-
-Minimal, fast, and flexible start screen. Displayed items are fully customizable both in terms of what they do and how they look (with reasonable defaults). Item selection can be done using prefix query with instant visual feedback.
-
-[**DEMO of 'mini.starter'**](DEMO.md#ministarter)
-
-Default `config`:
-
-```lua
-{
-  -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
-  -- started with intent to show something else.
-  autoopen = true,
-
-  -- Whether to evaluate action of single active item
-  evaluate_single = false,
-
-  -- Items to be displayed. Should be an array with the following elements:
-  -- - Item: table with <action>, <name>, and <section> keys.
-  -- - Function: should return one of these three categories.
-  -- - Array: elements of these three types (i.e. item, array, function).
-  -- If `nil` (default), default items will be used (see |mini.starter|).
-  items = nil,
-
-  -- Header to be displayed before items. Converted to single string via
-  -- `tostring` (use `\n` to display several lines). If function, it is
-  -- evaluated first. If `nil` (default), polite greeting will be used.
-  header = nil,
-
-  -- Footer to be displayed after items. Converted to single string via
-  -- `tostring` (use `\n` to display several lines). If function, it is
-  -- evaluated first. If `nil` (default), default usage help will be shown.
-  footer = nil,
-
-  -- Array  of functions to be applied consecutively to initial content.
-  -- Each function should take and return content for 'Starter' buffer (see
-  -- |mini.starter| and |MiniStarter.content| for more details).
-  content_hooks = nil,
-
-  -- Characters to update query. Each character will have special buffer
-  -- mapping overriding your global ones. Be careful to not add `:` as it
-  -- allows you to go into command mode.
-  query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
-}
-```
-
-For more information, read 'mini.starter' section of [help file](doc/mini.txt) (also contains example configurations similar to 'vim-startify' and 'dashboard-nvim'). For its benchmarks alongside plugins with similar functionality, see [benchmarks/starter/startup-summary.md](benchmarks/starter/startup-summary.md) (more details [here](benchmarks/starter/README.md)).
-
-Plugins with similar functionality:
-
-- [mhinz/vim-startify](https://github.com/mhinz/vim-startify)
-- [glepnir/dashboard-nvim](https://github.com/glepnir/dashboard-nvim)
-- [goolord/alpha-nvim](https://github.com/goolord/alpha-nvim)
-
-### mini.statusline
-
-Minimal and fast statusline. Has ability to use custom content supplied with concise function (using module's provided section functions) along with builtin default. For full experience needs [Nerd font](https://www.nerdfonts.com/), [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin (but works without any them).
-
-[**DEMO of 'mini.statusline'**](DEMO.md#ministatusline)
-
-Default `config`:
-
-```lua
-{
-  -- Content of statusline as functions which return statusline string. See
-  -- `:h statusline` and code of default contents (used instead of `nil`).
-  content = {
-    -- Content for active window
-    active = nil,
-    -- Content for inactive window(s)
-    inactive = nil,
-  },
-
-  -- Whether to use icons by default
-  use_icons = true,
-
-  -- Whether to set Vim's settings for statusline (make it always shown with
-  -- 'laststatus' set to 2). To use global statusline in Neovim>=0.7.0, set
-  -- this to `false` and 'laststatus' to 3.
-  set_vim_settings = true,
-}
-```
-
-For more information, read 'mini.statusline' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [hoob3rt/lualine.nvim](https://github.com/hoob3rt/lualine.nvim)
-- [NTBBloodbath/galaxyline.nvim](https://github.com/NTBBloodbath/galaxyline.nvim)
-- [famiu/feline.nvim](https://github.com/famiu/feline.nvim)
-
-### mini.surround
-
-Fast and feature-rich surround plugin. Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.). Supports dot-repeat, `v:count`, different search methods, "last"/"next" extended mappings, customization via Lua patterns or functions, and more. Has builtins for brackets, function call, tag, user prompt, and any alphanumeric/punctuation/whitespace character.
-
-[**DEMO of 'mini.surround'**](DEMO.md#minisurround)
-
-Default `config`:
-
-```lua
-{
-  -- Add custom surroundings to be used on top of builtin ones. For more
-  -- information with examples, see `:h MiniSurround.config`.
-  custom_surroundings = nil,
-
-  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
-  highlight_duration = 500,
-
-  -- Module mappings. Use `''` (empty string) to disable one.
-  mappings = {
-    add = 'sa', -- Add surrounding in Normal and Visual modes
-    delete = 'sd', -- Delete surrounding
-    find = 'sf', -- Find surrounding (to the right)
-    find_left = 'sF', -- Find surrounding (to the left)
-    highlight = 'sh', -- Highlight surrounding
-    replace = 'sr', -- Replace surrounding
-    update_n_lines = 'sn', -- Update `n_lines`
-
-    suffix_last = 'l', -- Suffix to search with "prev" method
-    suffix_next = 'n', -- Suffix to search with "next" method
-  },
-
-  -- Number of lines within which surrounding is searched
-  n_lines = 20,
-
-  -- How to search for surrounding (first inside current line, then inside
-  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
-  -- see `:h MiniSurround.config`.
-  search_method = 'cover',
-}
-```
-
-For more information, read 'mini.surround' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [tpope/vim-surround](https://github.com/tpope/vim-surround)
-- [kylechui/nvim-surround](https://github.com/kylechui/nvim-surround)
-- [machakann/vim-sandwich](https://github.com/machakann/vim-sandwich)
-
-### mini.tabline
-
-Minimal tabline which always shows listed (see `:h buflisted`) buffers. Allows showing extra information section in case of multiple vim tabpages. For full experience needs [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
-
-[**DEMO of 'mini.tabline'**](DEMO.md#minitabline)
-
-Default `config`:
-
-```lua
-{
-  -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
-  show_icons = true,
-
-  -- Whether to set Vim's settings for tabline (make it always shown and
-  -- allow hidden buffers)
-  set_vim_settings = true,
-
-  -- Where to show tabpage section in case of multiple vim tabpages.
-  -- One of 'left', 'right', 'none'.
-  tabpage_section = 'left',
-}
-```
-
-For more information, read 'mini.tabline' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [akinsho/bufferline.nvim](https://github.com/akinsho/bufferline.nvim)
-- [ap/vim-buftabline](https://github.com/ap/vim-buftabline)
-
-### mini.test
-
-Framework for writing extensive Neovim plugin tests. Supports hierarchical tests, hooks, parametrization, filtering (like from current file or cursor position), screen tests, "busted-style" emulation, customizable reporters, and more. Designed to be used with provided wrapper for managing child Neovim processes.
-
-[**DEMO of 'mini.test'**](DEMO.md#minitest)
-
-Default `config`:
-
-```lua
-{
-  -- Options for collection of test cases. See `:h MiniTest.collect()`.
-  collect = {
-    -- Temporarily emulate functions from 'busted' testing framework
-    -- (`describe`, `it`, `before_each`, `after_each`, and more)
-    emulate_busted = true,
-
-    -- Function returning array of file paths to be collected.
-    -- Default: all Lua files in 'tests' directory starting with 'test_'.
-    find_files = function()
-      return vim.fn.globpath('tests', '**/test_*.lua', true, true)
-    end,
-
-    -- Predicate function indicating if test case should be executed
-    filter_cases = function(case) return true end,
-  },
-
-  -- Options for execution of test cases. See `:h MiniTest.execute()`.
-  execute = {
-    -- Table with callable fields `start()`, `update()`, and `finish()`
-    reporter = nil,
-
-    -- Whether to stop execution after first error
-    stop_on_error = false,
-  },
-
-  -- Path (relative to current directory) to script which handles project
-  -- specific test running
-  script_path = 'scripts/minitest.lua',
-}
-```
-
-Further reading:
-- For more detailed information, read 'mini.test' section of [help file](doc/mini.txt).
-- For more hands-on introduction based on examples, see [TESTING.md](TESTING.md).
-- For more in-depth usage see [tests](tests) of this plugin.
-
-Plugins with similar functionality:
-
-- [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) ('test_harness', 'busted', 'luassert' modules)
-
-### mini.trailspace
-
-Automatic highlighting of trailing whitespace with functionality to remove it.
-
-[**DEMO of 'mini.trailspace'**](DEMO.md#minitrailspace)
-
-Default `config`:
-
-```lua
-{
-  -- Highlight only in normal buffers (ones with empty 'buftype'). This is
-  -- useful to not show trailing whitespace where it usually doesn't matter.
-  only_in_normal_buffers = true,
-}
-```
-
-For more information, read 'mini.trailspace' section of [help file](doc/mini.txt).
-
-Plugins with similar functionality:
-
-- [ntpeters/vim-better-whitespace](https://github.com/ntpeters/vim-better-whitespace)
+Activate them as regular `colorscheme` (for example, `:colorscheme minicyan`). You can see how they look in [demo of 'mini.base16'](readmes/mini-base16.md#demo).
 
 ## Planned modules
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
-- 'mini.align' - align text with respect to some separators. Something like [tommcdo/vim-lion](https://github.com/tommcdo/vim-lion).
+- 'mini.align' - align text with respect to some separators. Something like [junegunn/vim-easy-align](https://github.com/junegunn/vim-easy-align).
 - 'mini.basics' - configurable collection of options and mappings sets intended mostly for quick "up and running" Neovim config. Something like a combination of [tpope/vim-sensible](https://github.com/tpope/vim-sensible) and [tpope/vim-unimpaired](https://github.com/tpope/vim-unimpaired).
 - 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
 - 'mini.filetree' - file tree viewer. Simplified version of [kyazdani42/nvim-tree](https://github.com/kyazdani42/nvim-tree.lua).
