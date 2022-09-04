@@ -53,7 +53,28 @@ Here are code snippets for some common installation methods:
 
 ## Modules
 
----
+| Module           | Description                                 | Overview                              | Details                               |
+|------------------|---------------------------------------------|---------------------------------------|---------------------------------------|
+| mini.ai          | Extend and create `a`/`i` textobjects       | [README](readmes/mini-ai.md)          | [Help file](doc/mini-ai.txt)          |
+| mini.base16      | Base16 colorscheme creation                 | [README](readmes/mini-base16.md)      | [Help file](doc/mini-base16.txt)      |
+| mini.bufremove   | Remove buffers                              | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
+| mini.comment     | Comment                                     | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
+| mini.completion  | Completion and signature help               | [README](readmes/mini-completion.md)  | [Help file](doc/mini-completion.txt)  |
+| mini.cursorword  | Autohighlight word under cursor             | [README](readmes/mini-cursorword.md)  | [Help file](doc/mini-cursorword.txt)  |
+| mini.doc         | Generate Neovim help files                  | [README](readmes/mini-doc.md)         | [Help file](doc/mini-doc.txt)         |
+| mini.fuzzy       | Fuzzy matching                              | [README](readmes/mini-fuzzy.md)       | [Help file](doc/mini-fuzzy.txt)       |
+| mini.indentscope | Visualize and operate on indent scope       | [README](readmes/mini-indentscope.md) | [Help file](doc/mini-indentscope.txt) |
+| mini.jump        | Jump forward/backward to a single character | [README](readmes/mini-jump.md)        | [Help file](doc/mini-jump.txt)        |
+| mini.jump2d      | Jump within visible lines                   | [README](readmes/mini-jump2d.md)      | [Help file](doc/mini-jump2d.txt)      |
+| mini.misc        | Miscellaneous functions                     | [README](readmes/mini-misc.md)        | [Help file](doc/mini-misc.txt)        |
+| mini.pairs       | Autopairs                                   | [README](readmes/mini-pairs.md)       | [Help file](doc/mini-pairs.txt)       |
+| mini.sessions    | Session management                          | [README](readmes/mini-sessions.md)    | [Help file](doc/mini-sessions.txt)    |
+| mini.starter     | Start screen                                | [README](readmes/mini-starter.md)     | [Help file](doc/mini-starter.txt)     |
+| mini.statusline  | Statusline                                  | [README](readmes/mini-statusline.md)  | [Help file](doc/mini-statusline.txt)  |
+| mini.surround    | Surround actions                            | [README](readmes/mini-surround.md)    | [Help file](doc/mini-surround.txt)    |
+| mini.tabline     | Tabline                                     | [README](readmes/mini-tabline.md)     | [Help file](doc/mini-tabline.txt)     |
+| mini.test        | Test Neovim plugins                         | [README](readmes/mini-test.md)        | [Help file](doc/mini-test.txt)        |
+| mini.trailspace  | Trailspace (highlight and remove)           | [README](readmes/mini-trailspace.md)  | [Help file](doc/mini-trailspace.txt)  |
 
 <a name='mini.ai'></a>
 ### mini.ai
@@ -254,6 +275,8 @@ For video demo and quick overview see its [README](readmes/mini-test.md). For mo
 Work with trailing whitespace
 
 For video demo and quick overview see its [README](readmes/mini-trailspace.md). For more details see its [help file](doc/mini-trailspace.txt).
+
+---
 
 ## General principles
 
