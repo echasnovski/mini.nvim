@@ -47,6 +47,7 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
 ## Implementation notes
 
 - Use module's `H.get_config()` helper to get its `config`. This way allows using buffer local configuration.
+
 - Checklist for adding new config setting:
     - Add code which uses new setting.
     - Update module's `H.setup_config()` with type check of new setting.
@@ -54,11 +55,13 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Regenerate help file.
     - Update module's README in 'readmes' directory.
     - Update 'CHANGELOG.md'. In module's section of current version add line starting with `- FEATURE: Implement ...`.
+
 - Checklist for adding new plugin integration:
     - Update file 'lua/mini/base16.lua' in a way similar to other already added plugins:
         - Add definitions for highlight groups.
         - Add plugin entry in a list of supported plugins in help annotations.
     - Regenerate documentation (see [](#generating-help-file)).
+
 - Checklist for adding new module:
     - Add Lua source code in 'lua' directory.
     - Add tests in 'tests' directory. Use 'tests/dir-xxx' name for module-specific non-test helpers.
@@ -67,7 +70,21 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Generate help files.
     - Add README to 'readmes' directory.
     - Update main README to mention new module: both in table of contents and subsection.
+    - Update 'scripts/dual_sync.sh' to include new module.
     - Update 'CHANGELOG.md' to mention introduction of new module.
+    - Make standalone plugin:
+        - Create new empty GitHub repository.
+        - Create initial structure. For list of tracked files see 'scripts/dual_sync.sh'. Initially they are 'doc/mini-xxx.txt', 'lua/mini/xxx.lua', 'LICENSE', and 'readmes/mini-xxx.md' (copied to be 'README.md' in standalone repository). NOTE: Modify 'README.md' to have appropriate relative links (see patch script).
+        - Make initial commit and push.
+
+- Checklist for making release:
+    - Bump version in 'CHANGELOG.md'. Commit.
+    - Checkout to `new_release` branch and push to check in CI. Proceed only if it is successful.
+    - Make annotated tag: `git tag -a v0.xx.0 -m 'Version 0.xx.0'`. Push it.
+    - Move `stable` branch to point at new tag.
+    - Check that all CI has passed.
+    - Make GitHub release. Get description from copying entries of version's 'CHANGELOG.md' section.
+    - Use development version in 'CHANGELOG.md' ('0.(xx + 1).0.9000'). Commit.
 
 ## List of highlight groups
 

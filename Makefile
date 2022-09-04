@@ -20,3 +20,14 @@ documentation:
 
 basic_setup:
 	$(NVIM_EXEC) --headless --noplugin -u ./scripts/basic-setup_init.lua
+
+dual_sync:
+	chmod u+x scripts/dual_sync.sh && scripts/dual_sync.sh
+
+dual_log:
+	chmod u+x scripts/dual_log.sh && scripts/dual_log.sh
+
+dual_push:
+	chmod u+x scripts/dual_push.sh && scripts/dual_push.sh
+	git branch --force sync
+	rm -r dual/patches
