@@ -656,7 +656,7 @@ MiniTest.expect = {}
 MiniTest.expect.equality = function(left, right)
   if vim.deep_equal(left, right) then return true end
 
-  local context = string.format('Left: %s\nRight: %s', vim.inspect(left), vim.inspect(right))
+  local context = string.format('Left:  %s\nRight: %s', vim.inspect(left), vim.inspect(right))
   H.error_expect('equality', context)
 end
 

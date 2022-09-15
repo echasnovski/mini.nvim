@@ -609,7 +609,7 @@ end
 T['expect']['equality()/no_equality()']['work when not equal'] = function()
   local f = function() end
   local validate = function(x, y)
-    expect.error(MiniTest.expect.equality, 'equality.*Left:.*Right:', x, y)
+    expect.error(MiniTest.expect.equality, 'equality.*Left:  .*Right: ', x, y)
     expect.no_error(MiniTest.expect.no_equality, x, y)
   end
 
