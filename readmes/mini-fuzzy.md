@@ -95,6 +95,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Maximum allowed value of match features (width and first match). All
   -- feature values greater than cutoff can be considered "equally bad".

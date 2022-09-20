@@ -96,6 +96,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Highlight only in normal buffers (ones with empty 'buftype'). This is
   -- useful to not show trailing whitespace where it usually doesn't matter.

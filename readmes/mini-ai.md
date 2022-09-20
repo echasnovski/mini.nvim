@@ -115,6 +115,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Table with textobject id as fields, textobject specification as values.
   -- Also use this to disable builtin textobjects. See |MiniAi.config|.

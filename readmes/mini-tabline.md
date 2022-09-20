@@ -101,6 +101,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
   show_icons = true,

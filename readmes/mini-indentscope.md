@@ -101,6 +101,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   draw = {
     -- Delay (in ms) between event and start of drawing scope indicator

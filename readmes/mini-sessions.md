@@ -98,6 +98,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Whether to read latest session if Neovim opened without file arguments
   autoread = false,

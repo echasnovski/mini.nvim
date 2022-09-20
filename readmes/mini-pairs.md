@@ -96,6 +96,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- In which modes mappings from this `config` should be created
   modes = { insert = true, command = false, terminal = false },

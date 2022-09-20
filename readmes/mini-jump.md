@@ -99,6 +99,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {

@@ -98,6 +98,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Lua string pattern to determine if line has documentation annotation.
   -- First capture group should describe possible section id. Default value

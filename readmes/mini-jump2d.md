@@ -104,6 +104,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Function producing jump spots (byte indexed) for a particular line.
   -- For more information see |MiniJump2d.start|.

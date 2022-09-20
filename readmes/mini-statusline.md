@@ -100,6 +100,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Content of statusline as functions which return statusline string. See
   -- `:h statusline` and code of default contents (used instead of `nil`).

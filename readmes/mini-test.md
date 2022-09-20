@@ -107,6 +107,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Options for collection of test cases. See `:h MiniTest.collect()`.
   collect = {

@@ -96,6 +96,7 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
+-- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Delay (in ms) between when cursor moved and when highlighting appeared
   delay = 100,
