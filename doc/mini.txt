@@ -88,7 +88,7 @@ Table of contents:
 
 # List of modules~
 
-- |MiniAi| - Extend and create `a`/`i` textobjects (like in `di(` or
+- |MiniAi| - extend and create `a`/`i` textobjects (like in `di(` or
   `va"`). It enhances some builtin |text-objects| (like |a(|, |a)|, |a'|,
   and more), creates new ones (like `a*`, `a<Space>`, `af`, `a?`, and
   more), and allows user to create their own (like based on treesitter, and
