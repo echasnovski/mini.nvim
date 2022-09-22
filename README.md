@@ -43,8 +43,6 @@ Here are code snippets for some common installation methods:
 | Main   | `Plug 'echasnovski/mini.nvim'`                         |
 | Stable | `Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }` |
 
-- Every module is also distributed as a standalone Git repository. Check out module's information for more details.
-
 **Important**: don't forget to call module's `setup()` (if required) to enable its functionality.
 
 **Note**: if you are on Windows, there might be problems with too long file paths (like `error: unable to create file <some file name>: Filename too long`). Try doing one of the following:

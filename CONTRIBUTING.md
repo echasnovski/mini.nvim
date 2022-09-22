@@ -66,6 +66,7 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Update 'scripts/minidoc.lua' to generate separate help file.
     - Generate help files.
     - Add README to 'readmes' directory.
+    - Update main README to mention new module: both in table of contents and subsection.
     - Update 'CHANGELOG.md' to mention introduction of new module.
 
 ## List of highlight groups

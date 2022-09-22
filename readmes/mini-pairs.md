@@ -12,7 +12,7 @@ See more details in [help file](../doc/mini-pairs.txt).
 
 This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. See its repository page to learn about common design principles and configuration recipes.
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](../CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any standalone Git repositories.
+If you want to help this project grow but don't know where to start, check out [contributing guides](../CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project.
 
 ## Demo
 
