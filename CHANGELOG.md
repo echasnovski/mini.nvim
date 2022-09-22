@@ -1,5 +1,9 @@
 # Version 0.5.0.9000
 
+## mini.align
+
+Introduction of new module.
+
 ## mini.base16
 
 - FEATURE: Add support for many plugin integrations.

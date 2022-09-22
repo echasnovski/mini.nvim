@@ -1,0 +1,912 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                    *mini.align*
+                                                                     *MiniAlign*
+Align text interactively (with or without instant preview). Allows rich and
+flexible customization of both alignment rules and user interaction. Works
+with charwise, linewise, and blockwise selections in both Normal mode (on
+textobject/motion; with dot-repeat) and Visual mode.
+
+Features:
+- Alignment is done in three main steps:
+    - <Split> lines into parts based on Lua pattern(s) or user-supplied rule.
+    - <Justify> parts for certain side(s) to be same width inside columns.
+    - <Merge> parts to be lines, with customizable delimiter(s).
+  Each main step can be preceded by other steps (pre-steps) to achieve
+  highly customizable outcome. See `steps` value in |MiniAlign.config|. For
+  more details, see |MiniAlign-glossary| and |MiniAlign-algorithm|.
+- User can control alignment interactively by pressing customizable modifiers
+  (single keys representing how alignment steps and/or options should change).
+  Some of default modifiers:
+    - Press `s` to enter split Lua pattern.
+    - Press `j` to choose justification side from available ones ("left",
+      "center", "right", "none").
+    - Press `m` to enter merge delimiter.
+    - Press `f` to enter filter Lua expression to configure which parts
+      will be affected (like "align only first column").
+    - Press `i` to ignore some commonly unwanted split matches.
+    - Press `p` to pair neighboring parts so they be aligned together.
+    - Press `t` to trim whitespace from parts.
+    - Press `<BS>` (backspace) to delete some last pre-step.
+  For more details, see |MiniAlign-modifiers-builtin| and |MiniAlign-examples|.
+- Alignment can be done with instant preview (result is updated after each
+  modifier) or without it (result is shown and accepted after non-default
+  split pattern is set).
+- Every user interaction is accompanied with helper status message showing
+  relevant information about current alignment process.
+
+# Setup~
+
+This module needs a setup with `require('mini.align').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniAlign`
+which you can use for scripting or manually (with `:lua MiniAlign.*`).
+
+See |MiniAlign.config| for available config settings.
+
+You can override runtime config settings (like `config.modifiers`) locally
+to buffer inside `vim.b.minialign_config` which should have same structure
+as `MiniAlign.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons~
+
+- 'junegunn/vim-easy-align':
+    - 'mini.align' is mostly designed after 'junegunn/vim-easy-align', so
+      there are a lot of similarities.
+    - Both plugins allow users to change alignment options interactively by
+      pressing modifier keys (albeit completely different default ones).
+      'junegunn/vim-easy-align' has those modifiers fixed, while 'mini.align'
+      allows their full customization. See |MiniAlign.config| for examples.
+    - 'junegunn/vim-easy-align' is designed to treat delimiters differently
+      than other parts of strings. 'mini.align' doesn't distinguish split
+      parts from one another by design: splitting is allowed to be done
+      based on some other logic than by splitting on delimiters.
+    - 'junegunn/vim-easy-align' initially aligns by only first delimiter.
+      'mini.align' initially aligns by all delimiter.
+    - 'junegunn/vim-easy-align' implements special filtering by delimiter
+      row number. 'mini.align' has builtin filtering based on Lua code
+      supplied by user in modifier phase. See |MiniAlign.gen_step.filter|
+      and 'f' builtin modifier.
+    - 'mini.align' treats any non-registered modifier as a plain delimiter
+      pattern, while 'junegunn/vim-easy-align' does not.
+    - 'mini.align' exports core Lua function used for aligning strings
+      (|MiniAlign.align_strings()|).
+- 'godlygeek/tabular':
+    - 'godlygeek/tabular' is mostly designed around single command which is
+      customized by printing its parameters. 'mini.align' implements
+      different concept of interactive alignment through pressing
+      customizable single character modifiers.
+    - 'godlygeek/tabular' can detect region upon which alignment can be
+      desirable. 'mini.align' does not by design: use Visual selection or
+      textobject/motion to explicitly define region to align.
+
+# Disabling~
+
+To disable, set `g:minialign_disable` (globally) or `b:minialign_disable`
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+------------------------------------------------------------------------------
+                                                            *MiniAlign-glossary*
+Glossary
+
+PARTS   2d array of strings (array of arrays of strings).
+        See more in |MiniAlign.as_parts()|.
+
+ROW     First-level array of parts (like `parts[1]`).
+
+COLUMN  Array of strings, constructed from parts elements with the same
+        second-level index (like `{ parts[1][1],` `parts[2][1], ... }`).
+
+STEP    A named callable. See |MiniAlign.new_step()|. When used in terms of
+        alignment steps, callable takes two arguments: some object (parts
+        or string array) and option table.
+
+SPLIT   Process of taking array of strings and converting it into parts.
+
+JUSTIFY Process of taking parts and converting them to aligned parts (all
+        elements have same widths inside columns).
+
+MERGE   Process of taking parts and converting it back to array of strings.
+        Usually by concatenating rows into strings.
+
+REGION  Table representing region in a buffer. Fields: <from> and <to> for
+        inclusive start and end positions (<to> might be `nil` to describe
+        empty region). Each position is also a table with line <line> and
+        column <col> (both start at 1).
+
+MODE    Either charwise ("char", `v`, |charwise|), linewise ("line", `V`,
+        |linewise|) or blockwise ("block", `<C-v>`, |blockwise-visual|)
+
+------------------------------------------------------------------------------
+                                                           *MiniAlign-algorithm*
+Algorithm design
+
+There are two main processes implemented in 'mini.align': strings alignment
+and interactive region alignment. See |MiniAlign-glossary| for more information
+about used terms.
+
+Strings alignment ~
+
+Main implementation is in |MiniAlign.align_strings()|. Its input is array of
+strings and output - array of aligned strings. The process consists from three
+main steps (split, justify, merge) which can be preceded by any number of
+preliminary steps (pre-split, pre-justify, pre-merge).
+
+Algorithm:
+- <Pre-split>. Take input array of strings and consecutively apply all
+  pre-split steps (`steps.pre_split`). Each one has `(strings, opts)` signature
+  and should modify array in place.
+- <Split>. Take array of strings and convert it to parts with `steps.split()`.
+  It has `(strings, opts)` signature and should return parts.
+- <Pre-justify>. Take parts and consecutively apply all pre-justify
+  steps (`steps.pre_justify`). Each one has `(parts, opts)` signature and
+  should modify parts in place.
+- <Justify>. Take parts and apply `steps.justify()`. It has `(parts, opts)`
+  signature and should modify parts in place.
+- <Pre-merge>. Take parts and consecutively apply all pre-merge
+  steps (`steps.pre_merge`). Each one has `(parts, opts)` signature and
+  should modify parts in place.
+- <Merge>. Take parts and convert it to array of strings with `steps.merge()`.
+  It has `(parts, opts)` signature and should return array of strings.
+
+Notes:
+- All table objects are initially copied so that modification in place doesn't
+  affect workflow.
+- Default main steps are designed to be controlled via options. See
+  |MiniAlign.align_strings()| and default step entries in |MiniAlign.gen_step|.
+- All steps are guaranteed to take same option table as second argument.
+  This allows steps to "talk" to each other, i.e. earlier steps can pass data
+  to later ones.
+
+Interactive region alignment ~
+
+Interactive alignment is a main entry point for most users. It can be done
+in two flavors:
+- <Without preview>. Initiated via mapping defined in `start` of
+  `MiniAlign.config.mappings`. Alignment is accepted once split pattern becomes
+  non-default.
+- <With preview>. Initiated via mapping defined in `start_with_preview` of
+  `MiniAlign.config.mappings`. Alignment result is shown after every modifier
+  and is accepted after `<CR>` (`Enter`) is hit. Note: each preview is done by
+  applying current alignment steps and options to the initial region lines,
+  not the ones currently displaying in preview.
+
+Lifecycle (assuming default mappings):
+- <Initiate alignment>:
+    - In Normal mode type `ga` (or `gA` to show preview) followed by textobject
+      or motion defining region to be aligned.
+    - In Visual mode select region and type `ga` (or `gA` to show preview).
+  Strings contained in selected region will be used as input to
+  |MiniAlign.align_strings()|.
+  Beware of mode when selecting region: charwise (`v`), linewise (`V`), or
+  blockwise (`<C-v>`). They all behave differently.
+- <Press modifiers>. Press single keys one at a time:
+    - If pressed key is among table keys of `modifiers` table of
+      |MiniAlign.config|, its function value is executed. It usually modifies
+      some options(s) and/or affects some pre-step(s).
+    - If pressed key is not among defined modifiers, it is treated as plain
+      split pattern.
+  This process can either end by itself (usually in case of no preview and
+  non-default split pattern being set) or you can choose to end it manually.
+- <Accept or discard>. In case of active preview, accept current result by
+  pressing `<CR>`. Discard any result and return to initial regions with
+  either `<Esc>` or `<C-c>`.
+
+See more in |MiniAlign-modifiers-builtin| and |MiniAlign-examples|.
+
+Notes:
+- Visual blockwise selection works best with 'virtualedit' equal to "block"
+  or "all".
+
+------------------------------------------------------------------------------
+                                                   *MiniAlign-modifiers-builtin*
+Overview of builtin modifiers
+
+All examples assume interactive alignment with preview in linewise mode. With
+default mappings, use `V` to select lines and `gA` to initiate alignment. It
+might be helpful to copy lines into modifiable buffer and experiment yourself.
+
+Notes:
+- Any pressed key which doesn't have defined modifier will be treated as
+  plain split pattern.
+- All modifiers can be customized inside |MiniAlign.setup|. See "Modifiers"
+  section of |MiniAlign.config|.
+
+Main option modifiers ~
+
+<s> Enter split pattern (confirm prompt by pressing `<CR>`). Input is treated
+    as plain delimiter.
+
+    Before: >
+    a-b-c
+    aa-bb-cc
+<
+    After typing `s-<CR>`: >
+    a -b -c
+    aa-bb-cc
+<
+<j> Choose justify side. Prompts user (with helper message) to type single
+    character identifier of side: `l`eft, `c`enter, `r`ight, `n`one.
+
+    Before: >
+    a_b_c
+    aa_bb_cc
+<
+    After typing `_jr` (first make split by `_`): >
+     a_ b_ c
+    aa_bb_cc
+<
+<m> Enter merge delimiter (confirm prompt by pressing `<CR>`).
+
+    Before: >
+    a_b_c
+    aa_bb_cc
+<
+    After typing `_m--<CR>` (first make split by `_`): >
+    a --_--b --_--c
+    aa--_--bb--_--cc
+<
+Modifiers adding pre-steps ~
+
+<f> Enter filter expression. See more details in |MiniAlign.gen_step.filter()|.
+
+    Before: >
+    a_b_c
+    aa_bb_cc
+<
+    After typing `_fn==1<CR>` (first make split by `_`): >
+    a _b_c
+    aa_bb_cc
+<
+<i> Ignore some split matches. It modifies `split_exclude_patterns` option by
+    adding commonly wanted patterns. See more details in
+    |MiniAlign.gen_step.ignore_split()|.
+
+    Before: >
+    /* This_is_assumed_to_be_comment */
+    a"_"_b
+    aa_bb
+<
+    After typing `_i` (first make split by `_`): >
+    /* This_is_assumed_to_be_comment */
+    a"_"_b
+    aa  _bb
+<
+<p> Pair neighboring parts.
+
+    Before: >
+    a_b_c
+    aaa_bbb_ccc
+<
+    After typing `_p` (first make split by `_`): >
+    a_  b_  c
+    aaa_bbb_ccc
+<
+<t> Trim parts from whitespace on both sides (keeping indentation).
+
+    Before: >
+    a   _   b   _   c
+      aa _bb _cc
+<
+    After typing `_t` (first make split by `_`): >
+    a   _b _c
+      aa_bb_cc
+<
+Delete some last pre-step ~
+
+<BS> Delete one of the pre-steps. If there is only one kind of pre-steps,
+     remove its latest added one. If not, prompt user to choose pre-step kind
+     by entering single character: `s`plit, `j`ustify, `m`erge.
+
+     Examples:
+     - `tp<BS>` results in only "trim" step to be left.
+     - `it<BS>` prompts to choose which step to delete (pre-split or
+       pre-justify in this case).
+
+Special configurations for common splits ~
+
+<=> Use special pattern to align by a group of consecutive "=". It can be
+    preceded by any number of punctuation marks and followed by some sommon
+    punctuation characters. Trim whitespace and merge with single space.
+
+    Before: >
+    a=b
+    aa<=bb
+    aaa===bbb
+    aaaa   =   cccc
+<
+    After typing `=`: >
+    a    =   b
+    aa   <=  bb
+    aaa  === bbb
+    aaaa =   cccc
+<
+<,> Besides splitting by "," character, trim whitespace, pair neighboring
+    parts and merge with single space.
+
+    Before: >
+    a,b
+    aa,bb
+    aaa    ,    bbb
+<
+    After typing `,`: >
+    a,   b
+    aa,  bb
+    aaa, bbb
+<
+< > (Space bar) Squash consecutive whitespace into single single space (accept
+    possible indentation) and split by `%s+` pattern (keeps indentation).
+
+    Before: >
+    a b c
+      aa    bb   cc
+<
+    After typing `<Space>`: >
+      a  b  c
+      aa bb cc
+
+------------------------------------------------------------------------------
+                                                            *MiniAlign-examples*
+More complex examples to explore functionality
+
+Copy lines in modifiable buffer, initiate alignment with preview (`gAip`)
+and try typing suggested key sequences.
+These are modified examples taken from 'junegunn/vim-easy-align'.
+
+Equal sign ~
+
+Lines:
+
+# This=is=assumed=to be a comment
+"a ="
+a =
+a = 1
+bbbb = 2
+ccccccc = 3
+ccccccccccccccc
+ddd = 4
+eeee === eee = eee = eee=f
+fff = ggg += gg &&= gg
+g != hhhhhhhh == 888
+i   := 5
+i     %= 5
+i       *= 5
+j     =~ 5
+j   >= 5
+aa      =>         123
+aa <<= 123
+aa        >>= 123
+bbb               => 123
+c     => 1233123
+d   =>      123
+dddddd &&= 123
+dddddd ||= 123
+dddddd /= 123
+gg <=> ee
+
+Key sequences:
+- `=`
+- `=jc`
+- `=jr`
+- `=m!<CR>`
+- `=p`
+- `=i` (execute `:lua vim.o.commentstring = '# %s'` for full experience)
+- `=<BS>`
+- `=<BS>p`
+- `=fn==1<CR>`
+- `=<BS>fn==1<CR>t`
+- `=frow>7<CR>`
+
+
+------------------------------------------------------------------------------
+                                                             *MiniAlign.setup()*
+                          `MiniAlign.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniAlign.config|.
+
+Usage~
+`require('mini.align').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                              *MiniAlign.config*
+                               `MiniAlign.config`
+Module config
+
+Default values:
+>
+  MiniAlign.config = {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      start = 'ga',
+      start_with_preview = 'gA',
+    },
+
+    -- Modifiers changing alignment steps and/or options
+    modifiers = {
+      -- Main option modifiers
+      ['s'] = --<function: enter split pattern>,
+      ['j'] = --<function: choose justify side>,
+      ['m'] = --<function: enter merge delimiter>,
+
+      -- Modifiers adding pre-steps
+      ['f'] = --<function: filter parts by entering Lua expression>,
+      ['i'] = --<function: ignore some split matches>,
+      ['p'] = --<function: pair parts>,
+      ['t'] = --<function: trim parts>,
+
+      -- Delete some last pre-step
+      ['<BS>'] = --<function: delete some last pre-step>,
+
+      -- Special configurations for common splits
+      ['='] = --<function: enhanced setup for '='>,
+      [','] = --<function: enhanced setup for ','>,
+      [' '] = --<function: enhanced setup for ' '>,
+    },
+
+    -- Default options controlling alignment process
+    options = {
+      split_pattern = '',
+      justify_side = 'left',
+      merge_delimiter = '',
+    },
+
+    -- Default steps performing alignment (if `nil`, default is used)
+    steps = {
+      pre_split = {},
+      split = nil,
+      pre_justify = {},
+      justify = nil,
+      pre_merge = {},
+      merge = nil,
+    },
+  }
+<
+# Options ~
+
+## Modifiers ~
+
+`MiniAlign.config.modifiers` is used to define interactive user experience
+of managing alignment process. It is a table with single character keys and
+modifier function values.
+
+Each modifier function:
+- Is called when corresponding modifier key is pressed.
+- Has signature `(steps, opts)` and should modify any of its input in place.
+
+Examples:
+- Modifier function used for default 'i' modifier:
+>
+  function(steps, _)
+    table.insert(steps.pre_split, MiniAlign.gen_step.ignore_split())
+  end
+<
+- Tweak 't' modifier to use highest indentation instead of keeping it:
+>
+  require('mini.align').setup({
+    t = function(steps, _)
+      table.insert(steps.pre_justify, MiniAlign.gen_step.trim('both', 'high'))
+    end
+  })
+<
+- Tweak `j` modifier to cycle through available "justify_side" option
+  values (like in 'junegunn/vim-easy-align'):
+>
+  require('mini.align').setup({
+    modifiers = {
+      j = function(_, opts)
+        local next_option = ({
+          left = 'center', center = 'right', right = 'none', none = 'left',
+        })[opts.justify_side]
+        opts.justify_side = next_option or 'left'
+      end,
+    },
+  })
+<
+## Options ~
+
+`MiniAlign.config.options` defines default values of options used to control
+behavior of steps.
+
+Examples:
+- Set `justify_side = 'center'` to center align at initialization.
+
+For more details about options see |MiniAlign.align_strings()| and entries of
+|MiniAlign.gen_step| for default main steps.
+
+## Steps ~
+
+`MiniAlign.config.steps` defines default steps to be applied during
+alignment process.
+
+Examples:
+- Align by default only first pair of columns:
+>
+  local align = require('mini.align')
+  align.setup({
+    steps = {
+      pre_justify = { align.gen_step.filter('n == 1') }
+    },
+  })
+
+------------------------------------------------------------------------------
+                                                     *MiniAlign.align_strings()*
+             `MiniAlign.align_strings`({strings}, {opts}, {steps})
+Align strings
+
+For details about alignment process see |MiniAlign-algorithm|.
+
+Parameters~
+{strings} `(table)` Array of strings.
+{opts} `(table|nil)` Options. Its copy will be passed to steps as second
+  argument. Extended with `MiniAlign.config.options`.
+  This is a place to control default main steps:
+    - `opts.split_pattern` - Lua pattern(s) used to make split parts.
+    - `opts.split_exclude_patterns` - which split matches should be ignored.
+    - `opts.justify_side` - which direction(s) alignment should be done.
+    - `opts.justify_offsets` - offsets tweaking width of first column
+    - `opts.merge_delimiter` - which delimiter(s) to use when merging.
+  For more information see |MiniAlign.gen_step| entry for corresponding
+  default step.
+{steps} `(table|nil)` Steps. Extended with `MiniAlign.config.steps`.
+  Possible `nil` values are replaced with corresponding default steps:
+  - `split` - |MiniAlign.gen_step.default_split()|.
+  - `justify` - |MiniAlign.gen_step.default_justify()|.
+  - `merge` - |MiniAlign.gen_step.default_merge()|.
+
+------------------------------------------------------------------------------
+                                                        *MiniAlign.align_user()*
+                         `MiniAlign.align_user`({mode})
+Align current region with user-supplied steps
+
+Mostly designed to be used inside mappings.
+
+Will use |MiniAlign.align_strings()| and set the following options in `opts`:
+- `justify_offsets` - array of offsets used to achieve actual alignment of
+  a region. It is non-trivial (not array of zeros) only for charwise
+  selection: offset of first string is computed as width of prefix to the
+  left of region start.
+- `region` - current affected region (see |MiniAlign-glossary|). Can be
+  used to create more advanced steps.
+- `mode` - mode of selection (see |MiniAlign-glossary|).
+
+Parameters~
+{mode} `(string)` Selection mode. One of "char", "line", "block".
+
+------------------------------------------------------------------------------
+                                                     *MiniAlign.action_normal()*
+                   `MiniAlign.action_normal`({with_preview})
+Perfrom action in Normal mode
+
+Used in Normal mode mapping. No need to use it directly.
+
+Parameters~
+{with_preview} `(boolean|nil)` Whether to align with live preview.
+
+------------------------------------------------------------------------------
+                                                     *MiniAlign.action_visual()*
+                   `MiniAlign.action_visual`({with_preview})
+Perfrom action in Visual mode
+
+Used in Visual mode mapping. No need to use it directly.
+
+Parameters~
+{with_preview} `(boolean|nil)` Whether to align with live preview.
+
+------------------------------------------------------------------------------
+                                                          *MiniAlign.as_parts()*
+                         `MiniAlign.as_parts`({arr2d})
+Convert 2d array of strings to parts
+
+This function verifies if input is a proper 2d array of strings and adds
+methods to its copy.
+
+Class~
+{parts}
+
+Fields~
+{apply} `(function)` Takes callable `f` and applies it to every part.
+  Callable should have signature `(s, data)`: `s` is a string part,
+  `data` - table with its data (<row> has row number, <col> has column number).
+  Returns new 2d array.
+
+{apply_inplace} `(function)` Takes callable `f` and applies it to every part.
+  Should have same signature as in `apply` method. Outputs (should all be
+  strings) are assigned in place to a corresponding parts element. Returns
+  parts itself to enable method chaining.
+
+{get_dims} `(function)` Return dimensions of parts array: a table with
+  <row> and <col> keys having number of rows and number of columns (maximum
+  number of elements across all rows).
+
+{group} `(function)` Concatenate neighboring strings based on supplied
+  boolean mask and direction (one of "left", default, or "right"). Has
+  signature `(mask, direction)` and modifies parts in place. Returns parts
+  itself to enable method chaining.
+  Example:
+  - Parts: { { "a", "b", "c" }, { "d", "e" }, { "f" } }
+  - Mask: { { false, false, true }, { true, false }, { false } }
+  - Result for direction "left":  { { "abc" },    { "d", "e" }, { "f" } }
+  - Result for direction "right": { { "ab","c" }, { "de" },     { "f" } }
+
+{pair} `(function)` Concatenate neighboring element pairs. Takes
+  `direction` as input (one of "left", default, or "right") and applies
+  `group()` for an alternating mask.
+  Example:
+  - Parts: { { "a", "b", "c" }, { "d", "e" }, { "f" } }
+  - Result for direction "left":  { { "ab", "c" }, { "de" }, { "f" } }
+  - Result for direction "right": { { "a", "bc" }, { "de" }, { "f" } }
+
+{slice_col} `(function)` Return column with input index `j`. Note: it might
+  not be an array if rows have unequal number of columns.
+
+{slice_row} `(function)` Return row with input index `i`.
+
+{trim} `(function)` Trim elements whitespace. Has signature `(direction, indent)`
+  and modifies parts in place. Returns parts itself to enable method chaining.
+  - Possible values of `direction`: "both" (default), "left", "right",
+  "none". Defines from which side whitespaces should be removed.
+  - Possible values of `indent`: "keep" (default), "low", "high", "remove".
+  Defines what to do with possible indent (left whitespace of first string
+  in a row). Value "keep" keeps it; "low" makes all indent equal to the
+  lowest across rows; "high" - highest across rows; "remove" - removes indent.
+
+Usage~
+>
+  parts = MiniAlign.as_parts({ { 'a', 'b' }, { 'c' } })
+  print(vim.inspect(parts.get_dims())) -- Should be { row = 2, col = 2 }
+
+  parts.apply_inplace(function(s, data)
+    return ' ' .. data.row .. s .. data.col .. ' '
+  end)
+  print(vim.inspect(parts)) -- Should be { { ' 1a1 ', ' 1b2 ' }, { ' 2c1 ' } }
+
+  parts.trim('both', 'remove').pair()
+  print(vim.inspect(parts)) -- Should be { { '1a11b2' }, { '2c1' } }
+
+------------------------------------------------------------------------------
+                                                          *MiniAlign.new_step()*
+                     `MiniAlign.new_step`({name}, {action})
+Create step
+
+A step is basically a named callable object. Having a name bundled with
+some action powers helper status message during interactive alignment process.
+
+Parameters~
+{name} `(string)` Step name.
+{action} `(function|table)` Step action. Should be a callable object
+  (see |vim.is_callable()|).
+
+Return~
+`(table)` A table with keys: <name> with `name` argument, <action> with `action`.
+
+------------------------------------------------------------------------------
+                                                            *MiniAlign.gen_step*
+                              `MiniAlign.gen_step`
+Generate common action steps
+
+This is a table with function elements. Call to actually get step.
+
+Each step action is a function that has signature `(object, opts)`, where
+`object` is either parts or array of strings (depends on which stage of
+alignment process it is assumed to be applied) and `opts` is table of options.
+
+Outputs of elements named `default_*` are used as default corresponding main
+step (split, justify, merge). Behavior of all of them depend on values from
+supplied options (second argument).
+
+Outputs of other elements depend on both step generator input values and
+options supplied at execution. This design is mostly because their output
+can be used several times in pre-steps.
+
+Usage~
+>
+  local align = require('mini.align')
+  align.setup({
+    modifiers = {
+      -- Use 'T' modifier to remove both whitespace and indent
+      T = function(steps, _)
+        table.insert(steps.pre_justify, align.gen_step.trim('both', 'remove'))
+      end,
+    },
+    options = {
+      -- By default align "right", "left", "right", "left", ...
+      justify_side = { 'right', 'left' },
+    },
+    steps = {
+      -- Align by default only first pair of columns
+      pre_justify = { align.gen_step.filter('n == 1') },
+    },
+  })
+
+------------------------------------------------------------------------------
+                                            *MiniAlign.gen_step.default_split()*
+                      `MiniAlign.gen_step.default_split`()
+Generate default split step
+
+Output splits strings using matches of Lua pattern(s) from `split_pattern`
+option which are not dismissed by `split_exclude_patterns` option.
+
+Outline of how single string is split:
+- Convert `split_pattern` option to array of strings (string is converted
+  as one-element array). This array will be recycled in case there are more
+  split matches than in converted `split_pattern` array (which almost always).
+- Find all forbidden spans (intervals inside string) - all matches of all
+  patterns in `split_exclude_patterns`.
+- Find match for the next pattern. If it is not inside any forbidden span,
+  add preceding unmatched substring and matched split as two parts. Repeat
+  with the next pattern.
+- If no pattern match is found, add the rest of string as final part.
+
+Output uses following options (as part second argument, `opts` table):
+- <split_pattern> - string or array of strings used to detect split matches
+  and create parts. Default: `''` meaning no matches (whole string is used
+  as part). Examples: `'%s+'`, `{ '<', '>' }`.
+- <split_exclude_patterns> - array of strings defining which regions to
+  exclude from being matched. Default: `{}`. Examples: `{ '".-"', '^%s*#.*' }`.
+
+Return~
+`(table)` A step named "split" and with appropriate callable action.
+
+See also~
+|MiniAlign.gen_step.ignore_split()| heavily uses `split_exclude_patterns`.
+
+------------------------------------------------------------------------------
+                                          *MiniAlign.gen_step.default_justify()*
+                     `MiniAlign.gen_step.default_justify`()
+Generate default justify step
+
+Output makes column elements of string parts have equal width by adding
+left and/or right whitespace padding. Which side(s) to pad is defined by
+`justify_side` option. Width of first column can be tweaked with `justify_offsets`
+option.
+
+Outline of how parts are justified:
+- Convert `justify_side` option to array of strings (single string is
+  converted as one-element array). Recycle this array to have length equal
+  to number of columns in parts.
+- For all columns compute maximum width of strings from it (add offsets from
+  `justify_offsets` to first column widths). Note: for left alignment, width
+  of last row element does not affect column width. This is mainly because
+  it won't be padded and helps dealing with "no single match" lines.
+- Make all elements have same width inside column by adding appropriate
+  amount of whitespace. Which side(s) to add is controlled by the corresponding
+  `justify_side` array element. Note: padding is done with spaces which
+  might conflict with tab indentation.
+
+Output uses following options (as part second argument, `opts` table):
+- <justify_side> - string or array of strings. Each element can be one of
+  "left" (pad right side), "center" (pad both sides equally), "right" (pad
+  left side), "none" (no padding). Default: "left".
+- <justify_offsets> - array of numeric left offsets of rows. Used to adjust
+  for possible not equal indents, like in case of charwise selection when
+  left edge is not on the first column. Default: array of zeros. Set
+  automatically during interactive alignment in charwise mode.
+
+Return~
+`(table)` A step named "justify" and with appropriate callable action.
+
+------------------------------------------------------------------------------
+                                            *MiniAlign.gen_step.default_merge()*
+                      `MiniAlign.gen_step.default_merge`()
+Generate default merge step
+
+Output merges rows of parts into strings by placing merge delimiter(s)
+between them.
+
+Outline of how parts are converted to array of strings:
+- Convert `merge_delimiter` option to array of strings (single string is
+  converted as one-element array). Recycle this array to have length equal
+  to number of columns in parts minus 1.
+- Exclude empty strings from parts. They add nothing to output except extra
+  usage of merge delimiter.
+- Concatenate each row interleaving with array of merge delimiters.
+
+Output uses following options (as part second argument, `opts` table):
+- <merge_delimiter> - string or array of strings. Default: `''`.
+  Examples: `' '`, `{ '', ' ' }`.
+
+Return~
+`(table)` A step named "merge" and with appropriate callable action.
+
+------------------------------------------------------------------------------
+                                                   *MiniAlign.gen_step.filter()*
+                      `MiniAlign.gen_step.filter`({expr})
+Generate filter step
+
+Construct function predicate from supplied Lua string expression and make
+step evaluating it on every part element.
+
+Outline of how filtering is done:
+- Convert Lua filtering expression into function predicate which can be
+  evaluated in manually created context (some specific variables being set).
+- Compute boolean mask for parts by applying predicate to each element of
+  2d array with special variables set to specific values (see next section).
+- Group parts with compted mask. See `group()` method of parts in
+  |MiniAlign.as_parts()|.
+
+Special variables which can be used in expression:
+- <row> - row number of current element.
+- <ROW> - total number of rows in parts.
+- <col> - column number of current element.
+- <COL> - total number of columns in current row.
+- <s>   - string value of current element.
+- <n>   - column pair number of current element. Useful when filtering by
+          result of pattern splitting.
+- <N>   - total number of column pairs in current row.
+- All variables from global table `_G`.
+
+Tips:
+- This general filtering approach can be used to both include and exclude
+  certain parts from alignment. Examples:
+    - Use `row ~= 2` to align all parts except from second row.
+    - Use `n == 1` to align only by first pair of columns.
+- Filtering by last equal sign usually can be done with `n >= (N - 1)`
+  (because there is usually something to the right of it).
+
+Parameters~
+{expr} `(string)` Lua expression as a string which will be used as predicate.
+
+Return~
+`(table)` A step named "filter" and with appropriate callable action.
+
+------------------------------------------------------------------------------
+                                             *MiniAlign.gen_step.ignore_split()*
+        `MiniAlign.gen_step.ignore_split`({patterns}, {exclude_comment})
+Generate ignore step
+
+Output adds certain values to `split_exclude_patterns` option. Should be
+used as pre-split step.
+
+Parameters~
+{patterns} `(table)` Array of patterns to be added to
+  `split_exclude_patterns` as is. Default: `{ [[".-"]] }` (excludes strings
+  for most cases).
+{exclude_comment} `(boolean)` Whether to add comment pattern to
+  `split_exclude_patterns`. Comment pattern is derived from 'commentstring'
+  option. Default: `true`.
+
+Return~
+`(table)` A step named "ignore" and with appropriate callable action.
+
+See also~
+|MiniAlign.gen_step.default_split()| for details about
+  `split_exclude_patterns` option.
+
+------------------------------------------------------------------------------
+                                                     *MiniAlign.gen_step.pair()*
+                     `MiniAlign.gen_step.pair`({direction})
+Generate pair step
+
+Output calls `pair()` method of parts (see |MiniAlign.as_parts()|) with
+supplied `direction` argument.
+
+Parameters~
+{direction} `(string)` Which direction to pair. One of "left" (default) or
+
+
+Return~
+`(table)` A step named "pair" and with appropriate callable action.
+
+------------------------------------------------------------------------------
+                                                     *MiniAlign.gen_step.trim()*
+                `MiniAlign.gen_step.trim`({direction}, {indent})
+Generate trim step
+
+Output calls `trim()` method of parts (see |MiniAlign.as_parts()|) with
+supplied `direction` and `indent` arguments.
+
+Parameters~
+{direction} `(string)` Which sides to trim whitespace. One of "both"
+  (default), "left", "right", "none".
+{indent} `(string)` What to do with possible indent (left whitespace of first
+  string in a row). One of "keep" (default), "low", "high", "remove".
+
+Return~
+`(table)` A step named "trim" and with appropriate callable action.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

@@ -11,6 +11,7 @@ vim.cmd([[let &rtp.=','.getcwd()]])
 --stylua: ignore
 local test_actions = {
   ['ai']          = function() require('mini.ai').setup() end,
+  ['align']       = function() require('mini.align').setup() end,
   ['base16']      = function()
     local palette = require('mini.base16').mini_palette('#000000', '#ffffff', 50)
     require('mini.base16').setup({ palette = palette })

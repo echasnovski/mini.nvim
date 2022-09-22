@@ -6,6 +6,7 @@ minidoc.generate({ 'lua/mini/init.lua' }, 'doc/mini.txt', { hooks = minidoc.defa
 
 local modules = {
   'ai',
+  'align',
   'base16',
   'bufremove',
   'comment',

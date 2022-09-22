@@ -56,6 +56,7 @@ Here are code snippets for some common installation methods:
 | Module           | Description                                 | Overview                              | Details                               |
 |------------------|---------------------------------------------|---------------------------------------|---------------------------------------|
 | mini.ai          | Extend and create `a`/`i` textobjects       | [README](readmes/mini-ai.md)          | [Help file](doc/mini-ai.txt)          |
+| mini.align       | Align text interactively                    | [README](readmes/mini-align.md)       | [Help file](doc/mini-align.txt)       |
 | mini.base16      | Base16 colorscheme creation                 | [README](readmes/mini-base16.md)      | [Help file](doc/mini-base16.txt)      |
 | mini.bufremove   | Remove buffers                              | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
 | mini.comment     | Comment                                     | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
@@ -86,6 +87,15 @@ Extend and create `a`/`i` textobjects (like in `di(` or `va"`).
 - Has builtins for brackets, quotes, function call, argument, tag, user prompt, and any punctuation/digit/whitespace character.
 
 For video demo and quick overview see its [README](readmes/mini-ai.md). For more details see its [help file](doc/mini-ai.txt).
+
+---
+
+<a name='mini.align'></a>
+### mini.align
+
+Align text interactively (with or without instant preview).
+
+For video demo and quick overview see its [README](readmes/mini-align.md). For more details see its [help file](doc/mini-align.txt).
 
 ---
 

@@ -16,6 +16,7 @@
 ---   Buffer-local config..........................|mini.nvim-buffer-local-config|
 ---   Plugin colorschemes.....................................|mini-color-schemes|
 ---   Extend and create a/i textobjects..................................|mini.ai|
+---   Align text interactively........................................|mini.align|
 ---   Base16 colorscheme creation....................................|mini.base16|
 ---   Remove buffers..............................................|mini.bufremove|
 ---   Comment.......................................................|mini.comment|
@@ -96,6 +97,10 @@
 ---   consecutive application, and customization via Lua patterns or functions.
 ---   Has builtins for brackets, quotes, function call, argument, tag, user
 ---   prompt, and any punctuation/digit/whitespace character.
+--- - |MiniAlign| - align text interactively (with or without instant preview).
+---   Allows rich and flexible customization of both alignment rules and user
+---   interaction. Works with charwise, linewise, and blockwise selections in
+---   both Normal mode (on textobject/motion; with dot-repeat) and Visual mode.
 --- - |MiniBase16| - fast implementation of base16 theme for manually supplied
 ---   palette. Supports 30+ plugin integrations. Has unique palette generator
 ---   which needs only background and foreground colors.
