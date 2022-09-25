@@ -118,7 +118,7 @@ Return~
 ------------------------------------------------------------------------------
                                                  *MiniFuzzy.process_lsp_items()*
                  `MiniFuzzy.process_lsp_items`({items}, {base})
-Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
+Fuzzy matching for `lsp_completion.process_items` of |MiniCompletion.config|
 
 Parameters~
 {items} `(table)` Lua array with LSP 'textDocument/completion' response items.

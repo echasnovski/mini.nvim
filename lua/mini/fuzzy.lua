@@ -133,7 +133,7 @@ MiniFuzzy.filtersort = function(word, candidate_array)
   return H.filter_by_indexes(candidate_array, filter_ids)
 end
 
---- Fuzzy matching for |MiniCompletion.lsp_completion.process_items|
+--- Fuzzy matching for `lsp_completion.process_items` of |MiniCompletion.config|
 ---
 ---@param items table Lua array with LSP 'textDocument/completion' response items.
 ---@param base string Word to complete.
