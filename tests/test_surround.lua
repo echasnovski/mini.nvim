@@ -438,6 +438,9 @@ T['Add surrounding']['works with multibyte characters'] = function()
   validate_edit({ '  ыыы  ' }, { 1, 2 }, { '  (ыыы)  ' }, { 1, 3 }, f)
   validate_edit({ 'ыыы ttt' }, { 1, 2 }, { '(ыыы) ttt' }, { 1, 1 }, f)
   validate_edit({ 'ttt ыыы' }, { 1, 4 }, { 'ttt (ыыы)' }, { 1, 5 }, f)
+
+  -- Test 4-byte characters (might be a cause of incorrect marks retrieval)
+  validate_edit({ '🬗 🬗 🬗 🬗 🬗' }, { 1, 20 }, { '🬗 🬗 🬗 🬗 (🬗)' }, { 1, 21 }, f)
 end
 
 T['Add surrounding']['works on whole line'] = function()

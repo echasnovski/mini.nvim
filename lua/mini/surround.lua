@@ -1726,15 +1726,13 @@ H.get_marks_pos = function(mode)
     -- Respect 'selection' option
     pos2[2] = pos2[2] - 1
   else
+    -- Use `math.min()` because it might lead to 'index out of range' error
+    -- when mark is positioned at the end of line (that extra space which is
+    -- selected when selecting with `v$`)
+    local utf_index = vim.str_utfindex(line2, math.min(#line2, pos2[2]))
     -- This returns the last byte inside character because `vim.str_byteindex()`
     -- 'rounds upwards to the end of that sequence'.
-    pos2[2] = vim.str_byteindex(
-      line2,
-      -- Use `math.min()` because it might lead to 'index out of range' error
-      -- when mark is positioned at the end of line (that extra space which is
-      -- selected when selecting with `v$`)
-      vim.str_utfindex(line2, math.min(#line2, pos2[2]))
-    )
+    pos2[2] = vim.str_byteindex(line2, utf_index)
   end
 
   return {
