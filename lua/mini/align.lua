@@ -780,6 +780,9 @@ MiniAlign.align_user = function(mode)
     -- Stop in "no preview" mode right after `split` is defined
     if not with_preview and opts.split_pattern ~= '' then break end
   end
+
+  -- Remove helper status message (if shown)
+  H.unecho()
 end
 
 --- Perfrom action in Normal mode
@@ -1939,6 +1942,10 @@ H.echo = function(msg, add_to_history)
   -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
   vim.cmd([[echo '' | redraw]])
   vim.api.nvim_echo(chunks, add_to_history, {})
+end
+
+H.unecho = function()
+  if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
 end
 
 H.error = function(msg) error(string.format('(mini.align) %s', msg), 0) end

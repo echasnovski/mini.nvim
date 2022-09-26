@@ -1360,6 +1360,10 @@ T['Align']['prompts helper message after one idle second'] = new_set({
     -- Should show message immediately if it was already shown
     type_keys('j', 'c')
     child.expect_screenshot()
+
+    -- Ending alignment should remove shown message
+    type_keys('_')
+    child.expect_screenshot()
   end,
 })
 
@@ -1371,6 +1375,13 @@ T['Align']['helper message does not cause hit-enter-prompt'] = function()
 
   type_keys('ga', 'Vj')
   sleep(1000)
+  child.expect_screenshot()
+end
+
+T['Align']['cleans command line only if helper message was shown'] = function()
+  child.set_size(12, 20)
+  child.cmd([[echo 'My echo']])
+  validate_keys({ 'a_b', 'aa_b' }, { 'ga', 'ip', '_' }, { 'a _b', 'aa_b' })
   child.expect_screenshot()
 end
 
@@ -1476,7 +1487,7 @@ T['Align with preview']['works'] = new_set({
     type_keys('m', '-', '<CR>')
     child.expect_screenshot()
 
-    -- Hitting `<CR>` accepts current result
+    -- Hitting `<CR>` accepts current result and echoed status helper message
     type_keys('<CR>')
     -- This should start Insert mode and not right justify by 'a'
     type_keys('a')
