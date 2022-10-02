@@ -720,6 +720,15 @@ T['Jumping with f/t/F/T']["respects 'selection=exclusive'"] = function()
   eq(get_lines(), { '2e' })
 end
 
+T['Jumping with f/t/F/T']['can be used with `:normal-range`'] = function()
+  -- Basically, it should check that jumping state is restarted even outside of
+  -- `CursorMoved` event (which is not issued in this case)
+  set_lines({ '11e22e', '11e22e', '11e22e' })
+  set_cursor(1, 0)
+  type_keys('vip', ':normal fefx<CR>')
+  eq(get_lines(), { '11e22', '11e22', '11e22' })
+end
+
 T['Repeat jump with ;'] = new_set()
 
 T['Repeat jump with ;']['works'] = function()

@@ -190,7 +190,7 @@ MiniJump.jump = function(target, backward, till, n_times)
   H.timers.idle_stop:start(config.delay.idle_stop, 0, vim.schedule_wrap(function() MiniJump.stop_jumping() end))
 
   -- Make jump(s)
-  H.n_cursor_moved = 0
+  H.cache.n_cursor_moved = 0
   MiniJump.state.jumping = true
   for _ = 1, MiniJump.state.n_times do
     vim.fn.search(pattern, flags)
@@ -198,6 +198,9 @@ MiniJump.jump = function(target, backward, till, n_times)
 
   -- Open enough folds to show jump
   vim.cmd('normal! zv')
+
+  -- Track cursor position to account for movement not caught by `CursorMoved`
+  H.cache.latest_cursor = H.get_cursor_data()
 end
 
 --- Make smart jump
@@ -212,9 +215,11 @@ end
 MiniJump.smart_jump = function(backward, till)
   if H.is_disabled() then return end
 
-  -- Jumping should stop after mode change. Use `mode(1)` to track 'omap' case.
-  local cur_mode = vim.fn.mode(1)
-  if MiniJump.state.mode ~= cur_mode then MiniJump.stop_jumping() end
+  -- Jumping should stop after mode change (use `mode(1)` to track 'omap' case)
+  -- or if cursor has moved after latest jump
+  local has_changed_mode = MiniJump.state.mode ~= vim.fn.mode(1)
+  local has_changed_cursor = not vim.deep_equal(H.cache.latest_cursor, H.get_cursor_data())
+  if has_changed_mode or has_changed_cursor then MiniJump.stop_jumping() end
 
   -- Ask for target only when needed
   local target
@@ -259,7 +264,12 @@ end
 MiniJump.stop_jumping = function()
   H.timers.highlight:stop()
   H.timers.idle_stop:stop()
+
   MiniJump.state.jumping = false
+
+  H.cache.n_cursor_moved = 0
+  H.cache.latest_cursor = nil
+
   H.unhighlight()
 end
 
@@ -267,9 +277,9 @@ end
 MiniJump.on_cursormoved = function()
   -- Check if jumping to avoid unnecessary actions on every CursorMoved
   if MiniJump.state.jumping then
-    H.n_cursor_moved = H.n_cursor_moved + 1
+    H.cache.n_cursor_moved = H.cache.n_cursor_moved + 1
     -- Stop jumping only if `CursorMoved` was not a result of smart jump
-    if H.n_cursor_moved > 1 then MiniJump.stop_jumping() end
+    if H.cache.n_cursor_moved > 1 then MiniJump.stop_jumping() end
   end
 end
 
@@ -277,8 +287,14 @@ end
 -- Module default config
 H.default_config = MiniJump.config
 
--- Counter of number of CursorMoved events
-H.n_cursor_moved = 0
+-- Cache for various operations
+H.cache = {
+  -- Counter of number of CursorMoved events
+  n_cursor_moved = 0,
+
+  -- Latest cursor position data
+  latest_cursor = nil,
+}
 
 -- Timers for different delay-related functionalities
 H.timers = { highlight = vim.loop.new_timer(), idle_stop = vim.loop.new_timer() }
@@ -443,6 +459,8 @@ H.update_state = function(target, backward, till, n_times)
   if till ~= nil then MiniJump.state.till = till end
   if n_times ~= nil then MiniJump.state.n_times = n_times end
 end
+
+H.get_cursor_data = function() return { vim.api.nvim_get_current_win(), vim.api.nvim_win_get_cursor(0) } end
 
 H.get_target = function()
   local needs_help_msg = true
