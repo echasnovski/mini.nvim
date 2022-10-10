@@ -1332,6 +1332,11 @@ T['Align']['prompts helper message after one idle second'] = new_set({
   parametrize = { { 'Normal' }, { 'Visual' } },
 }, {
   test = function(test_mode)
+    -- Check this only on Neovim>=0.9, as there is a slight change in
+    -- highlighting command line area. Probably, after
+    -- https://github.com/neovim/neovim/pull/20476
+    if child.fn.has('nvim-0.9') == 0 then return end
+
     child.set_size(12, 20)
     child.o.cmdheight = 5
 
