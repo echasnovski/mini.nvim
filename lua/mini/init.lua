@@ -7,7 +7,7 @@
 --- License: MIT
 ---
 --- |mini.nvim| is a collection of minimal, independent, and fast Lua modules
---- dedicated to improve Neovim (version 0.5 and higher) experience. Each
+--- dedicated to improve Neovim (version 0.6 and higher) experience. Each
 --- module can be considered as a separate sub-plugin.
 ---
 --- Table of contents:

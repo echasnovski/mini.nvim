@@ -1,5 +1,7 @@
 # Version 0.5.0.9000
 
+- Stop official support of Neovim 0.5.
+
 ## mini.align
 
 Introduction of new module.
