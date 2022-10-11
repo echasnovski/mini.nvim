@@ -65,6 +65,7 @@ Here are code snippets for some common installation methods:
 | mini.indentscope | Visualize and operate on indent scope       | [README](readmes/mini-indentscope.md) | [Help file](doc/mini-indentscope.txt) |
 | mini.jump        | Jump forward/backward to a single character | [README](readmes/mini-jump.md)        | [Help file](doc/mini-jump.txt)        |
 | mini.jump2d      | Jump within visible lines                   | [README](readmes/mini-jump2d.md)      | [Help file](doc/mini-jump2d.txt)      |
+| mini.map         | Window with buffer text overview            | [README](readmes/mini-map.md)         | [Help file](doc/mini-map.txt)         |
 | mini.misc        | Miscellaneous functions                     | [README](readmes/mini-misc.md)        | [Help file](doc/mini-misc.txt)        |
 | mini.pairs       | Autopairs                                   | [README](readmes/mini-pairs.md)       | [Help file](doc/mini-pairs.txt)       |
 | mini.sessions    | Session management                          | [README](readmes/mini-sessions.md)    | [Help file](doc/mini-sessions.txt)    |
@@ -194,6 +195,15 @@ For video demo and quick overview see its [README](readmes/mini-jump.md). For mo
 Jump  within visible lines via iterative label filtering.
 
 For video demo and quick overview see its [README](readmes/mini-jump2d.md). For more details see its [help file](doc/mini-jump2d.txt).
+
+---
+
+<a name='mini.map'></a>
+### mini.map
+
+Window with buffer text overview, scrollbar, and highlights.
+
+For video demo and quick overview see its [README](readmes/mini-map.md). For more details see its [help file](doc/mini-map.txt).
 
 ---
 

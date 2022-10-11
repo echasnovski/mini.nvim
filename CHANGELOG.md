@@ -20,6 +20,10 @@ Introduction of new module.
 
 - BREAKING: Allow cursor to be positioned past the end of previous/current line (#113).
 
+## mini.map
+
+Introduction of new module.
+
 ## mini.starter
 
 - Item evaluation is now prepended with query reset, as it is rarely needed any more (#105).

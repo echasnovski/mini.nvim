@@ -90,6 +90,11 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
 - 'mini.jump2d':
     - `MiniJump2dSpot`
 
+- 'mini.map':
+    - `MiniMapSymbolCount`
+    - `MiniMapSymbolLine`
+    - `MiniMapSymbolView`
+
 - 'mini.starter':
     - `MiniStarterCurrent`
     - `MiniStarterFooter`

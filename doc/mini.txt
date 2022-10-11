@@ -27,6 +27,7 @@ Table of contents:
   Visualize and operate on indent scope.....................|mini.indentscope|
   Jump forward/backward to a single character......................|mini.jump|
   Jump within visible lines......................................|mini.jump2d|
+  Window with buffer text overview.................................|mini.misc|
   Miscellaneous functions..........................................|mini.misc|
   Autopairs.......................................................|mini.pairs|
   Session management...........................................|mini.sessions|
@@ -128,6 +129,10 @@ Table of contents:
 - |MiniJump2d| - minimal and fast Lua plugin for jumping (moving cursor)
   within visible lines via iterative label filtering. Supports custom jump
   targets (spots), labels, hooks, allowed windows and lines, and more.
+- |MiniMap| - window with buffer text overview, scrollbar, and highlights.
+  Allows configurable symbols for line encode and scrollbar, extensible
+  highlight integration (with pre-built ones for builtin search, diagnostic,
+  git line status), window properties, and more.
 - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
   and `put_text()` which print Lua objects to command line and current
   buffer respectively.

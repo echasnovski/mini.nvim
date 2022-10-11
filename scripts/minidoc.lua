@@ -17,6 +17,7 @@ local modules = {
   'indentscope',
   'jump',
   'jump2d',
+  'map',
   'misc',
   'pairs',
   'sessions',
