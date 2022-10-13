@@ -657,6 +657,11 @@ H.apply_palette = function(palette, use_cterm)
 
     hi('MiniJump2dSpot', {fg=p.base07, bg=p.base01, attr='bold,nocombine', sp=nil})
 
+    hi('MiniMapNormal',      {fg=p.base05, bg=p.base01, attr=nil, sp=nil})
+    hi('MiniMapSymbolCount', {fg=p.base0C, bg=nil,      attr=nil, sp=nil})
+    hi('MiniMapSymbolLine',  {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
+    hi('MiniMapSymbolView',  {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
+
     hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil,    sp=nil})
     hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
     hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
