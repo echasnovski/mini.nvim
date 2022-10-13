@@ -640,9 +640,9 @@ end
 --- When not inside map window, put cursor inside map window; otherwise put
 --- cursor in previous window with source buffer.
 ---
---- When cursor is moving inside map window, view of source window is updated to
---- show first line convertible to current map line. This allows quick targeted
---- source buffer exploration.
+--- When cursor is moving inside map window (but not just after focusing), view of
+--- source window is updated to show first line convertible to current map line.
+--- This allows quick targeted source buffer exploration.
 ---
 --- There are at least these extra methods to focus back from map window:
 --- - Press `<CR>` to accept current explored position in source buffer.
@@ -662,18 +662,16 @@ MiniMap.toggle_focus = function(use_previous_cursor)
     -- Focus on previous window
     vim.api.nvim_set_current_win(H.cache.previous_win.id)
 
-    -- Use either previous cursor or first non-whitespace character
+    -- Use either previous cursor or first non-whitespace character (if this
+    -- was the result of cursor movement inside map window)
     if use_previous_cursor then
       vim.api.nvim_win_set_cursor(0, H.cache.previous_win.cursor)
-    else
+    elseif H.cache.n_map_cursor_moves > 1 then
       vim.cmd('normal! ^')
     end
   else
-    -- Put cursor in map window at line indicator to the right of scrollbar
-    local map_line = H.sourceline_to_mapline(vim.fn.line('.'))
-    vim.api.nvim_win_set_cursor(map_win, { map_line, H.cache.scrollbar_data.offset })
-
-    -- Focus on map window
+    -- Focus on map window. Cursor is set on `BufEnter` to account for other
+    -- ways of focusing on buffer (for example, with `<C-w><C-w>`)
     vim.api.nvim_set_current_win(map_win)
   end
 end
@@ -959,9 +957,10 @@ end
 ---
 --- No need to use it directly, everything is setup in |MiniMap.open()|.
 MiniMap.track_map_cursor = function()
-  -- Operate only inside map window
+  -- Operate only inside map window but not just after focusing
+  H.cache.n_map_cursor_moves = H.cache.n_map_cursor_moves + 1
   local cur_win, map_win = vim.api.nvim_get_current_win(), H.get_current_map_win()
-  if cur_win ~= map_win then return end
+  if cur_win ~= map_win or H.cache.n_map_cursor_moves <= 1 then return end
 
   -- Don't allow putting cursor inside offset (where scrollbar is)
   local cur_pos = vim.api.nvim_win_get_cursor(map_win)
@@ -977,6 +976,25 @@ MiniMap.track_map_cursor = function()
 
   -- Open just enough folds and center cursor
   vim.api.nvim_win_call(prev_win_id, function() vim.cmd('normal! zvzz') end)
+end
+
+--- Act on |BufEnter| for map buffer
+---
+--- No need to use it directly, everything is setup in |MiniMap.open()|.
+MiniMap.on_map_enter = function()
+  -- Check if anything is present (window can be not opened because there is
+  -- one buffer, but many possible windows; so this can be executed on second
+  -- `MiniMap.open()` without opened window)
+  if not H.is_window_open() or H.cache.previous_win.cursor == nil then return end
+
+  -- Put cursor in map window at line indicator to the right of scrollbar
+  local map_line = H.sourceline_to_mapline(H.cache.previous_win.cursor[1])
+  local win_id = H.get_current_map_win()
+
+  vim.api.nvim_win_set_cursor(win_id, { map_line, H.cache.scrollbar_data.offset })
+
+  -- Reset number of cursor moves to later check if should track cursor move
+  H.cache.n_map_cursor_moves = 0
 end
 
 -- Helper data ================================================================
@@ -995,6 +1013,10 @@ H.cache = {
   -- Table with information about scrollbar. Used for quick scrollbar related
   -- computations.
   scrollbar_data = { view = {}, line = nil },
+
+  -- Number of cursor movements inside map buffer since focusing. Needed to not
+  -- update source buffer view just after focusing.
+  n_map_cursor_moves = 0,
 }
 
 H.ns_id = {
@@ -1331,8 +1353,11 @@ H.create_map_buffer = function()
   vim.api.nvim_buf_set_keymap(buf_id, 'n', '<Esc>', '<Cmd>lua MiniMap.toggle_focus(true)<CR>', { noremap = false })
 
   -- Make buffer local autocommands
-  local cmd = string.format('au CursorMoved <buffer=%d> lua MiniMap.track_map_cursor()', buf_id)
-  vim.cmd(cmd)
+  local bufenter_cmd = string.format('au BufEnter <buffer=%d> lua MiniMap.on_map_enter()', buf_id)
+  vim.cmd(bufenter_cmd)
+
+  local cursormoved_cmd = string.format('au CursorMoved <buffer=%d> lua MiniMap.track_map_cursor()', buf_id)
+  vim.cmd(cursormoved_cmd)
 
   -- Make buffer play nicely with other 'mini.nvim' modules
   vim.api.nvim_buf_set_var(buf_id, 'minicursorword_disable', true)

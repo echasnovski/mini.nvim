@@ -777,11 +777,11 @@ T['toggle_focus()']['works'] = function()
   -- Should move focus to map window
   child.lua('MiniMap.toggle_focus()')
   eq(child.api.nvim_get_current_win(), get_map_win_id())
+
   -- Moving cursor in map window should move cursor in previous window (line -
   -- first one encoded by the current map line; column - first non-blank)
   -- More tests in integration tests
   set_cursor(1, 0)
-
   child.lua('MiniMap.toggle_focus()')
   eq(child.api.nvim_get_current_win(), init_win)
   eq(get_cursor(), { 1, 2 })
@@ -795,6 +795,20 @@ T['toggle_focus()']['respects `use_previous_cursor`'] = function()
   child.lua('MiniMap.toggle_focus()')
   set_cursor(1, 0)
   child.lua('MiniMap.toggle_focus(true)')
+  eq(get_cursor(), { 15, 10 })
+end
+
+T['toggle_focus()']['does not move to first non-blank in source if no movement in map'] = function()
+  set_lines(example_lines)
+  set_cursor(15, 10)
+  local init_win = child.api.nvim_get_current_win()
+
+  map_open()
+  child.lua('MiniMap.toggle_focus()')
+  eq(child.api.nvim_get_current_win(), get_map_win_id())
+
+  child.lua('MiniMap.toggle_focus()')
+  eq(child.api.nvim_get_current_win(), init_win)
   eq(get_cursor(), { 15, 10 })
 end
 
@@ -1302,11 +1316,15 @@ T['Cursor in map window']['moves cursor in source window'] = function()
   local init_win_id = child.api.nvim_get_current_win()
   local validate_source_cursor = function(ref_cursor) eq(child.api.nvim_win_get_cursor(init_win_id), ref_cursor) end
   set_lines(example_lines)
-  set_cursor(1, 0)
+  set_cursor(2, 10)
   map_open()
   child.lua('MiniMap.toggle_focus()')
 
+  -- It shouldn't move just after focusing
   eq(get_cursor(), { 1, 2 })
+  validate_source_cursor({ 2, 10 })
+
+  type_keys('l')
   validate_source_cursor({ 1, 0 })
 
   type_keys('j')
@@ -1347,6 +1365,16 @@ T['Cursor in map window']['can not move on scrollbar or integration counts'] = f
 
   type_keys('0')
   eq(get_cursor(), { 1, 2 })
+end
+
+T['Cursor in map window']['is properly set outside of `MiniMap.toggle_focus()`'] = function()
+  set_lines(example_lines)
+  set_cursor(15, 0)
+
+  map_open()
+  type_keys('<C-w><C-w>')
+  eq(child.api.nvim_get_current_win(), get_map_win_id())
+  eq(get_cursor(), { 5, 2 })
 end
 
 return T

@@ -533,9 +533,9 @@ Toggle focus to/from map window
 When not inside map window, put cursor inside map window; otherwise put
 cursor in previous window with source buffer.
 
-When cursor is moving inside map window, view of source window is updated to
-show first line convertible to current map line. This allows quick targeted
-source buffer exploration.
+When cursor is moving inside map window (but not just after focusing), view of
+source window is updated to show first line convertible to current map line.
+This allows quick targeted source buffer exploration.
 
 There are at least these extra methods to focus back from map window:
 - Press `<CR>` to accept current explored position in source buffer.
@@ -720,6 +720,13 @@ No need to use it directly, everything is setup in |MiniMap.setup()|.
                                                     *MiniMap.track_map_cursor()*
                           `MiniMap.track_map_cursor`()
 Track cursor in map buffer
+
+No need to use it directly, everything is setup in |MiniMap.open()|.
+
+------------------------------------------------------------------------------
+                                                        *MiniMap.on_map_enter()*
+                            `MiniMap.on_map_enter`()
+Act on |BufEnter| for map buffer
 
 No need to use it directly, everything is setup in |MiniMap.open()|.
 
