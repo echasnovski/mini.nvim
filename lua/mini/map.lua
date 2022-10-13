@@ -123,6 +123,7 @@
 ---
 --- # Highlight groups~
 ---
+--- * `MiniMapNormal` - basic highlight of whole window.
 --- * `MiniMapSymbolCount` - counts of per-line integration items.
 --- * `MiniMapSymbolLine` - scrollbar part representing current line.
 --- * `MiniMapSymbolView` - scrollbar part representing current view.
@@ -219,7 +220,8 @@ MiniMap.setup = function(config)
 
   -- Create highlighting
   vim.api.nvim_exec(
-    [[hi default link MiniMapSymbolCount Special
+    [[hi default link MiniMapNormal NormalFloat
+      hi default link MiniMapSymbolCount Special
       hi default link MiniMapSymbolLine Title
       hi default link MiniMapSymbolView Delimiter]],
     false
@@ -569,6 +571,9 @@ MiniMap.open = function(opts)
     -- Vim's `setlocal` is currently more robust comparing to `opt_local`
     -- Use `noautocmd` to make it more invisible for others
     vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
+
+    -- Override Normal highlighting locally for map window
+    vim.cmd('silent! setlocal winhighlight=NormalFloat:MiniMapNormal')
   end)
 
   -- Refresh content

@@ -124,6 +124,7 @@ Suggested dependencies (provide extra functionality for integrations):
 
 # Highlight groups~
 
+* `MiniMapNormal` - basic highlight of whole window.
 * `MiniMapSymbolCount` - counts of per-line integration items.
 * `MiniMapSymbolLine` - scrollbar part representing current line.
 * `MiniMapSymbolView` - scrollbar part representing current view.

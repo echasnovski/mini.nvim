@@ -141,6 +141,7 @@ T['setup()']['creates side effects'] = function()
   -- Highlight groups
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
+  has_highlight('MiniMapNormal', 'links to NormalFloat')
   has_highlight('MiniMapSymbolCount', 'links to Special')
   has_highlight('MiniMapSymbolLine', 'links to Title')
   has_highlight('MiniMapSymbolView', 'links to Delimiter')
@@ -546,6 +547,27 @@ T['open()']['shows appropriate integration counts'] = function()
     integrations = { _G.integration_many_matches },
     symbols = { encode = { ' ', '█', resolution = { row = 1, col = 1 } } }
   })]])
+  child.expect_screenshot()
+end
+
+T['open()']['respects `MiniMapNormal` highlight group'] = function()
+  set_lines(example_lines)
+  child.cmd('hi MiniMapNormal ctermfg=black')
+  map_open({ window = { winblend = 0 } })
+
+  -- Open separate floating window for comparison
+  local buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, true, tbl_repeat('bbbbb', 10))
+  child.api.nvim_open_win(buf_id, false, {
+    relative = 'editor',
+    anchor = 'NW',
+    row = 0,
+    col = 0,
+    width = 5,
+    height = 10,
+  })
+
+  -- Highlighting of map and other floating window should differ
   child.expect_screenshot()
 end
 
