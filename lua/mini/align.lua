@@ -1861,13 +1861,6 @@ H.is_string = function(v) return type(v) == 'string' end
 
 H.is_justify_side = function(x) return x == 'left' or x == 'center' or x == 'right' or x == 'none' end
 
-H.is_nonempty_region = function(x)
-  if type(x) ~= 'table' then return false end
-  local from_is_valid = type(x.from) == 'table' and type(x.from.line) == 'number' and type(x.from.col) == 'number'
-  local to_is_valid = type(x.to) == 'table' and type(x.to.line) == 'number' and type(x.to.col) == 'number'
-  return from_is_valid and to_is_valid
-end
-
 H.is_parts = function(x) return H.can_be_parts(x) and (getmetatable(x) or {}).class == 'parts' end
 
 H.can_be_parts = function(x)
