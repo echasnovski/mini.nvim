@@ -334,6 +334,10 @@ end
 ---
 --- Option `config.window` defines some properties of map window.
 ---
+--- `window.focusable` - whether to allow focusing on map window with other
+--- methods beside |MiniMap.toggle_focus()| (like |wincmd|, |CTRL-W|, or
+--- mouse). Default: `false`.
+---
 --- `window.side` - which side to stick map window: `'left'` or `'right'` (default).
 ---
 --- `window.show_integration_count` - whether to show integration count between
@@ -393,6 +397,9 @@ MiniMap.config = {
 
   -- Window options
   window = {
+    -- Whether window is focusable in normal way (with `wincmd` or mouse)
+    focusable = false,
+
     -- Side to stick ('left' or 'right')
     side = 'right',
 
@@ -1285,6 +1292,9 @@ H.is_valid_config_window = function(x, x_name)
 
   if type(x) ~= 'table' then return false, H.msg_config(x_name, 'table') end
 
+  -- Focusable
+  if type(x.focusable) ~= 'boolean' then return false, H.msg_config(x_name .. '.focusable', 'boolean') end
+
   -- Side
   if not (x.side == 'left' or x.side == 'right') then
     return false, H.msg_config(x_name .. '.side', [[one of 'left', 'right']])
@@ -1329,6 +1339,7 @@ H.normalize_window_options = function(win_opts, full)
     width = win_opts.width,
     -- Can be updated at `VimResized` event
     height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0),
+    focusable = win_opts.focusable,
   }
   if not full then return res end
 

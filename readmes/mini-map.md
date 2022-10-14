@@ -16,7 +16,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://user-images.githubusercontent.com/24854248/194914295-2d854c6b-1b5a-418d-9e1b-9e95539ebb7e.mp4
+https://user-images.githubusercontent.com/24854248/195806215-10e05020-50b7-4bee-9447-ee5af3e971ec.mp4
 
 ## Features
 
@@ -133,6 +133,9 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Window options
   window = {
+    -- Whether window is focusable in normal way (with `wincmd` or mouse)
+    focusable = false,
+
     -- Side to stick ('left' or 'right')
     side = 'right',
 

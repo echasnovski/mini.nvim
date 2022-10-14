@@ -160,6 +160,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('symbols.scroll_line', '█')
   expect_config('symbols.scroll_view', '┃')
 
+  expect_config('window.focusable', false)
   expect_config('window.side', 'right')
   expect_config('window.show_integration_count', true)
   expect_config('window.width', 10)
@@ -215,6 +216,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ symbols = { scroll_view = 1 } }, 'symbols.scroll_view', 'string')
 
   expect_config_error({ window = 'a' }, 'window', 'table')
+  expect_config_error({ window = { focusable = 1 } }, 'window.focusable', 'boolean')
   expect_config_error({ window = { side = 1 } }, 'window.side', 'one of')
   expect_config_error({ window = { side = 'a' } }, 'window.side', 'one of')
   expect_config_error({ window = { show_integration_count = 1 } }, 'window.show_integration_count', 'boolean')
@@ -360,7 +362,7 @@ T['open()']['correctly computes window config'] = function()
     anchor = 'NE',
     col = 20,
     external = false,
-    focusable = true,
+    focusable = false,
     height = 28,
     relative = 'editor',
     row = 0,
@@ -404,11 +406,16 @@ end
 
 T['open()']['respects `opts.window` argument'] = function()
   set_lines(example_lines)
-  local opts = { window = { side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+  local opts =
+    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
   map_open(opts)
 
   child.expect_screenshot()
   eq(child.api.nvim_win_get_option(get_map_win_id(), 'winblend'), 50)
+
+  -- Map window should be focusable
+  child.cmd('wincmd w')
+  eq(child.api.nvim_get_current_win(), get_map_win_id())
 
   -- Updates current data accordingly
   eq(child.lua_get('MiniMap.current.opts.window'), opts.window)
@@ -635,7 +642,8 @@ T['refresh()']['respects `opts.window` argument'] = function()
   set_lines(example_lines)
   map_open()
 
-  local opts = { window = { side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+  local opts =
+    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
   map_refresh(opts)
 
   child.expect_screenshot()
@@ -1266,6 +1274,23 @@ T['Window']['does not account for folds'] = function()
   child.expect_screenshot()
 end
 
+T['Window']['is not focusable by default'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  set_lines(example_lines)
+  map_open()
+
+  child.cmd('wincmd w')
+  eq(child.api.nvim_get_current_win(), init_win_id)
+end
+
+T['Window']['can be made focusable by mouse with `window.focusable = true`'] = function()
+  set_lines(example_lines)
+  map_open({ window = { focusable = true, side = 'left' } })
+
+  child.api.nvim_input_mouse('left', 'press', '', 0, 5, 5)
+  eq(child.api.nvim_get_current_win(), get_map_win_id())
+end
+
 T['Scrollbar'] = new_set()
 
 T['Scrollbar']['updates on cursor movement'] = function()
@@ -1393,7 +1418,7 @@ T['Cursor in map window']['is properly set outside of `MiniMap.toggle_focus()`']
   set_lines(example_lines)
   set_cursor(15, 0)
 
-  map_open()
+  map_open({ window = { focusable = true } })
   type_keys('<C-w><C-w>')
   eq(child.api.nvim_get_current_win(), get_map_win_id())
   eq(get_cursor(), { 5, 2 })

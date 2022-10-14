@@ -205,6 +205,9 @@ Default values:
 
     -- Window options
     window = {
+      -- Whether window is focusable in normal way (with `wincmd` or mouse)
+      focusable = false,
+
       -- Side to stick ('left' or 'right')
       side = 'right',
 
@@ -319,6 +322,10 @@ Example of using `config.integrations`: >
 ## Window config ~
 
 Option `config.window` defines some properties of map window.
+
+`window.focusable` - whether to allow focusing on map window with other
+methods beside |MiniMap.toggle_focus()| (like |wincmd|, |CTRL-W|, or
+mouse). Default: `false`.
 
 `window.side` - which side to stick map window: `'left'` or `'right'` (default).
 
