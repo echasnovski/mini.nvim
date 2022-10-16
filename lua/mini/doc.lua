@@ -420,7 +420,7 @@ MiniDoc.config = {
         vim.inspect(output),
         vim.fn.strftime('%Y-%m-%d %H:%M:%S')
       )
-      H.message(msg)
+      H.echo(msg)
     end,
     --minidoc_replace_end
   },
@@ -1248,6 +1248,32 @@ H.match_first_pattern = function(text, pattern_set, init)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.doc) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local chunks = msg
+  if not is_important then
+    chunks = {}
+    local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+    local tot_width = 0
+    for _, ch in ipairs(msg) do
+      local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+      table.insert(chunks, new_ch)
+      tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+      if tot_width >= max_width then break end
+    end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.message = function(msg) H.echo(msg, true) end
+
 H.apply_recursively = function(f, x)
   f(x)
 
@@ -1288,7 +1314,5 @@ H.file_write = function(path, lines)
 end
 
 H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
-
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.doc) ' .. msg)) end
 
 return MiniDoc

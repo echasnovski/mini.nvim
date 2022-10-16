@@ -2,8 +2,6 @@ local minidoc = require('mini.doc')
 
 if _G.MiniDoc == nil then minidoc.setup() end
 
-minidoc.generate({ 'lua/mini/init.lua' }, 'doc/mini.txt', { hooks = minidoc.default_hooks })
-
 local modules = {
   'ai',
   'align',
@@ -32,3 +30,5 @@ local modules = {
 for _, m in ipairs(modules) do
   minidoc.generate({ 'lua/mini/' .. m .. '.lua' }, 'doc/mini-' .. m .. '.txt', { hooks = minidoc.default_hooks })
 end
+
+minidoc.generate({ 'lua/mini/init.lua' }, 'doc/mini.txt', { hooks = minidoc.default_hooks })

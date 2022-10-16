@@ -10,7 +10,6 @@ local new_set = MiniTest.new_set
 --stylua: ignore start
 local load_module = function(config) child.mini_load('doc', config) end
 local unload_module = function() child.mini_unload('doc') end
-local reload_module = function(config) unload_module(); load_module(config) end
 local cd = function(path) child.cmd('cd ' .. path) end
 local source_helpers = function() child.cmd('luafile tests/dir-doc/helpers.lua') end
 local remove_dir = function(path) child.lua('_G.remove_dir(...)', { path }) end
@@ -153,9 +152,6 @@ T['generate()'] = new_set({
 
       -- Set current directory to one containing all input data for tests
       cd('tests/dir-doc')
-
-      -- Set high height of command line to not encounter hit-enter-prompt
-      child.o.cmdheight = 10
     end,
   },
 })
