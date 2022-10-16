@@ -16,6 +16,8 @@ local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 --stylua: ignore end
 
+local get_latest_message = function() return child.cmd_capture('1messages') end
+
 local get_ref_path = function(name) return string.format('tests/dir-test/%s', name) end
 
 local skip_screenshot = function()
@@ -523,7 +525,7 @@ T['execute()']['handles no cases'] = function()
   eq(child.lua_get('MiniTest.current.all_cases'), {})
 
   -- Should throw message
-  eq(child.cmd_capture('1messages'), '(mini.test) No cases to execute.')
+  eq(get_latest_message(), '(mini.test) No cases to execute.')
 end
 
 T['stop()'] = new_set()
@@ -920,7 +922,7 @@ T['child']['start()']['does nothing if already running'] = function()
   child.lua('_G.grandchild.start()')
   eq(child.lua_get('_G.should_be_present'), true)
 
-  eq(child.cmd_capture('1messages'), '(mini.test) Child process is already running. Use `child.restart()`.')
+  eq(get_latest_message(), '(mini.test) Child process is already running. Use `child.restart()`.')
 end
 
 T['child']['stop()'] = function()

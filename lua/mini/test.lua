@@ -2220,7 +2220,17 @@ H.screenshot_read = function(path)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.test) ' .. msg)) end
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.test) ', 'WarningMsg' })
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(msg, is_important, {})
+end
+
+H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.test) %s', msg)) end
 
