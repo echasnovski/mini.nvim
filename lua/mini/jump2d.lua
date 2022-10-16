@@ -343,6 +343,7 @@ end
 MiniJump2d.stop = function()
   H.spots_unshow()
   H.cache.spots = nil
+  H.cache.msg_shown = false
   vim.cmd('redraw')
 
   if H.cache.is_in_getchar then vim.api.nvim_input('<C-c>') end
@@ -544,8 +545,12 @@ H.ns_id = {
 H.cache = {
   -- Array of shown spots
   spots = nil,
+
   -- Indicator of whether Neovim is currently in "getchar" mode
   is_in_getchar = false,
+
+  -- Whether helper message was shown
+  msg_shown = false,
 }
 
 -- Table with special keys
@@ -800,16 +805,44 @@ H.advance_jump = function(opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump2d) ' .. msg)) end
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.jump2d) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+  local chunks, tot_width = {}, 0
+  for _, ch in ipairs(msg) do
+    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+    table.insert(chunks, new_ch)
+    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+    if tot_width >= max_width then break end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.unecho = function()
+  if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
+end
+
+H.message = function(msg) H.echo(msg, true) end
 
 H.is_operator_pending =
   function() return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1)) end
 
 H.getcharstr = function(msg)
   local needs_help_msg = true
-  if msg ~= nil then vim.defer_fn(function()
-    if needs_help_msg then H.message(msg) end
-  end, 1000) end
+  if msg ~= nil then
+    vim.defer_fn(function()
+      if not needs_help_msg then return end
+      H.echo(msg)
+      H.cache.msg_shown = true
+    end, 1000)
+  end
 
   -- Use `getchar()` because `getcharstr()` is present only in Neovim>=0.6
   -- Might want to remove if support for Neovim<0.6 is dropped
@@ -817,6 +850,7 @@ H.getcharstr = function(msg)
   local ok, char = pcall(vim.fn.getchar)
   H.cache.is_in_getchar = false
   needs_help_msg = false
+  H.unecho()
 
   if not ok then return end
 

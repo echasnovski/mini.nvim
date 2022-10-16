@@ -287,15 +287,27 @@ T['start()']['uses `<CR>` to jump to first available spot'] = function()
 end
 
 T['start()']['prompts helper message after one idle second'] = function()
-  -- Avoid hit-enter-prompt
-  child.set_size(5, 80)
+  -- Helps create hit-enter-prompt
+  child.set_size(5, 60)
+
+  child.lua([[MiniJump2d.config.labels = 'jk']])
 
   start()
+  sleep(1000 + 10)
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
   eq(get_latest_message(), '')
-  sleep(1000 - 10)
-  eq(get_latest_message(), '')
-  sleep(10 + 1)
-  eq(get_latest_message(), '(mini.jump2d) Enter encoding symbol to advance jump')
+  child.expect_screenshot()
+
+  -- Should clean afterwards
+  type_keys('j')
+  sleep(10)
+  child.expect_screenshot()
+
+  -- Should show message for every key in sequence
+  sleep(1000 + 10)
+  child.expect_screenshot()
 end
 
 T['start()']['stops jumping if not label was typed'] = new_set({
@@ -533,7 +545,15 @@ T['start()']['respects `allowed_windows`'] = new_set({
   parametrize = { { { current = false } }, { { not_current = false } }, { { current = false, not_current = false } } },
 }, {
   test = function(allowed_windows_opts)
-    child.set_size(5, 40)
+    -- Check this only on Neovim>=0.9, as there is a slight change in
+    -- highlighting command line area. Probably, after
+    -- https://github.com/neovim/neovim/pull/20476
+    if child.fn.has('nvim-0.9') == 0 then return end
+
+    child.set_size(6, 40)
+    -- Make all showed messages full width
+    child.o.cmdheight = 2
+
     local wins = setup_two_windows()
     child.api.nvim_set_current_win(wins.left)
 
@@ -873,24 +893,24 @@ T['builtin_opts.single_character']['handles special user input'] = new_set({
 })
 
 T['builtin_opts.single_character']['prompts helper message after one idle second'] = function()
+  -- Helps create hit-enter-prompt
+  child.set_size(5, 50)
+
   start_single_char()
   eq(get_latest_message(), '')
   sleep(1000 - 10)
   eq(get_latest_message(), '')
   sleep(10 + 1)
-  eq(get_latest_message(), '(mini.jump2d) Enter single character to search')
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
+  eq(get_latest_message(), '')
+  child.expect_screenshot()
 end
 
 -- NOTE: For some reason, testing with screenshots is flaky when user input is
 -- involved. Test with moving cursor instead.
-T['builtin_opts.query'] = new_set({
-  hooks = {
-    pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
-    end,
-  },
-})
+T['builtin_opts.query'] = new_set()
 
 local start_query = function() child.lua_notify('MiniJump2d.start(MiniJump2d.builtin_opts.query)') end
 
