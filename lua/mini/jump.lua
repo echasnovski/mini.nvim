@@ -274,6 +274,7 @@ MiniJump.stop_jumping = function()
 
   H.cache.n_cursor_moved = 0
   H.cache.latest_cursor = nil
+  H.cache.msg_shown = false
 
   H.unhighlight()
 end
@@ -299,6 +300,9 @@ H.cache = {
 
   -- Latest cursor position data
   latest_cursor = nil,
+
+  -- Whether helper message was shown
+  msg_shown = false,
 }
 
 -- Timers for different delay-related functionalities
@@ -453,7 +457,35 @@ H.is_highlighting = function(pattern)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.jump) ' .. msg)) end
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.jump) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local chunks = msg
+  if not is_important then
+    chunks = {}
+    local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+    local tot_width = 0
+    for _, ch in ipairs(msg) do
+      local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+      table.insert(chunks, new_ch)
+      tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+      if tot_width >= max_width then break end
+    end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.unecho = function()
+  if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
+end
+
+H.message = function(msg) H.echo(msg, true) end
 
 H.update_state = function(target, backward, till, n_times)
   MiniJump.state.mode = vim.fn.mode(1)
@@ -471,10 +503,12 @@ H.get_target = function()
   local needs_help_msg = true
   vim.defer_fn(function()
     if not needs_help_msg then return end
-    H.message('Enter target single character ')
+    H.echo('Enter target single character ')
+    H.cache.msg_shown = true
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false
+  H.unecho()
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == 27 then return end

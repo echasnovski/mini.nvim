@@ -600,20 +600,26 @@ T['Jumping with f/t/F/T']['for t/T allows matches on end of line'] = function()
   validate_T({ 3, 2 }, { 2, 1 })
 end
 
-T['Jumping with f/t/F/T']['asks for target letter after one idle second'] = function()
-  local get_latest_message = function() return child.cmd_capture('1messages') end
-  child.cmd('messages clear')
+T['Jumping with f/t/F/T']['shows helper message after one idle second'] = function()
+  child.set_size(10, 40)
 
   -- Execute one time to test if 'needs help message' flag is set per call
+  set_lines(example_lines)
   set_cursor(1, 0)
   type_keys('f', 'e')
   sleep(200)
 
-  type_keys('f')
-  sleep(1000 - 10)
-  eq(get_latest_message(), '')
-  sleep(10)
-  eq(get_latest_message(), '(mini.jump) Enter target single character ')
+  -- Start another jump
+  type_keys('h', 'f')
+  sleep(1000)
+  -- Should show colored helper message without adding it to `:messages` and
+  -- causing hit-enter-prompt
+  child.expect_screenshot()
+  eq(child.cmd_capture('1messages'), '')
+
+  -- Should clean command line after starting jumping
+  type_keys('m')
+  child.expect_screenshot()
 end
 
 T['Jumping with f/t/F/T']['stops jumping if no target is found'] = function()
