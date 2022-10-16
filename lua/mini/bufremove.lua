@@ -220,6 +220,18 @@ H.unshow_and_cmd = function(buf_id, force, cmd)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.bufremove) ', 'WarningMsg' })
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(msg, is_important, {})
+end
+
+H.message = function(msg) H.echo(msg, true) end
+
 H.is_valid_id = function(x, type)
   local is_valid = false
   if type == 'buffer' then
@@ -256,7 +268,5 @@ H.normalize_buf_id = function(buf_id)
   if buf_id == nil or buf_id == 0 then return vim.api.nvim_get_current_buf() end
   return buf_id
 end
-
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.bufremove) ' .. msg)) end
 
 return MiniBufremove
