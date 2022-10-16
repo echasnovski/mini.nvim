@@ -179,9 +179,8 @@ end
 ---   extended in the future): <maximum>, <mean>, <median>, <minimum>, <n>
 ---   (number of elements), <sd> (sample standard deviation).
 MiniMisc.stat_summary = function(t)
-  if type(t) ~= 'table' then
-    H.message('Input of `MiniMisc.stat_summary` should be an array of numbers.')
-    return
+  if not H.is_array_of(t, H.is_number) then
+    H.error('Input of `MiniMisc.stat_summary()` should be an array of numbers.')
   end
 
   -- Welford algorithm of computing variance
@@ -375,6 +374,16 @@ H.apply_config = function(config)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.misc) ' .. msg)) end
+H.error = function(msg) error(string.format('(mini.misc) %s', msg)) end
+
+H.is_array_of = function(x, predicate)
+  if not vim.tbl_islist(x) then return false end
+  for _, v in ipairs(x) do
+    if not predicate(v) then return false end
+  end
+  return true
+end
+
+H.is_number = function(x) return type(x) == 'number' end
 
 return MiniMisc

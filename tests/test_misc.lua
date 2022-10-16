@@ -224,12 +224,18 @@ T['resize_window()']['correctly computes default `text_width` argument'] = funct
   eq(child.api.nvim_win_get_width(0), 40 + 4)
 end
 
-T['stat_summary()'] = new_set()
-
 local stat_summary = function(...) return child.lua_get('MiniMisc.stat_summary({ ... })', { ... }) end
+
+T['stat_summary()'] = new_set()
 
 T['stat_summary()']['works'] = function()
   eq(stat_summary(10, 4, 3, 2, 1), { minimum = 1, mean = 4, median = 3, maximum = 10, n = 5, sd = math.sqrt(50 / 4) })
+end
+
+T['stat_summary()']['validates input'] = function()
+  expect.error(stat_summary, 'array', 'a')
+  expect.error(stat_summary, 'array', { a = 1 })
+  expect.error(stat_summary, 'numbers', { 'a' })
 end
 
 T['stat_summary()']['works with one number'] =
