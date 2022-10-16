@@ -319,6 +319,14 @@ T['Commenting']["respects 'commentstring'"] = function()
   eq(get_lines(), { '/* aa */', '/*  aa */', '/*   aa */', '/**/', '  aa', ' aa', 'aa' })
 end
 
+T['Commenting']["works with empty 'commentstring'"] = function()
+  child.api.nvim_buf_set_option(0, 'commentstring', '')
+  set_cursor(2, 2)
+  type_keys('gc', 'ap')
+  eq(get_lines(), example_lines)
+  eq(child.cmd_capture('1messages'), [[(mini.comment) Option 'commentstring' is empty.]])
+end
+
 T['Commenting']['allows dot-repeat'] = function()
   local doubly_commented = { '# # aa', '# #  aa', '# #   aa', '# #', '#   aa', '#  aa', '# aa' }
 
