@@ -485,43 +485,41 @@ MiniIndentscope.undraw = function() H.undraw_scope() end
 ---
 ---@seealso |MiniIndentscope-drawing| for more information about how drawing is done.
 MiniIndentscope.gen_animation = function(easing, opts)
-  --stylua: ignore start
-  if easing == 'none' then
-    return function() return 0 end
-  end
+  if easing == 'none' then return function() return 0 end end
 
   opts = vim.tbl_deep_extend('force', { duration = 20, unit = 'step' }, opts or {})
-  if not vim.tbl_contains({'total', 'step'}, opts.unit) then
-    H.message([[`opts.unit` should be one of 'step' or 'total'. Using 'step'.]])
-    opts.unit = 'step'
+  if not vim.tbl_contains({ 'total', 'step' }, opts.unit) then
+    H.error([[In `gen_animation()` argument `opts.unit` should be one of 'step' or 'total'.]])
   end
 
+  --stylua: ignore
   local easing_calls = {
-    linear           = {impl = H.animation_arithmetic_powers,  args = {0, 'in', opts}},
-    quadraticIn      = {impl = H.animation_arithmetic_powers,  args = {1, 'in', opts}},
-    quadraticOut     = {impl = H.animation_arithmetic_powers,  args = {1, 'out', opts}},
-    quadraticInOut   = {impl = H.animation_arithmetic_powers,  args = {1, 'in-out', opts}},
-    cubicIn          = {impl = H.animation_arithmetic_powers,  args = {2, 'in', opts}},
-    cubicOut         = {impl = H.animation_arithmetic_powers,  args = {2, 'out', opts}},
-    cubicInOut       = {impl = H.animation_arithmetic_powers,  args = {2, 'in-out', opts}},
-    quarticIn        = {impl = H.animation_arithmetic_powers,  args = {3, 'in', opts}},
-    quarticOut       = {impl = H.animation_arithmetic_powers,  args = {3, 'out', opts}},
-    quarticInOut     = {impl = H.animation_arithmetic_powers,  args = {3, 'in-out', opts}},
-    exponentialIn    = {impl = H.animation_geometrical_powers, args = {'in', opts}},
-    exponentialOut   = {impl = H.animation_geometrical_powers, args = {'out', opts}},
-    exponentialInOut = {impl = H.animation_geometrical_powers, args = {'in-out', opts}},
+    linear           = { impl = H.animation_arithmetic_powers,  args = { 0, 'in',     opts } },
+    quadraticIn      = { impl = H.animation_arithmetic_powers,  args = { 1, 'in',     opts } },
+    quadraticOut     = { impl = H.animation_arithmetic_powers,  args = { 1, 'out',    opts } },
+    quadraticInOut   = { impl = H.animation_arithmetic_powers,  args = { 1, 'in-out', opts } },
+    cubicIn          = { impl = H.animation_arithmetic_powers,  args = { 2, 'in',     opts } },
+    cubicOut         = { impl = H.animation_arithmetic_powers,  args = { 2, 'out',    opts } },
+    cubicInOut       = { impl = H.animation_arithmetic_powers,  args = { 2, 'in-out', opts } },
+    quarticIn        = { impl = H.animation_arithmetic_powers,  args = { 3, 'in',     opts } },
+    quarticOut       = { impl = H.animation_arithmetic_powers,  args = { 3, 'out',    opts } },
+    quarticInOut     = { impl = H.animation_arithmetic_powers,  args = { 3, 'in-out', opts } },
+    exponentialIn    = { impl = H.animation_geometrical_powers, args = {    'in',     opts } },
+    exponentialOut   = { impl = H.animation_geometrical_powers, args = {    'out',    opts } },
+    exponentialInOut = { impl = H.animation_geometrical_powers, args = {    'in-out', opts } },
   }
   local allowed_easing_types = vim.tbl_keys(easing_calls)
   table.sort(allowed_easing_types)
 
   if not vim.tbl_contains(allowed_easing_types, easing) then
-    H.message(('`easing` should be one of: %s.'):format(table.concat(allowed_easing_types, ', ')))
-    return
+    local msg = 'In `gen_animation()` argument `easing` should be one of: '
+      .. table.concat(allowed_easing_types, ', ')
+      .. '.'
+    H.error(msg)
   end
 
   local parts = easing_calls[easing]
   return parts.impl(unpack(parts.args))
-  --stylua: ignore end
 end
 
 --- Move cursor within scope
@@ -1101,7 +1099,7 @@ H.animation_geometrical_powers = function(type, opts)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.indentscope) ' .. msg)) end
+H.error = function(msg) error(('(mini.indentscope) %s'):format(msg)) end
 
 H.map = function(mode, key, rhs, opts)
   if key == '' then return end

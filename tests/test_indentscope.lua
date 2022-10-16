@@ -277,12 +277,18 @@ T['gen_animation()']['respects `easing` argument'] = function()
   expect_easing('cubicInOut', { 38.6, 17.1, 4.3, 4.3, 17.1, 38.6 })
   expect_easing('quarticInOut', { 45, 13.3, 1.7, 1.7, 13.3, 45 })
   expect_easing('exponentialInOut', { 45.5, 11.6, 2.9, 2.9, 11.6, 45.5 })
+
+  -- Validates incorrect value
+  expect.error(function() child.lua([[MiniIndentscope.gen_animation('a')]]) end, 'one of')
 end
 
 T['gen_animation()']['respects `opts` argument'] = function()
   expect_easing('linear', { 10, 10 }, { unit = 'total' })
   expect_easing('linear', { 100, 100 }, { duration = 100 })
   expect_easing('linear', { 50, 50 }, { unit = 'total', duration = 100 })
+
+  -- Validates incorrect value
+  expect.error(function() child.lua([[MiniIndentscope.gen_animation('linear', { unit = 'a' })]]) end, 'one of')
 end
 
 T['gen_animation()']['handles `n_steps=1` for all `easing` values'] = function()
