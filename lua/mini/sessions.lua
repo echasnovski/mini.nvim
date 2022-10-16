@@ -532,6 +532,30 @@ H.name_to_path = function(session_name)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.sessions) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+  local chunks, tot_width = {}, 0
+  for _, ch in ipairs(msg) do
+    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+    table.insert(chunks, new_ch)
+    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+    if tot_width >= max_width then break end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.message = function(msg) H.echo(msg, true) end
+
+H.error = function(msg) error(('(mini.sessions) %s'):format(msg)) end
+
 H.default_opts = function(action)
   local config = MiniSessions.config
   return {
@@ -540,10 +564,6 @@ H.default_opts = function(action)
     hooks = { pre = config.hooks.pre[action], post = config.hooks.post[action] },
   }
 end
-
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.sessions) ' .. msg)) end
-
-H.error = function(msg) error(('(mini.sessions) %s'):format(msg)) end
 
 H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 

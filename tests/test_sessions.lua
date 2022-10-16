@@ -138,14 +138,17 @@ T = new_set({
       -- Ensure always identical starting current directory
       cd(project_root)
 
-      -- Avoid 'hit-enter-prompt' during setup. It seems to happen because child
-      -- process can't find "stdpath('data')/session".
-      child.o.cmdheight = 10
-
       -- Ensure directory structure invariants
       cleanup_directories()
 
+      -- Make all showed messages full width
+      child.o.cmdheight = 10
+
+      -- Load module
       load_module()
+
+      -- Ensure clear message history
+      child.cmd('messages clear')
     end,
     post_once = function()
       cleanup_directories()
