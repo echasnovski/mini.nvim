@@ -801,8 +801,10 @@ MiniSurround.user_input = function(prompt, text)
   -- simple way to stop execution of this current function until `ui.input()`'s
   -- callback finished execution.
   local opts = { prompt = '(mini.surround) ' .. prompt .. ': ', default = text or '' }
+  vim.cmd('echohl Question')
   -- Use `pcall` to allow `<C-c>` to cancel user input
   local ok, res = pcall(vim.fn.input, opts)
+  vim.cmd([[echohl None | echo '' | redraw]])
 
   -- Stop key listening
   on_key(nil, H.ns_id.input)
@@ -1022,6 +1024,7 @@ H.builtin_surroundings.i = {
 -- - 'direction' - direction in which `MiniSurround.find()` should go. Used to
 --   enable same `operatorfunc` pattern for dot-repeatability.
 -- - 'search_method' - search method.
+-- - 'msg_shown' - whether helper message was shown.
 H.cache = {}
 
 -- Helper functionality =======================================================
@@ -1788,10 +1791,12 @@ H.user_surround_id = function(sur_type)
     if not needs_help_msg then return end
 
     local msg = string.format('Enter %s surrounding identifier (single character) ', sur_type)
-    H.message(msg)
+    H.echo(msg)
+    H.cache.msg_shown = true
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false
+  H.unecho()
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == 27 then return nil end
@@ -2008,7 +2013,31 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.surround) ' .. msg)) end
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.surround) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+  local chunks, tot_width = {}, 0
+  for _, ch in ipairs(msg) do
+    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+    table.insert(chunks, new_ch)
+    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+    if tot_width >= max_width then break end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.unecho = function()
+  if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
+end
+
+H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.surround) %s', msg)) end
 

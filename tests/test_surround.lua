@@ -83,7 +83,7 @@ T = new_set({
       child.setup()
       load_module()
 
-      -- Avoid hit-enter-prompt
+      -- Make all showed messages full width
       child.o.cmdheight = 10
     end,
     post_once = child.stop,
@@ -418,6 +418,9 @@ T['Add surrounding']['places cursor to the right of left surrounding'] = functio
 end
 
 T['Add surrounding']['prompts helper message after one idle second'] = function()
+  child.set_size(5, 70)
+  child.o.cmdheight = 1
+
   set_lines({ ' aaa ' })
   set_cursor(1, 1)
 
@@ -426,10 +429,16 @@ T['Add surrounding']['prompts helper message after one idle second'] = function(
   sleep(200)
 
   type_keys('sa', 'iw')
-  sleep(1000 - 10)
+  sleep(1000)
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
   eq(get_latest_message(), '')
-  sleep(10 + 2)
-  eq(get_latest_message(), '(mini.surround) Enter output surrounding identifier (single character) ')
+  child.expect_screenshot()
+
+  -- Should clear afterwards
+  type_keys(')')
+  child.expect_screenshot()
 end
 
 T['Add surrounding']['works with multibyte characters'] = function()
@@ -613,6 +622,9 @@ T['Delete surrounding']['places cursor to the right of left surrounding'] = func
 end
 
 T['Delete surrounding']['prompts helper message after one idle second'] = function()
+  child.set_size(5, 70)
+  child.o.cmdheight = 1
+
   -- Mapping is applied only after `timeoutlen` milliseconds, because
   -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
   child.o.timeoutlen = 50
@@ -626,10 +638,16 @@ T['Delete surrounding']['prompts helper message after one idle second'] = functi
   sleep(200)
 
   type_keys('sd')
-  sleep(total_wait_time - 10)
+  sleep(total_wait_time)
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
   eq(get_latest_message(), '')
-  sleep(10 + 2)
-  eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
+  child.expect_screenshot()
+
+  -- Should clear afterwards
+  type_keys(')')
+  child.expect_screenshot()
 end
 
 T['Delete surrounding']['works with multibyte characters'] = function()
@@ -815,8 +833,11 @@ T['Replace surrounding']['places cursor to the right of left surrounding'] = fun
 end
 
 T['Replace surrounding']['prompts helper message after one idle second'] = function()
+  child.set_size(5, 70)
+  child.o.cmdheight = 1
+
   -- Mapping is applied only after `timeoutlen` milliseconds, because
-  -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
+  -- there are `srn`/`srl` mappings. Wait 1000 seconds after that.
   child.o.timeoutlen = 50
   local total_wait_time = 1000 + child.o.timeoutlen
 
@@ -828,19 +849,24 @@ T['Replace surrounding']['prompts helper message after one idle second'] = funct
   sleep(200)
 
   type_keys('sr')
-  sleep(total_wait_time - 10)
+  sleep(total_wait_time)
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
   eq(get_latest_message(), '')
-  sleep(10 + 2)
-  eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
+  child.expect_screenshot()
 
   clear_messages()
   type_keys(')')
 
   -- Here mapping collision doesn't matter any more
-  sleep(1000 - 10)
+  sleep(1000)
   eq(get_latest_message(), '')
-  sleep(10 + 2)
-  eq(get_latest_message(), '(mini.surround) Enter output surrounding identifier (single character) ')
+  child.expect_screenshot()
+
+  -- Should clear afterwards
+  type_keys('>')
+  child.expect_screenshot()
 end
 
 T['Replace surrounding']['works with multibyte characters'] = function()
@@ -1079,8 +1105,11 @@ T['Find surrounding']['respects `config.search_method`'] = function()
 end
 
 T['Find surrounding']['prompts helper message after one idle second'] = function()
+  child.set_size(5, 70)
+  child.o.cmdheight = 1
+
   -- Mapping is applied only after `timeoutlen` milliseconds, because
-  -- there are `sdn`/`sdl` mappings. Wait 1000 seconds after that.
+  -- there are `sfn`/`sfl` mappings. Wait 1000 seconds after that.
   child.o.timeoutlen = 50
   local total_wait_time = 1000 + child.o.timeoutlen
 
@@ -1092,10 +1121,16 @@ T['Find surrounding']['prompts helper message after one idle second'] = function
   sleep(200)
 
   type_keys('sf')
-  sleep(total_wait_time - 10)
+  sleep(total_wait_time)
+
+  -- Should show helper message without adding it to `:messages` and causing
+  -- hit-enter-prompt
   eq(get_latest_message(), '')
-  sleep(10 + 2)
-  eq(get_latest_message(), '(mini.surround) Enter input surrounding identifier (single character) ')
+  child.expect_screenshot()
+
+  -- Should clear afterwards
+  type_keys(')')
+  child.expect_screenshot()
 end
 
 T['Find surrounding']['works with multibyte characters'] = function()
@@ -1379,10 +1414,12 @@ T['Highlight surrounding']['respects `v:count` for input surrounding'] = functio
   child.expect_screenshot()
 
   -- Should give informative message on failure
+  child.set_size(10, 80)
   child.o.cmdheight = 10
   set_lines({ '(a)' })
   set_cursor(1, 0)
   type_keys('2sh', ')')
+
   has_message_about_not_found(')', nil, nil, 2)
 end
 
@@ -1811,6 +1848,19 @@ T['Builtin']['Function call']['handles <C-c>, <Esc>, <CR> in user input'] = func
   validate_edit({ '[aaa]' }, { 1, 2 }, { '(aaa)' }, { 1, 1 }, type_keys, 'sr', ']', 'f', '<CR>')
 end
 
+T['Builtin']['Function call']['colors its prompts'] = function()
+  child.set_size(5, 40)
+
+  set_lines({ '(aaa)' })
+  set_cursor(1, 2)
+  type_keys('sr', ')', 'f', 'hello')
+  child.expect_screenshot()
+  type_keys('<CR>')
+
+  -- Should clean command line afterwards
+  child.expect_screenshot()
+end
+
 T['Builtin']['Tag'] = new_set()
 
 T['Builtin']['Tag']['works'] = function()
@@ -1916,6 +1966,19 @@ T['Builtin']['Tag']['handles <C-c>, <Esc>, <CR> in user input'] = function()
   validate_edit({ '(aaa)' }, { 1, 2 }, { '<>aaa</>' }, { 1, 2 }, type_keys, 'sr', ')', 't', '<CR>')
 end
 
+T['Builtin']['Tag']['colors its prompts'] = function()
+  child.set_size(5, 40)
+
+  set_lines({ '(aaa)' })
+  set_cursor(1, 2)
+  type_keys('sr', ')', 't', 'hello')
+  child.expect_screenshot()
+  type_keys('<CR>')
+
+  -- Should clean command line afterwards
+  child.expect_screenshot()
+end
+
 T['Builtin']['User prompt'] = new_set()
 
 T['Builtin']['User prompt']['works'] = function()
@@ -1996,6 +2059,21 @@ T['Builtin']['User prompt']['handles <C-c>, <Esc>, <CR> in user input'] = functi
   -- string in pattern search
   validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', '?', '<CR>')
   validate_edit({ '**aaa**' }, { 1, 3 }, { '**aaa**' }, { 1, 3 }, type_keys, 'sr', '?', '**<CR>', '<CR>')
+end
+
+T['Builtin']['User prompt']['colors its prompts'] = function()
+  child.set_size(5, 40)
+
+  set_lines({ '(aaa)' })
+  set_cursor(1, 2)
+  type_keys('sr', ')', '?', 'xxx')
+  child.expect_screenshot()
+  type_keys('<CR>', 'yyy')
+  child.expect_screenshot()
+  type_keys('<CR>')
+
+  -- Should clean command line afterwards
+  child.expect_screenshot()
 end
 
 local set_custom_surr = function(tbl) child.lua('MiniSurround.config.custom_surroundings = ' .. vim.inspect(tbl)) end
@@ -2303,8 +2381,6 @@ end
 
 -- TODO: Remove after 0.6.0
 T['Custom surrounding']['transition from previous format'] = function()
-  -- Avoid hit-enter-prompt
-  child.o.cmdheight = 10
   child.lua([=[MiniSurround.config.custom_surroundings = {
     s = { input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' } }
   }]=])
