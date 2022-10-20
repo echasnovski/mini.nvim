@@ -1258,9 +1258,7 @@ H.make_query = function(buf_id, query, echo_msg)
     -- Make sure that output of `echo` will be shown
     vim.cmd('redraw')
 
-    local msg = ('Query: %s'):format(query)
-    -- Use `echo` because it doesn't write to `:messages`.
-    vim.cmd(([[echo '(mini.starter) %s']]):format(vim.fn.escape(msg, "'")))
+    H.echo(('Query: %s'):format(query))
   end
 end
 
@@ -1408,6 +1406,30 @@ H.is_something_shown = function()
 end
 
 -- Utilities ------------------------------------------------------------------
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.starter) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+  local chunks, tot_width = {}, 0
+  for _, ch in ipairs(msg) do
+    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+    table.insert(chunks, new_ch)
+    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+    if tot_width >= max_width then break end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
+end
+
+H.message = function(msg) H.echo(msg, true) end
+
+H.error = function(msg) error(string.format('(mini.starter) %s', msg)) end
+
 H.validate_starter_buf_id = function(buf_id, fun_name, severity)
   local is_starter_buf_id = type(buf_id) == 'number'
     and vim.tbl_contains(vim.tbl_keys(H.buffer_data), buf_id)
@@ -1447,10 +1469,6 @@ else
     vim.highlight.range(buf_id, ns_id, hl_group, { line, col_start }, { line, col_end })
   end
 end
-
-H.message = function(msg) vim.cmd('echomsg ' .. vim.inspect('(mini.starter) ' .. msg)) end
-
-H.error = function(msg) error(string.format('(mini.starter) %s', msg)) end
 
 H.get_buffer_windows = function(buf_id)
   return vim.tbl_filter(

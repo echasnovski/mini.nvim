@@ -275,14 +275,7 @@ T['open()']['respects `vim.b.ministarter_config`'] = function()
   child.expect_screenshot()
 end
 
-T['refresh()'] = new_set({
-  hooks = {
-    pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
-    end,
-  },
-})
+T['refresh()'] = new_set()
 
 T['refresh()']['does `header` normalization'] = function()
   validate_equal_starter({ header = '100' }, { header = [['100']] })
@@ -437,7 +430,6 @@ T['refresh()']['calls `content_hooks` on every call'] = function()
 end
 
 T['refresh()']['respects `vim.b.ministarter_config`'] = function()
-  child.o.cmdheight = 1
   child.lua('MiniStarter.open()')
   child.expect_screenshot()
 
@@ -713,14 +705,7 @@ T['gen_hook']['aligning()']['respects arguments'] = new_set({
 })
 
 T['gen_hook']['aligning()']['handles small windows'] = function()
-  child.cmd('vsplit | split')
-  child.api.nvim_win_set_width(0, 10)
-  child.api.nvim_win_set_height(0, 10)
-  child.lua('MiniStarter.open()')
-  child.expect_screenshot()
-end
-
-T['gen_hook']['aligning() handles small windows'] = function()
+  child.set_size(15, 40)
   child.cmd('vsplit | split')
   child.api.nvim_win_set_width(0, 2)
   child.api.nvim_win_set_height(0, 2)
@@ -814,9 +799,6 @@ end
 T['set_query()'] = new_set({
   hooks = {
     pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
-
       child.lua('MiniStarter.config.items = ' .. example_itemstring)
       child.lua('MiniStarter.open()')
     end,
@@ -849,6 +831,9 @@ T['set_query()']['validates argument'] = function()
 end
 
 T['set_query()']['does not allow query resulting in no active items'] = function()
+  -- Make all showed messages full width
+  child.o.cmdheight = 2
+
   child.lua([[MiniStarter.set_query('a')]])
   eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa' })
 
@@ -868,9 +853,6 @@ end
 T['add_to_query()'] = new_set({
   hooks = {
     pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
-
       child.lua('MiniStarter.config.items = ' .. vim.inspect(example_items))
       child.lua('MiniStarter.open()')
     end,
@@ -878,6 +860,9 @@ T['add_to_query()'] = new_set({
 })
 
 T['add_to_query()']['works'] = function()
+  -- Make all showed messages full width
+  child.o.cmdheight = 2
+
   eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
 
   child.lua([[MiniStarter.add_to_query('a')]])
@@ -957,16 +942,12 @@ T['Autoopening']['does not autoopen if Neovim started to show something'] = func
   validate_starter_not_shown()
 end
 
-T['Querying'] = new_set({
-  hooks = {
-    pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
-    end,
-  },
-})
+T['Querying'] = new_set()
 
 T['Querying']['works'] = function()
+  -- Make all showed messages full width
+  child.o.cmdheight = 2
+
   reload_module({ items = example_items })
   child.lua('MiniStarter.open()')
   eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
@@ -1031,8 +1012,6 @@ end
 T['Keybindings'] = new_set({
   hooks = {
     pre_case = function()
-      -- Avoid hit-enter-prompt
-      child.o.cmdheight = 10
       reload_module({ items = example_items, content_hooks = {}, header = '', footer = '' })
       child.lua('MiniStarter.open()')
     end,
