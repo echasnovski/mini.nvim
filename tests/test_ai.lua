@@ -18,8 +18,6 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
-local avoid_hit_enter_prompt = function() child.o.cmdheight = 10 end
-
 local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local get_mode = function() return child.api.nvim_get_mode()['mode'] end
@@ -421,7 +419,8 @@ T['find_textobject()']['handles callable table']['as specification item'] = func
 end
 
 T['find_textobject()']['shows message if no region is found'] = function()
-  avoid_hit_enter_prompt()
+  -- Make all showed messages full width
+  child.o.cmdheight = 10
 
   local validate = function(msg, args)
     child.cmd('messages clear')
@@ -1363,7 +1362,6 @@ T['Textobject']['works in Visual mode'] = function()
   -- Exits Visual mode if textobject is not found
   set_lines({ 'aa' })
   set_cursor(1, 0)
-  avoid_hit_enter_prompt()
 
   type_keys('v', 'a)')
   eq(get_cursor(), { 1, 0 })
@@ -1423,8 +1421,6 @@ T['Textobject']['works with multibyte characters'] = function()
 end
 
 T['Textobject']['respects `v:count`'] = function()
-  avoid_hit_enter_prompt()
-
   validate_tobj1d('(aa)bb(cc)dd(ee)', 0, '2a)', { 7, 10 })
   validate_tobj1d('(aa)bb(cc)dd(ee)', 0, '3a)', { 13, 16 })
 
@@ -1525,8 +1521,8 @@ end
 
 T['Textobject']['prompts helper message after one idle second'] = new_set({ parametrize = { { 'a' }, { 'i' } } }, {
   test = function(key)
-    set_lines({ 'aaa' })
-    set_cursor(1, 1)
+    child.set_size(5, 70)
+    child.o.cmdheight = 1
 
     -- Both mappings are applied only after `timeoutlen` milliseconds, because
     -- there are `an`/`in`/`al`/`il` mappings.
@@ -1534,16 +1530,26 @@ T['Textobject']['prompts helper message after one idle second'] = new_set({ para
     child.o.timeoutlen = 50
     local total_wait_time = 1000 + child.o.timeoutlen
 
+    set_lines({ '(aaa)' })
+    set_cursor(1, 1)
+
     type_keys('v', key)
-    sleep(total_wait_time - 10)
+    sleep(total_wait_time)
+
+    -- Should show helper message without adding it to `:messages` and causing
+    -- hit-enter-prompt
     eq(get_latest_message(), '')
-    sleep(10 + 2)
-    eq(get_latest_message(), string.format('(mini.ai) Enter `%s` textobject identifier (single character) ', key))
+    child.expect_screenshot()
+
+    -- Should clear afterwards
+    type_keys(')')
+    child.expect_screenshot()
   end,
 })
 
 T['Textobject']['shows message if no textobject is found'] = function()
-  avoid_hit_enter_prompt()
+  -- Make all showed messages full width
+  child.o.cmdheight = 10
 
   local validate = function(keys, msg)
     child.cmd('messages clear')
@@ -1668,8 +1674,6 @@ T['Textobject next/last']['allows dot-repeat'] = function()
 end
 
 T['Textobject next/last']['respects `v:count`'] = function()
-  avoid_hit_enter_prompt()
-
   validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '2an)', { 9, 12 })
   validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '2in)', { 10, 11 })
   validate_tobj1d('(aa)(bb)(cc)(dd)', 1, '3an)', { 13, 16 })
@@ -2157,7 +2161,6 @@ T['Builtin']['Argument']['works with whitespace argument'] = function()
 end
 
 T['Builtin']['Argument']['does not match with cursor on covering bracket'] = function()
-  avoid_hit_enter_prompt()
   child.lua([[MiniAi.config.search_method = 'cover']])
 
   validate_no_tobj1d('f(a)', 1, 'aa')
@@ -2167,7 +2170,6 @@ T['Builtin']['Argument']['does not match with cursor on covering bracket'] = fun
 end
 
 T['Builtin']['Argument']['ignores empty brackets'] = function()
-  avoid_hit_enter_prompt()
   validate_no_tobj1d('f()', 0, 'aa')
   validate_no_tobj1d('f()', 0, 'ia')
 end
@@ -2307,8 +2309,6 @@ T['Builtin']['Function call']['is detected with "_" and "." in name'] = function
 end
 
 T['Builtin']['Function call']['has limited support of multibyte characters'] = function()
-  avoid_hit_enter_prompt()
-
   -- It doesn't support multibyte characters in name due to Lua patterns nature
   validate_no_tobj1d('ыы(aa)', 0, 'af')
 
@@ -2359,8 +2359,6 @@ end
 T['Builtin']['Tag']['does not work in some cases'] = function()
   -- Although, it would be great if it did
 
-  avoid_hit_enter_prompt()
-
   -- It does not take into account that part is inside string
   validate_tobj1d([[<x> '</x>' </x>]], 0, 'at', { 1, 9 })
 
@@ -2373,8 +2371,6 @@ T['Builtin']['Tag']['does not work in some cases'] = function()
 end
 
 T['Builtin']['Tag']['allows extra symbols in opening tag'] = function()
-  avoid_hit_enter_prompt()
-
   validate_tobj1d('<x bbb cc_dd!>aaa</x>', 0, 'at', { 1, 21 })
 
   -- Symbol `<` is not allowed
@@ -2394,8 +2390,6 @@ T['Builtin']['Tag']['detects covering with smallest width'] = function()
 end
 
 T['Builtin']['Tag']['works in edge cases'] = function()
-  avoid_hit_enter_prompt()
-
   -- Nesting different tags
   validate_tobj1d('<x><y></y></x>', 1, 'at', { 1, 14 })
   validate_tobj1d('<x><y></y></x>', 3, 'at', { 4, 10 })
@@ -2411,8 +2405,6 @@ T['Builtin']['Tag']['works in edge cases'] = function()
 end
 
 T['Builtin']['Tag']['has limited support of multibyte characters'] = function()
-  avoid_hit_enter_prompt()
-
   -- It doesn't support multibyte characters in name due to Lua patterns nature
   validate_no_tobj1d('<ы>aaa</ы>', 0, 'at')
 
@@ -2471,8 +2463,6 @@ T['Builtin']['User prompt']['works with empty region'] =
   function() validate_tobj1d('_eo', 0, 'i?e<CR>o<CR>', { 3, 3 }) end
 
 T['Builtin']['User prompt']['can not be covering'] = function()
-  avoid_hit_enter_prompt()
-
   set_lines({ 'e_e_o_o' })
   set_cursor(1, 0)
   local keys = { 'a?', 'e<CR>', 'o<CR>' }
@@ -2530,6 +2520,22 @@ T['Builtin']['User prompt']['handles <C-c>, <Esc>, <CR> in user input'] = functi
   -- Should stop on `<CR>` because can't use empty string in pattern search
   validate_nothing('a', '<CR>')
   validate_nothing('i', '<CR>')
+end
+
+T['Builtin']['User prompt']['colors its prompts'] = function()
+  child.set_size(5, 40)
+  child.o.showmode = false
+
+  set_lines({ '_aaa!' })
+  set_cursor(1, 2)
+  type_keys('v', 'a?', '_')
+  child.expect_screenshot()
+  type_keys('<CR>', '!')
+  child.expect_screenshot()
+  type_keys('<CR>')
+
+  -- Should clean command line afterwards
+  child.expect_screenshot()
 end
 
 T['Builtin']['User prompt']['works in edge cases'] = function()
@@ -2592,8 +2598,6 @@ T['Builtin']['Default']['works with empty region'] = function()
 end
 
 T['Builtin']['Default']['can not be covering'] = function()
-  avoid_hit_enter_prompt()
-
   set_lines({ '_aa_bb_' })
   set_cursor(1, 0)
 
@@ -2625,8 +2629,6 @@ T['Custom textobject']['works'] = function()
 end
 
 T['Custom textobject']['overrides builtins'] = function()
-  avoid_hit_enter_prompt()
-
   set_custom_tobj({ a = { 'a()a()a' } })
   validate_tobj1d('__aaa__', 0, 'aa', { 3, 5 })
   validate_no_tobj1d('ff(xx)', 0, 'aa')
@@ -2701,7 +2703,6 @@ T['Custom textobject']['handles function as textobject spec'] = function()
   validate_tobj({ 'aaaaa', 'bbbb', 'ccc' }, { 2, 0 }, 'ig', { { 1, 1 }, { 3, 2 } })
 
   -- Function which returns region array
-  avoid_hit_enter_prompt()
   child.lua([[_G.long_lines = function(_, _, _)
     local res = {}
     for i = 1, vim.api.nvim_buf_line_count(0) do
@@ -2756,8 +2757,6 @@ T['Custom textobject']['handles different extractions in last spec item'] = new_
 T['Custom textobject']['works with special patterns'] = new_set()
 
 T['Custom textobject']['works with special patterns']['%bxx'] = function()
-  avoid_hit_enter_prompt()
-
   -- `%bxx` should represent balanced character
   set_custom_tobj({ e = { '%bee' } })
 
@@ -2840,8 +2839,6 @@ T['Custom textobject']['documented examples']['full buffer'] = function()
 end
 
 T['Custom textobject']['documented examples']['wide lines'] = function()
-  avoid_hit_enter_prompt()
-
   child.lua([[_G.long_lines = function(_, _, _)
     local res = {}
     for i = 1, vim.api.nvim_buf_line_count(0) do
@@ -2895,8 +2892,6 @@ T['Custom textobject']['documented examples']['word'] = function()
 end
 
 T['Custom textobject']['documented examples']['camel case word'] = function()
-  avoid_hit_enter_prompt()
-
   set_custom_tobj({
     c = {
       { '%u[%l%d]+%f[^%l%d]', '%f[%S][%l%d]+%f[^%l%d]', '%f[%P][%l%d]+%f[^%l%d]', '^[%l%d]+%f[^%l%d]' },

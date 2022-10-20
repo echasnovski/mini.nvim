@@ -1075,6 +1075,9 @@ H.builtin_textobjects = {
     local right = H.user_input('Right edge')
     if right == nil or right == '' then return end
 
+    -- Clean command line from prompt messages (does not work in Visual mode)
+    vim.cmd([[echo '' | redraw]])
+
     local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
     local res = { string.format('%s().-()%s', left_esc, right_esc) }
     H.cache.prompted_textobject = res
@@ -1781,10 +1784,12 @@ H.user_textobject_id = function(ai_type)
     if not needs_help_msg then return end
 
     local msg = string.format('Enter `%s` textobject identifier (single character) ', ai_type)
-    H.message(msg)
+    H.echo(msg)
+    H.cache.msg_shown = true
   end, 1000)
   local ok, char = pcall(vim.fn.getchar)
   needs_help_msg = false
+  H.unecho()
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == 27 then return nil end
@@ -1809,8 +1814,10 @@ H.user_input = function(prompt, text)
 
   -- Ask for input
   local opts = { prompt = '(mini.ai) ' .. prompt .. ': ', default = text or '' }
+  vim.cmd('echohl Question')
   -- Use `pcall` to allow `<C-c>` to cancel user input
   local ok, res = pcall(vim.fn.input, opts)
+  vim.cmd([[echohl None | echo '' | redraw]])
 
   -- Stop key listening
   on_key(nil, H.ns_id.input)
@@ -1845,11 +1852,31 @@ H.get_visual_region = function()
 end
 
 -- Utilities ------------------------------------------------------------------
-H.message = function(msg)
-  vim.cmd([[echon '']])
-  vim.cmd('redraw')
-  vim.cmd('echomsg ' .. vim.inspect('(mini.ai) ' .. msg))
+H.echo = function(msg, is_important)
+  -- Construct message chunks
+  msg = type(msg) == 'string' and { { msg } } or msg
+  table.insert(msg, 1, { '(mini.ai) ', 'WarningMsg' })
+
+  -- Avoid hit-enter-prompt
+  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
+  local chunks, tot_width = {}, 0
+  for _, ch in ipairs(msg) do
+    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
+    table.insert(chunks, new_ch)
+    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
+    if tot_width >= max_width then break end
+  end
+
+  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
+  vim.cmd([[echo '' | redraw]])
+  vim.api.nvim_echo(chunks, is_important, {})
 end
+
+H.unecho = function()
+  if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
+end
+
+H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.ai) %s', msg), 0) end
 
