@@ -756,6 +756,13 @@ T['gen_pattern_spotter()']['works with multibyte characters'] = function()
   set_lines({ 'ы ыыы ы_ы ыы' })
   start_gen_pattern('%S')
   child.expect_screenshot()
+
+  child.lua('MiniJump2d.stop()')
+
+  -- It should also work with three and four byte characters
+  set_lines({ '███ 🬤🬤🬤 🬤█🬤 █🬤🬤🬤█' })
+  start_gen_pattern('%S')
+  child.expect_screenshot()
 end
 
 T['gen_pattern_spotter()']['works in edge cases'] = function()

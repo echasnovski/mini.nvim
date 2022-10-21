@@ -408,7 +408,8 @@ MiniJump2d.gen_pattern_spotter = function(pattern, side)
       spot = math.min(math.max(spot, 0), line:len())
 
       -- Unify how spot is chosen in case of multibyte characters
-      spot = vim.str_byteindex(line, vim.str_utfindex(line, spot))
+      local utf_index = vim.str_utfindex(line, spot)
+      spot = vim.str_byteindex(line, utf_index)
 
       -- Add spot only if it referces new actually visible column
       if spot ~= res[#res] then table.insert(res, spot) end
