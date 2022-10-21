@@ -736,6 +736,26 @@ T['gen_hook']['aligning()']['handles small windows'] = function()
   child.expect_screenshot()
 end
 
+T['gen_hook']['aligning()']['has output respecting `buf_id` argument'] = function()
+  child.set_size(15, 40)
+  reload_from_strconfig({
+    content_hooks = [[{ MiniStarter.gen_hook.aligning('center', 'center') }]],
+    header = [['']],
+    footer = [['']],
+    items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
+  })
+
+  child.cmd('vsplit | split | wincmd l')
+  child.lua('MiniStarter.open()')
+  local starter_buf_id = child.api.nvim_get_current_buf()
+  child.expect_screenshot()
+
+  child.cmd('wincmd h')
+  child.api.nvim_win_set_width(0, 5)
+  child.lua('MiniStarter.refresh(...)', { starter_buf_id })
+  child.expect_screenshot()
+end
+
 local reload_indexing = function(args)
   local itemstrings = {
     mock_itemstring('a', 'AAA'),

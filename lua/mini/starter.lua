@@ -693,9 +693,11 @@ end
 --- Hook generator for aligning content
 ---
 --- Output is a content hook which independently aligns content horizontally
---- and vertically. Basically, this computes left and top pads for
---- |MiniStarter.gen_hook.padding| such that output lines would appear aligned
---- in certain way.
+--- and vertically. Window width and height are taken from first window in current
+--- tabpage displaying the starter buffer.
+---
+--- Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
+--- such that output lines would appear aligned in certain way.
 ---
 ---@param horizontal string One of "left", "center", "right". Default: "left".
 ---@param vertical string One of "top", "center", "bottom". Default: "top".
@@ -708,17 +710,20 @@ MiniStarter.gen_hook.aligning = function(horizontal, vertical)
   local horiz_coef = ({ left = 0, center = 0.5, right = 1.0 })[horizontal]
   local vert_coef = ({ top = 0, center = 0.5, bottom = 1.0 })[vertical]
 
-  return function(content, _)
+  return function(content, buf_id)
+    local win_id = vim.fn.bufwinid(buf_id)
+    if win_id < 0 then return end
+
     local line_strings = MiniStarter.content_to_lines(content)
 
     -- Align horizontally
     -- Don't use `string.len()` to account for multibyte characters
     local lines_width = vim.tbl_map(function(l) return vim.fn.strdisplaywidth(l) end, line_strings)
-    local min_right_space = vim.api.nvim_win_get_width(0) - math.max(unpack(lines_width))
+    local min_right_space = vim.api.nvim_win_get_width(win_id) - math.max(unpack(lines_width))
     local left_pad = math.max(math.floor(horiz_coef * min_right_space), 0)
 
     -- Align vertically
-    local bottom_space = vim.api.nvim_win_get_height(0) - #line_strings
+    local bottom_space = vim.api.nvim_win_get_height(win_id) - #line_strings
     local top_pad = math.max(math.floor(vert_coef * bottom_space), 0)
 
     return MiniStarter.gen_hook.padding(left_pad, top_pad)(content)

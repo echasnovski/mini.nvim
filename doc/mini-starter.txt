@@ -439,9 +439,11 @@ Return~
 Hook generator for aligning content
 
 Output is a content hook which independently aligns content horizontally
-and vertically. Basically, this computes left and top pads for
-|MiniStarter.gen_hook.padding| such that output lines would appear aligned
-in certain way.
+and vertically. Window width and height are taken from first window in current
+tabpage displaying the starter buffer.
+
+Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
+such that output lines would appear aligned in certain way.
 
 Parameters~
 {horizontal} `(string)` One of "left", "center", "right". Default: "left".
