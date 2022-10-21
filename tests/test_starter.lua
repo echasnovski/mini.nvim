@@ -429,6 +429,22 @@ T['refresh()']['calls `content_hooks` on every call'] = function()
   eq(child.lua_get('_G.hooks_history'), { 'a', 'b', 'a', 'b' })
 end
 
+T['refresh()']['calls `content_hooks` with proper signature'] = function()
+  child.lua([[MiniStarter.config.content_hooks = {
+    function(...) local dots = {...}; _G.args = dots; return dots[1] end
+  }]])
+  child.lua('MiniStarter.open()')
+  local buf_id = child.api.nvim_get_current_buf()
+
+  -- Hooks should be called with `(content, buf_id)` signature
+  child.lua('MiniStarter.refresh()')
+  local args = child.lua_get('_G.args')
+
+  eq(#args, 2)
+  eq(child.lua_get('MiniStarter.get_content()'), args[1])
+  eq(buf_id, args[2])
+end
+
 T['refresh()']['respects `vim.b.ministarter_config`'] = function()
   child.lua('MiniStarter.open()')
   child.expect_screenshot()

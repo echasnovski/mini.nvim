@@ -17,9 +17,9 @@
 ---   normalized to an array of items. Read about how supplied items are
 ---   normalized in |MiniStarter.refresh|.
 --- - Modify the final look by supplying content hooks: functions which take
----   buffer content as input (see |MiniStarter.get_content()| for more
----   information) and return buffer content as output. There are
----   pre-configured content hook generators in |MiniStarter.gen_hook|.
+---   buffer content (see |MiniStarter.get_content()|) and identifier as input
+---   while returning buffer content as output. There are pre-configured
+---   content hook generators in |MiniStarter.gen_hook|.
 --- - Choosing an item can be done in two ways:
 ---     - Type prefix query to filter item by matching its name (ignoring
 ---       case). Displayed information is updated after every typed character.
@@ -359,7 +359,8 @@ end
 ---       by empty line.
 ---     - Last lines contain separate strings of normalized footer.
 --- - Sequentially apply hooks from `MiniStarter.config.content_hooks` to
----   content. Output of one hook serves as input to the next.
+---   content. All hooks are applied with `(content, buf_id)` signature. Output
+---   of one hook serves as first argument to the next.
 --- - Gather final items from content with |MiniStarter.content_to_items|.
 --- - Convert content to buffer lines with |MiniStarter.content_to_lines| and
 ---   add them to buffer.
@@ -388,7 +389,7 @@ MiniStarter.refresh = function(buf_id)
   local content = H.make_initial_content(data.header, items, data.footer)
   local hooks = config.content_hooks or H.default_content_hooks
   for _, f in ipairs(hooks) do
-    content = f(content)
+    content = f(content, buf_id)
   end
   data.content = content
 
@@ -593,7 +594,7 @@ MiniStarter.gen_hook = {}
 MiniStarter.gen_hook.padding = function(left, top)
   left = math.max(left or 0, 0)
   top = math.max(top or 0, 0)
-  return function(content)
+  return function(content, _)
     -- Add left padding
     local left_pad = string.rep(' ', left)
     for _, line in ipairs(content) do
@@ -663,7 +664,7 @@ MiniStarter.gen_hook.indexing = function(grouping, exclude_sections)
   exclude_sections = exclude_sections or {}
   local per_section = grouping == 'section'
 
-  return function(content)
+  return function(content, _)
     local cur_section, n_section, n_item = nil, 0, 0
     local coords = MiniStarter.content_coords(content, 'item')
 
@@ -707,7 +708,7 @@ MiniStarter.gen_hook.aligning = function(horizontal, vertical)
   local horiz_coef = ({ left = 0, center = 0.5, right = 1.0 })[horizontal]
   local vert_coef = ({ top = 0, center = 0.5, bottom = 1.0 })[vertical]
 
-  return function(content)
+  return function(content, _)
     local line_strings = MiniStarter.content_to_lines(content)
 
     -- Align horizontally
@@ -772,7 +773,7 @@ end
 ---   `c`, use `content[c.line][c.unit]`.
 MiniStarter.content_coords = function(content, predicate)
   content = content or MiniStarter.get_content()
-  if predicate == nil then predicate = function(unit) return true end end
+  if predicate == nil then predicate = function(_) return true end end
   if type(predicate) == 'string' then
     local pred_type = predicate
     predicate = function(unit) return unit.type == pred_type end

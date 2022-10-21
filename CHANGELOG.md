@@ -28,6 +28,7 @@ Introduction of new module.
 ## mini.starter
 
 - Item evaluation is now prepended with query reset, as it is rarely needed any more (#105).
+- All hooks are now called with `(content, buf_id)` signature allowing them properly use current window layout.
 
 ## mini.surround
 
