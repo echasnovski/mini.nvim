@@ -1,4 +1,4 @@
-# Version 0.5.0.9000
+# Version 0.6.0
 
 - Stop official support of Neovim 0.5.
 - Make all messages use colors and not cause hit-enter-prompt.
