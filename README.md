@@ -10,7 +10,7 @@ Library of 20+ independent Lua modules improving overall [Neovim](https://github
 
 Think about this project as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used separately without any startup and usage overhead.
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or leave a Github star.
+If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Table of contents
 
@@ -42,6 +42,8 @@ Here are code snippets for some common installation methods:
 |--------|--------------------------------------------------------|
 | Main   | `Plug 'echasnovski/mini.nvim'`                         |
 | Stable | `Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }` |
+
+- Every module is also distributed as a standalone Git repository. Check out module's information for more details.
 
 **Important**: don't forget to call module's `setup()` (if required) to enable its functionality.
 

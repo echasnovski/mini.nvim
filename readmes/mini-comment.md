@@ -2,17 +2,23 @@
 
 <!-- badges: start -->
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-<!-- [![GitHub tag](https://badgen.net/github/tag/echasnovski/mini.comment)](https://github.com/echasnovski/mini.comment/tags/) -->
-<!-- [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.comment/blob/main/CHANGELOG.md) -->
 <!-- badges: end -->
 
-**Fast and familiar per-line commenting**
+### Fast and familiar per-line commenting
 
-See more details in [help file](../doc/mini-comment.txt).
+See more details in [Features](#features) and [help file](../doc/mini-comment.txt).
 
-This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. See its repository page to learn about common design principles and configuration recipes.
+---
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](../CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project.
+⦿ This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. Please use [this link](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-comment.md) if you want to mention this module.
+
+⦿ All contributions (issues, pull requests, discussions, etc.) are done inside of 'mini.nvim'.
+
+⦿ See the repository page to learn about common design principles and configuration recipes.
+
+---
+
+If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Demo
 
@@ -27,7 +33,7 @@ https://user-images.githubusercontent.com/24854248/173044250-1a8bceae-8f14-40e2-
 
 ## Installation
 
-<!-- This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository. -->
+This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
 
 There are two branches to install from:
 
@@ -41,24 +47,24 @@ Here are code snippets for some common installation methods (use only one):
 <table>
     <thead>
         <tr>
-            <!-- <th>Github repo</th> -->
+            <th>Github repo</th>
             <th>Branch</th> <th>Code snippet</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>use 'echasnovski/mini.nvim'</code></td>
         </tr>
         <tr>
             <td>Stable</td> <td><code>use { 'echasnovski/mini.nvim', branch = 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.comment'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>use { 'echasnovski/mini.comment', branch = 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.comment'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>use { 'echasnovski/mini.comment', branch = 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 
@@ -67,24 +73,24 @@ Here are code snippets for some common installation methods (use only one):
 <table>
     <thead>
         <tr>
-            <!-- <th>Github repo</th> -->
+            <th>Github repo</th>
             <th>Branch</th> <th>Code snippet</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
         </tr>
         <tr>
             <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.comment'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.comment', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.comment'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.comment', { 'branch': 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 

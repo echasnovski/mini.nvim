@@ -1,5 +1,7 @@
 # Version 0.6.0.9000
 
+- Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
+
 # Version 0.6.0
 
 - Stop official support of Neovim 0.5.

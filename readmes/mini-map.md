@@ -2,17 +2,23 @@
 
 <!-- badges: start -->
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-<!-- [![GitHub tag](https://badgen.net/github/tag/echasnovski/mini.map)](https://github.com/echasnovski/mini.map/tags/) -->
-<!-- [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.map/blob/main/CHANGELOG.md) -->
 <!-- badges: end -->
 
-**Window with buffer text overview, scrollbar, and highlights**
+### Window with buffer text overview, scrollbar, and highlights
 
-See more details in [help file](../doc/mini-map.txt).
+See more details in [Features](#features) and [help file](../doc/mini-map.txt).
 
-This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. See its repository page to learn about common design principles and configuration recipes.
+---
 
-If you want to help this project grow but don't know where to start, check out [contributing guides](../CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project.
+⦿ This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. Please use [this link](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-map.md) if you want to mention this module.
+
+⦿ All contributions (issues, pull requests, discussions, etc.) are done inside of 'mini.nvim'.
+
+⦿ See the repository page to learn about common design principles and configuration recipes.
+
+---
+
+If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Demo
 
@@ -44,7 +50,7 @@ https://user-images.githubusercontent.com/24854248/195806215-10e05020-50b7-4bee-
 
 ## Installation
 
-<!-- This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository. -->
+This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
 
 There are two branches to install from:
 
@@ -58,24 +64,24 @@ Here are code snippets for some common installation methods (use only one):
 <table>
     <thead>
         <tr>
-            <!-- <th>Github repo</th> -->
+            <th>Github repo</th>
             <th>Branch</th> <th>Code snippet</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>use 'echasnovski/mini.nvim'</code></td>
         </tr>
         <tr>
             <td>Stable</td> <td><code>use { 'echasnovski/mini.nvim', branch = 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.map'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>use { 'echasnovski/mini.map', branch = 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.map'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>use { 'echasnovski/mini.map', branch = 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 
@@ -84,24 +90,24 @@ Here are code snippets for some common installation methods (use only one):
 <table>
     <thead>
         <tr>
-            <!-- <th>Github repo</th> -->
+            <th>Github repo</th>
             <th>Branch</th> <th>Code snippet</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
         </tr>
         <tr>
             <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.map'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.map', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.map'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.map', { 'branch': 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 
