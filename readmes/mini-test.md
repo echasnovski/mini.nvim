@@ -11,7 +11,7 @@
 - Supports hierarchical tests, hooks, parametrization, filtering (like from current file or cursor position), screen tests, "busted-style" emulation, customizable reporters, and more.
 - Designed to be used with provided wrapper for managing child Neovim processes.
 
-See more details in [help file](../doc/mini-test.txt). For more hands-on introduction based on examples, see [TESTING.md](../TESTING.md). For more in-depth usage see [tests](../tests) of this plugin.
+See more details in [help file](../doc/mini-test.txt). For more hands-on introduction based on examples, see [TESTING.md](https://github.com/echasnovski/mini.nvim/blob/main/TESTING.md). For more in-depth usage see ['mini.nvim' tests](https://github.com/echasnovski/mini.nvim/tree/main/tests) of this plugin.
 
 This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. See its repository page to learn about common design principles and configuration recipes.
 
