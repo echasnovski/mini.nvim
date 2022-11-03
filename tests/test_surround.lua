@@ -2379,14 +2379,4 @@ T['Custom surrounding']['documented examples']['brackets with newlines'] = funct
   validate_edit({ '  aaa' }, { 1, 2 }, { '  (', 'aaa', ')' }, { 1, 2 }, type_keys, 'sa', 'iw', 'x')
 end
 
--- TODO: Remove after 0.6.0
-T['Custom surrounding']['transition from previous format'] = function()
-  child.lua([=[MiniSurround.config.custom_surroundings = {
-    s = { input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' } }
-  }]=])
-
-  validate_edit1d([=[aa[[bb]]cc]=], 4, [=[aa<bb>cc]=], 3, type_keys, 'sr', 's', '>')
-  expect.match(get_latest_message(), 'format.*has changed')
-end
-
 return T
