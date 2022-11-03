@@ -120,13 +120,6 @@ local H = {}
 ---
 ---@usage `require('mini.jump2d').setup({})` (replace `{}` with your `config` table)
 MiniJump2d.setup = function(config)
-  -- TODO: Remove after support for Neovim<0.6 is dropped
-  if vim.fn.has('nvim-0.6') == 0 then
-    vim.notify(
-      '(mini.jump2d) Official support for Neovim<0.6 will soon be dropped. Update to a newer version of Neovim.'
-    )
-  end
-
   -- Export module
   _G.MiniJump2d = MiniJump2d
 

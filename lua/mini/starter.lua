@@ -192,13 +192,6 @@ local H = {}
 ---
 ---@usage `require('mini.starter').setup({})` (replace `{}` with your `config` table)
 MiniStarter.setup = function(config)
-  -- TODO: Remove after support for Neovim<0.6 is dropped
-  if vim.fn.has('nvim-0.6') == 0 then
-    vim.notify(
-      '(mini.starter) Official support for Neovim<0.6 will soon be dropped. Update to a newer version of Neovim.'
-    )
-  end
-
   -- Export module
   _G.MiniStarter = MiniStarter
 
