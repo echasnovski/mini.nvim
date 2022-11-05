@@ -316,9 +316,9 @@ end
 
 --- Select session interactively and perform action
 ---
---- Note: this uses |vim.ui.select| function, which is present in Neovim
---- starting from 0.6 version. For more user-friendly experience, override it
---- (for example, with external plugins like "stevearc/dressing.nvim").
+--- Note: this uses |vim.ui.select()| function. For more user-friendly
+--- experience, override it (for example, with external plugins like
+--- "stevearc/dressing.nvim").
 ---
 ---@param action string Action to perform. Should be one of "read" (default),
 ---   "write", or "delete".
