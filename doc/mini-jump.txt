@@ -146,7 +146,7 @@ Parameters~
 Make smart jump
 
 If the last movement was a jump, perform another jump with the same target.
-Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
+Otherwise, wait for a target input (via |getcharstr()|). Respects |v:count|.
 
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
@@ -164,7 +164,7 @@ Make expression jump
 
 Cache information about the jump and return string with command to perform
 jump. Designed to be used inside Operator-pending mapping (see
-|omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
+|omap-info|). Always asks for target (via |getcharstr()|). Respects |v:count|.
 
 All default values are taken from |MiniJump.state| to emulate latest jump.
 

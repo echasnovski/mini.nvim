@@ -206,7 +206,7 @@ end
 --- Make smart jump
 ---
 --- If the last movement was a jump, perform another jump with the same target.
---- Otherwise, wait for a target input (via |getchar()|). Respects |v:count|.
+--- Otherwise, wait for a target input (via |getcharstr()|). Respects |v:count|.
 ---
 --- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
@@ -238,7 +238,7 @@ end
 ---
 --- Cache information about the jump and return string with command to perform
 --- jump. Designed to be used inside Operator-pending mapping (see
---- |omap-info|). Always asks for target (via |getchar()|). Respects |v:count|.
+--- |omap-info|). Always asks for target (via |getcharstr()|). Respects |v:count|.
 ---
 --- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
@@ -501,14 +501,12 @@ H.get_target = function()
     H.echo('Enter target single character ')
     H.cache.msg_shown = true
   end, 1000)
-  local ok, char = pcall(vim.fn.getchar)
+  local ok, char = pcall(vim.fn.getcharstr)
   needs_help_msg = false
   H.unecho()
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
-  if not ok or char == 27 then return end
-
-  if type(char) == 'number' then char = vim.fn.nr2char(char) end
+  if not ok or char == '\27' then return end
   return char
 end
 
