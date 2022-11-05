@@ -339,7 +339,7 @@ MiniJump2d.stop = function()
   H.cache.msg_shown = false
   vim.cmd('redraw')
 
-  if H.cache.is_in_getchar then vim.api.nvim_input('<C-c>') end
+  if H.cache.is_in_getcharstr then vim.api.nvim_input('<C-c>') end
 end
 
 --- Generate spotter for Lua pattern
@@ -540,8 +540,8 @@ H.cache = {
   -- Array of shown spots
   spots = nil,
 
-  -- Indicator of whether Neovim is currently in "getchar" mode
-  is_in_getchar = false,
+  -- Indicator of whether Neovim is currently in "getcharstr" mode
+  is_in_getcharstr = false,
 
   -- Whether helper message was shown
   msg_shown = false,
@@ -838,17 +838,12 @@ H.getcharstr = function(msg)
     end, 1000)
   end
 
-  -- Use `getchar()` because `getcharstr()` is present only in Neovim>=0.6
-  -- Might want to remove if support for Neovim<0.6 is dropped
-  H.cache.is_in_getchar = true
-  local ok, char = pcall(vim.fn.getchar)
-  H.cache.is_in_getchar = false
+  H.cache.is_in_getcharstr = true
+  local _, char = pcall(vim.fn.getcharstr)
+  H.cache.is_in_getcharstr = false
   needs_help_msg = false
   H.unecho()
 
-  if not ok then return end
-
-  if type(char) == 'number' then char = vim.fn.nr2char(char) end
   return char
 end
 

@@ -21,8 +21,6 @@ local get_latest_message = function() return child.cmd_capture('1messages') end
 -- Make helpers
 -- Window setups
 local setup_windows = function()
-  if child.fn.has('nvim-0.6') == 0 then child.o.hidden = true end
-
   -- Current tabpage. Create four windows.
   local win_topleft = child.api.nvim_get_current_win()
 
@@ -63,8 +61,6 @@ local setup_windows = function()
 end
 
 local setup_two_windows = function()
-  if child.fn.has('nvim-0.6') == 0 then child.o.hidden = true end
-
   local win_left = child.api.nvim_get_current_win()
   child.cmd('rightbelow vsplit aaa')
   local win_right = child.api.nvim_get_current_win()
