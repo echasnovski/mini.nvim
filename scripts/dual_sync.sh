@@ -35,6 +35,14 @@ sync_module () {
     LICENSE \
     $@
 
+  # Do nothing if patch is empty
+  if [[ ! -s $patch ]]
+  then
+    rm $patch
+    printf "Patch is empty\n"
+    return
+  fi
+
   # Tweak patch:
   # - Move 'readmes/mini-xxx.md' to 'README.md'.
   # - This also means move all references used in it one step higher (and hope
@@ -43,15 +51,10 @@ sync_module () {
   sed -i "s/\[help file\](\.\.\//[help file](/" $patch
 
   # Apply patch
-  if [[ -f $patch ]]
-  then
-    printf "Applying patch\n"
-    cd $repo
-    git am $patch
-    cd - > /dev/null
-  else
-    printf "No patch detected\n"
-  fi
+  printf "Applying patch\n"
+  cd $repo
+  git am $patch
+  cd - > /dev/null
 }
 
 sync_module "ai"

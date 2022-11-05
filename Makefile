@@ -30,4 +30,5 @@ dual_log:
 dual_push:
 	chmod u+x scripts/dual_push.sh && scripts/dual_push.sh
 	git branch --force sync
+	git push origin sync
 	rm -r dual/patches
