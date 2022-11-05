@@ -1,13 +1,17 @@
 name: Linting and style checking
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore: [ sync, stable ]
+  pull_request:
+    branches-ignore: [ sync, stable ]
 
 jobs:
   stylua:
     name: Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: JohnnyMorganz/stylua-action@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -24,7 +28,7 @@ jobs:
         id: neovim
         with:
           neovim: true
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Generate documentation
         run: make --silent documentation
       - name: Check for changes
@@ -34,7 +38,7 @@ jobs:
     name: File case sensitivity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Check Case Sensitivity
@@ -50,7 +54,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup neovim
         uses: rhysd/action-setup-vim@v1
         with:
