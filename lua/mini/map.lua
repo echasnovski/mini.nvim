@@ -857,8 +857,6 @@ MiniMap.gen_integration.diagnostic = function(hl_groups)
   )
 
   return function()
-    if vim.fn.has('nvim-0.6') == 0 then return {} end
-
     local line_hl = {}
     local diagnostic_arr = vim.diagnostic.get(MiniMap.current.buf_data.source)
     for _, data in ipairs(severity_data) do
