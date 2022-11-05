@@ -20,10 +20,6 @@ local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local get_ref_path = function(name) return string.format('tests/dir-test/%s', name) end
 
-local skip_screenshot = function()
-  if child.fn.has('nvim-0.6') == 0 then MiniTest.skip('Neovim version is not enough for `child.get_screenshot()`') end
-end
-
 local get_current_all_cases = function()
   -- Encode functions inside child. Works only for "simple" functions.
   local command = [[vim.tbl_map(function(case)
@@ -695,8 +691,6 @@ end
 T['expect']['reference_screenshot()'] = new_set()
 
 T['expect']['reference_screenshot()']['works'] = function()
-  skip_screenshot()
-
   local path = get_ref_path('reference-screenshot')
   child.set_size(5, 12)
 
@@ -714,8 +708,6 @@ T['expect']['reference_screenshot()']['works'] = function()
 end
 
 T['expect']['reference_screenshot()']['locates problem'] = function()
-  skip_screenshot()
-
   local path = get_ref_path('reference-screenshot')
   local validate = function(screen, pattern)
     expect.error(function() MiniTest.expect.reference_screenshot(screen, path) end, pattern)
@@ -754,7 +746,6 @@ T['expect']['reference_screenshot()']['locates problem'] = function()
 end
 
 T['expect']['reference_screenshot()']['correctly infers reference path'] = function()
-  skip_screenshot()
   child.set_size(5, 20)
 
   set_lines({ 'This path should be correctly inferred without suffix' })
@@ -771,7 +762,6 @@ T['expect']['reference_screenshot()']['correctly infers reference path'] = funct
 end
 
 local validate_path_sanitize = function()
-  skip_screenshot()
   child.set_size(5, 12)
   set_lines({ 'Path should be correctly sanitized' })
 
@@ -814,8 +804,6 @@ T['expect']['reference_screenshot()']['correctly sanitizes path for Windows '] =
 T['expect']['reference_screenshot()']['correctly sanitizes path for Windows #2.'] = validate_path_sanitize
 
 T['expect']['reference_screenshot()']['creates refernce if it does not exist'] = function()
-  skip_screenshot()
-
   local path = get_ref_path('nonexistent-reference-screenshot')
   child.fn.delete(path)
   finally(function()
@@ -835,8 +823,6 @@ T['expect']['reference_screenshot()']['creates refernce if it does not exist'] =
 end
 
 T['expect']['reference_screenshot()']['respects `opts` argument'] = function()
-  skip_screenshot()
-
   local path = get_ref_path('force-reference-screenshot')
   local notes = { 'Created reference screenshot at path ' .. vim.inspect(path) }
 
@@ -857,8 +843,6 @@ T['expect']['reference_screenshot()']['respects `opts` argument'] = function()
 end
 
 T['expect']['reference_screenshot()']['works with multibyte characters'] = function()
-  skip_screenshot()
-
   child.set_size(5, 12)
   set_lines({ '  1  2' })
   expect.no_error(function() MiniTest.expect.reference_screenshot(child.get_screenshot()) end)
@@ -1150,15 +1134,10 @@ T['child']['ensure_normal_mode()']['ensures running'] =
 
 T['child']['get_screenshot()'] = new_set()
 
-T['child']['get_screenshot()']['ensures running'] = function()
-  skip_screenshot()
-
-  validate_child_method(child.get_screenshot, { name = 'get_screenshot' })
-end
+T['child']['get_screenshot()']['ensures running'] =
+  function() validate_child_method(child.get_screenshot, { name = 'get_screenshot' }) end
 
 T['child']['get_screenshot()']['works'] = function()
-  skip_screenshot()
-
   set_lines({ 'aaa' })
   local screenshot = child.get_screenshot()
 
@@ -1193,8 +1172,6 @@ end
 T['child']['get_screenshot()']['`tostring()`'] = new_set()
 
 T['child']['get_screenshot()']['`tostring()`']['works'] = function()
-  skip_screenshot()
-
   set_lines({ 'aaa' })
   local screenshot = child.get_screenshot()
   local lines = vim.split(tostring(screenshot), '\n')
@@ -1213,8 +1190,6 @@ T['child']['get_screenshot()']['`tostring()`']['works'] = function()
 end
 
 T['child']['get_screenshot()']['`tostring()`']['makes proper rulers'] = function()
-  skip_screenshot()
-
   local validate = function(ref_ruler)
     local lines = vim.split(tostring(child.get_screenshot()), '\n')
     eq(lines[1], ref_ruler)
@@ -1233,8 +1208,6 @@ T['child']['get_screenshot()']['`tostring()`']['makes proper rulers'] = function
 end
 
 T['child']['get_screenshot()']['`tostring()`']['makes proper line numbers'] = function()
-  skip_screenshot()
-
   local validate = function(...)
     local lines = vim.split(tostring(child.get_screenshot()), '\n')
     local n = 0.5 * (#lines - 3)
@@ -1257,8 +1230,6 @@ T['child']['get_screenshot()']['`tostring()`']['makes proper line numbers'] = fu
 end
 
 T['child']['get_screenshot()']['adds a note with floating windows in Neovim<=0.7'] = function()
-  skip_screenshot()
-
   if child.fn.has('nvim-0.8') == 1 then return end
 
   local buf_id = child.api.nvim_create_buf(true, true)

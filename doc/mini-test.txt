@@ -748,7 +748,6 @@ Fields~
 {ensure_normal_mode} `(function)` Ensure normal mode.
 {get_screenshot} `(function)` Returns table with two "2d arrays" of single
   characters representing what is displayed on screen and how it looks.
-  Note: works only in Neovim>=0.6. See |MiniTest-child-neovim.get_screenshot()|.
 
 {job} `(table|nil)` Information about current job. If `nil`, child is not running.
 
@@ -843,7 +842,6 @@ This basically calls |screenstring()| and |screenattr()| for every visible
 cell (row from 1 to 'lines', column from 1 to 'columns').
 
 Notes:
-- This requires Neovim>=0.6 as `screenstring()` was introduced only in 0.6.
 - Due to implementation details of `screenstring()` and `screenattr()` in
   Neovim<=0.7, this function won't recognize floating windows displayed on
   screen. It will throw an error if there is a visible floating window. Use

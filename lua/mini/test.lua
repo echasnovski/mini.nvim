@@ -1143,7 +1143,7 @@ MiniTest.new_child_neovim = function()
   })
 
   -- Variant of `api` functions called with `vim.rpcnotify`. Useful for making
-  -- blocking requests (like `getchar()`).
+  -- blocking requests (like `getcharstr()`).
   child.api_notify = setmetatable({}, {
     __index = function(_, key)
       ensure_running()
@@ -1299,9 +1299,6 @@ MiniTest.new_child_neovim = function()
     ensure_running()
     prevent_hanging('get_screenshot')
 
-    -- Error if Neovim version is "too old"
-    if child.fn.has('nvim-0.6') == 0 then error('`child.get_screenshot()` needs Neovim>=0.6', 0) end
-
     -- Add note if there is a visible floating window but `screen*()` functions
     -- don't support them (Neovim<0.8).
     -- See https://github.com/neovim/neovim/issues/19013
@@ -1405,7 +1402,6 @@ end
 ---@field ensure_normal_mode function Ensure normal mode.
 ---@field get_screenshot function Returns table with two "2d arrays" of single
 ---   characters representing what is displayed on screen and how it looks.
----   Note: works only in Neovim>=0.6. See |MiniTest-child-neovim.get_screenshot()|.
 ---
 ---@field job table|nil Information about current job. If `nil`, child is not running.
 ---
@@ -1493,7 +1489,6 @@ end
 --- cell (row from 1 to 'lines', column from 1 to 'columns').
 ---
 --- Notes:
---- - This requires Neovim>=0.6 as `screenstring()` was introduced only in 0.6.
 --- - Due to implementation details of `screenstring()` and `screenattr()` in
 ---   Neovim<=0.7, this function won't recognize floating windows displayed on
 ---   screen. It will throw an error if there is a visible floating window. Use

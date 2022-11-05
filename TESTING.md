@@ -870,7 +870,6 @@ One of the main difficulties in testing Neovim plugins is verifying that somethi
 Couple of caveats:
 
 - As is apparent from use of `screenattr()`, these screenshots **can't tell how exactly cell is highlighted**, only **if two cells are highlighted the same**. This is due to the currently lacking functionality in Neovim itself. This might change in the future.
-- It works only for Neovim>=0.6 because `screenstring()` was introduced in 0.6.
 - Due to implementation details of `screenstring()` and `screenattr()` in Neovim<=0.7, this function won't recognize floating windows displayed on screen. It will throw an error if there is a visible floating window. Use Neovim>=0.8 (current nightly) to properly handle floating windows. Details:
     - https://github.com/neovim/neovim/issues/19013
     - https://github.com/neovim/neovim/pull/19020
