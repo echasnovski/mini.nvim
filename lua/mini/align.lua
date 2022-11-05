@@ -514,9 +514,8 @@ MiniAlign.config = {
         { 'c', 'Question' }, { 'enter, ' }, { 'r', 'Question' }, { 'ight, ' },
         { 'n', 'Question' }, { 'one' }
       })
-      local ok, char = pcall(vim.fn.getchar)
-      if not ok or char == 27 then return end
-      if type(char) == 'number' then char = vim.fn.nr2char(char) end
+      local ok, char = pcall(vim.fn.getcharstr)
+      if not ok or char == '\27' then return end
 
       local direction = ({ l = 'left', c = 'center', r = 'right', n = 'none' })[char]
       if direction == nil then return end
@@ -571,9 +570,8 @@ MiniAlign.config = {
         { 'Select pre-step to remove: ', 'ModeMsg' }, { 's', 'Question' }, { 'plit, ' },
         { 'j', 'Question' }, { 'ustify, ' }, { 'm', 'Question' }, { 'erge' },
       })
-      local ok, char = pcall(vim.fn.getchar)
-      if not ok or char == 27 then return end
-      if type(char) == 'number' then char = vim.fn.nr2char(char) end
+      local ok, char = pcall(vim.fn.getcharstr)
+      if not ok or char == '\27' then return end
 
       if char == 's' then table.remove(steps.pre_split, #steps.pre_split) end
       if char == 'j' then table.remove(steps.pre_justify, #steps.pre_justify) end
@@ -1783,13 +1781,11 @@ H.user_modifier = function(with_preview, msg_chunks)
     H.echo(msg_chunks)
     H.cache.msg_shown = true
   end, delay)
-  local ok, char = pcall(vim.fn.getchar)
+  local ok, char = pcall(vim.fn.getcharstr)
   needs_help_msg = false
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
-  if not ok or char == 27 then return nil end
-
-  if type(char) == 'number' then char = vim.fn.nr2char(char) end
+  if not ok or char == '\27' then return nil end
   return char
 end
 
