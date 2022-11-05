@@ -115,15 +115,12 @@ T['setup()']['defines builtin highlight groups'] = function()
   validate_hl_group('Cursor', ('guifg=%s guibg=%s'):format(p.base00, p.base05))
   validate_hl_group('SpellBad', ('ctermbg=9 gui=%s guisp=%s'):format('undercurl', p.base08))
 
-  -- Don't test exact values on Neovim<=0.5.1 due to CI difficulties
-  if vim.fn.has('nvim-0.6.0') == 0 then return end
-
   validate_hl_group('Comment', ('ctermfg=14 guifg=%s'):format(p.base03))
   validate_hl_group('Error', ('ctermfg=15 ctermbg=9 guifg=%s guibg=%s'):format(p.base00, p.base08))
   validate_hl_group('Special', ('ctermfg=224 guifg=%s'):format(p.base0C))
   validate_hl_group('Bold', 'gui=bold')
 
-  local diagnostic_hl_group = vim.fn.has('nvim-0.6.0') == 1 and 'DiagnosticError' or 'LspDiagnosticsDefaultWarning'
+  local diagnostic_hl_group = 'DiagnosticError'
   validate_hl_group(diagnostic_hl_group, ('ctermfg=1 guifg=%s'):format(p.base08))
 end
 

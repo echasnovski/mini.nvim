@@ -583,47 +583,25 @@ H.apply_palette = function(palette, use_cterm)
   hi('gitcommitUntrackedFile', {fg=p.base0A, bg=nil, attr=nil,    sp=nil})
 
   -- Built-in diagnostic
-  if vim.fn.has("nvim-0.6.0") == 1 then
-    hi('DiagnosticError', {fg=p.base08, bg=nil, attr=nil, sp=nil})
-    hi('DiagnosticHint',  {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-    hi('DiagnosticInfo',  {fg=p.base0C, bg=nil, attr=nil, sp=nil})
-    hi('DiagnosticWarn',  {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+  hi('DiagnosticError', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('DiagnosticHint',  {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('DiagnosticInfo',  {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('DiagnosticWarn',  {fg=p.base0E, bg=nil, attr=nil, sp=nil})
 
-    hi('DiagnosticFloatingError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticFloatingHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticFloatingInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
-    hi('DiagnosticFloatingWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+  hi('DiagnosticFloatingError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+  hi('DiagnosticFloatingHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+  hi('DiagnosticFloatingInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+  hi('DiagnosticFloatingWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
 
-    hi('DiagnosticSignError', {link='DiagnosticFloatingError'})
-    hi('DiagnosticSignHint',  {link='DiagnosticFloatingHint'})
-    hi('DiagnosticSignInfo',  {link='DiagnosticFloatingInfo'})
-    hi('DiagnosticSignWarn',  {link='DiagnosticFloatingWarn'})
+  hi('DiagnosticSignError', {link='DiagnosticFloatingError'})
+  hi('DiagnosticSignHint',  {link='DiagnosticFloatingHint'})
+  hi('DiagnosticSignInfo',  {link='DiagnosticFloatingInfo'})
+  hi('DiagnosticSignWarn',  {link='DiagnosticFloatingWarn'})
 
-    hi('DiagnosticUnderlineError', {fg=nil, bg=nil, attr='underline', sp=p.base08})
-    hi('DiagnosticUnderlineHint',  {fg=nil, bg=nil, attr='underline', sp=p.base0D})
-    hi('DiagnosticUnderlineInfo',  {fg=nil, bg=nil, attr='underline', sp=p.base0C})
-    hi('DiagnosticUnderlineWarn',  {fg=nil, bg=nil, attr='underline', sp=p.base0E})
-  else
-    hi('LspDiagnosticsDefaultError',       {fg=p.base08, bg=nil, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultHint',        {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultInformation', {fg=p.base0C, bg=nil, attr=nil, sp=nil})
-    hi('LspDiagnosticsDefaultWarning',     {fg=p.base0E, bg=nil, attr=nil, sp=nil})
-
-    hi('LspDiagnosticsFloatingError',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsFloatingHint',        {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsFloatingInformation', {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
-    hi('LspDiagnosticsFloatingWarning',     {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
-
-    hi('LspDiagnosticsSignError',       {link='LspDiagnosticsFloatingError'})
-    hi('LspDiagnosticsSignHint',        {link='LspDiagnosticsFloatingHint'})
-    hi('LspDiagnosticsSignInformation', {link='LspDiagnosticsFloatingInformation'})
-    hi('LspDiagnosticsSignWarning',     {link='LspDiagnosticsFloatingWarning'})
-
-    hi('LspDiagnosticsUnderlineError',       {fg=nil, bg=nil, attr='underline', sp=p.base08})
-    hi('LspDiagnosticsUnderlineHint',        {fg=nil, bg=nil, attr='underline', sp=p.base0D})
-    hi('LspDiagnosticsUnderlineInformation', {fg=nil, bg=nil, attr='underline', sp=p.base0C})
-    hi('LspDiagnosticsUnderlineWarning',     {fg=nil, bg=nil, attr='underline', sp=p.base0E})
-  end
+  hi('DiagnosticUnderlineError', {fg=nil, bg=nil, attr='underline', sp=p.base08})
+  hi('DiagnosticUnderlineHint',  {fg=nil, bg=nil, attr='underline', sp=p.base0D})
+  hi('DiagnosticUnderlineInfo',  {fg=nil, bg=nil, attr='underline', sp=p.base0C})
+  hi('DiagnosticUnderlineWarn',  {fg=nil, bg=nil, attr='underline', sp=p.base0E})
 
   -- Built-in LSP
   hi('LspReferenceText',  {fg=nil, bg=p.base02, attr=nil, sp=nil})
