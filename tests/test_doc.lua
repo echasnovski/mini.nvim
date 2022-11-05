@@ -120,12 +120,9 @@ end
 T['default_hooks'] = new_set()
 
 T['default_hooks']['is same as default `MiniDoc.config.hooks`'] = function()
-  -- `tostring()` when applied to table returns string with its hex id
-  -- (except in Neovim<0.6, where it seems to return `vim.empty_dict()` if
-  -- table has metatable). So this checks for *exact* equality of two tables.
-  if vim.fn.has('nvim-0.6') == 1 then
-    eq(child.lua_get('tostring(MiniDoc.default_hooks) == tostring(MiniDoc.config.hooks)'), true)
-  end
+  -- `tostring()` when applied to table returns string with its hex id. So this
+  -- checks for *exact* equality of two tables.
+  eq(child.lua_get('tostring(MiniDoc.default_hooks) == tostring(MiniDoc.config.hooks)'), true)
 end
 
 -- General overview of testing workflow:
