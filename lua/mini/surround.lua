@@ -1743,14 +1743,13 @@ H.user_surround_id = function(sur_type)
     H.echo(msg)
     H.cache.msg_shown = true
   end, 1000)
-  local ok, char = pcall(vim.fn.getchar)
+  local ok, char = pcall(vim.fn.getcharstr)
   needs_help_msg = false
   H.unecho()
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
-  if not ok or char == 27 then return nil end
+  if not ok or char == '\27' then return nil end
 
-  if type(char) == 'number' then char = vim.fn.nr2char(char) end
   if char:find('^[%w%p%s]$') == nil then
     H.message('Input must be single character: alphanumeric, punctuation, or space.')
     return nil
