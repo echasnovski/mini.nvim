@@ -92,36 +92,6 @@
 ---   indent is -1) which is not visible.
 ---@tag MiniIndentscope-drawing
 
--- Notes about implementation:
--- - Tried and rejected features/optimizations:
---     - Gap at cursor. Intended to always show cursor at normal state. It
---       might be more visually pleasing and more convenient when start typing
---       over indicator. Couldn't properly do that because couldn't find an
---       appropriate (fast, non-blocking, without much code complexity,
---       low-flickering) way to do that. There was an idea of making draw
---       function not draw at cursor and update only cursor gap when it was
---       enough, but there was slight flickering and too much code complexity.
---     - Draw only inside current window view (from top visible line to bottom
---       one). Would decrease workload. Couldn't properly do that because there
---       is early screen redraw after `WinScrolled` which introduced flickering
---       when scrolling (so it was `WinScrolled` -> redraw with current
---       extmarks -> redraw with new extmarks).
--- - Manual tests to check proper drawing (not sure how to autotest this):
---     - Moving cursor faster than debounce delay should not initiate drawing.
---     - Extmark on cursor line should show right after debounce delay. Other
---       steps (if present) should use animation function.
---     - Usual typing on new line without decreasing indent should immediately
---       update scope without animation (although it is a different scope).
---     - Moving cursor within same scope when it is already drawing shouldn't
---       stop drawing.
---     - Fast consecutive scrolling within big scope (try `<C-d>` and `<Down>`)
---       shouldn't cause flicker.
--- - Manual tests for textobjects and motions:
---     - Dot-repeat in operator-pending mode should work (like `dii` or `d[i`
---       and then `.` in other place).
---     - Different options should be properly handled (like using body line
---       when border line is not present).
-
 -- Module definition ==========================================================
 local MiniIndentscope = {}
 local H = {}
