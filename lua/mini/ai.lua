@@ -387,16 +387,22 @@ end
 --- Each named entry of `config.custom_textobjects` is a textobject with
 --- that identifier and specification (see |MiniAi-textobject-specification|).
 --- They are also used to override builtin ones (|MiniAi-textobject-builtin|).
---- Supply non-table input to disable builtin textobject. Examples:
+--- Supply non-valid input (not in specification format) to disable module's
+--- builtin textobject in favor of external or Neovim's builtin mapping.
+---
+--- Examples:
 --- >
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {
----       -- Disables function call textobject
----       f = false,
----       -- Tweaks argument textobject
+---       -- Tweak argument textobject
 ---       a = require('mini.ai').gen_spec.argument({ brackets = { '%b()' } }),
+---
+---       -- Disable brackets alias in favor of builtin block textobject
+---       b = false,
+---
 ---       -- Now `vax` should select `xxx` and `vix` - middle `x`
 ---       x = { 'x()x()x' },
+---
 ---       -- Whole buffer
 ---       g = function()
 ---         local from = { line = 1, col = 1 }
@@ -1227,8 +1233,8 @@ H.get_textobject_spec = function(id, args)
 end
 
 H.is_valid_textobject_id = function(id)
-  local textobject_tbl = H.make_textobject_table()
-  return textobject_tbl[id] ~= nil
+  local spec = H.make_textobject_table()[id]
+  return type(spec) == 'table' or vim.is_callable(spec)
 end
 
 H.is_region = function(x)

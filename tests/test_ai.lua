@@ -2628,10 +2628,26 @@ T['Custom textobject']['works'] = function()
   validate_tobj1d('aayyybb', 0, 'ix', { 4, 4 })
 end
 
-T['Custom textobject']['overrides builtins'] = function()
+T['Custom textobject']['overrides module builtin'] = function()
   set_custom_tobj({ a = { 'a()a()a' } })
   validate_tobj1d('__aaa__', 0, 'aa', { 3, 5 })
   validate_no_tobj1d('ff(xx)', 0, 'aa')
+end
+
+T['Custom textobject']['allows reverting to external mapping'] = function()
+  -- Neovim's builtin
+  set_custom_tobj({ b = false })
+  validate_tobj1d('([{ aaa }])', 5, 'ab', { 1, 11 })
+
+  -- Manual external mapping
+  set_custom_tobj({ f = false })
+  child.api.nvim_set_keymap('x', 'af', 'iw', { noremap = true })
+
+  child.o.timeoutlen = 5
+  set_lines({ 'func(xxx)' })
+  set_cursor(1, 0)
+  type_keys(10, 'v', 'a', 'f')
+  child.expect_visual_marks({ 1, 0 }, { 1, 3 })
 end
 
 T['Custom textobject']['works consecutively'] = function()
