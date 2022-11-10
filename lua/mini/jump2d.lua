@@ -134,7 +134,7 @@ MiniJump2d.setup = function(config)
     vim.api.nvim_exec(
       [[augroup MiniJump2d
           au!
-          autocmd BufWinEnter quickfix nnoremap <buffer> <CR> <CR>
+          autocmd FileType qf nnoremap <buffer> <CR> <CR>
           autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
         augroup END]],
       false
