@@ -182,6 +182,23 @@ T['setup()']['properly handles `config.mappings`'] = function()
   eq(has_map('<CR>'), false)
 end
 
+T['setup()']['resets <CR> mapping in quickfix window'] = function()
+  child.set_size(20, 50)
+  set_lines({ 'Hello World' })
+  child.cmd([[cexpr ['Hello', 'Quickfix'] | copen]])
+  type_keys('<CR>')
+  child.expect_screenshot()
+end
+
+T['setup()']['resets <CR> mapping in command-line window'] = function()
+  type_keys([[:call append(0, 'Hello')<CR>]])
+  set_lines({})
+  type_keys('q:')
+  set_cursor(1, 0)
+  type_keys('<CR>')
+  eq(child.get_lines(), { 'Hello', '' })
+end
+
 T['start()'] = new_set({
   hooks = {
     pre_case = function()
