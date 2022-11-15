@@ -231,7 +231,9 @@ MiniIndentscope.config = {
   -- Which character to use for drawing scope indicator
   symbol = '╎',
 
-  -- Which character to use for drawing a scope indicator prefix
+  -- Which character to use for drawing a scope indicator prefix.
+  -- In case of an empty string, prefix will not be drawn, allowing to keep
+  -- the visibility of listchars.
   prefix = ' ',
 }
 --minidoc_afterlines_end
