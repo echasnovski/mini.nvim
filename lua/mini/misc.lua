@@ -74,25 +74,8 @@ end
 ---@param win_id number Window identifier (see |win_getid()|) for which gutter
 ---   width is computed. Default: 0 for current.
 MiniMisc.get_gutter_width = function(win_id)
-  win_id = win_id or 0
-
-  -- Store window metadata
-  local virtualedit = vim.opt.virtualedit
-  local curpos = vim.api.nvim_win_get_cursor(win_id)
-
-  -- Move cursor to the last visible column
-  local last_col = vim.api.nvim_win_call(win_id, function()
-    vim.opt.virtualedit = 'all'
-    vim.cmd('normal! g$')
-    return vim.fn.virtcol('.')
-  end)
-
-  -- Restore current window metadata
-  vim.opt.virtualedit = virtualedit
-  vim.api.nvim_win_set_cursor(win_id, curpos)
-
-  -- Compute result
-  return vim.api.nvim_win_get_width(win_id) - last_col
+  win_id = (win_id == nil or win_id == 0) and vim.api.nvim_get_current_win() or win_id
+  return vim.fn.getwininfo(win_id)[1].textoff
 end
 
 --- Print Lua objects in command line
