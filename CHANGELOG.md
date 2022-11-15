@@ -4,7 +4,7 @@
 
 ## mini.indentscope
 
-- FEATURE: Add 'prefix' option to specify a prefix character in place of virtual text hard-coded space. It provides the ability to use this module with 'listchars=lead:<char>' option without overwriting user-selected character with spaces.
+- FEATURE: Add 'prefix' option to specify a prefix character in place of virtual text hard-coded space. Empty string value provides the ability to use this module with 'listchar' options ('lead', 'tab' and 'leadmultispace') without overwriting user-selected characters.
 
 # Version 0.6.0
 

@@ -788,20 +788,26 @@ H.indicator_compute = function(scope)
   --   can't scroll to be past left window side. Sources:
   --     - Neovim issue: https://github.com/neovim/neovim/issues/14050
   --     - Used fix: https://github.com/lukas-reineke/indent-blankline.nvim/pull/155
-  local leftcol = vim.fn.winsaveview().leftcol
-  if indent < leftcol then return {} end
+  local col = indent - vim.fn.winsaveview().leftcol
+  if col < 0 then return {} end
 
   -- Usage separate highlight groups for prefix and symbol allows cursor to be
   -- "natural" when on the left of indicator line (like on empty lines)
   local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
-  local prefix = string.rep(H.get_config().prefix, indent - leftcol)
+  local prefix = string.rep(H.get_config().prefix, col)
   -- Currently Neovim doesn't work when text for extmark is empty string
   if prefix:len() > 0 then table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' }) end
 
   local top = scope.body.top
   local bottom = scope.body.bottom
 
-  return { buf_id = vim.api.nvim_get_current_buf(), virt_text = virt_text, top = top, bottom = bottom }
+  return {
+    buf_id = vim.api.nvim_get_current_buf(),
+    virt_text = virt_text,
+    virt_text_win_col = prefix:len() > 0 and 0 or col,
+    top = top,
+    bottom = bottom,
+  }
 end
 
 -- Drawing --------------------------------------------------------------------
@@ -922,6 +928,7 @@ H.make_draw_function = function(indicator, opts)
     right_gravity = false,
     virt_text = indicator.virt_text,
     virt_text_pos = 'overlay',
+    virt_text_win_col = indicator.virt_text_win_col,
   }
 
   local current_event_id = opts.event_id
