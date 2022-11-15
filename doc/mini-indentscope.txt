@@ -151,6 +151,9 @@ Default values:
 
     -- Which character to use for drawing scope indicator
     symbol = '╎',
+
+    -- Which character to use for drawing a scope indicator prefix
+    prefix = ' ',
   }
 <
 # Options ~

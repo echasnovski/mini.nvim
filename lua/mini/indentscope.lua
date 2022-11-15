@@ -230,6 +230,9 @@ MiniIndentscope.config = {
 
   -- Which character to use for drawing scope indicator
   symbol = '╎',
+
+  -- Which character to use for drawing a scope indicator prefix
+  prefix = ' ',
 }
 --minidoc_afterlines_end
 
@@ -658,6 +661,7 @@ H.setup_config = function(config)
     mappings = { config.mappings, 'table' },
     options = { config.options, 'table' },
     symbol = { config.symbol, 'string' },
+    prefix = { config.prefix, 'string' },
   })
 
   vim.validate({
@@ -790,7 +794,7 @@ H.indicator_compute = function(scope)
   -- Usage separate highlight groups for prefix and symbol allows cursor to be
   -- "natural" when on the left of indicator line (like on empty lines)
   local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
-  local prefix = string.rep(' ', indent - leftcol)
+  local prefix = string.rep(H.get_config().prefix, indent - leftcol)
   -- Currently Neovim doesn't work when text for extmark is empty string
   if prefix:len() > 0 then table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' }) end
 

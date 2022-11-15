@@ -2,6 +2,10 @@
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
 
+## mini.indentscope
+
+- FEATURE: Add 'prefix' option to specify a prefix character in place of virtual text hard-coded space. It provides the ability to use this module with 'listchars=lead:<char>' option without overwriting user-selected character with spaces.
+
 # Version 0.6.0
 
 - Stop official support of Neovim 0.5.
