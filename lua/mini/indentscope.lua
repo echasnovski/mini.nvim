@@ -794,9 +794,11 @@ H.indicator_compute = function(scope)
   -- Usage separate highlight groups for prefix and symbol allows cursor to be
   -- "natural" when on the left of indicator line (like on empty lines)
   local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
-  local prefix = string.rep(H.get_config().prefix, col)
   -- Currently Neovim doesn't work when text for extmark is empty string
-  if prefix:len() > 0 then table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' }) end
+  if col > 0 and H.get_config().prefix ~= '' then
+    local prefix = string.rep(H.get_config().prefix, col)
+    table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' })
+  end
 
   local top = scope.body.top
   local bottom = scope.body.bottom
@@ -804,7 +806,7 @@ H.indicator_compute = function(scope)
   return {
     buf_id = vim.api.nvim_get_current_buf(),
     virt_text = virt_text,
-    virt_text_win_col = prefix:len() > 0 and 0 or col,
+    virt_text_win_col = H.get_config().prefix == '' and col or 0,
     top = top,
     bottom = bottom,
   }
