@@ -1345,7 +1345,7 @@ H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minia
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end
 
--- Work with steps and options -------------------------------------------------
+-- Work with steps and options ------------------------------------------------
 H.is_valid_steps = function(x, x_name)
   x_name = x_name or 'config.steps'
 
@@ -1424,7 +1424,7 @@ H.apply_step = function(step, arr, opts, step_container_name)
   return res
 end
 
--- Work with default actions ---------------------------------------------------
+-- Work with default actions --------------------------------------------------
 H.default_action_split = function(string_array, opts)
   -- Prepare options
   local pattern = opts.split_pattern
@@ -1769,7 +1769,7 @@ H.pos_to_virtcol = function(pos)
   return vim.fn.virtcol({ pos.line, pos.col })
 end
 
--- Work with user interaction --------------------------------------------------
+-- Work with user interaction -------------------------------------------------
 H.user_modifier = function(with_preview, msg_chunks)
   -- Get from user single character modifier
   local needs_help_msg = true

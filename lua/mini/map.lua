@@ -1113,7 +1113,7 @@ H.is_disabled = function() return vim.g.minimap_disable == true or vim.b.minimap
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniMap.config, vim.b.minimap_config or {}, config or {}) end
 
--- Work with mask --------------------------------------------------------------
+-- Work with mask -------------------------------------------------------------
 ---@param strings table Array of strings
 ---@return table Non-whitespace mask, boolean 2d array. Each row corresponds to
 ---   string, each column - to whether character with that number is a
@@ -1233,7 +1233,7 @@ H.mask_to_symbols = function(mask, opts)
   return res
 end
 
--- Work with config ------------------------------------------------------------
+-- Work with config -----------------------------------------------------------
 H.normalize_opts = function(x)
   x = vim.tbl_deep_extend('force', H.get_config(), MiniMap.current.opts or {}, x or {})
   H.validate_if(H.is_valid_opts, x, 'opts')
@@ -1318,7 +1318,7 @@ end
 
 H.msg_config = function(x_name, msg) return string.format('`%s` should be %s.', x_name, msg) end
 
--- Work with map window --------------------------------------------------------
+-- Work with map window -------------------------------------------------------
 H.normalize_window_options = function(win_opts, full)
   if full == nil then full = true end
 
@@ -1355,7 +1355,7 @@ H.is_window_open = function()
   return cur_win_id ~= nil and vim.api.nvim_win_is_valid(cur_win_id)
 end
 
--- Work with map updates -------------------------------------------------------
+-- Work with map updates ------------------------------------------------------
 H.create_map_buffer = function()
   local buf_id = vim.api.nvim_create_buf(false, true)
 
@@ -1556,7 +1556,7 @@ H.mapline_to_sourceline = function(map_line)
   return math.min(math.max(res, 1), data.source_rows)
 end
 
--- Predicates ------------------------------------------------------------------
+-- Predicates -----------------------------------------------------------------
 H.is_array_of = function(x, predicate)
   if not vim.tbl_islist(x) then return false end
   for _, v in ipairs(x) do
