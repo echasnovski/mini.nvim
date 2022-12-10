@@ -53,7 +53,7 @@ Supported highlight groups:
     - [glepnir/lspsaga.nvim](https://github.com/glepnir/lspsaga.nvim)
     - [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
     - [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
-    - [kyazdani42/nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
+    - [nvim-tree/nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua)
     - [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
     - [lukas-reineke/indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
     - [neoclide/coc.nvim](https://github.com/neoclide/coc.nvim)

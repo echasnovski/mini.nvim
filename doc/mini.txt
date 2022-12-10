@@ -150,7 +150,7 @@ Table of contents:
   functions) along with builtin default. For full experience needs [Nerd
   font](https://www.nerdfonts.com/),
   [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and
-  [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons)
+  [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
   plugin (but works without any them).
 - |MiniSurround| - fast and feature-rich surround plugin. Add, delete,
   replace, find, highlight surrounding (like pair of parenthesis, quotes,
@@ -166,7 +166,7 @@ Table of contents:
 - |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
   buffers. Allows showing extra information section in case of multiple vim
   tabpages. For full experience needs
-  [nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons).
+  [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons).
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
 

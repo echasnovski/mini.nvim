@@ -25,7 +25,7 @@
 ---     - 'glepnir/lspsaga.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
----     - 'kyazdani42/nvim-tree.lua'
+---     - 'nvim-tree/nvim-tree.lua'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
 ---     - 'neoclide/coc.nvim'
@@ -822,7 +822,7 @@ H.apply_palette = function(palette, use_cterm)
     hi('SneakLabel', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
   end
 
-  if H.has_integration('kyazdani42/nvim-tree.lua') then
+  if H.has_integration('nvim-tree/nvim-tree.lua') then
     hi('NvimTreeExecFile',     {fg=p.base0B, bg=nil,      attr='bold',           sp=nil})
     hi('NvimTreeFolderIcon',   {fg=p.base03, bg=nil,      attr=nil,              sp=nil})
     hi('NvimTreeGitDeleted',   {fg=p.base08, bg=nil,      attr=nil,              sp=nil})

@@ -6,7 +6,7 @@
 
 ### Minimal and fast tabline showing listed buffers
 
-For full experience needs [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin (but works without it).
+For full experience needs [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin (but works without it).
 
 See more details in [Features](#features) and [help file](../doc/mini-tabline.txt).
 
@@ -109,7 +109,7 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
-  -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
+  -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
   show_icons = true,
 
   -- Whether to set Vim's settings for tabline (make it always shown and

@@ -26,7 +26,7 @@ Supported highlight groups:
     - 'glepnir/lspsaga.nvim'
     - 'hrsh7th/nvim-cmp'
     - 'justinmk/vim-sneak'
-    - 'kyazdani42/nvim-tree.lua'
+    - 'nvim-tree/nvim-tree.lua'
     - 'lewis6991/gitsigns.nvim'
     - 'lukas-reineke/indent-blankline.nvim'
     - 'neoclide/coc.nvim'

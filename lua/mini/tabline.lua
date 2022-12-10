@@ -22,7 +22,7 @@
 ---
 --- Suggested dependencies (provide extra functionality, tabline will work
 --- without them):
---- - Plugin 'kyazdani42/nvim-web-devicons' for filetype icons near the buffer
+--- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the buffer
 ---   name. If missing, no icons will be shown.
 ---
 --- # Setup~
@@ -112,7 +112,7 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniTabline.config = {
-  -- Whether to show file icons (requires 'kyazdani42/nvim-web-devicons')
+  -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
   show_icons = true,
 
   -- Whether to set Vim's settings for tabline (make it always shown and

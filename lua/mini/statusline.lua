@@ -20,7 +20,7 @@
 --- - Nerd font (to support extra icons).
 --- - Plugin 'lewis6991/gitsigns.nvim' for Git information in
 ---   |MiniStatusline.section_git|. If missing, no section will be shown.
---- - Plugin 'kyazdani42/nvim-web-devicons' for filetype icons in
+--- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons in
 ---   `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
 ---
 --- # Setup~
