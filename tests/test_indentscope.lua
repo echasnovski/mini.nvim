@@ -470,6 +470,18 @@ T['draw()']['respects `config.symbol`'] = function()
   child.expect_screenshot()
 end
 
+T['draw()']["does not overshadow 'listchars'"] = function()
+  mark_flaky()
+
+  child.o.list = true
+  child.o.listchars = 'space:.'
+
+  set_cursor(5, 4)
+  child.lua('MiniIndentscope.config.draw.animation = function() return 0 end')
+  child.lua('MiniIndentscope.draw()')
+  child.expect_screenshot()
+end
+
 T['undraw()'] = new_set({
   hooks = {
     pre_case = function()
