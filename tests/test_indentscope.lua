@@ -78,7 +78,6 @@ T['setup()']['creates side effects'] = function()
 
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniIndentscopeSymbol'), 'links to Delimiter')
-  expect.match(child.cmd_capture('hi MiniIndentscopePrefix'), 'gui=nocombine')
 end
 
 T['setup()']['creates `config` field'] = function()

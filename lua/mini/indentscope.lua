@@ -49,8 +49,6 @@
 --- # Highlight groups~
 ---
 --- * `MiniIndentscopeSymbol` - symbol showing on every line of scope.
---- * `MiniIndentscopePrefix` - space before symbol. By default made so as to
----   appear as nothing is displayed.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -132,11 +130,7 @@ MiniIndentscope.setup = function(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniIndentscopeSymbol Delimiter
-      hi MiniIndentscopePrefix guifg=NONE guibg=NONE gui=nocombine]],
-    false
-  )
+  vim.api.nvim_exec('hi default link MiniIndentscopeSymbol Delimiter', false)
 end
 
 --- Module config
@@ -778,26 +772,20 @@ H.indicator_compute = function(scope)
   -- (perpusfully) "responsible" for not drawing indicator spanning whole file.
   if indent < 0 then return {} end
 
-  -- Extmarks will be located at column zero but show indented text:
-  -- - This allows showing line even on empty lines.
-  -- - Text indentation should depend on current window view because extmarks
-  --   can't scroll to be past left window side. Sources:
-  --     - Neovim issue: https://github.com/neovim/neovim/issues/14050
-  --     - Used fix: https://github.com/lukas-reineke/indent-blankline.nvim/pull/155
-  local leftcol = vim.fn.winsaveview().leftcol
-  if indent < leftcol then return {} end
-
-  -- Usage separate highlight groups for prefix and symbol allows cursor to be
-  -- "natural" when on the left of indicator line (like on empty lines)
+  -- Text indentation should depend on current window view because it will use
+  -- `virt_text_win_col` attribute of extmark options (the only way to reliably
+  -- put it anywhere on screen; important to show properly on empty lines).
+  local col = indent - vim.fn.winsaveview().leftcol
+  if col < 0 then return {} end
   local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
-  local prefix = string.rep(' ', indent - leftcol)
-  -- Currently Neovim doesn't work when text for extmark is empty string
-  if prefix:len() > 0 then table.insert(virt_text, 1, { prefix, 'MiniIndentscopePrefix' }) end
 
-  local top = scope.body.top
-  local bottom = scope.body.bottom
-
-  return { buf_id = vim.api.nvim_get_current_buf(), virt_text = virt_text, top = top, bottom = bottom }
+  return {
+    buf_id = vim.api.nvim_get_current_buf(),
+    virt_text = virt_text,
+    virt_text_win_col = col,
+    top = scope.body.top,
+    bottom = scope.body.bottom,
+  }
 end
 
 -- Drawing --------------------------------------------------------------------
@@ -917,6 +905,7 @@ H.make_draw_function = function(indicator, opts)
     priority = 2,
     right_gravity = false,
     virt_text = indicator.virt_text,
+    virt_text_win_col = indicator.virt_text_win_col,
     virt_text_pos = 'overlay',
   }
 
