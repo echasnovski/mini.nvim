@@ -115,8 +115,8 @@ Here are code snippets for some common installation methods (use only one):
 
     -- Animation rule for scope's first drawing. A function which, given
     -- next and total step numbers, returns wait time (in ms). See
-    -- |MiniIndentscope.gen_animation()| for builtin options. To disable
-    -- animation, use `require('mini.indentscope').gen_animation('none')`.
+    -- |MiniIndentscope.gen_animation| for builtin options. To disable
+    -- animation, use `require('mini.indentscope').gen_animation.none()`.
     animation = --<function: implements constant 20ms between steps>,
   },
 

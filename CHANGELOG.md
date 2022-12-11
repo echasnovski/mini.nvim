@@ -5,6 +5,7 @@
 ## mini.indentscope
 
 - BREAKING: `MiniIndentscopePrefix` is now not used (deprecated). It was initially introduced as a way to properly show scope indicator on empty lines. It had a drawback of overshadowing 'listchars' symbols (see #125) and vertical guides from 'lukas-reineke/indent-blankline.nvim'. As the other implementation approach was found by @mivort (see #161), `MiniIndentscopePrefix` is no longer needed and no overshadowing is done.
+- BREAKING: `MiniIndentscope.gen_animation` is now a table (for consistency with other `gen_*` functions in 'mini.nvim'). See "Migrate from function type" section of `:h MiniIndentscope.gen_animation`. Calling it as function will be available until next release.
 
 # Version 0.6.0
 

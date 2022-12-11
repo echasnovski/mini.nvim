@@ -115,8 +115,8 @@ Default values:
 
       -- Animation rule for scope's first drawing. A function which, given
       -- next and total step numbers, returns wait time (in ms). See
-      -- |MiniIndentscope.gen_animation()| for builtin options. To disable
-      -- animation, use `require('mini.indentscope').gen_animation('none')`.
+      -- |MiniIndentscope.gen_animation| for builtin options. To disable
+      -- animation, use `require('mini.indentscope').gen_animation.none()`.
       animation = --<function: implements constant 20ms between steps>,
     },
 
@@ -291,7 +291,7 @@ Parameters~
   with default arguments.
 {opts} `(table)` Options. Currently supported:
    - <animation_fun> - animation function for drawing. See
-     |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation()|.
+     |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation|.
 
 ------------------------------------------------------------------------------
                                                       *MiniIndentscope.undraw()*
@@ -299,8 +299,8 @@ Parameters~
 Undraw currently visible scope manually
 
 ------------------------------------------------------------------------------
-                                               *MiniIndentscope.gen_animation()*
-               `MiniIndentscope.gen_animation`({easing}, {opts})
+                                                 *MiniIndentscope.gen_animation*
+                        `MiniIndentscope.gen_animation`
 Generate builtin animation function
 
 This is a builtin source to generate animation function for usage in
@@ -308,33 +308,50 @@ This is a builtin source to generate animation function for usage in
 common easing functions, which provide certain type of progression for
 revealing scope visual indicator.
 
-Supported easing types:
-- `'none'` - show indicator immediately. Equivalent to animation function
-  always returning 0.
-- `'linear'` - linear progression.
-- Quadratic progression:
-    - `'quadraticIn'` - accelerating from zero speed.
-    - `'quadraticOut'` - decelerating to zero speed.
-    - `'quadraticInOut'` - accelerating halfway, decelerating after.
-- Cubic progression:
-    - `'cubicIn'` - accelerating from zero speed.
-    - `'cubicOut'` - decelerating to zero speed.
-    - `'cubicInOut'` - accelerating halfway, decelerating after.
-- Quartic progression:
-    - `'quarticIn'` - accelerating from zero speed.
-    - `'quarticOut'` - decelerating to zero speed.
-    - `'quarticInOut'` - accelerating halfway, decelerating after.
-- Exponential progression:
-    - `'exponentialIn'` - accelerating from zero speed.
-    - `'exponentialOut'` - decelerating to zero speed.
-    - `'exponentialInOut'` - accelerating halfway, decelerating after.
+Each field corresponds to one family of progression which can be customized
+further by supplying appropriate arguments.
 
-Customization of duration and other general behavior of output animation
-function is done through `opts` argument.
+Examples ~
+- Don't use animation: `MiniIndentscope.gen_animation.none()`
+- Use quadratic "out" easing with total duration of 1000 ms:
+  `gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })`
+
+Migrate from function type ~
+
+Initially `MiniIndentscope.gen_animation` was a function taking `easing`
+and `opts` as arguments. To migrate from it, perform these steps:
+- Split `easing` value into two parts: progression family ("none", "linear",
+  etc.) and acceleration type ("In", "Out", "InOut").
+- Use progression family as a field name of `gen_animation` table.
+- Convert acceleration type to other notation ("In" -> "in", "Out" ->
+  "out", "InOut" -> "in-out") and use it as `easing` field of `opts` table.
+
+Examples:
+- `MiniIndentscope.gen_animation('none')` ->
+  `MiniIndentscope.gen_animation.none()`.
+- `gen_animation('quadraticInOut', { duration = 1000, unit = 'total' })` ->
+  `gen_animation.quadratic({ easing = 'in-out', duration = 1000, unit = 'total' })`.
+
+See also~
+|MiniIndentscope-drawing| for more information about how drawing is done.
+
+------------------------------------------------------------------------------
+                                          *MiniIndentscope.gen_animation.none()*
+                     `MiniIndentscope.gen_animation.none`()
+Generate no animation
+
+Show indicator immediately. Same as animation function always returning 0.
+
+------------------------------------------------------------------------------
+                                        *MiniIndentscope.gen_animation.linear()*
+                 `MiniIndentscope.gen_animation.linear`({opts})
+Generate linear progression
 
 Parameters~
-{easing} `(string)` One of supported easing types.
 {opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
   - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
   - <unit> `(string)` - which unit's duration `opts.duration` controls. One
     of "step" (default; ensures average duration of step to be `opts.duration`)
@@ -343,13 +360,77 @@ Parameters~
 Return~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
-Examples~
-- Don't use animation: `gen_animation('none')`
-- Use quadratic "out" easing with total duration of 1000 ms:
-  `gen_animation('quadraticOut', { duration = 1000, unit = 'total' })`
+------------------------------------------------------------------------------
+                                     *MiniIndentscope.gen_animation.quadratic()*
+               `MiniIndentscope.gen_animation.quadratic`({opts})
+Generate quadratic progression
 
-See also~
-|MiniIndentscope-drawing| for more information about how drawing is done.
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Animation function (see |MiniIndentscope-drawing|).
+
+------------------------------------------------------------------------------
+                                         *MiniIndentscope.gen_animation.cubic()*
+                 `MiniIndentscope.gen_animation.cubic`({opts})
+Generate cubic progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Animation function (see |MiniIndentscope-drawing|).
+
+------------------------------------------------------------------------------
+                                       *MiniIndentscope.gen_animation.quartic()*
+                `MiniIndentscope.gen_animation.quartic`({opts})
+Generate quartic progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Animation function (see |MiniIndentscope-drawing|).
+
+------------------------------------------------------------------------------
+                                   *MiniIndentscope.gen_animation.exponential()*
+              `MiniIndentscope.gen_animation.exponential`({opts})
+Generate exponential progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
                                                  *MiniIndentscope.move_cursor()*

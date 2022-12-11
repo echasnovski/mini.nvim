@@ -240,71 +240,112 @@ T['get_scope()']['uses correct config source'] = function()
   eq(get_cursor_scope({ border = 'none' }).border, {})
 end
 
-T['gen_animation()'] = new_set()
+T['gen_animation'] = new_set()
 
-local expect_easing = function(easing, target, opts, tolerance)
+local expect_animation = function(family, target, opts, tolerance)
   opts = opts or {}
   tolerance = tolerance or 0.1
-  child.lua('_G._f = MiniIndentscope.gen_animation(...)', { easing, opts })
-  local f = function(...) return child.lua_get('_G._f(...)', { ... }) end
+  local lua_cmd = string.format('_G.f = MiniIndentscope.gen_animation.%s(...)', family)
+  child.lua(lua_cmd, { opts })
+
+  local f = function(...) return child.lua_get('_G.f(...)', { ... }) end
   for i, _ in ipairs(target) do
     -- Expect approximate equality
     eq(math.abs(f(i, #target) - target[i]) <= tolerance, true)
   end
 
-  child.lua('_G._f = nil')
+  child.lua('_G.f = nil')
 end
 
-T['gen_animation()']['respects `easing` argument'] = function()
-  expect_easing('none', { 0, 0, 0, 0, 0 })
-  expect_easing('linear', { 20, 20, 20, 20, 20 })
-  expect_easing('quadraticIn', { 33.3, 26.7, 20, 13.3, 6.7 })
-  expect_easing('quadraticOut', { 6.7, 13.3, 20, 26.7, 33.3 })
-  expect_easing('quadraticInOut', { 27.3, 18.2, 9, 18.2, 27.3 })
-  expect_easing('cubicIn', { 45.5, 29.1, 16.4, 7.2, 1.8 })
-  expect_easing('cubicOut', { 1.8, 7.2, 16.4, 29.1, 45.5 })
-  expect_easing('cubicInOut', { 33.3, 14.8, 3.8, 14.8, 33.3 })
-  expect_easing('quarticIn', { 55.5, 28.5, 12, 3.5, 0.5 })
-  expect_easing('quarticOut', { 0.5, 3.5, 12, 28.5, 55.5 })
-  expect_easing('quarticInOut', { 38, 11.3, 1.4, 11.3, 38 })
-  expect_easing('exponentialIn', { 60.9, 24.2, 9.6, 3.8, 1.5 })
-  expect_easing('exponentialOut', { 1.5, 3.8, 9.6, 24.2, 60.9 })
-  expect_easing('exponentialInOut', { 38.4, 10.2, 2.8, 10.2, 38.4 })
+--stylua: ignore
+T['gen_animation']['respects `opts.easing` argument'] = function()
+  expect_animation('none',        { 0,    0,    0,    0,    0 })
+  expect_animation('linear',      { 20,   20,   20,   20,   20 })
+  expect_animation('quadratic',   { 33.3, 26.7, 20,   13.3, 6.7 },  { easing = 'in' })
+  expect_animation('quadratic',   { 6.7,  13.3, 20,   26.7, 33.3 }, { easing = 'out' })
+  expect_animation('quadratic',   { 27.3, 18.2, 9,    18.2, 27.3 }, { easing = 'in-out' })
+  expect_animation('cubic',       { 45.5, 29.1, 16.4, 7.2,  1.8 },  { easing = 'in' })
+  expect_animation('cubic',       { 1.8,  7.2,  16.4, 29.1, 45.5 }, { easing = 'out' })
+  expect_animation('cubic',       { 33.3, 14.8, 3.8,  14.8, 33.3 }, { easing = 'in-out' })
+  expect_animation('quartic',     { 55.5, 28.5, 12,   3.5,  0.5 },  { easing = 'in' })
+  expect_animation('quartic',     { 0.5,  3.5,  12,   28.5, 55.5 }, { easing = 'out' })
+  expect_animation('quartic',     { 38,   11.3, 1.4,  11.3, 38 },   { easing = 'in-out' })
+  expect_animation('exponential', { 60.9, 24.2, 9.6,  3.8,  1.5 },  { easing = 'in' })
+  expect_animation('exponential', { 1.5,  3.8,  9.6,  24.2, 60.9 }, { easing = 'out' })
+  expect_animation('exponential', { 38.4, 10.2, 2.8,  10.2, 38.4 }, { easing = 'in-out' })
 
-  -- 'InOut' variants should be always symmetrical
-  expect_easing('quadraticInOut', { 30, 20, 10, 10, 20, 30 })
-  expect_easing('cubicInOut', { 38.6, 17.1, 4.3, 4.3, 17.1, 38.6 })
-  expect_easing('quarticInOut', { 45, 13.3, 1.7, 1.7, 13.3, 45 })
-  expect_easing('exponentialInOut', { 45.5, 11.6, 2.9, 2.9, 11.6, 45.5 })
-
-  -- Validates incorrect value
-  expect.error(function() child.lua([[MiniIndentscope.gen_animation('a')]]) end, 'one of')
+  -- 'in-out' variants should be always symmetrical
+  expect_animation('quadratic',   { 30,   20,   10,  10,  20,   30 },   { easing = 'in-out' })
+  expect_animation('cubic',       { 38.6, 17.1, 4.3, 4.3, 17.1, 38.6 }, { easing = 'in-out' })
+  expect_animation('quartic',     { 45,   13.3, 1.7, 1.7, 13.3, 45 },   { easing = 'in-out' })
+  expect_animation('exponential', { 45.5, 11.6, 2.9, 2.9, 11.6, 45.5 }, { easing = 'in-out' })
 end
 
-T['gen_animation()']['respects `opts` argument'] = function()
-  expect_easing('linear', { 10, 10 }, { unit = 'total' })
-  expect_easing('linear', { 100, 100 }, { duration = 100 })
-  expect_easing('linear', { 50, 50 }, { unit = 'total', duration = 100 })
-
-  -- Validates incorrect value
-  expect.error(function() child.lua([[MiniIndentscope.gen_animation('linear', { unit = 'a' })]]) end, 'one of')
+T['gen_animation']['respects `opts` other arguments'] = function()
+  expect_animation('linear', { 10, 10 }, { unit = 'total' })
+  expect_animation('linear', { 100, 100 }, { duration = 100 })
+  expect_animation('linear', { 50, 50 }, { unit = 'total', duration = 100 })
 end
 
-T['gen_animation()']['handles `n_steps=1` for all `easing` values'] = function()
-  expect_easing('none', { 0 })
-  expect_easing('linear', { 20 })
-  expect_easing('quadraticIn', { 20 })
-  expect_easing('quadraticOut', { 20 })
-  expect_easing('quadraticInOut', { 20 })
-  expect_easing('cubicIn', { 20 })
-  expect_easing('cubicOut', { 20 })
-  expect_easing('cubicInOut', { 20 })
-  expect_easing('quarticIn', { 20 })
-  expect_easing('quarticOut', { 20 })
-  expect_easing('quarticInOut', { 20 })
-  expect_easing('exponentialIn', { 20 })
-  expect_easing('exponentialOut', { 20 })
-  expect_easing('exponentialInOut', { 20 })
+T['gen_animation']['validates `opts` values'] = function()
+  local validate = function(opts, err_pattern)
+    expect.error(function() child.lua('MiniIndentscope.gen_animation.linear(...)', { opts }) end, err_pattern)
+  end
+
+  validate({ easing = 'a' }, 'one of')
+  validate({ duration = 'a' }, 'number')
+  validate({ duration = -1 }, 'positive')
+  validate({ unit = 'a' }, 'one of')
+end
+
+--stylua: ignore
+T['gen_animation']['handles `n_steps=1` for all progression families and `opts.easing`'] = function()
+  expect_animation('none',        { 0 })
+  expect_animation('linear',      { 20 })
+  expect_animation('quadratic',   { 20 }, { easing = 'in' })
+  expect_animation('quadratic',   { 20 }, { easing = 'out' })
+  expect_animation('quadratic',   { 20 }, { easing = 'in-out' })
+  expect_animation('cubic',       { 20 }, { easing = 'in' })
+  expect_animation('cubic',       { 20 }, { easing = 'out' })
+  expect_animation('cubic',       { 20 }, { easing = 'in-out' })
+  expect_animation('quartic',     { 20 }, { easing = 'in' })
+  expect_animation('quartic',     { 20 }, { easing = 'out' })
+  expect_animation('quartic',     { 20 }, { easing = 'in-out' })
+  expect_animation('exponential', { 20 }, { easing = 'in' })
+  expect_animation('exponential', { 20 }, { easing = 'out' })
+  expect_animation('exponential', { 20 }, { easing = 'in-out' })
+end
+
+-- TODO: Remove after 0.7.0 release.
+T['gen_animation()'] = new_set()
+
+T['gen_animation()']['is possible as transition layer'] = function()
+  child.o.cmdheight = 10
+
+  -- Previous arguments should work
+  child.lua([[_G.f = MiniIndentscope.gen_animation('none')]])
+  eq(child.lua_get([[{ _G.f(1, 2), _G.f(2, 2) }]]), { 0, 0 })
+  -- Should give a change warning
+  expect.match(child.cmd_capture('1messages'), 'is now a table')
+  child.cmd('messages clear')
+
+  -- Should work with all possible previous arguments
+  child.lua([[_G.f = MiniIndentscope.gen_animation('linear', { duration = 100, unit = 'total' })]])
+  eq(child.lua_get([[{ _G.f(1, 2), _G.f(2, 2) }]]), { 50, 50 })
+
+  -- Should give warning only once
+  expect.match(child.cmd_capture('1messages'), '')
+end
+
+T['gen_animation()']['has properly documented examples'] = function()
+  child.o.cmdheight = 10
+
+  child.lua([[_G.f_old = MiniIndentscope.gen_animation('quadraticInOut', { duration = 1000, unit = 'total' })]])
+  child.lua(
+    [[_G.f_new = MiniIndentscope.gen_animation.quadratic({ easing = 'in-out', duration = 1000, unit = 'total' })]]
+  )
+
+  eq(child.lua_get('{ _G.f_old(1, 10), _G.f_old(5, 10) }'), child.lua_get('{ _G.f_new(1, 10), _G.f_new(5, 10) }'))
 end
 
 T['move_cursor()'] = new_set({

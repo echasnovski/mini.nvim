@@ -188,8 +188,8 @@ MiniIndentscope.config = {
 
     -- Animation rule for scope's first drawing. A function which, given
     -- next and total step numbers, returns wait time (in ms). See
-    -- |MiniIndentscope.gen_animation()| for builtin options. To disable
-    -- animation, use `require('mini.indentscope').gen_animation('none')`.
+    -- |MiniIndentscope.gen_animation| for builtin options. To disable
+    -- animation, use `require('mini.indentscope').gen_animation.none()`.
     --minidoc_replace_start animation = --<function: implements constant 20ms between steps>,
     animation = function(s, n) return 20 end,
     --minidoc_replace_end
@@ -381,7 +381,7 @@ end
 ---   with default arguments.
 ---@param opts table Options. Currently supported:
 ---    - <animation_fun> - animation function for drawing. See
----      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation()|.
+---      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation|.
 MiniIndentscope.draw = function(scope, opts)
   scope = scope or MiniIndentscope.get_scope()
   local draw_opts = vim.tbl_deep_extend('force', { animation_fun = H.get_config().draw.animation }, opts or {})
@@ -395,6 +395,7 @@ end
 --- Undraw currently visible scope manually
 MiniIndentscope.undraw = function() H.undraw_scope() end
 
+-- TODO: Remove "Migrate from function type" after 0.7.0 release.
 --- Generate builtin animation function
 ---
 --- This is a builtin source to generate animation function for usage in
@@ -402,82 +403,143 @@ MiniIndentscope.undraw = function() H.undraw_scope() end
 --- common easing functions, which provide certain type of progression for
 --- revealing scope visual indicator.
 ---
---- Supported easing types:
---- - `'none'` - show indicator immediately. Equivalent to animation function
----   always returning 0.
---- - `'linear'` - linear progression.
---- - Quadratic progression:
----     - `'quadraticIn'` - accelerating from zero speed.
----     - `'quadraticOut'` - decelerating to zero speed.
----     - `'quadraticInOut'` - accelerating halfway, decelerating after.
---- - Cubic progression:
----     - `'cubicIn'` - accelerating from zero speed.
----     - `'cubicOut'` - decelerating to zero speed.
----     - `'cubicInOut'` - accelerating halfway, decelerating after.
---- - Quartic progression:
----     - `'quarticIn'` - accelerating from zero speed.
----     - `'quarticOut'` - decelerating to zero speed.
----     - `'quarticInOut'` - accelerating halfway, decelerating after.
---- - Exponential progression:
----     - `'exponentialIn'` - accelerating from zero speed.
----     - `'exponentialOut'` - decelerating to zero speed.
----     - `'exponentialInOut'` - accelerating halfway, decelerating after.
+--- Each field corresponds to one family of progression which can be customized
+--- further by supplying appropriate arguments.
 ---
---- Customization of duration and other general behavior of output animation
---- function is done through `opts` argument.
+--- Examples ~
+--- - Don't use animation: `MiniIndentscope.gen_animation.none()`
+--- - Use quadratic "out" easing with total duration of 1000 ms:
+---   `gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })`
 ---
----@param easing string One of supported easing types.
----@param opts table Options that control progression. Possible keys:
+--- Migrate from function type ~
+---
+--- Initially `MiniIndentscope.gen_animation` was a function taking `easing`
+--- and `opts` as arguments. To migrate from it, perform these steps:
+--- - Split `easing` value into two parts: progression family ("none", "linear",
+---   etc.) and acceleration type ("In", "Out", "InOut").
+--- - Use progression family as a field name of `gen_animation` table.
+--- - Convert acceleration type to other notation ("In" -> "in", "Out" ->
+---   "out", "InOut" -> "in-out") and use it as `easing` field of `opts` table.
+---
+--- Examples:
+--- - `MiniIndentscope.gen_animation('none')` ->
+---   `MiniIndentscope.gen_animation.none()`.
+--- - `gen_animation('quadraticInOut', { duration = 1000, unit = 'total' })` ->
+---   `gen_animation.quadratic({ easing = 'in-out', duration = 1000, unit = 'total' })`.
+---
+---@seealso |MiniIndentscope-drawing| for more information about how drawing is done.
+MiniIndentscope.gen_animation = {}
+
+---@alias __animation_opts table Options that control progression. Possible keys:
+---   - <easing> `(string)` - a subtype of progression. One of "in"
+---     (accelerating from zero speed), "out" (decelerating to zero speed),
+---     "in-out" (default; accelerating halfway, decelerating after).
 ---   - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
 ---   - <unit> `(string)` - which unit's duration `opts.duration` controls. One
 ---     of "step" (default; ensures average duration of step to be `opts.duration`)
 ---     or "total" (ensures fixed total duration regardless of scope's range).
+---@alias __animation_return function Animation function (see |MiniIndentscope-drawing|).
+
+-- TODO: Remove after 0.7.0 release.
+local n_notifications = 0
+setmetatable(MiniIndentscope.gen_animation, {
+  __call = function(_, easing, opts)
+    if n_notifications < 1 then
+      vim.notify(
+        '(mini.indentscope) `MiniIndentscope.gen_animation` is now a table '
+          .. [[(for consistency with other `gen_*` functions in 'mini.nvim').]]
+          .. ' See "Migrate from function type" section of `:h MiniIndentscope.gen_animation`.'
+          .. ' Calling it as function will be available until next release.'
+      )
+      n_notifications = n_notifications + 1
+    end
+
+    if easing == 'none' then return function() return 0 end end
+
+    opts = vim.tbl_deep_extend('force', { duration = 20, unit = 'step' }, opts or {})
+    if not vim.tbl_contains({ 'total', 'step' }, opts.unit) then
+      H.error([[In `gen_animation()` argument `opts.unit` should be one of 'step' or 'total'.]])
+    end
+
+    local arith, geom = H.animation_arithmetic_powers, H.animation_geometrical_powers
+    local duration, unit = opts.duration, opts.unit
+    --stylua: ignore
+    local easing_calls = {
+      linear           = { impl = arith, args = { 0, { easing = 'in',     duration = duration, unit = unit } } },
+      quadraticIn      = { impl = arith, args = { 1, { easing = 'in',     duration = duration, unit = unit } } },
+      quadraticOut     = { impl = arith, args = { 1, { easing = 'out',    duration = duration, unit = unit } } },
+      quadraticInOut   = { impl = arith, args = { 1, { easing = 'in-out', duration = duration, unit = unit } } },
+      cubicIn          = { impl = arith, args = { 2, { easing = 'in',     duration = duration, unit = unit } } },
+      cubicOut         = { impl = arith, args = { 2, { easing = 'out',    duration = duration, unit = unit } } },
+      cubicInOut       = { impl = arith, args = { 2, { easing = 'in-out', duration = duration, unit = unit } } },
+      quarticIn        = { impl = arith, args = { 3, { easing = 'in',     duration = duration, unit = unit } } },
+      quarticOut       = { impl = arith, args = { 3, { easing = 'out',    duration = duration, unit = unit } } },
+      quarticInOut     = { impl = arith, args = { 3, { easing = 'in-out', duration = duration, unit = unit } } },
+      exponentialIn    = { impl = geom,  args = {    { easing = 'in',     duration = duration, unit = unit } } },
+      exponentialOut   = { impl = geom,  args = {    { easing = 'out',    duration = duration, unit = unit } } },
+      exponentialInOut = { impl = geom,  args = {    { easing = 'in-out', duration = duration, unit = unit } } },
+    }
+    local allowed_easing_types = vim.tbl_keys(easing_calls)
+    table.sort(allowed_easing_types)
+
+    if not vim.tbl_contains(allowed_easing_types, easing) then
+      local msg = 'In `gen_animation()` argument `easing` should be one of: '
+        .. table.concat(allowed_easing_types, ', ')
+        .. '.'
+      H.error(msg)
+    end
+
+    local parts = easing_calls[easing]
+    return parts.impl(unpack(parts.args))
+  end,
+})
+
+--- Generate no animation
 ---
----@return function Animation function (see |MiniIndentscope-drawing|).
----
---- Examples~
---- - Don't use animation: `gen_animation('none')`
---- - Use quadratic "out" easing with total duration of 1000 ms:
----   `gen_animation('quadraticOut', { duration = 1000, unit = 'total' })`
----
----@seealso |MiniIndentscope-drawing| for more information about how drawing is done.
-MiniIndentscope.gen_animation = function(easing, opts)
-  if easing == 'none' then return function() return 0 end end
-
-  opts = vim.tbl_deep_extend('force', { duration = 20, unit = 'step' }, opts or {})
-  if not vim.tbl_contains({ 'total', 'step' }, opts.unit) then
-    H.error([[In `gen_animation()` argument `opts.unit` should be one of 'step' or 'total'.]])
-  end
-
-  --stylua: ignore
-  local easing_calls = {
-    linear           = { impl = H.animation_arithmetic_powers,  args = { 0, 'in',     opts } },
-    quadraticIn      = { impl = H.animation_arithmetic_powers,  args = { 1, 'in',     opts } },
-    quadraticOut     = { impl = H.animation_arithmetic_powers,  args = { 1, 'out',    opts } },
-    quadraticInOut   = { impl = H.animation_arithmetic_powers,  args = { 1, 'in-out', opts } },
-    cubicIn          = { impl = H.animation_arithmetic_powers,  args = { 2, 'in',     opts } },
-    cubicOut         = { impl = H.animation_arithmetic_powers,  args = { 2, 'out',    opts } },
-    cubicInOut       = { impl = H.animation_arithmetic_powers,  args = { 2, 'in-out', opts } },
-    quarticIn        = { impl = H.animation_arithmetic_powers,  args = { 3, 'in',     opts } },
-    quarticOut       = { impl = H.animation_arithmetic_powers,  args = { 3, 'out',    opts } },
-    quarticInOut     = { impl = H.animation_arithmetic_powers,  args = { 3, 'in-out', opts } },
-    exponentialIn    = { impl = H.animation_geometrical_powers, args = {    'in',     opts } },
-    exponentialOut   = { impl = H.animation_geometrical_powers, args = {    'out',    opts } },
-    exponentialInOut = { impl = H.animation_geometrical_powers, args = {    'in-out', opts } },
-  }
-  local allowed_easing_types = vim.tbl_keys(easing_calls)
-  table.sort(allowed_easing_types)
-
-  if not vim.tbl_contains(allowed_easing_types, easing) then
-    local msg = 'In `gen_animation()` argument `easing` should be one of: '
-      .. table.concat(allowed_easing_types, ', ')
-      .. '.'
-    H.error(msg)
-  end
-
-  local parts = easing_calls[easing]
-  return parts.impl(unpack(parts.args))
+--- Show indicator immediately. Same as animation function always returning 0.
+MiniIndentscope.gen_animation.none = function()
+  return function() return 0 end
 end
+
+--- Generate linear progression
+---
+---@param opts __animation_opts
+---
+---@return __animation_return
+MiniIndentscope.gen_animation.linear =
+  function(opts) return H.animation_arithmetic_powers(0, H.normalize_animation_opts(opts)) end
+
+--- Generate quadratic progression
+---
+---@param opts __animation_opts
+---
+---@return __animation_return
+MiniIndentscope.gen_animation.quadratic =
+  function(opts) return H.animation_arithmetic_powers(1, H.normalize_animation_opts(opts)) end
+
+--- Generate cubic progression
+---
+---@param opts __animation_opts
+---
+---@return __animation_return
+MiniIndentscope.gen_animation.cubic =
+  function(opts) return H.animation_arithmetic_powers(2, H.normalize_animation_opts(opts)) end
+
+--- Generate quartic progression
+---
+---@param opts __animation_opts
+---
+---@return __animation_return
+MiniIndentscope.gen_animation.quartic =
+  function(opts) return H.animation_arithmetic_powers(3, H.normalize_animation_opts(opts)) end
+
+--- Generate exponential progression
+---
+---@param opts __animation_opts
+---
+---@return __animation_return
+MiniIndentscope.gen_animation.exponential =
+  function(opts) return H.animation_geometrical_powers(H.normalize_animation_opts(opts)) end
 
 --- Move cursor within scope
 ---
@@ -892,7 +954,7 @@ H.make_autodraw_opts = function(scope)
   if H.scope_has_intersect(scope, H.current.scope) then
     res.type = 'immediate'
     res.delay = 0
-    res.animation_fun = MiniIndentscope.gen_animation('none')
+    res.animation_fun = MiniIndentscope.gen_animation.none()
     return res
   end
 
@@ -938,19 +1000,16 @@ end
 --- progression behaves as sum of `power` elements.
 ---
 ---@param power number Power of series.
----@param type string One of "in", "out", "in-out".
----@param opts table Options from `MiniIndentscope.gen_animation()`.
+---@param opts table Options from `MiniIndentscope.gen_animation` entry.
 ---@private
-H.animation_arithmetic_powers = function(power, type, opts)
+H.animation_arithmetic_powers = function(power, opts)
   -- Sum of first `n_steps` natural numbers raised to `power`
-  --stylua: ignore start
   local arith_power_sum = ({
     [0] = function(n_steps) return n_steps end,
     [1] = function(n_steps) return n_steps * (n_steps + 1) / 2 end,
     [2] = function(n_steps) return n_steps * (n_steps + 1) * (2 * n_steps + 1) / 6 end,
     [3] = function(n_steps) return n_steps ^ 2 * (n_steps + 1) ^ 2 / 4 end,
   })[power]
-  --stylua: ignore end
 
   -- Function which computes common delta so that overall duration will have
   -- desired value (based on supplied `opts`)
@@ -982,7 +1041,7 @@ H.animation_arithmetic_powers = function(power, type, opts)
       end
       return make_delta(n, true) * s_halved ^ power
     end,
-  })[type]
+  })[opts.easing]
 end
 
 --- Imitate common exponential easing function
@@ -993,10 +1052,9 @@ end
 --- - 'out': (d-1)*d^0;     (d-1)*d^1;     ...; (d-1)*d^(n-2); (d-1)*d^(n-1)
 --- - 'in-out': 'in' until 0.5*n, 'out' afterwards
 ---
----@param type string One of "in", "out", "in-out".
----@param opts table Options from `MiniIndentscope.gen_animation()`.
+---@param opts table Options from `MiniIndentscope.gen_animation` entry.
 ---@private
-H.animation_geometrical_powers = function(type, opts)
+H.animation_geometrical_powers = function(opts)
   -- Function which computes common delta so that overall duration will have
   -- desired value (based on supplied `opts`)
   local duration_unit, duration_value = opts.unit, opts.duration
@@ -1047,7 +1105,25 @@ H.animation_geometrical_powers = function(type, opts)
       end
       return (delta - 1) * delta ^ s_halved
     end,
-  })[type]
+  })[opts.easing]
+end
+
+H.normalize_animation_opts = function(x)
+  x = vim.tbl_deep_extend('force', { easing = 'in-out', duration = 20, unit = 'step' }, x or {})
+
+  if not vim.tbl_contains({ 'in', 'out', 'in-out' }, x.easing) then
+    H.error([[In `gen_animation` option `easing` should be one of 'in', 'out', or 'in-out'.]])
+  end
+
+  if type(x.duration) ~= 'number' or x.duration < 0 then
+    H.error([[In `gen_animation` option `duration` should be a positive number.]])
+  end
+
+  if not vim.tbl_contains({ 'total', 'step' }, x.unit) then
+    H.error([[In `gen_animation` option `unit` should be one of 'step' or 'total'.]])
+  end
+
+  return x
 end
 
 -- Utilities ------------------------------------------------------------------
