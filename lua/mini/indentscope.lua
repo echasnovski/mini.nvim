@@ -905,8 +905,9 @@ H.draw_indicator_animation = function(indicator, draw_fun, animation_fun)
     else
       H.timer:set_repeat(wait_time)
 
-      -- Restart `wait_time` only if it is actually used
-      wait_time = 0
+      -- Restart `wait_time` only if it is actually used. Do this accounting
+      -- actually set repeat time.
+      wait_time = wait_time - H.timer:get_repeat()
 
       -- Usage of `again()` is needed to overcome the fact that it is called
       -- inside callback and to restart initial timer. Mainly this is needed

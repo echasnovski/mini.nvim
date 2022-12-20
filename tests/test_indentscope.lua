@@ -482,6 +482,17 @@ T['draw()']["does not overshadow 'listchars'"] = function()
   child.expect_screenshot()
 end
 
+T['draw()']['does not round time of every animation step'] = function()
+  child.lua('MiniIndentscope.config.draw.animation = function() return 2.99 end')
+
+  set_cursor(6, 0)
+  child.lua('MiniIndentscope.draw()')
+
+  -- Should be single symbol at cursor line
+  sleep(2 * 3)
+  child.expect_screenshot()
+end
+
 T['undraw()'] = new_set({
   hooks = {
     pre_case = function()
