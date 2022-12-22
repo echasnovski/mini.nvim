@@ -5,6 +5,7 @@ if _G.MiniDoc == nil then minidoc.setup() end
 local modules = {
   'ai',
   'align',
+  'animate',
   'base16',
   'bufremove',
   'comment',

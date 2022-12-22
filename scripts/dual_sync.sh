@@ -59,6 +59,7 @@ sync_module () {
 
 sync_module "ai"
 sync_module "align"
+sync_module "animate"
 sync_module "base16" colors/*
 sync_module "bufremove"
 sync_module "comment"

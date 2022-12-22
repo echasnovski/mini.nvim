@@ -57,6 +57,7 @@ Here are code snippets for some common installation methods:
 |------------------|---------------------------------------------|---------------------------------------|---------------------------------------|
 | mini.ai          | Extend and create `a`/`i` textobjects       | [README](readmes/mini-ai.md)          | [Help file](doc/mini-ai.txt)          |
 | mini.align       | Align text interactively                    | [README](readmes/mini-align.md)       | [Help file](doc/mini-align.txt)       |
+| mini.animate     | Animate common Neovim actions               | [README](readmes/mini-animate.md)     | [Help file](doc/mini-animate.txt)     |
 | mini.base16      | Base16 colorscheme creation                 | [README](readmes/mini-base16.md)      | [Help file](doc/mini-base16.txt)      |
 | mini.bufremove   | Remove buffers                              | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
 | mini.comment     | Comment                                     | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
@@ -97,6 +98,15 @@ For video demo and quick overview see its [README](readmes/mini-ai.md). For more
 Align text interactively (with or without instant preview).
 
 For video demo and quick overview see its [README](readmes/mini-align.md). For more details see its [help file](doc/mini-align.txt).
+
+---
+
+<a name='mini.animate'></a>
+### mini.animate
+
+Animate common Neovim actions (works out of the box without extra mappings or commands needed).
+
+For video demo and quick overview see its [README](readmes/mini-animate.md). For more details see its [help file](doc/mini-animate.txt).
 
 ---
 

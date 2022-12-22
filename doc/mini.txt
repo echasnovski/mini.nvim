@@ -17,6 +17,7 @@ Table of contents:
   Plugin colorschemes.....................................|mini-color-schemes|
   Extend and create a/i textobjects..................................|mini.ai|
   Align text interactively........................................|mini.align|
+  Animate common Neovim actions.................................|mini.animate|
   Base16 colorscheme creation....................................|mini.base16|
   Remove buffers..............................................|mini.bufremove|
   Comment.......................................................|mini.comment|
@@ -102,6 +103,9 @@ Table of contents:
   Allows rich and flexible customization of both alignment rules and user
   interaction. Works with charwise, linewise, and blockwise selections in
   both Normal mode (on textobject/motion; with dot-repeat) and Visual mode.
+- |MiniAnimate| - animate common Neovim actions. Has "works out of the box"
+  builtin animations for cursor movement, scroll, resize, window open and
+  close. All of them can be customized and enabled/disabled independently.
 - |MiniBase16| - fast implementation of base16 theme for manually supplied
   palette. Supports 30+ plugin integrations. Has unique palette generator
   which needs only background and foreground colors.

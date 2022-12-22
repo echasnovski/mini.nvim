@@ -1,0 +1,956 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                  *mini.animate*
+                                                                   *MiniAnimate*
+Animate common Neovim actions
+
+Features:
+- Works out of the box with a single `require('mini.animate').setup()`.
+  No extra mappings or commands needed.
+- Animate cursor movement inside same buffer by showing customizable path.
+  See |MiniAnimate.config.cursor| for more details.
+- Animate scrolling with a series of subscrolls ("smooth scrolling").
+  See |MiniAnimate.config.scroll| for more details.
+- Animate window resize by gradually changing sizes of all windows.
+  See |MiniAnimate.config.resize| for more details.
+- Animate window open/close with visually updating floating window.
+  See |MiniAnimate.config.open| and |MiniAnimate.config.close| for more details.
+- Timings for all actions can be customized independently.
+  See |MiniAnimate-timing| for more details.
+- Action animations can be enabled/disabled independently.
+- All animations are asynchronous/non-blocking and trigger a targeted event
+  which can be used to perform actions after animation is done.
+- |MiniAnimate.animate()| function which can be used to perform own animations.
+
+Notes:
+- Cursor movement is animated inside same window and buffer, not as cursor
+  moves across the screen.
+- Scroll and resize animations are done with "side effects": they actually
+  change the state of what is animated (window view and sizes
+  respectively). This has a downside of possibly needing extra work to
+  account for asynchronous nature of animation (like adjusting certain
+  mappings, etc.). See |MiniAnimate.config.scroll| and
+  |MiniAnimate.config.resize| for more details.
+- Although all animations work in all supported versions of Neovim, scroll
+  and resize animations have best experience with Neovim>=0.9 (current nightly
+  release). This is due to updated implementation of |WinScrolled| event.
+
+# Setup ~
+
+This module needs a setup with `require('mini.animate').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniAnimate`
+which you can use for scripting or manually (with `:lua MiniAnimate.*`).
+
+See |MiniAnimate.config| for available config settings.
+
+You can override runtime config settings (like `config.modifiers`) locally
+to buffer inside `vim.b.minianimate_config` which should have same structure
+as `MiniAnimate.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons ~
+
+- Neovide:
+    - Neovide is a standalone GUI which has more control over its animations.
+      While 'mini.animate' works inside terminal emulator (with all its
+      limitations, like lack of pixel-size control over animations).
+    - Neovide animates cursor movement across screen, while 'mini.animate' -
+      as it moves across same buffer.
+    - Neovide has fixed number of animation effects per action, while
+      'mini.animate' is fully customizable.
+    - 'mini.animate' implements animations for window open/close, while
+      Neovide does not.
+- 'edluffy/specs.nvim':
+    - 'mini.animate' approaches cursor movement visualization via
+      customizable path function (uses extmarks), while 'specs.nvim' can
+      customize within its own visual effects (shading and floating
+      window resizing).
+- 'karb94/neoscroll.nvim':
+    - Scroll animation is triggered only inside dedicated mappings.
+      'mini.animate' animates scroll resulting from any window view change.
+- 'anuvyklack/windows.nvim':
+    - Resize animation is done only within custom commands and mappings,
+      while 'mini.animate' animates any resize out of the box (works
+      similarly to 'windows.nvim' in Neovim>=0.9 with appropriate
+      'winheight' / 'winwidth' and 'winminheight' / 'winminwidth').
+
+# Highlight groups~
+
+* `MiniAnimateCursor` - highlight of cursor during its animated movement.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling~
+
+To disable, set `g:minianimate_disable` (globally) or `b:minianimate_disable`
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+------------------------------------------------------------------------------
+                                                           *MiniAnimate.setup()*
+                         `MiniAnimate.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniAnimate.config|.
+
+Usage~
+`require('mini.animate').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                            *MiniAnimate.config*
+                              `MiniAnimate.config`
+Module config
+
+Default values:
+>
+  MiniAnimate.config = {
+    -- Cursor path
+    cursor = {
+      -- Whether to enable this animation
+      enable = true,
+
+      -- Timing of animation (how steps will progress in time)
+      timing = --<function: implements linear total 250ms animation duration>,
+
+      -- Path generator for visualized cursor movement
+      path = --<function: implements shortest line path>,
+    },
+
+    -- Vertical scroll
+    scroll = {
+      -- Whether to enable this animation
+      enable = true,
+
+      -- Timing of animation (how steps will progress in time)
+      timing = --<function: implements linear total 250ms animation duration>,
+
+      -- Subscroll generator based on total scroll
+      subscroll = --<function: implements equal scroll with at most 60 steps>,
+    },
+
+    -- Window resize
+    resize = {
+      -- Whether to enable this animation
+      enable = true,
+
+      -- Timing of animation (how steps will progress in time)
+      timing = --<function: implements linear total 250ms animation duration>,
+
+      -- Subresize generator for all steps of resize animations
+      subresize = --<function: implements equal linear steps>,
+    },
+
+    -- Window open
+    open = {
+      -- Whether to enable this animation
+      enable = true,
+
+      -- Timing of animation (how steps will progress in time)
+      timing = --<function: implements linear total 250ms animation duration>,
+
+      -- Floating window config generator visualizing specific window
+      winconfig = --<function: implements static window for 25 steps>,
+
+      -- 'winblend' (window transparency) generator for floating window
+      winblend = --<function: implements equal linear steps from 80 to 100>,
+    },
+
+    -- Window close
+    close = {
+      -- Whether to enable this animation
+      enable = true,
+
+      -- Timing of animation (how steps will progress in time)
+      timing = --<function: implements linear total 250ms animation duration>,
+
+      -- Floating window config generator visualizing specific window
+      winconfig = --<function: implements static window for 25 steps>,
+
+      -- 'winblend' (window transparency) generator for floating window
+      winblend = --<function: implements equal linear steps from 80 to 100>,
+    },
+  }
+<
+
+# General ~
+                                                            *MiniAnimate-timing*
+- Every animation is a non-blockingly scheduled series of specific actions.
+  They are executed in a sequence of timed steps controlled by `timing` option.
+  It is a callable which, given next and total step numbers, returns wait time
+  (in ms). See |MiniAnimate.gen_timing| for builtin timing functions.
+  See |MiniAnimate.animate()| for more details about animation process.
+
+- Every animation can be enabled/disabled independently by setting `enable`
+  option to `true`/`false`.
+
+                                                        *MiniAnimate-done-event*
+- Every animation triggers custom |User| event when it is finished. It is
+  named `MiniAnimateDoneXxx` with `Xxx` replaced by capitalized supported
+  animation action name (like `MiniAnimateDoneCursor`). Use it to schedule
+  some action after certain animation is completed. Alternatively, you can
+  use |MiniAnimate.execute_after()| (usually preferred in mappings).
+
+- Each animation has its main step generator which defines how particular
+  animation is done. They all are callables which take some input data and
+  return an array of step data. Length of that array determines number of
+  animation steps. Outputs `nil` and empty table result in no animation.
+
+                                                     *MiniAnimate.config.cursor*
+# Cursor ~
+
+This animation is triggered for each movement of cursor inside same window
+and buffer. Its visualization step consists from placing single extmark (see
+|extmarks|) at certain position. This extmark contains single space and is
+highlighted with `MiniAnimateCursor` highlight group.
+
+Exact places of extmark and their number is controlled by `path` option. It
+is a callable which takes `destination` argument (2d integer point in
+`(line, col)` coordinates) and returns array of relative to `(0, 0)` places
+for extmark to be placed. Example:
+- Input `(2, -3)` means cursor jumped 2 lines forward and 3 columns backward.
+- Output `{ {0, 0 }, { 0, -1 }, { 0, -2 }, { 0, -3 }, { 1, -3 } }` means
+  that path is first visualized along the initial line and then along final
+  column.
+
+See |MiniAnimate.gen_path| for builtin path generators.
+
+Notes:
+- Input `destination` value is computed ignoring folds. This is by design
+  as it helps better visualize distance between two cursor positions.
+- Outputs of path generator resulting in a place where extmark can't be
+  placed are silently omitted during animation: this step won't show any
+  visualization.
+
+Configuration example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    cursor = {
+      -- Animate for 200 milliseconds with linear easing
+      timing = animate.gen_timing.linear({ duration = 200, unit = 'total' }),
+
+      -- Animate with line-column angle instead of shortest line
+      path = animate.gen_path.angle(),
+    }
+  })
+
+After animation is done, `MiniAnimateDoneCursor` event is triggered.
+
+                                                     *MiniAnimate.config.scroll*
+# Scroll ~
+
+This animation is triggered for each vertical scroll of current window.
+Its visualization step consists from performing a small subscroll which all
+in total will result into needed total scroll.
+
+Exact subscroll values and their number is controlled by `subscroll` option.
+It is a callable which takes `total_scroll` argument (single non-negative
+integer) and returns array of non-negative integers each representing the
+amount of lines needed to be scrolled inside corresponding step. All
+subscroll values should sum to input `total_scroll`.
+Example:
+- Input `5` means that total scroll consists from 5 lines (either up or down,
+  which doesn't matter).
+- Output of `{ 1, 1, 1, 1, 1 }` means that there are 5 equal subscrolls.
+
+See |MiniAnimate.gen_subscroll| for builtin subscroll generators.
+
+Notes:
+- Input value of `total_scroll` is computed taking folds into account.
+- As scroll animation is essentially a precisely scheduled non-blocking
+  subscrolls, this has two important interconnected consequences:
+    - If another scroll is attempted during the animation, it is done based
+      on the **currently visible** window view. Example: if user presses
+      |CTRL-D| and then |CTRL-U| when animation is half done, window will not
+      display the previous view half of 'scroll' above it. This especially
+      affects mouse wheel scrolling, as each its turn results in a new scroll
+      for number of lines defined by 'mousescroll'. Tweak it to your liking.
+    - It breaks the use of several relative scrolling commands in the same
+      command. Use |MiniAnimate.execute_after()| to schedule action after
+      reaching target window view.
+      Example: a useful `nnoremap n nzvzz` mapping (consecutive application
+      of |n|, |zv|, and |zz|) should have this right hand side: >
+
+  <Cmd>lua vim.cmd('normal! n'); MiniAnimate.execute_after('scroll', 'normal! zvzz')<CR>
+
+- This animation works best with Neovim>=0.9 (after certain updates to
+  |WinScrolled| event).
+
+Configuration example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    scroll = {
+      -- Animate for 200 milliseconds with linear easing
+      timing = animate.gen_timing.linear({ duration = 200, unit = 'total' }),
+
+      -- Animate equally but with at most 120 steps instead of default 60
+      subscroll = animate.gen_subscroll.equal({ max_output_steps = 120 }),
+    }
+  })
+
+After animation is done, `MiniAnimateDoneScroll` event is triggered.
+
+                                                     *MiniAnimate.config.resize*
+# Resize ~
+
+This animation is triggered for window resize while having same layout of
+same windows. For example, it won't trigger when window is opened/closed or
+after something like |CTRL-W_K|. Its visualization step consists from setting
+certain sizes to all visible windows (last step being for "true" final sizes).
+
+Exact window step sizes and their number is controlled by `subresize` option.
+It is a callable which takes `sizes_from` and `sizes_to` arguments (both
+tables with window id as keys and dimension table as values) and returns
+array of same shaped data.
+Example:
+- Inputs
+  `{ [1000] = {width = 7, height = 5}, [1001] = {width = 7, height = 10} }`
+  and
+  `{ [1000] = {width = 9, height = 5}, [1001] = {width = 5, height = 10} }`
+  mean that window 1000 increased its width by 2 in expense of window 1001.
+- The following output demonstrates equal resizing: >
+
+  {
+    { [1000] = {width = 8, height = 5}, [1001] = {width = 6, height = 10} },
+    { [1000] = {width = 9, height = 5}, [1001] = {width = 5, height = 10} },
+  }
+
+See |MiniAnimate.gen_subresize| for builtin subresize generators.
+
+Notes:
+
+- As resize animation is essentially a precisely scheduled non-blocking
+  subresizes, this has two important interconnected consequences:
+    - If another resize is attempted during the animation, it is done based
+      on the **currently visible** window sizes. This might affect relative
+      resizing.
+    - It breaks the use of several relative resizing commands in the same
+      command. Use |MiniAnimate.execute_after()| to schedule action after
+      reaching target window sizes.
+- This animation works best with Neovim>=0.9 (after certain updates to
+  |WinScrolled| event). For example, resize resulting from effect of
+  'winheight' / 'winwidth' will work properly.
+
+Configuration example: >
+
+  local is_many_wins = function(sizes_from, sizes_to)
+    return vim.tbl_count(sizes_from) >= 3
+  end
+  local animate = require('mini.animate')
+  animate.setup({
+    resize = {
+      -- Animate for 200 milliseconds with linear easing
+      timing = animate.gen_timing.linear({ duration = 200, unit = 'total' }),
+
+      -- Animate only if there are at least 3 windows
+      subresize = animate.gen_subscroll.equal({ predicate = is_many_wins }),
+    }
+  })
+
+After animation is done, `MiniAnimateDoneResize` event is triggered.
+
+                              *MiniAnimate.config.open* *MiniAnimate.config.close*
+# Window open/close ~
+
+These animations are similarly triggered for regular (non-floating) window
+open/close. Their visualization step consists from drawing empty floating
+window with customizable config and transparency.
+
+Exact window visualization characteristics are controlled by `winconfig`
+and `winblend` options.
+
+The `winconfig` option is a callable which takes window id (|window-ID|) as
+input and returns an array of floating window configs (as in `config`
+argument of |nvim_open_win()|). Its length determines number of animation steps.
+Example:
+- The following output results into two animation steps with second being
+  upper left quarter of a first: >
+
+  {
+    {
+      row      = 0,        col    = 0,
+      width    = 10,       height = 10,
+      relative = 'editor', anchor = 'NW', focusable = false,
+      zindex   = 1,        style  = 'minimal',
+    },
+    {
+      row      = 0,        col    = 0,
+      width    = 5,        height = 5,
+      relative = 'editor', anchor = 'NW', focusable = false,
+      zindex   = 1,        style  = 'minimal',
+    },
+  }
+
+The `winblend` option is similar to `timing` option: it is a callable
+which, given current and total step numbers, returns value of floating
+window's 'winblend' option. Note, that it is called for current step (so
+starts from 0), as opposed to `timing` which is called before step.
+Example:
+- Function `function(s, n) return 80 + 20 * s / n end` results in linear
+  transition from `winblend` value of 80 to 100.
+
+See |MiniAnimate.gen_winconfig| for builtin window config generators.
+See |MiniAnimate.gen_winblend| for builtin window transparency generators.
+
+Configuration example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    open = {
+      -- Animate for 400 milliseconds with linear easing
+      timing = animate.gen_timing.linear({ duration = 400, unit = 'total' }),
+
+      -- Animate with wiping from nearest edge instead of default static one
+      winconfig = animate.gen_winconfig.wipe({ direction = 'from_edge' }),
+
+      -- Make bigger windows more transparent
+      winblend = animate.gen_winblend.linear({ from = 80, to = 100 }),
+    },
+
+    close = {
+      -- Animate for 400 milliseconds with linear easing
+      timing = animate.gen_timing.linear({ duration = 400, unit = 'total' }),
+
+      -- Animate with wiping to nearest edge instead of default static one
+      winconfig = animate.gen_winconfig.wipe({ direction = 'to_edge' }),
+
+      -- Make bigger windows more transparent
+      winblend = animate.gen_winblend.linear({ from = 100, to = 80 }),
+    },
+  })
+
+After animation is done, `MiniAnimateDoneOpen` or `MiniAnimateDoneClose`
+event is triggered for `open` and `close` animation respectively.
+
+------------------------------------------------------------------------------
+                                                       *MiniAnimate.is_active()*
+                   `MiniAnimate.is_active`({animation_type})
+Check animation activity
+
+Parameters~
+{animation_type} `(string)` One of supported animation types
+  (entries of |MiniAnimate.config|, like `'cursor'`, etc.).
+
+Return~
+`(boolean)` Whether the animation is currently active.
+
+------------------------------------------------------------------------------
+                                                   *MiniAnimate.execute_after()*
+            `MiniAnimate.execute_after`({animation_type}, {action})
+Execute action after some animation is done
+
+Execute action immediately if animation is not active (checked with
+|MiniAnimate.is_active()|). Else, schedule its execution until after
+animation is done (on corresponding "done event", see
+|MiniAnimate-done-event|).
+
+Mostly meant to be used inside mappings.
+
+Example ~
+
+A useful `nnoremap n nzvzz` mapping (consecutive application of |n|, |zv|, and |zz|)
+should have this right hand side: >
+
+  <Cmd>lua vim.cmd('normal! n'); MiniAnimate.execute_after('scroll', 'normal! zvzz')<CR>
+
+Parameters~
+{animation_type} `(string)` One of supported animation types
+  (as in |MiniAnimate.is_active()|).
+{action} `(string|function)` Action to be executed. If string, executed as
+  command (via |vim.cmd()|).
+
+------------------------------------------------------------------------------
+                                                         *MiniAnimate.animate()*
+          `MiniAnimate.animate`({step_action}, {step_timing}, {opts})
+Animate action
+
+This is equivalent to asynchronous execution of the following algorithm:
+- Call `step_action(0)` immediately after calling this function. Stop if
+  action returned `false` or `nil`.
+- Wait `step_timing(1)` milliseconds.
+- Call `step_action(1)`. Stop if it returned `false` or `nil`.
+- Wait `step_timing(2)` milliseconds.
+- Call `step_action(2)`. Stop if it returned `false` or `nil`.
+- ...
+
+Notes:
+- Animation is also stopped on action error or if maximum number of steps
+  is reached.
+- Asynchronous execution is done with |uv.new_timer()|. It only allows
+  integer parts as repeat value. This has several implications:
+    - Outputs of `step_timing()` are accumulated in order to preserve total
+      execution time.
+    - Any wait time less than 1 ms means that action will be executed
+      immediately.
+
+Parameters~
+{step_action} `(function)` Callable which takes `step` (integer 0, 1, 2,
+  etc. indicating current step) and executes some action. Its return value
+  defines when animation should stop: values `false` and `nil` (equivalent
+  to no explicit return) stop animation timer; any other continues it.
+{step_timing} `(function)` Callable which takes `step` (integer 1, 2, etc.
+  indicating next step) and returns how many milliseconds to wait before
+  executing this step action.
+{opts} `(table|nil)` Options. Possible fields:
+  - <max_steps> - Maximum value of allowed step to execute. Default: 10000000.
+
+------------------------------------------------------------------------------
+                                                        *MiniAnimate.gen_timing*
+                            `MiniAnimate.gen_timing`
+Generate animation timing
+
+Each field corresponds to one family of progression which can be customized
+further by supplying appropriate arguments.
+
+This is a table with function elements. Call to actually get timing function.
+
+Example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    cursor = {
+      timing = animate.gen_timing.linear({ duration = 100, unit = 'total' })
+    },
+  })
+
+See also~
+|MiniIndentscope.gen_animation| for similar concept in 'mini.indentscope'.
+
+------------------------------------------------------------------------------
+                                                 *MiniAnimate.gen_timing.none()*
+                        `MiniAnimate.gen_timing.none`()
+Generate timing with no animation
+
+Show final result immediately. Usually better to use `enable` field in `config`
+if you want to disable animation.
+
+------------------------------------------------------------------------------
+                                               *MiniAnimate.gen_timing.linear()*
+                    `MiniAnimate.gen_timing.linear`({opts})
+Generate timing with linear progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Timing function (see |MiniAnimate-timing|).
+
+------------------------------------------------------------------------------
+                                            *MiniAnimate.gen_timing.quadratic()*
+                   `MiniAnimate.gen_timing.quadratic`({opts})
+Generate timing with quadratic progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Timing function (see |MiniAnimate-timing|).
+
+------------------------------------------------------------------------------
+                                                *MiniAnimate.gen_timing.cubic()*
+                     `MiniAnimate.gen_timing.cubic`({opts})
+Generate timing with cubic progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Timing function (see |MiniAnimate-timing|).
+
+------------------------------------------------------------------------------
+                                              *MiniAnimate.gen_timing.quartic()*
+                    `MiniAnimate.gen_timing.quartic`({opts})
+Generate timing with quartic progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Timing function (see |MiniAnimate-timing|).
+
+------------------------------------------------------------------------------
+                                          *MiniAnimate.gen_timing.exponential()*
+                  `MiniAnimate.gen_timing.exponential`({opts})
+Generate timing with exponential progression
+
+Parameters~
+{opts} `(table)` Options that control progression. Possible keys:
+  - <easing> `(string)` - a subtype of progression. One of "in"
+    (accelerating from zero speed), "out" (decelerating to zero speed),
+    "in-out" (default; accelerating halfway, decelerating after).
+  - <duration> `(number)` - duration (in ms) of a unit. Default: 20.
+  - <unit> `(string)` - which unit's duration `opts.duration` controls. One
+    of "step" (default; ensures average duration of step to be `opts.duration`)
+    or "total" (ensures fixed total duration regardless of scope's range).
+
+Return~
+`(function)` Timing function (see |MiniAnimate-timing|).
+
+------------------------------------------------------------------------------
+                                                          *MiniAnimate.gen_path*
+                             `MiniAnimate.gen_path`
+Generate cursor animation path
+
+For more information see |MiniAnimate.config.cursor|.
+
+This is a table with function elements. Call to actually get generator.
+
+Example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    cursor = {
+      -- Animate with line-column angle instead of shortest line
+      path = animate.gen_path.angle(),
+    }
+  })
+
+------------------------------------------------------------------------------
+                                                   *MiniAnimate.gen_path.line()*
+                      `MiniAnimate.gen_path.line`({opts})
+Generate path as shortest line
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `destination` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: `false` if `destination` is within one line of origin (reduces
+    flickering), `true` otherwise.
+
+Return~
+`(function)` Path function (see |MiniAnimate.config.cursor|).
+
+------------------------------------------------------------------------------
+                                                  *MiniAnimate.gen_path.angle()*
+                      `MiniAnimate.gen_path.angle`({opts})
+Generate path as line/column angle
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `destination` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: `false` if `destination` is within one line of origin (reduces
+    flickering), `true` otherwise.
+  - <first_direction> `(string)` - one of `"horizontal"` (default; animates
+    across initial line first) or `"vertical"` (animates across initial
+    column first).
+
+Return~
+`(function)` Path function (see |MiniAnimate.config.cursor|).
+
+------------------------------------------------------------------------------
+                                                  *MiniAnimate.gen_path.walls()*
+                      `MiniAnimate.gen_path.walls`({opts})
+Generate path as closing walls at final position
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `destination` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: `false` if `destination` is within one line of origin (reduces
+    flickering), `true` otherwise.
+  - <width> `(number)` - initial width of left and right walls. Default: 10.
+
+Return~
+`(function)` Path function (see |MiniAnimate.config.cursor|).
+
+------------------------------------------------------------------------------
+                                                 *MiniAnimate.gen_path.spiral()*
+                     `MiniAnimate.gen_path.spiral`({opts})
+Generate path as diminishing spiral at final position
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `destination` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: `false` if `destination` is within one line of origin (reduces
+    flickering), `true` otherwise.
+  - <width> `(number)` - initial width of spiral. Default: 2.
+
+Return~
+`(function)` Path function (see |MiniAnimate.config.cursor|).
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.gen_subscroll*
+                          `MiniAnimate.gen_subscroll`
+Generate scroll animation subscroll
+
+For more information see |MiniAnimate.config.scroll|.
+
+This is a table with function elements. Call to actually get generator.
+
+Example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    scroll = {
+      -- Animate equally but with 120 maximum steps instead of default 60
+      subscroll = animate.gen_subscroll.equal({ max_output_steps = 120 }),
+    }
+  })
+
+------------------------------------------------------------------------------
+                                             *MiniAnimate.gen_subscroll.equal()*
+                   `MiniAnimate.gen_subscroll.equal`({opts})
+Generate subscroll with equal steps
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `total_scroll` as
+    input and returns boolean value indicating whether animation should be
+    done. Default: `false` if `total_scroll` is 1 or less (reduces
+    unnecessary waiting), `true` otherwise.
+  - <max_output_steps> `(number)` - maximum number of subscroll steps in output.
+    Adjust this to reduce computations in expense of reduced smoothness.
+    Default: 60.
+
+Return~
+`(function)` Subscroll function (see |MiniAnimate.config.scroll|).
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.gen_subresize*
+                          `MiniAnimate.gen_subresize`
+Generate resize animation subresize
+
+For more information see |MiniAnimate.config.resize|.
+
+This is a table with function elements. Call to actually get generator.
+
+Example: >
+
+  local is_many_wins = function(sizes_from, sizes_to)
+    return vim.tbl_count(sizes_from) >= 3
+  end
+  local animate = require('mini.animate')
+  animate.setup({
+    resize = {
+      -- Animate only if there are at least 3 windows
+      subresize = animate.gen_subresize.equal({ predicate = is_many_wins }),
+    }
+  })
+
+------------------------------------------------------------------------------
+                                             *MiniAnimate.gen_subresize.equal()*
+                   `MiniAnimate.gen_subresize.equal`({opts})
+Generate subresize with equal steps
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `sizes_from` and
+    `sizes_to` as input and returns boolean value indicating whether
+    animation should be done. Default: always `true`.
+
+Return~
+`(function)` Subresize function (see |MiniAnimate.config.resize|).
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.gen_winconfig*
+                          `MiniAnimate.gen_winconfig`
+Generate open/close animation winconfig
+
+For more information see |MiniAnimate.config.open| or |MiniAnimate.config.close|.
+
+This is a table with function elements. Call to actually get generator.
+
+Example: >
+
+  local is_not_single_window = function(win_id)
+    local tabpage_id = vim.api.nvim_win_get_tabpage(win_id)
+    return #vim.api.nvim_tabpage_list_wins(tabpage_id) > 1
+  end
+  local animate = require('mini.animate')
+  animate.setup({
+    open = {
+      -- Animate with wiping from nearest edge instead of default static one
+      -- and only if it is not a single window in tabpage
+      winconfig = animate.gen_winconfig.wipe({
+        predicate = is_not_single_window,
+        direction = 'from_edge',
+      }),
+    },
+    close = {
+      -- Animate with wiping to nearest edge instead of default static one
+      -- and only if it is not a single window in tabpage
+      winconfig = animate.gen_winconfig.wipe({
+        predicate = is_not_single_window,
+        direction = 'to_edge',
+      }),
+    },
+  })
+
+------------------------------------------------------------------------------
+                                            *MiniAnimate.gen_winconfig.static()*
+                   `MiniAnimate.gen_winconfig.static`({opts})
+Generate winconfig for static floating window
+
+This will result into floating window statically covering whole target
+window.
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `win_id` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: always `true`.
+  - <n_steps> `(number)` - number of output steps, all with same config.
+    Usefule to tweak smoothness of transparency animation (done inside
+    `winblend` config option). Default: 25.
+
+Return~
+`(function)` Winconfig function (see |MiniAnimate.config.open|
+  or |MiniAnimate.config.close|).
+
+------------------------------------------------------------------------------
+                                            *MiniAnimate.gen_winconfig.center()*
+                   `MiniAnimate.gen_winconfig.center`({opts})
+Generate winconfig for center-focused animated floating window
+
+This will result into floating window growing from or shrinking to the
+target window center.
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `win_id` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: always `true`.
+  - <direction> `(string)` - one of `"to_center"` (default; window will
+    shrink from full coverage to center) or `"from_center"` (window will
+    grow from center to full coverage).
+
+Return~
+`(function)` Winconfig function (see |MiniAnimate.config.open|
+  or |MiniAnimate.config.close|).
+
+------------------------------------------------------------------------------
+                                              *MiniAnimate.gen_winconfig.wipe()*
+                    `MiniAnimate.gen_winconfig.wipe`({opts})
+Generate winconfig for wiping animated floating window
+
+This will result into floating window growing from or shrinking to the
+nearest edge. This also takes into account the split type of target window:
+vertically split window will progress towards vertical edge; horizontally -
+towards horizontal.
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <predicate> `(function)` - a callable which takes `win_id` as input and
+    returns boolean value indicating whether animation should be done.
+    Default: always `true`.
+  - <direction> `(string)` - one of `"to_edge"` (default; window will
+    shrink from full coverage to nearest edge) or `"from_edge"` (window
+    will grow from edge to full coverage).
+
+Return~
+`(function)` Winconfig function (see |MiniAnimate.config.open|
+  or |MiniAnimate.config.close|).
+
+------------------------------------------------------------------------------
+                                                      *MiniAnimate.gen_winblend*
+                           `MiniAnimate.gen_winblend`
+Generate open/close animation `winblend` progression
+
+For more information see |MiniAnimate.config.open| or |MiniAnimate.config.close|.
+
+This is a table with function elements. Call to actually get transparency
+function.
+
+Example: >
+
+  local animate = require('mini.animate')
+  animate.setup({
+    open = {
+      -- Change transparency from 60 to 80 instead of default 80 to 100
+      winblend = animate.gen_winblend.linear({ from = 60, to = 80 }),
+    },
+    close = {
+      -- Change transparency from 60 to 80 instead of default 80 to 100
+      winblend = animate.gen_winblend.linear({ from = 60, to = 80 }),
+    },
+  })
+
+------------------------------------------------------------------------------
+                                             *MiniAnimate.gen_winblend.linear()*
+                   `MiniAnimate.gen_winblend.linear`({opts})
+Generate linear `winblend` progression
+
+Parameters~
+{opts} `(table)` Options that control generator. Possible keys:
+  - <from> `(number)` - initial value of 'winblend'.
+  - <to> `(number)` - final value of 'winblend'.
+
+Return~
+`(function)` Winblend function (see |MiniAnimate.config.open|
+  or |MiniAnimate.config.close|).
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.auto_cursor()*
+                          `MiniAnimate.auto_cursor`()
+Automatically animate cursor movement
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.auto_scroll()*
+                          `MiniAnimate.auto_scroll`()
+Automatically animate window scroll
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+------------------------------------------------------------------------------
+                                              *MiniAnimate.track_scroll_state()*
+                       `MiniAnimate.track_scroll_state`()
+Track scroll state
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+------------------------------------------------------------------------------
+                                                     *MiniAnimate.auto_resize()*
+                          `MiniAnimate.auto_resize`()
+Automatically animate window resize
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+------------------------------------------------------------------------------
+                                                  *MiniAnimate.auto_openclose()*
+                  `MiniAnimate.auto_openclose`({action_type})
+Automatically animate window open/close
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
