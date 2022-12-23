@@ -1449,6 +1449,51 @@ T['Scroll']['respects folds'] = function()
   child.expect_screenshot()
 end
 
+T['Scroll']["respects global 'scrolloff'"] = function()
+  child.o.scrolloff = 1
+  type_keys('L')
+
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  sleep(5)
+  for _ = 1, 4 do
+    sleep(20)
+    child.expect_screenshot()
+  end
+  eq(child.o.scrolloff, 1)
+end
+
+T['Scroll']["respects window-local 'scrolloff'"] = function()
+  child.cmd('setlocal scrolloff=1')
+  type_keys('L')
+
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  sleep(5)
+  for _ = 1, 4 do
+    sleep(20)
+    child.expect_screenshot()
+  end
+  eq(child.wo.scrolloff, 1)
+end
+
+T['Scroll']["respects 'scrolloff' in presence of folds"] = function()
+  set_cursor(6, 0)
+  type_keys('zf5j')
+  set_cursor(1, 0)
+
+  child.o.scrolloff = 1
+  type_keys('L')
+
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  sleep(5)
+  for _ = 1, 4 do
+    sleep(20)
+    child.expect_screenshot()
+  end
+end
+
 T['Scroll']['places cursor on final position immediately'] = function()
   set_cursor(9, 3)
 

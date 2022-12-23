@@ -1488,8 +1488,12 @@ H.scroll_action = function(key, n, final_cursor_pos)
   end
 
   -- Set cursor to properly handle final cursor position
-  local top, bottom = vim.fn.line('w0'), vim.fn.line('w$')
+  -- Computation of available top/bottom line depends on `scrolloff = 0`
+  -- because otherwise it will go out of bounds causing scroll overshoot with
+  -- later "bounce" back on view restore (see
+  -- https://github.com/echasnovski/mini.nvim/issues/177).
   --stylua: ignore start
+  local top, bottom = vim.fn.line('w0'), vim.fn.line('w$')
   local line, col = final_cursor_pos[1], final_cursor_pos[2]
   if line < top    then line, col = top,    0 end
   if bottom < line then line, col = bottom, 0 end
@@ -1499,12 +1503,20 @@ end
 
 H.start_scroll = function(start_state)
   H.cache.scroll_is_active = true
+  -- Disable scrolloff in order to be able to place cursor on top/bottom window
+  -- line inside scroll step.
+  -- Incorporating `vim.wo.scrolloff` in computation of available top and
+  -- bottom window lines works, but only in absence of folds. It gets tricky
+  -- otherwise, so disabling on scroll start and restore on scroll end is
+  -- better solution.
+  H.set_scrolloff(0)
   if start_state ~= nil then vim.fn.winrestview(start_state.view) end
   return true
 end
 
 H.stop_scroll = function(end_state)
   if end_state ~= nil then vim.fn.winrestview(end_state.view) end
+  H.set_scrolloff(end_state.scrolloff)
   H.cache.scroll_is_active = false
   H.trigger_done_event('scroll')
   return false
@@ -1515,6 +1527,7 @@ H.get_scroll_state = function()
     buf_id = vim.api.nvim_get_current_buf(),
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
+    scrolloff = H.get_scrolloff(),
   }
 end
 
@@ -2016,6 +2029,16 @@ end
 -- This is needed for compatibility with Neovim<=0.6
 -- TODO: Remove after compatibility with Neovim<=0.6 is dropped
 H.getcursorcharpos = vim.fn.exists('*getcursorcharpos') == 1 and vim.fn.getcursorcharpos or vim.fn.getcurpos
+
+-- TODO: Remove after compatibility with Neovim<=0.6 is dropped
+H.get_scrolloff = function() return vim.wo.scrolloff end
+H.set_scrolloff = function(x) vim.wo.scrolloff = x end
+
+-- For some reason, `vim.wo.scrolloff` doesn't work properly in Neovim=0.6
+if vim.fn.has('nvim-0.7') == 0 then
+  H.get_scrolloff = function() return vim.api.nvim_get_option('scrolloff') end
+  H.set_scrolloff = function(x) return vim.api.nvim_set_option('scrolloff', x) end
+end
 
 H.make_step = function(x) return x == 0 and 0 or (x < 0 and -1 or 1) end
 
