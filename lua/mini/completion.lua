@@ -242,6 +242,12 @@ MiniCompletion.config = {
     signature = { height = 25, width = 80 },
   },
 
+  -- Floating window border
+  window_border = {
+    info = 'none',
+    signature = 'none',
+  },
+
   -- Way of how module does LSP completion
   lsp_completion = {
     -- `source_func` should be one of 'completefunc' or 'omnifunc'.
@@ -601,6 +607,7 @@ H.setup_config = function(config)
   vim.validate({
     delay = { config.delay, 'table' },
     window_dimensions = { config.window_dimensions, 'table' },
+    window_border = { config.window_border,  'table'},
     lsp_completion = { config.lsp_completion, 'table' },
     fallback_action = {
       config.fallback_action,
@@ -618,6 +625,9 @@ H.setup_config = function(config)
 
     ['window_dimensions.info'] = { config.window_dimensions.info, 'table' },
     ['window_dimensions.signature'] = { config.window_dimensions.signature, 'table' },
+
+    ['window_border.info'] = { config.window_dimensions.info, { 'string', 'table' } },
+    ['window_border.signature'] = { config.window_dimensions.signature, { 'string', 'table' } },
 
     ['lsp_completion.source_func'] = {
       config.lsp_completion.source_func,
@@ -1015,6 +1025,8 @@ H.info_window_options = function()
     info_height, info_width = H.floating_dimensions(lines, config.window_dimensions.info.height, space)
   end
 
+  local border = config.window_border.info;
+
   return {
     relative = 'editor',
     anchor = anchor,
@@ -1024,6 +1036,7 @@ H.info_window_options = function()
     height = info_height,
     focusable = false,
     style = 'minimal',
+    border = border,
   }
 end
 
@@ -1207,6 +1220,8 @@ H.signature_window_opts = function()
   local bufpos = vim.api.nvim_win_get_cursor(0)
   bufpos[1] = bufpos[1] - 1
 
+  local border = config.window_border.signature;
+
   return {
     relative = 'win',
     bufpos = bufpos,
@@ -1217,6 +1232,7 @@ H.signature_window_opts = function()
     height = height,
     focusable = false,
     style = 'minimal',
+    border = border,
   }
 end
 
