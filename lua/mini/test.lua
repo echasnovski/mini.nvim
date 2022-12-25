@@ -887,9 +887,10 @@ MiniTest.gen_reporter.buffer = function(opts)
     -- Set up buffer and window
     buf_id, win_id = H.buffer_reporter.setup_buf_and_win(opts.window)
 
-    -- Set up data
+    -- Set up data (taking into account possible not first time run)
     all_cases = cases
     all_groups = H.overview_reporter.compute_groups(cases, opts.group_depth)
+    latest_group_name = nil
 
     -- Write lines
     local lines = H.overview_reporter.start_lines(all_cases, all_groups)

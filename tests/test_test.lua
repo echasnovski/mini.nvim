@@ -1285,10 +1285,16 @@ T['gen_reporter']['buffer'] = new_set({
 
     -- Testing "in dynamic" is left for manual approach
     local path = get_ref_path('testref_reporters.lua')
-    local command = string.format('_G.reporter = MiniTest.gen_reporter.buffer({ %s })', opts_element)
-    child.lua(command)
-    child.lua(([[MiniTest.run_file('%s', { execute = { reporter = _G.reporter } })]]):format(path))
+    local reporter_command = string.format('_G.reporter = MiniTest.gen_reporter.buffer({ %s })', opts_element)
+    child.lua(reporter_command)
+
+    local execute_command = string.format([[MiniTest.run_file('%s', { execute = { reporter = _G.reporter } })]], path)
+    child.lua(execute_command)
     child.expect_screenshot()
+
+    -- Should be able to run several times
+    expect.no_error(child.lua, execute_command)
+    expect.no_error(child.lua, execute_command)
   end,
 })
 
