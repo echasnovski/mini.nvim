@@ -90,6 +90,9 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
 
 Here is a list of all highlight groups defined inside 'mini.nvim' modules. See documentation in 'doc' directory to find out what they are used for.
 
+- 'mini.animate':
+    - `MiniAnimateCursor`
+
 - 'mini.completion':
     - `MiniCompletionActiveParameter`
 
