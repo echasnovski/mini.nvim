@@ -87,6 +87,20 @@ local test_times = { total_timing = 250 }
 local step_time = 40
 local small_time = 5
 
+--stylua: ignore
+local example_scroll_lines = {
+  'aaaa', 'bbbb', 'cccc', 'dddd', 'eeee',
+  'ffff', 'gggg', 'hhhh', 'iiii', 'jjjj',
+  'kkkk', 'llll', 'mmmm', 'nnnn', 'oooo',
+}
+
+--stylua: ignore
+local example_scroll_lines_2 = {
+  'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE',
+  'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ',
+  'KKKK', 'LLLL', 'MMMM', 'NNNN', 'OOOO',
+}
+
 -- Output test set ============================================================
 T = new_set({
   hooks = {
@@ -1368,12 +1382,7 @@ T['Scroll'] = new_set({
       local lua_cmd = string.format('MiniAnimate.config.scroll.timing = function() return %d end', step_time)
       child.lua(lua_cmd)
 
-      --stylua: ignore
-      set_lines({
-        'aaaa', 'bbbb', 'cccc', 'dddd', 'eeee',
-        'ffff', 'gggg', 'hhhh', 'iiii', 'jjjj',
-        'kkkk', 'llll', 'mmmm', 'nnnn', 'oooo',
-      })
+      set_lines(example_scroll_lines)
       set_cursor(1, 0)
     end,
   },
@@ -1554,6 +1563,44 @@ T['Scroll']['stops on window change'] = function()
   -- Should not scroll
   child.expect_screenshot()
   sleep(step_time)
+  child.expect_screenshot()
+end
+
+T['Scroll']['works properly just after buffer change'] = function()
+  local buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, true, example_scroll_lines_2)
+
+  child.api.nvim_set_current_buf(buf_id)
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  sleep(step_time + small_time)
+  -- Should start animation
+  child.expect_screenshot()
+end
+
+T['Scroll']['works properly just after window change'] = function()
+  child.o.winwidth = 1
+  child.cmd('botright vertical split')
+  child.cmd('wincmd h')
+
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  sleep(step_time + small_time)
+  -- Should start animation
+  child.expect_screenshot()
+end
+
+T['Scroll']['does not automatically animate after buffer change'] = function()
+  local init_buf_id = child.api.nvim_get_current_buf()
+  set_cursor(5, 0)
+
+  local buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf_id)
+  child.api.nvim_set_current_buf(init_buf_id)
+
+  -- Should immediately show centered cursor line without animating it
+  child.expect_screenshot()
+  sleep(step_time + small_time)
   child.expect_screenshot()
 end
 

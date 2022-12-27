@@ -115,15 +115,18 @@ MiniAnimate.setup = function(config)
   --   flickering.
   -- - Use `vim.schedule()` for "open" animation to get a window data used for
   --   displaying (and not one after just opening). Useful for 'nvim-tree'.
-  -- - Track scroll state immediately to avoid first scroll being non-animated.
+  -- - Track scroll state on buffer and window enter to animate its first
+  --   scroll. Use `vim.schedule()` to allow other immediate commands to change
+  --   view (like builtin cursor center on buffer change) to avoid unnecessary
+  --   animated scroll.
   vim.api.nvim_exec(
     [[augroup MiniAnimate
         au!
-        au CursorMoved * lua MiniAnimate.auto_cursor()
-        au WinScrolled * lua MiniAnimate.auto_resize(); MiniAnimate.auto_scroll()
-        au WinEnter    * lua MiniAnimate.track_scroll_state()
-        au WinNew      * lua vim.schedule(MiniAnimate.auto_openclose)
-        au WinClosed   * lua MiniAnimate.auto_openclose("close")
+        au CursorMoved       * lua MiniAnimate.auto_cursor()
+        au WinScrolled       * lua MiniAnimate.auto_resize(); MiniAnimate.auto_scroll()
+        au BufEnter,WinEnter * lua vim.schedule(MiniAnimate.track_scroll_state)
+        au WinNew            * lua vim.schedule(MiniAnimate.auto_openclose)
+        au WinClosed         * lua MiniAnimate.auto_openclose("close")
       augroup END]],
     false
   )
@@ -1176,18 +1179,21 @@ MiniAnimate.auto_scroll = function()
     return
   end
 
+  -- Get states
+  local prev_state, new_state = H.cache.scroll_state, H.get_scroll_state()
+
   -- Don't animate if nothing to animate. Mostly used to distinguish
-  -- `WinScrolled` due to module animation from the other ones.
-  local prev_state = H.cache.scroll_state
-  if prev_state.view.topline == vim.fn.line('w0') then return end
+  -- `WinScrolled` resulting from module animation from the other ones.
+  local is_same_bufwin = new_state.buf_id == prev_state.buf_id and new_state.win_id == prev_state.win_id
+  local is_same_topline = new_state.view.topline == prev_state.view.topline
+  if is_same_topline and is_same_bufwin then return end
 
   -- Update necessary information
-  local new_state = H.get_scroll_state()
   H.cache.scroll_state = new_state
   H.cache.scroll_event_id = H.cache.scroll_event_id + 1
 
   -- Don't animate if changed buffer or window
-  if new_state.buf_id ~= prev_state.buf_id or new_state.win_id ~= prev_state.win_id then return end
+  if not is_same_bufwin then return end
 
   -- Don't animate if inside resize animation. This reduces computations and
   -- occasional flickering.
