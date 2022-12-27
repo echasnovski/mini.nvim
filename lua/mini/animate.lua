@@ -195,8 +195,10 @@ end
 ---       -- Animate for 200 milliseconds with linear easing
 ---       timing = animate.gen_timing.linear({ duration = 200, unit = 'total' }),
 ---
----       -- Animate with line-column angle instead of shortest line
----       path = animate.gen_path.angle(),
+---       -- Animate with shortest line for any cursor move
+---       path = animate.gen_path.line({
+---         predicate = function() return true end,
+---       }),
 ---     }
 ---   })
 ---
