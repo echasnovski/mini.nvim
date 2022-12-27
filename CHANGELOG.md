@@ -6,6 +6,10 @@
 
 Introduction of new module.
 
+## mini.completion
+
+- BREAKING: `MiniCompletion.config.window_dimensions` is renamed to `MiniCompletion.config.window` to be able to handle more general configuration.
+
 ## mini.indentscope
 
 - BREAKING: `MiniIndentscopePrefix` is now not used (deprecated). It was initially introduced as a way to properly show scope indicator on empty lines. It had a drawback of overshadowing 'listchars' symbols (see #125) and vertical guides from 'lukas-reineke/indent-blankline.nvim'. As the other implementation approach was found by @mivort (see #161), `MiniIndentscopePrefix` is no longer needed and no overshadowing is done.

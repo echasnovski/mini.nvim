@@ -115,9 +115,9 @@ Here are code snippets for some common installation methods (use only one):
   -- setting very high delay time (like 10^7).
   delay = { completion = 100, info = 100, signature = 50 },
 
-  -- Maximum dimensions of floating windows for certain actions. Action
-  -- entry should be a table with 'height' and 'width' fields.
-  window_dimensions = {
+  -- Configuration for action windows. `height` and `width` are maximum
+  -- dimensions of floating windows for certain actions.
+  window = {
     info = { height = 25, width = 80 },
     signature = { height = 25, width = 80 },
   },

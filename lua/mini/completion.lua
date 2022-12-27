@@ -235,9 +235,9 @@ MiniCompletion.config = {
   -- setting very high delay time (like 10^7).
   delay = { completion = 100, info = 100, signature = 50 },
 
-  -- Maximum dimensions of floating windows for certain actions. Action
-  -- entry should be a table with 'height' and 'width' fields.
-  window_dimensions = {
+  -- Configuration for action windows. `height` and `width` are maximum
+  -- dimensions of floating windows for certain actions.
+  window = {
     info = { height = 25, width = 80 },
     signature = { height = 25, width = 80 },
   },
@@ -600,7 +600,7 @@ H.setup_config = function(config)
   -- Validate per nesting level to produce correct error message
   vim.validate({
     delay = { config.delay, 'table' },
-    window_dimensions = { config.window_dimensions, 'table' },
+    window = { config.window, 'table' },
     lsp_completion = { config.lsp_completion, 'table' },
     fallback_action = {
       config.fallback_action,
@@ -616,8 +616,8 @@ H.setup_config = function(config)
     ['delay.info'] = { config.delay.info, 'number' },
     ['delay.signature'] = { config.delay.signature, 'number' },
 
-    ['window_dimensions.info'] = { config.window_dimensions.info, 'table' },
-    ['window_dimensions.signature'] = { config.window_dimensions.signature, 'table' },
+    ['window.info'] = { config.window.info, 'table' },
+    ['window.signature'] = { config.window.signature, 'table' },
 
     ['lsp_completion.source_func'] = {
       config.lsp_completion.source_func,
@@ -632,11 +632,21 @@ H.setup_config = function(config)
   })
 
   vim.validate({
-    ['window_dimensions.info.height'] = { config.window_dimensions.info.height, 'number' },
-    ['window_dimensions.info.width'] = { config.window_dimensions.info.width, 'number' },
-    ['window_dimensions.signature.height'] = { config.window_dimensions.signature.height, 'number' },
-    ['window_dimensions.signature.width'] = { config.window_dimensions.signature.width, 'number' },
+    ['window.info.height'] = { config.window.info.height, 'number' },
+    ['window.info.width'] = { config.window.info.width, 'number' },
+    ['window.signature.height'] = { config.window.signature.height, 'number' },
+    ['window.signature.width'] = { config.window.signature.width, 'number' },
   })
+
+  -- TODO: Remove after 0.7.0 release.
+  -- Compatibility for renaming `config.window_dimensions` to `config.window`
+  if config.window_dimensions ~= nil then
+    vim.notify(
+      '(mini.completion) Field `config.window_dimensions` is renamed to `config.window`. '
+        .. 'It will work until next release.'
+    )
+    config.window = vim.tbl_deep_extend('force', config.window, config.window_dimensions)
+  end
 
   return config
 end
@@ -921,7 +931,7 @@ H.show_info_window = function()
 
   -- Add `lines` to info buffer. Use `wrap_at` to have proper width of
   -- 'non-UTF8' section separators.
-  vim.lsp.util.stylize_markdown(H.info.bufnr, lines, { wrap_at = H.get_config().window_dimensions.info.width })
+  vim.lsp.util.stylize_markdown(H.info.bufnr, lines, { wrap_at = H.get_config().window.info.width })
 
   -- Compute floating window options
   local opts = H.info_window_options()
@@ -992,8 +1002,7 @@ H.info_window_options = function()
 
   -- Compute dimensions based on lines to be displayed
   local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, {})
-  local info_height, info_width =
-    H.floating_dimensions(lines, config.window_dimensions.info.height, config.window_dimensions.info.width)
+  local info_height, info_width = H.floating_dimensions(lines, config.window.info.height, config.window.info.width)
 
   -- Compute position
   local event = H.info.event
@@ -1012,7 +1021,7 @@ H.info_window_options = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < info_width then
-    info_height, info_width = H.floating_dimensions(lines, config.window_dimensions.info.height, space)
+    info_height, info_width = H.floating_dimensions(lines, config.window.info.height, space)
   end
 
   return {
@@ -1073,11 +1082,7 @@ H.show_signature_window = function()
 
   -- Add `lines` to signature buffer. Use `wrap_at` to have proper width of
   -- 'non-UTF8' section separators.
-  vim.lsp.util.stylize_markdown(
-    H.signature.bufnr,
-    lines,
-    { wrap_at = H.get_config().window_dimensions.signature.width }
-  )
+  vim.lsp.util.stylize_markdown(H.signature.bufnr, lines, { wrap_at = H.get_config().window.signature.width })
 
   -- Add highlighting of active parameter
   for i, hl_range in ipairs(hl_ranges) do
@@ -1184,8 +1189,7 @@ end
 H.signature_window_opts = function()
   local config = H.get_config()
   local lines = vim.api.nvim_buf_get_lines(H.signature.bufnr, 0, -1, {})
-  local height, width =
-    H.floating_dimensions(lines, config.window_dimensions.signature.height, config.window_dimensions.signature.width)
+  local height, width = H.floating_dimensions(lines, config.window.signature.height, config.window.signature.width)
 
   -- Compute position
   local win_line = vim.fn.winline()
@@ -1200,7 +1204,7 @@ H.signature_window_opts = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < height then
-    height, width = H.floating_dimensions(lines, space, config.window_dimensions.signature.width)
+    height, width = H.floating_dimensions(lines, space, config.window.signature.width)
   end
 
   -- Get zero-indexed current cursor position

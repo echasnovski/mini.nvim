@@ -101,10 +101,10 @@ T['setup()']['creates `config` field'] = function()
   expect_config('delay.completion', 100)
   expect_config('delay.info', 100)
   expect_config('delay.signature', 50)
-  expect_config('window_dimensions.info.height', 25)
-  expect_config('window_dimensions.info.width', 80)
-  expect_config('window_dimensions.signature.height', 25)
-  expect_config('window_dimensions.signature.width', 80)
+  expect_config('window.info.height', 25)
+  expect_config('window.info.width', 80)
+  expect_config('window.signature.height', 25)
+  expect_config('window.signature.width', 80)
   expect_config('lsp_completion.source_func', 'completefunc')
   expect_config('lsp_completion.auto_setup', true)
   eq(child.lua_get('type(_G.MiniCompletion.config.lsp_completion.process_items)'), 'function')
@@ -132,21 +132,13 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ delay = { completion = 'a' } }, 'delay.completion', 'number')
   expect_config_error({ delay = { info = 'a' } }, 'delay.info', 'number')
   expect_config_error({ delay = { signature = 'a' } }, 'delay.signature', 'number')
-  expect_config_error({ window_dimensions = 'a' }, 'window_dimensions', 'table')
-  expect_config_error({ window_dimensions = { info = 'a' } }, 'window_dimensions.info', 'table')
-  expect_config_error({ window_dimensions = { info = { height = 'a' } } }, 'window_dimensions.info.height', 'number')
-  expect_config_error({ window_dimensions = { info = { width = 'a' } } }, 'window_dimensions.info.width', 'number')
-  expect_config_error({ window_dimensions = { signature = 'a' } }, 'window_dimensions.signature', 'table')
-  expect_config_error(
-    { window_dimensions = { signature = { height = 'a' } } },
-    'window_dimensions.signature.height',
-    'number'
-  )
-  expect_config_error(
-    { window_dimensions = { signature = { width = 'a' } } },
-    'window_dimensions.signature.width',
-    'number'
-  )
+  expect_config_error({ window = 'a' }, 'window', 'table')
+  expect_config_error({ window = { info = 'a' } }, 'window.info', 'table')
+  expect_config_error({ window = { info = { height = 'a' } } }, 'window.info.height', 'number')
+  expect_config_error({ window = { info = { width = 'a' } } }, 'window.info.width', 'number')
+  expect_config_error({ window = { signature = 'a' } }, 'window.signature', 'table')
+  expect_config_error({ window = { signature = { height = 'a' } } }, 'window.signature.height', 'number')
+  expect_config_error({ window = { signature = { width = 'a' } } }, 'window.signature.width', 'number')
   expect_config_error({ lsp_completion = 'a' }, 'lsp_completion', 'table')
   expect_config_error(
     { lsp_completion = { source_func = 'a' } },
@@ -202,6 +194,15 @@ T['setup()']['respects `config.set_vim_settings`'] = function()
   reload_module({ set_vim_settings = true })
   expect.match(child.api.nvim_get_option('shortmess'), 'c')
   eq(child.api.nvim_get_option('completeopt'), 'menuone,noinsert,noselect')
+end
+
+-- TODO: Remove after 0.7.0 release.
+T['setup()']['`config.window_dimensions` is possible as transition layer'] = function()
+  child.o.cmdheight = 10
+  reload_module({ window_dimensions = { info = { height = 10 } } })
+
+  eq(child.lua_get('MiniCompletion.config.window.info.height'), 10)
+  expect.match(child.cmd_capture('1messages'), 'is renamed')
 end
 
 -- Integration tests ==========================================================
@@ -527,7 +528,7 @@ T['Information window']['respects `config.delay.info`'] = function()
   validate_info_win(50)
 end
 
-local validate_dimensions_info = function(keys, completion_items, dimensions)
+local validate_info_window_config = function(keys, completion_items, win_config)
   type_keys('i', keys, '<C-Space>')
   eq(get_completion(), completion_items)
 
@@ -535,29 +536,29 @@ local validate_dimensions_info = function(keys, completion_items, dimensions)
   -- Some windows can take a while to process on slow machines. So add `10`
   -- to ensure that processing is finished.
   sleep(test_times.info + 10)
-  validate_single_floating_win({ config = dimensions })
+  validate_single_floating_win({ config = win_config })
 end
 
-T['Information window']['respects `config.window_dimensions.info`'] = function()
+T['Information window']['respects `config.window.info`'] = function()
   child.set_size(25, 60)
-  local dimensions = { height = 20, width = 40 }
-  child.lua('MiniCompletion.config.window_dimensions.info = ' .. vim.inspect(dimensions))
-  validate_dimensions_info('D', { 'December' }, dimensions)
+  local win_config = { height = 20, width = 40 }
+  child.lua('MiniCompletion.config.window.info = ' .. vim.inspect(win_config))
+  validate_info_window_config('D', { 'December' }, win_config)
   child.expect_screenshot()
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { window_dimensions = { info = { height = 10, width = 20 } } }
-  validate_dimensions_info('D', { 'December' }, { height = 10, width = 20 })
+  child.b.minicompletion_config = { window = { info = { height = 10, width = 20 } } }
+  validate_info_window_config('D', { 'December' }, { height = 10, width = 20 })
   child.expect_screenshot()
 end
 
 T['Information window']['has minimal dimensions for small text'] = function()
   child.set_size(10, 40)
-  local dimensions = { height = 1, width = 9 }
-  child.lua('MiniCompletion.config.window_dimensions.info = ' .. vim.inspect(dimensions))
-  validate_dimensions_info('J', { 'January', 'June', 'July' }, dimensions)
+  local win_config = { height = 1, width = 9 }
+  child.lua('MiniCompletion.config.window.info = ' .. vim.inspect(win_config))
+  validate_info_window_config('J', { 'January', 'June', 'July' }, win_config)
   child.expect_screenshot()
 end
 
@@ -645,34 +646,34 @@ T['Signature help']['updates highlighting of active parameter'] = function()
   child.expect_screenshot()
 end
 
-local validate_dimensions_signature = function(keys, dimensions)
+local validate_signature_window_config = function(keys, win_config)
   child.cmd('startinsert')
   type_keys(keys)
   sleep(test_times.signature + 2)
-  validate_single_floating_win({ config = dimensions })
+  validate_single_floating_win({ config = win_config })
 end
 
-T['Signature help']['respects `config.window_dimensions.signature`'] = function()
+T['Signature help']['respects `config.window.signature`'] = function()
   local keys = { 'l', 'o', 'n', 'g', '(' }
-  local dimensions = { height = 20, width = 40 }
-  child.lua('MiniCompletion.config.window_dimensions.signature = ' .. vim.inspect(dimensions))
-  validate_dimensions_signature(keys, dimensions)
+  local win_config = { height = 20, width = 40 }
+  child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
+  validate_signature_window_config(keys, win_config)
   child.expect_screenshot()
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { window_dimensions = { signature = { height = 10, width = 20 } } }
-  validate_dimensions_signature(keys, { height = 10, width = 20 })
+  child.b.minicompletion_config = { window = { signature = { height = 10, width = 20 } } }
+  validate_signature_window_config(keys, { height = 10, width = 20 })
   child.expect_screenshot()
 end
 
 T['Signature help']['has minimal dimensions for small text'] = function()
   child.set_size(5, 30)
   local keys = { 'a', 'b', 'c', '(' }
-  local dimensions = { height = 1, width = 19 }
-  child.lua('MiniCompletion.config.window_dimensions.signature = ' .. vim.inspect(dimensions))
-  validate_dimensions_signature(keys, dimensions)
+  local win_config = { height = 1, width = 19 }
+  child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
+  validate_signature_window_config(keys, win_config)
   child.expect_screenshot()
 end
 
