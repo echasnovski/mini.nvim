@@ -9,6 +9,7 @@ Introduction of new module.
 ## mini.completion
 
 - BREAKING: `MiniCompletion.config.window_dimensions` is renamed to `MiniCompletion.config.window` to be able to handle more general configuration.
+- FEATURE: Add `MiniCompletion.config.window.info.border` and `MiniCompletion.config.window.signature.border` which can be used to define border of info and signature floating windows respectively.
 
 ## mini.indentscope
 

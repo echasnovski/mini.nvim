@@ -235,11 +235,12 @@ MiniCompletion.config = {
   -- setting very high delay time (like 10^7).
   delay = { completion = 100, info = 100, signature = 50 },
 
-  -- Configuration for action windows. `height` and `width` are maximum
-  -- dimensions of floating windows for certain actions.
+  -- Configuration for action windows:
+  -- - `height` and `width` are maximum dimensions.
+  -- - `border` defines border (as in `nvim_open_win()`).
   window = {
-    info = { height = 25, width = 80 },
-    signature = { height = 25, width = 80 },
+    info = { height = 25, width = 80, border = 'none' },
+    signature = { height = 25, width = 80, border = 'none' },
   },
 
   -- Way of how module does LSP completion
@@ -631,11 +632,22 @@ H.setup_config = function(config)
     ['mappings.force_fallback'] = { config.mappings.force_fallback, 'string' },
   })
 
+  local is_string_or_array = function(x) return type(x) == 'string' or vim.tbl_islist(x) end
   vim.validate({
     ['window.info.height'] = { config.window.info.height, 'number' },
     ['window.info.width'] = { config.window.info.width, 'number' },
+    ['window.info.border'] = {
+      config.window.info.border,
+      is_string_or_array,
+      '(mini.completion) `config.window.info.border` can be either string or array.',
+    },
     ['window.signature.height'] = { config.window.signature.height, 'number' },
     ['window.signature.width'] = { config.window.signature.width, 'number' },
+    ['window.signature.border'] = {
+      config.window.signature.border,
+      is_string_or_array,
+      '(mini.completion) `config.window.signature.border` can be either string or array.',
+    },
   })
 
   -- TODO: Remove after 0.7.0 release.
@@ -998,11 +1010,11 @@ H.info_window_lines = function(info_id)
 end
 
 H.info_window_options = function()
-  local config = H.get_config()
+  local win_config = H.get_config().window.info
 
   -- Compute dimensions based on lines to be displayed
   local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, {})
-  local info_height, info_width = H.floating_dimensions(lines, config.window.info.height, config.window.info.width)
+  local info_height, info_width = H.floating_dimensions(lines, win_config.height, win_config.width)
 
   -- Compute position
   local event = H.info.event
@@ -1021,7 +1033,7 @@ H.info_window_options = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < info_width then
-    info_height, info_width = H.floating_dimensions(lines, config.window.info.height, space)
+    info_height, info_width = H.floating_dimensions(lines, win_config.height, space)
   end
 
   return {
@@ -1033,6 +1045,7 @@ H.info_window_options = function()
     height = info_height,
     focusable = false,
     style = 'minimal',
+    border = win_config.border,
   }
 end
 
@@ -1187,9 +1200,9 @@ H.process_signature_response = function(response)
 end
 
 H.signature_window_opts = function()
-  local config = H.get_config()
+  local win_config = H.get_config().window.signature
   local lines = vim.api.nvim_buf_get_lines(H.signature.bufnr, 0, -1, {})
-  local height, width = H.floating_dimensions(lines, config.window.signature.height, config.window.signature.width)
+  local height, width = H.floating_dimensions(lines, win_config.height, win_config.width)
 
   -- Compute position
   local win_line = vim.fn.winline()
@@ -1204,7 +1217,7 @@ H.signature_window_opts = function()
 
   -- Possibly adjust floating window dimensions to fit screen
   if space < height then
-    height, width = H.floating_dimensions(lines, space, config.window.signature.width)
+    height, width = H.floating_dimensions(lines, space, win_config.width)
   end
 
   -- Get zero-indexed current cursor position
@@ -1221,6 +1234,7 @@ H.signature_window_opts = function()
     height = height,
     focusable = false,
     style = 'minimal',
+    border = win_config.border,
   }
 end
 

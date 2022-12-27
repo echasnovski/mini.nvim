@@ -103,8 +103,10 @@ T['setup()']['creates `config` field'] = function()
   expect_config('delay.signature', 50)
   expect_config('window.info.height', 25)
   expect_config('window.info.width', 80)
+  expect_config('window.info.border', 'none')
   expect_config('window.signature.height', 25)
   expect_config('window.signature.width', 80)
+  expect_config('window.signature.border', 'none')
   expect_config('lsp_completion.source_func', 'completefunc')
   expect_config('lsp_completion.auto_setup', true)
   eq(child.lua_get('type(_G.MiniCompletion.config.lsp_completion.process_items)'), 'function')
@@ -136,9 +138,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { info = 'a' } }, 'window.info', 'table')
   expect_config_error({ window = { info = { height = 'a' } } }, 'window.info.height', 'number')
   expect_config_error({ window = { info = { width = 'a' } } }, 'window.info.width', 'number')
+  expect_config_error({ window = { info = { border = 1 } } }, 'window.info.border', 'string or array')
   expect_config_error({ window = { signature = 'a' } }, 'window.signature', 'table')
   expect_config_error({ window = { signature = { height = 'a' } } }, 'window.signature.height', 'number')
   expect_config_error({ window = { signature = { width = 'a' } } }, 'window.signature.width', 'number')
+  expect_config_error({ window = { signature = { border = 1 } } }, 'window.signature.border', 'string or array')
   expect_config_error({ lsp_completion = 'a' }, 'lsp_completion', 'table')
   expect_config_error(
     { lsp_completion = { source_func = 'a' } },
@@ -541,16 +545,21 @@ end
 
 T['Information window']['respects `config.window.info`'] = function()
   child.set_size(25, 60)
-  local win_config = { height = 20, width = 40 }
+  local win_config = { height = 20, width = 40, border = 'single' }
   child.lua('MiniCompletion.config.window.info = ' .. vim.inspect(win_config))
-  validate_info_window_config('D', { 'December' }, win_config)
+  validate_info_window_config('D', { 'December' }, {
+    height = 20,
+    width = 40,
+    border = { '┌', '─', '┐', '│', '┘', '─', '└', '│' },
+  })
   child.expect_screenshot()
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { window = { info = { height = 10, width = 20 } } }
-  validate_info_window_config('D', { 'December' }, { height = 10, width = 20 })
+  local test_border = { '1', '2', '3', '4', '5', '6', '7', '8' }
+  child.b.minicompletion_config = { window = { info = { height = 10, width = 20, border = test_border } } }
+  validate_info_window_config('D', { 'December' }, { height = 10, width = 20, border = test_border })
   child.expect_screenshot()
 end
 
@@ -655,16 +664,21 @@ end
 
 T['Signature help']['respects `config.window.signature`'] = function()
   local keys = { 'l', 'o', 'n', 'g', '(' }
-  local win_config = { height = 20, width = 40 }
+  local win_config = { height = 20, width = 40, border = 'single' }
   child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
-  validate_signature_window_config(keys, win_config)
+  validate_signature_window_config(keys, {
+    height = 20,
+    width = 40,
+    border = { '┌', '─', '┐', '│', '┘', '─', '└', '│' },
+  })
   child.expect_screenshot()
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { window = { signature = { height = 10, width = 20 } } }
-  validate_signature_window_config(keys, { height = 10, width = 20 })
+  local test_border = { '1', '2', '3', '4', '5', '6', '7', '8' }
+  child.b.minicompletion_config = { window = { signature = { height = 10, width = 20, border = test_border } } }
+  validate_signature_window_config(keys, { height = 10, width = 20, border = test_border })
   child.expect_screenshot()
 end
 
