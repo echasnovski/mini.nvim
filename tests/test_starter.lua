@@ -275,6 +275,14 @@ T['open()']['respects `vim.b.ministarter_config`'] = function()
   child.expect_screenshot()
 end
 
+T['open()']['does not fire `InsertEnter`'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.g.insert_enter_fired = 0
+  child.cmd('autocmd InsertEnter * let g:insert_enter_fired = 1')
+  child.lua('MiniStarter.open()')
+  eq(child.g.insert_enter_fired, 0)
+end
+
 T['refresh()'] = new_set()
 
 T['refresh()']['does `header` normalization'] = function()
