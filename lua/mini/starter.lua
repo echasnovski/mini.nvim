@@ -1280,7 +1280,7 @@ end
 H.apply_buffer_options = function(buf_id)
   -- NOTE: assumed that it is executing with `buf_id` being current buffer
   -- Force Normal mode
-  vim.cmd('stopinsert')
+  vim.cmd('normal! <C-\\><C-n>')
 
   -- Set buffer name
   H.buffer_number = H.buffer_number + 1
