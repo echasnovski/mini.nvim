@@ -4,6 +4,9 @@ local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
 
+local path_sep = package.config:sub(1, 1)
+local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ':p')
+
 -- Helpers with child processes
 --stylua: ignore start
 local load_module = function(config) child.mini_load('misc', config) end
@@ -11,6 +14,9 @@ local unload_module = function() child.mini_unload('misc') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
+local make_path = function(...) return table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep) end
+local make_abspath = function(...) return make_path(project_root, ...) end
+local getcwd = function() return child.fn.fnamemodify(child.fn.getcwd(), ':p') end
 --stylua: ignore end
 
 -- Output test set ============================================================
@@ -222,6 +228,193 @@ T['resize_window()']['correctly computes default `text_width` argument'] = funct
   child.wo.colorcolumn = '40,-2'
   child.lua('MiniMisc.resize_window(0)')
   eq(child.api.nvim_win_get_width(0), 40 + 4)
+end
+
+local dir_misc_path = make_abspath('tests/dir-misc/')
+local git_repo_path = make_abspath('tests/dir-misc/mocked-git-repo/')
+local git_path = make_abspath('tests/dir-misc/mocked-git-repo/.git')
+local test_file_makefile = make_abspath('tests/dir-misc/aaa.lua')
+local test_file_git = make_abspath('tests/dir-misc/mocked-git-repo/bbb.lua')
+
+local skip_if_no_fs = function()
+  if child.lua_get('type(vim.fs)') == 'nil' then MiniTest.skip('No `vim.fs`.') end
+end
+
+local init_mock_git = function(git_type)
+  if git_type == 'file' then
+    -- File '.git' is used inside submodules
+    child.fn.writefile({ '' }, git_path)
+  else
+    child.fn.mkdir(git_path)
+  end
+end
+
+local cleanup_mock_git = function() child.fn.delete(git_path, 'rf') end
+
+T['setup_auto_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
+
+local setup_auto_root = function(...) child.lua('MiniMisc.setup_auto_root(...)', { ... }) end
+
+T['setup_auto_root()']['works'] = function()
+  skip_if_no_fs()
+  eq(getcwd(), project_root)
+  child.o.autochdir = true
+
+  setup_auto_root()
+
+  -- Resets 'autochdir'
+  eq(child.o.autochdir, false)
+
+  -- Creates autocommand
+  eq(child.lua_get([[#vim.api.nvim_get_autocmds({ group = 'MiniMiscAutoRoot' })]]) > 0, true)
+
+  -- Respects 'Makefile'
+  child.cmd('edit ' .. test_file_makefile)
+  eq(getcwd(), dir_misc_path)
+
+  -- Respects '.git' directory and file
+  for _, git_type in ipairs({ 'directory', 'file' }) do
+    init_mock_git(git_type)
+    child.cmd('edit ' .. test_file_git)
+    eq(getcwd(), git_repo_path)
+    cleanup_mock_git()
+  end
+end
+
+T['setup_auto_root()']['checks if no `vim.fs` is present'] = function()
+  -- Don't test if `vim.fs` is actually present
+  if child.lua_get('type(vim.fs)') == 'table' then return end
+
+  child.o.cmdheight = 10
+  setup_auto_root()
+
+  eq(
+    child.cmd_capture('1messages'),
+    '(mini.misc) `setup_auto_root()` requires `vim.fs` module (present in Neovim>=0.8).'
+  )
+  expect.error(function() child.cmd_capture('au MiniMiscAutoRoot') end, 'No such group or event')
+end
+
+T['setup_auto_root()']['validates input'] = function()
+  skip_if_no_fs()
+
+  expect.error(function() setup_auto_root('a') end, '`names`.*array')
+  expect.error(function() setup_auto_root({ 1 }) end, '`names`.*string')
+end
+
+T['setup_auto_root()']['respects `names` argument'] = function()
+  skip_if_no_fs()
+  init_mock_git('directory')
+  setup_auto_root({ 'Makefile' })
+
+  -- Should not stop on git repo directory, but continue going up
+  child.cmd('edit ' .. test_file_git)
+  eq(getcwd(), dir_misc_path)
+end
+
+T['setup_auto_root()']['allows callable `names`'] = function()
+  skip_if_no_fs()
+  init_mock_git('directory')
+  child.lua([[_G.find_aaa = function(x) return x == 'aaa.lua' end]])
+  child.lua('MiniMisc.setup_auto_root(_G.find_aaa)')
+
+  -- Should not stop on git repo directory, but continue going up
+  child.cmd('edit ' .. test_file_git)
+  eq(child.lua_get('MiniMisc.find_root(0, _G.find_aaa)'), dir_misc_path)
+  eq(getcwd(), dir_misc_path)
+end
+
+T['setup_auto_root()']['works in buffers without path'] = function()
+  skip_if_no_fs()
+
+  setup_auto_root()
+
+  local scratch_buf_id = child.api.nvim_create_buf(false, true)
+
+  local cur_dir = getcwd()
+  child.api.nvim_set_current_buf(scratch_buf_id)
+  eq(getcwd(), cur_dir)
+end
+
+T['find_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
+
+local find_root = function(...) return child.lua_get('MiniMisc.find_root(...)', { ... }) end
+
+T['find_root()']['works'] = function()
+  skip_if_no_fs()
+
+  -- Respects 'Makefile'
+  child.cmd('edit ' .. test_file_makefile)
+  eq(find_root(), dir_misc_path)
+  child.cmd('%bwipeout')
+
+  -- Respects '.git' directory and file
+  for _, git_type in ipairs({ 'directory', 'file' }) do
+    init_mock_git(git_type)
+    child.cmd('edit ' .. test_file_git)
+    eq(find_root(), git_repo_path)
+    child.cmd('%bwipeout')
+    cleanup_mock_git()
+  end
+end
+
+T['find_root()']['validates arguments'] = function()
+  skip_if_no_fs()
+
+  expect.error(function() find_root('a') end, '`buf_id`.*number')
+  expect.error(function() find_root(0, 1) end, '`names`.*string')
+  expect.error(function() find_root(0, '.git') end, '`names`.*array')
+end
+
+T['find_root()']['respects `buf_id` argument'] = function()
+  skip_if_no_fs()
+  init_mock_git('directory')
+
+  child.cmd('edit ' .. test_file_makefile)
+  local init_buf_id = child.api.nvim_get_current_buf()
+  child.cmd('edit ' .. test_file_git)
+  eq(child.api.nvim_get_current_buf() ~= init_buf_id, true)
+
+  eq(find_root(init_buf_id), dir_misc_path)
+end
+
+T['find_root()']['respects `names` argument'] = function()
+  skip_if_no_fs()
+  init_mock_git('directory')
+
+  -- Should not stop on git repo directory, but continue going up
+  child.cmd('edit ' .. test_file_git)
+  eq(find_root(0, { 'aaa.lua' }), dir_misc_path)
+end
+
+T['find_root()']['allows callable `names`'] = function()
+  skip_if_no_fs()
+  init_mock_git('directory')
+  child.cmd('edit ' .. test_file_git)
+
+  child.lua([[_G.find_aaa = function(x) return x == 'aaa.lua' end]])
+  eq(child.lua_get('MiniMisc.find_root(0, _G.find_aaa)'), dir_misc_path)
+end
+
+T['find_root()']['works in buffers without path'] = function()
+  skip_if_no_fs()
+
+  local scratch_buf_id = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(scratch_buf_id)
+  eq(find_root(), vim.NIL)
+end
+
+T['find_root()']['uses cache'] = function()
+  skip_if_no_fs()
+
+  child.cmd('edit ' .. test_file_git)
+  -- Returns root based on 'Makefile' as there is no git root
+  eq(find_root(), dir_misc_path)
+
+  -- Later creation of git root should not affect output as it should be cached
+  -- from first call
+  init_mock_git('directory')
+  eq(find_root(), dir_misc_path)
 end
 
 local stat_summary = function(...) return child.lua_get('MiniMisc.stat_summary({ ... })', { ... }) end

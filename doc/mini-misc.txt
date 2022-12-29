@@ -92,6 +92,54 @@ Parameters~
   (using screen width as its default but not more than 79).
 
 ------------------------------------------------------------------------------
+                                                    *MiniMisc.setup_auto_root()*
+                      `MiniMisc.setup_auto_root`({names})
+Setup automated change of current directory
+
+What it does:
+- Creates autocommand which on every |BufEnter| event with |MiniMisc.find_root()|
+  finds root directory for current buffer file and sets |current-directory|
+  to it (using |chdir()|).
+- Resets |autochdir| to `false`.
+
+Note: requires |vim.fs| module (present in Neovim>=0.8).
+
+Parameters~
+{names} `(table|function)` Array of file names or a callable used to
+  identify a root directory. Forwarded to |MiniMisc.find_root()|.
+  Default: `{ '.git', 'Makefile' }`.
+
+Usage~
+>
+  require('mini.misc').setup()
+  MiniMisc.setup_auto_root()
+
+------------------------------------------------------------------------------
+                                                          *MiniMisc.find_root()*
+                    `MiniMisc.find_root`({buf_id}, {names})
+Find root directory
+
+Based on a buffer name (full path to file opened in a buffer) find a root
+directory. If buffer is not associated with file, returns `nil`.
+
+Root directory is a directory containing at least one of pre-defined files.
+It is searched using |vim.fn.find()| with `upward = true` starting from
+directory of current buffer file until first occurence of root file(s).
+
+Notes:
+- Requires |vim.fs| module (present in Neovim>=0.8).
+- Uses directory path caching to speed up computations. This means that no
+  changes in root directory will be detected after directory path was already
+  used in this function. Reload Neovim to account for that.
+
+Parameters~
+{buf_id} `(number)` Buffer identifier (see |bufnr()|) to use.
+  Default: 0 for current.
+{names} `(table|function)` Array of file names or a callable used to
+  identify a root directory. Forwarded to |vim.fs.find()|.
+  Default: `{ '.git', 'Makefile' }`.
+
+------------------------------------------------------------------------------
                                                        *MiniMisc.stat_summary()*
                           `MiniMisc.stat_summary`({t})
 Compute summary statistics of numerical array

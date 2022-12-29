@@ -146,6 +146,105 @@ H.default_text_width = function(win_id)
   end
 end
 
+--- Setup automated change of current directory
+---
+--- What it does:
+--- - Creates autocommand which on every |BufEnter| event with |MiniMisc.find_root()|
+---   finds root directory for current buffer file and sets |current-directory|
+---   to it (using |chdir()|).
+--- - Resets |autochdir| to `false`.
+---
+--- Note: requires |vim.fs| module (present in Neovim>=0.8).
+---
+---@param names table|function Array of file names or a callable used to
+---   identify a root directory. Forwarded to |MiniMisc.find_root()|.
+---   Default: `{ '.git', 'Makefile' }`.
+---
+---@usage >
+---   require('mini.misc').setup()
+---   MiniMisc.setup_auto_root()
+MiniMisc.setup_auto_root = function(names)
+  if vim.fs == nil then
+    vim.notify('(mini.misc) `setup_auto_root()` requires `vim.fs` module (present in Neovim>=0.8).')
+    return
+  end
+
+  names = names or { '.git', 'Makefile' }
+  if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
+    H.error('Argument `names` of `setup_auto_root()` should be array of string file names or a callable.')
+  end
+
+  -- Disable conflicting option
+  vim.o.autochdir = false
+
+  -- Create autocommand
+  local set_root = function()
+    local root = MiniMisc.find_root(0, names)
+    if root == nil then return end
+    vim.fn.chdir(root)
+  end
+  local augroup = vim.api.nvim_create_augroup('MiniMiscAutoRoot', {})
+  vim.api.nvim_create_autocmd(
+    'BufEnter',
+    { group = augroup, callback = set_root, desc = 'Find root and change current directory' }
+  )
+end
+
+--- Find root directory
+---
+--- Based on a buffer name (full path to file opened in a buffer) find a root
+--- directory. If buffer is not associated with file, returns `nil`.
+---
+--- Root directory is a directory containing at least one of pre-defined files.
+--- It is searched using |vim.fn.find()| with `upward = true` starting from
+--- directory of current buffer file until first occurence of root file(s).
+---
+--- Notes:
+--- - Requires |vim.fs| module (present in Neovim>=0.8).
+--- - Uses directory path caching to speed up computations. This means that no
+---   changes in root directory will be detected after directory path was already
+---   used in this function. Reload Neovim to account for that.
+---
+---@param buf_id number Buffer identifier (see |bufnr()|) to use.
+---   Default: 0 for current.
+---@param names table|function Array of file names or a callable used to
+---   identify a root directory. Forwarded to |vim.fs.find()|.
+---   Default: `{ '.git', 'Makefile' }`.
+MiniMisc.find_root = function(buf_id, names)
+  buf_id = buf_id or 0
+  names = names or { '.git', 'Makefile' }
+
+  if type(buf_id) ~= 'number' then H.error('Argument `buf_id` of `find_root()` should be number.') end
+  if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
+    H.error('Argument `names` of `find_root()` should be array of string file names or a callable.')
+  end
+
+  -- Compute directory to start search from. NOTEs on why not using file path:
+  -- - This has better performance because `vim.fs.find()` is called less.
+  -- - *Needs* to be a directory for callable `names` to work.
+  -- - Later search is done including initial `path` if directory, so this
+  --   should work for detecting buffer directory as root.
+  local path = vim.api.nvim_buf_get_name(buf_id)
+  if path == '' then return end
+  path = vim.fs.dirname(path)
+
+  -- Try using cache
+  local res = H.root_cache[path]
+  if res ~= nil then return res end
+
+  -- Find root
+  local root_file = vim.fs.find(names, { path = path, upward = true })[1]
+  if root_file == nil then return end
+
+  -- Use absolute path and cache result
+  res = vim.fn.fnamemodify(vim.fs.dirname(root_file), ':p')
+  H.root_cache[path] = res
+
+  return res
+end
+
+H.root_cache = {}
+
 --- Compute summary statistics of numerical array
 ---
 --- This might be useful to compute summary of time benchmarking with
@@ -363,5 +462,7 @@ H.is_array_of = function(x, predicate)
 end
 
 H.is_number = function(x) return type(x) == 'number' end
+
+H.is_string = function(x) return type(x) == 'string' end
 
 return MiniMisc
