@@ -275,12 +275,61 @@ T['open()']['respects `vim.b.ministarter_config`'] = function()
   child.expect_screenshot()
 end
 
-T['open()']['does not fire `InsertEnter`'] = function()
+T['open()']['does not trigger `InsertEnter`'] = function()
   child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
   child.g.insert_enter_fired = 0
   child.cmd('autocmd InsertEnter * let g:insert_enter_fired = 1')
   child.lua('MiniStarter.open()')
   eq(child.g.insert_enter_fired, 0)
+end
+
+T['open()']['forces normal mode from insert mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.type_keys('i')
+  eq(child.fn.mode(), 'i')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
+end
+
+T['open()']['forces normal mode from visual mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.type_keys('v')
+  eq(child.fn.mode(), 'v')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
+end
+
+T['open()']['forces normal mode from terminal mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.cmd('term')
+  child.type_keys('i')
+  eq(child.fn.mode(), 't')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
+end
+
+T['open()']['forces normal mode from replace mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.type_keys('R')
+  eq(child.fn.mode(), 'R')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
+end
+
+T['open()']['forces normal mode from virtual replace mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.type_keys('gR')
+  eq(child.fn.mode(), 'R')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
+end
+
+T['open()']['forces normal mode from select mode'] = function()
+  child.b.ministarter_config = { header = 'Hello', footer = 'World', content_hooks = {} }
+  child.type_keys('gh')
+  eq(child.fn.mode(), 's')
+  child.lua('MiniStarter.open()')
+  eq(child.fn.mode(), 'n')
 end
 
 T['refresh()'] = new_set()
