@@ -158,7 +158,6 @@ T['open()']['works'] = function()
   expect.no_equality(child.api.nvim_get_current_buf(), init_buf_id)
   eq(child.api.nvim_buf_get_name(0), child.fn.getcwd() .. '/Starter')
   validate_starter_shown()
-  eq(child.fn.mode(), 'n')
 
   expect.match(table.concat(get_lines(), '\n'), 'Builtin actions')
 end
@@ -188,6 +187,27 @@ T['open()']['sets buffer options'] = function()
   child.cmd('bwipeout')
   eq(child.o.showtabline, 2)
 end
+
+T['open()']['ends up in Normal mode'] = new_set(
+  { parametrize = { { 'Insert' }, { 'Visual' }, { 'Replace' }, { 'Command' }, { 'Terminal' } } },
+  {
+    test = function(test_mode)
+      local keys = ({ Insert = 'i', Visual = 'v', Replace = 'R', Command = ':', Terminal = ':terminal<CR>i' })[test_mode]
+      type_keys(keys)
+      local cur_mode_id = ({ Insert = 'i', Visual = 'v', Replace = 'R', Command = 'c', Terminal = 't' })[test_mode]
+      eq(child.fn.mode(), cur_mode_id)
+
+      -- Ensure no `InsertEnter` event is triggered (see #183)
+      child.cmd('au InsertEnter * lua _G.been_inside_insertenter = true')
+
+      child.lua('MiniStarter.open()')
+      validate_starter_shown()
+      eq(child.fn.mode(), 'n')
+
+      eq(child.lua_get('_G.been_inside_insertenter'), vim.NIL)
+    end,
+  }
+)
 
 local has_map = function(key, value)
   value = value or ''
