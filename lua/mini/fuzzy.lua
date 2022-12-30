@@ -22,7 +22,7 @@
 --- 1. Currently there is no explicit design to work with multibyte symbols,
 ---    but simple examples should work.
 --- 2. Smart case is used: case insensitive if input word (which is usually a
----     user input) is all lower ase. Case sensitive otherwise.
+---     user input) is all lower case. Case sensitive otherwise.
 ---@tag mini.fuzzy
 ---@tag MiniFuzzy
 
