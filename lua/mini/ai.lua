@@ -650,70 +650,56 @@ MiniAi.gen_spec.argument = function(opts)
     brackets = { '%b()', '%b[]', '%b{}' },
     separators = { ',' },
     exclude_regions = { '%b""', "%b''", '%b()', '%b[]', '%b{}' },
+    match_whitespaces = false,
   }, opts or {})
-  local brackets, separators, exclude_regions = opts.brackets, opts.separators, opts.exclude_regions
+  local brackets, separators, exclude_regions, match_whitespaces = opts.brackets, opts.separators, opts.exclude_regions,
+      opts.match_whitespaces
 
   if type(opts.brackets) == 'string' then opts.brackets = { opts.brackets } end
   local separators_esc = vim.tbl_map(vim.pesc, separators)
   local sep_str = table.concat(separators_esc, '')
-  local sep_pattern, nosep_pattern = '[' .. sep_str .. ']', '[^' .. sep_str .. ']'
+  local sep_pattern = '[' .. sep_str .. ']'
 
   local res = {}
   -- Match brackets
   res[1] = brackets
 
-  -- Match argument with both left and right separators/brackets
+  -- Remove brackets and padding
   res[2] = function(s, init)
+    if init > 1 then
+      return nil
+    end
+    local result = { 1, s:len() }
+    s:gsub('^.%s*().-()%s*.$', function(l, r)
+      result = { l, r - 1 }
+    end)
+    return result[1], result[2]
+  end
+
+  -- Match argument with both left and right separators/brackets
+  res[3] = function(s, init)
     -- Cache string separators per spec as they are used multiple times.
     -- Storing per spec allows coexistence of several argument specifications.
     H.cache.argument_seps = H.cache.argument_seps or {}
     H.cache.argument_seps[res] = H.cache.argument_seps[res] or {}
-    local seps = H.cache.argument_seps[res][s] or H.arg_get_separators(s, sep_pattern, exclude_regions)
+    local seps = H.cache.argument_seps[res][s] or
+        H.arg_get_separators(s, sep_pattern, exclude_regions, match_whitespaces)
     H.cache.argument_seps[res][s] = seps
 
     -- Return span fully on right of `init`, `nil` otherwise
     -- For first argument returns left bracket; for last - right one.
     for i = 1, #seps - 1 do
-      if init <= seps[i] then return seps[i], seps[i + 1] end
+      if init <= seps[i][1] then
+        return seps[i][1], seps[i + 1][2]
+      end
     end
 
     return nil
   end
 
-  -- Make extraction part
-  local match_and_shrink = function(left, left_keep, right, right_keep)
-    local pattern = '^' .. left .. '.*' .. right .. '$'
-    return function(s, init)
-      if init > 1 then return nil end
-      if not s:find(pattern) then return nil end
-      return left_keep and 1 or 2, s:len() - (right_keep and 0 or 1)
-    end
-  end
-
-  -- `a` type depends on argument number, `i` - as `a` but without whitespace
-  -- The reason for this complex solution is the following requirements:
-  -- - Don't match argument region when cursor is on the outer bracket.
-  --   Example: `f(xxx)` should select argument only when cursor is on 'x'.
-  -- - Don't select edge whitespace for first and last argument BUT match when
-  --   cursor is on them. This is useful when working with padded brackets.
-  --   Example for `f(  xx  ,  yy  )`:
-  --     - `a` object should select 'xx  ,' when cursor is on all '  xx  ';
-  --       should select ',  yy' when cursor is on all '  yy  '.
-  --     - `i` object should select 'xx' when cursor is on all '  xx  ';
-  --       should select 'yy' when cursor is on all '  yy  '.
-  res[3] = {
-    -- Middle argument. Include only left separator.
-    { match_and_shrink(sep_pattern, true, sep_pattern, false), '^.%s*().-()%s*$' },
-
-    -- First argument. Include right separator, exclude left whitespace.
-    { match_and_shrink(nosep_pattern, false, sep_pattern, true), '^%s*()().-()%s*.()$' },
-
-    -- Last argument. Include left separator, exclude right whitespace.
-    -- NOTE: it misbehaves for whitespace argument. It's OK because it's rare.
-    { match_and_shrink(sep_pattern, true, nosep_pattern, false), '^().%s*().-()()%s*$' },
-
-    -- Single argument. Include both whitespace (makes `aa` and `ia` differ).
-    { match_and_shrink(nosep_pattern, false, nosep_pattern, false), '^%s*().-()%s*$' },
+  res[4] = {
+    '^()%s*' .. sep_pattern .. '%s*().-()()' .. sep_pattern .. '%s*$',
+    '^%s*' .. sep_pattern .. '?%s*().-()' .. sep_pattern .. '?%s*$',
   }
 
   return res
@@ -1351,30 +1337,41 @@ H.get_default_opts = function()
 end
 
 -- Work with argument textobject ----------------------------------------------
-H.arg_get_separators = function(s, sep_pattern, exclude_regions)
-  if s:len() <= 2 then return {} end
-
+H.arg_get_separators = function(s, sep_pattern, exclude_regions, match_whitespaces)
   -- Get all separators
   local seps = {}
-  s:gsub('()' .. sep_pattern, function(x) table.insert(seps, x) end)
-  if #seps == 0 then return { 1, s:len() } end
+
+  if match_whitespaces then
+    s:gsub('()%s*' .. sep_pattern .. '%s*()', function(l, r)
+      table.insert(seps, { l, r - 1 })
+    end)
+  else
+    s:gsub('()' .. sep_pattern, function(x) table.insert(seps, { x, x }) end)
+  end
+
+  if #seps == 0 then
+    return { { 1, 1 }, { s:len(), s:len() } }
+  end
 
   -- Remove separators that are in "excluded regions": by default, inside
   -- brackets or quotes
-  local inner_s, forbidden = s:sub(2, -2), {}
-  local add_to_forbidden = function(l, r) table.insert(forbidden, { l + 1, r }) end
+  local forbidden = {}
+  local add_to_forbidden = function(l, r)
+    table.insert(forbidden, { l + 1, r - 2 })
+  end
 
   for _, pat in ipairs(exclude_regions) do
     local capture_pat = string.format('()%s()', pat)
-    inner_s:gsub(capture_pat, add_to_forbidden)
+    s:gsub(capture_pat, add_to_forbidden)
   end
 
-  local res = vim.tbl_filter(function(x) return not H.is_point_inside_spans(x, forbidden) end, seps)
+  local res = vim.tbl_filter(function(x)
+    return not H.is_span_inside_spans(x, forbidden)
+  end, seps)
 
-  -- Append edge separators (assumes first and last characters are from
-  -- brackets). This allows single argument and ensures at least 2 elements.
-  table.insert(res, 1, 1)
-  table.insert(res, s:len())
+  -- Append edge separators. This allows single argument and ensures at least 2 elements.
+  table.insert(res, 1, { 1, 1 })
+  table.insert(res, { s:len(), s:len() })
   return res
 end
 
@@ -1655,9 +1652,11 @@ H.is_span_on_left = function(span_1, span_2)
   return (span_1.from <= span_2.from) and (span_1.to <= span_2.to)
 end
 
-H.is_point_inside_spans = function(point, spans)
-  for _, span in ipairs(spans) do
-    if span[1] <= point and point <= span[2] then return true end
+H.is_span_inside_spans = function(span, spans)
+  for _, s in ipairs(spans) do
+    if s[1] <= span[1] and span[1] <= s[2] then
+      return true
+    end
   end
   return false
 end
