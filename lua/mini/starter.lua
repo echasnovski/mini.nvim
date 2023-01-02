@@ -1280,8 +1280,11 @@ end
 H.apply_buffer_options = function(buf_id)
   -- NOTE: assumed that it is executing with `buf_id` being current buffer
 
-  -- Force Normal mode
-  vim.api.nvim_input([[<C-\><C-n>]])
+  -- Force Normal mode. NOTEs:
+  -- - Using `vim.cmd('normal! \28\14')` weirdly does not work.
+  -- - Using `vim.api.nvim_input([[<C-\><C-n>]])` doesn't play nice if `<C-\>`
+  --   mapping is present (maybe due to non-blocking nature of `nvim_input()`).
+  vim.api.nvim_feedkeys('\28\14', 'nx', false)
 
   -- Set buffer name
   H.buffer_number = H.buffer_number + 1

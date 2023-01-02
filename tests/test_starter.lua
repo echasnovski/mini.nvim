@@ -200,11 +200,18 @@ T['open()']['ends up in Normal mode'] = new_set(
       -- Ensure no `InsertEnter` event is triggered (see #183)
       child.cmd('au InsertEnter * lua _G.been_inside_insertenter = true')
 
+      -- Ensure `<C-\>` mapping is respected (see #189)
+      child.cmd([[nnoremap <C-\> <Cmd>lua _G.been_inside_ctrlslash = true<CR>]])
+      if test_mode ~= 'Replace' then
+        child.cmd(cur_mode_id .. [[noremap <C-\> <Cmd>lua _G.been_inside_ctrlslash = true<CR>]])
+      end
+
       child.lua('MiniStarter.open()')
       validate_starter_shown()
       eq(child.fn.mode(), 'n')
 
       eq(child.lua_get('_G.been_inside_insertenter'), vim.NIL)
+      eq(child.lua_get('_G.been_inside_ctrlslash'), vim.NIL)
     end,
   }
 )
