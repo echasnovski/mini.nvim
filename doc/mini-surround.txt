@@ -64,8 +64,8 @@ You can override runtime config settings locally to buffer inside
 
 Regular mappings:
 - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
-- `saiwi[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
-  surrounding (`i`): `[[` for left and `]]` for right.
+- `saiw?[[<CR>]]<CR>` - add (`sa`) for inner word (`iw`) interactive
+  surrounding (`?`): `[[` for left and `]]` for right.
 - `2sdf` - delete (`sd`) second (`2`) surrounding function call (`f`).
 - `sr)tdiv<CR>` - replace (`sr`) surrounding parenthesis (`)`) with tag
   (`t`) with identifier 'div' (`div<CR>` in command line prompt).
