@@ -119,12 +119,18 @@ MiniAnimate.setup = function(config)
   --   scroll. Use `vim.schedule()` to allow other immediate commands to change
   --   view (like builtin cursor center on buffer change) to avoid unnecessary
   --   animated scroll.
+  -- - Track scroll state (partially) on every cursor move to keep cursor
+  --   position up to date. This enables visually better cursor positioning
+  --   during scroll animation (convex progression from start cursor position
+  --   to end). Use `vim.schedule()` to make it affect state only after scroll
+  --   is done and cursor is already in correct final position.
   vim.api.nvim_exec(
     [[augroup MiniAnimate
         au!
         au CursorMoved       * lua MiniAnimate.auto_cursor()
         au WinScrolled       * lua MiniAnimate.auto_resize(); MiniAnimate.auto_scroll()
         au BufEnter,WinEnter * lua vim.schedule(MiniAnimate.track_scroll_state)
+        au CursorMoved       * lua vim.schedule(MiniAnimate.track_scroll_state_partial)
         au WinNew            * lua vim.schedule(MiniAnimate.auto_openclose)
         au WinClosed         * lua MiniAnimate.auto_openclose("close")
       augroup END]],
@@ -1213,6 +1219,20 @@ end
 --- is setup in |MiniAnimate.setup()|.
 MiniAnimate.track_scroll_state = function() H.cache.scroll_state = H.get_scroll_state() end
 
+--- Partially track scroll state
+---
+--- Designed to be used with |autocmd|. No need to use it directly, everything
+--- is setup in |MiniAnimate.setup()|.
+MiniAnimate.track_scroll_state_partial = function()
+  -- This not only improves computation load, but seems to be crucial for
+  -- a proper state tracking
+  if H.cache.scroll_is_active then return end
+
+  local view = H.cache.scroll_state.view
+  local cur_pos = H.getcursorcharpos()
+  view.lnum, view.col = cur_pos[2], cur_pos[3] - 1
+end
+
 --- Automatically animate window resize
 ---
 --- Designed to be used with |autocmd|. No need to use it directly, everything
@@ -1450,13 +1470,16 @@ H.make_scroll_step = function(state_from, state_to, opts)
   -- Don't animate if no subscroll steps is returned
   if step_scrolls == nil or #step_scrolls == 0 then return end
 
-  -- Compute scrolling key ('\25' and '\5' are escaped '<C-Y>' and '<C-E>') and
-  -- final cursor position
+  -- Compute scrolling key ('\25' and '\5' are escaped '<C-Y>' and '<C-E>')
   local scroll_key = from_line < to_line and '\5' or '\25'
-  local final_cursor_pos = { state_to.view.lnum, state_to.view.col }
+
+  -- Cache frequently accessed data
+  local from_cur_line, to_cur_line = state_from.view.lnum, state_to.view.lnum
+  local from_cur_col, to_cur_col = state_from.view.col, state_to.view.col
 
   local event_id, buf_id, win_id = H.cache.scroll_event_id, state_from.buf_id, state_from.win_id
   local n_steps, timing = #step_scrolls, opts.timing
+
   return {
     step_action = function(step)
       -- Stop animation if another scroll is active. Don't use `stop_scroll()`
@@ -1468,8 +1491,16 @@ H.make_scroll_step = function(state_from, state_to, opts)
       local is_same_win_buf = vim.api.nvim_get_current_buf() == buf_id and vim.api.nvim_get_current_win() == win_id
       if not is_same_win_buf then return H.stop_scroll() end
 
+      -- Compute intermideate cursor position. This relies on `virtualedit=all`
+      -- to be able to place cursor anywhere on screen (has better animation;
+      -- at least for default equally spread subscrolls).
+      local coef = step / n_steps
+      local cursor_line = H.convex_point(from_cur_line, to_cur_line, coef)
+      local cursor_col = H.convex_point(from_cur_col, to_cur_col, coef)
+      local cursor_pos = { cursor_line, cursor_col }
+
       -- Preform scroll. Possibly stop on error.
-      local ok, _ = pcall(H.scroll_action, scroll_key, step_scrolls[step], final_cursor_pos)
+      local ok, _ = pcall(H.scroll_action, scroll_key, step_scrolls[step], cursor_pos)
       if not ok then return H.stop_scroll(state_to) end
 
       -- Update current scroll state for two reasons:
@@ -1487,7 +1518,7 @@ H.make_scroll_step = function(state_from, state_to, opts)
   }
 end
 
-H.scroll_action = function(key, n, final_cursor_pos)
+H.scroll_action = function(key, n, cursor_pos)
   -- Scroll. Allow supplying non-valid `n` for initial "scroll" which sets
   -- cursor immediately, which reduces flicker.
   if n ~= nil and n > 0 then
@@ -1495,18 +1526,14 @@ H.scroll_action = function(key, n, final_cursor_pos)
     vim.cmd(command)
   end
 
-  -- Set cursor to properly handle final cursor position
+  -- Set cursor to properly handle cursor position
   -- Computation of available top/bottom line depends on `scrolloff = 0`
   -- because otherwise it will go out of bounds causing scroll overshoot with
   -- later "bounce" back on view restore (see
   -- https://github.com/echasnovski/mini.nvim/issues/177).
-  --stylua: ignore start
   local top, bottom = vim.fn.line('w0'), vim.fn.line('w$')
-  local line, col = final_cursor_pos[1], final_cursor_pos[2]
-  if line < top    then line, col = top,    0 end
-  if bottom < line then line, col = bottom, 0 end
-  --stylua: ignore end
-  vim.api.nvim_win_set_cursor(0, { line, col })
+  local line = math.min(math.max(cursor_pos[1], top), bottom)
+  vim.api.nvim_win_set_cursor(0, { line, cursor_pos[2] })
 end
 
 H.start_scroll = function(start_state)
@@ -1518,6 +1545,8 @@ H.start_scroll = function(start_state)
   -- otherwise, so disabling on scroll start and restore on scroll end is
   -- better solution.
   H.set_scrolloff(0)
+  -- Allow placing cursor anywhere on screen for better cursor placing
+  H.set_virtualedit('all')
   if start_state ~= nil then vim.fn.winrestview(start_state.view) end
   return true
 end
@@ -1525,6 +1554,7 @@ end
 H.stop_scroll = function(end_state)
   if end_state ~= nil then vim.fn.winrestview(end_state.view) end
   H.set_scrolloff(end_state.scrolloff)
+  H.set_virtualedit(end_state.virtualedit)
   H.cache.scroll_is_active = false
   H.trigger_done_event('scroll')
   return false
@@ -1536,6 +1566,7 @@ H.get_scroll_state = function()
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
     scrolloff = H.get_scrolloff(),
+    virtualedit = H.get_virtualedit(),
   }
 end
 
@@ -2046,6 +2077,16 @@ H.set_scrolloff = function(x) vim.wo.scrolloff = x end
 if vim.fn.has('nvim-0.7') == 0 then
   H.get_scrolloff = function() return vim.api.nvim_get_option('scrolloff') end
   H.set_scrolloff = function(x) return vim.api.nvim_set_option('scrolloff', x) end
+end
+
+-- TODO: Remove after compatibility with Neovim<=0.6 is dropped
+H.get_virtualedit = function() return vim.wo.virtualedit end
+H.set_virtualedit = function(x) vim.wo.virtualedit = x end
+
+-- The 'scrolloff' option started to be window-local in Neovim=0.7.0
+if vim.fn.has('nvim-0.7') == 0 then
+  H.get_virtualedit = function() return vim.api.nvim_get_option('virtualedit') end
+  H.set_virtualedit = function(x) return vim.api.nvim_set_option('virtualedit', x) end
 end
 
 H.make_step = function(x) return x == 0 and 0 or (x < 0 and -1 or 1) end

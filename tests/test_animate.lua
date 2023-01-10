@@ -21,6 +21,11 @@ local skip_on_old_neovim = function()
   if child.fn.has('nvim-0.7') == 0 then MiniTest.skip() end
 end
 
+local get_virt_cursor = function()
+  local pos = child.fn.getcurpos()
+  return { pos[2], pos[3] + pos[4] - 1 }
+end
+
 local validate_topline = function(x) eq(child.fn.line('w0'), x) end
 
 local validate_floats = function(configs)
@@ -1435,7 +1440,7 @@ T['Scroll']['allows immediate another scroll animation'] = function()
   sleep(step_time)
   child.expect_screenshot()
 
-  -- Should start from the current window view (and not final)
+  -- Should start from the current window view and cursor (and not final)
   type_keys('2<C-y>')
   child.expect_screenshot()
   sleep(step_time)
@@ -1491,6 +1496,26 @@ T['Scroll']["respects window-local 'scrolloff'"] = function()
   eq(child.wo.scrolloff, 1)
 end
 
+T['Scroll']["respects 'virtualedit'"] = function()
+  -- Global option
+  child.o.virtualedit = 'block'
+
+  type_keys('<C-d>')
+  sleep(3 * step_time + small_time)
+
+  validate_topline(4)
+  eq(child.o.virtualedit, 'block')
+
+  -- Window-local
+  child.cmd('setlocal virtualedit=onemore')
+
+  type_keys('<C-u>')
+  sleep(3 * step_time + small_time)
+
+  validate_topline(1)
+  eq(child.o.virtualedit, 'onemore')
+end
+
 T['Scroll']["respects 'scrolloff' in presence of folds"] = function()
   set_cursor(6, 0)
   type_keys('zf5j')
@@ -1508,27 +1533,82 @@ T['Scroll']["respects 'scrolloff' in presence of folds"] = function()
   end
 end
 
-T['Scroll']['places cursor on final position immediately'] = function()
+T['Scroll']['places cursor proportionally to scroll step'] = function()
   set_cursor(9, 3)
 
-  -- If position is not visible, put on first column of closest visible line
-  eq(get_cursor(), { 6, 0 })
+  -- Works forward
+  eq(get_cursor(), { 1, 0 })
   sleep(step_time)
-  eq(get_cursor(), { 7, 0 })
+  eq(get_cursor(), { 4, 1 })
   sleep(step_time)
-  eq(get_cursor(), { 8, 0 })
+  eq(get_cursor(), { 6, 2 })
   sleep(step_time)
   eq(get_cursor(), { 9, 3 })
 
   -- Should work both ways
+  set_cursor(1, 2)
+  eq(get_cursor(), { 9, 3 })
+  sleep(step_time)
+  eq(get_cursor(), { 6, 3 })
+  sleep(step_time)
+  eq(get_cursor(), { 4, 2 })
+  sleep(step_time)
+  eq(get_cursor(), { 1, 2 })
+end
+
+T['Scroll']['can place intermideate cursor outside of line'] = function()
+  set_lines({ 'aaaa', 'a', '', '', '', '', '', 'a', 'aaaa' })
   set_cursor(1, 3)
-  eq(get_cursor(), { 4, 0 })
+
+  set_cursor(9, 3)
+
+  eq(get_virt_cursor(), { 1, 3 })
   sleep(step_time)
-  eq(get_cursor(), { 3, 0 })
+  eq(get_virt_cursor(), { 4, 3 })
   sleep(step_time)
-  eq(get_cursor(), { 2, 0 })
+  eq(get_virt_cursor(), { 6, 3 })
   sleep(step_time)
-  eq(get_cursor(), { 1, 3 })
+  eq(get_virt_cursor(), { 9, 3 })
+end
+
+T['Scroll']['places cursor on edge lines if intermideate target is not visible'] = function()
+  child.lua('MiniAnimate.config.scroll.subscroll = function(total_scroll) return { 1, total_scroll - 1 } end')
+
+  local many_lines = { 'aaaa' }
+  for _ = 1, 20 do
+    table.insert(many_lines, 'a')
+  end
+  table.insert(many_lines, 'aaaa')
+
+  set_lines(many_lines)
+  set_cursor(1, 3)
+
+  -- Cursor should be placed on visible window top/bottom at target column
+  -- (even if outside of line)
+  set_cursor(22, 3)
+  eq(get_virt_cursor(), { 1, 3 })
+  validate_topline(1)
+
+  sleep(step_time)
+  eq(get_virt_cursor(), { 7, 3 })
+  validate_topline(2)
+
+  sleep(step_time)
+  eq(get_virt_cursor(), { 22, 3 })
+  validate_topline(17)
+
+  -- Should work in both directions
+  set_cursor(1, 3)
+  eq(get_virt_cursor(), { 22, 3 })
+  validate_topline(17)
+
+  sleep(step_time)
+  eq(get_virt_cursor(), { 16, 3 })
+  validate_topline(16)
+
+  sleep(step_time)
+  eq(get_virt_cursor(), { 1, 3 })
+  validate_topline(1)
 end
 
 T['Scroll']['stops on buffer change'] = function()

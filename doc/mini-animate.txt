@@ -939,6 +939,14 @@ Designed to be used with |autocmd|. No need to use it directly, everything
 is setup in |MiniAnimate.setup()|.
 
 ------------------------------------------------------------------------------
+                                      *MiniAnimate.track_scroll_state_partial()*
+                   `MiniAnimate.track_scroll_state_partial`()
+Partially track scroll state
+
+Designed to be used with |autocmd|. No need to use it directly, everything
+is setup in |MiniAnimate.setup()|.
+
+------------------------------------------------------------------------------
                                                      *MiniAnimate.auto_resize()*
                           `MiniAnimate.auto_resize`()
 Automatically animate window resize
