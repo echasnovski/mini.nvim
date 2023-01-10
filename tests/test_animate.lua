@@ -1433,12 +1433,18 @@ T['Scroll']['works when movement is triggered by outside command'] = function()
 end
 
 T['Scroll']['allows immediate another scroll animation'] = function()
+  -- This should also properly restore some termporary set options
+  child.o.scrolloff, child.o.virtualedit = 1, 'block'
+
   type_keys('10<C-e>')
   child.expect_screenshot()
   sleep(step_time)
   child.expect_screenshot()
   sleep(step_time)
   child.expect_screenshot()
+
+  -- Should have intermediate options set
+  eq({ child.o.scrolloff, child.o.virtualedit }, { 0, 'all' })
 
   -- Should start from the current window view and cursor (and not final)
   type_keys('2<C-y>')
@@ -1447,6 +1453,9 @@ T['Scroll']['allows immediate another scroll animation'] = function()
   child.expect_screenshot()
   sleep(step_time)
   child.expect_screenshot()
+
+  -- Should properly restore options
+  eq({ child.o.scrolloff, child.o.virtualedit }, { 1, 'block' })
 end
 
 T['Scroll']['respects folds'] = function()

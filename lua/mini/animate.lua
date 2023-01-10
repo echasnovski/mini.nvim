@@ -1565,8 +1565,8 @@ H.get_scroll_state = function()
     buf_id = vim.api.nvim_get_current_buf(),
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
-    scrolloff = H.get_scrolloff(),
-    virtualedit = H.get_virtualedit(),
+    scrolloff = H.cache.scroll_is_active and H.cache.scroll_state.scrolloff or H.get_scrolloff(),
+    virtualedit = H.cache.scroll_is_active and H.cache.scroll_state.virtualedit or H.get_virtualedit(),
   }
 end
 
