@@ -1099,6 +1099,14 @@ MiniTest.new_child_neovim = function()
 
     child.job = job
     start_args, start_opts = args, opts
+
+    -- Close immediately on Neovim>=0.9 to avoid hanging (see
+    -- https://github.com/neovim/neovim/issues/21630)
+    if vim.fn.has('nvim-0.9') == 1 then
+      child.job.stdin:close()
+      child.job.stdout:close()
+      child.job.stderr:close()
+    end
   end
 
   child.stop = function()
@@ -1110,9 +1118,11 @@ MiniTest.new_child_neovim = function()
     -- NOTE: it is also important to close this before ending child process.
     -- Otherwise it seems to result in hanging process during test runs (often
     -- seen in Github actions for Neovim>=0.7, but not locally).
-    child.job.stdin:close()
-    child.job.stdout:close()
-    child.job.stderr:close()
+    if vim.fn.has('nvim-0.9') ~= 1 then
+      child.job.stdin:close()
+      child.job.stdout:close()
+      child.job.stderr:close()
+    end
 
     -- Properly exit Neovim. `pcall` avoids `channel closed by client` error.
     pcall(child.cmd, 'silent! 0cquit')
