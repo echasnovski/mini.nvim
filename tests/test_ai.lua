@@ -1525,6 +1525,47 @@ T['Textobject']['falls back in case of absent textobject id and different main m
   validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'I', 'c')
 end
 
+T['Textobject']["works with 'langmap'"] = function()
+  -- Useful for different keyboard layouts. See
+  -- https://github.com/echasnovski/mini.nvim/issues/195
+  child.o.langmap = 'ki,ik'
+
+  local validate_visual = function(line, column, keys, expected)
+    child.ensure_normal_mode()
+    set_lines({ line })
+    set_cursor(1, column)
+    type_keys(10, 'v', keys[1], keys[2])
+
+    child.expect_visual_marks({ 1, expected[1] - 1 }, { 1, expected[2] - 1 })
+  end
+
+  local map = function(mode, lhs)
+    child.api.nvim_set_keymap(mode, lhs, '<Cmd>lua vim.api.nvim_win_set_cursor(0, { 1, 5 })<CR>', { noremap = true })
+  end
+
+  -- Visual mode
+  -- - Registered textobject
+  validate_visual('aa(bb)cc', 3, { 'k', ')' }, { 4, 5 })
+
+  -- - Default textobject
+  validate_visual('aa bb cc', 3, { 'k', 'w' }, { 4, 5 })
+
+  -- - Custom textobject
+  map('x', 'ic')
+  validate_visual('aa bb cc', 3, { 'k', 'c' }, { 4, 6 })
+
+  -- Operator-pending mode
+  -- - Registered textobject
+  validate_edit1d('aa(bb)cc', 3, 'aa()cc', 3, 'dk)')
+
+  -- - Default textobject
+  validate_edit1d('aa bb cc', 3, 'aa  cc', 3, 'dkw')
+
+  -- - Custom textobject
+  map('o', 'ic')
+  validate_edit1d('aa bb cc', 3, 'aa  cc', 3, 'dkc')
+end
+
 T['Textobject']['works with empty output region'] = function()
   local validate = function(start_column)
     validate_edit1d('a()b', start_column, 'a()b', 2, 'ci)')
