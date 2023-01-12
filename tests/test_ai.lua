@@ -1490,6 +1490,41 @@ T['Textobject']['falls back in case of absent textobject id'] = function()
   validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'i', 'c')
 end
 
+T['Textobject']['falls back in case of absent textobject id and different main mapping'] = function()
+  reload_module({ mappings = { around = 'A', inside = 'I' } })
+
+  -- Set low `timeoutlen` to simulate its expiration
+  child.o.timeoutlen = 5
+
+  local validate = function(line, column, keys, expected)
+    child.ensure_normal_mode()
+    set_lines({ line })
+    set_cursor(1, column)
+    type_keys(10, 'v', keys[1], keys[2])
+
+    child.expect_visual_marks({ 1, expected[1] - 1 }, { 1, expected[2] - 1 })
+  end
+
+  -- Custom textobject
+  local map = function(mode, lhs)
+    child.api.nvim_set_keymap(mode, lhs, '<Cmd>lua vim.api.nvim_win_set_cursor(0, { 1, 5 })<CR>', { noremap = true })
+  end
+
+  -- Visual mode
+  map('x', 'Ac')
+  validate('aaa bbb', 0, { 'A', 'c' }, { 1, 6 })
+
+  map('x', 'Ic')
+  validate('aaa bbb', 0, { 'I', 'c' }, { 1, 6 })
+
+  -- Operator-pending mode
+  map('o', 'Ac')
+  validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'A', 'c')
+
+  map('o', 'Ic')
+  validate_edit1d('aaa bbb', 0, 'bb', 0, 10, 'd', 'I', 'c')
+end
+
 T['Textobject']['works with empty output region'] = function()
   local validate = function(start_column)
     validate_edit1d('a()b', start_column, 'a()b', 2, 'ci)')

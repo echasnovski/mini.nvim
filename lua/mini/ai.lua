@@ -968,7 +968,9 @@ MiniAi.expr_textobject = function(mode, ai_type, opts)
 
   -- Possibly fall back to builtin `a`/`i` textobjects
   if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then
-    local res = ai_type .. tobj_id
+    local mappings = H.get_config().mappings
+    local main_key = mappings[ai_type == 'a' and 'around' or 'inside']
+    local res = main_key .. tobj_id
     -- If fallback is an existing user mapping, prepend it with '<Ignore>'.
     -- This deals with `:h recursive_mapping`. Shouldn't prepend if it is a
     -- builtin textobject. Also see https://github.com/vim/vim/issues/10907 .
