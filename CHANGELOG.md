@@ -20,6 +20,10 @@ Introduction of new module.
 
 - FEATURE: Add `MiniMisc.setup_auto_root()` and `MiniMisc.find_root()` for root finding functionality. NOTE: requires Neovim>=0.8.
 
+## mini.move
+
+Introduction of new module.
+
 # Version 0.6.0
 
 - Stop official support of Neovim 0.5.

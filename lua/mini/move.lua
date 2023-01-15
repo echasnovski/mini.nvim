@@ -1,0 +1,416 @@
+-- MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+-- Documentation ==============================================================
+--- Move any selection in any direction
+---
+--- Features:
+--- - Works in two modes:
+---     - Visual mode. Select text (charwise with |v|, linewise with |V|, and
+---       blockwise with |CTRL-V|) and press customizable mapping to move in
+---       all four directions (left, right, down, up). It keeps Visual mode.
+---     - Normal mode. Press customizable mapping to move current line in all
+---       four directions (left, right, down, up).
+---     - Vertical linewise movement gets reindented with |=|.
+---       Horizontal linewise movement is same as indent with |>| and dedent with |<|.
+--- - Provides both mappings and Lua functions for motions. See
+---   |MiniMove.move_selection()| and |MiniMove.move_line()|.
+--- - Respects |v:count|. Movement mappings can be preceded by a number which
+---   multiplies command effect.
+--- - All consecutive moves (regardless of direction) can be undone by a single |u|.
+--- - Respects preferred column for vertical movement. It will vertically move
+---   selection as how cursor is moving (not strictly vertically if target
+---   column is not present in target line).
+---
+--- Notes:
+--- - Doesn't allow moving selection outside of current lines (by design).
+---
+--- # Setup ~
+---
+--- This module needs a setup with `require('mini.move').setup({})` (replace
+--- `{}` with your `config` table). It will create global Lua table `MiniMove`
+--- which you can use for scripting or manually (with `:lua MiniMove.*`).
+---
+--- See |MiniMove.config| for available config settings.
+---
+--- You can override runtime config settings (like `config.modifiers`) locally
+--- to buffer inside `vim.b.minimove_config` which should have same structure
+--- as `MiniMove.config`. See |mini.nvim-buffer-local-config| for more details.
+---
+--- # Comparisons ~
+---
+--- - 'matze/vim-move':
+---     - Doesn't support vertical movement of charwise and blockwise selections.
+---       While 'mini.move' does.
+---     - Doesn't support horizontal movement of current line in favor of
+---       horizontal movement of current character. While 'mini.move' supports
+---       horizontal movement of current line and doesn't support such movement
+---       of current character.
+---     - Has extra functionality for certain moves (like move by half page).
+---       While 'mini.move' does not (by design).
+--- - 'booperlv/nvim-gomove':
+---     - Doesn't support movement in charwise visual selection.
+---       While 'mini.move' does.
+---     - Has extra functionality beyond moving text, like duplication.
+---       While 'mini.move' concentrates only on moving functionality.
+---
+--- # Disabling~
+---
+--- To disable, set `g:minimove_disable` (globally) or `b:minimove_disable`
+--- (for a buffer) to `v:true`. Considering high number of different scenarios
+--- and customization intentions, writing exact rules for disabling module's
+--- functionality is left to user. See |mini.nvim-disabling-recipes| for common
+--- recipes.
+---@tag mini.move
+---@tag MiniMove
+
+---@diagnostic disable:undefined-field
+
+-- Module definition ==========================================================
+local MiniMove = {}
+local H = {}
+
+--- Module setup
+---
+---@param config table|nil Module config table. See |MiniMove.config|.
+---
+---@usage `require('mini.move').setup({})` (replace `{}` with your `config` table)
+MiniMove.setup = function(config)
+  -- Export module
+  _G.MiniMove = MiniMove
+
+  -- Setup config
+  config = H.setup_config(config)
+
+  -- Apply config
+  H.apply_config(config)
+end
+
+--- Module config
+---
+--- Default values:
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+---@text # Mappings ~
+---
+--- Other possible choices of mappings:
+---
+--- - `HJKL` for moving visual selection (overrides |H|, |L|, |v_J| in Visual mode): >
+---   require('mini.move').setup({
+---     mappings = {
+---       left  = 'H',
+---       right = 'L',
+---       down  = 'J',
+---       up    = 'K',
+---     }
+---   })
+---
+--- - Shift + arrows: >
+---   require('mini.move').setup({
+---     mappings = {
+---       left  = '<S-left>',
+---       right = '<S-right>',
+---       down  = '<S-down>',
+---       up    = '<S-up>',
+---
+---       line_left  = '<S-left>',
+---       line_right = '<S-right>',
+---       line_down  = '<S-down>',
+---       line_up    = '<S-up>',
+---     }
+---   })
+MiniMove.config = {
+  -- Module mappings. Use `''` (empty string) to disable one.
+  mappings = {
+    -- Move visual selection in Visual mode. Defaults are Alt (Meta) + hjkl.
+    left = '<M-h>',
+    right = '<M-l>',
+    down = '<M-j>',
+    up = '<M-k>',
+
+    -- Move current line in Normal mode
+    line_left = '<M-h>',
+    line_right = '<M-l>',
+    line_down = '<M-j>',
+    line_up = '<M-k>',
+  },
+}
+--minidoc_afterlines_end
+
+-- Module functionality =======================================================
+--- Move visually selected region in any direction within present lines
+---
+--- Main function powering visual selection move in Visual mode.
+---
+--- Notes:
+--- - Vertical movement in linewise mode is followed up by reindent with |v_=|.
+--- - Horizontal movement in linewise mode is same as |v_<| and |v_>|.
+---
+---@param direction string One of "left", "down", "up", "right".
+MiniMove.move_selection = function(direction)
+  if H.is_disabled() then return end
+
+  -- This could have been a one-line expression mappings, but there are issues:
+  -- - Initial yanking modifies some register. Not critical, but also not good.
+  -- - Doesn't work at movement edges (first line for `K`, etc.). See
+  --   https://github.com/vim/vim/issues/11786
+  -- - Results into each movement being a separate undo block, which is
+  --   inconvenient with several back-to-back movements.
+  local cur_mode = vim.fn.mode()
+
+  -- Act only inside visual mode
+  if not (cur_mode == 'v' or cur_mode == 'V' or cur_mode == '\22') then return end
+
+  -- Define common predicates
+  local dir_type = (direction == 'up' or direction == 'down') and 'vert' or 'hori'
+  local is_linewise = cur_mode == 'V'
+
+  -- Cache useful data because it will be reset when executing commands
+  local count1 = vim.v.count1
+
+  -- Determine if previous action was this type of move
+  local is_moving = vim.deep_equal(H.state, H.get_move_state())
+  if not is_moving then H.curswant = nil end
+
+  -- Allow undo of consecutive moves at once (direction doesn't matter)
+  local normal_command = (is_moving and 'undojoin |' or '') .. ' keepjumps normal! '
+  local cmd = function(x) vim.cmd(normal_command .. x) end
+
+  -- Treat horizontal linewise movement specially
+  if is_linewise and dir_type == 'hori' then
+    -- Use indentation as horizontal movement for linewise selection
+    cmd(count1 .. H.indent_keys[direction] .. 'gv')
+
+    -- Track new state to allow joining in single undo block
+    H.state = H.get_move_state()
+
+    return
+  end
+
+  -- Temporarily ensure possibility to put cursor just after line end.
+  -- This allows a more intuitive cursor positioning from and to end of line.
+  -- NOTE: somehow, this should be done before initial cut to take effect.
+  local cache_virtualedit = vim.o.virtualedit
+  if not cache_virtualedit:find('all') then vim.o.virtualedit = 'onemore' end
+
+  -- Cut selection while saving caching register
+  local cache_z_reg = vim.fn.getreg('z')
+  cmd('"zx')
+
+  -- Detect edge selection: last line(s) for vertical and last character(s)
+  -- for horizontal. At this point (after cutting selection) cursor is on the
+  -- edge which can happen in two cases:
+  --   - Move second to last selection towards edge (like in 'abc' move 'b'
+  --     to right or second to last line down).
+  --   - Move edge selection away from edge (like in 'abc' move 'c' to left
+  --     or last line up).
+  -- Use condition that removed selection was further than current cursor
+  -- to distinguish between two cases.
+  local is_edge_selection_hori = dir_type == 'hori' and vim.fn.col('.') < vim.fn.col("'<")
+  local is_edge_selection_vert = dir_type == 'vert' and vim.fn.line('.') < vim.fn.line("'<")
+  local is_edge_selection = is_edge_selection_hori or is_edge_selection_vert
+
+  -- Use `p` as paste key instead of `P` in cases which might require moving
+  -- selection to place which is unreachable with `P`: right to be line end
+  -- and down to be last line. NOTE: temporary `virtualedit=onemore` solves
+  -- this only for horizontal movement, but not for vertical.
+  local can_go_overline = not is_linewise and direction == 'right'
+  local can_go_overbuf = is_linewise and direction == 'down'
+  local paste_key = (can_go_overline or can_go_overbuf) and 'p' or 'P'
+
+  -- Restore `curswant` to try move cursor to initial column (just like
+  -- default `hjkl` moves)
+  if dir_type == 'vert' then H.set_curswant(H.curswant) end
+
+  -- Possibly reduce number of moves by one to not overshoot move
+  local n = count1 - ((paste_key == 'p' or is_edge_selection) and 1 or 0)
+
+  -- Don't allow movement past last line of block selection (any part)
+  if cur_mode == '\22' and direction == 'down' and vim.fn.line('$') == vim.fn.line("'>") then n = 0 end
+
+  -- Move cursor
+  if n > 0 then cmd(n .. H.move_keys[direction]) end
+
+  -- Save curswant. Correct for one less move when using `p` as paste.
+  H.curswant = H.get_curswant() + ((direction == 'right' and paste_key == 'p') and 1 or 0)
+
+  -- Open just enough folds (but not in linewise mode, as it allows moving
+  -- past folds)
+  if not is_linewise then cmd('zv') end
+
+  -- Paste
+  cmd('"z' .. paste_key)
+
+  -- Select newly moved region. Another way is to use something like `gvhoho`
+  -- but it doesn't work well with selections spanning several lines.
+  cmd('`[1v')
+
+  -- Reindent linewise selection if `=` can do that.
+  -- NOTE: this sometimes doesn't work well with folds (and probably
+  -- `foldmethod=indent`) and linewise mode because it recomputes folds after
+  -- that and the whole "move past fold" doesn't work.
+  if is_linewise and dir_type == 'vert' and vim.o.equalprg == '' then cmd('=gv') end
+
+  -- Restore intermediate values
+  vim.fn.setreg('z', cache_z_reg)
+  vim.o.virtualedit = cache_virtualedit
+
+  -- Track new state to allow joining in single undo block
+  H.state = H.get_move_state()
+end
+
+--- Move current line in any direction
+---
+--- Main function powering current line move in Normal mode.
+---
+--- Notes:
+--- - Vertical movement is followed up by reindent with |v_=|.
+--- - Horizontal movement is almost the same as |<<| and |>>| with a different
+---   handling of |v:count| (multiplies shift effect instead of modifying that
+---   number of lines).
+---
+---@param direction string One of "left", "down", "up", "right".
+MiniMove.move_line = function(direction)
+  if H.is_disabled() then return end
+
+  -- Determine if previous action was this type of move
+  local is_moving = vim.deep_equal(H.state, H.get_move_state())
+
+  -- Allow undo of consecutive moves at once (direction doesn't matter)
+  local normal_command = (is_moving and 'undojoin |' or '') .. ' keepjumps normal! '
+  local cmd = function(x) vim.cmd(normal_command .. x) end
+
+  -- Cache useful data because it will be reset when executing commands
+  local count1 = vim.v.count1
+  local is_last_line_up = direction == 'up' and vim.fn.line('.') == vim.fn.line('$')
+
+  if direction == 'left' or direction == 'right' then
+    -- Use indentation as horizontal movement. Explicitly call `count1` because
+    -- `<`/`>` use `v:count` to define number of lines.
+    -- Go to first non-blank at the end.
+    local key = H.indent_keys[direction]
+    cmd(string.rep(key .. key, count1) .. '^')
+
+    -- Track new state to allow joining in single undo block
+    H.state = H.get_move_state()
+
+    return
+  end
+
+  -- Cut curre lint while saving caching register
+  local cache_z_reg = vim.fn.getreg('z')
+  cmd('"zdd')
+
+  -- Move cursor
+  local paste_key = direction == 'up' and 'P' or 'p'
+  local n = count1 - ((paste_key == 'p' or is_last_line_up) and 1 or 0)
+  if n > 0 then cmd(n .. H.move_keys[direction]) end
+
+  -- Paste
+  cmd('"z' .. paste_key)
+
+  -- Reindent and put cursor on first non-blank
+  if vim.o.equalprg == '' then cmd('==^') end
+
+  -- Restore intermediate values
+  vim.fn.setreg('z', cache_z_reg)
+
+  -- Track new state to allow joining in single undo block
+  H.state = H.get_move_state()
+end
+
+-- Helper data ================================================================
+-- Module default config
+H.default_config = MiniMove.config
+
+H.move_keys = { left = 'h', down = 'j', up = 'k', right = 'l' }
+H.indent_keys = { left = '<', right = '>' }
+
+-- Moving state used to decide when to start new undo block ...
+H.state = {
+  -- ... on buffer change
+  buf_id = nil,
+  -- ... on text change
+  changedtick = nil,
+  -- ... on cursor move
+  cursor = nil,
+  -- ... on mode change
+  mode = nil,
+}
+
+H.curswant = nil
+
+-- Helper functionality =======================================================
+-- Settings -------------------------------------------------------------------
+H.setup_config = function(config)
+  -- General idea: if some table elements are not present in user-supplied
+  -- `config`, take them from default config
+  vim.validate({ config = { config, 'table', true } })
+  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+
+  vim.validate({
+    mappings = { config.mappings, 'table' },
+  })
+
+  vim.validate({
+    ['mappings.left'] = { config.mappings.left, 'string' },
+    ['mappings.down'] = { config.mappings.down, 'string' },
+    ['mappings.up'] = { config.mappings.up, 'string' },
+    ['mappings.right'] = { config.mappings.right, 'string' },
+
+    ['mappings.line_down'] = { config.mappings.line_down, 'string' },
+    ['mappings.line_up'] = { config.mappings.line_up, 'string' },
+  })
+
+  return config
+end
+
+--stylua: ignore
+H.apply_config = function(config)
+  MiniMove.config = config
+
+  -- Make mappings
+  local maps = config.mappings
+
+  H.map('x', maps.left,  [[<Cmd>lua MiniMove.move_selection('left')<CR>]],  { desc = 'Move left' })
+  H.map('x', maps.right, [[<Cmd>lua MiniMove.move_selection('right')<CR>]], { desc = 'Move right' })
+  H.map('x', maps.down,  [[<Cmd>lua MiniMove.move_selection('down')<CR>]],  { desc = 'Move down' })
+  H.map('x', maps.up,    [[<Cmd>lua MiniMove.move_selection('up')<CR>]],    { desc = 'Move up' })
+
+  H.map('n', maps.line_left,  [[<Cmd>lua MiniMove.move_line('left')<CR>]],  { desc = 'Move line left' })
+  H.map('n', maps.line_right, [[<Cmd>lua MiniMove.move_line('right')<CR>]], { desc = 'Move line right' })
+  H.map('n', maps.line_down,  [[<Cmd>lua MiniMove.move_line('down')<CR>]],  { desc = 'Move line down' })
+  H.map('n', maps.line_up,    [[<Cmd>lua MiniMove.move_line('up')<CR>]],    { desc = 'Move line up' })
+end
+
+H.is_disabled = function() return vim.g.minimove_disable == true or vim.b.minimove_disable == true end
+
+H.get_config =
+  function(config) return vim.tbl_deep_extend('force', MiniMove.config, vim.b.minimove_config or {}, config or {}) end
+
+-- Utilities ------------------------------------------------------------------
+H.map = function(mode, key, rhs, opts)
+  if key == '' then return end
+
+  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
+
+  -- Use mapping description only in Neovim>=0.7
+  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
+
+  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+end
+
+H.get_move_state = function()
+  return {
+    buf_id = vim.api.nvim_get_current_buf(),
+    changedtick = vim.b.changedtick,
+    cursor = vim.api.nvim_win_get_cursor(0),
+    mode = vim.fn.mode(),
+  }
+end
+
+H.get_curswant = function() return vim.fn.winsaveview().curswant end
+H.set_curswant = function(x)
+  if x == nil then return end
+  vim.fn.winrestview({ curswant = x })
+end
+
+return MiniMove

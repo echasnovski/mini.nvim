@@ -70,6 +70,7 @@ Here are code snippets for some common installation methods:
 | mini.jump2d      | Jump within visible lines                   | [README](readmes/mini-jump2d.md)      | [Help file](doc/mini-jump2d.txt)      |
 | mini.map         | Window with buffer text overview            | [README](readmes/mini-map.md)         | [Help file](doc/mini-map.txt)         |
 | mini.misc        | Miscellaneous functions                     | [README](readmes/mini-misc.md)        | [Help file](doc/mini-misc.txt)        |
+| mini.move        | Move any selection in any direction         | [README](readmes/mini-move.md)        | [Help file](doc/mini-move.txt)        |
 | mini.pairs       | Autopairs                                   | [README](readmes/mini-pairs.md)       | [Help file](doc/mini-pairs.txt)       |
 | mini.sessions    | Session management                          | [README](readmes/mini-sessions.md)    | [Help file](doc/mini-sessions.txt)    |
 | mini.starter     | Start screen                                | [README](readmes/mini-starter.md)     | [Help file](doc/mini-starter.txt)     |
@@ -225,6 +226,15 @@ For video demo and quick overview see its [README](readmes/mini-map.md). For mor
 Miscellaneous useful functions.
 
 For video demo and quick overview see its [README](readmes/mini-misc.md). For more details see its [help file](doc/mini-misc.txt).
+
+---
+
+<a name='mini.move'></a>
+### mini.move
+
+Move any selection in any direction.
+
+For video demo and quick overview see its [README](readmes/mini-move.md). For more details see its [help file](doc/mini-move.txt).
 
 ---
 

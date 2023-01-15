@@ -18,6 +18,7 @@ local modules = {
   'jump2d',
   'map',
   'misc',
+  'move',
   'pairs',
   'sessions',
   'starter',

@@ -1,0 +1,160 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                     *mini.move*
+                                                                      *MiniMove*
+Move any selection in any direction
+
+Features:
+- Works in two modes:
+    - Visual mode. Select text (charwise with |v|, linewise with |V|, and
+      blockwise with |CTRL-V|) and press customizable mapping to move in
+      all four directions (left, right, down, up). It keeps Visual mode.
+    - Normal mode. Press customizable mapping to move current line in all
+      four directions (left, right, down, up).
+    - Vertical linewise movement gets reindented with |=|.
+      Horizontal linewise movement is same as indent with |>| and dedent with |<|.
+- Provides both mappings and Lua functions for motions. See
+  |MiniMove.move_selection()| and |MiniMove.move_line()|.
+- Respects |v:count|. Movement mappings can be preceded by a number which
+  multiplies command effect.
+- All consecutive moves (regardless of direction) can be undone by a single |u|.
+- Respects preferred column for vertical movement. It will vertically move
+  selection as how cursor is moving (not strictly vertically if target
+  column is not present in target line).
+
+Notes:
+- Doesn't allow moving selection outside of current lines (by design).
+
+# Setup ~
+
+This module needs a setup with `require('mini.move').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniMove`
+which you can use for scripting or manually (with `:lua MiniMove.*`).
+
+See |MiniMove.config| for available config settings.
+
+You can override runtime config settings (like `config.modifiers`) locally
+to buffer inside `vim.b.minimove_config` which should have same structure
+as `MiniMove.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons ~
+
+- 'matze/vim-move':
+    - Doesn't support vertical movement of charwise and blockwise selections.
+      While 'mini.move' does.
+    - Doesn't support horizontal movement of current line in favor of
+      horizontal movement of current character. While 'mini.move' supports
+      horizontal movement of current line and doesn't support such movement
+      of current character.
+    - Has extra functionality for certain moves (like move by half page).
+      While 'mini.move' does not (by design).
+- 'booperlv/nvim-gomove':
+    - Doesn't support movement in charwise visual selection.
+      While 'mini.move' does.
+    - Has extra functionality beyond moving text, like duplication.
+      While 'mini.move' concentrates only on moving functionality.
+
+# Disabling~
+
+To disable, set `g:minimove_disable` (globally) or `b:minimove_disable`
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+------------------------------------------------------------------------------
+                                                              *MiniMove.setup()*
+                           `MiniMove.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniMove.config|.
+
+Usage~
+`require('mini.move').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                               *MiniMove.config*
+                               `MiniMove.config`
+Module config
+
+Default values:
+>
+  MiniMove.config = {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    mappings = {
+      -- Move visual selection in Visual mode. Defaults are Alt (Meta) + hjkl.
+      left = '<M-h>',
+      right = '<M-l>',
+      down = '<M-j>',
+      up = '<M-k>',
+
+      -- Move current line in Normal mode
+      line_left = '<M-h>',
+      line_right = '<M-l>',
+      line_down = '<M-j>',
+      line_up = '<M-k>',
+    },
+  }
+<
+# Mappings ~
+
+Other possible choices of mappings:
+
+- `HJKL` for moving visual selection (overrides |H|, |L|, |v_J| in Visual mode): >
+  require('mini.move').setup({
+    mappings = {
+      left  = 'H',
+      right = 'L',
+      down  = 'J',
+      up    = 'K',
+    }
+  })
+
+- Shift + arrows: >
+  require('mini.move').setup({
+    mappings = {
+      left  = '<S-left>',
+      right = '<S-right>',
+      down  = '<S-down>',
+      up    = '<S-up>',
+
+      line_left  = '<S-left>',
+      line_right = '<S-right>',
+      line_down  = '<S-down>',
+      line_up    = '<S-up>',
+    }
+  })
+
+------------------------------------------------------------------------------
+                                                     *MiniMove.move_selection()*
+                     `MiniMove.move_selection`({direction})
+Move visually selected region in any direction within present lines
+
+Main function powering visual selection move in Visual mode.
+
+Notes:
+- Vertical movement in linewise mode is followed up by reindent with |v_=|.
+- Horizontal movement in linewise mode is same as |v_<| and |v_>|.
+
+Parameters~
+{direction} `(string)` One of "left", "down", "up", "right".
+
+------------------------------------------------------------------------------
+                                                          *MiniMove.move_line()*
+                       `MiniMove.move_line`({direction})
+Move current line in any direction
+
+Main function powering current line move in Normal mode.
+
+Notes:
+- Vertical movement is followed up by reindent with |v_=|.
+- Horizontal movement is almost the same as |<<| and |>>| with a different
+  handling of |v:count| (multiplies shift effect instead of modifying that
+  number of lines).
+
+Parameters~
+{direction} `(string)` One of "left", "down", "up", "right".
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

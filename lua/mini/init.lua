@@ -28,8 +28,9 @@
 ---   Visualize and operate on indent scope.....................|mini.indentscope|
 ---   Jump forward/backward to a single character......................|mini.jump|
 ---   Jump within visible lines......................................|mini.jump2d|
----   Window with buffer text overview.................................|mini.misc|
+---   Window with buffer text overview..................................|mini.map|
 ---   Miscellaneous functions..........................................|mini.misc|
+---   Move any selection in any direction..............................|mini.move|
 ---   Autopairs.......................................................|mini.pairs|
 ---   Session management...........................................|mini.sessions|
 ---   Start screen..................................................|mini.starter|
@@ -140,6 +141,9 @@
 --- - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
 ---   and `put_text()` which print Lua objects to command line and current
 ---   buffer respectively.
+--- - |MiniMove| - move any selection in any direction. Supports any Visual
+---   mode (charwise, linewise, blockwise) and Normal mode (current line) for
+---   all four directions (left, right, down, up). Respects `count` and undo.
 --- - |MiniPairs| - autopairs plugin which has minimal defaults and
 ---   functionality to do per-key expression mappings.
 --- - |MiniSessions| - session management (read, write, delete) which works
