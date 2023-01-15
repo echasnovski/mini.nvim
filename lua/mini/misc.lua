@@ -409,6 +409,100 @@ MiniMisc.zoom = function(buf_id, config)
   end
 end
 
+--- Restore the cursor on file reopen
+---
+--- What it does:
+--- - When reopening a file, this will make sure the cursor is placed back to
+---   the position where you left before. This implements `:help restore-cursor`
+---   in a nicer way.
+---
+--- If you want to lazy load this use the |BufReadPre| event.
+---
+---@param opts table|nil Options for |MiniMisc.restore_cursor|. Possible fields:
+---   - <ignore_buftype> - (table) Define buffer types to be ignored.
+---     Default: { "quickfix", "nofile", "help" }
+---   - <ignore_filetype> - (table) Define file types to be ignored.
+---     Default: { "gitcommit", "gitrebase" }
+---   - <center> - (boolean) Center the window after we restored the cursor.
+---     Default: true
+---
+---@usage >
+---   require('mini.misc').setup_restore_cursor()
+MiniMisc.setup_restore_cursor = function(opts)
+  opts = opts or {}
+
+  opts.ignore_buftype = opts.ignore_buftype or { "quickfix", "nofile", "help" }
+  if not H.is_array_of(opts.ignore_buftype, H.is_string) then
+    H.error('In `setup_restore_cursor()` `opts.ignore_buftype` should be an array of strings.')
+  end
+
+  opts.ignore_filetype = opts.ignore_filetype or { "gitcommit", "gitrebase" }
+  if not H.is_array_of(opts.ignore_filetype, H.is_string) then
+    H.error('In `setup_restore_cursor()` `opts.ignore_filetype` should be an array of strings.')
+  end
+
+  if opts.center == nil then
+    opts.center = true
+  end
+  if not H.is_boolean(opts.center) then
+    H.error('In `setup_restore_cursor()` `opts.center` should be a boolean.')
+  end
+
+  local au_command = string.format(
+    [[augroup MiniMiscRestoreCursor
+      au!
+      au BufReadPre * au FileType <buffer> ++once lua require('mini.misc').restore_cursor(%s)
+    augroup END]],
+    vim.inspect(opts, { newline = ' ', indent = '' }))
+  vim.api.nvim_exec(au_command, false)
+end
+
+--- Restore cursor when reopening a file
+MiniMisc.restore_cursor = function(opts)
+  opts = opts or {}
+  if opts.center == nil then
+    opts.center = true
+  end
+
+  -- Check if the buffer should be ignored
+  opts.ignore_buftype = opts.ignore_buftype or {}
+  if vim.tbl_contains(opts.ignore_buftype, vim.bo.buftype) then
+    return
+  end
+
+  -- Check if the filetype should be ignored
+  opts.ignore_filetype = opts.ignore_filetype or {}
+  if vim.tbl_contains(opts.ignore_filetype, vim.bo.filetype) then
+    return
+  end
+
+  -- If a line has already been specified on the command line, we are done
+  --   nvim file +num
+  if vim.fn.line('.') > 1 then
+    return
+  end
+
+  local last_line = vim.fn.line([['"]])
+  local buf_last_line = vim.fn.line('$')
+
+  if last_line <= 1 and last_line >= buf_last_line then
+    return
+  end
+
+  -- Restore cursor
+  vim.api.nvim_exec([[normal! g`"]], false)
+
+  -- Open fold
+  if vim.fn.foldclosed('.') ~= -1 then
+    vim.api.nvim_exec([[normal! zv]], false)
+  end
+
+  -- Center window
+  if opts.center then
+    vim.api.nvim_exec([[normal! zz]], false)
+  end
+end
+
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniMisc.config
@@ -464,5 +558,7 @@ end
 H.is_number = function(x) return type(x) == 'number' end
 
 H.is_string = function(x) return type(x) == 'string' end
+
+H.is_boolean = function(x) return type(x) == 'boolean' end
 
 return MiniMisc
