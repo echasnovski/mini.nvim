@@ -32,7 +32,7 @@
 ---
 --- See |MiniMove.config| for available config settings.
 ---
---- You can override runtime config settings (like `config.modifiers`) locally
+--- You can override runtime config settings (but not `config.mappings`) locally
 --- to buffer inside `vim.b.minimove_config` which should have same structure
 --- as `MiniMove.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
