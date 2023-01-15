@@ -356,6 +356,8 @@ H.setup_config = function(config)
     ['mappings.up'] = { config.mappings.up, 'string' },
     ['mappings.right'] = { config.mappings.right, 'string' },
 
+    ['mappings.line_left'] = { config.mappings.line_left, 'string' },
+    ['mappings.line_right'] = { config.mappings.line_right, 'string' },
     ['mappings.line_down'] = { config.mappings.line_down, 'string' },
     ['mappings.line_up'] = { config.mappings.line_up, 'string' },
   })
