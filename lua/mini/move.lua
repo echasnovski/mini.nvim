@@ -190,7 +190,7 @@ MiniMove.move_selection = function(direction, opts)
   if not is_moving then H.curswant = nil end
 
   -- Allow undo of consecutive moves at once (direction doesn't matter)
-  local normal_command = (is_moving and 'undojoin |' or '') .. ' keepjumps normal! '
+  local normal_command = (is_moving and 'undojoin | ' or '') .. 'silent keepjumps normal! '
   local cmd = function(x) vim.cmd(normal_command .. x) end
 
   -- Treat horizontal linewise movement specially
@@ -309,7 +309,7 @@ MiniMove.move_line = function(direction, opts)
   local is_moving = vim.deep_equal(H.state, H.get_move_state())
 
   -- Allow undo of consecutive moves at once (direction doesn't matter)
-  local normal_command = (is_moving and 'undojoin |' or '') .. ' keepjumps normal! '
+  local normal_command = (is_moving and 'undojoin | ' or '') .. 'silent keepjumps normal! '
   local cmd = function(x) vim.cmd(normal_command .. x) end
 
   -- Cache useful data because it will be reset when executing commands

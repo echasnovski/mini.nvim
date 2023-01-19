@@ -770,6 +770,37 @@ T['move_selection()']['works with `virtualedit=all`'] = function()
   validate_state({ 'ab ', '   X' }, { { 2, 4 }, { 2, 4 } })
 end
 
+T['move_selection()']['works silently'] = function()
+  -- Horizontal movement should not add "x lines >ed y times" message
+  set_lines({ 'aa', 'bb', 'cc' })
+  set_cursor(1, 0)
+  type_keys('V2j')
+  validate_state({ 'aa', 'bb', 'cc' }, { { 1, 1 }, { 3, 1 } })
+
+  child.cmd('messages clear')
+  move('right')
+  validate_state({ '\taa', '\tbb', '\tcc' }, { { 1, 1 }, { 3, 2 } })
+  eq(child.cmd_capture('messages'), '')
+
+  move('left')
+  validate_state({ 'aa', 'bb', 'cc' }, { { 1, 1 }, { 3, 1 } })
+  eq(child.cmd_capture('messages'), '')
+
+  child.ensure_normal_mode()
+  child.cmd('messages clear')
+
+  -- Reindent when moving vertically linewise should not add "x lines to
+  -- indent" messages
+  set_lines({ 'aa', 'bb', 'cc', '\tdd' })
+  set_cursor(1, 0)
+  type_keys('V2j')
+  validate_state({ 'aa', 'bb', 'cc', '\tdd' }, { { 1, 1 }, { 3, 1 } })
+
+  move('down')
+  validate_state({ '\tdd', '\taa', '\tbb', '\tcc' }, { { 2, 1 }, { 4, 2 } })
+  eq(child.cmd_capture('messages'), '')
+end
+
 T['move_selection()']['undos all movements at once'] = function()
   set_lines({ 'aXbc', 'defg' })
   set_cursor(1, 1)
@@ -1009,6 +1040,38 @@ T['move_line()']['has no side effects'] = function()
 
   -- Check
   eq(child.fn.getreg('z'), 'a')
+end
+
+T['move_line()']['works silently'] = function()
+  -- Although at the moment single line moves don't produce messages, test it
+  -- to align with 'move_selection()'
+
+  -- Horizontal movement should not add "x lines >ed y times" message
+  set_lines({ 'aa' })
+  set_cursor(1, 0)
+  validate_line_state({ 'aa' }, { 1, 0 })
+
+  child.cmd('messages clear')
+  move_line('right')
+  validate_line_state({ '\taa' }, { 1, 1 })
+  eq(child.cmd_capture('messages'), '')
+
+  move_line('left')
+  validate_line_state({ 'aa' }, { 1, 0 })
+  eq(child.cmd_capture('messages'), '')
+
+  child.ensure_normal_mode()
+
+  -- Reindent when moving vertically linewise should not add "x lines to
+  -- indent" messages
+  child.cmd('messages clear')
+  set_lines({ 'aa', '\tdd' })
+  set_cursor(1, 0)
+  validate_line_state({ 'aa', '\tdd' }, { 1, 0 })
+
+  move_line('down')
+  validate_line_state({ '\tdd', '\taa' }, { 2, 1 })
+  eq(child.cmd_capture('messages'), '')
 end
 
 T['move_line()']['undos all movements at once'] = function()
