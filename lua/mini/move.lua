@@ -65,6 +65,12 @@
 ---@tag mini.move
 ---@tag MiniMove
 
+---@alias __move_direction string One of "left", "down", "up", "right".
+---@alias __move_opts table Options. Same structure as `options` in |MiniMove.config|
+---   (with its values as defaults) plus these allowed extra fields:
+---   - <n_times> (number) - number of times to try to make a move.
+---     Default: |v:count1|.
+
 ---@diagnostic disable:undefined-field
 
 -- Module definition ==========================================================
@@ -134,6 +140,12 @@ MiniMove.config = {
     line_down = '<M-j>',
     line_up = '<M-k>',
   },
+
+  -- Options which control moving behavior
+  options = {
+    -- Automatically reindent selection during linewise vertical move
+    reindent_linewise = true,
+  },
 }
 --minidoc_afterlines_end
 
@@ -146,9 +158,12 @@ MiniMove.config = {
 --- - Vertical movement in linewise mode is followed up by reindent with |v_=|.
 --- - Horizontal movement in linewise mode is same as |v_<| and |v_>|.
 ---
----@param direction string One of "left", "down", "up", "right".
-MiniMove.move_selection = function(direction)
+---@param direction __move_direction
+---@param opts __move_opts
+MiniMove.move_selection = function(direction, opts)
   if H.is_disabled() then return end
+
+  opts = vim.tbl_deep_extend('force', H.get_config().options, opts or {})
 
   -- This could have been a one-line expression mappings, but there are issues:
   -- - Initial yanking modifies some register. Not critical, but also not good.
@@ -166,7 +181,7 @@ MiniMove.move_selection = function(direction)
   local is_linewise = cur_mode == 'V'
 
   -- Cache useful data because it will be reset when executing commands
-  local count1 = vim.v.count1
+  local n_times = opts.n_times or vim.v.count1
   local ref_curpos, ref_last_col = vim.fn.getcurpos(), vim.fn.col('$')
   local is_cursor_on_selection_start = vim.fn.line('.') < vim.fn.line('v')
 
@@ -181,7 +196,7 @@ MiniMove.move_selection = function(direction)
   -- Treat horizontal linewise movement specially
   if is_linewise and dir_type == 'hori' then
     -- Use indentation as horizontal movement for linewise selection
-    cmd(count1 .. H.indent_keys[direction] .. 'gv')
+    cmd(n_times .. H.indent_keys[direction] .. 'gv')
 
     -- Make cursor move along selection
     H.correct_cursor_col(ref_curpos, ref_last_col)
@@ -228,7 +243,7 @@ MiniMove.move_selection = function(direction)
   if dir_type == 'vert' then H.set_curswant(H.curswant) end
 
   -- Possibly reduce number of moves by one to not overshoot move
-  local n = count1 - ((paste_key == 'p' or is_edge_selection) and 1 or 0)
+  local n = n_times - ((paste_key == 'p' or is_edge_selection) and 1 or 0)
 
   -- Don't allow movement past last line of block selection (any part)
   if cur_mode == '\22' and direction == 'down' and vim.fn.line('$') == vim.fn.line("'>") then n = 0 end
@@ -256,7 +271,7 @@ MiniMove.move_selection = function(direction)
     -- NOTE: this sometimes doesn't work well with folds (and probably
     -- `foldmethod=indent`) and linewise mode because it recomputes folds after
     -- that and the whole "move past fold" doesn't work.
-    if dir_type == 'vert' and vim.o.equalprg == '' then cmd('=gv') end
+    if opts.reindent_linewise and dir_type == 'vert' and vim.o.equalprg == '' then cmd('=gv') end
 
     -- Move cursor along the selection. NOTE: do this *after* reindent to
     -- account for its effect.
@@ -283,9 +298,12 @@ end
 ---   handling of |v:count| (multiplies shift effect instead of modifying that
 ---   number of lines).
 ---
----@param direction string One of "left", "down", "up", "right".
-MiniMove.move_line = function(direction)
+---@param direction __move_direction
+---@param opts __move_opts
+MiniMove.move_line = function(direction, opts)
   if H.is_disabled() then return end
+
+  opts = vim.tbl_deep_extend('force', H.get_config().options, opts or {})
 
   -- Determine if previous action was this type of move
   local is_moving = vim.deep_equal(H.state, H.get_move_state())
@@ -295,7 +313,7 @@ MiniMove.move_line = function(direction)
   local cmd = function(x) vim.cmd(normal_command .. x) end
 
   -- Cache useful data because it will be reset when executing commands
-  local count1 = vim.v.count1
+  local n_times = opts.n_times or vim.v.count1
   local is_last_line_up = direction == 'up' and vim.fn.line('.') == vim.fn.line('$')
   local ref_curpos, ref_last_col = vim.fn.getcurpos(), vim.fn.col('$')
 
@@ -304,7 +322,7 @@ MiniMove.move_line = function(direction)
     -- `<`/`>` use `v:count` to define number of lines.
     -- Go to first non-blank at the end.
     local key = H.indent_keys[direction]
-    cmd(string.rep(key .. key, count1))
+    cmd(string.rep(key .. key, n_times))
 
     -- Make cursor move along selection
     H.correct_cursor_col(ref_curpos, ref_last_col)
@@ -321,14 +339,14 @@ MiniMove.move_line = function(direction)
 
   -- Move cursor
   local paste_key = direction == 'up' and 'P' or 'p'
-  local n = count1 - ((paste_key == 'p' or is_last_line_up) and 1 or 0)
+  local n = n_times - ((paste_key == 'p' or is_last_line_up) and 1 or 0)
   if n > 0 then cmd(n .. H.move_keys[direction]) end
 
   -- Paste
   cmd('"z' .. paste_key)
 
   -- Reindent and put cursor on first non-blank
-  if vim.o.equalprg == '' then cmd('==') end
+  if opts.reindent_linewise and vim.o.equalprg == '' then cmd('==') end
 
   -- Move cursor along the selection. NOTE: do this *after* reindent to
   -- account for its effect.
@@ -372,6 +390,7 @@ H.setup_config = function(config)
 
   vim.validate({
     mappings = { config.mappings, 'table' },
+    options = { config.options, 'table' },
   })
 
   vim.validate({
@@ -384,6 +403,8 @@ H.setup_config = function(config)
     ['mappings.line_right'] = { config.mappings.line_right, 'string' },
     ['mappings.line_down'] = { config.mappings.line_down, 'string' },
     ['mappings.line_up'] = { config.mappings.line_up, 'string' },
+
+    ['options.reindent_linewise'] = { config.options.reindent_linewise, 'boolean' },
   })
 
   return config

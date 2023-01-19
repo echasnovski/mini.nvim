@@ -97,6 +97,12 @@ Default values:
       line_down = '<M-j>',
       line_up = '<M-k>',
     },
+
+    -- Options which control moving behavior
+    options = {
+      -- Automatically reindent selection during linewise vertical move
+      reindent_linewise = true,
+    },
   }
 <
 # Mappings ~
@@ -130,7 +136,7 @@ Other possible choices of mappings:
 
 ------------------------------------------------------------------------------
                                                      *MiniMove.move_selection()*
-                     `MiniMove.move_selection`({direction})
+                 `MiniMove.move_selection`({direction}, {opts})
 Move visually selected region in any direction within present lines
 
 Main function powering visual selection move in Visual mode.
@@ -141,10 +147,14 @@ Notes:
 
 Parameters~
 {direction} `(string)` One of "left", "down", "up", "right".
+{opts} `(table)` Options. Same structure as `options` in |MiniMove.config|
+  (with its values as defaults) plus these allowed extra fields:
+  - <n_times> (number) - number of times to try to make a move.
+    Default: |v:count1|.
 
 ------------------------------------------------------------------------------
                                                           *MiniMove.move_line()*
-                       `MiniMove.move_line`({direction})
+                   `MiniMove.move_line`({direction}, {opts})
 Move current line in any direction
 
 Main function powering current line move in Normal mode.
@@ -157,6 +167,10 @@ Notes:
 
 Parameters~
 {direction} `(string)` One of "left", "down", "up", "right".
+{opts} `(table)` Options. Same structure as `options` in |MiniMove.config|
+  (with its values as defaults) plus these allowed extra fields:
+  - <n_times> (number) - number of times to try to make a move.
+    Default: |v:count1|.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

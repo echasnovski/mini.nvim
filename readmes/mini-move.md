@@ -22,7 +22,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://user-images.githubusercontent.com/24854248/212487956-5c25df54-f754-40b8-84a1-1a9b15ab03d3.mp4
+https://user-images.githubusercontent.com/24854248/213466308-2e732d83-7c49-452d-8974-6b18b38bf89f.mp4
 
 ## Features
 
@@ -133,6 +133,12 @@ Here are code snippets for some common installation methods (use only one):
     line_right = '<M-l>',
     line_down = '<M-j>',
     line_up = '<M-k>',
+  },
+
+  -- Options which control moving behavior
+  options = {
+    -- Automatically reindent selection during linewise vertical move
+    reindent_linewise = true,
   },
 }
 ```

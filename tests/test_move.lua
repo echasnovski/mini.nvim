@@ -64,6 +64,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.line_right', '<M-l>')
   expect_config('mappings.line_down', '<M-j>')
   expect_config('mappings.line_up', '<M-k>')
+  expect_config('options.reindent_linewise', true)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -88,6 +89,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { line_right = 1 } }, 'mappings.line_right', 'string')
   expect_config_error({ mappings = { line_down = 1 } }, 'mappings.line_down', 'string')
   expect_config_error({ mappings = { line_up = 1 } }, 'mappings.line_up', 'string')
+  expect_config_error({ options = 'a' }, 'options', 'table')
+  expect_config_error({ options = { reindent_linewise = 1 } }, 'options.reindent_linewise', 'boolean')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
@@ -104,7 +107,7 @@ end
 
 T['move_selection()'] = new_set()
 
-local move = function(direction) child.lua('MiniMove.move_selection(...)', { direction }) end
+local move = function(direction, opts) child.lua('MiniMove.move_selection(...)', { direction, opts }) end
 
 T['move_selection()']['works charwise horizontally'] = function()
   -- Test for this many moves because there can be special cases when movement
@@ -139,6 +142,18 @@ T['move_selection()']['works charwise horizontally'] = function()
   validate_state1d('XXabcd', { 1, 2 })
 end
 
+T['move_selection()']['respects `opts.n_times` charwise horizontally'] = function()
+  set_lines({ 'XXabcd' })
+  set_cursor(1, 0)
+  type_keys('vl')
+  validate_state1d('XXabcd', { 1, 2 })
+
+  move('right', { n_times = 3 })
+  validate_state1d('abcXXd', { 4, 5 })
+  move('left', { n_times = 2 })
+  validate_state1d('aXXbcd', { 2, 3 })
+end
+
 T['move_selection()']['works charwise vertically'] = function()
   set_lines({ '1XXx', '2a', '3b', '4c', '5d' })
   set_cursor(1, 1)
@@ -168,6 +183,18 @@ T['move_selection()']['works charwise vertically'] = function()
   -- Should allow to try to move past first line without error
   move('up')
   validate_state({ '1XXx', '2a', '3b', '4c', '5d' }, { { 1, 2 }, { 1, 3 } })
+end
+
+T['move_selection()']['respects `opts.n_times` charwise vertically'] = function()
+  set_lines({ '1XXx', '2a', '3b', '4c', '5d' })
+  set_cursor(1, 1)
+  type_keys('vl')
+  validate_state({ '1XXx', '2a', '3b', '4c', '5d' }, { { 1, 2 }, { 1, 3 } })
+
+  move('down', { n_times = 3 })
+  validate_state({ '1x', '2a', '3b', '4XXc', '5d' }, { { 4, 2 }, { 4, 3 } })
+  move('up', { n_times = 2 })
+  validate_state({ '1x', '2XXa', '3b', '4c', '5d' }, { { 2, 2 }, { 2, 3 } })
 end
 
 T['move_selection()']['works with folds charwise'] = function()
@@ -291,6 +318,18 @@ T['move_selection()']['works blockwise horizontally'] = function()
   validate_state({ 'XXabcd', 'XXabcd' }, { { 1, 1 }, { 2, 2 } })
 end
 
+T['move_selection()']['respects `opts.n_times` blockwise horizontally'] = function()
+  set_lines({ 'XXabcd', 'XXabcd' })
+  set_cursor(1, 0)
+  type_keys('<C-v>', 'lj')
+  validate_state({ 'XXabcd', 'XXabcd' }, { { 1, 1 }, { 2, 2 } })
+
+  move('right', { n_times = 3 })
+  validate_state({ 'abcXXd', 'abcXXd' }, { { 1, 4 }, { 2, 5 } })
+  move('left', { n_times = 2 })
+  validate_state({ 'aXXbcd', 'aXXbcd' }, { { 1, 2 }, { 2, 3 } })
+end
+
 T['move_selection()']['works blockwise vertically'] = function()
   set_lines({ '1XXa', '2YYb', '3c', '4d', '5e' })
   set_cursor(1, 1)
@@ -317,6 +356,18 @@ T['move_selection()']['works blockwise vertically'] = function()
   -- Should allow to try to move past first line without error
   move('up')
   validate_state({ '1XXa', '2YYb', '3c', '4d', '5e' }, { { 1, 2 }, { 2, 3 } })
+end
+
+T['move_selection()']['respects `opts.n_times` blockwise vertically'] = function()
+  set_lines({ '1XXa', '2YYb', '3c', '4d', '5e' })
+  set_cursor(1, 1)
+  type_keys('<C-v>', 'lj')
+  validate_state({ '1XXa', '2YYb', '3c', '4d', '5e' }, { { 1, 2 }, { 2, 3 } })
+
+  move('down', { n_times = 3 })
+  validate_state({ '1a', '2b', '3c', '4XXd', '5YYe' }, { { 4, 2 }, { 5, 3 } })
+  move('up', { n_times = 2 })
+  validate_state({ '1a', '2XXb', '3YYc', '4d', '5e' }, { { 2, 2 }, { 3, 3 } })
 end
 
 T['move_selection()']['works with folds blockwise'] = function()
@@ -381,6 +432,18 @@ T['move_selection()']['works linewise horizontally'] = function()
   -- Should allow to try impossible dedent without error
   move('left')
   validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 1 } })
+end
+
+T['move_selection()']['respects `opts.n_times` linewise horizontally'] = function()
+  set_lines({ 'aa', '  bb' })
+  set_cursor(1, 0)
+  type_keys('Vj')
+  validate_state({ 'aa', '  bb' }, { { 1, 1 }, { 2, 1 } })
+
+  move('right', { n_times = 3 })
+  validate_state({ '\t\t\taa', '\t\t\t  bb' }, { { 1, 1 }, { 2, 4 } })
+  move('left', { n_times = 2 })
+  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 2 } })
 end
 
 T['move_selection()']['linewise horizontally moves cursor along selection in edge cases'] = function()
@@ -451,6 +514,18 @@ T['move_selection()']['works linewise vertically'] = function()
   validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 2 } })
 end
 
+T['move_selection()']['respects `opts.n_times` linewise vertically'] = function()
+  set_lines({ 'XX', 'YY', 'aa', 'bb', 'cc' })
+  set_cursor(1, 0)
+  type_keys('Vjl')
+  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 2 } })
+
+  move('down', { n_times = 3 })
+  validate_state({ 'aa', 'bb', 'cc', 'XX', 'YY' }, { { 4, 1 }, { 5, 2 } })
+  move('up', { n_times = 2 })
+  validate_state({ 'aa', 'XX', 'YY', 'bb', 'cc' }, { { 2, 1 }, { 3, 2 } })
+end
+
 T['move_selection()']['works with folds linewise'] = function()
   local setup_folds = function()
     child.ensure_normal_mode()
@@ -505,6 +580,31 @@ T['move_selection()']['reindents linewise vertically'] = function()
   validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX',   '\tYY', 'ee' }, { { 5, 1 }, { 6, 3 } })
   move('down')
   validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',     'XX',   'YY' }, { { 6, 1 }, { 7, 2 } })
+end
+
+T['move_selection()']['respects `opts.reindent_linewise`'] = function()
+  set_lines({ 'XX', '\taa' })
+  set_cursor(1, 0)
+  type_keys('V')
+  validate_state({ 'XX', '\taa' }, { { 1, 1 }, { 1, 1 } })
+
+  -- `false` as argument
+  move('down', { reindent_linewise = false })
+  validate_state({ '\taa', 'XX' }, { { 2, 1 }, { 2, 1 } })
+
+  -- `true` as argument
+  move('up')
+  validate_state({ 'XX', '\taa' }, { { 1, 1 }, { 1, 1 } })
+  move('down', { reindent_linewise = true })
+  validate_state({ '\taa', '\tXX' }, { { 2, 1 }, { 2, 2 } })
+
+  -- `false` as global
+  move('up')
+  validate_state({ 'XX', '\taa' }, { { 1, 1 }, { 1, 1 } })
+
+  child.lua('MiniMove.config.options.reindent_linewise = false')
+  move('down')
+  validate_state({ '\taa', 'XX' }, { { 2, 1 }, { 2, 1 } })
 end
 
 T['move_selection()']['linewise vertically moves cursor along selection in edge cases'] = function()
@@ -743,7 +843,7 @@ T['move_selection()']['respects `vim.{g,b}.minimove_disable`'] = new_set({
 
 T['move_line()'] = new_set()
 
-local move_line = function(direction) child.lua('MiniMove.move_line(...)', { direction }) end
+local move_line = function(direction, opts) child.lua('MiniMove.move_line(...)', { direction, opts }) end
 
 T['move_line()']['works vertically'] = function()
   set_lines({ 'XX', 'aa', 'bb', 'cc' })
@@ -770,6 +870,17 @@ T['move_line()']['works vertically'] = function()
   -- Should allow to try to move_line past first line without error
   move_line('up')
   validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
+end
+
+T['move_line()']['respects `opts.n_times` vertically'] = function()
+  set_lines({ 'XX', 'aa', 'bb', 'cc' })
+  set_cursor(1, 1)
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
+
+  move_line('down', { n_times = 3 })
+  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 1 })
+  move_line('up', { n_times = 2 })
+  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 1 })
 end
 
 T['move_line()']['works vertically with folds'] = function()
@@ -806,6 +917,51 @@ T['move_line()']['works vertically with folds'] = function()
   eq(get_fold_range(3), { 3, 5 })
 end
 
+--stylua: ignore
+T['move_line()']['reindents while moving cursor along'] = function()
+  set_lines({ 'XX', 'aa', '\tbb', '\t\tcc', '\tdd', 'ee' })
+  set_cursor(1, 1)
+  -- As `get_cursor()` treats '\t' as single character, use 1 and 2 instead of
+  -- relying on computing visible cursor position with 'shiftwidth'
+  validate_line_state({ 'XX', 'aa',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 1, 1 })
+
+  -- Should also move cursor along selection
+  move_line('down')
+  validate_line_state({ 'aa', 'XX',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 2, 1 })
+  move_line('down')
+  validate_line_state({ 'aa', '\tbb', '\tXX',   '\t\tcc', '\tdd', 'ee' }, { 3, 2 })
+  move_line('down')
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\tdd', 'ee' }, { 4, 3 })
+  move_line('down')
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX', 'ee' }, { 5, 2 })
+  move_line('down')
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',   'XX' }, { 6, 1 })
+end
+
+T['move_line()']['respects `opts.reindent_linewise`'] = function()
+  set_lines({ 'XX', '\taa' })
+  set_cursor(1, 1)
+  validate_line_state({ 'XX', '\taa' }, { 1, 1 })
+
+  -- `false` as argument
+  move_line('down', { reindent_linewise = false })
+  validate_line_state({ '\taa', 'XX' }, { 2, 1 })
+
+  -- `true` as argument
+  move_line('up')
+  validate_line_state({ 'XX', '\taa' }, { 1, 1 })
+  move_line('down', { reindent_linewise = true })
+  validate_line_state({ '\taa', '\tXX' }, { 2, 2 })
+
+  -- `false` as global
+  move_line('up')
+  validate_line_state({ 'XX', '\taa' }, { 1, 1 })
+
+  child.lua('MiniMove.config.options.reindent_linewise = false')
+  move_line('down')
+  validate_line_state({ '\taa', 'XX' }, { 2, 1 })
+end
+
 T['move_line()']['works horizontally'] = function()
   -- Should be the same as indent (`>`) and dedent (`<`)
   set_lines({ '  aa' })
@@ -829,25 +985,15 @@ T['move_line()']['works horizontally'] = function()
   validate_line_state({ 'aa' }, { 1, 0 })
 end
 
---stylua: ignore
-T['move_line()']['reindents while moving cursor along'] = function()
-  set_lines({ 'XX', 'aa', '\tbb', '\t\tcc', '\tdd', 'ee' })
-  set_cursor(1, 1)
-  -- As `get_cursor()` treats '\t' as single character, use 1 and 2 instead of
-  -- relying on computing visible cursor position with 'shiftwidth'
-  validate_line_state({ 'XX', 'aa',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 1, 1 })
+T['move_line()']['respects `opts.n_times` horizontally'] = function()
+  set_lines({ 'aa' })
+  set_cursor(1, 0)
+  validate_line_state({ 'aa' }, { 1, 0 })
 
-  -- Should also move cursor along selection
-  move_line('down')
-  validate_line_state({ 'aa', 'XX',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 2, 1 })
-  move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\tXX',   '\t\tcc', '\tdd', 'ee' }, { 3, 2 })
-  move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\tdd', 'ee' }, { 4, 3 })
-  move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX', 'ee' }, { 5, 2 })
-  move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',   'XX' }, { 6, 1 })
+  move_line('right', { n_times = 3 })
+  validate_line_state({ '\t\t\taa' }, { 1, 3 })
+  move_line('left', { n_times = 2 })
+  validate_line_state({ '\taa' }, { 1, 1 })
 end
 
 T['move_line()']['has no side effects'] = function()
