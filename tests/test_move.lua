@@ -366,13 +366,14 @@ T['move_selection()']['works linewise horizontally'] = function()
   type_keys('Vj')
   validate_state({ 'aa', '  bb' }, { { 1, 1 }, { 2, 1 } })
 
+  -- Should also move cursor along selection
   move('right')
-  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 2 } })
   move('right')
-  validate_state({ '\t\taa', '\t\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\t\taa', '\t\t  bb' }, { { 1, 1 }, { 2, 3 } })
 
   move('left')
-  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 2 } })
   move('left')
   validate_state({ 'aa', '  bb' }, { { 1, 1 }, { 2, 1 } })
   move('left')
@@ -382,31 +383,72 @@ T['move_selection()']['works linewise horizontally'] = function()
   validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 1 } })
 end
 
+T['move_selection()']['linewise horizontally moves cursor along selection in edge cases'] = function()
+  -- Empty line
+  set_lines({ 'aa', '' })
+  set_cursor(1, 0)
+  type_keys('Vj')
+  validate_state({ 'aa', '' }, { { 1, 1 }, { 2, 1 } })
+
+  move('right')
+  validate_state({ '\taa', '' }, { { 1, 1 }, { 2, 1 } })
+  move('left')
+  validate_state({ 'aa', '' }, { { 1, 1 }, { 2, 1 } })
+
+  child.ensure_normal_mode()
+
+  -- Past line end with default 'virtualedit'
+  set_lines({ 'aa', 'bb' })
+  set_cursor(1, 0)
+  type_keys('Vj$')
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 3 } })
+
+  move('right')
+  validate_state({ '\taa', '\tbb' }, { { 1, 1 }, { 2, 4 } })
+  move('left')
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 3 } })
+
+  child.ensure_normal_mode()
+
+  -- Extreme past line end with non-default 'virtualedit'
+  child.o.virtualedit = 'all'
+  set_lines({ 'aa', 'bb' })
+  set_cursor(1, 0)
+  type_keys('Vj10l')
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 3 } })
+  eq(child.fn.getcurpos(), { 0, 2, 3, 8, 11 })
+
+  move('right')
+  validate_state({ '\taa', '\tbb' }, { { 1, 1 }, { 2, 4 } })
+  eq(child.fn.getcurpos(), { 0, 2, 4, 8, 12 })
+end
+
 T['move_selection()']['works linewise vertically'] = function()
   set_lines({ 'XX', 'YY', 'aa', 'bb', 'cc' })
   set_cursor(1, 0)
-  type_keys('Vj')
-  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 1 } })
+  type_keys('Vjl')
+  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 2 } })
 
+  -- Should also preserve cursor column
   move('down')
-  validate_state({ 'aa', 'XX', 'YY', 'bb', 'cc' }, { { 2, 1 }, { 3, 1 } })
+  validate_state({ 'aa', 'XX', 'YY', 'bb', 'cc' }, { { 2, 1 }, { 3, 2 } })
   move('down')
-  validate_state({ 'aa', 'bb', 'XX', 'YY', 'cc' }, { { 3, 1 }, { 4, 1 } })
+  validate_state({ 'aa', 'bb', 'XX', 'YY', 'cc' }, { { 3, 1 }, { 4, 2 } })
   move('down')
-  validate_state({ 'aa', 'bb', 'cc', 'XX', 'YY' }, { { 4, 1 }, { 5, 1 } })
+  validate_state({ 'aa', 'bb', 'cc', 'XX', 'YY' }, { { 4, 1 }, { 5, 2 } })
   -- Should allow to try to move past last line without error
   move('down')
-  validate_state({ 'aa', 'bb', 'cc', 'XX', 'YY' }, { { 4, 1 }, { 5, 1 } })
+  validate_state({ 'aa', 'bb', 'cc', 'XX', 'YY' }, { { 4, 1 }, { 5, 2 } })
 
   move('up')
-  validate_state({ 'aa', 'bb', 'XX', 'YY', 'cc' }, { { 3, 1 }, { 4, 1 } })
+  validate_state({ 'aa', 'bb', 'XX', 'YY', 'cc' }, { { 3, 1 }, { 4, 2 } })
   move('up')
-  validate_state({ 'aa', 'XX', 'YY', 'bb', 'cc' }, { { 2, 1 }, { 3, 1 } })
+  validate_state({ 'aa', 'XX', 'YY', 'bb', 'cc' }, { { 2, 1 }, { 3, 2 } })
   move('up')
-  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 2 } })
   -- Should allow to try to move past first line without error
   move('up')
-  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ 'XX', 'YY', 'aa', 'bb', 'cc' }, { { 1, 1 }, { 2, 2 } })
 end
 
 T['move_selection()']['works with folds linewise'] = function()
@@ -449,19 +491,67 @@ end
 T['move_selection()']['reindents linewise vertically'] = function()
   set_lines({ 'XX', 'YY', 'aa', '\tbb', '\t\tcc', '\tdd', 'ee' })
   set_cursor(1, 0)
+  type_keys('Vjl')
+  validate_state({ 'XX', 'YY',   'aa',     '\tbb',   '\t\tcc', '\tdd', 'ee' }, { { 1, 1 }, { 2, 2 } })
+
+  -- Should also move cursor along selection
+  move('down')
+  validate_state({ 'aa', 'XX',   'YY',     '\tbb',   '\t\tcc', '\tdd', 'ee' }, { { 2, 1 }, { 3, 2 } })
+  move('down')
+  validate_state({ 'aa', '\tbb', '\tXX',   '\tYY',   '\t\tcc', '\tdd', 'ee' }, { { 3, 1 }, { 4, 3 } })
+  move('down')
+  validate_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\t\tYY', '\tdd', 'ee' }, { { 4, 1 }, { 5, 4 } })
+  move('down')
+  validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX',   '\tYY', 'ee' }, { { 5, 1 }, { 6, 3 } })
+  move('down')
+  validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',     'XX',   'YY' }, { { 6, 1 }, { 7, 2 } })
+end
+
+T['move_selection()']['linewise vertically moves cursor along selection in edge cases'] = function()
+  -- Empty line
+  set_lines({ 'aa', '', 'bb' })
+  set_cursor(1, 0)
   type_keys('Vj')
-  validate_state({ 'XX', 'YY',   'aa',     '\tbb',   '\t\tcc', '\tdd', 'ee' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ 'aa', '', 'bb' }, { { 1, 1 }, { 2, 1 } })
 
   move('down')
-  validate_state({ 'aa', 'XX',   'YY',     '\tbb',   '\t\tcc', '\tdd', 'ee' }, { { 2, 1 }, { 3, 1 } })
+  validate_state({ 'bb', 'aa', '' }, { { 2, 1 }, { 3, 1 } })
+
+  child.ensure_normal_mode()
+
+  -- Past line end with default 'virtualedit'
+  set_lines({ 'aa', 'bb' })
+  set_cursor(1, 0)
+  type_keys('V$')
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 1, 3 } })
+
   move('down')
-  validate_state({ 'aa', '\tbb', '\tXX',   '\tYY',   '\t\tcc', '\tdd', 'ee' }, { { 3, 1 }, { 4, 1 } })
+  validate_state({ 'bb', 'aa' }, { { 2, 1 }, { 2, 3 } })
+
+  child.ensure_normal_mode()
+
+  -- Extreme past line end non-default 'virtualedit'
+  child.o.virtualedit = 'all'
+  set_lines({ 'aa', 'bb' })
+  set_cursor(1, 0)
+  type_keys('V10l')
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 1, 3 } })
+  eq(child.fn.getcurpos(), { 0, 1, 3, 8, 11 })
+
   move('down')
-  validate_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\t\tYY', '\tdd', 'ee' }, { { 4, 1 }, { 5, 1 } })
+  validate_state({ 'bb', 'aa' }, { { 2, 1 }, { 2, 3 } })
+  eq(child.fn.getcurpos(), { 0, 2, 3, 8, 11 })
+end
+
+T['move_selection()']['linewise vertically respects cursor side of selection'] = function()
+  set_lines({ 'aa', 'bb', 'cc' })
+  set_cursor(2, 0)
+  type_keys('Vkl')
+  validate_state({ 'aa', 'bb', 'cc' }, { { 2, 1 }, { 1, 2 } })
+
+  -- It should put cursor at top line of selection, as it is initially
   move('down')
-  validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX',   '\tYY', 'ee' }, { { 5, 1 }, { 6, 1 } })
-  move('down')
-  validate_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',     'XX',   'YY' }, { { 6, 1 }, { 7, 1 } })
+  validate_state({ 'cc', 'aa', 'bb' }, { { 3, 1 }, { 2, 2 } })
 end
 
 T['move_selection()']['moves cursor respecting initial `curswant`'] = function()
@@ -660,25 +750,26 @@ T['move_line()']['works vertically'] = function()
   set_cursor(1, 1)
   validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
 
+  -- Should also preserve cursor column
   move_line('down')
-  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 0 })
+  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 1 })
   move_line('down')
-  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 0 })
+  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 1 })
   move_line('down')
-  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 0 })
+  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 1 })
   -- Should allow to try to move_line past last line without error
   move_line('down')
-  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 0 })
+  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 1 })
 
   move_line('up')
-  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 0 })
+  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 1 })
   move_line('up')
-  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 0 })
+  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 1 })
   move_line('up')
-  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 0 })
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
   -- Should allow to try to move_line past first line without error
   move_line('up')
-  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 0 })
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
 end
 
 T['move_line()']['works vertically with folds'] = function()
@@ -718,18 +809,19 @@ end
 T['move_line()']['works horizontally'] = function()
   -- Should be the same as indent (`>`) and dedent (`<`)
   set_lines({ '  aa' })
-  set_cursor(1, 0)
-  validate_line_state({ '  aa' }, { 1, 0 })
+  set_cursor(1, 1)
+  validate_line_state({ '  aa' }, { 1, 1 })
 
+  -- Should also move cursor along selection
   move_line('right')
-  validate_line_state({ '\t  aa' }, { 1, 3 })
+  validate_line_state({ '\t  aa' }, { 1, 2 })
   move_line('right')
-  validate_line_state({ '\t\t  aa' }, { 1, 4 })
+  validate_line_state({ '\t\t  aa' }, { 1, 3 })
 
   move_line('left')
-  validate_line_state({ '\t  aa' }, { 1, 3 })
+  validate_line_state({ '\t  aa' }, { 1, 2 })
   move_line('left')
-  validate_line_state({ '  aa' }, { 1, 2 })
+  validate_line_state({ '  aa' }, { 1, 1 })
   move_line('left')
   validate_line_state({ 'aa' }, { 1, 0 })
   -- Should allow to try impossible dedent without error
@@ -738,23 +830,24 @@ T['move_line()']['works horizontally'] = function()
 end
 
 --stylua: ignore
-T['move_line()']['reindents and puts cursor on first non-blank character'] = function()
+T['move_line()']['reindents while moving cursor along'] = function()
   set_lines({ 'XX', 'aa', '\tbb', '\t\tcc', '\tdd', 'ee' })
-  set_cursor(1, 0)
-  validate_line_state({ 'XX', 'aa',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 1, 0 })
-
+  set_cursor(1, 1)
   -- As `get_cursor()` treats '\t' as single character, use 1 and 2 instead of
   -- relying on computing visible cursor position with 'shiftwidth'
+  validate_line_state({ 'XX', 'aa',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 1, 1 })
+
+  -- Should also move cursor along selection
   move_line('down')
-  validate_line_state({ 'aa', 'XX',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 2, 0 })
+  validate_line_state({ 'aa', 'XX',   '\tbb',   '\t\tcc', '\tdd', 'ee' }, { 2, 1 })
   move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\tXX',   '\t\tcc', '\tdd', 'ee' }, { 3, 1 })
+  validate_line_state({ 'aa', '\tbb', '\tXX',   '\t\tcc', '\tdd', 'ee' }, { 3, 2 })
   move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\tdd', 'ee' }, { 4, 2 })
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\t\tXX', '\tdd', 'ee' }, { 4, 3 })
   move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX', 'ee' }, { 5, 1 })
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   '\tXX', 'ee' }, { 5, 2 })
   move_line('down')
-  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',   'XX' }, { 6, 0 })
+  validate_line_state({ 'aa', '\tbb', '\t\tcc', '\tdd',   'ee',   'XX' }, { 6, 1 })
 end
 
 T['move_line()']['has no side effects'] = function()
@@ -832,7 +925,7 @@ T['move_line()']['does not create unnecessary jumps'] = function()
   move_line('down')
   move_line('down')
   move_line('down')
-  validate_line_state({ 'bb', 'cc', 'dd', 'aa' }, { 4, 0 })
+  validate_line_state({ 'bb', 'cc', 'dd', 'aa' }, { 4, 1 })
 
   -- In jump list there should be only single entry
   eq(#child.fn.getjumplist()[1], 1)
@@ -913,25 +1006,25 @@ T['Mappings']['left/right']['works blockwise'] = function()
 end
 
 T['Mappings']['left/right']['works linewise'] = function()
-  set_lines({ 'aa', '  bb' })
+  set_lines({ '  aa', 'bb' })
   set_cursor(1, 0)
-  type_keys('Vj')
-  validate_state({ 'aa', '  bb' }, { { 1, 1 }, { 2, 1 } })
+  type_keys('Vjl')
+  validate_state({ '  aa', 'bb' }, { { 1, 1 }, { 2, 2 } })
 
   type_keys('<M-l>')
-  validate_state({ '\taa', '\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\t  aa', '\tbb' }, { { 1, 1 }, { 2, 3 } })
   -- Supports `v:count`
   type_keys('2<M-l>')
-  validate_state({ '\t\t\taa', '\t\t\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\t\t\t  aa', '\t\t\tbb' }, { { 1, 1 }, { 2, 5 } })
 
   type_keys('<M-h>')
-  validate_state({ '\t\taa', '\t\t  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '\t\t  aa', '\t\tbb' }, { { 1, 1 }, { 2, 4 } })
   -- Supports `v:count`
   type_keys('2<M-h>')
-  validate_state({ 'aa', '  bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ '  aa', 'bb' }, { { 1, 1 }, { 2, 2 } })
   -- Should allow overshoot without error
   type_keys('2<M-h>')
-  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 1 } })
+  validate_state({ 'aa', 'bb' }, { { 1, 1 }, { 2, 2 } })
 end
 
 T['Mappings']['down/up'] = new_set()
@@ -1016,18 +1109,18 @@ T['Mappings']['line_left/line_right'] = new_set()
 T['Mappings']['line_left/line_right']['works'] = function()
   -- Should be the same as indent (`>`) and dedent (`<`)
   set_lines({ '  aa' })
-  set_cursor(1, 0)
-  validate_line_state({ '  aa' }, { 1, 0 })
+  set_cursor(1, 1)
+  validate_line_state({ '  aa' }, { 1, 1 })
 
   type_keys('<M-l>')
-  validate_line_state({ '\t  aa' }, { 1, 3 })
+  validate_line_state({ '\t  aa' }, { 1, 2 })
   type_keys('2<M-l>')
-  validate_line_state({ '\t\t\t  aa' }, { 1, 5 })
+  validate_line_state({ '\t\t\t  aa' }, { 1, 4 })
 
   type_keys('<M-h>')
-  validate_line_state({ '\t\t  aa' }, { 1, 4 })
+  validate_line_state({ '\t\t  aa' }, { 1, 3 })
   type_keys('2<M-h>')
-  validate_line_state({ '  aa' }, { 1, 2 })
+  validate_line_state({ '  aa' }, { 1, 1 })
   -- Should allow to try impossible dedent without error
   type_keys('2<M-h>')
   validate_line_state({ 'aa' }, { 1, 0 })
@@ -1037,26 +1130,26 @@ T['Mappings']['line_down/line_up'] = new_set()
 
 T['Mappings']['line_down/line_up']['works'] = function()
   set_lines({ 'XX', 'aa', 'bb', 'cc' })
-  set_cursor(1, 0)
-  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 0 })
+  set_cursor(1, 1)
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
 
   type_keys('<M-j>')
-  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 0 })
+  validate_line_state({ 'aa', 'XX', 'bb', 'cc' }, { 2, 1 })
   -- Supports `v:count`
   type_keys('2<M-j>')
-  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 0 })
+  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 1 })
   -- Should allow overshoot without error
   type_keys('2<M-j>')
-  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 0 })
+  validate_line_state({ 'aa', 'bb', 'cc', 'XX' }, { 4, 1 })
 
   type_keys('<M-k>')
-  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 0 })
+  validate_line_state({ 'aa', 'bb', 'XX', 'cc' }, { 3, 1 })
   -- Supports `v:count`
   type_keys('2<M-k>')
-  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 0 })
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
   -- Should allow overshoot without error
   type_keys('2<M-k>')
-  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 0 })
+  validate_line_state({ 'XX', 'aa', 'bb', 'cc' }, { 1, 1 })
 end
 
 return T

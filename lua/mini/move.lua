@@ -10,8 +10,10 @@
 ---       all four directions (left, right, down, up). It keeps Visual mode.
 ---     - Normal mode. Press customizable mapping to move current line in all
 ---       four directions (left, right, down, up).
----     - Vertical linewise movement gets reindented with |=|.
----       Horizontal linewise movement is same as indent with |>| and dedent with |<|.
+---     - Special handling of linewise movement:
+---         - Vertical movement gets reindented with |=|.
+---         - Horizontal movement is improved indent/dedent with |>| / |<|.
+---         - Cursor moves along with selection.
 --- - Provides both mappings and Lua functions for motions. See
 ---   |MiniMove.move_selection()| and |MiniMove.move_line()|.
 --- - Respects |v:count|. Movement mappings can be preceded by a number which
@@ -165,6 +167,8 @@ MiniMove.move_selection = function(direction)
 
   -- Cache useful data because it will be reset when executing commands
   local count1 = vim.v.count1
+  local ref_curpos, ref_last_col = vim.fn.getcurpos(), vim.fn.col('$')
+  local is_cursor_on_selection_start = vim.fn.line('.') < vim.fn.line('v')
 
   -- Determine if previous action was this type of move
   local is_moving = vim.deep_equal(H.state, H.get_move_state())
@@ -178,6 +182,9 @@ MiniMove.move_selection = function(direction)
   if is_linewise and dir_type == 'hori' then
     -- Use indentation as horizontal movement for linewise selection
     cmd(count1 .. H.indent_keys[direction] .. 'gv')
+
+    -- Make cursor move along selection
+    H.correct_cursor_col(ref_curpos, ref_last_col)
 
     -- Track new state to allow joining in single undo block
     H.state = H.get_move_state()
@@ -243,11 +250,20 @@ MiniMove.move_selection = function(direction)
   -- but it doesn't work well with selections spanning several lines.
   cmd('`[1v')
 
-  -- Reindent linewise selection if `=` can do that.
-  -- NOTE: this sometimes doesn't work well with folds (and probably
-  -- `foldmethod=indent`) and linewise mode because it recomputes folds after
-  -- that and the whole "move past fold" doesn't work.
-  if is_linewise and dir_type == 'vert' and vim.o.equalprg == '' then cmd('=gv') end
+  -- Do extra in case of linewise selection
+  if is_linewise then
+    -- Reindent linewise selection if `=` can do that.
+    -- NOTE: this sometimes doesn't work well with folds (and probably
+    -- `foldmethod=indent`) and linewise mode because it recomputes folds after
+    -- that and the whole "move past fold" doesn't work.
+    if dir_type == 'vert' and vim.o.equalprg == '' then cmd('=gv') end
+
+    -- Move cursor along the selection. NOTE: do this *after* reindent to
+    -- account for its effect.
+    -- - Ensure that cursor is on the right side of selection
+    if is_cursor_on_selection_start then cmd('o') end
+    H.correct_cursor_col(ref_curpos, ref_last_col)
+  end
 
   -- Restore intermediate values
   vim.fn.setreg('z', cache_z_reg)
@@ -281,13 +297,17 @@ MiniMove.move_line = function(direction)
   -- Cache useful data because it will be reset when executing commands
   local count1 = vim.v.count1
   local is_last_line_up = direction == 'up' and vim.fn.line('.') == vim.fn.line('$')
+  local ref_curpos, ref_last_col = vim.fn.getcurpos(), vim.fn.col('$')
 
   if direction == 'left' or direction == 'right' then
     -- Use indentation as horizontal movement. Explicitly call `count1` because
     -- `<`/`>` use `v:count` to define number of lines.
     -- Go to first non-blank at the end.
     local key = H.indent_keys[direction]
-    cmd(string.rep(key .. key, count1) .. '^')
+    cmd(string.rep(key .. key, count1))
+
+    -- Make cursor move along selection
+    H.correct_cursor_col(ref_curpos, ref_last_col)
 
     -- Track new state to allow joining in single undo block
     H.state = H.get_move_state()
@@ -308,7 +328,11 @@ MiniMove.move_line = function(direction)
   cmd('"z' .. paste_key)
 
   -- Reindent and put cursor on first non-blank
-  if vim.o.equalprg == '' then cmd('==^') end
+  if vim.o.equalprg == '' then cmd('==') end
+
+  -- Move cursor along the selection. NOTE: do this *after* reindent to
+  -- account for its effect.
+  H.correct_cursor_col(ref_curpos, ref_last_col)
 
   -- Restore intermediate values
   vim.fn.setreg('z', cache_z_reg)
@@ -407,6 +431,15 @@ H.get_move_state = function()
     cursor = vim.api.nvim_win_get_cursor(0),
     mode = vim.fn.mode(),
   }
+end
+
+H.correct_cursor_col = function(ref_curpos, ref_last_col)
+  -- Use `ref_curpos = getcurpos()` instead of `vim.api.nvim_win_get_cursor(0)`
+  -- allows to also account for `virtualedit=all`
+
+  local col_diff = vim.fn.col('$') - ref_last_col
+  local new_col = math.max(ref_curpos[3] + col_diff, 1)
+  vim.fn.cursor({ vim.fn.line('.'), new_col, ref_curpos[4], ref_curpos[5] + col_diff })
 end
 
 H.get_curswant = function() return vim.fn.winsaveview().curswant end

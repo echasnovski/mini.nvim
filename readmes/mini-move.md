@@ -29,7 +29,10 @@ https://user-images.githubusercontent.com/24854248/212487956-5c25df54-f754-40b8-
 - Works in two modes:
     - Visual mode. Select text (charwise with `v`, linewise with `V`, and blockwise with `CTRL-V`) and press customizable mapping to move in all four directions (left, right, down, up). It keeps Visual mode.
     - Normal mode. Press customizable mapping to move current line in all four directions (left, right, down, up).
-    - Vertical linewise movement gets reindented with `=`. Horizontal linewise movement is same as indent with `>` and dedent with `<`.
+    - Special handling of linewise movement:
+        - Vertical movement gets reindented with `=`.
+        - Horizontal movement is improved indent/dedent with `>` / `<`.
+        - Cursor moves along with selection.
 - Provides both mappings and Lua functions for motions. See `:h MiniMove.move_selection()` and `:h MiniMove.move_line()`.
 - Respects `v:count`. Movement mappings can be preceded by a number which multiplies command effect.
 - All consecutive moves (regardless of direction) can be undone by a single `u`.

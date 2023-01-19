@@ -11,8 +11,10 @@ Features:
       all four directions (left, right, down, up). It keeps Visual mode.
     - Normal mode. Press customizable mapping to move current line in all
       four directions (left, right, down, up).
-    - Vertical linewise movement gets reindented with |=|.
-      Horizontal linewise movement is same as indent with |>| and dedent with |<|.
+    - Special handling of linewise movement:
+        - Vertical movement gets reindented with |=|.
+        - Horizontal movement is improved indent/dedent with |>| / |<|.
+        - Cursor moves along with selection.
 - Provides both mappings and Lua functions for motions. See
   |MiniMove.move_selection()| and |MiniMove.move_line()|.
 - Respects |v:count|. Movement mappings can be preceded by a number which
