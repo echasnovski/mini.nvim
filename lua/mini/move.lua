@@ -161,7 +161,7 @@ MiniMove.config = {
 ---@param direction __move_direction
 ---@param opts __move_opts
 MiniMove.move_selection = function(direction, opts)
-  if H.is_disabled() then return end
+  if H.is_disabled() or not vim.o.modifiable then return end
 
   opts = vim.tbl_deep_extend('force', H.get_config().options, opts or {})
 
@@ -301,7 +301,7 @@ end
 ---@param direction __move_direction
 ---@param opts __move_opts
 MiniMove.move_line = function(direction, opts)
-  if H.is_disabled() then return end
+  if H.is_disabled() or not vim.o.modifiable then return end
 
   opts = vim.tbl_deep_extend('force', H.get_config().options, opts or {})
 

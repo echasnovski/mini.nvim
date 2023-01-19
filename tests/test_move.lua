@@ -852,6 +852,29 @@ T['move_selection()']['does not create unnecessary jumps'] = function()
   eq(#child.fn.getjumplist()[1], 1)
 end
 
+T['move_selection()']["silently respects 'nomodifiable'"] = function()
+  set_lines({ 'aa', '  bb', 'cc' })
+  set_cursor(2, 0)
+  type_keys('V')
+
+  local validate = function()
+    validate_state({ 'aa', '  bb', 'cc' }, { { 2, 1 }, { 2, 1 } })
+    eq(child.cmd_capture('messages'), '')
+  end
+  validate()
+
+  child.o.modifiable = false
+
+  move('left')
+  validate()
+  move('right')
+  validate()
+  move('up')
+  validate()
+  move('down')
+  validate()
+end
+
 T['move_selection()']['respects `vim.{g,b}.minimove_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -1138,6 +1161,28 @@ T['move_line()']['does not create unnecessary jumps'] = function()
 
   -- In jump list there should be only single entry
   eq(#child.fn.getjumplist()[1], 1)
+end
+
+T['move_line()']["silently respects 'nomodifiable'"] = function()
+  set_lines({ 'aa', '  bb', 'cc' })
+  set_cursor(2, 0)
+
+  local validate = function()
+    validate_line_state({ 'aa', '  bb', 'cc' }, { 2, 0 })
+    eq(child.cmd_capture('messages'), '')
+  end
+  validate()
+
+  child.o.modifiable = false
+
+  move_line('left')
+  validate()
+  move_line('right')
+  validate()
+  move_line('up')
+  validate()
+  move_line('down')
+  validate()
 end
 
 T['move_line()']['respects `vim.{g,b}.minimove_disable`'] = new_set({
