@@ -17,6 +17,9 @@ local get_lines = function(...) return child.get_lines(...) end
 local make_path = function(...) return table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep) end
 local make_abspath = function(...) return make_path(project_root, ...) end
 local getcwd = function() return child.fn.fnamemodify(child.fn.getcwd(), ':p') end
+local cd = function(...) child.cmd('cd ' .. make_path(...)) end
+local set_cursor = function(...) return child.set_cursor(...) end
+local get_cursor = function(...) return child.get_cursor(...) end
 --stylua: ignore end
 
 -- Output test set ============================================================
@@ -539,6 +542,231 @@ T['zoom()']['respects `config` argument'] = function()
   eq({ config.height, config.width }, { 1000, 20 })
 
   child.expect_screenshot()
+end
+
+T['setup_restore_cursor()'] = new_set()
+
+local setup_restore_cursor = function(...) child.lua('MiniMisc.setup_restore_cursor(...)', { ... }) end
+
+T['setup_restore_cursor()']['autocmd is registered'] = function()
+  setup_restore_cursor()
+
+  eq(child.fn.exists('#MiniMiscRestoreCursor'), 1)
+end
+
+T['setup_restore_cursor()']['set options and autocmd registered'] = function()
+  setup_restore_cursor({
+    ignore_buftype = { 'nofile' },
+    ignore_filetype = { 'gitcommit' },
+    center = true
+  })
+
+  eq(child.fn.exists('#MiniMiscRestoreCursor'), 1)
+end
+
+T['setup_restore_cursor()']['invalid options raise error'] = function()
+  expect.error(function() setup_restore_cursor({ ignore_buftype = true }) end, '`opts.ignore_buftype`.*array')
+  expect.error(function() setup_restore_cursor({ ignore_filetype = true }) end, '`opts.ignore_filetype`.*array')
+  expect.error(function() setup_restore_cursor({ center = '' }) end, '`opts.center`.*boolean')
+end
+
+local cursor_dir_relpath = 'tests/dir-misc/cursor'
+local cursor_dir_path = vim.fn.fnamemodify(cursor_dir_relpath, ':p')
+local cursor_shada_file = string.format("%s/cursor.shada", cusor_dir_path)
+
+local cursor_cleanup = function()
+  child.fn.delete(cursor_dir_path, 'rf')
+end
+
+T['restore_cursor()'] = new_set({
+  hooks = {
+    pre_case = function()
+      cursor_cleanup()
+    end,
+    post_once = function()
+      cursor_cleanup()
+    end,
+  },
+})
+
+local restore_cursor = function(...) child.lua('MiniMisc.restore_cursor(...)', { ... }) end
+local test_file_cursor = make_abspath('tests/dir-misc/cursor_restore.lua')
+
+local write_shada_file = function()
+  child.fn.mkdir(cursor_dir_path)
+  child.o.shadafile = ''
+  child.cmd('wshada! ' .. cursor_shada_file)
+  -- Verify that shada file has been written
+  eq(child.fn.filereadable(cursor_shada_file), 1)
+end
+
+local read_shada_file = function()
+  eq(child.fn.filereadable(cursor_shada_file), 1)
+
+  child.cmd('rshada! ' .. cursor_shada_file)
+end
+
+local fold_range = function(from, to)
+  local fold_cmd = string.format('%u,%u fold', from, to)
+  child.cmd(fold_cmd)
+end
+
+T['restore_cursor()']['works with a file'] = function()
+  child.set_size(10, 20)
+  child.cmd('edit ' .. test_file_cursor)
+
+  local line = 15
+  local column = 5
+  set_cursor(line, column)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  eq(get_cursor(), { 1, 0 })
+  restore_cursor()
+  eq(get_cursor(), { line, column })
+
+  eq(child.fn.line('w0'), 12)
+end
+
+T['restore_cursor()']['works with special buffer'] = function()
+  child.cmd('help')
+  local line = 20
+  set_cursor(line)
+  write_shada_file()
+  child.cmd('quit')
+
+  read_shada_file()
+  child.cmd('help')
+  eq(get_cursor(), { 1, 0 })
+  restore_cursor()
+  eq(get_cursor(), { line, 0 })
+end
+
+T['restore_cursor()']['ignore if line specified on cmdline'] = function()
+  child.cmd('edit ' .. test_file_cursor)
+
+  local line = 20
+  local column = 5
+  set_cursor(line, column)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  child.restart({ '-u', 'scripts/minimal_init.lua', '+2', '--', test_file_cursor })
+  load_module()
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  restore_cursor()
+  eq(get_cursor(), { 2, 0 })
+end
+
+T['restore_cursor()']['respects option `ignore_buftype`'] = function()
+  child.cmd('help')
+
+  local line = 20
+  set_cursor(line)
+  write_shada_file()
+  child.cmd('quit')
+
+  read_shada_file()
+  child.cmd('help')
+  restore_cursor({ ignore_buftype = { 'help' }})
+  eq(get_cursor(), { 1, 0 })
+end
+
+T['restore_cursor()']['respects option `ignore_filetype`'] = function()
+  child.cmd('edit ' .. test_file_cursor)
+
+  local line = 26
+  set_cursor(line)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  restore_cursor({ ignore_filetype = { 'lua' }})
+  eq(get_cursor(), { 1, 0 })
+end
+
+T['restore_cursor()']['respects option `center` on eof'] = function()
+  child.set_size(10, 20)
+  child.cmd('edit ' .. test_file_cursor)
+
+  local last_line = child.fn.line('$')
+  set_cursor(last_line)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  restore_cursor()
+  eq(get_cursor(), { last_line, 0 })
+
+  eq(child.fn.line('w0'), 28)
+end
+
+T['restore_cursor()']['respects option `center = false` on eof'] = function()
+  child.set_size(10, 20)
+  child.cmd('edit ' .. test_file_cursor)
+
+  local last_line = child.fn.line('$')
+  set_cursor(last_line)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  restore_cursor({ center = false })
+  eq(get_cursor(), { last_line, 0 })
+
+  eq(child.fn.line('w0'), last_line - 7)
+  eq(child.fn.line('w$'), last_line)
+end
+
+T['restore_cursor()']['opens a fold and centers window'] = function()
+  child.set_size(10, 20)
+  child.cmd('edit ' .. test_file_cursor)
+
+  local line = 15
+  set_cursor(line)
+  fold_range(2, 30)
+  eq(child.fn.foldclosed(10), 2)
+  eq(child.fn.foldclosed(31), -1)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  eq(get_cursor(), { 1, 0 })
+  restore_cursor()
+  eq(get_cursor(), { line, 0 })
+  eq(child.fn.foldclosed('.'), -1)
+  eq(child.fn.foldclosed(10), -1)
+
+  eq(child.fn.line('w0'), 12)
+end
+
+T['restore_cursor()']['respects option `center = false` with folds on eof'] = function()
+  child.set_size(10, 20)
+  child.cmd('edit ' .. test_file_cursor)
+
+  local last_line = child.fn.line('$')
+  set_cursor(last_line)
+  fold_range(2, last_line)
+  eq(child.fn.foldclosed('30'), 2)
+  write_shada_file()
+  child.cmd('bdelete')
+
+  read_shada_file()
+  child.cmd('edit ' .. test_file_cursor)
+  eq(get_cursor(), { 1, 0 })
+  restore_cursor({ center = false })
+  eq(get_cursor(), { last_line, 0 })
+  eq(child.fn.foldclosed('30'), -1)
+
+  eq(child.fn.line('w0'), last_line - 7)
 end
 
 return T
