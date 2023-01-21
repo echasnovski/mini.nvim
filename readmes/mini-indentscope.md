@@ -46,8 +46,36 @@ There are two branches to install from:
 
 Here are code snippets for some common installation methods (use only one):
 
-- Using [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
+<details>
+<summary>With <a href="https://github.com/folke/lazy.nvim">folke/lazy.nvim</a></summary>
+<table>
+    <thead>
+        <tr>
+            <th>Github repo</th>
+            <th>Branch</th> <th>Code snippet</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan=2>'mini.nvim' library</td>
+            <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+        </tr>
+        <tr>
+            <td rowspan=2>Standalone plugin</td>
+            <td>Main</td> <td><code>{ 'echasnovski/mini.indentscope', version = false },</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.indentscope', version = '*' },</code></td>
+        </tr>
+    </tbody>
+</table>
+</details>
 
+<details>
+<summary>With <a href="https://github.com/wbthomason/packer.nvim">wbthomason/packer.nvim</a></summary>
 <table>
     <thead>
         <tr>
@@ -71,9 +99,10 @@ Here are code snippets for some common installation methods (use only one):
         </tr>
     </tbody>
 </table>
+</details>
 
-- Using [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
-
+<details>
+<summary>With <a href="https://github.com/junegunn/vim-plug">junegunn/vim-plug</a></summary>
 <table>
     <thead>
         <tr>
@@ -97,6 +126,9 @@ Here are code snippets for some common installation methods (use only one):
         </tr>
     </tbody>
 </table>
+</details>
+
+<br>
 
 **Important**: don't forget to call `require('mini.indentscope').setup()` to enable its functionality.
 

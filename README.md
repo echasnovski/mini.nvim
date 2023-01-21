@@ -29,14 +29,21 @@ There are two branches to install from:
 
 Here are code snippets for some common installation methods:
 
-- Using [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
+- With [folke/lazy.nvim](https://github.com/folke/lazy.nvim):
+
+| Branch | Code snippet                                         |
+|--------|------------------------------------------------------|
+| Main   | `{ 'echasnovski/mini.nvim', version = false },`      |
+| Stable | `{ 'echasnovski/mini.nvim', version = '*' },`        |
+
+- With [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 | Branch | Code snippet                                         |
 |--------|------------------------------------------------------|
 | Main   | `use 'echasnovski/mini.nvim'`                        |
 | Stable | `use { 'echasnovski/mini.nvim', branch = 'stable' }` |
 
-- Using [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
+- With [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
 | Branch | Code snippet                                           |
 |--------|--------------------------------------------------------|
