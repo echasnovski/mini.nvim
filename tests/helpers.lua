@@ -52,7 +52,7 @@ Helpers.new_child_neovim = function()
   child.set_cursor = function(line, column, win_id)
     prevent_hanging('set_cursor')
 
-    child.api.nvim_win_set_cursor(win_id or 0, { line, column })
+    child.api.nvim_win_set_cursor(win_id or 0, { line, column or 0 })
   end
 
   child.get_cursor = function(win_id)
