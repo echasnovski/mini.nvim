@@ -50,10 +50,12 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
 
 - Checklist for adding new config setting:
     - Add code which uses new setting.
-    - Update module's `H.setup_config()` with type check of new setting.
     - Add default value to `Mini*.config` definition.
+    - Update module's `H.setup_config()` with type check of new setting.
+    - Update tests to test default config value and its type check.
     - Regenerate help file.
     - Update module's README in 'readmes' directory.
+    - Possible update demo for it to be aligned with current config values.
     - Update 'CHANGELOG.md'. In module's section of current version add line starting with `- FEATURE: Implement ...`.
 
 - Checklist for adding new plugin integration:

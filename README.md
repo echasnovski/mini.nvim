@@ -353,9 +353,12 @@ Activate them as regular `colorscheme` (for example, `:colorscheme minicyan`). Y
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
+- 'mini.base3' - a configurable color scheme taking only three colors: background, foreground, and accent. Similar to an upgraded version of 'mini.base16' with builtin-in palette generator.
 - 'mini.basics' - configurable collection of options and mappings sets intended mostly for quick "up and running" Neovim config. Something like a combination of [tpope/vim-sensible](https://github.com/tpope/vim-sensible) and [tpope/vim-unimpaired](https://github.com/tpope/vim-unimpaired).
 - 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
+- 'mini.colortext' - automatically highlight some common text (color strings, "TODO", etc.). Similar to colorizer capabilities of [uga-rosa/ccc.nvim](https://github.com/uga-rosa/ccc.nvim) and [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim).
 - 'mini.filetree' - file tree viewer. Simplified version of [nvim-tree/nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua).
 - 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
 - 'mini.swap' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
 - 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
+- 'mini.quickfix' - fuzzy search and preview of quickfix entries. Possibly with some presets for populating quickfix list (like files, help tags, etc.). Similar to [kevinhwang91/nvim-bqf](https://github.com/kevinhwang91/nvim-bqf).
