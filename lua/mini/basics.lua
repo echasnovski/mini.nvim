@@ -105,7 +105,7 @@ end
 --- - General:
 ---     - Sets |<Leader>| key to |<Space>|. Be sure to make all Leader mappings
 ---       after this (otherwise they are made with default <Leader>).
----     - Runs `:filetype pluging indent on` (see |:filetype-overview|)
+---     - Runs `:filetype plugin indent on` (see |:filetype-overview|)
 ---     - |backup|
 ---     - |mouse|
 ---     - |undofile|
