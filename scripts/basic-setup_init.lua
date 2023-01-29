@@ -12,6 +12,7 @@ vim.cmd([[let &rtp.=','.getcwd()]])
 local test_actions = {
   ['ai']          = function() require('mini.ai').setup() end,
   ['align']       = function() require('mini.align').setup() end,
+  ['animate']     = function() require('mini.animate').setup() end,
   ['base16']      = function()
     local palette = require('mini.base16').mini_palette('#000000', '#ffffff', 50)
     require('mini.base16').setup({ palette = palette })
@@ -25,7 +26,9 @@ local test_actions = {
   ['indentscope'] = function() require('mini.indentscope').setup() end,
   ['jump']        = function() require('mini.jump').setup() end,
   ['jump2d']      = function() require('mini.jump2d').setup() end,
+  ['map']         = function() require('mini.map').setup() end,
   ['misc']        = function() require('mini.misc').setup() end,
+  ['move']        = function() require('mini.move').setup() end,
   ['pairs']       = function() require('mini.pairs').setup() end,
   ['sessions']    = function() require('mini.sessions').setup({ directory = '' }) end,
   ['starter']     = function() require('mini.starter').setup() end,
