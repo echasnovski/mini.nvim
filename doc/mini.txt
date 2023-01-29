@@ -19,6 +19,7 @@ Table of contents:
   Align text interactively........................................|mini.align|
   Animate common Neovim actions.................................|mini.animate|
   Base16 colorscheme creation....................................|mini.base16|
+  Common configuration presets...................................|mini.basics|
   Remove buffers..............................................|mini.bufremove|
   Comment.......................................................|mini.comment|
   Completion and signature help..............................|mini.completion|
@@ -110,6 +111,9 @@ Table of contents:
 - |MiniBase16| - fast implementation of base16 theme for manually supplied
   palette. Supports 30+ plugin integrations. Has unique palette generator
   which needs only background and foreground colors.
+- |MiniBasics| - common configuration presets. Has configurable presets for
+  options, mappings, and autocommands. It doesn't change option or mapping
+  if it was manually created.
 - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
   window layout.
 - |MiniComment| - fast and familiar per-line code commenting.

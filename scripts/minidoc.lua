@@ -7,6 +7,7 @@ local modules = {
   'align',
   'animate',
   'base16',
+  'basics',
   'bufremove',
   'comment',
   'completion',

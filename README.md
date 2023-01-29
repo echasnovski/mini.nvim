@@ -66,6 +66,7 @@ Here are code snippets for some common installation methods:
 | mini.align       | Align text interactively                    | [README](readmes/mini-align.md)       | [Help file](doc/mini-align.txt)       |
 | mini.animate     | Animate common Neovim actions               | [README](readmes/mini-animate.md)     | [Help file](doc/mini-animate.txt)     |
 | mini.base16      | Base16 colorscheme creation                 | [README](readmes/mini-base16.md)      | [Help file](doc/mini-base16.txt)      |
+| mini.basics      | Common configuration presets                | [README](readmes/mini-basics.md)      | [Help file](doc/mini-basics.txt)      |
 | mini.bufremove   | Remove buffers                              | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
 | mini.comment     | Comment                                     | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
 | mini.completion  | Completion and signature help               | [README](readmes/mini-completion.md)  | [Help file](doc/mini-completion.txt)  |
@@ -128,6 +129,15 @@ Fast implementation of [chriskempson/base16](https://github.com/chriskempson/bas
 - Comes with several hand-picked color schemes.
 
 For video demo and quick overview see its [README](readmes/mini-base16.md). For more details see its [help file](doc/mini-base16.txt).
+
+---
+
+<a name='mini.basics'></a>
+### mini.basics
+
+Common configuration presets
+
+For video demo and quick overview see its [README](readmes/mini-basics.md). For more details see its [help file](doc/mini-basics.txt).
 
 ---
 
@@ -354,7 +364,6 @@ Activate them as regular `colorscheme` (for example, `:colorscheme minicyan`). Y
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
 - 'mini.base3' - a configurable color scheme taking only three colors: background, foreground, and accent. Similar to an upgraded version of 'mini.base16' with builtin-in palette generator.
-- 'mini.basics' - configurable collection of options and mappings sets intended mostly for quick "up and running" Neovim config. Something like a combination of [tpope/vim-sensible](https://github.com/tpope/vim-sensible) and [tpope/vim-unimpaired](https://github.com/tpope/vim-unimpaired).
 - 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
 - 'mini.colortext' - automatically highlight some common text (color strings, "TODO", etc.). Similar to colorizer capabilities of [uga-rosa/ccc.nvim](https://github.com/uga-rosa/ccc.nvim) and [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim).
 - 'mini.filetree' - file tree viewer. Simplified version of [nvim-tree/nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua).

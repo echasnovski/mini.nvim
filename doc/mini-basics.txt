@@ -1,0 +1,327 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                   *mini.basics*
+                                                                    *Minibasics*
+Common configuration presets
+
+Install, create 'init.lua', add `require('mini.basics').setup()` and you
+are good to go.
+
+Features:
+- Presets for common options. It will only change option if it wasn't
+  manually set before. See more in |MiniBasics.config.options|.
+- Presets for common mappings. It will only add a mapping if it wasn't
+  manually created before. See more in |MiniBasics.config.mappings|.
+- Presets for common autocommands. See more in |MiniBasics.config.autocommands|.
+- Reverse compatibility is a high priority. Any decision to change already
+  present behavior will be made with great care.
+
+Notes:
+- Main goal of this module is to provide a relatively easier way for
+  new-ish Neovim users to have better "works out of the box" experience
+  while having documented relevant options/mappings/autocommands to study.
+  It is based partially on survey among Neovim users and partially is
+  coming from personal preferences.
+
+  However, more seasoned users almost surely will find something useful.
+
+  Still, it is recommended to read about used options/mappings/autocommands
+  and decide if they are needed. The main way to do that is by reading
+  Neovim's help pages (linked in help file) and this module's source code
+  (thoroughly documented for easier comprehension).
+
+# Setup ~
+
+This module needs a setup with `require('mini.basics').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniBasics`
+which you can use for scripting or manually (with `:lua MiniBasics.*`).
+
+See |MiniBasics.config| for available config settings.
+
+# Comparisons ~
+
+- 'tpope/vim-sensible':
+    - Most of 'tpope/vim-sensible' is already incorporated as default
+      options in Neovim (see |nvim-default|). This module has a much
+      broader effect.
+- 'tpope/vim-unimpaired':
+    - The 'tpope/vim-unimpaired' has mapping for toggling options with `yo`
+      prefix. This module implements similar functionality with `\` prefix
+      (see |MiniBasics.config.mappings|).
+
+------------------------------------------------------------------------------
+                                                            *MiniBasics.setup()*
+                          `MiniBasics.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniBasics.config|.
+
+Usage~
+`require('mini.basics').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                             *MiniBasics.config*
+                              `MiniBasics.config`
+Module config
+
+Default values:
+>
+  MiniBasics.config = {
+    -- Options. Set to `false` to disable.
+    options = {
+      -- Basic options ('termguicolors', 'number', 'ignorecase', and many more)
+      basic = true,
+
+      -- Extra UI features ('winblend', 'cmdheight=0', ...)
+      extra_ui = false,
+
+      -- Presets for window borders ('single', 'double', ...)
+      win_borders = 'default',
+    },
+
+    -- Mappings. Set to `false` to disable.
+    mappings = {
+      -- Basic mappings (better 'jk', save with Ctrl+S, ...)
+      basic = true,
+
+      -- Prefix for mappings that toggle common options ('wrap', 'spell', ...).
+      -- Supply empty string to not create these mappings.
+      option_toggle_prefix = [[\]],
+
+      -- Window navigation with <C-hjkl>, resize with <C-arrow>
+      windows = false,
+
+      -- Move cursor in Insert, Command, and Terminal mode with <M-hjkl>
+      move_with_alt = false,
+    },
+
+    -- Autocommands. Set to `false` to disable
+    autocommands = {
+      -- Basic autocommands (highlight on yank, start Insert in terminal, ...)
+      basic = true,
+
+      -- Set 'relativenumber' only in linewise and blockwise Visual mode
+      relnum_in_visual_mode = false,
+    },
+  }
+<
+                                                     *MiniBasics.config.options*
+# Options ~
+
+Usage example: >
+  require('mini.basics').setup({
+    options = {
+      basic = true,
+      extra_ui = true,
+      win_borders = 'double',
+    }
+  })
+
+## options.basic ~
+
+The `config.options.basic` sets certain options to values which are quite
+commonly used (judging by study of available Neovim pre-configurations,
+public dotfiles, and surveys).
+Any option is changed only if it was not set manually beforehand.
+For exact changes, please see source code ('lua/mini/basics.lua').
+
+Here is the list of affected options (put cursor on it and press |CTRL-]|):
+- General:
+    - Sets |<Leader>| key to |<Space>|. Be sure to make all Leader mappings
+      after this (otherwise they are made with default <Leader>).
+    - Runs `:filetype pluging indent on` (see |:filetype-overview|)
+    - |backup|
+    - |mouse|
+    - |undofile|
+    - |writebackup|
+- Appearance
+    - |breakindent|
+    - |cursorline|
+    - |fillchars|
+    - |linebreak|
+    - |number|
+    - |ruler|
+    - |showmode|
+    - |signcolumn|
+    - |shortmess|
+    - |splitbelow|
+    - |splitkeep| (on Neovim>=0.9)
+    - |splitright|
+    - |termguicolors|
+    - |wrap|
+- Editing
+    - |completeopt|
+    - |formatoptions|
+    - |ignorecase|
+    - |incsearch|
+    - |infercase|
+    - |smartcase|
+    - |smartindent|
+    - |virtualedit|
+
+## options.extra_ui ~
+
+The `config.options.extra_ui` sets certain options for visual appearance
+which might not be aligned with common preferences, but still worth trying.
+Any option is changed only if it was not set manually beforehand.
+For exact changes, please see source code ('lua/mini/basics.lua').
+
+List of affected options:
+- |list|
+- |listchars|
+- |pumblend|
+- |pumheight|
+- |winblend|
+- Runs `:syntax on` (see |:syntax-on|)
+
+## options.win_borders
+
+The `config.options.win_borders` updates |fillchars| to have a consistent set of
+characters for window border (`vert`, `horiz`, etc.).
+
+Available values:
+- `'bold'` - bold lines.
+- `'dot'` - dot in every cell.
+- `'double'` - double line.
+- `'single'` - single line.
+- `'solid'` - no symbol, only background.
+
+                                                    *MiniBasics.config.mappings*
+# Mappings ~
+
+Usage example: >
+  require('mini.basics').setup({
+    mappings = {
+      basic = true,
+      option_toggle_prefix = [[\]],
+      windows = true,
+      move_with_alt = true,
+    }
+  })
+
+## mappings.basic ~
+
+The `config.mappings.basic` creates mappings for certain commonly mapped actions
+(judging by study of available Neovim pre-configurations and public dotfiles).
+
+Some of the mappings override built-in ones to either improve their
+behavior or override its default not very useful action.
+It will only add a mapping if it wasn't manually created before.
+
+Here is a table with created mappings (see |[count]| for its meaning;): >
+
+ |Keys   |     Modes       |                  Description                  |
+ |-------|-----------------|-----------------------------------------------|
+ | j     | Normal, Visual  | Move down by visible lines with no [count]    |
+ | k     | Normal, Visual  | Move up by visible lines with no [count]      |
+ | go    | Normal          | Add [count] empty lines after cursor          |
+ | gO    | Normal          | Add [count] empty lines before cursor         |
+ | gy    | Normal, Visual  | Copy to system clipboard                      |
+ | gp    | Normal, Visual  | Paste from system clipboard                   |
+ | gV    | Normal          | Visually select latest changed or yanked text |
+ | g/    | Visual          | Search inside current visual selection        |
+ | *     | Visual          | Search forward for current visual selection   |
+ | #     | Visual          | Search backward for current visual selection  |
+ | <C-s> | Normal, Visual, | Save and go to Normal mode                    |
+ |       |     Insert      |                                               |
+ | <C-z> | Normal, Insert  | Correct latest misspelled word                |
+<
+
+## mappings.option_toggle_prefix ~
+
+The `config.mappings.option_toggle_prefix` defines a prefix used for
+creating mappings that toggle common options. The result mappings will be
+`<prefix> + <suffix>`. For example, with default value, `\w` will toggle |wrap|.
+
+Other viable choices for prefix are
+- `,` (as a mnemonic for several values to toggle).
+- `|` (as a same mnemonic).
+- `yo` (used in 'tpope/vim-unimpaired')
+- Something with |<Leader>| key, like `<Leader>t` (`t` for "toggle"). Note:
+  if your prefix contains `<Leader>` key, make sure to set it before
+  calling |MiniBasics.setup()| (as is done with default `basic` field of
+  |MiniBasics.config.options|).
+
+After toggling, there will be a feedback about the current option value.
+
+It will only add a mapping if it wasn't manually created before.
+
+Here is a list of suffixes for created toggling mappings (all in Normal mode):
+
+- `b` - |'background'|.
+- `c` - |'cursorline'|.
+- `C` - |'cursorcolumn'|.
+- `d` - diagnostic (via |vim.diagnostic.enable()| and |vim.diagnostic.disable()|).
+- `h` - |'hlsearch'| (or |v:hlsearch| to be precise).
+- `i` - |'ignorecase'|.
+- `l` - |'list'|.
+- `n` - |'number'|.
+- `r` - |'relativenumber'|.
+- `s` - |'spell'|.
+- `w` - |'wrap'|.
+
+## mappings.windows ~
+
+The `config.mappings.windows` creates mappings for easiere window manipulation.
+
+It will only add a mapping if it wasn't manually created before.
+
+Here is a list with created Normal mode mappings (all mappings respect |[count]|):
+- Window navigation:
+    - `<C-h>` - focus on left window (see |CTRL-W_H|).
+    - `<C-j>` - focus on below window (see |CTRL-W_J|).
+    - `<C-k>` - focus on above window (see |CTRL-W_K|).
+    - `<C-l>` - focus on right window (see |CTRL-W_L|).
+- Window resize (all use arrow keys; variants of |resize|; all respect |[count]|):
+    - `<C-left>`  - decrease window width.
+    - `<C-down>`  - decrease window height.
+    - `<C-up>`    - increase window height.
+    - `<C-right>` - increase window width.
+
+It also creates a `<C-w>` mapping in |Terminal-mode| for easier window
+navigation inside builtin |terminal-emulator|. Tip: use `<C-w><Esc>` for
+easier Terminal mode exit than |CTRL-\_CTRL-N|.
+
+## mappings.move_with_alt
+
+The `config.mappings.move_with_alt` creates mappings for a more consistent
+cursor move in Insert, Command, and Terminal modes. For example, it proves
+useful in combination of autopair plugin (like |MiniPairs|) to move right
+outside of inserted pairs (no matter what the pair is).
+
+It will only add a mapping if it wasn't manually created before.
+
+Here is a list of created mappings (`<M-x>` means `Alt`/`Meta` plus `x`):
+- `<M-h>` - move cursor left.  Modes: Insert, Terminal, Command.
+- `<M-h>` - move cursor down.  Modes: Insert, Terminal.
+- `<M-h>` - move cursor up.    Modes: Insert, Terminal.
+- `<M-h>` - move cursor right. Modes: Insert, Terminal, Command.
+
+                                                *MiniBasics.config.autocommands*
+# Autocommands ~
+
+Usage example: >
+  require('mini.basics').setup({
+    autocommands = {
+      basic = true,
+      relnum_in_visual_mode = true,
+    }
+  })
+
+## autocommands.basic ~
+
+The `config.autocommands.basic` creates some common autocommands:
+
+- Starts insert mode when opening terminal (see |startinsert| and |TermOpen|).
+- Highlights yanked text for a brief period of time (see
+  |vim.highlight.on_yank()| and |TextYankPost|).
+
+## autocommands.relnum_in_visual_mode ~
+
+The `config.autocommands.relnum_in_visual_mode` creates autocommands that
+enable |relativenumber| in linewise and blockwise Visual modes and disable
+otherwise. See |ModeChanged|.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

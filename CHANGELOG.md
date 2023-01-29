@@ -6,6 +6,10 @@
 
 Introduction of new module.
 
+## mini.basics
+
+Introduction of a new module.
+
 ## mini.completion
 
 - BREAKING: `MiniCompletion.config.window_dimensions` is renamed to `MiniCompletion.config.window` to be able to handle more general configuration.
