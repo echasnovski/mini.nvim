@@ -105,7 +105,7 @@ end
 --- - General:
 ---     - Sets |<Leader>| key to |<Space>|. Be sure to make all Leader mappings
 ---       after this (otherwise they are made with default <Leader>).
----     - Runs `:filetype pluging indent on` (see |:filetype-overview|)
+---     - Runs `:filetype plugin indent on` (see |:filetype-overview|)
 ---     - |backup|
 ---     - |mouse|
 ---     - |undofile|
@@ -553,8 +553,8 @@ H.apply_mappings = function(config)
     -- Source: https://stackoverflow.com/a/16481737
     -- NOTE: this remaps `<C-z>` in Normal mode (completely stops Neovim), but
     -- it seems to be too harmful anyway.
-    map('n', '<C-z>', '[s1z=',                     { desc = 'Correct lastest misspelled word' })
-    map('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct lastest misspelled word' })
+    map('n', '<C-z>', '[s1z=',                     { desc = 'Correct latest misspelled word' })
+    map('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
   end
 
   local toggle_prefix = config.mappings.option_toggle_prefix
