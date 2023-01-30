@@ -79,6 +79,40 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ autocommands = { relnum_in_visual_mode = 1 } }, 'autocommands.relnum_in_visual_mode', 'boolean')
 end
 
+T['toggle_diagnostic()'] = new_set()
+
+T['toggle_diagnostic()']['works'] = function()
+  local toggle_diagnostic = function() return child.lua_get('MiniBasics.toggle_diagnostic()') end
+  child.lua([[vim.diagnostic.enable = function() vim.b.diag_status = 'enabled' end]])
+  child.lua([[vim.diagnostic.disable = function() vim.b.diag_status = 'disabled' end]])
+
+  load_module()
+
+  -- Should disable on per-buffer basis
+  local buf_id_one = child.api.nvim_get_current_buf()
+  local buf_id_two = child.api.nvim_create_buf(true, false)
+
+  child.api.nvim_set_current_buf(buf_id_one)
+  eq(child.b.diag_status, vim.NIL)
+  eq(toggle_diagnostic(), 'nodiagnostic')
+  eq(child.b.diag_status, 'disabled')
+
+  child.api.nvim_set_current_buf(buf_id_two)
+  eq(child.b.diag_status, vim.NIL)
+  eq(toggle_diagnostic(), 'nodiagnostic')
+  eq(child.b.diag_status, 'disabled')
+
+  child.api.nvim_set_current_buf(buf_id_one)
+  eq(child.b.diag_status, 'disabled')
+  eq(toggle_diagnostic(), '  diagnostic')
+  eq(child.b.diag_status, 'enabled')
+
+  child.api.nvim_set_current_buf(buf_id_two)
+  eq(child.b.diag_status, 'disabled')
+  eq(toggle_diagnostic(), '  diagnostic')
+  eq(child.b.diag_status, 'enabled')
+end
+
 -- Integration tests ==========================================================
 T['Options'] = new_set()
 

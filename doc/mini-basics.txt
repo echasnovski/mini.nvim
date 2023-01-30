@@ -323,5 +323,16 @@ The `config.autocommands.relnum_in_visual_mode` creates autocommands that
 enable |relativenumber| in linewise and blockwise Visual modes and disable
 otherwise. See |ModeChanged|.
 
+------------------------------------------------------------------------------
+                                                *MiniBasics.toggle_diagnostic()*
+                        `MiniBasics.toggle_diagnostic`()
+Toggle diagnostic for current buffer
+
+This uses |vim.diagnostic.enable()| and |vim.diagnostic.disable()| on
+per buffer basis.
+
+Return~
+`(string)` String indicator for new state. Similar to what |:set| `{option}?` shows.
+
 
  vim:tw=78:ts=8:noet:ft=help:norl:

@@ -337,6 +337,12 @@ MiniBasics.config = {
 }
 --minidoc_afterlines_end
 
+--- Toggle diagnostic for current buffer
+---
+--- This uses |vim.diagnostic.enable()| and |vim.diagnostic.disable()| on
+--- per buffer basis.
+---
+---@return string String indicator for new state. Similar to what |:set| `{option}?` shows.
 MiniBasics.toggle_diagnostic = function()
   local buf_id = vim.api.nvim_get_current_buf()
   local buf_state = H.buffer_diagnostic_state[buf_id]
