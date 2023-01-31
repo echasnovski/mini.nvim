@@ -200,6 +200,13 @@ Usage example: >
     }
   })
 
+If you don't want only some mappings to be made at all, use |vim.keymap.del()|
+after calling |MiniMisc.setup()|. For example, to delete `<C-w>` mapping in
+|Terminal-mode| (as it conflicts with `<C-w>` usage in terminal emulators)
+use this code: >
+
+  vim.keymap.del('t', '<C-w>').
+
 ## mappings.basic ~
 
 The `config.mappings.basic` creates mappings for certain commonly mapped actions
