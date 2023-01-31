@@ -6,6 +6,7 @@ local new_set = MiniTest.new_set
 
 local path_sep = package.config:sub(1, 1)
 local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ':p')
+local dir_misc_path = project_root .. 'tests/dir-misc/'
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -17,6 +18,9 @@ local get_lines = function(...) return child.get_lines(...) end
 local make_path = function(...) return table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep) end
 local make_abspath = function(...) return make_path(project_root, ...) end
 local getcwd = function() return child.fn.fnamemodify(child.fn.getcwd(), ':p') end
+local set_cursor = function(...) return child.set_cursor(...) end
+local get_cursor = function(...) return child.get_cursor(...) end
+local edit = function(x) child.cmd('edit ' .. x) end
 --stylua: ignore end
 
 -- Output test set ============================================================
@@ -230,7 +234,6 @@ T['resize_window()']['correctly computes default `text_width` argument'] = funct
   eq(child.api.nvim_win_get_width(0), 40 + 4)
 end
 
-local dir_misc_path = make_abspath('tests/dir-misc/')
 local git_repo_path = make_abspath('tests/dir-misc/mocked-git-repo/')
 local git_path = make_abspath('tests/dir-misc/mocked-git-repo/.git')
 local test_file_makefile = make_abspath('tests/dir-misc/aaa.lua')
@@ -415,6 +418,139 @@ T['find_root()']['uses cache'] = function()
   -- from first call
   init_mock_git('directory')
   eq(find_root(), dir_misc_path)
+end
+
+local restore_cursor_test_file = make_path(dir_misc_path, 'restore-cursor.lua')
+local restore_cursor_init_file = make_path(dir_misc_path, 'init-restore-cursor.lua')
+local restore_cursor_shada_path = make_path(dir_misc_path, 'restore-cursor.shada')
+
+local cursor_set_test_type = function(x)
+  vim.env.RESTORE_CURSOR_TEST_TYPE = x
+  MiniTest.finally(function() vim.env.RESTORE_CURSOR_TEST_TYPE = '' end)
+end
+
+T['setup_restore_cursor()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Ensure that shada file is correctly set
+      child.o.shadafile = restore_cursor_shada_path
+    end,
+    post_case = function()
+      -- Don't save new shada file on child stop
+      child.o.shadafile = ''
+
+      -- Clean up
+      child.fn.delete(restore_cursor_shada_path)
+    end,
+  },
+})
+
+T['setup_restore_cursor()']['works'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 10, 3 })
+  -- Should center by default
+  eq(child.fn.line('w0'), 7)
+end
+
+T['setup_restore_cursor()']['validates input'] = function()
+  local setup_restore_cursor = function(...) child.lua('MiniMisc.setup_restore_cursor(...)', { ... }) end
+
+  expect.error(setup_restore_cursor, '`opts.center`.*boolean', { center = 1 })
+  expect.error(setup_restore_cursor, '`opts.ignore_filetype`.*array', { ignore_filetype = 1 })
+end
+
+T['setup_restore_cursor()']['respects `opts.center`'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  cursor_set_test_type('not-center')
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 10, 3 })
+  -- Should not center line
+  eq(child.fn.line('w$'), 10)
+end
+
+T['setup_restore_cursor()']['respects `opts.ignore_filetype`'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  cursor_set_test_type('ignore-lua')
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 1, 0 })
+end
+
+T['setup_restore_cursor()']['restores only in normal buffer'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  cursor_set_test_type('set-not-normal-buftype')
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 1, 0 })
+end
+
+T['setup_restore_cursor()']['does not restore if position is already set'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  cursor_set_test_type('set-position')
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 4, 0 })
+
+  -- Double check that `setup_restore_cursor()` was run
+  expect.match(child.cmd_capture('au MiniMiscRestoreCursor'), 'BufRead')
+end
+
+T['setup_restore_cursor()']['does not restore if position is outdated'] = function()
+  edit(restore_cursor_test_file)
+
+  -- Ensure that file content won't change even on test case error
+  local true_lines = get_lines()
+  MiniTest.finally(function() vim.fn.writefile(true_lines, restore_cursor_test_file) end)
+
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+  child.cmd('bwipeout')
+
+  -- Modify file so that position will appear outdated
+  child.fn.writefile({ '-- bbb', '-- bbb' }, restore_cursor_test_file)
+
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  eq(get_cursor(), { 1, 0 })
+
+  -- Double check that `setup_restore_cursor()` was run
+  expect.match(child.cmd_capture('au MiniMiscRestoreCursor'), 'BufRead')
+end
+
+T['setup_restore_cursor()']['opens just enough folds'] = function()
+  edit(restore_cursor_test_file)
+  set_cursor(10, 3)
+  child.cmd('wshada!')
+
+  cursor_set_test_type('make-folds')
+  child.restart({ '-u', restore_cursor_init_file, '--', restore_cursor_test_file })
+
+  -- Should open only needed folds
+  eq(get_cursor(), { 10, 3 })
+
+  eq({ child.fn.foldclosed(2), child.fn.foldclosed(3) }, { 2, 2 })
+  eq({ child.fn.foldclosed(9), child.fn.foldclosed(10) }, { -1, -1 })
+
+  -- Double check that `setup_restore_cursor()` was run
+  expect.match(child.cmd_capture('au MiniMiscRestoreCursor'), 'BufRead')
 end
 
 local stat_summary = function(...) return child.lua_get('MiniMisc.stat_summary({ ... })', { ... }) end

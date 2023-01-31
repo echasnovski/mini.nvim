@@ -23,6 +23,7 @@ Introduction of a new module.
 ## mini.misc
 
 - FEATURE: Add `MiniMisc.setup_auto_root()` and `MiniMisc.find_root()` for root finding functionality. NOTE: requires Neovim>=0.8.
+- FEATURE: Add `MiniMisc.setup_restore_cursor()` for automatically restoring latest cursor position on file reopen. By @cryptomilk, PR #198.
 
 ## mini.move
 

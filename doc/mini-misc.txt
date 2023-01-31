@@ -140,6 +140,30 @@ Parameters~
   Default: `{ '.git', 'Makefile' }`.
 
 ------------------------------------------------------------------------------
+                                               *MiniMisc.setup_restore_cursor()*
+                    `MiniMisc.setup_restore_cursor`({opts})
+Restore cursor position on file open
+
+When reopening a file this will make sure the cursor is placed back to the
+position where you left before. This implements |restore-cursor| in a nicer way.
+File should have a recognized file type (see 'filetype') and be opened in
+a normal buffer (see 'buftype').
+
+Note: it relies on file mark data stored in 'shadafile' (see |shada-f|).
+Be sure to enable it.
+
+Parameters~
+{opts} `(table|nil)` Options for |MiniMisc.restore_cursor|. Possible fields:
+  - <center> - (boolean) Center the window after we restored the cursor.
+    Default: `true`.
+  - <ignore_filetype> - Array with file types to be ignored (see 'filetype').
+    Default: `{ "gitcommit", "gitrebase" }`.
+
+Usage~
+>
+  require('mini.misc').setup_restore_cursor()
+
+------------------------------------------------------------------------------
                                                        *MiniMisc.stat_summary()*
                           `MiniMisc.stat_summary`({t})
 Compute summary statistics of numerical array

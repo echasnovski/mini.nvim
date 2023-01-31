@@ -245,6 +245,68 @@ end
 
 H.root_cache = {}
 
+--- Restore cursor position on file open
+---
+--- When reopening a file this will make sure the cursor is placed back to the
+--- position where you left before. This implements |restore-cursor| in a nicer way.
+--- File should have a recognized file type (see 'filetype') and be opened in
+--- a normal buffer (see 'buftype').
+---
+--- Note: it relies on file mark data stored in 'shadafile' (see |shada-f|).
+--- Be sure to enable it.
+---
+---@param opts table|nil Options for |MiniMisc.restore_cursor|. Possible fields:
+---   - <center> - (boolean) Center the window after we restored the cursor.
+---     Default: `true`.
+---   - <ignore_filetype> - Array with file types to be ignored (see 'filetype').
+---     Default: `{ "gitcommit", "gitrebase" }`.
+---
+---@usage >
+---   require('mini.misc').setup_restore_cursor()
+MiniMisc.setup_restore_cursor = function(opts)
+  opts = opts or {}
+
+  opts.ignore_filetype = opts.ignore_filetype or { 'gitcommit', 'gitrebase' }
+  if not H.is_array_of(opts.ignore_filetype, H.is_string) then
+    H.error('In `setup_restore_cursor()` `opts.ignore_filetype` should be an array of strings.')
+  end
+
+  if opts.center == nil then opts.center = true end
+  if type(opts.center) ~= 'boolean' then H.error('In `setup_restore_cursor()` `opts.center` should be a boolean.') end
+
+  -- TODO: use `nvim_create_autocmd()` after Neovim<=0.6 support is dropped
+  local au_command = string.format(
+    [[augroup MiniMiscRestoreCursor
+      au!
+      au BufReadPre * au FileType <buffer> ++once lua require('mini.misc').restore_cursor(%s)
+    augroup END]],
+    vim.inspect(opts, { newline = ' ', indent = '' })
+  )
+  vim.api.nvim_exec(au_command, false)
+end
+
+-- TODO: Make local once Lua autocmd is used inside `setup_restore_cursor()`
+MiniMisc.restore_cursor = function(opts)
+  -- Stop if not a normal buffer
+  if vim.bo.buftype ~= '' then return end
+
+  -- Stop if filetype is ignored
+  if vim.tbl_contains(opts.ignore_filetype, vim.bo.filetype) then return end
+
+  -- Stop if line is already specified (like during start with `nvim file +num`)
+  if vim.fn.line('.') > 1 then return end
+
+  -- Stop if can't restore proper line for some reason
+  local last_line = vim.fn.line([['"]])
+  if not (1 <= last_line and last_line <= vim.fn.line('$')) then return end
+
+  -- Restore cursor and open just enough folds
+  vim.cmd([[normal! g`"zv]])
+
+  -- Center window
+  if opts.center then vim.cmd('normal! zz') end
+end
+
 --- Compute summary statistics of numerical array
 ---
 --- This might be useful to compute summary of time benchmarking with
