@@ -22,7 +22,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://user-images.githubusercontent.com/24854248/208977267-e332c9d8-5232-450c-ae6b-d12a4899c23c.mp4
+https://user-images.githubusercontent.com/24854248/215829092-5aba4e8d-94a5-43da-8ef0-243bf0708f76.mp4
 
 ## Features
 
