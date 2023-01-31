@@ -1,7 +1,23 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski
 
 -- Documentation ==============================================================
---- Miscellaneous useful functions.
+--- Miscellaneous useful functions
+---
+--- Features the following functions:
+--- - |MiniMisc.bench_time()| to benchmark function execution time.
+---   Useful in combination with `stat_summary()`.
+--- - |MiniMisc.put()| and |MiniMisc.put_text()| to pretty print its arguments
+---   into command line and current buffer respectively.
+--- - |MiniMisc.setup_auto_root()| to set up automated change of current directory.
+--- - |MiniMisc.setup_restore_cursor()| to set up automated restoration of
+---   cursor position on file reopen.
+--- - |MiniMisc.stat_summary()| to compute summary statistics of numerical array.
+---   Useful in combination with `bench_time()`.
+--- - |MiniMisc.tbl_head()| and |MiniMisc.tbl_tail()| to return "first" and "last"
+---   elements of table.
+--- - |MiniMisc.zoom()| to zoom in and out of a buffer, making it full screen
+---   in a floating window.
+--- - And more.
 ---
 --- # Setup~
 ---
@@ -146,7 +162,7 @@ H.default_text_width = function(win_id)
   end
 end
 
---- Setup automated change of current directory
+--- Set up automated change of current directory
 ---
 --- What it does:
 --- - Creates autocommand which on every |BufEnter| event with |MiniMisc.find_root()|
