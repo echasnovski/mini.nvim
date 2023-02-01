@@ -116,7 +116,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniJump2d.config|.
+---@param config table|nil Module config table. See |MiniJump2d.config|.
 ---
 ---@usage `require('mini.jump2d').setup({})` (replace `{}` with your `config` table)
 MiniJump2d.setup = function(config)

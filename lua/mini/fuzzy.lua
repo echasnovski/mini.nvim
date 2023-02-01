@@ -60,7 +60,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniFuzzy.config|.
+---@param config table|nil Module config table. See |MiniFuzzy.config|.
 ---
 ---@usage `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
 MiniFuzzy.setup = function(config)

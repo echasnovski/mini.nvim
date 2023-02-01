@@ -88,7 +88,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniPairs.config|.
+---@param config table|nil Module config table. See |MiniPairs.config|.
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniPairs.setup = function(config)

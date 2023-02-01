@@ -188,7 +188,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniStarter.config|.
+---@param config table|nil Module config table. See |MiniStarter.config|.
 ---
 ---@usage `require('mini.starter').setup({})` (replace `{}` with your `config` table)
 MiniStarter.setup = function(config)

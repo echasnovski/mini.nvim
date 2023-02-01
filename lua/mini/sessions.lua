@@ -54,7 +54,7 @@ local H = { path_sep = package.config:sub(1, 1) }
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniSessions.config|.
+---@param config table|nil Module config table. See |MiniSessions.config|.
 ---
 ---@usage `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
 MiniSessions.setup = function(config)

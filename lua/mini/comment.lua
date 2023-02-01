@@ -44,7 +44,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniComment.config|.
+---@param config table|nil Module config table. See |MiniComment.config|.
 ---
 ---@usage `require('mini.comment').setup({})` (replace `{}` with your `config` table)
 MiniComment.setup = function(config)

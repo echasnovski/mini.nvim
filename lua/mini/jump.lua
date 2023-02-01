@@ -61,7 +61,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniJump.config|.
+---@param config table|nil Module config table. See |MiniJump.config|.
 ---
 ---@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
 MiniJump.setup = function(config)

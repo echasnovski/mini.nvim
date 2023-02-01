@@ -145,7 +145,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniDoc.config|.
+---@param config table|nil Module config table. See |MiniDoc.config|.
 ---
 ---@usage `require('mini.doc').setup({})` (replace `{}` with your `config` table)
 MiniDoc.setup = function(config)

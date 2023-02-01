@@ -143,7 +143,7 @@ local H = {}
 --- - Table with similar structure to `palette` but having terminal colors
 ---   (integers from 0 to 255) instead of hex strings.
 ---
----@param config table Module config table. See |MiniBase16.config|.
+---@param config table|nil Module config table. See |MiniBase16.config|.
 ---
 ---@usage `require('mini.base16').setup({})` (replace `{}` with your `config`
 ---   table; `config.palette` should be a table with colors)

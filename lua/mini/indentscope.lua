@@ -96,7 +96,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniIndentscope.config|.
+---@param config table|nil Module config table. See |MiniIndentscope.config|.
 ---
 ---@usage `require('mini.indentscope').setup({})` (replace `{}` with your `config` table)
 MiniIndentscope.setup = function(config)

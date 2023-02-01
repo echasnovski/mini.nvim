@@ -181,7 +181,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniCompletion.config|.
+---@param config table|nil Module config table. See |MiniCompletion.config|.
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniCompletion.setup = function(config)

@@ -114,7 +114,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniStatusline.config|.
+---@param config table|nil Module config table. See |MiniStatusline.config|.
 ---
 ---@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
 MiniStatusline.setup = function(config)

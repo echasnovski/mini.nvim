@@ -39,7 +39,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniMisc.config|.
+---@param config table|nil Module config table. See |MiniMisc.config|.
 ---
 ---@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
 MiniMisc.setup = function(config)

@@ -413,7 +413,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniSurround.config|.
+---@param config table|nil Module config table. See |MiniSurround.config|.
 ---
 ---@usage `require('mini.surround').setup({})` (replace `{}` with your `config` table)
 MiniSurround.setup = function(config)

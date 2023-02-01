@@ -41,7 +41,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniBufremove.config|.
+---@param config table|nil Module config table. See |MiniBufremove.config|.
 ---
 ---@usage `require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
 MiniBufremove.setup = function(config)

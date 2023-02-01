@@ -72,7 +72,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniCursorword.config|.
+---@param config table|nil Module config table. See |MiniCursorword.config|.
 ---
 ---@usage `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
 MiniCursorword.setup = function(config)
