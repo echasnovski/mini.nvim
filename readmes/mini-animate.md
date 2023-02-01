@@ -150,6 +150,8 @@ Here are code snippets for some common installation methods (use only one):
 - Enable corresponding git global config value: `git config --system core.longpaths true`. Then try to reinstall.
 - Install plugin in other place with shorter path.
 
+**Note**: if you have remapped `<C-d>` or `<C-u>` to center after navigation, you need to remove them to get the the animated scrolling working properly.
+
 ## Default config
 
 ```lua
