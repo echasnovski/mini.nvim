@@ -453,11 +453,14 @@ H.apply_palette = function(palette, use_cterm)
   -- are added based on groups to which they are linked.
   hi('ColorColumn',  {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
   hi('Conceal',      {fg=p.base0D, bg=p.base00, attr=nil,         sp=nil})
+  hi('CurSearch',    {fg=p.base01, bg=p.base09, attr=nil,         sp=nil})
   hi('Cursor',       {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
   hi('CursorColumn', {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
   hi('CursorIM',     {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
   hi('CursorLine',   {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
+  hi('CursorLineFold', {fg=p.base0C, bg=p.base01, attr=nil,         sp=nil})
   hi('CursorLineNr', {fg=p.base04, bg=p.base01, attr=nil,         sp=nil})
+  hi('CursorLineSign', {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
   hi('DiffAdd',      {fg=p.base0B, bg=p.base01, attr=nil,         sp=nil})
   -- Differs from base16-vim, but according to general style guide
   hi('DiffChange',   {fg=p.base0E, bg=p.base01, attr=nil,         sp=nil})
@@ -471,6 +474,8 @@ H.apply_palette = function(palette, use_cterm)
   hi('IncSearch',    {fg=p.base01, bg=p.base09, attr=nil,         sp=nil})
   hi('lCursor',      {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
   hi('LineNr',       {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
+  hi('LineNrAbove',  {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
+  hi('LineNrBelow',  {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
   -- Slight difference from base16, where `bg=base03` is used. This makes
   -- it possible to comfortably see this highlighting in comments.
   hi('MatchParen',   {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
@@ -510,11 +515,9 @@ H.apply_palette = function(palette, use_cterm)
   hi('WarningMsg',   {fg=p.base08, bg=nil,      attr=nil,         sp=nil})
   hi('Whitespace',   {fg=p.base03, bg=nil,      attr=nil,         sp=nil})
   hi('WildMenu',     {fg=p.base08, bg=p.base0A, attr=nil,         sp=nil})
-
-  if vim.fn.hlexists('WinBar') == 1 then
-    hi('WinBar',   {fg=p.base04, bg=p.base02, attr=nil, sp=nil})
-    hi('WinBarNC', {fg=p.base03, bg=p.base01, attr=nil, sp=nil})
-  end
+  hi('WinBar',       {fg=p.base04, bg=p.base02, attr=nil,         sp=nil})
+  hi('WinBarNC',     {fg=p.base03, bg=p.base01, attr=nil,         sp=nil})
+  hi('WinSeparator', {fg=p.base02, bg=p.base02, attr=nil,         sp=nil})
 
   -- Standard syntax (affects treesitter)
   hi('Boolean',        {fg=p.base09, bg=nil,      attr=nil, sp=nil})
