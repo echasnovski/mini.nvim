@@ -639,6 +639,7 @@ T['zoom()']['works'] = function()
   child.set_size(5, 20)
   set_lines({ 'aaa', 'bbb' })
   child.o.statusline = 'Statusline should not be visible in floating window'
+  child.o.winblend = 50
 
   local buf_id = child.api.nvim_get_current_buf()
   child.lua('MiniMisc.zoom()')
@@ -649,6 +650,7 @@ T['zoom()']['works'] = function()
   eq(child.api.nvim_win_get_buf(win_id), buf_id)
   local config = child.api.nvim_win_get_config(win_id)
   eq({ config.height, config.width }, { 1000, 1000 })
+  eq(child.api.nvim_win_get_option(win_id, 'winblend'), 0)
 
   -- No statusline should be present
   child.expect_screenshot()
