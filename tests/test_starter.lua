@@ -1073,6 +1073,28 @@ T['Querying']['respects `config.evaluate_single`'] = function()
   validate()
 end
 
+T['Querying']['works with `cmdheight=0`'] = function()
+  if child.fn.has('nvim-0.8') == 0 then return end
+
+  child.set_size(20, 50)
+  child.o.cmdheight = 0
+  reload_module({ items = example_items })
+
+  child.lua('MiniStarter.open()')
+
+  -- It should work without giving hit-enter-prompt
+  type_keys('a')
+  type_keys('a')
+  eq(child.api.nvim_get_mode().blocking, false)
+
+  -- There should be no query showed
+  child.expect_screenshot()
+
+  -- There shouldn't be hit-enter-prompt after leaving buffer
+  type_keys(':bw<CR>')
+  eq(child.api.nvim_get_mode().blocking, false)
+end
+
 T['Keybindings'] = new_set({
   hooks = {
     pre_case = function()

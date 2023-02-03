@@ -1253,7 +1253,7 @@ H.make_query = function(buf_id, query, echo_msg)
 
   -- Notify about new query if not in VimEnter, where it might lead to
   -- unpleasant flickering due to startup process (lazy loading, etc.).
-  if echo_msg and not H.is_in_vimenter then
+  if echo_msg and not H.is_in_vimenter and vim.o.cmdheight > 0 then
     -- Make sure that output of `echo` will be shown
     vim.cmd('redraw')
 
@@ -1269,7 +1269,7 @@ H.make_buffer_autocmd = function(buf_id)
         au!
         au VimResized <buffer=%s> lua MiniStarter.refresh()
         au CursorMoved <buffer=%s> lua MiniStarter.on_cursormoved()
-        au BufLeave <buffer=%s> echo ''
+        au BufLeave <buffer=%s> if &cmdheight > 0 | echo '' | endif
         au BufLeave <buffer=%s> if &showtabline==1 | set showtabline=%s | endif
       augroup END]],
     buf_id, buf_id, buf_id, buf_id, vim.o.showtabline
