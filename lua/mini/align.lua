@@ -756,7 +756,7 @@ MiniAlign.align_user = function(mode)
       opts.split_pattern = vim.pesc(id)
     else
       -- Modifier should change input `steps` table in place
-      local ok, out = pcall(modifiers[id], steps, opts)
+      local ok, out = pcall(mod, steps, opts)
       if not ok then
         -- Force message to appear for 500ms because it might be overridden by
         -- helper status message
