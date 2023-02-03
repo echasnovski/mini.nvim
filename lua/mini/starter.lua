@@ -1316,6 +1316,7 @@ H.apply_buffer_options = function(buf_id)
     'nomodeline',
     'nomodifiable',
     'foldlevel=999',
+    'nowrap',
   }
   -- Vim's `setlocal` is currently more robust comparing to `opt_local`
   vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))

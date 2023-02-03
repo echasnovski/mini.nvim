@@ -178,6 +178,7 @@ T['open()']['sets buffer options'] = function()
   eq(child.bo.modifiable, false)
   eq(child.wo.colorcolumn, '')
   eq(child.wo.signcolumn, 'no')
+  eq(child.wo.wrap, false)
 
   -- Should hide tabline but not touch statusline
   eq(child.o.showtabline, 1)
