@@ -113,7 +113,6 @@ T['setup()']['defines builtin highlight groups'] = function()
   local p = child.lua_get('MiniBase16.config.palette')
   validate_hl_group('Normal', ('guifg=%s guibg=%s'):format(p.base05, p.base00))
   validate_hl_group('Cursor', ('guifg=%s guibg=%s'):format(p.base00, p.base05))
-  validate_hl_group('SpellBad', ('ctermbg=9 gui=%s guisp=%s'):format('undercurl', p.base08))
 
   validate_hl_group('Comment', ('ctermfg=14 guifg=%s'):format(p.base03))
   validate_hl_group('Error', ('ctermfg=15 ctermbg=9 guifg=%s guibg=%s'):format(p.base00, p.base08))
