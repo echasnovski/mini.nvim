@@ -1064,24 +1064,20 @@ MiniTest.new_child_neovim = function()
     args = args or {}
     opts = vim.tbl_deep_extend('force', { nvim_executable = vim.v.progpath, connection_timeout = 5000 }, opts or {})
 
-    -- Using 'libuv' for creating a job is crucial for getting this to work in
-    -- Github Actions. Other approaches:
-    -- - Use built-in `vim.fn.jobstart(args)`. Works locally but doesn't work
-    --   in Github Action.
-    -- - Use `plenary.job`. Works fine both locally and in Github Action, but
-    --   needs a 'plenary.nvim' dependency (not exactly bad, but undesirable).
-
     -- Make unique name for `--listen` pipe
     local job = { address = vim.fn.tempname() }
 
-    local full_args = { '--clean', '-n', '--listen', job.address }
+    local full_args = { opts.nvim_executable, '--clean', '-n', '--listen', job.address }
     vim.list_extend(full_args, args)
 
-    job.stdin, job.stdout, job.stderr = vim.loop.new_pipe(false), vim.loop.new_pipe(false), vim.loop.new_pipe(false)
-    job.handle, job.pid = vim.loop.spawn(opts.nvim_executable, {
-      stdio = { job.stdin, job.stdout, job.stderr },
-      args = full_args,
-    }, function() end)
+    -- Using 'libuv' for creating a job is crucial for getting this to work in
+    -- Github Actions. Other approaches:
+    -- - Using `{ pty = true }` seems crucial to make this work on GitHub CI.
+    -- - Using `vim.loop.spawn()` is doable, but has issues on Neovim>=0.9:
+    --     - https://github.com/neovim/neovim/issues/21630
+    --     - https://github.com/neovim/neovim/issues/21886
+    --     - https://github.com/neovim/neovim/issues/22018
+    job.id = vim.fn.jobstart(full_args, { pty = true })
 
     local step = 10
     local connected, i, max_tries = nil, 0, math.floor(opts.connection_timeout / step)
@@ -1099,41 +1095,25 @@ MiniTest.new_child_neovim = function()
 
     child.job = job
     start_args, start_opts = args, opts
-
-    -- Close immediately on Neovim>=0.9 to avoid hanging (see
-    -- https://github.com/neovim/neovim/issues/21630)
-    if vim.fn.has('nvim-0.9') == 1 then
-      child.job.stdin:close()
-      child.job.stdout:close()
-      child.job.stderr:close()
-    end
   end
 
   child.stop = function()
     if not child.is_running() then return end
 
-    -- It is important to close these because there is an upper limit on how
-    -- many resources `vim.loop` (libuv) can have. If not, this will result
-    -- into "connection refused" errors while trying to connect.
-    -- NOTE: it is also important to close this before ending child process.
-    -- Otherwise it seems to result in hanging process during test runs (often
-    -- seen in Github actions for Neovim>=0.7, but not locally).
-    if vim.fn.has('nvim-0.9') ~= 1 then
-      child.job.stdin:close()
-      child.job.stdout:close()
-      child.job.stderr:close()
-    end
-
     -- Properly exit Neovim. `pcall` avoids `channel closed by client` error.
+    -- Also wait for it to actually close. This reduces simultaneously opened
+    -- Neovim instances and CPU load (overall reducing flacky tests).
     pcall(child.cmd, 'silent! 0cquit')
+    vim.fn.jobwait({ child.job.id }, 1000)
 
+    -- Close all used channels. Prevents `too many open files` type of errors.
     pcall(vim.fn.chanclose, child.job.channel)
+    pcall(vim.fn.chanclose, child.job.id)
 
     -- Remove file for address to reduce chance of "can't open file" errors, as
     -- address uses temporary unique files
     pcall(vim.fn.delete, child.job.address)
 
-    child.job.handle:kill(9)
     child.job = nil
   end
 
