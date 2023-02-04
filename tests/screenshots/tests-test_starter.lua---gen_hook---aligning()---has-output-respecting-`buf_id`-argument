@@ -5,14 +5,14 @@
 04|~                  │                    
 05|~                  │                    
 06|~                  │        AAA         
-07|<No Name] 1,0-1 All│        aaa         
+07|<No Name] 0,0-1 All│        aaa         
 08|                   │        bbb         
 09|~                  │~                   
 10|~                  │~                   
 11|~                  │~                   
 12|~                  │~                   
 13|~                  │~                   
-14|<No Name] 1,0-1 All Starter   7,9    All
+14|<No Name] 0,0-1 All Starter   7,9    All
 15|(mini.starter) Query:                   
 
 --|---------|---------|---------|---------|
