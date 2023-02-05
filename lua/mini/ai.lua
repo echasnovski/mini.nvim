@@ -666,15 +666,15 @@ MiniAi.gen_spec.argument = function(opts)
   res[2] = function(s, init)
     -- Cache string separators per spec as they are used multiple times.
     -- Storing per spec allows coexistence of several argument specifications.
-    H.cache.argument_seps = H.cache.argument_seps or {}
-    H.cache.argument_seps[res] = H.cache.argument_seps[res] or {}
-    local seps = H.cache.argument_seps[res][s] or H.arg_get_separators(s, sep_pattern, exclude_regions)
-    H.cache.argument_seps[res][s] = seps
+    H.cache.argument_sep_spans = H.cache.argument_sep_spans or {}
+    H.cache.argument_sep_spans[res] = H.cache.argument_sep_spans[res] or {}
+    local sep_spans = H.cache.argument_sep_spans[res][s] or H.arg_get_separator_spans(s, sep_pattern, exclude_regions)
+    H.cache.argument_sep_spans[res][s] = sep_spans
 
     -- Return span fully on right of `init`, `nil` otherwise
     -- For first argument returns left bracket; for last - right one.
-    for i = 1, #seps - 1 do
-      if init <= seps[i] then return seps[i], seps[i + 1] end
+    for i = 1, #sep_spans - 1 do
+      if init <= sep_spans[i][1] then return sep_spans[i][1], sep_spans[i + 1][2] end
     end
 
     return nil
@@ -686,7 +686,8 @@ MiniAi.gen_spec.argument = function(opts)
     return function(s, init)
       if init > 1 then return nil end
       if not s:find(pattern) then return nil end
-      return left_keep and 1 or 2, s:len() - (right_keep and 0 or 1)
+      local left_pad, right_pad = left_keep and 0 or 1, right_keep and 0 or 1
+      return 1 + left_pad, s:len() - right_pad
     end
   end
 
@@ -1353,13 +1354,18 @@ H.get_default_opts = function()
 end
 
 -- Work with argument textobject ----------------------------------------------
-H.arg_get_separators = function(s, sep_pattern, exclude_regions)
+H.arg_get_separator_spans = function(s, sep_pattern, exclude_regions)
   if s:len() <= 2 then return {} end
 
-  -- Get all separators
-  local seps = {}
-  s:gsub('()' .. sep_pattern, function(x) table.insert(seps, x) end)
-  if #seps == 0 then return { 1, s:len() } end
+  -- Pre-compute edge separator spans (assumes edge characters are brackets)
+  local left_bracket_span = { 1, 1 }
+  local right_bracket_span = { s:len(), s:len() }
+
+  -- Get all separator spans (meaning separator is allowed to match more than
+  -- a single character)
+  local sep_spans = {}
+  s:gsub('()' .. sep_pattern .. '()', function(l, r) table.insert(sep_spans, { l, r - 1 }) end)
+  if #sep_spans == 0 then return { left_bracket_span, right_bracket_span } end
 
   -- Remove separators that are in "excluded regions": by default, inside
   -- brackets or quotes
@@ -1371,12 +1377,12 @@ H.arg_get_separators = function(s, sep_pattern, exclude_regions)
     inner_s:gsub(capture_pat, add_to_forbidden)
   end
 
-  local res = vim.tbl_filter(function(x) return not H.is_point_inside_spans(x, forbidden) end, seps)
+  local res = vim.tbl_filter(function(x) return not H.is_span_inside_spans(x, forbidden) end, sep_spans)
 
   -- Append edge separators (assumes first and last characters are from
   -- brackets). This allows single argument and ensures at least 2 elements.
-  table.insert(res, 1, 1)
-  table.insert(res, s:len())
+  table.insert(res, 1, left_bracket_span)
+  table.insert(res, right_bracket_span)
   return res
 end
 
@@ -1657,9 +1663,9 @@ H.is_span_on_left = function(span_1, span_2)
   return (span_1.from <= span_2.from) and (span_1.to <= span_2.to)
 end
 
-H.is_point_inside_spans = function(point, spans)
+H.is_span_inside_spans = function(ref_span, spans)
   for _, span in ipairs(spans) do
-    if span[1] <= point and point <= span[2] then return true end
+    if span[1] <= ref_span[1] and ref_span[2] <= span[2] then return true end
   end
   return false
 end
