@@ -558,10 +558,31 @@ T['gen_spec']['argument()']['respects `opts.brackets`'] = function()
   validate_find1d('{aa, bb}', 0, { 'a', 'A' }, nil)
 end
 
+-- TODO: remove after end of `opts.separators` soft deprecation period
 T['gen_spec']['argument()']['respects `opts.separators`'] = function()
+  child.o.cmdheight = 10
   child.lua([[MiniAi.config.custom_textobjects = {
     A = MiniAi.gen_spec.argument({ separators = { ';' } }),
     B = MiniAi.gen_spec.argument({ separators = { ',', ';' } }),
+  }]])
+
+  expect.match(get_latest_message(), 'soft deprecated')
+
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 1 } }, { 2, 8 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 2 } }, { 8, 15 })
+
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 1 } }, { 2, 4 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 2 } }, { 4, 7 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 3 } }, { 8, 11 })
+  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 4 } }, { 12, 15 })
+end
+
+T['gen_spec']['argument()']['respects `opts.separator`'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    A = MiniAi.gen_spec.argument({ separator = ';' }),
+    B = MiniAi.gen_spec.argument({ separator = '[,;]' }),
+    C = MiniAi.gen_spec.argument({ separator = '%s*,%s*' }),
+    D = MiniAi.gen_spec.argument({ separator = ', ,' }),
   }]])
 
   validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 1 } }, { 2, 8 })
@@ -571,6 +592,20 @@ T['gen_spec']['argument()']['respects `opts.separators`'] = function()
   validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 2 } }, { 4, 7 })
   validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 3 } }, { 8, 11 })
   validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 4 } }, { 12, 15 })
+
+  validate_find1d('(aa , bb , cc)', 0, { 'a', 'C', { n_times = 1 } }, { 2, 6 })
+  validate_find1d('(aa , bb , cc)', 0, { 'a', 'C', { n_times = 2 } }, { 4, 8 })
+  validate_find1d('(aa , bb , cc)', 0, { 'a', 'C', { n_times = 3 } }, { 9, 13 })
+
+  validate_find1d('(aa , bb , cc)', 0, { 'i', 'C', { n_times = 1 } }, { 2, 3 })
+  validate_find1d('(aa , bb , cc)', 0, { 'i', 'C', { n_times = 2 } }, { 7, 8 })
+  validate_find1d('(aa , bb , cc)', 0, { 'i', 'C', { n_times = 3 } }, { 12, 13 })
+
+  validate_find1d('(aa, bb , , cc, dd)', 0, { 'a', 'D', { n_times = 1 } }, { 2, 11 })
+  validate_find1d('(aa, bb , , cc, dd)', 0, { 'a', 'D', { n_times = 2 } }, { 9, 18 })
+
+  validate_find1d('(aa, bb , , cc, dd)', 0, { 'i', 'D', { n_times = 1 } }, { 2, 7 })
+  validate_find1d('(aa, bb , , cc, dd)', 0, { 'i', 'D', { n_times = 2 } }, { 13, 18 })
 end
 
 T['gen_spec']['argument()']['respects `opts.exclude_regions`'] = function()
@@ -2155,6 +2190,11 @@ T['Builtin']['Argument']['is ambiguous on first comma'] = function()
   -- of compromise over comma asymmetry.
   validate_tobj1d('f(x, yyyyyy)', 3, 'aa', { 3, 4 })
   validate_tobj1d('f(xxxxxx, y)', 8, 'aa', { 9, 11 })
+
+  -- It is also true if separator pattern includes whitespace
+  child.lua([[MiniAi.config.custom_textobjects = { A = MiniAi.gen_spec.argument({ separator = '%s*,%s*' }) }]])
+  validate_tobj1d('f(x , yyyyyy)', 5, 'aA', { 3, 6 })
+  validate_tobj1d('f(xxxxxx , y)', 8, 'aA', { 9, 12 })
 end
 
 T['Builtin']['Argument']['works inside all balanced brackets'] = function()
@@ -2194,7 +2234,7 @@ T['Builtin']['Argument']['ignores empty arguments'] = function()
   validate_tobj1d('f(, xx)', 0, '2ia', { 5, 6 })
 
   validate_tobj1d('f(,, xx)', 0, 'aa', { 3, 3 })
-  validate_tobj1d('f(,, xx)', 0, 'ia', { 4, 4 })
+  validate_tobj1d('f(,, xx)', 0, 'ia', { 3, 3 })
   validate_tobj1d('f(,, xx)', 0, '2aa', { 4, 7 })
   validate_tobj1d('f(,, xx)', 0, '2ia', { 6, 7 })
 
@@ -2278,12 +2318,41 @@ T['Builtin']['Argument']['handles first and last arguments'] = function()
     validate_tobj1d('f(  xx  ,  yy  )', i, 'ia', { 12, 13 })
   end
 
+  -- Edge whitespace should be recognized as part of current argument even in
+  -- presence of a bigger covering one
+  validate_tobj1d('g(f(  xx  ,  yy  ))', 4, 'aa', { 7, 11 })
+  validate_tobj1d('g(f(  xx  ,  yy  ))', 16, 'aa', { 11, 15 })
+
   -- Newline character should also be ignored
   local lines, cursor = { 'f(  ', '  aa,', '  bb', '  )' }, { 1, 0 }
   validate_tobj(lines, cursor, 'aa', { { 2, 3 }, { 2, 5 } })
   validate_tobj(lines, cursor, 'ia', { { 2, 3 }, { 2, 4 } })
   validate_tobj(lines, cursor, '2aa', { { 2, 5 }, { 3, 4 } })
   validate_tobj(lines, cursor, '2ia', { { 3, 3 }, { 3, 4 } })
+end
+
+--stylua: ignore
+T['Builtin']['Argument']['works with whitespace padding in separator pattern'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = { A = MiniAi.gen_spec.argument({ separator = '%s*,%s*' }) }]])
+
+  -- Visual mode
+  for i = 2, 5 do
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'aA', { 5, 11 })
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'iA', { 5, 6 })
+  end
+  for i = 11, 12 do
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'aA', { 7, 13 })
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'iA', { 12, 13 })
+  end
+  for i = 18, 21 do
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'aA', { 14, 20 })
+    validate_tobj1d('f(  xx  ,  yy  ,  zz  )', i, 'iA', { 19, 20 })
+  end
+
+  -- Operator-pending mode
+  validate_edit1d('f( xx  ,   yy    ,     zz )', 3,  'f( yy    ,     zz )', 3, 'daA')
+  validate_edit1d('f( xx  ,   yy    ,     zz )', 11, 'f( xx    ,     zz )', 5, 'daA')
+  validate_edit1d('f( xx  ,   yy    ,     zz )', 23, 'f( xx  ,   yy )',    13, 'daA')
 end
 
 T['Builtin']['Argument']['works in Operator-pending mode'] = function()

@@ -630,33 +630,51 @@ MiniAi.gen_spec = {}
 --- Examples:
 --- - `argument({ brackets = { '%b()' } })` will search for an argument only
 ---   inside balanced `()`.
---- - `argument({ separators = { ',', ';' } })` will consider both `,` and `;`
----   to be separators.
+--- - `argument({ separator = '[,;]' })` will treat both `,` and `;` as separators.
 --- - `argument({ exclude_regions = { '%b()' } })` will exclude separators
 ---   which are inside balanced `()` (inside outer brackets).
 ---
 ---@param opts table|nil Options. Allowed fields:
----   - <brackets> - table with patterns for outer balanced brackets.
+---   - <brackets> - array of patterns for outer balanced brackets.
 ---     Default: `{ '%b()', '%b[]', '%b{}' }` (any `()`, `[]`, or `{}` can
 ---     enclose arguments).
----   - <separators> - table with single character separators.
----     Default: `{ ',' }` (arguments are separated with `,`).
----   - <exclude_regions> - table with patterns for regions inside which
+---   - <separator> - separator pattern. Default: `','`.
+---     Notes:
+---       - To convert from previous `separators` option, paste all separators
+---         into square brackets. Example: `{ ',', ';' }` -> `'[,;]'`.
+---       - One of the practical usages of this option is to include whitespace
+---         around character to be a part of separator. For example,
+---         `'%s*,%s*'` will treat as separator not only ',', but its possible
+---         surrounding whitespace. This has both positive and negative effects.
+---         On one hand, `daa` executed over the first argument will delete
+---         whitespace after first comma, leading to a more expected outcome.
+---         On the other hand it is ambiguous which argument is picked when
+---         cursor is over whitespace near the character separator.
+---   - <exclude_regions> - array with patterns for regions inside which
 ---     separators will be ignored.
 ---     Default: `{ '%b""', "%b''", '%b()', '%b[]', '%b{}' }` (separators
 ---     inside balanced quotes or brackets are ignored).
 MiniAi.gen_spec.argument = function(opts)
   opts = vim.tbl_deep_extend('force', {
     brackets = { '%b()', '%b[]', '%b{}' },
-    separators = { ',' },
+    separator = ',',
     exclude_regions = { '%b""', "%b''", '%b()', '%b[]', '%b{}' },
   }, opts or {})
-  local brackets, separators, exclude_regions = opts.brackets, opts.separators, opts.exclude_regions
 
-  if type(opts.brackets) == 'string' then opts.brackets = { opts.brackets } end
-  local separators_esc = vim.tbl_map(vim.pesc, separators)
-  local sep_str = table.concat(separators_esc, '')
-  local sep_pattern, nosep_pattern = '[' .. sep_str .. ']', '[^' .. sep_str .. ']'
+  local brackets, separator, exclude_regions = opts.brackets, opts.separator, opts.exclude_regions
+
+  -- TODO: Remove after certain time of soft deprecation period passes (along
+  -- with documentation note)
+  if opts.separators ~= nil then
+    vim.notify(
+      '(mini.ai) The `separators` option (plural) for `gen_spec.argument` is soft deprecated'
+        .. ' in favor of `separator` option (singular).'
+        .. ' The `separators` option will work for some time, but will eventually get removed.'
+        .. ' See `:h MiniAi.gen_spec.argument`.'
+    )
+    local separators_esc = vim.tbl_map(vim.pesc, opts.separators)
+    separator = '[' .. table.concat(separators_esc, '') .. ']'
+  end
 
   local res = {}
   -- Match brackets
@@ -668,7 +686,7 @@ MiniAi.gen_spec.argument = function(opts)
     -- Storing per spec allows coexistence of several argument specifications.
     H.cache.argument_sep_spans = H.cache.argument_sep_spans or {}
     H.cache.argument_sep_spans[res] = H.cache.argument_sep_spans[res] or {}
-    local sep_spans = H.cache.argument_sep_spans[res][s] or H.arg_get_separator_spans(s, sep_pattern, exclude_regions)
+    local sep_spans = H.cache.argument_sep_spans[res][s] or H.arg_get_separator_spans(s, separator, exclude_regions)
     H.cache.argument_sep_spans[res][s] = sep_spans
 
     -- Return span fully on right of `init`, `nil` otherwise
@@ -681,40 +699,85 @@ MiniAi.gen_spec.argument = function(opts)
   end
 
   -- Make extraction part
-  local match_and_shrink = function(left, left_keep, right, right_keep)
-    local pattern = '^' .. left .. '.*' .. right .. '$'
-    return function(s, init)
-      if init > 1 then return nil end
-      if not s:find(pattern) then return nil end
-      local left_pad, right_pad = left_keep and 0 or 1, right_keep and 0 or 1
-      return 1 + left_pad, s:len() - right_pad
-    end
-  end
-
-  -- `a` type depends on argument number, `i` - as `a` but without whitespace
-  -- The reason for this complex solution is the following requirements:
+  --
+  -- Extraction of `a` type depends on argument number, `i` - as `a` but
+  -- without separators and inner whitespace. The reason for this complex
+  -- solution are the following requirements:
   -- - Don't match argument region when cursor is on the outer bracket.
   --   Example: `f(xxx)` should select argument only when cursor is on 'x'.
-  -- - Don't select edge whitespace for first and last argument BUT match when
-  --   cursor is on them. This is useful when working with padded brackets.
+  -- - Don't select edge whitespace for first and last argument BUT MATCH WHEN
+  --   CURSOR IS ON THEM which needs to match edge whitespace right until the
+  --   extraction part. This is useful when working with padded brackets.
   --   Example for `f(  xx  ,  yy  )`:
   --     - `a` object should select 'xx  ,' when cursor is on all '  xx  ';
   --       should select ',  yy' when cursor is on all '  yy  '.
   --     - `i` object should select 'xx' when cursor is on all '  xx  ';
   --       should select 'yy' when cursor is on all '  yy  '.
-  res[3] = {
-    -- Middle argument. Include only left separator.
-    { match_and_shrink(sep_pattern, true, sep_pattern, false), '^.%s*().-()%s*$' },
+  --
+  -- At this stage whether argument is first, middle, last, or single is
+  -- determined by presence of matching separator at either left or right edge.
+  -- If edge matches separator pattern - it has separator. If not - a bracket.
+  local left_edge_separator = '^' .. separator
+  local find_after_left_separator = function(s)
+    local _, sep_end = s:find(left_edge_separator)
+    if sep_end == nil then return nil end
+    return sep_end + 1
+  end
+  local find_after_left_bracket = function(s)
+    local left_sep = find_after_left_separator(s)
+    if left_sep ~= nil then return nil end
+    return 2
+  end
 
+  local right_edge_sep = separator .. '$'
+  local find_before_right_separator = function(s)
+    local sep_start, _ = s:find(right_edge_sep)
+    if sep_start == nil then return nil end
+    return sep_start - 1
+  end
+  local find_before_right_bracket = function(s)
+    local right_sep = find_before_right_separator(s)
+    if right_sep ~= nil then return nil end
+    return s:len() - 1
+  end
+
+  local match_and_include = function(left_type, left_include, right_type, right_include)
+    local find_after_left = left_type == 'bracket' and find_after_left_bracket or find_after_left_separator
+    local find_before_right = right_type == 'bracket' and find_before_right_bracket or find_before_right_separator
+
+    return function(s, init)
+      -- Match only once
+      if init > 1 then return nil end
+
+      -- Make sure that string matches left and right targets
+      local left_after, right_before = find_after_left(s), find_before_right(s)
+      if left_after == nil or right_before == nil then return nil end
+
+      -- Possibly include matched edge targets
+      local left = left_include and 1 or left_after
+      local right = right_include and s:len() or right_before
+
+      return left, right
+    end
+  end
+
+  local extract_first_arg = '^%s*()().-()%s*' .. separator .. '()$'
+  local extract_nonfirst_arg = '^()' .. separator .. '%s*().-()()%s*$'
+  local extract_single_arg = '^%s*().-()%s*$'
+
+  res[3] = {
     -- First argument. Include right separator, exclude left whitespace.
-    { match_and_shrink(nosep_pattern, false, sep_pattern, true), '^%s*()().-()%s*.()$' },
+    { match_and_include('bracket', false, 'separator', true), extract_first_arg },
+
+    -- Middle argument. Include only left separator.
+    { match_and_include('separator', true, 'separator', false), extract_nonfirst_arg },
 
     -- Last argument. Include left separator, exclude right whitespace.
     -- NOTE: it misbehaves for whitespace argument. It's OK because it's rare.
-    { match_and_shrink(sep_pattern, true, nosep_pattern, false), '^().%s*().-()()%s*$' },
+    { match_and_include('separator', true, 'bracket', false), extract_nonfirst_arg },
 
     -- Single argument. Include both whitespace (makes `aa` and `ia` differ).
-    { match_and_shrink(nosep_pattern, false, nosep_pattern, false), '^%s*().-()%s*$' },
+    { match_and_include('bracket', false, 'bracket', false), extract_single_arg },
   }
 
   return res

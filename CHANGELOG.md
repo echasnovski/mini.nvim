@@ -2,6 +2,10 @@
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
 
+## mini.ai
+
+- BREAKING FEATURE: In `MiniAi.gen_spec.argument()` option `separators` (plural; array of characters) is soft deprecated in favor of `separator` (singular; Lua pattern) option.
+
 ## mini.animate
 
 Introduction of new module.
