@@ -451,7 +451,7 @@ end
 ---@return __starter_section_fun
 MiniStarter.sections.sessions = function(n, recent)
   n = n or 5
-  recent = recent == nil and true or recent
+  if recent == nil then recent = true end
 
   return function()
     if _G.MiniSessions == nil then
@@ -509,8 +509,8 @@ end
 ---@return __starter_section_fun
 MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   n = n or 5
-  current_dir = current_dir == nil and false or current_dir
-  show_path = show_path == nil and true or show_path
+  if current_dir == nil then current_dir = false end
+  if show_path == nil then show_path = true end
 
   if current_dir then vim.cmd('au DirChanged * lua MiniStarter.refresh()') end
 
@@ -619,7 +619,7 @@ end
 ---@return function Content hook.
 MiniStarter.gen_hook.adding_bullet = function(bullet, place_cursor)
   bullet = bullet or '░ '
-  place_cursor = place_cursor == nil and true or place_cursor
+  if place_cursor == nil then place_cursor = true end
   return function(content)
     local coords = MiniStarter.content_coords(content, 'item')
     -- Go backwards to avoid conflict when inserting units
@@ -697,8 +697,8 @@ end
 ---
 ---@return function Content hook.
 MiniStarter.gen_hook.aligning = function(horizontal, vertical)
-  horizontal = horizontal == nil and 'left' or horizontal
-  vertical = vertical == nil and 'top' or vertical
+  horizontal = horizontal or 'left'
+  vertical = vertical or 'top'
 
   local horiz_coef = ({ left = 0, center = 0.5, right = 1.0 })[horizontal]
   local vert_coef = ({ top = 0, center = 0.5, bottom = 1.0 })[vertical]

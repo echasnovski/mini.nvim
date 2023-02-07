@@ -665,8 +665,6 @@ end
 ---@param use_previous_cursor boolean|nil Whether to focus on source window at
 ---   original cursor position (the one prior focusing on map window).
 MiniMap.toggle_focus = function(use_previous_cursor)
-  if use_previous_cursor == nil then use_previous_cursor = false end
-
   if not H.is_window_open() then return end
   local cur_win, map_win = vim.api.nvim_get_current_win(), H.get_current_map_win()
 

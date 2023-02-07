@@ -349,9 +349,11 @@ end
 ---   Default: `true`.
 MiniCompletion.complete_twostage = function(fallback, force)
   if H.is_disabled() then return end
+  if fallback == nil then fallback = true end
+  if force == nil then force = true end
 
   H.stop_completion()
-  H.completion.fallback, H.completion.force = fallback or true, force or true
+  H.completion.fallback, H.completion.force = fallback, force
   H.trigger_twostep()
 end
 
