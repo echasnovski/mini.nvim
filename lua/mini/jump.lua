@@ -251,7 +251,7 @@ MiniJump.expr_jump = function(backward, till)
   -- mode. Dot-repeat will be implemented via expression-mapping.
   local target = H.get_target()
   -- Stop if user supplied invalid target
-  if target == nil then return end
+  if target == nil then return '<Esc>' end
   H.update_state(target, backward, till, vim.v.count1)
 
   return vim.api.nvim_replace_termcodes('v<Cmd>lua MiniJump.jump()<CR>', true, true, true)

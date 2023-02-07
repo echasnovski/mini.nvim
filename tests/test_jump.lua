@@ -363,7 +363,7 @@ T['Jumping with f/t/F/T']['works in Normal and Visual modes'] = new_set({
 
 -- NOTE: for some reason it seems to be very important to do cases for
 -- Operator-pending mode in parametrized form, because this way child process
--- is restarted every time. Otherwise it will lead to hanging process somewhere
+-- is restarted every time. Otherwise it will lead to hanging process somewhere.
 T['Jumping with f/t/F/T']['works in Operator-pending mode'] = new_set({
   parametrize = {
     { 'f', { '2e3e4e5e_ ', '4e5e_ ', '_ ' } },
@@ -547,6 +547,14 @@ T['Jumping with f/t/F/T']['stops prompting for target if hit `<Esc>` or `<C-c>`'
     -- Here 'o' should act just like Normal mode 'o'
     -- Wait after every key to poke eventloop
     type_keys(1, key, test_key, 'o')
+    eq(get_lines(), { 'oooo', '' })
+
+    child.ensure_normal_mode()
+
+    -- Should also work in Operator-pending mode
+    set_lines({ 'oooo' })
+    set_cursor(1, 0)
+    type_keys(1, 'd', key, test_key, 'o')
     eq(get_lines(), { 'oooo', '' })
   end,
 })
