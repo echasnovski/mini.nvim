@@ -191,6 +191,35 @@ T['combine_groups()']['allows empty `strings` to start new highlight'] = functio
   eq(combine_groups({ { strings = { 'a1', 'a2' } }, { hl = 'BB' }, { strings = { 'c1' } } }), ' a1 a2 %#BB# c1 ')
 end
 
+local is_truncated = function(...) return child.lua_get('MiniStatusline.is_truncated(...)', { ... }) end
+
+T['is_truncated()'] = new_set()
+
+T['is_truncated()']['works'] = function()
+  child.cmd('wincmd v')
+  set_width(50)
+
+  -- Should return `false` ("not trauncated") by default
+  eq(is_truncated(), false)
+
+  eq(is_truncated(49), false)
+  eq(is_truncated(50), false)
+  eq(is_truncated(51), true)
+end
+
+T['is_truncated()']['respects global statusline'] = function()
+  if child.fn.has('nvim-0.7') == 0 then return end
+  child.o.laststatus = 3
+  child.o.columns = 60
+  child.cmd('wincmd v')
+  set_width(50)
+
+  eq(is_truncated(51), false)
+  eq(is_truncated(59), false)
+  eq(is_truncated(60), false)
+  eq(is_truncated(61), true)
+end
+
 local eval_content = function(field) return child.lua_get(('MiniStatusline.%s()'):format(field)) end
 
 T['active()/inactive()'] = new_set({

@@ -247,7 +247,8 @@ end
 ---@return boolean Whether to truncate.
 MiniStatusline.is_truncated = function(trunc_width)
   -- Use -1 to default to 'not truncated'
-  return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
+  local cur_width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
+  return cur_width < (trunc_width or -1)
 end
 
 -- Sections ===================================================================
