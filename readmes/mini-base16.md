@@ -175,7 +175,6 @@ Here are code snippets for some common installation methods (use only one):
 ## Default config
 
 ```lua
--- No need to copy this inside `setup()`. Will be used automatically.
 {
   -- Table with names from `base00` to `base0F` and values being strings of
   -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
