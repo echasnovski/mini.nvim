@@ -69,7 +69,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniTabline.config|.
+---@param config table|nil Module config table. See |MiniTabline.config|.
 ---
 ---@usage `require('mini.tabline').setup({})` (replace `{}` with your `config` table)
 MiniTabline.setup = function(config)

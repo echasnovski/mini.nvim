@@ -45,7 +45,7 @@ highlighting update (see |events| and `MiniTrailspace` |augroup|).
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniTrailspace.config|.
+{config} `(table|nil)` Module config table. See |MiniTrailspace.config|.
 
 Usage~
 `require('mini.trailspace').setup({})` (replace `{}` with your `config` table)

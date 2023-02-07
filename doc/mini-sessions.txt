@@ -53,7 +53,7 @@ rules for disabling module's functionality is left to user. See
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniSessions.config|.
+{config} `(table|nil)` Module config table. See |MiniSessions.config|.
 
 Usage~
 `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
@@ -118,10 +118,10 @@ What it does:
 - Source session with supplied name.
 
 Parameters~
-{session_name} `(string)` Name of detected session file to read. Default:
+{session_name} `(string|nil)` Name of detected session file to read. Default:
   `nil` for default session: local (if detected) or latest session (see
   |MiniSessions.get_latest|).
-{opts} `(table)` Table with options. Current allowed keys:
+{opts} `(table|nil)` Table with options. Current allowed keys:
   - <force> (whether to delete unsaved buffers; default:
     `MiniSessions.config.force.read`).
   - <verbose> (whether to print session path after action; default
@@ -150,9 +150,9 @@ What it does:
 - Update |MiniSessions.detected|.
 
 Parameters~
-{session_name} `(string)` Name of session file to write. Default: `nil` for
+{session_name} `(string|nil)` Name of session file to write. Default: `nil` for
   current session (|v:this_session|).
-{opts} `(table)` Table with options. Current allowed keys:
+{opts} `(table|nil)` Table with options. Current allowed keys:
   - <force> (whether to ignore existence of session file; default:
     `MiniSessions.config.force.write`).
   - <verbose> (whether to print session path after action; default
@@ -174,9 +174,9 @@ What it does:
 - Update |MiniSessions.detected|.
 
 Parameters~
-{session_name} `(string)` Name of detected session file to delete. Default:
+{session_name} `(string|nil)` Name of detected session file to delete. Default:
   `nil` for name of current session (taken from |v:this_session|).
-{opts} `(table)` Table with options. Current allowed keys:
+{opts} `(table|nil)` Table with options. Current allowed keys:
   - <force> (whether to allow deletion of current session; default:
     `MiniSessions.config.force.delete`).
   - <verbose> (whether to print session path after action; default
@@ -196,9 +196,9 @@ experience, override it (for example, with external plugins like
 "stevearc/dressing.nvim").
 
 Parameters~
-{action} `(string)` Action to perform. Should be one of "read" (default),
+{action} `(string|nil)` Action to perform. Should be one of "read" (default),
   "write", or "delete".
-{opts} `(table)` Options for specified action.
+{opts} `(table|nil)` Options for specified action.
 
 ------------------------------------------------------------------------------
                                                      *MiniSessions.get_latest()*

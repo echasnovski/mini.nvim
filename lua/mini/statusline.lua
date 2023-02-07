@@ -105,8 +105,8 @@
 --- is `true`-ish then return `y`, if not - return `z`.
 ---@tag MiniStatusline-example-content
 
----@alias __args table Section arguments.
----@alias __section string Section string.
+---@alias __statusline_args table Section arguments.
+---@alias __statusline_section string Section string.
 
 -- Module definition ==========================================================
 local MiniStatusline = {}
@@ -114,7 +114,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniStatusline.config|.
+---@param config table|nil Module config table. See |MiniStatusline.config|.
 ---
 ---@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
 MiniStatusline.setup = function(config)
@@ -205,7 +205,7 @@ end
 ---   strings from `strings` are separated by one space. Non-empty groups are
 ---   separated by two spaces (one for each highlighting).
 ---
----@param groups string|table Array of groups.
+---@param groups table Array of groups.
 ---
 ---@return string String suitable for 'statusline'.
 MiniStatusline.combine_groups = function(groups)
@@ -242,7 +242,7 @@ end
 ---
 --- Use this to manually decide if section needs truncation or not.
 ---
----@param trunc_width number Truncation width. If `nil`, output is `false`.
+---@param trunc_width number|nil Truncation width. If `nil`, output is `false`.
 ---
 ---@return boolean Whether to truncate.
 MiniStatusline.is_truncated = function(trunc_width)
@@ -259,7 +259,7 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args __args
+---@param args __statusline_args
 ---
 ---@return ... Section string and mode's highlight group.
 MiniStatusline.section_mode = function(args)
@@ -278,9 +278,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args __args Use `args.icon` to supply your own icon.
+---@param args __statusline_args Use `args.icon` to supply your own icon.
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_git = function(args)
   if H.isnt_normal_buffer() then return '' end
 
@@ -303,9 +303,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args __args Use `args.icon` to supply your own icon.
+---@param args __statusline_args Use `args.icon` to supply your own icon.
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
   -- Assumption: there are no attached clients if table
   -- `vim.lsp.buf_get_clients()` is empty
@@ -332,9 +332,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args __args
+---@param args __statusline_args
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_filename = function(args)
   -- In terminal always use plain name
   if vim.bo.buftype == 'terminal' then
@@ -354,9 +354,9 @@ end
 --- Short output contains only extension and is returned if window width is
 --- lower than `args.trunc_width`.
 ---
----@param args __args
+---@param args __statusline_args
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_fileinfo = function(args)
   local filetype = vim.bo.filetype
 
@@ -387,9 +387,9 @@ end
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
----@param args __args
+---@param args __statusline_args
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_location = function(args)
   -- Use virtual column number to allow update when past last column
   if MiniStatusline.is_truncated(args.trunc_width) then return '%l│%2v' end
@@ -409,9 +409,9 @@ end
 --- usually same order of magnitude as 0.1 ms). To prevent this, supply
 --- `args.options = {recompute = false}`.
 ---
----@param args __args
+---@param args __statusline_args
 ---
----@return __section
+---@return __statusline_section
 MiniStatusline.section_searchcount = function(args)
   if vim.v.hlsearch == 0 or MiniStatusline.is_truncated(args.trunc_width) then return '' end
   -- `searchcount()` can return errors because it is evaluated very often in

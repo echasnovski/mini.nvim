@@ -577,11 +577,11 @@ end
 ---     - Any wait time less than 1 ms means that action will be executed
 ---       immediately.
 ---
----@param step_action function Callable which takes `step` (integer 0, 1, 2,
+---@param step_action function|table Callable which takes `step` (integer 0, 1, 2,
 ---   etc. indicating current step) and executes some action. Its return value
 ---   defines when animation should stop: values `false` and `nil` (equivalent
 ---   to no explicit return) stop animation timer; any other continues it.
----@param step_timing function Callable which takes `step` (integer 1, 2, etc.
+---@param step_timing function|table Callable which takes `step` (integer 1, 2, etc.
 ---   indicating next step) and returns how many milliseconds to wait before
 ---   executing this step action.
 ---@param opts table|nil Options. Possible fields:
@@ -643,7 +643,7 @@ end
 ---@seealso |MiniIndentscope.gen_animation| for similar concept in 'mini.indentscope'.
 MiniAnimate.gen_timing = {}
 
----@alias __timing_opts table Options that control progression. Possible keys:
+---@alias __animate_timing_opts table|nil Options that control progression. Possible keys:
 ---   - <easing> `(string)` - a subtype of progression. One of "in"
 ---     (accelerating from zero speed), "out" (decelerating to zero speed),
 ---     "in-out" (default; accelerating halfway, decelerating after).
@@ -651,7 +651,7 @@ MiniAnimate.gen_timing = {}
 ---   - <unit> `(string)` - which unit's duration `opts.duration` controls. One
 ---     of "step" (default; ensures average duration of step to be `opts.duration`)
 ---     or "total" (ensures fixed total duration regardless of scope's range).
----@alias __timing_return function Timing function (see |MiniAnimate-timing|).
+---@alias __animate_timing_return function Timing function (see |MiniAnimate-timing|).
 
 --- Generate timing with no animation
 ---
@@ -663,37 +663,37 @@ end
 
 --- Generate timing with linear progression
 ---
----@param opts __timing_opts
+---@param opts __animate_timing_opts
 ---
----@return __timing_return
+---@return __animate_timing_return
 MiniAnimate.gen_timing.linear = function(opts) return H.timing_arithmetic(0, H.normalize_timing_opts(opts)) end
 
 --- Generate timing with quadratic progression
 ---
----@param opts __timing_opts
+---@param opts __animate_timing_opts
 ---
----@return __timing_return
+---@return __animate_timing_return
 MiniAnimate.gen_timing.quadratic = function(opts) return H.timing_arithmetic(1, H.normalize_timing_opts(opts)) end
 
 --- Generate timing with cubic progression
 ---
----@param opts __timing_opts
+---@param opts __animate_timing_opts
 ---
----@return __timing_return
+---@return __animate_timing_return
 MiniAnimate.gen_timing.cubic = function(opts) return H.timing_arithmetic(2, H.normalize_timing_opts(opts)) end
 
 --- Generate timing with quartic progression
 ---
----@param opts __timing_opts
+---@param opts __animate_timing_opts
 ---
----@return __timing_return
+---@return __animate_timing_return
 MiniAnimate.gen_timing.quartic = function(opts) return H.timing_arithmetic(3, H.normalize_timing_opts(opts)) end
 
 --- Generate timing with exponential progression
 ---
----@param opts __timing_opts
+---@param opts __animate_timing_opts
 ---
----@return __timing_return
+---@return __animate_timing_return
 MiniAnimate.gen_timing.exponential = function(opts) return H.timing_geometrical(H.normalize_timing_opts(opts)) end
 
 --- Generate cursor animation path
@@ -713,18 +713,18 @@ MiniAnimate.gen_timing.exponential = function(opts) return H.timing_geometrical(
 ---   })
 MiniAnimate.gen_path = {}
 
----@alias __path_opts_common table Options that control generator. Possible keys:
+---@alias __animate_path_opts_common table|nil Options that control generator. Possible keys:
 ---   - <predicate> `(function)` - a callable which takes `destination` as input and
 ---     returns boolean value indicating whether animation should be done.
 ---     Default: `false` if `destination` is within one line of origin (reduces
 ---     flickering), `true` otherwise.
----@alias __path_return function Path function (see |MiniAnimate.config.cursor|).
+---@alias __animate_path_return function Path function (see |MiniAnimate.config.cursor|).
 
 --- Generate path as shortest line
 ---
----@param opts __path_opts_common
+---@param opts __animate_path_opts_common
 ---
----@return __path_return
+---@return __animate_path_return
 MiniAnimate.gen_path.line = function(opts)
   opts = vim.tbl_deep_extend('force', { predicate = H.default_path_predicate }, opts or {})
 
@@ -733,12 +733,12 @@ end
 
 --- Generate path as line/column angle
 ---
----@param opts __path_opts_common
+---@param opts __animate_path_opts_common
 ---   - <first_direction> `(string)` - one of `"horizontal"` (default; animates
 ---     across initial line first) or `"vertical"` (animates across initial
 ---     column first).
 ---
----@return __path_return
+---@return __animate_path_return
 MiniAnimate.gen_path.angle = function(opts)
   opts = opts or {}
   local predicate = opts.predicate or H.default_path_predicate
@@ -780,10 +780,10 @@ end
 
 --- Generate path as closing walls at final position
 ---
----@param opts __path_opts_common
+---@param opts __animate_path_opts_common
 ---   - <width> `(number)` - initial width of left and right walls. Default: 10.
 ---
----@return __path_return
+---@return __animate_path_return
 MiniAnimate.gen_path.walls = function(opts)
   opts = opts or {}
   local predicate = opts.predicate or H.default_path_predicate
@@ -808,10 +808,10 @@ end
 
 --- Generate path as diminishing spiral at final position
 ---
----@param opts __path_opts_common
+---@param opts __animate_path_opts_common
 ---   - <width> `(number)` - initial width of spiral. Default: 2.
 ---
----@return __path_return
+---@return __animate_path_return
 MiniAnimate.gen_path.spiral = function(opts)
   opts = opts or {}
   local predicate = opts.predicate or H.default_path_predicate
@@ -861,7 +861,7 @@ MiniAnimate.gen_subscroll = {}
 
 --- Generate subscroll with equal steps
 ---
----@param opts table Options that control generator. Possible keys:
+---@param opts table|nil Options that control generator. Possible keys:
 ---   - <predicate> `(function)` - a callable which takes `total_scroll` as
 ---     input and returns boolean value indicating whether animation should be
 ---     done. Default: `false` if `total_scroll` is 1 or less (reduces
@@ -899,7 +899,7 @@ MiniAnimate.gen_subresize = {}
 
 --- Generate subresize with equal steps
 ---
----@param opts table Options that control generator. Possible keys:
+---@param opts table|nil Options that control generator. Possible keys:
 ---   - <predicate> `(function)` - a callable which takes `sizes_from` and
 ---     `sizes_to` as input and returns boolean value indicating whether
 ---     animation should be done. Default: always `true`.
@@ -944,11 +944,11 @@ end
 ---   })
 MiniAnimate.gen_winconfig = {}
 
----@alias __winconfig_opts_common table Options that control generator. Possible keys:
+---@alias __animate_winconfig_opts_common table|nil Options that control generator. Possible keys:
 ---   - <predicate> `(function)` - a callable which takes `win_id` as input and
 ---     returns boolean value indicating whether animation should be done.
 ---     Default: always `true`.
----@alias __winconfig_return function Winconfig function (see |MiniAnimate.config.open|
+---@alias __animate_winconfig_return function Winconfig function (see |MiniAnimate.config.open|
 ---   or |MiniAnimate.config.close|).
 
 --- Generate winconfig for static floating window
@@ -956,12 +956,12 @@ MiniAnimate.gen_winconfig = {}
 --- This will result into floating window statically covering whole target
 --- window.
 ---
----@param opts __winconfig_opts_common
+---@param opts __animate_winconfig_opts_common
 ---   - <n_steps> `(number)` - number of output steps, all with same config.
 ---     Usefule to tweak smoothness of transparency animation (done inside
 ---     `winblend` config option). Default: 25.
 ---
----@return __winconfig_return
+---@return __animate_winconfig_return
 MiniAnimate.gen_winconfig.static = function(opts)
   opts = vim.tbl_deep_extend('force', { predicate = H.default_winconfig_predicate, n_steps = 25 }, opts or {})
 
@@ -973,12 +973,12 @@ end
 --- This will result into floating window growing from or shrinking to the
 --- target window center.
 ---
----@param opts __winconfig_opts_common
+---@param opts __animate_winconfig_opts_common
 ---   - <direction> `(string)` - one of `"to_center"` (default; window will
 ---     shrink from full coverage to center) or `"from_center"` (window will
 ---     grow from center to full coverage).
 ---
----@return __winconfig_return
+---@return __animate_winconfig_return
 MiniAnimate.gen_winconfig.center = function(opts)
   opts = opts or {}
   local predicate = opts.predicate or H.default_winconfig_predicate
@@ -1027,12 +1027,12 @@ end
 --- vertically split window will progress towards vertical edge; horizontally -
 --- towards horizontal.
 ---
----@param opts __winconfig_opts_common
+---@param opts __animate_winconfig_opts_common
 ---   - <direction> `(string)` - one of `"to_edge"` (default; window will
 ---     shrink from full coverage to nearest edge) or `"from_edge"` (window
 ---     will grow from edge to full coverage).
 ---
----@return __winconfig_return
+---@return __animate_winconfig_return
 MiniAnimate.gen_winconfig.wipe = function(opts)
   opts = opts or {}
   local predicate = opts.predicate or H.default_winconfig_predicate
@@ -1123,7 +1123,7 @@ MiniAnimate.gen_winblend = {}
 
 --- Generate linear `winblend` progression
 ---
----@param opts table Options that control generator. Possible keys:
+---@param opts table|nil Options that control generator. Possible keys:
 ---   - <from> `(number)` - initial value of 'winblend'.
 ---   - <to> `(number)` - final value of 'winblend'.
 ---

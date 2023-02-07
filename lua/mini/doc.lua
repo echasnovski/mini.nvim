@@ -145,7 +145,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniDoc.config|.
+---@param config table|nil Module config table. See |MiniDoc.config|.
 ---
 ---@usage `require('mini.doc').setup({})` (replace `{}` with your `config` table)
 MiniDoc.setup = function(config)
@@ -536,14 +536,14 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 --- output files with eventual call to `require('mini.doc').generate()` (with
 --- or without arguments).
 ---
----@param input table Array of file paths which will be processed in supplied
+---@param input table|nil Array of file paths which will be processed in supplied
 ---   order. Default: all '.lua' files from current directory following by all
 ---   such files in these subdirectories: 'lua/', 'after/', 'colors/'. Note:
 ---   any 'init.lua' file is placed before other files from the same directory.
----@param output string Path for output help file. Default:
+---@param output string|nil Path for output help file. Default:
 ---   `doc/<current_directory>.txt` (designed to be used for generating help
 ---   file for plugin).
----@param config table Configuration overriding parts of |MiniDoc.config|.
+---@param config table|nil Configuration overriding parts of |MiniDoc.config|.
 ---
 ---@return table Document structure which was generated and used for output
 ---   help file. In case `MiniDoc.config.script_path` was successfully used,
@@ -640,8 +640,8 @@ end
 ---@param struct table Block or section structure which after lines will be
 ---   converted to code.
 ---
----@return string Single string (using `\n` to separate lines) describing
----   afterlines as code block in help file.
+---@return string|nil Single string (using `\n` to separate lines) describing
+---   afterlines as code block in help file. If `nil`, input is not valid.
 MiniDoc.afterlines_to_code = function(struct)
   if not (type(struct) == 'table' and (struct.type == 'section' or struct.type == 'block')) then
     H.message('Input to `MiniDoc.afterlines_to_code()` should be either section or block.')

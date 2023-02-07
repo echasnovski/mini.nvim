@@ -35,13 +35,19 @@
 ---@tag mini.bufremove
 ---@tag MiniBufremove
 
+---@alias __bufremove_return boolean|nil Whether operation was successful. If `nil`, no operation was done.
+---@alias __bufremove_buf_id number|nil Buffer identifier (see |bufnr()|) to use.
+---   Default: 0 for current.
+---@alias __bufremove_force boolean|nil Whether to ignore unsaved changes (using `!` version of
+---   command). Default: `false`.
+
 -- Module definition ==========================================================
 local MiniBufremove = {}
 local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniBufremove.config|.
+---@param config table|nil Module config table. See |MiniBufremove.config|.
 ---
 ---@usage `require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
 MiniBufremove.setup = function(config)
@@ -68,12 +74,10 @@ MiniBufremove.config = {
 -- Module functionality =======================================================
 --- Delete buffer `buf_id` with |:bdelete| after unshowing it
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
----   0 for current.
----@param force boolean Whether to ignore unsaved changes (using `!` version of
----   command). Default: `false`.
+---@param buf_id __bufremove_buf_id
+---@param force __bufremove_force
 ---
----@return boolean Whether operation was successful.
+---@return __bufremove_return
 MiniBufremove.delete = function(buf_id, force)
   if H.is_disabled() then return end
 
@@ -82,12 +86,10 @@ end
 
 --- Wipeout buffer `buf_id` with |:bwipeout| after unshowing it
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
----   0 for current.
----@param force boolean Whether to ignore unsaved changes (using `!` version of
----   command). Default: `false`.
+---@param buf_id __bufremove_buf_id
+---@param force __bufremove_force
 ---
----@return boolean Whether operation was successful.
+---@return __bufremove_return
 MiniBufremove.wipeout = function(buf_id, force)
   if H.is_disabled() then return end
 
@@ -96,10 +98,9 @@ end
 
 --- Stop showing buffer `buf_id` in all windows
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) to use. Default:
----   0 for current.
+---@param buf_id __bufremove_buf_id
 ---
----@return boolean Whether operation was successful.
+---@return __bufremove_return
 MiniBufremove.unshow = function(buf_id)
   if H.is_disabled() then return end
 
@@ -114,10 +115,10 @@ end
 
 --- Stop showing current buffer of window `win_id`
 ---
----@param win_id number Window identifier (see |win_getid()|) to use.
+---@param win_id number|nil Window identifier (see |win_getid()|) to use.
 ---   Default: 0 for current.
 ---
----@return boolean Whether operation was successful.
+---@return __bufremove_return
 MiniBufremove.unshow_in_window = function(win_id)
   if H.is_disabled() then return nil end
 

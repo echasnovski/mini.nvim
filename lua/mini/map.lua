@@ -169,7 +169,7 @@
 --- - Exit and enter Normal mode (if your Neovim version supports |ModeChanged|).
 ---@tag mini.map-usage
 
----@alias __opts table|nil Options used to define map configuration. Same structure
+---@alias __map_opts table|nil Options used to define map configuration. Same structure
 ---   as |MiniMap.config|. Will have effect until at least one tabpage has opened
 ---   map window. Default values are taken in the following order:
 ---   - From `opts` field of |MiniMap.current|.
@@ -543,7 +543,7 @@ end
 ---   visual indicators) and map window.
 --- - Call |MiniMap.refresh()|.
 ---
----@param opts __opts
+---@param opts __map_opts
 MiniMap.open = function(opts)
   -- Early returns
   if H.is_disabled() then return end
@@ -593,7 +593,7 @@ end
 --- - Update current map configuration via `opts`.
 --- - Update parts of displayed content via `parts`.
 ---
----@param opts __opts
+---@param opts __map_opts
 ---@param parts table|nil Which parts to update. Recognised keys with boolean
 ---   values (all `true` by default):
 ---   - <integrations> - whether to update integration highlights.
@@ -638,7 +638,7 @@ end
 ---
 --- Open if not shown in current tabpage, close otherwise.
 ---
----@param opts table Input for |MiniMap.open()|.
+---@param opts table|nil Input for |MiniMap.open()|.
 MiniMap.toggle = function(opts)
   if H.is_window_open() then
     MiniMap.close()
@@ -662,7 +662,7 @@ end
 --- - Press `<Esc>` to go back to original position prior focusing on map window.
 ---   Equivalent to calling this function with `true` argument.
 ---
----@param use_previous_cursor boolean Whether to focus on source window at
+---@param use_previous_cursor boolean|nil Whether to focus on source window at
 ---   original cursor position (the one prior focusing on map window).
 MiniMap.toggle_focus = function(use_previous_cursor)
   if use_previous_cursor == nil then use_previous_cursor = false end

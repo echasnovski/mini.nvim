@@ -96,7 +96,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniIndentscope.config|.
+---@param config table|nil Module config table. See |MiniIndentscope.config|.
 ---
 ---@usage `require('mini.indentscope').setup({})` (replace `{}` with your `config` table)
 MiniIndentscope.setup = function(config)
@@ -273,13 +273,13 @@ MiniIndentscope.config = {
 ---   lines at edge of scope's body if there is no border there. See
 ---   |MiniIndentscope.config| for a details example.
 ---
----@param line number Input line number (starts from 1). Can be modified to a
+---@param line number|nil Input line number (starts from 1). Can be modified to a
 ---   neighbor if `try_as_border` is `true`. Default: cursor line.
----@param col number Column number (starts from 1). Default: if
+---@param col number|nil Column number (starts from 1). Default: if
 ---   `indent_at_cursor` option is `true` - cursor column from `curswant` of
 ---   |getcurpos()| (allows for more natural behavior on empty lines);
 ---   `math.huge` otherwise in order to not incorporate cursor in computation.
----@param opts table Options to override global or buffer local ones (see
+---@param opts table|nil Options to override global or buffer local ones (see
 ---   |MiniIndentscope.config|).
 ---
 ---@return table Table with scope information:
@@ -335,7 +335,7 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniIndentscope.setup|.
 ---
----@param opts table Options.
+---@param opts table|nil Options.
 MiniIndentscope.auto_draw = function(opts)
   if H.is_disabled() then
     H.undraw_scope()
@@ -377,9 +377,9 @@ end
 --- equal to border indent plus one (or body indent if border is absent).
 --- Numbering starts from one.
 ---
----@param scope table Scope. Default: output of |MiniIndentscope.get_scope|
+---@param scope table|nil Scope. Default: output of |MiniIndentscope.get_scope|
 ---   with default arguments.
----@param opts table Options. Currently supported:
+---@param opts table|nil Options. Currently supported:
 ---    - <animation_fun> - animation function for drawing. See
 ---      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation|.
 MiniIndentscope.draw = function(scope, opts)
@@ -430,7 +430,7 @@ MiniIndentscope.undraw = function() H.undraw_scope() end
 ---@seealso |MiniIndentscope-drawing| for more information about how drawing is done.
 MiniIndentscope.gen_animation = {}
 
----@alias __animation_opts table Options that control progression. Possible keys:
+---@alias __indentscope_animation_opts table|nil Options that control progression. Possible keys:
 ---   - <easing> `(string)` - a subtype of progression. One of "in"
 ---     (accelerating from zero speed), "out" (decelerating to zero speed),
 ---     "in-out" (default; accelerating halfway, decelerating after).
@@ -438,7 +438,7 @@ MiniIndentscope.gen_animation = {}
 ---   - <unit> `(string)` - which unit's duration `opts.duration` controls. One
 ---     of "step" (default; ensures average duration of step to be `opts.duration`)
 ---     or "total" (ensures fixed total duration regardless of scope's range).
----@alias __animation_return function Animation function (see |MiniIndentscope-drawing|).
+---@alias __indentscope_animation_return function Animation function (see |MiniIndentscope-drawing|).
 
 -- TODO: Remove after 0.7.0 release.
 local n_notifications = 0
@@ -503,41 +503,41 @@ end
 
 --- Generate linear progression
 ---
----@param opts __animation_opts
+---@param opts __indentscope_animation_opts
 ---
----@return __animation_return
+---@return __indentscope_animation_return
 MiniIndentscope.gen_animation.linear =
   function(opts) return H.animation_arithmetic_powers(0, H.normalize_animation_opts(opts)) end
 
 --- Generate quadratic progression
 ---
----@param opts __animation_opts
+---@param opts __indentscope_animation_opts
 ---
----@return __animation_return
+---@return __indentscope_animation_return
 MiniIndentscope.gen_animation.quadratic =
   function(opts) return H.animation_arithmetic_powers(1, H.normalize_animation_opts(opts)) end
 
 --- Generate cubic progression
 ---
----@param opts __animation_opts
+---@param opts __indentscope_animation_opts
 ---
----@return __animation_return
+---@return __indentscope_animation_return
 MiniIndentscope.gen_animation.cubic =
   function(opts) return H.animation_arithmetic_powers(2, H.normalize_animation_opts(opts)) end
 
 --- Generate quartic progression
 ---
----@param opts __animation_opts
+---@param opts __indentscope_animation_opts
 ---
----@return __animation_return
+---@return __indentscope_animation_return
 MiniIndentscope.gen_animation.quartic =
   function(opts) return H.animation_arithmetic_powers(3, H.normalize_animation_opts(opts)) end
 
 --- Generate exponential progression
 ---
----@param opts __animation_opts
+---@param opts __indentscope_animation_opts
 ---
----@return __animation_return
+---@return __indentscope_animation_return
 MiniIndentscope.gen_animation.exponential =
   function(opts) return H.animation_geometrical_powers(H.normalize_animation_opts(opts)) end
 
@@ -546,9 +546,9 @@ MiniIndentscope.gen_animation.exponential =
 --- Cursor is placed on a first non-blank character of target line.
 ---
 ---@param side string One of "top" or "bottom".
----@param use_border boolean Whether to move to border or withing scope's body.
+---@param use_border boolean|nil Whether to move to border or withing scope's body.
 ---   If particular border is absent, body is used.
----@param scope table Scope to use. Default: output of |MiniIndentscope.get_scope()|.
+---@param scope table|nil Scope to use. Default: output of |MiniIndentscope.get_scope()|.
 MiniIndentscope.move_cursor = function(side, use_border, scope)
   scope = scope or MiniIndentscope.get_scope()
 
@@ -568,7 +568,7 @@ end
 --- (drawing indent less that zero).
 ---
 ---@param side string One of "top" or "bottom".
----@param add_to_jumplist boolean Whether to add movement to jump list. It is
+---@param add_to_jumplist boolean|nil Whether to add movement to jump list. It is
 ---   `true` only for Normal mode mappings.
 MiniIndentscope.operator = function(side, add_to_jumplist)
   local scope = MiniIndentscope.get_scope()
@@ -597,7 +597,7 @@ end
 --- Respects |count| and dot-repeat (in operator-pending mode). Doesn't work
 --- for scope that is not shown (drawing indent less that zero).
 ---
----@param use_border boolean Whether to include border in textobject. When
+---@param use_border boolean|nil Whether to include border in textobject. When
 ---   `true` and `try_as_border` option is `false`, allows "chaining" calls for
 ---   incremental selection.
 MiniIndentscope.textobject = function(use_border)

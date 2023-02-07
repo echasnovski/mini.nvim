@@ -351,8 +351,8 @@ end
 ---
 --- Can be used inside hooks and main test callable of test case.
 ---
----@param f function Callable to be executed after current callable is finished
----   executing (regardless of whether it ended with error or not).
+---@param f function|table Callable to be executed after current callable is
+---   finished executing (regardless of whether it ended with error or not).
 MiniTest.finally = function(f) H.cache.finally = f end
 
 --- Run tests
@@ -675,7 +675,7 @@ end
 
 --- Expect function call to raise error
 ---
----@param f function Function to be tested for raising error.
+---@param f function|table Callable to be tested for raising error.
 ---@param pattern string|nil Pattern which error message should match.
 ---   Use `nil` or empty string to not test for pattern matching.
 ---@param ... any Extra arguments with which `f` will be called.
@@ -696,7 +696,7 @@ end
 
 --- Expect function call to not raise error
 ---
----@param f function Function to be tested for raising error.
+---@param f function|table Callable to be tested for raising error.
 ---@param ... any Extra arguments with which `f` will be called.
 MiniTest.expect.no_error = function(f, ...)
   local ok, err = pcall(f, ...)
@@ -770,12 +770,12 @@ end
 --- Helper for writing custom functions with behavior similar to other methods
 --- of |MiniTest.expect|.
 ---
----@param subject string|function Subject of expectation. If function, called with
----   expectation input arguments to produce string value.
----@param predicate function Predicate function. Called with expectation input
----   arguments. Output `false` or `nil` means failed expectation.
----@param fail_context string|function Information about fail. If function, called
----   with expectation input arguments to produce string value.
+---@param subject string|function|table Subject of expectation. If callable,
+---   called with expectation input arguments to produce string value.
+---@param predicate function|table Predicate callable. Called with expectation
+---   input arguments. Output `false` or `nil` means failed expectation.
+---@param fail_context string|function|table Information about fail. If callable,
+---   called with expectation input arguments to produce string value.
 ---
 ---@return function Expectation function.
 ---
@@ -1431,7 +1431,7 @@ end
 ---
 ---@param args table Array with arguments for executable. Will be prepended
 ---   with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
----@param opts table Options:
+---@param opts table|nil Options:
 ---   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
 ---   - <connection_timeout> - stop trying to connect after this amount of
 ---     milliseconds. Default: 5000.
@@ -1455,7 +1455,7 @@ end
 ---   |v:errmsg| was updated).
 --- - Key '<' as separate entry may not be escaped as '<LT>'.
 ---
----@param wait number Number of milliseconds to wait after each entry. May be
+---@param wait number|nil Number of milliseconds to wait after each entry. May be
 ---   omitted, in which case no waiting is done.
 ---@param ... string|table<number,string> Separate entries for |nvim_input()|,
 ---   after which `wait` will be applied. Can be either string or array of strings.

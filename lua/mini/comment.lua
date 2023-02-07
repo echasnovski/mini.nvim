@@ -44,7 +44,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniComment.config|.
+---@param config table|nil Module config table. See |MiniComment.config|.
 ---
 ---@usage `require('mini.comment').setup({})` (replace `{}` with your `config` table)
 MiniComment.setup = function(config)
@@ -96,7 +96,7 @@ MiniComment.config = {
 --- dot-repeatability works): it should be called without arguments inside
 --- expression mapping and with argument when action should be performed.
 ---
----@param mode string Optional string with 'operatorfunc' mode (see |g@|).
+---@param mode string|nil Optional string with 'operatorfunc' mode (see |g@|).
 ---
 ---@return string 'g@' if called without argument, '' otherwise (but after
 ---   performing action).

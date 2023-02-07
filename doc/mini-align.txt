@@ -851,7 +851,7 @@ Parameters~
 {expr} `(string)` Lua expression as a string which will be used as predicate.
 
 Return~
-`(table)` A step named "filter" and with appropriate callable action.
+`(table|nil)` A step named "filter" and with appropriate callable action.
 
 ------------------------------------------------------------------------------
                                              *MiniAlign.gen_step.ignore_split()*
@@ -865,7 +865,7 @@ Parameters~
 {patterns} `(table)` Array of patterns to be added to
   `split_exclude_patterns` as is. Default: `{ [[".-"]] }` (excludes strings
   for most cases).
-{exclude_comment} `(boolean)` Whether to add comment pattern to
+{exclude_comment} `(boolean|nil)` Whether to add comment pattern to
   `split_exclude_patterns`. Comment pattern is derived from 'commentstring'
   option. Default: `true`.
 
@@ -900,9 +900,9 @@ Output calls `trim()` method of parts (see |MiniAlign.as_parts()|) with
 supplied `direction` and `indent` arguments.
 
 Parameters~
-{direction} `(string)` Which sides to trim whitespace. One of "both"
+{direction} `(string|nil)` Which sides to trim whitespace. One of "both"
   (default), "left", "right", "none".
-{indent} `(string)` What to do with possible indent (left whitespace of first
+{indent} `(string|nil)` What to do with possible indent (left whitespace of first
   string in a row). One of "keep" (default), "low", "high", "remove".
 
 Return~

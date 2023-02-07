@@ -39,7 +39,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniMisc.config|.
+---@param config table|nil Module config table. See |MiniMisc.config|.
 ---
 ---@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
 MiniMisc.setup = function(config)
@@ -67,7 +67,7 @@ MiniMisc.config = {
 --- Execute `f` several times and time how long it took
 ---
 ---@param f function Function which execution to benchmark.
----@param n number Number of times to execute `f(...)`. Default: 1.
+---@param n number|nil Number of times to execute `f(...)`. Default: 1.
 ---@param ... any Arguments when calling `f`.
 ---
 ---@return ... Table with durations (in seconds; up to microseconds) and
@@ -87,7 +87,7 @@ end
 
 --- Compute width of gutter (info column on the left of the window)
 ---
----@param win_id number Window identifier (see |win_getid()|) for which gutter
+---@param win_id number|nil Window identifier (see |win_getid()|) for which gutter
 ---   width is computed. Default: 0 for current.
 MiniMisc.get_gutter_width = function(win_id)
   win_id = (win_id == nil or win_id == 0) and vim.api.nvim_get_current_win() or win_id
@@ -130,9 +130,9 @@ end
 
 --- Resize window to have exact number of editable columns
 ---
----@param win_id number Window identifier (see |win_getid()|) to be resized.
+---@param win_id number|nil Window identifier (see |win_getid()|) to be resized.
 ---   Default: 0 for current.
----@param text_width number Number of editable columns resized window will
+---@param text_width number|nil Number of editable columns resized window will
 ---   display. Default: first element of 'colorcolumn' or otherwise 'textwidth'
 ---   (using screen width as its default but not more than 79).
 MiniMisc.resize_window = function(win_id, text_width)
@@ -172,7 +172,7 @@ end
 ---
 --- Note: requires |vim.fs| module (present in Neovim>=0.8).
 ---
----@param names table|function Array of file names or a callable used to
+---@param names table|function|nil Array of file names or a callable used to
 ---   identify a root directory. Forwarded to |MiniMisc.find_root()|.
 ---   Default: `{ '.git', 'Makefile' }`.
 ---
@@ -221,9 +221,9 @@ end
 ---   changes in root directory will be detected after directory path was already
 ---   used in this function. Reload Neovim to account for that.
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) to use.
+---@param buf_id number|nil Buffer identifier (see |bufnr()|) to use.
 ---   Default: 0 for current.
----@param names table|function Array of file names or a callable used to
+---@param names table|function|nil Array of file names or a callable used to
 ---   identify a root directory. Forwarded to |vim.fs.find()|.
 ---   Default: `{ '.git', 'Makefile' }`.
 MiniMisc.find_root = function(buf_id, names)
@@ -377,7 +377,7 @@ end
 --- Note: order of elements might vary.
 ---
 ---@param t table Input table.
----@param n number Maximum number of first elements. Default: 5.
+---@param n number|nil Maximum number of first elements. Default: 5.
 ---
 ---@return table Table with at most `n` first elements of `t` (with same keys).
 MiniMisc.tbl_head = function(t, n)
@@ -400,7 +400,7 @@ end
 --- Note: order of elements might vary.
 ---
 ---@param t table Input table.
----@param n number Maximum number of last elements. Default: 5.
+---@param n number|nil Maximum number of last elements. Default: 5.
 ---
 ---@return table Table with at most `n` last elements of `t` (with same keys).
 MiniMisc.tbl_tail = function(t, n)
@@ -442,7 +442,7 @@ end
 --- with this filetype is entered, so using non-current `buf_id` can not lead
 --- to desired effect.
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) in which function
+---@param buf_id number|nil Buffer identifier (see |bufnr()|) in which function
 ---   will operate. Default: 0 for current.
 MiniMisc.use_nested_comments = function(buf_id)
   buf_id = buf_id or 0
@@ -470,9 +470,9 @@ end
 --- needing to zoom into one to see more of the code from that buffer. Call it
 --- again (without arguments) to zoom out.
 ---
----@param buf_id number Buffer identifier (see |bufnr()|) to be zoomed.
+---@param buf_id number|nil Buffer identifier (see |bufnr()|) to be zoomed.
 ---   Default: 0 for current.
----@param config table Optional config for window (as for |nvim_open_win()|).
+---@param config table|nil Optional config for window (as for |nvim_open_win()|).
 MiniMisc.zoom = function(buf_id, config)
   if H.zoom_winid and vim.api.nvim_win_is_valid(H.zoom_winid) then
     vim.api.nvim_win_close(H.zoom_winid, true)

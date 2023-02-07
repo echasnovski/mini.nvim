@@ -181,7 +181,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniCompletion.config|.
+---@param config table|nil Module config table. See |MiniCompletion.config|.
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniCompletion.setup = function(config)
@@ -344,8 +344,9 @@ end
 
 --- Run two-stage completion
 ---
----@param fallback boolean Whether to use fallback completion.
----@param force boolean Whether to force update of completion popup.
+---@param fallback boolean|nil Whether to use fallback completion. Default: `true`.
+---@param force boolean|nil Whether to force update of completion popup.
+---   Default: `true`.
 MiniCompletion.complete_twostage = function(fallback, force)
   if H.is_disabled() then return end
 
@@ -414,8 +415,8 @@ end
 --- Designed to be used with |autocmd|. No need to use it directly, everything
 --- is setup in |MiniCompletion.setup|.
 ---
----@param actions table Array containing any of 'completion', 'info', or
----   'signature' string.
+---@param actions table|nil Array containing any of 'completion', 'info', or
+---   'signature' string. Default: array containing all of them.
 MiniCompletion.stop = function(actions)
   actions = actions or { 'completion', 'info', 'signature' }
   for _, n in pairs(actions) do
@@ -775,7 +776,7 @@ H.stop_actions = {
 }
 
 -- LSP ------------------------------------------------------------------------
----@param capability string|table|`nil` Server capability (possibly nested
+---@param capability string|table|nil Server capability (possibly nested
 ---   supplied via table) to check.
 ---
 ---@return boolean Whether at least one LSP client supports `capability`.

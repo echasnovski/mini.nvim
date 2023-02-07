@@ -145,7 +145,7 @@ Description of `info` fields per structure type:
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniDoc.config|.
+{config} `(table|nil)` Module config table. See |MiniDoc.config|.
 
 Usage~
 `require('mini.doc').setup({})` (replace `{}` with your `config` table)
@@ -351,14 +351,14 @@ output files with eventual call to `require('mini.doc').generate()` (with
 or without arguments).
 
 Parameters~
-{input} `(table)` Array of file paths which will be processed in supplied
+{input} `(table|nil)` Array of file paths which will be processed in supplied
   order. Default: all '.lua' files from current directory following by all
   such files in these subdirectories: 'lua/', 'after/', 'colors/'. Note:
   any 'init.lua' file is placed before other files from the same directory.
-{output} `(string)` Path for output help file. Default:
+{output} `(string|nil)` Path for output help file. Default:
   `doc/<current_directory>.txt` (designed to be used for generating help
   file for plugin).
-{config} `(table)` Configuration overriding parts of |MiniDoc.config|.
+{config} `(table|nil)` Configuration overriding parts of |MiniDoc.config|.
 
 Return~
 `(table)` Document structure which was generated and used for output
@@ -419,8 +419,8 @@ Parameters~
   converted to code.
 
 Return~
-`(string)` Single string (using `\n` to separate lines) describing
-  afterlines as code block in help file.
+`(string|nil)` Single string (using `\n` to separate lines) describing
+  afterlines as code block in help file. If `nil`, input is not valid.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

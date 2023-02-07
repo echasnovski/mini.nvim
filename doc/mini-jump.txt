@@ -52,7 +52,7 @@ disabling module's functionality is left to user. See
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniJump.config|.
+{config} `(table|nil)` Module config table. See |MiniJump.config|.
 
 Usage~
 `require('mini.jump').setup({})` (replace `{}` with your `config` table)
@@ -99,13 +99,13 @@ Class~
 {JumpingState}
 
 Fields~
-{target} `(string)` The string to jump to.
-{backward} `(boolean)` Whether to jump backward.
-{till} `(boolean)` Whether to jump just before/after the match instead of
+{target} `(string|nil)` The string to jump to.
+{backward} `(boolean|nil)` Whether to jump backward.
+{till} `(boolean|nil)` Whether to jump just before/after the match instead of
   exactly on target. This includes positioning cursor past the end of
   previous/current line. Note that with backward jump this might lead to
   cursor being on target if can't be put past the line.
-{n_times} `(number)` Number of times to perform consecutive jumps.
+{n_times} `(number|nil)` Number of times to perform consecutive jumps.
 {mode} `(string)` Mode of latest jump (output of |mode()| with non-zero argument).
 {jumping} `(boolean)` Whether module is currently in "jumping mode": usage of
   |MiniJump.smart_jump| and all mappings won't require target.
@@ -132,13 +132,13 @@ Takes a string and jumps to its first occurrence in desired direction.
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
 Parameters~
-{target} `(string)` The string to jump to.
-{backward} `(boolean)` Whether to jump backward.
-{till} `(boolean)` Whether to jump just before/after the match instead of
+{target} `(string|nil)` The string to jump to.
+{backward} `(boolean|nil)` Whether to jump backward.
+{till} `(boolean|nil)` Whether to jump just before/after the match instead of
   exactly on target. This includes positioning cursor past the end of
   previous/current line. Note that with backward jump this might lead to
   cursor being on target if can't be put past the line.
-{n_times} `(number)` Number of times to perform consecutive jumps.
+{n_times} `(number|nil)` Number of times to perform consecutive jumps.
 
 ------------------------------------------------------------------------------
                                                          *MiniJump.smart_jump()*
@@ -151,8 +151,8 @@ Otherwise, wait for a target input (via |getcharstr()|). Respects |v:count|.
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
 Parameters~
-{backward} `(boolean)` Whether to jump backward.
-{till} `(boolean)` Whether to jump just before/after the match instead of
+{backward} `(boolean|nil)` Whether to jump backward.
+{till} `(boolean|nil)` Whether to jump just before/after the match instead of
   exactly on target. This includes positioning cursor past the end of
   previous/current line. Note that with backward jump this might lead to
   cursor being on target if can't be put past the line.
@@ -169,8 +169,8 @@ jump. Designed to be used inside Operator-pending mapping (see
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
 Parameters~
-{backward} `(boolean)` Whether to jump backward.
-{till} `(boolean)` Whether to jump just before/after the match instead of
+{backward} `(boolean|nil)` Whether to jump backward.
+{till} `(boolean|nil)` Whether to jump just before/after the match instead of
   exactly on target. This includes positioning cursor past the end of
   previous/current line. Note that with backward jump this might lead to
   cursor being on target if can't be put past the line.

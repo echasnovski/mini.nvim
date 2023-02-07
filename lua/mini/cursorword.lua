@@ -72,7 +72,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniCursorword.config|.
+---@param config table|nil Module config table. See |MiniCursorword.config|.
 ---
 ---@usage `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
 MiniCursorword.setup = function(config)
@@ -215,7 +215,7 @@ H.get_config = function(config)
 end
 
 -- Highlighting ---------------------------------------------------------------
----@param only_current boolean Whether to forcefuly highlight only current word
+---@param only_current boolean|nil Whether to forcefuly highlight only current word
 ---   under cursor.
 ---@private
 H.highlight = function(only_current)
@@ -248,7 +248,7 @@ H.highlight = function(only_current)
   H.window_matches[win_id].word = curword
 end
 
----@param only_current boolean Whether to remove highlighting only of current
+---@param only_current boolean|nil Whether to remove highlighting only of current
 ---   word under cursor.
 ---@private
 H.unhighlight = function(only_current)

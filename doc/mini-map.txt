@@ -531,7 +531,7 @@ Toggle map window
 Open if not shown in current tabpage, close otherwise.
 
 Parameters~
-{opts} `(table)` Input for |MiniMap.open()|.
+{opts} `(table|nil)` Input for |MiniMap.open()|.
 
 ------------------------------------------------------------------------------
                                                         *MiniMap.toggle_focus()*
@@ -552,7 +552,7 @@ There are at least these extra methods to focus back from map window:
   Equivalent to calling this function with `true` argument.
 
 Parameters~
-{use_previous_cursor} `(boolean)` Whether to focus on source window at
+{use_previous_cursor} `(boolean|nil)` Whether to focus on source window at
   original cursor position (the one prior focusing on map window).
 
 ------------------------------------------------------------------------------

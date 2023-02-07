@@ -180,7 +180,7 @@
 
 ---@alias __starter_buf_id number|nil Buffer identifier of a valid Starter buffer.
 ---   Default: current buffer.
----@alias __section_fun function Function which returns array of items.
+---@alias __starter_section_fun function Function which returns array of items.
 
 -- Module definition ==========================================================
 local MiniStarter = {}
@@ -188,7 +188,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniStarter.config|.
+---@param config table|nil Module config table. See |MiniStarter.config|.
 ---
 ---@usage `require('mini.starter').setup({})` (replace `{}` with your `config` table)
 MiniStarter.setup = function(config)
@@ -294,7 +294,7 @@ end
 --- |autocmd-nested|. Example:
 --- `autocmd TabNewEntered * ++nested lua MiniStarter.open()`
 ---
----@param buf_id number Identifier of existing valid buffer (see |bufnr()|) to
+---@param buf_id number|nil Identifier of existing valid buffer (see |bufnr()|) to
 ---   open inside. Default: create a new one.
 MiniStarter.open = function(buf_id)
   if H.is_disabled() then return end
@@ -444,11 +444,11 @@ end
 ---   stored (see |MiniSessions.setup|).
 --- - Local session (if detected) is always displayed first.
 ---
----@param n number Number of returned items. Default: 5.
----@param recent boolean Whether to use recent sessions (instead of
+---@param n number|nil Number of returned items. Default: 5.
+---@param recent boolean|nil Whether to use recent sessions (instead of
 ---   alphabetically by name). Default: true.
 ---
----@return __section_fun
+---@return __starter_section_fun
 MiniStarter.sections.sessions = function(n, recent)
   n = n or 5
   recent = recent == nil and true or recent
@@ -500,13 +500,13 @@ end
 ---
 --- Files are taken from |vim.v.oldfiles|.
 ---
----@param n number Number of returned items. Default: 5.
----@param current_dir boolean Whether to return files only from current working
+---@param n number|nil Number of returned items. Default: 5.
+---@param current_dir boolean|nil Whether to return files only from current working
 ---   directory. Default: `false`.
----@param show_path boolean Whether to append file name with its full path.
+---@param show_path boolean|nil Whether to append file name with its full path.
 ---   Default: `true`.
 ---
----@return __section_fun
+---@return __starter_section_fun
 MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   n = n or 5
   current_dir = current_dir == nil and false or current_dir
@@ -551,7 +551,7 @@ end
 -- stylua: ignore start
 --- Section with basic Telescope pickers relevant to start screen
 ---
----@return __section_fun
+---@return __starter_section_fun
 MiniStarter.sections.telescope = function()
   return function()
     return {
@@ -578,9 +578,9 @@ MiniStarter.gen_hook = {}
 --- Output is a content hook which adds constant padding from left and top.
 --- This allows tweaking the screen position of buffer content.
 ---
----@param left number Number of empty spaces to add to start of each content
+---@param left number|nil Number of empty spaces to add to start of each content
 ---   line. Default: 0.
----@param top number Number of empty lines to add to start of content.
+---@param top number|nil Number of empty lines to add to start of content.
 ---   Default: 0.
 ---
 ---@return function Content hook.
@@ -611,9 +611,9 @@ end
 --- Output is a content hook which adds supplied string to be displayed to the
 --- left of item.
 ---
----@param bullet string String to be placed to the left of item name.
+---@param bullet string|nil String to be placed to the left of item name.
 ---   Default: "░ ".
----@param place_cursor boolean Whether to place cursor on the first character
+---@param place_cursor boolean|nil Whether to place cursor on the first character
 ---   of bullet when corresponding item becomes current. Default: true.
 ---
 ---@return function Content hook.
@@ -646,9 +646,9 @@ end
 --- name. It results into shortening queries required to choose an item (at
 --- expense of clarity).
 ---
----@param grouping string One of "all" (number indexing across all sections) or
+---@param grouping string|nil One of "all" (number indexing across all sections) or
 ---   "section" (letter-number indexing within each section). Default: "all".
----@param exclude_sections table Array of section names (values of `section`
+---@param exclude_sections table|nil Array of section names (values of `section`
 ---   element of item) for which index won't be added. Default: `{}`.
 ---
 ---@return function Content hook.
@@ -692,8 +692,8 @@ end
 --- Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
 --- such that output lines would appear aligned in certain way.
 ---
----@param horizontal string One of "left", "center", "right". Default: "left".
----@param vertical string One of "top", "center", "bottom". Default: "top".
+---@param horizontal string|nil One of "left", "center", "right". Default: "left".
+---@param vertical string|nil One of "top", "center", "bottom". Default: "top".
 ---
 ---@return function Content hook.
 MiniStarter.gen_hook.aligning = function(horizontal, vertical)
@@ -759,7 +759,7 @@ end
 --- to bottom, left to right) and returns "coordinates" of units for which
 --- `predicate` is true-ish.
 ---
----@param content table Content "2d array". Default: content of current buffer.
+---@param content table|nil Content "2d array". Default: content of current buffer.
 ---@param predicate function|string|nil Predictate to filter units. If it is:
 ---    - Function, then it is evaluated with unit as input.
 ---    - String, then it checks unit to have this type (allows easy getting of
@@ -792,7 +792,7 @@ end
 --- One buffer line is made by concatenating `string` element of units within
 --- same content line.
 ---
----@param content table Content "2d array". Default: content of current buffer.
+---@param content table|nil Content "2d array". Default: content of current buffer.
 ---
 ---@return table Array of strings for each buffer line.
 MiniStarter.content_to_lines = function(content)
@@ -819,7 +819,7 @@ end
 ---   element of content unit. This allows modifying item's `name` at the stage
 ---   of content hooks (like, for example, in |MiniStarter.gen_hook.indexing|).
 ---
----@param content table Content "2d array". Default: content of current buffer.
+---@param content table|nil Content "2d array". Default: content of current buffer.
 ---
 ---@return table Array of items.
 MiniStarter.content_to_items = function(content)
@@ -919,7 +919,7 @@ end
 --- - Update highlighting: whole strings for "inactive" items, current query
 ---   for "active" items.
 ---
----@param char string Single character to be added to query. If `nil`, deletes
+---@param char string|nil Single character to be added to query. If `nil`, deletes
 ---   latest character from query.
 ---@param buf_id __starter_buf_id
 MiniStarter.add_to_query = function(char, buf_id)

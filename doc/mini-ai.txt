@@ -708,7 +708,7 @@ Parameters~
   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
   Each value can be either a string capture (should start with `'@'`) or an
   array of such captures (best among all matches will be chosen).
-{opts} `(table)` Options. Possible values:
+{opts} `(table|nil)` Options. Possible values:
   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
     (if present) to do the query. It implements more advanced behavior at
     cost of increased execution time. Provides more coherent experience if

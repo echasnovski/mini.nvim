@@ -140,7 +140,7 @@ rules for disabling module's functionality is left to user. See
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniCompletion.config|.
+{config} `(table|nil)` Module config table. See |MiniCompletion.config|.
 
 Usage~
 `require('mini.completion').setup({})` (replace `{}` with your `config` table)
@@ -215,8 +215,9 @@ is setup in |MiniCompletion.setup|.
 Run two-stage completion
 
 Parameters~
-{fallback} `(boolean)` Whether to use fallback completion.
-{force} `(boolean)` Whether to force update of completion popup.
+{fallback} `(boolean|nil)` Whether to use fallback completion. Default: `true`.
+{force} `(boolean|nil)` Whether to force update of completion popup.
+  Default: `true`.
 
 ------------------------------------------------------------------------------
                                             *MiniCompletion.complete_fallback()*
@@ -251,8 +252,8 @@ Designed to be used with |autocmd|. No need to use it directly, everything
 is setup in |MiniCompletion.setup|.
 
 Parameters~
-{actions} `(table)` Array containing any of 'completion', 'info', or
-  'signature' string.
+{actions} `(table|nil)` Array containing any of 'completion', 'info', or
+  'signature' string. Default: array containing all of them.
 
 ------------------------------------------------------------------------------
                                             *MiniCompletion.on_text_changed_i()*

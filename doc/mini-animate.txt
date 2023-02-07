@@ -489,11 +489,11 @@ Notes:
       immediately.
 
 Parameters~
-{step_action} `(function)` Callable which takes `step` (integer 0, 1, 2,
+{step_action} `(function|table)` Callable which takes `step` (integer 0, 1, 2,
   etc. indicating current step) and executes some action. Its return value
   defines when animation should stop: values `false` and `nil` (equivalent
   to no explicit return) stop animation timer; any other continues it.
-{step_timing} `(function)` Callable which takes `step` (integer 1, 2, etc.
+{step_timing} `(function|table)` Callable which takes `step` (integer 1, 2, etc.
   indicating next step) and returns how many milliseconds to wait before
   executing this step action.
 {opts} `(table|nil)` Options. Possible fields:
@@ -535,7 +535,7 @@ if you want to disable animation.
 Generate timing with linear progression
 
 Parameters~
-{opts} `(table)` Options that control progression. Possible keys:
+{opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
     "in-out" (default; accelerating halfway, decelerating after).
@@ -553,7 +553,7 @@ Return~
 Generate timing with quadratic progression
 
 Parameters~
-{opts} `(table)` Options that control progression. Possible keys:
+{opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
     "in-out" (default; accelerating halfway, decelerating after).
@@ -571,7 +571,7 @@ Return~
 Generate timing with cubic progression
 
 Parameters~
-{opts} `(table)` Options that control progression. Possible keys:
+{opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
     "in-out" (default; accelerating halfway, decelerating after).
@@ -589,7 +589,7 @@ Return~
 Generate timing with quartic progression
 
 Parameters~
-{opts} `(table)` Options that control progression. Possible keys:
+{opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
     "in-out" (default; accelerating halfway, decelerating after).
@@ -607,7 +607,7 @@ Return~
 Generate timing with exponential progression
 
 Parameters~
-{opts} `(table)` Options that control progression. Possible keys:
+{opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
     "in-out" (default; accelerating halfway, decelerating after).
@@ -644,7 +644,7 @@ Example: >
 Generate path as shortest line
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
@@ -659,7 +659,7 @@ Return~
 Generate path as line/column angle
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
@@ -677,7 +677,7 @@ Return~
 Generate path as closing walls at final position
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
@@ -693,7 +693,7 @@ Return~
 Generate path as diminishing spiral at final position
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
@@ -728,7 +728,7 @@ Example: >
 Generate subscroll with equal steps
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `total_scroll` as
     input and returns boolean value indicating whether animation should be
     done. Default: `false` if `total_scroll` is 1 or less (reduces
@@ -768,7 +768,7 @@ Example: >
 Generate subresize with equal steps
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `sizes_from` and
     `sizes_to` as input and returns boolean value indicating whether
     animation should be done. Default: always `true`.
@@ -820,7 +820,7 @@ This will result into floating window statically covering whole target
 window.
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
     Default: always `true`.
@@ -841,7 +841,7 @@ This will result into floating window growing from or shrinking to the
 target window center.
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
     Default: always `true`.
@@ -864,7 +864,7 @@ vertically split window will progress towards vertical edge; horizontally -
 towards horizontal.
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
     Default: always `true`.
@@ -906,7 +906,7 @@ Example: >
 Generate linear `winblend` progression
 
 Parameters~
-{opts} `(table)` Options that control generator. Possible keys:
+{opts} `(table|nil)` Options that control generator. Possible keys:
   - <from> `(number)` - initial value of 'winblend'.
   - <to> `(number)` - final value of 'winblend'.
 

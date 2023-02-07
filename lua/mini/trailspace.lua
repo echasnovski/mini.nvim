@@ -46,7 +46,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniTrailspace.config|.
+---@param config table|nil Module config table. See |MiniTrailspace.config|.
 ---
 ---@usage `require('mini.trailspace').setup({})` (replace `{}` with your `config` table)
 MiniTrailspace.setup = function(config)

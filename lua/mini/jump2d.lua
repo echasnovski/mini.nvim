@@ -116,7 +116,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniJump2d.config|.
+---@param config table|nil Module config table. See |MiniJump2d.config|.
 ---
 ---@usage `require('mini.jump2d').setup({})` (replace `{}` with your `config` table)
 MiniJump2d.setup = function(config)
@@ -278,7 +278,7 @@ MiniJump2d.config = {
 --- With default 26 labels for most real-world cases 2 steps is enough for
 --- default spotter function. Rarely 3 steps are needed with several windows.
 ---
----@param opts table Configuration of jumping, overriding global and buffer
+---@param opts table|nil Configuration of jumping, overriding global and buffer
 ---   local values.config|. Has the same structure as |MiniJump2d.config|
 ---   without <mappings> field. Extra allowed fields:
 ---     - <hl_group> - which highlight group to use (default: "MiniJump2dSpot").

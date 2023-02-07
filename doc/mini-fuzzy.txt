@@ -60,7 +60,7 @@ Given input `word` and target `candidate`:
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniFuzzy.config|.
+{config} `(table|nil)` Module config table. See |MiniFuzzy.config|.
 
 Usage~
 `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
@@ -121,7 +121,7 @@ Return~
 Fuzzy matching for `lsp_completion.process_items` of |MiniCompletion.config|
 
 Parameters~
-{items} `(table)` Lua array with LSP 'textDocument/completion' response items.
+{items} `(table)` Array with LSP 'textDocument/completion' response items.
 {base} `(string)` Word to complete.
 
 ------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ Designed to be used as value for |telescope.defaults.file_sorter| and
 |telescope.defaults.generic_sorter| inside `setup()` call.
 
 Parameters~
-{opts} `(table)` Options (currently not used).
+{opts} `(table|nil)` Options (currently not used).
 
 Usage~
 >

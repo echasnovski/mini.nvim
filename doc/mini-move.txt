@@ -147,7 +147,7 @@ Notes:
 
 Parameters~
 {direction} `(string)` One of "left", "down", "up", "right".
-{opts} `(table)` Options. Same structure as `options` in |MiniMove.config|
+{opts} `(table|nil)` Options. Same structure as `options` in |MiniMove.config|
   (with its values as defaults) plus these allowed extra fields:
   - <n_times> (number) - number of times to try to make a move.
     Default: |v:count1|.
@@ -167,7 +167,7 @@ Notes:
 
 Parameters~
 {direction} `(string)` One of "left", "down", "up", "right".
-{opts} `(table)` Options. Same structure as `options` in |MiniMove.config|
+{opts} `(table|nil)` Options. Same structure as `options` in |MiniMove.config|
   (with its values as defaults) plus these allowed extra fields:
   - <n_times> (number) - number of times to try to make a move.
     Default: |v:count1|.

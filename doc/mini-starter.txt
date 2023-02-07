@@ -185,7 +185,7 @@ header/footer, and content hooks:
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniStarter.config|.
+{config} `(table|nil)` Module config table. See |MiniStarter.config|.
 
 Usage~
 `require('mini.starter').setup({})` (replace `{}` with your `config` table)
@@ -261,7 +261,7 @@ Note: to fully use it in autocommand, it is recommended to utilize
 `autocmd TabNewEntered * ++nested lua MiniStarter.open()`
 
 Parameters~
-{buf_id} `(number)` Identifier of existing valid buffer (see |bufnr()|) to
+{buf_id} `(number|nil)` Identifier of existing valid buffer (see |bufnr()|) to
   open inside. Default: create a new one.
 
 ------------------------------------------------------------------------------
@@ -341,8 +341,8 @@ Sessions are taken from |MiniSessions.detected|. Notes:
 - Local session (if detected) is always displayed first.
 
 Parameters~
-{n} `(number)` Number of returned items. Default: 5.
-{recent} `(boolean)` Whether to use recent sessions (instead of
+{n} `(number|nil)` Number of returned items. Default: 5.
+{recent} `(boolean|nil)` Whether to use recent sessions (instead of
   alphabetically by name). Default: true.
 
 Return~
@@ -356,10 +356,10 @@ Section with most recently used files
 Files are taken from |vim.v.oldfiles|.
 
 Parameters~
-{n} `(number)` Number of returned items. Default: 5.
-{current_dir} `(boolean)` Whether to return files only from current working
+{n} `(number|nil)` Number of returned items. Default: 5.
+{current_dir} `(boolean|nil)` Whether to return files only from current working
   directory. Default: `false`.
-{show_path} `(boolean)` Whether to append file name with its full path.
+{show_path} `(boolean|nil)` Whether to append file name with its full path.
   Default: `true`.
 
 Return~
@@ -390,9 +390,9 @@ Output is a content hook which adds constant padding from left and top.
 This allows tweaking the screen position of buffer content.
 
 Parameters~
-{left} `(number)` Number of empty spaces to add to start of each content
+{left} `(number|nil)` Number of empty spaces to add to start of each content
   line. Default: 0.
-{top} `(number)` Number of empty lines to add to start of content.
+{top} `(number|nil)` Number of empty lines to add to start of content.
   Default: 0.
 
 Return~
@@ -407,9 +407,9 @@ Output is a content hook which adds supplied string to be displayed to the
 left of item.
 
 Parameters~
-{bullet} `(string)` String to be placed to the left of item name.
+{bullet} `(string|nil)` String to be placed to the left of item name.
   Default: "░ ".
-{place_cursor} `(boolean)` Whether to place cursor on the first character
+{place_cursor} `(boolean|nil)` Whether to place cursor on the first character
   of bullet when corresponding item becomes current. Default: true.
 
 Return~
@@ -425,9 +425,9 @@ name. It results into shortening queries required to choose an item (at
 expense of clarity).
 
 Parameters~
-{grouping} `(string)` One of "all" (number indexing across all sections) or
+{grouping} `(string|nil)` One of "all" (number indexing across all sections) or
   "section" (letter-number indexing within each section). Default: "all".
-{exclude_sections} `(table)` Array of section names (values of `section`
+{exclude_sections} `(table|nil)` Array of section names (values of `section`
   element of item) for which index won't be added. Default: `{}`.
 
 Return~
@@ -446,8 +446,8 @@ Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
 such that output lines would appear aligned in certain way.
 
 Parameters~
-{horizontal} `(string)` One of "left", "center", "right". Default: "left".
-{vertical} `(string)` One of "top", "center", "bottom". Default: "top".
+{horizontal} `(string|nil)` One of "left", "center", "right". Default: "left".
+{vertical} `(string|nil)` One of "top", "center", "bottom". Default: "top".
 
 Return~
 `(function)` Content hook.
@@ -490,7 +490,7 @@ to bottom, left to right) and returns "coordinates" of units for which
 `predicate` is true-ish.
 
 Parameters~
-{content} `(table)` Content "2d array". Default: content of current buffer.
+{content} `(table|nil)` Content "2d array". Default: content of current buffer.
 {predicate} `(function|string|nil)` Predictate to filter units. If it is:
    - Function, then it is evaluated with unit as input.
    - String, then it checks unit to have this type (allows easy getting of
@@ -511,7 +511,7 @@ One buffer line is made by concatenating `string` element of units within
 same content line.
 
 Parameters~
-{content} `(table)` Content "2d array". Default: content of current buffer.
+{content} `(table|nil)` Content "2d array". Default: content of current buffer.
 
 Return~
 `(table)` Array of strings for each buffer line.
@@ -531,7 +531,7 @@ element of content units with type "item". This also:
   of content hooks (like, for example, in |MiniStarter.gen_hook.indexing|).
 
 Parameters~
-{content} `(table)` Content "2d array". Default: content of current buffer.
+{content} `(table|nil)` Content "2d array". Default: content of current buffer.
 
 Return~
 `(table)` Array of items.
@@ -573,7 +573,7 @@ Add character to current query
   for "active" items.
 
 Parameters~
-{char} `(string)` Single character to be added to query. If `nil`, deletes
+{char} `(string|nil)` Single character to be added to query. If `nil`, deletes
   latest character from query.
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.

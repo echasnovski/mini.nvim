@@ -47,13 +47,13 @@
 ---@tag mini.jump
 ---@tag MiniJump
 
----@alias __target string The string to jump to.
----@alias __backward boolean Whether to jump backward.
----@alias __till boolean Whether to jump just before/after the match instead of
+---@alias __jump_target string|nil The string to jump to.
+---@alias __jump_backward boolean|nil Whether to jump backward.
+---@alias __jump_till boolean|nil Whether to jump just before/after the match instead of
 ---   exactly on target. This includes positioning cursor past the end of
 ---   previous/current line. Note that with backward jump this might lead to
 ---   cursor being on target if can't be put past the line.
----@alias __n_times number Number of times to perform consecutive jumps.
+---@alias __jump_n_times number|nil Number of times to perform consecutive jumps.
 
 -- Module definition ==========================================================
 local MiniJump = {}
@@ -61,7 +61,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniJump.config|.
+---@param config table|nil Module config table. See |MiniJump.config|.
 ---
 ---@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
 MiniJump.setup = function(config)
@@ -123,10 +123,10 @@ MiniJump.config = {
 ---
 ---@class JumpingState
 ---
----@field target __target
----@field backward __backward
----@field till __till
----@field n_times __n_times
+---@field target __jump_target
+---@field backward __jump_backward
+---@field till __jump_till
+---@field n_times __jump_n_times
 ---@field mode string Mode of latest jump (output of |mode()| with non-zero argument).
 ---@field jumping boolean Whether module is currently in "jumping mode": usage of
 ---   |MiniJump.smart_jump| and all mappings won't require target.
@@ -150,10 +150,10 @@ MiniJump.state = {
 ---
 --- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
----@param target __target
----@param backward __backward
----@param till __till
----@param n_times __n_times
+---@param target __jump_target
+---@param backward __jump_backward
+---@param till __jump_till
+---@param n_times __jump_n_times
 MiniJump.jump = function(target, backward, till, n_times)
   if H.is_disabled() then return end
 
@@ -210,8 +210,8 @@ end
 ---
 --- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
----@param backward __backward
----@param till __till
+---@param backward __jump_backward
+---@param till __jump_till
 MiniJump.smart_jump = function(backward, till)
   if H.is_disabled() then return end
 
@@ -242,8 +242,8 @@ end
 ---
 --- All default values are taken from |MiniJump.state| to emulate latest jump.
 ---
----@param backward __backward
----@param till __till
+---@param backward __jump_backward
+---@param till __jump_till
 MiniJump.expr_jump = function(backward, till)
   if H.is_disabled() then return '' end
 
@@ -441,7 +441,7 @@ H.unhighlight = function()
   end
 end
 
----@param pattern string Highlight pattern to check for. If `nil`, checks for
+---@param pattern string|nil Highlight pattern to check for. If `nil`, checks for
 ---   any highlighting registered in current window.
 ---@private
 H.is_highlighting = function(pattern)

@@ -416,7 +416,7 @@ Notes:
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniSurround.config|.
+{config} `(table|nil)` Module config table. See |MiniSurround.config|.
 
 Usage~
 `require('mini.surround').setup({})` (replace `{}` with your `config` table)
@@ -614,7 +614,7 @@ directly, everything is setup in |MiniSurround.setup|.
 
 Parameters~
 {task} `(string)` Name of surround task.
-{cache} `(table)` Task cache.
+{cache} `(table|nil)` Task cache.
 
 ------------------------------------------------------------------------------
                                                             *MiniSurround.add()*
@@ -752,7 +752,7 @@ Parameters~
   (`[left.form; right.to]`) and inner (`(left.to; right.from)` both edges
   exclusive, i.e. they won't be a part of surrounding) regions. Each value
   should be a string capture starting with `'@'`.
-{opts} `(table)` Options. Possible values:
+{opts} `(table|nil)` Options. Possible values:
   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
     (if present) to do the query. It implements more advanced behavior at
     cost of increased execution time. Provides more coherent experience if

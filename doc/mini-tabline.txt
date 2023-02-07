@@ -68,7 +68,7 @@ tabline is not updated right away, but rather after dedicated event (see
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniTabline.config|.
+{config} `(table|nil)` Module config table. See |MiniTabline.config|.
 
 Usage~
 `require('mini.tabline').setup({})` (replace `{}` with your `config` table)

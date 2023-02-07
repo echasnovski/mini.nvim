@@ -413,7 +413,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniSurround.config|.
+---@param config table|nil Module config table. See |MiniSurround.config|.
 ---
 ---@usage `require('mini.surround').setup({})` (replace `{}` with your `config` table)
 MiniSurround.setup = function(config)
@@ -617,7 +617,7 @@ MiniSurround.config = {
 --- directly, everything is setup in |MiniSurround.setup|.
 ---
 ---@param task string Name of surround task.
----@param cache table Task cache.
+---@param cache table|nil Task cache.
 MiniSurround.operator = function(task, cache)
   if H.is_disabled() then
     -- Using `<Esc>` helps to stop moving cursor caused by current
@@ -869,7 +869,7 @@ MiniSurround.gen_spec = { input = {}, output = {} }
 ---   (`[left.form; right.to]`) and inner (`(left.to; right.from)` both edges
 ---   exclusive, i.e. they won't be a part of surrounding) regions. Each value
 ---   should be a string capture starting with `'@'`.
----@param opts table Options. Possible values:
+---@param opts table|nil Options. Possible values:
 ---   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
 ---     (if present) to do the query. It implements more advanced behavior at
 ---     cost of increased execution time. Provides more coherent experience if

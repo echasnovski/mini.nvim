@@ -75,10 +75,10 @@
 ---@tag mini.pairs
 ---@tag MiniPairs
 
----@alias __neigh_pattern string Pattern for two neighborhood characters ("\r" line
----   start, "\n" - line end).
----@alias __pair string String with two characters representing pair.
----@alias __unregister_pair string Pair which should be unregistered from both
+---@alias __pairs_neight_pattern string|nil Pattern for two neighborhood characters.
+---   Character "\r" indicates line start, "\n" - line end.
+---@alias __pairs_pair string String with two characters representing pair.
+---@alias __pairs_unregistered_pair string Pair which should be unregistered from both
 ---   `<BS>` and `<CR>`. Should be explicitly supplied to avoid confusion.
 ---   Supply `''` to not unregister pair.
 
@@ -88,7 +88,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniPairs.config|.
+---@param config table|nil Module config table. See |MiniPairs.config|.
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniPairs.setup = function(config)
@@ -166,7 +166,7 @@ MiniPairs.config = {
 ---@param mode string `mode` for |nvim_set_keymap()|.
 ---@param lhs string `lhs` for |nvim_set_keymap()|.
 ---@param pair_info table Table with pair information.
----@param opts table Optional table `opts` for |nvim_set_keymap()|. Elements
+---@param opts table|nil Optional table `opts` for |nvim_set_keymap()|. Elements
 ---   `expr` and `noremap` won't be recognized (`true` by default).
 MiniPairs.map = function(mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
@@ -194,7 +194,7 @@ end
 ---@param mode string `mode` for |nvim_buf_set_keymap()|.
 ---@param lhs string `lhs` for |nvim_buf_set_keymap()|.
 ---@param pair_info table Table with pair information.
----@param opts table Optional table `opts` for |nvim_buf_set_keymap()|.
+---@param opts table|nil Optional table `opts` for |nvim_buf_set_keymap()|.
 ---   Elements `expr` and `noremap` won't be recognized (`true` by default).
 MiniPairs.map_buf = function(buffer, mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
@@ -214,7 +214,7 @@ end
 ---
 ---@param mode string `mode` for |nvim_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_del_keymap()|.
----@param pair __unregister_pair
+---@param pair __pairs_unregistered_pair
 MiniPairs.unmap = function(mode, lhs, pair)
   -- `pair` should be supplied explicitly
   vim.validate({ pair = { pair, 'string' } })
@@ -237,7 +237,7 @@ end
 ---@param buffer number `buffer` for |nvim_buf_del_keymap()|.
 ---@param mode string `mode` for |nvim_buf_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_buf_del_keymap()|.
----@param pair __unregister_pair
+---@param pair __pairs_unregistered_pair
 MiniPairs.unmap_buf = function(buffer, mode, lhs, pair)
   -- `pair` should be supplied explicitly
   vim.validate({ pair = { pair, 'string' } })
@@ -257,8 +257,8 @@ end
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair __pair
----@param neigh_pattern __neigh_pattern
+---@param pair __pairs_pair
+---@param neigh_pattern __pairs_neight_pattern
 MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
@@ -275,8 +275,8 @@ end
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair __pair
----@param neigh_pattern __neigh_pattern
+---@param pair __pairs_pair
+---@param neigh_pattern __pairs_neight_pattern
 MiniPairs.close = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(2, 2) end
 
@@ -297,8 +297,8 @@ end
 ---
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
----@param pair __pair
----@param neigh_pattern __neigh_pattern
+---@param pair __pairs_pair
+---@param neigh_pattern __pairs_neight_pattern
 MiniPairs.closeopen = function(pair, neigh_pattern)
   if H.is_disabled() or H.get_cursor_neigh(1, 1) ~= pair:sub(2, 2) then
     return MiniPairs.open(pair, neigh_pattern)

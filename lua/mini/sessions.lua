@@ -54,7 +54,7 @@ local H = { path_sep = package.config:sub(1, 1) }
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniSessions.config|.
+---@param config table|nil Module config table. See |MiniSessions.config|.
 ---
 ---@usage `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
 MiniSessions.setup = function(config)
@@ -141,10 +141,10 @@ MiniSessions.detected = {}
 ---   beforehand for unsaved listed buffers and stops if there is any.
 --- - Source session with supplied name.
 ---
----@param session_name string Name of detected session file to read. Default:
+---@param session_name string|nil Name of detected session file to read. Default:
 ---   `nil` for default session: local (if detected) or latest session (see
 ---   |MiniSessions.get_latest|).
----@param opts table Table with options. Current allowed keys:
+---@param opts table|nil Table with options. Current allowed keys:
 ---   - <force> (whether to delete unsaved buffers; default:
 ---     `MiniSessions.config.force.read`).
 ---   - <verbose> (whether to print session path after action; default
@@ -216,9 +216,9 @@ end
 ---       session).
 --- - Update |MiniSessions.detected|.
 ---
----@param session_name string Name of session file to write. Default: `nil` for
+---@param session_name string|nil Name of session file to write. Default: `nil` for
 ---   current session (|v:this_session|).
----@param opts table Table with options. Current allowed keys:
+---@param opts table|nil Table with options. Current allowed keys:
 ---   - <force> (whether to ignore existence of session file; default:
 ---     `MiniSessions.config.force.write`).
 ---   - <verbose> (whether to print session path after action; default
@@ -266,9 +266,9 @@ end
 --- - Delete session.
 --- - Update |MiniSessions.detected|.
 ---
----@param session_name string Name of detected session file to delete. Default:
+---@param session_name string|nil Name of detected session file to delete. Default:
 ---   `nil` for name of current session (taken from |v:this_session|).
----@param opts table Table with options. Current allowed keys:
+---@param opts table|nil Table with options. Current allowed keys:
 ---   - <force> (whether to allow deletion of current session; default:
 ---     `MiniSessions.config.force.delete`).
 ---   - <verbose> (whether to print session path after action; default
@@ -320,9 +320,9 @@ end
 --- experience, override it (for example, with external plugins like
 --- "stevearc/dressing.nvim").
 ---
----@param action string Action to perform. Should be one of "read" (default),
+---@param action string|nil Action to perform. Should be one of "read" (default),
 ---   "write", or "delete".
----@param opts table Options for specified action.
+---@param opts table|nil Options for specified action.
 MiniSessions.select = function(action, opts)
   if not (type(vim.ui) == 'table' and type(vim.ui.select) == 'function') then
     H.error('`MiniSessions.select()` requires `vim.ui.select()` function.')

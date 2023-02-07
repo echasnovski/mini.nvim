@@ -397,7 +397,7 @@
 ---
 ---@tag MiniAlign-examples
 
----@alias __with_preview boolean|nil Whether to align with live preview.
+---@alias __align_with_preview boolean|nil Whether to align with live preview.
 
 -- Module definition ==========================================================
 local MiniAlign = {}
@@ -787,7 +787,7 @@ end
 ---
 --- Used in Normal mode mapping. No need to use it directly.
 ---
----@param with_preview __with_preview
+---@param with_preview __align_with_preview
 MiniAlign.action_normal = function(with_preview)
   if H.is_disabled() then return end
 
@@ -802,7 +802,7 @@ end
 ---
 --- Used in Visual mode mapping. No need to use it directly.
 ---
----@param with_preview __with_preview
+---@param with_preview __align_with_preview
 MiniAlign.action_visual = function(with_preview)
   if H.is_disabled() then return end
 
@@ -1157,7 +1157,7 @@ MiniAlign.gen_step.default_merge = function() return MiniAlign.new_step('merge',
 ---
 ---@param expr string Lua expression as a string which will be used as predicate.
 ---
----@return table A step named "filter" and with appropriate callable action.
+---@return table|nil A step named "filter" and with appropriate callable action.
 MiniAlign.gen_step.filter = function(expr)
   local action = H.make_filter_action(expr)
   if action == nil then return end
@@ -1172,7 +1172,7 @@ end
 ---@param patterns table Array of patterns to be added to
 ---   `split_exclude_patterns` as is. Default: `{ [[".-"]] }` (excludes strings
 ---   for most cases).
----@param exclude_comment boolean Whether to add comment pattern to
+---@param exclude_comment boolean|nil Whether to add comment pattern to
 ---   `split_exclude_patterns`. Comment pattern is derived from 'commentstring'
 ---   option. Default: `true`.
 ---
@@ -1234,9 +1234,9 @@ end
 --- Output calls `trim()` method of parts (see |MiniAlign.as_parts()|) with
 --- supplied `direction` and `indent` arguments.
 ---
----@param direction string Which sides to trim whitespace. One of "both"
+---@param direction string|nil Which sides to trim whitespace. One of "both"
 ---   (default), "left", "right", "none".
----@param indent string What to do with possible indent (left whitespace of first
+---@param indent string|nil What to do with possible indent (left whitespace of first
 ---   string in a row). One of "keep" (default), "low", "high", "remove".
 ---
 ---@return table A step named "trim" and with appropriate callable action.

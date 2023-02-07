@@ -60,7 +60,7 @@ local H = {}
 
 --- Module setup
 ---
----@param config table Module config table. See |MiniFuzzy.config|.
+---@param config table|nil Module config table. See |MiniFuzzy.config|.
 ---
 ---@usage `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
 MiniFuzzy.setup = function(config)
@@ -135,7 +135,7 @@ end
 
 --- Fuzzy matching for `lsp_completion.process_items` of |MiniCompletion.config|
 ---
----@param items table Lua array with LSP 'textDocument/completion' response items.
+---@param items table Array with LSP 'textDocument/completion' response items.
 ---@param base string Word to complete.
 MiniFuzzy.process_lsp_items = function(items, base)
   -- Extract completion words from items
@@ -156,7 +156,7 @@ end
 --- Designed to be used as value for |telescope.defaults.file_sorter| and
 --- |telescope.defaults.generic_sorter| inside `setup()` call.
 ---
----@param opts table Options (currently not used).
+---@param opts table|nil Options (currently not used).
 ---
 ---@usage >
 ---   require('telescope').setup({
@@ -233,7 +233,7 @@ H.get_config =
 ---@param letters table Array of letters from input word
 ---@param candidate string String of interest
 ---
----@return table Table with matched positions (in `candidate`) if there is a
+---@return table|nil Table with matched positions (in `candidate`) if there is a
 ---   match, `nil` otherwise.
 ---@private
 H.find_best_positions = function(letters, candidate)

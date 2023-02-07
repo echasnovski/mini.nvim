@@ -66,7 +66,7 @@
 ---@tag MiniMove
 
 ---@alias __move_direction string One of "left", "down", "up", "right".
----@alias __move_opts table Options. Same structure as `options` in |MiniMove.config|
+---@alias __move_opts table|nil Options. Same structure as `options` in |MiniMove.config|
 ---   (with its values as defaults) plus these allowed extra fields:
 ---   - <n_times> (number) - number of times to try to make a move.
 ---     Default: |v:count1|.

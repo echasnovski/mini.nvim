@@ -38,7 +38,7 @@ will have no effect here.
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniMisc.config|.
+{config} `(table|nil)` Module config table. See |MiniMisc.config|.
 
 Usage~
 `require('mini.misc').setup({})` (replace `{}` with your `config` table)
@@ -63,7 +63,7 @@ Execute `f` several times and time how long it took
 
 Parameters~
 {f} `(function)` Function which execution to benchmark.
-{n} `(number)` Number of times to execute `f(...)`. Default: 1.
+{n} `(number|nil)` Number of times to execute `f(...)`. Default: 1.
 {...} `(any)` Arguments when calling `f`.
 
 Return~
@@ -76,7 +76,7 @@ Return~
 Compute width of gutter (info column on the left of the window)
 
 Parameters~
-{win_id} `(number)` Window identifier (see |win_getid()|) for which gutter
+{win_id} `(number|nil)` Window identifier (see |win_getid()|) for which gutter
   width is computed. Default: 0 for current.
 
 ------------------------------------------------------------------------------
@@ -101,9 +101,9 @@ Parameters~
 Resize window to have exact number of editable columns
 
 Parameters~
-{win_id} `(number)` Window identifier (see |win_getid()|) to be resized.
+{win_id} `(number|nil)` Window identifier (see |win_getid()|) to be resized.
   Default: 0 for current.
-{text_width} `(number)` Number of editable columns resized window will
+{text_width} `(number|nil)` Number of editable columns resized window will
   display. Default: first element of 'colorcolumn' or otherwise 'textwidth'
   (using screen width as its default but not more than 79).
 
@@ -121,7 +121,7 @@ What it does:
 Note: requires |vim.fs| module (present in Neovim>=0.8).
 
 Parameters~
-{names} `(table|function)` Array of file names or a callable used to
+{names} `(table|function|nil)` Array of file names or a callable used to
   identify a root directory. Forwarded to |MiniMisc.find_root()|.
   Default: `{ '.git', 'Makefile' }`.
 
@@ -149,9 +149,9 @@ Notes:
   used in this function. Reload Neovim to account for that.
 
 Parameters~
-{buf_id} `(number)` Buffer identifier (see |bufnr()|) to use.
+{buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to use.
   Default: 0 for current.
-{names} `(table|function)` Array of file names or a callable used to
+{names} `(table|function|nil)` Array of file names or a callable used to
   identify a root directory. Forwarded to |vim.fs.find()|.
   Default: `{ '.git', 'Makefile' }`.
 
@@ -204,7 +204,7 @@ Note: order of elements might vary.
 
 Parameters~
 {t} `(table)` Input table.
-{n} `(number)` Maximum number of first elements. Default: 5.
+{n} `(number|nil)` Maximum number of first elements. Default: 5.
 
 Return~
 `(table)` Table with at most `n` first elements of `t` (with same keys).
@@ -222,7 +222,7 @@ Note: order of elements might vary.
 
 Parameters~
 {t} `(table)` Input table.
-{n} `(number)` Maximum number of last elements. Default: 5.
+{n} `(number|nil)` Maximum number of last elements. Default: 5.
 
 Return~
 `(table)` Table with at most `n` last elements of `t` (with same keys).
@@ -251,7 +251,7 @@ with this filetype is entered, so using non-current `buf_id` can not lead
 to desired effect.
 
 Parameters~
-{buf_id} `(number)` Buffer identifier (see |bufnr()|) in which function
+{buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) in which function
   will operate. Default: 0 for current.
 
 ------------------------------------------------------------------------------
@@ -264,9 +264,9 @@ needing to zoom into one to see more of the code from that buffer. Call it
 again (without arguments) to zoom out.
 
 Parameters~
-{buf_id} `(number)` Buffer identifier (see |bufnr()|) to be zoomed.
+{buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to be zoomed.
   Default: 0 for current.
-{config} `(table)` Optional config for window (as for |nvim_open_win()|).
+{config} `(table|nil)` Optional config for window (as for |nvim_open_win()|).
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

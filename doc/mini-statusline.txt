@@ -111,7 +111,7 @@ is `true`-ish then return `y`, if not - return `z`.
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniStatusline.config|.
+{config} `(table|nil)` Module config table. See |MiniStatusline.config|.
 
 Usage~
 `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
@@ -169,7 +169,7 @@ General idea of this function is as follows;
   separated by two spaces (one for each highlighting).
 
 Parameters~
-{groups} `(string|table)` Array of groups.
+{groups} `(table)` Array of groups.
 
 Return~
 `(string)` String suitable for 'statusline'.
@@ -186,7 +186,7 @@ default.
 Use this to manually decide if section needs truncation or not.
 
 Parameters~
-{trunc_width} `(number)` Truncation width. If `nil`, output is `false`.
+{trunc_width} `(number|nil)` Truncation width. If `nil`, output is `false`.
 
 Return~
 `(boolean)` Whether to truncate.

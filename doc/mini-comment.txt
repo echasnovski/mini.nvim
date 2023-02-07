@@ -43,7 +43,7 @@ for disabling module's functionality is left to user. See
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniComment.config|.
+{config} `(table|nil)` Module config table. See |MiniComment.config|.
 
 Usage~
 `require('mini.comment').setup({})` (replace `{}` with your `config` table)
@@ -92,7 +92,7 @@ dot-repeatability works): it should be called without arguments inside
 expression mapping and with argument when action should be performed.
 
 Parameters~
-{mode} `(string)` Optional string with 'operatorfunc' mode (see |g@|).
+{mode} `(string|nil)` Optional string with 'operatorfunc' mode (see |g@|).
 
 Return~
 `(string)` 'g@' if called without argument, '' otherwise (but after

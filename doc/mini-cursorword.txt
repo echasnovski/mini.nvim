@@ -71,7 +71,7 @@ Module-specific disabling:
 Module setup
 
 Parameters~
-{config} `(table)` Module config table. See |MiniCursorword.config|.
+{config} `(table|nil)` Module config table. See |MiniCursorword.config|.
 
 Usage~
 `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)

@@ -904,7 +904,7 @@ end
 ---   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
 ---   Each value can be either a string capture (should start with `'@'`) or an
 ---   array of such captures (best among all matches will be chosen).
----@param opts table Options. Possible values:
+---@param opts table|nil Options. Possible values:
 ---   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
 ---     (if present) to do the query. It implements more advanced behavior at
 ---     cost of increased execution time. Provides more coherent experience if
@@ -1511,7 +1511,7 @@ end
 
 -- Work with matching spans ---------------------------------------------------
 ---@param neighborhood table Output of `get_neighborhood()`.
----@param tobj_spec table
+---@param tobj_spec table Textobject specification.
 ---@param reference_span table Span to cover.
 ---@param opts table Fields: <search_method>.
 ---@private
