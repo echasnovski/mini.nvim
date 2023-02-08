@@ -501,6 +501,9 @@ MiniAi.config = {
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
   -- 'cover_or_nearest', 'next', 'prev', 'nearest'.
   search_method = 'cover_or_next',
+
+  -- Print message if a textobject can't be found
+  verbose = true,
 }
 --minidoc_afterlines_end
 
@@ -538,7 +541,7 @@ MiniAi.find_textobject = function(ai_type, id, opts)
   -- Find region
   local res = H.find_textobject_region(tobj_spec, ai_type, opts)
 
-  if res == nil then
+  if H.get_config().verbose and res == nil then
     local msg = string.format(
       [[No textobject %s found covering region%s within %d line%s and `search_method = '%s'`.]],
       vim.inspect(ai_type .. id),

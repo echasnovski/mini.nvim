@@ -183,6 +183,9 @@ Here are code snippets for some common installation methods (use only one):
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
   -- 'cover_or_nearest', 'next', 'previous', 'nearest'.
   search_method = 'cover_or_next',
+
+  -- Print message if a textobject can't be found
+  verbose = true,
 }
 ```
 
