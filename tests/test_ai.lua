@@ -1631,11 +1631,14 @@ T['Textobject']['works in command-line window'] = function()
     child.cmd('close')
   end
 
-  validate('(hello)', '()', 'di)')
-  validate('(hello)', '', 'da)')
+  validate('(aaa)', '(...)', 'vi)r.')
+  validate('(aaa)', '.....', 'va)r.')
 
-  validate('fun(hello)', 'fun()', 'cif')
-  validate('fun(hello)', '', 'caf')
+  validate('(aaa)', '()', 'di)')
+  validate('(aaa)', '', 'da)')
+
+  validate('fun(aaa)', 'fun()', 'cif')
+  validate('fun(aaa)', '', 'caf')
 end
 
 T['Textobject']['ensures that output is not covered by reference'] = function()
