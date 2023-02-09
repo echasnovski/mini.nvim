@@ -1613,6 +1613,31 @@ T['Textobject']['works with empty output region'] = function()
   validate(1)
 end
 
+T['Textobject']['works in command-line window'] = function()
+  child.set_size(20, 40)
+
+  local validate = function(before_line, after_line, keys)
+    -- Open command-line window
+    type_keys('q:')
+    eq(child.fn.getcmdwintype(), ':')
+
+    type_keys('i', before_line, '<Esc>')
+    type_keys(keys)
+    eq(child.fn.getline('.'), after_line)
+
+    -- It shouldn't close command-line window
+    eq(child.fn.getcmdwintype(), ':')
+    type_keys('<Esc>')
+    child.cmd('close')
+  end
+
+  validate('(hello)', '()', 'di)')
+  validate('(hello)', '', 'da)')
+
+  validate('fun(hello)', 'fun()', 'cif')
+  validate('fun(hello)', '', 'caf')
+end
+
 T['Textobject']['ensures that output is not covered by reference'] = function()
   -- Non-empty region
   set_lines({ 'aa(bb)cc(dd)' })

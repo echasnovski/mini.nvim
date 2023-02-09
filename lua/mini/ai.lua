@@ -1906,8 +1906,14 @@ H.is_visual_mode = function()
 end
 
 H.exit_to_normal_mode = function()
-  -- '\28\14' is an escaped version of `<C-\><C-n>`
-  vim.cmd('normal! \28\14')
+  -- Don't use `<C-\><C-n>` in command-line window as they close it
+  if vim.fn.getcmdwintype() ~= '' then
+    local is_vis, cur_mode = H.is_visual_mode()
+    if is_vis then vim.cmd('normal! ' .. cur_mode) end
+  else
+    -- '\28\14' is an escaped version of `<C-\><C-n>`
+    vim.cmd('normal! \28\14')
+  end
 end
 
 H.get_visual_region = function()
