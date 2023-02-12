@@ -32,3 +32,6 @@ dual_push:
 	git branch --force sync
 	git push origin sync
 	rm -r dual/patches
+
+dual_release:
+	chmod u+x scripts/dual_release.sh && scripts/dual_release.sh "$(TAG_NAME)" "$(TAG_MESSAGE)"

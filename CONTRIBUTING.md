@@ -89,9 +89,11 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Check that all CI has passed.
     - Make GitHub release. Get description from copying entries of version's 'CHANGELOG.md' section.
     - Move `stable` branch to point at new tag.
-    - Manage standalone repositories. In each one:
-        - Make annotated tag.
-        - Move existing `stable` branch or create one if it doesn't exist.
+    - Manage standalone repositories. It should be enough to use 'scripts/dual_release.sh' like so:
+    ```
+    # REPLACE `xx` with your version number
+    TAG_NAME="v0.xx.0" TAG_MESSAGE="Version 0.xx.0" make dual_release
+    ```
     - Use development version in 'CHANGELOG.md' ('0.(xx + 1).0.9000'). Commit.
     - Check for `TODO`s about actions to be done *after* release.
 
