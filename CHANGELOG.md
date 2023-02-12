@@ -1,3 +1,5 @@
+# Version 0.7.0.9000
+
 # Version 0.7.0
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
