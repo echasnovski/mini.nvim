@@ -552,7 +552,7 @@ Example: >
   require('mini.ai').setup({
     custom_textobjects = {
       -- Tweak argument to be recognized only inside `()` between `;`
-      a = gen_spec.argument({ brackets = { '%b()' }, separators = { ';' } }),
+      a = gen_spec.argument({ brackets = { '%b()' }, separator = ';' }),
 
       -- Tweak function call to not detect dot in function name
       f = gen_spec.function_call({ name_pattern = '[%w_]' }),
