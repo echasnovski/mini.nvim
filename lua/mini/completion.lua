@@ -662,16 +662,6 @@ H.setup_config = function(config)
     },
   })
 
-  -- TODO: Remove after 0.7.0 release.
-  -- Compatibility for renaming `config.window_dimensions` to `config.window`
-  if config.window_dimensions ~= nil then
-    vim.notify(
-      '(mini.completion) Field `config.window_dimensions` is renamed to `config.window`. '
-        .. 'It will work until next release.'
-    )
-    config.window = vim.tbl_deep_extend('force', config.window, config.window_dimensions)
-  end
-
   return config
 end
 
