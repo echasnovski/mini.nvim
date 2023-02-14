@@ -316,38 +316,6 @@ T['gen_animation']['handles `n_steps=1` for all progression families and `opts.e
   expect_animation('exponential', { 20 }, { easing = 'in-out' })
 end
 
--- TODO: Remove after 0.7.0 release.
-T['gen_animation()'] = new_set()
-
-T['gen_animation()']['is possible as transition layer'] = function()
-  child.o.cmdheight = 10
-
-  -- Previous arguments should work
-  child.lua([[_G.f = MiniIndentscope.gen_animation('none')]])
-  eq(child.lua_get([[{ _G.f(1, 2), _G.f(2, 2) }]]), { 0, 0 })
-  -- Should give a change warning
-  expect.match(child.cmd_capture('1messages'), 'is now a table')
-  child.cmd('messages clear')
-
-  -- Should work with all possible previous arguments
-  child.lua([[_G.f = MiniIndentscope.gen_animation('linear', { duration = 100, unit = 'total' })]])
-  eq(child.lua_get([[{ _G.f(1, 2), _G.f(2, 2) }]]), { 50, 50 })
-
-  -- Should give warning only once
-  expect.match(child.cmd_capture('1messages'), '')
-end
-
-T['gen_animation()']['has properly documented examples'] = function()
-  child.o.cmdheight = 10
-
-  child.lua([[_G.f_old = MiniIndentscope.gen_animation('quadraticInOut', { duration = 1000, unit = 'total' })]])
-  child.lua(
-    [[_G.f_new = MiniIndentscope.gen_animation.quadratic({ easing = 'in-out', duration = 1000, unit = 'total' })]]
-  )
-
-  eq(child.lua_get('{ _G.f_old(1, 10), _G.f_old(5, 10) }'), child.lua_get('{ _G.f_new(1, 10), _G.f_new(5, 10) }'))
-end
-
 T['move_cursor()'] = new_set({
   hooks = {
     pre_case = function() set_lines(example_lines_nested) end,

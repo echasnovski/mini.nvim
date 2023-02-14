@@ -316,22 +316,6 @@ Examples ~
 - Use quadratic "out" easing with total duration of 1000 ms:
   `gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })`
 
-Migrate from function type ~
-
-Initially `MiniIndentscope.gen_animation` was a function taking `easing`
-and `opts` as arguments. To migrate from it, perform these steps:
-- Split `easing` value into two parts: progression family ("none", "linear",
-  etc.) and acceleration type ("In", "Out", "InOut").
-- Use progression family as a field name of `gen_animation` table.
-- Convert acceleration type to other notation ("In" -> "in", "Out" ->
-  "out", "InOut" -> "in-out") and use it as `easing` field of `opts` table.
-
-Examples:
-- `MiniIndentscope.gen_animation('none')` ->
-  `MiniIndentscope.gen_animation.none()`.
-- `gen_animation('quadraticInOut', { duration = 1000, unit = 'total' })` ->
-  `gen_animation.quadratic({ easing = 'in-out', duration = 1000, unit = 'total' })`.
-
 See also~
 |MiniIndentscope-drawing| for more information about how drawing is done.
 
