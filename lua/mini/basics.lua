@@ -523,11 +523,11 @@ H.vim_opt = setmetatable({}, {
 
 --stylua: ignore
 H.win_borders_fillchars = {
-  bold    = { vert = 'vert:┃', rest = ',horiz:━,horizdown:┳,horizup:┻,,verthoriz:╋,vertleft:┫,vertright:┣' },
-  dot     = { vert = 'vert:·', rest = ',horiz:·,horizdown:·,horizup:·,,verthoriz:·,vertleft:·,vertright:·' },
-  double  = { vert = 'vert:║', rest = ',horiz:═,horizdown:╦,horizup:╩,,verthoriz:╬,vertleft:╣,vertright:╠' },
-  single  = { vert = 'vert:│', rest = ',horiz:─,horizdown:┬,horizup:┴,,verthoriz:┼,vertleft:┤,vertright:├' },
-  solid   = { vert = 'vert: ', rest = ',horiz: ,horizdown: ,horizup: ,,verthoriz: ,vertleft: ,vertright: ' },
+  bold    = { vert = 'vert:┃', rest = ',horiz:━,horizdown:┳,horizup:┻,verthoriz:╋,vertleft:┫,vertright:┣' },
+  dot     = { vert = 'vert:·', rest = ',horiz:·,horizdown:·,horizup:·,verthoriz:·,vertleft:·,vertright:·' },
+  double  = { vert = 'vert:║', rest = ',horiz:═,horizdown:╦,horizup:╩,verthoriz:╬,vertleft:╣,vertright:╠' },
+  single  = { vert = 'vert:│', rest = ',horiz:─,horizdown:┬,horizup:┴,verthoriz:┼,vertleft:┤,vertright:├' },
+  solid   = { vert = 'vert: ', rest = ',horiz: ,horizdown: ,horizup: ,verthoriz: ,vertleft: ,vertright: ' },
 }
 
 -- Mappings -------------------------------------------------------------------
