@@ -567,16 +567,16 @@ H.apply_mappings = function(config)
 
     -- Alternative way to save and exit in Normal mode.
     -- NOTE: Adding `redraw` helps with `cmdheight=0` if buffer is not modified
-    map(  'n',        '<C-s>', '<Cmd>silent! update | redraw<CR>',      { desc = 'Save' })
-    map({ 'i', 'x' }, '<C-s>', '<Esc><Cmd>silent! update | redraw<CR>', { desc = 'Save and go to Normal mode' })
+    map(  'n',        '<C-S>', '<Cmd>silent! update | redraw<CR>',      { desc = 'Save' })
+    map({ 'i', 'x' }, '<C-S>', '<Esc><Cmd>silent! update | redraw<CR>', { desc = 'Save and go to Normal mode' })
 
     -- Correct latest misspelled word by taking first suggestion.
     -- Use `<C-g>u` in Insert mode to mark this as separate undoable action.
     -- Source: https://stackoverflow.com/a/16481737
     -- NOTE: this remaps `<C-z>` in Normal mode (completely stops Neovim), but
     -- it seems to be too harmful anyway.
-    map('n', '<C-z>', '[s1z=',                     { desc = 'Correct latest misspelled word' })
-    map('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
+    map('n', '<C-Z>', '[s1z=',                     { desc = 'Correct latest misspelled word' })
+    map('i', '<C-Z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
   end
 
   local toggle_prefix = config.mappings.option_toggle_prefix
@@ -605,12 +605,12 @@ H.apply_mappings = function(config)
 
   if config.mappings.windows then
     -- Window navigation
-    map('n', '<C-h>', '<C-w>h', { desc = 'Focus on left window' })
-    map('n', '<C-j>', '<C-w>j', { desc = 'Focus on below window' })
-    map('n', '<C-k>', '<C-w>k', { desc = 'Focus on above window' })
-    map('n', '<C-l>', '<C-w>l', { desc = 'Focus on right window' })
+    map('n', '<C-H>', '<C-w>h', { desc = 'Focus on left window' })
+    map('n', '<C-J>', '<C-w>j', { desc = 'Focus on below window' })
+    map('n', '<C-K>', '<C-w>k', { desc = 'Focus on above window' })
+    map('n', '<C-L>', '<C-w>l', { desc = 'Focus on right window' })
 
-    map('t', '<C-w>', [[<C-\><C-N><C-w>]], { desc = 'Focus other window' })
+    map('t', '<C-W>', [[<C-\><C-N><C-w>]], { desc = 'Focus other window' })
 
     -- Window resize (respecting `v:count`)
     map('n', '<C-Left>',  '"<Cmd>vertical resize -" . v:count1 . "<CR>"', { expr = true, desc = 'Decrease window width' })
@@ -640,20 +640,30 @@ H.apply_mappings = function(config)
 end
 
 H.keymap_set = function(modes, lhs, rhs, opts)
+  -- NOTE: Use `<C-H>`, `<C-Up>`, `<M-h>` casing (instead of `<C-h>`, `<C-up>`,
+  -- `<M-H>`) to match the `lhs` of keymap info. Otherwise it will say that
+  -- mapping doesn't exist when in fact it does.
   if type(modes) == 'string' then modes = { modes } end
 
   for _, mode in ipairs(modes) do
-    -- Don't map if mapping was already set
-    local map = vim.fn.maparg(lhs, mode)
-    local is_default = map == ''
+    -- Don't map if mapping is already set **globally**
+    local map_info = H.get_map_info(mode, lhs)
+    local is_default = map_info == nil
       -- Some mappings are set by default in Neovim
-      or (mode == 'n' and lhs == '<C-l>' and map:find('nohl') ~= nil)
-      or (mode == 'x' and lhs == '*' and map == [[y/\V<C-R>"<CR>]])
-      or (mode == 'x' and lhs == '#' and map == [[y?\V<C-R>"<CR>]])
+      or (mode == 'n' and lhs == '<C-L>' and map_info.rhs:find('nohl') ~= nil)
+      or (mode == 'x' and lhs == '*' and map_info.rhs == [[y/\V<C-R>"<CR>]])
+      or (mode == 'x' and lhs == '#' and map_info.rhs == [[y?\V<C-R>"<CR>]])
     if not is_default then return end
 
     -- Map
     H.map(mode, lhs, rhs, opts)
+  end
+end
+
+H.get_map_info = function(mode, lhs)
+  local keymaps = vim.api.nvim_get_keymap(mode)
+  for _, info in ipairs(keymaps) do
+    if info.lhs == lhs then return info end
   end
 end
 

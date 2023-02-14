@@ -209,14 +209,33 @@ T['Mappings']['do not override manually created mappings'] = function()
   child.api.nvim_set_keymap('n', 'j', 'aaaaa', { noremap = true })
   child.api.nvim_set_keymap('n', ',s', 'bbbbb', { noremap = true })
   child.api.nvim_set_keymap('n', '<C-h>', 'ccccc', { noremap = true })
-  child.api.nvim_set_keymap('n', '<M-h>', 'ddddd', { noremap = true })
+  child.api.nvim_set_keymap('i', '<M-h>', 'ddddd', { noremap = true })
 
   load_module({ mappings = { basic = true, option_toggle_prefix = ',', windows = true, move_with_alt = true } })
 
   expect.match(child.cmd_capture('nmap j'), 'aaaaa')
   expect.match(child.cmd_capture('nmap ,s'), 'bbbbb')
   expect.match(child.cmd_capture('nmap <C-h>'), 'ccccc')
-  expect.match(child.cmd_capture('nmap <M-h>'), 'ddddd')
+  expect.match(child.cmd_capture('imap <M-h>'), 'ddddd')
+end
+
+T['Mappings']['ignores buffer-local mappings when deciding whether to create one'] = function()
+  child.api.nvim_buf_set_keymap(0, 'n', 'j', 'aaaaa', { noremap = true })
+  child.api.nvim_buf_set_keymap(0, 'n', ',s', 'bbbbb', { noremap = true })
+  child.api.nvim_buf_set_keymap(0, 'n', '<C-h>', 'ccccc', { noremap = true })
+  child.api.nvim_buf_set_keymap(0, 'i', '<M-h>', 'ddddd', { noremap = true })
+
+  load_module({ mappings = { basic = true, option_toggle_prefix = ',', windows = true, move_with_alt = true } })
+
+  child.api.nvim_buf_del_keymap(0, 'n', 'j')
+  child.api.nvim_buf_del_keymap(0, 'n', ',s')
+  child.api.nvim_buf_del_keymap(0, 'n', '<C-h>')
+  child.api.nvim_buf_del_keymap(0, 'i', '<M-h>')
+
+  expect.match(child.cmd_capture('nmap j'), 'gj')
+  expect.match(child.cmd_capture('nmap ,s'), 'spell')
+  expect.match(child.cmd_capture('nmap <C-h>'), '<C%-W>')
+  expect.match(child.cmd_capture('imap <M-h>'), '<Left>')
 end
 
 T['Mappings']['Basic'] = new_set()
