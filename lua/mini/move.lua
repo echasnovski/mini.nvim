@@ -199,8 +199,7 @@ MiniMove.move_selection = function(direction, opts)
   if not is_moving then H.curswant = nil end
 
   -- Allow undo of consecutive moves at once (direction doesn't matter)
-  local normal_command = (is_moving and 'undojoin | ' or '') .. 'silent keepjumps normal! '
-  local cmd = function(x) vim.cmd(normal_command .. x) end
+  local cmd = H.make_cmd_normal(is_moving)
 
   -- Treat horizontal linewise movement specially
   if is_linewise and dir_type == 'hori' then
@@ -318,8 +317,7 @@ MiniMove.move_line = function(direction, opts)
   local is_moving = vim.deep_equal(H.state, H.get_move_state())
 
   -- Allow undo of consecutive moves at once (direction doesn't matter)
-  local normal_command = (is_moving and 'undojoin | ' or '') .. 'silent keepjumps normal! '
-  local cmd = function(x) vim.cmd(normal_command .. x) end
+  local cmd = H.make_cmd_normal(is_moving)
 
   -- Cache useful data because it will be reset when executing commands
   local n_times = opts.n_times or vim.v.count1
@@ -452,6 +450,18 @@ H.map = function(mode, key, rhs, opts)
   if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
 
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
+end
+
+H.make_cmd_normal = function(include_undojoin)
+  local normal_command = (include_undojoin and 'undojoin | ' or '') .. 'silent keepjumps normal! '
+
+  return function(x)
+    -- Caching and restoring unnamed register on every command is unnecessary
+    -- but has better implementation
+    local cache_unnamed_register = vim.fn.getreg('"')
+    vim.cmd(normal_command .. x)
+    vim.fn.setreg('"', cache_unnamed_register)
+  end
 end
 
 H.get_move_state = function()

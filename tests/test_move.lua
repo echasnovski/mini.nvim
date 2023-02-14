@@ -738,11 +738,15 @@ end
 
 T['move_selection()']['has no side effects'] = function()
   set_lines({ 'abXcd' })
-  set_cursor(1, 0)
 
-  -- Shouldn't modify used `z` register
+  -- Shouldn't modify used `z` or unnamed registers
+  set_cursor(1, 0)
   type_keys('"zyl')
   eq(child.fn.getreg('z'), 'a')
+
+  set_cursor(1, 1)
+  type_keys('yl')
+  eq(child.fn.getreg('"'), 'b')
 
   -- Shouldn't modify 'virtualedit'
   child.o.virtualedit = 'block,insert'
@@ -754,6 +758,7 @@ T['move_selection()']['has no side effects'] = function()
 
   -- Check
   eq(child.fn.getreg('z'), 'a')
+  eq(child.fn.getreg('"'), 'b')
   eq(child.o.virtualedit, 'block,insert')
 end
 
@@ -1052,17 +1057,23 @@ end
 
 T['move_line()']['has no side effects'] = function()
   set_lines({ 'aaa', 'bbb' })
-  set_cursor(1, 0)
 
-  -- Shouldn't modify used `z` register
+  -- Shouldn't modify used `z` and unnamed registers
+  set_cursor(1, 0)
   type_keys('"zyl')
   eq(child.fn.getreg('z'), 'a')
 
+  set_cursor(2, 0)
+  type_keys('yl')
+  eq(child.fn.getreg('"'), 'b')
+
+  set_cursor(1, 0)
   move_line('down')
   validate_line_state({ 'bbb', 'aaa' }, { 2, 0 })
 
   -- Check
   eq(child.fn.getreg('z'), 'a')
+  eq(child.fn.getreg('"'), 'b')
 end
 
 T['move_line()']['works silently'] = function()
