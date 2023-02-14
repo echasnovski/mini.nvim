@@ -374,7 +374,7 @@ T['draw()'] = new_set({
       -- Virtually disable autodrawing
       child.lua('MiniIndentscope.config.draw.delay = 100000')
       set_lines(example_lines_nested)
-      child.set_size(15, 10)
+      child.set_size(15, 12)
     end,
   },
 })
@@ -467,7 +467,7 @@ T['undraw()'] = new_set({
       -- Virtually disable autodrawing
       child.lua('MiniIndentscope.config.draw.delay = 100000')
       set_lines(example_lines_nested)
-      child.set_size(15, 10)
+      child.set_size(15, 12)
     end,
   },
 })
@@ -487,7 +487,7 @@ T['Auto drawing'] = new_set({
   hooks = {
     pre_case = function()
       set_lines(example_lines_nested)
-      child.set_size(15, 10)
+      child.set_size(15, 12)
     end,
   },
 })
