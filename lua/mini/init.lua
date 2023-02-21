@@ -20,6 +20,7 @@
 ---   Animate common Neovim actions.................................|mini.animate|
 ---   Base16 colorscheme creation....................................|mini.base16|
 ---   Common configuration presets...................................|mini.basics|
+---   Go forward/backward with square brackets..................  |mini.bracketed|
 ---   Remove buffers..............................................|mini.bufremove|
 ---   Comment.......................................................|mini.comment|
 ---   Completion and signature help..............................|mini.completion|
@@ -114,6 +115,9 @@
 --- - |MiniBasics| - common configuration presets. Has configurable presets for
 ---   options, mappings, and autocommands. It doesn't change option or mapping
 ---   if it was manually created.
+--- - |MiniBracketed| - go forward/backward with square brackets. Among others,
+---   supports variaty of non-trivial targets: comments, files on disk, indent
+---   changes, tree-sitter nodes, linear undo states, yank history entries.
 --- - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
 ---   window layout.
 --- - |MiniComment| - fast and familiar per-line code commenting.

@@ -8,6 +8,7 @@ local modules = {
   'animate',
   'base16',
   'basics',
+  'bracketed',
   'bufremove',
   'comment',
   'completion',

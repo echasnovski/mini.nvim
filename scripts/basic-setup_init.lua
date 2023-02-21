@@ -18,6 +18,7 @@ local test_actions = {
     require('mini.base16').setup({ palette = palette })
   end,
   ['basics']      = function() require('mini.basics').setup() end,
+  ['bracketed']   = function() require('mini.bracketed').setup() end,
   ['bufremove']   = function() require('mini.bufremove').setup() end,
   ['comment']     = function() require('mini.comment').setup() end,
   ['completion']  = function() require('mini.completion').setup() end,
