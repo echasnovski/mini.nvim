@@ -27,7 +27,7 @@
 ---   Generate Neovim help files........................................|mini.doc|
 ---   Fuzzy matching..................................................|mini.fuzzy|
 ---   Visualize and operate on indent scope.....................|mini.indentscope|
----   Jump forward/backward to a single character......................|mini.jump|
+---   Jump to next/previous single character...........................|mini.jump|
 ---   Jump within visible lines......................................|mini.jump2d|
 ---   Window with buffer text overview..................................|mini.map|
 ---   Miscellaneous functions..........................................|mini.misc|

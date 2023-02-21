@@ -1,7 +1,7 @@
 -- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
 
 -- Documentation ==============================================================
---- Smarter forward/backward jumping to a single character.
+--- Smarter jumping to next/previous single character
 ---
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
