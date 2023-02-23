@@ -23,12 +23,15 @@ You can override runtime config settings locally to buffer inside
 
 # Highlight groups~
 
-* `MiniCursorword` - highlight group of cursor word. Default: plain underline.
-* `MiniCursorwordCurrent` - highlight group of a current word under
-  cursor. It will be displayed on top of `MiniCursorword`
-  (so `:hi clear MiniCursorwordCurrent` will lead to showing
-  `MiniCursorword` highlight group). Note: To not highlight it, use
-  `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
+* `MiniCursorword` - highlight group of a non-current cursor word.
+  Default: plain underline.
+
+* `MiniCursorwordCurrent` - highlight group of a current word under cursor.
+  Default: links to `MiniCursorword` (so `:hi clear MiniCursorwordCurrent`
+  will lead to showing `MiniCursorword` highlight group).
+  Note: To not highlight it, use
+
+  `:hi! MiniCursorwordCurrent guifg=NONE guibg=NONE gui=NONE cterm=NONE`
 
 To change any highlight group, modify it directly with |:highlight|.
 

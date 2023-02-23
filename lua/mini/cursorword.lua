@@ -22,12 +22,15 @@
 ---
 --- # Highlight groups~
 ---
---- * `MiniCursorword` - highlight group of cursor word. Default: plain underline.
---- * `MiniCursorwordCurrent` - highlight group of a current word under
----   cursor. It will be displayed on top of `MiniCursorword`
----   (so `:hi clear MiniCursorwordCurrent` will lead to showing
----   `MiniCursorword` highlight group). Note: To not highlight it, use
----   `:hi! MiniCursorwordCurrent gui=nocombine guifg=NONE guibg=NONE` .
+--- * `MiniCursorword` - highlight group of a non-current cursor word.
+---   Default: plain underline.
+---
+--- * `MiniCursorwordCurrent` - highlight group of a current word under cursor.
+---   Default: links to `MiniCursorword` (so `:hi clear MiniCursorwordCurrent`
+---   will lead to showing `MiniCursorword` highlight group).
+---   Note: To not highlight it, use
+---
+---   `:hi! MiniCursorwordCurrent guifg=NONE guibg=NONE gui=NONE cterm=NONE`
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -237,20 +240,21 @@ H.highlight = function(only_current)
 
   H.window_matches[win_id] = H.window_matches[win_id] or {}
 
-  -- Add match highlight for current word under cursor with low priority
-  local match_id_current = vim.fn.matchadd('MiniCursorwordCurrent', [[\k*\%#\k*]], -1)
+  -- Add match highlight for current word under cursor
+  local current_word_pattern = [[\k*\%#\k*]]
+  local match_id_current = vim.fn.matchadd('MiniCursorwordCurrent', current_word_pattern, -1)
   H.window_matches[win_id].id_current = match_id_current
 
   -- Don't add main match id if not needed or if one is already present
   if only_current or H.window_matches[win_id].id ~= nil then return end
 
-  -- Make highlighting for cursor word with pattern being 'very nomagic' ('\V')
-  -- and matching whole word ('\<' and '\>')
+  -- Add match highlight for non-current word under cursor. NOTEs:
+  -- - Using `\(...\)\@!` allows to not match current word.
+  -- - Using 'very nomagic' ('\V') allows not escaping.
+  -- - Using `\<` and `\>` matches whole word (and not as part).
   local curword = H.get_cursor_word()
-  local curpattern = string.format([[\V\<%s\>]], curword)
-
-  -- Add match highlight with even lower priority for current word to be on top
-  local match_id = vim.fn.matchadd('MiniCursorword', curpattern, -2)
+  local pattern = string.format([[\(%s\)\@!\&\V\<%s\>]], current_word_pattern, curword)
+  local match_id = vim.fn.matchadd('MiniCursorword', pattern, -1)
 
   -- Store information about highlight
   H.window_matches[win_id].id = match_id

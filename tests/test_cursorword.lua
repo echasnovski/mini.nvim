@@ -18,12 +18,14 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 -- Make helpers
 local word_is_highlighted = function(word)
   local general_n, current_n = 0, 0
-  local general_pattern = ([[\V\<%s\>]]):format(word)
+  local current_word_pattern = [[\k*\%#\k*]]
+  local noncurrent_pattern = string.format([[\(%s\)\@!\&\V\<%s\>]], current_word_pattern, word)
+
   for _, m in ipairs(child.fn.getmatches()) do
-    if m.group == 'MiniCursorword' and m.pattern == general_pattern and m.priority == -2 then
+    if m.group == 'MiniCursorword' and m.pattern == noncurrent_pattern and m.priority == -1 then
       general_n = general_n + 1
     end
-    if m.group == 'MiniCursorwordCurrent' and m.pattern == [[\k*\%#\k*]] and m.priority == -1 then
+    if m.group == 'MiniCursorwordCurrent' and m.pattern == current_word_pattern and m.priority == -1 then
       current_n = current_n + 1
     end
   end
