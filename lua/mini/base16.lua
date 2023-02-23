@@ -635,7 +635,8 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
     hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
 
-    hi('MiniIndentscopeSymbol', {fg=p.base0F, bg=nil, attr=nil,         sp=nil})
+    hi('MiniIndentscopeSymbol',    {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+    hi('MiniIndentscopeSymbolOff', {fg=p.base08, bg=nil, attr=nil, sp=nil})
 
     hi('MiniJump', {link='SpellRare'})
 
