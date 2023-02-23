@@ -7,6 +7,7 @@ Introduction of a new module.
 ## mini.comment
 
 - FEATURE: Add `options.start_of_line` option which controls whether to recognize as comment only lines without indent.
+- FEATURE: Add `options.ignore_blank_line` option which controls whether to ignore blank lines when adding comment.
 
 ## mini.indentscope
 

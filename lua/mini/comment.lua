@@ -74,6 +74,9 @@ end
 MiniComment.config = {
   -- Options which control module behavior
   options = {
+    -- Whether to ignore blank lines when adding comment
+    ignore_blank_line = false,
+
     -- Whether to recognize as comment only lines without indent
     start_of_line = false,
   },
@@ -268,6 +271,7 @@ H.setup_config = function(config)
   })
 
   vim.validate({
+    ['options.ignore_blank_line'] = { config.options.ignore_blank_line, 'boolean' },
     ['options.start_of_line'] = { config.options.start_of_line, 'boolean' },
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
@@ -357,6 +361,8 @@ H.get_lines_info = function(lines, comment_parts)
 end
 
 H.make_comment_function = function(comment_parts, indent)
+  local options = H.get_config().options
+
   -- NOTE: this assumes that indent doesn't mix tabs with spaces
   local nonindent_start = indent:len() + 1
 
@@ -364,24 +370,22 @@ H.make_comment_function = function(comment_parts, indent)
   local lpad = (l == '') and '' or ' '
   local rpad = (r == '') and '' or ' '
 
-  local empty_comment = indent .. l .. r
+  local blank_comment = indent .. l .. r
 
   -- Escape literal '%' symbols in comment parts (like in LaTeX) to be '%%'
   -- because they have special meaning in `string.format` input. NOTE: don't
   -- use `vim.pesc()` here because it also escapes other special characters
   -- (like '-', '*', etc.).
   local l_esc, r_esc = l:gsub('%%', '%%%%'), r:gsub('%%', '%%%%')
-  local left = H.get_config().options.start_of_line and (l_esc .. indent) or (indent .. l_esc)
-  local nonempty_format = left .. lpad .. '%s' .. rpad .. r_esc
+  local left = options.start_of_line and (l_esc .. indent) or (indent .. l_esc)
+  local nonblank_format = left .. lpad .. '%s' .. rpad .. r_esc
 
+  local ignore_blank_line = options.ignore_blank_line
   return function(line)
-    -- Line is empty if it doesn't have anything except whitespace
-    if line:find('^%s*$') ~= nil then
-      -- If doesn't want to comment empty lines, return `line` here
-      return empty_comment
-    else
-      return string.format(nonempty_format, line:sub(nonindent_start))
-    end
+    -- Line is blank if it doesn't have anything except whitespace
+    if line:find('^%s*$') ~= nil then return ignore_blank_line and line or blank_comment end
+
+    return string.format(nonblank_format, line:sub(nonindent_start))
   end
 end
 

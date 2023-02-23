@@ -68,6 +68,7 @@ T['setup()']['creates `config` field'] = function()
   -- Check default values
   local expect_config = function(field, value) eq(child.lua_get('MiniComment.config.' .. field), value) end
 
+  expect_config('options.ignore_blank_line', false)
   expect_config('options.start_of_line', false)
   expect_config('mappings.comment', 'gc')
   expect_config('mappings.comment_line', 'gcc')
@@ -89,6 +90,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error('a', 'config', 'table')
   expect_config_error({ options = 'a' }, 'options', 'table')
+  expect_config_error({ options = { ignore_blank_line = 1 } }, 'options.ignore_blank_line', 'boolean')
   expect_config_error({ options = { start_of_line = 1 } }, 'options.start_of_line', 'boolean')
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { comment = 1 } }, 'mappings.comment', 'string')
@@ -215,6 +217,16 @@ T['toggle_lines()']['respects `config.options.start_of_line`'] = function()
   eq(get_lines(), { ' # aa', '  # aa', 'aa', 'aa', ' aa' })
   child.lua('MiniComment.toggle_lines(3, 5)')
   eq(get_lines(), { ' # aa', '  # aa', '# aa', '# aa', '#  aa' })
+end
+
+T['toggle_lines()']['respects `config.options.ignore_blank_line`'] = function()
+  child.lua('MiniComment.config.options.ignore_blank_line = true')
+  local lines = { '  aa', '', '  aa', '  ', '  aa' }
+
+  -- Should not add comment to blank (empty or with only whitespace) lines
+  set_lines(lines)
+  child.lua('MiniComment.toggle_lines(1, 5)')
+  eq(get_lines(), { '  # aa', '', '  # aa', '  ', '  # aa' })
 end
 
 T['toggle_lines()']['uncomments on inconsistent indent levels'] = function()
