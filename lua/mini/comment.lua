@@ -72,6 +72,12 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniComment.config = {
+  -- Options which control module behavior
+  options = {
+    -- Whether to recognize as comment only lines without indent
+    start_of_line = false,
+  },
+
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     -- Toggle comment (like `gcip` - comment inner paragraph) for both
@@ -84,6 +90,7 @@ MiniComment.config = {
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
     textobject = 'gc',
   },
+
   -- Hook functions to be executed at certain stage of commenting
   hooks = {
     -- Before successful commenting. Does nothing by default.
@@ -166,6 +173,7 @@ end
 ---@param line_end number End line number (inclusive from 1 to number of lines).
 MiniComment.toggle_lines = function(line_start, line_end)
   if H.is_disabled() then return end
+
   local n_lines = vim.api.nvim_buf_line_count(0)
   if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
     error(('(mini.comment) `line_start` and `line_end` should be within range [1; %s].'):format(n_lines))
@@ -254,11 +262,13 @@ H.setup_config = function(config)
 
   -- Validate per nesting level to produce correct error message
   vim.validate({
+    options = { config.options, 'table' },
     mappings = { config.mappings, 'table' },
     hooks = { config.hooks, 'table' },
   })
 
   vim.validate({
+    ['options.start_of_line'] = { config.options.start_of_line, 'boolean' },
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
     ['mappings.textobject'] = { config.mappings.textobject, 'string' },
@@ -311,8 +321,9 @@ end
 H.make_comment_check = function(comment_parts)
   local l, r = comment_parts.left, comment_parts.right
   -- String is commented if it has structure:
-  -- <space> <left> <anything> <right> <space>
-  local regex = string.format('^%%s-%s.*%s%%s-$', vim.pesc(l), vim.pesc(r))
+  -- <possible space> <left> <anything> <right> <space>
+  local start_blank = H.get_config().options.start_of_line and '' or '%s-'
+  local regex = '^' .. start_blank .. vim.pesc(l) .. '.*' .. vim.pesc(r) .. '%s-$'
 
   return function(line) return line:find(regex) ~= nil end
 end
@@ -354,11 +365,14 @@ H.make_comment_function = function(comment_parts, indent)
   local rpad = (r == '') and '' or ' '
 
   local empty_comment = indent .. l .. r
+
   -- Escape literal '%' symbols in comment parts (like in LaTeX) to be '%%'
   -- because they have special meaning in `string.format` input. NOTE: don't
   -- use `vim.pesc()` here because it also escapes other special characters
   -- (like '-', '*', etc.).
-  local nonempty_format = indent .. l:gsub('%%', '%%%%') .. lpad .. '%s' .. rpad .. r:gsub('%%', '%%%%')
+  local l_esc, r_esc = l:gsub('%%', '%%%%'), r:gsub('%%', '%%%%')
+  local left = H.get_config().options.start_of_line and (l_esc .. indent) or (indent .. l_esc)
+  local nonempty_format = left .. lpad .. '%s' .. rpad .. r_esc
 
   return function(line)
     -- Line is empty if it doesn't have anything except whitespace

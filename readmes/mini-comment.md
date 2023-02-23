@@ -137,6 +137,12 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
+  -- Options which control module behavior
+  options = {
+    -- Whether to recognize as comment only lines without indent
+    start_of_line = false,
+  },
+
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
     -- Toggle comment (like `gcip` - comment inner paragraph) for both
@@ -149,6 +155,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
     textobject = 'gc',
   },
+
   -- Hook functions to be executed at certain stage of commenting
   hooks = {
     -- Before successful commenting. Does nothing by default.

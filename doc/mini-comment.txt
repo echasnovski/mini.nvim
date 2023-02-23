@@ -56,6 +56,12 @@ Module config
 Default values:
 >
   MiniComment.config = {
+    -- Options which control module behavior
+    options = {
+      -- Whether to recognize as comment only lines without indent
+      start_of_line = false,
+    },
+
     -- Module mappings. Use `''` (empty string) to disable one.
     mappings = {
       -- Toggle comment (like `gcip` - comment inner paragraph) for both
@@ -68,6 +74,7 @@ Default values:
       -- Define 'comment' textobject (like `dgc` - delete whole comment block)
       textobject = 'gc',
     },
+
     -- Hook functions to be executed at certain stage of commenting
     hooks = {
       -- Before successful commenting. Does nothing by default.

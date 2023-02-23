@@ -4,6 +4,10 @@
 
 Introduction of a new module.
 
+## mini.comment
+
+- FEATURE: Add `options.start_of_line` option which controls whether to recognize as comment only lines without indent.
+
 ## mini.indentscope
 
 - FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.
