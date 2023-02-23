@@ -456,12 +456,18 @@ H.detect_sessions = function(config)
 end
 
 H.detect_sessions_global = function(global_dir)
+  -- Ensure correct directory path: create if doesn't exist
   global_dir = H.full_path(global_dir)
   if vim.fn.isdirectory(global_dir) ~= 1 then
-    H.message(('%s is not a directory path.'):format(vim.inspect(global_dir)))
-    return {}
+    local ok, _ = pcall(vim.fn.mkdir, global_dir, 'p')
+
+    if not ok then
+      H.message(('%s is not a directory path.'):format(vim.inspect(global_dir)))
+      return {}
+    end
   end
 
+  -- Find global sessions
   local globs = vim.fn.globpath(global_dir, '*')
   if #globs == 0 then return {} end
 

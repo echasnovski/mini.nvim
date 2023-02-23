@@ -34,6 +34,9 @@ local cleanup_directories = function()
   -- Ensure 'empty' directory doesn't exist
   child.fn.delete(empty_dir_path, 'rf')
 
+  -- Ensure 'missing-directory' doesn't exist
+  child.fn.delete('tests/dir-sessions/missing-directory', 'rf')
+
   -- Ensure 'global' does not contain file 'Session.vim'
   local files = { 'tests/dir-sessions/global/Session.vim' }
 
@@ -268,9 +271,17 @@ T['setup()']['allows empty string for `config.directory`'] = function()
   eq(child.lua_get('MiniSessions.detected'), {})
 end
 
-T['setup()']['gives feedback about absent `config.directory`'] = function()
-  reload_module({ directory = 'aaa' })
-  expect.match(get_latest_message(), '%(mini%.sessions%).*aaa.*is not a directory path')
+T['setup()']['creates missing `config.directory`'] = function()
+  local directory = 'tests/dir-sessions/missing-directory'
+
+  eq(child.fn.isdirectory(directory), 0)
+  reload_module({ directory = directory })
+  eq(child.fn.isdirectory(directory), 1)
+end
+
+T['setup()']['does not create `config.directory` if it is an existing file'] = function()
+  reload_module({ directory = 'lua/mini/sessions.lua' })
+  expect.match(get_latest_message(), '%(mini%.sessions%).*lua/mini/sessions%.lua.*is not a directory path')
 end
 
 T['setup()']['respects `config.file`'] = function()

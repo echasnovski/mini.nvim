@@ -4,6 +4,10 @@
 
 Introduction of a new module.
 
+## mini.sessions
+
+- FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.
+
 # Version 0.7.0
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
