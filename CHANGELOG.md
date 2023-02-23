@@ -4,6 +4,10 @@
 
 Introduction of a new module.
 
+## mini.indentscope
+
+- FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.
+
 ## mini.sessions
 
 - FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.

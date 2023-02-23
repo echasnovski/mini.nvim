@@ -48,7 +48,11 @@
 ---
 --- # Highlight groups~
 ---
---- * `MiniIndentscopeSymbol` - symbol showing on every line of scope.
+--- * `MiniIndentscopeSymbol` - symbol showing on every line of scope if its
+---   indent is multiple of 'shiftwidth'.
+--- * `MiniIndentscopeSymbolOff` - symbol showing on every line of scope if its
+---   indent is not multiple of 'shiftwidth'.
+---   Default: links to `MiniIndentscopeSymbol`.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -139,7 +143,11 @@ MiniIndentscope.setup = function(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec('hi default link MiniIndentscopeSymbol Delimiter', false)
+  vim.api.nvim_exec(
+    [[hi default link MiniIndentscopeSymbol Delimiter
+      hi default link MiniIndentscopeSymbolOff MiniIndentscopeSymbol]],
+    false
+  )
 end
 
 --- Module config
@@ -777,7 +785,11 @@ H.indicator_compute = function(scope)
   -- put it anywhere on screen; important to show properly on empty lines).
   local col = indent - vim.fn.winsaveview().leftcol
   if col < 0 then return {} end
-  local virt_text = { { H.get_config().symbol, 'MiniIndentscopeSymbol' } }
+
+  -- Pick highlight group based on if indent is a multiple of shiftwidth.
+  -- This adds visual indicator of whether indent is "correct".
+  local hl_group = (indent % vim.fn.shiftwidth() == 0) and 'MiniIndentscopeSymbol' or 'MiniIndentscopeSymbolOff'
+  local virt_text = { { H.get_config().symbol, hl_group } }
 
   return {
     buf_id = vim.api.nvim_get_current_buf(),

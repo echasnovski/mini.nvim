@@ -49,7 +49,11 @@ You can override runtime config settings locally to buffer inside
 
 # Highlight groups~
 
-* `MiniIndentscopeSymbol` - symbol showing on every line of scope.
+* `MiniIndentscopeSymbol` - symbol showing on every line of scope if its
+  indent is multiple of 'shiftwidth'.
+* `MiniIndentscopeSymbolOff` - symbol showing on every line of scope if its
+  indent is not multiple of 'shiftwidth'.
+  Default: links to `MiniIndentscopeSymbol`.
 
 To change any highlight group, modify it directly with |:highlight|.
 

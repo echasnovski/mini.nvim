@@ -396,6 +396,34 @@ T['draw()']['works'] = function()
   child.expect_screenshot()
 end
 
+local validate_hl_group = function(hl_group)
+  local ns_id = child.api.nvim_get_namespaces()['MiniIndentscope']
+  local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
+
+  local all_correct_hl_group = true
+  for _, e_mark in ipairs(extmarks) do
+    if e_mark[4].virt_text[1][2] ~= hl_group then all_correct_hl_group = false end
+  end
+
+  eq(all_correct_hl_group, true)
+end
+
+T['draw()']['uses correct highlight groups'] = new_set(
+  { parametrize = { { 2, 'MiniIndentscopeSymbol' }, { 3, 'MiniIndentscopeSymbolOff' } } },
+  {
+    test = function(shiftwidth, hl_group)
+      child.o.shiftwidth = shiftwidth
+      set_lines({ '  aa', '    aa', '  aa' })
+      set_cursor(2, 4)
+
+      child.lua('MiniIndentscope.draw()')
+      sleep(test_times.animation_step)
+
+      validate_hl_group(hl_group)
+    end,
+  }
+)
+
 T['draw()']['respects `config.draw.animation`'] = function()
   mark_flaky()
 
