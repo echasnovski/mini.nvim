@@ -521,8 +521,6 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   if current_dir == nil then current_dir = false end
   if show_path == nil then show_path = true end
 
-  if current_dir then vim.cmd('au DirChanged * lua MiniStarter.refresh()') end
-
   return function()
     local section = ('Recent files%s'):format(current_dir and ' (current directory)' or '')
 
