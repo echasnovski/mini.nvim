@@ -30,8 +30,8 @@
 ---
 --- # Disabling~
 ---
---- To disable core functionality, set `g:minicomment_disable` (globally) or
---- `b:minicomment_disable` (for a buffer) to `v:true`. Considering high number
+--- To disable core functionality, set `vim.g.minicomment_disable` (globally) or
+--- `vim.b.minicomment_disable` (for a buffer) to `true`. Considering high number
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.

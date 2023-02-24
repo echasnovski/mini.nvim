@@ -91,11 +91,11 @@
 ---
 --- # Disabling~
 ---
---- To disable, set `g:minibracketed_disable` (globally) or `b:minibracketed_disable`
---- (for a buffer) to `v:true`. Considering high number of different scenarios
---- and customization intentions, writing exact rules for disabling module's
---- functionality is left to user. See |mini.nvim-disabling-recipes| for common
---- recipes.
+--- To disable, set `vim.g.minibracketed_disable` (globally) or
+--- `vim.b.minibracketed_disable` (for a buffer) to `true`. Considering high
+--- number of different scenarios and customization intentions, writing exact
+--- rules for disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.bracketed
 ---@tag MiniBracketed
 

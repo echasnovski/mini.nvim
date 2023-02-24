@@ -48,19 +48,23 @@ Table of contents:
   balance between feature-richness (handling as many edge-cases as
   possible) and simplicity of implementation/support. Granted, not all of
   them ended up with the same balance, but it is the goal nevertheless.
+
 - <Independence>. Modules are independent of each other and can be run
   without external dependencies. Although some of them may need
   dependencies for full experience.
+
 - <Structure>. Each module is a submodule for a placeholder "mini" module. So,
   for example, "surround" module should be referred to as "mini.surround".
   As later will be explained, this plugin can also be referred to
   as "MiniSurround".
+
 - <Setup>:
     - Each module (if needed) should be setup separately with
       `require(<name of module>).setup({})`
       (possibly replace {} with your config table or omit to use defaults).
       You can supply only values which differ from defaults, which will be
       used for the rest ones.
+
     - Call to module's `setup()` always creates a global Lua object with
       coherent camel-case name: `require('mini.surround').setup()` creates
       `_G.MiniSurround`. This allows for a simpler usage of plugin
@@ -69,24 +73,30 @@ Table of contents:
       available from `v:lua` like `v:lua.MiniSurround`. Considering this,
       "module" and "Lua object" names can be used interchangeably:
       'mini.surround' and 'MiniSurround' will mean the same thing.
+
     - Each supplied `config` table (after extending with default values) is
       stored in `config` field of global object. Like `MiniSurround.config`.
+
     - Values of `config`, which affect runtime activity, can be changed on
       the fly to have effect. For example, `MiniSurround.config.n_lines`
       can be changed during runtime; but changing
       `MiniSurround.config.mappings` won't have any effect (as mappings are
       created once during `setup()`).
+
 - <Buffer local configuration>. Each module can be additionally configured
   to use certain runtime config settings locally to buffer. See
   |mini.nvim-buffer-local-config| for more information.
+
 - <Disabling>. Each module's core functionality can be disabled globally or
-  buffer-locally by creating appropriate global or buffer-scoped variables
-  equal to |v:true|. See |mini.nvim-disabling-recipes| for common recipes.
+  locally to buffer. See "Disabling" section in module's help page for more
+  details. See |mini.nvim-disabling-recipes| for common recipes.
+
 - <Highlight groups>. Appearance of module's output is controlled by
   certain highlight group (see |highlight-groups|). To customize them, use
   |highlight| command. Note: currently not many Neovim themes support this
   plugin's highlight groups; fixing this situation is highly appreciated.
   To see a more calibrated look, use |MiniBase16| or plugin's colorschemes.
+
 - <Stability>. Each module upon release is considered to be relatively
   stable: both in terms of setup and functionality. Any
   non-bugfix backward-incompatible change will be released gradually as

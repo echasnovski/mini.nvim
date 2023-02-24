@@ -53,8 +53,8 @@
 ---
 --- # Disabling~
 ---
---- To disable (show empty tabline), set `g:minitabline_disable` (globally) or
---- `b:minitabline_disable` (for a buffer) to `v:true`. Considering high number
+--- To disable (show empty tabline), set `vim.g.minitabline_disable` (globally) or
+--- `vim.b.minitabline_disable` (for a buffer) to `true`. Considering high number
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes. Note: after disabling,

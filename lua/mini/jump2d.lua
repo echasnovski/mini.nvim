@@ -102,11 +102,11 @@
 ---
 --- # Disabling~
 ---
---- To disable, set `g:minijump2d_disable` (globally) or `b:minijump2d_disable`
---- (for a buffer) to `v:true`. Considering high number of different scenarios
---- and customization intentions, writing exact rules for disabling module's
---- functionality is left to user. See |mini.nvim-disabling-recipes| for common
---- recipes.
+--- To disable, set `vim.g.minijump2d_disable` (globally) or
+--- `vim.b.minijump2d_disable` (for a buffer) to `true`. Considering high
+--- number of different scenarios and customization intentions, writing exact
+--- rules for disabling module's functionality is left to user. See
+--- |mini.nvim-disabling-recipes| for common recipes.
 ---@tag mini.jump2d
 ---@tag MiniJump2d
 

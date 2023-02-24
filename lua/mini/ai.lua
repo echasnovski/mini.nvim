@@ -94,8 +94,8 @@
 ---
 --- # Disabling~
 ---
---- To disable, set `g:miniai_disable` (globally) or `b:miniai_disable`
---- (for a buffer) to `v:true`. Considering high number of different scenarios
+--- To disable, set `vim.g.miniai_disable` (globally) or `vim.b.miniai_disable`
+--- (for a buffer) to `true`. Considering high number of different scenarios
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.

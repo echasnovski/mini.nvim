@@ -58,8 +58,8 @@ as `MiniMove.config`. See |mini.nvim-buffer-local-config| for more details.
 
 # Disabling~
 
-To disable, set `g:minimove_disable` (globally) or `b:minimove_disable`
-(for a buffer) to `v:true`. Considering high number of different scenarios
+To disable, set `vim.g.minimove_disable` (globally) or `vim.b.minimove_disable`
+(for a buffer) to `true`. Considering high number of different scenarios
 and customization intentions, writing exact rules for disabling module's
 functionality is left to user. See |mini.nvim-disabling-recipes| for common
 recipes.

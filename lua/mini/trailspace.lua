@@ -30,8 +30,8 @@
 ---
 --- # Disabling~
 ---
---- To disable, set `g:minitrailspace_disable` (globally) or
---- `b:minitrailspace_disable` (for a buffer) to `v:true`. Considering high
+--- To disable, set `vim.g.minitrailspace_disable` (globally) or
+--- `vim.b.minitrailspace_disable` (for a buffer) to `true`. Considering high
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes. Note: after disabling
