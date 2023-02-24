@@ -121,6 +121,16 @@ local validate_disable = function(var_type, fun_name, layout)
   eq(win_get_buf(layout['win_right']), layout['buf'])
 end
 
+local validate_silence = function(var_type, fun_name)
+  child[var_type].minibufremove_silence = true
+
+  local command = ('MiniBufremove.%s(-1)'):format(fun_name)
+  eq(child.lua_get(command), false)
+
+  -- Should show no message
+  eq(child.cmd_capture('1messages'), '')
+end
+
 local validate_bufhidden_option = function(fun_name, bufhidden_value)
   local layout = setup_layout()
   child.api.nvim_buf_set_option(layout['buf'], 'bufhidden', bufhidden_value)
@@ -208,11 +218,15 @@ T['unshow()']['respects `buf_id` argument'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
 end
 
-T['unshow()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type) validate_disable(var_type, 'unshow', layout) end,
-})
+T['unshow()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_disable(var_type, 'unshow', layout) end }
+)
+
+T['unshow()']['respects `vim.{g,b}.minibufremove_silence`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_silence(var_type, 'unshow') end }
+)
 
 T['unshow_in_window()'] = new_set()
 
@@ -266,11 +280,15 @@ T['unshow_in_window()']['respects `win_id` argument'] = function()
   eq(win_get_buf(layout['win_right']), layout['buf'])
 end
 
-T['unshow_in_window()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type) validate_disable(var_type, 'unshow_in_window', layout) end,
-})
+T['unshow_in_window()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_disable(var_type, 'unshow_in_window', layout) end }
+)
+
+T['unshow_in_window()']['respects `vim.{g,b}.minibufremove_silence`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_silence(var_type, 'unshow_in_window') end }
+)
 
 T['delete()'] = new_set()
 
@@ -298,11 +316,15 @@ end
 
 T['delete()']['respects `force` argument'] = function() validate_force_argument('delete', layout) end
 
-T['delete()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type) validate_disable(var_type, 'delete', layout) end,
-})
+T['delete()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_disable(var_type, 'delete', layout) end }
+)
+
+T['delete()']['respects `vim.{g,b}.minibufremove_silence`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_silence(var_type, 'delete') end }
+)
 
 T['delete()']["works with different 'bufhidden' options"] = function()
   validate_bufhidden_option('delete', 'delete')
@@ -335,11 +357,15 @@ end
 
 T['wipeout()']['respects `force` argument'] = function() validate_force_argument('wipeout', layout) end
 
-T['wipeout()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type) validate_disable(var_type, 'wipeout', layout) end,
-})
+T['wipeout()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_disable(var_type, 'wipeout', layout) end }
+)
+
+T['wipeout()']['respects `vim.{g,b}.minibufremove_silence`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  { test = function(var_type) validate_silence(var_type, 'wipeout') end }
+)
 
 T['wipeout()']["works with different 'bufhidden' options"] = function()
   validate_bufhidden_option('wipeout', 'delete')

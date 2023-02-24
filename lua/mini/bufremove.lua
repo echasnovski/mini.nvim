@@ -32,6 +32,11 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minibufremove_silence`
+--- (globally) or `vim.b.minibufremove_silence` (for a buffer) to `true`.
 ---@tag mini.bufremove
 ---@tag MiniBufremove
 
@@ -185,6 +190,8 @@ end
 
 H.is_disabled = function() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
 
+H.is_silenced = function() return vim.g.minibufremove_silence == true or vim.b.minibufremove_silence == true end
+
 -- Removing implementation ----------------------------------------------------
 H.unshow_and_cmd = function(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
@@ -224,6 +231,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.bufremove) ', 'WarningMsg' })
