@@ -192,16 +192,6 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
   )
 end
 
-T['make_tabline_string()']['validates `config.tabpage_section`'] = function()
-  child.o.cmdheight = 10
-  child.lua([[MiniTabline.config.tabpage_section = 'aaa']])
-  child.cmd('tabedit')
-  eq(
-    child.cmd_capture('1messages'),
-    [[(mini.tabline) `config.tabpage_section` should be one of 'left', 'right', 'none'.]]
-  )
-end
-
 T['make_tabline_string()']['shows only listed buffers'] = function()
   child.cmd('edit aaa | edit bbb | set nobuflisted | help')
   eq(eval_tabline(), ' aaa ')

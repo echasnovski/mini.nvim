@@ -480,9 +480,6 @@ H.concat_tabs = function()
   -- Add tabpage section
   local position = H.get_config().tabpage_section
   if H.tabpage_section ~= '' then
-    if not vim.tbl_contains({ 'none', 'left', 'right' }, position) then
-      H.message([[`config.tabpage_section` should be one of 'left', 'right', 'none'.]])
-    end
     if position == 'left' then res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res) end
     if position == 'right' then
       -- Use `%=` to make it stick to right hand side
@@ -492,18 +489,5 @@ H.concat_tabs = function()
 
   return res
 end
-
--- Utilities ------------------------------------------------------------------
-H.echo = function(msg, is_important)
-  -- Construct message chunks
-  msg = type(msg) == 'string' and { { msg } } or msg
-  table.insert(msg, 1, { '(mini.tabline) ', 'WarningMsg' })
-
-  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
-  vim.cmd([[echo '' | redraw]])
-  vim.api.nvim_echo(msg, is_important, {})
-end
-
-H.message = function(msg) H.echo(msg, true) end
 
 return MiniTabline
