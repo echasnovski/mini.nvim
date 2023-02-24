@@ -128,6 +128,11 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minisurround_silence`
+--- (globally) or `vim.b.minisurround_silence` (for a buffer) to `true`.
 ---@tag mini.surround
 ---@tag MiniSurround
 
@@ -1086,6 +1091,8 @@ end
 
 H.is_disabled = function() return vim.g.minisurround_disable == true or vim.b.minisurround_disable == true end
 
+H.is_silenced = function() return vim.g.minisurround_silence == true or vim.b.minisurround_silence == true end
+
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniSurround.config, vim.b.minisurround_config or {}, config or {})
 end
@@ -1971,6 +1978,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.surround) ', 'WarningMsg' })

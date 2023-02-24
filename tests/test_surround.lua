@@ -526,7 +526,6 @@ T['Add surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
-    child.ensure_normal_mode()
     child[var_type].minisurround_disable = true
 
     set_lines({ ' aaa ' })
@@ -536,6 +535,23 @@ T['Add surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
     type_keys('sa', 'iw', ')')
     eq(get_lines(), { ' w)aaa ' })
     eq(get_cursor(), { 1, 3 })
+  end,
+})
+
+T['Add surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minisurround_silence = true
+    child.set_size(10, 20)
+
+    set_lines({ ' aaa ' })
+    set_cursor(1, 1)
+
+    -- It should not show helper message after one idle second
+    type_keys('sa', 'iw')
+    sleep(1000 + 15)
+    child.expect_screenshot()
   end,
 })
 
@@ -744,6 +760,30 @@ T['Delete surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
     type_keys('sd', '>')
     eq(get_lines(), { '<aaa>' })
     eq(get_cursor(), { 1, 1 })
+  end,
+})
+
+T['Delete surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minisurround_silence = true
+    child.set_size(10, 20)
+
+    child.o.timeoutlen = 50
+    local total_wait_time = 1000 + child.o.timeoutlen
+
+    set_lines({ '<aaa>' })
+    set_cursor(1, 1)
+
+    -- It should not show helper message after one idle second
+    type_keys('sd')
+    sleep(total_wait_time + 15)
+    child.expect_screenshot()
+
+    -- It should not show message about "No surrounding found"
+    type_keys(')')
+    child.expect_screenshot()
   end,
 })
 
@@ -977,6 +1017,30 @@ T['Replace surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set(
     type_keys('sr', '>', '"')
     eq(get_lines(), { '<aaa>' })
     eq(get_cursor(), { 1, 1 })
+  end,
+})
+
+T['Replace surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minisurround_silence = true
+    child.set_size(10, 20)
+
+    child.o.timeoutlen = 50
+    local total_wait_time = 1000 + child.o.timeoutlen
+
+    set_lines({ '<aaa>' })
+    set_cursor(1, 1)
+
+    -- It should not show helper message after one idle second
+    type_keys('sr')
+    sleep(total_wait_time + 15)
+    child.expect_screenshot()
+
+    -- It should not show message about "No surrounding found"
+    type_keys(')')
+    child.expect_screenshot()
   end,
 })
 
