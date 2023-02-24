@@ -1766,33 +1766,6 @@ H.qf_loc_implementation = function(list_type, direction, opts)
   vim.cmd('normal! zvzz')
 end
 
--- Treesitter -----------------------------------------------------------------
-H.treesitter_go_up = function(node)
-  local sibling = node:prev_named_sibling()
-  if sibling == nil then return node:parent() end
-
-  local res = sibling
-  -- In theory, it should be `while true`. `for` guards against infinite loop.
-  for _ = 1, 10000 do
-    local n_children = res:named_child_count()
-    if n_children == 0 then return res end
-    res = res:named_child(n_children - 1)
-  end
-end
-
-H.treesitter_go_down = function(node)
-  local child = node:named_child(0)
-  if child ~= nil then return child end
-
-  local res = node
-  for _ = 1, 10000 do
-    local sibling = res:next_named_sibling()
-    if sibling ~= nil then return sibling end
-    res = res:parent()
-    if res == nil then return end
-  end
-end
-
 -- Undo -----------------------------------------------------------------------
 H.undo_sync = function(buf_id, tree, is_advancing)
   -- Get or initialize buffer history of visited undo states
