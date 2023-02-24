@@ -405,8 +405,9 @@ Tree-sitter node
 Go to end/start of current tree-sitter node and its parents (except root).
 
 Notes:
-- Requires |get_node_at_pos()| function from |lua-treesitter| module
-  (present in Neovim>=0.8) and loaded tree-sitter parser in current buffer.
+- Requires |get_node_at_pos()| from |lua-treesitter| (present in Neovim=0.8)
+  or |vim.treesitter.get_node()| (present in Neovim>=0.9) along with loaded
+  tree-sitter parser in current buffer.
 - Directions "first" and "last" work differently from most other targets
   for performance reasons. They are essentially "backward" and "forward"
   with very big `n_times` option.

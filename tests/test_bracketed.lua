@@ -2111,7 +2111,15 @@ T['quickfix()']['respects `vim.b.minibracketed_config`'] = function()
   eq(get_cursor(), cur_pos)
 end
 
-T['treesitter()'] = new_set()
+T['treesitter()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Imitate `get_node_at_pos()` to pass tests with mocks on Neovim<0.8
+      child.lua('vim.treesitter.get_node_at_pos = function() end')
+      reload_module()
+    end,
+  },
+})
 
 local setup_treesitter = function()
   -- Make `vim.treesitter.get_node_at_pos()` return mock of tree-sitter node
@@ -2203,6 +2211,7 @@ end
 
 T['treesitter()']['does nothing if no node at cursor'] = function()
   child.lua('vim.treesitter.get_node_at_pos = function() return nil end')
+  child.lua('vim.treesitter.get_node = function() return nil end')
 
   for _, dir in ipairs({ forward, backward, first, last }) do
     set_lines({ '{ aaa }' })
@@ -2217,8 +2226,11 @@ T['treesitter()']['handles error when finding node at cursor'] = function()
   expect.error(function() forward('treesitter') end, 'can not find tree%-sitter node')
 end
 
-T['treesitter()']['requires `vim.treesitter.get_node_at_pos()`'] = function()
+T['treesitter()']['requires `vim.treesitter.get_node_at_pos()` or `vim.treesitter.get_node()`'] = function()
   child.lua('vim.treesitter.get_node_at_pos = nil')
+  child.lua('vim.treesitter.get_node = nil')
+  reload_module()
+
   expect.error(function() forward('treesitter') end, 'get_node_at_pos%(%).*')
 end
 
@@ -3949,7 +3961,15 @@ T['Mappings']['quickfix']['allows non-letter suffix'] = function()
   validate_map_quickfix(1, '],', 2)
 end
 
-T['Mappings']['treesitter'] = new_set()
+T['Mappings']['treesitter'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Imitate `get_node_at_pos()` to pass tests with mocks on Neovim<0.8
+      child.lua('vim.treesitter.get_node_at_pos = function() end')
+      reload_module()
+    end,
+  },
+})
 
 T['Mappings']['treesitter']['works'] = function()
   local nodes, _, inside_nodes = setup_treesitter()

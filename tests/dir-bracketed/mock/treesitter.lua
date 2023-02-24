@@ -57,3 +57,4 @@ end
 
 -- `row` and `col` are both zero-indexed here
 vim.treesitter.get_node_at_pos = function(_, row, col, _) return new_node(row + 1, col + 1) end
+vim.treesitter.get_node = function(opts) return new_node(opts.pos[1] + 1, opts.pos[2] + 1) end

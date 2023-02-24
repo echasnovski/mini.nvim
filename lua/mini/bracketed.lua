@@ -784,8 +784,9 @@ end
 --- Go to end/start of current tree-sitter node and its parents (except root).
 ---
 --- Notes:
---- - Requires |get_node_at_pos()| function from |lua-treesitter| module
----   (present in Neovim>=0.8) and loaded tree-sitter parser in current buffer.
+--- - Requires |get_node_at_pos()| from |lua-treesitter| (present in Neovim=0.8)
+---   or |vim.treesitter.get_node()| (present in Neovim>=0.9) along with loaded
+---   tree-sitter parser in current buffer.
 --- - Directions "first" and "last" work differently from most other targets
 ---   for performance reasons. They are essentially "backward" and "forward"
 ---   with very big `n_times` option.
@@ -798,8 +799,11 @@ end
 ---@param opts table|nil Options. A table with fields:
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
 MiniBracketed.treesitter = function(direction, opts)
-  if vim.treesitter.get_node_at_pos == nil then
-    H.error('`treesitter()` target requires `vim.treesitter.get_node_at_pos()`. Use newer Neovim version.')
+  if H.get_treesitter_node == nil then
+    H.error(
+      '`treesitter()` target requires either `vim.treesitter.get_node()` or `vim.treesitter.get_node_at_pos()`.'
+        .. ' Use newer Neovim version.'
+    )
   end
   if H.is_disabled() then return end
 
@@ -867,7 +871,7 @@ MiniBracketed.treesitter = function(direction, opts)
   end
 
   local cur_pos = vim.api.nvim_win_get_cursor(0)
-  local ok, node = pcall(vim.treesitter.get_node_at_pos, 0, cur_pos[1] - 1, cur_pos[2], {})
+  local ok, node = pcall(H.get_treesitter_node, cur_pos[1] - 1, cur_pos[2])
   if not ok then
     H.error(
       'In `treesitter()` target can not find tree-sitter node under cursor.'
@@ -1764,6 +1768,13 @@ H.qf_loc_implementation = function(list_type, direction, opts)
   -- cursor position.
   vim.cmd(goto_command .. ' ' .. res_ind)
   vim.cmd('normal! zvzz')
+end
+
+-- Treesitter -----------------------------------------------------------------
+if vim.treesitter.get_node ~= nil then
+  H.get_treesitter_node = function(row, col) return vim.treesitter.get_node({ pos = { row, col } }) end
+elseif vim.treesitter.get_node_at_pos ~= nil then
+  H.get_treesitter_node = function(row, col) return vim.treesitter.get_node_at_pos(0, row, col, {}) end
 end
 
 -- Undo -----------------------------------------------------------------------
