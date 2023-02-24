@@ -442,6 +442,17 @@ T['find_textobject()']['shows message if no region is found'] = function()
   )
 end
 
+T['find_textobject()']['respects `vim.{g,b}.miniai_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].miniai_silence = true
+
+    validate_find1d('aa', 0, { 'a', ')' }, nil)
+    eq(get_latest_message(), '')
+  end,
+})
+
 T['find_textobject()']['respects `vim.b.miniai_config`'] = function()
   child.b.miniai_config = { search_method = 'cover' }
   validate_find1d('aa(bb)', 0, { 'a', ')' }, nil)
@@ -1722,6 +1733,30 @@ T['Textobject']['respects `vim.{g,b}.miniai_disable`'] = new_set({
 
     -- It shouldn't recognize new textobjects
     validate_edit1d('*bb*', 1, '*bb*', 1, 'ci*')
+  end,
+})
+
+T['Textobject']['respects `vim.{g,b}.miniai_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child.set_size(5, 40)
+    child[var_type].miniai_silence = true
+
+    child.o.timeoutlen = 50
+    local total_wait_time = 1000 + child.o.timeoutlen
+
+    set_lines({ '(aaa)' })
+    set_cursor(1, 1)
+
+    type_keys('v', 'a')
+    sleep(total_wait_time)
+
+    -- Should not show helper message
+    child.expect_screenshot()
+
+    -- Finish user input for cleaner Neovim restart
+    type_keys(')')
   end,
 })
 
