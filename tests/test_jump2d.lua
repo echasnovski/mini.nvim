@@ -692,6 +692,21 @@ T['start()']['respects `vim.{g,b}.minijump2d_disable`'] = new_set({
   end,
 })
 
+T['start()']['respects `vim.{g,b}.minijump2d_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minijump2d_silence = true
+    child.set_size(10, 20)
+
+    start()
+    sleep(1000 + 15)
+
+    -- Should not show helper message
+    child.expect_screenshot()
+  end,
+})
+
 T['stop()'] = new_set()
 
 T['stop()']['works'] = function()

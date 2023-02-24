@@ -107,6 +107,11 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minijump2d_silence`
+--- (globally) or `vim.b.minijump2d_silence` (for a buffer) to `true`.
 ---@tag mini.jump2d
 ---@tag MiniJump2d
 
@@ -610,6 +615,8 @@ end
 
 H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
 
+H.is_silenced = function() return vim.g.minijump2d_silence == true or vim.b.minijump2d_silence == true end
+
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniJump2d.config, vim.b.minijump2d_config or {}, config or {})
 end
@@ -809,6 +816,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.jump2d) ', 'WarningMsg' })

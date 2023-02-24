@@ -109,6 +109,11 @@ number of different scenarios and customization intentions, writing exact
 rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
 
+# Silencing ~
+
+To stop module from giving non-error feedback, set `vim.g.minijump2d_silence`
+(globally) or `vim.b.minijump2d_silence` (for a buffer) to `true`.
+
 ------------------------------------------------------------------------------
                                                             *MiniJump2d.setup()*
                           `MiniJump2d.setup`({config})
