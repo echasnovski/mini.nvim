@@ -52,6 +52,12 @@
 ---     - The 'tpope/vim-unimpaired' has mapping for toggling options with `yo`
 ---       prefix. This module implements similar functionality with `\` prefix
 ---       (see |MiniBasics.config.mappings|).
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
+--- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
+--- Note: Should be set **before** running `require('mini.basics').setup()`.
 ---@tag mini.basics
 ---@tag Minibasics
 
@@ -234,7 +240,9 @@ end
 ---   calling |MiniBasics.setup()| (as is done with default `basic` field of
 ---   |MiniBasics.config.options|).
 ---
---- After toggling, there will be a feedback about the current option value.
+--- After toggling, there will be a feedback about the current option value if
+--- prior to `require('mini.basics').setup()` module wasn't silenced (see
+--- "Silencing" section in |mini.basics|).
 ---
 --- It will only add a mapping if it wasn't manually created before.
 ---
@@ -422,6 +430,8 @@ H.apply_config = function(config)
   H.apply_autocommands(config)
 end
 
+H.is_silenced = function() return vim.g.minibasics_silence == true or vim.b.minibasics_silence == true end
+
 -- Options --------------------------------------------------------------------
 --stylua: ignore
 H.apply_options = function(config)
@@ -583,24 +593,32 @@ H.apply_mappings = function(config)
   if type(toggle_prefix) == 'string' and toggle_prefix ~= '' then
     local map_toggle = function(lhs, rhs, desc) map('n', toggle_prefix .. lhs, rhs, { desc = desc }) end
 
-    -- NOTE: showing current option value after toggling it is very useful but
-    -- might not play nicely with `cmdheight=0` causing `hit-enter-prompt`.
-    -- If it is crucial for you, consider doing one of these:
-    -- - Copy this code without showing part: `xxx?` for most, similar for others.
-    -- - Use `cmdheight=1`.
-    -- - Use 'folke/noice.nvim'.
-    -- - Help fixing https://github.com/neovim/neovim/issues/20673 .
-    map_toggle('b', '<Cmd>lua vim.o.bg = vim.o.bg == "dark" and "light" or "dark"; print(vim.o.bg)<CR>',       "Toggle 'background'")
-    map_toggle('c', '<Cmd>setlocal cursorline! cursorline?<CR>',                                               "Toggle 'cursorline'")
-    map_toggle('C', '<Cmd>setlocal cursorcolumn! cursorcolumn?<CR>',                                           "Toggle 'cursorcolumn'")
-    map_toggle('d', '<Cmd>lua print(MiniBasics.toggle_diagnostic())<CR>',                                      'Toggle diagnostic')
-    map_toggle('h', '<Cmd>let v:hlsearch = 1 - v:hlsearch | echo (v:hlsearch ? "  " : "no") . "hlsearch"<CR>', 'Toggle search highlight')
-    map_toggle('i', '<Cmd>setlocal ignorecase! ignorecase?<CR>',                                               "Toggle 'ignorecase'")
-    map_toggle('l', '<Cmd>setlocal list! list?<CR>',                                                           "Toggle 'list'")
-    map_toggle('n', '<Cmd>setlocal number! number?<CR>',                                                       "Toggle 'number'")
-    map_toggle('r', '<Cmd>setlocal relativenumber! relativenumber?<CR>',                                       "Toggle 'relativenumber'")
-    map_toggle('s', '<Cmd>setlocal spell! spell?<CR>',                                                         "Toggle 'spell'")
-    map_toggle('w', '<Cmd>setlocal wrap! wrap?<CR>',                                                           "Toggle 'wrap'")
+    if H.is_silenced() then
+      -- Toggle without feedback
+      map_toggle('b', '<Cmd>lua vim.o.bg = vim.o.bg == "dark" and "light" or "dark"<CR>', "Toggle 'background'")
+      map_toggle('c', '<Cmd>setlocal cursorline!<CR>',                                    "Toggle 'cursorline'")
+      map_toggle('C', '<Cmd>setlocal cursorcolumn!<CR>',                                  "Toggle 'cursorcolumn'")
+      map_toggle('d', '<Cmd>lua MiniBasics.toggle_diagnostic()<CR>',                      'Toggle diagnostic')
+      map_toggle('h', '<Cmd>let v:hlsearch = 1 - v:hlsearch<CR>',                         'Toggle search highlight')
+      map_toggle('i', '<Cmd>setlocal ignorecase!<CR>',                                    "Toggle 'ignorecase'")
+      map_toggle('l', '<Cmd>setlocal list!<CR>',                                          "Toggle 'list'")
+      map_toggle('n', '<Cmd>setlocal number!<CR>',                                        "Toggle 'number'")
+      map_toggle('r', '<Cmd>setlocal relativenumber!<CR>',                                "Toggle 'relativenumber'")
+      map_toggle('s', '<Cmd>setlocal spell!<CR>',                                         "Toggle 'spell'")
+      map_toggle('w', '<Cmd>setlocal wrap!<CR>',                                          "Toggle 'wrap'")
+    else
+      map_toggle('b', '<Cmd>lua vim.o.bg = vim.o.bg == "dark" and "light" or "dark"; print(vim.o.bg)<CR>',       "Toggle 'background'")
+      map_toggle('c', '<Cmd>setlocal cursorline! cursorline?<CR>',                                               "Toggle 'cursorline'")
+      map_toggle('C', '<Cmd>setlocal cursorcolumn! cursorcolumn?<CR>',                                           "Toggle 'cursorcolumn'")
+      map_toggle('d', '<Cmd>lua print(MiniBasics.toggle_diagnostic())<CR>',                                      'Toggle diagnostic')
+      map_toggle('h', '<Cmd>let v:hlsearch = 1 - v:hlsearch | echo (v:hlsearch ? "  " : "no") . "hlsearch"<CR>', 'Toggle search highlight')
+      map_toggle('i', '<Cmd>setlocal ignorecase! ignorecase?<CR>',                                               "Toggle 'ignorecase'")
+      map_toggle('l', '<Cmd>setlocal list! list?<CR>',                                                           "Toggle 'list'")
+      map_toggle('n', '<Cmd>setlocal number! number?<CR>',                                                       "Toggle 'number'")
+      map_toggle('r', '<Cmd>setlocal relativenumber! relativenumber?<CR>',                                       "Toggle 'relativenumber'")
+      map_toggle('s', '<Cmd>setlocal spell! spell?<CR>',                                                         "Toggle 'spell'")
+      map_toggle('w', '<Cmd>setlocal wrap! wrap?<CR>',                                                           "Toggle 'wrap'")
+    end
   end
 
   if config.mappings.windows then

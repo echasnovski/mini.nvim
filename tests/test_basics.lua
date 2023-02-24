@@ -564,8 +564,8 @@ T['Mappings']['Toggle options'] = new_set()
 
 T['Mappings']['Toggle options']['work'] = function()
   -- NOTE: these mappings should also give feedback about new option values.
-  -- But there doesn't seem to be a way of testing it without screenshots
-  -- (which is not worth it).
+  -- But there doesn't seem to be a way of testing it without screenshots.
+  -- So later test only for 'spell'.
   local validate = function(keys, option, before, after)
     eq(child.o[option], before)
     type_keys(keys)
@@ -588,6 +588,13 @@ T['Mappings']['Toggle options']['work'] = function()
   validate([[\r]], 'relativenumber', false, true)
   validate([[\s]], 'spell', false, true)
   validate([[\w]], 'wrap', true, false)
+end
+
+T['Mappings']['Toggle options']['shows feedback about new value'] = function()
+  child.set_size(10, 20)
+  load_module()
+  type_keys([[\s]])
+  child.expect_screenshot()
 end
 
 T['Mappings']['Toggle options']['works with diagnostic'] = function()
@@ -653,6 +660,20 @@ T['Mappings']['Toggle options']['can work with `<Leader>`'] = function()
 
   expect.match(child.cmd_capture([[nmap <Space>tw]]), 'wrap')
 end
+
+T['Mappings']['Toggle options']['respects `vim.{g,b}.minibasics_silence`'] = new_set(
+  { parametrize = { { 'g' }, { 'b' } } },
+  {
+    test = function(var_type)
+      child[var_type].minibasics_silence = true
+      child.set_size(10, 20)
+
+      load_module()
+      type_keys([[\s]])
+      child.expect_screenshot()
+    end,
+  }
+)
 
 T['Mappings']['Windows'] = new_set()
 
