@@ -366,6 +366,8 @@ For video demo and quick overview see its [README](readmes/mini-trailspace.md). 
 
 - **Disabling**. Each module's core functionality can be disabled globally or locally to buffer. See "Disabling" section in module's help page for more details. See `mini.nvim-disabling-recipes` section in main help file for common recipes.
 
+- **Silencing**. Each module can be configured to not show non-error feedback globally or locally to buffer. See "Silencing" section in module's help page for more details.
+
 - **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
 
 - **Stability**. Each module upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.

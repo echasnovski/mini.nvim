@@ -91,6 +91,10 @@
 ---   locally to buffer. See "Disabling" section in module's help page for more
 ---   details. See |mini.nvim-disabling-recipes| for common recipes.
 ---
+--- - <Silencing>. Each module can be configured to not show non-error feedback
+---   globally or locally to buffer. See "Silencing" section in module's help page
+---   for more details.
+---
 --- - <Highlight groups>. Appearance of module's output is controlled by
 ---   certain highlight group (see |highlight-groups|). To customize them, use
 ---   |highlight| command. Note: currently not many Neovim themes support this

@@ -1,5 +1,7 @@
 # Version 0.7.0.9000
 
+- Add and implement design principle for silencing module: set `vim.g.minixxx_silence` or `vim.b.minixxx_silence` variable to `true` in order to not show non-error feedback.
+
 ## mini.bracketed
 
 Introduction of a new module.
