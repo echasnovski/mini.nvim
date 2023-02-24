@@ -119,6 +119,11 @@ and customization intentions, writing exact rules for disabling module's
 functionality is left to user. See |mini.nvim-disabling-recipes| for common
 recipes.
 
+# Silencing ~
+
+To stop module from giving non-error feedback, set `vim.g.minitest_silence`
+(globally) or `vim.b.minitest_silence` (for a buffer) to `true`.
+
 ------------------------------------------------------------------------------
                                                               *MiniTest.setup()*
                            `MiniTest.setup`({config})

@@ -524,6 +524,19 @@ T['execute()']['handles no cases'] = function()
   eq(get_latest_message(), '(mini.test) No cases to execute.')
 end
 
+T['execute()']['respects `vim.{g,b}.minitest_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minitest_silence = true
+    child.lua('MiniTest.execute({})')
+    eq(child.lua_get('MiniTest.current.all_cases'), {})
+
+    -- Should not throw message
+    eq(get_latest_message(), '')
+  end,
+})
+
 T['stop()'] = new_set()
 
 T['stop()']['works'] = function()
