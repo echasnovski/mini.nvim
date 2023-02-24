@@ -68,6 +68,12 @@
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback (like current query message),
+--- set `vim.g.ministarter_silence` (globally) or `vim.b.ministarter_silence`
+--- (for a buffer) to `true`.
 ---@tag mini.starter
 ---@tag MiniStarter
 
@@ -1044,6 +1050,8 @@ H.apply_config = function(config) MiniStarter.config = config end
 
 H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
+H.is_silenced = function() return vim.g.ministarter_silence == true or vim.b.ministarter_silence == true end
+
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniStarter.config, vim.b.ministarter_config or {}, config or {})
 end
@@ -1418,6 +1426,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.starter) ', 'WarningMsg' })

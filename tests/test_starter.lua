@@ -487,6 +487,36 @@ T['refresh()']['respects `vim.b.ministarter_config`'] = function()
   child.expect_screenshot()
 end
 
+T['refresh()']['respects `vim.b.ministarter_config`'] = function()
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+
+  child.b.ministarter_config = {
+    header = 'Hello',
+    footer = 'World',
+    content_hooks = {},
+    items = { { name = 'aaa', action = 'echo "aaa"', section = 'AAA' } },
+  }
+  child.lua('MiniStarter.refresh()')
+  child.expect_screenshot()
+end
+
+T['refresh()']['respects `vim.{g,b}.ministarter_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child.lua('MiniStarter.open()')
+    child.expect_screenshot()
+
+    -- Clear command line
+    child.cmd([[echo '']])
+    child[var_type].ministarter_silence = true
+
+    type_keys('a')
+    child.expect_screenshot()
+  end,
+})
+
 T['close()'] = new_set()
 
 T['close()']['works'] = function()
