@@ -680,6 +680,24 @@ T['Jumping with f/t/F/T']['respects `vim.{g,b}.minijump_disable`'] = new_set({
   end,
 })
 
+T['Jumping with f/t/F/T']['respects `vim.{g,b}.minijump_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child[var_type].minijump_silence = true
+    child.set_size(10, 20)
+
+    -- Execute one time to test if 'needs help message' flag is set per call
+    set_lines({ '1e2e3e4e' })
+    set_cursor(1, 0)
+    type_keys('f')
+    sleep(1000 + 15)
+
+    -- Should not show helper message
+    child.expect_screenshot()
+  end,
+})
+
 T['Jumping with f/t/F/T']["respects 'ignorecase'"] = function()
   child.cmd('set ignorecase')
   set_lines({ ' 1e2E3E4e_ ' })
