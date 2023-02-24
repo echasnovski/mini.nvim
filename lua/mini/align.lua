@@ -85,6 +85,11 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
+--- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
 ---@tag mini.align
 ---@tag MiniAlign
 
@@ -1351,6 +1356,8 @@ end
 
 H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minialign_disable == true end
 
+H.is_silenced = function() return vim.g.minialign_silence == true or vim.b.minialign_silence == true end
+
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end
 
@@ -1923,6 +1930,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, add_to_history)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.align) ', 'WarningMsg' })

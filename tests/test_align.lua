@@ -1445,6 +1445,23 @@ T['Align']['respects `vim.{g,b}.minialign_disable`'] = new_set({
   end,
 })
 
+T['Align']['respects `vim.{g,b}.minialign_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child.set_size(12, 20)
+    child[var_type].minialign_silence = true
+
+    -- Should not prompt message after idle second
+    set_lines({ 'a_b', 'aa_b' })
+    set_cursor(1, 0)
+    type_keys('Vip', 'ga')
+
+    sleep(1000 + 15)
+    child.expect_screenshot()
+  end,
+})
+
 -- Test mostly "preview" part. Hope that other is covered in 'Align' tests.
 T['Align with preview'] =
   new_set({ hooks = {
@@ -1605,6 +1622,22 @@ T['Align with preview']['respects `vim.{g,b}.minialign_disable`'] = new_set({
     set_cursor(1, 0)
     type_keys('Vj', 'gA', '_', '<CR>')
     eq(get_lines(), lines)
+  end,
+})
+
+T['Align with preview']['respects `vim.{g,b}.minialign_silence`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    child.set_size(12, 20)
+    child[var_type].minialign_silence = true
+
+    set_lines({ 'a_b_c', 'aaa_bbb_ccc' })
+    set_cursor(1, 0)
+    type_keys('V', 'j', 'gA')
+
+    -- Should not show helper message
+    child.expect_screenshot()
   end,
 })
 
