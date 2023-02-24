@@ -63,6 +63,11 @@
 ---     - It takes more care about automating output formatting (like auto
 ---       indentation and line width fit). This plugin leans more to manual
 ---       formatting with option to supply customized post-processing hooks.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback, set `vim.g.minidoc_silence`
+--- (globally) or `vim.b.minidoc_silence` (for a buffer) to `true`.
 ---@tag mini.doc
 ---@tag MiniDoc
 
@@ -756,6 +761,8 @@ end
 
 H.apply_config = function(config) MiniDoc.config = config end
 
+H.is_silenced = function() return vim.g.minidoc_silence == true or vim.b.minidoc_silence == true end
+
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {}) end
 
@@ -1243,6 +1250,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.doc) ', 'WarningMsg' })

@@ -65,6 +65,11 @@ See |mini.nvim-buffer-local-config| for more details.
       indentation and line width fit). This plugin leans more to manual
       formatting with option to supply customized post-processing hooks.
 
+# Silencing ~
+
+To stop module from giving non-error feedback, set `vim.g.minidoc_silence`
+(globally) or `vim.b.minidoc_silence` (for a buffer) to `true`.
+
 ------------------------------------------------------------------------------
                                                        *MiniDoc-data-structures*
 Data structures
