@@ -45,6 +45,12 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
+---
+--- # Silencing ~
+---
+--- To stop module from giving non-error feedback entirely (overriding all
+--- `config.verbose` options), set `vim.g.minisessions_silence` (globally) or
+--- `vim.b.minisessions_silence` (for a buffer) to `true`.
 ---@tag mini.sessions
 ---@tag MiniSessions
 
@@ -192,6 +198,9 @@ MiniSessions.read = function(session_name, opts)
     end
   end
 
+  -- Decide whether to show message now to account for buffer-local silencing
+  local should_message = opts.verbose and not H.is_silenced()
+
   -- Execute 'pre' hook
   H.possibly_execute(opts.hooks.pre, data)
 
@@ -204,7 +213,7 @@ MiniSessions.read = function(session_name, opts)
   vim.v.this_session = session_path
 
   -- Possibly notify
-  if opts.verbose then H.message(('Read session %s'):format(session_path)) end
+  if should_message then H.message(('Read session %s'):format(session_path)) end
 
   -- Execute 'post' hook
   H.possibly_execute(opts.hooks.post, data)
@@ -249,6 +258,9 @@ MiniSessions.write = function(session_name, opts)
 
   local data = H.new_session(session_path)
 
+  -- Decide whether to show message now to account for buffer-local silencing
+  local should_message = opts.verbose and not H.is_silenced()
+
   -- Execute 'pre' hook
   H.possibly_execute(opts.hooks.pre, data)
 
@@ -261,7 +273,7 @@ MiniSessions.write = function(session_name, opts)
   MiniSessions.detected[data.name] = data
 
   -- Possibly notify
-  if opts.verbose then H.message(('Written session %s'):format(session_path)) end
+  if should_message then H.message(('Written session %s'):format(session_path)) end
 
   -- Execute 'post' hook
   H.possibly_execute(opts.hooks.post, data)
@@ -446,6 +458,8 @@ end
 
 H.is_disabled = function() return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true end
 
+H.is_silenced = function() return vim.g.minisessions_silence == true or vim.b.minisessions_silence == true end
+
 -- Work with sessions ---------------------------------------------------------
 H.detect_sessions = function(config)
   local res_global = config.directory == '' and {} or H.detect_sessions_global(config.directory)
@@ -541,6 +555,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
+  if H.is_silenced() then return end
+
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
   table.insert(msg, 1, { '(mini.sessions) ', 'WarningMsg' })

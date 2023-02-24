@@ -47,6 +47,12 @@ number of different scenarios and customization intentions, writing exact
 rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
 
+# Silencing ~
+
+To stop module from giving non-error feedback entirely (overriding all
+`config.verbose` options), set `vim.g.minisessions_silence` (globally) or
+`vim.b.minisessions_silence` (for a buffer) to `true`.
+
 ------------------------------------------------------------------------------
                                                           *MiniSessions.setup()*
                          `MiniSessions.setup`({config})
