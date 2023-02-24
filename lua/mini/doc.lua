@@ -63,14 +63,6 @@
 ---     - It takes more care about automating output formatting (like auto
 ---       indentation and line width fit). This plugin leans more to manual
 ---       formatting with option to supply customized post-processing hooks.
----
---- # Disabling~
----
---- To disable, set `vim.g.minidoc_disable` (globally) or `vim.b.minidoc_disable`
---- (for a buffer) to `true`. Considering high number of different scenarios and
---- customization intentions, writing exact rules for disabling module's
---- functionality is left to user. See |mini.nvim-disabling-recipes| for common
---- recipes.
 ---@tag mini.doc
 ---@tag MiniDoc
 
@@ -763,8 +755,6 @@ H.setup_config = function(config)
 end
 
 H.apply_config = function(config) MiniDoc.config = config end
-
-H.is_disabled = function() return vim.g.minidoc_disable == true or vim.b.minidoc_disable == true end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {}) end

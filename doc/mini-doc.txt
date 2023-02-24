@@ -65,14 +65,6 @@ See |mini.nvim-buffer-local-config| for more details.
       indentation and line width fit). This plugin leans more to manual
       formatting with option to supply customized post-processing hooks.
 
-# Disabling~
-
-To disable, set `vim.g.minidoc_disable` (globally) or `vim.b.minidoc_disable`
-(for a buffer) to `true`. Considering high number of different scenarios and
-customization intentions, writing exact rules for disabling module's
-functionality is left to user. See |mini.nvim-disabling-recipes| for common
-recipes.
-
 ------------------------------------------------------------------------------
                                                        *MiniDoc-data-structures*
 Data structures
