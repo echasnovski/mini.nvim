@@ -456,10 +456,19 @@ H.make_cmd_normal = function(include_undojoin)
   local normal_command = (include_undojoin and 'undojoin | ' or '') .. 'silent keepjumps normal! '
 
   return function(x)
-    -- Caching and restoring unnamed register on every command is unnecessary
-    -- but has better implementation
+    -- Caching and restoring data on every command is not necessary but leads
+    -- to a nicer implementation
+
+    -- Disable 'mini.bracketed' to avoid unwanted entries to its yank history
+    local cache_minibracketed_disable = vim.b.minibracketed_disable
     local cache_unnamed_register = vim.fn.getreg('"')
+
+    -- Don't track possible put commands into yank history
+    vim.b.minibracketed_disable = true
+
     vim.cmd(normal_command .. x)
+
+    vim.b.minibracketed_disable = cache_minibracketed_disable
     vim.fn.setreg('"', cache_unnamed_register)
   end
 end
