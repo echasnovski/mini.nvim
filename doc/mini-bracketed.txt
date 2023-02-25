@@ -276,8 +276,10 @@ Parameters~
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
   - <wrap> `(boolean)` - Whether to wrap around edges. Default: `true`.
-  - <severity> `(string|table)` - which severity to use. For available
-    formats see |diagnostic-severity|.
+  - <float> `(boolean|table)` - control floating window after movement.
+    For available values see |vim.diagnostic.goto_next()|.
+  - <severity> `(string|table)` - which severity to use.
+    For available values see |diagnostic-severity|.
 
 ------------------------------------------------------------------------------
                                                           *MiniBracketed.file()*

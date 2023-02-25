@@ -409,15 +409,17 @@ end
 ---
 ---@param direction __bracketed_direction
 ---@param opts __bracketed_opts
----   - <severity> `(string|table)` - which severity to use. For available
----     formats see |diagnostic-severity|.
+---   - <float> `(boolean|table)` - control floating window after movement.
+---     For available values see |vim.diagnostic.goto_next()|.
+---   - <severity> `(string|table)` - which severity to use.
+---     For available values see |diagnostic-severity|.
 MiniBracketed.diagnostic = function(direction, opts)
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'diagnostic')
   opts = vim.tbl_deep_extend(
     'force',
-    { n_times = vim.v.count1, severity = nil, wrap = true },
+    { float = nil, n_times = vim.v.count1, severity = nil, wrap = true },
     H.get_config().diagnostic.options,
     opts or {}
   )
@@ -456,13 +458,13 @@ MiniBracketed.diagnostic = function(direction, opts)
   local res_pos = MiniBracketed.advance(iterator, direction, opts)
   if res_pos == nil or res_pos == iterator.state then return end
 
-  -- Apply. Open just enough folds and floating window when just jumping.
-  vim.api.nvim_win_set_cursor(0, diag_pos_to_cursor_pos(res_pos))
-  vim.cmd('normal! zv')
-  if vim.fn.mode(1) == 'n' then
-    -- - Mostly a copy from implementation of `vim.diagnostic.goto_next()`
-    vim.schedule(function() vim.diagnostic.open_float({ scope = 'cursor', pos = res_pos, focus = false }) end)
-  end
+  -- Apply. Use `goto_next()` with offsetted cursor position to make it respect
+  -- `vim.diagnostic.config()`.
+  vim.diagnostic.goto_next({
+    cursor_position = { res_pos[1] + 1, res_pos[2] - 1 },
+    float = opts.float,
+    severity = opts.severity,
+  })
 end
 
 --- File on disk

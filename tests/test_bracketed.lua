@@ -1075,6 +1075,11 @@ T['diagnostic()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.diagnostic('next')]]) end, 'diagnostic%(%).*direction.*one of')
 end
 
+T['diagnostic()']['respects `opts.float`'] = function()
+  -- As actual testing of floating window fails for some unimagniable reason,
+  -- there is no way at the moment to test this. Would be **great** otherwise.
+end
+
 T['diagnostic()']['respects `opts.n_times`'] = function()
   local cur_pos_tbl, _ = setup_diagnostic()
   local all = cur_pos_tbl.all
