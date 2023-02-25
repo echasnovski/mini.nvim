@@ -12,8 +12,9 @@
 ---   |mksession|). There are two kinds of sessions:
 ---     - Global: any file inside a configurable directory.
 ---     - Local: configurable file inside current working directory (|getcwd|).
---- - All session files are detected during `MiniSessions.setup()` with session
----   names being file names (including their possible extension).
+--- - All session files are detected during `MiniSessions.setup()` and on any
+---   relevant action with session names being file names (including their
+---   possible extension).
 --- - Store information about detected sessions in separate table
 ---   (|MiniSessions.detected|) and operate only on it. Meaning if this
 ---   information changes, there will be no effect until next detection. So to
@@ -174,6 +175,10 @@ MiniSessions.read = function(session_name, opts)
     H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
   end
 
+  -- Make sessions up to date
+  H.detect_sessions()
+
+  -- Get session data
   if session_name == nil then
     if MiniSessions.detected[MiniSessions.config.file] ~= nil then
       session_name = MiniSessions.config.file
@@ -308,6 +313,9 @@ MiniSessions.delete = function(session_name, opts)
 
   local session_path = H.name_to_path(session_name)
 
+  -- Make sessions up to date
+  H.detect_sessions()
+
   -- Make sure to delete only detected session (matters for local session)
   session_name = vim.fn.fnamemodify(session_path, ':t')
   if not H.validate_detected(session_name) then return end
@@ -353,6 +361,9 @@ MiniSessions.select = function(action, opts)
   if not vim.tbl_contains({ 'read', 'write', 'delete' }, action) then
     H.error("`action` should be one of 'read', 'write', or 'delete'.")
   end
+
+  -- Make sessions up to date
+  H.detect_sessions()
 
   -- Ensure consistent order of items
   local detected = {}
@@ -453,20 +464,26 @@ end
 H.apply_config = function(config)
   MiniSessions.config = config
 
-  MiniSessions.detected = H.detect_sessions(config)
+  H.detect_sessions(config)
 end
 
 H.is_disabled = function() return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true end
 
 H.is_silenced = function() return vim.g.minisessions_silence == true or vim.b.minisessions_silence == true end
 
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniSessions.config, vim.b.minisessions_config or {}, config or {})
+end
+
 -- Work with sessions ---------------------------------------------------------
 H.detect_sessions = function(config)
+  config = H.get_config(config)
+
   local res_global = config.directory == '' and {} or H.detect_sessions_global(config.directory)
   local res_local = config.file == '' and {} or H.detect_sessions_local(config.file)
 
   -- If there are both local and global session with same name, prefer local
-  return vim.tbl_deep_extend('force', res_global, res_local)
+  MiniSessions.detected = vim.tbl_deep_extend('force', res_global, res_local)
 end
 
 H.detect_sessions_global = function(global_dir)

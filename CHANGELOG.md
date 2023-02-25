@@ -18,6 +18,7 @@ Introduction of a new module.
 ## mini.sessions
 
 - FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.
+- All actions now keep list of detected sessions up to date.
 
 # Version 0.7.0
 

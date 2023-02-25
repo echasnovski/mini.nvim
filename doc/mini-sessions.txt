@@ -13,8 +13,9 @@ Key design ideas:
   |mksession|). There are two kinds of sessions:
     - Global: any file inside a configurable directory.
     - Local: configurable file inside current working directory (|getcwd|).
-- All session files are detected during `MiniSessions.setup()` with session
-  names being file names (including their possible extension).
+- All session files are detected during `MiniSessions.setup()` and on any
+  relevant action with session names being file names (including their
+  possible extension).
 - Store information about detected sessions in separate table
   (|MiniSessions.detected|) and operate only on it. Meaning if this
   information changes, there will be no effect until next detection. So to
