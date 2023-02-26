@@ -142,6 +142,8 @@ MiniAnimate.setup = function(config)
         au CursorMoved       * lua vim.schedule(MiniAnimate.track_scroll_state_partial)
         au WinNew            * lua vim.schedule(MiniAnimate.auto_openclose)
         au WinClosed         * lua MiniAnimate.auto_openclose("close")
+
+        au ColorScheme       * hi default MiniAnimateCursor gui=reverse,nocombine
       augroup END]],
     false
   )

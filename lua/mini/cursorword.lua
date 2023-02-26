@@ -105,6 +105,7 @@ MiniCursorword.setup = function(config)
         au InsertEnter,TermEnter,QuitPre * lua MiniCursorword.auto_unhighlight()
 
         au FileType TelescopePrompt let b:minicursorword_disable=v:true
+        au ColorScheme * hi default MiniCursorword cterm=underline gui=underline
       augroup END]],
     false
   )

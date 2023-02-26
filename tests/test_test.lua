@@ -88,6 +88,7 @@ T['setup()']['creates side effects'] = function()
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniTestFail'), 'gui=bold')
   expect.match(child.cmd_capture('hi MiniTestPass'), 'gui=bold')
+  expect.match(child.cmd_capture('hi MiniTestEmphasis'), 'gui=bold')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -127,6 +128,13 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ execute = { reporter = 'a' } }, 'execute.reporter', 'function')
   expect_config_error({ execute = { stop_on_error = 'a' } }, 'execute.stop_on_error', 'boolean')
   expect_config_error({ script_path = 1 }, 'script_path', 'string')
+end
+
+T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
+  child.cmd('colorscheme blue')
+  expect.match(child.cmd_capture('hi MiniTestFail'), 'gui=bold')
+  expect.match(child.cmd_capture('hi MiniTestPass'), 'gui=bold')
+  expect.match(child.cmd_capture('hi MiniTestEmphasis'), 'gui=bold')
 end
 
 T['new_set()'] = new_set()

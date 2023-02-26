@@ -161,6 +161,14 @@ MiniJump2d.setup = function(config)
     hl_cmd = 'hi default MiniJump2dSpot guifg=black guibg=white gui=bold,nocombine'
   end
   vim.cmd(hl_cmd)
+
+  local augroup_hl_cmd = string.format(
+    [[augroup MiniJump2d
+        au ColorScheme * %s
+      augroup END]],
+    hl_cmd
+  )
+  vim.api.nvim_exec(augroup_hl_cmd, false)
 end
 
 --- Module config

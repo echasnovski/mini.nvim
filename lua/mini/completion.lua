@@ -216,6 +216,7 @@ MiniCompletion.setup = function(config)
         au TextChangedP    * lua MiniCompletion.on_text_changed_p()
 
         au FileType TelescopePrompt let b:minicompletion_disable=v:true
+        au ColorScheme * hi default MiniCompletionActiveParameter cterm=underline gui=underline
       augroup END]],
     false
   )
@@ -231,7 +232,7 @@ MiniCompletion.setup = function(config)
   end
 
   -- Create highlighting
-  vim.api.nvim_exec('hi default MiniCompletionActiveParameter term=underline cterm=underline gui=underline', false)
+  vim.api.nvim_exec('hi default MiniCompletionActiveParameter cterm=underline gui=underline', false)
 end
 
 --- Module config

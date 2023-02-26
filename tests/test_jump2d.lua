@@ -199,6 +199,11 @@ T['setup()']['resets <CR> mapping in command-line window'] = function()
   eq(child.get_lines(), { 'Hello', '' })
 end
 
+T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
+  child.cmd('colorscheme blue')
+  expect.match(child.cmd_capture('hi MiniJump2dSpot'), 'gui=bold,nocombine guifg=[Ww]hite guibg=[Bb]lack')
+end
+
 T['start()'] = new_set({
   hooks = {
     pre_case = function()

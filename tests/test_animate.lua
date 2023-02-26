@@ -205,6 +205,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ close = { winblend = 'a' } }, 'close.winblend', 'callable')
 end
 
+T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
+  child.cmd('colorscheme blue')
+  expect.match(child.cmd_capture('hi MiniAnimateCursor'), 'gui=reverse,nocombine')
+end
+
 T['is_active()'] = new_set()
 
 local is_active = function(action_type) return child.lua_get('MiniAnimate.is_active(...)', { action_type }) end

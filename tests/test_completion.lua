@@ -200,6 +200,11 @@ T['setup()']['respects `config.set_vim_settings`'] = function()
   eq(child.api.nvim_get_option('completeopt'), 'menuone,noinsert,noselect')
 end
 
+T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
+  child.cmd('colorscheme blue')
+  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
+end
+
 -- Integration tests ==========================================================
 T['Autocompletion'] = new_set({
   hooks = {

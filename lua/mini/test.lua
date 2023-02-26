@@ -154,14 +154,28 @@ MiniTest.setup = function(config)
   H.apply_config(config)
 
   -- Create highlighting
+  local color_fail = vim.g.terminal_color_1 or '#FF0000'
+  local color_pass = vim.g.terminal_color_2 or '#00FF00'
   local command = string.format(
     [[hi default MiniTestFail guifg=%s gui=bold
       hi default MiniTestPass guifg=%s gui=bold
       hi default MiniTestEmphasis gui=bold]],
-    vim.g.terminal_color_1 or '#FF0000',
-    vim.g.terminal_color_2 or '#00FF00'
+    color_fail,
+    color_pass
   )
   vim.cmd(command)
+
+  local augroup_hl_cmd = string.format(
+    [[augroup MiniTest
+        au!
+        au ColorScheme * hi default MiniTestFail guifg=%s gui=bold
+        au ColorScheme * hi default MiniTestPass guifg=%s gui=bold
+        au ColorScheme * hi default MiniTestEmphasis gui=bold
+      augroup END]],
+    color_fail,
+    color_pass
+  )
+  vim.cmd(augroup_hl_cmd)
 end
 
 --stylua: ignore start
