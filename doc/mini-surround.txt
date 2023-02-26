@@ -458,6 +458,11 @@ Default values:
     -- Number of lines within which surrounding is searched
     n_lines = 20,
 
+    -- Whether to respect selection type:
+    -- - Place surroundings on separate lines in linewise mode.
+    -- - Place surroundings on each line in blockwise mode.
+    respect_selection_type = false,
+
     -- How to search for surrounding (first inside current line, then inside
     -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
     -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
@@ -547,7 +552,21 @@ Examples of using `config.custom_surroundings` (see more examples at
     },
   }
 <
-## Search method~
+## Respect selection type ~
+
+Boolean option `config.respect_selection_type` controls whether to respect
+selection type when adding and deleting surrounding. When enabled:
+- Linewise adding places surroundings on separate lines while indenting
+  surrounded lines ones.
+- Deleting surroundings which look like they were the result of linewise
+  adding will act to revert it: delete lines with surroundings and dedent
+  surrounded lines ones.
+- Blockwise adding places surroundings on whole edges, not only start and
+  end of selection. Note: it doesn't really work outside of text and in
+  presence of multibyte characters; and probably won't due to
+  implementation difficulties.
+
+## Search method ~
 
 Value of `config.search_method` defines how best match search is done.
 Based on its value, one of the following matches will be selected:

@@ -20,6 +20,13 @@ Introduction of a new module.
 - FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.
 - All actions now keep list of detected sessions up to date.
 
+## mini.surround
+
+- FEATURE: Add `respect_selection_type` option which, when enabled, makes adding and deleting surrounding respect selection type:
+    - Linewise adding places surrounding parts on separate lines while indenting surrounded lines once.
+    - Deleting surrounding which looks like a result of linewise adding will act to revert it: delete lines with surrounding parts and dedent surrounded lines once.
+    - Blockwise adding places surrounding parts on whole edges, not only start and end of selection.
+
 # Version 0.7.0
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).

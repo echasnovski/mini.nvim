@@ -530,7 +530,21 @@ end
 ---     },
 ---   }
 --- <
---- ## Search method~
+--- ## Respect selection type ~
+---
+--- Boolean option `config.respect_selection_type` controls whether to respect
+--- selection type when adding and deleting surrounding. When enabled:
+--- - Linewise adding places surroundings on separate lines while indenting
+---   surrounded lines ones.
+--- - Deleting surroundings which look like they were the result of linewise
+---   adding will act to revert it: delete lines with surroundings and dedent
+---   surrounded lines ones.
+--- - Blockwise adding places surroundings on whole edges, not only start and
+---   end of selection. Note: it doesn't really work outside of text and in
+---   presence of multibyte characters; and probably won't due to
+---   implementation difficulties.
+---
+--- ## Search method ~
 ---
 --- Value of `config.search_method` defines how best match search is done.
 --- Based on its value, one of the following matches will be selected:
@@ -616,6 +630,11 @@ MiniSurround.config = {
   -- Number of lines within which surrounding is searched
   n_lines = 20,
 
+  -- Whether to respect selection type:
+  -- - Place surroundings on separate lines in linewise mode.
+  -- - Place surroundings on each line in blockwise mode.
+  respect_selection_type = false,
+
   -- How to search for surrounding (first inside current line, then inside
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
   -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
@@ -667,13 +686,56 @@ MiniSurround.add = function(mode)
   end
   if surr_info == nil then return '<Esc>' end
 
-  -- Add surrounding. Begin insert from right to not break column numbers
-  -- Insert after the right mark (`+ 1` is for that)
-  H.region_replace({ from = { line = marks.second.line, col = marks.second.col + 1 } }, surr_info.right)
-  H.region_replace({ from = marks.first }, surr_info.left)
+  -- Add surrounding.
+  -- Possibly deal with linewise and blockwise addition separately
+  local respect_selection_type = H.get_config().respect_selection_type
 
-  -- Set cursor to be on the right of left surrounding
-  H.set_cursor(marks.first.line, marks.first.col + surr_info.left:len())
+  if not respect_selection_type or marks.selection_type == 'charwise' then
+    -- Begin insert from right to not break column numbers
+    -- Insert after the right mark (`+ 1` is for that)
+    H.region_replace({ from = { line = marks.second.line, col = marks.second.col + 1 } }, surr_info.right)
+    H.region_replace({ from = marks.first }, surr_info.left)
+
+    -- Set cursor to be on the right of left surrounding
+    H.set_cursor(marks.first.line, marks.first.col + surr_info.left:len())
+
+    return
+  end
+
+  if marks.selection_type == 'linewise' then
+    local from_line, to_line = marks.first.line, marks.second.line
+
+    -- Save current range indent and indent surrounded lines
+    local init_indent = H.get_range_indent(from_line, to_line)
+    H.shift_indent('>', from_line, to_line)
+
+    -- Put cursor on the start of first surrounded line
+    H.set_cursor_nonblank(from_line)
+
+    -- Put surroundings on separate lines
+    vim.fn.append(to_line, init_indent .. surr_info.right)
+    vim.fn.append(from_line - 1, init_indent .. surr_info.left)
+
+    return
+  end
+
+  if marks.selection_type == 'blockwise' then
+    -- NOTE: this doesn't work with mix of multibyte and normal characters, as
+    -- well as outside of text lines.
+    local from_col, to_col = marks.first.col, marks.second.col
+    -- - Ensure that `to_col` is to the right of `from_col`. Can be not the
+    --   case if visual block was selected from "south-west" to "north-east".
+    from_col, to_col = math.min(from_col, to_col), math.max(from_col, to_col)
+
+    for i = marks.first.line, marks.second.line do
+      H.region_replace({ from = { line = i, col = to_col + 1 } }, surr_info.right)
+      H.region_replace({ from = { line = i, col = from_col } }, surr_info.left)
+    end
+
+    H.set_cursor(marks.first.line, from_col + surr_info.left:len())
+
+    return
+  end
 end
 
 --- Delete surrounding
@@ -691,6 +753,25 @@ MiniSurround.delete = function()
   -- Set cursor to be on the right of deleted left surrounding
   local from = surr.left.from
   H.set_cursor(from.line, from.col)
+
+  -- Possibly tweak deletion of linewise surrounding. Should act as reverse to
+  -- linewise addition.
+  if not H.get_config().respect_selection_type then return end
+
+  local from_line, to_line = surr.left.from.line, surr.right.from.line
+  local is_linewise_delete = from_line < to_line and H.is_line_blank(from_line) and H.is_line_blank(to_line)
+  if is_linewise_delete then
+    -- Dedent surrounded lines
+    H.shift_indent('<', from_line, to_line)
+
+    -- Place cursor on first surrounded line
+    H.set_cursor_nonblank(from_line + 1)
+
+    -- Delete blank lines left after deleting surroundings
+    local buf_id = vim.api.nvim_get_current_buf()
+    vim.fn.deletebufline(buf_id, to_line)
+    vim.fn.deletebufline(buf_id, from_line)
+  end
 end
 
 --- Replace surrounding
@@ -1023,6 +1104,7 @@ H.setup_config = function(config)
     highlight_duration = { config.highlight_duration, 'number' },
     mappings = { config.mappings, 'table' },
     n_lines = { config.n_lines, 'number' },
+    respect_selection_type = { config.respect_selection_type, 'boolean' },
     search_method = { config.search_method, H.is_search_method },
   })
 
@@ -1674,9 +1756,10 @@ H.get_marks_pos = function(mode)
   local pos1 = vim.api.nvim_buf_get_mark(0, mark1)
   local pos2 = vim.api.nvim_buf_get_mark(0, mark2)
 
+  local selection_type = H.get_selection_type(mode)
+
   -- Tweak position in linewise mode as marks are placed on the first column
-  local is_linewise = (mode == 'line') or (mode == 'visual' and vim.fn.visualmode() == 'V')
-  if is_linewise then
+  if selection_type == 'linewise' then
     -- Move start mark past the indent
     pos1[2] = vim.fn.indent(pos1[1])
     -- Move end mark to the last character (` - 2` here because `col()` returns
@@ -1713,11 +1796,23 @@ H.get_marks_pos = function(mode)
   return {
     first = { line = pos1[1], col = pos1[2] },
     second = { line = pos2[1], col = pos2[2] },
+    selection_type = selection_type,
   }
+end
+
+H.get_selection_type = function(mode)
+  if (mode == 'char') or (mode == 'visual' and vim.fn.visualmode() == 'v') then return 'charwise' end
+  if (mode == 'line') or (mode == 'visual' and vim.fn.visualmode() == 'V') then return 'linewise' end
+  if (mode == 'block') or (mode == 'visual' and vim.fn.visualmode() == '\22') then return 'blockwise' end
 end
 
 -- Work with cursor -----------------------------------------------------------
 H.set_cursor = function(line, col) vim.api.nvim_win_set_cursor(0, { line, col - 1 }) end
+
+H.set_cursor_nonblank = function(line)
+  H.set_cursor(line, 1)
+  vim.cmd('normal! ^')
+end
 
 H.compare_pos = function(pos1, pos2)
   if pos1.line < pos2.line then return '<' end
@@ -1869,6 +1964,31 @@ H.region_unhighlight = function(buf_id, region)
 end
 
 H.region_is_empty = function(region) return region.to == nil end
+
+-- Work with text -------------------------------------------------------------
+H.get_range_indent = function(from_line, to_line)
+  local n_indent, indent = math.huge, nil
+
+  local lines = vim.api.nvim_buf_get_lines(0, from_line - 1, to_line, true)
+  local n_indent_cur, indent_cur
+  for _, l in ipairs(lines) do
+    _, n_indent_cur, indent_cur = l:find('^(%s*)')
+
+    -- Don't indent blank lines
+    if n_indent_cur < n_indent and n_indent_cur < l:len() then
+      n_indent, indent = n_indent_cur, indent_cur
+    end
+  end
+
+  return indent or ''
+end
+
+H.shift_indent = function(command, from_line, to_line)
+  if to_line < from_line then return end
+  vim.cmd(from_line .. ',' .. to_line .. command)
+end
+
+H.is_line_blank = function(line_num) return vim.fn.nextnonblank(line_num) ~= line_num end
 
 -- Work with Lua patterns -----------------------------------------------------
 H.extract_surr_spans = function(s, extract_pattern)
