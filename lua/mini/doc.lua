@@ -804,14 +804,19 @@ H.default_input = function()
     -- Use full paths
     files = vim.tbl_map(function(x) return vim.fn.fnamemodify(x, ':p') end, files)
 
-    -- Put 'init.lua' first among files from same directory
+    -- Ensure consistent order
     table.sort(files, function(a, b)
-      if vim.fn.fnamemodify(a, ':h') == vim.fn.fnamemodify(b, ':h') then
-        if vim.fn.fnamemodify(a, ':t') == 'init.lua' then return true end
-        if vim.fn.fnamemodify(b, ':t') == 'init.lua' then return false end
+      local a_dir, b_dir = vim.fn.fnamemodify(a, ':h'), vim.fn.fnamemodify(b, ':h')
+
+      -- Put 'init.lua' first among files from same directory
+      if a_dir == b_dir then
+        local a_basename, b_basename = vim.fn.fnamemodify(a, ':t'), vim.fn.fnamemodify(b, ':t')
+        if a_basename == 'init.lua' then return true end
+        if b_basename == 'init.lua' then return false end
+        return a_basename < b_basename
       end
 
-      return a < b
+      return a_dir < b_dir
     end)
     table.insert(res, files)
   end
