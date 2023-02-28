@@ -2139,7 +2139,7 @@ local setup_treesitter = function()
   --   2 }
   --   1 }
   --   root }
-  local lines = { '{ root', '{ 1', '{ 2', '{ 3 { 4 { 5 } 4 } 3 }', '  2 }', '  1 }', '  root }}' }
+  local lines = { '{ root', '{ 1', '{ 2', '{ 3 { 4 { 5 } 4 } 3 }', '  2 }', '  1 }', '  root }' }
   set_lines(lines)
 
   -- Rows one-indexed, columns - zero-indexed (like cursor)
