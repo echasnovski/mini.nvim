@@ -38,6 +38,7 @@ https://user-images.githubusercontent.com/24854248/215829092-5aba4e8d-94a5-43da-
 
 Notes:
 - Although all animations work in all supported versions of Neovim, scroll and resize animations have best experience with Neovim>=0.9 (current nightly release).
+- If you have remapped any movement operation to center after it is done (like to be `nzvzz` or `<C-d>zz`), you need to change those mappings to account for asynchronous nature of scroll animation. Either remove those mappings or update to use `MiniAnimate.execute_after()` (see `:h MiniAnimate.config.scroll`)
 
 ## Installation
 
