@@ -809,9 +809,10 @@ H.default_input = function()
       if vim.fn.fnamemodify(a, ':h') == vim.fn.fnamemodify(b, ':h') then
         if vim.fn.fnamemodify(a, ':t') == 'init.lua' then return true end
         if vim.fn.fnamemodify(b, ':t') == 'init.lua' then return false end
+        return a < b
       end
 
-      return a < b
+      return vim.fn.fnamemodify(a, ":h") < vim.fn.fnamemodify(b, ":h")
     end)
     table.insert(res, files)
   end
