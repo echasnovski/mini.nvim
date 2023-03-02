@@ -75,7 +75,7 @@
 ---@tag mini.pairs
 ---@tag MiniPairs
 
----@alias __pairs_neight_pattern string|nil Pattern for two neighborhood characters.
+---@alias __pairs_neigh_pattern string|nil Pattern for two neighborhood characters.
 ---   Character "\r" indicates line start, "\n" - line end.
 ---@alias __pairs_pair string String with two characters representing pair.
 ---@alias __pairs_unregistered_pair string Pair which should be unregistered from both
@@ -267,7 +267,9 @@ end
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
 ---@param pair __pairs_pair
----@param neigh_pattern __pairs_neight_pattern
+---@param neigh_pattern __pairs_neigh_pattern
+---
+---@return string Keys performing "open" action.
 MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
@@ -285,7 +287,9 @@ end
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
 ---@param pair __pairs_pair
----@param neigh_pattern __pairs_neight_pattern
+---@param neigh_pattern __pairs_neigh_pattern
+---
+---@return string Keys performing "close" action.
 MiniPairs.close = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(2, 2) end
 
@@ -307,7 +311,9 @@ end
 --- Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 ---
 ---@param pair __pairs_pair
----@param neigh_pattern __pairs_neight_pattern
+---@param neigh_pattern __pairs_neigh_pattern
+---
+---@return string Keys performing "closeopen" action.
 MiniPairs.closeopen = function(pair, neigh_pattern)
   if H.is_disabled() or H.get_cursor_neigh(1, 1) ~= pair:sub(2, 2) then
     return MiniPairs.open(pair, neigh_pattern)
@@ -325,6 +331,8 @@ end
 --- calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
+---
+---@return string Keys performing "backspace" action.
 MiniPairs.bs = function()
   local res = H.keys.bs
 
@@ -345,6 +353,8 @@ end
 --- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
+---
+---@return string Keys performing "new line" action.
 MiniPairs.cr = function()
   local res = H.keys.cr
 

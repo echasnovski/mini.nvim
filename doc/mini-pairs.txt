@@ -220,6 +220,9 @@ Parameters~
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
+Return~
+`(string)` Keys performing "open" action.
+
 ------------------------------------------------------------------------------
                                                              *MiniPairs.close()*
                    `MiniPairs.close`({pair}, {neigh_pattern})
@@ -238,6 +241,9 @@ Parameters~
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
+Return~
+`(string)` Keys performing "close" action.
+
 ------------------------------------------------------------------------------
                                                          *MiniPairs.closeopen()*
                  `MiniPairs.closeopen`({pair}, {neigh_pattern})
@@ -255,6 +261,9 @@ Parameters~
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
+Return~
+`(string)` Keys performing "closeopen" action.
+
 ------------------------------------------------------------------------------
                                                                 *MiniPairs.bs()*
                                 `MiniPairs.bs`()
@@ -268,6 +277,9 @@ calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
 Mapped by default inside |MiniPairs.setup|.
 
+Return~
+`(string)` Keys performing "backspace" action.
+
 ------------------------------------------------------------------------------
                                                                 *MiniPairs.cr()*
                                 `MiniPairs.cr`()
@@ -280,6 +292,9 @@ if it is registered for global or current buffer mapping. Pair is
 registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
 Mapped by default inside |MiniPairs.setup|.
+
+Return~
+`(string)` Keys performing "new line" action.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
