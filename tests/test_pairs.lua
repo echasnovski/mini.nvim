@@ -766,6 +766,45 @@ T['<BS> action']['works'] = function()
   validate_bs('i', '``')
 end
 
+T['<BS> action']['respects `key` argument'] = function()
+  child.lua([[
+    local map_bs = function(lhs, rhs)
+      vim.keymap.set('i', lhs, rhs, { expr = true, replace_keycodes = false })
+    end
+
+    map_bs('<C-h>', 'v:lua.MiniPairs.bs()')
+    map_bs('<C-w>', 'v:lua.MiniPairs.bs("\23")')
+    map_bs('<C-u>', 'v:lua.MiniPairs.bs("\21")')
+  ]])
+  local validate_key = function(key, line_before, col_before, line_after, col_after)
+    child.ensure_normal_mode()
+    set_lines({ line_before })
+    set_cursor(1, col_before)
+    type_keys('a')
+
+    type_keys(key)
+
+    eq(child.api.nvim_get_mode().mode, 'i')
+    eq(get_lines(), { line_after })
+    eq(get_cursor(), { 1, col_after })
+  end
+
+  -- `<C-h>`
+  validate_key('<C-h>', 'aa(b)', 3, 'aa()', 3)
+  validate_key('<C-h>', 'aa()', 2, 'aa', 2)
+  validate_key('<C-h>', 'aa', 1, 'a', 1)
+
+  -- `<C-w>`
+  validate_key('<C-w>', 'aa(bb)', 4, 'aa()', 3)
+  validate_key('<C-w>', 'aa()', 2, 'aa', 2)
+  validate_key('<C-w>', 'aa', 1, '', 0)
+
+  -- `<C-u>`
+  validate_key('<C-u>', 'aa()cc', 1, '()cc', 0)
+  validate_key('<C-u>', 'aa()cc', 2, 'cc', 0)
+  validate_key('<C-u>', 'aa()cc', 5, '', 0)
+end
+
 T['<BS> action']['does not break undo sequence in Insert mode'] = function()
   set_lines({ 'a()' })
   set_cursor(1, 2)
@@ -834,6 +873,28 @@ T['<CR> action']['works'] = function()
   validate_no('cr', '""')
   validate_no('cr', "''")
   validate_no('cr', '``')
+end
+
+T['<CR> action']['respects `key` argument'] = function()
+  child.api.nvim_set_keymap('i', '<C-u>', 'v:lua.MiniPairs.cr("\21")', { noremap = true, expr = true })
+
+  local validate_key = function(key, lines_before, cursor_before, lines_after, cursor_after)
+    child.ensure_normal_mode()
+    set_lines(lines_before)
+    set_cursor(unpack(cursor_before))
+    type_keys('a')
+
+    type_keys(key)
+
+    eq(child.api.nvim_get_mode().mode, 'i')
+    eq(get_lines(), lines_after)
+    eq(get_cursor(), cursor_after)
+  end
+
+  -- `<C-u>`
+  validate_key('<C-u>', { 'aa()cc' }, { 1, 1 }, { '()cc' }, { 1, 0 })
+  validate_key('<C-u>', { 'aa()cc' }, { 1, 2 }, { '', ')cc' }, { 1, 0 })
+  validate_key('<C-u>', { 'aa()cc' }, { 1, 5 }, { '' }, { 1, 0 })
 end
 
 T['<CR> action']['does not break undo sequence in Insert mode'] = function()

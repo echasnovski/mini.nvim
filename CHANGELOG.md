@@ -15,6 +15,10 @@ Introduction of a new module.
 
 - FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.
 
+## mini.pairs
+
+- FEATURE: Both `MiniPairs.br()` and `MiniPairs.cr()` can now take a key which will be used instead of default `<BS>` and `<CR>`.
+
 ## mini.sessions
 
 - FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.

@@ -324,17 +324,30 @@ end
 
 --- Process |<BS>|
 ---
---- Used as |map-expr| mapping for `<BS>`. It removes whole pair (via
---- `<BS><Del>`) if neighborhood is equal to a whole pair recognized for
---- current buffer. Pair is recognized for current buffer if it is registered
---- for global or current buffer mapping. Pair is registered as a result of
---- calling |MiniPairs.map| or |MiniPairs.map_buf|.
+--- Used as |map-expr| mapping for `<BS>` in Insert mode. It removes whole pair
+--- (via executing `<Del>` after input key) if neighborhood is equal to a whole
+--- pair recognized for current buffer. Pair is recognized for current buffer
+--- if it is registered for global or current buffer mapping. Pair is
+--- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
 --- Mapped by default inside |MiniPairs.setup|.
 ---
+--- This can be used to modify other Insert mode keys to respect neighborhood
+--- pair. Examples: >
+---
+---   local map_bs = function(lhs, rhs)
+---     vim.keymap.set('i', lhs, rhs, { expr = true, replace_keycodes = false })
+---   end
+---
+---   map_bs('<C-h>', 'v:lua.MiniPairs.bs()')
+---   map_bs('<C-w>', 'v:lua.MiniPairs.bs("\23")')
+---   map_bs('<C-u>', 'v:lua.MiniPairs.bs("\21")')
+---
+---@param key string|nil Key to use. Default: `<BS>`.
+---
 ---@return string Keys performing "backspace" action.
-MiniPairs.bs = function()
-  local res = H.keys.bs
+MiniPairs.bs = function(key)
+  local res = key or H.keys.bs
 
   local neigh = H.get_cursor_neigh(0, 1)
   if not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 0, 'bs') then
@@ -354,9 +367,11 @@ end
 ---
 --- Mapped by default inside |MiniPairs.setup|.
 ---
+---@param key string|nil Key to use. Default: `<CR>`.
+---
 ---@return string Keys performing "new line" action.
-MiniPairs.cr = function()
-  local res = H.keys.cr
+MiniPairs.cr = function(key)
+  local res = key or H.keys.cr
 
   local neigh = H.get_cursor_neigh(0, 1)
   if not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 0, 'cr') then
