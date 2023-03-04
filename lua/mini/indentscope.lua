@@ -199,6 +199,7 @@ end
 ---   Similar, for input line 5 inner scope will be returned if it is
 ---   recognized as border.
 MiniIndentscope.config = {
+  -- Draw options
   draw = {
     -- Delay (in ms) between event and start of drawing scope indicator
     delay = 100,
@@ -210,6 +211,9 @@ MiniIndentscope.config = {
     --minidoc_replace_start animation = --<function: implements constant 20ms between steps>,
     animation = function(s, n) return 20 end,
     --minidoc_replace_end
+
+    -- Symbol priority. Increase to display on top of more symbols.
+    priority = 2,
   },
 
   -- Module mappings. Use `''` (empty string) to disable one.
@@ -399,9 +403,13 @@ end
 ---@param opts table|nil Options. Currently supported:
 ---    - <animation_fun> - animation function for drawing. See
 ---      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation|.
+---    - <priority> - priority number for visualization. See `priority` option
+---      for |nvim_buf_set_extmark()|.
 MiniIndentscope.draw = function(scope, opts)
   scope = scope or MiniIndentscope.get_scope()
-  local draw_opts = vim.tbl_deep_extend('force', { animation_fun = H.get_config().draw.animation }, opts or {})
+  local config = H.get_config()
+  local draw_opts =
+    vim.tbl_deep_extend('force', { animation_fun = config.draw.animation, priority = config.draw.priority }, opts or {})
 
   H.undraw_scope()
 
@@ -665,6 +673,7 @@ H.setup_config = function(config)
   vim.validate({
     ['draw.delay'] = { config.draw.delay, 'number' },
     ['draw.animation'] = { config.draw.animation, 'function' },
+    ['draw.priority'] = { config.draw.priority, 'number' },
 
     ['mappings.object_scope'] = { config.mappings.object_scope, 'string' },
     ['mappings.object_scope_with_border'] = { config.mappings.object_scope_with_border, 'string' },
@@ -896,6 +905,7 @@ H.make_autodraw_opts = function(scope)
     type = 'animation',
     delay = config.draw.delay,
     animation_fun = config.draw.animation,
+    priority = config.draw.priority,
   }
 
   if H.current.draw_status == 'none' then return res end
@@ -915,7 +925,7 @@ end
 H.make_draw_function = function(indicator, opts)
   local extmark_opts = {
     hl_mode = 'combine',
-    priority = 2,
+    priority = opts.priority,
     right_gravity = false,
     virt_text = indicator.virt_text,
     virt_text_win_col = indicator.virt_text_win_col,

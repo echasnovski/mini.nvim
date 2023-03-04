@@ -88,6 +88,7 @@ T['setup()']['creates `config` field'] = function()
 
   eq(child.lua_get('type(_G.MiniIndentscope.config.draw.animation)'), 'function')
   expect_config('draw.delay', 100)
+  expect_config('draw.priority', 2)
   expect_config('mappings.goto_bottom', ']i')
   expect_config('mappings.goto_top', '[i')
   expect_config('mappings.object_scope', 'ii')
@@ -115,6 +116,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ draw = 'a' }, 'draw', 'table')
   expect_config_error({ draw = { delay = 'a' } }, 'draw.delay', 'number')
   expect_config_error({ draw = { animation = 'a' } }, 'draw.animation', 'function')
+  expect_config_error({ draw = { priority = 'a' } }, 'draw.priority', 'number')
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { object_scope = 1 } }, 'mappings.object_scope', 'string')
   expect_config_error({ mappings = { object_scope_with_border = 1 } }, 'mappings.object_scope_with_border', 'string')
@@ -448,6 +450,25 @@ T['draw()']['respects `config.draw.animation`'] = function()
   set_cursor(1, 0)
   child.lua('vim.b.miniindentscope_config = { draw = { animation = function() return 30 end } }')
   validate(30)
+end
+
+T['draw()']['respects `config.draw.priority`'] = function()
+  mark_flaky()
+
+  local ns_id = child.api.nvim_create_namespace('indentscope-test')
+  child.api.nvim_buf_set_extmark(0, ns_id, 4, 0, { virt_text_pos = 'overlay', virt_text = { { '+' } }, priority = 5 })
+
+  set_cursor(5, 0)
+  child.lua('MiniIndentscope.draw()')
+  sleep(test_times.animation_step)
+  child.expect_screenshot()
+
+  child.lua('MiniIndentscope.undraw()')
+
+  child.lua('MiniIndentscope.config.draw.priority = 6')
+  child.lua('MiniIndentscope.draw()')
+  sleep(test_times.animation_step)
+  child.expect_screenshot()
 end
 
 T['draw()']['respects `config.symbol`'] = function()

@@ -14,6 +14,7 @@ Introduction of a new module.
 ## mini.indentscope
 
 - FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.
+- FEATURE: Add `draw.priority` option to control priority of scope line draw.
 
 ## mini.pairs
 

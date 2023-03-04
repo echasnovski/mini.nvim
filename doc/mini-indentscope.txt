@@ -113,6 +113,7 @@ Module config
 Default values:
 >
   MiniIndentscope.config = {
+    -- Draw options
     draw = {
       -- Delay (in ms) between event and start of drawing scope indicator
       delay = 100,
@@ -122,6 +123,9 @@ Default values:
       -- |MiniIndentscope.gen_animation| for builtin options. To disable
       -- animation, use `require('mini.indentscope').gen_animation.none()`.
       animation = --<function: implements constant 20ms between steps>,
+
+      -- Symbol priority. Increase to display on top of more symbols.
+      priority = 2,
     },
 
     -- Module mappings. Use `''` (empty string) to disable one.
@@ -296,6 +300,8 @@ Parameters~
 {opts} `(table|nil)` Options. Currently supported:
    - <animation_fun> - animation function for drawing. See
      |MiniIndentscope-drawing| and |MiniIndentscope.gen_animation|.
+   - <priority> - priority number for visualization. See `priority` option
+     for |nvim_buf_set_extmark()|.
 
 ------------------------------------------------------------------------------
                                                       *MiniIndentscope.undraw()*

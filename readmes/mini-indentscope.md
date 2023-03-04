@@ -141,6 +141,7 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
+  -- Draw options
   draw = {
     -- Delay (in ms) between event and start of drawing scope indicator
     delay = 100,
@@ -150,6 +151,9 @@ Here are code snippets for some common installation methods (use only one):
     -- |MiniIndentscope.gen_animation| for builtin options. To disable
     -- animation, use `require('mini.indentscope').gen_animation.none()`.
     animation = --<function: implements constant 20ms between steps>,
+
+    -- Symbol priority. Increase to display on top of more symbols.
+    priority = 2,
   },
 
   -- Module mappings. Use `''` (empty string) to disable one.
