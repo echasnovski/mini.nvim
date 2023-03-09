@@ -35,6 +35,7 @@
 ---   Move any selection in any direction..............................|mini.move|
 ---   Autopairs.......................................................|mini.pairs|
 ---   Session management...........................................|mini.sessions|
+---   Split and join arguments....................................|mini.splitjoin|
 ---   Start screen..................................................|mini.starter|
 ---   Statusline.................................................|mini.statusline|
 ---   Surround actions.............................................|mini.surround|
@@ -171,6 +172,9 @@
 --- - |MiniSessions| - session management (read, write, delete) which works
 ---   using |mksession|. Implements both global (from configured directory) and
 ---   local (from current directory) sessions.
+--- - |MiniSplitjoin| - split and join arguments (regions inside brackets
+---   between allowed separators). Has customizable pre and post hooks.
+---   Works inside comments.
 --- - |MiniStarter| - minimal, fast, and flexible start screen. Displayed items
 ---   are fully customizable both in terms of what they do and how they look
 ---   (with reasonable defaults). Item selection can be done using prefix query

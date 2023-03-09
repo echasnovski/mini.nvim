@@ -25,6 +25,10 @@ Introduction of a new module.
 - FEATURE: `setup()` now creates global directory at path `config.directory` if it doesn't exist.
 - All actions now keep list of detected sessions up to date.
 
+## mini.splitjoin
+
+Introduction of a new module.
+
 ## mini.surround
 
 - FEATURE: Add `respect_selection_type` option which, when enabled, makes adding and deleting surrounding respect selection type:

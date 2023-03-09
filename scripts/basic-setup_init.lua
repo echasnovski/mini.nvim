@@ -33,6 +33,7 @@ local test_actions = {
   ['move']        = function() require('mini.move').setup() end,
   ['pairs']       = function() require('mini.pairs').setup() end,
   ['sessions']    = function() require('mini.sessions').setup({ directory = '' }) end,
+  ['splitjoin']   = function() require('mini.splitjoin').setup() end,
   ['starter']     = function() require('mini.starter').setup() end,
   ['statusline']  = function() require('mini.statusline').setup() end,
   ['surround']    = function() require('mini.surround').setup() end,

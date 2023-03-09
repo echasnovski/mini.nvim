@@ -1,0 +1,531 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                *mini.splitjoin*
+                                                                 *MiniSplitjoin*
+Split and join arguments
+
+Features:
+- Mappings and Lua functions that modify arguments (regions inside brackets
+  between allowed separators) under cursor.
+
+  Supported actions:
+    - Toggle - split if arguments are on single line, join otherwise.
+      Main supported function of the module. See |MiniSplitjoin.toggle()|.
+    - Split - make every argument separator be on end of separate line.
+      See |MiniSplitjoin.split()|.
+    - Join - make all arguments be on single line.
+      See |MiniSplitjoin.join()|.
+
+- Mappings are dot-repeatable in Normal mode and work in Visual mode.
+
+- Customizable argument detection (see |MiniSplitjoin.config.detect|):
+    - Which brackets can contain arguments.
+    - Which strings can separate arguments.
+    - Which regions are excluded when looking for separators (like inside
+      nested brackets or quotes).
+
+- Customizable pre and post hooks for both split and join. See `split` and
+  `join` in |MiniSplitjoin.config|. There are several built-in ones
+  in |MiniSplitjoin.gen_hook|.
+
+- Works inside comments by using modified notion of indent.
+  See |MiniSplitjoin.get_indent_part()|.
+
+- Provides low-level Lua functions for split and join at positions.
+  See |MiniSplitjoin.split_at()| and |MiniSplitjoin.join_at()|.
+
+Notes:
+- Search for arguments is done using Lua patterns (regex-like approach).
+  Certain amount of false positives is to be expected.
+- This module is mostly designed around |MiniSplitjoin.toggle()|. If target
+  split positions are on different lines, join first and then split.
+- Actions can be done on Visual mode selection, which mostly present as
+  a safety route in case of incorrect detection of initial region.
+  It uses |MiniSplitjoin.get_visual_region()| which treats selection as full
+  brackets (include brackets in selection).
+
+# Setup ~
+
+This module needs a setup with `require('mini.splitjoin').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniSplitjoin`
+which you can use for scripting or manually (with `:lua MiniSplitjoin.*`).
+
+See |MiniSplitjoin.config| for available config settings.
+
+You can override runtime config settings (like action hooks) locally to
+buffer inside `vim.b.minisplitjoin_config` which should have same structure
+as `MiniSplitjoin.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons ~
+
+- 'FooSoft/vim-argwrap':
+    - Mostly has the same design as this module.
+    - Doesn't work inside comments, while this module does.
+    - Has more built-in ways to control split and join, while this module
+      intentionally provides only handful.
+- 'AndrewRadev/splitjoin.vim':
+    - More oriented towards language-depended transformations, while this
+      module intntionally deals with more generic text-related functionality.
+- 'Wansmer/treesj':
+    - Operates based on tree-sitter nodes. This is more accurate in
+      some edge cases, but **requires** tree-sitter parser.
+    - Doesn't work inside comments or strings.
+
+# Disabling~
+
+To disable, set `g:minisplitjoin_disable` (globally) or `b:minisplitjoin_disable`
+(for a buffer) to `v:true`. Considering high number of different scenarios
+and customization intentions, writing exact rules for disabling module's
+functionality is left to user. See |mini.nvim-disabling-recipes| for common
+recipes.
+
+------------------------------------------------------------------------------
+                                                        *MiniSplitjoin-glossary*
+- POSITION - table with fields <line> and <col> containing line and column
+  numbers respectively. Both are 1-indexed. Example: `{ line = 2, col = 1 }`.
+
+- REGION - table representing region in a buffer. Fields: <from> and
+  <to> for inclusive start and end positions. Example: >
+
+  { from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }
+
+------------------------------------------------------------------------------
+                                                         *MiniSplitjoin.setup()*
+                        `MiniSplitjoin.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniSplitjoin.config|.
+
+Usage~
+`require('mini.splitjoin').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                          *MiniSplitjoin.config*
+                             `MiniSplitjoin.config`
+Module config
+
+Default values:
+>
+  MiniSplitjoin.config = {
+    -- Module mappings. Use `''` (empty string) to disable one.
+    -- Created for both Normal and Visual modes.
+    mappings = {
+      toggle = 'gS',
+      split = '',
+      join = '',
+    },
+
+    -- Detection options: where split/join should be done
+    detect = {
+      -- Array of Lua patterns to detect region with arguments.
+      -- Default: { '%b()', '%b[]', '%b{}' }
+      brackets = nil,
+
+      -- String Lua pattern defining argument separator
+      separator = ',',
+
+      -- Array of Lua patterns for sub-regions to exclude separators from.
+      -- Enables correct detection in presence of nested brackets and quotes.
+      -- Default: { '%b()', '%b[]', '%b{}', '%b""', "%b''" }
+      exclude_regions = nil,
+    },
+
+    -- Split options
+    split = {
+      hooks_pre = {},
+      hooks_post = {},
+    },
+
+    -- Join options
+    join = {
+      hooks_pre = {},
+      hooks_post = {},
+    },
+  }
+<
+                                                   *MiniSplitjoin.config.detect*
+# Detection ~
+
+The table at `config.detect` controls how arguments are detected using Lua
+patterns. General idea is to convert whole buffer into a single line,
+perform string search, and convert results back into 2d positions.
+
+Example configuration: >
+
+  require('mini.splitjoin').setup({
+    detect = {
+      -- Detect only inside balanced parenthesis
+      brackets = { '%b()' },
+
+      -- Allow both `,` and `;` to separate arguments
+      separator = '[,;]',
+
+      -- Make any separator define an argument
+      exclude_regions = {},
+    },
+  })
+
+## Outer brackets ~
+
+`detect.brackets` is an array of Lua patterns used to find enclosing region.
+It is done by traversing whole buffer to find the smallest region matching
+any supplied pattern.
+
+Default: `nil`, inferred as `{ '%b()', '%b[]', '%b{}' }`.
+So an argument can be inside a balanced `()`, `[]`, or `{}`.
+
+Example: `brackets = { '%b()' }` will search for arguments only inside
+balanced `()`.
+
+## Separator ~
+
+`detect.separator` is a single Lua pattern defining which strings should be
+treated as argument separators.
+
+Empty string in `detect.separator` will result in only surrounding brackets
+used as separators.
+
+Only end of pattern match will be used as split/join positions.
+
+Default: `','`. So an argument can be separated only with comma.
+
+Example: `separator = { '[,;]' }` will treat both `,` and `;` as separators.
+
+## Excluded regions ~
+
+`detect.exclude_regions` is an array of Lua patterns for sub-regions from which
+to exclude separators. Enables correct detection in case of nested brackets
+and quotes.
+
+Default: `nil`; inferred as `{ '%b()', '%b[]', '%b{}', '%b""', "%b''" }`.
+So a separator **can not** be inside a balanced `()`, `[]`, `{}` (representing
+nested argument regions) or `""`, `''` (representing strings).
+
+Example: `exclude_regions = {}` will not exclude any regions. So in case of
+`f(a, { b, c })` it will detect both commas as argument separators.
+
+# Hooks ~
+
+`split.hooks_pre`, `split.hooks_post`, `join.hooks_pre`, and `join.hooks_post`
+are arrays of hook functions. If empty (default) no hook is applied.
+
+Hooks should take and return array of positions. See |MiniSplitjoin-glossary|.
+
+They can be used to tweak actions:
+
+- Pre-hooks are called before action. Each is applied on the output of
+  previous one. Input of first hook are detected split/join positions.
+  Output of last one is actually used to perform split/join.
+
+- Post-hooks are called after action. Each is applied on the output of
+  previous one. Input of first hook are split/join positions from actual
+  action plus its region's right end as last position (for easier hook code).
+  Output of last one is used as action return value.
+
+For more specific details see |MiniSplitjoin.split()| and |MiniSplitjoin.join()|.
+
+See |MiniSplitjoin.gen_hook| for generating common hooks with examples.
+
+------------------------------------------------------------------------------
+                                                        *MiniSplitjoin.toggle()*
+                         `MiniSplitjoin.toggle`({opts})
+Toggle arguments
+
+Overview:
+- Detect region at input position: either by using supplied `opts.region` or
+  by finding smallest bracketed region surrounding position.
+  See |MiniSplitjoin.config.detect| for more details.
+- If region spans single line, use |MiniSplitjoin.split()| with found region.
+  Otherwise use |MiniSplitjoin.join()|.
+
+Parameters~
+{opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
+  inheriting its default values.
+
+  Following extra optional fields are allowed:
+  - <position> `(table)` - position at which to find smallest bracket region.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: cursor position.
+  - <region> `(table)` - region at which to perform action. Assumes inclusive
+    both start at left bracket and end at right bracket.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: `nil` to automatically detect region.
+
+Return~
+`(any)` Output of chosen `split()` or `join()` action.
+
+------------------------------------------------------------------------------
+                                                         *MiniSplitjoin.split()*
+                         `MiniSplitjoin.split`({opts})
+Split arguments
+
+Overview:
+- Detect region: either by using supplied `opts.region` or by finding smallest
+  bracketed region surrounding input position (cursor position by default).
+  See |MiniSplitjoin.config.detect| for more details.
+
+- Find separator positions using `separator` and `exclude_regions` from `opts`.
+  Both brackets are treated as separators.
+  See |MiniSplitjoin.config.detect| for more details.
+  Note: stop if no join positions are found.
+
+- Modify separator positions to represent split positions. Last split position
+  (which is inferred from right bracket) is moved one column to left so that
+  right bracket would move on new line.
+
+- Apply all hooks from `opts.split.hooks_pre`. Each is applied on the output of
+  previous one. Input of first hook is split positions from previous step.
+  Output of last one is used as split positions in next step.
+
+- Split and update split positions with |MiniSplitjoin.split_at()|.
+
+- Apply all hooks from `opts.split.hooks_post`. Each is applied on the output of
+  previous one. Input of first hook is split positions from previous step plus
+  region's right end (for easier hook code).
+  Output of last one is used as function return value.
+
+Note:
+- By design, it doesn't detect if argument **should** be split, so application
+  on arguments spanning multiple lines can lead to undesirable result.
+
+Parameters~
+{opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
+  inheriting its default values.
+
+  Following extra optional fields are allowed:
+  - <position> `(table)` - position at which to find smallest bracket region.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: cursor position.
+  - <region> `(table)` - region at which to perform action. Assumes inclusive
+    both start at left bracket and end at right bracket.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: `nil` to automatically detect region.
+
+Return~
+`(any)` Output of last `opts.split.hooks_post` or `nil` if no split positions
+  found. Default: return value of |MiniSplitjoin.split_at()| application.
+
+------------------------------------------------------------------------------
+                                                          *MiniSplitjoin.join()*
+                          `MiniSplitjoin.join`({opts})
+Join arguments
+
+Overview:
+- Detect region: either by using supplied `opts.region` or by finding smallest
+  bracketed region surrounding input position (cursor position by default).
+  See |MiniSplitjoin.config.detect| for more details.
+
+- Compute join positions to be line ends of all but last region lines.
+  Note: stop if no join positions are found.
+
+- Apply all hooks from `opts.join.hooks_pre`. Each is applied on the output
+  of previous one. Input of first hook is join positions from previous step.
+  Output of last one is used as join positions in next step.
+
+- Join and update join positions with |MiniSplitjoin.join_at()|.
+
+- Apply all hooks from `opts.join.hooks_post`. Each is applied on the output
+  of previous one. Input of first hook is join positions from previous step
+  plus region's right end for easier hook code.
+  Output of last one is used as function return value.
+
+Parameters~
+{opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
+  inheriting its default values.
+
+  Following extra optional fields are allowed:
+  - <position> `(table)` - position at which to find smallest bracket region.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: cursor position.
+  - <region> `(table)` - region at which to perform action. Assumes inclusive
+    both start at left bracket and end at right bracket.
+    See |MiniSplitjoin-glossary| for the structure.
+    Default: `nil` to automatically detect region.
+
+Return~
+`(any)` Output of last `opts.split.hooks_post` or `nil` of no join positions
+  found. Default: return value of |MiniSplitjoin.join_at()| application.
+
+------------------------------------------------------------------------------
+                                                        *MiniSplitjoin.gen_hook*
+                            `MiniSplitjoin.gen_hook`
+Generate common hooks
+
+This is a table with function elements. Call to actually get hook.
+
+All generated post-hooks return updated versions of their input reflecting
+changes done inside hook.
+
+Example for `lua` filetype (place it in 'lua.lua' filetype plugin, |ftplugin|): >
+
+  local gen_hook = MiniSplitjoin.gen_hook
+  local curly = { brackets = { '%b{}' } }
+
+  -- Add trailing comma when splitting inside curly brackets
+  local add_comma_curly = gen_hook.add_trailing_separator(curly)
+
+  -- Delete trailing comma when joining inside curly brackets
+  local del_comma_curly = gen_hook.del_trailing_separator(curly)
+
+  -- Pad curly brackets with single space after join
+  local pad_curly = gen_hook.pad_brackets(curly)
+
+  -- Create buffer-local config
+  vim.b.minisplitjoin_config = {
+    split = { hooks_post = { add_comma_curly } },
+    join  = { hooks_post = { del_comma_curly, pad_curly } },
+  }
+
+------------------------------------------------------------------------------
+                                         *MiniSplitjoin.gen_hook.pad_brackets()*
+                 `MiniSplitjoin.gen_hook.pad_brackets`({opts})
+Generate hook to pad brackets
+
+This is a join post-hook. Use in `join.hooks_post` of |MiniSplitjoin.config|.
+
+Parameters~
+{opts} `(table|nil)` Options. Possible fields:
+   - <pad> `(string)` - pad to add after first and before last join positions.
+     Default: `' '` (single space).
+   - <brackets> `(table)` - array of bracket patterns indicating on which
+     brackets action should be made. Has same structure as `brackets`
+     in |MiniSplitjoin.config.detect|.
+     Default: `MiniSplitjoin.config.detect.brackets`.
+
+Return~
+`(function)` A hook which adds inner pad to first and last join positions and
+  returns updated input join positions.
+
+------------------------------------------------------------------------------
+                               *MiniSplitjoin.gen_hook.add_trailing_separator()*
+            `MiniSplitjoin.gen_hook.add_trailing_separator`({opts})
+Generate hook to add trailing separator
+
+This is a split post-hook. Use in `split.hooks_post` of |MiniSplitjoin.config|.
+
+Parameters~
+{opts} `(table|nil)` Options. Possible fields:
+   - <sep> `(string)` - separator to add before last split position.
+     Default: `','`.
+   - <brackets> `(table)` - array of bracket patterns indicating on which
+     brackets action should be made. Has same structure as `brackets`
+     in |MiniSplitjoin.config.detect|.
+     Default: `MiniSplitjoin.config.detect.brackets`.
+
+Return~
+`(function)` A hook which adds separator before last split position and
+  returns updated input split positions.
+
+------------------------------------------------------------------------------
+                               *MiniSplitjoin.gen_hook.del_trailing_separator()*
+            `MiniSplitjoin.gen_hook.del_trailing_separator`({opts})
+Generate hook to delete trailing separator
+
+This is a join post-hook. Use in `join.hooks_post` of |MiniSplitjoin.config|.
+
+Parameters~
+{opts} `(table|nil)` Options. Possible fields:
+   - <sep> `(string)` - separator to remove before last join position.
+     Default: `','`.
+   - <brackets> `(table)` - array of bracket patterns indicating on which
+     brackets action should be made. Has same structure as `brackets`
+     in |MiniSplitjoin.config.detect|.
+     Default: `MiniSplitjoin.config.detect.brackets`.
+
+Return~
+`(function)` A hook which adds separator before last split position and
+  returns updated input split positions.
+
+------------------------------------------------------------------------------
+                                                      *MiniSplitjoin.split_at()*
+                     `MiniSplitjoin.split_at`({positions})
+Split at positions
+
+Overview:
+- For each position move all characters after it to next line and make it have
+  same indent as current one (see |MiniSplitjoin.get_indent_part()|).
+  Also remove trailing whitespace at position line.
+
+- Increase indent of inner lines by a single pad: tab in case of |noexpandtab|
+  or |shiftwidth()| number of spaces otherwise.
+
+Notes:
+- Cursor is adjusted to follow text updates.
+- Use output of this function to keep track of input positions.
+
+Parameters~
+{positions} `(table)` Array of positions at which to perform split.
+  See |MiniSplitjoin-glossary| for their structure. Note: they don't have
+  to be ordered, but first and last ones will be used to infer lines for
+  which indent will be increased.
+
+Return~
+`(table)` Array of new positions to where input `positions` were moved.
+
+------------------------------------------------------------------------------
+                                                       *MiniSplitjoin.join_at()*
+                      `MiniSplitjoin.join_at`({positions})
+Join at positions
+
+Overview:
+- For each position join its line with the next line. Joining is done by
+  replacing trailing whitespace of the line and indent of its next line
+  (see |MiniSplitjoin.get_indent_part()|) with a pad string (single space except
+  empty string for first and last positions). To adjust this, use hooks
+  (for example, see |MiniSplitjoin.gen_hook.pad_brackets()|).
+
+Notes:
+- Cursor is adjusted to follow text updates.
+- Use output of this function to keep track of input positions.
+
+Parameters~
+{positions} `(table)` Array of positions at which to perform join.
+  See |MiniSplitjoin-glossary| for their structure. Note: they don't have
+  to be ordered, but first and last ones will have different pad string.
+
+Return~
+`(table)` Array of new positions to where input `positions` were moved.
+
+------------------------------------------------------------------------------
+                                             *MiniSplitjoin.get_visual_region()*
+                      `MiniSplitjoin.get_visual_region`()
+Get previous visual region
+
+Get previous visual selection using |`<| and |`>| marks in the format of
+region (see |MiniSplitjoin-glossary|). Used in Visual mode mappings.
+
+Note:
+- Both marks are included in region, so for better
+- In linewise Visual mode
+
+Return~
+`(table)` A region. See |MiniSplitjoin-glossary| for exact structure.
+
+------------------------------------------------------------------------------
+                                               *MiniSplitjoin.get_indent_part()*
+          `MiniSplitjoin.get_indent_part`({line}, {respect_comments})
+Get string's indent part
+
+Parameters~
+{line} `(string)` String for which to compute indent.
+{respect_comments} `(boolean|nil)` Whether to respect comments as indent part.
+  Default: `true`.
+
+Return~
+`(string)` Part of input representing line's indent. Can be empty string.
+  Use `string.len()` to compute indent in bytes.
+
+------------------------------------------------------------------------------
+                                                      *MiniSplitjoin.operator()*
+                        `MiniSplitjoin.operator`({task})
+Operator for Normal mode mappings
+
+Main function to be used in expression mappings. No need to use it
+directly, everything is setup in |MiniSplitjoin.setup()|.
+
+Parameters~
+{task} `(string)` Name of task.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

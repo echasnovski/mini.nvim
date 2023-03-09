@@ -82,6 +82,7 @@ Here are code snippets for some common installation methods:
 | mini.move        | Move any selection in any direction      | [README](readmes/mini-move.md)        | [Help file](doc/mini-move.txt)        |
 | mini.pairs       | Autopairs                                | [README](readmes/mini-pairs.md)       | [Help file](doc/mini-pairs.txt)       |
 | mini.sessions    | Session management                       | [README](readmes/mini-sessions.md)    | [Help file](doc/mini-sessions.txt)    |
+| mini.splitjoin   | Split and join arguments                 | [README](readmes/mini-splitjoin.md)   | [Help file](doc/mini-splitjoin.txt)   |
 | mini.starter     | Start screen                             | [README](readmes/mini-starter.md)     | [Help file](doc/mini-starter.txt)     |
 | mini.statusline  | Statusline                               | [README](readmes/mini-statusline.md)  | [Help file](doc/mini-statusline.txt)  |
 | mini.surround    | Surround actions                         | [README](readmes/mini-surround.md)    | [Help file](doc/mini-surround.txt)    |
@@ -280,6 +281,15 @@ For video demo and quick overview see its [README](readmes/mini-pairs.md). For m
 Session management (read, write, delete).
 
 For video demo and quick overview see its [README](readmes/mini-sessions.md). For more details see its [help file](doc/mini-sessions.txt).
+
+---
+
+<a name='mini.splitjoin'></a>
+### mini.splitjoin
+
+Split and join arguments
+
+For video demo and quick overview see its [README](readmes/mini-splitjoin.md). For more details see its [help file](doc/mini-splitjoin.txt).
 
 ---
 

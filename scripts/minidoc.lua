@@ -23,6 +23,7 @@ local modules = {
   'move',
   'pairs',
   'sessions',
+  'splitjoin',
   'starter',
   'statusline',
   'surround',
