@@ -108,6 +108,9 @@ Return~
                    `MiniBufremove.unshow_in_window`({win_id})
 Stop showing current buffer of window `win_id`
 
+Notes:
+- If `win_id` represents |cmdline-window|, this function will close it.
+
 Parameters~
 {win_id} `(number|nil)` Window identifier (see |win_getid()|) to use.
   Default: 0 for current.

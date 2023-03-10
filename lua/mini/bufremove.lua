@@ -129,6 +129,9 @@ end
 
 --- Stop showing current buffer of window `win_id`
 ---
+--- Notes:
+--- - If `win_id` represents |cmdline-window|, this function will close it.
+---
 ---@param win_id number|nil Window identifier (see |win_getid()|) to use.
 ---   Default: 0 for current.
 ---
@@ -144,6 +147,11 @@ MiniBufremove.unshow_in_window = function(win_id)
 
   -- Temporary use window `win_id` as current to have Vim's functions working
   vim.api.nvim_win_call(win_id, function()
+    if vim.fn.getcmdwintype() ~= '' then
+      vim.cmd('close!')
+      return
+    end
+
     -- Try using alternate buffer
     local alt_buf = vim.fn.bufnr('#')
     if alt_buf ~= cur_buf and vim.fn.buflisted(alt_buf) == 1 then
@@ -220,8 +228,12 @@ H.unshow_and_cmd = function(buf_id, force, cmd)
   --   it gives E516 for `MiniBufremove.delete()` (`wipeout` works).
   -- - If `wipe` then `unshow()` already `bwipeout`ed buffer. Without `pcall`
   --   it gives E517 for module's `wipeout()` (still E516 for `delete()`).
+  --
+  -- Also account for executing command in command-line window.
+  -- It gives E11 if trying to execute command. The `unshow()` call should
+  -- close such window but somehow it doesn't seem to happen immediately.
   local ok, result = pcall(vim.cmd, command)
-  if not (ok or result:find('E516') or result:find('E517')) then
+  if not (ok or result:find('E516%D') or result:find('E517%D') or result:find('E11%D')) then
     H.message(result)
     return false
   end

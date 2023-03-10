@@ -68,6 +68,21 @@ local validate_unshow_scratch = function(fun_name, layout)
   eq(win_get_buf(layout['win_right']), new_buf)
 end
 
+local validate_unshow_cmdwin = function(fun_name)
+  child.cmd('only')
+
+  child.type_keys('q:')
+  eq(child.fn.getcmdwintype(), ':')
+  eq(#child.api.nvim_list_wins(), 2)
+
+  local command = ('MiniBufremove.%s()'):format(fun_name)
+  local out = child.lua_get(command)
+  eq(out, true)
+
+  eq(child.fn.getcmdwintype(), '')
+  eq(#child.api.nvim_list_wins(), 1)
+end
+
 local validate_args_validation = function(fun_name, args)
   if vim.tbl_contains(args, 'buf_id') then
     local command = ('MiniBufremove.%s(100)'):format(fun_name)
@@ -213,6 +228,8 @@ end
 
 T['unshow()']['validates arguments'] = function() validate_args_validation('unshow', { 'buf_id' }) end
 
+T['unshow()']['closes command-line window'] = function() validate_unshow_cmdwin('unshow') end
+
 T['unshow()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('unshow', layout)
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
@@ -280,6 +297,8 @@ T['unshow_in_window()']['respects `win_id` argument'] = function()
   eq(win_get_buf(layout['win_right']), layout['buf'])
 end
 
+T['unshow_in_window()']['closes command-line window'] = function() validate_unshow_cmdwin('unshow_in_window') end
+
 T['unshow_in_window()']['respects `vim.{g,b}.minibufremove_disable`'] = new_set(
   { parametrize = { { 'g' }, { 'b' } } },
   { test = function(var_type) validate_disable(var_type, 'unshow_in_window', layout) end }
@@ -308,6 +327,8 @@ T['delete()']['creates a scratch buffer'] = function()
 end
 
 T['delete()']['validates arguments'] = function() validate_args_validation('delete', { 'buf_id', 'force' }) end
+
+T['delete()']['closes command-line window'] = function() validate_unshow_cmdwin('delete') end
 
 T['delete()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('delete', layout)
@@ -349,6 +370,8 @@ T['wipeout()']['creates a scratch buffer'] = function()
 end
 
 T['wipeout()']['validates arguments'] = function() validate_args_validation('wipeout', { 'buf_id', 'force' }) end
+
+T['wipeout()']['closes command-line window'] = function() validate_unshow_cmdwin('wipeout') end
 
 T['wipeout()']['respects `buf_id` argument'] = function()
   validate_unshow_with_buf_id('wipeout', layout)
