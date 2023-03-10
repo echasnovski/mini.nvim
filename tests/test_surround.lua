@@ -415,6 +415,10 @@ T['Add surrounding']['respects `config.respect_selection_type` in linewise mode'
   validate({ '',  '  aaa', '' },  { 1, 0 }, { '  (', '',    '\t  aaa', '',    '  )' }, { 2, 0 }, 'V2j')
   validate({ ' ', '  aaa', ' ' }, { 1, 0 }, { '  (', '\t ', '\t  aaa', '\t ', '  )' }, { 2, 1 }, 'V2j')
 
+  -- Doesn't produce messages
+  validate({ 'aa', 'bb', 'cc' }, { 1, 0 }, { '(', '\taa', '\tbb', '\tcc', ')' }, { 2, 1 }, 'Vip')
+  eq(child.cmd_capture('1messages'), '')
+
   -- Works with different surroundings
   validate_edit({ 'aaa' }, { 1, 0 }, { 'ff(', '\taaa', ')' }, { 2, 1 }, type_keys, 'V', 'sa', 'f', 'ff<CR>')
 
@@ -683,6 +687,10 @@ T['Delete surrounding']['respects `config.respect_selection_type` in linewise mo
 
   -- Correctly dedents
   validate({ '(', 'aaa', ')' }, { 2, 0 }, { 'aaa' }, { 1, 0 })
+
+  -- Doesn't produce messages
+  validate({ '(', '\taa', '\tbb', '\tcc', ')' }, { 2, 1 }, { 'aa', 'bb', 'cc' }, { 1, 0 })
+  eq(child.cmd_capture('1messages'), '')
 
   child.o.shiftwidth = 3
   validate({ '(', '    aaa', ')' }, { 2, 0 }, { ' aaa' }, { 1, 1 })

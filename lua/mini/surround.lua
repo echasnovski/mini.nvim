@@ -1985,7 +1985,7 @@ end
 
 H.shift_indent = function(command, from_line, to_line)
   if to_line < from_line then return end
-  vim.cmd(from_line .. ',' .. to_line .. command)
+  vim.cmd('silent ' .. from_line .. ',' .. to_line .. command)
 end
 
 H.is_line_blank = function(line_num) return vim.fn.nextnonblank(line_num) ~= line_num end
