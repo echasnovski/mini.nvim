@@ -246,6 +246,8 @@ T['Trailspace autohighlighting']['respects BufEnter/BufLeave'] = function()
 end
 
 T['Trailspace autohighlighting']['respects WinEnter/WinLeave'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9.') end
+
   child.set_size(10, 40)
   child.lua('MiniTrailspace.highlight()')
   child.cmd('edit bbb | vsplit | edit aaa')

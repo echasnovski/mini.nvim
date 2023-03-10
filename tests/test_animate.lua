@@ -1253,6 +1253,8 @@ T['Cursor']['does not stop if mark should be placed outside of range'] = functio
 end
 
 T['Cursor']['stops on buffer change'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9.') end
+
   child.set_size(12, 24)
   child.o.winwidth = 1
   child.cmd('vertical botright new')
