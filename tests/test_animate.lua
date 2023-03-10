@@ -1209,6 +1209,21 @@ T['Cursor']['works when cursor and/or marks are outside of line'] = function()
   end
 end
 
+T['Cursor']['works with tabs'] = function()
+  child.o.tabstop = 4
+  set_lines({ '\taa', '\tbb', 'cc' })
+  set_cursor(1, 4)
+
+  set_cursor(3, 0)
+  child.expect_screenshot()
+  -- Introduce lag for test stability
+  sleep(small_time)
+  for _ = 1, 5 do
+    sleep(step_time)
+    child.expect_screenshot()
+  end
+end
+
 T['Cursor']['works with horizontally scrolled window view'] = function()
   child.o.wrap = false
   type_keys('2zl')

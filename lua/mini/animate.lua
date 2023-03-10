@@ -1430,9 +1430,8 @@ H.make_cursor_step = function(state_from, state_to, opts)
 end
 
 H.get_cursor_state = function()
-  -- Use character column to allow tracking outside of line width
-  local curpos = H.getcursorcharpos()
-  return { buf_id = vim.api.nvim_get_current_buf(), pos = { curpos[2], curpos[3] + curpos[4] } }
+  -- Use virtual column to respect position outside of line width and tabs
+  return { buf_id = vim.api.nvim_get_current_buf(), pos = { vim.fn.line('.'), vim.fn.virtcol('.') } }
 end
 
 H.draw_cursor_mark = function(line, virt_col, buf_id)
