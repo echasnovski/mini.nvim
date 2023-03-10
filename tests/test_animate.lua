@@ -1585,6 +1585,74 @@ T['Scroll']['places cursor proportionally to scroll step'] = function()
   eq(get_cursor(), { 1, 2 })
 end
 
+T['Scroll']['correctly places cursor in presence of multibyte characters'] = function()
+  if child.lua_get('vim.fn.exists("*virtcol2col") == 0') then
+    MiniTest.skip('`vim.fn.virt2col()` is needed for this to work.')
+  end
+
+  local validate = function(topline_ref, cursor_ref)
+    eq(child.fn.line('w0'), topline_ref)
+    eq(get_cursor(), cursor_ref)
+  end
+
+  --stylua: ignore
+  set_lines({ 'аааа', '🬗🬗🬗🬗', 'ббб', '🬗🬗🬗', 'вввв', 'гггг', 'дддд', 'ееее' })
+  set_cursor(1, 6)
+
+  type_keys('3<C-e>')
+
+  validate(1, { 1, 6 })
+  -- Introduce lag for test stability
+  sleep(small_time)
+
+  sleep(step_time)
+  validate(2, { 2, 12 })
+
+  sleep(step_time)
+  validate(3, { 3, 4 })
+
+  sleep(step_time)
+  validate(4, { 4, 8 })
+
+  sleep(step_time)
+  validate(4, { 4, 8 })
+end
+
+T['Scroll']['correctly places cursor in presence of tabs'] = function()
+  if child.lua_get('vim.fn.exists("*virtcol2col") == 0') then
+    MiniTest.skip('`vim.fn.virt2col()` is needed for this to work.')
+  end
+
+  local validate = function(topline_ref, cursor_ref)
+    eq(child.fn.line('w0'), topline_ref)
+    eq(get_cursor(), cursor_ref)
+  end
+
+  set_lines({ '\t\ta', '\t\tb', '\t\tc', '\t\td', 'e' })
+  set_cursor(1, 2)
+
+  type_keys('4<C-e>')
+
+  validate(1, { 1, 2 })
+  -- Introduce lag for test stability
+  sleep(small_time)
+
+  sleep(step_time)
+  validate(2, { 2, 1 })
+
+  sleep(step_time)
+  validate(3, { 3, 1 })
+
+  sleep(step_time)
+  validate(4, { 4, 0 })
+
+  sleep(step_time)
+  validate(5, { 5, 0 })
+
+  sleep(step_time)
+  validate(5, { 5, 0 })
+end
+
 T['Scroll']['can place intermideate cursor outside of line'] = function()
   set_lines({ 'aaaa', 'a', '', '', '', '', '', 'a', 'aaaa' })
   set_cursor(1, 3)

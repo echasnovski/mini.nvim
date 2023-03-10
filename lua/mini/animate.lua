@@ -1192,7 +1192,7 @@ MiniAnimate.auto_scroll = function()
   local scroll_config = H.get_config().scroll
   if not scroll_config.enable or H.is_disabled() then
     -- Reset state to not use an outdated one if enabled again
-    H.cache.scroll_state = { buf_id = nil, win_id = nil, view = {} }
+    H.cache.scroll_state = { buf_id = nil, win_id = nil, view = {}, cursor = {} }
     return
   end
 
@@ -1239,9 +1239,7 @@ MiniAnimate.track_scroll_state_partial = function()
   -- a proper state tracking
   if H.cache.scroll_is_active then return end
 
-  local view = H.cache.scroll_state.view
-  local cur_pos = H.getcursorcharpos()
-  view.lnum, view.col = cur_pos[2], cur_pos[3] - 1
+  H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') }
 end
 
 --- Automatically animate window resize
@@ -1327,7 +1325,7 @@ H.cache = {
   -- Scroll animation data
   scroll_event_id = 0,
   scroll_is_active = false,
-  scroll_state = { buf_id = nil, win_id = nil, view = {} },
+  scroll_state = { buf_id = nil, win_id = nil, view = {}, cursor = {} },
 
   -- Resize animation data
   resize_event_id = 0,
@@ -1431,7 +1429,7 @@ end
 
 H.get_cursor_state = function()
   -- Use virtual column to respect position outside of line width and tabs
-  return { buf_id = vim.api.nvim_get_current_buf(), pos = { vim.fn.line('.'), vim.fn.virtcol('.') } }
+  return { buf_id = vim.api.nvim_get_current_buf(), pos = { vim.fn.line('.'), H.virtcol('.') } }
 end
 
 H.draw_cursor_mark = function(line, virt_col, buf_id)
@@ -1484,8 +1482,8 @@ H.make_scroll_step = function(state_from, state_to, opts)
   local scroll_key = from_line < to_line and '\5' or '\25'
 
   -- Cache frequently accessed data
-  local from_cur_line, to_cur_line = state_from.view.lnum, state_to.view.lnum
-  local from_cur_col, to_cur_col = state_from.view.col, state_to.view.col
+  local from_cur_line, to_cur_line = state_from.cursor.line, state_to.cursor.line
+  local from_cur_virtcol, to_cur_virtcol = state_from.cursor.virtcol, state_to.cursor.virtcol
 
   local event_id, buf_id, win_id = H.cache.scroll_event_id, state_from.buf_id, state_from.win_id
   local n_steps, timing = #step_scrolls, opts.timing
@@ -1506,11 +1504,11 @@ H.make_scroll_step = function(state_from, state_to, opts)
       -- at least for default equally spread subscrolls).
       local coef = step / n_steps
       local cursor_line = H.convex_point(from_cur_line, to_cur_line, coef)
-      local cursor_col = H.convex_point(from_cur_col, to_cur_col, coef)
-      local cursor_pos = { cursor_line, cursor_col }
+      local cursor_virtcol = H.convex_point(from_cur_virtcol, to_cur_virtcol, coef)
+      local cursor_data = { line = cursor_line, virtcol = cursor_virtcol }
 
       -- Preform scroll. Possibly stop on error.
-      local ok, _ = pcall(H.scroll_action, scroll_key, step_scrolls[step], cursor_pos)
+      local ok, _ = pcall(H.scroll_action, scroll_key, step_scrolls[step], cursor_data)
       if not ok then return H.stop_scroll(state_to) end
 
       -- Update current scroll state for two reasons:
@@ -1528,7 +1526,7 @@ H.make_scroll_step = function(state_from, state_to, opts)
   }
 end
 
-H.scroll_action = function(key, n, cursor_pos)
+H.scroll_action = function(key, n, cursor_data)
   -- Scroll. Allow supplying non-valid `n` for initial "scroll" which sets
   -- cursor immediately, which reduces flicker.
   if n ~= nil and n > 0 then
@@ -1542,8 +1540,12 @@ H.scroll_action = function(key, n, cursor_pos)
   -- later "bounce" back on view restore (see
   -- https://github.com/echasnovski/mini.nvim/issues/177).
   local top, bottom = vim.fn.line('w0'), vim.fn.line('w$')
-  local line = math.min(math.max(cursor_pos[1], top), bottom)
-  vim.api.nvim_win_set_cursor(0, { line, cursor_pos[2] })
+  local line = math.min(math.max(cursor_data.line, top), bottom)
+
+  -- Cursor can only be set using byte column. To place it in the most correct
+  -- virtual column, use tweaked version of `virtcol2col()`
+  local col = H.virtcol2col(line, cursor_data.virtcol)
+  vim.api.nvim_win_set_cursor(0, { line, col - 1 })
 end
 
 H.start_scroll = function(start_state)
@@ -1575,6 +1577,7 @@ H.get_scroll_state = function()
     buf_id = vim.api.nvim_get_current_buf(),
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
+    cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') },
     scrolloff = H.cache.scroll_is_active and H.cache.scroll_state.scrolloff or H.get_scrolloff(),
     virtualedit = H.cache.scroll_is_active and H.cache.scroll_state.virtualedit or H.get_virtualedit(),
   }
@@ -2114,7 +2117,23 @@ end
 H.convex_point = function(x, y, coef) return H.round((1 - coef) * x + coef * y) end
 
 -- `virtcol2col()` is only present in Neovim>=0.8. Earlier Neovim versions will
--- have troubles dealing with multibyte characters.
-H.virtcol2col = vim.fn.virtcol2col or function(_, _, col) return col end
+-- have troubles dealing with multibyte characters and tabs.
+if vim.fn.exists('*virtcol2col') == 1 then
+  H.virtcol2col = function(line, virtcol)
+    local col = vim.fn.virtcol2col(0, line, virtcol)
+
+    -- Corrent for virtual column being outside of line's last virtual column
+    local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
+    if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
+
+    return col
+  end
+
+  H.virtcol = vim.fn.virtcol
+else
+  H.virtcol2col = function(_, col) return col end
+
+  H.virtcol = vim.fn.col
+end
 
 return MiniAnimate
