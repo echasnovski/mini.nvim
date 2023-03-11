@@ -1,6 +1,6 @@
+*mini.indentscope*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                              *mini.indentscope*
                                                                *MiniIndentscope*
 Visualize and operate on indent scope
 

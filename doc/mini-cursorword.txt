@@ -1,6 +1,6 @@
+*mini.cursorword*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                               *mini.cursorword*
                                                                 *MiniCursorword*
 Autohighlight word under cursor with customizable delay. Current word under
 cursor can be highlighted differently. Highlighting is triggered only if

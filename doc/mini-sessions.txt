@@ -1,6 +1,6 @@
+*mini.sessions*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                                 *mini.sessions*
                                                                   *MiniSessions*
 Session management (read, write, delete), which works using |mksession|
 (meaning 'sessionoptions' is fully respected). This is intended as a

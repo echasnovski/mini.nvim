@@ -1,6 +1,6 @@
+*mini.completion*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                               *mini.completion*
                                                                 *MiniCompletion*
 Autocompletion and signature help plugin. Key design ideas:
 - Have an async (with customizable "debounce" delay) "two-stage chain

@@ -1,6 +1,6 @@
+*mini.ai*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                                       *mini.ai*
                                                                         *MiniAi*
 Module for extending and creating `a`/`i` textobjects. It enhances some builtin
 |text-objects| (like |a(|, |a)|, |a'|, and more), creates new ones (like `a*`, `a<Space>`,

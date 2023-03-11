@@ -1,6 +1,6 @@
+*mini.comment*
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                                  *mini.comment*
                                                                    *MiniComment*
 Fast and familiar per-line commenting. Commenting in Normal mode respects
 |count| and is dot-repeatable. Comment structure is inferred from
