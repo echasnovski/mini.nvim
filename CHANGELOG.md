@@ -10,7 +10,7 @@ Introduction of a new module.
 
 - FEATURE: Add `options.start_of_line` option which controls whether to recognize as comment only lines without indent.
 - FEATURE: Add `options.ignore_blank_line` option which controls whether to ignore blank lines when adding comment.
-- FEATURE: Add `options.pad_comment_leaders` option which controls whether to ensure single space pad for comment leaders.
+- FEATURE: Add `options.pad_comment_parts` option which controls whether to ensure single space pad for comment leaders.
 
 ## mini.doc
 

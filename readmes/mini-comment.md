@@ -145,8 +145,8 @@ Here are code snippets for some common installation methods (use only one):
     -- Whether to recognize as comment only lines without indent
     start_of_line = false,
 
-    -- Whether to ensure single space pad for comment leaders
-    pad_comment_leaders = true,
+    -- Whether to ensure single space pad for comment parts
+    pad_comment_parts = true,
   },
 
   -- Module mappings. Use `''` (empty string) to disable one.
