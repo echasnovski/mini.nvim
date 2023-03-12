@@ -1,6 +1,6 @@
-*mini.tabline*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                  *mini.tabline*
                                                                    *MiniTabline*
 Minimal and fast tabline showing listed buffers. General idea: show all
 listed buffers in readable way with minimal total width. Also allow showing

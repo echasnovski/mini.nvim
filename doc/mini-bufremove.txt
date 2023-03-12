@@ -1,6 +1,6 @@
-*mini.bufremove*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                *mini.bufremove*
                                                                  *MiniBufremove*
 Buffer removing (unshow, delete, wipeout), which saves window layout
 (opposite to builtin Neovim's commands).

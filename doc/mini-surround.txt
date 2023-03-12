@@ -1,6 +1,6 @@
-*mini.surround*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                 *mini.surround*
                                                                   *MiniSurround*
 Fast and feature-rich surrounding. This is mostly a reimplementation of the
 core features of 'machakann/vim-sandwich' with more on top (find

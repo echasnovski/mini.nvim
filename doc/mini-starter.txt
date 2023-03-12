@@ -1,6 +1,6 @@
-*mini.starter*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                  *mini.starter*
                                                                    *MiniStarter*
 Fast and flexible start screen. Displayed items are fully customizable both
 in terms of what they do and how they look (with reasonable defaults). Item

@@ -1,6 +1,6 @@
-*mini.nvim*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                     *mini.nvim*
 *mini.txt*  Collection of minimal, independent and fast Lua modules
 
 Author:  Evgeni Chasnovski

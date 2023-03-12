@@ -1,6 +1,6 @@
-*mini.statusline*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                               *mini.statusline*
                                                                 *MiniStatusline*
 Minimal and fast statusline with opinionated default look.
 

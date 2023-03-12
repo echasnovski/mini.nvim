@@ -1,6 +1,6 @@
-*mini.align*
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                    *mini.align*
                                                                      *MiniAlign*
 Align text interactively (with or without instant preview). Allows rich and
 flexible customization of both alignment rules and user interaction. Works
