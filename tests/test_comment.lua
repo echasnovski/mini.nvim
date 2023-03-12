@@ -70,6 +70,7 @@ T['setup()']['creates `config` field'] = function()
 
   expect_config('options.ignore_blank_line', false)
   expect_config('options.start_of_line', false)
+  expect_config('options.pad_comment_leaders', true)
   expect_config('mappings.comment', 'gc')
   expect_config('mappings.comment_line', 'gcc')
   expect_config('mappings.textobject', 'gc')
@@ -92,6 +93,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ options = 'a' }, 'options', 'table')
   expect_config_error({ options = { ignore_blank_line = 1 } }, 'options.ignore_blank_line', 'boolean')
   expect_config_error({ options = { start_of_line = 1 } }, 'options.start_of_line', 'boolean')
+  expect_config_error({ options = { pad_comment_leaders = 1 } }, 'options.pad_comment_leaders', 'boolean')
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { comment = 1 } }, 'mappings.comment', 'string')
   expect_config_error({ mappings = { comment_line = 1 } }, 'mappings.comment_line', 'string')
@@ -227,6 +229,43 @@ T['toggle_lines()']['respects `config.options.ignore_blank_line`'] = function()
   set_lines(lines)
   child.lua('MiniComment.toggle_lines(1, 5)')
   eq(get_lines(), { '  # aa', '', '  # aa', '  ', '  # aa' })
+end
+
+T['toggle_lines()']['respects `config.options.pad_comment_leaders`'] = function()
+  child.lua('MiniComment.config.options.pad_comment_leaders = false')
+
+  local validate = function(lines_before, lines_after)
+    set_lines(lines_before)
+    local lua_command = string.format('MiniComment.toggle_lines(1, %s)', #lines_before)
+    child.lua(lua_command)
+    eq(get_lines(), lines_after)
+  end
+
+  -- No whitespace in 'commentstring'
+  child.bo.commentstring = '#%s#'
+
+  -- - Should correctly comment
+  validate({ 'aa', '  aa', 'aa  ' }, { '#aa#', '#  aa#', '#aa  #' })
+  validate({ '\taa', '\taa', '\taa\t' }, { '\t#aa#', '\t#aa#', '\t#aa\t#' })
+
+  -- - Should correctly uncomment
+  validate({ '# aa #', '#aa #', '# aa#', '#aa#' }, { ' aa ', 'aa ', ' aa', 'aa' })
+  validate({ '#aa#', '  #aa#' }, { 'aa', '  aa' })
+  validate({ '\t#aa#', '\t#aa#' }, { '\taa', '\taa' })
+
+  -- Extra whitespace in 'commentstring'
+  child.bo.commentstring = '#  %s  #'
+
+  -- - Should correctly comment
+  validate({ 'aa', '  aa', 'aa  ' }, { '#  aa  #', '#    aa  #', '#  aa    #' })
+  validate({ '\taa', '\taa', '\taa\t' }, { '\t#  aa  #', '\t#  aa  #', '\t#  aa\t  #' })
+
+  --validate({'# aa  #', '# aa #', '#  aa #'}, {'#  # aa  #  #', '#  # aa #  #', '#  #  aa #  #'})
+  --
+  -- - Should correctly uncomment
+  validate({ '#  aa  #', '#   a   #' }, { 'aa', ' a ' })
+  validate({ '  #  aa  #', '  #   a   #' }, { '  aa', '   a ' })
+  validate({ '\t#  aa  #', '\t#  aa  #' }, { '\taa', '\taa' })
 end
 
 T['toggle_lines()']['uncomments on inconsistent indent levels'] = function()

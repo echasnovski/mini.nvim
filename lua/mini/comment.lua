@@ -79,6 +79,9 @@ MiniComment.config = {
 
     -- Whether to recognize as comment only lines without indent
     start_of_line = false,
+
+    -- Whether to ensure single space pad for comment leaders
+    pad_comment_leaders = true,
   },
 
   -- Module mappings. Use `''` (empty string) to disable one.
@@ -273,6 +276,7 @@ H.setup_config = function(config)
   vim.validate({
     ['options.ignore_blank_line'] = { config.options.ignore_blank_line, 'boolean' },
     ['options.start_of_line'] = { config.options.start_of_line, 'boolean' },
+    ['options.pad_comment_leaders'] = { config.options.pad_comment_leaders, 'boolean' },
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
     ['mappings.textobject'] = { config.mappings.textobject, 'string' },
@@ -308,6 +312,8 @@ end
 
 -- Core implementations -------------------------------------------------------
 H.make_comment_parts = function()
+  local options = H.get_config().options
+
   local cs = vim.api.nvim_buf_get_option(0, 'commentstring')
 
   if cs == '' then
@@ -316,9 +322,13 @@ H.make_comment_parts = function()
   end
 
   -- Assumed structure of 'commentstring':
-  -- <space> <left> <space> <'%s'> <space> <right> <space>
+  -- <space> <left> <'%s'> <right> <space>
   -- So this extracts parts without surrounding whitespace
-  local left, right = cs:match('^%s*(.-)%s*%%s%s*(.-)%s*$')
+  local left, right = cs:match('^%s*(.*)%%s(.-)%s*$')
+  -- Trim comment leader from inner whitespace to ensure single space pad
+  if options.pad_comment_leaders then
+    left, right = vim.trim(left), vim.trim(right)
+  end
   return { left = left, right = right }
 end
 
@@ -367,8 +377,8 @@ H.make_comment_function = function(comment_parts, indent)
   local nonindent_start = indent:len() + 1
 
   local l, r = comment_parts.left, comment_parts.right
-  local lpad = (l == '') and '' or ' '
-  local rpad = (r == '') and '' or ' '
+  local lpad = (options.pad_comment_leaders and l ~= '') and ' ' or ''
+  local rpad = (options.pad_comment_leaders and r ~= '') and ' ' or ''
 
   local blank_comment = indent .. l .. r
 
@@ -390,9 +400,11 @@ H.make_comment_function = function(comment_parts, indent)
 end
 
 H.make_uncomment_function = function(comment_parts)
+  local options = H.get_config().options
+
   local l, r = comment_parts.left, comment_parts.right
-  local lpad = (l == '') and '' or '[ ]?'
-  local rpad = (r == '') and '' or '[ ]?'
+  local lpad = (options.pad_comment_leaders and l ~= '') and '[ ]?' or ''
+  local rpad = (options.pad_comment_leaders and r ~= '') and '[ ]?' or ''
 
   -- Usage of `lpad` and `rpad` as possbile single space enables uncommenting
   -- of commented empty lines without trailing whitespace (like '  #').
