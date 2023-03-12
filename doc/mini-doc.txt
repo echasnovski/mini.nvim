@@ -205,7 +205,10 @@ Default values:
       -- Applied to doc after all previous steps
       doc = --<function: adds modeline>,
 
-      -- Applied to after output help file is written. Takes doc as argument.
+      -- Applied before output file is written. Takes lines array as argument.
+      write_pre = --<function: currently returns its input>,
+
+      -- Applied after output help file is written. Takes doc as argument.
       write_post = --<function: various convenience actions>,
     },
 
@@ -328,8 +331,11 @@ Generate help file
       adding any helpfile-related data (maybe like table of contents).
 - Collect all strings from sections in depth-first fashion (equivalent to
   nested "for all files -> for all blocks -> for all sections -> for all
-  strings -> add string to output") and write them to output file. Strings
-  can have `\n` character indicating start of new line.
+  strings -> add string to output"). Strings can have `\n` character
+  indicating start of new line.
+- Modify collected strings with `MiniDoc.config.write_pre`. Takes strings
+  from previous step as input and should return array of strings.
+- Write modified strings to output file.
 - Execute `MiniDoc.config.write_post` hook. This is useful for showing some
   feedback and making actions involving newly updated help file (like
   generate tags, etc.).

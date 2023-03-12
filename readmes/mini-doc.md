@@ -187,6 +187,12 @@ Here are code snippets for some common installation methods (use only one):
 
     -- Applied to doc after all previous steps
     doc = --<function: adds modeline>,
+
+    -- Applied before output file is written. Takes lines array as argument.
+    write_pre = --<function: currently returns its input>,
+
+    -- Applied after output help file is written. Takes doc as argument.
+    write_post = --<function: various convenience actions>,
   },
 
   -- Path (relative to current directory) to script which handles project

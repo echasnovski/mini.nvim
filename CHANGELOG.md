@@ -11,6 +11,10 @@ Introduction of a new module.
 - FEATURE: Add `options.start_of_line` option which controls whether to recognize as comment only lines without indent.
 - FEATURE: Add `options.ignore_blank_line` option which controls whether to ignore blank lines when adding comment.
 
+## mini.doc
+
+- FEATURE: Add `config.hooks.write_pre` hook to be executed before writing to a file.
+
 ## mini.indentscope
 
 - FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.

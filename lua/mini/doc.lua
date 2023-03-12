@@ -399,7 +399,12 @@ MiniDoc.config = {
     end,
     --minidoc_replace_end
 
-    -- Applied to after output help file is written. Takes doc as argument.
+    -- Applied before output file is written. Takes lines array as argument.
+    --minidoc_replace_start write_pre = --<function: currently returns its input>,
+    write_pre = function(l) return l end,
+    --minidoc_replace_end
+
+    -- Applied after output help file is written. Takes doc as argument.
     --minidoc_replace_start write_post = --<function: various convenience actions>,
     write_post = function(d)
       local output = d.info.output
@@ -523,8 +528,11 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---       adding any helpfile-related data (maybe like table of contents).
 --- - Collect all strings from sections in depth-first fashion (equivalent to
 ---   nested "for all files -> for all blocks -> for all sections -> for all
----   strings -> add string to output") and write them to output file. Strings
----   can have `\n` character indicating start of new line.
+---   strings -> add string to output"). Strings can have `\n` character
+---   indicating start of new line.
+--- - Modify collected strings with `MiniDoc.config.write_pre`. Takes strings
+---   from previous step as input and should return array of strings.
+--- - Write modified strings to output file.
 --- - Execute `MiniDoc.config.write_post` hook. This is useful for showing some
 ---   feedback and making actions involving newly updated help file (like
 ---   generate tags, etc.).
@@ -581,6 +589,10 @@ MiniDoc.generate = function(input, output, config)
 
   -- Gather string lines in depth-first fashion
   local help_lines = H.collect_strings(doc)
+
+  -- Execute pre-write hook
+  help_lines = config.hooks.write_pre(help_lines)
+  if not H.is_array_of(help_lines, H.is_string) then H.error('Output of `write_pre` should be array of strings.') end
 
   -- Write helpfile
   H.file_write(output, help_lines)
@@ -733,6 +745,7 @@ H.setup_config = function(config)
     ['hooks.block_post'] = { config.hooks.block_post, 'function' },
     ['hooks.file'] = { config.hooks.file, 'function' },
     ['hooks.doc'] = { config.hooks.doc, 'function' },
+    ['hooks.write_pre'] = { config.hooks.write_pre, 'function' },
     ['hooks.write_post'] = { config.hooks.write_post, 'function' },
   })
 
@@ -1322,5 +1335,15 @@ H.file_write = function(path, lines)
 end
 
 H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
+
+H.is_array_of = function(x, predicate)
+  if not vim.tbl_islist(x) then return false end
+  for _, v in ipairs(x) do
+    if not predicate(v) then return false end
+  end
+  return true
+end
+
+H.is_string = function(x) return type(x) == 'string' end
 
 return MiniDoc
