@@ -156,6 +156,11 @@ T['setup()']['respects `config.set_vim_settings`'] = function()
   eq(child.o.laststatus, 2)
 end
 
+T['setup()']['disables built-in statusline in quickfix window'] = function()
+  child.cmd('copen')
+  expect.match(child.o.statusline, 'MiniStatusline')
+end
+
 T['combine_groups()'] = new_set()
 
 local combine_groups = function(...) return child.lua_get('MiniStatusline.combine_groups(...)', { ... }) end

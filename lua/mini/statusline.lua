@@ -147,6 +147,8 @@ MiniStatusline.setup = function(config)
       augroup END]],
     false
   )
+  -- - Disable built-in statusline in Quickfix window
+  vim.g.qf_disable_statusline = 1
 
   -- Create highlighting
   vim.api.nvim_exec(
