@@ -73,7 +73,7 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14
     - Update 'scripts/basic-setup_init.lua' to include new module.
     - Update 'scripts/dual_sync.sh' to include new module.
     - Add README to 'readmes' directory. NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
-    - Update main README to mention new module: both in table of contents and subsection.
+    - Update main README to mention new module in table of contents.
     - Update 'CHANGELOG.md' to mention introduction of new module.
     - Make standalone plugin:
         - Create new empty GitHub repository. Disable Issues and limit PRs.
