@@ -1,19 +1,24 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Minimal and fast autopairs.
+--- *mini.pairs* Autopairs
+--- *MiniPairs*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Functionality to work with 'paired' characters conditional on cursor's
 ---   neighborhood (two characters to its left and right).
+---
 --- - Usage should be through making appropriate mappings using |MiniPairs.map|
 ---   or in |MiniPairs.setup| (for global mapping), |MiniPairs.map_buf| (for
 ---   buffer mapping).
+---
 --- - Pairs get automatically registered to be recognized by `<BS>` and `<CR>`.
 ---
 --- What it doesn't do:
 --- - It doesn't support multiple characters as "open" and "close" symbols. Use
 ---   snippets for that.
+---
 --- - It doesn't support dependency on filetype. Use |i_CTRL-V| to insert
 ---   single symbol or `autocmd` command or 'after/ftplugin' approach to:
 ---     - `lua MiniPairs.map_buf(0, 'i', <*>, <pair_info>)` : make new mapping
@@ -72,8 +77,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----@tag mini.pairs
----@tag MiniPairs
 
 ---@alias __pairs_neigh_pattern string|nil Pattern for two neighborhood characters.
 ---   Character "\r" indicates line start, "\n" - line end.

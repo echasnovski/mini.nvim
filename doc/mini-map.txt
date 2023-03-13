@@ -1,8 +1,9 @@
+*mini.map* Window with buffer text overview
+*MiniMap*
+
+MIT License Copyright (c) 2022 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                                      *mini.map*
-                                                                       *MiniMap*
-Window with buffer text overview, scrollbar, and highlights
 
 Features:
 - Show and manage special floating window displaying automatically updated

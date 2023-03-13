@@ -1,9 +1,13 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Fast and flexible start screen. Displayed items are fully customizable both
---- in terms of what they do and how they look (with reasonable defaults). Item
---- selection can be done using prefix query with instant visual feedback.
+--- *mini.starter* Start screen
+--- *MiniStarter*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Displayed items are fully customizable both in terms of what they do and
+--- how they look (with reasonable defaults). Item selection can be done using
+--- prefix query with instant visual feedback.
 ---
 --- Key design ideas:
 --- - All available actions are defined inside items. Each item should have the
@@ -13,18 +17,22 @@
 ---     - <name> - string which will be displayed and used for choosing.
 ---     - <section> - string representing to which section item belongs.
 ---   There are pre-configured whole sections in |MiniStarter.sections|.
+---
 --- - Configure what items are displayed by supplying an array which can be
 ---   normalized to an array of items. Read about how supplied items are
 ---   normalized in |MiniStarter.refresh|.
+---
 --- - Modify the final look by supplying content hooks: functions which take
 ---   buffer content (see |MiniStarter.get_content()|) and identifier as input
 ---   while returning buffer content as output. There are pre-configured
 ---   content hook generators in |MiniStarter.gen_hook|.
+---
 --- - Choosing an item can be done in two ways:
 ---     - Type prefix query to filter item by matching its name (ignoring
 ---       case). Displayed information is updated after every typed character.
 ---       For every item its unique prefix is highlighted.
 ---     - Use Up/Down arrows and hit Enter.
+---
 --- - Allow multiple simultaneously open Starter buffers.
 ---
 --- What is doesn't do:
@@ -74,8 +82,6 @@
 --- To stop module from giving non-error feedback (like current query message),
 --- set `vim.g.ministarter_silence` (globally) or `vim.b.ministarter_silence`
 --- (for a buffer) to `true`.
----@tag mini.starter
----@tag MiniStarter
 
 --- Example configurations
 ---

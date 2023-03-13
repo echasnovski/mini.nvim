@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2023 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Move any selection in any direction
+--- *mini.move* Move any selection in any direction
+--- *MiniMove*
+---
+--- MIT License Copyright (c) 2023 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Works in two modes:
@@ -14,11 +16,15 @@
 ---         - Vertical movement gets reindented with |=|.
 ---         - Horizontal movement is improved indent/dedent with |>| / |<|.
 ---         - Cursor moves along with selection.
+---
 --- - Provides both mappings and Lua functions for motions. See
 ---   |MiniMove.move_selection()| and |MiniMove.move_line()|.
+---
 --- - Respects |v:count|. Movement mappings can be preceded by a number which
 ---   multiplies command effect.
+---
 --- - All consecutive moves (regardless of direction) can be undone by a single |u|.
+---
 --- - Respects preferred column for vertical movement. It will vertically move
 ---   selection as how cursor is moving (not strictly vertically if target
 ---   column is not present in target line).
@@ -62,8 +68,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----@tag mini.move
----@tag MiniMove
 
 ---@alias __move_direction string One of "left", "down", "up", "right".
 ---@alias __move_opts table|nil Options. Same structure as `options` in |MiniMove.config|

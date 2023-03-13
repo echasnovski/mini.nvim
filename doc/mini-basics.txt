@@ -1,8 +1,9 @@
+*mini.basics* Common configuration presets
+*MiniBasics*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                                   *mini.basics*
-                                                                    *Minibasics*
-Common configuration presets
 
 Install, create 'init.lua', add `require('mini.basics').setup()` and you
 are good to go.
@@ -10,9 +11,12 @@ are good to go.
 Features:
 - Presets for common options. It will only change option if it wasn't
   manually set before. See more in |MiniBasics.config.options|.
+
 - Presets for common mappings. It will only add a mapping if it wasn't
   manually created before. See more in |MiniBasics.config.mappings|.
+
 - Presets for common autocommands. See more in |MiniBasics.config.autocommands|.
+
 - Reverse compatibility is a high priority. Any decision to change already
   present behavior will be made with great care.
 

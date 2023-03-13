@@ -1,10 +1,8 @@
-==============================================================================
-------------------------------------------------------------------------------
-                                                                     *mini.nvim*
-*mini.txt*  Collection of minimal, independent and fast Lua modules
+*mini.nvim* Collection of minimal, independent and fast Lua modules
 
-Author:  Evgeni Chasnovski
-License: MIT
+MIT License Copyright (c) 2021 Evgeni Chasnovski
+
+==============================================================================
 
 |mini.nvim| is a collection of minimal, independent, and fast Lua modules
 dedicated to improve Neovim (version 0.7 and higher) experience. Each
@@ -22,12 +20,12 @@ Table of contents:
   Common configuration presets...................................|mini.basics|
   Go forward/backward with square brackets..................  |mini.bracketed|
   Remove buffers..............................................|mini.bufremove|
-  Comment.......................................................|mini.comment|
+  Comment lines.................................................|mini.comment|
   Completion and signature help..............................|mini.completion|
   Autohighlight word under cursor............................|mini.cursorword|
   Generate Neovim help files........................................|mini.doc|
   Fuzzy matching..................................................|mini.fuzzy|
-  Visualize and operate on indent scope.....................|mini.indentscope|
+  Visualize and work with indent scope......................|mini.indentscope|
   Jump to next/previous single character...........................|mini.jump|
   Jump within visible lines......................................|mini.jump2d|
   Window with buffer text overview..................................|mini.map|
@@ -117,68 +115,90 @@ Table of contents:
   consecutive application, and customization via Lua patterns or functions.
   Has builtins for brackets, quotes, function call, argument, tag, user
   prompt, and any punctuation/digit/whitespace character.
+
 - |MiniAlign| - align text interactively (with or without instant preview).
   Allows rich and flexible customization of both alignment rules and user
   interaction. Works with charwise, linewise, and blockwise selections in
   both Normal mode (on textobject/motion; with dot-repeat) and Visual mode.
+
 - |MiniAnimate| - animate common Neovim actions. Has "works out of the box"
   builtin animations for cursor movement, scroll, resize, window open and
   close. All of them can be customized and enabled/disabled independently.
+
 - |MiniBase16| - fast implementation of base16 theme for manually supplied
   palette. Supports 30+ plugin integrations. Has unique palette generator
   which needs only background and foreground colors.
+
 - |MiniBasics| - common configuration presets. Has configurable presets for
   options, mappings, and autocommands. It doesn't change option or mapping
   if it was manually created.
+
 - |MiniBracketed| - go forward/backward with square brackets. Among others,
   supports variaty of non-trivial targets: comments, files on disk, indent
   changes, tree-sitter nodes, linear undo states, yank history entries.
+
 - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
   window layout.
+
 - |MiniComment| - fast and familiar per-line code commenting.
+
 - |MiniCompletion| - async (with customizable 'debounce' delay) 'two-stage
   chain completion': first builtin LSP, then configurable fallback. Also
   has functionality for completion item info and function signature (both
   in floating window appearing after customizable delay).
+
 - |MiniCursorword| - automatic highlighting of word under cursor (displayed
   after customizable delay). Current word under cursor can be highlighted
   differently.
+
 - |MiniDoc| - generation of help files from EmmyLua-like annotations.
   Allows flexible customization of output via hook functions. Used for
   documenting this plugin.
+
 - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
   not only functions to perform fuzzy matching of one string to others, but
   also a sorter for |telescope.nvim|.
+
 - |MiniIndentscope| - Visualize and operate on indent scope. Supports
   customization of debounce delay, animation style, and different
   granularity of options for scope computing algorithm.
+
 - |MiniJump| - minimal and fast module for smarter jumping to a single
   character.
+
 - |MiniJump2d| - minimal and fast Lua plugin for jumping (moving cursor)
   within visible lines via iterative label filtering. Supports custom jump
   targets (spots), labels, hooks, allowed windows and lines, and more.
+
 - |MiniMap| - window with buffer text overview, scrollbar, and highlights.
   Allows configurable symbols for line encode and scrollbar, extensible
   highlight integration (with pre-built ones for builtin search, diagnostic,
   git line status), window properties, and more.
+
 - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
   and `put_text()` which print Lua objects to command line and current
   buffer respectively.
+
 - |MiniMove| - move any selection in any direction. Supports any Visual
   mode (charwise, linewise, blockwise) and Normal mode (current line) for
   all four directions (left, right, down, up). Respects `count` and undo.
+
 - |MiniPairs| - autopairs plugin which has minimal defaults and
   functionality to do per-key expression mappings.
+
 - |MiniSessions| - session management (read, write, delete) which works
   using |mksession|. Implements both global (from configured directory) and
   local (from current directory) sessions.
+
 - |MiniSplitjoin| - split and join arguments (regions inside brackets
   between allowed separators). Has customizable pre and post hooks.
   Works inside comments.
+
 - |MiniStarter| - minimal, fast, and flexible start screen. Displayed items
   are fully customizable both in terms of what they do and how they look
   (with reasonable defaults). Item selection can be done using prefix query
   with instant visual feedback.
+
 - |MiniStatusline| - minimal and fast statusline. Has ability to use custom
   content supplied with concise function (using module's provided section
   functions) along with builtin default. For full experience needs [Nerd
@@ -186,21 +206,25 @@ Table of contents:
   [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and
   [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
   plugin (but works without any them).
+
 - |MiniSurround| - fast and feature-rich surround plugin. Add, delete,
   replace, find, highlight surrounding (like pair of parenthesis, quotes,
   etc.). Supports dot-repeat, `v:count`, different search methods,
   "last"/"next" extended mappings, customization via Lua patterns or
   functions, and more. Has builtins for brackets, function call, tag, user
   prompt, and any alphanumeric/punctuation/whitespace character.
+
 - |MiniTest| - framework for writing extensive Neovim plugin tests.
   Supports hierarchical tests, hooks, parametrization, filtering (like from
   current file or cursor position), screen tests, "busted-style" emulation,
   customizable reporters, and more. Designed to be used with provided
   wrapper for managing child Neovim processes.
+
 - |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
   buffers. Allows showing extra information section in case of multiple vim
   tabpages. For full experience needs
   [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons).
+
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
 

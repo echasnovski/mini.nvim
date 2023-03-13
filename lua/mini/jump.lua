@@ -1,15 +1,20 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
-
--- Documentation ==============================================================
---- Smarter jumping to next/previous single character
+--- *mini.jump* Jump to next/previous single character
+--- *MiniJump*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski, Adam Blažek
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Extend f, F, t, T to work on multiple lines.
+---
 --- - Repeat jump by pressing f, F, t, T again. It is reset when cursor moved
 ---   as a result of not jumping or timeout after idle time (duration
 ---   customizable).
+---
 --- - Highlight (after customizable delay) all possible target characters and
 ---   stop it after some (customizable) idle time.
+---
 --- - Normal, Visual, and Operator-pending (with full dot-repeat) modes are
 ---   supported.
 ---
@@ -49,8 +54,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minijump_silence`
 --- (globally) or `vim.b.minijump_silence` (for a buffer) to `true`.
----@tag mini.jump
----@tag MiniJump
 
 ---@alias __jump_target string|nil The string to jump to.
 ---@alias __jump_backward boolean|nil Whether to jump backward.

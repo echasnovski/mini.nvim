@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Window with buffer text overview, scrollbar, and highlights
+--- *mini.map* Window with buffer text overview
+--- *MiniMap*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Show and manage special floating window displaying automatically updated
@@ -137,8 +139,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----@tag mini.map
----@tag MiniMap
 
 --- # Mappings ~
 ---

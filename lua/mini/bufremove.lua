@@ -1,8 +1,13 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Buffer removing (unshow, delete, wipeout), which saves window layout
---- (opposite to builtin Neovim's commands).
+--- *mini.bufremove* Remove buffers
+--- *MiniBufremove*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Features:
+--- - Unshow, delete, and wipeout buffer while saving window layout
+---   (opposite to builtin Neovim's commands).
 ---
 --- # Setup~
 ---
@@ -37,8 +42,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minibufremove_silence`
 --- (globally) or `vim.b.minibufremove_silence` (for a buffer) to `true`.
----@tag mini.bufremove
----@tag MiniBufremove
 
 ---@alias __bufremove_return boolean|nil Whether operation was successful. If `nil`, no operation was done.
 ---@alias __bufremove_buf_id number|nil Buffer identifier (see |bufnr()|) to use.

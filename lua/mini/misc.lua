@@ -1,22 +1,31 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Miscellaneous useful functions
+--- *mini.misc* Miscellaneous functions
+--- *MiniMisc*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features the following functions:
 --- - |MiniMisc.bench_time()| to benchmark function execution time.
 ---   Useful in combination with `stat_summary()`.
+---
 --- - |MiniMisc.put()| and |MiniMisc.put_text()| to pretty print its arguments
 ---   into command line and current buffer respectively.
+---
 --- - |MiniMisc.setup_auto_root()| to set up automated change of current directory.
+---
 --- - |MiniMisc.setup_restore_cursor()| to set up automated restoration of
 ---   cursor position on file reopen.
+---
 --- - |MiniMisc.stat_summary()| to compute summary statistics of numerical array.
 ---   Useful in combination with `bench_time()`.
+---
 --- - |MiniMisc.tbl_head()| and |MiniMisc.tbl_tail()| to return "first" and "last"
 ---   elements of table.
+---
 --- - |MiniMisc.zoom()| to zoom in and out of a buffer, making it full screen
 ---   in a floating window.
+---
 --- - And more.
 ---
 --- # Setup~
@@ -30,8 +39,6 @@
 ---
 --- This module doesn't have runtime options, so using `vim.b.minimisc_config`
 --- will have no effect here.
----@tag mini.misc
----@tag MiniMisc
 
 -- Module definition ==========================================================
 local MiniMisc = {}

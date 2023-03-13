@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Visualize and operate on indent scope
+--- *mini.indentscope* Visualize and work with indent scope
+--- *MiniIndentscope*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Indent scope (or just "scope") is a maximum set of consecutive lines which
 --- contains certain reference line (cursor line by default) and every member
@@ -12,15 +14,19 @@
 --- - Visualize scope with animated vertical line. It is very fast and done
 ---   automatically in a non-blocking way (other operations can be performed,
 ---   like moving cursor). You can customize debounce delay and animation rule.
+---
 --- - Customization of scope computation options can be done on global level
 ---   (in |MiniIndentscope.config|), for a certain buffer (using
 ---   `vim.b.miniindentscope_config` buffer variable), or within a call (using
 ---   `opts` variable in |MiniIndentscope.get_scope|).
+---
 --- - Customizable notion of a border: which adjacent lines with strictly lower
 ---   indent are recognized as such. This is useful for a certain filetypes
 ---   (for example, Python or plain text).
+---
 --- - Customizable way of line to be considered "border first". This is useful
 ---   if you want to place cursor on function header and get scope of its body.
+---
 --- - There are textobjects and motions to operate on scope. Support |count|
 ---   and dot-repeat (in operator pending mode).
 ---
@@ -63,8 +69,6 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----@tag mini.indentscope
----@tag MiniIndentscope
 
 --- Drawing of scope indicator
 ---

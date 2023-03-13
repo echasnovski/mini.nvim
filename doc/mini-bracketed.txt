@@ -1,8 +1,9 @@
+*mini.bracketed* Go forward/backward with square brackets
+*MiniBracketed*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                                *mini.bracketed*
-                                                                 *MiniBracketed*
-Go forward/backward with square brackets
 
 Features:
 - Configurable Lua functions to go forward/backward to a certain target.

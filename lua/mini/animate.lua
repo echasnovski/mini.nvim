@@ -1,35 +1,47 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Animate common Neovim actions
+--- *mini.animate* Animate common Neovim actions
+--- *MiniAnimate*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Works out of the box with a single `require('mini.animate').setup()`.
 ---   No extra mappings or commands needed.
+---
 --- - Animate cursor movement inside same buffer by showing customizable path.
 ---   See |MiniAnimate.config.cursor| for more details.
+---
 --- - Animate scrolling with a series of subscrolls ("smooth scrolling").
 ---   See |MiniAnimate.config.scroll| for more details.
+---
 --- - Animate window resize by gradually changing sizes of all windows.
 ---   See |MiniAnimate.config.resize| for more details.
+---
 --- - Animate window open/close with visually updating floating window.
 ---   See |MiniAnimate.config.open| and |MiniAnimate.config.close| for more details.
+---
 --- - Timings for all actions can be customized independently.
 ---   See |MiniAnimate-timing| for more details.
+---
 --- - Action animations can be enabled/disabled independently.
+---
 --- - All animations are asynchronous/non-blocking and trigger a targeted event
 ---   which can be used to perform actions after animation is done.
+---
 --- - |MiniAnimate.animate()| function which can be used to perform own animations.
 ---
 --- Notes:
 --- - Cursor movement is animated inside same window and buffer, not as cursor
 ---   moves across the screen.
+---
 --- - Scroll and resize animations are done with "side effects": they actually
 ---   change the state of what is animated (window view and sizes
 ---   respectively). This has a downside of possibly needing extra work to
 ---   account for asynchronous nature of animation (like adjusting certain
 ---   mappings, etc.). See |MiniAnimate.config.scroll| and
 ---   |MiniAnimate.config.resize| for more details.
+---
 --- - Although all animations work in all supported versions of Neovim, scroll
 ---   and resize animations have best experience with Neovim>=0.9 (current nightly
 ---   release). This is due to updated implementation of |WinScrolled| event.
@@ -85,8 +97,6 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----@tag mini.animate
----@tag MiniAnimate
 
 ---@diagnostic disable:undefined-field
 

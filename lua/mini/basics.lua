@@ -1,12 +1,9 @@
--- MIT License Copyright (c) 2023 Evgeni Chasnovski
-
--- To study source behind presets, search for:
--- - `-- Options ---` for `config.options`.
--- - `-- Mappings ---` for `config.mappings`.
--- - `-- Autocommands ---` for `config.autocommands`.
-
--- Documentation ==============================================================
---- Common configuration presets
+--- *mini.basics* Common configuration presets
+--- *MiniBasics*
+---
+--- MIT License Copyright (c) 2023 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Install, create 'init.lua', add `require('mini.basics').setup()` and you
 --- are good to go.
@@ -14,9 +11,12 @@
 --- Features:
 --- - Presets for common options. It will only change option if it wasn't
 ---   manually set before. See more in |MiniBasics.config.options|.
+---
 --- - Presets for common mappings. It will only add a mapping if it wasn't
 ---   manually created before. See more in |MiniBasics.config.mappings|.
+---
 --- - Presets for common autocommands. See more in |MiniBasics.config.autocommands|.
+---
 --- - Reverse compatibility is a high priority. Any decision to change already
 ---   present behavior will be made with great care.
 ---
@@ -58,10 +58,13 @@
 --- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
 --- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
 --- Note: Should be set **before** running `require('mini.basics').setup()`.
----@tag mini.basics
----@tag Minibasics
 
 ---@diagnostic disable:undefined-field
+
+-- To study source behind presets, search for:
+-- - `-- Options ---` for `config.options`.
+-- - `-- Mappings ---` for `config.mappings`.
+-- - `-- Autocommands ---` for `config.autocommands`.
 
 -- Module definition ==========================================================
 local MiniBasics = {}

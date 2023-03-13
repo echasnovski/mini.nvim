@@ -4,7 +4,7 @@
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
 <!-- badges: end -->
 
-### Visualize and operate on indent scope
+### Visualize and work with indent scope
 
 - Customizable debounce delay, animation style, and scope computation options.
 - Implements scope-related motions and textobjects.

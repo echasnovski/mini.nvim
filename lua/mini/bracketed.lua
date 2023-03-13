@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2023 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Go forward/backward with square brackets
+--- *mini.bracketed* Go forward/backward with square brackets
+--- *MiniBracketed*
+---
+--- MIT License Copyright (c) 2023 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Configurable Lua functions to go forward/backward to a certain target.
@@ -96,8 +98,6 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----@tag mini.bracketed
----@tag MiniBracketed
 
 ---@alias __bracketed_direction string One of "first", "backward", "forward", "last".
 ---@alias __bracketed_opts table|nil Options. A table with fields:

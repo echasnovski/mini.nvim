@@ -1,9 +1,13 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Module for extending and creating `a`/`i` textobjects. It enhances some builtin
---- |text-objects| (like |a(|, |a)|, |a'|, and more), creates new ones (like `a*`, `a<Space>`,
---- `af`, `a?`, and more), and allows user to create their own.
+--- *mini.ai* Extend and create a/i textobjects
+--- *MiniAi*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Enhance some builtin |text-objects| (like |a(|, |a)|, |a'|, and more),
+--- create new ones (like `a*`, `a<Space>`, `af`, `a?`, and more), and allow
+--- user to create their own.
 ---
 --- Features:
 --- - Customizable creation of `a`/`i` textobjects using Lua patterns and functions.
@@ -13,6 +17,7 @@
 ---     - Different search methods (see |MiniAi.config|).
 ---     - Consecutive application (update selection without leaving Visual mode).
 ---     - Aliases for multiple textobjects.
+---
 --- - Comprehensive builtin textobjects (see more in |MiniAi-textobject-builtin|):
 ---     - Balanced brackets (with and without whitespace) plus alias.
 ---     - Balanced quotes plus alias.
@@ -21,9 +26,12 @@
 ---     - Tag.
 ---     - Derived from user prompt.
 ---     - Default for punctuation, digit, or whitespace single character.
+---
 --- - Motions for jumping to left/right edge of textobject.
+---
 --- - Set of specification generators to tweak some builtin textobjects (see
 ---   |MiniAi.gen_spec|).
+---
 --- - Treesitter textobjects (through |MiniAi.gen_spec.treesitter()| helper).
 ---
 --- This module works by defining mappings for both `a` and `i` in Visual and
@@ -35,6 +43,7 @@
 --- Known issues which won't be resolved:
 --- - Search for builtin textobjects is done mostly using Lua patterns
 ---   (regex-like approach). Certain amount of false positives is to be expected.
+---
 --- - During search for builtin textobjects there is no distinction if it is
 ---   inside string or comment. For example, in the following case there will
 ---   be wrong match for a function call: `f(a = ")", b = 1)`.
@@ -104,8 +113,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.miniai_silence`
 --- (globally) or `vim.b.miniai_silence` (for a buffer) to `true`.
----@tag mini.ai
----@tag MiniAi
 
 --- Builtin textobjects~
 ---

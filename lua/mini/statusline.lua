@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Minimal and fast statusline with opinionated default look.
+--- *mini.statusline* Statusline
+--- *MiniStatusline*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Define own custom statusline structure for active and inactive windows.
@@ -9,7 +11,9 @@
 ---   |statusline|. Its code should be similar to default one with structure:
 ---     - Compute string data for every section you want to be displayed.
 ---     - Combine them in groups with |MiniStatusline.combine_groups()|.
+---
 --- - Built-in active mode indicator with colors.
+---
 --- - Sections can hide information when window is too narrow (specific window
 ---   width is configurable per section).
 ---
@@ -65,8 +69,6 @@
 --- Considering high number of different scenarios and customization
 --- intentions, writing exact rules for disabling module's functionality is
 --- left to user. See |mini.nvim-disabling-recipes| for common recipes.
----@tag mini.statusline
----@tag MiniStatusline
 
 --- Example content
 ---

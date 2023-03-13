@@ -1,11 +1,21 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Autohighlight word under cursor with customizable delay. Current word under
---- cursor can be highlighted differently. Highlighting is triggered only if
---- current cursor character is a |[:keyword:]|. "Word under cursor" is meant
---- as in Vim's |<cword>|: something user would get as 'iw' text object.
---- Highlighting stops in insert and terminal modes.
+--- *mini.cursorword* Autohighlight word under cursor
+--- *MiniCursorword*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Features:
+--- - Autohighlight word under cursor with customizable delay.
+---
+--- - Current word under cursor can be highlighted differently.
+---
+--- - Highlighting is triggered only if current cursor character is a |[:keyword:]|.
+---
+--- - Highlighting stops in insert and terminal modes.
+---
+--- - "Word under cursor" is meant as in Vim's |<cword>|: something user would
+---   get as 'iw' text object.
 ---
 --- # Setup~
 ---
@@ -66,8 +76,6 @@
 ---
 ---   -- Make sure to add this autocommand *before* calling module's `setup()`.
 ---   vim.cmd('au CursorMoved * lua _G.cursorword_blocklist()')
----@tag mini.cursorword
----@tag MiniCursorword
 
 -- Module definition ==========================================================
 local MiniCursorword = {}

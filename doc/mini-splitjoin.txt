@@ -1,8 +1,9 @@
+*mini.splitjoin* Split and join arguments
+*MiniSplitjoin*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                                *mini.splitjoin*
-                                                                 *MiniSplitjoin*
-Split and join arguments
 
 Features:
 - Mappings and Lua functions that modify arguments (regions inside brackets
@@ -37,8 +38,10 @@ Features:
 Notes:
 - Search for arguments is done using Lua patterns (regex-like approach).
   Certain amount of false positives is to be expected.
+
 - This module is mostly designed around |MiniSplitjoin.toggle()|. If target
   split positions are on different lines, join first and then split.
+
 - Actions can be done on Visual mode selection, which mostly present as
   a safety route in case of incorrect detection of initial region.
   It uses |MiniSplitjoin.get_visual_region()| which treats selection as full

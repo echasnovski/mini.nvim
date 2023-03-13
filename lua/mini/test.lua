@@ -1,31 +1,43 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Write and use extensive neovim plugin tests
+--- *mini.test* Test Neovim plugins
+--- *MiniTest*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Test action is defined as a named callable entry of a table.
+---
 --- - Helper for creating child Neovim process which is designed to be used in
 ---   tests (including taking and verifying screenshots). See
 ---   |MiniTest.new_child_neovim()| and |Minitest.expect.reference_screenshot()|.
+---
 --- - Hierarchical organization of tests with custom hooks, parametrization,
 ---   and user data. See |MiniTest.new_set()|.
+---
 --- - Emulation of 'Olivine-Labs/busted' interface (`describe`, `it`, etc.).
+---
 --- - Predefined small yet usable set of expectations (`assert`-like functions).
 ---   See |MiniTest.expect|.
+---
 --- - Customizable definition of what files should be tested.
+---
 --- - Test case filtering. There are predefined wrappers for testing a file
 ---   (|MiniTest.run_file()|) and case at a location like current cursor position
 ---   (|MiniTest.run_at_location()|).
+---
 --- - Customizable reporter of output results. There are two predefined ones:
 ---     - |MiniTest.gen_reporter.buffer()| for interactive usage.
 ---     - |MiniTest.gen_reporter.stdout()| for headless Neovim.
+---
 --- - Customizable project specific testing script.
 ---
 --- What it doesn't support:
 --- - Parallel execution. Due to idea of limiting implementation complexity.
+---
 --- - Mocks, stubs, etc. Use child Neovim process and manually override what is
 ---   needed. Reset child process it afterwards.
+---
 --- - "Overly specific" expectations. Tests for (no) equality and (absence of)
 ---   errors usually cover most of the needs. Adding new expectations is a
 ---   subject to weighing its usefulness against additional implementation
@@ -33,6 +45,7 @@
 ---
 --- For more information see:
 --- - 'TESTING.md' file for a hands-on introduction based on examples.
+---
 --- - Code of this plugin's tests. Consider it to be an example of intended
 ---   way to use 'mini.test' for test organization and creation.
 ---
@@ -40,9 +53,11 @@
 ---
 --- - Organize tests in separate files. Each test file should return a test set
 ---   (explicitly or implicitly by using "busted" style functions).
+---
 --- - Write test actions as callable entries of test set. Use child process
 ---   inside test actions (see |MiniTest.new_child_neovim()|) and builtin
 ---   expectations (see |MiniTest.expect|).
+---
 --- - Run tests. This does two steps:
 ---     - *Collect*. This creates single hierarchical test set, flattens into
 ---       array of test cases (see |MiniTest-test-case|) while expanding with
@@ -122,8 +137,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minitest_silence`
 --- (globally) or `vim.b.minitest_silence` (for a buffer) to `true`.
----@tag mini.test
----@tag MiniTest
 
 -- Module definition ==========================================================
 local MiniTest = {}

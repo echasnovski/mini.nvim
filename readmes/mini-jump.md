@@ -4,7 +4,7 @@
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
 <!-- badges: end -->
 
-### Smarter jumping to next/previous single character
+### Jump to next/previous single character
 
 See more details in [Features](#features) and [help file](../doc/mini-jump.txt).
 

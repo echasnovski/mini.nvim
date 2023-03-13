@@ -1,7 +1,9 @@
--- MIT License Copyright (c) 2023 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Split and join arguments
+--- *mini.splitjoin* Split and join arguments
+--- *MiniSplitjoin*
+---
+--- MIT License Copyright (c) 2023 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Features:
 --- - Mappings and Lua functions that modify arguments (regions inside brackets
@@ -36,8 +38,10 @@
 --- Notes:
 --- - Search for arguments is done using Lua patterns (regex-like approach).
 ---   Certain amount of false positives is to be expected.
+---
 --- - This module is mostly designed around |MiniSplitjoin.toggle()|. If target
 ---   split positions are on different lines, join first and then split.
+---
 --- - Actions can be done on Visual mode selection, which mostly present as
 ---   a safety route in case of incorrect detection of initial region.
 ---   It uses |MiniSplitjoin.get_visual_region()| which treats selection as full
@@ -77,8 +81,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----@tag mini.splitjoin
----@tag MiniSplitjoin
 
 --- - POSITION - table with fields <line> and <col> containing line and column
 ---   numbers respectively. Both are 1-indexed. Example: `{ line = 2, col = 1 }`.

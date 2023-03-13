@@ -1,11 +1,15 @@
+*mini.completion* Completion and signature help
+*MiniCompletion*
+
+MIT License Copyright (c) 2021 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                               *mini.completion*
-                                                                *MiniCompletion*
-Autocompletion and signature help plugin. Key design ideas:
+
+Key design ideas:
 - Have an async (with customizable "debounce" delay) "two-stage chain
   completion": first try to get completion items from LSP client (if set
   up) and if no result, fallback to custom action.
+
 - Managing completion is done as much with Neovim's built-in tools as
   possible.
 
@@ -24,15 +28,18 @@ Features:
     - If first stage is not set up or resulted into no candidates, fallback
       action is executed. The most tested actions are Neovim's built-in
       insert completion (see |ins-completion|).
+
 - Automatic display in floating window of completion item info (via
   'completionItem/resolve' request) and signature help (with highlighting
   of active parameter if LSP server provides such information). After
   opening, window for signature help is fixed and is closed when there is
   nothing to show, text is different or
   when leaving Insert mode.
+
 - Automatic actions are done after some configurable amount of delay. This
   reduces computational load and allows fast typing (completion and
   signature help) and item selection (item info)
+
 - User can force two-stage completion via
   |MiniCompletion.complete_twostage()| (by default is mapped to
   `<C-Space>`) or fallback completion via

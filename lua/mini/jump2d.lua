@@ -1,12 +1,17 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
+--- *mini.jump2d* Jump within visible lines
+--- *MiniJump2d*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
 --- Jump within visible lines via iterative label filtering.
 ---
 --- Features:
 --- - Make jump by iterative filtering of possible, equally considered jump
 ---   spots until there is only one. Filtering is done by typing a label
 ---   character that is visualized at jump spot.
+---
 --- - Customizable:
 ---     - Way of computing possible jump spots with opinionated default.
 ---     - Characters used to label jump spots during iterative filtering.
@@ -18,20 +23,26 @@
 ---     Example: user can configure to look for word starts only inside current
 ---     window at or after cursor line with 'j' and 'k' labels performing some
 ---     action after jump.
+---
 --- - Works in Visual and Operator-pending (with dot-repeat) modes.
+---
 --- - Preconfigured ways of computing jump spots (see |MiniJump2d.builtin_opts|).
+---
 --- - Works with multibyte characters.
 ---
 --- General overview of how jump is intended to be performed:
 --- - Lock eyes on desired location ("spot") recognizable by future jump.
 ---   Should be within visible lines at place where cursor can be placed.
+---
 --- - Initiate jump. Either by custom keybinding or with a call to
 ---   |MiniJump2d.start()| (allows customization options). This will highlight
 ---   all possible jump spots with their labels (letters from "a" to "z" by
 ---   default). For more details, read |MiniJump2d.start()| and |MiniJump2d.config|.
+---
 --- - Type character that appeared over desired location. If its label was
 ---   unique, jump is performed. If it wasn't unique, possible jump spots are
 ---   filtered to those having the same label character.
+---
 --- - Repeat previous step until there is only one possible jump spot or type `<CR>`
 ---   to jump to first available jump spot. Typing anything else stops jumping
 ---    without moving cursor.
@@ -112,8 +123,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minijump2d_silence`
 --- (globally) or `vim.b.minijump2d_silence` (for a buffer) to `true`.
----@tag mini.jump2d
----@tag MiniJump2d
 
 -- Module definition ==========================================================
 local MiniJump2d = {}

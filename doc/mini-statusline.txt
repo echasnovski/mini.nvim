@@ -1,8 +1,9 @@
+*mini.statusline* Statusline
+*MiniStatusline*
+
+MIT License Copyright (c) 2021 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                               *mini.statusline*
-                                                                *MiniStatusline*
-Minimal and fast statusline with opinionated default look.
 
 Features:
 - Define own custom statusline structure for active and inactive windows.
@@ -10,7 +11,9 @@ Features:
   |statusline|. Its code should be similar to default one with structure:
     - Compute string data for every section you want to be displayed.
     - Combine them in groups with |MiniStatusline.combine_groups()|.
+
 - Built-in active mode indicator with colors.
+
 - Sections can hide information when window is too narrow (specific window
   width is configurable per section).
 

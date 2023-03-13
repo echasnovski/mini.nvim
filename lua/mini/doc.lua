@@ -1,21 +1,26 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Generation of help files from EmmyLua-like annotations
+--- *mini.doc* Generate Neovim help files
+--- *MiniDoc*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
 ---
 --- Key design ideas:
 --- - Keep documentation next to code by writing EmmyLua-like annotation
 ---   comments. They will be parsed as is, so formatting should follow built-in
 ---   guide in |help-writing|. However, custom hooks are allowed at many
 ---   generation stages for more granular management of output help file.
+---
 --- - Generation is done by processing a set of ordered files line by line.
 ---   Each line can either be considered as a part of documentation block (if
 ---   it matches certain configurable pattern) or not (considered to be an
 ---   "afterline" of documentation block). See |MiniDoc.generate()| for more
 ---   details.
+---
 --- - Processing is done by using nested data structures (section, block, file,
 ---   doc) describing certain parts of help file. See |MiniDoc-data-structures|
 ---   for more details.
+---
 --- - Project specific script can be written as plain Lua file with
 ---   configuratble path. See |MiniDoc.generate()| for more details.
 ---
@@ -68,8 +73,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minidoc_silence`
 --- (globally) or `vim.b.minidoc_silence` (for a buffer) to `true`.
----@tag mini.doc
----@tag MiniDoc
 
 --- Data structures
 ---

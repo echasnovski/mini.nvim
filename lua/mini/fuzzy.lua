@@ -1,7 +1,19 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Minimal and fast fuzzy matching.
+--- *mini.fuzzy* Fuzzy matching
+--- *MiniFuzzy*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Features:
+--- - Minimal and fast fuzzy matching algorithm which prioritizes match width.
+---
+--- - Functions to for common fuzzy matching operations:
+---     - |MiniFuzzy.match()|.
+---     - |MiniFuzzy.filtersort()|.
+---     - |MiniFuzzy.process_lsp_items()|.
+---
+--- - Generator of |telescope.nvim| sorter: |MiniFuzzy.get_telescope_sorter()|.
 ---
 --- # Setup~
 ---
@@ -23,8 +35,6 @@
 ---    but simple examples should work.
 --- 2. Smart case is used: case insensitive if input word (which is usually a
 ---     user input) is all lower case. Case sensitive otherwise.
----@tag mini.fuzzy
----@tag MiniFuzzy
 
 --- # Algorithm design~
 ---

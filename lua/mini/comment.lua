@@ -1,18 +1,29 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Fast and familiar per-line commenting. Commenting in Normal mode respects
---- |count| and is dot-repeatable. Comment structure is inferred from
---- 'commentstring'. Handles both tab and space indenting (but not when they
---- are mixed). Allows custom hooks before and after successful commenting.
+--- *mini.comment* Comment lines
+--- *MiniComment*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Features:
+--- - Commenting in Normal mode respects |count| and is dot-repeatable.
+---
+--- - Comment structure is inferred from 'commentstring'.
+---
+--- - Allows custom hooks before and after successful commenting.
+---
+--- - Configurable options for some nuanced behavior.
 ---
 --- What it doesn't do:
 --- - Block and sub-line comments. This will only support per-line commenting.
+---
 --- - Configurable (from module) comment structure. Modify |commentstring|
 ---   instead. To enhance support for commenting in multi-language files, see
 ---   "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
 ---   option of this module (see |MiniComment.config|).
+---
 --- - Handle indentation with mixed tab and space.
+---
 --- - Preserve trailing whitespace in empty lines.
 ---
 --- # Setup~
@@ -35,8 +46,6 @@
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----@tag mini.comment
----@tag MiniComment
 
 -- Module definition ==========================================================
 local MiniComment = {}

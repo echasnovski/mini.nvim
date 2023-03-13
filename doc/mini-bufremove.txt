@@ -1,9 +1,13 @@
+*mini.bufremove* Remove buffers
+*MiniBufremove*
+
+MIT License Copyright (c) 2021 Evgeni Chasnovski
+
 ==============================================================================
-------------------------------------------------------------------------------
-                                                                *mini.bufremove*
-                                                                 *MiniBufremove*
-Buffer removing (unshow, delete, wipeout), which saves window layout
-(opposite to builtin Neovim's commands).
+
+Features:
+- Unshow, delete, and wipeout buffer while saving window layout
+  (opposite to builtin Neovim's commands).
 
 # Setup~
 

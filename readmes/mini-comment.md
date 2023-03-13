@@ -4,7 +4,7 @@
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
 <!-- badges: end -->
 
-### Fast and familiar per-line commenting
+### Comment lines
 
 See more details in [Features](#features) and [help file](../doc/mini-comment.txt).
 

@@ -1,6 +1,10 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
+--- *mini.base16* Base16 colorscheme creation
+--- *MiniBase16*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
 --- Fast implementation of 'chriskempson/base16' color scheme (with Copyright
 --- (C) 2012 Chris Kempson) adapted for modern Neovim Lua plugins.
 --- Extra features:
@@ -10,6 +14,7 @@
 ---
 --- Supported highlight groups:
 --- - Builtin-in Neovim LSP and diagnostic.
+---
 --- - Plugins (either with explicit definition or by verification that default
 ---   highlighting works appropriately):
 ---     - 'echasnovski/mini.nvim'
@@ -93,8 +98,6 @@
 ---       your Neovim config directory is usually enough).
 ---     - Inside "myscheme.lua" call `require('mini.base16').setup()` with your
 ---       palette and only after that set |g:colors_name| to "myscheme".
----@tag mini.base16
----@tag MiniBase16
 
 --- # Plugin colorschemes~
 ---

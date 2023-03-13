@@ -1,10 +1,13 @@
--- MIT License Copyright (c) 2022 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Align text interactively (with or without instant preview). Allows rich and
---- flexible customization of both alignment rules and user interaction. Works
---- with charwise, linewise, and blockwise selections in both Normal mode (on
---- textobject/motion; with dot-repeat) and Visual mode.
+--- *mini.align* Align text interactively
+--- *MiniAlign*
+---
+--- MIT License Copyright (c) 2022 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Rich and flexible customization of both alignment rules and user interaction.
+--- Works with charwise, linewise, and blockwise selections in both Normal mode
+--- (on textobject/motion; with dot-repeat) and Visual mode.
 ---
 --- Features:
 --- - Alignment is done in three main steps:
@@ -14,6 +17,7 @@
 ---   Each main step can be preceded by other steps (pre-steps) to achieve
 ---   highly customizable outcome. See `steps` value in |MiniAlign.config|. For
 ---   more details, see |MiniAlign-glossary| and |MiniAlign-algorithm|.
+---
 --- - User can control alignment interactively by pressing customizable modifiers
 ---   (single keys representing how alignment steps and/or options should change).
 ---   Some of default modifiers:
@@ -28,9 +32,11 @@
 ---     - Press `t` to trim whitespace from parts.
 ---     - Press `<BS>` (backspace) to delete some last pre-step.
 ---   For more details, see |MiniAlign-modifiers-builtin| and |MiniAlign-examples|.
+---
 --- - Alignment can be done with instant preview (result is updated after each
 ---   modifier) or without it (result is shown and accepted after non-default
 ---   split pattern is set).
+---
 --- - Every user interaction is accompanied with helper status message showing
 ---   relevant information about current alignment process.
 ---
@@ -90,8 +96,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
 --- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
----@tag mini.align
----@tag MiniAlign
 
 --- Glossary
 ---

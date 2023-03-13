@@ -69,12 +69,12 @@ Here are code snippets for some common installation methods:
 | mini.basics      | Common configuration presets             | [README](readmes/mini-basics.md)      | [Help file](doc/mini-basics.txt)      |
 | mini.bracketed   | Go forward/backward with square brackets | [README](readmes/mini-bracketed.md)   | [Help file](doc/mini-bracketed.txt)   |
 | mini.bufremove   | Remove buffers                           | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
-| mini.comment     | Comment                                  | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
+| mini.comment     | Comment lines                            | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
 | mini.completion  | Completion and signature help            | [README](readmes/mini-completion.md)  | [Help file](doc/mini-completion.txt)  |
 | mini.cursorword  | Autohighlight word under cursor          | [README](readmes/mini-cursorword.md)  | [Help file](doc/mini-cursorword.txt)  |
 | mini.doc         | Generate Neovim help files               | [README](readmes/mini-doc.md)         | [Help file](doc/mini-doc.txt)         |
 | mini.fuzzy       | Fuzzy matching                           | [README](readmes/mini-fuzzy.md)       | [Help file](doc/mini-fuzzy.txt)       |
-| mini.indentscope | Visualize and operate on indent scope    | [README](readmes/mini-indentscope.md) | [Help file](doc/mini-indentscope.txt) |
+| mini.indentscope | Visualize and work with indent scope     | [README](readmes/mini-indentscope.md) | [Help file](doc/mini-indentscope.txt) |
 | mini.jump        | Jump to next/previous single character   | [README](readmes/mini-jump.md)        | [Help file](doc/mini-jump.txt)        |
 | mini.jump2d      | Jump within visible lines                | [README](readmes/mini-jump2d.md)      | [Help file](doc/mini-jump2d.txt)      |
 | mini.map         | Window with buffer text overview         | [README](readmes/mini-map.md)         | [Help file](doc/mini-map.txt)         |
@@ -164,7 +164,7 @@ For video demo and quick overview see its [README](readmes/mini-bufremove.md). F
 <a name='mini.comment'></a>
 ### mini.comment
 
-Fast and familiar per-line commenting.
+Comment lines.
 
 For video demo and quick overview see its [README](readmes/mini-comment.md). For more details see its [help file](doc/mini-comment.txt).
 
@@ -212,7 +212,7 @@ For video demo and quick overview see its [README](readmes/mini-fuzzy.md). For m
 <a name='mini.indentscope'></a>
 ### mini.indentscope
 
-Visualize and operate on indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
+Visualize and work with indent scope. Supports customization of debounce delay, animation style, and different granularity of options for scope computing algorithm.
 
 - Customizable debounce delay, animation style, and scope computation options.
 - Implements scope-related motions and textobjects.

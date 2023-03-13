@@ -1,10 +1,12 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Fast and feature-rich surrounding. This is mostly a reimplementation of the
---- core features of 'machakann/vim-sandwich' with more on top (find
---- surrounding, highlight surrounding, flexible customization). Can be
---- configured to have experience similar to 'tpope/vim-surround'.
+--- *mini.surround* Surround actions
+--- *MiniSurround*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Fast and feature-rich surrounding. Can be configured to have experience
+--- similar to 'tpope/vim-surround' (see |MiniSurround-vim-surround-config|).
 ---
 --- Features:
 --- - Actions (all of them are dot-repeatable out of the box and respect
@@ -15,6 +17,7 @@
 ---     - Find surrounding with `sf` or `sF` (move cursor right or left).
 ---     - Highlight surrounding with `sh`.
 ---     - Change number of neighbor lines with `sn` (see |MiniSurround-algorithm|).
+---
 --- - Surrounding is identified by a single character as both "input" (in
 ---   `delete` and `replace` start, `find`, and `highlight`) and "output" (in
 ---   `add` and `replace` end):
@@ -29,8 +32,10 @@
 ---     - '?' - interactive. Prompts user to enter left and right parts.
 ---     - All other alphanumeric, punctuation, or space characters represent
 ---       surrounding with identical left and right parts.
+---
 --- - Configurable search methods to find not only covering but possibly next,
 ---   previous, or nearest surrounding. See more in |MiniSurround.config|.
+---
 --- - All actions involving finding surrounding (delete, replace, find,
 ---   highlight) can be used with suffix that changes search method to find
 ---   previous/last. See more in |MiniSurround.config|.
@@ -38,9 +43,11 @@
 --- Known issues which won't be resolved:
 --- - Search for surrounding is done using Lua patterns (regex-like approach).
 ---   So certain amount of false positives should be expected.
+---
 --- - When searching for "input" surrounding, there is no distinction if it is
 ---   inside string or comment. So in this case there will be not proper match
 ---   for a function call: 'f(a = ")", b = 1)'.
+---
 --- - Tags are searched using regex-like methods, so issues are inevitable.
 ---   Overall it is pretty good, but certain cases won't work. Like self-nested
 ---   tags won't match correctly on both ends: '<a><a></a></a>'.
@@ -52,8 +59,7 @@
 --- `MiniSurround` which you can use for scripting or manually (with
 --- `:lua MiniSurround.*`).
 ---
---- See |MiniSurround.config| for `config` structure and default values. It
---- also has example setup providing experience similar to 'tpope/vim-surround'.
+--- See |MiniSurround.config| for `config` structure and default values.
 ---
 --- You can override runtime config settings locally to buffer inside
 --- `vim.b.minisurround_config` which should have same structure as
@@ -133,8 +139,6 @@
 ---
 --- To stop module from giving non-error feedback, set `vim.g.minisurround_silence`
 --- (globally) or `vim.b.minisurround_silence` (for a buffer) to `true`.
----@tag mini.surround
----@tag MiniSurround
 
 --- Builtin surroundings~
 ---
@@ -448,7 +452,8 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
----@text # Setup similar to 'tpope/vim-surround'~
+---@text                                               *MiniSurround-vim-surround-config*
+--- # Setup similar to 'tpope/vim-surround'~
 ---
 --- This module is primarily designed after 'machakann/vim-sandwich'. To get
 --- behavior closest to 'tpope/vim-surround' (but not identical), use this setup:

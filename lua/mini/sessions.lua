@@ -1,20 +1,26 @@
--- MIT License Copyright (c) 2021 Evgeni Chasnovski
-
--- Documentation ==============================================================
---- Session management (read, write, delete), which works using |mksession|
---- (meaning 'sessionoptions' is fully respected). This is intended as a
---- drop-in Lua replacement for session management part of 'mhinz/vim-startify'
---- (works out of the box with sessions created by it). Implements both global
---- (from configured directory) and local (from current directory) sessions.
+--- *mini.sessions* Session management
+--- *MiniSessions*
+---
+--- MIT License Copyright (c) 2021 Evgeni Chasnovski
+---
+--- ==============================================================================
+---
+--- Read, write, and delete sessions. Works using |mksession| (meaning
+--- 'sessionoptions' is fully respected). This is intended as a drop-in Lua
+--- replacement for session management part of 'mhinz/vim-startify' (works out
+--- of the box with sessions created by it). Implements both global (from
+--- configured directory) and local (from current directory) sessions.
 ---
 --- Key design ideas:
 --- - Sessions are represented by readable files (results of applying
 ---   |mksession|). There are two kinds of sessions:
 ---     - Global: any file inside a configurable directory.
 ---     - Local: configurable file inside current working directory (|getcwd|).
+---
 --- - All session files are detected during `MiniSessions.setup()` and on any
 ---   relevant action with session names being file names (including their
 ---   possible extension).
+---
 --- - Store information about detected sessions in separate table
 ---   (|MiniSessions.detected|) and operate only on it. Meaning if this
 ---   information changes, there will be no effect until next detection. So to
@@ -24,7 +30,9 @@
 --- Features:
 --- - Autoread default session (local if detected, latest otherwise) if Neovim
 ---   was called without intention to show something else.
+---
 --- - Autowrite current session before quitting Neovim.
+---
 --- - Configurable severity level of all actions.
 ---
 --- # Setup~
@@ -37,7 +45,7 @@
 --- See |MiniSessions.config| for `config` structure and default values.
 ---
 --- This module doesn't benefit from buffer local configuration, so using
---- `vim.b.minimisc_config` will have no effect here.
+--- `vim.b.minisessions_config` will have no effect here.
 ---
 --- # Disabling~
 ---
@@ -52,8 +60,6 @@
 --- To stop module from giving non-error feedback entirely (overriding all
 --- `config.verbose` options), set `vim.g.minisessions_silence` (globally) or
 --- `vim.b.minisessions_silence` (for a buffer) to `true`.
----@tag mini.sessions
----@tag MiniSessions
 
 -- Module definition ==========================================================
 local MiniSessions = {}
