@@ -9,37 +9,37 @@
 --- module can be considered as a separate sub-plugin.
 ---
 --- Table of contents:
----   General overview.................................................|mini.nvim|
----   Disabling recepies.............................|mini.nvim-disabling-recipes|
----   Buffer-local config..........................|mini.nvim-buffer-local-config|
----   Plugin colorschemes.....................................|mini-color-schemes|
----   Extend and create a/i textobjects..................................|mini.ai|
----   Align text interactively........................................|mini.align|
----   Animate common Neovim actions.................................|mini.animate|
----   Base16 colorscheme creation....................................|mini.base16|
----   Common configuration presets...................................|mini.basics|
----   Go forward/backward with square brackets..................  |mini.bracketed|
----   Remove buffers..............................................|mini.bufremove|
----   Comment lines.................................................|mini.comment|
----   Completion and signature help..............................|mini.completion|
----   Autohighlight word under cursor............................|mini.cursorword|
----   Generate Neovim help files........................................|mini.doc|
----   Fuzzy matching..................................................|mini.fuzzy|
----   Visualize and work with indent scope......................|mini.indentscope|
----   Jump to next/previous single character...........................|mini.jump|
----   Jump within visible lines......................................|mini.jump2d|
----   Window with buffer text overview..................................|mini.map|
----   Miscellaneous functions..........................................|mini.misc|
----   Move any selection in any direction..............................|mini.move|
----   Autopairs.......................................................|mini.pairs|
----   Session management...........................................|mini.sessions|
----   Split and join arguments....................................|mini.splitjoin|
----   Start screen..................................................|mini.starter|
----   Statusline.................................................|mini.statusline|
----   Surround actions.............................................|mini.surround|
----   Tabline.......................................................|mini.tabline|
----   Test Neovim plugins..............................................|mini.test|
----   Trailspace (highlight and remove)..........................|mini.trailspace|
+---   General overview ............................................... |mini.nvim|
+---   Disabling recepies ........................... |mini.nvim-disabling-recipes|
+---   Buffer-local config ........................ |mini.nvim-buffer-local-config|
+---   Plugin colorschemes ................................... |mini-color-schemes|
+---   Extend and create a/i textobjects ................................ |mini.ai|
+---   Align text interactively ...................................... |mini.align|
+---   Animate common Neovim actions ............................... |mini.animate|
+---   Base16 colorscheme creation .................................. |mini.base16|
+---   Common configuration presets ................................. |mini.basics|
+---   Go forward/backward with square brackets .................. |mini.bracketed|
+---   Remove buffers ............................................ |mini.bufremove|
+---   Comment lines ............................................... |mini.comment|
+---   Completion and signature help ............................ |mini.completion|
+---   Autohighlight word under cursor .......................... |mini.cursorword|
+---   Generate Neovim help files ...................................... |mini.doc|
+---   Fuzzy matching ................................................ |mini.fuzzy|
+---   Visualize and work with indent scope .................... |mini.indentscope|
+---   Jump to next/previous single character ......................... |mini.jump|
+---   Jump within visible lines .................................... |mini.jump2d|
+---   Window with buffer text overview ................................ |mini.map|
+---   Miscellaneous functions ........................................ |mini.misc|
+---   Move any selection in any direction ............................ |mini.move|
+---   Autopairs ..................................................... |mini.pairs|
+---   Session management ......................................... |mini.sessions|
+---   Split and join arguments .................................. |mini.splitjoin|
+---   Start screen ................................................ |mini.starter|
+---   Statusline ............................................... |mini.statusline|
+---   Surround actions ........................................... |mini.surround|
+---   Tabline ..................................................... |mini.tabline|
+---   Test Neovim plugins ............................................ |mini.test|
+---   Trailspace (highlight and remove)......................... |mini.trailspace|
 ---
 --- # General principles~
 ---
