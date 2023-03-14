@@ -64,6 +64,13 @@ Features:
   Yank selection replacing
   latest put region................`[Y` `[y` `]y` `]Y` .... |MiniBracketed.yank()|
 
+Notes:
+- The `undo` target remaps |u| and |<C-R>| keys to register undo state
+  after undo and redo respectively. If this conflicts with your setup,
+  either disable `undo` target or make your remaps after calling
+  |MiniBracketed.setup()|. To use `undo` target, remap your undo/redo keys
+  to call |MiniBracketed.register_undo_state()| after the action.
+
 # Setup ~
 
 This module needs a setup with `require('mini.bracketed').setup({})` (replace

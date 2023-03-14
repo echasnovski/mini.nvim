@@ -61,6 +61,9 @@ https://user-images.githubusercontent.com/24854248/220173251-cd905d8f-ad07-4654-
     | Window in current tab                             | `[W` `[w` `]w` `]W` | `MiniBracketed.window()`     |
     | Yank selection replacing latest put region        | `[Y` `[y` `]y` `]Y` | `MiniBracketed.yank()`       |
 
+Notes:
+- The `undo` target remaps `u` and `<C-R>` keys to register undo state after undo and redo respectively. If this conflicts with your setup, either disable `undo` target or make your remaps after calling `MiniBracketed.setup()`. To use `undo` target, remap your undo/redo keys to call `MiniBracketed.register_undo_state()` after the action.
+
 ## Installation
 
 This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
