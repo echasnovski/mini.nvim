@@ -1071,12 +1071,6 @@ H.apply_palette = function(palette, use_cterm)
   vim.g.terminal_color_13 = palette.base0E
   vim.g.terminal_color_14 = palette.base0C
   vim.g.terminal_color_15 = palette.base07
-  vim.g.terminal_color_background = vim.g.terminal_color_0
-  vim.g.terminal_color_foreground = vim.g.terminal_color_5
-  if vim.o.background == 'light' then
-    vim.g.terminal_color_background = vim.g.terminal_color_7
-    vim.g.terminal_color_foreground = vim.g.terminal_color_2
-  end
 end
 
 H.has_integration = function(name)
