@@ -1783,6 +1783,15 @@ T['Scroll']['does not automatically animate after buffer change'] = function()
   child.expect_screenshot()
 end
 
+T['Scroll']['handles mappings with <Cmd><CR>'] = function()
+  child.api.nvim_set_keymap('n', 'G', 'G<Cmd>lua _G.n = 0<CR>', {})
+
+  type_keys('G')
+  child.expect_screenshot()
+  sleep(step_time + small_time)
+  child.expect_screenshot()
+end
+
 T['Scroll']['works with different keys'] = new_set()
 
 T['Scroll']['works with different keys']['zz'] = function()

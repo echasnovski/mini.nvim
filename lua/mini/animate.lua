@@ -1569,16 +1569,30 @@ H.start_scroll = function(start_state)
   H.set_scrolloff(0)
   -- Allow placing cursor anywhere on screen for better cursor placing
   H.set_virtualedit('all')
-  if start_state ~= nil then vim.fn.winrestview(start_state.view) end
+
+  if start_state ~= nil then
+    vim.fn.winrestview(start_state.view)
+    -- Track state because `winrestview()` later triggers `WinScrolled`.
+    -- Otherwise mapping like `u<Cmd>lua _G.n = 0<CR>` (as in 'mini.bracketed')
+    -- can result into "inverted scroll": from destination to current state.
+    MiniAnimate.track_scroll_state()
+  end
+
   return true
 end
 
 H.stop_scroll = function(end_state)
-  if end_state ~= nil then vim.fn.winrestview(end_state.view) end
+  if end_state ~= nil then
+    vim.fn.winrestview(end_state.view)
+    MiniAnimate.track_scroll_state()
+  end
+
   H.set_scrolloff(end_state.scrolloff)
   H.set_virtualedit(end_state.virtualedit)
+
   H.cache.scroll_is_active = false
   H.trigger_done_event('scroll')
+
   return false
 end
 
