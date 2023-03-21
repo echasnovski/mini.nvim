@@ -2,6 +2,25 @@
 
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for how to generate help files, run tests, and format.
 
+## Dual distribution
+
+Modules of 'mini.nvim' are distributed both as part of 'mini.nvim' repository and each one in its standalone repository. All development takes place in 'mini.nvim' while being synced to standalone ones. This is done by keeping track of special `sync` branch which points to the latest commit which was synced to standalone repositories.
+
+Usual workflow involves performing these steps after every commit in 'mini.nvim':
+
+- Ensure current `main` branch has no immediate defects. Usually it means to wait until all CI checks passed.
+- Run `make dual_sync`. This should:
+    - Create 'dual' directory if doesn't exist yet.
+    - Pull standalone repositories in 'dual/repos'.
+    - Create patches in 'dual/patches' and apply them for standalone repositories.
+
+    See 'scripts/dual_sync.sh' for more details.
+- Run `make dual_log` to make sure that all and correct patches were applied. If some commit touches files from several modules, it results into commits for every affected standalone repository.
+- Run `make dual_push`. This should:
+    - Push updates for affected standalone repositories.
+    - Clean up 'dual/patches'.
+    - Update `sync` branch to point to latest commit and push it to `origin`.
+
 ## Implementation details
 
 - Use module's `H.get_config()` helper to get its `config`. This way allows using buffer local configuration.
@@ -36,10 +55,12 @@
 - Add README to 'readmes' directory. NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
 - Update main README to mention new module in table of contents.
 - Update 'CHANGELOG.md' to mention introduction of new module.
+- Commit changes with message '(mini.xxx) NEW MODULE: initial commit.'. NOTE: synchronize standalone repositories prior to this commit.
 - Make standalone plugin:
     - Create new empty GitHub repository. Disable Issues and limit PRs.
     - Create initial structure. For list of tracked files see 'scripts/dual_sync.sh'. Initially they are 'doc/mini-xxx.txt', 'lua/mini/xxx.lua', 'LICENSE', and 'readmes/mini-xxx.md' (copied to be 'README.md' in standalone repository). NOTE: Modify 'README.md' to have appropriate relative links (see patch script).
     - Make initial commit and push.
+- Force update `sync` branch to point to latest commit with `git branch --force sync`.
 
 ## Making stable release
 
