@@ -671,7 +671,7 @@ H.keymap_set = function(modes, lhs, rhs, opts)
     local map_info = H.get_map_info(mode, lhs)
     local is_default = map_info == nil
       -- Some mappings are set by default in Neovim
-      or (mode == 'n' and lhs == '<C-L>' and map_info.rhs:find('nohl') ~= nil)
+      or (mode == 'n' and lhs == '<C-l>' and map_info.rhs:find('nohl') ~= nil)
       or (mode == 'x' and lhs == '*' and map_info.rhs == [[y/\V<C-R>"<CR>]])
       or (mode == 'x' and lhs == '#' and map_info.rhs == [[y?\V<C-R>"<CR>]])
     if not is_default then return end
