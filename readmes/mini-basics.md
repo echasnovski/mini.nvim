@@ -180,6 +180,9 @@ Here are code snippets for some common installation methods (use only one):
     -- Set 'relativenumber' only in linewise and blockwise Visual mode
     relnum_in_visual_mode = false,
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

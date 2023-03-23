@@ -52,6 +52,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.move_with_alt', false)
   expect_config('autocommands.basic', true)
   expect_config('autocommands.relnum_in_visual_mode', false)
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -77,6 +78,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ autocommands = 'a' }, 'autocommands', 'table')
   expect_config_error({ autocommands = { basic = 1 } }, 'autocommands.basic', 'boolean')
   expect_config_error({ autocommands = { relnum_in_visual_mode = 1 } }, 'autocommands.relnum_in_visual_mode', 'boolean')
+  expect_config_error({ silent = 'a' }, 'silent', 'boolean')
 end
 
 T['toggle_diagnostic()'] = new_set()
@@ -661,19 +663,13 @@ T['Mappings']['Toggle options']['can work with `<Leader>`'] = function()
   expect.match(child.cmd_capture([[nmap <Space>tw]]), 'wrap')
 end
 
-T['Mappings']['Toggle options']['respects `vim.{g,b}.minibasics_silence`'] = new_set(
-  { parametrize = { { 'g' }, { 'b' } } },
-  {
-    test = function(var_type)
-      child[var_type].minibasics_silence = true
-      child.set_size(10, 20)
+T['Mappings']['Toggle options']['respects `config.silent`'] = function()
+  child.set_size(10, 20)
 
-      load_module()
-      type_keys([[\s]])
-      child.expect_screenshot()
-    end,
-  }
-)
+  load_module({ silent = true })
+  type_keys([[\s]])
+  child.expect_screenshot()
+end
 
 T['Mappings']['Windows'] = new_set()
 

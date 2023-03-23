@@ -42,6 +42,8 @@ which you can use for scripting or manually (with `:lua MiniBasics.*`).
 
 See |MiniBasics.config| for available config settings.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Comparisons ~
 
 - 'tpope/vim-sensible':
@@ -52,12 +54,6 @@ See |MiniBasics.config| for available config settings.
     - The 'tpope/vim-unimpaired' has mapping for toggling options with `yo`
       prefix. This module implements similar functionality with `\` prefix
       (see |MiniBasics.config.mappings|).
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minialign_silence`
-(globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
-Note: Should be set **before** running `require('mini.basics').setup()`.
 
 ------------------------------------------------------------------------------
                                                             *MiniBasics.setup()*
@@ -114,6 +110,9 @@ Default values:
       -- Set 'relativenumber' only in linewise and blockwise Visual mode
       relnum_in_visual_mode = false,
     },
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
                                                      *MiniBasics.config.options*

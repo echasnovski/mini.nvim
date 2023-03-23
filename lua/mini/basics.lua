@@ -42,6 +42,8 @@
 ---
 --- See |MiniBasics.config| for available config settings.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Comparisons ~
 ---
 --- - 'tpope/vim-sensible':
@@ -52,12 +54,6 @@
 ---     - The 'tpope/vim-unimpaired' has mapping for toggling options with `yo`
 ---       prefix. This module implements similar functionality with `\` prefix
 ---       (see |MiniBasics.config.mappings|).
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
---- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
---- Note: Should be set **before** running `require('mini.basics').setup()`.
 
 ---@diagnostic disable:undefined-field
 
@@ -361,6 +357,9 @@ MiniBasics.config = {
     -- Set 'relativenumber' only in linewise and blockwise Visual mode
     relnum_in_visual_mode = false,
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -420,6 +419,8 @@ H.setup_config = function(config)
 
     ['autocommands.basic'] = { config.autocommands.basic, 'boolean' },
     ['autocommands.relnum_in_visual_mode'] = { config.autocommands.relnum_in_visual_mode, 'boolean' },
+
+    ['silent'] = { config.silent, 'boolean' },
   })
 
   return config
@@ -433,7 +434,18 @@ H.apply_config = function(config)
   H.apply_autocommands(config)
 end
 
-H.is_silenced = function() return vim.g.minibasics_silence == true or vim.b.minibasics_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minibasics_silence == true or vim.b.minibasics_silence == true then
+    vim.notify_once(
+      "(mini.basics) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return MiniBasics.config.silent
+end
 
 -- Options --------------------------------------------------------------------
 --stylua: ignore
