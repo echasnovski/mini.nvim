@@ -42,6 +42,8 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minidoc_config` which should have same structure as `MiniDoc.config`.
 See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Tips~
 
 - Some settings tips that might make writing annotation comments easier:
@@ -68,11 +70,6 @@ See |mini.nvim-buffer-local-config| for more details.
     - It takes more care about automating output formatting (like auto
       indentation and line width fit). This plugin leans more to manual
       formatting with option to supply customized post-processing hooks.
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minidoc_silence`
-(globally) or `vim.b.minidoc_silence` (for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                        *MiniDoc-data-structures*
@@ -219,6 +216,9 @@ Default values:
     -- Path (relative to current directory) to script which handles project
     -- specific help file generation (like custom input files, hooks, etc.).
     script_path = 'scripts/minidoc.lua',
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 # Notes ~

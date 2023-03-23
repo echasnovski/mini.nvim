@@ -42,6 +42,8 @@
 --- `vim.b.minidoc_config` which should have same structure as `MiniDoc.config`.
 --- See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Tips~
 ---
 --- - Some settings tips that might make writing annotation comments easier:
@@ -68,11 +70,6 @@
 ---     - It takes more care about automating output formatting (like auto
 ---       indentation and line width fit). This plugin leans more to manual
 ---       formatting with option to supply customized post-processing hooks.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minidoc_silence`
---- (globally) or `vim.b.minidoc_silence` (for a buffer) to `true`.
 
 --- Data structures
 ---
@@ -437,6 +434,9 @@ MiniDoc.config = {
   -- Path (relative to current directory) to script which handles project
   -- specific help file generation (like custom input files, hooks, etc.).
   script_path = 'scripts/minidoc.lua',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -738,6 +738,7 @@ H.setup_config = function(config)
     default_section_id = { config.default_section_id, 'string' },
     hooks = { config.hooks, 'table' },
     script_path = { config.script_path, 'string' },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -777,7 +778,18 @@ end
 
 H.apply_config = function(config) MiniDoc.config = config end
 
-H.is_silenced = function() return vim.g.minidoc_silence == true or vim.b.minidoc_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minidoc_silence == true or vim.b.minidoc_silence == true then
+    vim.notify_once(
+      "(mini.doc) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {}) end

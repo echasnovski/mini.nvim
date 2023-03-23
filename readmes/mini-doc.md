@@ -198,6 +198,9 @@ Here are code snippets for some common installation methods (use only one):
   -- Path (relative to current directory) to script which handles project
   -- specific help file generation (like custom input files, hooks, etc.).
   script_path = 'scripts/minidoc.lua',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

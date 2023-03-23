@@ -81,6 +81,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config_function('hooks.write_pre')
   expect_config_function('hooks.write_post')
   expect_config('script_path', 'scripts/minidoc.lua')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -117,6 +118,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ hooks = { write_pre = 1 } }, 'hooks.write_pre', 'function')
   expect_config_error({ hooks = { write_post = 1 } }, 'hooks.write_post', 'function')
   expect_config_error({ script_path = 1 }, 'script_path', 'string')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 T['default_hooks'] = new_set()
