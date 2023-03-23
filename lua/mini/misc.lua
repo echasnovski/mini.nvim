@@ -326,13 +326,15 @@ MiniMisc.restore_cursor = function(opts)
   if vim.tbl_contains(opts.ignore_filetype, vim.bo.filetype) then return end
 
   -- Stop if line is already specified (like during start with `nvim file +num`)
-  if vim.fn.line('.') > 1 then return end
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  if cursor[1] > 1 then return end
 
   -- Stop if can't restore proper line for some reason
-  local last_line = vim.fn.line([['"]])
-  if not (1 <= last_line and last_line <= vim.fn.line('$')) then return end
+  local mark = vim.api.nvim_buf_get_mark(0, [["]])
+  if not (1 <= mark[1] and mark[1] <= vim.api.nvim_buf_line_count(0)) then return end
 
   -- Restore cursor and open just enough folds
+  -- TODO: pcall(vim.api.nvim_win_set_cursor, 0, mark)
   vim.cmd([[normal! g`"zv]])
 
   -- Center window
