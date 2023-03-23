@@ -111,7 +111,7 @@ Here are code snippets for some common installation methods:
 
 - **Disabling**. Each module's core functionality can be disabled globally or locally to buffer. See "Disabling" section in module's help page for more details. See `mini.nvim-disabling-recipes` section in main help file for common recipes.
 
-- **Silencing**. Each module can be configured to not show non-error feedback globally or locally to buffer. See "Silencing" section in module's help page for more details.
+- **Silencing**. Each module providing non-error feedback can be configured to not do that by setting `config.silent = true` (either inside `setup()` call or on the fly).
 
 - **Highlight groups**. Appearance of module's output is controlled by certain highlight group (see `:h highlight-groups`). To customize them, use `highlight` command. **Note**: currently not many Neovim themes support this plugin's highlight groups; fixing this situation is highly appreciated.  To see a more calibrated look, use MiniBase16 or plugin's colorscheme `minischeme`.
 
