@@ -55,6 +55,8 @@
 --- Note: `vim.b.ministarter_config` is copied to Starter buffer from current
 --- buffer allowing full customization.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Highlight groups~
 ---
 --- * `MiniStarterCurrent` - current item.
@@ -76,12 +78,6 @@
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback (like current query message),
---- set `vim.g.ministarter_silence` (globally) or `vim.b.ministarter_silence`
---- (for a buffer) to `true`.
 
 --- Example configurations
 ---
@@ -284,6 +280,9 @@ MiniStarter.config = {
   -- mapping overriding your global ones. Be careful to not add `:` as it
   -- allows you to go into command mode.
   query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -1047,6 +1046,7 @@ H.setup_config = function(config)
     -- `header` and `footer` can have any type
     content_hooks = { config.content_hooks, 'table', true },
     query_updaters = { config.query_updaters, 'string' },
+    silent = { config.silent, 'boolean' },
   })
 
   return config
@@ -1056,7 +1056,18 @@ H.apply_config = function(config) MiniStarter.config = config end
 
 H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
-H.is_silenced = function() return vim.g.ministarter_silence == true or vim.b.ministarter_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.ministarter_silence == true or vim.b.ministarter_silence == true then
+    vim.notify_once(
+      "(mini.starter) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniStarter.config, vim.b.ministarter_config or {}, config or {})

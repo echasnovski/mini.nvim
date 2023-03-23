@@ -55,6 +55,8 @@ You can override runtime config settings locally to buffer inside
 Note: `vim.b.ministarter_config` is copied to Starter buffer from current
 buffer allowing full customization.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Highlight groups~
 
 * `MiniStarterCurrent` - current item.
@@ -76,12 +78,6 @@ To disable core functionality, set `vim.g.ministarter_disable` (globally) or
 of different scenarios and customization intentions, writing exact rules
 for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
-
-# Silencing ~
-
-To stop module from giving non-error feedback (like current query message),
-set `vim.g.ministarter_silence` (globally) or `vim.b.ministarter_silence`
-(for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                     *MiniStarter-example-config*
@@ -244,6 +240,9 @@ Default values:
     -- mapping overriding your global ones. Be careful to not add `:` as it
     -- allows you to go into command mode.
     query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 

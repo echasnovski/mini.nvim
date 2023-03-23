@@ -173,6 +173,9 @@ Here are code snippets for some common installation methods (use only one):
   -- mapping overriding your global ones. Be careful to not add `:` as it
   -- allows you to go into command mode.
   query_updaters = 'abcdefghijklmnopqrstuvwxyz0123456789_-.',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

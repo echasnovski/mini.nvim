@@ -124,6 +124,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('footer', vim.NIL)
   expect_config('content_hooks', vim.NIL)
   expect_config('query_updaters', 'abcdefghijklmnopqrstuvwxyz0123456789_-.')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -145,6 +146,7 @@ T['setup()']['validates `config` argument'] = function()
   -- `header` and `footer` can have any type
   expect_config_error({ content_hooks = 'a' }, 'content_hooks', 'table')
   expect_config_error({ query_updaters = 1 }, 'query_updaters', 'string')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 -- Work with Starter buffer ---------------------------------------------------
@@ -501,21 +503,17 @@ T['refresh()']['respects `vim.b.ministarter_config`'] = function()
   child.expect_screenshot()
 end
 
-T['refresh()']['respects `vim.{g,b}.ministarter_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.lua('MiniStarter.open()')
-    child.expect_screenshot()
+T['refresh()']['respects `config.silent`'] = function()
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
 
-    -- Clear command line
-    child.cmd([[echo '']])
-    child[var_type].ministarter_silence = true
+  -- Clear command line
+  child.cmd([[echo '']])
+  child.lua('MiniStarter.config.silent = true')
 
-    type_keys('a')
-    child.expect_screenshot()
-  end,
-})
+  type_keys('a')
+  child.expect_screenshot()
+end
 
 T['close()'] = new_set()
 
