@@ -65,6 +65,8 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minisurround_config` which should have same structure as
 `MiniSurround.config`. See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Example usage~
 
 Regular mappings:
@@ -134,11 +136,6 @@ To disable, set `vim.g.minisurround_disable` (globally) or
 number of different scenarios and customization intentions, writing exact
 rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minisurround_silence`
-(globally) or `vim.b.minisurround_silence` (for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                  *MiniSurround-surround-builtin*
@@ -473,6 +470,9 @@ Default values:
     -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
     -- see `:h MiniSurround.config`.
     search_method = 'cover',
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
                                               *MiniSurround-vim-surround-config*

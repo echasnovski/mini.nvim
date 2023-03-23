@@ -187,6 +187,9 @@ Here are code snippets for some common installation methods (use only one):
   -- 'cover_or_nearest', 'next', 'prev', 'nearest'. For more details,
   -- see `:h MiniSurround.config`.
   search_method = 'cover',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

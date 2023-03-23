@@ -122,6 +122,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.suffix_next', 'n')
   expect_config('respect_selection_type', false)
   expect_config('search_method', 'cover')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -153,6 +154,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ n_lines = 'a' }, 'n_lines', 'number')
   expect_config_error({ respect_selection_type = 1 }, 'respect_selection_type', 'boolean')
   expect_config_error({ search_method = 1 }, 'search_method', 'one of')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
@@ -617,22 +619,18 @@ T['Add surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   end,
 })
 
-T['Add surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minisurround_silence = true
-    child.set_size(10, 20)
+T['Add surrounding']['respects `config.silent`'] = function()
+  child.lua('MiniSurround.config.silent = true')
+  child.set_size(10, 20)
 
-    set_lines({ ' aaa ' })
-    set_cursor(1, 1)
+  set_lines({ ' aaa ' })
+  set_cursor(1, 1)
 
-    -- It should not show helper message after one idle second
-    type_keys('sa', 'iw')
-    sleep(1000 + 15)
-    child.expect_screenshot()
-  end,
-})
+  -- It should not show helper message after one idle second
+  type_keys('sa', 'iw')
+  sleep(1000 + 15)
+  child.expect_screenshot()
+end
 
 T['Add surrounding']['respects `vim.b.minisurround_config`'] = function()
   child.b.minisurround_config = { custom_surroundings = { ['<'] = { output = { left = '>', right = '<' } } } }
@@ -880,29 +878,25 @@ T['Delete surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set({
   end,
 })
 
-T['Delete surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minisurround_silence = true
-    child.set_size(10, 20)
+T['Delete surrounding']['respects `config.silent`'] = function()
+  child.lua('MiniSurround.config.silent = true')
+  child.set_size(10, 20)
 
-    child.o.timeoutlen = 50
-    local total_wait_time = 1000 + child.o.timeoutlen
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
 
-    set_lines({ '<aaa>' })
-    set_cursor(1, 1)
+  set_lines({ '<aaa>' })
+  set_cursor(1, 1)
 
-    -- It should not show helper message after one idle second
-    type_keys('sd')
-    sleep(total_wait_time + 15)
-    child.expect_screenshot()
+  -- It should not show helper message after one idle second
+  type_keys('sd')
+  sleep(total_wait_time + 15)
+  child.expect_screenshot()
 
-    -- It should not show message about "No surrounding found"
-    type_keys(')')
-    child.expect_screenshot()
-  end,
-})
+  -- It should not show message about "No surrounding found"
+  type_keys(')')
+  child.expect_screenshot()
+end
 
 T['Delete surrounding']['respects `vim.b.minisurround_config`'] = function()
   child.b.minisurround_config = { custom_surroundings = { ['<'] = { input = { '>().-()<' } } } }
@@ -1137,29 +1131,25 @@ T['Replace surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_set(
   end,
 })
 
-T['Replace surrounding']['respects `vim.{g,b}.minisurround_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minisurround_silence = true
-    child.set_size(10, 20)
+T['Replace surrounding']['respects `config.silent`'] = function()
+  child.lua('MiniSurround.config.silent = true')
+  child.set_size(10, 20)
 
-    child.o.timeoutlen = 50
-    local total_wait_time = 1000 + child.o.timeoutlen
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
 
-    set_lines({ '<aaa>' })
-    set_cursor(1, 1)
+  set_lines({ '<aaa>' })
+  set_cursor(1, 1)
 
-    -- It should not show helper message after one idle second
-    type_keys('sr')
-    sleep(total_wait_time + 15)
-    child.expect_screenshot()
+  -- It should not show helper message after one idle second
+  type_keys('sr')
+  sleep(total_wait_time + 15)
+  child.expect_screenshot()
 
-    -- It should not show message about "No surrounding found"
-    type_keys(')')
-    child.expect_screenshot()
-  end,
-})
+  -- It should not show message about "No surrounding found"
+  type_keys(')')
+  child.expect_screenshot()
+end
 
 T['Replace surrounding']['respects `vim.b.minisurround_config`'] = function()
   child.b.minisurround_config = { custom_surroundings = { ['<'] = { output = { left = '>', right = '<' } } } }
