@@ -60,6 +60,8 @@
 --- `vim.b.minijump2d_config` which should have same structure as
 --- `MiniJump2d.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Example usage~
 ---
 --- - Modify default jumping to use only current window at or after cursor line: >
@@ -118,11 +120,6 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minijump2d_silence`
---- (globally) or `vim.b.minijump2d_silence` (for a buffer) to `true`.
 
 -- Module definition ==========================================================
 local MiniJump2d = {}
@@ -259,6 +256,9 @@ MiniJump2d.config = {
   mappings = {
     start_jumping = '<CR>',
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -600,6 +600,7 @@ H.setup_config = function(config)
     allowed_windows = { config.allowed_windows, 'table' },
     hooks = { config.hooks, 'table' },
     mappings = { config.mappings, 'table' },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -632,7 +633,18 @@ end
 
 H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end
 
-H.is_silenced = function() return vim.g.minijump2d_silence == true or vim.b.minijump2d_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minijump2d_silence == true or vim.b.minijump2d_silence == true then
+    vim.notify_once(
+      "(mini.jump2d) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniJump2d.config, vim.b.minijump2d_config or {}, config or {})

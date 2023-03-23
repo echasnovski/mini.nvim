@@ -129,6 +129,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('allowed_windows', { current = true, not_current = true })
   expect_config('hooks', { before_start = nil, after_jump = nil })
   expect_config('mappings', { start_jumping = '<CR>' })
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -161,6 +162,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ hooks = { after_jump = 1 } }, 'hooks.after_jump', 'function')
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { start_jumping = 1 } }, 'mappings.start_jumping', 'string')
+  expect_config_error({ silent = 'a' }, 'silent', 'boolean')
 end
 
 T['setup()']['applies `config.mappings`'] = function()
@@ -697,20 +699,16 @@ T['start()']['respects `vim.{g,b}.minijump2d_disable`'] = new_set({
   end,
 })
 
-T['start()']['respects `vim.{g,b}.minijump2d_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minijump2d_silence = true
-    child.set_size(10, 20)
+T['start()']['respects `config.silent`'] = function()
+  child.lua('MiniJump2d.config.silent = true')
+  child.set_size(10, 20)
 
-    start()
-    sleep(1000 + 15)
+  start()
+  sleep(1000 + 15)
 
-    -- Should not show helper message
-    child.expect_screenshot()
-  end,
-})
+  -- Should not show helper message
+  child.expect_screenshot()
+end
 
 T['stop()'] = new_set()
 

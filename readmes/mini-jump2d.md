@@ -177,6 +177,9 @@ Here are code snippets for some common installation methods (use only one):
   mappings = {
     start_jumping = '<CR>',
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

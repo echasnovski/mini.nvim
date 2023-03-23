@@ -60,6 +60,8 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minijump2d_config` which should have same structure as
 `MiniJump2d.config`. See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Example usage~
 
 - Modify default jumping to use only current window at or after cursor line: >
@@ -119,11 +121,6 @@ number of different scenarios and customization intentions, writing exact
 rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
 
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minijump2d_silence`
-(globally) or `vim.b.minijump2d_silence` (for a buffer) to `true`.
-
 ------------------------------------------------------------------------------
                                                             *MiniJump2d.setup()*
                           `MiniJump2d.setup`({config})
@@ -176,6 +173,9 @@ Default values:
     mappings = {
       start_jumping = '<CR>',
     },
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 # Options~
