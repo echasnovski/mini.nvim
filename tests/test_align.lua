@@ -106,6 +106,8 @@ T['setup()']['creates `config` field'] = function()
   expect_config('steps.justify', vim.NIL)
   expect_config('steps.pre_merge', {})
   expect_config('steps.merge', vim.NIL)
+
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -134,6 +136,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ steps = { justify = 1 } }, 'steps.justify', 'step')
   expect_config_error({ steps = { pre_merge = 1 } }, 'steps.pre_merge', 'array of steps')
   expect_config_error({ steps = { merge = 1 } }, 'steps.merge', 'step')
+  expect_config_error({ silent = 'a' }, 'silent', 'boolean')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
@@ -1445,22 +1448,18 @@ T['Align']['respects `vim.{g,b}.minialign_disable`'] = new_set({
   end,
 })
 
-T['Align']['respects `vim.{g,b}.minialign_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.set_size(12, 20)
-    child[var_type].minialign_silence = true
+T['Align']['respects `config.silent`'] = function()
+  child.set_size(12, 20)
+  child.lua('MiniAlign.config.silent = true')
 
-    -- Should not prompt message after idle second
-    set_lines({ 'a_b', 'aa_b' })
-    set_cursor(1, 0)
-    type_keys('Vip', 'ga')
+  -- Should not prompt message after idle second
+  set_lines({ 'a_b', 'aa_b' })
+  set_cursor(1, 0)
+  type_keys('Vip', 'ga')
 
-    sleep(1000 + 15)
-    child.expect_screenshot()
-  end,
-})
+  sleep(1000 + 15)
+  child.expect_screenshot()
+end
 
 -- Test mostly "preview" part. Hope that other is covered in 'Align' tests.
 T['Align with preview'] =
@@ -1625,21 +1624,17 @@ T['Align with preview']['respects `vim.{g,b}.minialign_disable`'] = new_set({
   end,
 })
 
-T['Align with preview']['respects `vim.{g,b}.minialign_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.set_size(12, 20)
-    child[var_type].minialign_silence = true
+T['Align with preview']['respects `config.silent`'] = function()
+  child.set_size(12, 20)
+  child.lua('MiniAlign.config.silent = true')
 
-    set_lines({ 'a_b_c', 'aaa_bbb_ccc' })
-    set_cursor(1, 0)
-    type_keys('V', 'j', 'gA')
+  set_lines({ 'a_b_c', 'aaa_bbb_ccc' })
+  set_cursor(1, 0)
+  type_keys('V', 'j', 'gA')
 
-    -- Should not show helper message
-    child.expect_screenshot()
-  end,
-})
+  -- Should not show helper message
+  child.expect_screenshot()
+end
 
 local init_preview_align = function(lines, keys)
   child.ensure_normal_mode()

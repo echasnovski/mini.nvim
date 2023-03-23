@@ -52,6 +52,8 @@
 --- to buffer inside `vim.b.minialign_config` which should have same structure
 --- as `MiniAlign.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Comparisons~
 ---
 --- - 'junegunn/vim-easy-align':
@@ -91,11 +93,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minialign_silence`
---- (globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
 
 --- Glossary
 ---
@@ -646,6 +643,9 @@ MiniAlign.config = {
     pre_merge = {},
     merge = nil,
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -1336,6 +1336,7 @@ H.setup_config = function(config)
     modifiers = { config.modifiers, H.is_valid_modifiers },
     steps = { config.steps, H.is_valid_steps },
     options = { config.options, 'table' },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -1360,7 +1361,18 @@ end
 
 H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minialign_disable == true end
 
-H.is_silenced = function() return vim.g.minialign_silence == true or vim.b.minialign_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minialign_silence == true or vim.b.minialign_silence == true then
+    vim.notify_once(
+      "(mini.align) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end

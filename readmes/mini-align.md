@@ -196,6 +196,9 @@ Here are code snippets for some common installation methods (use only one):
     pre_merge = {},
     merge = nil,
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

@@ -52,6 +52,8 @@ You can override runtime config settings (like `config.modifiers`) locally
 to buffer inside `vim.b.minialign_config` which should have same structure
 as `MiniAlign.config`. See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Comparisons~
 
 - 'junegunn/vim-easy-align':
@@ -91,11 +93,6 @@ To disable, set `vim.g.minialign_disable` (globally) or `vim.b.minialign_disable
 and customization intentions, writing exact rules for disabling module's
 functionality is left to user. See |mini.nvim-disabling-recipes| for common
 recipes.
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minialign_silence`
-(globally) or `vim.b.minialign_silence` (for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                             *MiniAlign-glossary*
@@ -473,6 +470,9 @@ Default values:
       pre_merge = {},
       merge = nil,
     },
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 # Options ~
