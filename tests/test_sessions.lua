@@ -475,21 +475,6 @@ T['read()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
   end,
 })
 
-T['read()']['respects `vim.{g,b}.minisessions_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    reload_module({ autowrite = false, directory = 'tests/dir-sessions/global', verbose = { read = true } })
-    child[var_type].minisessions_silence = true
-
-    -- Should not give message about read session although `verbose` is true
-    child.lua([[MiniSessions.read('session1')]])
-    validate_session_loaded('global/session1')
-
-    eq(get_latest_message(), '')
-  end,
-})
-
 T['write()'] = new_set()
 
 T['write()']['works'] = function()
@@ -669,24 +654,6 @@ T['write()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
   end,
 })
 
-T['write()']['respects `vim.{g,b}.minisessions_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.fn.mkdir(empty_dir_path)
-    reload_module({ directory = empty_dir_path, verbose = { write = true } })
-
-    child[var_type].minisessions_silence = true
-
-    -- Should not give message about read session although `verbose` is true
-    child.lua([[MiniSessions.write('session-written')]])
-    local path = make_path(empty_dir_path, 'session-written')
-    eq(#child.fn.readfile(path) > 0, true)
-
-    eq(get_latest_message(), '')
-  end,
-})
-
 T['delete()'] = new_set()
 
 T['delete()']['works'] = function()
@@ -853,25 +820,6 @@ T['delete()']['respects `vim.{g,b}.minisessions_disable`'] = new_set({
     if child.fn.filereadable(path) == 0 then populate_sessions() end
     child.lua([[MiniSessions.delete('session_a')]])
     eq(child.fn.filereadable(path), 1)
-  end,
-})
-
-T['delete()']['respects `vim.{g,b}.minisessions_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    local session_dir = populate_sessions()
-    reload_module({ directory = session_dir, verbose = { delete = true } })
-    local path = make_path(session_dir, 'session_a')
-
-    child[var_type].minisessions_silence = true
-
-    -- Should not give message about read session although `verbose` is true
-    child.lua([[MiniSessions.delete('session_a')]])
-    path = make_path(session_dir, 'session_a')
-    eq(child.fn.filereadable(path), 0)
-
-    eq(get_latest_message(), '')
   end,
 })
 
