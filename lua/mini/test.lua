@@ -78,6 +78,8 @@
 --- `vim.b.minitest_config` which should have same structure as `MiniTest.config`.
 --- See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Comparisons~
 ---
 --- - Testing infrastructure from 'nvim-lua/plenary.nvim':
@@ -132,11 +134,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minitest_silence`
---- (globally) or `vim.b.minitest_silence` (for a buffer) to `true`.
 
 -- Module definition ==========================================================
 local MiniTest = {}
@@ -225,6 +222,9 @@ MiniTest.config = {
   -- Path (relative to current directory) to script which handles project
   -- specific test running
   script_path = 'scripts/minitest.lua',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 --stylua: ignore end
@@ -1616,6 +1616,7 @@ H.setup_config = function(config)
     collect = { config.collect, 'table' },
     execute = { config.execute, 'table' },
     script_path = { config.script_path, 'string' },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -1634,7 +1635,18 @@ H.apply_config = function(config) MiniTest.config = config end
 
 H.is_disabled = function() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 
-H.is_silenced = function() return vim.g.minitest_silence == true or vim.b.minitest_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minitest_silence == true or vim.b.minitest_silence == true then
+    vim.notify_once(
+      "(mini.test) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniTest.config, vim.b.minitest_config or {}, config or {}) end

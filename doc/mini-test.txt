@@ -78,6 +78,8 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minitest_config` which should have same structure as `MiniTest.config`.
 See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Comparisons~
 
 - Testing infrastructure from 'nvim-lua/plenary.nvim':
@@ -133,11 +135,6 @@ and customization intentions, writing exact rules for disabling module's
 functionality is left to user. See |mini.nvim-disabling-recipes| for common
 recipes.
 
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minitest_silence`
-(globally) or `vim.b.minitest_silence` (for a buffer) to `true`.
-
 ------------------------------------------------------------------------------
                                                               *MiniTest.setup()*
                            `MiniTest.setup`({config})
@@ -185,6 +182,9 @@ Default values:
     -- Path (relative to current directory) to script which handles project
     -- specific test running
     script_path = 'scripts/minitest.lua',
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 

@@ -175,6 +175,9 @@ Here are code snippets for some common installation methods (use only one):
   -- Path (relative to current directory) to script which handles project
   -- specific test running
   script_path = 'scripts/minitest.lua',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 ```
 

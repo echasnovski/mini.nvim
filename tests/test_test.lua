@@ -103,6 +103,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('execute.reporter', vim.NIL)
   expect_config('execute.stop_on_error', false)
   expect_config('script_path', 'scripts/minitest.lua')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -128,6 +129,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ execute = { reporter = 'a' } }, 'execute.reporter', 'function')
   expect_config_error({ execute = { stop_on_error = 'a' } }, 'execute.stop_on_error', 'boolean')
   expect_config_error({ script_path = 1 }, 'script_path', 'string')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
@@ -532,18 +534,14 @@ T['execute()']['handles no cases'] = function()
   eq(get_latest_message(), '(mini.test) No cases to execute.')
 end
 
-T['execute()']['respects `vim.{g,b}.minitest_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minitest_silence = true
-    child.lua('MiniTest.execute({})')
-    eq(child.lua_get('MiniTest.current.all_cases'), {})
+T['execute()']['respects `config.silent`'] = function()
+  child.lua('MiniTest.config.silent = true')
+  child.lua('MiniTest.execute({})')
+  eq(child.lua_get('MiniTest.current.all_cases'), {})
 
-    -- Should not throw message
-    eq(get_latest_message(), '')
-  end,
-})
+  -- Should not throw message
+  eq(get_latest_message(), '')
+end
 
 T['stop()'] = new_set()
 
