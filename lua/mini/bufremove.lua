@@ -21,6 +21,8 @@
 --- This module doesn't have runtime options, so using `vim.b.minibufremove_config`
 --- will have no effect here.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Notes~
 ---
 --- 1. Which buffer to show in window(s) after its current buffer is removed is
@@ -37,11 +39,6 @@
 --- number of different scenarios and customization intentions, writing exact
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minibufremove_silence`
---- (globally) or `vim.b.minibufremove_silence` (for a buffer) to `true`.
 
 ---@alias __bufremove_return boolean|nil Whether operation was successful. If `nil`, no operation was done.
 ---@alias __bufremove_buf_id number|nil Buffer identifier (see |bufnr()|) to use.
@@ -85,6 +82,9 @@ end
 MiniBufremove.config = {
   -- Whether to set Vim's settings for buffers (allow hidden buffers)
   set_vim_settings = true,
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -186,7 +186,10 @@ H.setup_config = function(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', H.default_config, config or {})
 
-  vim.validate({ set_vim_settings = { config.set_vim_settings, 'boolean' } })
+  vim.validate({
+    set_vim_settings = { config.set_vim_settings, 'boolean' },
+    silent = { config.silent, 'boolean' },
+  })
 
   return config
 end
@@ -201,7 +204,18 @@ end
 
 H.is_disabled = function() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
 
-H.is_silenced = function() return vim.g.minibufremove_silence == true or vim.b.minibufremove_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minibufremove_silence == true or vim.b.minibufremove_silence == true then
+    vim.notify_once(
+      "(mini.bufremove) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return MiniBufremove.config.silent
+end
 
 -- Removing implementation ----------------------------------------------------
 H.unshow_and_cmd = function(buf_id, force, cmd)

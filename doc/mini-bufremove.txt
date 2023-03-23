@@ -21,6 +21,8 @@ See |MiniBufremove.config| for `config` structure and default values.
 This module doesn't have runtime options, so using `vim.b.minibufremove_config`
 will have no effect here.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Notes~
 
 1. Which buffer to show in window(s) after its current buffer is removed is
@@ -37,11 +39,6 @@ To disable core functionality, set `vim.g.minibufremove_disable` (globally) or
 number of different scenarios and customization intentions, writing exact
 rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minibufremove_silence`
-(globally) or `vim.b.minibufremove_silence` (for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                          *MiniBufremove.setup()*
@@ -64,6 +61,9 @@ Default values:
   MiniBufremove.config = {
     -- Whether to set Vim's settings for buffers (allow hidden buffers)
     set_vim_settings = true,
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 
