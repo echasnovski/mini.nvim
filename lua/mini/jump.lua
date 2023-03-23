@@ -36,6 +36,8 @@
 --- `vim.b.minijump_config` which should have same structure as
 --- `MiniJump.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Highlight groups~
 ---
 --- * `MiniJump` - all possible cursor positions.
@@ -49,11 +51,6 @@
 --- different scenarios and customization intentions, writing exact rules for
 --- disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.minijump_silence`
---- (globally) or `vim.b.minijump_silence` (for a buffer) to `true`.
 
 ---@alias __jump_target string|nil The string to jump to.
 ---@alias __jump_backward boolean|nil Whether to jump backward.
@@ -128,6 +125,9 @@ MiniJump.config = {
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -339,6 +339,7 @@ H.setup_config = function(config)
   vim.validate({
     mappings = { config.mappings, 'table' },
     delay = { config.delay, 'table' },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -381,7 +382,18 @@ end
 
 H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
 
-H.is_silenced = function() return vim.g.minijump_silence == true or vim.b.minijump_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.minijump_silence == true or vim.b.minijump_silence == true then
+    vim.notify_once(
+      "(mini.jump) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniJump.config, vim.b.minijump_config or {}, config or {}) end

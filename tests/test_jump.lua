@@ -67,6 +67,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.forward_till', 't')
   expect_config('mappings.backward_till', 'T')
   expect_config('mappings.repeat_jump', ';')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -92,6 +93,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { forward_till = 1 } }, 'mappings.forward_till', 'string')
   expect_config_error({ mappings = { backward_till = 1 } }, 'mappings.backward_till', 'string')
   expect_config_error({ mappings = { repeat_jump = 1 } }, 'mappings.repeat_jump', 'string')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
@@ -680,23 +682,19 @@ T['Jumping with f/t/F/T']['respects `vim.{g,b}.minijump_disable`'] = new_set({
   end,
 })
 
-T['Jumping with f/t/F/T']['respects `vim.{g,b}.minijump_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].minijump_silence = true
-    child.set_size(10, 20)
+T['Jumping with f/t/F/T']['respects `config.silent`'] = function()
+  child.lua('MiniJump.config.silent = true')
+  child.set_size(10, 20)
 
-    -- Execute one time to test if 'needs help message' flag is set per call
-    set_lines({ '1e2e3e4e' })
-    set_cursor(1, 0)
-    type_keys('f')
-    sleep(1000 + 15)
+  -- Execute one time to test if 'needs help message' flag is set per call
+  set_lines({ '1e2e3e4e' })
+  set_cursor(1, 0)
+  type_keys('f')
+  sleep(1000 + 15)
 
-    -- Should not show helper message
-    child.expect_screenshot()
-  end,
-})
+  -- Should not show helper message
+  child.expect_screenshot()
+end
 
 T['Jumping with f/t/F/T']["respects 'ignorecase'"] = function()
   child.cmd('set ignorecase')

@@ -36,6 +36,8 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minijump_config` which should have same structure as
 `MiniJump.config`. See |mini.nvim-buffer-local-config| for more details.
 
+To stop module from showing non-error feedback, set `config.silent = true`.
+
 # Highlight groups~
 
 * `MiniJump` - all possible cursor positions.
@@ -49,11 +51,6 @@ To disable core functionality, set `vim.g.minijump_disable` (globally) or
 different scenarios and customization intentions, writing exact rules for
 disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
-
-# Silencing ~
-
-To stop module from giving non-error feedback, set `vim.g.minijump_silence`
-(globally) or `vim.b.minijump_silence` (for a buffer) to `true`.
 
 ------------------------------------------------------------------------------
                                                               *MiniJump.setup()*
@@ -92,6 +89,9 @@ Default values:
       -- Delay between jump and automatic stop if idle (no jump is done)
       idle_stop = 10000000,
     },
+
+    -- Whether to disable showing non-error feedback
+    silent = false,
   }
 <
 
