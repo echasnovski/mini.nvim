@@ -564,8 +564,15 @@ H.apply_mappings = function(config)
     -- Copy/paste with system clipboard
     map({ 'n', 'x' }, 'gy', '"+y', { desc = 'Copy to system clipboard' })
     map(  'n',        'gp', '"+p', { desc = 'Paste from system clipboard' })
-    -- - Paste in Visual with `P` to not copy selected text (`:h v_P`)
+
+    -- Paste in Visual with `P` to not copy selected text (`:h v_P`)
     map(  'x',        'gp', '"+P', { desc = 'Paste from system clipboard' })
+
+    -- Map ESC
+    map('i', 'jj', "ESC")
+    map('i', 'jk', "ESC")
+    map('i', 'kk', "ESC")
+    map('i', 'kj', "ESC")
 
     -- Reselect latest changed, put, or yanked text
     map('n', 'gV', '"`[" . strpart(getregtype(), 0, 1) . "`]"', { expr = true, desc = 'Visually select changed text' })
