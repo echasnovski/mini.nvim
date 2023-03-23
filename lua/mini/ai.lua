@@ -71,6 +71,8 @@
 --- locally to buffer inside `vim.b.miniai_config` which should have same structure
 --- as `MiniAi.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- To stop module from showing non-error feedback, set `config.silent = true`.
+---
 --- # Comparisons~
 ---
 --- - 'wellle/targets.vim':
@@ -108,11 +110,6 @@
 --- and customization intentions, writing exact rules for disabling module's
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
----
---- # Silencing ~
----
---- To stop module from giving non-error feedback, set `vim.g.miniai_silence`
---- (globally) or `vim.b.miniai_silence` (for a buffer) to `true`.
 
 --- Builtin textobjects~
 ---
@@ -522,6 +519,9 @@ MiniAi.config = {
   -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
   -- 'cover_or_nearest', 'next', 'prev', 'nearest'.
   search_method = 'cover_or_next',
+
+  -- Whether to disable showing non-error feedback
+  silent = false,
 }
 --minidoc_afterlines_end
 
@@ -1210,6 +1210,7 @@ H.setup_config = function(config)
     mappings = { config.mappings, 'table' },
     n_lines = { config.n_lines, 'number' },
     search_method = { config.search_method, H.is_search_method },
+    silent = { config.silent, 'boolean' },
   })
 
   vim.validate({
@@ -1264,7 +1265,18 @@ end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
 
-H.is_silenced = function() return vim.g.miniai_silence == true or vim.b.miniai_silence == true end
+-- TODO: Remove **before** releasing 0.8.0
+H.is_silenced = function()
+  if vim.g.miniai_silence == true or vim.b.miniai_silence == true then
+    vim.notify_once(
+      "(mini.ai) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
+        .. ' Use `config.silent` and buffer-local config.'
+    )
+    return true
+  end
+
+  return H.get_config().silent
+end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAi.config, vim.b.miniai_config or {}, config or {}) end

@@ -89,6 +89,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.goto_right', 'g]')
   expect_config('n_lines', 50)
   expect_config('search_method', 'cover_or_next')
+  expect_config('silent', false)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -117,6 +118,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { goto_right = 1 } }, 'mappings.goto_right', 'string')
   expect_config_error({ n_lines = 'a' }, 'n_lines', 'number')
   expect_config_error({ search_method = 1 }, 'search_method', 'one of')
+  expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
@@ -442,16 +444,12 @@ T['find_textobject()']['shows message if no region is found'] = function()
   )
 end
 
-T['find_textobject()']['respects `vim.{g,b}.miniai_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child[var_type].miniai_silence = true
+T['find_textobject()']['respects `config.silent`'] = function()
+  child.lua('MiniAi.config.silent = true')
 
-    validate_find1d('aa', 0, { 'a', ')' }, nil)
-    eq(get_latest_message(), '')
-  end,
-})
+  validate_find1d('aa', 0, { 'a', ')' }, nil)
+  eq(get_latest_message(), '')
+end
 
 T['find_textobject()']['respects `vim.b.miniai_config`'] = function()
   child.b.miniai_config = { search_method = 'cover' }
@@ -1736,29 +1734,25 @@ T['Textobject']['respects `vim.{g,b}.miniai_disable`'] = new_set({
   end,
 })
 
-T['Textobject']['respects `vim.{g,b}.miniai_silence`'] = new_set({
-  parametrize = { { 'g' }, { 'b' } },
-}, {
-  test = function(var_type)
-    child.set_size(5, 40)
-    child[var_type].miniai_silence = true
+T['Textobject']['respects `config.silent`'] = function()
+  child.set_size(5, 40)
+  child.lua('MiniAi.config.silent = true')
 
-    child.o.timeoutlen = 50
-    local total_wait_time = 1000 + child.o.timeoutlen
+  child.o.timeoutlen = 50
+  local total_wait_time = 1000 + child.o.timeoutlen
 
-    set_lines({ '(aaa)' })
-    set_cursor(1, 1)
+  set_lines({ '(aaa)' })
+  set_cursor(1, 1)
 
-    type_keys('v', 'a')
-    sleep(total_wait_time)
+  type_keys('v', 'a')
+  sleep(total_wait_time)
 
-    -- Should not show helper message
-    child.expect_screenshot()
+  -- Should not show helper message
+  child.expect_screenshot()
 
-    -- Finish user input for cleaner Neovim restart
-    type_keys(')')
-  end,
-})
+  -- Finish user input for cleaner Neovim restart
+  type_keys(')')
+end
 
 T['Textobject next/last'] = new_set()
 
