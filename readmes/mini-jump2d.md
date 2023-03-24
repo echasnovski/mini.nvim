@@ -156,6 +156,9 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Options for visual effects
   view = {
+    -- Whether to dim lines with at least one jump spot
+    dim = false,
+
     -- How many steps ahead to show. Set to big number to show all steps.
     n_steps_ahead = 0,
   },

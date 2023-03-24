@@ -15,7 +15,7 @@
 --- - Customizable (see |MiniJump2d.config|):
 ---     - Way of computing possible jump spots with opinionated default.
 ---     - Characters used to label jump spots during iterative filtering.
----     - Visual effects: how many steps ahead to show.
+---     - Visual effects: how many steps ahead to show; dim lines with spots.
 ---     - Action hooks to be executed at certain events during jump.
 ---     - Allowed windows: current and/or not current.
 ---     - Allowed lines: whether to process blank or folded lines, lines
@@ -114,6 +114,10 @@
 --- * `MiniJump2dSpotAhead` - highlighting of jump spot's future steps. By default
 ---   similar to `MiniJump2dSpot` but with less contrast and visibility.
 ---
+--- * `MiniJump2dDim` - highlighting of lines with at least one jump spot.
+---   Make it non-bright in order for jump spot labels to be more visible.
+---   By default linked to `Comment` highlight group.
+---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling~
@@ -174,6 +178,8 @@ MiniJump2d.setup = function(config)
   vim.cmd(main_hl_cmd)
   vim.cmd(ahead_hl_cmd)
 
+  vim.cmd('hi default link MiniJump2dDim Comment')
+
   local augroup_hl_cmd = string.format(
     [[augroup MiniJump2d
         au ColorScheme * %s
@@ -219,6 +225,9 @@ end
 --- jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
 --- Default is 0 to not show anything ahead as it reduces visual noise.
 ---
+--- Option `view.dim` contols whether to dim lines with at least one jump spot.
+--- Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
+---
 --- ## Allowed lines~
 ---
 --- Option `allowed_lines` controls which lines will be used for computing
@@ -250,6 +259,9 @@ MiniJump2d.config = {
 
   -- Options for visual effects
   view = {
+    -- Whether to dim lines with at least one jump spot
+    dim = false,
+
     -- How many steps ahead to show. Set to big number to show all steps.
     n_steps_ahead = 0,
   },
@@ -339,6 +351,8 @@ MiniJump2d.config = {
 ---       Default: "MiniJump2dSpot".
 ---     - <hl_group_ahead> - which highlight group to use for second step and later.
 ---       Default: "MiniJump2dSpotAhead".
+---     - <hl_group_dim> - which highlight group to use dimming used lines.
+---       Default: "MiniJump2dSpotDim".
 ---
 ---@usage - Start default jumping:
 ---   `MiniJump2d.start()`
@@ -372,6 +386,7 @@ MiniJump2d.start = function(opts)
   opts.spotter = opts.spotter or MiniJump2d.default_spotter
   opts.hl_group = opts.hl_group or 'MiniJump2dSpot'
   opts.hl_group_ahead = opts.hl_group_ahead or 'MiniJump2dSpotAhead'
+  opts.hl_group_dim = opts.hl_group_dim or 'MiniJump2dDim'
 
   local spots = H.spots_compute(opts)
   local label_tbl = vim.split(opts.labels, '')
@@ -590,6 +605,7 @@ H.default_config = MiniJump2d.config
 
 -- Namespaces to be used withing module
 H.ns_id = {
+  dim = vim.api.nvim_create_namespace('MiniJump2dDim'),
   spots = vim.api.nvim_create_namespace('MiniJump2dSpots'),
   input = vim.api.nvim_create_namespace('MiniJump2dInput'),
 }
@@ -633,6 +649,7 @@ H.setup_config = function(config)
   })
 
   vim.validate({
+    ['view.dim'] = { config.view.dim, 'boolean' },
     ['view.n_steps_ahead'] = { config.view.n_steps_ahead, 'number' },
 
     ['allowed_lines.blank'] = { config.allowed_lines.blank, 'boolean' },
@@ -765,6 +782,10 @@ H.spots_show = function(spots, opts)
     return
   end
 
+  local set_extmark = vim.api.nvim_buf_set_extmark
+
+  -- Add extmark with proper virtual text to jump spots
+  local dim_buf_lines = {}
   for _, extmark in ipairs(H.spots_to_extmarks(spots, opts)) do
     local extmark_opts = {
       hl_mode = 'combine',
@@ -773,7 +794,24 @@ H.spots_show = function(spots, opts)
       virt_text = extmark.virt_text,
       virt_text_pos = 'overlay',
     }
-    pcall(vim.api.nvim_buf_set_extmark, extmark.buf_id, H.ns_id.spots, extmark.line, extmark.col, extmark_opts)
+    local buf_id, line = extmark.buf_id, extmark.line
+    pcall(set_extmark, buf_id, H.ns_id.spots, line, extmark.col, extmark_opts)
+
+    -- Register lines to dim
+    local lines = dim_buf_lines[buf_id] or {}
+    lines[line] = true
+    dim_buf_lines[buf_id] = lines
+  end
+
+  -- Possibly dim used lines
+  if opts.view.dim then
+    local extmark_opts = { end_col = 0, hl_eol = true, hl_group = opts.hl_group_dim, priority = 999 }
+    for buf_id, lines in pairs(dim_buf_lines) do
+      for _, l_num in ipairs(vim.tbl_keys(lines)) do
+        extmark_opts.end_line = l_num + 1
+        pcall(set_extmark, buf_id, H.ns_id.dim, l_num, 0, extmark_opts)
+      end
+    end
   end
 
   -- Need to redraw in Operator-pending mode, because otherwise extmarks won't
@@ -792,6 +830,7 @@ H.spots_unshow = function(spots)
 
   for _, buf_id in ipairs(vim.tbl_keys(buf_ids)) do
     pcall(vim.api.nvim_buf_clear_namespace, buf_id, H.ns_id.spots, 0, -1)
+    pcall(vim.api.nvim_buf_clear_namespace, buf_id, H.ns_id.dim, 0, -1)
   end
 end
 

@@ -15,7 +15,7 @@ Features:
 - Customizable (see |MiniJump2d.config|):
     - Way of computing possible jump spots with opinionated default.
     - Characters used to label jump spots during iterative filtering.
-    - Visual effects: how many steps ahead to show.
+    - Visual effects: how many steps ahead to show; dim lines with spots.
     - Action hooks to be executed at certain events during jump.
     - Allowed windows: current and/or not current.
     - Allowed lines: whether to process blank or folded lines, lines
@@ -114,6 +114,10 @@ To stop module from showing non-error feedback, set `config.silent = true`.
 * `MiniJump2dSpotAhead` - highlighting of jump spot's future steps. By default
   similar to `MiniJump2dSpot` but with less contrast and visibility.
 
+* `MiniJump2dDim` - highlighting of lines with at least one jump spot.
+  Make it non-bright in order for jump spot labels to be more visible.
+  By default linked to `Comment` highlight group.
+
 To change any highlight group, modify it directly with |:highlight|.
 
 # Disabling~
@@ -153,6 +157,9 @@ Default values:
 
     -- Options for visual effects
     view = {
+      -- Whether to dim lines with at least one jump spot
+      dim = false,
+
       -- How many steps ahead to show. Set to big number to show all steps.
       n_steps_ahead = 0,
     },
@@ -216,6 +223,9 @@ different (less visible) highlight group ("MiniJump2dSpotAhead"). Usually
 it is a good idea to use this with a spotter which doesn't result into many
 jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
 Default is 0 to not show anything ahead as it reduces visual noise.
+
+Option `view.dim` contols whether to dim lines with at least one jump spot.
+Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
 
 ## Allowed lines~
 
@@ -295,6 +305,8 @@ Parameters~
       Default: "MiniJump2dSpot".
     - <hl_group_ahead> - which highlight group to use for second step and later.
       Default: "MiniJump2dSpotAhead".
+    - <hl_group_dim> - which highlight group to use dimming used lines.
+      Default: "MiniJump2dSpotDim".
 
 Usage~
 - Start default jumping:
