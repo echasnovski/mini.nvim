@@ -265,6 +265,13 @@ T['start()']['works in Operator-pending mode'] = function()
   child.expect_screenshot()
 end
 
+T['start()']['highlights unique labels with different highlight group'] = function()
+  child.cmd('hi MiniJump2dSpotUnique guifg=Green')
+  start({ labels = 'jk' })
+  type_keys('j')
+  child.expect_screenshot()
+end
+
 T['start()']['uses only visible lines'] = function()
   set_lines({ '1xxx', '2xxx', '3xxx', '4xxx' })
 
@@ -708,17 +715,9 @@ end
 
 T['start()']['does not call `hook.after_jump` on jump cancel'] = new_set({
   parametrize = {
-    --stylua: ignore start
-    {
-      function() child.lua('MiniJump2d.stop()') end,
-    },
-    {
-      function() type_keys('<Esc>') end,
-    },
-    {
-      function() type_keys('<C-c>') end,
-    },
-    --stylua: ignore end
+    { function() child.lua('MiniJump2d.stop()') end },
+    { function() type_keys('<Esc>') end },
+    { function() type_keys('<C-c>') end },
   },
 }, {
   test = function(cancel_action)
@@ -750,13 +749,13 @@ local validate_hl_group = function(hl_group, hl_group_ahead)
   eq(all_correct_ahead, true)
 end
 
-T['start()']['uses `MiniJump2dSpot` highlight group by default'] = function()
-  start()
+T['start()']['uses `MiniJump2dSpot` highlight group for next step by default'] = function()
+  start({ labels = 'jk' })
   validate_hl_group('MiniJump2dSpot')
 end
 
 T['start()']['respects `opts.hl_group`'] = function()
-  start({ hl_group = 'Search' })
+  start({ labels = 'jk', hl_group = 'Search' })
   validate_hl_group('Search')
 end
 
@@ -768,6 +767,16 @@ end
 T['start()']['respects `opts.hl_group_ahead`'] = function()
   start({ labels = 'jk', view = { n_steps_ahead = 1 }, hl_group_ahead = 'Search' })
   validate_hl_group('MiniJump2dSpot', 'Search')
+end
+
+T['start()']['uses `MiniJump2dSpotUnique` highlight group for spots with unique next step'] = function()
+  start()
+  validate_hl_group('MiniJump2dSpotUnique')
+end
+
+T['start()']['respects `opts.hl_group_unique`'] = function()
+  start({ hl_group_unique = 'Search' })
+  validate_hl_group('Search')
 end
 
 T['start()']['uses `MiniJump2dDim` highlight group by default'] = function()

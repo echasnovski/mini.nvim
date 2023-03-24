@@ -35,6 +35,7 @@ Introduction of a new module.
 
 - FEATURE: Add `view.n_steps_ahead` option which controls how many steps ahead to show. Appearance is controlled by new `MiniJump2dSpotAhead` highlight group.
 - FEATURE: Add `view.dim` option which controls whether to dim lines with at least one jump spot. Appearance is controlled by new `MiniJump2dDim` highlight group.
+- FEATURE: Add `MiniJump2dSpotUnique` highlight group to be used for spots with unique label for next step.
 
 ## mini.pairs
 

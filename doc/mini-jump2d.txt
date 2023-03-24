@@ -101,7 +101,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
 
 # Highlight groups~
 
-* `MiniJump2dSpot` - highlighting of jump spot's first step. By default it
+* `MiniJump2dSpot` - highlighting of jump spot's next step. By default it
   uses label with highest contrast while not being too visually demanding:
   white on black for dark 'background', black on white for light. If it
   doesn't suit your liking, try couple of these alternatives (or choose
@@ -110,6 +110,9 @@ To stop module from showing non-error feedback, set `config.silent = true`.
       colorful while being visible in any colorscheme).
     - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
     - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+
+* `MiniJump2dSpotUnique` - highlighting of jump spot's next step if it has
+  unique label. By default links to `MiniJump2dSpot`.
 
 * `MiniJump2dSpotAhead` - highlighting of jump spot's future steps. By default
   similar to `MiniJump2dSpot` but with less contrast and visibility.

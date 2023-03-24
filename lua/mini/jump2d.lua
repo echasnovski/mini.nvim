@@ -101,7 +101,7 @@
 ---
 --- # Highlight groups~
 ---
---- * `MiniJump2dSpot` - highlighting of jump spot's first step. By default it
+--- * `MiniJump2dSpot` - highlighting of jump spot's next step. By default it
 ---   uses label with highest contrast while not being too visually demanding:
 ---   white on black for dark 'background', black on white for light. If it
 ---   doesn't suit your liking, try couple of these alternatives (or choose
@@ -110,6 +110,9 @@
 ---       colorful while being visible in any colorscheme).
 ---     - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
 ---     - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+---
+--- * `MiniJump2dSpotUnique` - highlighting of jump spot's next step if it has
+---   unique label. By default links to `MiniJump2dSpot`.
 ---
 --- * `MiniJump2dSpotAhead` - highlighting of jump spot's future steps. By default
 ---   similar to `MiniJump2dSpot` but with less contrast and visibility.
@@ -169,15 +172,18 @@ MiniJump2d.setup = function(config)
   end
 
   -- Create highlighting
-  local main_hl_cmd = 'hi default MiniJump2dSpot guifg=white guibg=black gui=bold,nocombine'
-  local ahead_hl_cmd = 'hi default MiniJump2dSpotAhead guifg=grey guibg=black gui=nocombine'
-  if vim.o.background == 'light' then
-    main_hl_cmd = 'hi default MiniJump2dSpot guifg=black guibg=white gui=bold,nocombine'
-    ahead_hl_cmd = 'hi default MiniJump2dSpotAhead guifg=grey guibg=white gui=nocombine'
-  end
+  local is_light_bg = vim.o.background == 'light'
+  local bg_color = is_light_bg and 'white' or 'black'
+  local fg_color = is_light_bg and 'black' or 'white'
+
+  local main_hl_cmd =
+    string.format('hi default MiniJump2dSpot guifg=%s guibg=%s gui=bold,nocombine', fg_color, bg_color)
   vim.cmd(main_hl_cmd)
+
+  local ahead_hl_cmd = string.format('hi default MiniJump2dSpotAhead guifg=grey guibg=%s gui=nocombine', bg_color)
   vim.cmd(ahead_hl_cmd)
 
+  vim.cmd('hi default link MiniJump2dSpotUnique MiniJump2dSpot')
   vim.cmd('hi default link MiniJump2dDim Comment')
 
   local augroup_hl_cmd = string.format(
@@ -386,6 +392,7 @@ MiniJump2d.start = function(opts)
   opts.spotter = opts.spotter or MiniJump2d.default_spotter
   opts.hl_group = opts.hl_group or 'MiniJump2dSpot'
   opts.hl_group_ahead = opts.hl_group_ahead or 'MiniJump2dSpotAhead'
+  opts.hl_group_unique = opts.hl_group_unique or 'MiniJump2dSpotUnique'
   opts.hl_group_dim = opts.hl_group_dim or 'MiniJump2dDim'
 
   local spots = H.spots_compute(opts)
@@ -834,21 +841,36 @@ H.spots_unshow = function(spots)
   end
 end
 
---- Convert consecutive spots into single extmark
+--- Convert consecutive spot labels into single extmark
 ---
 --- This considerably increases performance in case of many spots.
 ---@private
 H.spots_to_extmarks = function(spots, opts)
   if #spots == 0 then return {} end
 
-  local hl_group, hl_group_ahead = opts.hl_group, opts.hl_group_ahead
+  local hl_group, hl_group_ahead, hl_group_unique = opts.hl_group, opts.hl_group_ahead, opts.hl_group_unique
 
+  -- Compute counts for first step in order to distinguish which highlight
+  -- group to use: `hl_group` or `hl_group_unique`
+  local first_step_counts = {}
+  for _, s in ipairs(spots) do
+    local cur_first_step = s.steps[1]
+    local cur_count = first_step_counts[cur_first_step] or 0
+    first_step_counts[cur_first_step] = cur_count + 1
+  end
+
+  -- Define how steps for single spot are added to virtual text
   local append_to_virt_text = function(virt_text_arr, steps, n_steps_to_show)
-    table.insert(virt_text_arr, { steps[1], hl_group })
+    -- Use special group if current first step is unique
+    local first_hl_group = first_step_counts[steps[1]] == 1 and hl_group_unique or hl_group
+    table.insert(virt_text_arr, { steps[1], first_hl_group })
+
+    -- Add ahead steps only if they are present
     local ahead_label = table.concat(steps):sub(2, n_steps_to_show)
     if ahead_label ~= '' then table.insert(virt_text_arr, { ahead_label, hl_group_ahead }) end
   end
 
+  -- Convert all spots to array of extmarks
   local res = {}
   local buf_id, line, col, virt_text = spots[1].buf_id, spots[1].line - 1, spots[1].column - 1, {}
 
