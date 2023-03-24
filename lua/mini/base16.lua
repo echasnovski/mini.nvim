@@ -643,7 +643,10 @@ H.apply_palette = function(palette, use_cterm)
 
     hi('MiniJump', {link='SpellRare'})
 
-    hi('MiniJump2dSpot', {fg=p.base07, bg=p.base01, attr='bold,nocombine', sp=nil})
+    hi('MiniJump2dDim',        {link='Comment'})
+    hi('MiniJump2dSpot',       {fg=p.base07, bg=p.base01, attr='bold,nocombine', sp=nil})
+    hi('MiniJump2dSpotAhead',  {fg=p.base06, bg=p.base00, attr='nocombine',      sp=nil})
+    hi('MiniJump2dSpotUnique', {link='MiniJump2dSpot'})
 
     hi('MiniMapNormal',      {fg=p.base05, bg=p.base01, attr=nil, sp=nil})
     hi('MiniMapSymbolCount', {fg=p.base0C, bg=nil,      attr=nil, sp=nil})
