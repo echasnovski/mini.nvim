@@ -122,6 +122,7 @@ T['setup()']['creates `config` field'] = function()
 
   expect_config('spotter', vim.NIL)
   expect_config('labels', 'abcdefghijklmnopqrstuvwxyz')
+  expect_config('view', { n_steps_ahead = 0 })
   expect_config(
     'allowed_lines',
     { blank = true, cursor_before = true, cursor_at = true, cursor_after = true, fold = true }
@@ -148,6 +149,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error('a', 'config', 'table')
   expect_config_error({ spotter = 'a' }, 'spotter', 'function')
   expect_config_error({ labels = 1 }, 'labels', 'string')
+  expect_config_error({ view = 1 }, 'view', 'table')
+  expect_config_error({ view = { n_steps_ahead = 'a' } }, 'view.n_steps_ahead', 'number')
   expect_config_error({ allowed_lines = 'a' }, 'allowed_lines', 'table')
   expect_config_error({ allowed_lines = { blank = 1 } }, 'allowed_lines.blank', 'boolean')
   expect_config_error({ allowed_lines = { cursor_before = 1 } }, 'allowed_lines.cursor_before', 'boolean')
@@ -488,6 +491,53 @@ T['start()']['respects `labels`'] = function()
   child.expect_screenshot()
 end
 
+T['start()']['respects `view.n_steps_ahead`'] = function()
+  -- In argument
+  start({ labels = 'jk', view = { n_steps_ahead = 1 } })
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+
+  type_keys('k')
+  eq(get_cursor(), { 1, 3 })
+
+  -- In global config
+  child.lua('MiniJump2d.config.view.n_steps_ahead = 2')
+  start({ labels = 'jk' })
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+end
+
+T['start()']['handles very big `view.n_steps_ahead`'] = function()
+  start({ labels = 'jk', view = { n_steps_ahead = math.huge } })
+  child.expect_screenshot()
+  child.lua('MiniJump2d.stop()')
+
+  start({ labels = 'hjkl', view = { n_steps_ahead = math.huge } })
+  child.expect_screenshot()
+end
+
+T['start()']['handles overlapping multi-step labels'] = function()
+  child.lua([[MiniJump2d.config.spotter = MiniJump2d.gen_pattern_spotter('.')]])
+  start({ labels = 'jk', view = { n_steps_ahead = 2 } })
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+
+  type_keys('j')
+  child.expect_screenshot()
+end
+
 T['start()']['respects `allowed_lines.blank`'] = function()
   start({ allowed_lines = { blank = false } })
   child.expect_screenshot()
@@ -665,16 +715,19 @@ T['start()']['does not call `hook.after_jump` on jump cancel'] = new_set({
   end,
 })
 
-local validate_hl_group = function(hl_group)
+local validate_hl_group = function(hl_group, hl_group_ahead)
   local ns_id = child.api.nvim_get_namespaces()['MiniJump2dSpots']
   local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
 
-  local all_correct_hl_group = true
+  local all_correct, all_correct_ahead = true, true
   for _, e_mark in ipairs(extmarks) do
-    if e_mark[4].virt_text[1][2] ~= hl_group then all_correct_hl_group = false end
+    local virt_text = e_mark[4].virt_text
+    if virt_text[1][2] ~= hl_group then all_correct = false end
+    if virt_text[2] ~= nil and virt_text[2][2] ~= hl_group_ahead then all_correct_ahead = false end
   end
 
-  eq(all_correct_hl_group, true)
+  eq(all_correct, true)
+  eq(all_correct_ahead, true)
 end
 
 T['start()']['uses `MiniJump2dSpot` highlight group by default'] = function()
@@ -685,6 +738,16 @@ end
 T['start()']['respects `opts.hl_group`'] = function()
   start({ hl_group = 'Search' })
   validate_hl_group('Search')
+end
+
+T['start()']['uses `MiniJump2dSpotAhead` highlight group by default'] = function()
+  start({ labels = 'jk', view = { n_steps_ahead = 1 } })
+  validate_hl_group('MiniJump2dSpot', 'MiniJump2dSpotAhead')
+end
+
+T['start()']['respects `opts.hl_group_ahead`'] = function()
+  start({ labels = 'jk', view = { n_steps_ahead = 1 }, hl_group_ahead = 'Search' })
+  validate_hl_group('MiniJump2dSpot', 'Search')
 end
 
 T['start()']['respects `vim.{g,b}.minijump2d_disable`'] = new_set({

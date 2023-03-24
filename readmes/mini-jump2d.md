@@ -24,6 +24,8 @@ If you want to help this project grow but don't know where to start, check out [
 
 https://user-images.githubusercontent.com/24854248/173044834-b7d428f5-1f5c-4ab5-8563-2c5b7abd3e10.mp4
 
+<!-- TODO: Update demo to show `config.view` features -->
+
 ## Features
 
 - Make jump by iterative filtering of possible, equally considered jump spots until there is only one. Filtering is done by typing a label character that is visualized at jump spot.
@@ -151,6 +153,12 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Characters used for labels of jump spots (in supplied order)
   labels = 'abcdefghijklmnopqrstuvwxyz',
+
+  -- Options for visual effects
+  view = {
+    -- How many steps ahead to show. Set to big number to show all steps.
+    n_steps_ahead = 0,
+  },
 
   -- Which lines are used for computing spots
   allowed_lines = {

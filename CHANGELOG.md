@@ -31,6 +31,10 @@ Introduction of a new module.
 - FEATURE: Add `MiniIndentscopeSymbolOff` highlight group to be used if scope's indent is not multiple of 'shiftwidth'.
 - FEATURE: Add `draw.priority` option to control priority of scope line draw.
 
+## mini.jump2d
+
+- FEATURE: Add `view.n_steps_ahead` option which controls how many steps ahead to show. Appearance is controlled by new `MiniJump2dSpotAhead` highlight group.
+
 ## mini.pairs
 
 - FEATURE: Both `MiniPairs.br()` and `MiniPairs.cr()` can now take a key which will be used instead of default `<BS>` and `<CR>`.
