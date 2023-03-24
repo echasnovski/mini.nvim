@@ -962,9 +962,11 @@ local validate_child_method = function(method, opts)
   if opts.prevent_hanging then
     child.type_keys('di')
     expect.error(method, opts.name .. '.*child process is blocked')
+    -- Unblock for faster test execution
+    child.type_keys('<Esc>')
   end
 
-  -- Validate ensuring running. NOTE: should be called last in case.
+  -- Validate ensuring running
   child.stop()
   expect.error(method, 'Child process is not running')
 end
@@ -1012,7 +1014,7 @@ T['child']['redirected method tables']['method'] = function(tbl_name, field_name
   validate_child_method(method, { name = tbl_name .. '.' .. field_name })
 end
 
-T['child']['redirected method tables']['field'] = function(tbl_name, field_name, _, _)
+T['child']['redirected method tables']['field'] = function(tbl_name, field_name, _)
   -- Test only on Neovim>=0.7 (not everything is present in earlier versions)
   if child.fn.has('nvim-0.7.0') == 0 then return end
 
