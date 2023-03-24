@@ -17,6 +17,43 @@ You can make contributions in the following ways:
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
 
+## Commit messages
+
+- Try to make commit message as concise as possible while giving enough information about nature of a change. Think about whether it will be easy to understand in one year time when browsing through commit history.
+- Use two part structure:
+    - First part is a change overview in present tense, preferably in single line under 80 characters. Should end with a period. Usually should be enough.
+
+      **If commit affects only one particular module (as it usually should), prepend with "(mini.\<module-name\>) ".** If commit ensures something for all modules but not necessary touches all of them, use "(all) ".
+
+    - Second part is optional and should contain details about the change after empty line and "Details:". Use bullet list with `-`.
+
+      Use "Resolves #xxx" as separate entry if this commit resolves issue or PR.
+
+- Use these prefixes after initial module name in described situations:
+    - "FEATURE:" - if change implements new feature (like option or function).
+    - "BREAKING:" - if change breaks current documented behavior.
+    - "BREAKING FEATURE:" - if change introduces new feature while breaking current documented behavior.
+    - "NEW MODULE:" - if change introduces new module (see 'MAINTAINING.md').
+
+- Use module's function and field names without module's name. Like `add()` and not `MiniSurround.add()`.
+
+Examples:
+
+```
+Fix typo in 'README.md'.
+```
+
+```
+(mini.animate) Update `cursor` to use virtual columns.
+
+Details:
+- Resolves #258.
+```
+
+```
+(mini.comment) FEATURE: add `options.pad_comment_leaders` option.
+```
+
 ## Generating help file
 
 If your contribution updates annotations used to generate help file, please regenerate it. You can make this with one of the following (assuming current directory being project root):
