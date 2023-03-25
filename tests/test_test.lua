@@ -1002,7 +1002,8 @@ T['child']['redirected method tables'] = new_set({
     { 'lsp', 'get_active_clients', {} },
     { 'mpack', 'encode', { { a = 1 } } },
     { 'spell', 'check', { 'thouht' } },
-    { 'treesitter', 'list_directives', {} },
+    -- The `treesitter` module is also redirected but there is no reliable way
+    -- to test it without installing parsers
   },
 })
 
