@@ -150,6 +150,7 @@ MiniAnimate.setup = function(config)
         au WinScrolled       * lua MiniAnimate.auto_resize(); MiniAnimate.auto_scroll()
         au BufEnter,WinEnter * lua vim.schedule(MiniAnimate.track_scroll_state)
         au CursorMoved       * lua vim.schedule(MiniAnimate.track_scroll_state_partial)
+        au CmdlineLeave      * lua MiniAnimate.on_cmdline_leave()
         au WinNew            * lua vim.schedule(MiniAnimate.auto_openclose)
         au WinClosed         * lua MiniAnimate.auto_openclose("close")
 
@@ -1250,6 +1251,17 @@ MiniAnimate.track_scroll_state_partial = function()
   if H.cache.scroll_is_active then return end
 
   H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') }
+end
+
+MiniAnimate.on_cmdline_leave = function()
+  local cmd_type = vim.fn.getcmdtype()
+  local is_insearch = vim.o.incsearch and (cmd_type == '/' or cmd_type == '?')
+  if not is_insearch then return end
+
+  -- Update scroll state so that there is no scroll animation after confirming
+  -- incremental search. Otherwise it leads to unnecessary animation from
+  -- initial scroll state to the one **already shown**.
+  MiniAnimate.track_scroll_state()
 end
 
 --- Automatically animate window resize

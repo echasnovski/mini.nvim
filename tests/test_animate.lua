@@ -1783,6 +1783,26 @@ T['Scroll']['does not automatically animate after buffer change'] = function()
   child.expect_screenshot()
 end
 
+T['Scroll']["does not automatically animate result of 'incsearch'"] = function()
+  child.o.incsearch = true
+
+  child.set_size(10, 25)
+
+  -- Should work for search with `/`
+  type_keys('/', 'oo', '<CR>')
+  child.expect_screenshot()
+  sleep(step_time + 10)
+  -- Should be the same
+  child.expect_screenshot()
+
+  -- Should work for search with `?`
+  type_keys('?', 'aa', '<CR>')
+  child.expect_screenshot()
+  sleep(step_time + 10)
+  -- Should be the same
+  child.expect_screenshot()
+end
+
 T['Scroll']['handles mappings with <Cmd><CR>'] = function()
   child.api.nvim_set_keymap('n', 'G', 'G<Cmd>lua _G.n = 0<CR>', {})
 
