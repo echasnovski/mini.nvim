@@ -1692,10 +1692,17 @@ H.get_layout_windows = function(layout)
 end
 
 H.apply_resize_state = function(state, full_view)
+  -- Set window sizes while ensuring that 'cmdheight' will not change. Can
+  -- happen if chaning height of window main row layout or increase terminal
+  -- height quickly (see #270)
+  local cache_cmdheight = vim.o.cmdheight
+
   for win_id, dims in pairs(state.sizes) do
     vim.api.nvim_win_set_height(win_id, dims.height)
     vim.api.nvim_win_set_width(win_id, dims.width)
   end
+
+  vim.o.cmdheight = cache_cmdheight
 
   -- Use `or {}` to allow states without `view` (mainly inside animation)
   for win_id, view in pairs(state.views or {}) do
