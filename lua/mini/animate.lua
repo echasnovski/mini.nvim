@@ -1555,7 +1555,7 @@ H.scroll_action = function(key, n, cursor_data)
   -- Cursor can only be set using byte column. To place it in the most correct
   -- virtual column, use tweaked version of `virtcol2col()`
   local col = H.virtcol2col(line, cursor_data.virtcol)
-  vim.api.nvim_win_set_cursor(0, { line, col - 1 })
+  pcall(vim.api.nvim_win_set_cursor, 0, { line, col - 1 })
 end
 
 H.start_scroll = function(start_state)
@@ -1712,7 +1712,7 @@ H.apply_resize_state = function(state, full_view)
 
       -- This triggers `CursorMoved` event, but nothing can be done
       -- (`noautocmd` is of no use, see https://github.com/vim/vim/issues/2084)
-      vim.api.nvim_win_set_cursor(win_id, { view.lnum, view.leftcol })
+      pcall(vim.api.nvim_win_set_cursor, win_id, { view.lnum, view.leftcol })
       vim.fn.winrestview({ topline = view.topline, leftcol = view.leftcol })
     end)
   end
