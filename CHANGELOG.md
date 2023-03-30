@@ -1,5 +1,7 @@
 # Version 0.8.0.9000
 
+- Stop official support of Neovim 0.6.
+
 # mini.base16
 
 - FEATURE: Add new integrations:

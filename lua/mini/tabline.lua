@@ -78,15 +78,6 @@ local H = {}
 ---
 ---@usage `require('mini.tabline').setup({})` (replace `{}` with your `config` table)
 MiniTabline.setup = function(config)
-  -- TODO: Remove after Neovim<=0.6 support is dropped
-  if vim.fn.has('nvim-0.7') == 0 then
-    vim.notify(
-      '(mini.tabline) Neovim<0.7 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after Neovim 0.9.0 release (module will not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniTabline = MiniTabline
 
