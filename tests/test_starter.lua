@@ -894,23 +894,50 @@ end
 T['sections']['recent_files()'] = new_set()
 
 T['sections']['recent_files()']['correctly identifies files from current directory'] = function()
-  child.fn.mkdir('tests/dir-starter/aaa')
-  child.fn.mkdir('tests/dir-starter/aaabbb')
+  local dir, dir_similar = 'tests/dir-starter/aaa', 'tests/dir-starter/aaabbb'
+  child.fn.mkdir(dir)
+  child.fn.mkdir(dir_similar)
   MiniTest.finally(function()
-    vim.fn.delete('tests/dir-starter/aaa', 'rf')
-    vim.fn.delete('tests/dir-starter/aaabbb', 'rf')
+    vim.fn.delete(dir, 'rf')
+    vim.fn.delete(dir_similar, 'rf')
   end)
 
   -- Make recent file with absolute path having current directory as substring
   -- but not inside current directory
-  child.fn.writefile({ '' }, 'tests/dir-starter/aaabbb/c')
-  child.v.oldfiles = { child.fn.fnamemodify('tests/dir-starter/aaabbb/c', ':p') }
-  child.cmd('cd tests/dir-starter/aaa')
+  local file = dir_similar .. '/file'
+  child.fn.writefile({ '' }, file)
+  child.v.oldfiles = { child.fn.fnamemodify(file, ':p') }
+  child.cmd('cd ' .. dir)
 
   -- Set up to show files only in current directory
   child.lua('MiniStarter.config.items = { MiniStarter.sections.recent_files(5, true, true) }')
   child.lua('MiniStarter.open()')
   -- "Recent files" section should be empty
+  child.expect_screenshot()
+end
+
+T['sections']['recent_files()']['respects files in subdirectories'] = function()
+  local dir = 'tests/dir-starter/aaa'
+  local dir_nested = 'tests/dir-starter/aaa/bbb'
+  child.fn.mkdir(dir)
+  child.fn.mkdir(dir_nested)
+  MiniTest.finally(function()
+    vim.fn.delete(dir, 'rf')
+    vim.fn.delete(dir_nested, 'rf')
+  end)
+
+  local file1 = dir .. '/file1'
+  child.fn.writefile({ '' }, file1)
+  local file2 = dir_nested .. '/file2'
+  child.fn.writefile({ '' }, file2)
+
+  child.v.oldfiles = { child.fn.fnamemodify(file1, ':p'), child.fn.fnamemodify(file2, ':p') }
+  child.cmd('cd ' .. dir)
+
+  -- Set up to show files only in current directory
+  child.lua('MiniStarter.config.items = { MiniStarter.sections.recent_files(5, true, true) }')
+  child.lua('MiniStarter.open()')
+  -- "Recent files" section should show both files
   child.expect_screenshot()
 end
 

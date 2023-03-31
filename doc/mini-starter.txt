@@ -370,7 +370,7 @@ Files are taken from |vim.v.oldfiles|.
 Parameters~
 {n} `(number|nil)` Number of returned items. Default: 5.
 {current_dir} `(boolean|nil)` Whether to return files only from current working
-  directory. Default: `false`.
+  directory and its subdirectories. Default: `false`.
 {show_path} `(boolean|nil)` Whether to append file name with its full path.
   Default: `true`.
 

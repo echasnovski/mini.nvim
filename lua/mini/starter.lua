@@ -522,7 +522,7 @@ end
 ---
 ---@param n number|nil Number of returned items. Default: 5.
 ---@param current_dir boolean|nil Whether to return files only from current working
----   directory. Default: `false`.
+---   directory and its subdirectories. Default: `false`.
 ---@param show_path boolean|nil Whether to append file name with its full path.
 ---   Default: `true`.
 ---
@@ -544,8 +544,9 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
 
     -- Possibly filter files from current directory
     if current_dir then
-      local cwd = vim.loop.cwd()
-      files = vim.tbl_filter(function(f) return vim.fn.fnamemodify(f, ':p:h') == cwd end, files)
+      local cwd_pattern = '^' .. vim.pesc(vim.fn.getcwd()) .. '%/'
+      -- Use only files from current directory and its subdirectories
+      files = vim.tbl_filter(function(f) return vim.fn.fnamemodify(f, ':p'):find(cwd_pattern) ~= nil end, files)
     end
 
     if #files == 0 then
