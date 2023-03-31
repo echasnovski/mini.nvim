@@ -660,17 +660,14 @@ MiniAi.gen_spec = {}
 ---     Default: `{ '%b()', '%b[]', '%b{}' }` (any `()`, `[]`, or `{}` can
 ---     enclose arguments).
 ---   - <separator> - separator pattern. Default: `','`.
----     Notes:
----       - To convert from previous `separators` option, paste all separators
----         into square brackets. Example: `{ ',', ';' }` -> `'[,;]'`.
----       - One of the practical usages of this option is to include whitespace
----         around character to be a part of separator. For example,
----         `'%s*,%s*'` will treat as separator not only ',', but its possible
----         surrounding whitespace. This has both positive and negative effects.
----         On one hand, `daa` executed over the first argument will delete
----         whitespace after first comma, leading to a more expected outcome.
----         On the other hand it is ambiguous which argument is picked when
----         cursor is over whitespace near the character separator.
+---     One of the practical usages of this option is to include whitespace
+---     around character to be a part of separator. For example, `'%s*,%s*'`
+---     will treat as separator not only ',', but its possible surrounding
+---     whitespace. This has both positive and negative effects. On one hand,
+---     `daa` executed over the first argument will delete whitespace after
+---     first comma, leading to a more expected outcome. On the other hand it
+---     is ambiguous which argument is picked when cursor is over whitespace
+---     near the character separator.
 ---   - <exclude_regions> - array with patterns for regions inside which
 ---     separators will be ignored.
 ---     Default: `{ '%b""', "%b''", '%b()', '%b[]', '%b{}' }` (separators
@@ -683,19 +680,6 @@ MiniAi.gen_spec.argument = function(opts)
   }, opts or {})
 
   local brackets, separator, exclude_regions = opts.brackets, opts.separator, opts.exclude_regions
-
-  -- TODO: Remove after certain time of soft deprecation period passes (along
-  -- with documentation note)
-  if opts.separators ~= nil then
-    vim.notify(
-      '(mini.ai) The `separators` option (plural) for `gen_spec.argument` is soft deprecated'
-        .. ' in favor of `separator` option (singular).'
-        .. ' The `separators` option will work for some time, but will eventually get removed.'
-        .. ' See `:h MiniAi.gen_spec.argument`.'
-    )
-    local separators_esc = vim.tbl_map(vim.pesc, opts.separators)
-    separator = '[' .. table.concat(separators_esc, '') .. ']'
-  end
 
   local res = {}
   -- Match brackets

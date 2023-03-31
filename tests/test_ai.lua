@@ -567,25 +567,6 @@ T['gen_spec']['argument()']['respects `opts.brackets`'] = function()
   validate_find1d('{aa, bb}', 0, { 'a', 'A' }, nil)
 end
 
--- TODO: remove after end of `opts.separators` soft deprecation period
-T['gen_spec']['argument()']['respects `opts.separators`'] = function()
-  child.o.cmdheight = 10
-  child.lua([[MiniAi.config.custom_textobjects = {
-    A = MiniAi.gen_spec.argument({ separators = { ';' } }),
-    B = MiniAi.gen_spec.argument({ separators = { ',', ';' } }),
-  }]])
-
-  expect.match(get_latest_message(), 'soft deprecated')
-
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 1 } }, { 2, 8 })
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'A', { n_times = 2 } }, { 8, 15 })
-
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 1 } }, { 2, 4 })
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 2 } }, { 4, 7 })
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 3 } }, { 8, 11 })
-  validate_find1d('(aa, bb; cc, dd)', 0, { 'a', 'B', { n_times = 4 } }, { 12, 15 })
-end
-
 T['gen_spec']['argument()']['respects `opts.separator`'] = function()
   child.lua([[MiniAi.config.custom_textobjects = {
     A = MiniAi.gen_spec.argument({ separator = ';' }),
