@@ -545,8 +545,7 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
     -- Possibly filter files from current directory
     if current_dir then
       local cwd = vim.loop.cwd()
-      local n_cwd = cwd:len()
-      files = vim.tbl_filter(function(f) return f:sub(1, n_cwd) == cwd end, files)
+      files = vim.tbl_filter(function(f) return vim.fn.fnamemodify(f, ':p:h') == cwd end, files)
     end
 
     if #files == 0 then

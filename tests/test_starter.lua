@@ -891,6 +891,29 @@ T['sections']['has correct items'] = function()
   eq(types, { builtin_actions = 'function', recent_files = 'function', sessions = 'function', telescope = 'function' })
 end
 
+T['sections']['recent_files()'] = new_set()
+
+T['sections']['recent_files()']['correctly identifies files from current directory'] = function()
+  child.fn.mkdir('tests/dir-starter/aaa')
+  child.fn.mkdir('tests/dir-starter/aaabbb')
+  MiniTest.finally(function()
+    vim.fn.delete('tests/dir-starter/aaa', 'rf')
+    vim.fn.delete('tests/dir-starter/aaabbb', 'rf')
+  end)
+
+  -- Make recent file with absolute path having current directory as substring
+  -- but not inside current directory
+  child.fn.writefile({ '' }, 'tests/dir-starter/aaabbb/c')
+  child.v.oldfiles = { child.fn.fnamemodify('tests/dir-starter/aaabbb/c', ':p') }
+  child.cmd('cd tests/dir-starter/aaa')
+
+  -- Set up to show files only in current directory
+  child.lua('MiniStarter.config.items = { MiniStarter.sections.recent_files(5, true, true) }')
+  child.lua('MiniStarter.open()')
+  -- "Recent files" section should be empty
+  child.expect_screenshot()
+end
+
 -- Work with query ------------------------------------------------------------
 T['set_query()'] = new_set({
   hooks = {
