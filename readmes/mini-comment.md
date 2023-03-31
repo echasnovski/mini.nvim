@@ -139,7 +139,7 @@ Here are code snippets for some common installation methods (use only one):
 {
   -- Options which control module behavior
   options = {
-    -- Whether to ignore blank lines when adding comment
+    -- Whether to ignore blank lines
     ignore_blank_line = false,
 
     -- Whether to recognize as comment only lines without indent

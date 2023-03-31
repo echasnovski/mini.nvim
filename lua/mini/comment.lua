@@ -83,7 +83,7 @@ end
 MiniComment.config = {
   -- Options which control module behavior
   options = {
-    -- Whether to ignore blank lines when adding comment
+    -- Whether to ignore blank lines
     ignore_blank_line = false,
 
     -- Whether to recognize as comment only lines without indent
@@ -202,7 +202,7 @@ MiniComment.toggle_lines = function(line_start, line_end)
 
   local comment_parts = H.make_comment_parts()
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
-  local indent, is_comment = H.get_lines_info(lines, comment_parts)
+  local indent, is_comment = H.get_lines_info(lines, comment_parts, H.get_config().options)
 
   local f
   if is_comment then
@@ -351,28 +351,29 @@ H.make_comment_check = function(comment_parts)
   return function(line) return line:find(regex) ~= nil end
 end
 
-H.get_lines_info = function(lines, comment_parts)
+H.get_lines_info = function(lines, comment_parts, options)
   local n_indent, n_indent_cur = math.huge, math.huge
   local indent, indent_cur
 
   local is_comment = true
   local comment_check = H.make_comment_check(comment_parts)
+  local ignore_blank_line = options.ignore_blank_line
 
   for _, l in pairs(lines) do
-    -- Update lines indent: minimum of all indents except empty lines
-    if n_indent > 0 then
-      _, n_indent_cur, indent_cur = l:find('^(%s*)')
-      -- Condition "current n-indent equals line length" detects empty line
-      if (n_indent_cur < n_indent) and (n_indent_cur < l:len()) then
-        -- NOTE: Copy of actual indent instead of recreating it with `n_indent`
-        -- allows to handle both tabs and spaces
-        n_indent = n_indent_cur
-        indent = indent_cur
-      end
+    -- Update lines indent: minimum of all indents except blank lines
+    _, n_indent_cur, indent_cur = l:find('^(%s*)')
+    local is_blank = n_indent_cur == l:len()
+
+    if n_indent_cur < n_indent and not is_blank then
+      -- NOTE: Copy of actual indent instead of recreating it with `n_indent`
+      -- allows to handle both tabs and spaces
+      n_indent = n_indent_cur
+      indent = indent_cur
     end
 
     -- Update comment info: lines are comment if every single line is comment
-    if is_comment then is_comment = comment_check(l) end
+    -- Ignore blank lines if corresponding option is set to `true`
+    if not (ignore_blank_line and is_blank) then is_comment = is_comment and comment_check(l) end
   end
 
   -- `indent` can still be `nil` in case all `lines` are empty

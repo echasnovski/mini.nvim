@@ -229,6 +229,10 @@ T['toggle_lines()']['respects `config.options.ignore_blank_line`'] = function()
   set_lines(lines)
   child.lua('MiniComment.toggle_lines(1, 5)')
   eq(get_lines(), { '  # aa', '', '  # aa', '  ', '  # aa' })
+
+  -- Should ignore blank lines when deciding comment/uncomment action
+  child.lua('MiniComment.toggle_lines(1, 5)')
+  eq(get_lines(), lines)
 end
 
 T['toggle_lines()']['respects `config.options.pad_comment_parts`'] = function()
