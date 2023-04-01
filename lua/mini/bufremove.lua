@@ -204,19 +204,6 @@ end
 
 H.is_disabled = function() return vim.g.minibufremove_disable == true or vim.b.minibufremove_disable == true end
 
--- TODO: Remove **before** releasing 0.8.0
-H.is_silenced = function()
-  if vim.g.minibufremove_silence == true or vim.b.minibufremove_silence == true then
-    vim.notify_once(
-      "(mini.bufremove) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
-        .. ' Use `config.silent` and buffer-local config.'
-    )
-    return true
-  end
-
-  return MiniBufremove.config.silent
-end
-
 -- Removing implementation ----------------------------------------------------
 H.unshow_and_cmd = function(buf_id, force, cmd)
   buf_id = H.normalize_buf_id(buf_id)
@@ -260,7 +247,7 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, is_important)
-  if H.is_silenced() then return end
+  if MiniBufremove.config.silent then return end
 
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg

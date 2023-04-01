@@ -434,19 +434,6 @@ H.apply_config = function(config)
   H.apply_autocommands(config)
 end
 
--- TODO: Remove **before** releasing 0.8.0
-H.is_silenced = function()
-  if vim.g.minibasics_silence == true or vim.b.minibasics_silence == true then
-    vim.notify_once(
-      "(mini.basics) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
-        .. ' Use `config.silent` and buffer-local config.'
-    )
-    return true
-  end
-
-  return MiniBasics.config.silent
-end
-
 -- Options --------------------------------------------------------------------
 --stylua: ignore
 H.apply_options = function(config)
@@ -608,7 +595,7 @@ H.apply_mappings = function(config)
   if type(toggle_prefix) == 'string' and toggle_prefix ~= '' then
     local map_toggle = function(lhs, rhs, desc) map('n', toggle_prefix .. lhs, rhs, { desc = desc }) end
 
-    if H.is_silenced() then
+    if config.silent then
       -- Toggle without feedback
       map_toggle('b', '<Cmd>lua vim.o.bg = vim.o.bg == "dark" and "light" or "dark"<CR>', "Toggle 'background'")
       map_toggle('c', '<Cmd>setlocal cursorline!<CR>',                                    "Toggle 'cursorline'")

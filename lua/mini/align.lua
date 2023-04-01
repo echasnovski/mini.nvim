@@ -1361,19 +1361,6 @@ end
 
 H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minialign_disable == true end
 
--- TODO: Remove **before** releasing 0.8.0
-H.is_silenced = function()
-  if vim.g.minialign_silence == true or vim.b.minialign_silence == true then
-    vim.notify_once(
-      "(mini.align) Vimscript variables for silencing 'mini.nvim' modules are deprecated."
-        .. ' Use `config.silent` and buffer-local config.'
-    )
-    return true
-  end
-
-  return H.get_config().silent
-end
-
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end
 
@@ -1946,7 +1933,7 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.echo = function(msg, add_to_history)
-  if H.is_silenced() then return end
+  if H.get_config().silent then return end
 
   -- Construct message chunks
   msg = type(msg) == 'string' and { { msg } } or msg
