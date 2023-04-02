@@ -1,4 +1,4 @@
-# Version 0.7.0.9000
+# Version 0.8.0
 
 - Add and implement design principle for silencing module by setting `config.silent = true`. It is now present in modules capable of showing non-error feedback:
     - mini.ai
