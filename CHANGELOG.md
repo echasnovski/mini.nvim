@@ -57,6 +57,7 @@ Introduction of a new module.
     - Deleting surrounding which looks like a result of linewise adding will act to revert it: delete lines with surrounding parts and dedent surrounded lines once.
     - Blockwise adding places surrounding parts on whole edges, not only start and end of selection.
 
+
 # Version 0.7.0
 
 - Start dual distribution. Every module is now distributed both as part of 'mini.nvim' library and as standalone plugin (in separate git repository).
@@ -91,6 +92,7 @@ Introduction of a new module.
 ## mini.move
 
 Introduction of new module.
+
 
 # Version 0.6.0
 
