@@ -50,6 +50,13 @@ Here are code snippets for some common installation methods:
 | Main   | `Plug 'echasnovski/mini.nvim'`                         |
 | Stable | `Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }` |
 
+- Manual: to try out mini.nvim (requires Neovim 0.9.0) while keeping your current config safe, use the `$NVIM_APPNAME` env variable:
+
+```sh
+git clone https://github.com/echasnovski/mini.nvim ~/.config/mini.nvim
+NVIM_APPNAME=mini.nvim nvim
+```
+
 - Every module is also distributed as a standalone Git repository. Check out module's information for more details.
 
 **Important**: don't forget to call module's `setup()` (if required) to enable its functionality.
