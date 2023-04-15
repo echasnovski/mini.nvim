@@ -14,6 +14,14 @@ local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
+local child_expect_screenshot = child.expect_screenshot
+child.expect_screenshot = function()
+  -- Test screenshots only on Neovim>=0.10 as they have slightly different
+  -- highlighting on earlier versions
+  if child.fn.has('nvim-0.10') == 0 then return true end
+  child_expect_screenshot()
+end
+
 -- Main function wrappers
 local map_open = function(opts) child.lua('MiniMap.open(...)', { opts }) end
 
