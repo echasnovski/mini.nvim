@@ -292,6 +292,18 @@ T['split()']['works inside comments'] = function()
   child.bo.comments = ':---,:--'
   validate_edit({ '-- (aaa)' }, { 1, 3 }, { '-- (', '-- \taaa', '-- )' }, { 1, 3 }, split)
   validate_edit({ '--- (aaa)' }, { 1, 4 }, { '--- (', '--- \taaa', '--- )' }, { 1, 4 }, split)
+
+  -- Respects `b` flag
+  child.bo.comments = 'b:*'
+  validate_edit({ '*(aaa)' }, { 1, 1 }, { '*(', '\taaa', ')' }, { 1, 1 }, split)
+  validate_edit({ '* (aaa)' }, { 1, 2 }, { '* (', '* \taaa', '* )' }, { 1, 2 }, split)
+  validate_edit({ '*\t(aaa)' }, { 1, 2 }, { '*\t(', '*\t\taaa', '*\t)' }, { 1, 2 }, split)
+
+  -- Respects `f` flag (ignores as comment leader)
+  child.bo.comments = 'f:-'
+  validate_edit({ '-(aaa)' }, { 1, 1 }, { '-(', '\taaa', ')' }, { 1, 1 }, split)
+  validate_edit({ '- (aaa)' }, { 1, 2 }, { '- (', '\taaa', ')' }, { 1, 2 }, split)
+  validate_edit({ '-\t(aaa)' }, { 1, 2 }, { '-\t(', '\taaa', ')' }, { 1, 2 }, split)
 end
 
 T['split()']['works with trailing separator'] =
@@ -485,6 +497,19 @@ T['join()']['works inside comments'] = function()
   child.bo.comments = ':---,:--'
   validate_edit({ '-- (', '-- \taaa', '-- )' }, { 1, 3 }, { '-- (aaa)' }, { 1, 3 }, join)
   validate_edit({ '--- (', '--- \taaa', '--- )' }, { 1, 4 }, { '--- (aaa)' }, { 1, 4 }, join)
+
+  -- Respects `b` flag
+  child.bo.comments = 'b:*'
+  validate_edit({ '*(', '\t*aaa', '*)' }, { 1, 1 }, { '*(*aaa*)' }, { 1, 1 }, join)
+  validate_edit({ '* (', '\t* aaa', '* )' }, { 1, 2 }, { '* (aaa)' }, { 1, 2 }, join)
+  validate_edit({ '*\t(', '\t*\taaa', '*\t)' }, { 1, 2 }, { '*\t(aaa)' }, { 1, 2 }, join)
+
+  -- Respects `f` flag (ignores as comment leader)
+  child.bo.comments = 'f:-'
+  validate_edit({ '(', '-aaa', ')' }, { 1, 0 }, { '(-aaa)' }, { 1, 0 }, join)
+  validate_edit({ '(', '- aaa', ')' }, { 1, 0 }, { '(- aaa)' }, { 1, 0 }, join)
+  validate_edit({ '(', '-\taaa', ')' }, { 1, 0 }, { '(-\taaa)' }, { 1, 0 }, join)
+  validate_edit({ '- (', '- aaa', '- )' }, { 1, 2 }, { '- (- aaa- )' }, { 1, 2 }, join)
 end
 
 T['join()']['works in empty brackets'] = function() validate_edit({ '()' }, { 1, 0 }, { '()' }, { 1, 0 }, join) end
@@ -851,6 +876,18 @@ T['split_at()']['works inside comments'] = function()
   child.bo.comments = ':---,:--'
   validate_edit({ '-- (aaa)' },  { 1, 3 }, { '-- (',  '-- \taaa',  '-- )' },  { 1, 3 }, split_at, { { 1, 4 }, { 1, 7 } })
   validate_edit({ '--- (aaa)' }, { 1, 4 }, { '--- (', '--- \taaa', '--- )' }, { 1, 4 }, split_at, { { 1, 5 }, { 1, 8 } })
+
+  -- Respects `b` flag
+  child.bo.comments = 'b:*'
+  validate_edit({ '*(aaa)' }, { 1, 1 }, { '*(', '\taaa', ')' }, { 1, 1 }, split_at, { { 1, 2 }, { 1, 5 } })
+  validate_edit({ '* (aaa)' }, { 1, 2 }, { '* (', '* \taaa', '* )' }, { 1, 2 }, split_at, { { 1, 3 }, { 1, 6 } })
+  validate_edit({ '*\t(aaa)' }, { 1, 2 }, { '*\t(', '*\t\taaa', '*\t)' }, { 1, 2 }, split_at, { { 1, 3 }, { 1, 6 } })
+
+  -- Respects `f` flag (ignores as comment leader)
+  child.bo.comments = 'f:-'
+  validate_edit({ '-(aaa)' }, { 1, 1 }, { '-(', '\taaa', ')' }, { 1, 1 }, split_at, { { 1, 2 }, { 1, 5 } })
+  validate_edit({ '- (aaa)' }, { 1, 2 }, { '- (', '\taaa', ')' }, { 1, 2 }, split_at, { { 1, 3 }, { 1, 6 } })
+  validate_edit({ '-\t(aaa)' }, { 1, 2 }, { '-\t(', '\taaa', ')' }, { 1, 2 }, split_at, { { 1, 3 }, { 1, 6 } })
 end
 
 T['split_at()']['correctly increases indent of commented line in non-commented block'] = function()
@@ -961,15 +998,30 @@ end
 
 --stylua: ignore
 T['join_at()']['works inside comments'] = function()
+  local two_lines_pos = { { 1, 1 }, { 2, 1 } }
+
   -- After 'commentstring'
   child.bo.commentstring = '# %s'
-  validate_edit({ '# (', '# \taaa', '# )' }, { 1, 2 }, { '# (aaa)' }, { 1, 2 }, join_at, { {1, 1}, {2, 1} })
-  validate_edit({ '# (', 'aaa',     '# )' }, { 1, 2 }, { '# (aaa)' }, { 1, 2 }, join_at, { {1, 1}, {2, 2} })
+  validate_edit({ '# (', '# \taaa', '# )' }, { 1, 2 }, { '# (aaa)' }, { 1, 2 }, join_at, two_lines_pos)
+  validate_edit({ '# (', 'aaa',     '# )' }, { 1, 2 }, { '# (aaa)' }, { 1, 2 }, join_at, two_lines_pos)
 
   -- After any entry in 'comments'
   child.bo.comments = ':---,:--'
-  validate_edit({ '-- (',  '-- \taaa',  '-- )' },  { 1, 3 }, { '-- (aaa)' },  { 1, 3 }, join_at, { { 1, 1 }, { 2, 2 } })
-  validate_edit({ '--- (', '--- \taaa', '--- )' }, { 1, 4 }, { '--- (aaa)' }, { 1, 4 }, join_at, { { 1, 1 }, { 2, 2 } })
+  validate_edit({ '-- (',  '-- \taaa',  '-- )' },  { 1, 3 }, { '-- (aaa)' },  { 1, 3 }, join_at, two_lines_pos)
+  validate_edit({ '--- (', '--- \taaa', '--- )' }, { 1, 4 }, { '--- (aaa)' }, { 1, 4 }, join_at, two_lines_pos)
+
+  -- Respects `b` flag
+  child.bo.comments = 'b:*'
+  validate_edit({ '*(', '\t*aaa', '*)' }, { 1, 1 }, { '*(*aaa*)' }, { 1, 1 }, join_at, two_lines_pos)
+  validate_edit({ '* (', '\t* aaa', '* )' }, { 1, 2 }, { '* (aaa)' }, { 1, 2 }, join_at, two_lines_pos)
+  validate_edit({ '*\t(', '\t*\taaa', '*\t)' }, { 1, 2 }, { '*\t(aaa)' }, { 1, 2 }, join_at, two_lines_pos)
+
+  -- Respects `f` flag (ignores as comment leader)
+  child.bo.comments = 'f:-'
+  validate_edit({ '(', '-aaa', ')' }, { 1, 0 }, { '(-aaa)' }, { 1, 0 }, join_at, two_lines_pos)
+  validate_edit({ '(', '- aaa', ')' }, { 1, 0 }, { '(- aaa)' }, { 1, 0 }, join_at, two_lines_pos)
+  validate_edit({ '(', '-\taaa', ')' }, { 1, 0 }, { '(-\taaa)' }, { 1, 0 }, join_at, two_lines_pos)
+  validate_edit({ '- (', '- aaa', '- )' }, { 1, 2 }, { '- (- aaa- )' }, { 1, 2 }, join_at, two_lines_pos)
 end
 
 T['get_visual_region()'] = new_set()
@@ -1046,6 +1098,25 @@ T['get_indent_part()']['works'] = function()
   validate('\t--- aa', '\t--- ')
   validate('\t \t--- aa', '\t \t--- ')
   validate('---\taa', '---\t')
+
+  -- Should respect `b` flag
+  child.bo.comments = 'b:*'
+  validate('*aa', '')
+  validate(' *aa', ' ')
+  validate('\t*aa', '\t')
+
+  validate(' * aa', ' * ')
+  validate(' *\taa', ' *\t')
+  validate('\t* aa', '\t* ')
+  validate('\t*\taa', '\t*\t')
+
+  -- Should respect `f` flag (ignore comment leader)
+  child.bo.comments = 'f:-'
+  validate('-aa', '')
+  validate(' -aa', ' ')
+  validate(' - aa', ' ')
+  validate('\t-aa', '\t')
+  validate('\t-\taa', '\t')
 end
 
 T['get_indent_part()']['respects `respect_comments` argument'] = function()

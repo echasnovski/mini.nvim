@@ -1060,15 +1060,28 @@ H.get_comment_leaders = function()
   local res = {}
 
   -- From 'commentstring'
-  table.insert(res, vim.split(vim.bo.commentstring, '%%s')[1])
+  local main_leader = vim.split(vim.bo.commentstring, '%%s')[1]
+  -- - Ensure there is no whitespace before or after
+  table.insert(res, vim.trim(main_leader))
 
   -- From 'comments'
   for _, comment_part in ipairs(vim.opt_local.comments:get()) do
-    table.insert(res, comment_part:match(':(.*)$'))
+    local prefix, suffix = comment_part:match('^(.*):(.*)$')
+
+    -- Control whitespace around suffix
+    suffix = vim.trim(suffix)
+
+    if prefix:find('b') then
+      -- Respect `b` flag (for blank) requiring space, tab or EOL after it
+      table.insert(res, suffix .. ' ')
+      table.insert(res, suffix .. '\t')
+    elseif prefix:find('f') == nil then
+      -- Add otherwise ignoring `f` flag (only first line should have it)
+      table.insert(res, suffix)
+    end
   end
 
-  -- Ensure there is no whitespace before or after
-  return vim.tbl_map(vim.trim, res)
+  return res
 end
 
 H.is_comment_block = function(lines, comment_leaders)
