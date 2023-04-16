@@ -1,5 +1,9 @@
 # Version 0.8.0.9000
 
+# mini.colors
+
+Introduction of a new module.
+
 
 # Version 0.8.0
 

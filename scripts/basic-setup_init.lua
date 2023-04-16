@@ -20,6 +20,7 @@ local test_actions = {
   ['basics']      = function() require('mini.basics').setup() end,
   ['bracketed']   = function() require('mini.bracketed').setup() end,
   ['bufremove']   = function() require('mini.bufremove').setup() end,
+  ['colors']      = function() require('mini.colors').setup() end,
   ['comment']     = function() require('mini.comment').setup() end,
   ['completion']  = function() require('mini.completion').setup() end,
   ['cursorword']  = function() require('mini.cursorword').setup() end,

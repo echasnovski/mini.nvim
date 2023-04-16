@@ -15,6 +15,26 @@ Helpers.expect.no_match = MiniTest.new_expectation(
   function(str, pattern) return string.format('Pattern: %s\nObserved string: %s', vim.inspect(pattern), str) end
 )
 
+Helpers.expect.equality_approx = MiniTest.new_expectation(
+  'approximate equality',
+  function(x, y, tol)
+    if type(x) ~= type(y) then return false end
+    if type(x) == 'number' then return math.abs(x - y) <= tol end
+    if type(x) ~= 'table' then return vim.deep_equal(x, y) end
+
+    local x_keys, y_keys = vim.tbl_keys(x), vim.tbl_keys(y)
+    table.sort(x_keys)
+    table.sort(y_keys)
+    if not vim.deep_equal(x_keys, y_keys) then return false end
+    for _, key in ipairs(x_keys) do
+      if math.abs(x[key] - y[key]) > tol then return false end
+    end
+
+    return true
+  end,
+  function(x, y, tol) return string.format('Left: %s\nRight: %s\nTolerance: %s', vim.inspect(x), vim.inspect(y), tol) end
+)
+
 -- Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 Helpers.new_child_neovim = function()
   local child = MiniTest.new_child_neovim()

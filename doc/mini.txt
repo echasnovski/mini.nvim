@@ -20,6 +20,7 @@ Table of contents:
   Common configuration presets ................................. |mini.basics|
   Go forward/backward with square brackets .................. |mini.bracketed|
   Remove buffers ............................................ |mini.bufremove|
+  Tweak and save any color scheme .............................. |mini.colors|
   Comment lines ............................................... |mini.comment|
   Completion and signature help ............................ |mini.completion|
   Autohighlight word under cursor .......................... |mini.cursorword|
@@ -139,6 +140,13 @@ Table of contents:
 
 - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
   window layout.
+
+- |MiniColors| - tweak and save any color scheme. Can create colorscheme
+  object with methods to invert/set/modify/etc.
+  lightness/saturation/hue/temperature/etc. of foreground/background/all
+  colors, infer cterm attributes, add transparency, save to a file and more.
+  Has functionality for interactive experiments and animation of
+  transitition between color schemes.
 
 - |MiniComment| - fast and familiar per-line code commenting.
 

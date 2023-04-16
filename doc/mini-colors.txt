@@ -1,0 +1,816 @@
+*mini.colors* Tweak and save any color scheme
+*MiniColors*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+- Create colorscheme object: either manually (|MiniColors.as_colorscheme()|)
+  or by querying present color schemes (including currently active one; see
+  |MiniColors.get_colorscheme()|).
+
+- Infer data about color scheme and/or modify based on it:
+    - Add transparency by removing background color (requires transparency
+      in terminal emulator).
+    - Infer cterm attributes (|cterm-colors|) based on gui colors making it
+      compatible with 'notermguicolors'.
+    - Resolve highlight group links (|:highlight-link|).
+    - Compress by removing redundant highlight groups.
+    - Extract palette of used colors and/or infer terminal colors
+      (|terminal-config|) based on it.
+
+- Modify colors to better fit your taste and/or goals (see more in
+  |MiniColors-colorscheme-methods|):
+    - Apply any function to color hex string.
+    - Update channels (like lightness, saturation, hue, temperature, red,
+      green, blue, etc.; see more in |MiniColors-channels|).
+      Use either own function or one of the implemented methods:
+        - Add value to channel or multiply it by coefficient. Like "add 10
+          to saturation of every color" or "multiply saturation by 2" to
+          make colors more saturated (less gray).
+        - Invert. Like "invert lightness" to convert between dark/light theme.
+        - Set to one or more values (picks closest to current one). Like
+          "set to one or two hues" to make mono- or dichromatic color scheme.
+        - Repel from certain source(s) with stronger effect for closer values.
+          Like "repel from hue 30" to remove red color from color scheme.
+          Repel hue (how much is removed) is configurable.
+    - Simulate color vision deficiency.
+
+- Once color scheme is ready, either apply it to see effects right away or
+  write it into a Lua file as a fully functioning separate color scheme.
+
+- Experiment interactively with a feedback (|MiniColors.interactive()|).
+
+- Animate transition between color schemes either with |MiniColors.animate()|
+  or with |:Colorscheme| user command.
+
+- Convert within supported color spaces (|MiniColors.convert()|):
+    - Hex string.
+    - 8-bit number (terminal colors).
+    - RGB.
+    - Oklab, Oklch, Okhsl (https://bottosson.github.io/posts/oklab/).
+
+Notes:
+- There is a collection of |MiniColors-recipes| with code snippets for some
+  common tasks.
+- There is no goal to support as many color spaces as possible, only the
+  already present ones.
+
+Tweak quick start ~
+
+- Execute `:lua require('mini.colors').interactive()`.
+
+- Experiment by writing calls to exposed color scheme methods and applying
+  them with `<M-a>`. For more information, see |MiniColors-colorscheme-methods|
+  and |MiniColors-recipes|.
+
+- If you are happy with result, write color scheme with `<M-w>`. If not,
+  reset to initial color scheme with `<M-r>`.
+
+- If only some highlight groups can be made better, adjust them manually
+  inside written color scheme file.
+
+# Setup~
+
+This module doesn't need setup, but it can be done to improve usability.
+Setup with `require('mini.colors').setup({})` (replace `{}` with your
+`config` table). It will create global Lua table `MiniColors` which you can
+use for scripting or manually (with `:lua MiniColors.*`).
+
+See |MiniColors.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minicolors_config`
+will have no effect here.
+
+# Comparisons ~
+
+- 'rktjmp/lush.nvim':
+    - Oriented towards tweaking separate highlight groups, while 'mini.colors'
+      is more designed to work with color scheme as a whole.
+    - Uses HSL and HSLuv color spaces, while 'mini.colors' uses Oklab, Oklch,
+      and Okhsl which have slightly better perceptual uniformity properties.
+    - Doesn't have functionality to infer and repair missing data in color
+      scheme (like cterm attributes, terminal colors, transparency, etc.),
+      while 'mini.colors' does.
+    - Doesn't implement animation of color scheme transition, while
+      'mini.colors' does.
+- 'lifepillar/vim-colortemplate':
+    - Comparisons are similar to that of 'rktjmp/lush.nvim'.
+- 'tjdevries/colorbuddy.nvim':
+    - Comparisons are similar to that of 'rktjmp/lush.nvim'.
+
+------------------------------------------------------------------------------
+                                                            *MiniColors-recipes*
+Recipes for common tasks ~
+
+All following code snippets assume to be executed inside interactive buffer
+(|MiniColors.interactively()|). They are directly copy-pasteable.
+
+To apply single method to current color scheme, use >
+  :lua MiniColors.get_colorscheme():<method goes here>:apply().
+
+Recipes:
+- Tweak lightness: >
+
+  -- Invert to dark/light color scheme to be light/dark
+  chan_invert('lightness', { gamut_clip = 'cusp' })
+
+  -- Ensure constant contrast ratio
+  chan_set('lightness', 15, { filter = 'bg' })
+  chan_set('lightness', 85, { filter = 'fg' })
+
+- Tweak saturation: >
+
+  -- Make background colors less saturated and foreground - more
+  chan_add('saturation', -20, { filter = 'bg' })
+  chan_add('saturation', 20,  { filter = 'fg' })
+
+  -- Convert to grayscale
+  chan_set('saturation', 0)
+
+- Tweak hue: >
+
+  -- Create monochromatic variant (this uses green color)
+  chan_set('hue', 135)
+
+  -- Create dichromatic variant (this uses Neovim-themed hues)
+  chan_set('hue', { 140, 245 })
+
+- Tweak temperature: >
+
+  -- Invert temperature (make cold theme become warm and vice versa)
+  chan_invert('temperature')
+
+  -- Make background colors colder and foreground warmer
+  chan_add('temperature', -40, { filter = 'bg' })
+  chan_add('temperature', 40,  { filter = 'fg' })
+
+- Counter color vision deficiency (try combinations of these to see which
+  one works best for you):
+
+    - Improve text saturation contrast (usually the best starting approach): >
+
+      chan_set('saturation', { 10, 90 }, { filter = 'fg' })
+<
+    - Remove certain hues from all colors (use 30 for red, 90 for yellow,
+      135 for green, 270 for blue): >
+
+      -- Repel red color
+      chan_repel('hue', 30, 45)
+<
+    - Force equally spaced palette (remove ones with which you know you
+      have trouble): >
+
+      -- Might be a good choice for red-green color blindness
+      chan_set('hue', { 90, 180, 270})
+
+      -- Might be a good choice for blue-yellow color blindness
+      chan_set('hue', { 0, 90, 180 })
+<
+    - Inverting temperature or pressure can sometimes improve readability: >
+
+      chan_invert('temperature')
+      chan_invert('pressure')
+<
+    - If all hope is lost, hue random generation might help if you are lucky: >
+
+      chan_modify('hue', function() return math.random(0, 359) end)
+<
+- For color scheme creators use |MiniColors-colorscheme:simualte_cvd()| to
+  simulate various color vision deficiency types to see how color scheme
+  would look in the eyes of color blind person.
+
+------------------------------------------------------------------------------
+                                                       *MiniColors-color-spaces*
+Color space is a way to quantitatively describe a color. In this module
+color spaces are used both as source for |MiniColors-channels| and inputs
+for |MiniColors.convert()|
+
+List of supported color spaces (along with their id in parenthesis):
+- 8-bit (`8-bit`) - integer between 16 and 255. Usually values 0-15 are also
+  supported, but they depend on terminal emulator theme which is not reliable.
+  See https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit .
+
+- Hex (`hex`) - string of the form "#xxxxxx" where `x` is a hexadecimal number.
+
+- RGB (`rgb`) - table with numeric fields `r` (red), `g` (green), `b` (blue).
+  Visible range is from 0 to 255.
+
+- Oklab (`oklab`) - table with fields `l` (lightness; numeric in [0; 100]),
+  `a`, `b` (both are unbounded numeric; visible range is usually between
+  -30 to 30). Field `l` describes how light is color; `a` - how "greed-red" it is;
+  `b` - how "blue-yellow" it is.
+
+- Oklch (`oklch`) - table with fields `l` (same as in Oklab),
+  `c` (chroma; positive numeric, visible range usually lower than 32),
+  `h` (`nil` for grays or periodic numeric in [0, 360)). Field `c` describes how
+  colorful a color is; `h` is a value of "true color" on color circle/wheel.
+  NOTE: gray colors, being achromatic by nature, don't have hue.
+
+- Okhsl (`okhsl`) - Oklch but with `c` replaced by `s` (saturation; numeric
+  in [0; 100]). Field `s` describes a percent of chroma relative to maximum
+  visible chroma for the particular lightness and hue combination. Note,
+  that mathematical model used to compute maximum visible chroma is
+  approximate which might lead to inaccuracies for highly saturated colors
+  with relatively low or high lightness.
+
+Sources for Oklab/Oklch/Okhsl:
+- https://bottosson.github.io/posts/oklab/ - initial derivation and
+  introduction of Oklab and Oklch.
+- https://bottosson.github.io/misc/colorpicker - interactive color picker.
+  Great way for a hands-on introduction to concepts of lightness, chroma,
+  saturation, and hue.
+
+                                                         *MiniColors-gamut-clip*
+Gamut clip ~
+
+In Neovim highlight group colors are usually specified by their red, green,
+and blue values from 0 to 255 in the form of HEX string (see |gui-colors|).
+Although plenty, these are not all possible colors.
+
+When performing color manipulation using |MiniColors-colorscheme-methods|,
+it is possible to end up with "impossible" color (which can't be directly
+converted to HEX string). For example, inverting lightness of color "#fce094"
+will lead to a color `{ l = 10, c = 10, h = 90 }` in Oklch space, i.e.
+"dark yellow" which is impossible to show in HEX.
+
+**Gamut clipping** is an action of converting color outside of visible gamut
+(colors representable with HEX string) to be inside it while preserving
+certain perceptual characteristics as much as possible.
+
+Gamut clipping in this module is done inside Oklch color space. The goal is to
+preserve hue as much as possible while manipulating lightness and/or chroma.
+
+List of supported gamut clip methods (along with their id in parenthesis):
+- Clip chroma (`'chroma'`) - reduce chroma while preserving lightness until
+  color is inside visible gamut. Default method.
+
+- Clip lightness (`'lightness'`) - reduce lightness while preserving chroma
+  until color is inside visible gamut.
+
+- Clip according to "cusp" (`'cusp'`) - reduce both lightness and chroma in
+  a compromise way depending on hue.
+  Cusp is a color with the highest chroma inside slice of visible gamut
+  with the same hue (hue leaf). It is called that way because the slice has
+  a roughly triangular shape with points at (0, 0) - (0, 100) - "cusp" in
+  (chroma, lightness) coordinates.
+  Gamut clipping using "cusp" as reference is done by changing color towards
+  (0, cusp_lightness) point (gray with lightness equal to that of a current
+  cusp) until color is inside visible gamut.
+
+In short:
+- Usually `'chroma'` is enough.
+- If colors are too desaturated - try `'cusp'`.
+- If still not colorful enough - try `'lightness'`.
+
+Notes:
+- Currently implemented formulas are approximate (by design; to reduce code
+  complexity) so there might be problems for highly saturated colors with
+  relatively low or high lightness.
+
+------------------------------------------------------------------------------
+                                                           *MiniColors-channels*
+A color channel is a number describing one particular aspect of a color.
+It is usually direct or modified coordinate of a color space. See
+|MiniColors-color-spaces| for information on color spaces.
+
+List of supported channels (along with their id in parenthesis):
+- Lightness (`lightness`) - corrected `l` component of Oklch. Describes how
+  light is a color. Ranges from 0 (black dark) to 100 (white light).
+
+- Chroma (`chroma`) - `c` component of Oklch. Describes how colorful is
+  a color in absolute units. Ranges from 0 (gray) to infinity (more like
+  around 30 in practice).
+
+- Saturation (`saturation`) - `s` component of Okhsl. Describes how colorful
+  is color in relative units. Ranges from 0 (gray) to 100 (maximum saturation
+  for a given lightness-hue pair).
+
+- Hue (`hue`) - `h` component of Oklch. Describes "true color value" (like
+  red/green/blue) as a number. It is a periodic value from 0 (included) to
+  360 (not included). Best perceived as a degree on a color circle/wheel.
+
+  Approximate values for common color names:
+    - 0   - pink.
+    - 30  - red.
+    - 60  - orange.
+    - 90  - yellow.
+    - 135 - green.
+    - 180 - cyan.
+    - 225 - light blue.
+    - 270 - blue.
+    - 315 - magenta/purple.
+
+- Temperature (`temperature`) - circular distance from current hue to hue 270
+  angle (blue). Ranges from 0 (cool) to 180 (hot) anchored at hues 270 (blue)
+  and 90 (yellow). Similar to `b` channel but tries to preserve chroma.
+
+- Pressure (`pressure`) - circular distance from current hue to hue 180.
+  Ranges from 0 (low; green-ish) to 180 (high; red-ish) anchored at hues
+  180 and 0. Similar to `a` channel but tries to preserve chroma.
+  Not widely used; added to have something similar to temperature.
+
+- a (`a`) - `a` component of Oklab. Describes how "green-red" a color is.
+  Can have any value. Negative values are "green-ish", positive - "red-ish".
+
+- b (`b`) - `b` component of Oklab. Describes how "blue-yellow" a color is.
+  Can have any value. Negative values are "blue-ish", positive - "yellow-ish".
+
+- Red (`red`) - `r` component of RGB. Describes how much red a color has.
+  Ranges from 0 (no red) to 255 (full red).
+
+- Green (`green`) - `g` component of RGB. Describes how much green a color has.
+  Ranges from 0 (no green) to 255 (full green).
+
+- Blue (`blue`) - `b` component of RGB. Describes how much blue a color has.
+  Ranges from 0 (no blue) to 255 (full blue).
+
+------------------------------------------------------------------------------
+                                                        *MiniColors-colorscheme*
+Colorscheme object is a central structure of this module. It contains all
+data relevant to colors in fields and provides methods to modify it.
+
+Create colorscheme object manually with |MiniColors.as_colorscheme()|: >
+
+  MiniColors.as_colorscheme({
+    name = 'my_cs',
+    groups = {
+      Normal   = { fg = '#dddddd', bg = '#222222' },
+      SpellBad = { sp = '#dd2222', undercurl = true },
+    },
+    terminal = { [0] = '#222222', [1] = '#dd2222' },
+  })
+
+Get any registered color scheme (including currently active) as colorscheme
+object with |MiniColors.get_colorscheme()|: >
+
+  -- Get current color scheme
+  MiniColors.get_colorscheme()
+
+  -- Get registered color scheme by name
+  MiniColors.get_colorscheme('minischeme', { new_name = 'maxischeme' })
+
+Class~
+{Colorscheme}
+
+                                                 *MiniColors-colorscheme-fields*
+
+Fields~
+{name} `(string|nil)` Name of the color scheme (as in |g:colors_name|).
+
+{groups} `(table|nil)` Table with highlight groups data. Keys are group
+  names appropriate for `name` argument of |nvim_set_hl()|, values - tables
+  appropriate for its `val` argument. Note: gui colors are accepted only in
+  short form (`fg`, `bg`, `sp`).
+
+{terminal} `(table|nil)` Table with terminal colors data (|terminal-config|).
+  Keys are numbers from 0 to 15, values - strings representing color (hex
+  string or plain color name; see |nvim_get_color_by_name()|).
+
+                                                *MiniColors-colorscheme-methods*
+Notes about all methods:
+- They never modify underlying colorscheme object instead returning deep
+  copy with modified fields.
+- They accept `self` colorscheme object as first argument meaning they should be
+  called with `:` notation (like `cs:method()`).
+
+Example calling methods: >
+
+  -- Get current color scheme, set hue of colors to 135, infer cterm
+  -- attributes and apply
+  local cs = MiniColors.get_colorscheme()
+  cs:chan_set('hue', 135):add_cterm_attributes():apply()
+<
+                                 *MiniColors-colorscheme:add_cterm_attributes()*
+Infer |cterm-colors| based on present |gui-colors|. It updates `ctermbg`/`ctermfg`
+based on `fg`/`bg` by approximating in perceptually uniform distance in Oklab
+space (|MiniColors-color-spaces|).
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <force> `(boolean)` - Whether to replace already present cterm attributes
+    with inferred ones. Default: `true`.
+
+                                  *MiniColors-colorscheme:add_terminal_colors()*
+Infer terminal colors (|terminal-config|) based on colorscheme palette
+(see |MiniColors-colorscheme:get_palette()|). It updates `terminal` field
+based on color scheme's palette by picking the most appropriate entry to
+represent terminal color. Colors from 0 to 7 are attempted to be black,
+red, green, yellow, blue, magenta, cyan, white. Colors from 8 to 15 are
+the same as from 0 to 7.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <force> `(boolean)` - Whether to replace already present terminal colors
+    with inferred ones. Default: `true`.
+  - <palette_args> `(table)` - |MiniColors-colorscheme:get_palette()| arguments.
+
+                                     *MiniColors-colorscheme:add_transparency()*
+Add transparency by removing background from a certain highlight groups.
+Requires actual transparency from terminal emulator to experience visible
+transparency.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields can be used to configure which
+  sets of highlight groups to update:
+  - <general> `(boolean)` - general groups (like `Normal`). Default: `true`.
+  - <float> `(boolean)` - built-in groups for floating windows. Default: `false`.
+  - <statuscolumn> `(boolean)` - groups related to 'statuscolumn' (signcolumn,
+    numbercolumn, foldcolumn). Also updates groups for all currently
+    defined signs. Default: `false`.
+  - <statusline> `(boolean)` - built-in groups for 'statusline'. Default: `false`.
+  - <tabline> `(boolean)` - built-in groups for 'tabline'. Default: `false`.
+  - <winbar> `(boolean)` - built-in groups for 'winbar'. Default: `false`.
+
+                                                *MiniColors-colorscheme:apply()*
+Apply colorscheme:
+- Set |g:colors_name| to a `name` field.
+- Apply highlight groups in a `groups` field.
+- Set terminal colors from a `terminal` field.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <clear> `(boolean)` - whether to execute |:hi-clear| first. Default: `true`.
+
+                                             *MiniColors-colorscheme:chan_add()*
+Add value to a channel (see |MiniColors-channels|).
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{value} `(number)` Number to add (can be negative).
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+
+                                          *MiniColors-colorscheme:chan_invert()*
+Invert value in a channel (see |MiniColors-channels|).
+
+Notes:
+- Most Oklab/Oklch inversions are not exactly invertible: applying it twice
+  might lead to slightly different colors depending on gamut clip method
+  (|MiniColors-gamut-clip|) like smaller chroma with default `'chroma'` method.
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+                                          *MiniColors-colorscheme:chan_modify()*
+Modify channel with a callable.
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{f} `(function)` - callable which defines modification. Should take current
+  value of a channel and return a new one.
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+                                        *MiniColors-colorscheme:chan_multiply()*
+Multiply value of a channel (see |MiniColors-channels|).
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{coef} `(number)` Number to multiply with (can be negative).
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+                                           *MiniColors-colorscheme:chan_repel()*
+Repel from certain sources.
+
+Given an array of repel centers (`sources`) and repel degree (`coef`) add to
+current channel value some amount ("nudge") with the following properties:
+- Nudges from several sources are added together.
+- Nudge is directly proportional to `coef`: bigger `coef` means bigger nudge.
+- Nudge is inversely proportional to the distance between current value and
+  source: for positive `coef` bigger distance means smaller nudge, i.e.
+  repel effect weakens with distance.
+- With positive `coef` nudges close to source are computed in a way to remove
+  whole `[source - coef; source + coef]` range.
+- Negative `coef` results into attraction to source. Nudges in
+  `[source - coef; source + coef]` range are computed to completely collapse it
+  into `source`.
+
+Examples: >
+
+  -- Repel hue from red color removing hue in range from 20 to 40
+  chan_repel('hue', 30, 10)
+
+  -- Attract hue to red color collapsing [20; 40] range into 30.
+  chan_repel('hue', 30, -10)
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{sources} `(table|number)` Single or multiple source from which to repel.
+{coef} `(number)` Repel degree (can be negative to attract).
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+                                             *MiniColors-colorscheme:chan_set()*
+Set channel to certain value(s). This can be used to ensure that channel has
+value(s) only within supplied set. If more than one is supplied, closest
+element to current value is used.
+
+Parameters ~
+{channel} `(string)` One of supported |MiniColors-channels|.
+{values} `(table|number)` Single or multiple values to set.
+{opts} `(table|nil)` Options. Possible fields:
+  - <filter> `(function|string)` - filter colors to update. Possible values:
+      - String representing target attributes. One of `'fg'`, `'bg'`, `'sp'`,
+        `'term'` (only terminal colors).
+      - Callable with signature as in |MiniColors-colorscheme:color_modify()|.
+    Default: `nil` to update all colors.
+  - <gamut_clip> `(string)` - gamut clipping method. One of `'chroma'`,
+    `'lightness'`, `'cusp'`. See |MiniColors-gamut-clip|. Default: `'chroma'`.
+
+                                         *MiniColors-colorscheme:color_modify()*
+Modify all colors with a callable. It should return new color value (hex
+string or `nil` to remove attribute) base on the following input:
+- Current color as hex string.
+- Data about the color: a table with fields:
+    - <attr> - one of `'fg'`, `'bg'`, `'sp'`, and `'term'` for terminal color.
+    - <name> - name of color source. Either a name of highlight group or
+      string of the form `terminal_color_x` for terminal color (as in
+      |terminal-config|).
+
+Example: >
+
+  -- Set to '#dd2222' all foreground colors for groups starting with "N"
+  color_modify(function(hex, data)
+    if data.attr == 'fg' and data.name:find('^N') then
+      return '#dd2222'
+    end
+    return hex
+  end)
+
+Parameters ~
+{f} `(function)` Callable returning new color value.
+
+                                             *MiniColors-colorscheme:compress()*
+Remove redundant highlight groups. These are one of the two kinds:
+- Having values identical to ones after |:hi-clear| (meaning they usually
+  don't add new information).
+- Coming from a curated list of plugins with highlight groups usually not
+  worth keeping around. Current list of such plugins:
+    - 'nvim-tree/nvim-web-devicons'
+    - 'norcalli/nvim-colorizer.lua'
+
+This method is useful to reduce size of color scheme before writing into
+the file with |MiniColors-colorscheme:write()|.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <plugins> `(boolean)` - whether to remove highlight groups from a curated
+    list of plugins. Default: `true`.
+
+                                          *MiniColors-colorscheme:get_palette()*
+Get commonly used colors. This basically counts number of all color
+occurrences and filter out rare ones.
+
+It is usually a good idea to apply both |MiniColors-colorscheme:compress()|
+and |MiniColors-colorscheme:resolve_links()| before applying this.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <threshold> `(number)` - relative threshold for groups to keep. A group
+    is not included in output if it has less than this many occurrences
+    relative to a total number of colors. Default: 0.01.
+
+                                        *MiniColors-colorscheme:resolve_links()*
+Resolve links (|:highlight-link|). This makes all highlight groups with `link`
+attribute have data from a linked one.
+
+Notes:
+- Resolves nested links.
+- If some group is linked to a group missing in current colorscheme object,
+  it is not resolved.
+
+                                         *MiniColors-colorscheme:simulate_cvd()*
+Simulate color vision deficiency (CVD, color blindness). This is basically
+a wrapper using |MiniColors.simulate_cvd()| as a part of
+call to |MiniColors-colorscheme:color_modify()| method.
+
+Parameters ~
+{cvd_type} `(string)` One of `'protan'`, `'deutan'`, `'tritan'`, `'mono'`.
+{severity} `(number|nil)` Severity of CVD, number between 0 and 1. Default: 1.
+
+                                                *MiniColors-colorscheme:write()*
+Write color scheme to a file. It will be a Lua script readily usable as
+a regular color scheme. Useful to both save results of color scheme tweaking
+and making local snapshot of some other color scheme.
+
+Sourcing this file on startup usually leads to a better performance that
+sourcing initial color scheme, as it is essentially a conditioned
+|:hi-clear| call followed by a series of |nvim_set_hl()| calls.
+
+Default writing location is a "colors" directory of your Neovim config
+directory (see |base-directories|). After writing, it should be available
+for sourcing with |:colorscheme| or |:Colorscheme|.
+
+Name of the file by default is taken from `name` field (`'mini_colors'` is
+used if it is `nil`). If color scheme with this name already exists, it
+appends prefix based on current time to make it unique.
+
+Notes:
+- If colors were updated, it is usually a good idea to infer cterm attributes
+  with |MiniColors-colorscheme:add_cterm_attributes()| prior to writing.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <compress> `(boolean)` - whether to call |MiniColors-colorscheme:compress()|
+    prior to writing. Default: `true`.
+  - <name> `(string|nil)` - basename of written file. Default: `nil` to infer
+    from `name` field.
+  - <directory> `(string)` - directory to where file should be saved.
+    Default: "colors" subdirectory of Neovim home config (`stdpath("config")`).
+
+------------------------------------------------------------------------------
+                                                            *MiniColors.setup()*
+                          `MiniColors.setup`({config})
+Module setup
+
+                                                                  *:Colorscheme*
+Calling this function creates a `:Colorscheme` user command. It takes one or
+more registered color scheme names and performs animated transition between
+them (starting from currently active color scheme).
+It uses |MiniColors.animte()| with default options.
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniSplitjoin.config|.
+
+Usage~
+`require('mini.colors').setup({})` (replace `{}` with your `config` table)
+
+------------------------------------------------------------------------------
+                                                             *MiniColors.config*
+                              `MiniColors.config`
+Module config
+
+Default values:
+>
+  MiniColors.config = {}
+<
+
+------------------------------------------------------------------------------
+                                                   *MiniColors.as_colorscheme()*
+                        `MiniColors.as_colorscheme`({x})
+Create colorscheme object
+
+Parameters~
+{x} `(table)` Table to be transformed into |MiniColors-colorscheme| object.
+
+Return~
+`(table)` Copy of `x` transformed into a colorscheme object.
+
+------------------------------------------------------------------------------
+                                                  *MiniColors.get_colorscheme()*
+                  `MiniColors.get_colorscheme`({name}, {opts})
+Get colorscheme object from registered color scheme
+
+Parameters~
+{name} `(string|nil)` Name of color scheme to use. If `nil` (default) creates
+ colorscheme object based on currently active data (|g:colors_name|,
+ highlight groups, terminal colors). If string, converts color scheme with
+ that name to a colorscheme object.
+{opts} `(table|nil)` Options. Possible fields:
+  - <new_name> `(string|nil)` - new name of colorscheme object.
+
+Return~
+`(table)` Colorscheme object |(MiniColors-colorscheme|).
+
+------------------------------------------------------------------------------
+                                                      *MiniColors.interactive()*
+                        `MiniColors.interactive`({opts})
+Start interactive experiments
+
+Create a special buffer in which user can write plain Lua code to tweak
+color scheme and apply to get visual feedback.
+
+General principles ~
+- Initial colorscheme object is fixed to interactive buffer on its creation.
+
+- There are special buffer convenience mappings:
+    - Apply (source) current buffer content.
+    - Reset color scheme (make initial colorscheme the current one).
+    - Write to a file the result of applying current buffer content.
+      This sources current content and calls |MiniColors-colorscheme:write()|.
+    - Quit interactive buffer.
+
+- User is expected to iteratively tweak color scheme by writing general Lua
+  code in interactive buffer and applying it using convenience mapping.
+
+- Application of interactive buffer is essentially these steps:
+    - Expose `self` as initial colorscheme object on any application.
+      It is always the same for every application.
+    - Expose initial colorscheme methods as standalone functions. So instead
+      of writing `self = self:add_transparency()` user can only write
+      `add_transparency()`.
+    - Source buffer content as plain Lua code.
+
+Example of interactive buffer content: >
+
+  chan_modify('hue', function() return math.random(0, 359) end)
+  simulate_cvd('protan')
+  add_cterm_attributes()
+  add_terminal_colors()
+
+Parameters~
+{opts} `(table|nil)` Options. Possible fields:
+  - <colorscheme> `(table|nil)` - |MiniColors-colorscheme| object to be
+    used as initial colorscheme for executed code. By default uses current
+    color scheme.
+  - <mappings> `table` - buffer mappings for actions. Possible fields:
+      - <Apply> `(string)` - apply buffer code. Default: `'<M-a>'`.
+      - <Reset> `(string)` - apply initial color scheme as is. Default: `'<M-r>'`.
+      - <Quit> `(string)` - close interactive buffer. Default: `'<M-q>'`.
+      - <Write> `(string)` - write result of buffer code into a file.
+        Prompts for file name with |vim.ui.input()| and then
+        uses |MiniColors-colorscheme:wirte()| with other options being default.
+        Default: `'<M-w>'`.
+
+------------------------------------------------------------------------------
+                                                          *MiniColors.animate()*
+                    `MiniColors.animate`({cs_array}, {opts})
+Animate color scheme change
+
+Start from currently active color scheme and loop through `cs_array`.
+
+Powers |:Colorscheme| user command created in |MiniColors.setup()|.
+
+Parameters~
+{cs_array} `(`(table)`)` Array of |MiniColors-colorscheme| objects.
+{opts} `(table|nil)` Options. Possible fields:
+  - <transition_steps> `(number)` - number of intermediate steps to show
+    during transition between two color schemes. Bigger values result in
+    smoother visual feedback but require more computational power.
+    Default: 25.
+  - <transition_duration> `(number)` - number of milliseconds to spend
+    showing transition. Default: 1000.
+  - <show_duration> `(number)` - number of milliseconds to show intermediate
+    color schemes (all but last in `cs_array`). Default: 1000.
+
+------------------------------------------------------------------------------
+                                                          *MiniColors.convert()*
+                 `MiniColors.convert`({x}, {to_space}, {opts})
+Convert between color spaces
+
+For a list of supported colors spaces see |MiniColors-color-spaces|.
+
+Parameters~
+{x} `(table|string|number|nil)` Color to convert from. Its color space is
+  inferred automatically.
+{to_space} `(string)` Id of allowed color space.
+{opts} `(table|nil)` Options. Possible fields:
+  - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
+    Default: `'chroma'`.
+
+Return~
+`(table|string|number|nil)` Color in space `to_space` or `nil` if input is `nil`.
+
+------------------------------------------------------------------------------
+                                                     *MiniColors.simulate_cvd()*
+             `MiniColors.simulate_cvd`({x}, {cvd_type}, {severity})
+Simulate color vision deficiency
+
+Parameters~
+{x} `(table|string|number|nil)` Color to convert from. Its color space is
+  inferred automatically.
+{cvd_type} `(string)` Type of CVD. One of `'protan'`, `'deutan'`,
+or `'mono'` (equivalent to converting to graysacle).
+{severity} `(number|nil)` Severity of CVD. A number between 0 and 1 (default).
+
+Return~
+`(string|nil)` Hex string of simualted color or `nil` if input is `nil`.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
