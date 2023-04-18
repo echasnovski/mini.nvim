@@ -556,9 +556,30 @@ H.apply_mappings = function(config)
     map({ 'n', 'x' }, 'j', [[v:count == 0 ? 'gj' : 'j']], { expr = true })
     map({ 'n', 'x' }, 'k', [[v:count == 0 ? 'gk' : 'k']], { expr = true })
 
-    -- Add empty lines before and after cursor line
-    map('n', 'gO', "<Cmd>call append(line('.') - 1, repeat([''], v:count1))<CR>", { desc = 'Put empty line above' })
-    map('n', 'go', "<Cmd>call append(line('.'),     repeat([''], v:count1))<CR>", { desc = 'Put empty line below' })
+    -- Add empty lines before and after cursor line supporting dot-repeat
+    MiniBasics.put_empty_line = function(put_above)
+      -- This has a typical workflow for enabling dot-repeat:
+      -- - On first call it sets `operatorfunc`, caches data, and calls
+      --   `operatorfunc` on current cursor position.
+      -- - On second call it performs task: puts `v:count1` empty lines
+      --   above/below current line.
+      if type(put_above) == 'boolean' then
+        vim.o.operatorfunc = 'v:lua.MiniBasics.put_empty_line'
+        MiniBasics.cache_empty_line = { put_above = put_above }
+        return 'g@l'
+      end
+
+      local target_line = vim.fn.line('.') - (MiniBasics.cache_empty_line.put_above and 1 or 0)
+      vim.fn.append(target_line, vim.fn['repeat']({ '' }, vim.v.count1))
+    end
+
+    -- NOTE: if you don't want to support dot-repeat, use this snippet:
+    -- ```
+    -- map('n', 'gO', "<Cmd>call append(line('.') - 1, repeat([''], v:count1))<CR>")
+    -- map('n', 'go', "<Cmd>call append(line('.'),     repeat([''], v:count1))<CR>")
+    -- ```
+    map('n', 'gO', 'v:lua.MiniBasics.put_empty_line(v:true)',  { desc = 'Put empty line above', expr = true })
+    map('n', 'go', 'v:lua.MiniBasics.put_empty_line(v:false)', { desc = 'Put empty line below', expr = true })
 
     -- Copy/paste with system clipboard
     map({ 'n', 'x' }, 'gy', '"+y', { desc = 'Copy to system clipboard' })

@@ -1,5 +1,9 @@
 # Version 0.8.0.9000
 
+# mini.basics
+
+- Add dot-repeat support for adding empty lines (`go` and `gO` mappings).
+
 # mini.colors
 
 Introduction of a new module.

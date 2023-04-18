@@ -204,7 +204,7 @@ T['Mappings']['work'] = function()
 
   load_module()
 
-  expect.match(child.cmd_capture('nmap go'), 'go.*call')
+  expect.match(child.cmd_capture('nmap go'), 'MiniBasics')
 end
 
 T['Mappings']['do not override manually created mappings'] = function()
@@ -301,6 +301,16 @@ T['Mappings']['Basic']['go'] = function()
   type_keys('2go')
   eq(get_lines(), { 'aaa', '', '', '' })
   eq(get_cursor(), { 1, 1 })
+
+  -- Should work with dot-repeat
+  type_keys('.')
+  eq(get_lines(), { 'aaa', '', '', '', '', '' })
+  eq(get_cursor(), { 1, 1 })
+
+  -- Should allow different `v:count` in dot-repeat
+  type_keys('1.')
+  eq(get_lines(), { 'aaa', '', '', '', '', '', '' })
+  eq(get_cursor(), { 1, 1 })
 end
 
 T['Mappings']['Basic']['gO'] = function()
@@ -318,6 +328,16 @@ T['Mappings']['Basic']['gO'] = function()
   type_keys('2gO')
   eq(get_lines(), { '', '', '', 'aaa' })
   eq(get_cursor(), { 4, 1 })
+
+  -- Should work with dot-repeat
+  type_keys('.')
+  eq(get_lines(), { '', '', '', '', '', 'aaa' })
+  eq(get_cursor(), { 6, 1 })
+
+  -- Should allow different `v:count` in dot-repeat
+  type_keys('1.')
+  eq(get_lines(), { '', '', '', '', '', '', 'aaa' })
+  eq(get_cursor(), { 7, 1 })
 end
 
 T['Mappings']['Basic']['gy'] = function()
