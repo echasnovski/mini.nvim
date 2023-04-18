@@ -29,8 +29,8 @@ if vim.o.background == 'dark' then
   use_cterm = {
     base00 = 235,
     base01 = 238,
-    base02 = 60,
-    base03 = 103,
+    base02 = 242,
+    base03 = 246,
     base04 = 186,
     base05 = 186,
     base06 = 229,
@@ -40,8 +40,8 @@ if vim.o.background == 'dark' then
     base0A = 71,
     base0B = 156,
     base0C = 170,
-    base0D = 87,
-    base0E = 225,
+    base0D = 51,
+    base0E = 189,
     base0F = 38,
   }
 end
@@ -74,9 +74,9 @@ if vim.o.background == 'light' then
     base01 = 250,
     base02 = 246,
     base03 = 243,
-    base04 = 60,
+    base04 = 239,
     base05 = 18,
-    base06 = 4,
+    base06 = 20,
     base07 = 232,
     base08 = 52,
     base09 = 130,
