@@ -146,7 +146,7 @@
 ---   lightness/saturation/hue/temperature/etc. of foreground/background/all
 ---   colors, infer cterm attributes, add transparency, save to a file and more.
 ---   Has functionality for interactive experiments and animation of
----   transitition between color schemes.
+---   transition between color schemes.
 ---
 --- - |MiniComment| - fast and familiar per-line code commenting.
 ---
