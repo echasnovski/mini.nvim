@@ -777,7 +777,7 @@ T['gen_hook']['aligning()']['respects arguments'] = new_set({
 })
 
 T['gen_hook']['aligning()']['handles small windows'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9.') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
 
   child.set_size(15, 40)
   child.cmd('vsplit | split')
@@ -795,7 +795,7 @@ T['gen_hook']['aligning()']['handles small windows'] = function()
 end
 
 T['gen_hook']['aligning()']['has output respecting `buf_id` argument'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9.') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
 
   child.set_size(15, 40)
   reload_from_strconfig({

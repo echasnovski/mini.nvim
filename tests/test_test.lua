@@ -1301,7 +1301,7 @@ T['gen_reporter']['buffer'] = new_set({
   },
 }, {
   test = function(opts_element)
-    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9.') end
+    if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
 
     mark_flaky()
 
