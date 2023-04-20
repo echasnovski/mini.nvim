@@ -2049,6 +2049,66 @@ T['convert()']['validates arguments'] = function()
   expect.error(function() convert('#aaaaaa', 'AAA') end, 'one of')
 end
 
+-- Only basic testing here. More thorough tests are in `chan_modify()`
+-- Assumes they both are implemented similarly
+T['modify_channel()'] = new_set()
+
+T['modify_channel()']['works'] = function()
+  child.lua('_G.f = function(x) return x + 10 end')
+  local validate = function(channel, ref)
+    local lua_get_cmd = string.format([[MiniColors.modify_channel('#ba4a73', '%s', _G.f)]], channel)
+    eq(child.lua_get(lua_get_cmd), ref)
+  end
+
+  validate('lightness', '#d8658d')
+  validate('chroma', '#d70071')
+  validate('saturation', '#c33f72')
+  validate('hue', '#bd4a62')
+  validate('temperature', '#bd4a62')
+  validate('pressure', '#ba4a73')
+  validate('a', '#d70071')
+  validate('b', '#cb4021')
+  validate('red', '#c44a73')
+  validate('green', '#ba5473')
+  validate('blue', '#ba4a7d')
+end
+
+T['modify_channel()']['accepts input in any color space'] = function()
+  local validate = function(input)
+    child.lua('_G.f = function(x) return x end')
+    local lua_get_cmd = string.format([[MiniColors.modify_channel(%s, 'lightness', _G.f)]], vim.inspect(input))
+    eq(child.lua_get(lua_get_cmd), '#5f87af')
+  end
+
+  validate(67)
+  validate('#5f87af')
+  validate({ r = 95, g = 135, b = 175 })
+  validate({ l = 54.729, a = -2.692, b = -7.072 })
+  validate({ l = 54.729, c = 7.567, h = 249.16 })
+  validate({ l = 54.729, s = 44.01, h = 249.16 })
+end
+
+T['modify_channel()']['validates arguments'] = function()
+  child.lua('_G.f = function(x) return x + 1 end')
+
+  expect.error(function() child.lua([[MiniColors.modify_channel(1, 'hue', _G.f)]]) end, 'color space')
+  expect.error(function() child.lua([[MiniColors.modify_channel('111111', 'hue', _G.f)]]) end, 'color space')
+
+  expect.error(function() child.lua([[MiniColors.modify_channel('#000000', 1, _G.f)]]) end, 'Channel.*one of')
+  expect.error(function() child.lua([[MiniColors.modify_channel('#000000', 'aaa', _G.f)]]) end, 'Channel.*one of')
+
+  expect.error(function() child.lua([[MiniColors.modify_channel('#000000', 'hue', 1)]]) end, '`f`.*callable')
+end
+
+T['modify_channel()']['respects `opts.gamut_clip`'] = function()
+  eq(
+    child.lua_get(
+      [[MiniColors.modify_channel('#ba4a73', 'chroma', function() return 100 end, { gamut_clip = 'cusp' })]]
+    ),
+    '#f50081'
+  )
+end
+
 T['simulate_cvd()'] = new_set()
 
 local simulate_cvd = function(...) return child.lua_get('MiniColors.simulate_cvd(...)', { ... }) end

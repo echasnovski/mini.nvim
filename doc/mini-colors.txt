@@ -798,6 +798,24 @@ Return~
 `(table|string|number|nil)` Color in space `to_space` or `nil` if input is `nil`.
 
 ------------------------------------------------------------------------------
+                                                   *MiniColors.modify_channel()*
+            `MiniColors.modify_channel`({x}, {channel}, {f}, {opts})
+Modify channel
+
+Parameters~
+{x} `(table|string|number|nil)` Color which channel will be modified. Color
+  space is inferred automatically.
+{channel} `(string)` One of supported |MiniColors-channels|.
+{f} `(function)` Callable which defines modification. Should take current
+  value of a channel and return a new one.
+{opts} `(table|nil)` Options. Possible fields:
+  - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
+    Default: `'chroma'`.
+
+Return~
+`(string|nil)` Hex string of color with modified channel or `nil` if input is `nil`.
+
+------------------------------------------------------------------------------
                                                      *MiniColors.simulate_cvd()*
              `MiniColors.simulate_cvd`({x}, {cvd_type}, {severity})
 Simulate color vision deficiency

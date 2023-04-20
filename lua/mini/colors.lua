@@ -946,6 +946,27 @@ MiniColors.convert = function(x, to_space, opts)
   return H.converters[to_space](x, H.infer_color_space(x), opts)
 end
 
+--- Modify channel
+---
+---@param x table|string|number|nil Color which channel will be modified. Color
+---   space is inferred automatically.
+---@param channel string One of supported |MiniColors-channels|.
+---@param f function Callable which defines modification. Should take current
+---   value of a channel and return a new one.
+---@param opts table|nil Options. Possible fields:
+---   - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
+---     Default: `'chroma'`.
+---
+---@return string|nil Hex string of color with modified channel or `nil` if input is `nil`.
+MiniColors.modify_channel = function(x, channel, f, opts)
+  channel = H.normalize_channel(channel)
+  f = H.normalize_f(f)
+  opts = vim.tbl_deep_extend('force', { gamut_clip = 'chroma' }, opts or {})
+
+  local modify_channel = H.channel_modifiers[channel]
+  return modify_channel(x, f, opts.gamut_clip)
+end
+
 --- Simulate color vision deficiency
 ---
 ---@param x table|string|number|nil Color to convert from. Its color space is
