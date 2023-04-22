@@ -666,7 +666,7 @@ them (starting from currently active color scheme).
 It uses |MiniColors.animte()| with default options.
 
 Parameters~
-{config} `(table|nil)` Module config table. See |MiniSplitjoin.config|.
+{config} `(table|nil)` Module config table. See |MiniColors.config|.
 
 Usage~
 `require('mini.colors').setup({})` (replace `{}` with your `config` table)

@@ -632,7 +632,7 @@ local H = {}
 --- them (starting from currently active color scheme).
 --- It uses |MiniColors.animte()| with default options.
 ---
----@param config table|nil Module config table. See |MiniSplitjoin.config|.
+---@param config table|nil Module config table. See |MiniColors.config|.
 ---
 ---@usage `require('mini.colors').setup({})` (replace `{}` with your `config` table)
 MiniColors.setup = function(config)
