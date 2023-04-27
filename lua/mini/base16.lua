@@ -28,6 +28,7 @@
 ---     - 'ggandor/lightspeed.nvim'
 ---     - 'glepnir/dashboard-nvim'
 ---     - 'glepnir/lspsaga.nvim'
+---     - 'HiPhish/nvim-ts-rainbow2'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
 ---     - 'nvim-tree/nvim-tree.lua'
@@ -37,7 +38,6 @@
 ---     - 'nvim-lualine/lualine.nvim'
 ---     - 'nvim-neo-tree/neo-tree.nvim'
 ---     - 'nvim-telescope/telescope.nvim'
----     - 'p00f/nvim-ts-rainbow'
 ---     - 'phaazon/hop.nvim'
 ---     - 'rcarriga/nvim-dap-ui'
 ---     - 'rcarriga/nvim-notify'
@@ -801,6 +801,16 @@ H.apply_palette = function(palette, use_cterm)
     hi('OutlineIndentOdd',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
   end
 
+  if H.has_integration('HiPhish/nvim-ts-rainbow2') then
+    hi('TSRainbowBlue',   {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowCyan',   {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowGreen',  {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowOrange', {fg=p.base09, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowRed',    {fg=p.base08, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowViolet', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+    hi('TSRainbowYellow', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
+  end
+
   if H.has_integration('hrsh7th/nvim-cmp') then
     hi('CmpItemAbbr',           {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
     hi('CmpItemAbbrDeprecated', {fg=p.base03, bg=nil,      attr=nil,    sp=nil})
@@ -939,16 +949,6 @@ H.apply_palette = function(palette, use_cterm)
     hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil})
     hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
     hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
-  end
-
-  if H.has_integration('p00f/nvim-ts-rainbow') then
-    hi('rainbowcol1', {fg=p.base08, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol2', {fg=p.base09, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol3', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol4', {fg=p.base0B, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol5', {fg=p.base0C, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol6', {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-    hi('rainbowcol7', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
   end
 
   if H.has_integration('phaazon/hop.nvim') then

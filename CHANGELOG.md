@@ -1,5 +1,9 @@
 # Version 0.8.0.9000
 
+# mini.base16
+
+- BREAKING FEATURE: Stop supporting archived 'p00f/nvim-ts-rainbow' in favor of 'HiPhish/nvim-ts-rainbow2'.
+
 # mini.basics
 
 - Add dot-repeat support for adding empty lines (`go` and `gO` mappings).
