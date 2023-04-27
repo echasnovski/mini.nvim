@@ -21,6 +21,8 @@
 ---     - 'akinsho/bufferline.nvim'
 ---     - 'anuvyklack/hydra.nvim'
 ---     - 'DanilaMihailov/beacon.nvim'
+---     - 'folke/lazy.nvim'
+---     - 'folke/noice.nvim'
 ---     - 'folke/todo-comments.nvim'
 ---     - 'folke/trouble.nvim'
 ---     - 'folke/which-key.nvim'
@@ -31,6 +33,7 @@
 ---     - 'HiPhish/nvim-ts-rainbow2'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
+---     - 'kevinhwang91/nvim-ufo'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
 ---     - 'neoclide/coc.nvim'
@@ -638,6 +641,16 @@ H.apply_palette = function(palette, use_cterm)
     hi('@variable',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
   end
 
+  -- Semantic tokens
+  if vim.fn.has('nvim-0.9') == 1 then
+    -- Source: `:h lsp-semantic-highlight`
+    -- Included only those differing from default links
+    hi('@lsp.type.variable',      {fg=p.base05, bg=nil, attr=nil, sp=nil})
+
+    hi('@lsp.mod.defaultLibrary', {link='Special'})
+    hi('@lsp.mod.deprecated',     {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  end
+
   -- Plugins
   -- echasnovski/mini.nvim
   if H.has_integration('echasnovski/mini.nvim') then
@@ -725,6 +738,18 @@ H.apply_palette = function(palette, use_cterm)
 
   if H.has_integration('DanilaMihailov/beacon.nvim') then
     hi('Beacon', {fg=nil, bg=p.base07, attr=nil, sp=nil})
+  end
+
+  if H.has_integration('folke/lazy.nvim') then
+    hi('LazyButton',       {fg=nil, bg=p.base01, attr=nil,    sp=nil})
+    hi('LazyButtonActive', {fg=nil, bg=p.base02, attr=nil,    sp=nil})
+    hi('LazyDimmed',       {link='Comment'})
+    hi('LazyH1',           {fg=nil, bg=p.base02, attr='bold', sp=nil})
+  end
+
+  if H.has_integration('folke/noice.nvim') then
+    hi('NoiceCmdlinePopupBorder', {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+    hi('NoiceConfirmBorder',      {fg=p.base0E, bg=nil, attr=nil, sp=nil})
   end
 
   -- folke/trouble.nvim
@@ -861,6 +886,9 @@ H.apply_palette = function(palette, use_cterm)
     hi('SneakScope', {fg=p.base00, bg=p.base07, attr=nil,    sp=nil})
     hi('SneakLabel', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
   end
+
+  -- 'kevinhwang91/nvim-ufo'
+  -- Everything works correctly out of the box
 
   if H.has_integration('lewis6991/gitsigns.nvim') then
     hi('GitSignsAdd',             {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})

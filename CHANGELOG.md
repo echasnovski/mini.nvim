@@ -2,6 +2,11 @@
 
 # mini.base16
 
+- FEATURE: Add new integrations:
+    - Lsp semantic tokens.
+    - 'folke/lazy.nvim'.
+    - 'folke/noice.nvim'.
+    - 'kevinhwang91/nvim-ufo'.
 - BREAKING FEATURE: Stop supporting archived 'p00f/nvim-ts-rainbow' in favor of 'HiPhish/nvim-ts-rainbow2'.
 
 # mini.basics
