@@ -31,13 +31,13 @@
 ---     - 'HiPhish/nvim-ts-rainbow2'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
----     - 'nvim-tree/nvim-tree.lua'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
 ---     - 'neoclide/coc.nvim'
 ---     - 'nvim-lualine/lualine.nvim'
 ---     - 'nvim-neo-tree/neo-tree.nvim'
 ---     - 'nvim-telescope/telescope.nvim'
+---     - 'nvim-tree/nvim-tree.lua'
 ---     - 'phaazon/hop.nvim'
 ---     - 'rcarriga/nvim-dap-ui'
 ---     - 'rcarriga/nvim-notify'
@@ -464,7 +464,7 @@ H.apply_palette = function(palette, use_cterm)
   -- Builtin highlighting groups. Some groups which are missing in 'base16-vim'
   -- are added based on groups to which they are linked.
   hi('ColorColumn',    {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
-  hi('Conceal',        {fg=p.base0D, bg=p.base00, attr=nil,         sp=nil})
+  hi('Conceal',        {fg=p.base0D, bg=nil,      attr=nil,         sp=nil})
   hi('CurSearch',      {fg=p.base01, bg=p.base09, attr=nil,         sp=nil})
   hi('Cursor',         {fg=p.base00, bg=p.base05, attr=nil,         sp=nil})
   hi('CursorColumn',   {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
@@ -627,6 +627,16 @@ H.apply_palette = function(palette, use_cterm)
 
   hi('LspCodeLens',          {link='Comment'})
   hi('LspCodeLensSeparator', {link='Comment'})
+
+  -- Tree-sitter
+  if vim.fn.has('nvim-0.8') == 1 then
+    -- Sources:
+    -- - `:h treesitter-highlight-groups`
+    -- - https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights
+    -- Included only those differing from default links
+    hi('@keyword.return', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+    hi('@variable',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
+  end
 
   -- Plugins
   -- echasnovski/mini.nvim
@@ -852,34 +862,22 @@ H.apply_palette = function(palette, use_cterm)
     hi('SneakLabel', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
   end
 
-  if H.has_integration('nvim-tree/nvim-tree.lua') then
-    hi('NvimTreeExecFile',     {fg=p.base0B, bg=nil,      attr='bold',           sp=nil})
-    hi('NvimTreeFolderIcon',   {fg=p.base03, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitDeleted',   {fg=p.base08, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitDirty',     {fg=p.base08, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitMerge',     {fg=p.base0C, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitNew',       {fg=p.base0A, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitRenamed',   {fg=p.base0E, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeGitStaged',    {fg=p.base0B, bg=nil,      attr=nil,              sp=nil})
-    hi('NvimTreeImageFile',    {fg=p.base0E, bg=nil,      attr='bold',           sp=nil})
-    hi('NvimTreeIndentMarker', {link='NvimTreeFolderIcon'})
-    hi('NvimTreeOpenedFile',   {link='NvimTreeExecFile'})
-    hi('NvimTreeRootFolder',   {link='NvimTreeGitRenamed'})
-    hi('NvimTreeSpecialFile',  {fg=p.base0D, bg=nil,      attr='bold,underline', sp=nil})
-    hi('NvimTreeSymlink',      {fg=p.base0F, bg=nil,      attr='bold',           sp=nil})
-    hi('NvimTreeWindowPicker', {fg=p.base05, bg=p.base01, attr="bold",           sp=nil})
-  end
-
   if H.has_integration('lewis6991/gitsigns.nvim') then
-    hi('GitSignsAdd',          {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
-    hi('GitSignsAddLn',        {link='GitSignsAdd'})
-    hi('GitSignsAddInline',    {link='GitSignsAdd'})
-    hi('GitSignsChange',       {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
-    hi('GitSignsChangeLn',     {link='GitSignsChange'})
-    hi('GitSignsChangeInline', {link='GitSignsChange'})
-    hi('GitSignsDelete',       {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
-    hi('GitSignsDeleteLn',     {link='GitSignsDelete'})
-    hi('GitSignsDeleteInline', {link='GitSignsDelete'})
+    hi('GitSignsAdd',             {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
+    hi('GitSignsAddLn',           {link='GitSignsAdd'})
+    hi('GitSignsAddInline',       {link='GitSignsAdd'})
+
+    hi('GitSignsChange',          {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
+    hi('GitSignsChangeLn',        {link='GitSignsChange'})
+    hi('GitSignsChangeInline',    {link='GitSignsChange'})
+
+    hi('GitSignsDelete',          {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
+    hi('GitSignsDeleteLn',        {link='GitSignsDelete'})
+    hi('GitSignsDeleteInline',    {link='GitSignsDelete'})
+
+    hi('GitSignsUntracked',       {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('GitSignsUntrackedLn',     {link='GitSignsUntracked'})
+    hi('GitSignsUntrackedInline', {link='GitSignsUntracked'})
   end
 
   if H.has_integration('lukas-reineke/indent-blankline.nvim') then
@@ -949,6 +947,24 @@ H.apply_palette = function(palette, use_cterm)
     hi('TelescopeMatching',       {fg=p.base0A, bg=nil,      attr=nil,    sp=nil})
     hi('TelescopeMultiSelection', {fg=nil,      bg=p.base01, attr='bold', sp=nil})
     hi('TelescopeSelection',      {fg=nil,      bg=p.base01, attr='bold', sp=nil})
+  end
+
+  if H.has_integration('nvim-tree/nvim-tree.lua') then
+    hi('NvimTreeExecFile',     {fg=p.base0B, bg=nil,      attr='bold',           sp=nil})
+    hi('NvimTreeFolderIcon',   {fg=p.base03, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitDeleted',   {fg=p.base08, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitDirty',     {fg=p.base08, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitMerge',     {fg=p.base0C, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitNew',       {fg=p.base0A, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitRenamed',   {fg=p.base0E, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeGitStaged',    {fg=p.base0B, bg=nil,      attr=nil,              sp=nil})
+    hi('NvimTreeImageFile',    {fg=p.base0E, bg=nil,      attr='bold',           sp=nil})
+    hi('NvimTreeIndentMarker', {link='NvimTreeFolderIcon'})
+    hi('NvimTreeOpenedFile',   {link='NvimTreeExecFile'})
+    hi('NvimTreeRootFolder',   {link='NvimTreeGitRenamed'})
+    hi('NvimTreeSpecialFile',  {fg=p.base0D, bg=nil,      attr='bold,underline', sp=nil})
+    hi('NvimTreeSymlink',      {fg=p.base0F, bg=nil,      attr='bold',           sp=nil})
+    hi('NvimTreeWindowPicker', {fg=p.base05, bg=p.base01, attr="bold",           sp=nil})
   end
 
   if H.has_integration('phaazon/hop.nvim') then
