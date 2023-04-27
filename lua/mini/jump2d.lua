@@ -396,6 +396,15 @@ MiniJump2d.start = function(opts)
   opts.hl_group_dim = opts.hl_group_dim or 'MiniJump2dDim'
 
   local spots = H.spots_compute(opts)
+  if #spots == 0 then
+    H.message('No spots to show.')
+    return
+  end
+  if #spots == 1 then
+    H.perform_jump(spots[1], opts.hooks.after_jump)
+    return
+  end
+
   local label_tbl = vim.split(opts.labels, '')
   spots = H.spots_add_steps(spots, label_tbl, opts.view.n_steps_ahead)
 
@@ -771,10 +780,6 @@ end
 
 H.spots_show = function(spots, opts)
   spots = spots or H.cache.spots or {}
-  if #spots == 0 then
-    H.message('No spots to show.')
-    return
-  end
 
   local set_extmark = vim.api.nvim_buf_set_extmark
 
@@ -948,21 +953,22 @@ H.advance_jump = function(opts)
     end
   end
 
-  if #spots == 1 or key == H.keys.cr then
-    -- Add to jumplist
-    vim.cmd('normal! m`')
-
-    local first_spot = spots[1]
-    vim.api.nvim_set_current_win(first_spot.win_id)
-    vim.api.nvim_win_set_cursor(first_spot.win_id, { first_spot.line, first_spot.column - 1 })
-
-    -- Possibly unfold to see cursor
-    vim.cmd('normal! zv')
-
-    if opts.hooks.after_jump ~= nil then opts.hooks.after_jump() end
-  end
+  if #spots == 1 or key == H.keys.cr then H.perform_jump(spots[1], opts.hooks.after_jump) end
 
   MiniJump2d.stop()
+end
+
+H.perform_jump = function(spot, after_hook)
+  -- Add to jumplist
+  vim.cmd('normal! m`')
+
+  vim.api.nvim_set_current_win(spot.win_id)
+  vim.api.nvim_win_set_cursor(spot.win_id, { spot.line, spot.column - 1 })
+
+  -- Possibly unfold to see cursor
+  vim.cmd('normal! zv')
+
+  if after_hook ~= nil then after_hook() end
 end
 
 -- Utilities ------------------------------------------------------------------

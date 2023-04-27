@@ -317,6 +317,16 @@ T['start()']['uses `<CR>` to jump to first available spot'] = function()
   eq(get_cursor(), { 1, 4 })
 end
 
+T['start()']['jumps immediately to single spot'] = function()
+  set_lines({ '  x' })
+  set_cursor(1, 0)
+
+  start()
+  eq(get_cursor(), { 1, 2 })
+  -- No spots should be shown
+  child.expect_screenshot()
+end
+
 T['start()']['prompts helper message after one idle second'] = function()
   -- Helps create hit-enter-prompt
   child.set_size(5, 60)
