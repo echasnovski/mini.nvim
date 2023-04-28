@@ -74,7 +74,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniIndentscope'), 1)
 
   -- Autocommand on `ModeChanged` event
-  if child.fn.has('nvim-0.7.0') == 1 then eq(child.fn.exists('#MiniIndentscope#ModeChanged'), 1) end
+  eq(child.fn.exists('#MiniIndentscope#ModeChanged'), 1)
 
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniIndentscopeSymbol'), 'links to Delimiter')

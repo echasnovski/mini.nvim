@@ -188,12 +188,7 @@ T['Options']['respect `config.options.win_borders`'] = function()
 
   load_module({ options = { basic = false, win_borders = 'double' } })
 
-  local ref_value
-  if child.fn.has('nvim-0.7') == 1 then
-    ref_value = 'horiz:═,horizdown:╦,horizup:╩,vert:║,verthoriz:╬,vertleft:╣,vertright:╠'
-  else
-    ref_value = 'vert:║'
-  end
+  local ref_value = 'horiz:═,horizdown:╦,horizup:╩,vert:║,verthoriz:╬,vertleft:╣,vertright:╠'
   eq(child.o.fillchars, ref_value)
 end
 

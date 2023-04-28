@@ -1569,9 +1569,9 @@ H.start_scroll = function(start_state)
   -- bottom window lines works, but only in absence of folds. It gets tricky
   -- otherwise, so disabling on scroll start and restore on scroll end is
   -- better solution.
-  H.set_scrolloff(0)
+  vim.wo.scrolloff = 0
   -- Allow placing cursor anywhere on screen for better cursor placing
-  H.set_virtualedit('all')
+  vim.wo.virtualedit = 'all'
 
   if start_state ~= nil then
     vim.fn.winrestview(start_state.view)
@@ -1590,8 +1590,8 @@ H.stop_scroll = function(end_state)
     MiniAnimate.track_scroll_state()
   end
 
-  H.set_scrolloff(end_state.scrolloff)
-  H.set_virtualedit(end_state.virtualedit)
+  vim.wo.scrolloff = end_state.scrolloff
+  vim.wo.virtualedit = end_state.virtualedit
 
   H.cache.scroll_is_active = false
   H.trigger_done_event('scroll')
@@ -1605,8 +1605,8 @@ H.get_scroll_state = function()
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
     cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') },
-    scrolloff = H.cache.scroll_is_active and H.cache.scroll_state.scrolloff or H.get_scrolloff(),
-    virtualedit = H.cache.scroll_is_active and H.cache.scroll_state.virtualedit or H.get_virtualedit(),
+    scrolloff = H.cache.scroll_is_active and H.cache.scroll_state.scrolloff or vim.wo.scrolloff,
+    virtualedit = H.cache.scroll_is_active and H.cache.scroll_state.virtualedit or vim.wo.virtualedit,
   }
 end
 
@@ -2110,30 +2110,6 @@ H.get_n_visible_lines = function(from_line, to_line)
     i = (end_fold_line == -1 and i or end_fold_line) + 1
   end
   return res
-end
-
--- This is needed for compatibility with Neovim<=0.6
--- TODO: Remove after compatibility with Neovim<=0.6 is dropped
-H.getcursorcharpos = vim.fn.exists('*getcursorcharpos') == 1 and vim.fn.getcursorcharpos or vim.fn.getcurpos
-
--- TODO: Remove after compatibility with Neovim<=0.6 is dropped
-H.get_scrolloff = function() return vim.wo.scrolloff end
-H.set_scrolloff = function(x) vim.wo.scrolloff = x end
-
--- For some reason, `vim.wo.scrolloff` doesn't work properly in Neovim=0.6
-if vim.fn.has('nvim-0.7') == 0 then
-  H.get_scrolloff = function() return vim.api.nvim_get_option('scrolloff') end
-  H.set_scrolloff = function(x) return vim.api.nvim_set_option('scrolloff', x) end
-end
-
--- TODO: Remove after compatibility with Neovim<=0.6 is dropped
-H.get_virtualedit = function() return vim.wo.virtualedit end
-H.set_virtualedit = function(x) vim.wo.virtualedit = x end
-
--- The 'scrolloff' option started to be window-local in Neovim=0.7.0
-if vim.fn.has('nvim-0.7') == 0 then
-  H.get_virtualedit = function() return vim.api.nvim_get_option('virtualedit') end
-  H.set_virtualedit = function(x) return vim.api.nvim_set_option('virtualedit', x) end
 end
 
 H.make_step = function(x) return x == 0 and 0 or (x < 0 and -1 or 1) end

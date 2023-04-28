@@ -442,11 +442,6 @@ T['start()']['respects `spotter`'] = function()
   child.lua('MiniJump2d.start({ spotter = function() return { 1 } end })')
   child.expect_screenshot()
 
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
-
   child.lua('MiniJump2d.stop()')
   child.lua('vim.b.minijump2d_config = { spotter = function() return { 2 } end }')
   child.lua('MiniJump2d.start()')
@@ -694,11 +689,6 @@ T['start()']['respects `hooks`'] = function()
   eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 1, 0 })
   type_keys('<CR>')
   eq(child.lua_get('{ _G.n_before_start, _G.n_after_jump }'), { 1, 1 })
-
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
 
   child.lua('MiniJump2d.stop()')
   child.lua([[vim.b.minijump2d_config = {

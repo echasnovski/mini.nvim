@@ -2005,12 +2005,7 @@ H.buffer_reporter.set_options = function(buf_id, win_id)
 end
 
 H.buffer_reporter.set_mappings = function(buf_id)
-  local map_buf = function(key, rhs, opts)
-    -- Use mapping description only in Neovim>=0.7
-    if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
-
-    vim.api.nvim_buf_set_keymap(buf_id, 'n', key, rhs, opts)
-  end
+  local map_buf = function(key, rhs, opts) vim.api.nvim_buf_set_keymap(buf_id, 'n', key, rhs, opts) end
 
   local rhs = [[<Cmd>lua if MiniTest.is_executing() then MiniTest.stop() else vim.cmd('close') end<CR>]]
   map_buf('<Esc>', rhs, { noremap = true, desc = 'Stop execution or close window' })

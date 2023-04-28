@@ -1877,27 +1877,10 @@ H.is_visual_mode = function() return vim.tbl_contains({ 'v', 'V', '\22' }, vim.f
 H.is_whitespace = function(x) return type(x) == 'string' and x:find('^%s*$') ~= nil end
 
 -- Work with get/set text -----------------------------------------------------
---- Get text from current buffer
----
---- Needed for compatibility with Neovim<=0.6 which doesn't have
---- `vim.api.nvim_buf_get_text()`.
----@private
 H.get_text = function(start_row, start_col, end_row, end_col)
-  -- TODO: Remove this whole function after Neovim<=0.6 support is dropped
-  if vim.api.nvim_buf_get_text ~= nil then
-    return vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
-  end
-  local text = H.get_lines(start_row, end_row + 1)
-  if #text == 0 then return text end
-  text[#text] = text[#text]:sub(1, end_col)
-  text[1] = text[1]:sub(start_col + 1)
-  return text
+  return vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
 end
 
---- Get lines from current buffer
----
---- Added for completeness.
----@private
 H.get_lines = function(start_row, end_row) return vim.api.nvim_buf_get_lines(0, start_row, end_row, true) end
 
 --- Set text in current buffer without affecting marks
@@ -1953,12 +1936,7 @@ H.error = function(msg) error(string.format('(mini.align) %s', msg), 0) end
 
 H.map = function(mode, key, rhs, opts)
   if key == '' then return end
-
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-
-  -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
-
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

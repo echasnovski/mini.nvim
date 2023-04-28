@@ -1474,16 +1474,10 @@ H.buf_keymap = function(buf_id, key, cmd)
   vim.api.nvim_buf_set_keymap(buf_id, 'n', key, ('<Cmd>lua %s<CR>'):format(cmd), { nowait = true, silent = true })
 end
 
--- Use `priority` in Neovim 0.7 because of the regression bug (highlights are
--- not stacked properly): https://github.com/neovim/neovim/issues/17358
-if vim.fn.has('nvim-0.7') == 1 then
-  H.buf_hl = function(buf_id, ns_id, hl_group, line, col_start, col_end, priority)
-    vim.highlight.range(buf_id, ns_id, hl_group, { line, col_start }, { line, col_end }, { priority = priority })
-  end
-else
-  H.buf_hl = function(buf_id, ns_id, hl_group, line, col_start, col_end)
-    vim.highlight.range(buf_id, ns_id, hl_group, { line, col_start }, { line, col_end })
-  end
+-- Use `priority` because of the regression bug (highlights are not stacked
+-- properly): https://github.com/neovim/neovim/issues/17358
+H.buf_hl = function(buf_id, ns_id, hl_group, line, col_start, col_end, priority)
+  vim.highlight.range(buf_id, ns_id, hl_group, { line, col_start }, { line, col_end }, { priority = priority })
 end
 
 H.get_buffer_windows = function(buf_id)

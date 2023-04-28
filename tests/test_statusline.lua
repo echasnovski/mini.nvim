@@ -213,7 +213,6 @@ T['is_truncated()']['works'] = function()
 end
 
 T['is_truncated()']['respects global statusline'] = function()
-  if child.fn.has('nvim-0.7') == 0 then return end
   child.o.laststatus = 3
   child.o.columns = 60
   child.cmd('wincmd v')
@@ -237,11 +236,6 @@ T['active()/inactive()']['respects `config.content`'] = function(field)
     string.format([[require('mini.statusline').setup({ content = { %s = function() return 'aaa' end } })]], field)
   child.lua(command)
   eq(eval_content(field), 'aaa')
-
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
 
   command = string.format([[vim.b.ministatusline_config = { content = { %s = function() return 'bbb' end } }]], field)
   child.lua(command)

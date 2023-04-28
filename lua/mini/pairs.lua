@@ -202,7 +202,7 @@ end
 MiniPairs.map_buf = function(buffer, mode, lhs, pair_info, opts)
   pair_info = H.validate_pair_info(pair_info)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
-  if vim.fn.has('nvim-0.7') == 1 then opts.desc = H.infer_mapping_description(pair_info) end
+  opts.desc = H.infer_mapping_description(pair_info)
 
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
@@ -585,12 +585,7 @@ end
 
 H.map = function(mode, key, rhs, opts)
   if key == '' then return end
-
   opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
-
-  -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
-
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

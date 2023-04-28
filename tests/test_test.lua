@@ -186,10 +186,6 @@ T['run()']['respects `opts` argument'] = function()
   eq(#get_current_all_cases(), 0)
 
   -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
-
   local general_file = get_ref_path('testref_general.lua')
   local command = string.format(
     [[vim.b.minitest_config = { collect = { find_files = function() return { '%s' } end } }]],
@@ -415,11 +411,6 @@ T['collect()']['respects `find_files` option'] = function()
   eq(child.lua_get('#_G.cases'), 2)
   eq(child.lua_get('_G.cases[1].desc[1]'), 'tests/dir-test/testref_general.lua')
 
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
-
   child.lua([[vim.b.minitest_config = { collect = { find_files = function() return {} end } }]])
   child.lua('_G.cases = MiniTest.collect()')
   eq(child.lua_get('#_G.cases'), 0)
@@ -437,11 +428,6 @@ T['collect()']['respects `filter_cases` option'] = function()
 
   eq(child.lua_get('#_G.cases'), 1)
   eq(child.lua_get('_G.cases[1].desc[2]'), 'case 2')
-
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
 
   child.lua([[vim.b.minitest_config = { collect = { filter_cases = function() return false end } }]])
   child.lua('_G.cases = MiniTest.collect()')
@@ -469,11 +455,6 @@ T['execute()']['respects `reporter` option']['partial'] = function()
 
   eq(child.lua_get('_G.was_in_start'), true)
   eq(child.lua_get('_G.was_in_finish'), true)
-
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
 
   child.lua('vim.b.minitest_config = { execute = { reporter = { update = function() _G.was_in_update = true end } } }')
   child.lua('MiniTest.execute(_G.cases)')
@@ -1008,17 +989,11 @@ T['child']['redirected method tables'] = new_set({
 })
 
 T['child']['redirected method tables']['method'] = function(tbl_name, field_name, args)
-  -- Test only on Neovim>=0.7 (not everything is present in earlier versions)
-  if child.fn.has('nvim-0.7.0') == 0 then return end
-
   local method = function() return child[tbl_name][field_name](unpack(args)) end
   validate_child_method(method, { name = tbl_name .. '.' .. field_name })
 end
 
 T['child']['redirected method tables']['field'] = function(tbl_name, field_name, _)
-  -- Test only on Neovim>=0.7 (not everything is present in earlier versions)
-  if child.fn.has('nvim-0.7.0') == 0 then return end
-
   -- Although being tables, they should be overridable to allow test doubles
   validate_child_field(tbl_name, field_name, true)
 end

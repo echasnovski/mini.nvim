@@ -314,11 +314,6 @@ T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function
   sleep(test_times.completion + 1)
   eq(get_completion(), { 'February', 'March' })
 
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
-
   child.ensure_normal_mode()
   set_lines({ '' })
   set_cursor(1, 0)
@@ -353,11 +348,6 @@ T['Autocompletion']['respects function `config.fallback_action`'] = function()
   type_keys('i', 'a')
   sleep(test_times.completion + 1)
   eq(child.lua_get('_G.inside_fallback'), true)
-
-  -- Should also use buffer local config
-  if vim.fn.has('nvim-0.7') == 0 then
-    MiniTest.skip('Function values inside buffer variables are not supported in Neovim<0.7.')
-  end
 
   child.ensure_normal_mode()
   child.lua('vim.b.minicompletion_config = { fallback_action = function() _G.inside_local_fallback = true end }')

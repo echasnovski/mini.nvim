@@ -438,12 +438,7 @@ H.get_config =
 -- Utilities ------------------------------------------------------------------
 H.map = function(mode, key, rhs, opts)
   if key == '' then return end
-
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-
-  -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
-
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

@@ -499,10 +499,9 @@ H.apply_options = function(config)
   end
 
   -- Use some common window borders presets
-  local fillchars = H.win_borders_fillchars[config.options.win_borders]
-  if fillchars ~= nil then
-    local chars = fillchars.vert .. (vim.fn.has('nvim-0.7') == 1 and fillchars.rest or '')
-    vim.opt.fillchars:append(chars)
+  local border_chars = H.win_borders_fillchars[config.options.win_borders]
+  if border_chars ~= nil then
+    vim.opt.fillchars:append(border_chars)
   end
 end
 
@@ -526,11 +525,11 @@ H.vim_opt = setmetatable({}, {
 
 --stylua: ignore
 H.win_borders_fillchars = {
-  bold    = { vert = 'vert:┃', rest = ',horiz:━,horizdown:┳,horizup:┻,verthoriz:╋,vertleft:┫,vertright:┣' },
-  dot     = { vert = 'vert:·', rest = ',horiz:·,horizdown:·,horizup:·,verthoriz:·,vertleft:·,vertright:·' },
-  double  = { vert = 'vert:║', rest = ',horiz:═,horizdown:╦,horizup:╩,verthoriz:╬,vertleft:╣,vertright:╠' },
-  single  = { vert = 'vert:│', rest = ',horiz:─,horizdown:┬,horizup:┴,verthoriz:┼,vertleft:┤,vertright:├' },
-  solid   = { vert = 'vert: ', rest = ',horiz: ,horizdown: ,horizup: ,verthoriz: ,vertleft: ,vertright: ' },
+  bold   = 'vert:┃,horiz:━,horizdown:┳,horizup:┻,verthoriz:╋,vertleft:┫,vertright:┣',
+  dot    = 'vert:·,horiz:·,horizdown:·,horizup:·,verthoriz:·,vertleft:·,vertright:·',
+  double = 'vert:║,horiz:═,horizdown:╦,horizup:╩,verthoriz:╬,vertleft:╣,vertright:╠',
+  single = 'vert:│,horiz:─,horizdown:┬,horizup:┴,verthoriz:┼,vertleft:┤,vertright:├',
+  solid  = 'vert: ,horiz: ,horizdown: ,horizup: ,verthoriz: ,vertleft: ,vertright: ',
 }
 
 -- Mappings -------------------------------------------------------------------
@@ -728,12 +727,7 @@ end
 -- Utilities ------------------------------------------------------------------
 H.map = function(mode, key, rhs, opts)
   if key == '' then return end
-
   opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-
-  -- Use mapping description only in Neovim>=0.7
-  if vim.fn.has('nvim-0.7') == 0 then opts.desc = nil end
-
   vim.api.nvim_set_keymap(mode, key, rhs, opts)
 end
 

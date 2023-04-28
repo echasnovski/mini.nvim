@@ -16,11 +16,6 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
--- TODO: Remove after compatibility with Neovim<=0.6 is dropped
-local skip_on_old_neovim = function()
-  if child.fn.has('nvim-0.7') == 0 then MiniTest.skip() end
-end
-
 local get_virt_cursor = function()
   local pos = child.fn.getcurpos()
   return { pos[2], pos[3] + pos[4] - 1 }
@@ -284,8 +279,6 @@ T['execute_after()']['works immediately'] = function()
 end
 
 T['execute_after()']['works after animation is done'] = function()
-  skip_on_old_neovim()
-
   child.set_size(5, 80)
   child.api.nvim_set_keymap(
     'n',

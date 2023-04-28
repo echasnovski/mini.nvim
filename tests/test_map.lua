@@ -1027,8 +1027,6 @@ T['gen_integration']['builtin_search()']['updates when appropriate'] = function(
 end
 
 T['gen_integration']['builtin_search()']['respects documented keymaps'] = function()
-  if child.fn.has('nvim-0.7.0') == 0 then return end
-
   map_open_with_integration('builtin_search')
 
   child.lua([[

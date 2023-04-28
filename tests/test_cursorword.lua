@@ -63,7 +63,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniCursorword'), 1)
 
   -- Autocommand on `ModeChanged` event
-  if child.fn.has('nvim-0.7.0') == 1 then eq(child.fn.exists('#MiniCursorword#ModeChanged'), 1) end
+  eq(child.fn.exists('#MiniCursorword#ModeChanged'), 1)
 
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniCursorword'), 'gui=underline')
