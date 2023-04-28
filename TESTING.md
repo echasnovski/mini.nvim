@@ -169,7 +169,7 @@ return T
 
 ```bash
 mkdir -p deps
-git clone --depth 1 https://github.com/echasnovski/mini.nvim deps/mini.nvim
+git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim
 ```
 
 - **Manual Neovim startup file** (a.k.a 'init.lua') with proposed path 'scripts/minimal_init.lua'. It will be used to ensure that Neovim processes can recognize your tested plugin and 'mini.nvim' dependency. Proposed minimal content:
@@ -211,7 +211,7 @@ test_file: deps/mini.nvim
 # Download 'mini.nvim' to use its 'mini.test' testing module
 deps/mini.nvim:
 	@mkdir -p deps
-	git clone --depth 1 https://github.com/echasnovski/mini.nvim $@
+	git clone --filter=blob:none https://github.com/echasnovski/mini.nvim $@
 ```
 
 </details><br>

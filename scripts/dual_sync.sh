@@ -20,7 +20,7 @@ sync_module () {
   if [[ ! -d $repo ]]
   then
     printf "Pulling\n"
-    git clone --depth 1 https://github.com/echasnovski/mini.$module.git $repo
+    git clone --filter=blob:none https://github.com/echasnovski/mini.$module.git $repo
   else
     printf "No pulling (already present)\n"
   fi
