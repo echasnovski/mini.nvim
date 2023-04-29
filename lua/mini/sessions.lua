@@ -74,23 +74,8 @@ MiniSessions.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniSessions
-        au!
-        au VimEnter * ++nested ++once lua MiniSessions.on_vimenter()
-      augroup END]],
-    false
-  )
-
-  if config.autowrite then
-    vim.api.nvim_exec(
-      [[augroup MiniSessions
-          au VimLeavePre * lua if vim.v.this_session ~= '' then MiniSessions.write(nil, {force = true}) end
-        augroup END]],
-      false
-    )
-  end
+  -- Define behavior
+  H.create_autocommands(config)
 end
 
 --- Module config
@@ -392,11 +377,6 @@ MiniSessions.get_latest = function()
   return latest_name
 end
 
---- Act on |VimEnter|
-MiniSessions.on_vimenter = function()
-  if MiniSessions.config.autoread and not H.is_something_shown() then MiniSessions.read() end
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniSessions.config
@@ -450,6 +430,30 @@ H.apply_config = function(config)
   MiniSessions.config = config
 
   H.detect_sessions(config)
+end
+
+H.create_autocommands = function(config)
+  local augroup = vim.api.nvim_create_augroup('MiniSessions', {})
+
+  if config.autoread then
+    local autoread = function()
+      if not H.is_something_shown() then MiniSessions.read() end
+    end
+    vim.api.nvim_create_autocmd(
+      'VimEnter',
+      { group = augroup, nested = true, once = true, callback = autoread, desc = 'Autoread latest session' }
+    )
+  end
+
+  if config.autowrite then
+    local autowrite = function()
+      if vim.v.this_session ~= '' then MiniSessions.write(nil, { force = true }) end
+    end
+    vim.api.nvim_create_autocmd(
+      'VimLeavePre',
+      { group = augroup, callback = autowrite, desc = 'Autowrite current session' }
+    )
+  end
 end
 
 H.is_disabled = function() return vim.g.minisessions_disable == true or vim.b.minisessions_disable == true end

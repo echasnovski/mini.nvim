@@ -51,9 +51,7 @@
 --- What it doesn't do:
 --- - Automatically refresh when typing in Insert mode. Although it can be done in
 ---   non-blocking way, it still might introduce considerable computation overhead
----   (especially in very large files). You can enable it manually by calling
----   |MiniMap.on_content_change()| on |TextChangedI| event and
----   |MiniMap.on_view_change()| on |CursorMovedI| event.
+---   (especially in very large files).
 --- - Has more flexible window configuration. In case a full height floating
 ---   window obstructs vision of underlying buffers, use |MiniMap.toggle()| or
 ---   |MiniMap.toggle_side()|. Works best with global statusline.
@@ -197,26 +195,8 @@ MiniMap.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniMap
-        au!
-        au BufEnter,BufWritePost,TextChanged,VimResized * lua MiniMap.on_content_change()
-        au CursorMoved,WinScrolled * lua MiniMap.on_view_change()
-        au WinLeave * lua MiniMap.on_winleave()
-      augroup END]],
-    false
-  )
-
-  if vim.fn.exists('##ModeChanged') == 1 then
-    -- Refresh on every return to Normal mode
-    vim.api.nvim_exec(
-      [[augroup MiniMap
-          au ModeChanged *:n lua MiniMap.on_content_change()
-        augroup END]],
-      false
-    )
-  end
+  -- Define behavior
+  H.create_autocommands()
 
   -- Create highlighting
   vim.api.nvim_exec(
@@ -766,12 +746,10 @@ MiniMap.gen_integration.builtin_search = function(hl_groups)
 
   -- Update when necessary. Not ideal, because it won't react on `n/N/*`, etc.
   -- See https://github.com/neovim/neovim/issues/18879
-  vim.api.nvim_exec(
-    [[augroup MiniMapBuiltinSearch
-        au!
-        au OptionSet hlsearch lua MiniMap.on_integration_update()
-      augroup END]],
-    false
+  local augroup = vim.api.nvim_create_augroup('MiniMapBuiltinSearch', {})
+  vim.api.nvim_create_autocmd(
+    'OptionSet',
+    { group = augroup, pattern = 'hlsearch', callback = H.on_integration_update, desc = "On 'hlsearch' update" }
   )
 
   local search_hl = hl_groups.search
@@ -846,12 +824,10 @@ MiniMap.gen_integration.diagnostic = function(hl_groups)
   )
 
   -- Refresh map when needed
-  vim.api.nvim_exec(
-    [[augroup MiniMapDiagnostics
-        au!
-        au DiagnosticChanged * lua MiniMap.on_integration_update()
-      augroup END]],
-    false
+  local augroup = vim.api.nvim_create_augroup('MiniMapDiagnostics', {})
+  vim.api.nvim_create_autocmd(
+    'DiagnosticChanged',
+    { group = augroup, callback = H.on_integration_update, desc = 'On DiagnosticChanged' }
   )
 
   return function()
@@ -889,12 +865,10 @@ end
 MiniMap.gen_integration.gitsigns = function(hl_groups)
   if hl_groups == nil then hl_groups = { add = 'GitSignsAdd', change = 'GitSignsChange', delete = 'GitSignsDelete' } end
 
-  vim.api.nvim_exec(
-    [[augroup MiniMapGitsigns
-        au!
-        au User GitSignsUpdate lua MiniMap.on_integration_update()
-      augroup END]],
-    false
+  local augroup = vim.api.nvim_create_augroup('MiniMapGitsigns', {})
+  vim.api.nvim_create_autocmd(
+    'User',
+    { group = augroup, pattern = 'GitSignsUpdate', callback = H.on_integration_update, desc = 'On GitSignsUpdate' }
   )
 
   return function()
@@ -922,87 +896,6 @@ MiniMap.gen_integration.gitsigns = function(hl_groups)
 
     return line_hl
   end
-end
-
---- Act on content change
----
---- No need to use it directly, everything is setup in |MiniMap.setup()|.
-MiniMap.on_content_change = vim.schedule_wrap(function()
-  -- Using `vim.schedule_wrap()` helps computing more precise buffer data.
-  -- Example: if omitted, terminal buffer is recognized as normal and thus map
-  -- is updated.
-  if not H.is_proper_buftype() then return end
-  MiniMap.refresh()
-end)
-
---- Act on view change
----
---- No need to use it directly, everything is setup in |MiniMap.setup()|.
-MiniMap.on_view_change = vim.schedule_wrap(function()
-  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
-  MiniMap.refresh({}, { integrations = false, lines = false })
-end)
-
---- Act on integration update
----
---- No need to use it directly, everything is setup in |MiniMap.setup()|.
-MiniMap.on_integration_update = vim.schedule_wrap(function()
-  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
-  MiniMap.refresh({}, { lines = false, scrollbar = false })
-end)
-
---- Act on |WinLeave|
----
---- No need to use it directly, everything is setup in |MiniMap.setup()|.
-MiniMap.on_winleave = function()
-  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
-
-  H.cache.previous_win.id = vim.api.nvim_get_current_win()
-  H.cache.previous_win.cursor = vim.api.nvim_win_get_cursor(0)
-end
-
---- Track cursor in map buffer
----
---- No need to use it directly, everything is setup in |MiniMap.open()|.
-MiniMap.track_map_cursor = function()
-  -- Operate only inside map window but not just after focusing
-  H.cache.n_map_cursor_moves = H.cache.n_map_cursor_moves + 1
-  local cur_win, map_win = vim.api.nvim_get_current_win(), H.get_current_map_win()
-  if cur_win ~= map_win or H.cache.n_map_cursor_moves <= 1 then return end
-
-  -- Don't allow putting cursor inside offset (where scrollbar is)
-  local cur_pos = vim.api.nvim_win_get_cursor(map_win)
-  if cur_pos[2] < H.cache.scrollbar_data.offset then
-    vim.api.nvim_win_set_cursor(map_win, { cur_pos[1], H.cache.scrollbar_data.offset })
-  end
-
-  -- Synchronize cursors in map and previous window
-  local prev_win_id = H.cache.previous_win.id
-  if prev_win_id == nil then return end
-
-  vim.api.nvim_win_set_cursor(prev_win_id, { H.mapline_to_sourceline(cur_pos[1]), 0 })
-
-  -- Open just enough folds and center cursor
-  vim.api.nvim_win_call(prev_win_id, function() vim.cmd('normal! zvzz') end)
-end
-
---- Act on |BufEnter| for map buffer
----
---- No need to use it directly, everything is setup in |MiniMap.open()|.
-MiniMap.on_map_enter = function()
-  -- Check if anything is present (window can be not opened because there is
-  -- one buffer, but many possible windows; so this can be executed on second
-  -- `MiniMap.open()` without opened window)
-  if not H.is_window_open() or H.cache.previous_win.cursor == nil then return end
-
-  -- Put cursor in map window at line indicator to the right of scrollbar
-  local map_line = H.sourceline_to_mapline(H.cache.previous_win.cursor[1])
-  local win_id = H.get_current_map_win()
-
-  vim.api.nvim_win_set_cursor(win_id, { map_line, H.cache.scrollbar_data.offset })
-
-  -- Reset number of cursor moves to later check if should track cursor move
-  H.cache.n_map_cursor_moves = 0
 end
 
 -- Helper data ================================================================
@@ -1106,10 +999,87 @@ end
 
 H.apply_config = function(config) MiniMap.config = config end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniMap', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au({ 'BufEnter', 'BufWritePost', 'TextChanged', 'VimResized' }, '*', H.on_content_change, 'On content change')
+  au({ 'CursorMoved', 'WinScrolled' }, '*', H.on_view_change, 'On view change')
+  au('WinLeave', '*', H.on_winleave, 'On WinLeave')
+  au('ModeChanged', '*:n', H.on_content_change, 'On return to Normal mode')
+end
+
 H.is_disabled = function() return vim.g.minimap_disable == true or vim.b.minimap_disable == true end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniMap.config, vim.b.minimap_config or {}, config or {}) end
+
+-- Autocommands ---------------------------------------------------------------
+H.on_content_change = vim.schedule_wrap(function()
+  -- Using `vim.schedule_wrap()` helps computing more precise buffer data.
+  -- Example: if omitted, terminal buffer is recognized as normal and thus map
+  -- is updated.
+  if not H.is_proper_buftype() then return end
+  MiniMap.refresh()
+end)
+
+H.on_view_change = vim.schedule_wrap(function()
+  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
+  MiniMap.refresh({}, { integrations = false, lines = false })
+end)
+
+H.on_integration_update = vim.schedule_wrap(function()
+  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
+  MiniMap.refresh({}, { lines = false, scrollbar = false })
+end)
+
+H.on_winleave = function()
+  if not (H.is_proper_buftype() and H.is_source_buffer()) then return end
+
+  H.cache.previous_win.id = vim.api.nvim_get_current_win()
+  H.cache.previous_win.cursor = vim.api.nvim_win_get_cursor(0)
+end
+
+H.track_map_cursor = function()
+  -- Operate only inside map window but not just after focusing
+  H.cache.n_map_cursor_moves = H.cache.n_map_cursor_moves + 1
+  local cur_win, map_win = vim.api.nvim_get_current_win(), H.get_current_map_win()
+  if cur_win ~= map_win or H.cache.n_map_cursor_moves <= 1 then return end
+
+  -- Don't allow putting cursor inside offset (where scrollbar is)
+  local cur_pos = vim.api.nvim_win_get_cursor(map_win)
+  if cur_pos[2] < H.cache.scrollbar_data.offset then
+    vim.api.nvim_win_set_cursor(map_win, { cur_pos[1], H.cache.scrollbar_data.offset })
+  end
+
+  -- Synchronize cursors in map and previous window
+  local prev_win_id = H.cache.previous_win.id
+  if prev_win_id == nil then return end
+
+  vim.api.nvim_win_set_cursor(prev_win_id, { H.mapline_to_sourceline(cur_pos[1]), 0 })
+
+  -- Open just enough folds and center cursor
+  vim.api.nvim_win_call(prev_win_id, function() vim.cmd('normal! zvzz') end)
+end
+
+H.on_map_enter = function()
+  -- Check if anything is present (window can be not opened because there is
+  -- one buffer, but many possible windows; so this can be executed on second
+  -- `MiniMap.open()` without opened window)
+  if not H.is_window_open() or H.cache.previous_win.cursor == nil then return end
+
+  -- Put cursor in map window at line indicator to the right of scrollbar
+  local map_line = H.sourceline_to_mapline(H.cache.previous_win.cursor[1])
+  local win_id = H.get_current_map_win()
+
+  vim.api.nvim_win_set_cursor(win_id, { map_line, H.cache.scrollbar_data.offset })
+
+  -- Reset number of cursor moves to later check if should track cursor move
+  H.cache.n_map_cursor_moves = 0
+end
 
 -- Work with mask -------------------------------------------------------------
 ---@param strings table Array of strings
@@ -1365,11 +1335,11 @@ H.create_map_buffer = function()
   vim.api.nvim_buf_set_keymap(buf_id, 'n', '<Esc>', '<Cmd>lua MiniMap.toggle_focus(true)<CR>', { noremap = false })
 
   -- Make buffer local autocommands
-  local bufenter_cmd = string.format('au BufEnter <buffer=%d> lua MiniMap.on_map_enter()', buf_id)
-  vim.cmd(bufenter_cmd)
-
-  local cursormoved_cmd = string.format('au CursorMoved <buffer=%d> lua MiniMap.track_map_cursor()', buf_id)
-  vim.cmd(cursormoved_cmd)
+  vim.api.nvim_create_autocmd('BufEnter', { buffer = buf_id, callback = H.on_map_enter, desc = 'On map enter' })
+  vim.api.nvim_create_autocmd(
+    'CursorMoved',
+    { buffer = buf_id, callback = H.track_map_cursor, desc = 'Track map cursor' }
+  )
 
   -- Make buffer play nicely with other 'mini.nvim' modules
   vim.api.nvim_buf_set_var(buf_id, 'minicursorword_disable', true)

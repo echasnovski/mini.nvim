@@ -129,15 +129,9 @@ MiniStatusline.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniStatusline
-        au!
-        au WinEnter,BufEnter * setlocal statusline=%!v:lua.MiniStatusline.active()
-        au WinLeave,BufLeave * setlocal statusline=%!v:lua.MiniStatusline.inactive()
-      augroup END]],
-    false
-  )
+  -- Define behavior
+  H.create_autocommands()
+
   -- - Disable built-in statusline in Quickfix window
   vim.g.qf_disable_statusline = 1
 
@@ -473,6 +467,20 @@ H.apply_config = function(config)
   if config.set_vim_settings then
     vim.o.laststatus = 2 -- Always show statusline
   end
+end
+
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniStatusline', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  local set_active = function() vim.wo.statusline = '%!v:lua.MiniStatusline.active()' end
+  au({ 'WinEnter', 'BufEnter' }, '*', set_active, 'Set active statusline')
+
+  local set_inactive = function() vim.wo.statusline = '%!v:lua.MiniStatusline.inactive()' end
+  au({ 'WinLeave', 'BufLeave' }, '*', set_inactive, 'Set inactive statusline')
 end
 
 H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end

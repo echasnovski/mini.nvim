@@ -51,9 +51,7 @@ Features:
 What it doesn't do:
 - Automatically refresh when typing in Insert mode. Although it can be done in
   non-blocking way, it still might introduce considerable computation overhead
-  (especially in very large files). You can enable it manually by calling
-  |MiniMap.on_content_change()| on |TextChangedI| event and
-  |MiniMap.on_view_change()| on |CursorMovedI| event.
+  (especially in very large files).
 - Has more flexible window configuration. In case a full height floating
   window obstructs vision of underlying buffers, use |MiniMap.toggle()| or
   |MiniMap.toggle_side()|. Works best with global statusline.
@@ -696,48 +694,6 @@ Parameters~
   - <add> - highlight group for added lines. Default: "GitSignsAdd".
   - <change> - highlight group for changed lines. Default: "GitSignsChange".
   - <delete> - highlight group for deleted lines. Default: "GitSignsDelete".
-
-------------------------------------------------------------------------------
-                                                     *MiniMap.on_content_change*
-                          `MiniMap.on_content_change`
-Act on content change
-
-No need to use it directly, everything is setup in |MiniMap.setup()|.
-
-------------------------------------------------------------------------------
-                                                        *MiniMap.on_view_change*
-                            `MiniMap.on_view_change`
-Act on view change
-
-No need to use it directly, everything is setup in |MiniMap.setup()|.
-
-------------------------------------------------------------------------------
-                                                 *MiniMap.on_integration_update*
-                        `MiniMap.on_integration_update`
-Act on integration update
-
-No need to use it directly, everything is setup in |MiniMap.setup()|.
-
-------------------------------------------------------------------------------
-                                                         *MiniMap.on_winleave()*
-                            `MiniMap.on_winleave`()
-Act on |WinLeave|
-
-No need to use it directly, everything is setup in |MiniMap.setup()|.
-
-------------------------------------------------------------------------------
-                                                    *MiniMap.track_map_cursor()*
-                          `MiniMap.track_map_cursor`()
-Track cursor in map buffer
-
-No need to use it directly, everything is setup in |MiniMap.open()|.
-
-------------------------------------------------------------------------------
-                                                        *MiniMap.on_map_enter()*
-                            `MiniMap.on_map_enter`()
-Act on |BufEnter| for map buffer
-
-No need to use it directly, everything is setup in |MiniMap.open()|.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

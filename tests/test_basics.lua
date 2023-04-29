@@ -802,10 +802,10 @@ end
 T['Autocommands'] = new_set()
 
 T['Autocommands']['work'] = function()
+  child.lua('vim.highlight.on_yank = function() _G.been_here = true end')
   load_module()
 
   -- Highlight on yank
-  child.lua('vim.highlight.on_yank = function() _G.been_here = true end')
   set_lines({ 'aaa' })
   type_keys('yiw')
   eq(child.lua_get('_G.been_here'), true)
@@ -830,16 +830,13 @@ T['Autocommands']['respects `config.autocommands.relnum_in_visual_mode`'] = func
   type_keys('<Esc>')
   eq(child.o.relativenumber, false)
 
-  -- Autocommand depends on `ModeChanged` event. It should load properly but
-  -- not operate as expected.
-  local has_modechanged = vim.fn.exists('##ModeChanged') == 1
   load_module({ autocommands = { relnum_in_visual_mode = true } })
 
   eq(child.o.relativenumber, false)
   type_keys('V')
-  eq(child.o.relativenumber, has_modechanged)
+  eq(child.o.relativenumber, true)
   type_keys('<C-v>')
-  eq(child.o.relativenumber, has_modechanged)
+  eq(child.o.relativenumber, true)
   type_keys('<Esc>')
   eq(child.o.relativenumber, false)
 end

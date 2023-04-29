@@ -247,11 +247,6 @@ Default values:
 <
 
 ------------------------------------------------------------------------------
-                                                     *MiniStarter.on_vimenter()*
-                          `MiniStarter.on_vimenter`()
-Act on |VimEnter|.
-
-------------------------------------------------------------------------------
                                                             *MiniStarter.open()*
                           `MiniStarter.open`({buf_id})
 Open Starter buffer
@@ -601,11 +596,6 @@ Parameters~
   essentially resets query.
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
-
-------------------------------------------------------------------------------
-                                                  *MiniStarter.on_cursormoved()*
-                     `MiniStarter.on_cursormoved`({buf_id})
-Act on |CursorMoved| by repositioning cursor in fixed place.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

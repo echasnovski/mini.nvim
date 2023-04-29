@@ -117,25 +117,8 @@ MiniIndentscope.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniIndentscope
-        au!
-        au CursorMoved,CursorMovedI                          * lua MiniIndentscope.auto_draw({ lazy = true })
-        au TextChanged,TextChangedI,TextChangedP,WinScrolled * lua MiniIndentscope.auto_draw()
-      augroup END]],
-    false
-  )
-
-  if vim.fn.exists('##ModeChanged') == 1 then
-    vim.api.nvim_exec(
-      -- Call `auto_draw` on mode change to respect `miniindentscope_disable`
-      [[augroup MiniIndentscope
-          au ModeChanged *:* lua MiniIndentscope.auto_draw({ lazy = true })
-        augroup END]],
-      false
-    )
-  end
+  -- Define behavior
+  H.create_autocommands()
 
   -- Create highlighting
   vim.api.nvim_exec(
@@ -344,47 +327,6 @@ MiniIndentscope.get_scope = function(line, col, opts)
     buf_id = vim.api.nvim_get_current_buf(),
     reference = { line = line, column = col, indent = indent },
   }
-end
-
---- Auto draw scope indicator based on movement events
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniIndentscope.setup|.
----
----@param opts table|nil Options.
-MiniIndentscope.auto_draw = function(opts)
-  if H.is_disabled() then
-    H.undraw_scope()
-    return
-  end
-
-  opts = opts or {}
-  local scope = MiniIndentscope.get_scope()
-
-  -- Make early return if nothing has to be done. Doing this before updating
-  -- event id allows to not interrupt ongoing animation.
-  if opts.lazy and H.current.draw_status ~= 'none' and H.scope_is_equal(scope, H.current.scope) then return end
-
-  -- Account for current event
-  local local_event_id = H.current.event_id + 1
-  H.current.event_id = local_event_id
-
-  -- Compute drawing options for current event
-  local draw_opts = H.make_autodraw_opts(scope)
-
-  -- Allow delay
-  if draw_opts.delay > 0 then H.undraw_scope(draw_opts) end
-
-  -- Use `defer_fn()` even if `delay` is 0 to draw indicator only after all
-  -- events are processed (stops flickering)
-  vim.defer_fn(function()
-    if H.current.event_id ~= local_event_id then return end
-
-    H.undraw_scope(draw_opts)
-
-    H.current.scope = scope
-    H.draw_scope(scope, draw_opts)
-  end, draw_opts.delay)
 end
 
 --- Draw scope manually
@@ -702,10 +644,67 @@ H.apply_config = function(config)
   --stylua: ignore start
 end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniIndentscope', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au(
+    { 'CursorMoved', 'CursorMovedI', 'ModeChanged' },
+    '*',
+    function() H.auto_draw({ lazy = true }) end,
+    'Auto draw indentscope lazily'
+  )
+  au(
+    { 'TextChanged', 'TextChangedI', 'TextChangedP', 'WinScrolled' },
+    '*',
+    function() H.auto_draw() end,
+    'Auto draw indentscope'
+  )
+end
+
 H.is_disabled = function() return vim.g.miniindentscope_disable == true or vim.b.miniindentscope_disable == true end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniIndentscope.config, vim.b.miniindentscope_config or {}, config or {})
+end
+
+-- Autocommands ---------------------------------------------------------------
+H.auto_draw = function(opts)
+  if H.is_disabled() then
+    H.undraw_scope()
+    return
+  end
+
+  opts = opts or {}
+  local scope = MiniIndentscope.get_scope()
+
+  -- Make early return if nothing has to be done. Doing this before updating
+  -- event id allows to not interrupt ongoing animation.
+  if opts.lazy and H.current.draw_status ~= 'none' and H.scope_is_equal(scope, H.current.scope) then return end
+
+  -- Account for current event
+  local local_event_id = H.current.event_id + 1
+  H.current.event_id = local_event_id
+
+  -- Compute drawing options for current event
+  local draw_opts = H.make_autodraw_opts(scope)
+
+  -- Allow delay
+  if draw_opts.delay > 0 then H.undraw_scope(draw_opts) end
+
+  -- Use `defer_fn()` even if `delay` is 0 to draw indicator only after all
+  -- events are processed (stops flickering)
+  vim.defer_fn(function()
+    if H.current.event_id ~= local_event_id then return end
+
+    H.undraw_scope(draw_opts)
+
+    H.current.scope = scope
+    H.draw_scope(scope, draw_opts)
+  end, draw_opts.delay)
 end
 
 -- Scope ----------------------------------------------------------------------

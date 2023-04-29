@@ -64,9 +64,7 @@
 --- `vim.b.minitabline_disable` (for a buffer) to `true`. Considering high number
 --- of different scenarios and customization intentions, writing exact rules
 --- for disabling module's functionality is left to user. See
---- |mini.nvim-disabling-recipes| for common recipes. Note: after disabling,
---- tabline is not updated right away, but rather after dedicated event (see
---- |events| and `MiniTabline` |augroup|).
+--- |mini.nvim-disabling-recipes| for common recipes.
 
 -- Module definition ==========================================================
 local MiniTabline = {}

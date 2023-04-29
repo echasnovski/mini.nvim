@@ -1,6 +1,7 @@
 # Version 0.8.0.9000
 
 - Stop official support of Neovim 0.6.
+- Use Lua API to create autocommands. Stop exporting functions only related to autocommands.
 
 # mini.base16
 

@@ -150,42 +150,13 @@ MiniJump2d.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Corrections for default `<CR>` mapping to not interfer with popular usages
-  if config.mappings.start_jumping == '<CR>' then
-    vim.api.nvim_exec(
-      [[augroup MiniJump2d
-          au!
-          autocmd FileType qf nnoremap <buffer> <CR> <CR>
-          autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
-        augroup END]],
-      false
-    )
-  end
+  -- Define behavior
+  H.create_autocommands(config)
 
   -- Create highlighting
-  local is_light_bg = vim.o.background == 'light'
-  local bg_color = is_light_bg and 'white' or 'black'
-  local fg_color = is_light_bg and 'black' or 'white'
-
-  local main_hl_cmd =
-    string.format('hi default MiniJump2dSpot guifg=%s guibg=%s gui=bold,nocombine', fg_color, bg_color)
-  vim.cmd(main_hl_cmd)
-
-  local ahead_hl_cmd = string.format('hi default MiniJump2dSpotAhead guifg=grey guibg=%s gui=nocombine', bg_color)
-  vim.cmd(ahead_hl_cmd)
-
+  H.create_default_hl_groups()
   vim.cmd('hi default link MiniJump2dSpotUnique MiniJump2dSpot')
   vim.cmd('hi default link MiniJump2dDim Comment')
-
-  local augroup_hl_cmd = string.format(
-    [[augroup MiniJump2d
-        au ColorScheme * %s
-        au ColorScheme * %s
-      augroup END]],
-    main_hl_cmd,
-    ahead_hl_cmd
-  )
-  vim.api.nvim_exec(augroup_hl_cmd, false)
 end
 
 --- Module config
@@ -684,6 +655,38 @@ H.apply_config = function(config)
   H.map('n', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
   H.map('x', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
   H.map('o', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
+end
+
+H.create_autocommands = function(config)
+  local augroup = vim.api.nvim_create_augroup('MiniJump2d', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { pattern = pattern, group = augroup, callback = callback, desc = desc })
+  end
+
+  -- Corrections for default `<CR>` mapping to not interfer with popular usages
+  if config.mappings.start_jumping == '<CR>' then
+    local revert_cr = function() vim.keymap.set('n', '<CR>', '<CR>', { buffer = true }) end
+    au('FileType', 'qf', revert_cr, 'Revert <CR>')
+    au('CmdwinEnter', '*', revert_cr, 'Revert <CR>')
+  end
+
+  -- Ensure proper colors
+  au('ColorScheme', '*', H.create_default_hl_groups, 'Ensure proper colors')
+end
+
+H.create_default_hl_groups = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  local is_light_bg = vim.o.background == 'light'
+  local bg_color = is_light_bg and 'white' or 'black'
+  local fg_color = is_light_bg and 'black' or 'white'
+
+  set_default_hl('MiniJump2dSpot', { fg = fg_color, bg = bg_color, bold = true, nocombine = true })
+  set_default_hl('MiniJump2dSpotAhead', { fg = 'grey', bg = bg_color, nocombine = true })
 end
 
 H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end

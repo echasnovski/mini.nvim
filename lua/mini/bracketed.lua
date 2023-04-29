@@ -132,15 +132,8 @@ MiniBracketed.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniBracketed
-        au!
-        au BufEnter * lua MiniBracketed.track_oldfile()
-        au TextYankPost * lua MiniBracketed.track_yank()
-      augroup END]],
-    false
-  )
+  -- Define behavior
+  H.create_autocommands()
 end
 
 --stylua: ignore
@@ -1263,57 +1256,6 @@ MiniBracketed.advance = function(iterator, direction, opts)
   return res_state
 end
 
-MiniBracketed.track_oldfile = function()
-  if H.is_disabled() then return end
-
-  -- Ensure tracking data is initialized
-  H.oldfile_ensure_initialized()
-
-  -- Reset tracking indicator to allow proper tracking of next buffer
-  local is_advancing = H.cache.oldfile.is_advancing
-  H.cache.oldfile.is_advancing = false
-
-  -- Track only appropriate buffers (normal buffers with path)
-  local path = vim.api.nvim_buf_get_name(0)
-  local is_proper_buffer = path ~= '' and vim.bo.buftype == ''
-  if not is_proper_buffer then return end
-
-  -- If advancing, don't touch tracking data to be able to consecutively move
-  -- along recent files. Cache advanced buffer name to later update recency of
-  -- the last one (just before buffer switching outside of `oldfile()`)
-  local cache_oldfile = H.cache.oldfile
-
-  if is_advancing then
-    cache_oldfile.last_advanced_bufname = path
-    return
-  end
-
-  -- If not advancing, update recency of a single latest advanced buffer (if
-  -- present) and then update recency of current buffer
-  if cache_oldfile.last_advanced_bufname ~= nil then
-    H.oldfile_update_recency(cache_oldfile.last_advanced_bufname)
-    cache_oldfile.last_advanced_bufname = nil
-  end
-
-  H.oldfile_update_recency(path)
-end
-
-MiniBracketed.track_yank = function()
-  -- Don't track if asked not to. Allows other functionality to disable
-  -- tracking (like in 'mini.move').
-  if H.is_disabled() then return end
-
-  -- Track all `TextYankPost` events without exceptions. This leads to a better
-  -- handling of charwise/linewise/blockwise selection detection.
-  local event = vim.v.event
-  table.insert(
-    H.cache.yank.history,
-    { operator = event.operator, regcontents = event.regcontents, regtype = event.regtype }
-  )
-
-  H.yank_stop_advancing()
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniBracketed.config
@@ -1625,10 +1567,73 @@ end
 
 H.get_suffix_variants = function(char) return char:lower(), char:upper() end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniBracketed', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au('BufEnter', '*', H.track_oldfile, 'Track oldfile')
+  au('TextYankPost', '*', H.track_yank, 'Track yank')
+end
+
 H.is_disabled = function() return vim.g.minibracketed_disable == true or vim.b.minibracketed_disable == true end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniBracketed.config, vim.b.minibracketed_config or {}, config or {})
+end
+
+-- Autocommands ---------------------------------------------------------------
+H.track_oldfile = function()
+  if H.is_disabled() then return end
+
+  -- Ensure tracking data is initialized
+  H.oldfile_ensure_initialized()
+
+  -- Reset tracking indicator to allow proper tracking of next buffer
+  local is_advancing = H.cache.oldfile.is_advancing
+  H.cache.oldfile.is_advancing = false
+
+  -- Track only appropriate buffers (normal buffers with path)
+  local path = vim.api.nvim_buf_get_name(0)
+  local is_proper_buffer = path ~= '' and vim.bo.buftype == ''
+  if not is_proper_buffer then return end
+
+  -- If advancing, don't touch tracking data to be able to consecutively move
+  -- along recent files. Cache advanced buffer name to later update recency of
+  -- the last one (just before buffer switching outside of `oldfile()`)
+  local cache_oldfile = H.cache.oldfile
+
+  if is_advancing then
+    cache_oldfile.last_advanced_bufname = path
+    return
+  end
+
+  -- If not advancing, update recency of a single latest advanced buffer (if
+  -- present) and then update recency of current buffer
+  if cache_oldfile.last_advanced_bufname ~= nil then
+    H.oldfile_update_recency(cache_oldfile.last_advanced_bufname)
+    cache_oldfile.last_advanced_bufname = nil
+  end
+
+  H.oldfile_update_recency(path)
+end
+
+H.track_yank = function()
+  -- Don't track if asked not to. Allows other functionality to disable
+  -- tracking (like in 'mini.move').
+  if H.is_disabled() then return end
+
+  -- Track all `TextYankPost` events without exceptions. This leads to a better
+  -- handling of charwise/linewise/blockwise selection detection.
+  local event = vim.v.event
+  table.insert(
+    H.cache.yank.history,
+    { operator = event.operator, regcontents = event.regcontents, regtype = event.regtype }
+  )
+
+  H.yank_stop_advancing()
 end
 
 -- Comments -------------------------------------------------------------------

@@ -209,14 +209,8 @@ MiniStarter.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniStarter
-        au!
-        au VimEnter * ++nested ++once lua MiniStarter.on_vimenter()
-      augroup END]],
-    false
-  )
+  -- Define behavior
+  H.create_autocommands(config)
 
   -- Create highlighting
   vim.api.nvim_exec(
@@ -278,15 +272,6 @@ MiniStarter.config = {
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Act on |VimEnter|.
-MiniStarter.on_vimenter = function()
-  if MiniStarter.config.autoopen and not H.is_something_shown() then
-    -- Set indicator used to make different decision on startup
-    H.is_in_vimenter = true
-    MiniStarter.open()
-  end
-end
-
 --- Open Starter buffer
 ---
 --- - Create buffer if necessary and move into it.
@@ -962,13 +947,6 @@ MiniStarter.set_query = function(query, buf_id)
   H.make_query(buf_id, query)
 end
 
---- Act on |CursorMoved| by repositioning cursor in fixed place.
-MiniStarter.on_cursormoved = function(buf_id)
-  buf_id = buf_id or vim.api.nvim_get_current_buf()
-  if not H.validate_starter_buf_id(buf_id, 'on_cursormoved()') then return end
-  H.position_cursor_on_current_item(buf_id)
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniStarter.config
@@ -1044,6 +1022,25 @@ H.setup_config = function(config)
 end
 
 H.apply_config = function(config) MiniStarter.config = config end
+
+H.create_autocommands = function(config)
+  local augroup = vim.api.nvim_create_augroup('MiniStarter', {})
+
+  if config.autoopen then
+    local on_vimenter = function()
+      if H.is_something_shown() then return end
+
+      -- Set indicator used to make different decision on startup
+      H.is_in_vimenter = true
+      MiniStarter.open()
+    end
+
+    vim.api.nvim_create_autocmd(
+      'VimEnter',
+      { group = augroup, nested = true, once = true, callback = on_vimenter, desc = 'Open on VimEnter' }
+    )
+  end
+end
 
 H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end
 
@@ -1273,18 +1270,20 @@ end
 
 -- Work with starter buffer ---------------------------------------------------
 H.make_buffer_autocmd = function(buf_id)
-  --stylua: ignore
-  local command = string.format(
-    [[augroup MiniStarterBuffer
-        au!
-        au VimResized <buffer=%s> lua MiniStarter.refresh()
-        au CursorMoved <buffer=%s> lua MiniStarter.on_cursormoved()
-        au BufLeave <buffer=%s> if &cmdheight > 0 | echo '' | endif
-        au BufLeave <buffer=%s> if &showtabline==1 | set showtabline=%s | endif
-      augroup END]],
-    buf_id, buf_id, buf_id, buf_id, vim.o.showtabline
-  )
-  vim.cmd(command)
+  local augroup = vim.api.nvim_create_augroup('MiniStarterBuffer', {})
+
+  local au = function(event, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, buffer = buf_id, callback = callback, desc = desc })
+  end
+
+  au('VimResized', MiniStarter.refresh, 'Refresh')
+  au('CursorMoved', function() H.position_cursor_on_current_item(buf_id) end, 'Position cursor')
+
+  local cache_showtabline = vim.o.showtabline
+  au('BufLeave', function()
+    if vim.o.cmdheight > 0 then vim.cmd("echo ''") end
+    if vim.o.showtabline == 1 then vim.o.showtabline = cache_showtabline end
+  end, 'On BufLeave')
 end
 
 H.apply_buffer_options = function(buf_id)

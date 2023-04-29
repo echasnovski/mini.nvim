@@ -700,28 +700,34 @@ end
 
 -- Autocommands ---------------------------------------------------------------
 H.apply_autocommands = function(config)
-  -- TODO: use `nvim_create_autocmd()` after Neovim<=0.6 support is dropped
+  local augroup = vim.api.nvim_create_augroup('MiniBasicsAutocommands', {})
 
-  vim.cmd([[augroup MiniBasicsAutocommands]])
-  vim.cmd([[autocmd!]])
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
 
   if config.autocommands.basic then
-    -- Highlight yanked text
-    vim.cmd([[autocmd TextYankPost * silent! lua vim.highlight.on_yank()]])
-
-    -- Start builtin terminal in Insert mode
-    vim.cmd([[autocmd TermOpen * startinsert]])
+    au('TextYankPost', '*', vim.highlight.on_yank, 'Highlight yanked text')
+    au('TermOpen', '*', function() vim.cmd('startinsert') end, 'Start builtin terminal in Insert mode')
   end
 
-  if config.autocommands.relnum_in_visual_mode and vim.fn.exists('##ModeChanged') == 1 then
-    -- Show relative line numbers only when they matter (linewise and blockwise
-    -- selection) and 'number' is set (avoids horizontal flickering)
-    vim.cmd([[autocmd ModeChanged *:[V\x16]* let &l:relativenumber = &l:number == 1]])
-    -- - Using `mode () =~#...` handles switching between linewise and blockwise mode.
-    vim.cmd([[autocmd ModeChanged [V\x16]*:* let &l:relativenumber = mode() =~# '^[V\x16]']])
+  if config.autocommands.relnum_in_visual_mode then
+    au(
+      'ModeChanged',
+      -- Show relative numbers only when they matter (linewise and blockwise
+      -- selection) and 'number' is set (avoids horizontal flickering)
+      '*:[V\x16]*',
+      function() vim.wo.relativenumber = vim.wo.number end,
+      'Show relative line numbers'
+    )
+    au(
+      'ModeChanged',
+      '[V\x16]*:*',
+      -- Hide relative numbers when neither linewise/blockwise mode is on
+      function() vim.wo.relativenumber = string.find(vim.fn.mode(), '^[V\22]') ~= nil end,
+      'Hide relative line numbers'
+    )
   end
-
-  vim.cmd([[augroup END]])
 end
 
 -- Utilities ------------------------------------------------------------------

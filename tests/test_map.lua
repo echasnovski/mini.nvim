@@ -1213,8 +1213,6 @@ T['Window']['fully updates on vim resize'] = function()
 end
 
 T['Window']['fully updates on mode change to Normal'] = function()
-  if child.fn.exists('##ModeChanged') == 0 then return end
-
   child.set_size(15, 20)
   mock_test_integration()
   child.o.autoindent = false

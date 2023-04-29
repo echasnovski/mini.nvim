@@ -79,15 +79,8 @@ MiniJump.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniJump
-        au!
-        au CursorMoved * lua MiniJump.on_cursormoved()
-        au BufLeave,InsertEnter * lua MiniJump.stop_jumping()
-      augroup END]],
-    false
-  )
+  -- Define behavior
+  H.create_autocommands()
 
   -- Highlight groups
   vim.cmd('hi default link MiniJump SpellRare')
@@ -282,16 +275,6 @@ MiniJump.stop_jumping = function()
   H.unhighlight()
 end
 
---- Act on |CursorMoved|
-MiniJump.on_cursormoved = function()
-  -- Check if jumping to avoid unnecessary actions on every CursorMoved
-  if MiniJump.state.jumping then
-    H.cache.n_cursor_moved = H.cache.n_cursor_moved + 1
-    -- Stop jumping only if `CursorMoved` was not a result of smart jump
-    if H.cache.n_cursor_moved > 1 then MiniJump.stop_jumping() end
-  end
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniJump.config
@@ -371,10 +354,31 @@ H.apply_config = function(config)
   --stylua: ignore end
 end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniJump', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au('CursorMoved', '*', H.on_cursormoved, 'On CursorMoved')
+  au({ 'BufLeave', 'InsertEnter' }, '*', MiniJump.stop_jumping, 'Stop jumping')
+end
+
 H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniJump.config, vim.b.minijump_config or {}, config or {}) end
+
+-- Autocommands ---------------------------------------------------------------
+H.on_cursormoved = function()
+  -- Check if jumping to avoid unnecessary actions on every CursorMoved
+  if MiniJump.state.jumping then
+    H.cache.n_cursor_moved = H.cache.n_cursor_moved + 1
+    -- Stop jumping only if `CursorMoved` was not a result of smart jump
+    if H.cache.n_cursor_moved > 1 then MiniJump.stop_jumping() end
+  end
+end
 
 -- Pattern matching -----------------------------------------------------------
 H.make_search_data = function()

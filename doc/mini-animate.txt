@@ -925,53 +925,5 @@ Return~
 `(function)` Winblend function (see |MiniAnimate.config.open|
   or |MiniAnimate.config.close|).
 
-------------------------------------------------------------------------------
-                                                     *MiniAnimate.auto_cursor()*
-                          `MiniAnimate.auto_cursor`()
-Automatically animate cursor movement
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
-------------------------------------------------------------------------------
-                                                     *MiniAnimate.auto_scroll()*
-                          `MiniAnimate.auto_scroll`()
-Automatically animate window scroll
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
-------------------------------------------------------------------------------
-                                              *MiniAnimate.track_scroll_state()*
-                       `MiniAnimate.track_scroll_state`()
-Track scroll state
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
-------------------------------------------------------------------------------
-                                      *MiniAnimate.track_scroll_state_partial()*
-                   `MiniAnimate.track_scroll_state_partial`()
-Partially track scroll state
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
-------------------------------------------------------------------------------
-                                                     *MiniAnimate.auto_resize()*
-                          `MiniAnimate.auto_resize`()
-Automatically animate window resize
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
-------------------------------------------------------------------------------
-                                                  *MiniAnimate.auto_openclose()*
-                  `MiniAnimate.auto_openclose`({action_type})
-Automatically animate window open/close
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniAnimate.setup()|.
-
 
  vim:tw=78:ts=8:noet:ft=help:norl:

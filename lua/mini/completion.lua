@@ -200,33 +200,8 @@ MiniCompletion.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Setup module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniCompletion
-        au!
-        au InsertCharPre   * lua MiniCompletion.auto_completion()
-        au CompleteChanged * lua MiniCompletion.auto_info()
-        au CursorMovedI    * lua MiniCompletion.auto_signature()
-        au InsertLeavePre  * lua MiniCompletion.stop()
-        au CompleteDonePre * lua MiniCompletion.on_completedonepre()
-        au TextChangedI    * lua MiniCompletion.on_text_changed_i()
-        au TextChangedP    * lua MiniCompletion.on_text_changed_p()
-
-        au FileType TelescopePrompt let b:minicompletion_disable=v:true
-        au ColorScheme * hi default MiniCompletionActiveParameter cterm=underline gui=underline
-      augroup END]],
-    false
-  )
-
-  if config.lsp_completion.auto_setup then
-    local command = string.format(
-      [[augroup MiniCompletion
-          au BufEnter * setlocal %s=v:lua.MiniCompletion.completefunc_lsp
-        augroup END]],
-      config.lsp_completion.source_func
-    )
-    vim.api.nvim_exec(command, false)
-  end
+  -- Define behavior
+  H.create_autocommands(config)
 
   -- Create highlighting
   vim.api.nvim_exec('hi default MiniCompletionActiveParameter cterm=underline gui=underline', false)
@@ -299,56 +274,6 @@ MiniCompletion.config = {
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Auto completion
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniCompletion.setup|.
-MiniCompletion.auto_completion = function()
-  if H.is_disabled() then return end
-
-  H.completion.timer:stop()
-
-  -- Don't do anything if popup is visible
-  if H.pumvisible() then
-    -- Keep completion source as it is needed all time when popup is visible
-    H.stop_completion(true)
-    return
-  end
-
-  -- Stop everything if inserted character is not appropriate
-  local char_is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
-  if not (H.is_char_keyword(vim.v.char) or char_is_trigger) then
-    H.stop_completion(false)
-    return
-  end
-
-  -- If character is purely lsp trigger, make new LSP request without fallback
-  -- and force new completion
-  if char_is_trigger then H.cancel_lsp() end
-  H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
-
-  -- Cache id of Insert mode "text changed" event for a later tracking (reduces
-  -- false positive delayed triggers). The intention is to trigger completion
-  -- after the delay only if text wasn't changed during waiting. Using only
-  -- `InsertCharPre` is not enough though, as not every Insert mode change
-  -- triggers `InsertCharPre` event (notable example - hitting `<CR>`).
-  -- Also, using `+ 1` here because it is a `Pre` event and needs to cache
-  -- after inserting character.
-  H.completion.text_changed_id = H.text_changed_id + 1
-
-  -- If completion was requested after 'lsp' source exhausted itself (there
-  -- were matches on typing start, but they disappeared during filtering), call
-  -- fallback immediately.
-  if H.completion.source == 'lsp' then
-    H.trigger_fallback()
-    return
-  end
-
-  -- Using delay (of debounce type) actually improves user experience
-  -- as it allows fast typing without many popups.
-  H.completion.timer:start(H.get_config().delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
-end
-
 --- Run two-stage completion
 ---
 ---@param fallback boolean|nil Whether to use fallback completion. Default: `true`.
@@ -373,49 +298,6 @@ MiniCompletion.complete_fallback = function()
   H.trigger_fallback()
 end
 
---- Auto completion entry information
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniCompletion.setup|.
-MiniCompletion.auto_info = function()
-  if H.is_disabled() then return end
-
-  H.info.timer:stop()
-
-  -- Defer execution because of textlock during `CompleteChanged` event
-  -- Don't stop timer when closing info window because it is needed
-  vim.defer_fn(function() H.close_action_window(H.info, true) end, 0)
-
-  -- Stop current LSP request that tries to get not current data
-  H.cancel_lsp({ H.info })
-
-  -- Update metadata before leaving to register a `CompleteChanged` event
-  H.info.event = vim.v.event
-  H.info.id = H.info.id + 1
-
-  -- Don't even try to show info if nothing is selected in popup
-  if vim.tbl_isempty(H.info.event.completed_item) then return end
-
-  H.info.timer:start(H.get_config().delay.info, 0, vim.schedule_wrap(H.show_info_window))
-end
-
---- Auto function signature
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniCompletion.setup|.
-MiniCompletion.auto_signature = function()
-  if H.is_disabled() then return end
-
-  H.signature.timer:stop()
-  if not H.has_lsp_clients('signatureHelpProvider') then return end
-
-  local left_char = H.get_left_char()
-  local char_is_trigger = left_char == ')' or H.is_lsp_trigger(left_char, 'signature')
-  if not char_is_trigger then return end
-
-  H.signature.timer:start(H.get_config().delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
-end
-
 --- Stop actions
 ---
 --- This stops currently active (because of module delay or LSP answer delay)
@@ -431,30 +313,6 @@ MiniCompletion.stop = function(actions)
   for _, n in pairs(actions) do
     H.stop_actions[n]()
   end
-end
-
-MiniCompletion.on_completedonepre = function()
-  -- Try to apply additional text edits
-  H.apply_additional_text_edits()
-
-  -- Stop processes
-  MiniCompletion.stop({ 'completion', 'info' })
-end
-
---- Act on every |TextChangedI|
-MiniCompletion.on_text_changed_i = function()
-  -- Track Insert mode changes
-  H.text_changed_id = H.text_changed_id + 1
-
-  -- Stop 'info' processes in case no completion event is triggered but popup
-  -- is not visible. See https://github.com/neovim/neovim/issues/15077
-  H.stop_info()
-end
-
---- Act on every |TextChangedP|
-MiniCompletion.on_text_changed_p = function()
-  -- Track Insert mode changes
-  H.text_changed_id = H.text_changed_id + 1
 end
 
 --- Module's |complete-function|
@@ -679,10 +537,147 @@ H.apply_config = function(config)
   end
 end
 
+H.create_autocommands = function(config)
+  local augroup = vim.api.nvim_create_augroup('MiniCompletion', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au('InsertCharPre', '*', H.auto_completion, 'Auto show completion')
+  au('CompleteChanged', '*', H.auto_info, 'Auto show info')
+  au('CursorMovedI', '*', H.auto_signature, 'Auto show signature')
+  au('InsertLeavePre', '*', function() MiniCompletion.stop() end, 'Stop completion')
+  au('CompleteDonePre', '*', H.on_completedonepre, 'On CompleteDonePre')
+  au('TextChangedI', '*', H.on_text_changed_i, 'On TextChangedI')
+  au('TextChangedP', '*', H.on_text_changed_p, 'On TextChangedP')
+
+  if config.lsp_completion.auto_setup then
+    au(
+      'BufEnter',
+      '*',
+      function() vim.bo[config.lsp_completion.source_func] = 'v:lua.MiniCompletion.completefunc_lsp' end,
+      'Set completion function'
+    )
+  end
+
+  au(
+    'ColorScheme',
+    '*',
+    function() vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true }) end,
+    'Ensure proper colors'
+  )
+  au('FileType', 'TelescopePrompt', function() vim.b.minicompletion_disable = true end, 'Disable locally')
+end
+
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniCompletion.config, vim.b.minicompletion_config or {}, config or {})
+end
+
+-- Autocommands ---------------------------------------------------------------
+H.auto_completion = function()
+  if H.is_disabled() then return end
+
+  H.completion.timer:stop()
+
+  -- Don't do anything if popup is visible
+  if H.pumvisible() then
+    -- Keep completion source as it is needed all time when popup is visible
+    H.stop_completion(true)
+    return
+  end
+
+  -- Stop everything if inserted character is not appropriate
+  local char_is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
+  if not (H.is_char_keyword(vim.v.char) or char_is_trigger) then
+    H.stop_completion(false)
+    return
+  end
+
+  -- If character is purely lsp trigger, make new LSP request without fallback
+  -- and force new completion
+  if char_is_trigger then H.cancel_lsp() end
+  H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
+
+  -- Cache id of Insert mode "text changed" event for a later tracking (reduces
+  -- false positive delayed triggers). The intention is to trigger completion
+  -- after the delay only if text wasn't changed during waiting. Using only
+  -- `InsertCharPre` is not enough though, as not every Insert mode change
+  -- triggers `InsertCharPre` event (notable example - hitting `<CR>`).
+  -- Also, using `+ 1` here because it is a `Pre` event and needs to cache
+  -- after inserting character.
+  H.completion.text_changed_id = H.text_changed_id + 1
+
+  -- If completion was requested after 'lsp' source exhausted itself (there
+  -- were matches on typing start, but they disappeared during filtering), call
+  -- fallback immediately.
+  if H.completion.source == 'lsp' then
+    H.trigger_fallback()
+    return
+  end
+
+  -- Using delay (of debounce type) actually improves user experience
+  -- as it allows fast typing without many popups.
+  H.completion.timer:start(H.get_config().delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
+end
+
+H.auto_info = function()
+  if H.is_disabled() then return end
+
+  H.info.timer:stop()
+
+  -- Defer execution because of textlock during `CompleteChanged` event
+  -- Don't stop timer when closing info window because it is needed
+  vim.defer_fn(function() H.close_action_window(H.info, true) end, 0)
+
+  -- Stop current LSP request that tries to get not current data
+  H.cancel_lsp({ H.info })
+
+  -- Update metadata before leaving to register a `CompleteChanged` event
+  H.info.event = vim.v.event
+  H.info.id = H.info.id + 1
+
+  -- Don't even try to show info if nothing is selected in popup
+  if vim.tbl_isempty(H.info.event.completed_item) then return end
+
+  H.info.timer:start(H.get_config().delay.info, 0, vim.schedule_wrap(H.show_info_window))
+end
+
+H.auto_signature = function()
+  if H.is_disabled() then return end
+
+  H.signature.timer:stop()
+  if not H.has_lsp_clients('signatureHelpProvider') then return end
+
+  local left_char = H.get_left_char()
+  local char_is_trigger = left_char == ')' or H.is_lsp_trigger(left_char, 'signature')
+  if not char_is_trigger then return end
+
+  H.signature.timer:start(H.get_config().delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
+end
+
+H.on_completedonepre = function()
+  -- Try to apply additional text edits
+  H.apply_additional_text_edits()
+
+  -- Stop processes
+  MiniCompletion.stop({ 'completion', 'info' })
+end
+
+H.on_text_changed_i = function()
+  -- Track Insert mode changes
+  H.text_changed_id = H.text_changed_id + 1
+
+  -- Stop 'info' processes in case no completion event is triggered but popup
+  -- is not visible. See https://github.com/neovim/neovim/issues/15077
+  H.stop_info()
+end
+
+H.on_text_changed_p = function()
+  -- Track Insert mode changes
+  H.text_changed_id = H.text_changed_id + 1
 end
 
 -- Completion triggers --------------------------------------------------------

@@ -297,19 +297,21 @@ MiniMisc.setup_restore_cursor = function(opts)
   if opts.center == nil then opts.center = true end
   if type(opts.center) ~= 'boolean' then H.error('In `setup_restore_cursor()` `opts.center` should be a boolean.') end
 
-  -- TODO: use `nvim_create_autocmd()` after Neovim<=0.6 support is dropped
-  local au_command = string.format(
-    [[augroup MiniMiscRestoreCursor
-      au!
-      au BufReadPre * au FileType <buffer> ++once lua require('mini.misc').restore_cursor(%s)
-    augroup END]],
-    vim.inspect(opts, { newline = ' ', indent = '' })
-  )
-  vim.api.nvim_exec(au_command, false)
+  -- Create autocommand which runs once on `FileType` for every new buffer
+  local augroup = vim.api.nvim_create_augroup('MiniMiscRestoreCursor', {})
+  vim.api.nvim_create_autocmd('BufReadPre', {
+    group = augroup,
+    callback = function(data)
+      vim.api.nvim_create_autocmd('FileType', {
+        buffer = data.buf,
+        once = true,
+        callback = function() H.restore_cursor(opts) end,
+      })
+    end,
+  })
 end
 
--- TODO: Make local once Lua autocmd is used inside `setup_restore_cursor()`
-MiniMisc.restore_cursor = function(opts)
+H.restore_cursor = function(opts)
   -- Stop if not a normal buffer
   if vim.bo.buftype ~= '' then return end
 

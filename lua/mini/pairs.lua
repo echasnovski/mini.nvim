@@ -104,15 +104,8 @@ MiniPairs.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  vim.api.nvim_exec(
-    [[augroup MiniPairs
-        au!
-        au FileType TelescopePrompt let b:minipairs_disable=v:true
-        au FileType fzf let b:minipairs_disable=v:true
-      augroup END]],
-    false
-  )
+  -- Define behavior
+  H.create_autocommands()
 end
 
 --- Module config
@@ -455,6 +448,16 @@ H.apply_config = function(config)
       MiniPairs.map(mode, key, pair_info)
     end
   end
+end
+
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniPairs', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au('FileType', { 'TelescopePrompt', 'fzf' }, function() vim.b.minipairs_disable = true end, 'Disable locally')
 end
 
 H.is_disabled = function() return vim.g.minipairs_disable == true or vim.b.minipairs_disable == true end

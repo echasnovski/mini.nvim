@@ -219,10 +219,5 @@ by |getftime|.
 Return~
 `(string|nil)` Name of latest session or `nil` if there is no sessions.
 
-------------------------------------------------------------------------------
-                                                    *MiniSessions.on_vimenter()*
-                          `MiniSessions.on_vimenter`()
-Act on |VimEnter|
-
 
  vim:tw=78:ts=8:noet:ft=help:norl:

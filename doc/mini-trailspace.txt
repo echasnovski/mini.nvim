@@ -87,12 +87,5 @@ Trim trailing whitespace
                        `MiniTrailspace.trim_last_lines`()
 Trim last blank lines
 
-------------------------------------------------------------------------------
-                                          *MiniTrailspace.track_normal_buffer()*
-                     `MiniTrailspace.track_normal_buffer`()
-Track normal buffer
-
-Designed to be used with |autocmd|. No need to use it directly.
-
 
  vim:tw=78:ts=8:noet:ft=help:norl:

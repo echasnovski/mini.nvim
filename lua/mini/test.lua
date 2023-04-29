@@ -154,29 +154,11 @@ MiniTest.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Create highlighting
-  local color_fail = vim.g.terminal_color_1 or '#FF0000'
-  local color_pass = vim.g.terminal_color_2 or '#00FF00'
-  local command = string.format(
-    [[hi default MiniTestFail guifg=%s gui=bold
-      hi default MiniTestPass guifg=%s gui=bold
-      hi default MiniTestEmphasis gui=bold]],
-    color_fail,
-    color_pass
-  )
-  vim.cmd(command)
+  -- Define behavior
+  H.create_autocommands()
 
-  local augroup_hl_cmd = string.format(
-    [[augroup MiniTest
-        au!
-        au ColorScheme * hi default MiniTestFail guifg=%s gui=bold
-        au ColorScheme * hi default MiniTestPass guifg=%s gui=bold
-        au ColorScheme * hi default MiniTestEmphasis gui=bold
-      augroup END]],
-    color_fail,
-    color_pass
-  )
-  vim.cmd(augroup_hl_cmd)
+  -- Create highlighting
+  H.create_default_hl_groups()
 end
 
 --stylua: ignore start
@@ -1623,6 +1605,25 @@ H.setup_config = function(config)
 end
 
 H.apply_config = function(config) MiniTest.config = config end
+
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniTest', {})
+  vim.api.nvim_create_autocmd(
+    'ColorScheme',
+    { group = augroup, callback = H.create_default_hl_groups, desc = 'Ensure proper colors' }
+  )
+end
+
+H.create_default_hl_groups = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  set_default_hl('MiniTestFail', { fg = vim.g.terminal_color_1 or '#FF0000', bold = true })
+  set_default_hl('MiniTestPass', { fg = vim.g.terminal_color_2 or '#00FF00', bold = true })
+  set_default_hl('MiniTestEmphasis', { bold = true })
+end
 
 H.is_disabled = function() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 

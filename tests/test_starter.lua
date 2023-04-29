@@ -255,7 +255,7 @@ end
 
 T['open()']['makes buffer autocommands'] = function()
   child.lua('MiniStarter.open()')
-  expect.match(child.cmd_capture('au MiniStarterBuffer'), 'MiniStarter%.')
+  expect.match(child.cmd_capture('au MiniStarterBuffer'), '<buffer=%d')
 end
 
 T['open()']['respects `buf_id` argument'] = function()

@@ -147,15 +147,7 @@ Helpers.new_child_neovim = function()
     child.lua(('_G[%s] = nil'):format(tbl_name))
 
     -- Remove autocmd group
-    if child.fn.exists('#' .. tbl_name) == 1 then
-      -- NOTE: having this in one line as `'augroup %s | au! | augroup END'`
-      -- for some reason seemed to sometimes not execute `augroup END` part.
-      -- That lead to a subsequent bare `au ...` calls to be inside `tbl_name`
-      -- group, which gets empty after every `require(<module_name>)` call.
-      child.cmd(('augroup %s'):format(tbl_name))
-      child.cmd('au!')
-      child.cmd('augroup END')
-    end
+    if child.fn.exists('#' .. tbl_name) == 1 then child.api.nvim_del_augroup_by_name(tbl_name) end
   end
 
   child.expect_screenshot = function(opts, path, screenshot_opts)

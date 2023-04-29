@@ -61,30 +61,8 @@ MiniTrailspace.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  -- NOTE: Respecting both `WinEnter` and `BufEnter` seems to be useful to
-  -- account of different order of handling buffer opening in new window.
-  -- Notable example: 'nvim-tree' at commit a1600e5.
-  vim.api.nvim_exec(
-    [[augroup MiniTrailspace
-        au!
-        au WinEnter,BufEnter,InsertLeave * lua MiniTrailspace.highlight()
-        au WinLeave,BufLeave,InsertEnter * lua MiniTrailspace.unhighlight()
-      augroup END]],
-    false
-  )
-
-  if config.only_in_normal_buffers then
-    -- Add tracking of 'buftype' changing because it can be set after events on
-    -- which highlighting is done. If not done, highlighting appears but
-    -- disappears if buffer is reentered.
-    vim.api.nvim_exec(
-      [[augroup MiniTrailspace
-          au OptionSet buftype lua MiniTrailspace.track_normal_buffer()
-        augroup END]],
-      false
-    )
-  end
+  -- Define behavior
+  H.create_autocommands(config)
 
   -- Create highlighting
   vim.api.nvim_exec('hi default link MiniTrailspace Error', false)
@@ -145,21 +123,6 @@ MiniTrailspace.trim_last_lines = function()
   if last_nonblank < n_lines then vim.api.nvim_buf_set_lines(0, last_nonblank, n_lines, true, {}) end
 end
 
---- Track normal buffer
----
---- Designed to be used with |autocmd|. No need to use it directly.
-MiniTrailspace.track_normal_buffer = function()
-  if not H.get_config().only_in_normal_buffers then return end
-
-  -- This should be used with 'OptionSet' event for 'buftype' option
-  -- Empty 'buftype' means "normal buffer"
-  if vim.v.option_new == '' then
-    MiniTrailspace.highlight()
-  else
-    MiniTrailspace.unhighlight()
-  end
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniTrailspace.config
@@ -179,10 +142,43 @@ end
 
 H.apply_config = function(config) MiniTrailspace.config = config end
 
+H.create_autocommands = function(config)
+  local augroup = vim.api.nvim_create_augroup('MiniTrailspace', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  -- NOTE: Respecting both `WinEnter` and `BufEnter` seems to be useful to
+  -- account of different order of handling buffer opening in new window.
+  -- Notable example: 'nvim-tree' at commit a1600e5.
+  au({ 'WinEnter', 'BufEnter', 'InsertLeave' }, '*', MiniTrailspace.highlight, 'Highlight')
+  au({ 'WinLeave', 'BufLeave', 'InsertEnter' }, '*', MiniTrailspace.unhighlight, 'Unhighlight')
+
+  if config.only_in_normal_buffers then
+    -- Add tracking of 'buftype' changing because it can be set after events on
+    -- which highlighting is done. If not done, highlighting appears but
+    -- disappears if buffer is reentered.
+    au('OptionSet', 'buftype', H.track_normal_buffer, 'Track normal buffer')
+  end
+end
+
 H.is_disabled = function() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniTrailspace.config, vim.b.minitrailspace_config or {}, config or {})
+end
+
+H.track_normal_buffer = function()
+  if not H.get_config().only_in_normal_buffers then return end
+
+  -- This should be used with 'OptionSet' event for 'buftype' option
+  -- Empty 'buftype' means "normal buffer"
+  if vim.v.option_new == '' then
+    MiniTrailspace.highlight()
+  else
+    MiniTrailspace.unhighlight()
+  end
 end
 
 H.is_buffer_normal = function(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end

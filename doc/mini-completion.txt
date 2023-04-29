@@ -209,14 +209,6 @@ Default values:
 <
 
 ------------------------------------------------------------------------------
-                                              *MiniCompletion.auto_completion()*
-                       `MiniCompletion.auto_completion`()
-Auto completion
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniCompletion.setup|.
-
-------------------------------------------------------------------------------
                                             *MiniCompletion.complete_twostage()*
             `MiniCompletion.complete_twostage`({fallback}, {force})
 Run two-stage completion
@@ -232,22 +224,6 @@ Parameters~
 Run fallback completion
 
 ------------------------------------------------------------------------------
-                                                    *MiniCompletion.auto_info()*
-                          `MiniCompletion.auto_info`()
-Auto completion entry information
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniCompletion.setup|.
-
-------------------------------------------------------------------------------
-                                               *MiniCompletion.auto_signature()*
-                       `MiniCompletion.auto_signature`()
-Auto function signature
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniCompletion.setup|.
-
-------------------------------------------------------------------------------
                                                          *MiniCompletion.stop()*
                         `MiniCompletion.stop`({actions})
 Stop actions
@@ -261,16 +237,6 @@ is setup in |MiniCompletion.setup|.
 Parameters~
 {actions} `(table|nil)` Array containing any of 'completion', 'info', or
   'signature' string. Default: array containing all of them.
-
-------------------------------------------------------------------------------
-                                            *MiniCompletion.on_text_changed_i()*
-                      `MiniCompletion.on_text_changed_i`()
-Act on every |TextChangedI|
-
-------------------------------------------------------------------------------
-                                            *MiniCompletion.on_text_changed_p()*
-                      `MiniCompletion.on_text_changed_p`()
-Act on every |TextChangedP|
 
 ------------------------------------------------------------------------------
                                              *MiniCompletion.completefunc_lsp()*

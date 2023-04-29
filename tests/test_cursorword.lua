@@ -62,9 +62,6 @@ T['setup()']['creates side effects'] = function()
   -- Autocommand group
   eq(child.fn.exists('#MiniCursorword'), 1)
 
-  -- Autocommand on `ModeChanged` event
-  eq(child.fn.exists('#MiniCursorword#ModeChanged'), 1)
-
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniCursorword'), 'gui=underline')
   expect.match(child.cmd_capture('hi MiniCursorwordCurrent'), 'links to MiniCursorword')
@@ -236,8 +233,6 @@ T['Autohighlighting']['stops in Terminal mode'] = function()
 end
 
 T['Autohighlighting']['respects ModeChanged'] = function()
-  if child.fn.exists('##ModeChanged') ~= 1 then return end
-
   -- Add disabling in Visual mode
   unload_module()
   child.cmd([[

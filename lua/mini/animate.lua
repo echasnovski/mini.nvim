@@ -119,37 +119,9 @@ MiniAnimate.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Module behavior
-  -- NOTEs:
-  -- - Inside `WinScrolled` try to first animate resize before scroll to avoid
-  --   flickering.
-  -- - Use `vim.schedule()` for "open" animation to get a window data used for
-  --   displaying (and not one after just opening). Useful for 'nvim-tree'.
-  -- - Track scroll state on buffer and window enter to animate its first
-  --   scroll. Use `vim.schedule()` to allow other immediate commands to change
-  --   view (like builtin cursor center on buffer change) to avoid unnecessary
-  --   animated scroll.
-  -- - Track scroll state (partially) on every cursor move to keep cursor
-  --   position up to date. This enables visually better cursor positioning
-  --   during scroll animation (convex progression from start cursor position
-  --   to end). Use `vim.schedule()` to make it affect state only after scroll
-  --   is done and cursor is already in correct final position.
-  vim.api.nvim_exec(
-    [[augroup MiniAnimate
-        au!
-        au CursorMoved       * lua MiniAnimate.auto_cursor()
-        au WinScrolled       * lua MiniAnimate.auto_resize(); MiniAnimate.auto_scroll()
-        au BufEnter,WinEnter * lua vim.schedule(MiniAnimate.track_scroll_state)
-        au CursorMoved       * lua vim.schedule(MiniAnimate.track_scroll_state_partial)
-        au CmdlineLeave      * lua MiniAnimate.on_cmdline_leave()
-        au WinNew            * lua vim.schedule(MiniAnimate.auto_openclose)
-        au WinClosed         * lua MiniAnimate.auto_openclose("close")
-
-        au ColorScheme       * hi default MiniAnimateCursor gui=reverse,nocombine
-      augroup END]],
-    false
-  )
-  MiniAnimate.track_scroll_state()
+  -- Define behavior
+  H.create_autocommands()
+  H.track_scroll_state()
 
   -- Create highlighting
   vim.api.nvim_exec('hi default MiniAnimateCursor gui=reverse,nocombine', false)
@@ -557,10 +529,7 @@ MiniAnimate.execute_after = function(animation_type, action)
   -- (like `n`) not always result into scrolling.
   vim.schedule(function()
     if MiniAnimate.is_active(animation_type) then
-      -- TODO: use `nvim_create_autocmd()` after Neovim<=0.6 support is dropped
-      MiniAnimate._action = callable
-      local au_cmd = string.format('au User %s ++once lua MiniAnimate._action(); MiniAnimate._action = nil', event_name)
-      vim.cmd(au_cmd)
+      vim.api.nvim_create_autocmd('User', { pattern = event_name, once = true, callback = callable })
     else
       callable()
     end
@@ -1151,179 +1120,6 @@ MiniAnimate.gen_winblend.linear = function(opts)
   return function(s, n) return from + (s / n) * diff end
 end
 
---- Automatically animate cursor movement
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.auto_cursor = function()
-  -- Don't animate if disabled
-  local cursor_config = H.get_config().cursor
-  if not cursor_config.enable or H.is_disabled() then
-    -- Reset state to not use an outdated one if enabled again
-    H.cache.cursor_state = { buf_id = nil, pos = {} }
-    return
-  end
-
-  -- Don't animate if inside scroll animation
-  if H.cache.scroll_is_active then return end
-
-  -- Update necessary information. NOTE: update state only on `CursorMoved` and
-  -- not inside every animation step (like in scroll animation) for performance
-  -- reasons: cursor movement is much more common action than scrolling.
-  local prev_state, new_state = H.cache.cursor_state, H.get_cursor_state()
-  H.cache.cursor_state = new_state
-  H.cache.cursor_event_id = H.cache.cursor_event_id + 1
-
-  -- Don't animate if changed buffer
-  if new_state.buf_id ~= prev_state.buf_id then return end
-
-  -- Make animation step data and possibly animate
-  local animate_step = H.make_cursor_step(prev_state, new_state, cursor_config)
-  if not animate_step then return end
-
-  H.start_cursor()
-  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
-end
-
---- Automatically animate window scroll
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.auto_scroll = function()
-  -- Don't animate if disabled
-  local scroll_config = H.get_config().scroll
-  if not scroll_config.enable or H.is_disabled() then
-    -- Reset state to not use an outdated one if enabled again
-    H.cache.scroll_state = { buf_id = nil, win_id = nil, view = {}, cursor = {} }
-    return
-  end
-
-  -- Get states
-  local prev_state, new_state = H.cache.scroll_state, H.get_scroll_state()
-
-  -- Don't animate if nothing to animate. Mostly used to distinguish
-  -- `WinScrolled` resulting from module animation from the other ones.
-  local is_same_bufwin = new_state.buf_id == prev_state.buf_id and new_state.win_id == prev_state.win_id
-  local is_same_topline = new_state.view.topline == prev_state.view.topline
-  if is_same_topline and is_same_bufwin then return end
-
-  -- Update necessary information
-  H.cache.scroll_state = new_state
-  H.cache.scroll_event_id = H.cache.scroll_event_id + 1
-
-  -- Don't animate if changed buffer or window
-  if not is_same_bufwin then return end
-
-  -- Don't animate if inside resize animation. This reduces computations and
-  -- occasional flickering.
-  if H.cache.resize_is_active then return end
-
-  -- Make animation step data and possibly animate
-  local animate_step = H.make_scroll_step(prev_state, new_state, scroll_config)
-  if not animate_step then return end
-
-  H.start_scroll(prev_state)
-  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
-end
-
---- Track scroll state
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.track_scroll_state = function() H.cache.scroll_state = H.get_scroll_state() end
-
---- Partially track scroll state
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.track_scroll_state_partial = function()
-  -- This not only improves computation load, but seems to be crucial for
-  -- a proper state tracking
-  if H.cache.scroll_is_active then return end
-
-  H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') }
-end
-
-MiniAnimate.on_cmdline_leave = function()
-  local cmd_type = vim.fn.getcmdtype()
-  local is_insearch = vim.o.incsearch and (cmd_type == '/' or cmd_type == '?')
-  if not is_insearch then return end
-
-  -- Update scroll state so that there is no scroll animation after confirming
-  -- incremental search. Otherwise it leads to unnecessary animation from
-  -- initial scroll state to the one **already shown**.
-  MiniAnimate.track_scroll_state()
-end
-
---- Automatically animate window resize
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.auto_resize = function()
-  -- Don't animate if disabled
-  local resize_config = H.get_config().resize
-  if not resize_config.enable or H.is_disabled() then
-    -- Reset state to not use an outdated one if enabled again
-    H.cache.resize_state = { layout = {}, sizes = {}, views = {} }
-    return
-  end
-
-  -- Don't animate if inside scroll animation. This reduces computations and
-  -- occasional flickering.
-  if H.cache.scroll_is_active then return end
-
-  -- Update state. This also ensures that window views are up to date.
-  local prev_state, new_state = H.cache.resize_state, H.get_resize_state()
-  H.cache.resize_state = new_state
-
-  -- Don't animate if there is nothing to animate (should be same layout but
-  -- different sizes). This also stops triggering animation on window scrolls.
-  local same_state = H.is_equal_resize_state(prev_state, new_state)
-  if not (same_state.layout and not same_state.sizes) then return end
-
-  -- Register new event only in case there is something to animate
-  H.cache.resize_event_id = H.cache.resize_event_id + 1
-
-  -- Make animation step data and possibly animate
-  local animate_step = H.make_resize_step(prev_state, new_state, resize_config)
-  if not animate_step then return end
-
-  H.start_resize(prev_state)
-  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
-end
-
---- Automatically animate window open/close
----
---- Designed to be used with |autocmd|. No need to use it directly, everything
---- is setup in |MiniAnimate.setup()|.
-MiniAnimate.auto_openclose = function(action_type)
-  action_type = action_type or 'open'
-
-  -- Don't animate if disabled
-  local config = H.get_config()[action_type]
-  if not config.enable or H.is_disabled() then return end
-
-  -- Get window id to act upon
-  local win_id
-  if action_type == 'close' then win_id = tonumber(vim.fn.expand('<amatch>')) end
-  if action_type == 'open' then win_id = math.max(unpack(vim.api.nvim_list_wins())) end
-
-  -- Don't animate if created window is not right (valid and not floating)
-  if win_id == nil or not vim.api.nvim_win_is_valid(win_id) then return end
-  if vim.api.nvim_win_get_config(win_id).relative ~= '' then return end
-
-  -- Register new event only in case there is something to animate
-  local event_id_name = action_type .. '_event_id'
-  H.cache[event_id_name] = H.cache[event_id_name] + 1
-
-  -- Make animation step data and possibly animate
-  local animate_step = H.make_openclose_step(action_type, win_id, config)
-  if not animate_step then return end
-
-  H.start_openclose(action_type)
-  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniAnimate.config
@@ -1395,10 +1191,201 @@ end
 
 H.apply_config = function(config) MiniAnimate.config = config end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniAnimate', {})
+
+  local au = function(event, pattern, callback, desc)
+    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+  end
+
+  au('CursorMoved', '*', H.auto_cursor, 'Animate cursor')
+
+  au('WinScrolled', '*', function()
+    -- Inside `WinScrolled` first animate resize before scroll to avoid flicker
+    H.auto_resize()
+    H.auto_scroll()
+  end, 'Animate resize and animate scroll')
+  -- Track scroll state on buffer and window enter to animate its first scroll.
+  -- Use `vim.schedule_wrap()` to allow other immediate commands to change view
+  -- (like builtin cursor center on buffer change) to avoid unnecessary
+  -- animated scroll.
+  au({ 'BufEnter', 'WinEnter' }, '*', vim.schedule_wrap(H.track_scroll_state), 'Track scroll state')
+  -- Track scroll state (partially) on every cursor move to keep cursor
+  -- position up to date. This enables visually better cursor positioning
+  -- during scroll animation (convex progression from start cursor position to
+  -- end). Use `vim.schedule()` to make it affect state only after scroll is
+  -- done and cursor is already in correct final position.
+  au('CursorMoved', '*', vim.schedule_wrap(H.track_scroll_state_partial), 'Track partial scroll state')
+  au('CmdlineLeave', '*', H.on_cmdline_leave, 'On CmdlineLeave')
+
+  -- Use `vim.schedule_wrap()` animation to get a window data used for
+  -- displaying (and not one after just opening). Useful for 'nvim-tree'.
+  au('WinNew', '*', vim.schedule_wrap(function() H.auto_openclose('open') end), 'Animate window open')
+
+  au('WinClosed', '*', function() H.auto_openclose('close') end, 'Animate window close')
+
+  au(
+    'ColorScheme',
+    '*',
+    function() vim.api.nvim_set_hl(0, 'MiniAnimateCursor', { default = true, reverse = true, nocombine = true }) end,
+    'Ensure proper colors'
+  )
+end
+
 H.is_disabled = function() return vim.g.minianimate_disable == true or vim.b.minianimate_disable == true end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniAnimate.config, vim.b.minianimate_config or {}, config or {})
+end
+
+-- Autocommands ---------------------------------------------------------------
+H.auto_cursor = function()
+  -- Don't animate if disabled
+  local cursor_config = H.get_config().cursor
+  if not cursor_config.enable or H.is_disabled() then
+    -- Reset state to not use an outdated one if enabled again
+    H.cache.cursor_state = { buf_id = nil, pos = {} }
+    return
+  end
+
+  -- Don't animate if inside scroll animation
+  if H.cache.scroll_is_active then return end
+
+  -- Update necessary information. NOTE: update state only on `CursorMoved` and
+  -- not inside every animation step (like in scroll animation) for performance
+  -- reasons: cursor movement is much more common action than scrolling.
+  local prev_state, new_state = H.cache.cursor_state, H.get_cursor_state()
+  H.cache.cursor_state = new_state
+  H.cache.cursor_event_id = H.cache.cursor_event_id + 1
+
+  -- Don't animate if changed buffer
+  if new_state.buf_id ~= prev_state.buf_id then return end
+
+  -- Make animation step data and possibly animate
+  local animate_step = H.make_cursor_step(prev_state, new_state, cursor_config)
+  if not animate_step then return end
+
+  H.start_cursor()
+  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
+end
+
+H.auto_resize = function()
+  -- Don't animate if disabled
+  local resize_config = H.get_config().resize
+  if not resize_config.enable or H.is_disabled() then
+    -- Reset state to not use an outdated one if enabled again
+    H.cache.resize_state = { layout = {}, sizes = {}, views = {} }
+    return
+  end
+
+  -- Don't animate if inside scroll animation. This reduces computations and
+  -- occasional flickering.
+  if H.cache.scroll_is_active then return end
+
+  -- Update state. This also ensures that window views are up to date.
+  local prev_state, new_state = H.cache.resize_state, H.get_resize_state()
+  H.cache.resize_state = new_state
+
+  -- Don't animate if there is nothing to animate (should be same layout but
+  -- different sizes). This also stops triggering animation on window scrolls.
+  local same_state = H.is_equal_resize_state(prev_state, new_state)
+  if not (same_state.layout and not same_state.sizes) then return end
+
+  -- Register new event only in case there is something to animate
+  H.cache.resize_event_id = H.cache.resize_event_id + 1
+
+  -- Make animation step data and possibly animate
+  local animate_step = H.make_resize_step(prev_state, new_state, resize_config)
+  if not animate_step then return end
+
+  H.start_resize(prev_state)
+  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
+end
+
+H.auto_scroll = function()
+  -- Don't animate if disabled
+  local scroll_config = H.get_config().scroll
+  if not scroll_config.enable or H.is_disabled() then
+    -- Reset state to not use an outdated one if enabled again
+    H.cache.scroll_state = { buf_id = nil, win_id = nil, view = {}, cursor = {} }
+    return
+  end
+
+  -- Get states
+  local prev_state, new_state = H.cache.scroll_state, H.get_scroll_state()
+
+  -- Don't animate if nothing to animate. Mostly used to distinguish
+  -- `WinScrolled` resulting from module animation from the other ones.
+  local is_same_bufwin = new_state.buf_id == prev_state.buf_id and new_state.win_id == prev_state.win_id
+  local is_same_topline = new_state.view.topline == prev_state.view.topline
+  if is_same_topline and is_same_bufwin then return end
+
+  -- Update necessary information
+  H.cache.scroll_state = new_state
+  H.cache.scroll_event_id = H.cache.scroll_event_id + 1
+
+  -- Don't animate if changed buffer or window
+  if not is_same_bufwin then return end
+
+  -- Don't animate if inside resize animation. This reduces computations and
+  -- occasional flickering.
+  if H.cache.resize_is_active then return end
+
+  -- Make animation step data and possibly animate
+  local animate_step = H.make_scroll_step(prev_state, new_state, scroll_config)
+  if not animate_step then return end
+
+  H.start_scroll(prev_state)
+  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
+end
+
+H.track_scroll_state = function() H.cache.scroll_state = H.get_scroll_state() end
+
+H.track_scroll_state_partial = function()
+  -- This not only improves computation load, but seems to be crucial for
+  -- a proper state tracking
+  if H.cache.scroll_is_active then return end
+
+  H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') }
+end
+
+H.on_cmdline_leave = function()
+  local cmd_type = vim.fn.getcmdtype()
+  local is_insearch = vim.o.incsearch and (cmd_type == '/' or cmd_type == '?')
+  if not is_insearch then return end
+
+  -- Update scroll state so that there is no scroll animation after confirming
+  -- incremental search. Otherwise it leads to unnecessary animation from
+  -- initial scroll state to the one **already shown**.
+  H.track_scroll_state()
+end
+
+H.auto_openclose = function(action_type)
+  action_type = action_type or 'open'
+
+  -- Don't animate if disabled
+  local config = H.get_config()[action_type]
+  if not config.enable or H.is_disabled() then return end
+
+  -- Get window id to act upon
+  local win_id
+  if action_type == 'close' then win_id = tonumber(vim.fn.expand('<amatch>')) end
+  if action_type == 'open' then win_id = math.max(unpack(vim.api.nvim_list_wins())) end
+
+  -- Don't animate if created window is not right (valid and not floating)
+  if win_id == nil or not vim.api.nvim_win_is_valid(win_id) then return end
+  if vim.api.nvim_win_get_config(win_id).relative ~= '' then return end
+
+  -- Register new event only in case there is something to animate
+  local event_id_name = action_type .. '_event_id'
+  H.cache[event_id_name] = H.cache[event_id_name] + 1
+
+  -- Make animation step data and possibly animate
+  local animate_step = H.make_openclose_step(action_type, win_id, config)
+  if not animate_step then return end
+
+  H.start_openclose(action_type)
+  MiniAnimate.animate(animate_step.step_action, animate_step.step_timing)
 end
 
 -- General animation ----------------------------------------------------------
@@ -1578,7 +1565,7 @@ H.start_scroll = function(start_state)
     -- Track state because `winrestview()` later triggers `WinScrolled`.
     -- Otherwise mapping like `u<Cmd>lua _G.n = 0<CR>` (as in 'mini.bracketed')
     -- can result into "inverted scroll": from destination to current state.
-    MiniAnimate.track_scroll_state()
+    H.track_scroll_state()
   end
 
   return true
@@ -1587,7 +1574,7 @@ end
 H.stop_scroll = function(end_state)
   if end_state ~= nil then
     vim.fn.winrestview(end_state.view)
-    MiniAnimate.track_scroll_state()
+    H.track_scroll_state()
   end
 
   vim.wo.scrolloff = end_state.scrolloff

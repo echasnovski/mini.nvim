@@ -73,9 +73,6 @@ T['setup()']['creates side effects'] = function()
   -- Autocommand group
   eq(child.fn.exists('#MiniIndentscope'), 1)
 
-  -- Autocommand on `ModeChanged` event
-  eq(child.fn.exists('#MiniIndentscope#ModeChanged'), 1)
-
   -- Highlight groups
   expect.match(child.cmd_capture('hi MiniIndentscopeSymbol'), 'links to Delimiter')
 end
@@ -575,8 +572,6 @@ T['Auto drawing']['respects common events'] = new_set({
 })
 
 T['Auto drawing']['respects ModeChanged event'] = function()
-  if child.fn.exists('##ModeChanged') ~= 1 then return end
-
   -- Add disabling in Insert mode
   child.cmd([[
       augroup InsertDisable

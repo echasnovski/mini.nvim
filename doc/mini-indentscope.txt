@@ -280,17 +280,6 @@ Return~
     column), and <indent> ("indent at column") keys.
 
 ------------------------------------------------------------------------------
-                                                   *MiniIndentscope.auto_draw()*
-                      `MiniIndentscope.auto_draw`({opts})
-Auto draw scope indicator based on movement events
-
-Designed to be used with |autocmd|. No need to use it directly, everything
-is setup in |MiniIndentscope.setup|.
-
-Parameters~
-{opts} `(table|nil)` Options.
-
-------------------------------------------------------------------------------
                                                         *MiniIndentscope.draw()*
                     `MiniIndentscope.draw`({scope}, {opts})
 Draw scope manually
