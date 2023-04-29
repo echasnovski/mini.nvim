@@ -707,7 +707,7 @@ H.apply_autocommands = function(config)
   end
 
   if config.autocommands.basic then
-    au('TextYankPost', '*', vim.highlight.on_yank, 'Highlight yanked text')
+    au('TextYankPost', '*', function() vim.highlight.on_yank() end, 'Highlight yanked text')
     au('TermOpen', '*', function() vim.cmd('startinsert') end, 'Start builtin terminal in Insert mode')
   end
 
