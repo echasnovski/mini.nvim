@@ -99,9 +99,8 @@ MiniCursorword.setup = function(config)
   -- Define behavior
   H.create_autocommands()
 
-  -- Create highlighting
-  H.create_default_hl_groups()
-  vim.cmd('hi default link MiniCursorwordCurrent MiniCursorword')
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -156,12 +155,15 @@ H.create_autocommands = function()
   au({ 'InsertEnter', 'TermEnter', 'QuitPre' }, '*', H.auto_unhighlight, 'Auto unhighlight cursorword')
   au('ModeChanged', '*:[^i]', H.auto_highlight, 'Auto highlight cursorword')
 
-  au('ColorScheme', '*', H.create_default_hl_groups, 'Ensure proper colors')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
   au('FileType', 'TelescopePrompt', function() vim.b.minicursorword_disable = true end, 'Disable locally')
 end
 
-H.create_default_hl_groups =
-  function() vim.api.nvim_set_hl(0, 'MiniCursorword', { default = true, underline = true }) end
+--stylua: ignore
+H.create_default_hl = function()
+  vim.api.nvim_set_hl(0, 'MiniCursorword',        { default = true, underline = true })
+  vim.api.nvim_set_hl(0, 'MiniCursorwordCurrent', { default = true, link = 'MiniCursorword' })
+end
 
 H.is_disabled = function() return vim.g.minicursorword_disable == true or vim.b.minicursorword_disable == true end
 

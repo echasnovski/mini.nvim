@@ -203,8 +203,8 @@ MiniCompletion.setup = function(config)
   -- Define behavior
   H.create_autocommands(config)
 
-  -- Create highlighting
-  vim.api.nvim_exec('hi default MiniCompletionActiveParameter cterm=underline gui=underline', false)
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -561,14 +561,12 @@ H.create_autocommands = function(config)
     )
   end
 
-  au(
-    'ColorScheme',
-    '*',
-    function() vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true }) end,
-    'Ensure proper colors'
-  )
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
   au('FileType', 'TelescopePrompt', function() vim.b.minicompletion_disable = true end, 'Disable locally')
 end
+
+H.create_default_hl =
+  function() vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true }) end
 
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
 

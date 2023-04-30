@@ -153,10 +153,8 @@ MiniJump2d.setup = function(config)
   -- Define behavior
   H.create_autocommands(config)
 
-  -- Create highlighting
-  H.create_default_hl_groups()
-  vim.cmd('hi default link MiniJump2dSpotUnique MiniJump2dSpot')
-  vim.cmd('hi default link MiniJump2dDim Comment')
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -672,10 +670,11 @@ H.create_autocommands = function(config)
   end
 
   -- Ensure proper colors
-  au('ColorScheme', '*', H.create_default_hl_groups, 'Ensure proper colors')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
 end
 
-H.create_default_hl_groups = function()
+--stylua: ignore
+H.create_default_hl = function()
   local set_default_hl = function(name, data)
     data.default = true
     vim.api.nvim_set_hl(0, name, data)
@@ -685,8 +684,10 @@ H.create_default_hl_groups = function()
   local bg_color = is_light_bg and 'white' or 'black'
   local fg_color = is_light_bg and 'black' or 'white'
 
-  set_default_hl('MiniJump2dSpot', { fg = fg_color, bg = bg_color, bold = true, nocombine = true })
-  set_default_hl('MiniJump2dSpotAhead', { fg = 'grey', bg = bg_color, nocombine = true })
+  set_default_hl('MiniJump2dSpot',       { fg = fg_color, bg = bg_color, bold = true, nocombine = true })
+  set_default_hl('MiniJump2dSpotAhead',  { fg = 'grey',   bg = bg_color, nocombine = true })
+  set_default_hl('MiniJump2dSpotUnique', { link = 'MiniJump2dSpot' })
+  set_default_hl('MiniJump2dDim',        { link = 'Comment' })
 end
 
 H.is_disabled = function() return vim.g.minijump2d_disable == true or vim.b.minijump2d_disable == true end

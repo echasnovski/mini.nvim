@@ -123,8 +123,8 @@ MiniAnimate.setup = function(config)
   H.create_autocommands()
   H.track_scroll_state()
 
-  -- Create highlighting
-  vim.api.nvim_exec('hi default MiniAnimateCursor gui=reverse,nocombine', false)
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -1224,13 +1224,11 @@ H.create_autocommands = function()
 
   au('WinClosed', '*', function() H.auto_openclose('close') end, 'Animate window close')
 
-  au(
-    'ColorScheme',
-    '*',
-    function() vim.api.nvim_set_hl(0, 'MiniAnimateCursor', { default = true, reverse = true, nocombine = true }) end,
-    'Ensure proper colors'
-  )
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
 end
+
+H.create_default_hl =
+  function() vim.api.nvim_set_hl(0, 'MiniAnimateCursor', { default = true, reverse = true, nocombine = true }) end
 
 H.is_disabled = function() return vim.g.minianimate_disable == true or vim.b.minianimate_disable == true end
 

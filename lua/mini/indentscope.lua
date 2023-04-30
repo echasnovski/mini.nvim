@@ -120,12 +120,8 @@ MiniIndentscope.setup = function(config)
   -- Define behavior
   H.create_autocommands()
 
-  -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniIndentscopeSymbol Delimiter
-      hi default link MiniIndentscopeSymbolOff MiniIndentscopeSymbol]],
-    false
-  )
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -663,6 +659,12 @@ H.create_autocommands = function()
     function() H.auto_draw() end,
     'Auto draw indentscope'
   )
+end
+
+--stylua: ignore
+H.create_default_hl = function()
+  vim.api.nvim_set_hl(0, 'MiniIndentscopeSymbol',    { default = true, link = 'Delimiter' })
+  vim.api.nvim_set_hl(0, 'MiniIndentscopeSymbolOff', { default = true, link = 'MiniIndentscopeSymbol' })
 end
 
 H.is_disabled = function() return vim.g.miniindentscope_disable == true or vim.b.miniindentscope_disable == true end

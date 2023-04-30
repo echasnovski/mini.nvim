@@ -157,8 +157,8 @@ MiniTest.setup = function(config)
   -- Define behavior
   H.create_autocommands()
 
-  -- Create highlighting
-  H.create_default_hl_groups()
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --stylua: ignore start
@@ -1610,11 +1610,11 @@ H.create_autocommands = function()
   local augroup = vim.api.nvim_create_augroup('MiniTest', {})
   vim.api.nvim_create_autocmd(
     'ColorScheme',
-    { group = augroup, callback = H.create_default_hl_groups, desc = 'Ensure proper colors' }
+    { group = augroup, callback = H.create_default_hl, desc = 'Ensure proper colors' }
   )
 end
 
-H.create_default_hl_groups = function()
+H.create_default_hl = function()
   local set_default_hl = function(name, data)
     data.default = true
     vim.api.nvim_set_hl(0, name, data)

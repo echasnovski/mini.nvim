@@ -198,14 +198,8 @@ MiniMap.setup = function(config)
   -- Define behavior
   H.create_autocommands()
 
-  -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniMapNormal NormalFloat
-      hi default link MiniMapSymbolCount Special
-      hi default link MiniMapSymbolLine Title
-      hi default link MiniMapSymbolView Delimiter]],
-    false
-  )
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --stylua: ignore
@@ -1010,6 +1004,19 @@ H.create_autocommands = function()
   au({ 'CursorMoved', 'WinScrolled' }, '*', H.on_view_change, 'On view change')
   au('WinLeave', '*', H.on_winleave, 'On WinLeave')
   au('ModeChanged', '*:n', H.on_content_change, 'On return to Normal mode')
+end
+
+--stylua: ignore
+H.create_default_hl = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  set_default_hl('MiniMapNormal',      { link = 'NormalFloat' })
+  set_default_hl('MiniMapSymbolCount', { link = 'Special' })
+  set_default_hl('MiniMapSymbolLine',  { link = 'Title' })
+  set_default_hl('MiniMapSymbolView',  { link = 'Delimiter' })
 end
 
 H.is_disabled = function() return vim.g.minimap_disable == true or vim.b.minimap_disable == true end

@@ -212,19 +212,8 @@ MiniStarter.setup = function(config)
   -- Define behavior
   H.create_autocommands(config)
 
-  -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniStarterCurrent    NONE
-      hi default link MiniStarterFooter     Title
-      hi default link MiniStarterHeader     Title
-      hi default link MiniStarterInactive   Comment
-      hi default link MiniStarterItem       Normal
-      hi default link MiniStarterItemBullet Delimiter
-      hi default link MiniStarterItemPrefix WarningMsg
-      hi default link MiniStarterSection    Delimiter
-      hi default link MiniStarterQuery      MoreMsg]],
-    false
-  )
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -1040,6 +1029,24 @@ H.create_autocommands = function(config)
       { group = augroup, nested = true, once = true, callback = on_vimenter, desc = 'Open on VimEnter' }
     )
   end
+end
+
+--stylua: ignore
+H.create_default_hl = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  vim.cmd('hi default link MiniStarterCurrent NONE')
+  set_default_hl('MiniStarterFooter',     { link = 'Title' })
+  set_default_hl('MiniStarterHeader',     { link = 'Title' })
+  set_default_hl('MiniStarterInactive',   { link = 'Comment' })
+  set_default_hl('MiniStarterItem',       { link = 'Normal' })
+  set_default_hl('MiniStarterItemBullet', { link = 'Delimiter' })
+  set_default_hl('MiniStarterItemPrefix', { link = 'WarningMsg' })
+  set_default_hl('MiniStarterSection',    { link = 'Delimiter' })
+  set_default_hl('MiniStarterQuery',      { link = 'MoreMsg' })
 end
 
 H.is_disabled = function() return vim.g.ministarter_disable == true or vim.b.ministarter_disable == true end

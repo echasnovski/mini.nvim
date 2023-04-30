@@ -82,8 +82,8 @@ MiniJump.setup = function(config)
   -- Define behavior
   H.create_autocommands()
 
-  -- Highlight groups
-  vim.cmd('hi default link MiniJump SpellRare')
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -364,6 +364,8 @@ H.create_autocommands = function()
   au('CursorMoved', '*', H.on_cursormoved, 'On CursorMoved')
   au({ 'BufLeave', 'InsertEnter' }, '*', MiniJump.stop_jumping, 'Stop jumping')
 end
+
+H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniJump', { default = true, link = 'SpellRare' }) end
 
 H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.minijump_disable == true end
 

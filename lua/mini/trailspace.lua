@@ -64,8 +64,8 @@ MiniTrailspace.setup = function(config)
   -- Define behavior
   H.create_autocommands(config)
 
-  -- Create highlighting
-  vim.api.nvim_exec('hi default link MiniTrailspace Error', false)
+  -- Create default highlighting
+  H.create_default_hl()
 
   -- Initialize highlight (usually takes effect during startup)
   vim.defer_fn(MiniTrailspace.highlight, 0)
@@ -162,6 +162,8 @@ H.create_autocommands = function(config)
     au('OptionSet', 'buftype', H.track_normal_buffer, 'Track normal buffer')
   end
 end
+
+H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniTrailspace', { default = true, link = 'Error' }) end
 
 H.is_disabled = function() return vim.g.minitrailspace_disable == true or vim.b.minitrailspace_disable == true end
 

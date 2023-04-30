@@ -135,21 +135,8 @@ MiniStatusline.setup = function(config)
   -- - Disable built-in statusline in Quickfix window
   vim.g.qf_disable_statusline = 1
 
-  -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniStatuslineModeNormal  Cursor
-      hi default link MiniStatuslineModeInsert  DiffChange
-      hi default link MiniStatuslineModeVisual  DiffAdd
-      hi default link MiniStatuslineModeReplace DiffDelete
-      hi default link MiniStatuslineModeCommand DiffText
-      hi default link MiniStatuslineModeOther   IncSearch
-
-      hi default link MiniStatuslineDevinfo  StatusLine
-      hi default link MiniStatuslineFilename StatusLineNC
-      hi default link MiniStatuslineFileinfo StatusLine
-      hi default link MiniStatuslineInactive StatusLineNC]],
-    false
-  )
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -481,6 +468,26 @@ H.create_autocommands = function()
 
   local set_inactive = function() vim.wo.statusline = '%!v:lua.MiniStatusline.inactive()' end
   au({ 'WinLeave', 'BufLeave' }, '*', set_inactive, 'Set inactive statusline')
+end
+
+--stylua: ignore
+H.create_default_hl = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  set_default_hl('MiniStatuslineModeNormal',  { link = 'Cursor' })
+  set_default_hl('MiniStatuslineModeInsert',  { link = 'DiffChange' })
+  set_default_hl('MiniStatuslineModeVisual',  { link = 'DiffAdd' })
+  set_default_hl('MiniStatuslineModeReplace', { link = 'DiffDelete' })
+  set_default_hl('MiniStatuslineModeCommand', { link = 'DiffText' })
+  set_default_hl('MiniStatuslineModeOther',   { link = 'IncSearch' })
+
+  set_default_hl('MiniStatuslineDevinfo',  { link = 'StatusLine' })
+  set_default_hl('MiniStatuslineFilename', { link = 'StatusLineNC' })
+  set_default_hl('MiniStatuslineFileinfo', { link = 'StatusLine' })
+  set_default_hl('MiniStatuslineInactive', { link = 'StatusLineNC' })
 end
 
 H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.ministatusline_disable == true end

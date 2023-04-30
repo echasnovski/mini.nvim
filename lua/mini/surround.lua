@@ -432,8 +432,8 @@ MiniSurround.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Create highlighting
-  vim.api.nvim_exec('hi default link MiniSurround IncSearch', false)
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -1167,6 +1167,8 @@ H.apply_config = function(config)
   end
   --stylua: ignore end
 end
+
+H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniSurround', { default = true, link = 'IncSearch' }) end
 
 H.is_disabled = function() return vim.g.minisurround_disable == true or vim.b.minisurround_disable == true end
 

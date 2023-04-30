@@ -93,21 +93,8 @@ MiniTabline.setup = function(config)
     false
   )
 
-  -- Create highlighting
-  vim.api.nvim_exec(
-    [[hi default link MiniTablineCurrent TabLineSel
-      hi default link MiniTablineVisible TabLineSel
-      hi default link MiniTablineHidden  TabLine
-
-      hi default link MiniTablineModifiedCurrent StatusLine
-      hi default link MiniTablineModifiedVisible StatusLine
-      hi default link MiniTablineModifiedHidden  StatusLineNC
-
-      hi default link MiniTablineTabpagesection Search
-
-      hi default MiniTablineFill NONE]],
-    false
-  )
+  -- Create default highlighting
+  H.create_default_hl()
 end
 
 --- Module config
@@ -191,6 +178,26 @@ H.apply_config = function(config)
 
   -- Set tabline string
   vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
+end
+
+--stylua: ignore
+H.create_default_hl = function()
+  local set_default_hl = function(name, data)
+    data.default = true
+    vim.api.nvim_set_hl(0, name, data)
+  end
+
+  set_default_hl('MiniTablineCurrent', { link = 'TabLineSel' })
+  set_default_hl('MiniTablineVisible', { link = 'TabLineSel' })
+  set_default_hl('MiniTablineHidden',  { link = 'TabLine' })
+
+  set_default_hl('MiniTablineModifiedCurrent', { link = 'StatusLine' })
+  set_default_hl('MiniTablineModifiedVisible', { link = 'StatusLine' })
+  set_default_hl('MiniTablineModifiedHidden',  { link = 'StatusLineNC' })
+
+  set_default_hl('MiniTablineTabpagesection', { link = 'Search' })
+
+  vim.cmd('hi default MiniTablineFill NONE')
 end
 
 H.is_disabled = function() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end
