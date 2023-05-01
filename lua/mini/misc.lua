@@ -302,6 +302,9 @@ MiniMisc.setup_restore_cursor = function(opts)
   vim.api.nvim_create_autocmd('BufReadPre', {
     group = augroup,
     callback = function(data)
+      -- Stop if not a normal buffer
+      if vim.bo.buftype ~= '' then return end
+
       vim.api.nvim_create_autocmd('FileType', {
         buffer = data.buf,
         once = true,
@@ -312,9 +315,6 @@ MiniMisc.setup_restore_cursor = function(opts)
 end
 
 H.restore_cursor = function(opts)
-  -- Stop if not a normal buffer
-  if vim.bo.buftype ~= '' then return end
-
   -- Stop if filetype is ignored
   if vim.tbl_contains(opts.ignore_filetype, vim.bo.filetype) then return end
 
