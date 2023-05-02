@@ -423,6 +423,60 @@ T['read()']['respects `force` from `config` and `opts` argument'] = function()
   validate_no_session_loaded()
 end
 
+T['read()']['does not stop on source error'] = function()
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
+
+  local session_file = 'tests/dir-sessions/global/session_with_error'
+  local folded_file = 'tests/dir-sessions/folded_file'
+  local extra_file = 'tests/dir-sessions/extra_file'
+  MiniTest.finally(function()
+    vim.fn.delete(session_file)
+    vim.fn.delete(folded_file)
+    vim.fn.delete(extra_file)
+  end)
+
+  -- Create buffer with non-trivial folds to imitate "No folds found" error
+  child.o.foldmethod = 'indent'
+  child.cmd('edit ' .. folded_file)
+  set_lines({ 'a', '\ta', '\ta', 'a', '\ta', '\ta' })
+  child.cmd('write')
+
+  child.cmd('normal! zM')
+  child.cmd('2 | normal! zo')
+
+  -- Create another buffer to check correct session read
+  child.cmd('edit ' .. extra_file)
+  set_lines({ 'This should be preserved in session' })
+  child.cmd('write')
+
+  -- Write session and make sure it contains call to open folds
+  child.cmd('edit ' .. folded_file)
+  child.cmd('mksession ' .. session_file)
+
+  local session_lines = table.concat(child.fn.readfile(session_file), '\n')
+  expect.match(session_lines, 'normal! zo')
+
+  -- Modify file so that no folds will be found by session file
+  child.fn.writefile({ 'No folds in this file' }, folded_file)
+
+  -- Cleanly read session which should open foldless file without errors
+  child.restart()
+  load_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
+
+  expect.no_error(function() child.lua([[MiniSessions.read('session_with_error')]]) end)
+
+  local buffers = child.api.nvim_list_bufs()
+  eq(#buffers, 2)
+
+  child.api.nvim_set_current_buf(buffers[1])
+  expect.match(child.api.nvim_buf_get_name(0), vim.pesc(folded_file))
+  eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'No folds in this file' })
+
+  child.api.nvim_set_current_buf(buffers[2])
+  expect.match(child.api.nvim_buf_get_name(0), vim.pesc(extra_file))
+  eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'This should be preserved in session' })
+end
+
 T['read()']['respects hooks from `config` and `opts` argument'] = new_set({
   parametrize = { { 'pre' }, { 'post' } },
 }, {

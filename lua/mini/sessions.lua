@@ -187,7 +187,7 @@ MiniSessions.read = function(session_name, opts)
 
   -- Read session file
   local session_path = data.path
-  vim.cmd(('source %s'):format(vim.fn.fnameescape(session_path)))
+  vim.cmd(('silent! source %s'):format(vim.fn.fnameescape(session_path)))
   vim.v.this_session = session_path
 
   -- Possibly notify
