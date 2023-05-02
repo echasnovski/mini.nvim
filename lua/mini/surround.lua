@@ -640,26 +640,6 @@ MiniSurround.config = {
 --minidoc_afterlines_end
 
 -- Module functionality =======================================================
---- Surround operator
----
---- Main function to be used in expression mappings. No need to use it
---- directly, everything is setup in |MiniSurround.setup|.
----
----@param task string Name of surround task.
----@param cache table|nil Task cache.
-MiniSurround.operator = function(task, cache)
-  if H.is_disabled() then
-    -- Using `<Esc>` helps to stop moving cursor caused by current
-    -- implementation detail of adding `' '` inside expression mapping
-    return [[\<Esc>]]
-  end
-
-  H.cache = cache or {}
-
-  vim.cmd(string.format('set operatorfunc=v:lua.MiniSurround.%s', task))
-  return 'g@'
-end
-
 --- Add surrounding
 ---
 --- No need to use it directly, everything is setup in |MiniSurround.setup|.
@@ -1129,16 +1109,14 @@ H.apply_config = function(config)
   -- Make regular mappings
   local m = config.mappings
 
-  -- NOTE: In mappings construct ` . ' '` "disables" motion required by `g@`.
-  -- It is used to enable dot-repeatability.
-  expr_map(m.add,       [[v:lua.MiniSurround.operator('add')]],                                'Add surrounding')
-  expr_map(m.delete,    [[v:lua.MiniSurround.operator('delete') . ' ']],                       'Delete surrounding')
-  expr_map(m.replace,   [[v:lua.MiniSurround.operator('replace') . ' ']],                      'Replace surrounding')
-  expr_map(m.find,      [[v:lua.MiniSurround.operator('find', {'direction': 'right'}) . ' ']], 'Find right surrounding')
-  expr_map(m.find_left, [[v:lua.MiniSurround.operator('find', {'direction': 'left'}) . ' ']],  'Find left surrounding')
-  expr_map(m.highlight, [[v:lua.MiniSurround.operator('highlight') . ' ']],                    'Highlight surrounding')
+  expr_map(m.add,       H.make_operator('add', nil, nil, true), 'Add surrounding')
+  expr_map(m.delete,    H.make_operator('delete'),              'Delete surrounding')
+  expr_map(m.replace,   H.make_operator('replace'),             'Replace surrounding')
+  expr_map(m.find,      H.make_operator('find', 'right'),       'Find right surrounding')
+  expr_map(m.find_left, H.make_operator('find', 'left'),        'Find left surrounding')
+  expr_map(m.highlight, H.make_operator('highlight'),           'Highlight surrounding')
 
-  H.map('n', m.update_n_lines, '<Cmd>lua MiniSurround.update_n_lines()<CR>', { desc = 'Update `MiniSurround.config.n_lines`' })
+  H.map('n', m.update_n_lines, MiniSurround.update_n_lines, { desc = 'Update `MiniSurround.config.n_lines`' })
   H.map('x', m.add, [[:<C-u>lua MiniSurround.add('visual')<CR>]], { desc = 'Add surrounding to selection' })
 
   -- Make extended mappings
@@ -1149,21 +1127,29 @@ H.apply_config = function(config)
   end
 
   if m.suffix_last ~= '' then
+    local operator_prev = function(method, direction)
+      return H.make_operator(method, direction, 'prev')
+    end
+
     local suff = m.suffix_last
-    suffix_map(m.delete,    suff, [[v:lua.MiniSurround.operator('delete', {'search_method': 'prev'}) . ' ']],                     'Delete previous surrounding')
-    suffix_map(m.replace,   suff, [[v:lua.MiniSurround.operator('replace', {'search_method': 'prev'}) . ' ']],                    'Replace previous surrounding')
-    suffix_map(m.find,      suff, [[v:lua.MiniSurround.operator('find', {'direction': 'right', 'search_method': 'prev'}) . ' ']], 'Find previous right surrounding')
-    suffix_map(m.find_left, suff, [[v:lua.MiniSurround.operator('find', {'direction': 'left', 'search_method': 'prev'}) . ' ']],  'Find previous left surrounding')
-    suffix_map(m.highlight, suff, [[v:lua.MiniSurround.operator('highlight', {'search_method': 'prev'}) . ' ']],                  'Highlight previous surrounding')
+    suffix_map(m.delete,    suff, operator_prev('delte'),         'Delete previous surrounding')
+    suffix_map(m.replace,   suff, operator_prev('replace'),       'Replace previous surrounding')
+    suffix_map(m.find,      suff, operator_prev('find', 'right'), 'Find previous right surrounding')
+    suffix_map(m.find_left, suff, operator_prev('find', 'left'),  'Find previous left surrounding')
+    suffix_map(m.highlight, suff, operator_prev('highlight'),     'Highlight previous surrounding')
   end
 
   if m.suffix_next ~= '' then
+    local operator_next = function(method, direction)
+      return H.make_operator(method, direction, 'next')
+    end
+
     local suff = m.suffix_next
-    suffix_map(m.delete,    suff, [[v:lua.MiniSurround.operator('delete', {'search_method': 'next'}) . ' ']],                     'Delete next surrounding')
-    suffix_map(m.replace,   suff, [[v:lua.MiniSurround.operator('replace', {'search_method': 'next'}) . ' ']],                    'Replace next surrounding')
-    suffix_map(m.find,      suff, [[v:lua.MiniSurround.operator('find', {'direction': 'right', 'search_method': 'next'}) . ' ']], 'Find next right surrounding')
-    suffix_map(m.find_left, suff, [[v:lua.MiniSurround.operator('find', {'direction': 'left', 'search_method': 'next'}) . ' ']],  'Find next left surrounding')
-    suffix_map(m.highlight, suff, [[v:lua.MiniSurround.operator('highlight', {'search_method': 'next'}) . ' ']],                  'Highlight next surrounding')
+    suffix_map(m.delete,    suff, operator_next('delete'),        'Delete next surrounding')
+    suffix_map(m.replace,   suff, operator_next('replace'),       'Replace next surrounding')
+    suffix_map(m.find,      suff, operator_next('find', 'right'), 'Find next right surrounding')
+    suffix_map(m.find_left, suff, operator_next('find', 'left'),  'Find next left surrounding')
+    suffix_map(m.highlight, suff, operator_next('highlight'),     'Highlight next surrounding')
   end
   --stylua: ignore end
 end
@@ -1192,6 +1178,25 @@ end
 H.validate_search_method = function(x, x_name)
   local is_valid, msg = H.is_search_method(x, x_name)
   if not is_valid then H.error(msg) end
+end
+
+-- Mappings -------------------------------------------------------------------
+H.make_operator = function(task, direction, search_method, ask_for_textobject)
+  return function()
+    if H.is_disabled() then
+      -- Using `<Esc>` helps to stop moving cursor caused by current
+      -- implementation detail of adding `' '` inside expression mapping
+      return [[\<Esc>]]
+    end
+
+    H.cache = { direction = direction, search_method = search_method }
+
+    vim.cmd(string.format('set operatorfunc=v:lua.MiniSurround.%s', task))
+
+    -- NOTE: Concatenating `' '` to operator output "disables" motion
+    -- required by `g@`. It is used to enable dot-repeatability.
+    return 'g@' .. (ask_for_textobject and '' or ' ')
+  end
 end
 
 -- Work with surrounding info -------------------------------------------------
@@ -2124,10 +2129,10 @@ H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.surround) %s', msg)) end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.get_line_cols = function(line_num) return vim.fn.getline(line_num):len() end

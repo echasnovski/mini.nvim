@@ -1977,10 +1977,10 @@ H.validate_direction = function(direction, choices, fun_name)
   end
 end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniBracketed

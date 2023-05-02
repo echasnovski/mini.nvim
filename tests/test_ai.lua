@@ -122,8 +122,8 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('xmap ' .. lhs):find('MiniAi') ~= nil end
-  eq(has_map('a'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('xmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('a', 'Around'), true)
 
   unload_module()
   child.api.nvim_del_keymap('x', 'a')
@@ -132,7 +132,7 @@ T['setup()']['properly handles `config.mappings`'] = function()
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { around = '', around_next = '', around_last = '' } })
-  eq(has_map('a'), false)
+  eq(has_map('a', 'Around'), false)
 end
 
 local find_textobject = function(...) return child.lua_get('MiniAi.find_textobject(...)', { ... }) end
@@ -877,16 +877,6 @@ T['select_textobject()']["respects 'selection=exclusive'"] = function()
   validate('a', '  ')
 end
 
--- Actual testing is done in 'Integration tests'
-T['expr_textobject()'] = new_set()
-
-T['expr_textobject()']['is present'] = function() eq(child.lua_get('type(MiniAi.expr_textobject)'), 'function') end
-
--- Actual testing is done in 'Integration tests'
-T['expr_motion()'] = new_set()
-
-T['expr_motion()']['is present'] = function() eq(child.lua_get('type(MiniAi.expr_motion)'), 'function') end
-
 T['Search method'] = new_set()
 
 T['Search method']['works with "cover"'] = function()
@@ -1481,18 +1471,20 @@ T['Textobject']['falls back in case of absent textobject id'] = function()
   end
 
   -- Builtin textobject
+  -- TODO: Remove when support for Neovim=0.7 is dropped
+  local pattern = child.fn.has('nvim-0.8') == 0 and 'Lua' or 'mini.*ai'
   -- Visual mode
-  expect.match(child.fn.maparg('a', 'x'), 'MiniAi')
+  expect.match(child.fn.maparg('a', 'x'), pattern)
   validate('aaa bbb', 0, { 'a', 'w' }, { 1, 4 })
 
-  expect.match(child.fn.maparg('i', 'x'), 'MiniAi')
+  expect.match(child.fn.maparg('i', 'x'), pattern)
   validate('aaa bbb', 0, { 'i', 'w' }, { 1, 3 })
 
   -- Operator-pending mode
-  expect.match(child.fn.maparg('a', 'o'), 'MiniAi')
+  expect.match(child.fn.maparg('a', 'o'), pattern)
   validate_edit1d('aaa bbb', 0, 'bbb', 0, 20, 'd', 'a', 'w')
 
-  expect.match(child.fn.maparg('i', 'o'), 'MiniAi')
+  expect.match(child.fn.maparg('i', 'o'), pattern)
   validate_edit1d('aaa bbb', 0, ' bbb', 0, 10, 'd', 'i', 'w')
 
   -- Custom textobject

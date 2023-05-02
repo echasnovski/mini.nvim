@@ -633,6 +633,9 @@ H.apply_config = function(config)
   H.map('x', maps.object_scope, '<Cmd>lua MiniIndentscope.textobject(false)<CR>', { desc = 'Object scope' })
   H.map('x', maps.object_scope_with_border, '<Cmd>lua MiniIndentscope.textobject(true)<CR>', { desc = 'Object scope with border' })
 
+  -- Use `<Cmd>...<CR>` to have proper dot-repeat
+  -- See https://github.com/neovim/neovim/issues/23406
+  -- TODO: use local functions if/when that issue is resolved
   H.map('o', maps.goto_top, [[<Cmd>lua MiniIndentscope.operator('top')<CR>]], { desc = 'Go to indent scope top' })
   H.map('o', maps.goto_bottom, [[<Cmd>lua MiniIndentscope.operator('bottom')<CR>]], { desc = 'Go to indent scope bottom' })
   H.map('o', maps.object_scope, '<Cmd>lua MiniIndentscope.textobject(false)<CR>', { desc = 'Object scope' })
@@ -1086,10 +1089,10 @@ end
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(('(mini.indentscope) %s'):format(msg)) end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.exit_visual_mode = function()

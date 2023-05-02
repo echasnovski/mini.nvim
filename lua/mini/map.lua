@@ -1338,8 +1338,8 @@ H.create_map_buffer = function()
   vim.api.nvim_buf_set_option(buf_id, 'filetype', 'minimap')
 
   -- Make buffer local mappings
-  vim.api.nvim_buf_set_keymap(buf_id, 'n', '<CR>', '<Cmd>lua MiniMap.toggle_focus(false)<CR>', { noremap = false })
-  vim.api.nvim_buf_set_keymap(buf_id, 'n', '<Esc>', '<Cmd>lua MiniMap.toggle_focus(true)<CR>', { noremap = false })
+  vim.keymap.set('n', '<CR>', '<Cmd>lua MiniMap.toggle_focus(false)<CR>', { buffer = buf_id })
+  vim.keymap.set('n', '<Esc>', '<Cmd>lua MiniMap.toggle_focus(true)<CR>', { buffer = buf_id })
 
   -- Make buffer local autocommands
   vim.api.nvim_create_autocmd('BufEnter', { buffer = buf_id, callback = H.on_map_enter, desc = 'On map enter' })

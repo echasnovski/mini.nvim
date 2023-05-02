@@ -167,24 +167,6 @@ Parameters~
   cursor being on target if can't be put past the line.
 
 ------------------------------------------------------------------------------
-                                                          *MiniJump.expr_jump()*
-                    `MiniJump.expr_jump`({backward}, {till})
-Make expression jump
-
-Cache information about the jump and return string with command to perform
-jump. Designed to be used inside Operator-pending mapping (see
-|omap-info|). Always asks for target (via |getcharstr()|). Respects |v:count|.
-
-All default values are taken from |MiniJump.state| to emulate latest jump.
-
-Parameters~
-{backward} `(boolean|nil)` Whether to jump backward.
-{till} `(boolean|nil)` Whether to jump just before/after the match instead of
-  exactly on target. This includes positioning cursor past the end of
-  previous/current line. Note that with backward jump this might lead to
-  cursor being on target if can't be put past the line.
-
-------------------------------------------------------------------------------
                                                        *MiniJump.stop_jumping()*
                            `MiniJump.stop_jumping`()
 Stop jumping

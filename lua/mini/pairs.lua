@@ -169,7 +169,7 @@ MiniPairs.map = function(mode, lhs, pair_info, opts)
   opts = vim.tbl_deep_extend('force', opts or {}, { expr = true, noremap = true })
   opts.desc = H.infer_mapping_description(pair_info)
 
-  H.map(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
+  vim.api.nvim_set_keymap(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, 'all')
 
   -- Ensure that `<BS>` and `<CR>` are mapped for input mode
@@ -515,9 +515,14 @@ H.ensure_cr_bs = function(mode)
 
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
-  if has_any_bs_pair then H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', { expr = true, desc = 'MiniPairs <BS>' }) end
+  if has_any_bs_pair then
+    -- Use not `silent` in Command mode to make it redraw
+    local opts = { silent = mode ~= 'c', expr = true, replace_keycodes = false, desc = 'MiniPairs <BS>' }
+    H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', opts)
+  end
   if mode == 'i' and has_any_cr_pair then
-    H.map(mode, '<CR>', 'v:lua.MiniPairs.cr()', { expr = true, desc = 'MiniPairs <CR>' })
+    local opts = { expr = true, replace_keycodes = false, desc = 'MiniPairs <CR>' }
+    H.map(mode, '<CR>', 'v:lua.MiniPairs.cr()', opts)
   end
 end
 
@@ -586,10 +591,10 @@ H.get_arrow_key = function(key)
   end
 end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniPairs

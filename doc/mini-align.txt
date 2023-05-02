@@ -587,26 +587,6 @@ Parameters~
 {mode} `(string)` Selection mode. One of "char", "line", "block".
 
 ------------------------------------------------------------------------------
-                                                     *MiniAlign.action_normal()*
-                   `MiniAlign.action_normal`({with_preview})
-Perfrom action in Normal mode
-
-Used in Normal mode mapping. No need to use it directly.
-
-Parameters~
-{with_preview} `(boolean|nil)` Whether to align with live preview.
-
-------------------------------------------------------------------------------
-                                                     *MiniAlign.action_visual()*
-                   `MiniAlign.action_visual`({with_preview})
-Perfrom action in Visual mode
-
-Used in Visual mode mapping. No need to use it directly.
-
-Parameters~
-{with_preview} `(boolean|nil)` Whether to align with live preview.
-
-------------------------------------------------------------------------------
                                                           *MiniAlign.as_parts()*
                          `MiniAlign.as_parts`({arr2d})
 Convert 2d array of strings to parts

@@ -94,15 +94,15 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('xmap ' .. lhs):find('MiniMove') ~= nil end
-  eq(has_map('<M-h>'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('xmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('<M-h>', 'MiniMove'), true)
 
   unload_module()
   child.api.nvim_del_keymap('x', '<M-h>')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { left = '' } })
-  eq(has_map('<M-h>'), false)
+  eq(has_map('<M-h>', 'MiniMove'), false)
 end
 
 T['move_selection()'] = new_set()

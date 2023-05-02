@@ -705,8 +705,8 @@ MiniSplitjoin.operator = function(task)
   end
 
   if H.is_disabled() then
-    -- Using `<Esc>` helps to stop moving cursor caused by current
-    -- implementation detail of adding `' '` inside expression mapping
+    -- Using `<Esc>` prevents moving cursor caused by current implementation
+    -- detail of adding `' '` inside expression mapping
     return [[\<Esc>]]
   end
 
@@ -1103,7 +1103,7 @@ H.error = function(msg) error(string.format('(mini.splitjoin) %s', msg), 0) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
-  opts = vim.tbl_deep_extend('force', { remap = false, silent = true }, opts or {})
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 

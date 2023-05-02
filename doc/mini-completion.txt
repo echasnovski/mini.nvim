@@ -100,8 +100,8 @@ You can override runtime config settings locally to buffer inside
 
 To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 these key mappings:
-`vim.api.nvim_set_keymap('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { noremap = true, expr = true })`
-`vim.api.nvim_set_keymap('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })`
+`vim.keymap.set('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { expr = true })`
+`vim.keymap.set('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { expr = true })`
 
 To get more consistent behavior of `<CR>`, you can use this template in
 your 'init.lua' to make customized mapping: >
@@ -124,7 +124,7 @@ your 'init.lua' to make customized mapping: >
     end
   end
 
-  vim.api.nvim_set_keymap('i', '<CR>', 'v:lua._G.cr_action()', { noremap = true, expr = true })
+  vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
 <
 # Highlight groups~
 

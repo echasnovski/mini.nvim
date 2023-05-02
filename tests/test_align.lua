@@ -140,15 +140,15 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('xmap ' .. lhs):find('MiniAlign') ~= nil end
-  eq(has_map('ga'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('xmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('ga', 'Align'), true)
 
   unload_module()
   child.api.nvim_del_keymap('x', 'ga')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { start = '' } })
-  eq(has_map('ga'), false)
+  eq(has_map('ga', 'Align'), false)
 end
 
 local validate_align_strings = function(input_strings, opts, ref_strings, steps)
@@ -1667,7 +1667,9 @@ T['Modifiers'] =
 T['Modifiers']['s'] = new_set()
 
 T['Modifiers']['s']['works'] = function()
-  init_preview_align(nil, { 'Vj', 'ga' })
+  set_lines({ 'a_b', 'aaa_b' })
+  set_cursor(1, 0)
+  type_keys('ga', 'ip')
 
   type_keys('s')
   child.expect_screenshot()
@@ -1730,7 +1732,9 @@ end
 T['Modifiers']['m'] = new_set()
 
 T['Modifiers']['m']['works'] = function()
-  init_preview_align(nil, { 'Vj', 'ga' })
+  set_lines({ 'a_b', 'aaa_b' })
+  set_cursor(1, 0)
+  type_keys('ga', 'ip')
 
   type_keys('m')
   child.expect_screenshot()
@@ -1758,7 +1762,9 @@ end
 T['Modifiers']['f'] = new_set()
 
 T['Modifiers']['f']['works'] = function()
-  init_preview_align({ 'a_b', 'aa_b', 'aaa_b' }, { 'V2j', 'ga' })
+  set_lines({ 'a_b', 'aa_b', 'aaa_b' })
+  set_cursor(1, 0)
+  type_keys('ga', 'ip')
 
   type_keys('f')
   child.expect_screenshot()

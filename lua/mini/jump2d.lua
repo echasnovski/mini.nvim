@@ -502,9 +502,9 @@ end)()
 --- - Command:
 ---   `:lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)`
 --- - Custom mapping: >
----   vim.api.nvim_set_keymap(
+---   vim.keymap.set(
 ---     'n', '<CR>',
----     '<Cmd>lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)<CR>', {}
+---     '<Cmd>lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)<CR>'
 ---   )
 --- - Inside |MiniJump2d.setup| (make sure to use all defined options): >
 ---   local jump2d = require('mini.jump2d')
@@ -650,8 +650,11 @@ H.apply_config = function(config)
 
   -- Apply mappings
   local keymap = config.mappings.start_jumping
-  H.map('n', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
-  H.map('x', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
+  H.map('n', keymap, MiniJump2d.start, { desc = 'Start 2d jumping' })
+  H.map('x', keymap, MiniJump2d.start, { desc = 'Start 2d jumping' })
+  -- Use `<Cmd>...<CR>` to have proper dot-repeat
+  -- See https://github.com/neovim/neovim/issues/23406
+  -- TODO: use local functions if/when that issue is resolved
   H.map('o', keymap, '<Cmd>lua MiniJump2d.start()<CR>', { desc = 'Start 2d jumping' })
 end
 
@@ -1069,10 +1072,10 @@ H.tabpage_list_wins = function(tabpage_id)
   return wins
 end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.merge_unique = function(tbl_1, tbl_2)

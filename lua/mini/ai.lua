@@ -1011,101 +1011,6 @@ MiniAi.select_textobject = function(ai_type, id, opts)
   vim.o.eventignore = cache_eventignore
 end
 
---- Make expression to visually select textobject
----
---- Designed to be used inside expression mapping. No need to use directly.
----
---- Textobject identifier is taken from user single character input.
---- Default `n_times` option is taken from |v:count1|.
----
----@param mode string One of 'x' (Visual) or 'o' (Operator-pending).
----@param ai_type string One of `'a'` or `'i'`.
----@param opts table|nil Same as in |MiniAi.select_textobject()|.
-MiniAi.expr_textobject = function(mode, ai_type, opts)
-  local tobj_id = H.user_textobject_id(ai_type)
-
-  if tobj_id == nil then return '' end
-
-  -- Possibly fall back to builtin `a`/`i` textobjects
-  if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then
-    local mappings = H.get_config().mappings
-    local main_key = mappings[ai_type == 'a' and 'around' or 'inside']
-    local res = main_key .. tobj_id
-    -- If fallback is an existing user mapping, prepend it with '<Ignore>'.
-    -- This deals with `:h recursive_mapping`. Shouldn't prepend if it is a
-    -- builtin textobject. Also see https://github.com/vim/vim/issues/10907 .
-    if vim.fn.maparg(res, mode) ~= '' then res = H.keys.ignore .. res end
-    return res
-  end
-  opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
-
-  -- Clear cache
-  H.cache = {}
-
-  -- Construct call options based on mode
-  local reference_region_field, operator_pending_field, vis_mode_field = 'nil', 'nil', 'nil'
-
-  if mode == 'x' then
-    -- Use Visual selection as reference region for Visual mode mappings
-    reference_region_field = vim.inspect(H.get_visual_region(), { newline = '', indent = '' })
-  end
-
-  if mode == 'o' then
-    -- Supply `operator_pending` flag in Operator-pending mode
-    operator_pending_field = 'true'
-
-    -- Take into account forced Operator-pending modes ('nov', 'noV', 'no<C-V>')
-    vis_mode_field = vim.fn.mode(1):gsub('^no', '')
-    vis_mode_field = vim.inspect(vis_mode_field == '' and 'v' or vis_mode_field)
-  end
-
-  -- Make expression
-  return H.keys.cmd_lua
-    .. string.format(
-      [[MiniAi.select_textobject('%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
-      ai_type,
-      vim.fn.escape(tobj_id, "'"),
-      opts.search_method,
-      vim.v.count1,
-      reference_region_field,
-      operator_pending_field,
-      vis_mode_field
-    )
-    .. H.keys.cr
-end
-
---- Make expression for moving cursor to edge of textobject
----
---- Designed to be used inside expression mapping (powers `config.goto_left`
---- and `config.goto_right` mappings). No need to use directly.
----
---- Textobject identifier is taken from user single character input.
---- Default `n_times` option is taken from |v:count1|.
----
----@param side string One of `'left'` or `'right'`.
-MiniAi.expr_motion = function(side)
-  if H.is_disabled() then return '' end
-
-  if not (side == 'left' or side == 'right') then H.error([[`side` should be one of 'left' or 'right'.]]) end
-
-  -- Get user input
-  local tobj_id = H.user_textobject_id('a')
-  if tobj_id == nil then return end
-
-  -- Clear cache
-  H.cache = {}
-
-  -- Make expression for moving cursor
-  return H.keys.cmd_lua
-    .. string.format(
-      [[MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })]],
-      side,
-      vim.fn.escape(tobj_id, "'"),
-      vim.v.count1
-    )
-    .. H.keys.cr
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniAi.config
@@ -1165,13 +1070,6 @@ H.ns_id = {
   input = vim.api.nvim_create_namespace('MiniAiInput'),
 }
 
--- Commonly used keys
-H.keys = {
-  ignore = vim.api.nvim_replace_termcodes('<Ignore>', true, true, true),
-  cmd_lua = vim.api.nvim_replace_termcodes('<Cmd>lua ', true, true, true),
-  cr = vim.api.nvim_replace_termcodes('<CR>', true, true, true),
-}
-
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
@@ -1211,31 +1109,30 @@ H.apply_config = function(config)
   local m = function(mode, lhs, rhs, opts)
     opts.expr = true
     -- Allow recursive mapping to support falling back on user defined mapping
-    opts.noremap = false
+    opts.remap = true
     H.map(mode, lhs, rhs, opts)
   end
 
-  -- Usage of expression maps implements dot-repeat support
-  m('n', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
-  m('n', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
-  m('x', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
-  m('x', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
-  m('o', maps.goto_left,  [[v:lua.MiniAi.expr_motion('left')]],   { desc = 'Move to left "around"' })
-  m('o', maps.goto_right, [[v:lua.MiniAi.expr_motion('right')]],  { desc = 'Move to right "around"' })
+  m({ 'n', 'x', 'o' }, maps.goto_left,  function() return H.expr_motion('left') end,   { desc = 'Move to left "around"' })
+  m({ 'n', 'x', 'o' }, maps.goto_right, function() return H.expr_motion('right') end,  { desc = 'Move to right "around"' })
 
-  m('x', maps.around, [[v:lua.MiniAi.expr_textobject('x', 'a')]], { desc = 'Around textobject' })
-  m('x', maps.inside, [[v:lua.MiniAi.expr_textobject('x', 'i')]], { desc = 'Inside textobject' })
-  m('o', maps.around, [[v:lua.MiniAi.expr_textobject('o', 'a')]], { desc = 'Around textobject' })
-  m('o', maps.inside, [[v:lua.MiniAi.expr_textobject('o', 'i')]], { desc = 'Inside textobject' })
+  local make_tobj = function(mode, ai_type, search_method)
+    return function() return H.expr_textobject(mode, ai_type, { search_method = search_method }) end
+  end
 
-  m('x', maps.around_next, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'next'})]], { desc = 'Around next textobject' })
-  m('x', maps.around_last, [[v:lua.MiniAi.expr_textobject('x', 'a', {'search_method': 'prev'})]], { desc = 'Around last textobject' })
-  m('x', maps.inside_next, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'next'})]], { desc = 'Inside next textobject' })
-  m('x', maps.inside_last, [[v:lua.MiniAi.expr_textobject('x', 'i', {'search_method': 'prev'})]], { desc = 'Inside last textobject' })
-  m('o', maps.around_next, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'next'})]], { desc = 'Around next textobject' })
-  m('o', maps.around_last, [[v:lua.MiniAi.expr_textobject('o', 'a', {'search_method': 'prev'})]], { desc = 'Around last textobject' })
-  m('o', maps.inside_next, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'next'})]], { desc = 'Inside next textobject' })
-  m('o', maps.inside_last, [[v:lua.MiniAi.expr_textobject('o', 'i', {'search_method': 'prev'})]], { desc = 'Inside last textobject' })
+  m('x', maps.around, make_tobj('x', 'a'), { desc = 'Around textobject' })
+  m('x', maps.inside, make_tobj('x', 'i'), { desc = 'Inside textobject' })
+  m('o', maps.around, make_tobj('o', 'a'), { desc = 'Around textobject' })
+  m('o', maps.inside, make_tobj('o', 'i'), { desc = 'Inside textobject' })
+
+  m('x', maps.around_next, make_tobj('x', 'a', 'next'), { desc = 'Around next textobject' })
+  m('x', maps.around_last, make_tobj('x', 'a', 'prev'), { desc = 'Around last textobject' })
+  m('x', maps.inside_next, make_tobj('x', 'i', 'next'), { desc = 'Inside next textobject' })
+  m('x', maps.inside_last, make_tobj('x', 'i', 'prev'), { desc = 'Inside last textobject' })
+  m('o', maps.around_next, make_tobj('o', 'a', 'next'), { desc = 'Around next textobject' })
+  m('o', maps.around_last, make_tobj('o', 'a', 'prev'), { desc = 'Around last textobject' })
+  m('o', maps.inside_next, make_tobj('o', 'i', 'next'), { desc = 'Inside next textobject' })
+  m('o', maps.inside_last, make_tobj('o', 'i', 'prev'), { desc = 'Inside last textobject' })
 end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
@@ -1259,6 +1156,83 @@ end
 H.validate_search_method = function(x, x_name)
   local is_valid, msg = H.is_search_method(x, x_name)
   if not is_valid then H.error(msg) end
+end
+
+-- Mappings -------------------------------------------------------------------
+H.expr_textobject = function(mode, ai_type, opts)
+  local tobj_id = H.user_textobject_id(ai_type)
+
+  if tobj_id == nil then return '' end
+
+  -- Possibly fall back to builtin `a`/`i` textobjects
+  if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then
+    local mappings = H.get_config().mappings
+    local main_key = mappings[ai_type == 'a' and 'around' or 'inside']
+    local res = main_key .. tobj_id
+    -- If fallback is an existing user mapping, prepend it with '<Ignore>'.
+    -- This deals with `:h recursive_mapping`. Shouldn't prepend if it is a
+    -- builtin textobject. Also see https://github.com/vim/vim/issues/10907 .
+    if vim.fn.maparg(res, mode) ~= '' then res = '<Ignore>' .. res end
+    return res
+  end
+  opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
+
+  -- Clear cache
+  H.cache = {}
+
+  -- Construct call options based on mode
+  local reference_region_field, operator_pending_field, vis_mode_field = 'nil', 'nil', 'nil'
+
+  if mode == 'x' then
+    -- Use Visual selection as reference region for Visual mode mappings
+    reference_region_field = vim.inspect(H.get_visual_region(), { newline = '', indent = '' })
+  end
+
+  if mode == 'o' then
+    -- Supply `operator_pending` flag in Operator-pending mode
+    operator_pending_field = 'true'
+
+    -- Take into account forced Operator-pending modes ('nov', 'noV', 'no<C-V>')
+    vis_mode_field = vim.fn.mode(1):gsub('^no', '')
+    vis_mode_field = vim.inspect(vis_mode_field == '' and 'v' or vis_mode_field)
+  end
+
+  -- Make expression
+  return '<Cmd>lua '
+    .. string.format(
+      [[MiniAi.select_textobject('%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
+      ai_type,
+      vim.fn.escape(tobj_id, "'"),
+      opts.search_method,
+      vim.v.count1,
+      reference_region_field,
+      operator_pending_field,
+      vis_mode_field
+    )
+    .. '<CR>'
+end
+
+H.expr_motion = function(side)
+  if H.is_disabled() then return '' end
+
+  if not (side == 'left' or side == 'right') then H.error([[`side` should be one of 'left' or 'right'.]]) end
+
+  -- Get user input
+  local tobj_id = H.user_textobject_id('a')
+  if tobj_id == nil then return end
+
+  -- Clear cache
+  H.cache = {}
+
+  -- Make expression for moving cursor
+  return '<Cmd>lua '
+    .. string.format(
+      [[MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })]],
+      side,
+      vim.fn.escape(tobj_id, "'"),
+      vim.v.count1
+    )
+    .. '<CR>'
 end
 
 -- Work with textobject info --------------------------------------------------
@@ -1878,7 +1852,7 @@ H.user_input = function(prompt, text)
   local on_key = vim.on_key or vim.register_keystroke_callback
   local was_cancelled = false
   on_key(function(key)
-    if key == vim.api.nvim_replace_termcodes('<Esc>', true, true, true) then was_cancelled = true end
+    if key == '27' then was_cancelled = true end
   end, H.ns_id.input)
 
   -- Ask for input
@@ -1957,10 +1931,10 @@ H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.ai) %s', msg), 0) end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.string_find = function(s, pattern, init)

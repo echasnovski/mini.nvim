@@ -235,29 +235,6 @@ MiniJump.smart_jump = function(backward, till)
   MiniJump.jump()
 end
 
---- Make expression jump
----
---- Cache information about the jump and return string with command to perform
---- jump. Designed to be used inside Operator-pending mapping (see
---- |omap-info|). Always asks for target (via |getcharstr()|). Respects |v:count|.
----
---- All default values are taken from |MiniJump.state| to emulate latest jump.
----
----@param backward __jump_backward
----@param till __jump_till
-MiniJump.expr_jump = function(backward, till)
-  if H.is_disabled() then return '' end
-
-  -- Always ask for `target` as this will be used only in operator-pending
-  -- mode. Dot-repeat will be implemented via expression-mapping.
-  local target = H.get_target()
-  -- Stop if user supplied invalid target
-  if target == nil then return '<Esc>' end
-  H.update_state(target, backward, till, vim.v.count1)
-
-  return vim.api.nvim_replace_termcodes('v<Cmd>lua MiniJump.jump()<CR>', true, true, true)
-end
-
 --- Stop jumping
 ---
 --- Removes highlights (if any) and forces the next smart jump to prompt for
@@ -346,11 +323,11 @@ H.apply_config = function(config)
   H.map('x', config.mappings.backward_till, '<Cmd>lua MiniJump.smart_jump(true, true)<CR>', { desc = 'Jump backward till' })
   H.map('x', config.mappings.repeat_jump, '<Cmd>lua MiniJump.jump()<CR>', { desc = 'Repeat jump' })
 
-  H.map('o', config.mappings.forward, 'v:lua.MiniJump.expr_jump(v:false, v:false)', { expr = true, desc = 'Jump forward' })
-  H.map('o', config.mappings.backward, 'v:lua.MiniJump.expr_jump(v:true, v:false)', { expr = true, desc = 'Jump backward' })
-  H.map('o', config.mappings.forward_till, 'v:lua.MiniJump.expr_jump(v:false, v:true)', { expr = true, desc = 'Jump forward till' })
-  H.map('o', config.mappings.backward_till, 'v:lua.MiniJump.expr_jump(v:true, v:true)', { expr = true, desc = 'Jump backward till' })
-  H.map('o', config.mappings.repeat_jump, 'v:lua.MiniJump.expr_jump()', { expr = true, desc = 'Repeat jump' })
+  H.map('o', config.mappings.forward, H.make_expr_jump(false, false), { expr = true, desc = 'Jump forward' })
+  H.map('o', config.mappings.backward, H.make_expr_jump(true, false), { expr = true, desc = 'Jump backward' })
+  H.map('o', config.mappings.forward_till, H.make_expr_jump(false, true), { expr = true, desc = 'Jump forward till' })
+  H.map('o', config.mappings.backward_till, H.make_expr_jump(true, true), { expr = true, desc = 'Jump backward till' })
+  H.map('o', config.mappings.repeat_jump, H.make_expr_jump(), { expr = true, desc = 'Repeat jump' })
   --stylua: ignore end
 end
 
@@ -371,6 +348,22 @@ H.is_disabled = function() return vim.g.minijump_disable == true or vim.b.miniju
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniJump.config, vim.b.minijump_config or {}, config or {}) end
+
+-- Mappings -------------------------------------------------------------------
+H.make_expr_jump = function(backward, till)
+  return function()
+    if H.is_disabled() then return '' end
+
+    -- Always ask for `target` as this will be used only in operator-pending
+    -- mode. Dot-repeat will be implemented via expression-mapping.
+    local target = H.get_target()
+    -- Stop if user supplied invalid target
+    if target == nil then return '<Esc>' end
+    H.update_state(target, backward, till, vim.v.count1)
+
+    return 'v<Cmd>lua MiniJump.jump()<CR>'
+  end
+end
 
 -- Autocommands ---------------------------------------------------------------
 H.on_cursormoved = function()
@@ -527,10 +520,10 @@ H.get_target = function()
   return char
 end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniJump

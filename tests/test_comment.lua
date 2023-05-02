@@ -104,15 +104,15 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('omap ' .. lhs):find('MiniComment') ~= nil end
-  eq(has_map('gc'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('omap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('gc', 'Comment'), true)
 
   unload_module()
   child.api.nvim_del_keymap('o', 'gc')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { textobject = '' } })
-  eq(has_map('gc'), false)
+  eq(has_map('gc', 'Comment'), false)
 end
 
 T['toggle_lines()'] = new_set({

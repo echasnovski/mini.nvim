@@ -568,8 +568,8 @@ H.apply_mappings = function(config)
     -- map('n', 'gO', "<Cmd>call append(line('.') - 1, repeat([''], v:count1))<CR>")
     -- map('n', 'go', "<Cmd>call append(line('.'),     repeat([''], v:count1))<CR>")
     -- ```
-    map('n', 'gO', 'v:lua.MiniBasics.put_empty_line(v:true)',  { desc = 'Put empty line above', expr = true })
-    map('n', 'go', 'v:lua.MiniBasics.put_empty_line(v:false)', { desc = 'Put empty line below', expr = true })
+    map('n', 'gO', 'v:lua.MiniBasics.put_empty_line(v:true)',  { expr = true, desc = 'Put empty line above' })
+    map('n', 'go', 'v:lua.MiniBasics.put_empty_line(v:false)', { expr = true, desc = 'Put empty line below' })
 
     -- Copy/paste with system clipboard
     map({ 'n', 'x' }, 'gy', '"+y', { desc = 'Copy to system clipboard' })
@@ -578,7 +578,7 @@ H.apply_mappings = function(config)
     map(  'x',        'gp', '"+P', { desc = 'Paste from system clipboard' })
 
     -- Reselect latest changed, put, or yanked text
-    map('n', 'gV', '"`[" . strpart(getregtype(), 0, 1) . "`]"', { expr = true, desc = 'Visually select changed text' })
+    map('n', 'gV', '"`[" . strpart(getregtype(), 0, 1) . "`]"', { expr = true, replace_keycodes = false, desc = 'Visually select changed text' })
 
     -- Search inside visually highlighted text. Use `silent = false` for it to
     -- make effect immediately.
@@ -644,10 +644,10 @@ H.apply_mappings = function(config)
     map('t', '<C-W>', [[<C-\><C-N><C-w>]], { desc = 'Focus other window' })
 
     -- Window resize (respecting `v:count`)
-    map('n', '<C-Left>',  '"<Cmd>vertical resize -" . v:count1 . "<CR>"', { expr = true, desc = 'Decrease window width' })
-    map('n', '<C-Down>',  '"<Cmd>resize -"          . v:count1 . "<CR>"', { expr = true, desc = 'Decrease window height' })
-    map('n', '<C-Up>',    '"<Cmd>resize +"          . v:count1 . "<CR>"', { expr = true, desc = 'Increase window height' })
-    map('n', '<C-Right>', '"<Cmd>vertical resize +" . v:count1 . "<CR>"', { expr = true, desc = 'Increase window width' })
+    map('n', '<C-Left>',  '"<Cmd>vertical resize -" . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Decrease window width' })
+    map('n', '<C-Down>',  '"<Cmd>resize -"          . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Decrease window height' })
+    map('n', '<C-Up>',    '"<Cmd>resize +"          . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Increase window height' })
+    map('n', '<C-Right>', '"<Cmd>vertical resize +" . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Increase window width' })
   end
 
   if config.mappings.move_with_alt then
@@ -731,10 +731,10 @@ H.apply_autocommands = function(config)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniBasics

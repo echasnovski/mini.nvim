@@ -120,7 +120,7 @@ MiniComment.config = {
 ---
 ---@param mode string|nil Optional string with 'operatorfunc' mode (see |g@|).
 ---
----@return string 'g@' if called without argument, '' otherwise (but after
+---@return string|nil 'g@' if called without argument, '' otherwise (but after
 ---   performing action).
 MiniComment.operator = function(mode)
   if H.is_disabled() then return '' end
@@ -216,13 +216,13 @@ MiniComment.toggle_lines = function(line_start, line_end)
   if config.hooks.post() == false then return end
 end
 
---- Comment textobject
+--- Select comment textobject
 ---
 --- This selects all commented lines adjacent to cursor line (if it itself is
 --- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 ---
---- Before successful textobject usage it executes `config.hooks.pre`.
---- After successful textobject usage it executes `config.hooks.post`.
+--- Before successful selection it executes `config.hooks.pre`.
+--- After successful selection it executes `config.hooks.post`.
 --- If hook returns `false`, any further action is terminated.
 MiniComment.textobject = function()
   if H.is_disabled() then return end
@@ -291,7 +291,7 @@ H.apply_config = function(config)
   MiniComment.config = config
 
   -- Make mappings
-  H.map('n', config.mappings.comment, 'v:lua.MiniComment.operator()', { expr = true, desc = 'Comment' })
+  H.map('n', config.mappings.comment, function() return MiniComment.operator() end, { expr = true, desc = 'Comment' })
   H.map(
     'x',
     config.mappings.comment,
@@ -300,8 +300,15 @@ H.apply_config = function(config)
     [[:<c-u>lua MiniComment.operator('visual')<cr>]],
     { desc = 'Comment selection' }
   )
-  H.map('n', config.mappings.comment_line, 'v:lua.MiniComment.operator() . "_"', { expr = true, desc = 'Comment line' })
-  H.map('o', config.mappings.textobject, '<cmd>lua MiniComment.textobject()<cr>', { desc = 'Comment textobject' })
+  H.map(
+    'n',
+    config.mappings.comment_line,
+    function() return MiniComment.operator() .. '_' end,
+    { expr = true, desc = 'Comment line' }
+  )
+  -- Use `<Cmd>...<CR>` to have proper dot-repeat
+  -- See https://github.com/neovim/neovim/issues/23406
+  H.map('o', config.mappings.textobject, '<Cmd>lua MiniComment.textobject()<CR>', { desc = 'Comment textobject' })
 end
 
 H.is_disabled = function() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end
@@ -422,10 +429,10 @@ H.make_uncomment_function = function(comment_parts)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniComment

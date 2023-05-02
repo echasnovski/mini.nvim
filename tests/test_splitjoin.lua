@@ -121,22 +121,22 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly creates mappings'] = function()
-  local has_map = function(lhs, mode) return child.cmd_capture(mode .. 'map ' .. lhs):find('MiniSplitjoin') ~= nil end
-  eq(has_map('gS', 'n'), true)
-  eq(has_map('gS', 'x'), true)
-  eq(has_map('gj', 'n'), false)
-  eq(has_map('gj', 'x'), false)
+  local has_map = function(mode, lhs, pattern) return child.cmd_capture(mode .. 'map ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('n', 'gS', 'Toggle'), true)
+  eq(has_map('x', 'gS', 'Toggle'), true)
+  eq(has_map('n', 'gj', 'Join'), false)
+  eq(has_map('x', 'gj', 'Join'), false)
 
   unload_module()
   child.api.nvim_del_keymap('n', 'gS')
   child.api.nvim_del_keymap('x', 'gS')
 
   -- Supplying empty string should mean "don't create keymaps"
-  load_module({ mappings = { toggle = '', split = 'gj' } })
-  eq(has_map('gS', 'n'), false)
-  eq(has_map('gS', 'x'), false)
-  eq(has_map('gj', 'n'), true)
-  eq(has_map('gj', 'x'), true)
+  load_module({ mappings = { toggle = '', join = 'gj' } })
+  eq(has_map('n', 'gS', 'Toggle'), false)
+  eq(has_map('x', 'gS', 'Toggle'), false)
+  eq(has_map('n', 'gj', 'Join'), true)
+  eq(has_map('x', 'gj', 'Join'), true)
 end
 
 -- Most of action specific tests are done in their functions

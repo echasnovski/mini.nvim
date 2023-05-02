@@ -1348,24 +1348,28 @@ H.apply_buffer_options = function(buf_id)
 end
 
 H.apply_buffer_mappings = function(buf_id)
-  H.buf_keymap(buf_id, '<CR>', 'MiniStarter.eval_current_item()')
+  local buf_keymap = function(key, cmd)
+    vim.keymap.set('n', key, ('<Cmd>lua %s<CR>'):format(cmd), { buffer = buf_id, nowait = true, silent = true })
+  end
 
-  H.buf_keymap(buf_id, '<Up>', [[MiniStarter.update_current_item('prev')]])
-  H.buf_keymap(buf_id, '<C-p>', [[MiniStarter.update_current_item('prev')]])
-  H.buf_keymap(buf_id, '<M-k>', [[MiniStarter.update_current_item('prev')]])
-  H.buf_keymap(buf_id, '<Down>', [[MiniStarter.update_current_item('next')]])
-  H.buf_keymap(buf_id, '<C-n>', [[MiniStarter.update_current_item('next')]])
-  H.buf_keymap(buf_id, '<M-j>', [[MiniStarter.update_current_item('next')]])
+  buf_keymap('<CR>', 'MiniStarter.eval_current_item()')
+
+  buf_keymap('<Up>', [[MiniStarter.update_current_item('prev')]])
+  buf_keymap('<C-p>', [[MiniStarter.update_current_item('prev')]])
+  buf_keymap('<M-k>', [[MiniStarter.update_current_item('prev')]])
+  buf_keymap('<Down>', [[MiniStarter.update_current_item('next')]])
+  buf_keymap('<C-n>', [[MiniStarter.update_current_item('next')]])
+  buf_keymap('<M-j>', [[MiniStarter.update_current_item('next')]])
 
   -- Make all special symbols to update query
   for _, key in ipairs(vim.split(H.get_config().query_updaters, '')) do
     local key_string = vim.inspect(tostring(key))
-    H.buf_keymap(buf_id, key, ('MiniStarter.add_to_query(%s)'):format(key_string))
+    buf_keymap(key, ('MiniStarter.add_to_query(%s)'):format(key_string))
   end
 
-  H.buf_keymap(buf_id, '<Esc>', [[MiniStarter.set_query('')]])
-  H.buf_keymap(buf_id, '<BS>', 'MiniStarter.add_to_query()')
-  H.buf_keymap(buf_id, '<C-c>', 'MiniStarter.close()')
+  buf_keymap('<Esc>', [[MiniStarter.set_query('')]])
+  buf_keymap('<BS>', 'MiniStarter.add_to_query()')
+  buf_keymap('<C-c>', 'MiniStarter.close()')
 end
 
 H.add_hl_activity = function(buf_id, query)
@@ -1474,10 +1478,6 @@ H.eval_fun_or_string = function(x, string_as_cmd)
       return x
     end
   end
-end
-
-H.buf_keymap = function(buf_id, key, cmd)
-  vim.api.nvim_buf_set_keymap(buf_id, 'n', key, ('<Cmd>lua %s<CR>'):format(cmd), { nowait = true, silent = true })
 end
 
 -- Use `priority` because of the regression bug (highlights are not stacked

@@ -281,11 +281,11 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly creates mappings'] = function()
-  local has_map = function(lhs, mode) return child.cmd_capture(mode .. 'map ' .. lhs):find('MiniBracketed') ~= nil end
-  eq(has_map('[B', 'n'), true)
-  eq(has_map('[b', 'n'), true)
-  eq(has_map(']b', 'n'), true)
-  eq(has_map(']B', 'n'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('nmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('[B', 'first'), true)
+  eq(has_map('[b', 'backward'), true)
+  eq(has_map(']b', 'forward'), true)
+  eq(has_map(']B', 'last'), true)
 
   unload_module()
   child.api.nvim_del_keymap('n', '[B')
@@ -295,10 +295,10 @@ T['setup()']['properly creates mappings'] = function()
 
   -- Supplying empty string as suffix should mean "don't create keymaps"
   load_module({ buffer = { suffix = '' } })
-  eq(has_map('[B', 'n'), false)
-  eq(has_map('[b', 'n'), false)
-  eq(has_map(']b', 'n'), false)
-  eq(has_map(']B', 'n'), false)
+  eq(has_map('[B', 'first'), false)
+  eq(has_map('[b', 'backward'), false)
+  eq(has_map(']b', 'forward'), false)
+  eq(has_map(']B', 'last'), false)
 end
 
 T['buffer()'] = new_set()

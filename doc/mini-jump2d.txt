@@ -392,9 +392,9 @@ Using |MiniJump2d.builtin_opts.line_start| as example:
 - Command:
   `:lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)`
 - Custom mapping: >
-  vim.api.nvim_set_keymap(
+  vim.keymap.set(
     'n', '<CR>',
-    '<Cmd>lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)<CR>', {}
+    '<Cmd>lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)<CR>'
   )
 - Inside |MiniJump2d.setup| (make sure to use all defined options): >
   local jump2d = require('mini.jump2d')

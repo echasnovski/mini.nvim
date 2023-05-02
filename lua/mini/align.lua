@@ -792,37 +792,6 @@ MiniAlign.align_user = function(mode)
   H.unecho()
 end
 
---- Perfrom action in Normal mode
----
---- Used in Normal mode mapping. No need to use it directly.
----
----@param with_preview __align_with_preview
-MiniAlign.action_normal = function(with_preview)
-  if H.is_disabled() then return end
-
-  H.cache = { with_preview = with_preview }
-
-  -- Set 'operatorfunc' which will be later called with appropriate marks set
-  vim.cmd('set operatorfunc=v:lua.MiniAlign.align_user')
-  return 'g@'
-end
-
---- Perfrom action in Visual mode
----
---- Used in Visual mode mapping. No need to use it directly.
----
----@param with_preview __align_with_preview
-MiniAlign.action_visual = function(with_preview)
-  if H.is_disabled() then return end
-
-  H.cache = { with_preview = with_preview }
-
-  -- Perform action and exit Visual mode
-  local mode = ({ ['v'] = 'char', ['V'] = 'line', ['\22'] = 'block' })[vim.fn.mode(1)]
-  MiniAlign.align_user(mode)
-  vim.cmd('normal! \27')
-end
-
 --- Convert 2d array of strings to parts
 ---
 --- This function verifies if input is a proper 2d array of strings and adds
@@ -1342,11 +1311,11 @@ H.apply_config = function(config)
   MiniAlign.config = config
 
   --stylua: ignore start
-  H.map('n', config.mappings.start,              'v:lua.MiniAlign.action_normal(v:false)',      { expr = true, desc = 'Align' })
-  H.map('x', config.mappings.start,              '<Cmd>lua MiniAlign.action_visual(false)<CR>', { desc = 'Align' })
+  H.map('n', config.mappings.start, H.make_action_normal(false), { expr = true, desc = 'Align' })
+  H.map('x', config.mappings.start, H.make_action_visual(false), { desc = 'Align' })
 
-  H.map('n', config.mappings.start_with_preview, 'v:lua.MiniAlign.action_normal(v:true)',       { expr = true, desc = 'Align with preview' })
-  H.map('x', config.mappings.start_with_preview, '<Cmd>lua MiniAlign.action_visual(true)<CR>',  { desc = 'Align with preview' })
+  H.map('n', config.mappings.start_with_preview, H.make_action_normal(true), { expr = true, desc = 'Align with preview' })
+  H.map('x', config.mappings.start_with_preview, H.make_action_visual(true), { desc = 'Align with preview' })
   --stylua: ignore end
 end
 
@@ -1354,6 +1323,32 @@ H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minia
 
 H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end
+
+-- Mappings -------------------------------------------------------------------
+H.make_action_normal = function(with_preview)
+  return function()
+    if H.is_disabled() then return end
+
+    H.cache = { with_preview = with_preview }
+
+    -- Set 'operatorfunc' which will be later called with appropriate marks set
+    vim.cmd('set operatorfunc=v:lua.MiniAlign.align_user')
+    return 'g@'
+  end
+end
+
+H.make_action_visual = function(with_preview)
+  return function()
+    if H.is_disabled() then return end
+
+    H.cache = { with_preview = with_preview }
+
+    -- Perform action and exit Visual mode
+    local mode = ({ ['v'] = 'char', ['V'] = 'line', ['\22'] = 'block' })[vim.fn.mode(1)]
+    MiniAlign.align_user(mode)
+    vim.cmd('normal! \27')
+  end
+end
 
 -- Work with steps and options ------------------------------------------------
 H.is_valid_steps = function(x, x_name)
@@ -1934,10 +1929,10 @@ end
 
 H.error = function(msg) error(string.format('(mini.align) %s', msg), 0) end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.slice_mod = function(x, i) return x[((i - 1) % #x) + 1] end

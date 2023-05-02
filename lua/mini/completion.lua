@@ -100,8 +100,8 @@
 ---
 --- To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 --- these key mappings:
---- `vim.api.nvim_set_keymap('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { noremap = true, expr = true })`
---- `vim.api.nvim_set_keymap('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })`
+--- `vim.keymap.set('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { expr = true })`
+--- `vim.keymap.set('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { expr = true })`
 ---
 --- To get more consistent behavior of `<CR>`, you can use this template in
 --- your 'init.lua' to make customized mapping: >
@@ -124,7 +124,7 @@
 ---     end
 ---   end
 ---
----   vim.api.nvim_set_keymap('i', '<CR>', 'v:lua._G.cr_action()', { noremap = true, expr = true })
+---   vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
 --- <
 --- # Highlight groups~
 ---
@@ -525,8 +525,8 @@ H.apply_config = function(config)
   MiniCompletion.config = config
 
   --stylua: ignore start
-  H.map('i', config.mappings.force_twostep, '<cmd>lua MiniCompletion.complete_twostage()<cr>', { desc = 'Complete with two-stage' })
-  H.map('i', config.mappings.force_fallback, '<cmd>lua MiniCompletion.complete_fallback()<cr>', { desc = 'Complete with fallback' })
+  H.map('i', config.mappings.force_twostep, MiniCompletion.complete_twostage, { desc = 'Complete with two-stage' })
+  H.map('i', config.mappings.force_fallback, MiniCompletion.complete_fallback, { desc = 'Complete with fallback' })
   --stylua: ignore end
 
   if config.set_vim_settings then
@@ -1358,10 +1358,10 @@ H.get_left_char = function()
   return string.sub(line, col, col)
 end
 
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 return MiniCompletion

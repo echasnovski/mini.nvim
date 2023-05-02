@@ -159,15 +159,15 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('imap ' .. lhs):find('MiniCompletion') ~= nil end
-  eq(has_map('<C-Space>'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('imap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('<C-Space>', 'Complete'), true)
 
   unload_module()
   child.api.nvim_del_keymap('i', '<C-Space>')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { force_twostep = '' } })
-  eq(has_map('<C-Space>'), false)
+  eq(has_map('<C-Space>', 'Complete'), false)
 end
 
 T['setup()']['uses `config.lsp_completion`'] = function()

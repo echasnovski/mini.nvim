@@ -127,15 +127,15 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('nmap ' .. lhs):find('MiniIndentscope') ~= nil end
-  eq(has_map('[i'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('nmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('[i', 'indent scope'), true)
 
   unload_module()
   child.api.nvim_del_keymap('n', '[i')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { goto_top = '' } })
-  eq(has_map('[i'), false)
+  eq(has_map('[i', 'indent scope'), false)
 end
 
 T['get_scope()'] = new_set({

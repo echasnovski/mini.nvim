@@ -751,34 +751,5 @@ Parameters~
   - <operator_pending> - Whether selection is for Operator-pending mode.
     Used in that mode's mappings, shouldn't be used directly. Default: `false`.
 
-------------------------------------------------------------------------------
-                                                      *MiniAi.expr_textobject()*
-              `MiniAi.expr_textobject`({mode}, {ai_type}, {opts})
-Make expression to visually select textobject
-
-Designed to be used inside expression mapping. No need to use directly.
-
-Textobject identifier is taken from user single character input.
-Default `n_times` option is taken from |v:count1|.
-
-Parameters~
-{mode} `(string)` One of 'x' (Visual) or 'o' (Operator-pending).
-{ai_type} `(string)` One of `'a'` or `'i'`.
-{opts} `(table|nil)` Same as in |MiniAi.select_textobject()|.
-
-------------------------------------------------------------------------------
-                                                          *MiniAi.expr_motion()*
-                          `MiniAi.expr_motion`({side})
-Make expression for moving cursor to edge of textobject
-
-Designed to be used inside expression mapping (powers `config.goto_left`
-and `config.goto_right` mappings). No need to use directly.
-
-Textobject identifier is taken from user single character input.
-Default `n_times` option is taken from |v:count1|.
-
-Parameters~
-{side} `(string)` One of `'left'` or `'right'`.
-
 
  vim:tw=78:ts=8:noet:ft=help:norl:

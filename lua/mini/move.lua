@@ -436,10 +436,10 @@ H.get_config =
   function(config) return vim.tbl_deep_extend('force', MiniMove.config, vim.b.minimove_config or {}, config or {}) end
 
 -- Utilities ------------------------------------------------------------------
-H.map = function(mode, key, rhs, opts)
-  if key == '' then return end
-  opts = vim.tbl_deep_extend('force', { noremap = true, silent = true }, opts or {})
-  vim.api.nvim_set_keymap(mode, key, rhs, opts)
+H.map = function(mode, lhs, rhs, opts)
+  if lhs == '' then return end
+  opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 H.make_cmd_normal = function(include_undojoin)

@@ -158,21 +158,21 @@ T['setup()']['validates `config` argument'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs, rhs) return child.cmd_capture('nmap ' .. lhs):find(rhs or 'MiniSurround') ~= nil end
+  local has_map = function(lhs, pattern) return child.cmd_capture('nmap ' .. lhs):find(pattern) ~= nil end
 
   -- Regular mappings
-  eq(has_map('sa'), true)
+  eq(has_map('sa', 'surround'), true)
 
   unload_module()
   child.api.nvim_del_keymap('n', 'sa')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { add = '' } })
-  eq(has_map('sa'), false)
+  eq(has_map('sa', 'surround'), false)
 
   -- Extended mappings
-  eq(has_map('sdl', [['search_method': 'prev']]), true)
-  eq(has_map('sdn', [['search_method': 'next']]), true)
+  eq(has_map('sdl', 'previous'), true)
+  eq(has_map('sdn', 'next'), true)
 
   unload_module()
   child.api.nvim_del_keymap('n', 'sd')
@@ -182,10 +182,10 @@ T['setup()']['properly handles `config.mappings`'] = function()
   child.api.nvim_del_keymap('n', 'srn')
 
   load_module({ mappings = { delete = '', suffix_last = '' } })
-  eq(has_map('sdl', [['search_method': 'prev']]), false)
-  eq(has_map('sdn', [['search_method': 'next']]), false)
-  eq(has_map('srl', [['search_method': 'prev']]), false)
-  eq(has_map('srn', [['search_method': 'next']]), true)
+  eq(has_map('sdl', 'previous'), false)
+  eq(has_map('sdn', 'next'), false)
+  eq(has_map('srl', 'previous'), false)
+  eq(has_map('srn', 'next'), true)
 end
 
 T['gen_spec'] = new_set()

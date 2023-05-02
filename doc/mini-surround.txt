@@ -635,18 +635,6 @@ and initial line `(aa) (bb) (cc)`.
 - Typing `2srn)]` with cursor inside `(aa)` results into `(aa) (bb) [cc]`.
 
 ------------------------------------------------------------------------------
-                                                       *MiniSurround.operator()*
-                    `MiniSurround.operator`({task}, {cache})
-Surround operator
-
-Main function to be used in expression mappings. No need to use it
-directly, everything is setup in |MiniSurround.setup|.
-
-Parameters~
-{task} `(string)` Name of surround task.
-{cache} `(table|nil)` Task cache.
-
-------------------------------------------------------------------------------
                                                             *MiniSurround.add()*
                            `MiniSurround.add`({mode})
 Add surrounding

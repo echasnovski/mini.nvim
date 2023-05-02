@@ -177,15 +177,15 @@ T['setup()']['applies `config.mappings`'] = function()
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()
-  local has_map = function(lhs) return child.cmd_capture('nmap ' .. lhs):find('MiniJump2d') ~= nil end
-  eq(has_map('<CR>'), true)
+  local has_map = function(lhs, pattern) return child.cmd_capture('nmap ' .. lhs):find(pattern) ~= nil end
+  eq(has_map('<CR>', '2d'), true)
 
   unload_module()
   child.api.nvim_del_keymap('n', '<CR>')
 
   -- Supplying empty string should mean "don't create keymap"
   load_module({ mappings = { start_jumping = '' } })
-  eq(has_map('<CR>'), false)
+  eq(has_map('<CR>', '2d'), false)
 end
 
 T['setup()']['resets <CR> mapping in quickfix window'] = function()

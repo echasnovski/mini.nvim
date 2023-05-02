@@ -3,6 +3,7 @@
 - Stop official support of Neovim 0.6.
 - Use Lua API to create autocommands. Stop exporting functions only related to autocommands.
 - Use Lua API to create default highlight groups.
+- Use `vim.keymap` to deal with mappings. Stop exporting functions only related to mappings.
 
 # mini.base16
 

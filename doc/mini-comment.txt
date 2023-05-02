@@ -118,7 +118,7 @@ Parameters~
 {mode} `(string|nil)` Optional string with 'operatorfunc' mode (see |g@|).
 
 Return~
-`(string)` 'g@' if called without argument, '' otherwise (but after
+`(string|nil)` 'g@' if called without argument, '' otherwise (but after
   performing action).
 
 ------------------------------------------------------------------------------
@@ -147,13 +147,13 @@ Parameters~
 ------------------------------------------------------------------------------
                                                       *MiniComment.textobject()*
                            `MiniComment.textobject`()
-Comment textobject
+Select comment textobject
 
 This selects all commented lines adjacent to cursor line (if it itself is
 commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 
-Before successful textobject usage it executes `config.hooks.pre`.
-After successful textobject usage it executes `config.hooks.post`.
+Before successful selection it executes `config.hooks.pre`.
+After successful selection it executes `config.hooks.post`.
 If hook returns `false`, any further action is terminated.
 
 
