@@ -259,9 +259,16 @@ T['start()']['works in Operator-pending mode'] = function()
   -- Use default mapping because otherwise it hangs child process
   type_keys('<CR>')
   child.expect_screenshot()
-  type_keys('e')
+  type_keys('b')
 
   eq(get_cursor(), { 1, 0 })
+  child.cmd('redrawstatus')
+  child.expect_screenshot()
+
+  -- Allows dot-repeat
+  type_keys('.')
+  child.expect_screenshot()
+  type_keys('c')
   child.expect_screenshot()
 end
 
