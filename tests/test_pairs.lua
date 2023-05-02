@@ -764,6 +764,13 @@ T['<BS> action']['works'] = function()
   validate_bs('i', '""')
   validate_bs('i', "''")
   validate_bs('i', '``')
+
+  -- Should work in Command-line with redraw
+  child.set_size(10, 12)
+  reload_module({ modes = { command = true } })
+  type_keys(':aa()bb', '<Left>', '<Left>', '<Left>')
+  type_keys('<BS>')
+  child.expect_screenshot()
 end
 
 T['<BS> action']['respects `key` argument'] = function()
