@@ -1985,22 +1985,23 @@ H.buffer_reporter.set_options = function(buf_id, win_id)
 
   vim.cmd('silent! set filetype=minitest')
 
-  -- Set options for "temporary" buffer
   --stylua: ignore start
-  local buf_options = { buflisted = false, buftype = 'nofile', modeline = false, swapfile = false }
+  -- Set options for "temporary" buffer
+  local buf_options = {
+    bufhidden = 'wipe', buflisted = false, buftype = 'nofile', modeline = false, swapfile = false,
+  }
   for name, value in pairs(buf_options) do
-    vim.api.nvim_buf_set_option(buf_id, name, value)
+    vim.bo[buf_id][name] = value
   end
-  -- Doesn't work inside `nvim_buf_set_option()`
-  vim.cmd('setlocal bufhidden=wipe')
 
+  -- Set options for "clean" window
   local win_options = {
     colorcolumn = '', fillchars = 'eob: ',    foldcolumn = '0', foldlevel = 999,
     number = false,   relativenumber = false, spell = false,    signcolumn = 'no',
     wrap = true,
   }
   for name, value in pairs(win_options) do
-    vim.api.nvim_win_set_option(win_id, name, value)
+    vim.wo[win_id][name] = value
   end
   --stylua: ignore end
 end

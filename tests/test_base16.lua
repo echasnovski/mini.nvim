@@ -226,13 +226,13 @@ end
 T['minischeme colorscheme'] = new_set()
 
 T['minischeme colorscheme']['works with dark background'] = function()
-  child.cmd('set background=dark')
+  child.o.background = 'dark'
   child.cmd('colorscheme minischeme')
   validate_hl_group('Normal', 'ctermfg=186 ctermbg=235 guifg=#e2e98f guibg=#112641')
 end
 
 T['minischeme colorscheme']['works with light background'] = function()
-  child.cmd('set background=light')
+  child.o.background = 'light'
   child.cmd('colorscheme minischeme')
   validate_hl_group('Normal', 'ctermfg=18 ctermbg=254 guifg=#002a83 guibg=#e2e5ca')
 end

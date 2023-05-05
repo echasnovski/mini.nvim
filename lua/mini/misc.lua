@@ -494,7 +494,7 @@ MiniMisc.zoom = function(buf_id, config)
     local default_config = { relative = 'editor', row = 0, col = 0, width = 1000, height = 1000 }
     config = vim.tbl_deep_extend('force', default_config, config or {})
     H.zoom_winid = vim.api.nvim_open_win(buf_id, true, config)
-    vim.cmd('setlocal winblend=0')
+    vim.wo.winblend = 0
     vim.cmd('normal! zz')
   end
 end

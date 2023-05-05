@@ -531,9 +531,9 @@ H.apply_config = function(config)
 
   if config.set_vim_settings then
     -- Don't give ins-completion-menu messages
-    vim.cmd('set shortmess+=c')
+    vim.opt.shortmess:append('c')
     -- More common completion behavior
-    vim.cmd('set completeopt=menuone,noinsert,noselect')
+    vim.o.completeopt = 'menuone,noinsert,noselect'
   end
 end
 

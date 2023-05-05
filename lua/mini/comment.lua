@@ -134,7 +134,7 @@ MiniComment.operator = function(mode)
   -- NOTE: setting `operatorfunc` inside this function enables usage of 'count'
   -- like `10gc_` toggles comments of 10 lines below (starting with current).
   if mode == nil then
-    vim.cmd('set operatorfunc=v:lua.MiniComment.operator')
+    vim.o.operatorfunc = 'v:lua.MiniComment.operator'
     return 'g@'
   end
 

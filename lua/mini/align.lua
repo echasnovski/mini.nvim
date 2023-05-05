@@ -1332,7 +1332,7 @@ H.make_action_normal = function(with_preview)
     H.cache = { with_preview = with_preview }
 
     -- Set 'operatorfunc' which will be later called with appropriate marks set
-    vim.cmd('set operatorfunc=v:lua.MiniAlign.align_user')
+    vim.o.operatorfunc = 'v:lua.MiniAlign.align_user'
     return 'g@'
   end
 end

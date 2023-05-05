@@ -1507,7 +1507,7 @@ T['Scroll']["respects global 'scrolloff'"] = function()
 end
 
 T['Scroll']["respects window-local 'scrolloff'"] = function()
-  child.cmd('setlocal scrolloff=1')
+  child.wo.scrolloff = 1
   type_keys('L')
 
   type_keys('<C-d>')
@@ -1531,7 +1531,7 @@ T['Scroll']["respects 'virtualedit'"] = function()
   eq(child.o.virtualedit, 'block')
 
   -- Window-local
-  child.cmd('setlocal virtualedit=onemore')
+  child.wo.virtualedit = 'onemore'
 
   type_keys('<C-u>')
   sleep(3 * step_time + small_time)

@@ -1191,7 +1191,7 @@ H.make_operator = function(task, direction, search_method, ask_for_textobject)
 
     H.cache = { direction = direction, search_method = search_method }
 
-    vim.cmd(string.format('set operatorfunc=v:lua.MiniSurround.%s', task))
+    vim.o.operatorfunc = 'v:lua.MiniSurround.' .. task
 
     -- NOTE: Concatenating `' '` to operator output "disables" motion
     -- required by `g@`. It is used to enable dot-repeatability.

@@ -1265,7 +1265,7 @@ T['gen_reporter'] = new_set()
 T['gen_reporter']['buffer'] = new_set({
   hooks = {
     pre_case = function()
-      child.cmd('set termguicolors')
+      child.o.termguicolors = true
       child.set_size(60, 120)
     end,
   },
@@ -1298,7 +1298,7 @@ T['gen_reporter']['buffer'] = new_set({
 T['gen_reporter']['stdout'] = new_set({
   hooks = {
     pre_case = function()
-      child.cmd('set termguicolors')
+      child.o.termguicolors = true
       child.set_size(35, 120)
       child.o.laststatus = 0
     end,

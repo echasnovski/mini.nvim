@@ -697,7 +697,7 @@ T['Jumping with f/t/F/T']['respects `config.silent`'] = function()
 end
 
 T['Jumping with f/t/F/T']["respects 'ignorecase'"] = function()
-  child.cmd('set ignorecase')
+  child.o.ignorecase = true
   set_lines({ ' 1e2E3E4e_ ' })
 
   set_cursor(1, 0)
@@ -718,7 +718,8 @@ T['Jumping with f/t/F/T']["respects 'ignorecase'"] = function()
 end
 
 T['Jumping with f/t/F/T']["respects 'smartcase'"] = function()
-  child.cmd('set ignorecase smartcase')
+  child.o.ignorecase = true
+  child.o.smartcase = true
   set_lines({ ' 1e2E3E4e_ ' })
 
   set_cursor(1, 0)
@@ -992,7 +993,7 @@ T['Delayed highlighting']['never highlights in Insert mode'] = function()
 end
 
 T['Delayed highlighting']["respects 'ignorecase'"] = function()
-  child.cmd('set ignorecase')
+  child.o.ignorecase = true
   set_lines({ '1e2E' })
 
   set_cursor(1, 0)
@@ -1004,7 +1005,8 @@ T['Delayed highlighting']["respects 'ignorecase'"] = function()
 end
 
 T['Delayed highlighting']["respects 'smartcase'"] = function()
-  child.cmd('set ignorecase smartcase')
+  child.o.ignorecase = true
+  child.o.smartcase = true
   set_lines({ '1e2E3e4E' })
 
   set_cursor(1, 0)

@@ -549,7 +549,7 @@ MiniMap.open = function(opts)
       'buftype=nofile', 'foldcolumn=0', 'foldlevel=999', 'matchpairs=', 'nobuflisted',
       'nomodeline',     'noreadonly',   'noswapfile',    'synmaxcol&',  'nowrap',
     }
-    -- Vim's `setlocal` is currently more robust comparing to `opt_local`
+    -- Vim's `setlocal` is currently more robust compared to `opt_local`
     -- Use `noautocmd` to make it more invisible for others
     vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
 
@@ -1362,7 +1362,7 @@ H.update_window_opts = function()
   vim.api.nvim_win_set_config(win_id, H.normalize_window_options(opts.window, false))
 
   -- 'winblend'
-  vim.api.nvim_win_call(win_id, function() vim.cmd('setlocal winblend=' .. opts.window.winblend) end)
+  vim.wo[win_id].winblend = opts.window.winblend
 end
 
 H.update_map_lines = function()

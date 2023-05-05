@@ -711,7 +711,7 @@ MiniSplitjoin.operator = function(task)
   end
 
   H.cache.operator_task = task
-  vim.cmd('set operatorfunc=v:lua.MiniSplitjoin.operator')
+  vim.o.operatorfunc = 'v:lua.MiniSplitjoin.operator'
   return 'g@'
 end
 
