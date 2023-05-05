@@ -100,7 +100,7 @@ T['setup()']['creates side effects'] = function()
   -- Highlight groups
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
-  has_highlight('MiniStarterCurrent', 'cleared')
+  has_highlight('MiniStarterCurrent', 'links to MiniStarterItem')
   has_highlight('MiniStarterFooter', 'links to Title')
   has_highlight('MiniStarterHeader', 'links to Title')
   has_highlight('MiniStarterInactive', 'links to Comment')

@@ -60,7 +60,7 @@ T['setup()']['creates side effects'] = function()
   has_highlight('MiniTablineModifiedCurrent', 'links to StatusLine')
   has_highlight('MiniTablineModifiedVisible', 'links to StatusLine')
   has_highlight('MiniTablineModifiedHidden', 'links to StatusLineNC')
-  has_highlight('MiniTablineFill', 'cleared')
+  has_highlight('MiniTablineFill', 'links to Normal')
   has_highlight('MiniTablineTabpagesection', 'links to Search')
 end
 

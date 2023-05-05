@@ -197,7 +197,7 @@ H.create_default_hl = function()
 
   set_default_hl('MiniTablineTabpagesection', { link = 'Search' })
 
-  vim.cmd('hi default MiniTablineFill NONE')
+  set_default_hl('MiniTablineFill', { link = 'Normal' })
 end
 
 H.is_disabled = function() return vim.g.minitabline_disable == true or vim.b.minitabline_disable == true end

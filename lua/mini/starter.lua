@@ -1038,7 +1038,7 @@ H.create_default_hl = function()
     vim.api.nvim_set_hl(0, name, data)
   end
 
-  vim.cmd('hi default link MiniStarterCurrent NONE')
+  set_default_hl('MiniStarterCurrent',    { link = 'MiniStarterItem' })
   set_default_hl('MiniStarterFooter',     { link = 'Title' })
   set_default_hl('MiniStarterHeader',     { link = 'Title' })
   set_default_hl('MiniStarterInactive',   { link = 'Comment' })
@@ -1190,7 +1190,7 @@ H.items_highlight = function(buf_id)
       item._line,
       item._start_col,
       item._start_col + item._nprefix,
-      51
+      52
     )
   end
 end
@@ -1334,7 +1334,7 @@ H.apply_buffer_options = function(buf_id)
     'foldlevel=999',
     'nowrap',
   }
-  -- Vim's `setlocal` is currently more robust comparing to `opt_local`
+  -- Vim's `setlocal` is currently more robust compared to `opt_local`
   vim.cmd(('silent! noautocmd setlocal %s'):format(table.concat(options, ' ')))
 
   -- Hide tabline on single tab by setting `showtabline` to default value (but
@@ -1388,7 +1388,7 @@ end
 H.add_hl_current_item = function(buf_id)
   local data = H.buffer_data[buf_id]
   local cur_item = data.items[data.current_item_id]
-  H.buf_hl(buf_id, H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col, 52)
+  H.buf_hl(buf_id, H.ns.current_item, 'MiniStarterCurrent', cur_item._line, cur_item._start_col, cur_item._end_col, 51)
 end
 
 -- Predicates -----------------------------------------------------------------
