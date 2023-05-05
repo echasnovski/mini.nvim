@@ -595,21 +595,25 @@ H.apply_palette = function(palette, use_cterm)
   hi('DiagnosticError', {fg=p.base08, bg=nil, attr=nil, sp=nil})
   hi('DiagnosticHint',  {fg=p.base0D, bg=nil, attr=nil, sp=nil})
   hi('DiagnosticInfo',  {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('DiagnosticOk',    {fg=p.base0B, bg=nil, attr=nil, sp=nil})
   hi('DiagnosticWarn',  {fg=p.base0E, bg=nil, attr=nil, sp=nil})
 
   hi('DiagnosticFloatingError', {fg=p.base08, bg=p.base01, attr=nil, sp=nil})
   hi('DiagnosticFloatingHint',  {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
   hi('DiagnosticFloatingInfo',  {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
+  hi('DiagnosticFloatingOk',    {fg=p.base0B, bg=p.base01, attr=nil, sp=nil})
   hi('DiagnosticFloatingWarn',  {fg=p.base0E, bg=p.base01, attr=nil, sp=nil})
 
   hi('DiagnosticSignError', {link='DiagnosticFloatingError'})
   hi('DiagnosticSignHint',  {link='DiagnosticFloatingHint'})
   hi('DiagnosticSignInfo',  {link='DiagnosticFloatingInfo'})
+  hi('DiagnosticSignOk',    {link='DiagnosticFloatingOk'})
   hi('DiagnosticSignWarn',  {link='DiagnosticFloatingWarn'})
 
   hi('DiagnosticUnderlineError', {fg=nil, bg=nil, attr='underline', sp=p.base08})
   hi('DiagnosticUnderlineHint',  {fg=nil, bg=nil, attr='underline', sp=p.base0D})
   hi('DiagnosticUnderlineInfo',  {fg=nil, bg=nil, attr='underline', sp=p.base0C})
+  hi('DiagnosticUnderlineOk',    {fg=nil, bg=nil, attr='underline', sp=p.base0B})
   hi('DiagnosticUnderlineWarn',  {fg=nil, bg=nil, attr='underline', sp=p.base0E})
 
   -- Built-in LSP
@@ -628,7 +632,8 @@ H.apply_palette = function(palette, use_cterm)
     -- - `:h treesitter-highlight-groups`
     -- - https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights
     -- Included only those differing from default links
-    hi('@keyword.return', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+    hi('@keyword.return', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+    hi('@symbol',         {fg=p.base0E, bg=nil, attr=nil, sp=nil})
     hi('@variable',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
   end
 
