@@ -13,7 +13,7 @@ Extra features:
   colors.
 
 Supported highlight groups:
-- Builtin-in Neovim LSP and diagnostic.
+- Built-in Neovim LSP and diagnostic.
 
 - Plugins (either with explicit definition or by verification that default
   highlighting works appropriately):
@@ -103,10 +103,12 @@ Example:
       palette and only after that set |g:colors_name| to "myscheme".
 
 ------------------------------------------------------------------------------
-                                                            *mini-color-schemes*
-# Plugin colorschemes~
+                                                     *mini-base16-color-schemes*
+                                                                    *minischeme*
+                                                                      *minicyan*
+Base16 colorschemes ~
 
-This plugin comes with several color schemes. All of them are a
+This module comes with several pre-built color schemes. All of them are a
 |MiniBase16| theme created with faster version of the following Lua code:
 >
   require('mini.base16').setup({ palette = palette, use_cterm = true })

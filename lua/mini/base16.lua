@@ -13,7 +13,7 @@
 ---   colors.
 ---
 --- Supported highlight groups:
---- - Builtin-in Neovim LSP and diagnostic.
+--- - Built-in Neovim LSP and diagnostic.
 ---
 --- - Plugins (either with explicit definition or by verification that default
 ---   highlighting works appropriately):
@@ -102,9 +102,9 @@
 ---     - Inside "myscheme.lua" call `require('mini.base16').setup()` with your
 ---       palette and only after that set |g:colors_name| to "myscheme".
 
---- # Plugin colorschemes~
+--- Base16 colorschemes ~
 ---
---- This plugin comes with several color schemes. All of them are a
+--- This module comes with several pre-built color schemes. All of them are a
 --- |MiniBase16| theme created with faster version of the following Lua code:
 --- >
 ---   require('mini.base16').setup({ palette = palette, use_cterm = true })
@@ -128,7 +128,9 @@
 ---   `MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)`
 --- - For light 'background':
 ---   `MiniBase16.mini_palette('#C0D2D2', '#262626', 80)`
----@tag mini-color-schemes
+---@tag mini-base16-color-schemes
+---@tag minischeme
+---@tag minicyan
 
 -- Module definition ==========================================================
 local MiniBase16 = {}

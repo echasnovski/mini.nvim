@@ -60,7 +60,7 @@ sync_module () {
 sync_module "ai"
 sync_module "align"
 sync_module "animate"
-sync_module "base16" colors/*
+sync_module "base16" colors/minischeme.lua colors/minicyan.lua
 sync_module "basics"
 sync_module "bracketed"
 sync_module "bufremove"

@@ -37,7 +37,7 @@ Using `minicyan` color scheme:
 ## Features
 
 Supported highlight groups:
-- Builtin-in Neovim LSP and diagnostic.
+- Built-in Neovim LSP and diagnostic.
 - Plugins (either with explicit definition or by verification that default
   highlighting works appropriately):
     - [echasnovski/mini.nvim](https://github.com/echasnovski/mini.nvim)
