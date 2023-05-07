@@ -1,0 +1,339 @@
+*mini.hues* Generate configurable color scheme
+*MiniHues*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+- Required to set two base colors: background and foreground.
+  Their shades and other non-base colors are computed to be as much
+  perceptually different as reasonably possible.
+  See |MiniHues.config| for setup inspiration.
+
+- Configurable:
+    - Number of hues used for non-base colors (from 0 to 8).
+    - Saturation level ('low', 'medium', 'high').
+    - Accent color used for some selected UI elements.
+    - Plugin integration (can be selectively enabled for faster startup).
+
+- Random generator for base colors. See |MiniHues.gen_random_base_colors()|.
+  Powers |randomhue| color scheme.
+
+- Lua function to compute palette used in color scheme.
+  See |MiniHues.make_palette()|.
+
+Supported highlight groups:
+- All built-in UI and syntax groups.
+
+- Built-in Neovim LSP and diagnostic.
+
+- Tree-sitter (|treesitter-highlight-groups|).
+
+- LSP semantic tokens (|lsp-semantic-highlight|).
+
+- Plugins (either with explicit definition or by verification that default
+  highlighting works appropriately):
+    - 'echasnovski/mini.nvim'
+    - 'akinsho/bufferline.nvim'
+    - 'anuvyklack/hydra.nvim'
+    - 'DanilaMihailov/beacon.nvim'
+    - 'folke/lazy.nvim'
+    - 'folke/noice.nvim'
+    - 'folke/todo-comments.nvim'
+    - 'folke/trouble.nvim'
+    - 'folke/which-key.nvim'
+    - 'ggandor/leap.nvim'
+    - 'glepnir/dashboard-nvim'
+    - 'glepnir/lspsaga.nvim'
+    - 'HiPhish/nvim-ts-rainbow2'
+    - 'hrsh7th/nvim-cmp'
+    - 'justinmk/vim-sneak'
+    - 'kevinhwang91/nvim-ufo'
+    - 'lewis6991/gitsigns.nvim'
+    - 'lukas-reineke/indent-blankline.nvim'
+    - 'neoclide/coc.nvim'
+    - 'nvim-lualine/lualine.nvim'
+    - 'nvim-neo-tree/neo-tree.nvim'
+    - 'nvim-telescope/telescope.nvim'
+    - 'nvim-tree/nvim-tree.lua'
+    - 'phaazon/hop.nvim'
+    - 'rcarriga/nvim-dap-ui'
+    - 'rcarriga/nvim-notify'
+    - 'rlane/pounce.nvim'
+    - 'romgrk/barbar.nvim'
+    - 'simrat39/symbols-outline.nvim'
+    - 'stevearc/aerial.nvim'
+    - 'TimUntersberger/neogit'
+    - 'williamboman/mason.nvim'
+
+# Setup~
+
+This module needs a setup with `require('mini.hues').setup({})` and
+**mandatory `background` and `foreground` fields** (add more fields to fit
+your taste). It will create global Lua table `MiniHues` which you can use
+for scripting or manually (with `:lua MiniHues.*`).
+
+See |MiniHues.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.minihues_config`
+will have no effect here.
+
+Example:
+>
+  require('mini.hues').setup({
+    background = '#11262d',
+    foreground = '#c0c8cc',
+    plugins = {
+      default = false,
+      ['echasnovski/mini.nvim'] = true,
+    },
+  })
+<
+# Notes~
+
+- Using `setup()` doesn't actually create a |colorscheme|. It basically
+  creates a coordinated set of |highlight|s. To create your own scheme:
+    - Put "myscheme.lua" file (name after your chosen theme name) inside
+      any "colors" directory reachable from 'runtimepath' ("colors" inside
+      your Neovim config directory is usually enough).
+    - Inside "myscheme.lua" call `require('mini.hues').setup()` with your
+      palette and only after that set |g:colors_name| to "myscheme".
+
+- This module doesn't define |cterm-colors| for implementation simplicity.
+  Use |mini.colors| module, |MiniColors-colorscheme:add_cterm_attributes()|
+  in particular.
+
+------------------------------------------------------------------------------
+                                                                     *randomhue*
+Random hue color scheme ~
+
+This module comes with a pre-built color scheme but with a twist: every
+`:colorscheme randomhue` call will result in a different (randomly yet
+carefully selected) colors.
+
+It is essentially a combination of calls to |MiniHues.setup()| and
+|MiniHues.gen_random_base_colors()| with a slight adjustments for
+'background' value.
+
+Activate it as regular |colorscheme|. Get currently active config with
+`:lua print(vim.inspect(MiniHues.config))`.
+
+------------------------------------------------------------------------------
+                                                              *MiniHues.setup()*
+                           `MiniHues.setup`({config})
+Module setup
+
+Usage~
+
+`require('mini.hues').setup({ background = '#11262d', foreground = '#c0c8cc' })`
+(add/change input table as you like)
+
+------------------------------------------------------------------------------
+                                                               *MiniHues.config*
+                               `MiniHues.config`
+Module config
+
+See |MiniHues.make_palette()| for more information about how certain
+settings affect output color scheme.
+
+Default values:
+>
+  MiniHues.config = {
+    -- **Required** base colors as '#rrggbb' hex strings
+    background = nil,
+    foreground = nil,
+
+    -- Number of hues used for non-base colors
+    n_hues = 8,
+
+    -- Saturation level. One of 'low', 'medium', 'high'.
+    saturation = 'medium',
+
+    -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',
+    -- 'cyan', 'azure', 'blue', 'purple'
+    accent = 'bg',
+
+    -- Plugin integrations. Use `default = false` to disable all integrations.
+    -- Also can be set per plugin (see |MiniHues.config|).
+    plugins = { default = true },
+  }
+<
+# Options ~
+
+## Plugin integrations ~
+
+`config.plugins` defines for which supported plugins highlight groups will
+be created. Limiting number of integrations slightly decreases startup time.
+It is a table with boolean (`true`/`false`) values which are applied as follows:
+- If plugin name (as listed in |mini.hues|) has entry, it is used.
+- Otherwise `config.plugins.default` is used.
+
+Example which will load only "mini.nvim" integration:
+>
+  require('mini.hues').setup({
+    background = '#11262d',
+    foreground = '#c0c8cc',
+    plugins = {
+      default = false,
+      ['echasnovski/mini.nvim'] = true,
+    },
+  })
+
+# Examples ~
+
+Here are some possible setup configurations (copy first line and then use
+only one `setup` call): >
+
+  local setup = require('mini.hues').setup
+
+  -- Choose background and foreground
+  setup({ background = '#2f1c22', foreground = '#cdc4c6' }) -- red
+  setup({ background = '#2f1e16', foreground = '#cdc5c1' }) -- orange
+  setup({ background = '#282211', foreground = '#c9c6c0' }) -- yellow
+  setup({ background = '#1c2617', foreground = '#c4c8c2' }) -- green
+  setup({ background = '#112723', foreground = '#c0c9c7' }) -- cyan
+  setup({ background = '#11262d', foreground = '#c0c8cc' }) -- azure
+  setup({ background = '#1d2231', foreground = '#c4c6cd' }) -- blue
+  setup({ background = '#281e2c', foreground = '#c9c5cb' }) -- purple
+
+  -- Choose number of accent colors
+  setup({ background = '#11262d', foreground = '#c0c8cc', n_hues = 6 })
+  setup({ background = '#11262d', foreground = '#c0c8cc', n_hues = 4 })
+  setup({ background = '#11262d', foreground = '#c0c8cc', n_hues = 2 })
+  setup({ background = '#11262d', foreground = '#c0c8cc', n_hues = 0 })
+
+  -- Choose saturation of colored text
+  setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'low' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'medium' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'high' })
+
+  -- Choose accent color
+  setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'bg' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'red' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'yellow' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'cyan' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'blue' })
+
+------------------------------------------------------------------------------
+                                                       *MiniHues.make_palette()*
+                       `MiniHues.make_palette`({config})
+Make palette
+
+General idea of palette generation is that it is mostly based on color channel
+information extracted from base colors (background and foreground).
+
+All operations are done inside `Oklch` color space, meaning that each color
+is defined by three numbers:
+- Lightness (`l`) - number between 0 (black) and 100 (white) describing how
+  light is a color.
+- Chroma (`c`) - positive number describing how colorful is a color (bigger
+  values - more colorful; 0 is gray).
+- Hue (`h`) - periodic number in [0, 360) describing a value of "true color"
+  on color circle/wheel.
+
+For more details about `Oklch` see |MiniColors-color-spaces| or
+https://bottosson.github.io/posts/oklab/.
+
+Algorithm overview ~
+
+- Extract lightness, chroma, and hue of base colors.
+
+- Generate reference lightness values:
+    - Background edge: 0 or 100, whichever is closest to background lightness.
+    - Foreground edge: 0 or 100, different from background edge.
+    - Middle: arithmetic mean of background and foreground lightness values.
+
+- Compute background and foreground tints and shades by changing lightness
+  of background color: two colors closer to background lightness edge and
+  two closer to middle.
+
+- Pick chroma value for non-base colors based on `config.saturation`.
+
+- Generate hues for non-base colors:
+    - Fit an equidistant circular grid with `config.n_hues` points to be as
+      far from both background and foreground hues. This will ensure that
+      non-base colors are as different as possible from base ones (for
+      better visual perception).
+      Example: for background hue 0, foreground hue 180, and `config.n_hues` 2
+      the output grid will be `{ 90, 270 }`.
+
+    - For each hue of reference color (which itself is an equidistant grid
+      of 8 hues) compute the closest value from the grid. This allows
+      operating in same terms (like "red", "green") despite maybe actually
+      having less different hues.
+
+- Compute for each hue two variants of non-base colors: with background and
+  foreground lightness values.
+
+- Compute two variants of accent color (with background and foreground
+  lightness) based on `config.accent`.
+
+Notes:
+- Some output colors can have not exact values of generated Oklch channels.
+  This is due to actually computed colors being impossible to represent via
+  '#rrggbb' hex string. In this case a process called gamut clipping is done
+  to reduce lightness and chroma in optimal way while maintaining same hue.
+  For more information see |MiniColors-gamut-clip|.
+
+- Not all colors are actually used in highlight groups and are present for the
+  sake of completeness.
+
+Parameters~
+{config} `(table)` Configuration for palette. Same structure as |MiniHues.config|.
+  Needs to have <background> and <foreground> fields.
+
+Return~
+`(table)` Palette with the following fields:
+  - <bg> and <fg> with supplied `background` and `foreground` colors.
+  - Fields like <bg_*> and <fg_*> are essentially <bg> and <fg> but with
+    different lightness values: `_edge`/`_edge2` - closer to edge lightness,
+    `_mid`/`_mid2` - closer to middle lightness.
+  - Fields for non-base colors (<red>, <orange>, <yellow>, <green>, <cyan>,
+    <azure>, <blue>, <purple>) have the same lightness as foreground.
+  - Fields for non-base colors with <_bg> suffix have the same lightness as
+    background.
+  - <accent> and <accent_bg> represent accent colors with foreground and
+    background lightness values.
+
+------------------------------------------------------------------------------
+                                             *MiniHues.gen_random_base_colors()*
+                   `MiniHues.gen_random_base_colors`({opts})
+Generate random base colors
+
+Compute background and foreground colors based on randomly generated hue
+and heuristally picked lightness-chroma values.
+
+You can recreate a similar functionality but tweaked to your taste
+using |mini.colors|: >
+
+  local convert = require('mini.colors').convert
+  local hue = math.random(0, 359)
+  return {
+    background = convert({ l = 15, c = 3, h = hue }, 'hex'),
+    foreground = convert({ l = 80, c = 1, h = hue }, 'hex'),
+  }
+
+Notes:
+- Respects 'background' (uses different lightness and chroma values for
+  "dark" and "light" backgrounds).
+
+- When used during startup, might require usage of `math.randomseed()` for
+  proper random generation. For example: >
+
+  local hues = require('mini.hues')
+  math.randomseed(vim.loop.hrtime())
+  hues.setup(hues.gen_random_base_colors())
+
+Parameters~
+{opts} `(table|nil)` Options. Possible values:
+  - <gen_hue> `(function)` - callable which will return single number for
+    output hue. Can be used to limit which hues will be generated.
+    Default: random integer between 0 and 359.
+
+Return~
+`(table)` Table with <background> and <foreground> fields containing
+  color hex strings.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

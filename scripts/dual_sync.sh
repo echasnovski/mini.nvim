@@ -70,6 +70,7 @@ sync_module "completion"
 sync_module "cursorword"
 sync_module "doc"
 sync_module "fuzzy"
+sync_module "hues" colors/randomhue.lua
 sync_module "indentscope"
 sync_module "jump"
 sync_module "jump2d"

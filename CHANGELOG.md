@@ -4,6 +4,7 @@
 - Use Lua API to create autocommands. Stop exporting functions only related to autocommands.
 - Use Lua API to create default highlight groups.
 - Use `vim.keymap` to deal with mappings. Stop exporting functions only related to mappings.
+- Add 'randomhue' color scheme.
 
 # mini.base16
 
@@ -19,6 +20,10 @@
 - Add dot-repeat support for adding empty lines (`go` and `gO` mappings).
 
 # mini.colors
+
+Introduction of a new module.
+
+# mini.hues
 
 Introduction of a new module.
 

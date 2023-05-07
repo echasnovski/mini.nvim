@@ -26,6 +26,7 @@ local test_actions = {
   ['cursorword']  = function() require('mini.cursorword').setup() end,
   ['doc']         = function() require('mini.doc').setup() end,
   ['fuzzy']       = function() require('mini.fuzzy').setup() end,
+  ['hues']        = function() require('mini.hues').setup({ background = '#000000', foreground = '#ffffff' }) end,
   ['indentscope'] = function() require('mini.indentscope').setup() end,
   ['jump']        = function() require('mini.jump').setup() end,
   ['jump2d']      = function() require('mini.jump2d').setup() end,
