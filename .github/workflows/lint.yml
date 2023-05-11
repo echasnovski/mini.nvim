@@ -50,6 +50,7 @@ jobs:
     # - Long file names (particularly from reference screenshots).
     name: Test checkout
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
