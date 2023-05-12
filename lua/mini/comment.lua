@@ -8,7 +8,8 @@
 --- Features:
 --- - Commenting in Normal mode respects |count| and is dot-repeatable.
 ---
---- - Comment structure is inferred from 'commentstring'.
+--- - Comment structure is inferred from 'commentstring': either from current
+---   buffer or from locally active tree-sitter language (only on Neovim>=0.9).
 ---
 --- - Allows custom hooks before and after successful commenting.
 ---
@@ -17,10 +18,7 @@
 --- What it doesn't do:
 --- - Block and sub-line comments. This will only support per-line commenting.
 ---
---- - Configurable (from module) comment structure. Modify |commentstring|
----   instead. To enhance support for commenting in multi-language files, see
----   "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
----   option of this module (see |MiniComment.config|).
+--- - Configurable (from module) comment structure. Modify |commentstring| instead.
 ---
 --- - Handle indentation with mixed tab and space.
 ---
@@ -152,10 +150,17 @@ MiniComment.operator = function(mode)
   -- mark (indicating that there is nothing to do, like in comment textobject).
   if (line_left > line_right) or (line_left == line_right and col_left > col_right) then return end
 
-  -- Using `vim.cmd()` wrapper to allow usage of `lockmarks` command, because
-  -- raw execution will delete marks inside region (due to
-  -- `vim.api.nvim_buf_set_lines()`).
-  vim.cmd(string.format('lockmarks lua MiniComment.toggle_lines(%d, %d)', line_left, line_right))
+  -- Use `vim.cmd()` wrapper to allow usage of `lockmarks` command, because raw
+  -- execution deletes marks in region (due to `vim.api.nvim_buf_set_lines()`).
+  vim.cmd(string.format(
+    -- NOTE: use cursor position as reference for possibly computing local
+    -- tree-sitter-based 'commentstring'. Compute them inside command for
+    -- a proper dot-repeat. For Visual mode and sometimes Normal mode it uses
+    -- left position.
+    [[lockmarks lua MiniComment.toggle_lines(%d, %d, { ref_position = { vim.fn.line('.'), vim.fn.col('.') } })]],
+    line_left,
+    line_right
+  ))
   return ''
 end
 
@@ -170,15 +175,26 @@ end
 --- After successful commenting it executes `config.hooks.post`.
 --- If hook returns `false`, any further action is terminated.
 ---
---- # Notes~
+--- # Notes ~
 ---
---- 1. Currently call to this function will remove marks inside written range.
----    Use |lockmarks| to preserve marks.
+--- - Comment structure is inferred from buffer's 'commentstring' option or
+---   local language of tree-sitter parser (if active; only on Neovim>=0.9).
+---
+--- - Currently call to this function will remove marks inside written range.
+---   Use |lockmarks| to preserve marks.
 ---
 ---@param line_start number Start line number (inclusive from 1 to number of lines).
 ---@param line_end number End line number (inclusive from 1 to number of lines).
-MiniComment.toggle_lines = function(line_start, line_end)
+---@param opts table|nil Options. Possible fields:
+---   - <ref_position> `(table)` - A two-value array with `{ row, col }` (both
+---     starting at 1) of reference position at which local tree-sitter value of
+---     'commentstring' will be computed (if tree-sitter is active).
+---     Default: `{ line_start, 1 }`.
+MiniComment.toggle_lines = function(line_start, line_end, opts)
   if H.is_disabled() then return end
+
+  opts = opts or {}
+  local ref_position = opts.ref_position or { line_start, 1 }
 
   local n_lines = vim.api.nvim_buf_line_count(0)
   if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
@@ -191,7 +207,7 @@ MiniComment.toggle_lines = function(line_start, line_end)
   local config = H.get_config()
   if config.hooks.pre() == false then return end
 
-  local comment_parts = H.make_comment_parts()
+  local comment_parts = H.make_comment_parts(ref_position)
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
   local indent, is_comment = H.get_lines_info(lines, comment_parts, H.get_config().options)
 
@@ -230,7 +246,7 @@ MiniComment.textobject = function()
   local config = H.get_config()
   if config.hooks.pre() == false then return end
 
-  local comment_parts = H.make_comment_parts()
+  local comment_parts = H.make_comment_parts({ vim.fn.line('.'), vim.fn.col('.') })
   local comment_check = H.make_comment_check(comment_parts)
   local line_cur = vim.api.nvim_win_get_cursor(0)[1]
 
@@ -318,12 +334,12 @@ H.get_config = function(config)
 end
 
 -- Core implementations -------------------------------------------------------
-H.make_comment_parts = function()
+H.make_comment_parts = function(ref_position)
   local options = H.get_config().options
 
-  local cs = vim.api.nvim_buf_get_option(0, 'commentstring')
+  local cs = H.get_commentstring(ref_position)
 
-  if cs == '' then
+  if cs == nil or cs == '' then
     vim.api.nvim_echo({ { '(mini.comment) ', 'WarningMsg' }, { [[Option 'commentstring' is empty.]] } }, true, {})
     return { left = '', right = '' }
   end
@@ -337,6 +353,51 @@ H.make_comment_parts = function()
     left, right = vim.trim(left), vim.trim(right)
   end
   return { left = left, right = right }
+end
+
+H.get_commentstring = function(ref_position)
+  local buf_cs = vim.api.nvim_buf_get_option(0, 'commentstring')
+
+  -- Neovim<0.9 can only have buffer 'commentstring'
+  if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
+
+  local has_ts_parser, ts_parser = pcall(vim.treesitter.get_parser)
+  if not has_ts_parser then return buf_cs end
+
+  -- Try to get 'commentstring' associated with local tree-sitter language.
+  -- This is useful for injected languages (like markdown with code blocks).
+  -- Sources:
+  -- - https://github.com/neovim/neovim/pull/22634#issue-1620078948
+  -- - https://github.com/neovim/neovim/pull/22643
+  local row, col = ref_position[1] - 1, ref_position[2] - 1
+  local ref_range = { row, col, row, col + 1 }
+
+  -- - Get 'commentstring' from the deepest LanguageTree which both contains
+  --   reference range and has valid 'commentstring' (meaning it has at least
+  --   one associated 'filetype' with valid 'commentstring').
+  --   In simple cases using `parser:language_for_range()` would be enough, but
+  --   it fails for languages without valid 'commentstring' (like 'comment').
+  local ts_cs
+  local traverse
+
+  traverse = function(lang_tree)
+    if not lang_tree:contains(ref_range) then return end
+
+    local lang = lang_tree:lang()
+    local filetypes = vim.treesitter.language.get_filetypes(lang)
+    for _, ft in ipairs(filetypes) do
+      -- Using `vim.filetype.get_option()` for performance as it has caching
+      local cur_cs = vim.filetype.get_option(ft, 'commentstring')
+      if type(cur_cs) == 'string' and cur_cs ~= '' then ts_cs = cur_cs end
+    end
+
+    for _, child_lang_tree in pairs(lang_tree:children()) do
+      traverse(child_lang_tree)
+    end
+  end
+  traverse(ts_parser)
+
+  return ts_cs or buf_cs
 end
 
 H.make_comment_check = function(comment_parts)

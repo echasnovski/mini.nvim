@@ -8,7 +8,8 @@ MIT License Copyright (c) 2021 Evgeni Chasnovski
 Features:
 - Commenting in Normal mode respects |count| and is dot-repeatable.
 
-- Comment structure is inferred from 'commentstring'.
+- Comment structure is inferred from 'commentstring': either from current
+  buffer or from locally active tree-sitter language (only on Neovim>=0.9).
 
 - Allows custom hooks before and after successful commenting.
 
@@ -17,10 +18,7 @@ Features:
 What it doesn't do:
 - Block and sub-line comments. This will only support per-line commenting.
 
-- Configurable (from module) comment structure. Modify |commentstring|
-  instead. To enhance support for commenting in multi-language files, see
-  "JoosepAlviste/nvim-ts-context-commentstring" plugin along with `hooks`
-  option of this module (see |MiniComment.config|).
+- Configurable (from module) comment structure. Modify |commentstring| instead.
 
 - Handle indentation with mixed tab and space.
 
@@ -123,7 +121,7 @@ Return~
 
 ------------------------------------------------------------------------------
                                                     *MiniComment.toggle_lines()*
-              `MiniComment.toggle_lines`({line_start}, {line_end})
+          `MiniComment.toggle_lines`({line_start}, {line_end}, {opts})
 Toggle comments between two line numbers
 
 It uncomments if lines are comment (every line is a comment) and comments
@@ -135,14 +133,22 @@ Before successful commenting it executes `config.hooks.pre`.
 After successful commenting it executes `config.hooks.post`.
 If hook returns `false`, any further action is terminated.
 
-# Notes~
+# Notes ~
 
-1. Currently call to this function will remove marks inside written range.
-   Use |lockmarks| to preserve marks.
+- Comment structure is inferred from buffer's 'commentstring' option or
+  local language of tree-sitter parser (if active; only on Neovim>=0.9).
+
+- Currently call to this function will remove marks inside written range.
+  Use |lockmarks| to preserve marks.
 
 Parameters~
 {line_start} `(number)` Start line number (inclusive from 1 to number of lines).
 {line_end} `(number)` End line number (inclusive from 1 to number of lines).
+{opts} `(table|nil)` Options. Possible fields:
+  - <ref_position> `(table)` - A two-value array with `{ row, col }` (both
+    starting at 1) of reference position at which local tree-sitter value of
+    'commentstring' will be computed (if tree-sitter is active).
+    Default: `{ line_start, 1 }`.
 
 ------------------------------------------------------------------------------
                                                       *MiniComment.textobject()*

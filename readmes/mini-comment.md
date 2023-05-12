@@ -27,9 +27,10 @@ https://user-images.githubusercontent.com/24854248/173044250-1a8bceae-8f14-40e2-
 ## Features
 
 - Commenting in Normal mode respects `v:count` and is dot-repeatable.
-- Comment structure is inferred from 'commentstring'.
+- Comment structure is inferred from 'commentstring': either from current buffer or from locally active tree-sitter language (only on Neovim>=0.9).
 - Handles both tab and space indenting (but not when they are mixed).
 - Allows custom hooks before and after successful commenting.
+- Configurable options for some nuanced behavior.
 
 ## Installation
 

@@ -23,6 +23,10 @@
 
 Introduction of a new module.
 
+# mini.comment
+
+- FEATURE: Use tree-sitter information about locally active language to infer 'commentstring' option value.
+
 # mini.hues
 
 Introduction of a new module.

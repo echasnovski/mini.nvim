@@ -173,6 +173,77 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
   eq(get_lines(2, 5), { '  aa', '', '  aa' })
 end
 
+T['toggle_lines()']['respects tree-sitter injections'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
+
+  local lines = {
+    'set background=dark',
+    'lua << EOF',
+    'print(1)',
+    'vim.api.nvim_exec2([[',
+    '    set background=light',
+    ']])',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  -- Single line comments
+  local validate = function(line, ref_output)
+    child.lua(string.format('MiniComment.toggle_lines(%d, %d)', line, line))
+    eq(get_lines()[line], ref_output)
+    -- Cleanup
+    set_lines(lines)
+  end
+
+  validate(1, '" set background=dark')
+  validate(2, '" lua << EOF')
+  validate(3, '-- print(1)')
+  validate(4, '-- vim.api.nvim_exec2([[')
+  validate(5, '    " set background=light')
+  validate(6, '-- ]])')
+  validate(7, '" EOF')
+
+  -- Multiline comments should be computed based on first line 'commentstring'
+  set_lines(lines)
+  child.lua('MiniComment.toggle_lines(1, 3)')
+  local out_lines = get_lines()
+  eq(out_lines[1], '" set background=dark')
+  eq(out_lines[2], '" lua << EOF')
+  eq(out_lines[3], '" print(1)')
+end
+
+T['toggle_lines()']['respects `opts.ref_position`'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
+
+  local lines = {
+    'lua << EOF',
+    '  print(1)',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  -- Vimscript's tree-sitter grammar is (currently) written in a way that Lua's
+  -- injection really starts at the first non-blank character
+  child.lua('MiniComment.toggle_lines(2, 2, { ref_position = { 2, 1 } })')
+  eq(get_lines()[2], '  " print(1)')
+
+  set_lines(lines)
+  child.lua('MiniComment.toggle_lines(2, 2, { ref_position = { 2, 3 } })')
+  eq(get_lines()[2], '  -- print(1)')
+end
+
 T['toggle_lines()']['correctly computes indent'] = function()
   child.lua('MiniComment.toggle_lines(2, 4)')
   eq(get_lines(1, 4), { ' # aa', ' #  aa', ' #' })
@@ -397,6 +468,79 @@ T['Commenting']["works with empty 'commentstring'"] = function()
   eq(child.cmd_capture('1messages'), [[(mini.comment) Option 'commentstring' is empty.]])
 end
 
+T['Commenting']['respects tree-sitter injections'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
+
+  local lines = {
+    'set background=dark',
+    'lua << EOF',
+    'print(1)',
+    'vim.api.nvim_exec2([[',
+    '    set background=light',
+    ']])',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  -- Single line comments
+  local validate = function(line, ref_output)
+    set_cursor(line, 0)
+    type_keys('gc_')
+    eq(get_lines()[line], ref_output)
+    -- Cleanup
+    set_lines(lines)
+  end
+
+  validate(1, '" set background=dark')
+  validate(2, '" lua << EOF')
+  validate(3, '-- print(1)')
+  validate(4, '-- vim.api.nvim_exec2([[')
+  validate(5, '    " set background=light')
+  validate(6, '-- ]])')
+  validate(7, '" EOF')
+
+  -- Has proper dot-repeat which recomputes 'commentstring'
+  set_lines(lines)
+
+  set_cursor(1, 0)
+  type_keys('gc_')
+  eq(get_lines()[1], '" set background=dark')
+
+  set_cursor(3, 0)
+  type_keys('.')
+  eq(get_lines()[3], '-- print(1)')
+
+  -- Multiline comments should be computed based on cursor position
+  -- which in case of Visual selection means its left part
+  set_lines(lines)
+  set_cursor(1, 0)
+  type_keys('v2j', 'gc')
+  local out_lines = get_lines()
+  eq(out_lines[1], '" set background=dark')
+  eq(out_lines[2], '" lua << EOF')
+  eq(out_lines[3], '" print(1)')
+end
+
+T['Commenting']['does not break with loaded tree-sitter'] = function()
+  -- TODO: Remove after compatibility with Neovim=0.8 is dropped
+  -- This is more of a test for Neovim=0.8, as there is no easy way to load
+  -- tree-sitter on Neovim<0.8
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('No easy way to test tree-sitter on Neovim<0.8') end
+
+  set_lines({ 'set background=dark' })
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  type_keys('gcip')
+  eq(get_lines(), { '" set background=dark' })
+end
+
 T['Commenting']['allows dot-repeat'] = function()
   local doubly_commented = { '# # aa', '# #  aa', '# #   aa', '# #', '#   aa', '#  aa', '# aa' }
 
@@ -513,6 +657,59 @@ T['Commenting current line']['works with different mapping'] = function()
   eq(get_lines(0, 1), { '# aa' })
 end
 
+T['Commenting current line']['respects tree-sitter injections'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
+
+  local lines = {
+    'set background=dark',
+    'lua << EOF',
+    'print(1)',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  set_cursor(1, 0)
+  type_keys('gcc')
+  eq(get_lines(), { '" set background=dark', 'lua << EOF', 'print(1)', 'EOF' })
+
+  -- Should work with dot-repeat
+  set_cursor(3, 0)
+  type_keys('.')
+  eq(get_lines(), { '" set background=dark', 'lua << EOF', '-- print(1)', 'EOF' })
+end
+
+T['Commenting current line']["computes local 'commentstring' based on cursor position"] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  local lines = {
+    'lua << EOF',
+    '  print(1)',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  -- Vimscript's tree-sitter grammar is (currently) written in a way that Lua's
+  -- injection really starts at the first non-blank character
+  set_cursor(2, 1)
+  type_keys('gcc')
+  eq(get_lines()[2], '  " print(1)')
+
+  set_lines(lines)
+  set_cursor(2, 2)
+  type_keys('gcc')
+  eq(get_lines()[2], '  -- print(1)')
+end
+
 T['Commenting current line']['allows dot-repeat'] = function()
   set_lines(example_lines)
   set_cursor(1, 1)
@@ -606,6 +803,35 @@ T['Comment textobject']['works with different mapping'] = function()
   set_cursor(2, 0)
   type_keys('d', 'gC')
   eq(get_lines(), { 'aa', 'aa' })
+end
+
+T['Comment textobject']['respects tree-sitter injections'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
+  end
+
+  -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
+
+  local lines = {
+    '" set background=dark',
+    '" set termguicolors',
+    'lua << EOF',
+    '-- print(1)',
+    '-- print(2)',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  set_cursor(1, 0)
+  type_keys('dgc')
+  eq(get_lines(), { 'lua << EOF', '-- print(1)', '-- print(2)', 'EOF' })
+
+  -- Should work with dot-repeat
+  set_cursor(2, 0)
+  type_keys('.')
+  eq(get_lines(), { 'lua << EOF', 'EOF' })
 end
 
 T['Comment textobject']['allows dot-repeat'] = function()
