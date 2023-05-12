@@ -2296,11 +2296,11 @@ end
 -- Interactive ----------------------------------------------------------------
 H.apply_interactive_buffer = function(buf_id, init_cs)
   -- Create temporary color scheme
-  MiniColors._interactive_cs = vim.deepcopy(init_cs)
+  _G._interactive_cs = vim.deepcopy(init_cs)
 
   -- Create initial script lines exposing color scheme and its methods
-  local lines = { '-- Source code for interactive bufer', 'local self = MiniColors._interactive_cs' }
-  for key, val in pairs(MiniColors._interactive_cs) do
+  local lines = { '-- Source code for interactive buffer', 'local self = _G._interactive_cs' }
+  for key, val in pairs(_G._interactive_cs) do
     if vim.is_callable(val) then
       local l = string.format('local %s = function(...) self = self:%s(...) end', key, key)
       table.insert(lines, l)
@@ -2315,7 +2315,7 @@ H.apply_interactive_buffer = function(buf_id, init_cs)
 
   -- Source
   local ok, res = pcall(loadstring(table.concat(lines, '\n')))
-  MiniColors._interactive_cs = nil
+  _G._interactive_cs = nil
 
   if not ok then error(res) end
   return res

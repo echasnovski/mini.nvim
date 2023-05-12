@@ -10,6 +10,7 @@ local colors_path = dir_path .. '/colors/'
 -- Helpers with child processes
 --stylua: ignore start
 local load_module = function(config) child.mini_load('colors', config) end
+local unload_module = function(config) child.mini_unload('colors', config) end
 local type_keys = function(...) return child.type_keys(...) end
 local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
@@ -2311,6 +2312,13 @@ T['interactive()']['works'] = function()
   eq(child.api.nvim_get_current_buf() ~= cur_buf_id, true)
 end
 
+T['interactive()']['works without prior `setup()`'] = function()
+  unload_module()
+  expect.no_error(function() child.lua([[require('mini.colors').interactive()]]) end)
+
+  expect.match(child.cmd_capture('nmap <M-a>'), 'Apply')
+end
+
 T['interactive()']['can have side effects'] = function()
   child.lua('MiniColors.interactive()')
   type_keys('i', '_G.a = 1', '<Esc>')
@@ -2325,7 +2333,7 @@ T['interactive()']['has no internal side effects'] = function()
   -- Temporary values are not kept global
   local validate_nil = function(var_name) eq(child.lua_get('type(' .. var_name .. ')'), 'nil') end
 
-  validate_nil('MiniColors._interactive_cs')
+  validate_nil('_G._interactive_cs')
   validate_nil('self')
 
   -- Direct methods should not be global
