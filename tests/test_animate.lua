@@ -349,11 +349,14 @@ T['animate()']['respects `opts.max_steps`'] = function()
 end
 
 T['animate()']['handles step times less than 1 ms'] = function()
-  child.lua('_G.step_action = function(step) _G.latest_step = step; return step < 5 end')
+  child.lua('_G.step_action = function(step) _G.latest_step = step; return step < 3 end')
   child.lua('MiniAnimate.animate(_G.step_action, function() return 0.1 end)')
 
-  -- All steps should be executed immediately
-  eq(child.lua_get('_G.latest_step'), 5)
+  -- All steps should be executed almost immediately (respectnig `libuv` loops)
+  poke_eventloop()
+  poke_eventloop()
+  poke_eventloop()
+  eq(child.lua_get('_G.latest_step'), 3)
 end
 
 T['animate()']['handles non-integer step times'] = function()
