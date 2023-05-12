@@ -550,7 +550,7 @@ Parameters~
 {ai_type} `(string)` One of `'a'` or `'i'`.
 {id} `(string)` Single character string representing textobject id.
 {opts} `(table|nil)` Same as in |MiniAi.find_textobject()|.
-  `opts.n_times` means number of *actual* jumps (important when cursor
+  `opts.n_times` means number of actual jumps (important when cursor
   already on the potential jump spot).
 
 ------------------------------------------------------------------------------

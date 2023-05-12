@@ -571,7 +571,7 @@ end
 ---@param ai_type string One of `'a'` or `'i'`.
 ---@param id string Single character string representing textobject id.
 ---@param opts table|nil Same as in |MiniAi.find_textobject()|.
----   `opts.n_times` means number of *actual* jumps (important when cursor
+---   `opts.n_times` means number of actual jumps (important when cursor
 ---   already on the potential jump spot).
 MiniAi.move_cursor = function(side, ai_type, id, opts)
   if not (side == 'left' or side == 'right') then H.error([[`side` should be one of 'left' or 'right'.]]) end
