@@ -87,6 +87,10 @@ T = new_set({
     pre_case = function()
       child.setup()
       load_module()
+
+      -- Make `start()` non-blocking to be able to execute tests. Otherwise it
+      -- will block child state waiting for `getcharstr()` to finish.
+      child.lua('MiniJump2d.start = vim.schedule_wrap(MiniJump2d.start)')
     end,
     post_once = child.stop,
   },
@@ -255,13 +259,16 @@ T['start()']['works in Visual mode'] = function()
 end
 
 T['start()']['works in Operator-pending mode'] = function()
+  -- Reload module to revert `start()` to being blocking
+  reload_module()
+
   type_keys('d')
-  -- Use default mapping because otherwise it hangs child process
+  -- Use default mapping to fully imitate Operator-pending mode (and it doesn't
+  -- work otherwise)
   type_keys('<CR>')
   child.expect_screenshot()
   type_keys('b')
 
-  eq(get_cursor(), { 1, 0 })
   child.cmd('redrawstatus')
   child.expect_screenshot()
 

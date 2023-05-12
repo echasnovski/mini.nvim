@@ -372,14 +372,7 @@ MiniJump2d.start = function(opts)
 
   H.cache.spots = spots
 
-  -- Defer advancing jump to allow drawing before invoking `getcharstr()`.
-  -- This is much faster than having to call `vim.cmd('redraw')`.
-  -- Don't do that in Operator-pending mode because it doesn't work otherwise.
-  if H.is_operator_pending() then
-    H.advance_jump(opts)
-  else
-    vim.defer_fn(function() H.advance_jump(opts) end, 0)
-  end
+  H.advance_jump(opts)
 end
 
 --- Stop jumping
@@ -811,9 +804,8 @@ H.spots_show = function(spots, opts)
     end
   end
 
-  -- Need to redraw in Operator-pending mode, because otherwise extmarks won't
-  -- be shown and deferring disables this mode.
-  if H.is_operator_pending() then vim.cmd('redraw') end
+  -- Redraw to force showing marks
+  vim.cmd('redraw')
 end
 
 H.spots_unshow = function(spots)
@@ -939,15 +931,7 @@ H.advance_jump = function(opts)
       H.spots_show(spots, opts)
       H.cache.spots = spots
 
-      -- Defer advancing jump to allow drawing before invoking `getcharstr()`.
-      -- This is much faster than having to call `vim.cmd('redraw')`. Don't do that
-      -- in Operator-pending mode because it doesn't work otherwise.
-      if H.is_operator_pending() then
-        H.advance_jump(opts)
-      else
-        vim.defer_fn(function() H.advance_jump(opts) end, 0)
-        return
-      end
+      H.advance_jump(opts)
     end
   end
 
