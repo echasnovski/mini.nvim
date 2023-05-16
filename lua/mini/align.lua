@@ -451,9 +451,12 @@ end
 --- - Tweak 't' modifier to use highest indentation instead of keeping it:
 --- >
 ---   require('mini.align').setup({
----     t = function(steps, _)
----       table.insert(steps.pre_justify, MiniAlign.gen_step.trim('both', 'high'))
----     end
+---     modifiers = {
+---       t = function(steps, _)
+---         local trim_high = MiniAlign.gen_step.trim('both', 'high')
+---         table.insert(steps.pre_justify, trim_high)
+---       end
+---     }
 ---   })
 --- <
 --- - Tweak `j` modifier to cycle through available "justify_side" option
@@ -1214,8 +1217,8 @@ end
 ---
 ---@param direction string|nil Which sides to trim whitespace. One of "both"
 ---   (default), "left", "right", "none".
----@param indent string|nil What to do with possible indent (left whitespace of first
----   string in a row). One of "keep" (default), "low", "high", "remove".
+---@param indent string|nil What to do with possible indent (left whitespace
+---   of first string in a row). One of "keep" (default), "low", "high", "remove".
 ---
 ---@return table A step named "trim" and with appropriate callable action.
 MiniAlign.gen_step.trim = function(direction, indent)
