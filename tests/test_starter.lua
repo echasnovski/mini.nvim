@@ -1359,6 +1359,20 @@ T['Cursor positioning']['works with bullets'] = new_set({
   end,
 })
 
+T['Resize'] = new_set()
+
+T['Resize']['updates Starter buffer'] = function()
+  child.lua('MiniStarter.config.items = ' .. example_itemstring)
+  child.lua('MiniStarter.config.header = "Header"')
+  child.lua('MiniStarter.config.footer = "Footer"')
+
+  child.set_size(12, 20)
+  child.lua('MiniStarter.open()')
+
+  child.set_size(20, 40)
+  child.expect_screenshot()
+end
+
 T['Multiple buffers'] = new_set()
 
 T['Multiple buffers']['are allowed'] = function()
