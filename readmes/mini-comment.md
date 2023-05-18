@@ -32,6 +32,9 @@ https://user-images.githubusercontent.com/24854248/173044250-1a8bceae-8f14-40e2-
 - Allows custom hooks before and after successful commenting.
 - Configurable options for some nuanced behavior.
 
+Notes:
+- To use tree-sitter aware commenting, global value of 'commentstring' should be `''` (empty string). This is the default value in Neovim>=0.9, so make sure to not set it manually.
+
 ## Installation
 
 This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
