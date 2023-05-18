@@ -1580,7 +1580,12 @@ H.validate_if = function(predicate, x, x_name)
 end
 
 H.add_line_hl = function(buf_id, ns_id, hl_group, line)
-  pcall(vim.highlight.range, buf_id, ns_id, hl_group, { line, H.cache.scrollbar_data.offset }, { line, -1 })
+  H.set_extmark_safely(buf_id, ns_id, line, H.cache.scrollbar_data.offset, {
+    hl_group = hl_group,
+    end_row = line + 1,
+    end_col = 0,
+    strict = false,
+  })
 end
 
 H.set_extmark_safely = function(...) pcall(vim.api.nvim_buf_set_extmark, ...) end
