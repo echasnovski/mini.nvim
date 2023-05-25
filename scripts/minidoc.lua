@@ -16,6 +16,7 @@ local modules = {
   'cursorword',
   'doc',
   'fuzzy',
+  'hipatterns',
   'hues',
   'indentscope',
   'jump',

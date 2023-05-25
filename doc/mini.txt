@@ -26,6 +26,7 @@ Table of contents:
   Autohighlight word under cursor .......................... |mini.cursorword|
   Generate Neovim help files ...................................... |mini.doc|
   Fuzzy matching ................................................ |mini.fuzzy|
+  Highlight patterns in text ............................... |mini.hipatterns|
   Generate configurable color scheme ............................. |mini.hues|
   Visualize and work with indent scope .................... |mini.indentscope|
   Jump to next/previous single character ......................... |mini.jump|
@@ -167,6 +168,10 @@ Table of contents:
 - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
   not only functions to perform fuzzy matching of one string to others, but
   also a sorter for |telescope.nvim|.
+
+- |MiniHipatterns| - highlight patterns in text with configurable highlighters
+  (pattern and/or highlight group can be string or callable).
+  Works asynchronously with configurable debounce delay.
 
 - |MiniHues| - generate configurable color scheme. Takes only background
   and foreground colors as required arguments. Can adjust number of hues

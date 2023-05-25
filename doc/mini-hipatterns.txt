@@ -1,0 +1,380 @@
+*mini.hipatterns* Highlight patterns in text
+*MiniHipatterns*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+- Highlight text with configurable patterns and highlight groups (can be
+  string or callable).
+
+- Highlighting is updated asynchronously with configurable debounce delay.
+
+See |MiniHipatterns.config| for examples of common use cases.
+
+Notes:
+- It does not define any highlighters by default. Add to `config.highlighters`
+  to have a visible effect.
+
+- Sometimes (especially during frequent buffer updates on same line numbers)
+  highlighting can be outdated or not applied when it should be. This is due
+  to asynchronous nature of updates reacting to text changes (via
+  `on_lines` of |nvim_buf_attach()|).
+  To make them up to date, use one of the following:
+    - Scroll window (for example, with |CTRL-E| / |CTRL-Y|). This will ensure
+      up to date highlighting inside window view.
+    - Hide and show buffer.
+    - Execute `:edit` (if you enabled highlighting with |MiniHipatterns.setup()|).
+    - Manually call |MiniHipatterns.update()|.
+
+- There can be flicker when used together with 'mini.completion' or built-in
+  completion. This is due to (currently unresolvable) limitations of Neovim's
+  built-in completion implementation.
+  For better experience with 'mini.completion', make sure that its
+  `delay.completion` is less than this module's `delay.text_change`.
+
+# Setup ~
+
+Setting up highlights can be done in two ways:
+- Manually for every buffer with `require('mini.hipatterns').enable()`.
+  This will enable highlighting only in one particular buffer until it is
+  unloaded (which also includes calling `:edit` on current file).
+
+- Globally with `require('mini.hipatterns').setup({})` (replace `{}` with
+  your `config` table). This will auto-enable highlighting in "normal"
+  buffers (see 'buftype'). Use |MiniHipatterns.enable()| to manually enable
+  in other buffers.
+  It will also create global Lua table `MiniHipatterns` which you can use
+  for scripting or manually (with `:lua MiniHipatterns.*`).
+
+See |MiniHipatterns.config| for `config` structure and default values.
+
+You can override runtime config settings (like highlighters and delays)
+locally to buffer inside `vim.b.minihipatterns_config` which should have
+same structure as `MiniHipatterns.config`.
+See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons ~
+
+- 'folke/todo-comments':
+    - Oriented for "TODO", "NOTE", "FIXME" like patterns, while this module
+      can work with any Lua patterns and computable highlight groups.
+    - Has functionality beyond text highlighting (sign placing,
+      "telescope.nvim" extension, etc.), while this module only focuses on
+      highlighting text.
+- 'folke/paint.nvim':
+    - Mostly similar to this module, but with slightly less functionality,
+      such as computed pattern and highlight group, asynchronous delay, etc.
+- 'NvChad/nvim-colorizer.lua':
+    - Oriented for color highlighting, while this module can work with any
+      Lua patterns and computable highlight groups.
+    - Has more built-in color spaces to highlight, while this module out of
+      the box provides only hex color highlighting
+      (see |MiniHipatterns.gen_highlighter.hex_color()|). Other types are
+      also possible to implement.
+- 'uga-rosa/ccc.nvim':
+    - Has more than color highlighting functionality, which is compared to
+      this module in the same way as 'NvChad/nvim-colorizer.lua'.
+
+# Highlight groups~
+
+* `MiniHipatternsFixme` - suggested group to use for `FIXME`-like patterns.
+* `MiniHipatternsHack` - suggested group to use for `HACK`-like patterns.
+* `MiniHipatternsTodo` - suggested group to use for `TODO`-like patterns.
+* `MiniHipatternsNote` - suggested group to use for `NOTE`-like patterns.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling ~
+
+This module can be disabled in three ways:
+- Globally: set `vim.g.minihipatterns_disable` to `true`.
+- Locally for buffer permanently: set `vim.b.minihipatterns_disable` to `true`.
+- Locally for buffer temporarily (until next auto-enabling event if set up
+  with |MiniHipatterns.setup()|): call |MiniHipatterns.disable()|.
+
+Considering high number of different scenarios and customization
+intentions, writing exact rules for disabling module's functionality is
+left to user. See |mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                        *MiniHipatterns.setup()*
+                        `MiniHipatterns.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniHipatterns.config|.
+
+Usage~
+`require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
+
+Note: no highlighters is defined by default. Add them for visible effect.
+
+------------------------------------------------------------------------------
+                                                         *MiniHipatterns.config*
+                            `MiniHipatterns.config`
+Module config
+
+Default values:
+>
+  MiniHipatterns.config = {
+    -- Table with highlighters (see |MiniHipatterns.config| for more details).
+    -- Nothing is defined by default. Add manually for visible effect.
+    highlighters = {},
+
+    -- Delays (in ms) defining asynchronous highlighting process
+    delay = {
+      -- How much to wait for update after every text change
+      text_change = 200,
+
+      -- How much to wait for update after window scroll
+      scroll = 50,
+    },
+  }
+<
+# Options ~
+
+## Highlighters ~
+
+`highlighters` table defines which patterns will be highlighted. It might
+or might not have explicitly named fields, but having them is recommended
+and is required for proper use of `vim.b.minihipatterns_config` as
+buffer-local config. By default it is empty expecting user definition.
+
+Each entry defines single highlighter as a table with the following fields:
+- <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
+  or callable returning the string.
+  If string:
+    - It can have submatch delimited by placing `()` on start and end, NOT
+      by surrounding with it. Otherwise it will result in error containing
+      `number expected, got string`. Example: `xx()abcd()xx` will match `abcd`
+      only if `xx` is placed before and after it.
+
+  If callable:
+    - It will be called for every enabled buffer with its identifier as input.
+
+    - It can return `nil` meaning this particular highlighter will not work
+      in this particular buffer.
+
+- <group> `(string|function)` - name of highlight group to use. Can be either
+  string or callable returning the string.
+  If callable:
+    - It will be called for every pattern match with the following arguments:
+        - `buf_id` - buffer identifier.
+        - `match` - string pattern match to be highlighted.
+        - `data` - extra table with information about the match.
+          It has at least these fields:
+            - <full_match> - string with full pattern match.
+            - <line> - match line number (1-indexed).
+            - <from_col> - match starting byte column (1-indexed).
+            - <end_col> - match ending byte column (1-indexed, inclusive).
+
+    - It can return `nil` meaning this particular match will not be highlighted.
+
+- <priority> `(number|nil)` - optional highlighting priority (as
+  in |nvim_buf_set_extmark()|). Default: 200. See also |vim.highlight.priorities|.
+
+See "Common use cases" section for the examples.
+
+## Delay ~
+
+`delay` is a table defining delays in milliseconds used for asynchronous
+highlighting process.
+
+`delay.text_change` is used to delay highlighting updates by accumulating
+them (in debounce fashion). Smaller values will lead to faster response but
+more frequent updates. Bigger - slower response but less frequent updates.
+
+`delay.scroll` is used to delay updating highlights in current window view
+during scrolling (see |WinScrolled| event). These updates are present to
+ensure up to date highlighting after scroll.
+
+# Common use cases ~
+
+- Special words used to convey different level of attention: >
+
+  require('mini.hipatterns').setup({
+    highlighters = {
+      fixme = { pattern = 'FIXME', group = 'MiniHipatternsFixme' },
+      hack  = { pattern = 'HACK',  group = 'MiniHipatternsHack'  },
+      todo  = { pattern = 'TODO',  group = 'MiniHipatternsTodo'  },
+      note  = { pattern = 'NOTE',  group = 'MiniHipatternsNote'  },
+    }
+  })
+<
+- To match only when pattern appears as a standalone word, use frontier
+  patterns `%f`. For example, instead of `'TODO'` pattern use
+  `'%f[%w]()TODO()%f[%W]'`. In this case, for example, 'TODOING' or 'MYTODO'
+  won't match, but 'TODO' and 'TODO:' will.
+
+- Color hex (like `#rrggbb`) highlighting: >
+
+  local hipatterns = require('mini.hipatterns')
+  hipatterns.setup({
+    highlighters = {
+      hex_color = hipatterns.gen_highlighter.hex_color(),
+    }
+  })
+<
+  You can customize which part of hex color is highlighted by using `style`
+  field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
+
+- Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
+
+  { pattern = '%f[%s]%s*$', group = 'Error' }
+
+- Enable only in certain filetypes. There are at least these ways to do it:
+    - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
+      Basically, create "after/ftplugin/<filetype>.lua" file in your config
+      directory (see |$XDG_CONFIG_HOME|) and define `vim.b.minihipatterns_config`
+      there with filetype specific highlighters.
+
+      This assumes `require('mini.hipatterns').setup()` call.
+
+      For example, to highlight keywords in EmmyLua comments in Lua files,
+      create "after/ftplugin/lua.lua" with the following content: >
+
+        vim.b.minihipatterns_config = {
+          highlighters = {
+            emmylua = { pattern = '^%s*%-%-%-()@%w+()', group = 'Special' }
+          }
+        }
+<
+    - Use callable `pattern` with confition. For example: >
+
+      require('mini.hipatterns').setup({
+        highlighters = {
+          emmylua = {
+            pattern = function(buf_id)
+              if vim.bo[buf_id].filetype ~= 'lua' then return nil end
+              return '^%s*%-%-%-()@%w+()'
+            end,
+            group = 'Special',
+          },
+        },
+      })
+<
+- Disable only in certain filetypes. Enable with |MiniHipatterns.setup()|
+  and set `vim.b.minihipatterns_disable` buffer-local variable to `true` for
+  buffer you want disabled. See |mini.nvim-disabling-recipes| for more examples.
+
+------------------------------------------------------------------------------
+                                                       *MiniHipatterns.enable()*
+                  `MiniHipatterns.enable`({buf_id}, {config})
+Enable highlighting in buffer
+
+Notes:
+- With default config it will highlight nothing, as there are no default
+  highlighters.
+
+- Buffer highlighting is enabled until buffer is unloaded from memory
+  or |MiniHipatterns.disable()| on this buffer is called.
+
+- `:edit` disables this, as it is mostly equivalent to closing and opening
+  buffer. In order for highlighting to persist after `:edit`, call
+  |MiniHipatterns.setup()|.
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
+  Default: 0 for current buffer.
+{config} `(table|nil)` Optional buffer-local config. Should have the same
+  structure as |MiniHipatterns.config|. Values will be taken in this order:
+  - From this `config` argument (if supplied).
+  - From buffer-local config in `vim.b.minihipatterns_config` (if present).
+  - From global config (if |MiniHipatterns.setup()| was called).
+  - From default values.
+
+------------------------------------------------------------------------------
+                                                      *MiniHipatterns.disable()*
+                       `MiniHipatterns.disable`({buf_id})
+Disable highlighting in buffer
+
+Note that if |MiniHipatterns.setup()| was called, the effect is present
+until the next auto-enabling event. To permanently disable highlighting in
+buffer, set `vim.b.minihipatterns_disable` to `true`
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
+  Default: 0 for current buffer.
+
+------------------------------------------------------------------------------
+                                                       *MiniHipatterns.toggle()*
+                  `MiniHipatterns.toggle`({buf_id}, {config})
+Toggle highlighting in buffer
+
+Call |MiniHipatterns.disable()| if enabled; |MiniHipatterns.enable()| otherwise.
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
+  Default: 0 for current buffer.
+{config} `(table|nil)` Forwarded to |MiniHipatterns.enable()|.
+
+------------------------------------------------------------------------------
+                                                       *MiniHipatterns.update()*
+           `MiniHipatterns.update`({buf_id}, {from_line}, {to_line})
+Update highlighting in range
+
+Works only in buffer with enabled highlighting. Effect takes immediately
+without delay.
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
+  Default: 0 for current buffer.
+{from_line} `(number|nil)` Start line from which to update (1-indexed).
+{to_line} `(number|nil)` End line from which to update (1-indexed, inclusive).
+
+------------------------------------------------------------------------------
+                                          *MiniHipatterns.get_enabled_buffers()*
+                     `MiniHipatterns.get_enabled_buffers`()
+Get an array of enabled buffers
+
+Return~
+`(table)` Array of buffer identifiers with enabled highlighting.
+
+------------------------------------------------------------------------------
+                                                *MiniHipatterns.gen_highlighter*
+                        `MiniHipatterns.gen_highlighter`
+Generate builtin highlighters
+
+This is a table with function elements. Call to actually get highlighter.
+
+------------------------------------------------------------------------------
+                                    *MiniHipatterns.gen_highlighter.hex_color()*
+               `MiniHipatterns.gen_highlighter.hex_color`({opts})
+Highlight hex color string
+
+This will match color hex string in format `#rrggbb` and highlight it
+according to `opts.style` displaying matched color.
+
+Notes:
+- This works only with enabled |termguicolors|.
+- If you want to try different style in current Neovim session, execute
+  |:colorscheme| command to update highlight groups.
+
+Parameters~
+{opts} `(table|nil)` Options. Possible fields:
+  - <style> `(string)` - one of:
+    - `'full'` -  highlight background of whole hex string with it. Default.
+    - `'#'` - highlight background of only `#`.
+    - `'line'` highlight underline with that color.
+  - <priority> `(number)` - priority of highlighting. Default: 200.
+  - <filter> `(function)` - callable object used to filter buffers in which
+    highlighting will take place. It should take buffer identifier as input
+    and return `false` or `nil` to not highlight inside this buffer.
+
+Return~
+`(table)` Highlighter table ready to be used as part of `config.highlighters`.
+  Both `pattern` and `group` are callable.
+
+Usage~
+>
+  local hipatterns = require('mini.hipatterns')
+  hipatterns.setup({
+    highlighters = {
+      hex_color = hipatterns.gen_highlighter.hex_color(),
+    }
+  })
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

@@ -29,6 +29,10 @@ Introduction of a new module.
 - FEATURE: Add `options.custom_commentstring` option for a more granular customization of comment structure.
 - FEATURE: Add `get_commentstring()` function representing built-in logic of computing relevant 'commentstring'.
 
+# mini.hipatterns
+
+Introduction of a new module.
+
 # mini.hues
 
 Introduction of a new module.
