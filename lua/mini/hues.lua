@@ -935,6 +935,11 @@ H.apply_colorscheme = function(config)
     hi('MiniCursorword',        { fg=nil, bg=nil, underline=true })
     hi('MiniCursorwordCurrent', { fg=nil, bg=nil, underline=true })
 
+    hi('MiniHipatternsFixme', { fg=p.bg, bg=p.red,    bold=true})
+    hi('MiniHipatternsHack',  { fg=p.bg, bg=p.yellow, bold=true})
+    hi('MiniHipatternsNote',  { fg=p.bg, bg=p.cyan,   bold=true})
+    hi('MiniHipatternsTodo',  { fg=p.bg, bg=p.blue,   bold=true})
+
     hi('MiniIndentscopeSymbol',    { fg=p.accent, bg=nil })
     hi('MiniIndentscopeSymbolOff', { fg=p.red,    bg=nil })
 
