@@ -1765,6 +1765,23 @@ T['Scroll']['works properly just after window change'] = function()
   child.expect_screenshot()
 end
 
+T['Scroll']['works properly inside terminal'] = function()
+  -- Start functioning terminal buffer
+  child.cmd('enew')
+  local job_id = child.fn.termopen('env -i bash --norc --noprofile')
+  child.fn.jobwait({ job_id }, 1000)
+
+  -- Echo many lines of text so that window view is completely different
+  -- compared with what was at Terminal mode start
+  local many_lines = string.rep([[a\n]], 20)
+  type_keys(10, 'i', 'echo -e "' .. many_lines .. '"', '<CR>')
+
+  -- There should not be any scroll animation after exiting Terminal mode
+  type_keys([[<C-\>]], '<C-n>')
+  sleep(step_time)
+  eq(child.fn.line('w0'), 18)
+end
+
 T['Scroll']['does not automatically animate after buffer change'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
   set_cursor(5, 0)

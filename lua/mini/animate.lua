@@ -1210,6 +1210,9 @@ H.create_autocommands = function()
   -- (like builtin cursor center on buffer change) to avoid unnecessary
   -- animated scroll.
   au({ 'BufEnter', 'WinEnter' }, '*', vim.schedule_wrap(H.track_scroll_state), 'Track scroll state')
+  -- Track immediately scroll state after leaving terminal mode. Otherwise it
+  -- will lead to scroll animation starting at latest non-Terminal mode view.
+  au('TermLeave', '*', H.track_scroll_state, 'Track scroll state')
   -- Track scroll state (partially) on every cursor move to keep cursor
   -- position up to date. This enables visually better cursor positioning
   -- during scroll animation (convex progression from start cursor position to
