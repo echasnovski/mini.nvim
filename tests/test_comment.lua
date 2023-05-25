@@ -68,6 +68,7 @@ T['setup()']['creates `config` field'] = function()
   -- Check default values
   local expect_config = function(field, value) eq(child.lua_get('MiniComment.config.' .. field), value) end
 
+  expect_config('options.custom_commentstring', vim.NIL)
   expect_config('options.ignore_blank_line', false)
   expect_config('options.start_of_line', false)
   expect_config('options.pad_comment_parts', true)
@@ -91,6 +92,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error('a', 'config', 'table')
   expect_config_error({ options = 'a' }, 'options', 'table')
+  expect_config_error({ options = { custom_commentstring = 1 } }, 'options.custom_commentstring', 'function')
   expect_config_error({ options = { ignore_blank_line = 1 } }, 'options.ignore_blank_line', 'boolean')
   expect_config_error({ options = { start_of_line = 1 } }, 'options.start_of_line', 'boolean')
   expect_config_error({ options = { pad_comment_parts = 1 } }, 'options.pad_comment_parts', 'boolean')
@@ -272,6 +274,34 @@ T['toggle_lines()']['correctly detects comment/uncomment'] = function()
   set_lines(lines)
   child.lua('MiniComment.toggle_lines(1, 6)')
   eq(get_lines(), { '#', '# aa', '# # aa', '# # aa', '# aa', '#' })
+end
+
+T['toggle_lines()']['respects `config.options.custom_commentstring`'] = function()
+  local lines = { 'aa', '  aa' }
+
+  -- Works correctly and called with proper arguments
+  child.lua([[MiniComment.config.options.custom_commentstring = function(...)
+    _G.args = { ... }
+    return '++ %s'
+  end]])
+
+  set_lines(lines)
+  child.lua('MiniComment.toggle_lines(1, 2, { ref_position = { 2, 3 } })')
+  eq(get_lines(), { '++ aa', '++   aa' })
+  eq(child.lua_get('_G.args'), { { 2, 3 } })
+
+  -- Allows `nil` output to indicate usage of default rules
+  child.lua('MiniComment.config.options.custom_commentstring = function() return nil end')
+  set_lines(lines)
+  child.lua('MiniComment.toggle_lines(1, 2)')
+  eq(get_lines(), { '# aa', '#   aa' })
+
+  -- Validates output
+  child.lua('MiniComment.config.options.custom_commentstring = function() return 2 end')
+  expect.error(function() child.lua('MiniComment.toggle_lines(1, 2)') end, "2.*valid 'commentstring'")
+
+  child.lua('MiniComment.config.options.custom_commentstring = function() return "ab %c" end')
+  expect.error(function() child.lua('MiniComment.toggle_lines(1, 2)') end, [["ab %%c".*valid 'commentstring']])
 end
 
 T['toggle_lines()']['respects `config.options.start_of_line`'] = function()
@@ -525,6 +555,22 @@ T['Commenting']['respects tree-sitter injections'] = function()
   eq(out_lines[1], '" set background=dark')
   eq(out_lines[2], '" lua << EOF')
   eq(out_lines[3], '" print(1)')
+end
+
+T['Commenting']['respects `options.custom_commentstring`'] = function()
+  local lines = { 'aa', '  aa' }
+
+  -- Works correctly and called with proper arguments
+  child.lua([[MiniComment.config.options.custom_commentstring = function(...)
+    _G.args = { ... }
+    return '++ %s'
+  end]])
+
+  set_lines(lines)
+  set_cursor(2, 2)
+  type_keys('gc', '_')
+  eq(get_lines(), { 'aa', '  ++ aa' })
+  eq(child.lua_get('_G.args'), { { 2, 3 } })
 end
 
 T['Commenting']['does not break with loaded tree-sitter'] = function()

@@ -8,8 +8,10 @@
 --- Features:
 --- - Commenting in Normal mode respects |count| and is dot-repeatable.
 ---
---- - Comment structure is inferred from 'commentstring': either from current
----   buffer or from locally active tree-sitter language (only on Neovim>=0.9).
+--- - Comment structure by default is inferred from 'commentstring': either
+---   from current buffer or from locally active tree-sitter language (only on
+---   Neovim>=0.9). It can be customized via `options.custom_commentstring`
+---   (see |MiniComment.config| for details).
 ---
 --- - Allows custom hooks before and after successful commenting.
 ---
@@ -17,8 +19,6 @@
 ---
 --- What it doesn't do:
 --- - Block and sub-line comments. This will only support per-line commenting.
----
---- - Configurable (from module) comment structure. Modify |commentstring| instead.
 ---
 --- - Handle indentation with mixed tab and space.
 ---
@@ -74,9 +74,34 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+---@text # Options ~
+---
+--- ## Custom commentstring ~
+---
+--- `options.custom_commentstring` can be a function customizing 'commentstring'
+--- option used to infer comment structure. It is called once before every
+--- commenting action with the following arguments:
+--- - `ref_position` - position at which to compute 'commentstring' (might be
+---   relevant for a text with locally different commenting rules). Its structure
+---   is the same as `opts.ref_position` in |MiniComment.toggle_lines()|.
+---
+--- Its output should be a valid 'commentstring' (string containing `%s`) or
+--- `nil` (in which case default built-in logic is used).
+---
+--- For example, this option can be used to always use buffer 'commentstring'
+--- even in case of present active tree-sitter parser: >
+---
+---   require('mini.comment').setup({
+---     options = {
+---       custom_commentstring = function() return vim.bo.commentstring end,
+---     }
+---   })
 MiniComment.config = {
   -- Options which control module behavior
   options = {
+    -- Function to compute custom 'commentstring' (optional)
+    custom_commentstring = nil,
+
     -- Whether to ignore blank lines
     ignore_blank_line = false,
 
@@ -192,9 +217,8 @@ end
 ---@param line_end number End line number (inclusive from 1 to number of lines).
 ---@param opts table|nil Options. Possible fields:
 ---   - <ref_position> `(table)` - A two-value array with `{ row, col }` (both
----     starting at 1) of reference position at which local tree-sitter value of
----     'commentstring' will be computed (if tree-sitter is active).
----     Default: `{ line_start, 1 }`.
+---     starting at 1) of reference position at which 'commentstring' value
+---     will be computed. Default: `{ line_start, 1 }`.
 MiniComment.toggle_lines = function(line_start, line_end, opts)
   if H.is_disabled() then return end
 
@@ -295,6 +319,7 @@ H.setup_config = function(config)
   })
 
   vim.validate({
+    ['options.custom_commentstring'] = { config.options.custom_commentstring, 'function', true },
     ['options.ignore_blank_line'] = { config.options.ignore_blank_line, 'boolean' },
     ['options.start_of_line'] = { config.options.start_of_line, 'boolean' },
     ['options.pad_comment_parts'] = { config.options.pad_comment_parts, 'boolean' },
@@ -342,11 +367,15 @@ end
 H.make_comment_parts = function(ref_position)
   local options = H.get_config().options
 
-  local cs = H.get_commentstring(ref_position)
+  local cs = H.call_safely(options.custom_commentstring, ref_position) or H.get_commentstring(ref_position)
 
   if cs == nil or cs == '' then
     vim.api.nvim_echo({ { '(mini.comment) ', 'WarningMsg' }, { [[Option 'commentstring' is empty.]] } }, true, {})
     return { left = '', right = '' }
+  end
+
+  if not (type(cs) == 'string' and cs:find('%%s') ~= nil) then
+    H.error(vim.inspect(cs) .. " is not a valid 'commentstring'.")
   end
 
   -- Assumed structure of 'commentstring':
@@ -495,10 +524,17 @@ H.make_uncomment_function = function(comment_parts)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error(string.format('(mini.comment) %s', msg), 0) end
+
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
+end
+
+H.call_safely = function(f, ...)
+  if not vim.is_callable(f) then return nil end
+  return f(...)
 end
 
 return MiniComment

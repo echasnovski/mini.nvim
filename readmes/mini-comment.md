@@ -27,7 +27,7 @@ https://user-images.githubusercontent.com/24854248/173044250-1a8bceae-8f14-40e2-
 ## Features
 
 - Commenting in Normal mode respects `v:count` and is dot-repeatable.
-- Comment structure is inferred from 'commentstring': either from current buffer or from locally active tree-sitter language (only on Neovim>=0.9).
+- Comment structure is inferred from 'commentstring': either from current buffer or from locally active tree-sitter language (only on Neovim>=0.9). It can be customized via `options.custom_commentstring`.
 - Handles both tab and space indenting (but not when they are mixed).
 - Allows custom hooks before and after successful commenting.
 - Configurable options for some nuanced behavior.
@@ -143,6 +143,9 @@ Here are code snippets for some common installation methods (use only one):
 {
   -- Options which control module behavior
   options = {
+    -- Function to compute custom 'commentstring' (optional)
+    custom_commentstring = nil,
+
     -- Whether to ignore blank lines
     ignore_blank_line = false,
 

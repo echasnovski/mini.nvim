@@ -26,6 +26,7 @@ Introduction of a new module.
 # mini.comment
 
 - FEATURE: Use tree-sitter information about locally active language to infer 'commentstring' option value.
+- FEATURE: Add `options.custom_commentstring` option for a more granular customization of comment structure.
 
 # mini.hues
 
