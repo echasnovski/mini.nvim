@@ -1392,6 +1392,9 @@ H.cs_compress = function(self, opts)
     -- don't really have value outside of that plugin.
     local is_colorizer = opts.plugins and name:find('^colorizer_') ~= nil
 
+    -- 'mini.hipatterns' defines groups for hex color highlighting
+    local is_hipatterns_hex_color = opts.plugins and name:find('^MiniHipatterns%x%x%x%x%x%x$') ~= nil
+
     if not (is_from_clear or is_devicon or is_colorizer) then new_groups[name] = spec end
   end
 
