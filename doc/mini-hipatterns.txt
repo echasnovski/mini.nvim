@@ -28,11 +28,14 @@ Notes:
     - Execute `:edit` (if you enabled highlighting with |MiniHipatterns.setup()|).
     - Manually call |MiniHipatterns.update()|.
 
-- There can be flicker when used together with 'mini.completion' or built-in
-  completion. This is due to (currently unresolvable) limitations of Neovim's
-  built-in completion implementation.
+- If you experience flicker when typing near highlighted pattern in Insert
+  mode, it might be due to `delay` configuration of 'mini.completion' or
+  using built-in completion.
   For better experience with 'mini.completion', make sure that its
-  `delay.completion` is less than this module's `delay.text_change`.
+  `delay.completion` is less than this module's `delay.text_change` (which
+  it is by default).
+  The reason for this is (currently unresolvable) limitations of Neovim's
+  built-in completion implementation.
 
 # Setup ~
 
