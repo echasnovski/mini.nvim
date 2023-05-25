@@ -85,8 +85,9 @@ end
 ---   relevant for a text with locally different commenting rules). Its structure
 ---   is the same as `opts.ref_position` in |MiniComment.toggle_lines()|.
 ---
---- Its output should be a valid 'commentstring' (string containing `%s`) or
---- `nil` (in which case default built-in logic is used).
+--- Its output should be a valid 'commentstring' (string containing `%s`).
+---
+--- If not set or the output is `nil`, |MiniComment.get_commentstring()| is used.
 ---
 --- For example, this option can be used to always use buffer 'commentstring'
 --- even in case of present active tree-sitter parser: >
@@ -299,6 +300,67 @@ MiniComment.textobject = function()
   if config.hooks.post() == false then return end
 end
 
+--- Get 'commentstring'
+---
+--- This function represents default approach of computing relevant
+--- 'commentstring' option in current buffer. Used to infer comment structure.
+---
+--- It has the following logic:
+--- - (Only on Neovim>=0.9) If there is an active tree-sitter parser, try to get
+---   'commentstring' from the local language at `ref_position`.
+---
+--- - If first step is not successful, use buffer's 'commentstring' directly.
+---
+---@param ref_position table Reference position inside current buffer at which
+---   to compute 'commentstring'. Same structure as `opts.ref_position`
+---   in |MiniComment.toggle_lines()|.
+---
+---@return string Relevant value of 'commentstring'.
+MiniComment.get_commentstring = function(ref_position)
+  local buf_cs = vim.api.nvim_buf_get_option(0, 'commentstring')
+
+  -- Neovim<0.9 can only have buffer 'commentstring'
+  if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
+
+  local has_ts_parser, ts_parser = pcall(vim.treesitter.get_parser)
+  if not has_ts_parser then return buf_cs end
+
+  -- Try to get 'commentstring' associated with local tree-sitter language.
+  -- This is useful for injected languages (like markdown with code blocks).
+  -- Sources:
+  -- - https://github.com/neovim/neovim/pull/22634#issue-1620078948
+  -- - https://github.com/neovim/neovim/pull/22643
+  local row, col = ref_position[1] - 1, ref_position[2] - 1
+  local ref_range = { row, col, row, col + 1 }
+
+  -- - Get 'commentstring' from the deepest LanguageTree which both contains
+  --   reference range and has valid 'commentstring' (meaning it has at least
+  --   one associated 'filetype' with valid 'commentstring').
+  --   In simple cases using `parser:language_for_range()` would be enough, but
+  --   it fails for languages without valid 'commentstring' (like 'comment').
+  local ts_cs, res_level = nil, 0
+  local traverse
+
+  traverse = function(lang_tree, level)
+    if not lang_tree:contains(ref_range) then return end
+
+    local lang = lang_tree:lang()
+    local filetypes = vim.treesitter.language.get_filetypes(lang)
+    for _, ft in ipairs(filetypes) do
+      -- Using `vim.filetype.get_option()` for performance as it has caching
+      local cur_cs = vim.filetype.get_option(ft, 'commentstring')
+      if type(cur_cs) == 'string' and cur_cs ~= '' and level > res_level then ts_cs = cur_cs end
+    end
+
+    for _, child_lang_tree in pairs(lang_tree:children()) do
+      traverse(child_lang_tree, level + 1)
+    end
+  end
+  traverse(ts_parser, 1)
+
+  return ts_cs or buf_cs
+end
+
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniComment.config
@@ -367,7 +429,7 @@ end
 H.make_comment_parts = function(ref_position)
   local options = H.get_config().options
 
-  local cs = H.call_safely(options.custom_commentstring, ref_position) or H.get_commentstring(ref_position)
+  local cs = H.call_safely(options.custom_commentstring, ref_position) or MiniComment.get_commentstring(ref_position)
 
   if cs == nil or cs == '' then
     vim.api.nvim_echo({ { '(mini.comment) ', 'WarningMsg' }, { [[Option 'commentstring' is empty.]] } }, true, {})
@@ -387,51 +449,6 @@ H.make_comment_parts = function(ref_position)
     left, right = vim.trim(left), vim.trim(right)
   end
   return { left = left, right = right }
-end
-
-H.get_commentstring = function(ref_position)
-  local buf_cs = vim.api.nvim_buf_get_option(0, 'commentstring')
-
-  -- Neovim<0.9 can only have buffer 'commentstring'
-  if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
-
-  local has_ts_parser, ts_parser = pcall(vim.treesitter.get_parser)
-  if not has_ts_parser then return buf_cs end
-
-  -- Try to get 'commentstring' associated with local tree-sitter language.
-  -- This is useful for injected languages (like markdown with code blocks).
-  -- Sources:
-  -- - https://github.com/neovim/neovim/pull/22634#issue-1620078948
-  -- - https://github.com/neovim/neovim/pull/22643
-  local row, col = ref_position[1] - 1, ref_position[2] - 1
-  local ref_range = { row, col, row, col + 1 }
-
-  -- - Get 'commentstring' from the deepest LanguageTree which both contains
-  --   reference range and has valid 'commentstring' (meaning it has at least
-  --   one associated 'filetype' with valid 'commentstring').
-  --   In simple cases using `parser:language_for_range()` would be enough, but
-  --   it fails for languages without valid 'commentstring' (like 'comment').
-  local ts_cs, res_level = nil, 0
-  local traverse
-
-  traverse = function(lang_tree, level)
-    if not lang_tree:contains(ref_range) then return end
-
-    local lang = lang_tree:lang()
-    local filetypes = vim.treesitter.language.get_filetypes(lang)
-    for _, ft in ipairs(filetypes) do
-      -- Using `vim.filetype.get_option()` for performance as it has caching
-      local cur_cs = vim.filetype.get_option(ft, 'commentstring')
-      if type(cur_cs) == 'string' and cur_cs ~= '' and level > res_level then ts_cs = cur_cs end
-    end
-
-    for _, child_lang_tree in pairs(lang_tree:children()) do
-      traverse(child_lang_tree, level + 1)
-    end
-  end
-  traverse(ts_parser, 1)
-
-  return ts_cs or buf_cs
 end
 
 H.make_comment_check = function(comment_parts)

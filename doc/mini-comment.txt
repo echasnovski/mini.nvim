@@ -117,8 +117,9 @@ commenting action with the following arguments:
   relevant for a text with locally different commenting rules). Its structure
   is the same as `opts.ref_position` in |MiniComment.toggle_lines()|.
 
-Its output should be a valid 'commentstring' (string containing `%s`) or
-`nil` (in which case default built-in logic is used).
+Its output should be a valid 'commentstring' (string containing `%s`).
+
+If not set or the output is `nil`, |MiniComment.get_commentstring()| is used.
 
 For example, this option can be used to always use buffer 'commentstring'
 even in case of present active tree-sitter parser: >
@@ -190,6 +191,28 @@ commented). Designed to be used with operator mode mappings (see |mapmode-o|).
 Before successful selection it executes `config.hooks.pre`.
 After successful selection it executes `config.hooks.post`.
 If hook returns `false`, any further action is terminated.
+
+------------------------------------------------------------------------------
+                                               *MiniComment.get_commentstring()*
+                `MiniComment.get_commentstring`({ref_position})
+Get 'commentstring'
+
+This function represents default approach of computing relevant
+'commentstring' option in current buffer. Used to infer comment structure.
+
+It has the following logic:
+- (Only on Neovim>=0.9) If there is an active tree-sitter parser, try to get
+  'commentstring' from the local language at `ref_position`.
+
+- If first step is not successful, use buffer's 'commentstring' directly.
+
+Parameters~
+{ref_position} `(table)` Reference position inside current buffer at which
+  to compute 'commentstring'. Same structure as `opts.ref_position`
+  in |MiniComment.toggle_lines()|.
+
+Return~
+`(string)` Relevant value of 'commentstring'.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

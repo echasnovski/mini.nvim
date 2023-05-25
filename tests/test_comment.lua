@@ -442,6 +442,33 @@ T['toggle_lines()']['respects `vim.b.minicomment_config`'] = function()
   eq(get_lines(), { '#   # aa', '#   # aa' })
 end
 
+T['get_commentstring()'] = new_set()
+
+local get_commentstring = function(...) return child.lua_get('MiniComment.get_commentstring(...)', { ... }) end
+
+T['get_commentstring()']['works'] = function()
+  -- Uses buffer's 'commentstring'
+  child.bo.commentstring = '# %s'
+
+  eq(get_commentstring(), '# %s')
+
+  -- Uses local tree-sitter language on Neovim>=0.9
+  if child.fn.has('nvim-0.9') == 0 then return end
+
+  local lines = {
+    'lua << EOF',
+    '  print(1)',
+    'EOF',
+  }
+  set_lines(lines)
+  child.bo.filetype = 'vim'
+  child.lua('vim.treesitter.start()')
+
+  eq(get_commentstring({ 1, 1 }), '"%s')
+  eq(get_commentstring({ 2, 3 }), '-- %s')
+  eq(get_commentstring({ 3, 1 }), '"%s')
+end
+
 -- Integration tests ==========================================================
 T['Commenting'] = new_set({
   hooks = {
