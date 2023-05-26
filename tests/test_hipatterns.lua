@@ -29,6 +29,8 @@ local get_hipatterns_extmarks = function(buf_id)
   )
 end
 
+local validate_hl_group = function(name, pattern) expect.match(child.cmd_capture('hi ' .. name), pattern) end
+
 -- Data =======================================================================
 local test_config = {
   highlighters = { abcd = { pattern = 'abcd', group = 'Error' } },
@@ -826,10 +828,11 @@ T['gen_highlighter']['hex_color()']['correctly computes highlight group'] = func
     { line = 2, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns098777' },
     { line = 2, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns178d7c' },
   })
-  expect.match(child.cmd_capture('hi MiniHipatterns767676'), 'guifg=#ffffff guibg=#767676')
-  expect.match(child.cmd_capture('hi MiniHipatterns777777'), 'guifg=#000000 guibg=#777777')
-  expect.match(child.cmd_capture('hi MiniHipatterns098777'), 'guifg=#ffffff guibg=#098777')
-  expect.match(child.cmd_capture('hi MiniHipatterns178d7c'), 'guifg=#000000 guibg=#178d7c')
+
+  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
+  validate_hl_group('MiniHipatterns777777', 'guifg=#000000 guibg=#777777')
+  validate_hl_group('MiniHipatterns098777', 'guifg=#ffffff guibg=#098777')
+  validate_hl_group('MiniHipatterns178d7c', 'guifg=#000000 guibg=#178d7c')
 end
 
 T['gen_highlighter']['hex_color()']['is present after color scheme change'] = function()
@@ -896,6 +899,48 @@ T['gen_highlighter']['hex_color()']['respects `opts.filter`'] = function()
   child.b.do_highlight = true
   update(0)
   child.expect_screenshot()
+end
+
+T['compute_hex_color_group()'] = new_set()
+
+local compute_hex_color_group =
+  function(...) return child.lua_get([[require('mini.hipatterns').compute_hex_color_group(...)]], { ... }) end
+
+T['compute_hex_color_group()']['works'] = function()
+  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns000000')
+  eq(compute_hex_color_group('#ffffff', 'bg'), 'MiniHipatternsffffff')
+  eq(compute_hex_color_group('#767676', 'bg'), 'MiniHipatterns767676')
+  eq(compute_hex_color_group('#777777', 'bg'), 'MiniHipatterns777777')
+  eq(compute_hex_color_group('#098777', 'bg'), 'MiniHipatterns098777')
+  eq(compute_hex_color_group('#178d7c', 'bg'), 'MiniHipatterns178d7c')
+
+  validate_hl_group('MiniHipatterns000000', 'guifg=#ffffff guibg=#000000')
+  validate_hl_group('MiniHipatternsffffff', 'guifg=#000000 guibg=#ffffff')
+  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
+  validate_hl_group('MiniHipatterns777777', 'guifg=#000000 guibg=#777777')
+  validate_hl_group('MiniHipatterns098777', 'guifg=#ffffff guibg=#098777')
+  validate_hl_group('MiniHipatterns178d7c', 'guifg=#000000 guibg=#178d7c')
+
+  -- Should use cache per `hex_color`
+  eq(compute_hex_color_group('#767676', 'line'), 'MiniHipatterns767676')
+  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
+end
+
+T['compute_hex_color_group()']['respects `style` argument'] = function()
+  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns000000')
+  validate_hl_group('MiniHipatterns000000', 'gui=underline guisp=#000000')
+end
+
+T['compute_hex_color_group()']['clears cache after `:colorscheme`'] = function()
+  -- Needs `setup()` call to create `ColorScheme` autocommand
+  load_module()
+
+  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns000000')
+  validate_hl_group('MiniHipatterns000000', 'guifg=#ffffff guibg=#000000')
+
+  child.cmd('colorscheme blue')
+  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns000000')
+  validate_hl_group('MiniHipatterns000000', 'gui=underline guisp=#000000')
 end
 
 return T

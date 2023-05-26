@@ -230,6 +230,22 @@ end
 ---   You can customize which part of hex color is highlighted by using `style`
 ---   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
 ---
+--- - Colored words: >
+---
+---   local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
+---   local word_color_group = function(_, match)
+---     local hex = words[match]
+---     if hex == nil then return nil end
+---     return MiniHipatterns.compute_hex_color_group(hex, 'bg')
+---   end
+---
+---   local hipatterns = require('mini.hipatterns')
+---   hipatterns.setup({
+---     highlighters = {
+---       word_color = { pattern = '%S+', group = word_color_group },
+---     },
+---   })
+---
 --- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
 ---
 ---   { pattern = '%f[%s]%s*$', group = 'Error' }
@@ -446,16 +462,14 @@ MiniHipatterns.gen_highlighter = {}
 --- This will match color hex string in format `#rrggbb` and highlight it
 --- according to `opts.style` displaying matched color.
 ---
---- Notes:
---- - This works only with enabled |termguicolors|.
---- - If you want to try different style in current Neovim session, execute
----   |:colorscheme| command to update highlight groups.
+--- Highlight group is computed using |MiniHipatterns.compute_hex_color_group()|,
+--- so all its usage notes apply here.
 ---
 ---@param opts table|nil Options. Possible fields:
 ---   - <style> `(string)` - one of:
----     - `'full'` -  highlight background of whole hex string with it. Default.
----     - `'#'` - highlight background of only `#`.
----     - `'line'` highlight underline with that color.
+---       - `'full'` -  highlight background of whole hex string with it. Default.
+---       - `'#'` - highlight background of only `#`.
+---       - `'line'` highlight underline with that color.
 ---   - <priority> `(number)` - priority of highlighting. Default: 200.
 ---   - <filter> `(function)` - callable object used to filter buffers in which
 ---     highlighting will take place. It should take buffer identifier as input
@@ -475,12 +489,51 @@ MiniHipatterns.gen_highlighter.hex_color = function(opts)
   opts = vim.tbl_deep_extend('force', { style = 'full', priority = 200, filter = H.always_true }, opts or {})
 
   local pattern = opts.style == '#' and '()#()%x%x%x%x%x%x%f[%X]' or '#%x%x%x%x%x%x%f[%X]'
+  local style = opts.style == 'line' and 'line' or 'bg'
 
   return {
     pattern = H.wrap_pattern_with_filter(pattern, opts.filter),
-    group = function(_, _, data) return H.compute_hex_color_group(data.full_match, opts.style) end,
+    group = function(_, _, data) return MiniHipatterns.compute_hex_color_group(data.full_match, style) end,
     priority = opts.priority,
   }
+end
+
+--- Compute and create group to highlight hex color string
+---
+--- Notes:
+--- - This works properly only with enabled |termguicolors|.
+---
+--- - To increase performance, it caches highlight groups per `hex_color`. If
+---   you want to try different style in current Neovim session, execute
+---   |:colorscheme| command to clear cache. Needs a call to |MiniHipatterns.setup()|.
+---
+---@param hex_color string Hex color string in format `#rrggbb`.
+---@param style string One of:
+---   - `'bg'` -  highlight background with `hex_color`. Default.
+---   - `'line'` highlight underline with `hex_color`.
+---
+---@return string Name of created highlight group appropriate to show `hex_color`.
+MiniHipatterns.compute_hex_color_group = function(hex_color, style)
+  local hex = hex_color:lower():sub(2)
+  local group_name = 'MiniHipatterns' .. hex
+
+  -- Use manually tracked table instead of `vim.fn.hlexists()` because the
+  -- latter still returns true for cleared highlights
+  if H.hex_color_groups[group_name] then return group_name end
+
+  -- Define highlight group if it is not already defined
+  if style == 'bg' then
+    -- Compute opposite color based on Oklab lightness (for better contrast)
+    local opposite = H.compute_opposite_color(hex)
+    vim.api.nvim_set_hl(0, group_name, { fg = opposite, bg = hex_color })
+  end
+
+  if style == 'line' then vim.api.nvim_set_hl(0, group_name, { sp = hex_color, underline = true }) end
+
+  -- Keep track of created groups to properly react on `:hi clear`
+  H.hex_color_groups[group_name] = true
+
+  return group_name
 end
 
 -- Helper data ================================================================
@@ -756,29 +809,6 @@ H.wrap_pattern_with_filter = function(pattern, filter)
     if not filter(...) then return nil end
     return pattern
   end
-end
-
-H.compute_hex_color_group = function(hex_color, style)
-  local hex = hex_color:lower():sub(2)
-  local group_name = 'MiniHipatterns' .. hex
-
-  -- Use manually tracked table instead of `vim.fn.hlexists()` because the
-  -- latter still returns true for cleared highlights
-  if H.hex_color_groups[group_name] then return group_name end
-
-  -- Define highlight group if it is not already defined
-  if style == 'full' or style == '#' then
-    -- Compute opposite color based on Oklab lightness (for better contrast)
-    local opposite = H.compute_opposite_color(hex)
-    vim.api.nvim_set_hl(0, group_name, { fg = opposite, bg = hex_color })
-  end
-
-  if style == 'line' then vim.api.nvim_set_hl(0, group_name, { sp = hex_color, underline = true }) end
-
-  -- Keep track of created groups to properly react on `:hi clear`
-  H.hex_color_groups[group_name] = true
-
-  return group_name
 end
 
 H.compute_opposite_color = function(hex)

@@ -223,6 +223,22 @@ ensure up to date highlighting after scroll.
   You can customize which part of hex color is highlighted by using `style`
   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
 
+- Colored words: >
+
+  local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
+  local word_color_group = function(_, match)
+    local hex = words[match]
+    if hex == nil then return nil end
+    return MiniHipatterns.compute_hex_color_group(hex, 'bg')
+  end
+
+  local hipatterns = require('mini.hipatterns')
+  hipatterns.setup({
+    highlighters = {
+      word_color = { pattern = '%S+', group = word_color_group },
+    },
+  })
+
 - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
 
   { pattern = '%f[%s]%s*$', group = 'Error' }
@@ -350,17 +366,15 @@ Highlight hex color string
 This will match color hex string in format `#rrggbb` and highlight it
 according to `opts.style` displaying matched color.
 
-Notes:
-- This works only with enabled |termguicolors|.
-- If you want to try different style in current Neovim session, execute
-  |:colorscheme| command to update highlight groups.
+Highlight group is computed using |MiniHipatterns.compute_hex_color_group()|,
+so all its usage notes apply here.
 
 Parameters~
 {opts} `(table|nil)` Options. Possible fields:
   - <style> `(string)` - one of:
-    - `'full'` -  highlight background of whole hex string with it. Default.
-    - `'#'` - highlight background of only `#`.
-    - `'line'` highlight underline with that color.
+      - `'full'` -  highlight background of whole hex string with it. Default.
+      - `'#'` - highlight background of only `#`.
+      - `'line'` highlight underline with that color.
   - <priority> `(number)` - priority of highlighting. Default: 200.
   - <filter> `(function)` - callable object used to filter buffers in which
     highlighting will take place. It should take buffer identifier as input
@@ -378,6 +392,27 @@ Usage~
       hex_color = hipatterns.gen_highlighter.hex_color(),
     }
   })
+
+------------------------------------------------------------------------------
+                                      *MiniHipatterns.compute_hex_color_group()*
+         `MiniHipatterns.compute_hex_color_group`({hex_color}, {style})
+Compute and create group to highlight hex color string
+
+Notes:
+- This works properly only with enabled |termguicolors|.
+
+- To increase performance, it caches highlight groups per `hex_color`. If
+  you want to try different style in current Neovim session, execute
+  |:colorscheme| command to clear cache. Needs a call to |MiniHipatterns.setup()|.
+
+Parameters~
+{hex_color} `(string)` Hex color string in format `#rrggbb`.
+{style} `(string)` One of:
+  - `'bg'` -  highlight background with `hex_color`. Default.
+  - `'line'` highlight underline with `hex_color`.
+
+Return~
+`(string)` Name of created highlight group appropriate to show `hex_color`.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
