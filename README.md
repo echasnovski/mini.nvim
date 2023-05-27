@@ -6,7 +6,7 @@
 [![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
 <!-- badges: end -->
 
-Library of 20+ independent Lua modules improving overall [Neovim](https://github.com/neovim/neovim) (version 0.7 and higher) experience with minimal effort. They all share same configuration approaches and general design principles.
+Library of 30+ independent Lua modules improving overall [Neovim](https://github.com/neovim/neovim) (version 0.7 and higher) experience with minimal effort. They all share same configuration approaches and general design principles.
 
 Think about this project as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used separately without any startup and usage overhead.
 
@@ -135,8 +135,11 @@ Activate them as regular `colorscheme` (for example, `:colorscheme randomhue` or
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
 - 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
+- 'mini.exchange' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
 - 'mini.filetree' - file tree viewer. Simplified version of [nvim-tree/nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua).
+- 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
+- 'mini.pick' - fuzzy picker. A very simplified version of [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
-- 'mini.swap' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
+- 'mini.statuscolumn' - customizable 'statuscolumn'.
 - 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
 - 'mini.quickfix' - fuzzy search and preview of quickfix entries. Possibly with some presets for populating quickfix list (like files, help tags, etc.). Similar to [kevinhwang91/nvim-bqf](https://github.com/kevinhwang91/nvim-bqf).
