@@ -354,9 +354,11 @@ H.make_expr_jump = function(backward, till)
   return function()
     if H.is_disabled() then return '' end
 
-    -- Always ask for `target` as this will be used only in operator-pending
-    -- mode. Dot-repeat will be implemented via expression-mapping.
-    local target = H.get_target()
+    -- Ask for `target` for non-repeating jump as this will be used only in
+    -- operator-pending mode. Dot-repeat is supported via expression-mapping.
+    local is_repeat_jump = backward == nil or till == nil
+    local target = is_repeat_jump and MiniJump.state.target or H.get_target()
+
     -- Stop if user supplied invalid target
     if target == nil then return '<Esc>' end
     H.update_state(target, backward, till, vim.v.count1)

@@ -811,7 +811,7 @@ T['Repeat jump with ;']['works in Normal and Visual mode'] = new_set({
   end,
 })
 
-T['Repeat jump with ;']['works in Operator-pending mode'] = function()
+T['Repeat jump with ;']['works after jump in Operator-pending mode'] = function()
   -- It doesn't repeat actual operation, just performs same jump
   set_lines({ '1e2e3e4e5e' })
   set_cursor(1, 0)
@@ -827,6 +827,16 @@ T['Repeat jump with ;']['works in Operator-pending mode'] = function()
   type_keys('d', '2f', 'e', ';')
   eq(get_lines(), { '3e4e5e' })
   eq(get_cursor(), { 1, 3 })
+end
+
+T['Repeat jump with ;']['works in Operator-pending mode'] = function()
+  set_lines({ '1e2e3e4e5e' })
+  set_cursor(1, 0)
+
+  -- Should repeat without asking for target
+  type_keys('f', 'e', 'd', ';')
+  eq(get_lines(), { '13e4e5e' })
+  eq(get_cursor(), { 1, 1 })
 end
 
 T['Repeat jump with ;']['works with different mapping'] = function()
