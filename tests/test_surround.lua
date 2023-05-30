@@ -535,8 +535,9 @@ end
 
 T['Add surrounding']['works on whole line'] = function()
   -- Should ignore indent at left mark but not whitespace at right
-  validate_edit({ '  aaa ', '' }, { 1, 0 }, { '  (aaa )', '' }, { 1, 3 }, type_keys, 'sa', '_', ')')
-  validate_edit({ '  aaa ', '' }, { 1, 0 }, { '  (aaa )', '' }, { 1, 3 }, type_keys, 'V', 'sa', ')')
+  -- Should work with both tabs and spaces
+  validate_edit({ ' \t aaa ', '' }, { 1, 0 }, { ' \t (aaa )', '' }, { 1, 4 }, type_keys, 'sa', '_', ')')
+  validate_edit({ ' \t aaa ', '' }, { 1, 0 }, { ' \t (aaa )', '' }, { 1, 4 }, type_keys, 'V', 'sa', ')')
 end
 
 T['Add surrounding']['works on multiple lines'] = function()
@@ -544,10 +545,11 @@ T['Add surrounding']['works on multiple lines'] = function()
   local f_vis = function() type_keys('Vap', 'sa', ')') end
 
   -- Should ignore indent at left mark but not whitespace at right
-  validate_edit({ '  aaa ', 'bbb', ' ccc' }, { 1, 0 }, { '  (aaa ', 'bbb', ' ccc)' }, { 1, 3 }, f)
-  validate_edit({ '  aaa ', 'bbb', ' ccc' }, { 1, 0 }, { '  (aaa ', 'bbb', ' ccc)' }, { 1, 3 }, f_vis)
-  validate_edit({ '  aaa ', ' ' }, { 1, 0 }, { '  (aaa ', ' )' }, { 1, 3 }, f)
-  validate_edit({ '  aaa ', ' ' }, { 1, 0 }, { '  (aaa ', ' )' }, { 1, 3 }, f_vis)
+  -- Should work with both tabs and spaces
+  validate_edit({ ' \t aaa ', 'bbb', ' ccc' }, { 1, 0 }, { ' \t (aaa ', 'bbb', ' ccc)' }, { 1, 4 }, f)
+  validate_edit({ ' \t aaa ', 'bbb', ' ccc' }, { 1, 0 }, { ' \t (aaa ', 'bbb', ' ccc)' }, { 1, 4 }, f_vis)
+  validate_edit({ ' \t aaa ', ' ' }, { 1, 0 }, { ' \t (aaa ', ' )' }, { 1, 4 }, f)
+  validate_edit({ ' \t aaa ', ' ' }, { 1, 0 }, { ' \t (aaa ', ' )' }, { 1, 4 }, f_vis)
 end
 
 T['Add surrounding']['works with multiline output surroundings'] = function()

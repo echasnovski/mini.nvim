@@ -1763,7 +1763,9 @@ H.get_marks_pos = function(mode)
   -- Tweak position in linewise mode as marks are placed on the first column
   if selection_type == 'linewise' then
     -- Move start mark past the indent
-    pos1[2] = vim.fn.indent(pos1[1])
+    local _, line1_indent = vim.fn.getline(pos1[1]):find('^%s*')
+    pos1[2] = line1_indent
+
     -- Move end mark to the last character (` - 2` here because `col()` returns
     -- column right after the last 1-based column)
     pos2[2] = vim.fn.col({ pos2[1], '$' }) - 2
@@ -1781,11 +1783,11 @@ H.get_marks_pos = function(mode)
   --   insert to the left of the mark.
   -- - For the second mark we want last byte of symbol. To add surrounding to
   --   the right, use `pos2[2] + 1`.
-  local line2 = vim.fn.getline(pos2[1])
   if mode == 'visual' and vim.o.selection == 'exclusive' then
     -- Respect 'selection' option
     pos2[2] = pos2[2] - 1
   else
+    local line2 = vim.fn.getline(pos2[1])
     -- Use `math.min()` because it might lead to 'index out of range' error
     -- when mark is positioned at the end of line (that extra space which is
     -- selected when selecting with `v$`)
