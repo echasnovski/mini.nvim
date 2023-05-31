@@ -196,7 +196,7 @@
 ---
 --- - Oklab (`oklab`) - table with fields `l` (lightness; numeric in [0; 100]),
 ---   `a`, `b` (both are unbounded numeric; visible range is usually between
----   -30 to 30). Field `l` describes how light is color; `a` - how "greed-red" it is;
+---   -30 to 30). Field `l` describes how light is color; `a` - how "green-red" it is;
 ---   `b` - how "blue-yellow" it is.
 ---
 --- - Oklch (`oklch`) - table with fields `l` (same as in Oklab),
