@@ -496,7 +496,11 @@ T['start()']['uses `spotter` with correct arguments'] = function()
     { 1, { win_id = win_other, win_id_init = win_init } },
     -- Lines 2 and 3 are folded, shouldn't be called
   })
-  child.expect_screenshot()
+
+  -- TODO: remove condition after Neovim issue is resolved
+  -- Don't check on Neovim nightly because there is a crucial change
+  -- Source: https://github.com/neovim/neovim/issues/23831
+  if child.fn.has('nvim-0.10') == 0 then child.expect_screenshot() end
 
   -- Should call `spotter` only on jumpt start, not on every step
   child.lua('_G.args_history = {}')
@@ -627,14 +631,16 @@ T['start()']['respects folds'] = function()
 
   -- Validate
   start()
-  child.expect_screenshot()
+  -- TODO: remove condition after Neovim issue is resolved
+  if child.fn.has('nvim-0.10') == 0 then child.expect_screenshot() end
 
   -- Folds should still be present
   eq({ child.fn.foldclosed(2), child.fn.foldclosed(3) }, { 2, 2 })
 
   -- After jump should open enough folds to show cursor
   type_keys('c')
-  child.expect_screenshot()
+  -- TODO: remove condition after Neovim issue is resolved
+  if child.fn.has('nvim-0.10') == 0 then child.expect_screenshot() end
   eq(get_cursor(), { 2, 0 })
   eq({ child.fn.foldclosed(2), child.fn.foldclosed(3) }, { -1, -1 })
 end
@@ -654,7 +660,8 @@ T['start()']['respects `allowed_lines.fold`'] = function()
   child.lua('MiniJump2d.stop()')
   child.b.minijump2d_config = { allowed_lines = { fold = true } }
   start()
-  child.expect_screenshot()
+  -- TODO: remove condition after Neovim issue is resolved
+  if child.fn.has('nvim-0.10') == 0 then child.expect_screenshot() end
 end
 
 T['start()']['respects `allowed_windows`'] = new_set({
