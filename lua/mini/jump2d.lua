@@ -708,12 +708,15 @@ H.spots_compute = function(opts)
       local spotter_args = { win_id = win_id, win_id_init = win_id_init }
       local buf_id = vim.api.nvim_win_get_buf(win_id)
 
+      local win_leftcol = vim.fn.winsaveview().leftcol
+
       -- Use all currently visible lines
       for i = vim.fn.line('w0'), vim.fn.line('w$') do
         local columns = H.spot_find_in_line(i, spotter_args, opts, cursor_pos)
         -- Use all returned columns for particular line
         for _, col in ipairs(columns) do
-          table.insert(res, { line = i, column = col, buf_id = buf_id, win_id = win_id })
+          local win_col = vim.fn.virtcol({ i, col }) - win_leftcol
+          table.insert(res, { line = i, column = col, win_col = win_col, buf_id = buf_id, win_id = win_id })
         end
       end
     end)
@@ -777,16 +780,11 @@ H.spots_show = function(spots, opts)
 
   -- Add extmark with proper virtual text to jump spots
   local dim_buf_lines = {}
+  local extmark_opts = { hl_mode = 'combine', priority = 1000 }
   for _, extmark in ipairs(H.spots_to_extmarks(spots, opts)) do
-    local extmark_opts = {
-      hl_mode = 'combine',
-      -- Use very high priority
-      priority = 1000,
-      virt_text = extmark.virt_text,
-      virt_text_pos = 'overlay',
-    }
     local buf_id, line = extmark.buf_id, extmark.line
-    pcall(set_extmark, buf_id, H.ns_id.spots, line, extmark.col, extmark_opts)
+    extmark_opts.virt_text_win_col, extmark_opts.virt_text = extmark.win_col, extmark.virt_text
+    pcall(set_extmark, buf_id, H.ns_id.spots, line, 0, extmark_opts)
 
     -- Register lines to dim
     local lines = dim_buf_lines[buf_id] or {}
@@ -796,11 +794,11 @@ H.spots_show = function(spots, opts)
 
   -- Possibly dim used lines
   if opts.view.dim then
-    local extmark_opts = { end_col = 0, hl_eol = true, hl_group = opts.hl_group_dim, priority = 999 }
+    local dim_extmark_opts = { end_col = 0, hl_eol = true, hl_group = opts.hl_group_dim, priority = 999 }
     for buf_id, lines in pairs(dim_buf_lines) do
       for _, l_num in ipairs(vim.tbl_keys(lines)) do
-        extmark_opts.end_line = l_num + 1
-        pcall(set_extmark, buf_id, H.ns_id.dim, l_num, 0, extmark_opts)
+        dim_extmark_opts.end_line = l_num + 1
+        pcall(set_extmark, buf_id, H.ns_id.dim, l_num, 0, dim_extmark_opts)
       end
     end
   end
@@ -855,7 +853,8 @@ H.spots_to_extmarks = function(spots, opts)
 
   -- Convert all spots to array of extmarks
   local res = {}
-  local buf_id, line, col, virt_text = spots[1].buf_id, spots[1].line - 1, spots[1].column - 1, {}
+  local buf_id, line, col, win_col, virt_text =
+    spots[1].buf_id, spots[1].line - 1, spots[1].column - 1, spots[1].win_col - 1, {}
 
   for i = 1, #spots - 1 do
     local cur_spot, next_spot = spots[i], spots[i + 1]
@@ -872,14 +871,15 @@ H.spots_to_extmarks = function(spots, opts)
     -- Finish creating extmark if next spot is far enough
     local next_is_close = is_in_same_line and n_steps == max_allowed_steps
     if not next_is_close then
-      table.insert(res, { buf_id = buf_id, line = line, col = col, virt_text = virt_text })
-      buf_id, line, col, virt_text = next_spot.buf_id, next_spot.line - 1, next_spot.column - 1, {}
+      table.insert(res, { buf_id = buf_id, line = line, col = col, win_col = win_col, virt_text = virt_text })
+      buf_id, line, col, win_col, virt_text =
+        next_spot.buf_id, next_spot.line - 1, next_spot.column - 1, next_spot.win_col - 1, {}
     end
   end
 
   local last_steps = spots[#spots].steps
   append_to_virt_text(virt_text, last_steps, #last_steps)
-  table.insert(res, { buf_id = buf_id, line = line, col = col, virt_text = virt_text })
+  table.insert(res, { buf_id = buf_id, line = line, col = col, win_col = win_col, virt_text = virt_text })
 
   return res
 end
