@@ -6,7 +6,7 @@
 - Use `vim.keymap` to deal with mappings. Stop exporting functions only related to mappings.
 - Add 'randomhue' color scheme.
 
-# mini.base16
+## mini.base16
 
 - FEATURE: Add new integrations:
     - Lsp semantic tokens.
@@ -15,25 +15,25 @@
     - 'kevinhwang91/nvim-ufo'.
 - BREAKING FEATURE: Stop supporting archived 'p00f/nvim-ts-rainbow' in favor of 'HiPhish/nvim-ts-rainbow2'.
 
-# mini.basics
+## mini.basics
 
 - Add dot-repeat support for adding empty lines (`go` and `gO` mappings).
 
-# mini.colors
+## mini.colors
 
 Introduction of a new module.
 
-# mini.comment
+## mini.comment
 
 - FEATURE: Use tree-sitter information about locally active language to infer 'commentstring' option value.
 - FEATURE: Add `options.custom_commentstring` option for a more granular customization of comment structure.
 - FEATURE: Add `get_commentstring()` function representing built-in logic of computing relevant 'commentstring'.
 
-# mini.hipatterns
+## mini.hipatterns
 
 Introduction of a new module.
 
-# mini.hues
+## mini.hues
 
 Introduction of a new module.
 
