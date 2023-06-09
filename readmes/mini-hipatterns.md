@@ -178,7 +178,7 @@ Here are code snippets for some common installation methods (use only one):
 
 ## Similar plugins
 
-- [folke/todo-comments](https://github.com/folke/todo-comments)
+- [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim)
 - [folke/paint.nvim](https://github.com/folke/paint.nvim)
 - [NvChad/nvim-colorizer.lua](https://github.com/NvChad/nvim-colorizer.lua)
 - [uga-rosa/ccc.nvim](https://github.com/uga-rosa/ccc.nvim)
