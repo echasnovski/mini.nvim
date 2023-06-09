@@ -930,7 +930,7 @@ T['Replace surrounding']['works with dot-repeat'] = function()
   eq(get_lines(), { 'aaa <bbb>' })
 end
 
-T['Delete surrounding']['works in extended mappings'] = function()
+T['Replace surrounding']['works in extended mappings'] = function()
   validate_edit1d('(aa) (bb) (cc)', 1, '(aa) <bb> (cc)', 6, type_keys, 'srn', ')', '>')
   validate_edit1d('(aa) (bb) (cc)', 1, '(aa) (bb) <cc>', 11, type_keys, '2srn', ')', '>')
 

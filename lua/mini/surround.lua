@@ -1132,7 +1132,7 @@ H.apply_config = function(config)
     end
 
     local suff = m.suffix_last
-    suffix_map(m.delete,    suff, operator_prev('delte'),         'Delete previous surrounding')
+    suffix_map(m.delete,    suff, operator_prev('delete'),        'Delete previous surrounding')
     suffix_map(m.replace,   suff, operator_prev('replace'),       'Replace previous surrounding')
     suffix_map(m.find,      suff, operator_prev('find', 'right'), 'Find previous right surrounding')
     suffix_map(m.find_left, suff, operator_prev('find', 'left'),  'Find previous left surrounding')
