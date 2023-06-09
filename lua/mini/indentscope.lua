@@ -678,7 +678,7 @@ end
 
 -- Autocommands ---------------------------------------------------------------
 H.auto_draw = function(opts)
-  if H.is_disabled() then
+  if vim.bo.buftype ~= '' or H.is_disabled() then
     H.undraw_scope()
     return
   end
