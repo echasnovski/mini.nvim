@@ -87,6 +87,8 @@ as `MiniAnimate.config`. See |mini.nvim-buffer-local-config| for more details.
 # Highlight groups~
 
 * `MiniAnimateCursor` - highlight of cursor during its animated movement.
+* `MiniAnimateNormalFloat` - highlight of floating window for `open` and
+  `close` animations.
 
 To change any highlight group, modify it directly with |:highlight|.
 

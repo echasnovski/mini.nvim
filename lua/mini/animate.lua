@@ -87,6 +87,8 @@
 --- # Highlight groups~
 ---
 --- * `MiniAnimateCursor` - highlight of cursor during its animated movement.
+--- * `MiniAnimateNormalFloat` - highlight of floating window for `open` and
+---   `close` animations.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -1230,8 +1232,10 @@ H.create_autocommands = function()
   au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
 end
 
-H.create_default_hl =
-  function() vim.api.nvim_set_hl(0, 'MiniAnimateCursor', { default = true, reverse = true, nocombine = true }) end
+H.create_default_hl = function()
+  vim.api.nvim_set_hl(0, 'MiniAnimateCursor', { default = true, reverse = true, nocombine = true })
+  vim.api.nvim_set_hl(0, 'MiniAnimateNormalFloat', { default = true, link = 'NormalFloat' })
+end
 
 H.is_disabled = function() return vim.g.minianimate_disable == true or vim.b.minianimate_disable == true end
 
@@ -1756,6 +1760,7 @@ H.make_openclose_step = function(action_type, win_id, config)
       local float_config = step_winconfigs[step + 1]
       if step == 0 or not vim.api.nvim_win_is_valid(float_win_id) then
         float_win_id = vim.api.nvim_open_win(H.empty_buf_id, false, float_config)
+        vim.wo[float_win_id].winhighlight = 'Normal:MiniAnimateNormalFloat'
       else
         vim.api.nvim_win_set_config(float_win_id, float_config)
       end

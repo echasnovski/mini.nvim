@@ -2296,6 +2296,7 @@ T['Open']['works'] = function()
       row = 0, col = 0, width = 6, height = 6, winblend = 80,
     },
   })
+  eq(child.lua_get('vim.wo[1003].winhighlight'), 'Normal:MiniAnimateNormalFloat')
 
   sleep(step_time)
   validate_floats({ [1003] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
@@ -2479,6 +2480,7 @@ T['Close']['works'] = function()
       row = 0, col = 0, width = 6, height = 6, winblend = 80,
     },
   })
+  eq(child.lua_get('vim.wo[1003].winhighlight'), 'Normal:MiniAnimateNormalFloat')
 
   sleep(step_time)
   validate_floats({ [1003] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
