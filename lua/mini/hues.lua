@@ -928,7 +928,8 @@ H.apply_colorscheme = function(config)
   -- Plugins
   -- echasnovski/mini.nvim
   if has_integration('echasnovski/mini.nvim') then
-    hi('MiniAnimateCursor', { fg=nil, bg=nil, reverse=true, nocombine=true })
+    hi('MiniAnimateCursor',      { fg=nil, bg=nil, reverse=true, nocombine=true })
+    hi('MiniAnimateNormalFloat', { link='NormalFloat' })
 
     hi('MiniCompletionActiveParameter', { fg=nil, bg=p.bg_mid2 })
 
