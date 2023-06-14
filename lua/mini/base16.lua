@@ -750,8 +750,11 @@ H.apply_palette = function(palette, use_cterm)
     hi('NoiceConfirmBorder',      {fg=p.base0E, bg=nil, attr=nil, sp=nil})
   end
 
-  -- folke/trouble.nvim
-  -- Everything works correctly out of the box
+  if H.has_integration('folke/trouble.nvim') then
+    hi('TroubleFoldIcon', {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('TroubleIndent',   {fg=p.base03, bg=p.base00, attr=nil, sp=nil})
+    hi('TroubleLocation', {fg=p.base03, bg=p.base00, attr=nil, sp=nil})
+  end
 
   -- folke/todo-comments.nvim
   -- Everything works correctly out of the box
