@@ -652,7 +652,8 @@ H.apply_palette = function(palette, use_cterm)
   -- Plugins
   -- echasnovski/mini.nvim
   if H.has_integration('echasnovski/mini.nvim') then
-    hi('MiniAnimateCursor', {fg=nil, bg=nil, attr='reverse,nocombine', sp=nil})
+    hi('MiniAnimateCursor',      {fg=nil, bg=nil, attr='reverse,nocombine', sp=nil})
+    hi('MiniAnimateNormalFloat', {link='NormalFloat'})
 
     hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
 
