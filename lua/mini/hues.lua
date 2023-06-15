@@ -1033,7 +1033,22 @@ H.apply_colorscheme = function(config)
   end
 
   -- folke/trouble.nvim
-  -- Everything works correctly out of the box
+  if has_integration('folke/trouble.nvim') then
+    hi('TroubleCount',           { fg=p.accent,  bg=nil, bold=true })
+    hi('TroubleFoldIcon',        { fg=p.accent,  bg=nil, bold=true })
+    hi('TroubleIndent',          { fg=p.bg_mid2, bg=nil })
+    hi('TroubleLocation',        { fg=p.fg_mid,  bg=nil })
+    hi('TroubleSignError',       { link='DiagnosticError' })
+    hi('TroubleSignHint',        { link='DiagnosticHint' })
+    hi('TroubleSignInformation', { link='DiagnosticInfo' })
+    hi('TroubleSignOther',       { link='DiagnosticInfo' })
+    hi('TroubleSignWarning',     { link='DiagnosticWarn' })
+    hi('TroubleText',            { fg=p.fg,      bg=nil })
+    hi('TroubleTextError',       { link='TroubleText' })
+    hi('TroubleTextHint',        { link='TroubleText' })
+    hi('TroubleTextInformation', { link='TroubleText' })
+    hi('TroubleTextWarning',     { link='TroubleText' })
+  end
 
   -- folke/todo-comments.nvim
   -- Everything works correctly out of the box
