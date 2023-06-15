@@ -660,6 +660,11 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
     hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
 
+    hi('MiniHipatternsFixme', {fg=p.base00, bg=p.base08, attr='bold', sp=nil})
+    hi('MiniHipatternsHack',  {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
+    hi('MiniHipatternsNote',  {fg=p.base00, bg=p.base0D, attr='bold', sp=nil})
+    hi('MiniHipatternsTodo',  {fg=p.base00, bg=p.base0C, attr='bold', sp=nil})
+
     hi('MiniIndentscopeSymbol',    {fg=p.base0F, bg=nil, attr=nil, sp=nil})
     hi('MiniIndentscopeSymbolOff', {fg=p.base08, bg=nil, attr=nil, sp=nil})
 
