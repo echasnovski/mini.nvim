@@ -752,7 +752,22 @@ H.apply_palette = function(palette, use_cterm)
   end
 
   -- folke/trouble.nvim
-  -- Everything works correctly out of the box
+  if H.has_integration('folke/trouble.nvim') then
+    hi('TroubleCount',           {fg=p.base0B, bg=nil, attr='bold', sp=nil})
+    hi('TroubleFoldIcon',        {fg=p.base05, bg=nil, attr=nil,    sp=nil})
+    hi('TroubleIndent',          {fg=p.base02, bg=nil, attr=nil,    sp=nil})
+    hi('TroubleLocation',        {fg=p.base04, bg=nil, attr=nil,    sp=nil})
+    hi('TroubleSignError',       {link='DiagnosticError'})
+    hi('TroubleSignHint',        {link='DiagnosticHint'})
+    hi('TroubleSignInformation', {link='DiagnosticInfo'})
+    hi('TroubleSignOther',       {link='DiagnosticInfo'})
+    hi('TroubleSignWarning',     {link='DiagnosticWarn'})
+    hi('TroubleText',            {fg=p.base05, bg=nil, attr=nil,    sp=nil})
+    hi('TroubleTextError',       {link='TroubleText'})
+    hi('TroubleTextHint',        {link='TroubleText'})
+    hi('TroubleTextInformation', {link='TroubleText'})
+    hi('TroubleTextWarning',     {link='TroubleText'})
+  end
 
   -- folke/todo-comments.nvim
   -- Everything works correctly out of the box
