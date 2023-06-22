@@ -1918,7 +1918,7 @@ end
 H.window_get_max_height = function()
   local has_tabline = vim.o.showtabline == 2 or (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1)
   local has_statusline = vim.o.laststatus > 0
-  -- Remove 2 from maximum hight to accout for top and bottom borders
+  -- Remove 2 from maximum height to account for top and bottom borders
   return vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0) - 2
 end
 
