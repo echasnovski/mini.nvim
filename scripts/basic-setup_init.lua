@@ -25,6 +25,7 @@ local test_actions = {
   ['completion']  = function() require('mini.completion').setup() end,
   ['cursorword']  = function() require('mini.cursorword').setup() end,
   ['doc']         = function() require('mini.doc').setup() end,
+  ['files']       = function() require('mini.files').setup() end,
   ['fuzzy']       = function() require('mini.fuzzy').setup() end,
   ['hipatterns']  = function() require('mini.hipatterns').setup() end,
   ['hues']        = function() require('mini.hues').setup({ background = '#000000', foreground = '#ffffff' }) end,

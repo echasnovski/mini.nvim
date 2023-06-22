@@ -4,6 +4,10 @@
 
 - FEATURE: Add `MiniAnimateNormalFloat` highlight group to tweak highlighting of `open` and `close` animations.
 
+## mini.files
+
+Introduction of a new module.
+
 
 # Version 0.9.0
 

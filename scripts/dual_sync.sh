@@ -69,6 +69,7 @@ sync_module "comment"
 sync_module "completion"
 sync_module "cursorword"
 sync_module "doc"
+sync_module "files"
 sync_module "fuzzy"
 sync_module "hipatterns"
 sync_module "hues" colors/randomhue.lua

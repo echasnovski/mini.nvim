@@ -25,6 +25,7 @@
 ---   Completion and signature help ............................ |mini.completion|
 ---   Autohighlight word under cursor .......................... |mini.cursorword|
 ---   Generate Neovim help files ...................................... |mini.doc|
+---   Navigate and manipulate file system............................ |mini.files|
 ---   Fuzzy matching ................................................ |mini.fuzzy|
 ---   Highlight patterns in text ............................... |mini.hipatterns|
 ---   Generate configurable color scheme ............................. |mini.hues|
@@ -164,6 +165,11 @@
 --- - |MiniDoc| - generation of help files from EmmyLua-like annotations.
 ---   Allows flexible customization of output via hook functions. Used for
 ---   documenting this plugin.
+---
+--- - |MiniFiles| - navigate and manipulate file system. A file explorer with
+---   column view capable of manipulating file system by editing directory view
+---   text buffer. Can create/delete/rename/copy/move files/directories inside
+---   and across directories.
 ---
 --- - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
 ---   not only functions to perform fuzzy matching of one string to others, but
