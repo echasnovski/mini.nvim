@@ -1668,6 +1668,24 @@ T['Mappings']['`go_in` ignores non-linewise Visual mode'] = function()
   validate('\22')
 end
 
+T['Mappings']['`go_in` supports <count>'] = function()
+  child.set_size(15, 60)
+  child.o.laststatus = 0
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested'))
+  type_keys('2l')
+  child.expect_screenshot()
+
+  close()
+
+  -- Works with high values ending at file
+  open(test_dir_path)
+  type_keys('10l')
+  child.expect_screenshot()
+end
+
 T['Mappings']['`go_in_plus` works'] = function()
   -- Disable statusline for more portable screenshots
   child.o.laststatus = 0
@@ -1718,6 +1736,26 @@ T['Mappings']['`go_in_plus` works on non-path entry'] = function()
   eq(child.api.nvim_get_mode().blocking, false)
 end
 
+T['Mappings']['`go_in_plus` supports <count>'] = function()
+  child.set_size(10, 50)
+  child.o.laststatus = 0
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested'))
+  type_keys('2L')
+  child.expect_screenshot()
+
+  close()
+
+  -- Works with high values ending at file
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  child.fn.writefile({ 'Temp file' }, join_path(temp_dir, 'file'))
+  open(temp_dir)
+  type_keys('10L')
+  child.expect_screenshot()
+end
+
 T['Mappings']['`go_out` works'] = function()
   local path = make_test_path('common', 'a-dir')
 
@@ -1742,6 +1780,22 @@ T['Mappings']['`go_out` works'] = function()
   validate_n_wins(2)
 end
 
+T['Mappings']['`go_out` supports <count>'] = function()
+  child.set_size(10, 70)
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested', 'dir-1', 'dir-11'))
+  go_in()
+  go_in()
+  child.expect_screenshot()
+
+  type_keys('2h')
+  child.expect_screenshot()
+  type_keys('2h')
+  child.expect_screenshot()
+end
+
 T['Mappings']['`go_out_plus` works'] = function()
   local path = make_test_path('common', 'a-dir')
 
@@ -1763,6 +1817,22 @@ T['Mappings']['`go_out_plus` works'] = function()
   open(path, false, { mappings = { go_out_plus = '' } })
   validate_n_wins(2)
   type_keys('H')
+  child.expect_screenshot()
+end
+
+T['Mappings']['`go_out_plus` supports <count>'] = function()
+  child.set_size(10, 70)
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested', 'dir-1', 'dir-11'))
+  go_in()
+  go_in()
+  child.expect_screenshot()
+
+  type_keys('2H')
+  child.expect_screenshot()
+  type_keys('2H')
   child.expect_screenshot()
 end
 
