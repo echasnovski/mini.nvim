@@ -39,6 +39,10 @@
 ---
 --- - Works on all supported versions but using Neovim>=0.9 is recommended.
 ---
+--- - This module silently reacts to not enough permissions:
+---     - In case of missing file, check its or its parent read permissions.
+---     - In case of no manipulation result, check write permissions.
+---
 --- # Dependencies~
 ---
 --- Suggested dependencies (provide extra functionality, will work without them):
@@ -255,6 +259,8 @@
 ---
 --- - It is not needed to end directory name with `/`.
 ---
+--- - Cyclic renames ('a' to 'b' and 'b' to 'a') are not supported.
+---
 --- ## Copy ~
 ---
 --- - Copy file or directory by copying **whole line** describing it and pasting
@@ -276,7 +282,7 @@
 --- - Change of target path is allowed. Edit only entry name in target location
 ---   (not icon or path index to the left of it).
 ---
---- - Moving directory inside itself is not allowed.
+--- - Moving directory inside itself is not supported.
 ---
 ---@tag MiniFiles-manipulation
 

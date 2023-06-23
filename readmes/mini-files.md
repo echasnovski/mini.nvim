@@ -47,6 +47,10 @@ Notes:
 
 - Works on all supported versions but using Neovim>=0.9 is recommended.
 
+- This module silently reacts to not enough permissions:
+    - In case of missing file, check its or its parent read permissions.
+    - In case of no manipulation result, check write permissions.
+
 ## Quick start
 
 ### Navigation

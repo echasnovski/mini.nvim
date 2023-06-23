@@ -167,9 +167,9 @@
 ---   documenting this plugin.
 ---
 --- - |MiniFiles| - navigate and manipulate file system. A file explorer with
----   column view capable of manipulating file system by editing directory view
----   text buffer. Can create/delete/rename/copy/move files/directories inside
----   and across directories.
+---   column view capable of manipulating file system by editing text. Can
+---   create/delete/rename/copy/move files/directories inside and across
+---   directories.
 ---
 --- - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
 ---   not only functions to perform fuzzy matching of one string to others, but
