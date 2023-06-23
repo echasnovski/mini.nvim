@@ -1375,6 +1375,17 @@ T['Windows']['properly previews'] = function()
   child.expect_screenshot()
 end
 
+T['Windows']['previews only one level deep'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested'))
+  child.expect_screenshot()
+end
+
 T['Windows']['handles preview for user created lines'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
 

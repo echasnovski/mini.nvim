@@ -1125,10 +1125,11 @@ H.explorer_sync_cursor_and_branch = function(explorer, depth)
   end
   explorer.depth_focus = math.min(explorer.depth_focus, #explorer.branch)
 
-  -- Show preview if needed
-  if explorer.opts.windows.preview and vim.fn.isdirectory(cursor_path) == 1 then
-    table.insert(explorer.branch, cursor_path)
-  end
+  -- Show preview to the right of current buffer if needed
+  local show_preview = explorer.opts.windows.preview
+  local is_dir = vim.fn.isdirectory(cursor_path) == 1
+  local is_cur_buf = buf_id == vim.api.nvim_get_current_buf()
+  if show_preview and is_dir and is_cur_buf then table.insert(explorer.branch, cursor_path) end
 
   return explorer
 end
