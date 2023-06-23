@@ -2723,6 +2723,26 @@ T['Events']['triggers on buffer create'] = function()
   validate_event_track({})
 end
 
+T['Events']['triggers on buffer create inside preview'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
+
+  track_event('MiniFilesBufferCreate')
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  open(test_dir_path)
+  eq(#child.lua_get('_G.callback_args_data'), 2)
+
+  type_keys('j')
+  eq(#child.lua_get('_G.callback_args_data'), 3)
+
+  -- No event should be triggered as preview buffer is reused and no other
+  -- preview is shown
+  clear_event_track()
+  type_keys('k')
+  go_in()
+  eq(#child.lua_get('_G.callback_args_data'), 0)
+end
+
 T['Events']['on buffer create can be used to create buffer-local mappings'] = function()
   if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
 

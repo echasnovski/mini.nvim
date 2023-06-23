@@ -305,7 +305,7 @@ autocommand events are triggered for most common module events:
 - `MiniFilesWindowOpen` - when new window is opened. Can be used to set
   window-local settings (like border, 'winblend', etc.)
 
-- `MiniFilesWindowUpdate` - when a window is updated. Triggered frequently,
+- `MiniFilesWindowUpdate` - when a window is updated. Triggers frequently,
   for example, for every "go in" or "go out" action.
 
 Notes:

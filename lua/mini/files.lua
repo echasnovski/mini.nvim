@@ -301,7 +301,7 @@
 --- - `MiniFilesWindowOpen` - when new window is opened. Can be used to set
 ---   window-local settings (like border, 'winblend', etc.)
 ---
---- - `MiniFilesWindowUpdate` - when a window is updated. Triggered frequently,
+--- - `MiniFilesWindowUpdate` - when a window is updated. Triggers frequently,
 ---   for example, for every "go in" or "go out" action.
 ---
 --- Notes:
@@ -912,8 +912,8 @@ H.opened_buffers = {}
 -- File system information
 H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
--- Register to decide whether autocmd events should be triggered
-H.do_trigger_events = true
+-- Register table to decide whether certain autocmd events should be triggered
+H.block_event_trigger = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -1080,10 +1080,6 @@ H.explorer_refresh = function(explorer, opts)
   explorer = H.explorer_normalize(explorer)
   if #explorer.branch == 0 then return end
   opts = opts or {}
-
-  -- Decide whether events should be triggered (yes by default)
-  H.do_trigger_events = opts.do_trigger_events
-  if H.do_trigger_events == nil then H.do_trigger_events = true end
 
   -- Update cursor data in shown directory views. Do this prior to buffer
   -- updates for cursors to "stick" to current items.
@@ -1594,7 +1590,9 @@ H.dir_view_track_cursor = vim.schedule_wrap(function(data)
   explorer = H.explorer_sync_cursor_and_branch(explorer, buf_depth)
 
   -- Don't trigger redundant window update events
-  H.explorer_refresh(explorer, { do_trigger_events = false })
+  H.block_event_trigger['MiniFilesWindowUpdate'] = true
+  H.explorer_refresh(explorer)
+  H.block_event_trigger['MiniFilesWindowUpdate'] = false
 end)
 
 H.dir_view_track_text_change = function(data)
@@ -2249,7 +2247,7 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.trigger_event = function(event_name, data)
-  if not H.do_trigger_events then return end
+  if H.block_event_trigger[event_name] then return end
 
   -- TODO: Remove after compatibility with Neovim=0.7 is dropped
   if vim.fn.has('nvim-0.8') == 0 then data = nil end
