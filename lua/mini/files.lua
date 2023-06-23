@@ -359,7 +359,38 @@
 ---     end,
 ---   })
 ---
---- # Create a mapping to set current working directory ~
+--- # Create mappings to modify target window via split ~
+---
+--- Combine |MiniFiles.get_target_window()| and |MiniFiles.set_target_window()|: >
+---
+---   local map_split = function(buf_id, lhs, direction)
+---     local rhs = function()
+---       -- Make new window and set it as target
+---       local new_target_window
+---       vim.api.nvim_win_call(MiniFiles.get_target_window(), function()
+---         vim.cmd(direction .. ' split')
+---         new_target_window = vim.api.nvim_get_current_win()
+---       end)
+---
+---       MiniFiles.set_target_window(new_target_window)
+---     end
+---
+---     -- Adding `desc` will result into `show_help` entries
+---     local desc = 'Split ' .. direction
+---     vim.keymap.set('n', lhs, rhs, { buffer = buf_id, desc = desc })
+---   end
+---
+---   vim.api.nvim_create_autocmd('User', {
+---     pattern = 'MiniFilesBufferCreate',
+---     callback = function(args)
+---       local buf_id = args.data.buf_id
+---       -- Tweak keys to your liking
+---       map_split(buf_id, 'gs', 'belowright horizontal')
+---       map_split(buf_id, 'gv', 'belowright vertical')
+---     end,
+---   })
+---
+--- # Create mapping to set current working directory ~
 ---
 --- Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >
 ---
@@ -658,6 +689,10 @@ MiniFiles.close = function()
   -- Confirm close if there is modified buffer
   if not H.explorer_confirm_modified(explorer, 'close') then return false end
 
+  -- Focus on target window
+  explorer = H.explorer_ensure_target_window(explorer)
+  vim.api.nvim_set_current_win(explorer.target_window)
+
   -- Update currently shown cursors
   explorer = H.explorer_update_cursors(explorer)
 
@@ -771,6 +806,30 @@ MiniFiles.get_fs_entry = function(buf_id, line)
 
   local path = H.path_index[path_id]
   return { fs_type = H.fs_get_type(path), name = H.fs_get_basename(path), path = path }
+end
+
+--- Get target window
+---
+---@return number|nil Window identifier inside which file will be opened or
+---   `nil` if no explorer is opened.
+MiniFiles.get_target_window = function()
+  local explorer = H.explorer_get()
+  if explorer == nil then return end
+
+  explorer = H.explorer_ensure_target_window(explorer)
+  return explorer.target_window
+end
+
+--- Set target window
+---
+---@param win_id number Window identifier inside which file will be opened.
+MiniFiles.set_target_window = function(win_id)
+  if not H.is_valid_win(win_id) then H.error('`win_id` should be valid window identifier.') end
+
+  local explorer = H.explorer_get()
+  if explorer == nil then return end
+
+  explorer.target_window = win_id
 end
 
 --- Get latest used anchor path
@@ -1303,9 +1362,7 @@ H.explorer_confirm_modified = function(explorer, action_name)
 end
 
 H.explorer_open_file = function(explorer, path)
-  if not vim.api.nvim_win_is_valid(explorer.target_window) then
-    explorer.target_window = H.get_first_valid_normal_window()
-  end
+  explorer = H.explorer_ensure_target_window(explorer)
 
   -- Try to use already created buffer, if present. This avoids not needed
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
@@ -1320,6 +1377,11 @@ H.explorer_open_file = function(explorer, path)
     vim.fn.win_execute(explorer.target_window, 'edit ' .. vim.fn.fnameescape(path))
   end
 
+  return explorer
+end
+
+H.explorer_ensure_target_window = function(explorer)
+  if not H.is_valid_win(explorer.target_window) then explorer.target_window = H.get_first_valid_normal_window() end
   return explorer
 end
 

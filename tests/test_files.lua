@@ -947,6 +947,22 @@ T['close()']['checks for modified buffers'] = function()
   child.expect_screenshot()
 end
 
+T['close()']['results into focus on target window'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('belowright vertical split')
+  local ref_win_id = child.api.nvim_get_current_win()
+
+  open(test_dir_path)
+  close()
+  eq(child.api.nvim_get_current_win(), ref_win_id)
+
+  -- Should handle non-valid target window
+  open(test_dir_path)
+  child.api.nvim_win_close(ref_win_id, true)
+  close()
+  eq(child.api.nvim_get_current_win(), init_win_id)
+end
+
 T['close()']['works when no explorer is opened'] = function() eq(close(), vim.NIL) end
 
 T['go_in()'] = new_set()
@@ -1221,6 +1237,64 @@ T['get_fs_entry()']['validates input'] = function()
 
   open(test_dir_path)
   expect.error(function() get_fs_entry(0, 1000) end, 'line.*valid line number in buffer %d')
+end
+
+T['get_target_window()'] = new_set()
+
+local get_target_window = forward_lua('MiniFiles.get_target_window')
+
+T['get_target_window()']['works'] = function()
+  child.o.laststatus = 0
+
+  child.cmd('belowright vertical split')
+  local ref_win_id = child.api.nvim_get_current_win()
+
+  local temp_dir = make_temp_dir('temp', {})
+  open(temp_dir)
+  eq(get_target_window(), ref_win_id)
+end
+
+T['get_target_window()']['ensures valid window'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('belowright vertical split')
+  local ref_win_id = child.api.nvim_get_current_win()
+
+  open(test_dir_path)
+
+  eq(get_target_window(), ref_win_id)
+
+  child.api.nvim_win_close(ref_win_id, true)
+  eq(get_target_window(), init_win_id)
+end
+
+T['get_target_window()']['works when no explorer is opened'] = function() expect.no_error(get_target_window) end
+
+T['set_target_window()'] = new_set()
+
+local set_target_window = forward_lua('MiniFiles.set_target_window')
+
+T['set_target_window()']['works'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('belowright vertical split')
+  local ref_win_id = child.api.nvim_get_current_win()
+
+  open(test_file_path)
+
+  eq(get_target_window(), ref_win_id)
+  set_target_window(init_win_id)
+  eq(get_target_window(), init_win_id)
+
+  go_in()
+  eq(is_file_in_buffer(child.api.nvim_win_get_buf(init_win_id), test_file_path), true)
+end
+
+T['set_target_window()']['validates input'] = function()
+  open(test_dir_path)
+  expect.error(function() set_target_window(1) end, 'valid window')
+end
+
+T['set_target_window()']['works when no explorer is opened'] = function()
+  expect.no_error(function() set_target_window(child.api.nvim_get_current_win()) end)
 end
 
 T['get_latest_path()'] = new_set()

@@ -364,7 +364,38 @@ Create an autocommand for `MiniFilesBufferCreate` event which calls
     end,
   })
 
-# Create a mapping to set current working directory ~
+# Create mappings to modify target window via split ~
+
+Combine |MiniFiles.get_target_window()| and |MiniFiles.set_target_window()|: >
+
+  local map_split = function(buf_id, lhs, direction)
+    local rhs = function()
+      -- Make new window and set it as target
+      local new_target_window
+      vim.api.nvim_win_call(MiniFiles.get_target_window(), function()
+        vim.cmd(direction .. ' split')
+        new_target_window = vim.api.nvim_get_current_win()
+      end)
+
+      MiniFiles.set_target_window(new_target_window)
+    end
+
+    -- Adding `desc` will result into `show_help` entries
+    local desc = 'Split ' .. direction
+    vim.keymap.set('n', lhs, rhs, { buffer = buf_id, desc = desc })
+  end
+
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'MiniFilesBufferCreate',
+    callback = function(args)
+      local buf_id = args.data.buf_id
+      -- Tweak keys to your liking
+      map_split(buf_id, 'gs', 'belowright horizontal')
+      map_split(buf_id, 'gv', 'belowright vertical')
+    end,
+  })
+
+# Create mapping to set current working directory ~
 
 Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >
 
@@ -631,6 +662,23 @@ Return~
   - <path> `(string)` - full path of an entry.
 
 Returns `nil` if there is no proper file system entry path at the line.
+
+------------------------------------------------------------------------------
+                                                 *MiniFiles.get_target_window()*
+                        `MiniFiles.get_target_window`()
+Get target window
+
+Return~
+`(number|nil)` Window identifier inside which file will be opened or
+  `nil` if no explorer is opened.
+
+------------------------------------------------------------------------------
+                                                 *MiniFiles.set_target_window()*
+                    `MiniFiles.set_target_window`({win_id})
+Set target window
+
+Parameters~
+{win_id} `(number)` Window identifier inside which file will be opened.
 
 ------------------------------------------------------------------------------
                                                    *MiniFiles.get_latest_path()*
