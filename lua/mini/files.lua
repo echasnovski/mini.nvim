@@ -289,7 +289,9 @@
 --- Events ~
 ---
 --- To allow user customization and integration of external tools, certain |User|
---- autocommand events are triggered for most common module events:
+--- autocommand events are triggered under common circumstances.
+---
+--- UI events ~
 ---
 --- - `MiniFilesBufferCreate` - when buffer is created to show a particular
 ---   directory. Triggered once per directory during one explorer session.
@@ -304,14 +306,32 @@
 --- - `MiniFilesWindowUpdate` - when a window is updated. Triggers frequently,
 ---   for example, for every "go in" or "go out" action.
 ---
---- Notes:
+--- Callback for each UI event will receive `data` field (see |nvim_create_autocmd()|)
+--- with the following information:
 ---
---- - Callback for each event will receive `data` field (see |nvim_create_autocmd()|)
----   with the following information:
----     - <buf_id> - index of target buffer.
----     - <win_id> - index of target window. Can be `nil`, like in
----       `MiniFilesBufferCreate` and buffer's first `MiniFilesBufferUpdate` as
----       they are triggered before window is created.
+--- - <buf_id> - index of target buffer.
+--- - <win_id> - index of target window. Can be `nil`, like in
+---   `MiniFilesBufferCreate` and buffer's first `MiniFilesBufferUpdate` as
+---   they are triggered before window is created.
+---
+--- File action events ~
+---
+--- - `MiniFilesActionCreate` - after entry is successfully created.
+---
+--- - `MiniFilesActionDelete` - after entry is successfully deleted.
+---
+--- - `MiniFilesActionRename` - after entry is successfully renamed.
+---
+--- - `MiniFilesActionCopy` - after entry is successfully copied.
+---
+--- - `MiniFilesActionMove` - after entry is successfully moved.
+---
+--- Callback for each file action event will receive `data` field
+--- (see |nvim_create_autocmd()|) with the following information:
+---
+--- - <action> - string with action name.
+--- - <from> - absolute path of entry before action (`nil` for "create" action).
+--- - <to> - absolute path of entry after action (`nil` for "delete" action).
 ---@tag MiniFiles-events
 
 --- Common configuration examples ~
@@ -2148,24 +2168,34 @@ end
 H.fs_actions_apply = function(fs_actions)
   -- Copy first to allow later proper deleting
   for _, diff in ipairs(fs_actions.copy) do
-    pcall(H.fs_copy, diff.from, diff.to)
+    local ok, success = pcall(H.fs_copy, diff.from, diff.to)
+    local data = { action = 'copy', from = diff.from, to = diff.to }
+    if ok and success then H.trigger_event('MiniFilesActionCopy', data) end
   end
 
   for _, path in ipairs(fs_actions.create) do
-    pcall(H.fs_create, path)
+    local ok, success = pcall(H.fs_create, path)
+    local data = { action = 'create', to = H.fs_normalize_path(path) }
+    if ok and success then H.trigger_event('MiniFilesActionCreate', data) end
   end
 
   for _, diff in ipairs(fs_actions.move) do
-    pcall(H.fs_move, diff.from, diff.to)
+    local ok, success = pcall(H.fs_move, diff.from, diff.to)
+    local data = { action = 'move', from = diff.from, to = diff.to }
+    if ok and success then H.trigger_event('MiniFilesActionMove', data) end
   end
 
   for _, diff in ipairs(fs_actions.rename) do
-    pcall(H.fs_rename, diff.from, diff.to)
+    local ok, success = pcall(H.fs_rename, diff.from, diff.to)
+    local data = { action = 'rename', from = diff.from, to = diff.to }
+    if ok and success then H.trigger_event('MiniFilesActionRename', data) end
   end
 
   -- Delete last to not lose anything too early (just in case)
   for _, path in ipairs(fs_actions.delete) do
-    pcall(H.fs_delete, path)
+    local ok, success = pcall(H.fs_delete, path)
+    local data = { action = 'delete', from = path }
+    if ok and success then H.trigger_event('MiniFilesActionDelete', data) end
   end
 end
 
@@ -2176,38 +2206,43 @@ H.fs_create = function(path)
   -- Create
   local fs_type = path:find('/$') == nil and 'file' or 'directory'
   if fs_type == 'directory' then
-    vim.fn.mkdir(path)
+    return vim.fn.mkdir(path) == 1
   else
     -- Don't override existing file
     if H.fs_get_type(path) ~= nil then return false end
-    vim.fn.writefile({}, path)
+    return vim.fn.writefile({}, path) == 0
   end
 end
 
 H.fs_copy = function(from, to)
-  if H.fs_get_type(from) == 'file' then
-    vim.loop.fs_copyfile(from, to)
-    return
-  end
+  local from_type = H.fs_get_type(from)
+  if from_type == nil then return false end
+  if from_type == 'file' then return vim.loop.fs_copyfile(from, to) end
 
   -- Recursively copy a directory
   local fs_entries = H.fs_read_dir(from, { filter = function() return true end, sort = function(x) return x end })
   -- NOTE: Create directory *after* reading entries to allow copy inside itself
   vim.fn.mkdir(to)
+
+  local success = true
   for _, entry in ipairs(fs_entries) do
-    H.fs_copy(entry.path, H.fs_child_path(to, entry.name))
+    success = success and H.fs_copy(entry.path, H.fs_child_path(to, entry.name))
   end
+
+  return success
 end
 
-H.fs_delete = function(path) vim.fn.delete(path, 'rf') end
+H.fs_delete = function(path) return vim.fn.delete(path, 'rf') == 0 end
 
 H.fs_move = function(from, to)
-  vim.loop.fs_rename(from, to)
+  local success = vim.loop.fs_rename(from, to)
 
   -- Rename in loaded buffers
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
     H.rename_loaded_buffer(buf_id, from, to)
   end
+
+  return success
 end
 
 H.fs_rename = H.fs_move

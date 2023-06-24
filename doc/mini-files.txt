@@ -293,7 +293,9 @@ at that line (if present) to deduce which file system action to perform.
 Events ~
 
 To allow user customization and integration of external tools, certain |User|
-autocommand events are triggered for most common module events:
+autocommand events are triggered under common circumstances.
+
+UI events ~
 
 - `MiniFilesBufferCreate` - when buffer is created to show a particular
   directory. Triggered once per directory during one explorer session.
@@ -308,14 +310,32 @@ autocommand events are triggered for most common module events:
 - `MiniFilesWindowUpdate` - when a window is updated. Triggers frequently,
   for example, for every "go in" or "go out" action.
 
-Notes:
+Callback for each UI event will receive `data` field (see |nvim_create_autocmd()|)
+with the following information:
 
-- Callback for each event will receive `data` field (see |nvim_create_autocmd()|)
-  with the following information:
-    - <buf_id> - index of target buffer.
-    - <win_id> - index of target window. Can be `nil`, like in
-      `MiniFilesBufferCreate` and buffer's first `MiniFilesBufferUpdate` as
-      they are triggered before window is created.
+- <buf_id> - index of target buffer.
+- <win_id> - index of target window. Can be `nil`, like in
+  `MiniFilesBufferCreate` and buffer's first `MiniFilesBufferUpdate` as
+  they are triggered before window is created.
+
+File action events ~
+
+- `MiniFilesActionCreate` - after entry is successfully created.
+
+- `MiniFilesActionDelete` - after entry is successfully deleted.
+
+- `MiniFilesActionRename` - after entry is successfully renamed.
+
+- `MiniFilesActionCopy` - after entry is successfully copied.
+
+- `MiniFilesActionMove` - after entry is successfully moved.
+
+Callback for each file action event will receive `data` field
+(see |nvim_create_autocmd()|) with the following information:
+
+- <action> - string with action name.
+- <from> - absolute path of entry before action (`nil` for "create" action).
+- <to> - absolute path of entry after action (`nil` for "delete" action).
 
 ------------------------------------------------------------------------------
                                                             *MiniFiles-examples*

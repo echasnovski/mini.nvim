@@ -2723,7 +2723,7 @@ local track_event = function(event_name)
       'User',
       {
         pattern = '%s',
-        callback = function(args) table.insert(_G.callback_args_data, args.data) end,
+        callback = function(args) table.insert(_G.callback_args_data, args.data or {}) end,
       }
     )
     ]],
@@ -2734,11 +2734,22 @@ end
 
 local clear_event_track = function() child.lua('_G.callback_args_data = {}') end
 
-local validate_event_track = function(ref) eq(child.lua_get('_G.callback_args_data'), ref) end
+local validate_event_track = function(ref, do_sort)
+  local event_track = child.lua_get('_G.callback_args_data')
 
-T['Events']['triggers on buffer create'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
+  -- Neovim<0.8 doesn't have `data` field in event callback
+  if child.fn.has('nvim-0.8') == 0 then
+    eq(#event_track, #ref)
+    return
+  end
 
+  if do_sort then table.sort(event_track, function(a, b) return a.buf_id < b.buf_id end) end
+  eq(event_track, ref)
+end
+
+local validate_n_events = function(n_ref) eq(#child.lua_get('_G.callback_args_data'), n_ref) end
+
+T['Events']['`MiniFilesBufferCreate` triggers'] = function()
   track_event('MiniFilesBufferCreate')
 
   open(test_dir_path)
@@ -2757,27 +2768,25 @@ T['Events']['triggers on buffer create'] = function()
   validate_event_track({})
 end
 
-T['Events']['triggers on buffer create inside preview'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
-
+T['Events']['`MiniFilesBufferCreate` triggers inside preview'] = function()
   track_event('MiniFilesBufferCreate')
 
   child.lua('MiniFiles.config.windows.preview = true')
   open(test_dir_path)
-  eq(#child.lua_get('_G.callback_args_data'), 2)
+  validate_n_events(2)
 
   type_keys('j')
-  eq(#child.lua_get('_G.callback_args_data'), 3)
+  validate_n_events(3)
 
   -- No event should be triggered as preview buffer is reused and no other
   -- preview is shown
   clear_event_track()
   type_keys('k')
   go_in()
-  eq(#child.lua_get('_G.callback_args_data'), 0)
+  validate_n_events(0)
 end
 
-T['Events']['on buffer create can be used to create buffer-local mappings'] = function()
+T['Events']['`MiniFilesBufferCreate` can be used to create buffer-local mappings'] = function()
   if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
 
   child.lua([[
@@ -2804,9 +2813,7 @@ T['Events']['on buffer create can be used to create buffer-local mappings'] = fu
   eq(child.lua_get('_G.n'), 2)
 end
 
-T['Events']['triggers on buffer update'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
-
+T['Events']['`MiniFilesBufferUpdate` triggers'] = function()
   track_event('MiniFilesBufferUpdate')
 
   open(test_dir_path)
@@ -2828,15 +2835,11 @@ T['Events']['triggers on buffer update'] = function()
   -- Force all buffer to update
   synchronize()
 
-  local event_track = child.lua_get('_G.callback_args_data')
   -- - Force order, as there is no order guarantee of event trigger
-  table.sort(event_track, function(a, b) return a.buf_id < b.buf_id end)
-  eq(event_track, { { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } })
+  validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } }, true)
 end
 
-T['Events']['triggers on window open'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
-
+T['Events']['`MiniFilesWindowOpen` triggers'] = function()
   track_event('MiniFilesWindowOpen')
 
   open(test_dir_path)
@@ -2858,7 +2861,7 @@ T['Events']['triggers on window open'] = function()
   validate_event_track({ { buf_id = buf_id_2, win_id = win_id_3 } })
 end
 
-T['Events']['on window open can be used to set window-local options'] = function()
+T['Events']['`MiniFilesWindowOpen` can be used to create window-local mappings'] = function()
   if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
 
   child.lua([[
@@ -2882,9 +2885,7 @@ T['Events']['on window open can be used to set window-local options'] = function
   child.expect_screenshot()
 end
 
-T['Events']['triggers on window update'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
-
+T['Events']['`MiniFilesWindowUpdate` triggers'] = function()
   track_event('MiniFilesWindowUpdate')
 
   open(test_dir_path)
@@ -2895,11 +2896,196 @@ T['Events']['triggers on window update'] = function()
 
   go_in()
   local buf_id_2, win_id_2 = child.api.nvim_get_current_buf(), child.api.nvim_get_current_win()
-  local event_track = child.lua_get('_G.callback_args_data')
+
   -- - Force order, as there is no order guarantee of event trigger
-  table.sort(event_track, function(a, b) return a.buf_id < b.buf_id end)
-  -- -- Both windows should be updated
-  eq(event_track, { { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } })
+  -- - Both windows should be updated
+  validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } }, true)
+end
+
+T['Events']['`MiniFilesWindowUpdate` is not triggered for cursor move'] = function()
+  track_event('MiniFilesWindowUpdate')
+
+  open(test_dir_path)
+  clear_event_track()
+
+  type_keys('j')
+  type_keys('<Right>')
+  type_keys('i', '<Left>')
+  validate_event_track({})
+end
+
+T['Events']['`MiniFilesActionCreate` triggers'] = function()
+  track_event('MiniFilesActionCreate')
+
+  local validate = function(entry, inject_external_create)
+    local temp_dir = make_temp_dir('temp', {})
+    local entry_name = entry:gsub('(.)/$', '%1')
+    local entry_path = join_path(temp_dir, entry_name)
+    open(temp_dir, false)
+
+    -- Perform create
+    type_keys('i', entry, '<Esc>')
+
+    mock_confirm(1)
+    if inject_external_create then child.fn.writefile({}, entry_path) end
+    synchronize()
+
+    -- If there was external create, then action was not successful and thus
+    -- event should not trigger
+    local ref = inject_external_create and {} or { { action = 'create', to = entry_path } }
+    validate_event_track(ref)
+
+    -- Cleanup
+    close()
+    child.fn.delete(temp_dir, 'rf')
+    clear_event_track()
+  end
+
+  validate('file', false)
+  validate('file', true)
+  validate('dir/', false)
+  validate('dir/', true)
+end
+
+T['Events']['`MiniFilesActionDelete` triggers'] = function()
+  track_event('MiniFilesActionDelete')
+
+  local validate = function(entry, inject_external_delete)
+    local temp_dir = make_temp_dir('temp', { entry })
+    local entry_name = entry:gsub('(.)/$', '%1')
+    local entry_path = join_path(temp_dir, entry_name)
+    open(temp_dir, false)
+
+    -- Perform delete
+    type_keys('dd')
+
+    mock_confirm(1)
+    if inject_external_delete then child.fn.delete(entry_path, 'rf') end
+    synchronize()
+
+    -- If there was external delete, then action was not successful and thus
+    -- event should not trigger
+    local ref = inject_external_delete and {} or { { action = 'delete', from = entry_path } }
+    validate_event_track(ref)
+
+    -- Cleanup
+    close()
+    child.fn.delete(temp_dir, 'rf')
+    clear_event_track()
+  end
+
+  validate('file', false)
+  validate('file', true)
+  validate('dir/', false)
+  validate('dir/', true)
+end
+
+T['Events']['`MiniFilesActionRename` triggers'] = function()
+  track_event('MiniFilesActionRename')
+
+  local validate = function(entry, inject_external_delete)
+    local temp_dir = make_temp_dir('temp', { entry })
+    local entry_name = entry:gsub('(.)/$', '%1')
+    local entry_path = join_path(temp_dir, entry_name)
+    open(temp_dir, false)
+
+    -- Perform rename
+    type_keys('A', '-new', '<Esc>')
+    local new_entry_path = join_path(temp_dir, entry_name .. '-new')
+
+    mock_confirm(1)
+    if inject_external_delete then child.fn.delete(entry_path, 'rf') end
+    synchronize()
+
+    -- If there was external delete, then action was not successful and thus
+    -- event should not trigger
+    local ref = inject_external_delete and {} or { { action = 'rename', from = entry_path, to = new_entry_path } }
+    validate_event_track(ref)
+
+    -- Cleanup
+    close()
+    child.fn.delete(temp_dir, 'rf')
+    clear_event_track()
+  end
+
+  validate('file', false)
+  validate('file', true)
+  validate('dir/', false)
+  validate('dir/', true)
+end
+
+T['Events']['`MiniFilesActionCopy` triggers'] = function()
+  track_event('MiniFilesActionCopy')
+
+  local validate = function(entry, inject_external_delete)
+    local temp_dir = make_temp_dir('temp', { entry })
+    if entry == 'dir/' then
+      -- Test on non-empty directory
+      child.fn.mkdir(join_path(temp_dir, 'dir', 'subdir'))
+      child.fn.writefile({}, join_path(temp_dir, 'dir', 'subdir', 'subfile'))
+    end
+
+    local entry_name = entry:gsub('(.)/$', '%1')
+    local entry_path = join_path(temp_dir, entry_name)
+    open(temp_dir, false)
+
+    -- Perform copy in same parent directory
+    type_keys('yy', 'p', 'A', '-new', '<Esc>')
+    local new_entry_path = join_path(temp_dir, entry_name .. '-new')
+
+    mock_confirm(1)
+    if inject_external_delete then child.fn.delete(entry_path, 'rf') end
+    synchronize()
+
+    -- If there was external delete, then action was not successful and thus
+    -- event should not trigger
+    local ref = inject_external_delete and {} or { { action = 'copy', from = entry_path, to = new_entry_path } }
+    validate_event_track(ref)
+
+    -- Cleanup
+    close()
+    child.fn.delete(temp_dir, 'rf')
+    clear_event_track()
+  end
+
+  validate('file', false)
+  validate('file', true)
+  validate('dir/', false)
+  validate('dir/', true)
+end
+
+T['Events']['`MiniFilesActionMove` triggers'] = function()
+  track_event('MiniFilesActionMove')
+
+  local validate = function(entry, inject_external_delete)
+    local temp_dir = make_temp_dir('temp', { entry, 'a-dir/' })
+    local entry_name = entry:gsub('(.)/$', '%1')
+    local entry_path = join_path(temp_dir, entry_name)
+    open(temp_dir, false)
+
+    -- Perform move
+    type_keys('j', 'dd', 'l', 'p')
+    local new_entry_path = join_path(temp_dir, 'a-dir', entry_name)
+
+    mock_confirm(1)
+    if inject_external_delete then child.fn.delete(entry_path, 'rf') end
+    synchronize()
+
+    -- If there was external delete, then action was not successful and thus
+    -- event should not trigger
+    local ref = inject_external_delete and {} or { { action = 'move', from = entry_path, to = new_entry_path } }
+    validate_event_track(ref)
+
+    -- Cleanup
+    close()
+    child.fn.delete(temp_dir, 'rf')
+    clear_event_track()
+  end
+
+  validate('file', false)
+  validate('file', true)
+  validate('dir/', false)
+  validate('dir/', true)
 end
 
 T['Default explorer'] = new_set()
