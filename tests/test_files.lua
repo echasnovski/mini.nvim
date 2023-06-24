@@ -1422,58 +1422,6 @@ T['Windows']['is in sync with cursor'] = function()
   child.expect_screenshot()
 end
 
-T['Windows']['properly previews'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 10')
-
-  -- Should open preview right after `open()`
-  open(test_dir_path)
-  child.expect_screenshot()
-
-  -- Should update preview after cursor move
-  type_keys('j')
-  child.expect_screenshot()
-
-  -- Should open preview right after `go_in()`
-  go_in()
-  child.expect_screenshot()
-
-  -- Should not open preview for files
-  go_in()
-  child.expect_screenshot()
-
-  -- Should keep opened windows until next preview is active
-  go_out()
-  go_out()
-  child.expect_screenshot()
-end
-
-T['Windows']['previews only one level deep'] = function()
-  child.set_size(10, 80)
-
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 10')
-
-  open(make_test_path('nested'))
-  child.expect_screenshot()
-end
-
-T['Windows']['handles preview for user created lines'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
-
-  open(test_dir_path)
-  type_keys('o', 'new_entry', '<Esc>')
-  type_keys('k')
-
-  child.expect_screenshot()
-  type_keys('j')
-  child.expect_screenshot()
-  type_keys('j')
-  child.expect_screenshot()
-end
-
 T['Windows']['reacts on `VimResized`'] = function()
   open(test_dir_path)
   go_in()
@@ -1626,6 +1574,72 @@ T['Windows']['never shows past end of buffer'] = function()
   child.set_size(10, 60)
   open(test_dir_path)
   type_keys('yj', 'G', 'p')
+  child.expect_screenshot()
+end
+
+T['Preview'] = new_set()
+
+T['Preview']['works'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  -- Should open preview right after `open()`
+  open(test_dir_path)
+  child.expect_screenshot()
+
+  -- Should update preview after cursor move
+  type_keys('j')
+  child.expect_screenshot()
+
+  -- Should open preview right after `go_in()`
+  go_in()
+  child.expect_screenshot()
+
+  -- Should not open preview for files
+  go_in()
+  child.expect_screenshot()
+
+  -- Should keep opened windows until next preview is active
+  go_out()
+  go_out()
+  child.expect_screenshot()
+end
+
+T['Preview']['previews only one level deep'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(make_test_path('nested'))
+  child.expect_screenshot()
+end
+
+T['Preview']['handles user created lines'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+
+  open(test_dir_path)
+  type_keys('o', 'new_entry', '<Esc>')
+  type_keys('k')
+
+  child.expect_screenshot()
+  type_keys('j')
+  child.expect_screenshot()
+  type_keys('j')
+  child.expect_screenshot()
+end
+
+T['Preview']['works after `trim_left()`'] = function()
+  child.set_size(10, 80)
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 30')
+
+  open(make_test_path('nested'))
+  go_in()
+  trim_left()
+  type_keys('j')
   child.expect_screenshot()
 end
 

@@ -1103,6 +1103,12 @@ H.explorer_refresh = function(explorer, opts)
     explorer = H.explorer_sync_cursor_and_branch(explorer, depth)
   end
 
+  -- Unregister windows from showed buffers, as they might get outdated
+  for _, win_id in ipairs(explorer.windows) do
+    local buf_id = vim.api.nvim_win_get_buf(win_id)
+    H.opened_buffers[buf_id].win_id = nil
+  end
+
   -- Compute depth range which is possible to show in current window
   local depth_range = H.compute_visible_depth_range(explorer, explorer.opts)
 
@@ -1947,11 +1953,12 @@ H.window_close = function(win_id)
 end
 
 H.window_set_dir_view = function(win_id, dir_view)
-  local init_buf_id = vim.api.nvim_win_get_buf(win_id)
-  local buf_id = dir_view.buf_id
-
   -- Set buffer
+  local buf_id = dir_view.buf_id
   vim.api.nvim_win_set_buf(win_id, buf_id)
+  -- - Update buffer register. No need to update previous buffer data, as it
+  --   should already be invalidated.
+  H.opened_buffers[buf_id].win_id = win_id
 
   -- Set cursor
   pcall(vim.api.nvim_win_set_cursor, win_id, dir_view.cursor)
@@ -1961,10 +1968,6 @@ H.window_set_dir_view = function(win_id, dir_view)
 
   -- Update border highlight based on buffer status
   H.window_update_border_hl(win_id)
-
-  -- Update buffer register
-  H.opened_buffers[init_buf_id].win_id = nil
-  H.opened_buffers[buf_id].win_id = win_id
 end
 
 H.window_update_border_hl = function(win_id)
