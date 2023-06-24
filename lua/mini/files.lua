@@ -2178,6 +2178,8 @@ H.fs_create = function(path)
   if fs_type == 'directory' then
     vim.fn.mkdir(path)
   else
+    -- Don't override existing file
+    if H.fs_get_type(path) ~= nil then return false end
     vim.fn.writefile({}, path)
   end
 end

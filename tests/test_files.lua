@@ -2154,6 +2154,26 @@ T['File manipulation']['creates nested directories'] = function()
   validate_confirm_args(ref_pattern_2)
 end
 
+T['File manipulation']['creation does not override existing entry'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
+  local file_path = join_path(temp_dir, 'file')
+  child.fn.writefile({ 'File' }, file_path)
+
+  open(temp_dir)
+  type_keys('o', 'file', '<CR>', 'dir/', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+
+  validate_file(file_path)
+  validate_file_content(file_path, { 'File' })
+  validate_file(temp_dir, 'dir', 'subfile')
+end
+
 T['File manipulation']['can delete'] = function()
   local temp_dir =
     make_temp_dir('temp', { 'file', 'empty-dir/', 'dir/', 'dir/file', 'dir/nested-dir/', 'dir/nested-dir/file' })
