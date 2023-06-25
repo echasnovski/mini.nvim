@@ -271,7 +271,7 @@ Overview:
 - Find separator positions using `separator` and `exclude_regions` from `opts`.
   Both brackets are treated as separators.
   See |MiniSplitjoin.config.detect| for more details.
-  Note: stop if no join positions are found.
+  Note: stop if no separator positions are found.
 
 - Modify separator positions to represent split positions. Last split position
   (which is inferred from right bracket) is moved one column to left so that
