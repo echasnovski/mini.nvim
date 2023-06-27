@@ -9,6 +9,8 @@
 --- - Navigate file system using column view (Miller columns) to display nested
 ---   directories. See |MiniFiles-navigation| for overview.
 ---
+--- - Opt-in preview of file or directory under cursor.
+---
 --- - Manipulate files and directories by editing text buffers: create, delete,
 ---   copy, rename, move. See |MiniFiles-manipulation| for overview.
 ---
@@ -17,7 +19,7 @@
 --- - Configurable:
 ---     - Filter/sort of file system entries.
 ---     - Mappings used for common explorer actions.
----     - UI options: whether to show preview of directory under cursor, etc.
+---     - UI options: whether to show preview of file/directory under cursor, etc.
 ---
 --- What it doesn't do:
 --- - Try to be replacement of system file explorer. It is mostly designed to
@@ -521,7 +523,7 @@ end
 --- There is no constraint by default.
 ---
 --- `windows.preview` is a boolean indicating whether to show preview of
---- directory under cursor.
+--- file/directory under cursor.
 ---
 --- `windows.width_focus` and `windows.width_nofocus` are number of columns used
 --- as `width` for focused and non-focused windows respectively.
@@ -559,7 +561,7 @@ MiniFiles.config = {
   windows = {
     -- Maximum number of windows to show side by side
     max_number = math.huge,
-    -- Whether to show preview of directory under cursor
+    -- Whether to show preview of file/directory under cursor
     preview = false,
     -- Width of focused window
     width_focus = 50,
@@ -1161,11 +1163,11 @@ H.explorer_refresh = function(explorer, opts)
 end
 
 H.explorer_normalize = function(explorer)
-  -- Ensure that all paths from branch are valid directory paths
+  -- Ensure that all paths from branch are valid present paths
   local norm_branch = {}
-  for _, dir in ipairs(explorer.branch) do
-    if vim.fn.isdirectory(dir) == 0 then break end
-    table.insert(norm_branch, dir)
+  for _, path in ipairs(explorer.branch) do
+    if not H.fs_is_present_path(path) then break end
+    table.insert(norm_branch, path)
   end
 
   local cur_max_depth = #norm_branch
@@ -1214,9 +1216,8 @@ H.explorer_sync_cursor_and_branch = function(explorer, depth)
 
   -- Show preview to the right of current buffer if needed
   local show_preview = explorer.opts.windows.preview
-  local is_dir = vim.fn.isdirectory(cursor_path) == 1
   local is_cur_buf = buf_id == vim.api.nvim_get_current_buf()
-  if show_preview and is_dir and is_cur_buf then table.insert(explorer.branch, cursor_path) end
+  if show_preview and is_cur_buf then table.insert(explorer.branch, cursor_path) end
 
   return explorer
 end
@@ -1742,43 +1743,12 @@ H.buffer_make_mappings = function(buf_id, mappings)
   --stylua: ignore end
 end
 
-H.buffer_update = function(buf_id, dir_path, opts)
-  if not H.is_valid_buf(buf_id) then return end
+H.buffer_update = function(buf_id, path, opts)
+  if not (H.is_valid_buf(buf_id) and H.fs_is_present_path(path)) then return end
 
-  -- Compute and set lines
-  local fs_entries = H.fs_read_dir(dir_path, opts.content)
-  local get_icon_data = H.make_icon_getter()
-
-  -- - Compute format expression resulting into same width path ids
-  local path_width = math.floor(math.log10(#H.path_index)) + 1
-  local line_format = '/%0' .. path_width .. 'd%s %s'
-
-  local lines, icon_hl, name_hl = {}, {}, {}
-  for _, entry in ipairs(fs_entries) do
-    local icon, hl = get_icon_data(entry.name, entry.fs_type)
-    table.insert(lines, string.format(line_format, H.path_index[entry.path], icon, entry.name))
-    table.insert(icon_hl, hl)
-    table.insert(name_hl, entry.fs_type == 'directory' and 'MiniFilesDirectory' or 'MiniFilesFile')
-  end
-
-  H.set_buflines(buf_id, lines)
-
-  -- Add highlighting
-  local ns_id = H.ns_id.highlight
-  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, 0, -1)
-
-  local set_hl = function(line, col, hl_opts) H.set_extmark(buf_id, ns_id, line, col, hl_opts) end
-
-  for l_num, l in ipairs(lines) do
-    local icon_start, name_start = l:match('^/%d+()%S+ ()')
-
-    -- NOTE: Use `right_gravity = false` for persistent highlights during edit
-    local icon_opts = { hl_group = icon_hl[l_num], end_col = name_start - 1, right_gravity = false }
-    set_hl(l_num - 1, icon_start - 1, icon_opts)
-
-    local name_opts = { hl_group = name_hl[l_num], end_row = l_num, end_col = 0, right_gravity = false }
-    set_hl(l_num - 1, name_start - 1, name_opts)
-  end
+  -- Perform entry type specific updates
+  local update_fun = H.fs_get_type(path) == 'directory' and H.buffer_update_directory or H.buffer_update_file
+  local fs_entries = update_fun(buf_id, path, opts)
 
   -- Trigger dedicated event
   H.trigger_event('MiniFilesBufferUpdate', { buf_id = buf_id, win_id = H.opened_buffers[buf_id].win_id })
@@ -1788,6 +1758,77 @@ H.buffer_update = function(buf_id, dir_path, opts)
 
   -- Return array with children entries path ids for future synchronization
   return vim.tbl_map(function(x) return x.path_id end, fs_entries)
+end
+
+H.buffer_update_directory = function(buf_id, path, opts)
+  local lines, icon_hl, name_hl = {}, {}, {}
+
+  -- Compute lines
+  local fs_entries = H.fs_read_dir(path, opts.content)
+  local get_icon_data = H.make_icon_getter()
+
+  -- - Compute format expression resulting into same width path ids
+  local path_width = math.floor(math.log10(#H.path_index)) + 1
+  local line_format = '/%0' .. path_width .. 'd%s %s'
+
+  for _, entry in ipairs(fs_entries) do
+    local icon, hl = get_icon_data(entry.name, entry.fs_type)
+    table.insert(lines, string.format(line_format, H.path_index[entry.path], icon, entry.name))
+    table.insert(icon_hl, hl)
+    table.insert(name_hl, entry.fs_type == 'directory' and 'MiniFilesDirectory' or 'MiniFilesFile')
+  end
+
+  -- Set lines
+  H.set_buflines(buf_id, lines)
+
+  -- Add highlighting
+  local ns_id = H.ns_id.highlight
+  vim.api.nvim_buf_clear_namespace(buf_id, ns_id, 0, -1)
+
+  local set_hl = function(line, col, hl_opts) H.set_extmark(buf_id, ns_id, line, col, hl_opts) end
+
+  for i = 1, #icon_hl do
+    local l = lines[i]
+    local icon_start, name_start = l:match('^/%d+()%S+ ()')
+
+    -- NOTE: Use `right_gravity = false` for persistent highlights during edit
+    local icon_opts = { hl_group = icon_hl[i], end_col = name_start - 1, right_gravity = false }
+    set_hl(i - 1, icon_start - 1, icon_opts)
+
+    local name_opts = { hl_group = name_hl[i], end_row = i, end_col = 0, right_gravity = false }
+    set_hl(i - 1, name_start - 1, name_opts)
+  end
+
+  return fs_entries
+end
+
+H.buffer_update_file = function(buf_id, path, opts)
+  -- Determine if file is text. This is not 100% proof, but good enough.
+  -- Source: https://github.com/sharkdp/content_inspector
+  local fd = vim.loop.fs_open(path, 'r', 1)
+  local is_text = vim.loop.fs_read(fd, 1024):find('\0') == nil
+  vim.loop.fs_close(fd)
+  if not is_text then
+    H.set_buflines(buf_id, { '-Non-text-file' .. string.rep('-', opts.windows.width_preview) })
+    return {}
+  end
+
+  -- Compute lines. Limit number of read lines to work better on large files.
+  local has_lines, read_res = pcall(vim.fn.readfile, path, '', vim.o.lines)
+  -- - Make sure that lines don't contain '\n' (might happen in binary files).
+  local lines = has_lines and vim.split(table.concat(read_res, '\n'), '\n') or {}
+
+  -- Set lines
+  H.set_buflines(buf_id, lines)
+
+  -- Add highlighting on Neovim>=0.8 which has stabilized API
+  if vim.fn.has('nvim-0.8') == 1 then
+    local ft = vim.filetype.match({ filename = path })
+    local ok, _ = pcall(vim.treesitter.start, buf_id, ft)
+    if not ok then vim.bo[buf_id].syntax = ft end
+  end
+
+  return {}
 end
 
 H.buffer_delete = function(buf_id)
@@ -1893,6 +1934,7 @@ H.window_open = function(buf_id, config)
 
   -- Set permanent window options
   vim.wo[win_id].concealcursor = 'nvic'
+  vim.wo[win_id].foldenable = false
   vim.wo[win_id].wrap = false
 
   -- Conceal path id
@@ -2067,6 +2109,8 @@ H.fs_normalize_path = function(path)
   return res
 end
 
+H.fs_is_present_path = function(path) return vim.loop.fs_stat(path) ~= nil end
+
 H.fs_child_path = function(dir, name) return H.fs_normalize_path(string.format('%s/%s', dir, name)) end
 
 H.fs_full_path = function(path) return H.fs_normalize_path(vim.fn.fnamemodify(path, ':p')) end
@@ -2098,8 +2142,7 @@ end
 H.fs_is_windows_top = function(path) return H.is_windows and path:find('^%w:[\\/]?$') ~= nil end
 
 H.fs_get_type = function(path)
-  local ok, stat = pcall(vim.loop.fs_stat, path)
-  if not ok or stat == nil then return nil end
+  if not H.fs_is_present_path(path) then return nil end
   return vim.fn.isdirectory(path) == 1 and 'directory' or 'file'
 end
 

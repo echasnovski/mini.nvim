@@ -9,6 +9,8 @@ Features:
 - Navigate file system using column view (Miller columns) to display nested
   directories. See |MiniFiles-navigation| for overview.
 
+- Opt-in preview of file or directory under cursor.
+
 - Manipulate files and directories by editing text buffers: create, delete,
   copy, rename, move. See |MiniFiles-manipulation| for overview.
 
@@ -17,7 +19,7 @@ Features:
 - Configurable:
     - Filter/sort of file system entries.
     - Mappings used for common explorer actions.
-    - UI options: whether to show preview of directory under cursor, etc.
+    - UI options: whether to show preview of file/directory under cursor, etc.
 
 What it doesn't do:
 - Try to be replacement of system file explorer. It is mostly designed to
@@ -485,7 +487,7 @@ Default values:
     windows = {
       -- Maximum number of windows to show side by side
       max_number = math.huge,
-      -- Whether to show preview of directory under cursor
+      -- Whether to show preview of file/directory under cursor
       preview = false,
       -- Width of focused window
       width_focus = 50,
@@ -548,7 +550,7 @@ simultaneously. For example, use value 1 to always show single window.
 There is no constraint by default.
 
 `windows.preview` is a boolean indicating whether to show preview of
-directory under cursor.
+file/directory under cursor.
 
 `windows.width_focus` and `windows.width_nofocus` are number of columns used
 as `width` for focused and non-focused windows respectively.

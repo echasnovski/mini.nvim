@@ -315,9 +315,16 @@ T['open()']["uses 'nvim-web-devicons' if present"] = function()
 
   open(make_test_path('real'))
   child.expect_screenshot()
+  --stylua: ignore
   eq(
     get_extmarks_hl(),
-    { 'DevIconLua', 'MiniFilesFile', 'DevIconTxt', 'MiniFilesFile', 'DevIconLicense', 'MiniFilesFile' }
+    {
+      'DevIconLua',      'MiniFilesFile',
+      'DevIconTxt',      'MiniFilesFile',
+      'DevIconGif',      'MiniFilesFile',
+      'DevIconLicense',  'MiniFilesFile',
+      'DevIconMakefile', 'MiniFilesFile',
+    }
   )
 end
 
@@ -1579,7 +1586,7 @@ end
 
 T['Preview'] = new_set()
 
-T['Preview']['works'] = function()
+T['Preview']['works for directories'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
   child.lua('MiniFiles.config.windows.width_focus = 20')
   child.lua('MiniFiles.config.windows.width_nofocus = 10')
@@ -1595,14 +1602,85 @@ T['Preview']['works'] = function()
   -- Should open preview right after `go_in()`
   go_in()
   child.expect_screenshot()
+end
 
-  -- Should not open preview for files
-  go_in()
+T['Preview']['works for files'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
+
+  open(make_test_path('real'))
+
+  -- Should preview Lua file with highlighting
   child.expect_screenshot()
 
-  -- Should keep opened windows until next preview is active
+  -- Should preview text file (also with enabled highlighting but as there is
+  -- none defined, non should be visible)
+  type_keys('j')
+  child.expect_screenshot()
+
+  -- Should read only maximum necessary amount of lines
+  local buffers = child.api.nvim_list_bufs()
+  local buf_id = buffers[#buffers]
+  eq(#child.api.nvim_buf_get_lines(buf_id, 0, -1, false), child.o.lines)
+
+  -- Should not set filetype
+  eq(child.api.nvim_buf_get_option(buf_id, 'filetype'), 'minifiles')
+
+  -- Should recognize binary files and show placeholder preview
+  type_keys('j')
+  child.expect_screenshot()
+
+  -- Should work for empty files
+  type_keys('j')
+  child.expect_screenshot()
+
+  -- Should fall back to built-in syntax highlighting in case of no tree-sitter
+  type_keys('j')
+  child.expect_screenshot()
+end
+
+T['Preview']['is not removed when going out'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+
+  open(test_dir_path)
+
+  -- Directory preview
+  type_keys('j')
+  go_in()
+  go_out()
+  child.expect_screenshot()
+
+  -- File preview
+  go_in()
+  go_in()
   go_out()
   go_out()
+  child.expect_screenshot()
+end
+
+T['Preview']['reuses buffers'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
+
+  -- Show two previews (for directory and file) and hide them
+  open(test_dir_path)
+  type_keys('G')
+  go_out()
+  local all_buffers = child.api.nvim_list_bufs()
+  trim_left()
+
+  -- Show them again which should use same buffers
+  go_in()
+  type_keys('gg')
+  eq(all_buffers, child.api.nvim_list_bufs())
+end
+
+T['Preview']['is not shown if not enough space'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.set_size(15, 60)
+  open(test_dir_path)
   child.expect_screenshot()
 end
 
@@ -2778,12 +2856,12 @@ T['Events']['`MiniFilesBufferCreate` triggers inside preview'] = function()
   type_keys('j')
   validate_n_events(3)
 
-  -- No event should be triggered as preview buffer is reused and no other
-  -- preview is shown
+  -- No event should be triggered when going inside preview buffer (as it
+  -- should be reused). But should also be triggered for file previews.
   clear_event_track()
   type_keys('k')
   go_in()
-  validate_n_events(0)
+  validate_n_events(1)
 end
 
 T['Events']['`MiniFilesBufferCreate` can be used to create buffer-local mappings'] = function()

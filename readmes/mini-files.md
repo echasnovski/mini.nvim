@@ -30,6 +30,8 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/4d8fb50d-5d74-46ea-ba4d
 
 - Navigate file system using column view (Miller columns) to display nested directories. See `*MiniFiles-navigation*` tag in help file for overview.
 
+- Opt-in preview of file or directory under cursor.
+
 - Manipulate files and directories by editing text buffers: create, delete, copy, rename, move. See `*MiniFiles-manipulation*` tag in help file for overview.
 
 - Use as default file explorer instead of `netrw`.
@@ -37,7 +39,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/4d8fb50d-5d74-46ea-ba4d
 - Configurable:
     - Filter/sort of file system entries.
     - Mappings used for common explorer actions.
-    - UI options: whether to show preview of directory under cursor, etc.
+    - UI options: whether to show preview of file/directory under cursor, etc.
 
 See `*MiniFiles-examples*` tag in help file for some common configuration examples.
 
@@ -230,7 +232,7 @@ Here are code snippets for some common installation methods (use only one):
   windows = {
     -- Maximum number of windows to show side by side
     max_number = math.huge,
-    -- Whether to show preview of directory under cursor
+    -- Whether to show preview of file/directory under cursor
     preview = false,
     -- Width of focused window
     width_focus = 50,
