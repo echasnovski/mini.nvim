@@ -216,6 +216,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('windows.preview', false)
   expect_config('windows.width_focus', 50)
   expect_config('windows.width_nofocus', 15)
+  expect_config('windows.width_preview', 25)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -256,6 +257,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ windows = { preview = 1 } }, 'windows.preview', 'boolean')
   expect_config_error({ windows = { width_focus = 'a' } }, 'windows.width_focus', 'number')
   expect_config_error({ windows = { width_nofocus = 'a' } }, 'windows.width_nofocus', 'number')
+  expect_config_error({ windows = { width_preview = 'a' } }, 'windows.width_preview', 'number')
 end
 
 T['open()'] = new_set()
@@ -654,6 +656,33 @@ T['open()']['respects `windows.width_focus` and `windows.width_nofocus`'] = func
   -- Local value from argument should take precedence
   open(test_dir_path, false, { windows = { width_focus = 30, width_nofocus = 20 } })
   go_in()
+  child.expect_screenshot()
+end
+
+T['open()']['respects `windows.width_preview`'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 5')
+  child.lua('MiniFiles.config.windows.width_preview = 10')
+
+  local test_path = make_test_path('nested')
+
+  -- Preview window is to the right of focused one (if preview is active)
+  open(test_path)
+  child.expect_screenshot()
+  go_in()
+  child.expect_screenshot()
+  go_in()
+  child.expect_screenshot()
+  go_out()
+  child.expect_screenshot()
+  go_out()
+  child.expect_screenshot()
+
+  close()
+
+  -- Local value from argument should take precedence
+  open(test_path, false, { windows = { width_focus = 20, width_preview = 30 } })
   child.expect_screenshot()
 end
 
@@ -1588,8 +1617,7 @@ T['Preview'] = new_set()
 
 T['Preview']['works for directories'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
 
   -- Should open preview right after `open()`
   open(test_dir_path)
@@ -1641,8 +1669,8 @@ end
 
 T['Preview']['is not removed when going out'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_focus = 15')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
 
   open(test_dir_path)
 
@@ -1688,8 +1716,7 @@ T['Preview']['previews only one level deep'] = function()
   child.set_size(10, 80)
 
   child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
 
   open(make_test_path('nested'))
   child.expect_screenshot()
@@ -1712,7 +1739,7 @@ end
 T['Preview']['works after `trim_left()`'] = function()
   child.set_size(10, 80)
   child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 30')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
 
   open(make_test_path('nested'))
   go_in()

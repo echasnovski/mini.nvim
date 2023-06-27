@@ -238,6 +238,8 @@ Here are code snippets for some common installation methods (use only one):
     width_focus = 50,
     -- Width of non-focused window
     width_nofocus = 15,
+    -- Width of preview window
+    width_preview = 25,
   },
 }
 ```

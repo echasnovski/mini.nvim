@@ -567,6 +567,8 @@ MiniFiles.config = {
     width_focus = 50,
     -- Width of non-focused window
     width_nofocus = 15,
+    -- Width of preview window
+    width_preview = 25,
   },
 }
 --minidoc_afterlines_end
@@ -973,6 +975,7 @@ H.setup_config = function(config)
     ['windows.preview'] = { config.windows.preview, 'boolean' },
     ['windows.width_focus'] = { config.windows.width_focus, 'number' },
     ['windows.width_nofocus'] = { config.windows.width_nofocus, 'number' },
+    ['windows.width_preview'] = { config.windows.width_preview, 'number' },
   })
 
   return config
@@ -1332,9 +1335,13 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   view = H.view_ensure_proper(view, path, opts)
   views[path] = view
 
-  -- Create relevant window config
+  -- Compute width based on window role
   local win_is_focused = depth == explorer.depth_focus
-  local cur_width = win_is_focused and opts.windows.width_focus or opts.windows.width_nofocus
+  local win_is_preview = opts.windows.preview and (depth == (explorer.depth_focus + 1))
+  local cur_width = win_is_focused and opts.windows.width_focus
+    or (win_is_preview and opts.windows.width_preview or opts.windows.width_nofocus)
+
+  -- Create relevant window config
   local config = {
     col = win_col,
     height = vim.api.nvim_buf_line_count(view.buf_id),
