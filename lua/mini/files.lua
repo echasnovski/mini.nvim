@@ -720,10 +720,16 @@ MiniFiles.close = function()
   -- Update currently shown cursors
   explorer = H.explorer_update_cursors(explorer)
 
-  -- Close shown windows
+  -- Close shown explorer windows
   for i, win_id in pairs(explorer.windows) do
     H.window_close(win_id)
     explorer.windows[i] = nil
+  end
+
+  -- Close possibly visible help window
+  for _, win_id in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local buf_id = vim.api.nvim_win_get_buf(win_id)
+    if vim.bo[buf_id].filetype == 'minifiles-help' then vim.api.nvim_win_close(win_id, true) end
   end
 
   -- Invalidate views
@@ -1488,6 +1494,8 @@ H.explorer_show_help = function(explorer_buf_id, explorer_win_id)
 
   vim.b[buf_id].minicursorword_disable = true
   vim.b[buf_id].miniindentscope_disable = true
+
+  vim.bo[buf_id].filetype = 'minifiles-help'
 
   -- Compute window data
   local line_widths = vim.tbl_map(vim.fn.strdisplaywidth, lines)

@@ -999,6 +999,14 @@ T['close()']['results into focus on target window'] = function()
   eq(child.api.nvim_get_current_win(), init_win_id)
 end
 
+T['close()']['closes help window'] = function()
+  open(test_dir_path)
+  child.lua('MiniFiles.show_help()')
+  validate_n_wins(3)
+  close()
+  validate_n_wins(1)
+end
+
 T['close()']['works when no explorer is opened'] = function() eq(close(), vim.NIL) end
 
 T['go_in()'] = new_set()
