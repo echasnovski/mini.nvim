@@ -2248,6 +2248,9 @@ H.fs_actions_apply = function(fs_actions)
 end
 
 H.fs_create = function(path)
+  -- Don't override existing path
+  if H.fs_is_present_path(path) then return false end
+
   -- Create parent directory allowing nested names
   vim.fn.mkdir(H.fs_get_parent(path), 'p')
 
@@ -2256,13 +2259,15 @@ H.fs_create = function(path)
   if fs_type == 'directory' then
     return vim.fn.mkdir(path) == 1
   else
-    -- Don't override existing file
-    if H.fs_get_type(path) ~= nil then return false end
     return vim.fn.writefile({}, path) == 0
   end
 end
 
 H.fs_copy = function(from, to)
+  -- Don't override existing path
+  if H.fs_is_present_path(to) then return false end
+
+  -- Copy file directly
   local from_type = H.fs_get_type(from)
   if from_type == nil then return false end
   if from_type == 'file' then return vim.loop.fs_copyfile(from, to) end
@@ -2283,6 +2288,10 @@ end
 H.fs_delete = function(path) return vim.fn.delete(path, 'rf') == 0 end
 
 H.fs_move = function(from, to)
+  -- Don't override existing path
+  if H.fs_is_present_path(to) then return false end
+
+  -- Move
   local success = vim.loop.fs_rename(from, to)
 
   -- Rename in loaded buffers

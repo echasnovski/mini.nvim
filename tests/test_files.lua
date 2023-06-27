@@ -2187,6 +2187,26 @@ T['File manipulation']['can create'] = function()
   validate_confirm_args(ref_pattern)
 end
 
+T['File manipulation']['create does not override existing entry'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
+  local file_path = join_path(temp_dir, 'file')
+  child.fn.writefile({ 'File' }, file_path)
+
+  open(temp_dir)
+  type_keys('o', 'file', '<CR>', 'dir/', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+
+  validate_file(file_path)
+  validate_file_content(file_path, { 'File' })
+  validate_file(temp_dir, 'dir', 'subfile')
+end
+
 T['File manipulation']['creates files in nested directories'] = function()
   child.set_size(10, 60)
   local temp_dir = make_temp_dir('temp', { 'dir/' })
@@ -2259,26 +2279,6 @@ T['File manipulation']['creates nested directories'] = function()
   validate_confirm_args(ref_pattern_2)
 end
 
-T['File manipulation']['creation does not override existing entry'] = function()
-  child.set_size(10, 60)
-
-  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
-  local file_path = join_path(temp_dir, 'file')
-  child.fn.writefile({ 'File' }, file_path)
-
-  open(temp_dir)
-  type_keys('o', 'file', '<CR>', 'dir/', '<Esc>')
-  child.expect_screenshot()
-
-  mock_confirm(1)
-  synchronize()
-  child.expect_screenshot()
-
-  validate_file(file_path)
-  validate_file_content(file_path, { 'File' })
-  validate_file(temp_dir, 'dir', 'subfile')
-end
-
 T['File manipulation']['can delete'] = function()
   local temp_dir =
     make_temp_dir('temp', { 'file', 'empty-dir/', 'dir/', 'dir/file', 'dir/nested-dir/', 'dir/nested-dir/file' })
@@ -2327,6 +2327,22 @@ T['File manipulation']['can rename'] = function()
 
   validate_confirm_args([[  RENAME: 'dir' to 'new%-dir']])
   validate_confirm_args([[  RENAME: 'file' to 'file%-new']])
+end
+
+T['File manipulation']['rename does not override existing entry'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir-2/', 'file', 'file-2' })
+  open(temp_dir)
+  child.expect_screenshot()
+
+  type_keys('A', '-2', '<Esc>')
+  type_keys('2j', 'A', '-2', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
 end
 
 T['File manipulation']['rename file renames opened buffers'] = function()
@@ -2444,6 +2460,22 @@ T['File manipulation']['can move directory'] = function()
     string.format([[    MOVE: 'dir' to '%s']], target_path)
   )
   validate_confirm_args(ref_pattern)
+end
+
+T['File manipulation']['move does not override existing entry'] = function()
+  child.set_size(10, 80)
+
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file', 'target-dir/', 'target-dir/dir/', 'target-dir/file' })
+  open(temp_dir)
+  child.expect_screenshot()
+
+  type_keys('dd', 'l', 'p')
+  type_keys('h', 'G', 'dd', 'l', 'p')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
 end
 
 T['File manipulation']['handles move directory inside itself'] = function()
@@ -2585,6 +2617,22 @@ T['File manipulation']['can copy directory'] = function()
   local target_path_2 = short_path(temp_dir, 'dir-copy')
   local ref_pattern_2 = string.format([[    COPY: 'dir' to '%s']], vim.pesc(target_path_2))
   validate_confirm_args(ref_pattern_2)
+end
+
+T['File manipulation']['copy does not override existing entry'] = function()
+  child.set_size(10, 80)
+
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file', 'target-dir/', 'target-dir/dir/', 'target-dir/file' })
+  open(temp_dir)
+  child.expect_screenshot()
+
+  type_keys('yy', 'j', 'l', 'p')
+  type_keys('h', 'G', 'yy', 'k', 'l', 'p')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
 end
 
 T['File manipulation']['can copy directory inside itself'] = function()
