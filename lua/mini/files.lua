@@ -527,6 +527,12 @@ end
 ---
 --- `windows.width_focus` and `windows.width_nofocus` are number of columns used
 --- as `width` for focused and non-focused windows respectively.
+---
+--- # Callbacks ~
+---
+--- `callbacks.fs_delete` is an optional function that is called when deleting 
+--- a path. It takes a single argument, `path`, and must return true if
+--- successful.
 MiniFiles.config = {
   -- Customization of shown content
   content = {
@@ -570,6 +576,11 @@ MiniFiles.config = {
     -- Width of preview window
     width_preview = 25,
   },
+
+  -- Callbacks
+  callbacks = {
+    fs_delete = nil
+  }
 }
 --minidoc_afterlines_end
 
@@ -958,6 +969,7 @@ H.setup_config = function(config)
     mappings = { config.mappings, 'table' },
     options = { config.options, 'table' },
     windows = { config.windows, 'table' },
+    callbacks = { config.callbacks, 'table' },
   })
 
   vim.validate({
@@ -976,6 +988,8 @@ H.setup_config = function(config)
     ['mappings.trim_right'] = { config.mappings.trim_right, 'string' },
 
     ['options.use_as_default_explorer'] = { config.options.use_as_default_explorer, 'boolean' },
+
+    ['callbacks.fs_delete'] = { config.callbacks.fs_delete, 'function' },
 
     ['windows.max_number'] = { config.windows.max_number, 'number' },
     ['windows.preview'] = { config.windows.preview, 'boolean' },
@@ -1024,8 +1038,9 @@ H.create_default_hl = function()
   hi('MiniFilesTitleFocused',   { link = 'FloatTitle' })
 end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniFiles.config, vim.b.minifiles_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniFiles.config, vim.b.minifiles_config or {}, config or {})
+end
 
 H.normalize_opts = function(explorer_opts, opts)
   opts = vim.tbl_deep_extend('force', H.get_config(), explorer_opts or {}, opts or {})
@@ -2293,7 +2308,10 @@ H.fs_copy = function(from, to)
   return success
 end
 
-H.fs_delete = function(path) return vim.fn.delete(path, 'rf') == 0 end
+H.fs_delete = function(path)
+  if H.get_config().callbacks.fs_delete then return H.get_config().callbacks.fs_delete(path) end
+  return vim.fn.delete(path, 'rf') == 0
+end
 
 H.fs_move = function(from, to)
   -- Don't override existing path
