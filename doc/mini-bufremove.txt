@@ -29,8 +29,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
    decided by the algorithm:
    - If alternate buffer (see |CTRL-^|) is listed (see |buflisted()|), use it.
    - If previous listed buffer (see |bprevious|) is different, use it.
-   - Otherwise create a scratch one with `nvim_create_buf(true, true)` and use
-     it.
+   - Otherwise create a new one with `nvim_create_buf(true, false)` and use it.
 
 # Disabling~
 

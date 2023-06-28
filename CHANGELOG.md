@@ -4,6 +4,10 @@
 
 - FEATURE: Add `MiniAnimateNormalFloat` highlight group to tweak highlighting of `open` and `close` animations.
 
+## mini.bufremove
+
+- BREAKING: Create normal buffer instead of scratch when there is no reasonable target to focus (#394).
+
 ## mini.files
 
 Introduction of a new module.

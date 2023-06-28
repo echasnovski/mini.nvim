@@ -52,17 +52,17 @@ local validate_unshow_bprevious = function(fun_name, layout)
   eq(win_get_buf(layout['win_right']), layout['buf_right'])
 end
 
-local validate_unshow_scratch = function(fun_name, layout)
+local validate_unshow_normal_buf = function(fun_name, layout)
   -- Wipeout all buffers except current
   child.cmd('.+,$bwipeout')
 
   eq(child.lua_get(('MiniBufremove.%s()'):format(fun_name)), true)
 
-  -- Verify that created buffer is scratch buffer
+  -- Verify that created buffer is a normal buffer
   local new_buf = child.api.nvim_get_current_buf()
   expect.no_equality(new_buf, layout['buf'])
   eq(buf_get_option(new_buf, 'buflisted'), true)
-  eq(buf_get_option(new_buf, 'buftype'), 'nofile')
+  eq(buf_get_option(new_buf, 'buftype'), '')
 
   eq(win_get_buf(layout['win_left']), new_buf)
   eq(win_get_buf(layout['win_right']), new_buf)
@@ -223,8 +223,8 @@ T['unshow()']['uses `bprevious`'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
 end
 
-T['unshow()']['creates a scratch buffer'] = function()
-  validate_unshow_scratch('unshow', layout)
+T['unshow()']['creates a normal buffer'] = function()
+  validate_unshow_normal_buf('unshow', layout)
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
 end
 
@@ -267,14 +267,14 @@ T['unshow_in_window()']['uses `bprevious`'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), true)
 end
 
-T['unshow_in_window()']['creates a scratch buffer'] = function()
+T['unshow_in_window()']['creates a normal buffer'] = function()
   child.cmd('.+,$bwipeout')
   eq(child.lua_get('MiniBufremove.unshow_in_window()'), true)
 
-  -- Verify that created buffer is scratch buffer
+  -- Verify that created buffer is normal buffer
   local new_buf = child.api.nvim_get_current_buf()
   eq(buf_get_option(new_buf, 'buflisted'), true)
-  eq(buf_get_option(new_buf, 'buftype'), 'nofile')
+  eq(buf_get_option(new_buf, 'buftype'), '')
 
   eq(win_get_buf(layout['win_left']), new_buf)
   eq(win_get_buf(layout['win_right']), layout['buf'])
@@ -317,8 +317,8 @@ T['delete()']['uses `bprevious`'] = function()
   eq(buf_get_option(layout['buf'], 'buflisted'), false)
 end
 
-T['delete()']['creates a scratch buffer'] = function()
-  validate_unshow_scratch('delete', layout)
+T['delete()']['creates a normal buffer'] = function()
+  validate_unshow_normal_buf('delete', layout)
   eq(buf_get_option(layout['buf'], 'buflisted'), false)
 end
 
@@ -357,8 +357,8 @@ T['wipeout()']['uses `bprevious`'] = function()
   eq(child.api.nvim_buf_is_valid(layout['buf']), false)
 end
 
-T['wipeout()']['creates a scratch buffer'] = function()
-  validate_unshow_scratch('wipeout', layout)
+T['wipeout()']['creates a normal buffer'] = function()
+  validate_unshow_normal_buf('wipeout', layout)
   eq(child.api.nvim_buf_is_valid(layout['buf']), false)
 end
 

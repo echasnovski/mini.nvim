@@ -29,8 +29,7 @@
 ---    decided by the algorithm:
 ---    - If alternate buffer (see |CTRL-^|) is listed (see |buflisted()|), use it.
 ---    - If previous listed buffer (see |bprevious|) is different, use it.
----    - Otherwise create a scratch one with `nvim_create_buf(true, true)` and use
----      it.
+---    - Otherwise create a new one with `nvim_create_buf(true, false)` and use it.
 ---
 --- # Disabling~
 ---
@@ -157,8 +156,8 @@ MiniBufremove.unshow_in_window = function(win_id)
     local has_previous = pcall(vim.cmd, 'bprevious')
     if has_previous and cur_buf ~= vim.api.nvim_win_get_buf(win_id) then return end
 
-    -- Create new listed scratch buffer
-    local new_buf = vim.api.nvim_create_buf(true, true)
+    -- Create new listed buffer
+    local new_buf = vim.api.nvim_create_buf(true, false)
     vim.api.nvim_win_set_buf(win_id, new_buf)
   end)
 
