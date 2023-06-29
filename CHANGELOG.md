@@ -1,5 +1,9 @@
 # Version 0.9.0.9000
 
+## mini.ai
+
+- FEATURE: Allow `vis_mode` field in custom texobject region to force Visual mode with which textobject is selected.
+
 ## mini.animate
 
 - FEATURE: Add `MiniAnimateNormalFloat` highlight group to tweak highlighting of `open` and `close` animations.

@@ -177,12 +177,21 @@
 ---   (see |MiniAi-textobject-specification| and |MiniAi.config|).
 ---@tag MiniAi-textobject-builtin
 
---- - REGION - table representing region in a buffer. Fields: <from> and
----   <to> for inclusive start and end positions (<to> might be `nil` to
----   describe empty region). Each position is also a table with line <line>
----   and column <col> (both start at 1). Examples:
+--- - REGION - table representing region in a buffer. Fields:
+---     - <from> and <to> for inclusive start and end positions (<to> might be
+---       `nil` to describe empty region). Each position is also a table with
+---       line <line> and column <col> (both start at 1).
+---     - <vis_mode> for which Visual mode will be used to select textobject.
+---       See `opts` argument of |MiniAi.select_textobject()|.
+---       One of `'v'`, `'V'`, `'\22'` (escaped `'<C-v>'`).
+---   Examples:
 ---   - `{ from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }`
----   - `{ from = { line = 10, col = 10 } }` - empty region.
+---   - Force linewise mode: >
+---     {
+---       from = { line = 1, col = 1 }, to = { line = 2, col = 1 },
+---       vis_mode = 'V',
+---     }
+--- <  - Empty region: `{ from = { line = 10, col = 10 } }`
 --- - PATTERN - string describing Lua pattern.
 --- - SPAN - interval inside a string (end-exclusive). Like [1, 5). Equal
 ---   `from` and `to` edges describe empty span at that point.
@@ -253,7 +262,7 @@
 ---               line = vim.fn.line('$'),
 ---               col = math.max(vim.fn.getline('$'):len(), 1)
 ---             }
----             return { from = from, to = to }
+---             return { from = from, to = to, vis_mode = 'V' }
 ---           end
 --- <
 ---         - Array of output region(s). Useful for incorporating other
@@ -943,7 +952,8 @@ end
 ---@param ai_type string One of `'a'` or `'i'`.
 ---@param id string Single character string representing textobject id.
 ---@param opts table|nil Same as in |MiniAi.find_textobject()|. Extra fields:
----   - <vis_mode> - One of `'v'`, `'V'`, `'<C-v>'`. Default: Latest visual mode.
+---   - <vis_mode> - One of `'v'`, `'V'`, or `'\22'` (escaped version of `'<C-v>'`).
+---     Default: Latest visual mode.
 ---   - <operator_pending> - Whether selection is for Operator-pending mode.
 ---     Used in that mode's mappings, shouldn't be used directly. Default: `false`.
 MiniAi.select_textobject = function(ai_type, id, opts)
@@ -964,9 +974,13 @@ MiniAi.select_textobject = function(ai_type, id, opts)
   local tobj_is_empty = tobj.to == nil
   tobj.to = tobj.to or tobj.from
 
-  local prev_vis_mode = vim.fn.visualmode()
-  prev_vis_mode = prev_vis_mode == '' and 'v' or prev_vis_mode
-  local vis_mode = opts.vis_mode and vim.api.nvim_replace_termcodes(opts.vis_mode, true, true, true) or prev_vis_mode
+  -- Compute selection type preferring the one coming from textobject
+  local vis_mode = tobj.vis_mode
+  if vis_mode == nil or not H.is_visual_mode(vis_mode) then
+    local prev_vis_mode = vim.fn.visualmode()
+    prev_vis_mode = prev_vis_mode == '' and 'v' or prev_vis_mode
+    vis_mode = opts.vis_mode and vim.api.nvim_replace_termcodes(opts.vis_mode, true, true, true) or prev_vis_mode
+  end
 
   -- Allow going past end of line in order to collapse multiline regions
   local cache_virtualedit = vim.o.virtualedit
@@ -1870,10 +1884,10 @@ H.user_input = function(prompt, text)
 end
 
 -- Work with Visual mode ------------------------------------------------------
-H.is_visual_mode = function()
-  local cur_mode = vim.fn.mode()
+H.is_visual_mode = function(mode)
+  mode = mode or vim.fn.mode()
   -- '\22' is an escaped `<C-v>`
-  return cur_mode == 'v' or cur_mode == 'V' or cur_mode == '\22', cur_mode
+  return mode == 'v' or mode == 'V' or mode == '\22', mode
 end
 
 H.exit_to_normal_mode = function()

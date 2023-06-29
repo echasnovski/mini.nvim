@@ -877,6 +877,33 @@ T['select_textobject()']["respects 'selection=exclusive'"] = function()
   validate('a', '  ')
 end
 
+T['select_textobject()']['respects `vis_mode` from textobject region'] = function()
+  -- Should respect `vis_mode` in a region
+  local validate = function(tobj_vis_mode, type_vis_mode)
+    local lua_cmd = string.format(
+      [[_G.cur_line = function(ai_type, id, opts)
+        return { from = { line = vim.fn.line('.'), col = 1 }, vis_mode = '%s' }
+      end]],
+      tobj_vis_mode
+    )
+    child.lua(lua_cmd)
+    child.lua([[MiniAi.config.custom_textobjects = { c = _G.cur_line }]])
+
+    set_lines({ 'aaaa', 'bbbb' })
+    type_keys(type_vis_mode, 'ac')
+    eq(child.fn.mode(), tobj_vis_mode)
+
+    child.ensure_normal_mode()
+  end
+
+  validate('v', 'V')
+  validate('v', '\22')
+  validate('V', 'v')
+  validate('V', '\22')
+  validate('\22', 'v')
+  validate('\22', 'V')
+end
+
 T['Search method'] = new_set()
 
 T['Search method']['works with "cover"'] = function()
@@ -3021,12 +3048,12 @@ T['Custom textobject']['documented examples']['full buffer'] = function()
   child.lua([[_G.full_buffer = function()
     local from = { line = 1, col = 1 }
     local to = { line = vim.fn.line('$'), col = math.max(vim.fn.getline('$'):len(), 1) }
-    return { from = from, to = to }
+    return { from = from, to = to, vis_mode = 'V' }
   end]])
   child.lua('MiniAi.config.custom_textobjects = { g = _G.full_buffer }')
 
-  validate_tobj({ 'aaaa', 'bbb', 'cc' }, { 2, 0 }, 'ag', { { 1, 1 }, { 3, 2 } })
-  validate_tobj({ '' }, { 1, 0 }, 'ag', { { 1, 1 }, { 1, 1 } })
+  validate_tobj({ 'aaaa', 'bbb', 'cc' }, { 2, 0 }, 'ag', { 1, 3 }, 'V')
+  validate_tobj({ '' }, { 1, 0 }, 'ag', { 1, 1 }, 'V')
 end
 
 T['Custom textobject']['documented examples']['wide lines'] = function()

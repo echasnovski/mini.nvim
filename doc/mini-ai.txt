@@ -180,12 +180,21 @@ Notes:
 
 ------------------------------------------------------------------------------
                                                                *MiniAi-glossary*
-- REGION - table representing region in a buffer. Fields: <from> and
-  <to> for inclusive start and end positions (<to> might be `nil` to
-  describe empty region). Each position is also a table with line <line>
-  and column <col> (both start at 1). Examples:
+- REGION - table representing region in a buffer. Fields:
+    - <from> and <to> for inclusive start and end positions (<to> might be
+      `nil` to describe empty region). Each position is also a table with
+      line <line> and column <col> (both start at 1).
+    - <vis_mode> for which Visual mode will be used to select textobject.
+      See `opts` argument of |MiniAi.select_textobject()|.
+      One of `'v'`, `'V'`, `'\22'` (escaped `'<C-v>'`).
+  Examples:
   - `{ from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }`
-  - `{ from = { line = 10, col = 10 } }` - empty region.
+  - Force linewise mode: >
+    {
+      from = { line = 1, col = 1 }, to = { line = 2, col = 1 },
+      vis_mode = 'V',
+    }
+<  - Empty region: `{ from = { line = 10, col = 10 } }`
 - PATTERN - string describing Lua pattern.
 - SPAN - interval inside a string (end-exclusive). Like [1, 5). Equal
   `from` and `to` edges describe empty span at that point.
@@ -257,7 +266,7 @@ Textobject specification has a structure of composed pattern (see
               line = vim.fn.line('$'),
               col = math.max(vim.fn.getline('$'):len(), 1)
             }
-            return { from = from, to = to }
+            return { from = from, to = to, vis_mode = 'V' }
           end
 <
         - Array of output region(s). Useful for incorporating other
@@ -747,7 +756,8 @@ Parameters~
 {ai_type} `(string)` One of `'a'` or `'i'`.
 {id} `(string)` Single character string representing textobject id.
 {opts} `(table|nil)` Same as in |MiniAi.find_textobject()|. Extra fields:
-  - <vis_mode> - One of `'v'`, `'V'`, `'<C-v>'`. Default: Latest visual mode.
+  - <vis_mode> - One of `'v'`, `'V'`, or `'\22'` (escaped version of `'<C-v>'`).
+    Default: Latest visual mode.
   - <operator_pending> - Whether selection is for Operator-pending mode.
     Used in that mode's mappings, shouldn't be used directly. Default: `false`.
 
