@@ -453,6 +453,7 @@
 ---   })
 ---@tag MiniFiles-examples
 
+---@diagnostic disable:luadoc-miss-type-name
 ---@alias __minifiles_fs_entry_data_fields   - <fs_type> `(string)` - one of "file" or "directory".
 ---   - <name> `(string)` - basename of an entry (including extension).
 ---   - <path> `(string)` - full path of an entry.
@@ -2226,9 +2227,9 @@ H.fs_actions_to_lines = function(fs_actions)
   local actions_per_dir = {}
 
   local get_dir_actions = function(path)
-    local path = H.fs_shorten_path(H.fs_get_parent(path))
-    local dir_actions = actions_per_dir[path] or {}
-    actions_per_dir[path] = dir_actions
+    local dir_path = H.fs_shorten_path(H.fs_get_parent(path))
+    local dir_actions = actions_per_dir[dir_path] or {}
+    actions_per_dir[dir_path] = dir_actions
     return dir_actions
   end
 
