@@ -1893,7 +1893,7 @@ H.buffer_update_file = function(buf_id, path, opts)
 
   -- Add highlighting on Neovim>=0.8 which has stabilized API
   if vim.fn.has('nvim-0.8') == 1 then
-    local ft = vim.filetype.match({ filename = path })
+    local ft = vim.filetype.match({ buf = buf_id, filename = path })
     local ok, _ = pcall(vim.treesitter.start, buf_id, ft)
     if not ok then vim.bo[buf_id].syntax = ft end
   end
