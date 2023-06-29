@@ -197,6 +197,7 @@ T['setup()']['creates `config` field'] = function()
   local expect_config = function(field, value) eq(child.lua_get('MiniFiles.config.' .. field), value) end
 
   expect_config('content.filter', vim.NIL)
+  expect_config('content.prefix', vim.NIL)
   expect_config('content.sort', vim.NIL)
 
   expect_config('mappings.close', 'q')
@@ -235,6 +236,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error('a', 'config', 'table')
   expect_config_error({ content = 'a' }, 'content', 'table')
   expect_config_error({ content = { filter = 1 } }, 'content.filter', 'function')
+  expect_config_error({ content = { prefix = 1 } }, 'content.prefix', 'function')
   expect_config_error({ content = { sort = 1 } }, 'content.sort', 'function')
 
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
@@ -546,6 +548,58 @@ T['open()']['respects `content.filter`'] = function()
   child.expect_screenshot()
 end
 
+T['open()']['respects `content.prefix`'] = function()
+  child.set_size(15, 60)
+
+  child.lua([[
+    _G.prefix_arg = {}
+    MiniFiles.config.content.prefix = function(fs_entry)
+      _G.prefix_arg = fs_entry
+
+      if fs_entry.fs_type == 'directory' then
+        return '-', 'Comment'
+      else
+        return '|', 'Special'
+      end
+    end
+  ]])
+
+  open(test_dir_path)
+  child.expect_screenshot()
+  validate_fs_entry(child.lua_get('_G.prefix_arg'))
+
+  -- Local value from argument should take precedence
+  child.lua([[_G.prefix_2 = function(fs_entry) return '|', 'Special' end ]])
+
+  local lua_cmd =
+    string.format([[MiniFiles.open(%s, false, { content = { prefix = _G.prefix_2 } })]], vim.inspect(test_dir_path))
+  child.lua(lua_cmd)
+  child.expect_screenshot()
+end
+
+T['open()']['`content.prefix` can be used to not show prefix'] = function()
+  child.lua([[MiniFiles.config.content.prefix = function() return '', '' end]])
+  open(test_dir_path)
+  go_in()
+  child.expect_screenshot()
+end
+
+T['open()']['`content.prefix` can return `nil`'] = function()
+  child.set_size(15, 60)
+
+  local validate = function(return_expr)
+    local lua_cmd = string.format([[MiniFiles.config.content.prefix = function() return %s end]], return_expr)
+    child.lua(lua_cmd)
+    open(test_dir_path)
+    child.expect_screenshot()
+    close()
+  end
+
+  validate()
+  validate([['', nil]])
+  validate([[nil, '']])
+end
+
 T['open()']['respects `content.sort`'] = function()
   child.lua([[
     _G.sort_arg = {}
@@ -662,8 +716,8 @@ end
 T['open()']['respects `windows.width_preview`'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
   child.lua('MiniFiles.config.windows.width_focus = 20')
-  child.lua('MiniFiles.config.windows.width_nofocus = 5')
-  child.lua('MiniFiles.config.windows.width_preview = 10')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
 
   local test_path = make_test_path('nested')
 
@@ -771,9 +825,10 @@ T['refresh()']['does not update buffers with `nil` `filter` and `sort`'] = funct
   eq(child.api.nvim_buf_get_var(buf_id_2, 'changedtick'), changedtick_2)
 end
 
-T['refresh()']['updates buffers with non-`nil` `filter` or `sort`'] = function()
+T['refresh()']['updates buffers with non-empty `content`'] = function()
   child.lua([[
     _G.hide_dotfiles = function(fs_entry) return not vim.startswith(fs_entry.name, '.') end
+    _G.hide_prefix = function() return '', '' end
     _G.sort_rev_alpha = function(fs_entries)
       local res = vim.deepcopy(fs_entries)
       table.sort(res, function(a, b) return a.name > b.name end)
@@ -785,6 +840,9 @@ T['refresh()']['updates buffers with non-`nil` `filter` or `sort`'] = function()
   child.expect_screenshot()
 
   child.lua('MiniFiles.refresh({ content = { filter = _G.hide_dotfiles } })')
+  child.expect_screenshot()
+
+  child.lua('MiniFiles.refresh({ content = { prefix = _G.hide_prefix } })')
   child.expect_screenshot()
 
   child.lua('MiniFiles.refresh({ content = { sort = _G.sort_rev_alpha } })')
@@ -2862,12 +2920,40 @@ T['Cursors']['not allowed to the left of the entry name'] = function()
   eq(get_cursor(), cursor)
 end
 
+T['Cursors']['handle `content.prefix` returning different lengths'] = function()
+  child.lua([[
+    _G.cur_prefix = ''
+    MiniFiles.config.content.prefix = function()
+      local res_prefix = _G.cur_prefix
+      _G.cur_prefix = _G.cur_prefix .. '+'
+      return res_prefix, 'Comment'
+    end
+  ]])
+
+  open(test_dir_path)
+  child.expect_screenshot()
+
+  local cur_cursor = get_cursor()
+  eq(cur_cursor, { 1, 4 })
+
+  local offset = 0
+  local validate_cursor = function()
+    type_keys('j')
+    offset = offset + 1
+    eq(get_cursor(), { cur_cursor[1] + offset, cur_cursor[2] + offset })
+  end
+
+  validate_cursor()
+  validate_cursor()
+  validate_cursor()
+end
+
 T['Cursors']['shows whole line after horizontal scroll'] = function()
   child.set_size(10, 60)
 
   open(test_dir_path)
 
-  type_keys('5zl')
+  type_keys('7zl')
   child.expect_screenshot()
 
   type_keys('2B')

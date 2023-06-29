@@ -17,7 +17,7 @@ Features:
 - Use as default file explorer instead of |netrw|.
 
 - Configurable:
-    - Filter/sort of file system entries.
+    - Filter/prefix/sort of file system entries.
     - Mappings used for common explorer actions.
     - UI options: whether to show preview of file/directory under cursor, etc.
 
@@ -122,6 +122,9 @@ principles:
 - Explorer windows are the viewport to some part of current branch, meaning
   that their opening/closing does not affect the branch. This matters, for
   example, if there are more elements in the branch than can be shown windows.
+
+- Every buffer line represents separate file system entry following certain
+  format (not visible for users by default; set |conceallevel| to 0 to see it)
 
 - Once directory is shown, its buffer is not updated automatically following
   external file system changes. Manually use |MiniFiles.synchronize()| for that.
@@ -228,8 +231,9 @@ All manipulation functionality is powered by creating and keeping track of
 path indexes: text of the form `/xxx` (`xxx` is the number path index) placed
 at the start of every line representing file system entry.
 
-By default they are hidden as concealed text for more convenience but you
-can see them by setting |conceallevel| to 0.
+By default they are hidden as concealed text (along with prefix separators)
+for more convenience but you can see them by setting |conceallevel| to 0.
+DO NOT modify text to the left of entry name.
 
 During synchronization, actual text for entry name is compared to path index
 at that line (if present) to deduce which file system action to perform.
@@ -358,6 +362,24 @@ Create an autocommand for `MiniFilesWindowOpen` event: >
     end,
   })
 
+# Customize icons ~
+
+Use different directory icon: >
+
+  local my_prefix = function(fs_entry)
+    if fs_entry.fs_type == 'directory' then
+      -- NOTE: it is usually a good idea to use icon followed by space
+      return ' ', 'MiniFilesDirectory'
+    end
+    return MiniFiles.default_prefix(fs_entry)
+  end
+
+  require('mini.files').setup({ content = { prefix = my_prefix } })
+
+Show no icons: >
+
+  require('mini.files').setup({ content = { prefix = function() end } })
+
 # Create mapping to show/hide dot-files ~
 
 Create an autocommand for `MiniFilesBufferCreate` event which calls
@@ -458,6 +480,8 @@ Default values:
     content = {
       -- Predicate for which file system entries to show
       filter = nil,
+      -- What prefix to show to the left of file system entry
+      prefix = nil,
       -- In which order to show file system entries
       sort = nil,
     },
@@ -508,6 +532,15 @@ A file system entry data is a table with the following fields:
   - <fs_type> `(string)` - one of "file" or "directory".
   - <name> `(string)` - basename of an entry (including extension).
   - <path> `(string)` - full path of an entry.
+
+`content.prefix` describes what text (prefix) to show to the left of file
+system entry name (if any) and how to highlight it. It also takes file
+system entry data as input and returns tuple of text and highlight group
+name to be used to highlight prefix. See |MiniFiles-examples| for common
+examples of how to use it.
+Note: due to how lines are parsed to detect user edits for file system
+manipulation, output of `content.prefix` should not contain `/` character.
+Uses |MiniFiles.default_prefix()| by default.
 
 `content.sort` describes in which order directory entries should be shown
 in directory buffer. Takes as input and returns as output an array of file
@@ -594,8 +627,8 @@ Parameters~
 Refresh explorer
 
 Notes:
-- If in `opts` at least one of `content.filter` or `content.sort` is not `nil`,
-  all directory buffers are forced to update.
+- If in `opts` at least one of `content` entry is not `nil`, all directory
+  buffers are forced to update.
 
 Parameters~
 {opts} `(table|nil)` Table of options to update.
@@ -727,6 +760,25 @@ Parameters~
 
 Return~
 `(boolean)` Always `true`.
+
+------------------------------------------------------------------------------
+                                                    *MiniFiles.default_prefix()*
+                     `MiniFiles.default_prefix`({fs_entry})
+Default prefix of file system entries
+
+- For directory return fixed icon and 'MiniFilesDirectory' highlight group.
+- For file try to use `get_icon()` from 'nvim-tree/nvim-web-devicons'.
+  If missing, return fixed icon and 'MiniFilesFile' highlight group.
+
+Parameters~
+{fs_entry} `(table)` Table with the following fields:
+  - <fs_type> `(string)` - one of "file" or "directory".
+  - <name> `(string)` - basename of an entry (including extension).
+  - <path> `(string)` - full path of an entry.
+
+Return~
+`(...)` Icon and highlight group name. For more details, see |MiniFiles.config|
+  and |MiniFiles-examples|.
 
 ------------------------------------------------------------------------------
                                                       *MiniFiles.default_sort()*

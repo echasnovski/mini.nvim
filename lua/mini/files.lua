@@ -17,7 +17,7 @@
 --- - Use as default file explorer instead of |netrw|.
 ---
 --- - Configurable:
----     - Filter/sort of file system entries.
+---     - Filter/prefix/sort of file system entries.
 ---     - Mappings used for common explorer actions.
 ---     - UI options: whether to show preview of file/directory under cursor, etc.
 ---
@@ -120,6 +120,9 @@
 --- - Explorer windows are the viewport to some part of current branch, meaning
 ---   that their opening/closing does not affect the branch. This matters, for
 ---   example, if there are more elements in the branch than can be shown windows.
+---
+--- - Every buffer line represents separate file system entry following certain
+---   format (not visible for users by default; set |conceallevel| to 0 to see it)
 ---
 --- - Once directory is shown, its buffer is not updated automatically following
 ---   external file system changes. Manually use |MiniFiles.synchronize()| for that.
@@ -225,8 +228,9 @@
 --- path indexes: text of the form `/xxx` (`xxx` is the number path index) placed
 --- at the start of every line representing file system entry.
 ---
---- By default they are hidden as concealed text for more convenience but you
---- can see them by setting |conceallevel| to 0.
+--- By default they are hidden as concealed text (along with prefix separators)
+--- for more convenience but you can see them by setting |conceallevel| to 0.
+--- DO NOT modify text to the left of entry name.
 ---
 --- During synchronization, actual text for entry name is compared to path index
 --- at that line (if present) to deduce which file system action to perform.
@@ -352,6 +356,24 @@
 ---       vim.api.nvim_win_set_config(win_id, { border = 'double' })
 ---     end,
 ---   })
+---
+--- # Customize icons ~
+---
+--- Use different directory icon: >
+---
+---   local my_prefix = function(fs_entry)
+---     if fs_entry.fs_type == 'directory' then
+---       -- NOTE: it is usually a good idea to use icon followed by space
+---       return ' ', 'MiniFilesDirectory'
+---     end
+---     return MiniFiles.default_prefix(fs_entry)
+---   end
+---
+---   require('mini.files').setup({ content = { prefix = my_prefix } })
+---
+--- Show no icons: >
+---
+---   require('mini.files').setup({ content = { prefix = function() end } })
 ---
 --- # Create mapping to show/hide dot-files ~
 ---
@@ -480,6 +502,15 @@ end
 --- A file system entry data is a table with the following fields:
 --- __minifiles_fs_entry_data_fields
 ---
+--- `content.prefix` describes what text (prefix) to show to the left of file
+--- system entry name (if any) and how to highlight it. It also takes file
+--- system entry data as input and returns tuple of text and highlight group
+--- name to be used to highlight prefix. See |MiniFiles-examples| for common
+--- examples of how to use it.
+--- Note: due to how lines are parsed to detect user edits for file system
+--- manipulation, output of `content.prefix` should not contain `/` character.
+--- Uses |MiniFiles.default_prefix()| by default.
+---
 --- `content.sort` describes in which order directory entries should be shown
 --- in directory buffer. Takes as input and returns as output an array of file
 --- system entry data. Note: techincally, it can be used to filter and modify
@@ -532,6 +563,8 @@ MiniFiles.config = {
   content = {
     -- Predicate for which file system entries to show
     filter = nil,
+    -- What prefix to show to the left of file system entry
+    prefix = nil,
     -- In which order to show file system entries
     sort = nil,
   },
@@ -642,8 +675,8 @@ end
 --- Refresh explorer
 ---
 --- Notes:
---- - If in `opts` at least one of `content.filter` or `content.sort` is not `nil`,
----   all directory buffers are forced to update.
+--- - If in `opts` at least one of `content` entry is not `nil`, all directory
+---   buffers are forced to update.
 ---
 ---@param opts table|nil Table of options to update.
 MiniFiles.refresh = function(opts)
@@ -652,7 +685,7 @@ MiniFiles.refresh = function(opts)
 
   -- Decide whether buffers should be forcefully updated
   local content_opts = (opts or {}).content or {}
-  local force_update = content_opts.filter ~= nil or content_opts.sort ~= nil
+  local force_update = #vim.tbl_keys(content_opts) > 0
 
   -- Confirm refresh if there is modified buffer
   if force_update then force_update = H.explorer_confirm_modified(explorer, 'buffer updates') end
@@ -878,6 +911,26 @@ MiniFiles.get_latest_path = function() return H.latest_paths[vim.api.nvim_get_cu
 ---@return boolean Always `true`.
 MiniFiles.default_filter = function(fs_entry) return true end
 
+--- Default prefix of file system entries
+---
+--- - For directory return fixed icon and 'MiniFilesDirectory' highlight group.
+--- - For file try to use `get_icon()` from 'nvim-tree/nvim-web-devicons'.
+---   If missing, return fixed icon and 'MiniFilesFile' highlight group.
+---
+---@param fs_entry table Table with the following fields:
+--- __minifiles_fs_entry_data_fields
+---
+---@return ... Icon and highlight group name. For more details, see |MiniFiles.config|
+---   and |MiniFiles-examples|.
+MiniFiles.default_prefix = function(fs_entry)
+  if fs_entry.fs_type == 'directory' then return ' ', 'MiniFilesDirectory' end
+  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+  if not has_devicons then return ' ', 'MiniFilesFile' end
+
+  local icon, hl = devicons.get_icon(fs_entry.name, nil, { default = false })
+  return (icon or '') .. ' ', hl or 'MiniFilesFile'
+end
+
 --- Default sort of file system entries
 ---
 --- Sort directories and files separately (alphabetically ignoring case) and
@@ -962,6 +1015,7 @@ H.setup_config = function(config)
 
   vim.validate({
     ['content.filter'] = { config.content.filter, 'function', true },
+    ['content.prefix'] = { config.content.prefix, 'function', true },
     ['content.sort'] = { config.content.sort, 'function', true },
 
     ['mappings.close'] = { config.mappings.close, 'string' },
@@ -1030,6 +1084,7 @@ H.get_config =
 H.normalize_opts = function(explorer_opts, opts)
   opts = vim.tbl_deep_extend('force', H.get_config(), explorer_opts or {}, opts or {})
   opts.content.filter = opts.content.filter or MiniFiles.default_filter
+  opts.content.prefix = opts.content.prefix or MiniFiles.default_prefix
   opts.content.sort = opts.content.sort or MiniFiles.default_sort
 
   return opts
@@ -1780,15 +1835,16 @@ H.buffer_update_directory = function(buf_id, path, opts)
 
   -- Compute lines
   local fs_entries = H.fs_read_dir(path, opts.content)
-  local get_icon_data = H.make_icon_getter()
 
   -- - Compute format expression resulting into same width path ids
   local path_width = math.floor(math.log10(#H.path_index)) + 1
-  local line_format = '/%0' .. path_width .. 'd%s %s'
+  local line_format = '/%0' .. path_width .. 'd/%s/%s'
 
+  local prefix_fun = opts.content.prefix
   for _, entry in ipairs(fs_entries) do
-    local icon, hl = get_icon_data(entry.name, entry.fs_type)
-    table.insert(lines, string.format(line_format, H.path_index[entry.path], icon, entry.name))
+    local prefix, hl = prefix_fun(entry)
+    prefix, hl = prefix or '', hl or ''
+    table.insert(lines, string.format(line_format, H.path_index[entry.path], prefix, entry.name))
     table.insert(icon_hl, hl)
     table.insert(name_hl, entry.fs_type == 'directory' and 'MiniFilesDirectory' or 'MiniFilesFile')
   end
@@ -1802,9 +1858,8 @@ H.buffer_update_directory = function(buf_id, path, opts)
 
   local set_hl = function(line, col, hl_opts) H.set_extmark(buf_id, ns_id, line, col, hl_opts) end
 
-  for i = 1, #icon_hl do
-    local l = lines[i]
-    local icon_start, name_start = l:match('^/%d+()%S+ ()')
+  for i, l in ipairs(lines) do
+    local icon_start, name_start = l:match('^/%d+/().-()/')
 
     -- NOTE: Use `right_gravity = false` for persistent highlights during edit
     local icon_opts = { hl_group = icon_hl[i], end_col = name_start - 1, right_gravity = false }
@@ -1904,7 +1959,7 @@ end
 
 H.match_line_offset = function(l)
   if l == nil then return nil end
-  return l:match('^/%d+%S+ ()') or 1
+  return l:match('^/.-/.-/()') or 1
 end
 
 H.match_line_path_id = function(l)
@@ -1914,17 +1969,6 @@ H.match_line_path_id = function(l)
   local ok, res = pcall(tonumber, id_str)
   if not ok then return nil end
   return res
-end
-
-H.make_icon_getter = function()
-  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-  local get_file_icon = has_devicons and devicons.get_icon or function(...) end
-
-  return function(name, fs_type)
-    if fs_type == 'directory' then return '', 'MiniFilesDirectory' end
-    local icon, hl = get_file_icon(name, nil, { default = false })
-    return icon or '', hl or 'MiniFilesFile'
-  end
 end
 
 -- Windows --------------------------------------------------------------------
@@ -1952,8 +1996,11 @@ H.window_open = function(buf_id, config)
   vim.wo[win_id].foldenable = false
   vim.wo[win_id].wrap = false
 
-  -- Conceal path id
-  vim.api.nvim_win_call(win_id, function() vim.fn.matchadd('Conceal', [[^/\d\+]]) end)
+  -- Conceal path id and prefix separators
+  vim.api.nvim_win_call(win_id, function()
+    vim.fn.matchadd('Conceal', [[^/\d\+/]])
+    vim.fn.matchadd('Conceal', [[^/\d\+/[^/]*\zs/\ze]])
+  end)
 
   -- Set permanent window highlights
   H.window_update_highlight(win_id, 'NormalFloat', 'MiniFilesNormal')

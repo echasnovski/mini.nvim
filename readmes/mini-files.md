@@ -37,7 +37,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/4d8fb50d-5d74-46ea-ba4d
 - Use as default file explorer instead of `netrw`.
 
 - Configurable:
-    - Filter/sort of file system entries.
+    - Filter/prefix/sort of file system entries.
     - Mappings used for common explorer actions.
     - UI options: whether to show preview of file/directory under cursor, etc.
 
@@ -203,6 +203,8 @@ Here are code snippets for some common installation methods (use only one):
   content = {
     -- Predicate for which file system entries to show
     filter = nil,
+    -- What prefix to show to the left of file system entry
+    prefix = nil,
     -- In which order to show file system entries
     sort = nil,
   },
