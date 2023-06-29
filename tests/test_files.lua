@@ -1475,6 +1475,8 @@ T['Windows']['does not wrap content'] = function()
 end
 
 T['Windows']['correctly computes part of branch to show'] = function()
+  child.set_size(10, 80)
+
   child.lua('MiniFiles.config.windows.width_focus = 20')
   child.lua('MiniFiles.config.windows.width_nofocus = 10')
 
@@ -1493,6 +1495,17 @@ T['Windows']['correctly computes part of branch to show'] = function()
   go_out()
   child.expect_screenshot()
   go_out()
+  child.expect_screenshot()
+end
+
+T['Windows']['correctly computes part of branch to show with preview'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_preview = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  open(test_dir_path)
+  go_in()
   child.expect_screenshot()
 end
 

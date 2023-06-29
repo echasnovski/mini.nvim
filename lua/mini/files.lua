@@ -1580,8 +1580,16 @@ H.compute_visible_depth_range = function(explorer, opts)
   -- Compute maximum number of windows possible to fit in current Neovim width
   -- Add 2 to widths to take into account width of left and right borders
   local width_focus, width_nofocus = opts.windows.width_focus + 2, opts.windows.width_nofocus + 2
-  local max_number = math.floor((vim.o.columns - width_focus) / width_nofocus)
-  max_number = math.max(max_number, 0) + 1
+
+  local has_preview = explorer.opts.windows.preview and explorer.depth_focus < #explorer.branch
+  local width_preview = has_preview and (opts.windows.width_preview + 2) or width_nofocus
+
+  local max_number = 1
+  if (width_focus + width_preview) <= vim.o.columns then max_number = max_number + 1 end
+  if (width_focus + width_preview + width_nofocus) <= vim.o.columns then
+    max_number = max_number + math.floor((vim.o.columns - width_focus - width_preview) / width_nofocus)
+  end
+
   -- - Account for dedicated option
   max_number = math.min(math.max(max_number, 1), opts.windows.max_number)
 
