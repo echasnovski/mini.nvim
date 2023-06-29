@@ -395,6 +395,8 @@ end
 ---   (inclusive end of match), or 'none' (match for spot is done manually
 ---   inside pattern with plain `()` matching group).
 ---
+---@return function Spotter function.
+---
 ---@usage - Match any punctuation:
 ---   `MiniJump2d.gen_pattern_spotter('%p')`
 --- - Match first from line start non-whitespace character:
@@ -455,6 +457,38 @@ MiniJump2d.gen_pattern_spotter = function(pattern, side)
   end
 end
 
+--- Generate union of spotters
+---
+---@param ... any Each argument should be a valid spotter.
+---   See |MiniJump2d.config| for more details.
+---
+---@return function Spotter producing union of spots.
+---
+---@usage - Match start and end of non-blank character groups: >
+---
+---   local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
+---   local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
+---   local spotter = MiniJump2d.gen_union_spotter(nonblank_start, nonblank_end)
+MiniJump2d.gen_union_spotter = function(...)
+  local spotters = { ... }
+  if #spotters == 0 then return function() return {} end end
+
+  local is_all_callable = true
+  for _, x in ipairs(spotters) do
+    if not vim.is_callable(x) then is_all_callable = false end
+  end
+
+  if not is_all_callable then H.error('All `gen_union_spotter()` arguments should be callable elements.') end
+
+  return function(line_num, args)
+    local res = spotters[1](line_num, args)
+    for i = 2, #spotters do
+      res = H.merge_unique(res, spotters[i](line_num, args))
+    end
+    return res
+  end
+end
+
 --- Default spotter function
 ---
 --- Spot is possible for jump if it is one of the following:
@@ -470,6 +504,8 @@ end
 ---
 --- Usually takes from 2 to 3 keystrokes to get to destination.
 MiniJump2d.default_spotter = (function()
+  -- NOTE: not using `MiniJump2d.gen_union_spotter()` due to slightly better
+  -- algorithmic complexity merging small arrays first.
   local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
   local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
   -- Use `[^%s%p]` as "alphanumeric" to allow working with multibyte characters
@@ -955,6 +991,8 @@ H.perform_jump = function(spot, after_hook)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error(string.format('(mini.jump2d) %s', msg), 0) end
+
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end
 
@@ -1064,7 +1102,8 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.merge_unique = function(tbl_1, tbl_2)
-  if not (type(tbl_1) == 'table' and type(tbl_2) == 'table') then return end
+  if type(tbl_1) == 'table' and type(tbl_2) ~= 'table' then return tbl_1 end
+  if type(tbl_1) ~= 'table' and type(tbl_2) == 'table' then return tbl_2 end
 
   local n_1, n_2 = #tbl_1, #tbl_2
   local res, i, j = {}, 1, 1

@@ -349,6 +349,9 @@ Parameters~
   (inclusive end of match), or 'none' (match for spot is done manually
   inside pattern with plain `()` matching group).
 
+Return~
+`(function)` Spotter function.
+
 Usage~
 - Match any punctuation:
   `MiniJump2d.gen_pattern_spotter('%p')`
@@ -359,6 +362,25 @@ Usage~
 - Match letter followed by another letter (example of manual matching
   inside pattern):
   `MiniJump2d.gen_pattern_spotter('%a()%a', 'none')`
+
+------------------------------------------------------------------------------
+                                                *MiniJump2d.gen_union_spotter()*
+                     `MiniJump2d.gen_union_spotter`({...})
+Generate union of spotters
+
+Parameters~
+{...} `(any)` Each argument should be a valid spotter.
+  See |MiniJump2d.config| for more details.
+
+Return~
+`(function)` Spotter producing union of spots.
+
+Usage~
+- Match start and end of non-blank character groups: >
+
+  local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
+  local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
+  local spotter = MiniJump2d.gen_union_spotter(nonblank_start, nonblank_end)
 
 ------------------------------------------------------------------------------
                                                     *MiniJump2d.default_spotter*

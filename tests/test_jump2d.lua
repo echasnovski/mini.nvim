@@ -960,6 +960,47 @@ T['gen_pattern_spotter()']['works in edge cases'] = function()
   child.expect_screenshot()
 end
 
+T['gen_union_spotter()'] = new_set()
+
+T['gen_union_spotter()']['works'] = function()
+  child.set_size(5, 25)
+
+  child.lua([[
+    local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
+    _G.args_log = {}
+    _G.spotter_1 = function(...)
+      table.insert(_G.args_log, { ... })
+      return nonblank_start(...)
+    end
+
+    local word_start = MiniJump2d.gen_pattern_spotter('%w+', 'start')
+    _G.spotter_2 = function(...)
+      table.insert(_G.args_log, { ... })
+      return word_start(...)
+    end
+
+    _G.union_spotter = MiniJump2d.gen_union_spotter(_G.spotter_1, _G.spotter_2)
+  ]])
+
+  set_lines({ 'xxx x_x x_x xxx' })
+  child.lua('MiniJump2d.start({spotter = _G.union_spotter})')
+  child.expect_screenshot()
+end
+
+T['gen_union_spotter()']['validates arguments'] = function()
+  expect.error(
+    function() child.lua('MiniJump2d.gen_union_spotter(function() end, 1, function() end)') end,
+    'All.*callable'
+  )
+end
+
+T['gen_union_spotter()']['works with no arguments'] = function()
+  child.lua('_G.spotter = MiniJump2d.gen_union_spotter()')
+
+  set_lines({ 'xxx x_x x_x xxx' })
+  eq(child.lua_get('_G.spotter(1, {})'), {})
+end
+
 T['default_spotter()'] = new_set({
   hooks = {
     pre_case = function() child.set_size(5, 25) end,

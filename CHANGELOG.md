@@ -8,6 +8,10 @@
 
 Introduction of a new module.
 
+## mini.jump2d
+
+- FEATURE: Add `gen_union_spotter()` to allow combining separate spotters into one.
+
 
 # Version 0.9.0
 
