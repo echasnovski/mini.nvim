@@ -481,6 +481,8 @@ Default values:
     options = {
       -- Whether to use for editing directories
       use_as_default_explorer = true,
+      -- `string|nil` to be used to when deleting paths as with |system()|
+      delete_cmd = nil
     },
 
     -- Customization of explorer windows
@@ -496,11 +498,6 @@ Default values:
       -- Width of preview window
       width_preview = 25,
     },
-
-    -- Callbacks
-    callbacks = {
-      fs_delete = nil
-    }
   }
 <
 # Content ~
@@ -550,6 +547,9 @@ Here are some alternatives: >
 should be used as a default file explorer for editing directories (instead of
 |netrw| by default).
 
+`options.delete_cmd` is an optional string to use as a command when deleting
+a path as in |vim.fn.system|. Examples include "trash-put" and "gio trash"
+
 # Windows ~
 
 `windows.max_number` is a maximum number of windows allowed to be open
@@ -561,12 +561,6 @@ file/directory under cursor.
 
 `windows.width_focus` and `windows.width_nofocus` are number of columns used
 as `width` for focused and non-focused windows respectively.
-
-# Callbacks ~
-
-`callbacks.fs_delete` is an optional function that is called when deleting 
-a path. It takes a single argument, `path`, and must return true if
-successful.
 
 ------------------------------------------------------------------------------
                                                               *MiniFiles.open()*

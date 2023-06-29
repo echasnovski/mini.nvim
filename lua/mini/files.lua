@@ -516,6 +516,9 @@ end
 --- should be used as a default file explorer for editing directories (instead of
 --- |netrw| by default).
 ---
+--- `options.delete_cmd` is an optional string to use as a command when deleting
+--- a path as in |vim.fn.system|. Examples include "trash-put" and "gio trash"
+---
 --- # Windows ~
 ---
 --- `windows.max_number` is a maximum number of windows allowed to be open
@@ -527,12 +530,6 @@ end
 ---
 --- `windows.width_focus` and `windows.width_nofocus` are number of columns used
 --- as `width` for focused and non-focused windows respectively.
----
---- # Callbacks ~
----
---- `callbacks.fs_delete` is an optional function that is called when deleting 
---- a path. It takes a single argument, `path`, and must return true if
---- successful.
 MiniFiles.config = {
   -- Customization of shown content
   content = {
@@ -561,6 +558,8 @@ MiniFiles.config = {
   options = {
     -- Whether to use for editing directories
     use_as_default_explorer = true,
+    -- `string|nil` to be used to when deleting paths as with |system()|
+    delete_cmd = nil
   },
 
   -- Customization of explorer windows
@@ -576,11 +575,6 @@ MiniFiles.config = {
     -- Width of preview window
     width_preview = 25,
   },
-
-  -- Callbacks
-  callbacks = {
-    fs_delete = nil
-  }
 }
 --minidoc_afterlines_end
 
@@ -969,7 +963,6 @@ H.setup_config = function(config)
     mappings = { config.mappings, 'table' },
     options = { config.options, 'table' },
     windows = { config.windows, 'table' },
-    callbacks = { config.callbacks, 'table' },
   })
 
   vim.validate({
@@ -988,8 +981,7 @@ H.setup_config = function(config)
     ['mappings.trim_right'] = { config.mappings.trim_right, 'string' },
 
     ['options.use_as_default_explorer'] = { config.options.use_as_default_explorer, 'boolean' },
-
-    ['callbacks.fs_delete'] = { config.callbacks.fs_delete, 'function' },
+    ['options.delete_cmd'] = { config.options.delete_cmd, 'string' },
 
     ['windows.max_number'] = { config.windows.max_number, 'number' },
     ['windows.preview'] = { config.windows.preview, 'boolean' },
@@ -2309,7 +2301,11 @@ H.fs_copy = function(from, to)
 end
 
 H.fs_delete = function(path)
-  if H.get_config().callbacks.fs_delete then return H.get_config().callbacks.fs_delete(path) end
+  if H.get_config().options.delete_cmd ~= nil then
+    vim.fn.system(H.get_config().options.delete_cmd .. ' ' .. path)
+    return vim.v.shell_error == 0
+  end
+
   return vim.fn.delete(path, 'rf') == 0
 end
 
