@@ -10,7 +10,7 @@
 ---
 --- Features:
 --- - Actions (all of them are dot-repeatable out of the box and respect
----   |v:count| for searching surrounding) with configurable keymappings:
+---   |[count]|) with configurable keymappings:
 ---     - Add surrounding with `sa` (in visual mode or on motion).
 ---     - Delete surrounding with `sd`.
 ---     - Replace surrounding with `sr`.
@@ -108,8 +108,8 @@
 ---       similar to 'machakann/vim-sandwich'.
 ---     - 'mini.surround' has more flexible customization of input surrounding
 ---       (with composed patterns, region pair(s), search methods).
----     - 'mini.surround' supports |v:count| in input surrounding while
----       'nvim-surround' doesn't.
+---     - 'mini.surround' supports |[count]| in both input and output
+---       surrounding (see |MiniSurround-count|) while 'nvim-surround' doesn't.
 ---     - 'mini.surround' supports "last"/"next" extended mappings.
 --- - |mini.ai|:
 ---     - Both use similar logic for finding target: textobject in 'mini.ai'
@@ -197,7 +197,7 @@
 --- - Default surrounding is activated for all characters which are not
 ---   configured surrounding identifiers. Note: due to special handling of
 ---   underlying `x.-x` Lua pattern (see |MiniSurround-search-algorithm|), it
----   doesn't really support non-trivial `v:count` for "cover" search method.
+---   doesn't really support non-trivial `[count]` for "cover" search method.
 ---@tag MiniSurround-surround-builtin
 
 --- Note: this is similar to |MiniAi-glossary|.
@@ -370,6 +370,24 @@
 ---   `{ left = '(\n', right = '\n)' }`
 ---@tag MiniSurround-surround-specification
 
+--- Count with actions
+---
+--- |[count]| is supported by all actions in the following ways:
+---
+--- - In add, two types of `[count]` is supported in Normal mode:
+---   `[count1]sa[count2][textobject]`. The `[count1]` defines how many times
+---   left and right parts of output surrounding will be repeated and `[count2]` is
+---   used for textobject.
+---   In Visual mode `[count]` is treated as `[count1]`.
+---   Example: `2sa3aw)` and `v3aw2sa)` will result into textobject `3aw` being
+---   surrounded by `((` and `))`.
+---
+--- - In delete/replace/find/highlight `[count]` means "find n-th surrounding
+---   and execute operator on it".
+---   Example: `2sd)` on line `(a(b(c)b)a)` with cursor on `c` will result into
+---   `(ab(c)ba)` (and not in `(abcba)` if it would have meant "delete n times").
+---@tag MiniSurround-count
+
 --- Search algorithm design
 ---
 --- Search for the input surrounding relies on these principles:
@@ -388,12 +406,9 @@
 ---   otherwise closer is better) and search method (if span is even considered).
 --- - Extract pair of spans (for left and right regions in region pair) based
 ---   on extraction pattern (last item in nested pattern).
---- - For |v:count| greater than 1, steps are repeated with current best match
+--- - For |[count]| greater than 1, steps are repeated with current best match
 ---   becoming reference region. One such additional step is also done if final
----   region is equal to reference region. Note: |v:count| is not supported for
----   output surroundings because it brings a lot of inconvenience (for adding
----   it affects textobject/motion, for replacing it will be used for both
----   input and output).
+---   region is equal to reference region.
 ---
 --- Notes:
 --- - Iteration over all matched spans is done in depth-first fashion with
@@ -590,7 +605,7 @@ end
 --- - It creates new mappings only for actions involving surrounding search:
 ---   delete, replace, find (right and left), highlight.
 --- - All new mappings behave the same way as if `config.search_method` is set
----   to certain search method. They are dot-repeatable, respect |v:count|, etc.
+---   to certain search method. They are dot-repeatable, respect |[count]|, etc.
 --- - Supply empty string to disable creation of corresponding set of mappings.
 ---
 --- Example with default values (`n` for `suffix_next`, `l` for `suffix_last`)
@@ -661,6 +676,14 @@ MiniSurround.add = function(mode)
     surr_info = H.get_surround_spec('output', true)
   end
   if surr_info == nil then return '<Esc>' end
+
+  -- Extend parts based on provided `[count]` before operator (if this is not
+  -- from dot-repeat and was done already)
+  if not surr_info.did_count then
+    local count = H.cache.count or vim.v.count1
+    surr_info.left, surr_info.right = surr_info.left:rep(count), surr_info.right:rep(count)
+    surr_info.did_count = true
+  end
 
   -- Add surrounding.
   -- Possibly deal with linewise and blockwise addition separately
@@ -1189,13 +1212,16 @@ H.make_operator = function(task, direction, search_method, ask_for_textobject)
       return [[\<Esc>]]
     end
 
-    H.cache = { direction = direction, search_method = search_method }
+    H.cache = { count = vim.v.count1, direction = direction, search_method = search_method }
 
     vim.o.operatorfunc = 'v:lua.MiniSurround.' .. task
 
-    -- NOTE: Concatenating `' '` to operator output "disables" motion
-    -- required by `g@`. It is used to enable dot-repeatability.
-    return 'g@' .. (ask_for_textobject and '' or ' ')
+    -- NOTEs:
+    -- - Prepend with command to reset `vim.v.count1` to allow
+    -- `[count1]sa[count2][textobject]`.
+    -- - Concatenate `' '` to operator output to "disable" motion
+    --   required by `g@`. It is used to enable dot-repeatability.
+    return '<Cmd>echon ""<CR>g@' .. (ask_for_textobject and '' or ' ')
   end
 end
 
@@ -1207,6 +1233,8 @@ H.get_surround_spec = function(sur_type, use_cache)
   if use_cache then
     res = H.cache[sur_type]
     if res ~= nil then return res end
+  else
+    H.cache = {}
   end
 
   -- Prompt user to enter identifier of surrounding
@@ -1403,7 +1431,7 @@ H.get_default_opts = function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   return {
     n_lines = config.n_lines,
-    n_times = vim.v.count1,
+    n_times = H.cache.count or vim.v.count1,
     -- Empty region at cursor position
     reference_region = { from = { line = cur_pos[1], col = cur_pos[2] + 1 } },
     search_method = H.cache.search_method or config.search_method,

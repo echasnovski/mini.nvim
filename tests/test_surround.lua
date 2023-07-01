@@ -594,6 +594,32 @@ T['Add surrounding']['works with different mapping'] = function()
   child.api.nvim_del_keymap('n', 'SA')
 end
 
+T['Add surrounding']['respects two types of `[count]` in Normal mode'] = function()
+  validate_edit1d('aa bb cc dd', 0, '((aa ))bb cc dd', 2, type_keys, '2sa', 'aw', ')')
+  validate_edit1d('aa bb cc dd', 0, '(aa bb cc )dd', 1, type_keys, 'sa', '3aw', ')')
+  validate_edit1d('aa bb cc dd', 0, '((aa bb cc ))dd', 2, type_keys, '2sa', '3aw', ')')
+
+  -- Should work with dot-repeat
+  validate_edit1d('aa bb cc dd ee', 0, '((aa bb ))((cc dd ))ee', 12, type_keys, '2sa2aw)', 'fc', '.')
+end
+
+T['Add surrounding']['respects `[count]` in Visual mode'] = function()
+  validate_edit1d('aa bb cc dd', 0, '((aa ))bb cc dd', 2, type_keys, 'vaw', '2sa', ')')
+  validate_edit1d('aa bb cc dd', 0, '((aa bb cc ))dd', 2, type_keys, 'v3aw', '2sa', ')')
+end
+
+T['Add surrounding']['handles `[count]` cache'] = function()
+  set_lines({ 'aa bb' })
+  set_cursor(1, 0)
+
+  type_keys('2saiw)')
+  eq(get_lines(), { '((aa)) bb' })
+
+  set_cursor(1, 7)
+  type_keys('viw', 'sa)')
+  eq(get_lines(), { '((aa)) (bb)' })
+end
+
 T['Add surrounding']['respects `selection=exclusive` option'] = function()
   child.o.selection = 'exclusive'
   local f = function() type_keys('v2l', 'sa', ')') end
