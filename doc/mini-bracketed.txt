@@ -231,6 +231,8 @@ Parameters~
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
   - <wrap> `(boolean)` - Whether to wrap around edges. Default: `true`.
+  - <add_to_jumplist> (`boolean`) - Whether to add current position to jumplist.
+    Default: `false`.
   - <block_side> `(string)` - which side of comment block to use. One of
     "near" (default; use nearest side), "start" (use first line), "end"
     (use last line), "both" (use both first and last lines).
@@ -257,6 +259,8 @@ Parameters~
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
   - <wrap> `(boolean)` - Whether to wrap around edges. Default: `true`.
+  - <add_to_jumplist> (`boolean`) - Whether to add current position to jumplist.
+    Default: `false`.
 
 ------------------------------------------------------------------------------
                                                     *MiniBracketed.diagnostic()*
@@ -328,6 +332,8 @@ Parameters~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
+  - <add_to_jumplist> (`boolean`) - Whether to add current position to jumplist.
+    Default: `false`.
   - <change_type> `(string)` - which type of indent change to use.
     One of "less" (default; smaller indent), "more" (bigger indent),
     "diff" (different indent).
@@ -430,6 +436,8 @@ Parameters~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
+  - <add_to_jumplist> (`boolean`) - Whether to add current position to jumplist.
+    Default: `false`.
 
 ------------------------------------------------------------------------------
                                                           *MiniBracketed.undo()*

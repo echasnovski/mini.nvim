@@ -8,6 +8,10 @@
 
 - FEATURE: Add `MiniAnimateNormalFloat` highlight group to tweak highlighting of `open` and `close` animations.
 
+## mini.bracketed
+
+- FEATURE: Add `add_to_jumplist` option to relevant targets (which move cursor and don't already add to jumplist).
+
 ## mini.bufremove
 
 - BREAKING: Create normal buffer instead of scratch when there is no reasonable target to focus (#394).

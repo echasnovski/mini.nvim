@@ -361,6 +361,17 @@ T['buffer()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.buffer('next')]]) end, 'buffer%(%).*direction.*one of')
 end
 
+T['buffer()']['adds to jumplist'] = function()
+  setup_buffers()
+
+  local init_buf_id = child.api.nvim_get_current_buf()
+  child.lua([[MiniBracketed.buffer('forward')]])
+  eq(child.api.nvim_get_current_buf() == init_buf_id, false)
+
+  type_keys('<C-o>')
+  eq(child.api.nvim_get_current_buf() == init_buf_id, true)
+end
+
 T['buffer()']['respects `opts.n_times`'] = function()
   local buf_list, validate = setup_buffers()
   validate_n_times(validate, #buf_list)
@@ -527,6 +538,19 @@ end
 T['comment()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.comment(1)') end, 'comment%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.comment('next')]]) end, 'comment%(%).*direction.*one of')
+end
+
+T['comment()']['respects `opts.add_to_jumplist`'] = function()
+  child.o.commentstring = '## %s'
+  local lines = { '1', '222', '3', '## 4' }
+  set_lines(lines)
+  set_cursor(2, 2)
+
+  child.lua([[MiniBracketed.comment('forward', { add_to_jumplist = true })]])
+  eq(get_cursor(), { 4, 0 })
+
+  type_keys('<C-o>')
+  eq(get_cursor(), { 2, 2 })
 end
 
 T['comment()']['respects `opts.block_side`'] = function()
@@ -854,6 +878,19 @@ T['conflict()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.conflict('next')]]) end, 'conflict%(%).*direction.*one of')
 end
 
+T['conflict()']['respects `opts.add_to_jumplist`'] = function()
+  local m = conflict_marks
+  local lines = { '1', '222', '3', m[1] }
+  set_lines(lines)
+  set_cursor(2, 2)
+
+  child.lua([[MiniBracketed.conflict('forward', { add_to_jumplist = true })]])
+  eq(get_cursor(), { 4, 0 })
+
+  type_keys('<C-o>')
+  eq(get_cursor(), { 2, 2 })
+end
+
 T['conflict()']['respects `opts.n_times`'] = function()
   local m = conflict_marks
   local lines = { '1', m[1], '3', m[2], '5', m[3], '7', m[1], '9' }
@@ -1075,6 +1112,19 @@ T['diagnostic()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.diagnostic('next')]]) end, 'diagnostic%(%).*direction.*one of')
 end
 
+T['diagnostic()']['adds to jumplist'] = function()
+  local cur_pos_tbl, _ = setup_diagnostic()
+  local all = cur_pos_tbl.all
+
+  set_cursor(all[2][1], all[2][2])
+  child.lua([[MiniBracketed.diagnostic('forward', { n_times = 4 })]])
+
+  eq(get_cursor(), all[6])
+
+  type_keys('<C-o>')
+  eq(get_cursor(), all[2])
+end
+
 T['diagnostic()']['respects `opts.float`'] = function()
   -- As actual testing of floating window fails for some unimagniable reason,
   -- there is no way at the moment to test this. Would be **great** otherwise.
@@ -1237,6 +1287,17 @@ end
 T['file()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.file(1)') end, 'file%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.file('next')]]) end, 'file%(%).*direction.*one of')
+end
+
+T['file()']['adds to jumplist'] = function()
+  edit_test_file(test_files[1])
+  local init_file = child.api.nvim_buf_get_name(0)
+
+  child.lua([[MiniBracketed.file('forward')]])
+  eq(get_bufname() == init_file, false)
+
+  type_keys('<C-o>')
+  eq(get_bufname() == init_file, true)
 end
 
 T['file()']['respects `opts.n_times`'] = function() validate_n_times(validate_file, #test_files) end
@@ -1418,6 +1479,18 @@ end
 T['indent()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.indent(1)') end, 'indent%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.indent('next')]]) end, 'indent%(%).*direction.*one of')
+end
+
+T['indent()']['respects `opts.add_to_jumplist`'] = function()
+  local lines = { '  1', '  2', '3' }
+  set_lines(lines)
+  set_cursor(1, 2)
+
+  child.lua([[MiniBracketed.indent('forward', { add_to_jumplist = true })]])
+  eq(get_cursor(), { 3, 0 })
+
+  type_keys('<C-o>')
+  eq(get_cursor(), { 1, 2 })
 end
 
 T['indent()']['respects `opts.change_type`'] = function()
@@ -1671,6 +1744,8 @@ T['jump()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.jump('next')]]) end, 'jump%(%).*direction.*one of')
 end
 
+-- No test for adding to jumplist because it is moving along jumplist
+
 T['jump()']['respects `opts.n_times`'] = function()
   local cur_jump_inds, validate = setup_jumplist()
   validate_n_times(validate, #cur_jump_inds)
@@ -1739,6 +1814,23 @@ end
 T['location()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.location(1)') end, 'location%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.location('next')]]) end, 'location%(%).*direction.*one of')
+end
+
+T['location()']['adds to jumplist'] = function()
+  setup_location()
+
+  set_location(2)
+  local init_buf_id = child.api.nvim_get_current_buf()
+  local init_cursor = get_cursor()
+  local is_at_init_position =
+    function() return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor) end
+
+  child.lua([[MiniBracketed.location('forward')]])
+  eq(get_location(), 3)
+  eq(is_at_init_position(), false)
+
+  type_keys('<C-o>')
+  eq(is_at_init_position(), true)
 end
 
 T['location()']['respects `opts.n_times`'] = function()
@@ -1916,6 +2008,17 @@ T['oldfile()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.oldfile('next')]]) end, 'oldfile%(%).*direction.*one of')
 end
 
+T['oldfile()']['adds to jumplist'] = function()
+  setup_oldfile()
+  local init_file = child.api.nvim_buf_get_name(0)
+
+  child.lua([[MiniBracketed.oldfile('forward')]])
+  eq(get_bufname() == init_file, false)
+
+  type_keys('<C-o>')
+  eq(get_bufname() == init_file, true)
+end
+
 T['oldfile()']['respects `opts.n_times`'] = function()
   local files, validate = setup_oldfile()
   local n = #files
@@ -2045,6 +2148,23 @@ end
 T['quickfix()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.quickfix(1)') end, 'quickfix%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.quickfix('next')]]) end, 'quickfix%(%).*direction.*one of')
+end
+
+T['quickfix()']['adds to jumplist'] = function()
+  setup_quickfix()
+
+  set_quickfix(2)
+  local init_buf_id = child.api.nvim_get_current_buf()
+  local init_cursor = get_cursor()
+  local is_at_init_position =
+    function() return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor) end
+
+  child.lua([[MiniBracketed.quickfix('forward')]])
+  eq(get_quickfix(), 3)
+  eq(is_at_init_position(), false)
+
+  type_keys('<C-o>')
+  eq(is_at_init_position(), true)
 end
 
 T['quickfix()']['respects `opts.n_times`'] = function()
@@ -2244,6 +2364,17 @@ T['treesitter()']['validates `direction`'] = function()
 
   expect.error(function() child.lua('MiniBracketed.treesitter(1)') end, 'treesitter%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.treesitter('next')]]) end, 'treesitter%(%).*direction.*one of')
+end
+
+T['treesitter()']['respects `opts.add_to_jumplist`'] = function()
+  local nodes, _, inside_nodes = setup_treesitter()
+
+  set_cursor(inside_nodes[1][1], inside_nodes[1][2])
+  child.lua([[MiniBracketed.treesitter('forward', { add_to_jumplist = true })]])
+  eq(get_cursor(), nodes[1].to)
+
+  type_keys('<C-o>')
+  eq(get_cursor(), inside_nodes[1])
 end
 
 T['treesitter()']['respects `opts.n_times`'] = function()
@@ -2572,6 +2703,8 @@ T['undo()']['validates `direction`'] = function()
   expect.error(function() child.lua([[MiniBracketed.undo('next')]]) end, 'undo%(%).*direction.*one of')
 end
 
+-- No test for adding to jumplist because it is not designed to move cursor
+
 T['undo()']['respects `opts.n_times`'] = function()
   --stylua: ignore
   local undos, validate = setup_undo(
@@ -2727,6 +2860,8 @@ T['window()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.window(1)') end, 'window%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.window('next')]]) end, 'window%(%).*direction.*one of')
 end
+
+-- No test for adding to jumplist because it is not designed to move cursor
 
 T['window()']['respects `opts.n_times`'] = function()
   local winnr_list, validate = setup_windows()
@@ -3306,6 +3441,8 @@ T['yank()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.yank(1)') end, 'yank%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.yank('next')]]) end, 'yank%(%).*direction.*one of')
 end
+
+-- No test for adding to jumplist because it is not designed to move cursor
 
 T['yank()']['respects `opts.n_times`'] = function()
   local yanks, validate = setup_yank('one', 'two', 'three', 'four', 'five')

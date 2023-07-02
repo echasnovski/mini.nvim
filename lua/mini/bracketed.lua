@@ -106,7 +106,10 @@
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
 
+---@diagnostic disable:luadoc-miss-type-name
 ---@alias __bracketed_direction string One of "first", "backward", "forward", "last".
+---@alias __bracketed_add_to_jumplist - <add_to_jumplist> (`boolean`) - Whether to add current position to jumplist.
+---     Default: `false`.
 ---@alias __bracketed_opts table|nil Options. A table with fields:
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
 ---   - <wrap> `(boolean)` - Whether to wrap around edges. Default: `true`.
@@ -273,6 +276,7 @@ end
 ---
 ---@param direction __bracketed_direction
 ---@param opts __bracketed_opts
+---   __bracketed_add_to_jumplist
 ---   - <block_side> `(string)` - which side of comment block to use. One of
 ---     "near" (default; use nearest side), "start" (use first line), "end"
 ---     (use last line), "both" (use both first and last lines).
@@ -282,7 +286,7 @@ MiniBracketed.comment = function(direction, opts)
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'comment')
   opts = vim.tbl_deep_extend(
     'force',
-    { block_side = 'near', n_times = vim.v.count1, wrap = true },
+    { add_to_jumplist = false, block_side = 'near', n_times = vim.v.count1, wrap = true },
     H.get_config().comment.options,
     opts or {}
   )
@@ -330,6 +334,9 @@ MiniBracketed.comment = function(direction, opts)
   local is_outside = res_line_num <= 0 or n_lines < res_line_num
   if res_line_num == nil or res_line_num == iterator.state or is_outside then return end
 
+  -- Possibly add current position to jumplist
+  if opts.add_to_jumplist then H.add_to_jumplist() end
+
   -- Apply. Open just enough folds and put cursor on first non-blank.
   vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
   vim.cmd('normal! zv^')
@@ -351,12 +358,17 @@ end
 ---
 ---@param direction __bracketed_direction
 ---@param opts __bracketed_opts
+---   __bracketed_add_to_jumplist
 MiniBracketed.conflict = function(direction, opts)
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'conflict')
-  opts =
-    vim.tbl_deep_extend('force', { n_times = vim.v.count1, wrap = true }, H.get_config().conflict.options, opts or {})
+  opts = vim.tbl_deep_extend(
+    'force',
+    { add_to_jumplist = false, n_times = vim.v.count1, wrap = true },
+    H.get_config().conflict.options,
+    opts or {}
+  )
 
   -- Define iterator that traverses all conflict markers in current buffer
   local n_lines = vim.api.nvim_buf_line_count(0)
@@ -383,6 +395,9 @@ MiniBracketed.conflict = function(direction, opts)
   local res_line_num = MiniBracketed.advance(iterator, direction, opts)
   local is_outside = res_line_num <= 0 or n_lines < res_line_num
   if res_line_num == nil or res_line_num == iterator.state or is_outside then return end
+
+  -- Possibly add current position to jumplist
+  if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply. Open just enough folds and put cursor on first non-blank.
   vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
@@ -550,6 +565,7 @@ end
 ---@param direction __bracketed_direction
 ---@param opts table|nil Options. A table with fields:
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
+---   __bracketed_add_to_jumplist
 ---   - <change_type> `(string)` - which type of indent change to use.
 ---     One of "less" (default; smaller indent), "more" (bigger indent),
 ---     "diff" (different indent).
@@ -559,7 +575,7 @@ MiniBracketed.indent = function(direction, opts)
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'indent')
   opts = vim.tbl_deep_extend(
     'force',
-    { change_type = 'less', n_times = vim.v.count1 },
+    { add_to_jumplist = false, change_type = 'less', n_times = vim.v.count1 },
     H.get_config().indent.options,
     opts or {}
   )
@@ -618,6 +634,9 @@ MiniBracketed.indent = function(direction, opts)
   -- Iterate
   local res_line_num = MiniBracketed.advance(iterator, direction, opts)
   if res_line_num == nil or res_line_num == iterator.state then return end
+
+  -- Possibly add current position to jumplist
+  if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply. Open just enough folds and put cursor on first non-blank.
   vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
@@ -800,6 +819,7 @@ end
 ---@param direction __bracketed_direction
 ---@param opts table|nil Options. A table with fields:
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
+---   __bracketed_add_to_jumplist
 MiniBracketed.treesitter = function(direction, opts)
   if H.get_treesitter_node == nil then
     H.error(
@@ -810,7 +830,12 @@ MiniBracketed.treesitter = function(direction, opts)
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'treesitter')
-  opts = vim.tbl_deep_extend('force', { n_times = vim.v.count1 }, H.get_config().treesitter.options, opts or {})
+  opts = vim.tbl_deep_extend(
+    'force',
+    { add_to_jumplist = false, n_times = vim.v.count1 },
+    H.get_config().treesitter.options,
+    opts or {}
+  )
 
   opts.wrap = false
 
@@ -885,6 +910,9 @@ MiniBracketed.treesitter = function(direction, opts)
   -- Iterate
   local res_node_pos = MiniBracketed.advance(iterator, direction, opts)
   if res_node_pos == nil then return end
+
+  -- Possibly add current position to jumplist
+  if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply
   local row, col = res_node_pos.pos[1], res_node_pos.pos[2]
@@ -1982,5 +2010,7 @@ H.map = function(mode, lhs, rhs, opts)
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
+
+H.add_to_jumplist = function() vim.cmd([[normal! m']]) end
 
 return MiniBracketed
