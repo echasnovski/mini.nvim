@@ -283,9 +283,9 @@ end
 ---
 --- Here is a list of created mappings (`<M-x>` means `Alt`/`Meta` plus `x`):
 --- - `<M-h>` - move cursor left.  Modes: Insert, Terminal, Command.
---- - `<M-h>` - move cursor down.  Modes: Insert, Terminal.
---- - `<M-h>` - move cursor up.    Modes: Insert, Terminal.
---- - `<M-h>` - move cursor right. Modes: Insert, Terminal, Command.
+--- - `<M-j>` - move cursor down.  Modes: Insert, Terminal.
+--- - `<M-k>` - move cursor up.    Modes: Insert, Terminal.
+--- - `<M-l>` - move cursor right. Modes: Insert, Terminal, Command.
 ---
 ---                                                 *MiniBasics.config.autocommands*
 --- # Autocommands ~
