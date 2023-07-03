@@ -24,7 +24,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://github.com/echasnovski/mini.nvim/assets/24854248/4d8fb50d-5d74-46ea-ba4d-932869296bd8
+https://github.com/echasnovski/mini.nvim/assets/24854248/530483a5-fe9a-4e18-9813-a6d609fc89ff
 
 ## Features
 
