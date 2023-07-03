@@ -254,6 +254,10 @@ at that line (if present) to deduce which file system action to perform.
 
 - Delete file or directory by deleting **whole line** describing it.
 
+- If `options.permanent_delete` is `true`, delete is permanent. Otherwise
+  file system entry is moved to a module-specific trash directory
+  (see |MiniFiles.config| for more details).
+
 ## Rename ~
 
 - Rename file or directory by editing its name (not icon or path index to
@@ -503,6 +507,8 @@ Default values:
 
     -- General options
     options = {
+      -- Whether to delete permanently or move into module-specific trash
+      permanent_delete = true,
       -- Whether to use for editing directories
       use_as_default_explorer = true,
     },
@@ -577,6 +583,12 @@ Here are some alternatives: >
 `options.use_as_default_explorer` is a boolean indicating whether this module
 should be used as a default file explorer for editing directories (instead of
 |netrw| by default).
+
+`options.permanent_delete` is a boolean indicating whether to perform
+permanent delete or move into special trash directory.
+This is a module-specific variant of "remove to trash".
+Target directory is 'mini.files/trash' inside standard path of Neovim data
+directory (execute `:echo stdpath('data')` to see its path in your case).
 
 # Windows ~
 

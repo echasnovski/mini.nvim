@@ -13,7 +13,6 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
 --stylua: ignore end
 
 -- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as it introduced
@@ -24,20 +23,6 @@ child.expect_screenshot = function(...)
   expect_screenshot_orig(...)
 end
 
--- Common mocks
-local mock_win_functions = function() child.cmd('source tests/dir-files/mock-win-functions.lua') end
-
-local mock_confirm = function(user_choice)
-  local lua_cmd = string.format(
-    [[vim.fn.confirm = function(...)
-        _G.confirm_args = { ... }
-        return %d
-      end]],
-    user_choice
-  )
-  child.lua(lua_cmd)
-end
-
 -- Test paths helpers
 local test_dir = 'tests/dir-files'
 
@@ -45,11 +30,6 @@ local join_path = function(...) return table.concat({ ... }, '/') end
 
 local full_path = function(...)
   local res = vim.fn.fnamemodify(join_path(...), ':p'):gsub('(.)/$', '%1')
-  return res
-end
-
-local rel_path = function(...)
-  local res = vim.fn.fnamemodify(join_path(...), ':.'):gsub('(.)/$', '%1')
   return res
 end
 
@@ -140,6 +120,35 @@ local get_extmarks_hl = function()
   return vim.tbl_map(function(x) return x[4].hl_group end, extmarks)
 end
 
+-- Common mocks
+local mock_win_functions = function() child.cmd('source tests/dir-files/mock-win-functions.lua') end
+
+local mock_confirm = function(user_choice)
+  local lua_cmd = string.format(
+    [[vim.fn.confirm = function(...)
+        _G.confirm_args = { ... }
+        return %d
+      end]],
+    user_choice
+  )
+  child.lua(lua_cmd)
+end
+
+local mock_stdpath_data = function()
+  local data_dir = make_test_path('data')
+  local lua_cmd = string.format(
+    [[
+    _G.stdpath_orig = vim.fn.stpath
+    vim.fn.stdpath = function(what)
+      if what == 'data' then return '%s' end
+      return _G.stdpath_orig(what)
+    end]],
+    data_dir
+  )
+  child.lua(lua_cmd)
+  return data_dir
+end
+
 -- Data =======================================================================
 local test_dir_path = 'tests/dir-files/common'
 local test_file_path = 'tests/dir-files/common/a-file'
@@ -164,6 +173,7 @@ T = new_set({
       child.set_size(15, 80)
       load_module()
     end,
+    post_case = function() vim.fn.delete(make_test_path('data'), 'rf') end,
     post_once = child.stop,
   },
 })
@@ -212,6 +222,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.trim_right', '>')
 
   expect_config('options.use_as_default_explorer', true)
+  expect_config('options.permanent_delete', true)
 
   expect_config('windows.max_number', math.huge)
   expect_config('windows.preview', false)
@@ -253,6 +264,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error({ options = 'a' }, 'options', 'table')
   expect_config_error({ options = { use_as_default_explorer = 1 } }, 'options.use_as_default_explorer', 'boolean')
+  expect_config_error({ options = { permanent_delete = 1 } }, 'options.permanent_delete', 'boolean')
 
   expect_config_error({ windows = 'a' }, 'windows', 'table')
   expect_config_error({ windows = { max_number = 'a' } }, 'windows.max_number', 'number')
@@ -2383,6 +2395,55 @@ T['File manipulation']['can delete'] = function()
   validate_confirm_args([[  DELETE: 'file']])
 end
 
+T['File manipulation']['delete respects `options.permanent_delete`'] = function()
+  child.set_size(10, 60)
+
+  -- Mock `stdpath()`
+  local data_dir = mock_stdpath_data()
+  local trash_dir = join_path(data_dir, 'mini.files', 'trash')
+
+  -- Create temporary data and delete it
+  child.lua('MiniFiles.config.options.permanent_delete = false')
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
+
+  local validate_move_delete = function()
+    -- Should move into special trash directory
+    validate_no_file(temp_dir, 'file')
+    validate_no_directory(temp_dir, 'dir')
+    validate_file(trash_dir, 'file')
+    validate_directory(trash_dir, 'dir')
+    validate_file(trash_dir, 'dir', 'subfile')
+  end
+
+  open(temp_dir)
+
+  type_keys('VGd')
+  mock_confirm(1)
+  synchronize()
+
+  validate_move_delete()
+
+  -- Deleting entries again with same name should replace previous ones
+  -- - Recreate previously deleted entries with different content
+  child.fn.writefile({ 'New file' }, join_path(temp_dir, 'file'))
+  child.fn.mkdir(join_path(temp_dir, 'dir'))
+  child.fn.writefile({ 'New subfile' }, join_path(temp_dir, 'dir', 'subfile'))
+
+  mock_confirm(1)
+  synchronize()
+
+  -- - Delete again
+  type_keys('VGd')
+  mock_confirm(1)
+  synchronize()
+
+  validate_move_delete()
+
+  -- - Check that files actually were replaced
+  validate_file_content(join_path(trash_dir, 'file'), { 'New file' })
+  validate_file_content(join_path(trash_dir, 'dir', 'subfile'), { 'New subfile' })
+end
+
 T['File manipulation']['can rename'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
@@ -2992,6 +3053,8 @@ local track_event = function(event_name)
   child.lua(lua_cmd)
 end
 
+local get_event_track = function() return child.lua_get('_G.callback_args_data') end
+
 local clear_event_track = function() child.lua('_G.callback_args_data = {}') end
 
 local validate_event_track = function(ref, do_sort)
@@ -3238,6 +3301,30 @@ T['Events']['`MiniFilesActionDelete` triggers'] = function()
   validate('file', true)
   validate('dir/', false)
   validate('dir/', true)
+end
+
+T['Events']['`MiniFilesActionDelete` triggers for `options.permanent_delete = false`'] = function()
+  track_event('MiniFilesActionDelete')
+
+  child.lua('MiniFiles.config.options.permanent_delete = false')
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
+  open(temp_dir)
+
+  type_keys('VGd')
+  mock_confirm(1)
+  synchronize()
+
+  local event_track = get_event_track()
+  if child.fn.has('nvim-0.8') == 0 then
+    eq(#event_track, 2)
+    return
+  end
+
+  table.sort(event_track, function(a, b) return a.from < b.from end)
+  eq(event_track, {
+    { action = 'delete', from = join_path(temp_dir, 'dir') },
+    { action = 'delete', from = join_path(temp_dir, 'file') },
+  })
 end
 
 T['Events']['`MiniFilesActionRename` triggers'] = function()

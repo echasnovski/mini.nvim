@@ -251,6 +251,10 @@
 ---
 --- - Delete file or directory by deleting **whole line** describing it.
 ---
+--- - If `options.permanent_delete` is `true`, delete is permanent. Otherwise
+---   file system entry is moved to a module-specific trash directory
+---   (see |MiniFiles.config| for more details).
+---
 --- ## Rename ~
 ---
 --- - Rename file or directory by editing its name (not icon or path index to
@@ -548,6 +552,12 @@ end
 --- should be used as a default file explorer for editing directories (instead of
 --- |netrw| by default).
 ---
+--- `options.permanent_delete` is a boolean indicating whether to perform
+--- permanent delete or move into special trash directory.
+--- This is a module-specific variant of "remove to trash".
+--- Target directory is 'mini.files/trash' inside standard path of Neovim data
+--- directory (execute `:echo stdpath('data')` to see its path in your case).
+---
 --- # Windows ~
 ---
 --- `windows.max_number` is a maximum number of windows allowed to be open
@@ -587,6 +597,8 @@ MiniFiles.config = {
 
   -- General options
   options = {
+    -- Whether to delete permanently or move into module-specific trash
+    permanent_delete = true,
     -- Whether to use for editing directories
     use_as_default_explorer = true,
   },
@@ -710,7 +722,7 @@ MiniFiles.synchronize = function()
 
   -- Parse and apply file system operations
   local fs_actions = H.explorer_compute_fs_actions(explorer)
-  if fs_actions ~= nil and H.fs_actions_confirm(fs_actions) then H.fs_actions_apply(fs_actions) end
+  if fs_actions ~= nil and H.fs_actions_confirm(fs_actions) then H.fs_actions_apply(fs_actions, explorer.opts) end
 
   H.explorer_refresh(explorer, { force_update = true })
 end
@@ -1031,6 +1043,7 @@ H.setup_config = function(config)
     ['mappings.trim_right'] = { config.mappings.trim_right, 'string' },
 
     ['options.use_as_default_explorer'] = { config.options.use_as_default_explorer, 'boolean' },
+    ['options.permanent_delete'] = { config.options.permanent_delete, 'boolean' },
 
     ['windows.max_number'] = { config.windows.max_number, 'number' },
     ['windows.preview'] = { config.windows.preview, 'boolean' },
@@ -2277,7 +2290,7 @@ H.fs_actions_to_lines = function(fs_actions)
   return res
 end
 
-H.fs_actions_apply = function(fs_actions)
+H.fs_actions_apply = function(fs_actions, opts)
   -- Copy first to allow later proper deleting
   for _, diff in ipairs(fs_actions.copy) do
     local ok, success = pcall(H.fs_copy, diff.from, diff.to)
@@ -2305,7 +2318,7 @@ H.fs_actions_apply = function(fs_actions)
 
   -- Delete last to not lose anything too early (just in case)
   for _, path in ipairs(fs_actions.delete) do
-    local ok, success = pcall(H.fs_delete, path)
+    local ok, success = pcall(H.fs_delete, path, opts.options.permanent_delete)
     local data = { action = 'delete', from = path }
     if ok and success then H.trigger_event('MiniFilesActionDelete', data) end
   end
@@ -2349,7 +2362,20 @@ H.fs_copy = function(from, to)
   return success
 end
 
-H.fs_delete = function(path) return vim.fn.delete(path, 'rf') == 0 end
+H.fs_delete = function(path, permanent_delete)
+  if permanent_delete then return vim.fn.delete(path, 'rf') == 0 end
+
+  -- Move to trash instead of permanent delete
+  local trash_dir = H.fs_child_path(vim.fn.stdpath('data'), 'mini.files/trash')
+  vim.fn.mkdir(trash_dir, 'p')
+
+  local trash_path = H.fs_child_path(trash_dir, H.fs_get_basename(path))
+
+  -- Ensure that same basenames are replaced
+  pcall(vim.fn.delete, trash_path, 'rf')
+
+  return vim.loop.fs_rename(path, trash_path)
+end
 
 H.fs_move = function(from, to)
   -- Don't override existing path
