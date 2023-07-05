@@ -1151,8 +1151,9 @@ end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniAi.config, vim.b.miniai_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniAi.config, vim.b.miniai_config or {}, config or {})
+end
 
 H.is_search_method = function(x, x_name)
   x = x or H.get_config().search_method
@@ -1459,12 +1460,78 @@ H.prepare_ai_captures = function(ai_captures)
 end
 
 H.get_matched_nodes_plugin = function(captures)
-  -- Hope that 'nvim-treesitter.query' is stable enough
-  local ts_queries = require('nvim-treesitter.query')
+  -- Return all nodes corresponding to a specific capture path (like @definition.var, @reference.type)
+  -- Works like M.get_references or M.get_scopes except you can choose the capture
+  -- Can also be a nested capture like @definition.function to get all nodes defining a function.
+  --
+  ---@param bufnr integer the buffer
+  ---@param captures string|string[]
+  ---@param query_group string the name of query group (highlights or injections for example)
+  ---@param root TSNode|nil node from where to start the search
+  ---@param lang string|nil the language from where to get the captures.
+  ---              Root nodes can have several languages.
+  ---@return table|nil
+  function M.get_capture_matches(bufnr, captures, query_group, root, lang)
+    if type(captures) == 'string' then captures = { captures } end
+    local strip_captures = {} ---@type string[]
+    for i, capture in ipairs(captures) do
+      if capture:sub(1, 1) ~= '@' then
+        error('Captures must start with "@"')
+        return
+      end
+      -- Remove leading "@".
+      strip_captures[i] = capture:sub(2)
+    end
+
+    local matches = {}
+    for match in M.iter_group_results(bufnr, query_group, root, lang) do
+      for _, capture in ipairs(strip_captures) do
+        local insert = utils.get_at_path(match, capture)
+        if insert then table.insert(matches, insert) end
+      end
+    end
+    return matches
+  end
+
+  ---@alias CaptureResFn function(string, LanguageTree, LanguageTree): string, string
+
+  -- Same as get_capture_matches except this will recursively get matches for every language in the tree.
+  ---@param bufnr integer The buffer
+  ---@param capture_or_fn string|CaptureResFn The capture to get. If a function is provided then that
+  ---                       function will be used to resolve both the capture and query argument.
+  ---                       The function can return `nil` to ignore that tree.
+  ---@param query_type string? The query to get the capture from. This is ignored if a function is provided
+  ---                    for the capture argument.
+  ---@return table[]
+  function get_capture_matches_recursively(bufnr, capture_or_fn, query_type)
+    ---@type CaptureResFn
+    local type_fn
+    if type(capture_or_fn) == 'function' then
+      type_fn = capture_or_fn
+    else
+      type_fn = function(_, _, _) return capture_or_fn, query_type end
+    end
+    local parser = vim.treesitter.get_parser(bufnr)
+    local matches = {}
+
+    if parser then
+      parser:for_each_tree(function(tree, lang_tree)
+        local lang = lang_tree:lang()
+        local capture, type_ = type_fn(lang, tree, lang_tree)
+
+        if capture then
+          vim.list_extend(matches, get_capture_matches(bufnr, capture, type_, tree:root(), lang) or {})
+        end
+      end)
+    end
+
+    return matches
+  end
+
   return vim.tbl_map(
     function(match) return match.node end,
     -- This call should handle multiple languages in buffer
-    ts_queries.get_capture_matches_recursively(0, captures, 'textobjects')
+    get_capture_matches_recursively(0, captures, 'textobjects')
   )
 end
 

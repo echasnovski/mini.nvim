@@ -1450,18 +1450,47 @@ H.prepare_captures = function(captures)
 end
 
 H.get_matched_node_pairs_plugin = function(captures)
-  -- Hope that 'nvim-treesitter.query' is stable enough
-  local ts_queries = require('nvim-treesitter.query')
-  local ts_parsers = require('nvim-treesitter.parsers')
+  -- Return all nodes corresponding to a specific capture path (like @definition.var, @reference.type)
+  -- Works like M.get_references or M.get_scopes except you can choose the capture
+  -- Can also be a nested capture like @definition.function to get all nodes defining a function.
+  --
+  ---@param bufnr integer the buffer
+  ---@param captures string|string[]
+  ---@param query_group string the name of query group (highlights or injections for example)
+  ---@param root TSNode|nil node from where to start the search
+  ---@param lang string|nil the language from where to get the captures.
+  ---              Root nodes can have several languages.
+  ---@return table|nil
+  function get_capture_matches(bufnr, captures, query_group, root, lang)
+    if type(captures) == 'string' then captures = { captures } end
+    local strip_captures = {} ---@type string[]
+    for i, capture in ipairs(captures) do
+      if capture:sub(1, 1) ~= '@' then
+        error('Captures must start with "@"')
+        return
+      end
+      -- Remove leading "@".
+      strip_captures[i] = capture:sub(2)
+    end
+
+    local matches = {}
+    for match in M.iter_group_results(bufnr, query_group, root, lang) do
+      for _, capture in ipairs(strip_captures) do
+        local insert = utils.get_at_path(match, capture)
+        if insert then table.insert(matches, insert) end
+      end
+    end
+    return matches
+  end
 
   -- This is a modifed version of `ts_queries.get_capture_matches_recursively`
   -- source code which keeps track of match language
   local matches = {}
-  local parser = ts_parsers.get_parser(0)
+  local parser = vim.treesitter.get_parser(0)
   if parser then
     parser:for_each_tree(function(tree, lang_tree)
       local lang = lang_tree:lang()
-      local lang_matches = ts_queries.get_capture_matches(0, captures.outer, 'textobjects', tree:root(), lang)
+      local lang_matches = get_capture_matches(0, captures.outer, 'textobjects', tree:root(), lang)
       for _, m in pairs(lang_matches) do
         m.lang = lang
       end
@@ -1474,7 +1503,7 @@ H.get_matched_node_pairs_plugin = function(captures)
       local node_outer = match.node
       -- Pick inner node as the biggest node matching inner query. This is
       -- needed because query output is not quaranteed to come in order.
-      local matches_inner = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', node_outer, match.lang)
+      local matches_inner = get_capture_matches(0, captures.inner, 'textobjects', node_outer, match.lang)
       local nodes_inner = vim.tbl_map(function(x) return x.node end, matches_inner)
       return { outer = node_outer, inner = H.get_biggest_node(nodes_inner) }
     end,
