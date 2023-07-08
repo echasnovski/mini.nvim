@@ -24,6 +24,10 @@ Introduction of a new module.
 
 - FEATURE: Add `gen_union_spotter()` to allow combining separate spotters into one.
 
+## mini.pairs
+
+- FEATURE: Allow `false` in `config.mappings` to not map the key.
+
 ## mini.surround
 
 - FEATURE: Update `add` (`sa`) with ability to replicate left and right parts by respecting `[count]`. In Normal mode two kinds of `[count]` is respected: one for operator (replicates left and right parts) and one for textobject/motion. In Visual mode `[count]` replicates parts.

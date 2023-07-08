@@ -107,6 +107,7 @@ Default values:
     -- By default pair is not inserted after `\`, quotes are not recognized by
     -- `<CR>`, `'` does not insert pair after a letter.
     -- Only parts of tables can be tweaked (others will use these defaults).
+    -- Supply `false` instead of table to not map particular key.
     mappings = {
       ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
       ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },

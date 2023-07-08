@@ -123,6 +123,7 @@ MiniPairs.config = {
   -- By default pair is not inserted after `\`, quotes are not recognized by
   -- `<CR>`, `'` does not insert pair after a letter.
   -- Only parts of tables can be tweaked (others will use these defaults).
+  -- Supply `false` instead of table to not map particular key.
   mappings = {
     ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
     ['['] = { action = 'open', pair = '[]', neigh_pattern = '[^\\].' },
@@ -418,15 +419,21 @@ H.setup_config = function(config)
     ['modes.terminal'] = { config.modes.terminal, 'boolean' },
   })
 
-  H.validate_pair_info(config.mappings['('], "mappings['(']")
-  H.validate_pair_info(config.mappings['['], "mappings['[']")
-  H.validate_pair_info(config.mappings['{'], "mappings['{']")
-  H.validate_pair_info(config.mappings[')'], "mappings[')']")
-  H.validate_pair_info(config.mappings[']'], "mappings[']']")
-  H.validate_pair_info(config.mappings['}'], "mappings['}']")
-  H.validate_pair_info(config.mappings['"'], "mappings['\"']")
-  H.validate_pair_info(config.mappings["'"], 'mappings["\'"]')
-  H.validate_pair_info(config.mappings['`'], "mappings['`']")
+  local validate_mapping = function(pair_info, prefix)
+    -- Allow `false` to not create mapping
+    if pair_info == false then return end
+    H.validate_pair_info(pair_info, prefix)
+  end
+
+  validate_mapping(config.mappings['('], "mappings['(']")
+  validate_mapping(config.mappings['['], "mappings['[']")
+  validate_mapping(config.mappings['{'], "mappings['{']")
+  validate_mapping(config.mappings[')'], "mappings[')']")
+  validate_mapping(config.mappings[']'], "mappings[']']")
+  validate_mapping(config.mappings['}'], "mappings['}']")
+  validate_mapping(config.mappings['"'], "mappings['\"']")
+  validate_mapping(config.mappings["'"], 'mappings["\'"]')
+  validate_mapping(config.mappings['`'], "mappings['`']")
 
   return config
 end
@@ -442,10 +449,17 @@ H.apply_config = function(config)
     if to_set then table.insert(mode_array, mode_ids[name]) end
   end
 
+  local map_conditionally = function(mode, key, pair_info)
+    -- Allow `false` to not create mapping
+    if pair_info == false then return end
+
+    -- This also should take care of mapping `<BS>` and `<CR>`
+    MiniPairs.map(mode, key, pair_info)
+  end
+
   for _, mode in pairs(mode_array) do
     for key, pair_info in pairs(config.mappings) do
-      -- This also should take care of mapping `<BS>` and `<CR>`
-      MiniPairs.map(mode, key, pair_info)
+      map_conditionally(mode, key, pair_info)
     end
   end
 end

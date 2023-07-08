@@ -327,7 +327,6 @@ T['setup()']['validates `config` argument'] = function()
   local expect_mapping_pair_info = function(key)
     local quote = key == "'" and '"' or "'"
     local prefix = ('mappings[%s%s%s]'):format(quote, key, quote)
-    expect_config_error({ mappings = { [key] = 'a' } }, 'mappings', 'table')
     expect_config_error({ mappings = { [key] = { action = 1 } } }, prefix .. '.action', 'string')
     expect_config_error({ mappings = { [key] = { action = 1 } } }, prefix .. '.action', 'string')
     expect_config_error({ mappings = { [key] = { pair = 1 } } }, prefix .. '.pair', 'string')
@@ -384,6 +383,14 @@ T['setup()']['makes mappings in supplied modes'] = function()
 
   eq(has_map('(', [[v:lua.MiniPairs.open("()", "[^\\].")]]), false)
   eq(has_map('(', [[v:lua.MiniPairs.open("()", "[^\\].")]], 'c'), true)
+end
+
+T['setup()']['allows `false` as `mappings` entry to not create mapping'] = function()
+  eq(has_map('(', [[v:lua.MiniPairs.open("()", "[^\\].")]]), true)
+  child.api.nvim_del_keymap('i', '(')
+
+  reload_module({ mappings = { ['('] = false } })
+  eq(has_map('(', [[v:lua.MiniPairs.open("()", "[^\\].")]]), false)
 end
 
 T['map()/map_buf()'] = new_set({
