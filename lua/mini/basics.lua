@@ -585,8 +585,9 @@ H.apply_mappings = function(config)
     map('x', 'g/', '<esc>/\\%V', { silent = false, desc = 'Search inside visual selection' })
 
     -- Search visually selected text (slightly better than builtins in Neovim>=0.8)
-    map('x', '*', [[y/\V<C-R>=escape(@", '/\')<CR><CR>]])
-    map('x', '#', [[y?\V<C-R>=escape(@", '?\')<CR><CR>]])
+    -- TODO: Remove this after compatibility with Neovim=0.9 is dropped
+    map('x', '*', [[y/\V<C-R>=escape(@", '/\')<CR><CR>]], { desc = 'Search forward' })
+    map('x', '#', [[y?\V<C-R>=escape(@", '?\')<CR><CR>]], { desc = 'Search backward' })
 
     -- Alternative way to save and exit in Normal mode.
     -- NOTE: Adding `redraw` helps with `cmdheight=0` if buffer is not modified
@@ -679,15 +680,23 @@ H.keymap_set = function(modes, lhs, rhs, opts)
   for _, mode in ipairs(modes) do
     -- Don't map if mapping is already set **globally**
     local map_info = H.get_map_info(mode, lhs)
-    local is_default = map_info == nil
-      -- Some mappings are set by default in Neovim
-      or (mode == 'n' and lhs == '<C-L>' and map_info.rhs:find('nohl') ~= nil)
-      or (mode == 'x' and lhs == '*' and map_info.rhs == [[y/\V<C-R>"<CR>]])
-      or (mode == 'x' and lhs == '#' and map_info.rhs == [[y?\V<C-R>"<CR>]])
-    if not is_default then return end
+    if not H.is_default_keymap(mode, lhs, map_info) then return end
 
     -- Map
     H.map(mode, lhs, rhs, opts)
+  end
+end
+
+H.is_default_keymap = function(mode, lhs, map_info)
+  if map_info == nil then return true end
+
+  -- Some mappings are set by default in Neovim
+  if mode == 'n' and lhs == '<C-L>' then return map_info.rhs:find('nohl') ~= nil end
+  if mode == 'x' and lhs == '*' then
+    return map_info.rhs == [[y/\V<C-R>"<CR>]] or map_info.desc:find('builtin') ~= nil
+  end
+  if mode == 'x' and lhs == '#' then
+    return map_info.rhs == [[y?\V<C-R>"<CR>]] or map_info.desc:find('builtin') ~= nil
   end
 end
 

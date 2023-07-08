@@ -470,6 +470,8 @@ T['Mappings']['Basic']['*/#'] = function()
   -- with bad characters present
 
   -- *
+  expect.match(child.cmd_capture('xmap *'), 'Search forward')
+
   set_lines({ [[aa?/\bb]], 'aa', [[aa?/\bb]], 'aa', [[aa?/\bb]] })
   set_cursor(1, 0)
   type_keys('v$h', '*')
@@ -486,6 +488,8 @@ T['Mappings']['Basic']['*/#'] = function()
   child.ensure_normal_mode()
 
   -- #
+  expect.match(child.cmd_capture('xmap #'), 'Search backward')
+
   set_lines({ [[aa?/\bb]], 'aa', [[aa?/\bb]], 'aa', [[aa?/\bb]] })
   set_cursor(1, 0)
   type_keys('v$h', '#')
