@@ -196,7 +196,7 @@ end
 --- behavior or override its default not very useful action.
 --- It will only add a mapping if it wasn't manually created before.
 ---
---- Here is a table with created mappings (see |[count]| for its meaning;): >
+--- Here is a table with created mappings : >
 ---
 ---  |Keys   |     Modes       |                  Description                  |
 ---  |-------|-----------------|-----------------------------------------------|
@@ -214,6 +214,10 @@ end
 ---  |       |     Insert      |                                               |
 ---  | <C-z> | Normal, Insert  | Correct latest misspelled word                |
 --- <
+--- Notes:
+--- - See |[count]| for its meaning.
+--- - On Neovim>=0.10 mappings for `#` and `*` are not created as their
+---   enhanced variants are made built-in. See |v_star-default| and |v_#-default|.
 ---
 --- ## mappings.option_toggle_prefix ~
 ---
@@ -584,10 +588,13 @@ H.apply_mappings = function(config)
     -- make effect immediately.
     map('x', 'g/', '<esc>/\\%V', { silent = false, desc = 'Search inside visual selection' })
 
-    -- Search visually selected text (slightly better than builtins in Neovim>=0.8)
+    -- Search visually selected text (slightly better than builtins in
+    -- Neovim>=0.8 but slightly worse than builtins in Neovim>=0.10)
     -- TODO: Remove this after compatibility with Neovim=0.9 is dropped
-    map('x', '*', [[y/\V<C-R>=escape(@", '/\')<CR><CR>]], { desc = 'Search forward' })
-    map('x', '#', [[y?\V<C-R>=escape(@", '?\')<CR><CR>]], { desc = 'Search backward' })
+    if vim.fn.has('nvim-0.10') == 0 then
+      map('x', '*', [[y/\V<C-R>=escape(@", '/\')<CR><CR>]], { desc = 'Search forward' })
+      map('x', '#', [[y?\V<C-R>=escape(@", '?\')<CR><CR>]], { desc = 'Search backward' })
+    end
 
     -- Alternative way to save and exit in Normal mode.
     -- NOTE: Adding `redraw` helps with `cmdheight=0` if buffer is not modified
@@ -692,12 +699,8 @@ H.is_default_keymap = function(mode, lhs, map_info)
 
   -- Some mappings are set by default in Neovim
   if mode == 'n' and lhs == '<C-L>' then return map_info.rhs:find('nohl') ~= nil end
-  if mode == 'x' and lhs == '*' then
-    return map_info.rhs == [[y/\V<C-R>"<CR>]] or map_info.desc:find('builtin') ~= nil
-  end
-  if mode == 'x' and lhs == '#' then
-    return map_info.rhs == [[y?\V<C-R>"<CR>]] or map_info.desc:find('builtin') ~= nil
-  end
+  if mode == 'x' and lhs == '*' then return map_info.rhs == [[y/\V<C-R>"<CR>]] end
+  if mode == 'x' and lhs == '#' then return map_info.rhs == [[y?\V<C-R>"<CR>]] end
 end
 
 H.get_map_info = function(mode, lhs)

@@ -225,7 +225,7 @@ Some of the mappings override built-in ones to either improve their
 behavior or override its default not very useful action.
 It will only add a mapping if it wasn't manually created before.
 
-Here is a table with created mappings (see |[count]| for its meaning;): >
+Here is a table with created mappings : >
 
  |Keys   |     Modes       |                  Description                  |
  |-------|-----------------|-----------------------------------------------|
@@ -243,6 +243,10 @@ Here is a table with created mappings (see |[count]| for its meaning;): >
  |       |     Insert      |                                               |
  | <C-z> | Normal, Insert  | Correct latest misspelled word                |
 <
+Notes:
+- See |[count]| for its meaning.
+- On Neovim>=0.10 mappings for `#` and `*` are not created as their
+  enhanced variants are made built-in. See |v_star-default| and |v_#-default|.
 
 ## mappings.option_toggle_prefix ~
 
