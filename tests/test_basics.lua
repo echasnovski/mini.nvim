@@ -205,14 +205,14 @@ end
 T['Mappings']['do not override manually created mappings'] = function()
   child.api.nvim_set_keymap('n', 'j', 'aaaaa', { noremap = true })
   child.api.nvim_set_keymap('n', ',s', 'bbbbb', { noremap = true })
-  child.api.nvim_set_keymap('n', '<C-h>', 'ccccc', { noremap = true })
+  child.lua([[vim.keymap.set('n', '<C-l>', function() end, { desc = 'Test' })]])
   child.api.nvim_set_keymap('i', '<M-h>', 'ddddd', { noremap = true })
 
   load_module({ mappings = { basic = true, option_toggle_prefix = ',', windows = true, move_with_alt = true } })
 
   expect.match(child.cmd_capture('nmap j'), 'aaaaa')
   expect.match(child.cmd_capture('nmap ,s'), 'bbbbb')
-  expect.match(child.cmd_capture('nmap <C-h>'), 'ccccc')
+  expect.match(child.cmd_capture('nmap <C-l>'), 'Test')
   expect.match(child.cmd_capture('imap <M-h>'), 'ddddd')
 end
 

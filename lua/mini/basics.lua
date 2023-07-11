@@ -696,11 +696,12 @@ end
 
 H.is_default_keymap = function(mode, lhs, map_info)
   if map_info == nil then return true end
+  local rhs = map_info.rhs or ''
 
   -- Some mappings are set by default in Neovim
-  if mode == 'n' and lhs == '<C-L>' then return map_info.rhs:find('nohl') ~= nil end
-  if mode == 'x' and lhs == '*' then return map_info.rhs == [[y/\V<C-R>"<CR>]] end
-  if mode == 'x' and lhs == '#' then return map_info.rhs == [[y?\V<C-R>"<CR>]] end
+  if mode == 'n' and lhs == '<C-L>' then return rhs:find('nohl') ~= nil end
+  if mode == 'x' and lhs == '*' then return rhs == [[y/\V<C-R>"<CR>]] end
+  if mode == 'x' and lhs == '#' then return rhs == [[y?\V<C-R>"<CR>]] end
 end
 
 H.get_map_info = function(mode, lhs)
