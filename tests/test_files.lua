@@ -3034,6 +3034,18 @@ T['File manipulation']['can be not confirmed'] = function()
   validate_no_file(test_dir_path, 'new-file')
 end
 
+T['File manipulation']['can be not confirmed with preview'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  open(test_dir_path)
+  type_keys('o', 'new-file', '<Esc>')
+
+  child.expect_screenshot()
+  mock_confirm(2)
+  synchronize()
+  child.expect_screenshot()
+  validate_no_file(test_dir_path, 'new-file')
+end
+
 T['File manipulation']['works with problematic names'] = function()
   local temp_dir = make_temp_dir('temp', { [[a %file-]], 'b file' })
   open(temp_dir)
