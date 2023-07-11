@@ -2381,7 +2381,8 @@ H.fs_move = function(from, to)
   -- Don't override existing path
   if H.fs_is_present_path(to) then return false end
 
-  -- Move
+  -- Move while allowing to create directory
+  vim.fn.mkdir(H.fs_get_parent(to), 'p')
   local success = vim.loop.fs_rename(from, to)
 
   -- Rename in loaded buffers

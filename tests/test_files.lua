@@ -2671,6 +2671,28 @@ T['File manipulation']['can move while changing basename'] = function()
   validate_confirm_args(ref_pattern_2)
 end
 
+T['File manipulation']['can move inside new directory'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  open(temp_dir)
+
+  -- Write lines in moved file to check actual move and not "delete-create"
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+
+  -- Perform manipulation
+  type_keys('i', 'new-dir/new-subdir/', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+
+  validate_no_file(temp_dir, 'file')
+  validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
+  validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
+end
+
 T['File manipulation']['can copy file'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
