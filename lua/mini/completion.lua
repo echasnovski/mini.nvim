@@ -445,7 +445,7 @@ H.info = {
   event = nil,
   id = 0,
   timer = vim.loop.new_timer(),
-  winnr = nil,
+  win_id = nil,
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
 }
 
@@ -454,7 +454,7 @@ H.signature = {
   bufnr = nil,
   text = nil,
   timer = vim.loop.new_timer(),
-  winnr = nil,
+  win_id = nil,
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
 }
 
@@ -1106,7 +1106,7 @@ H.show_signature_window = function()
 
   -- If window is already opened and displays the same text, don't reopen it
   local cur_text = table.concat(lines, '\n')
-  if H.signature.winnr and cur_text == H.signature.text then return end
+  if H.signature.win_id and cur_text == H.signature.text then return end
 
   -- Cache lines for later checks if window should be reopened
   H.signature.text = cur_text
@@ -1270,17 +1270,19 @@ H.floating_dimensions = function(lines, max_height, max_width)
 end
 
 H.open_action_window = function(cache, opts)
-  cache.winnr = vim.api.nvim_open_win(cache.bufnr, false, opts)
-  vim.api.nvim_win_set_option(cache.winnr, 'wrap', true)
-  vim.api.nvim_win_set_option(cache.winnr, 'linebreak', true)
-  vim.api.nvim_win_set_option(cache.winnr, 'breakindent', false)
+  cache.win_id = vim.api.nvim_open_win(cache.bufnr, false, opts)
+  vim.api.nvim_win_set_option(cache.win_id, 'wrap', true)
+  vim.api.nvim_win_set_option(cache.win_id, 'linebreak', true)
+  vim.api.nvim_win_set_option(cache.win_id, 'breakindent', false)
 end
 
 H.close_action_window = function(cache, keep_timer)
   if not keep_timer then cache.timer:stop() end
 
-  if cache.winnr then vim.api.nvim_win_close(cache.winnr, true) end
-  cache.winnr = nil
+  if type(cache.win_id) == 'number' and vim.api.nvim_win_is_valid(cache.win_id) then
+    vim.api.nvim_win_close(cache.win_id, true)
+  end
+  cache.win_id = nil
 
   -- For some reason 'buftype' might be reset. Ensure that buffer is scratch.
   if cache.bufnr then vim.fn.setbufvar(cache.bufnr, '&buftype', 'nofile') end
