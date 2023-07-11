@@ -159,6 +159,8 @@ Available built-in actions (see "Details" for more information): >
  |-------------|------|------------------------------------------------|
  | Reset       | <BS> | Reset current explorer                         |
  |-------------|------|------------------------------------------------|
+ | Reveal cwd  |  @   | Reset current current working directory        |
+ |-------------|------|------------------------------------------------|
  | Show help   |  g?  | Show help window                               |
  |-------------|------|------------------------------------------------|
  | Synchronize |  =   | Synchronize user edits and/or external changes |
@@ -181,6 +183,9 @@ Details:
 
 - "Reset" focuses only on "anchor" directory (the one used to open current
   explorer) and resets all stored directory cursor positions.
+
+- "Reveal cwd" extends branch to include |current-directory|.
+  If it is not an ancestor of the current branch, nothing is done.
 
 - "Show help" results into new window with helpful information about current
   explorer. Press `q` to close it.
@@ -499,6 +504,7 @@ Default values:
       go_out      = 'h',
       go_out_plus = 'H',
       reset       = '<BS>',
+      reveal_cwd  = '@',
       show_help   = 'g?',
       synchronize = '=',
       trim_left   = '<',
@@ -704,6 +710,14 @@ Trim right part of branch
 
 - Remove all branch paths to the right of currently focused one. This also
   results into current window becoming the most right one.
+
+------------------------------------------------------------------------------
+                                                        *MiniFiles.reveal_cwd()*
+                            `MiniFiles.reveal_cwd`()
+Reveal current working directory
+
+- Prepend branch with parent paths until current working directory is reached.
+  Do nothing if not inside it.
 
 ------------------------------------------------------------------------------
                                                          *MiniFiles.show_help()*

@@ -218,6 +218,7 @@ Here are code snippets for some common installation methods (use only one):
     go_out      = 'h',
     go_out_plus = 'H',
     reset       = '<BS>',
+    reveal_cwd  = '@',
     show_help   = 'g?',
     synchronize = '=',
     trim_left   = '<',

@@ -216,6 +216,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.go_out', 'h')
   expect_config('mappings.go_out_plus', 'H')
   expect_config('mappings.reset', '<BS>')
+  expect_config('mappings.reveal_cwd', '@')
   expect_config('mappings.show_help', 'g?')
   expect_config('mappings.synchronize', '=')
   expect_config('mappings.trim_left', '<')
@@ -257,6 +258,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { go_out = 1 } }, 'mappings.go_out', 'string')
   expect_config_error({ mappings = { go_out_plus = 1 } }, 'mappings.go_out_plus', 'string')
   expect_config_error({ mappings = { reset = 1 } }, 'mappings.reset', 'string')
+  expect_config_error({ mappings = { reveal_cwd = 1 } }, 'mappings.reveal_cwd', 'string')
   expect_config_error({ mappings = { show_help = 1 } }, 'mappings.show_help', 'string')
   expect_config_error({ mappings = { synchronize = 1 } }, 'mappings.synchronize', 'string')
   expect_config_error({ mappings = { trim_left = 1 } }, 'mappings.trim_left', 'string')
@@ -1250,6 +1252,87 @@ end
 
 T['trim_right()']['works when no explorer is opened'] = function() expect.no_error(trim_right) end
 
+T['reveal_cwd()'] = new_set()
+
+local reveal_cwd = forward_lua('MiniFiles.reveal_cwd')
+
+T['reveal_cwd()']['works'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  local nested_path = make_test_path('nested')
+  child.fn.chdir(nested_path)
+
+  open(nested_path)
+  go_in()
+  go_in()
+  trim_left()
+  child.expect_screenshot()
+
+  reveal_cwd()
+  child.expect_screenshot()
+end
+
+T['reveal_cwd()']['works with preview'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_preview = 10')
+  local nested_path = make_test_path('nested')
+  child.fn.chdir(nested_path)
+
+  open(nested_path)
+  go_in()
+  go_in()
+  trim_left()
+  child.expect_screenshot()
+
+  reveal_cwd()
+  child.expect_screenshot()
+end
+
+T['reveal_cwd()']['works when not inside cwd'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  local open_path = full_path(test_dir_path)
+  local temp_dir = make_temp_dir('temp', {})
+  child.fn.chdir(temp_dir)
+
+  open(open_path)
+  child.expect_screenshot()
+
+  reveal_cwd()
+  child.expect_screenshot()
+end
+
+T['reveal_cwd()']['works when root is already cwd'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  local open_path = full_path(test_dir_path)
+  child.fn.chdir(test_dir_path)
+
+  open(open_path)
+  child.expect_screenshot()
+
+  reveal_cwd()
+  child.expect_screenshot()
+end
+
+T['reveal_cwd()']['properly places cursors'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  local temp_dir =
+    make_temp_dir('temp', { 'dir-1/', 'dir-2/', 'dir-3/', 'dir-2/dir-21/', 'dir-2/dir-22/', 'dir-2/dir-23/' })
+  temp_dir = full_path(temp_dir)
+  child.fn.chdir(temp_dir)
+
+  open(join_path(temp_dir, 'dir-2', 'dir-23'))
+  child.expect_screenshot()
+
+  reveal_cwd()
+  child.expect_screenshot()
+end
+
+T['reveal_cwd()']['works when no explorer is opened'] = function() expect.no_error(reveal_cwd) end
+
 T['show_help()'] = new_set()
 
 local show_help = forward_lua('MiniFiles.show_help')
@@ -2144,6 +2227,38 @@ T['Mappings']['`reset` works'] = function()
   prepare(test_dir_path, false, { mappings = { reset = '' } })
   validate_n_wins(3)
   type_keys('<BS>')
+  child.expect_screenshot()
+end
+
+T['Mappings']['`reveal_cwd` works'] = function()
+  child.set_size(10, 80)
+
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  local nested_path = make_test_path('nested')
+  child.fn.chdir(nested_path)
+
+  local prepare = function(...)
+    close()
+    open(...)
+    go_in()
+    go_in()
+    trim_left()
+  end
+
+  -- Default
+  prepare(nested_path)
+  type_keys('@')
+  child.expect_screenshot()
+
+  -- User-supplied
+  prepare(nested_path, false, { mappings = { reveal_cwd = 'Q' } })
+  type_keys('Q')
+  child.expect_screenshot()
+
+  -- Empty
+  prepare(nested_path, false, { mappings = { reveal_cwd = '' } })
+  -- - Follow up `@` with register name to avoid blocking child process
+  type_keys('@', 'a')
   child.expect_screenshot()
 end
 
