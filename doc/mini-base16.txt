@@ -31,6 +31,7 @@ Supported highlight groups:
     - 'glepnir/dashboard-nvim'
     - 'glepnir/lspsaga.nvim'
     - 'HiPhish/nvim-ts-rainbow2'
+    - 'HiPhish/rainbow-delimiters.nvim'
     - 'hrsh7th/nvim-cmp'
     - 'justinmk/vim-sneak'
     - 'kevinhwang91/nvim-ufo'

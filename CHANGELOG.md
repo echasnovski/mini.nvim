@@ -8,6 +8,10 @@
 
 - FEATURE: Add `MiniAnimateNormalFloat` highlight group to tweak highlighting of `open` and `close` animations.
 
+## mini.base16
+
+- FEATURE: Add 'HiPhish/rainbow-delimiters.nvim' integration.
+
 ## mini.bracketed
 
 - FEATURE: Add `add_to_jumplist` option to relevant targets (which move cursor and don't already add to jumplist).
