@@ -1716,15 +1716,7 @@ H.view_track_cursor = vim.schedule_wrap(function(data)
   if not H.is_valid_win(win_id) then return end
 
   -- Ensure cursor doesn't go over path id and icon
-  local cur_cursor = vim.api.nvim_win_get_cursor(win_id)
-  local l = H.get_bufline(buf_id, cur_cursor[1])
-
-  local cur_offset = H.match_line_offset(l)
-  if cur_cursor[2] < (cur_offset - 1) then
-    vim.api.nvim_win_set_cursor(win_id, { cur_cursor[1], cur_offset - 1 })
-    -- Ensure icons are shown (may be not the case after horizontal scroll)
-    vim.cmd('normal! 1000zh')
-  end
+  local cur_cursor = H.window_tweak_cursor(win_id, buf_id)
 
   -- Ensure cursor line doesn't contradict window on the right
   local tabpage_id = vim.api.nvim_win_get_tabpage(win_id)
@@ -2143,13 +2135,37 @@ H.window_set_view = function(win_id, view)
   H.opened_buffers[buf_id].win_id = win_id
 
   -- Set cursor
-  pcall(vim.api.nvim_win_set_cursor, win_id, view.cursor)
+  pcall(H.window_set_cursor, win_id, view.cursor)
 
   -- Set 'cursorline' here also because changing buffer might have removed it
   vim.wo[win_id].cursorline = true
 
   -- Update border highlight based on buffer status
   H.window_update_border_hl(win_id)
+end
+
+H.window_set_cursor = function(win_id, cursor)
+  if type(cursor) ~= 'table' then return end
+
+  vim.api.nvim_win_set_cursor(win_id, cursor)
+
+  -- Tweak cursor here and don't rely on `CursorMoved` event to reduce flicker
+  H.window_tweak_cursor(win_id, vim.api.nvim_win_get_buf(win_id))
+end
+
+H.window_tweak_cursor = function(win_id, buf_id)
+  local cursor = vim.api.nvim_win_get_cursor(win_id)
+  local l = H.get_bufline(buf_id, cursor[1])
+
+  local cur_offset = H.match_line_offset(l)
+  if cursor[2] < (cur_offset - 1) then
+    cursor[2] = cur_offset - 1
+    vim.api.nvim_win_set_cursor(win_id, cursor)
+    -- Ensure icons are shown (may be not the case after horizontal scroll)
+    vim.cmd('normal! 1000zh')
+  end
+
+  return cursor
 end
 
 H.window_update_border_hl = function(win_id)

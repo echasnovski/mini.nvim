@@ -805,7 +805,7 @@ T['refresh()']['works'] = function()
 end
 
 T['refresh()']['preserves explorer options'] = function()
-  open(test_dir_path, false, { windows = { width_focus = 45, width_nofocus = 5 } })
+  open(test_dir_path, false, { windows = { width_focus = 45, width_nofocus = 10 } })
   go_in()
   child.expect_screenshot()
   -- Current explorer options should be preserved
