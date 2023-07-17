@@ -60,6 +60,7 @@ Supported highlight groups:
     - [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
     - [lukas-reineke/indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
     - [neoclide/coc.nvim](https://github.com/neoclide/coc.nvim)
+    - [NeogitOrg/neogit](https://github.com/NeogitOrg/neogit)
     - [nvim-lualine/lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
     - [nvim-neo-tree/neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim)
     - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
@@ -71,7 +72,6 @@ Supported highlight groups:
     - [romgrk/barbar.nvim](https://github.com/romgrk/barbar.nvim)
     - [simrat39/symbols-outline.nvim](https://github.com/simrat39/symbols-outline.nvim)
     - [stevearc/aerial.nvim](https://github.com/stevearc/aerial.nvim)
-    - [TimUntersberger/neogit](https://github.com/TimUntersberger/neogit)
     - [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim)
 
 ## Installation

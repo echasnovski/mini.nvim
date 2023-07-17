@@ -37,6 +37,7 @@ Supported highlight groups:
     - 'lewis6991/gitsigns.nvim'
     - 'lukas-reineke/indent-blankline.nvim'
     - 'neoclide/coc.nvim'
+    - 'NeogitOrg/neogit'
     - 'nvim-lualine/lualine.nvim'
     - 'nvim-neo-tree/neo-tree.nvim'
     - 'nvim-telescope/telescope.nvim'
@@ -48,7 +49,6 @@ Supported highlight groups:
     - 'romgrk/barbar.nvim'
     - 'simrat39/symbols-outline.nvim'
     - 'stevearc/aerial.nvim'
-    - 'TimUntersberger/neogit'
     - 'williamboman/mason.nvim'
 
 # Setup~
