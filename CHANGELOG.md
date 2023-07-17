@@ -24,6 +24,10 @@
 
 Introduction of a new module.
 
+## mini.hues
+
+- FEATURE: Add 'HiPhish/rainbow-delimiters.nvim' integration.
+
 ## mini.jump2d
 
 - FEATURE: Add `gen_union_spotter()` to allow combining separate spotters into one.

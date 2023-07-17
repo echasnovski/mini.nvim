@@ -47,6 +47,7 @@
 ---     - 'glepnir/dashboard-nvim'
 ---     - 'glepnir/lspsaga.nvim'
 ---     - 'HiPhish/nvim-ts-rainbow2'
+---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
 ---     - 'kevinhwang91/nvim-ufo'
@@ -1127,6 +1128,7 @@ H.apply_colorscheme = function(config)
     hi('OutlineIndentOdd',       { fg=p.fg,      bg=nil })
   end
 
+  -- TODO: Remove after 'mini.nvim' 0.10.0 release
   if has_integration('HiPhish/nvim-ts-rainbow2') then
     hi('TSRainbowBlue',   { fg=p.azure,  bg=nil })
     hi('TSRainbowCyan',   { fg=p.cyan,   bg=nil })
@@ -1135,6 +1137,16 @@ H.apply_colorscheme = function(config)
     hi('TSRainbowRed',    { fg=p.red,    bg=nil })
     hi('TSRainbowViolet', { fg=p.purple, bg=nil })
     hi('TSRainbowYellow', { fg=p.yellow, bg=nil })
+  end
+
+  if has_integration('HiPhish/rainbow-delimiters.nvim') then
+    hi('RainbowDelimiterBlue',   { fg=p.azure,  bg=nil })
+    hi('RainbowDelimiterCyan',   { fg=p.cyan,   bg=nil })
+    hi('RainbowDelimiterGreen',  { fg=p.green,  bg=nil })
+    hi('RainbowDelimiterOrange', { fg=p.orange, bg=nil })
+    hi('RainbowDelimiterRed',    { fg=p.red,    bg=nil })
+    hi('RainbowDelimiterViolet', { fg=p.purple, bg=nil })
+    hi('RainbowDelimiterYellow', { fg=p.yellow, bg=nil })
   end
 
   if has_integration('hrsh7th/nvim-cmp') then
