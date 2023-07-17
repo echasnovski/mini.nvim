@@ -53,6 +53,7 @@
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
 ---     - 'neoclide/coc.nvim'
+---     - 'NeogitOrg/neogit'
 ---     - 'nvim-lualine/lualine.nvim'
 ---     - 'nvim-neo-tree/neo-tree.nvim'
 ---     - 'nvim-telescope/telescope.nvim'
@@ -64,7 +65,6 @@
 ---     - 'romgrk/barbar.nvim'
 ---     - 'simrat39/symbols-outline.nvim'
 ---     - 'stevearc/aerial.nvim'
----     - 'TimUntersberger/neogit'
 ---     - 'williamboman/mason.nvim'
 ---
 --- # Setup~
@@ -1239,6 +1239,21 @@ H.apply_colorscheme = function(config)
     hi('CocSelectedText',         { fg=p.yellow, bg=nil })
   end
 
+  -- NeogitOrg/neogit
+  if has_integration('NeogitOrg/neogit') then
+    hi('NeogitCommitViewHeader',    { link='Special' })
+    hi('NeogitDiffAddHighlight',    { link='DiffAdd' })
+    hi('NeogitDiffAdd',             { link='DiffAdd' })
+    hi('NeogitDiffDeleteHighlight', { link='DiffDelete' })
+    hi('NeogitDiffDelete',          { link='DiffDelete' })
+    hi('NeogitFold',                { link='FoldColumn' })
+    hi('NeogitHunkHeader',          { fg=p.accent, bg=nil})
+    hi('NeogitHunkHeaderHighlight', { fg=p.accent, bg=nil, bold = true})
+    hi('NeogitNotificationError',   { link='DiagnosticError' })
+    hi('NeogitNotificationInfo',    { link='DiagnosticInfo' })
+    hi('NeogitNotificationWarning', { link='DiagnosticWarn' })
+  end
+
   -- nvim-lualine/lualine.nvim
   -- Everything works correctly out of the box
 
@@ -1369,9 +1384,6 @@ H.apply_colorscheme = function(config)
   -- Everything works correctly out of the box
 
   -- stevearc/aerial.nvim
-  -- Everything works correctly out of the box
-
-  -- TimUntersberger/neogit
   -- Everything works correctly out of the box
 
   if has_integration('williamboman/mason.nvim') then
