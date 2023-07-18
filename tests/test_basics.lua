@@ -710,22 +710,6 @@ T['Mappings']['Windows']['work for common navigation'] = function()
   validate_cur_win(1001)
 end
 
-T['Mappings']['Windows']['work for navigation in Terminal mode'] = function()
-  load_module({ options = { basic = false }, mappings = { windows = true }, autocommands = { basic = false } })
-
-  child.cmd('wincmd v')
-  child.cmd('terminal')
-  -- Wait for terminal to load
-  vim.loop.sleep(100)
-  child.cmd('startinsert')
-  eq(child.fn.mode(), 't')
-
-  eq(child.api.nvim_get_current_win(), 1001)
-  type_keys('<C-w>l')
-  eq(child.api.nvim_get_current_win(), 1000)
-  eq(child.fn.mode(), 'n')
-end
-
 T['Mappings']['Windows']['work for resizing'] = function()
   local validate = function(dims) eq({ child.fn.winheight(0), child.fn.winwidth(0) }, dims) end
 

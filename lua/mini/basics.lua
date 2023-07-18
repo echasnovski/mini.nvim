@@ -272,10 +272,6 @@ end
 ---     - `<C-up>`    - increase window height.
 ---     - `<C-right>` - increase window width.
 ---
---- It also creates a `<C-w>` mapping in |Terminal-mode| for easier window
---- navigation inside builtin |terminal-emulator|. Tip: use `<C-w><Esc>` for
---- easier Terminal mode exit than |CTRL-\_CTRL-N|.
----
 --- ## mappings.move_with_alt
 ---
 --- The `config.mappings.move_with_alt` creates mappings for a more consistent
@@ -648,8 +644,6 @@ H.apply_mappings = function(config)
     map('n', '<C-J>', '<C-w>j', { desc = 'Focus on below window' })
     map('n', '<C-K>', '<C-w>k', { desc = 'Focus on above window' })
     map('n', '<C-L>', '<C-w>l', { desc = 'Focus on right window' })
-
-    map('t', '<C-W>', [[<C-\><C-N><C-w>]], { desc = 'Focus other window' })
 
     -- Window resize (respecting `v:count`)
     map('n', '<C-Left>',  '"<Cmd>vertical resize -" . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Decrease window width' })

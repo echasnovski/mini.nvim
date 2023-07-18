@@ -12,6 +12,10 @@
 
 - FEATURE: Add 'HiPhish/rainbow-delimiters.nvim' integration.
 
+## mini.basics
+
+- BREAKING: Remove `<C-w>` mapping in Terminal mode, as it is more useful inside terminal emulator itself.
+
 ## mini.bracketed
 
 - FEATURE: Add `add_to_jumplist` option to relevant targets (which move cursor and don't already add to jumplist).

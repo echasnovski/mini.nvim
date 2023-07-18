@@ -301,10 +301,6 @@ Here is a list with created Normal mode mappings (all mappings respect |[count]|
     - `<C-up>`    - increase window height.
     - `<C-right>` - increase window width.
 
-It also creates a `<C-w>` mapping in |Terminal-mode| for easier window
-navigation inside builtin |terminal-emulator|. Tip: use `<C-w><Esc>` for
-easier Terminal mode exit than |CTRL-\_CTRL-N|.
-
 ## mappings.move_with_alt
 
 The `config.mappings.move_with_alt` creates mappings for a more consistent
