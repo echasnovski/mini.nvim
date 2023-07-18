@@ -716,11 +716,11 @@ H.apply_autocommands = function(config)
   if config.autocommands.basic then
     au('TextYankPost', '*', function() vim.highlight.on_yank() end, 'Highlight yanked text')
 
-    local start_terminal_insert = function(data)
+    local start_terminal_insert = vim.schedule_wrap(function(data)
       -- Try to start terminal mode only if target terminal is current
       if not (vim.api.nvim_get_current_buf() == data.buf and vim.bo.buftype == 'terminal') then return end
       vim.cmd('startinsert')
-    end
+    end)
     au('TermOpen', 'term://*', start_terminal_insert, 'Start builtin terminal in Insert mode')
   end
 

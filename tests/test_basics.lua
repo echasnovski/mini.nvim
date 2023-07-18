@@ -809,8 +809,7 @@ T['Autocommands']['start Terminal mode only if target terminal is current'] = fu
   load_module()
 
   local init_buf_id = child.api.nvim_get_current_buf()
-  local new_buf_id = child.api.nvim_create_buf(true, false)
-  child.api.nvim_open_term(new_buf_id, {})
+  child.lua([[vim.api.nvim_buf_call(vim.api.nvim_create_buf(true, false), function() vim.cmd('terminal') end)]])
 
   eq(child.api.nvim_get_current_buf(), init_buf_id)
   eq(child.fn.mode(), 'n')
