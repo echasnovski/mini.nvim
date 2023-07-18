@@ -799,6 +799,23 @@ T['Autocommands']['work'] = function()
   eq(child.fn.mode(), 't')
 end
 
+T['Autocommands']['starts Terminal mode only in proper terminals'] = function()
+  load_module()
+  child.api.nvim_open_term(0, {})
+  eq(child.fn.mode(), 'n')
+end
+
+T['Autocommands']['start Terminal mode only if target terminal is current'] = function()
+  load_module()
+
+  local init_buf_id = child.api.nvim_get_current_buf()
+  local new_buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_open_term(new_buf_id, {})
+
+  eq(child.api.nvim_get_current_buf(), init_buf_id)
+  eq(child.fn.mode(), 'n')
+end
+
 T['Autocommands']['can be disabled'] = function()
   load_module({ autocommands = { basic = false } })
   child.cmd('terminal')
