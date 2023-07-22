@@ -1079,6 +1079,22 @@ T['close()']['closes help window'] = function()
   validate_n_wins(1)
 end
 
+T['close()']['handles invalid target window'] = function()
+  child.set_size(15, 60)
+  child.o.showtabline = 0
+  child.o.laststatus = 0
+
+  child.cmd('tabfind ' .. test_dir_path)
+  child.expect_screenshot()
+  eq(#child.api.nvim_list_tabpages(), 2)
+
+  close()
+  child.expect_screenshot()
+  eq(#child.api.nvim_list_bufs(), 1)
+  eq(#child.api.nvim_list_tabpages(), 1)
+  eq(child.cmd('messages'), '')
+end
+
 T['close()']['works when no explorer is opened'] = function() eq(close(), vim.NIL) end
 
 T['go_in()'] = new_set()
@@ -3621,6 +3637,23 @@ T['Default explorer']['works in `:vsplit .`'] = function()
   close()
   child.expect_screenshot()
   eq(#child.api.nvim_list_bufs(), 2)
+end
+
+T['Default explorer']['works in `:tabfind .`'] = function()
+  child.set_size(15, 60)
+  child.o.showtabline = 0
+  child.o.laststatus = 0
+
+  child.cmd('tabfind ' .. test_dir_path)
+  child.expect_screenshot()
+
+  type_keys('G')
+  go_in()
+  close()
+  child.expect_screenshot()
+  eq(#child.api.nvim_list_bufs(), 2)
+  eq(#child.api.nvim_list_tabpages(), 2)
+  eq(child.cmd('messages'), '')
 end
 
 T['Default explorer']['handles close without opening file'] = function()

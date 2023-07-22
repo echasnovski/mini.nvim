@@ -767,7 +767,8 @@ MiniFiles.close = function()
 
   -- Focus on target window
   explorer = H.explorer_ensure_target_window(explorer)
-  vim.api.nvim_set_current_win(explorer.target_window)
+  -- - Use `pcall()` because window might still be invalid
+  pcall(vim.api.nvim_set_current_win, explorer.target_window)
 
   -- Update currently shown cursors
   explorer = H.explorer_update_cursors(explorer)
