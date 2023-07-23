@@ -679,6 +679,12 @@ Return~
 `(boolean|nil)` Whether closing was done or `nil` if there was nothing to close.
 
 ------------------------------------------------------------------------------
+                                                            *MiniFiles.toggle()*
+                              `MiniFiles.toggle`()
+Toggle explorer
+
+
+------------------------------------------------------------------------------
                                                              *MiniFiles.go_in()*
                               `MiniFiles.go_in`()
 Go in entry under cursor
