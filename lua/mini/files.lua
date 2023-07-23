@@ -802,15 +802,7 @@ end
 
 --- Toggle file explorer
 ---
----@param path string|nil A valid file system path used as anchor.
----   If it is a path to directory, used directly.
----   If it is a path to file, its parent directory is used as anchor while
----   explorer will focus on the supplied file.
----   Default: path of |current-directory|.
----@param use_latest boolean|nil Whether to load explorer state from history
----   (based on the supplied anchor path). Default: `true`.
----@param opts table|nil Table of options overriding |MiniFiles.config| and
----   `vim.b.minifiles_config` for this particular explorer session.
+--- Uses the same input parameters as |MiniFiles.open()|
 MiniFiles.toggle = function(path, use_latest, opts)
   local explorer = H.explorer_get()
   if explorer == nil then MiniFiles.open(path, use_latest, opts) else MiniFiles.close() end
