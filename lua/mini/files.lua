@@ -799,6 +799,14 @@ MiniFiles.close = function()
   return true
 end
 
+
+--- Toggle explorer
+---
+MiniFiles.toggle = function()
+  local explorer = H.explorer_get()
+  if explorer == nil then MiniFiles.open() else MiniFiles.close() end
+end
+
 --- Go in entry under cursor
 ---
 --- Depends on entry under cursor:
