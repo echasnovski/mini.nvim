@@ -89,6 +89,15 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniAnimateCursor`
     - `MiniAnimateNormalFloat`
 
+- 'mini.clue':
+    -  `MiniClueBorder`
+    -  `MiniClueDescGroup`
+    -  `MiniClueDescSingle`
+    -  `MiniClueNextKey`
+    -  `MiniClueNextKeyWithPostkeys`
+    -  `MiniClueSeparator`
+    -  `MiniClueTitle`
+
 - 'mini.completion':
     - `MiniCompletionActiveParameter`
 

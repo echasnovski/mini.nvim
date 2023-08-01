@@ -64,6 +64,7 @@ sync_module "base16" colors/minischeme.lua colors/minicyan.lua
 sync_module "basics"
 sync_module "bracketed"
 sync_module "bufremove"
+sync_module "clue"
 sync_module "colors"
 sync_module "comment"
 sync_module "completion"

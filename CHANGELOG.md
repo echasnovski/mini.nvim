@@ -24,6 +24,10 @@
 
 - BREAKING: Create normal buffer instead of scratch when there is no reasonable target to focus (#394).
 
+## mini.clue
+
+Introduction of a new module.
+
 ## mini.files
 
 Introduction of a new module.

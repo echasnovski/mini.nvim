@@ -69,6 +69,7 @@ Here are code snippets for some common installation methods:
 | mini.basics      | Common configuration presets             | [README](readmes/mini-basics.md)      | [Help file](doc/mini-basics.txt)      |
 | mini.bracketed   | Go forward/backward with square brackets | [README](readmes/mini-bracketed.md)   | [Help file](doc/mini-bracketed.txt)   |
 | mini.bufremove   | Remove buffers                           | [README](readmes/mini-bufremove.md)   | [Help file](doc/mini-bufremove.txt)   |
+| mini.clue        | Show next key clues                      | [README](readmes/mini-clue.md)        | [Help file](doc/mini-clue.txt)        |
 | mini.colors      | Tweak and save any color scheme          | [README](readmes/mini-colors.md)      | [Help file](doc/mini-colors.txt)      |
 | mini.comment     | Comment lines                            | [README](readmes/mini-comment.md)     | [Help file](doc/mini-comment.txt)     |
 | mini.completion  | Completion and signature help            | [README](readmes/mini-completion.md)  | [Help file](doc/mini-completion.txt)  |
@@ -135,7 +136,6 @@ Activate them as regular `colorscheme` (for example, `:colorscheme randomhue` or
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
-- 'mini.clue' - "show as you type" floating window with customizable information. Something like [folke/which-key.nvim](https://github.com/folke/which-key.nvim) and [anuvyklack/hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
 - 'mini.exchange' - exchange two regions of text. Something like [tommcdo/vim-exchange](https://github.com/tommcdo/vim-exchange).
 - 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
 - 'mini.pick' - fuzzy picker. A very simplified version of [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).

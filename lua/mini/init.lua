@@ -20,6 +20,7 @@
 ---   Common configuration presets ................................. |mini.basics|
 ---   Go forward/backward with square brackets .................. |mini.bracketed|
 ---   Remove buffers ............................................ |mini.bufremove|
+---   Show next key clues ............................................ |mini.clue|
 ---   Tweak and save any color scheme .............................. |mini.colors|
 ---   Comment lines ............................................... |mini.comment|
 ---   Completion and signature help ............................ |mini.completion|
@@ -143,6 +144,11 @@
 ---
 --- - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving
 ---   window layout.
+---
+--- - |MiniClue| - show next key clues. Implements custom key query process with
+---   customizable opt-in triggers, next key descriptions (clues), hydra-like
+---   submodes, window delay/config. Provides clue sets for some built-in
+---   concepts: `g`/`z` keys, window commands, etc.
 ---
 --- - |MiniColors| - tweak and save any color scheme. Can create colorscheme
 ---   object with methods to invert/set/modify/etc.

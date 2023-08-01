@@ -1,0 +1,695 @@
+*mini.clue* Show next key clues
+*MiniClue*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+- Implement custom key query process to reach target key combination:
+    - Starts after customizable opt-in triggers (mode + keys).
+
+    - Each key press narrows down set of possible targets.
+      Pressing `<BS>` removes previous user entry.
+      Pressing `<Esc>` or `<C-c>` leads to an early stop.
+      Doesn't depend on 'timeoutlen' and has basic support for 'langmap'.
+
+    - Ends when there is at most one target left or user pressed `<CR>`.
+      Results into emulating pressing all query keys plus possible postkeys.
+
+- Show window (after configurable delay) with clues. It lists available
+  next keys along with their descriptions (auto generated from descriptions
+  present keymaps and user-supplied clues).
+
+- Configurable "postkeys" for key combinations - keys which will be emulated
+  after combination is reached during key query process.
+
+- Provide customizable sets of clues for common built-in keys/concepts:
+    - `g` key.
+    - `z` key.
+    - Window commands.
+    - Built-in completion.
+    - Marks.
+    - Registers.
+
+- Lua functions to disable/enable triggers globally or per buffer.
+
+For more details see:
+- |MiniClue-key-query-process|.
+- |MiniClue-examples|.
+- |MiniClue.config|.
+- |MiniClue.gen_clues|.
+
+Notes:
+- Works on all supported versions but using Neovim>=0.9 is recommended.
+
+- There is no functionality to create mappings in order to clearly separate
+  two different tasks.
+  The best suggested practice is to manually create mappings with
+  descriptions (`desc` field in options), as they will be automatically
+  used inside clue window.
+
+- Due to technical difficulties, there is no full proof support for
+  Operator-pending mode triggers (like `a`/`i` from |mini.ai|):
+    - Doesn't work as part of a command in "temporary Normal mode" (like
+      after |i_CTRL-O|) due to implementation difficulties.
+    - Can have unexpected behavior with custom operators.
+
+- Has (mostly solved) issues with macros:
+    - All triggers are disabled during macro recording due to technical
+      reasons.
+    - The `@` and `Q` keys are specially mapped inside |MiniClue.setup()|
+      to temporarily disable triggers.
+
+- Triggers will fully override same buffer-local mappings and will have
+  precedence over global one. For example, having set `<C-w>` as Normal
+  mode trigger means that there should not be another `<C-w>` mapping.
+
+# Setup ~
+
+This module needs a setup with `require('mini.clue').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniClue`
+which you can use for scripting or manually (with `:lua MiniClue.*`).
+
+Config table **needs to have triggers configured**, none is set up by default.
+
+See |MiniClue.config| for available config settings.
+
+You can override runtime config settings (like clues or window options)
+locally to a buffer inside `vim.b.miniclue_config` which should have same
+structure as `MiniClue.config`. See |mini.nvim-buffer-local-config| for
+more details.
+
+# Comparisons ~
+
+- 'folke/which-key.nvim':
+    - Both have the same main goal: show available next keys along with
+      their customizable descriptions.
+    - Has different UI and content layout.
+    - Allows creating mappings inside its configuration, while this module
+      doesn't have this by design (to clearly separate two different tasks).
+    - Doesn't allow creating submodes, while this module does (via `postkeys`).
+
+- 'anuvyklack/hydra.nvim':
+    - Both allow creating submodes: state which starts at certain key
+      combination; treats some keys differently; ends after `<Esc>`.
+    - Doesn't show information about available next keys (outside of
+      submodes), while that is this module's main goal.
+
+# Highlight groups ~
+
+* `MiniClueBorder` - window border.
+* `MiniClueDescGroup` - group description in clue window.
+* `MiniClueDescSingle` - single target description in clue window.
+* `MiniClueNextKey` - next key label in clue window.
+* `MiniClueNextKeyWithPostkeys` - next key label with postkeys in clue window.
+* `MiniClueSeparator` - separator in clue window.
+* `MiniClueTitle` - window title.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling~
+
+To disable creating triggers, set `vim.g.miniclue_disable` (globally) or
+`vim.b.miniclue_disable` (for a buffer) to `true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                    *MiniClue-key-query-process*
+# Key query process ~
+
+## General info ~
+
+This module implements custom key query process imitating a usual built-in
+mechanism of user pressing keys in order to execute a mapping. General idea
+is the same: narrow down key combinations until the target is reached.
+
+Main goals of its existence are:
+
+- Allow reaching certain mappings be independent of 'timeoutlen'. That is,
+  there is no fixed timeout after which currently typed keys are executed.
+
+- Enable automated showing of next key clues after user-supplied delay
+  (also independent of 'timeoutlen').
+
+- Allow emulating configurable key presses after certain key combination is
+  reached. This granular control allows creating so called "submodes".
+  See more at |MiniClue-examples-submodes|.
+
+This process is primarily designed for nested `<Leader>` mappings in Normal
+mode but works in all other main modes: Visual, Insert, Operator-pending
+(with caveats; no full proof guarantees), Command-line, Terminal.
+
+## Lifecycle ~
+
+- Key query process starts when user types a trigger: certain keys in certain
+  mode. Those keys are put into key query as a single user input. All possible
+  mode key combinations are filtered to ones starting with the trigger keys.
+
+  Note: trigger is implemented as a regular mapping, so if it has at least
+  two keys, they should be pressed within 'timeoutlen' milliseconds.
+
+- Wait (indefinitely) for user to press a key. Advance depending on the key:
+
+    - Special key:
+
+        - If `<Esc>` or `<C-c>`, stop the process without any action.
+
+        - If `<CR>`, stop the process and execute current key query, meaning
+          emulate (with |nvim_feedkeys()|) user pressing those keys.
+
+        - If `<BS>`, remove previous user input from the query. If query becomes
+          empty, stop the process without any action.
+
+        - If a key for scrolling clue window (`scroll_down` / `scroll_up`
+          in `config.window`; `<C-d>` / `<C-u>` by default), scroll clue window
+          and wait for the next user key.
+
+    - Not special key. Add key to the query while filtering all available
+      key combinations to start with the current key query. Advance:
+
+        - If there is a single available key combination matching current
+          key query, execute it.
+
+        - If there is no key combinations starting with the current query,
+          execute it. This, for instance, allows a seamless execution of
+          operators in presence of a longer key combinations. Example: with
+          `g` as trigger in Normal mode and available mappings `gc` / `gcc`
+          (like from |mini.comment|), this allows typing `gcip` to comment
+          current paragraph, although there are no key combinations
+          starting with `gci`.
+
+        - Otherwise wait for the new user key press.
+
+## Clue window ~
+
+After initiating key query process and after each key press, a timer is
+started to show a clue window: floating window with information about
+available next keys along with their descriptions. Note: if window is
+already shown, its content is updated right away.
+
+Clues can have these types:
+
+- "Terminal next key": when pressed, will lead to query execution.
+
+- "Terminal next key with postkeys": when pressed, will lead to query
+  execution plus some configured postkeys.
+
+- "Group next key": when pressed, will narrow down available key combinations
+  and wait for another key press. Note: can have configured description
+  (inside `config.clues`) or it will be auto generated based on the number of
+  available key combinations.
+
+------------------------------------------------------------------------------
+                                                             *MiniClue-examples*
+# Full starter example ~
+
+If not sure where to start, try this example with all provided clues from
+this module plus all |<Leader>| mappings in Normal and Visual modes: >
+
+  local miniclue = require('mini.clue')
+  miniclue.setup({
+    triggers = {
+      -- Leader triggers
+      { mode = 'n', keys = '<Leader>' },
+      { mode = 'x', keys = '<Leader>' },
+
+      -- Built-in completion
+      { mode = 'i', keys = '<C-x>' },
+
+      -- `g` key
+      { mode = 'n', keys = 'g' },
+      { mode = 'x', keys = 'g' },
+
+      -- Marks
+      { mode = 'n', keys = "'" },
+      { mode = 'n', keys = '`' },
+      { mode = 'x', keys = "'" },
+      { mode = 'x', keys = '`' },
+
+      -- Registers
+      { mode = 'n', keys = '"' },
+      { mode = 'x', keys = '"' },
+      { mode = 'i', keys = '<C-r>' },
+      { mode = 'c', keys = '<C-r>' },
+
+      -- Window commands
+      { mode = 'n', keys = '<C-w>' },
+
+      -- `z` key
+      { mode = 'n', keys = 'z' },
+      { mode = 'x', keys = 'z' },
+    },
+
+    clues = {
+      -- Enhance this by adding descriptions for <Leader> mapping groups
+      miniclue.gen_clues.builtin_completion(),
+      miniclue.gen_clues.g(),
+      miniclue.gen_clues.marks(),
+      miniclue.gen_clues.registers(),
+      miniclue.gen_clues.windows(),
+      miniclue.gen_clues.z(),
+    },
+  })
+
+# Leader clues ~
+
+Assume there are these |<Leader>| mappings set up: >
+
+  -- Set `<Leader>` before making any mappings and configuring 'mini.clue'
+  vim.g.mapleader = ' '
+
+  local nmap_leader = function(suffix, rhs, desc)
+    vim.keymap.set('n', '<Leader>' .. suffix, rhs, { desc = desc })
+  end
+  local xmap_leader = function(suffix, rhs, desc)
+    vim.keymap.set('x', '<Leader>' .. suffix, rhs, { desc = desc })
+  end
+
+  nmap_leader('bd', '<Cmd>lua MiniBufremove.delete()<CR>',  'Delete')
+  nmap_leader('bw', '<Cmd>lua MiniBufremove.wipeout()<CR>', 'Wipeout')
+
+  nmap_leader('lf', '<Cmd>lua vim.lsp.buf.format()<CR>',     'Format')
+  xmap_leader('lf', '<Cmd>lua vim.lsp.buf.format()<CR>',     'Format')
+  nmap_leader('lr', '<Cmd>lua vim.lsp.buf.rename()<CR>',     'Rename')
+  nmap_leader('lR', '<Cmd>lua vim.lsp.buf.references()<CR>', 'References')
+
+
+The following setup will enable |<Leader>| as trigger in Normal and Visual
+modes and add descriptions to mapping groups: >
+
+  require('mini.clue').setup({
+    -- Register `<Leader>` as trigger
+    triggers = {
+      { mode = 'n', keys = '<Leader>' },
+      { mode = 'x', keys = '<Leader>' },
+    },
+
+    -- Add descriptions for mapping groups
+    clues = {
+      { mode = 'n', keys = '<Leader>b', desc = '+Buffers' },
+      { mode = 'n', keys = '<Leader>l', desc = '+LSP' },
+    },
+  })
+
+# Clues without mappings ~
+
+Clues can be shown not only for actually present mappings. This is helpful for
+showing clues for built-in key combinations. Here is an example of clues for
+a subset of built-in completion (see |MiniClue.gen_clues.builtin_completion()|
+to generate clues for all available completion sources): >
+
+  require('mini.clue').setup({
+    -- Make `<C-x>` a trigger. Otherwise, key query process won't start.
+    triggers = {
+      { mode = 'i', keys = '<C-x>' },
+    },
+
+    -- Register custom clues
+    clues = {
+      { mode = 'i', keys = '<C-x><C-f>', desc = 'File names' },
+      { mode = 'i', keys = '<C-x><C-l>', desc = 'Whole lines' },
+      { mode = 'i', keys = '<C-x><C-o>', desc = 'Omni completion' },
+      { mode = 'i', keys = '<C-x><C-s>', desc = 'Spelling suggestions' },
+      { mode = 'i', keys = '<C-x><C-u>', desc = "With 'completefunc'" },
+    }
+  })
+<
+                                                    *MiniClue-examples-submodes*
+# Submodes ~
+
+Submode is a state initiated after pressing certain key combination ("prefix")
+during which some keys are interpreted differently.
+
+In this module submode can be implemented following these steps:
+
+- Create mappings for each key inside submode. Left hand side of mappings
+  should consist from prefix followed by the key.
+
+- Create clue for each key inside submode with `postkeys` value equal to
+  prefix. It would mean that after executing particular key combination from
+  this submode, pressing its prefix will be automatically emulated (leading
+  back to being inside submode).
+
+- Register submode prefix (or some of its starting part) as trigger.
+
+## Submode examples ~
+
+- Submode for moving with |mini.move|:
+    - Press `<Leader>m` to start submode.
+    - Press any of `h`/`j`/`k`/`l` to move selection/line.
+    - Press `<Esc>` to stop submode.
+
+  The code: >
+
+  require('mini.move').setup({
+    mappings = {
+      left       = '<Leader>mh',
+      right      = '<Leader>ml',
+      down       = '<Leader>mj',
+      up         = '<Leader>mk',
+      line_left  = '<Leader>mh',
+      line_right = '<Leader>ml',
+      line_down  = '<Leader>mj',
+      line_up    = '<Leader>mk',
+    },
+  })
+
+  require('mini.clue').setup({
+    triggers = {
+      { mode = 'n', keys = '<Leader>m' },
+      { mode = 'x', keys = '<Leader>m' },
+    },
+    clues = {
+      { mode = 'n', keys = '<Leader>mh', postkeys = '<Leader>m' },
+      { mode = 'n', keys = '<Leader>mj', postkeys = '<Leader>m' },
+      { mode = 'n', keys = '<Leader>mk', postkeys = '<Leader>m' },
+      { mode = 'n', keys = '<Leader>ml', postkeys = '<Leader>m' },
+      { mode = 'x', keys = '<Leader>mh', postkeys = '<Leader>m' },
+      { mode = 'x', keys = '<Leader>mj', postkeys = '<Leader>m' },
+      { mode = 'x', keys = '<Leader>mk', postkeys = '<Leader>m' },
+      { mode = 'x', keys = '<Leader>ml', postkeys = '<Leader>m' },
+    },
+  })
+
+- Submode for iterating buffers and windows with |mini.bracketed|:
+    - Press `[` or `]` to start key query process for certain direction.
+    - Press `b` / `w` to iterate buffers/windows until reach target one.
+    - Press `<Esc>` to stop submode.
+
+  The code: >
+
+  require('mini.bracketed').setup()
+
+  require('mini.clue').setup({
+    triggers = {
+      { mode = 'n', keys = ']' },
+      { mode = 'n', keys = '[' },
+    },
+    clues = {
+      { mode = 'n', keys = ']b', postkeys = ']' },
+      { mode = 'n', keys = ']w', postkeys = ']' },
+
+      { mode = 'n', keys = '[b', postkeys = '[' },
+      { mode = 'n', keys = '[w', postkeys = '[' },
+    },
+  })
+
+- Submode for window commands using |MiniClue.gen_clues.windows()|:
+    - Press `<C-w>` to start key query process.
+    - Press keys which move / change focus / resize windows.
+    - Press `<Esc>` to stop submode.
+
+  The code: >
+
+  local miniclue = require('mini.clue')
+  miniclue.setup({
+    triggers = {
+      { mode = 'n', keys = '<C-w>' },
+    },
+    clues = {
+      miniclue.gen_clues.windows({
+        submode_move = true,
+        submode_navigate = true,
+        submode_resize = true,
+      })
+    },
+  })
+
+# Window config ~
+>
+  require('mini.clue').setup({
+    triggers = { { mode = 'n', keys = '<Leader>' } },
+
+    window = {
+      -- Show window immediately
+      delay = 0,
+
+      config = {
+        -- Compute window width automatically
+        width = 'auto',
+
+        -- Use double-line border
+        border = 'double',
+      },
+    },
+  })
+
+------------------------------------------------------------------------------
+                                                              *MiniClue.setup()*
+                           `MiniClue.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniClue.config|.
+
+Usage~
+`require('mini.clue').setup({})` (replace `{}` with your `config` table).
+**Neds to have triggers configured**.
+
+------------------------------------------------------------------------------
+                                                               *MiniClue.config*
+                               `MiniClue.config`
+Module config
+
+Default values:
+>
+  MiniClue.config = {
+    -- Array of extra clues to show
+    clues = {},
+
+    -- Array of opt-in triggers which start custom key query process.
+    -- **Needs to have something in order to show clues**.
+    triggers = {},
+
+    -- Clue window settings
+    window = {
+      -- Floating window config
+      config = {},
+
+      -- Delay before showing clue window
+      delay = 1000,
+
+      -- Keys to scroll inside the clue window
+      scroll_down = '<C-d>',
+      scroll_up = '<C-u>',
+    },
+  }
+<
+# General info ~
+
+- To use |<Leader>| as part of the config (either as trigger or inside clues),
+  set it prior to running |MiniClue.setup()|.
+
+- See |MiniClue-examples| for examples.
+
+# Clues ~
+
+`config.clues` is an array with extra information about key combinations.
+Each element can be one of:
+- Clue table.
+- Array (possibly nested) of clue tables.
+- Callable (function) returning either of the previous two.
+
+A clue table is a table with the following fields:
+- <mode> `(string)` - single character describing **single** mode short-name of
+  key combination as in `nvim_set_keymap()` ('n', 'x', 'i', 'o', 'c', etc.).
+- <keys> `(string)` - key combination for which clue will be shown.
+  "Human-readable" key names as in |key-notation| (like "<Leader>", "<Space>",
+  "<Tab>", etc.) are allowed.
+- <desc> `(string|nil)` - optional key combination description which will
+  be shown in clue window.
+- <postkeys> `(string|nil)` - optional postkeys which will be executed
+  automatically after `keys`. Allows creation of submodes
+  (see |MiniClue-examples-submodes|).
+
+Notes:
+- Postkeys are literal simulation of keypresses with |nvim_feedkeys()|.
+
+- Suggested approach to configuring clues is to create mappings with `desc`
+  field while supplying to `config.clues` only elements describing groups,
+  postkeys, and built-in mappings.
+
+# Triggers ~
+
+`config.triggers` is an array with information when |MiniClue-key-query-process|
+should start. Each element is a trigger table with the fields <mode> and
+<keys> which are treated the same as in clue table.
+
+# Window ~
+
+`config.window` defines behavior of clue window.
+
+`config.window.delay` is a number of milliseconds after which clue window will
+appear. Can be 0 to show immediately.
+
+`config.window.config` is a table defining floating window characteristics.
+It should have the same structure as in |nvim_open_win()| with the following
+enhancements:
+- <width> field can be equal to `"auto"` leading to window width being
+  computed automatically based on its content. Default is fixed width of 30.
+- <row> and <col> can be equal to `"auto"` in which case they will be
+  computed to "stick" to set anchor ("SE" by default; see |nvim_open_win()|).
+  This allows changing corner in which window is shown: >
+
+  -- Pick one anchor
+  local anchor = 'NW' -- top-left
+  local anchor = 'NE' -- top-right
+  local anchor = 'SW' -- bottom-left
+  local anchor = 'SE' -- bottom-right
+
+  require('mini.clue').setup({
+    window = {
+      config = { anchor = anchor, row = 'auto', col = 'auto' },
+    },
+  })
+
+`config.window.scroll_down` / `config.window.scroll_up` are strings defining
+keys which will scroll clue window down / up which is useful in case not
+all clues fit in current window height. Set to empty string `''` to disable
+either of them.
+
+------------------------------------------------------------------------------
+                                                *MiniClue.enable_all_triggers()*
+                        `MiniClue.enable_all_triggers`()
+Enable triggers in all buffers
+
+------------------------------------------------------------------------------
+                                                *MiniClue.enable_buf_triggers()*
+                    `MiniClue.enable_buf_triggers`({buf_id})
+Enable triggers in buffer
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier. Default: current buffer.
+
+------------------------------------------------------------------------------
+                                               *MiniClue.disable_all_triggers()*
+                       `MiniClue.disable_all_triggers`()
+Disable triggers in all buffers
+
+------------------------------------------------------------------------------
+                                               *MiniClue.disable_buf_triggers()*
+                   `MiniClue.disable_buf_triggers`({buf_id})
+Disable triggers in buffer
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier. Default: current buffer.
+
+------------------------------------------------------------------------------
+                                                            *MiniClue.gen_clues*
+                              `MiniClue.gen_clues`
+Generate pre-configured clues
+
+This is a table with function elements. Call to actually get array of clues.
+
+------------------------------------------------------------------------------
+                                       *MiniClue.gen_clues.builtin_completion()*
+                   `MiniClue.gen_clues.builtin_completion`()
+Generate clues for built-in completion
+
+Contains clues for the following triggers: >
+
+  { mode = 'i', keys = '<C-x>' }
+
+Return~
+`(table)` Array of clues.
+
+------------------------------------------------------------------------------
+                                                        *MiniClue.gen_clues.g()*
+                            `MiniClue.gen_clues.g`()
+Generate clues for `g` key
+
+Contains clues for the following triggers: >
+
+  { mode = 'n', keys = 'g' }
+  { mode = 'x', keys = 'g' }
+
+Return~
+`(table)` Array of clues.
+
+------------------------------------------------------------------------------
+                                                    *MiniClue.gen_clues.marks()*
+                          `MiniClue.gen_clues.marks`()
+Generate clues for marks
+
+Contains clues for the following triggers: >
+
+  { mode = 'n', keys = "'" }
+  { mode = 'n', keys = "g'" }
+  { mode = 'n', keys = '`' }
+  { mode = 'n', keys = 'g`' }
+  { mode = 'x', keys = "'" }
+  { mode = 'x', keys = "g'" }
+  { mode = 'x', keys = '`' }
+  { mode = 'x', keys = 'g`' }
+
+Return~
+`(table)` Array of clues.
+
+See also~
+|mark-motions|
+
+------------------------------------------------------------------------------
+                                                *MiniClue.gen_clues.registers()*
+                     `MiniClue.gen_clues.registers`({opts})
+Generate clues for registers
+
+Contains clues for the following triggers: >
+
+  { mode = 'n', keys = '"' }
+  { mode = 'x', keys = '"' }
+  { mode = 'i', keys = '<C-r>' }
+  { mode = 'c', keys = '<C-r>' }
+
+Parameters~
+{opts} `(table|nil)` Options. Possible keys:
+  - <show_contents> `(boolean)` - whether to show contents of all possible
+    registers. If `false`, only description of special registers is shown.
+    Default: `false`.
+
+Return~
+`(table)` Array of clues.
+
+See also~
+|registers|
+
+------------------------------------------------------------------------------
+                                                  *MiniClue.gen_clues.windows()*
+                      `MiniClue.gen_clues.windows`({opts})
+Generate clues for window commands
+
+Contains clues for the following triggers: >
+
+  { mode = 'n', keys = '<C-w>' }
+
+Note: only non-duplicated commands are included. For full list see |CTRL-W|.
+
+Parameters~
+{opts} `(table|nil)` Options. Possible keys:
+  - <submode_move> `(boolean)` - whether to make move (change layout)
+    commands a submode by using `postkeys` field. Default: `false`.
+  - <submode_navigate> `(boolean)` - whether to make navigation (change
+    focus) commands a submode by using `postkeys` field. Default: `false`.
+  - <submode_resize> `(boolean)` - whether to make resize (change size)
+    commands a submode by using `postkeys` field. Default: `false`.
+
+Return~
+`(table)` Array of clues.
+
+------------------------------------------------------------------------------
+                                                        *MiniClue.gen_clues.z()*
+                            `MiniClue.gen_clues.z`()
+Generate clues for `z` key
+
+Contains clues for the following triggers: >
+
+  { mode = 'n', keys = 'z' }
+  { mode = 'x', keys = 'z' }
+
+Return~
+`(table)` Array of clues.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

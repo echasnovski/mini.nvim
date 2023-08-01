@@ -10,6 +10,7 @@ local modules = {
   'basics',
   'bracketed',
   'bufremove',
+  'clue',
   'colors',
   'comment',
   'completion',
