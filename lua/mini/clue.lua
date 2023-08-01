@@ -1461,6 +1461,8 @@ H.window_open = function(config)
 
   vim.wo[win_id].foldenable = false
   vim.wo[win_id].wrap = false
+  vim.wo[win_id].list = true
+  vim.wo[win_id].listchars = 'extends:…'
 
   -- Neovim=0.7 doesn't support invalid highlight groups in 'winhighlight'
   local win_hl = 'FloatBorder:MiniClueBorder' .. (vim.fn.has('nvim-0.8') == 1 and ',FloatTitle:MiniClueTitle' or '')

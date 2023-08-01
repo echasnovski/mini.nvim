@@ -1125,6 +1125,20 @@ T['Showing keys']['can work with small instance dimensions'] = function()
   child.expect_screenshot()
 end
 
+T['Showing keys']['indicates that description is truncated'] = function()
+  load_module({
+    clues = {
+      { mode = 'n', keys = '<Space>a', desc = 'A very long description' },
+    },
+    triggers = { { mode = 'n', keys = '<Space>' } },
+    window = { delay = 0, config = { width = 15 } },
+  })
+
+  child.set_size(5, 20)
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
 T['Showing keys']['respects `scroll_down` and `scroll_up` in `config.window`'] = function()
   child.set_size(7, 40)
 
@@ -1368,7 +1382,7 @@ end
 T['Showing keys']['respects `vim.b.miniclue_config`'] = function()
   make_test_map('n', '<Space>a')
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
-  child.b.miniclue_config = { window = { config = { width = 10 } } }
+  child.b.miniclue_config = { window = { config = { width = 20 } } }
 
   type_keys(' ')
   child.expect_screenshot()
