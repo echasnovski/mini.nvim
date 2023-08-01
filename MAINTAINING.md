@@ -55,6 +55,7 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 - Add README to 'readmes' directory. NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
 - Update main README to mention new module in table of contents.
 - Update 'CHANGELOG.md' to mention introduction of new module.
+- Update 'CONTRIBUTING.md' to mention new highlight groups (if there are any).
 - Commit changes with message '(mini.xxx) NEW MODULE: initial commit.'. NOTE: synchronize standalone repositories prior to this commit.
 - Make standalone plugin:
     - Create new empty GitHub repository. Disable Issues and limit PRs.
