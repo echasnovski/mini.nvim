@@ -932,6 +932,14 @@ H.apply_colorscheme = function(config)
     hi('MiniAnimateCursor',      { fg=nil, bg=nil, reverse=true, nocombine=true })
     hi('MiniAnimateNormalFloat', { link='NormalFloat' })
 
+    hi('MiniClueBorder',              { link = 'FloatBorder' })
+    hi('MiniClueDescGroup',           { link = 'DiagnosticFloatingWarn' })
+    hi('MiniClueDescSingle',          { link = 'NormalFloat' })
+    hi('MiniClueNextKey',             { link = 'DiagnosticFloatingHint' })
+    hi('MiniClueNextKeyWithPostkeys', { link = 'DiagnosticFloatingError' })
+    hi('MiniClueSeparator',           { link = 'DiagnosticFloatingInfo' })
+    hi('MiniClueTitle',               { link = 'FloatTitle' })
+
     hi('MiniCompletionActiveParameter', { fg=nil, bg=p.bg_mid2 })
 
     hi('MiniCursorword',        { fg=nil, bg=nil, underline=true })
