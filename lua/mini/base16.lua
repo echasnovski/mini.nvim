@@ -656,16 +656,24 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniAnimateCursor',      {fg=nil, bg=nil, attr='reverse,nocombine', sp=nil})
     hi('MiniAnimateNormalFloat', {link='NormalFloat'})
 
+    hi('MiniClueBorder',              {link='FloatBorder'})
+    hi('MiniClueDescGroup',           {link='DiagnosticFloatingWarn'})
+    hi('MiniClueDescSingle',          {link='NormalFloat'})
+    hi('MiniClueNextKey',             {link='DiagnosticFloatingHint'})
+    hi('MiniClueNextKeyWithPostkeys', {link='DiagnosticFloatingError'})
+    hi('MiniClueSeparator',           {link='DiagnosticFloatingInfo'})
+    hi('MiniClueTitle',               {link='FloatTitle'})
+
     hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
 
     hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
     hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
 
-    hi('MiniFilesBorder',         {link = 'NormalFloat'})
-    hi('MiniFilesBorderModified', {link = 'DiagnosticFloatingWarn'})
-    hi('MiniFilesDirectory',      {link = 'Directory'})
+    hi('MiniFilesBorder',         {link='NormalFloat'})
+    hi('MiniFilesBorderModified', {link='DiagnosticFloatingWarn'})
+    hi('MiniFilesDirectory',      {link='Directory'})
     hi('MiniFilesFile',           {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
-    hi('MiniFilesNormal',         {link = 'NormalFloat'})
+    hi('MiniFilesNormal',         {link='NormalFloat'})
     hi('MiniFilesTitle',          {fg=p.base0D, bg=p.base01, attr=nil,    sp=nil})
     hi('MiniFilesTitleFocused',   {fg=p.base0D, bg=p.base01, attr='bold', sp=nil})
 
