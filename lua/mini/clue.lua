@@ -1149,9 +1149,8 @@ end
 
 -- Triggers -------------------------------------------------------------------
 H.map_buf_triggers = function(buf_id)
-  if not H.is_valid_buf(buf_id) then return end
-
-  if H.is_disabled(buf_id) then return end
+  -- Map only inside valid listed buffers
+  if not H.is_valid_buf(buf_id) or vim.fn.buflisted(buf_id) == 0 or H.is_disabled(buf_id) then return end
 
   for _, trigger in ipairs(H.get_config(nil, buf_id).triggers) do
     H.map_trigger(buf_id, trigger)

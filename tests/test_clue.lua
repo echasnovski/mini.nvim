@@ -309,11 +309,13 @@ T['setup()']['creates triggers for already created buffers'] = function()
 end
 
 T['setup()']['creates triggers only in listed buffers'] = function()
+  local buf_id_nolisted = child.api.nvim_create_buf(false, true)
   make_test_map('n', '<Space>a')
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
-
-  local buf_id_nolisted = child.api.nvim_create_buf(false, true)
   validate_no_trigger_keymap('n', '<Space>', buf_id_nolisted)
+
+  local buf_id_nolisted_new = child.api.nvim_create_buf(false, true)
+  validate_no_trigger_keymap('n', '<Space>', buf_id_nolisted_new)
 end
 
 T['setup()']['respects `vim.b.miniclue_disable`'] = function()
