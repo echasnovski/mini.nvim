@@ -49,6 +49,33 @@
 ---   descriptions (`desc` field in options), as they will be automatically
 ---   used inside clue window.
 ---
+--- - Triggers are implemented as special buffer-local mappings. This leads to
+---   several caveats:
+---     - They will override same regular buffer-local mappings and have
+---       precedence over global one.
+---
+---       Example: having set `<C-w>` as Normal mode trigger means that
+---       there should not be another `<C-w>` mapping.
+---
+---     - They need to be the latest created buffer-local mappings or they will
+---       not function properly. Most common indicator of this is that some
+---       mapping starts to work only after clue window is shown.
+---
+---       Example: `g` is set as Normal mode trigger, but `gcc` from |mini.comment|
+---       doesn't work right away. This is probably because there are some
+---       other buffer-local mappings starting with `g` which were created after
+---       mapping for `g` trigger. Most common places for this are in LSP server's
+---       `on_attach` or during tree-sitter start in buffer.
+---
+---       To check if trigger is the most recent buffer-local mapping, execute
+---       `:<mode-char>map <trigger-keys>` (like `:nmap g` for previous example).
+---       Mapping for trigger should be the first listed.
+---
+---       This module makes the best effort to work out of the box and cover
+---       most common cases, but it is not full proof. The solution here is to
+---       ensure that triggers are created after making all buffer-local mappings:
+---       run either |MiniClue.setup()| or |MiniClue.ensure_buf_triggers()|.
+---
 --- - Due to technical difficulties, there is no full proof support for
 ---   Operator-pending mode triggers (like `a`/`i` from |mini.ai|):
 ---     - Doesn't work as part of a command in "temporary Normal mode" (like
@@ -60,10 +87,6 @@
 ---       reasons.
 ---     - The `@` and `Q` keys are specially mapped inside |MiniClue.setup()|
 ---       to temporarily disable triggers.
----
---- - Triggers will fully override same buffer-local mappings and will have
----   precedence over global one. For example, having set `<C-w>` as Normal
----   mode trigger means that there should not be another `<C-w>` mapping.
 ---
 --- # Setup ~
 ---
@@ -599,6 +622,20 @@ MiniClue.disable_buf_triggers = function(buf_id)
   H.unmap_buf_triggers(buf_id)
 end
 
+--- Ensure all triggers are valid
+MiniClue.ensure_all_triggers = function()
+  MiniClue.disable_all_triggers()
+  MiniClue.enable_all_triggers()
+end
+
+--- Ensure buffer triggers are valid
+---
+---@param buf_id number|nil Buffer identifier. Default: current buffer.
+MiniClue.ensure_buf_triggers = function(buf_id)
+  MiniClue.disable_buf_triggers(buf_id)
+  MiniClue.enable_buf_triggers(buf_id)
+end
+
 --- Generate pre-configured clues
 ---
 --- This is a table with function elements. Call to actually get array of clues.
@@ -1097,11 +1134,16 @@ H.create_autocommands = function(config)
     vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
   end
 
-  -- Create buffer-local mappings for triggers to fully utilize `<nowait>`
-  -- Use `vim.schedule_wrap` to allow other events to create
-  -- `vim.b.miniclue_config` and `vim.b.miniclue_disable`
-  local map_buf = vim.schedule_wrap(function(data) H.map_buf_triggers(data.buf) end)
-  au('BufAdd', '*', map_buf, 'Create buffer-local trigger keymaps')
+  -- Ensure buffer-local mappings for triggers are the latest ones to fully
+  -- utilize `<nowait>`. Use `vim.schedule_wrap` to allow other events to
+  -- create `vim.b.miniclue_config` and `vim.b.miniclue_disable`.
+  local ensure_triggers = vim.schedule_wrap(function(data)
+    if not H.is_valid_buf(data.buf) then return end
+    MiniClue.ensure_buf_triggers(data.buf)
+  end)
+  -- - Respect `LspAttach` as it is a common source of buffer-local mappings
+  local events = vim.fn.has('nvim-0.8') == 1 and { 'BufAdd', 'LspAttach' } or { 'BufAdd' }
+  au(events, '*', ensure_triggers, 'Ensure buffer-local trigger keymaps')
 
   -- Disable all triggers when recording macro as they interfer with what is
   -- actually recorded

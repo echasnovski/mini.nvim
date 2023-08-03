@@ -66,6 +66,19 @@ Notes:
 
   The best suggested practice is to manually create mappings with descriptions (`desc` field in options), as they will be automatically used inside clue window.
 
+- Triggers are implemented as special buffer-local mappings. This leads to several caveats:
+    - They will override same regular buffer-local mappings and have precedence over global one.
+
+      Example: having set `<C-w>` as Normal mode trigger means that there should not be another `<C-w>` mapping.
+
+    - They need to be the latest created buffer-local mappings or they will not function properly. Most common indicator of this is that some mapping starts to work only after clue window is shown.
+
+      Example: `g` is set as Normal mode trigger, but `gcc` from 'mini.comment' doesn't work right away. This is probably because there are some other buffer-local mappings starting with `g` which were created after mapping for `g` trigger. Most common places for this are in LSP server's `on_attach` or during tree-sitter start in buffer.
+
+      To check if trigger is the most recent buffer-local mapping, execute `:<mode-char>map <trigger-keys>` (like `:nmap g` for previous example). Mapping for trigger should be the first listed.
+
+      This module makes the best effort to work out of the box and cover most common cases, but it is not full proof. The solution here is to ensure that triggers are created after making all buffer-local mappings: run either `MiniClue.setup()` or `MiniClue.ensure_buf_triggers()`.
+
 - Due to technical difficulties, there is no full proof support for Operator-pending mode triggers (like `a`/`i` from 'mini.ai'):
     - Doesn't work as part of a command in "temporary Normal mode" (like after `<C-o>` in Insert mode) due to implementation difficulties.
     - Can have unexpected behavior with custom operators.
@@ -73,8 +86,6 @@ Notes:
 - Has (mostly solved) issues with macros:
     - All triggers are disabled during macro recording due to technical reasons.
     - The `@` and `Q` keys are specially mapped inside `MiniClue.setup()` to temporarily disable triggers.
-
-- Triggers will fully override same buffer-local mappings and will have precedence over global one. For example, having set `<C-w>` as Normal mode trigger means that there should not be another `<C-w>` mapping.
 
 ## Config quick start
 

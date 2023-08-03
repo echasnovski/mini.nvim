@@ -318,6 +318,19 @@ T['setup()']['creates triggers only in listed buffers'] = function()
   validate_no_trigger_keymap('n', '<Space>', buf_id_nolisted_new)
 end
 
+T['setup()']['ensures valid triggers on `LspAttach` event'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`LspAttach` is added in Neovim 0.8') end
+
+  child.set_size(10, 40)
+  child.cmd([[au LspAttach * lua vim.keymap.set('n', '<Space>a', ':echo 1<CR>', { buffer = true })]])
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  child.cmd('doautocmd LspAttach')
+
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
 T['setup()']['respects `vim.b.miniclue_disable`'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
   local other_buf_id = child.api.nvim_create_buf(true, false)
@@ -558,6 +571,59 @@ T['disable_buf_triggers()']['respects `vim.b.miniclue_config`'] = function()
   disable_buf_triggers(0)
   validate_no_trigger_keymap('n', '<Space>')
   validate_no_trigger_keymap('n', 'g')
+end
+
+T['ensure_all_triggers()'] = new_set()
+
+local ensure_all_triggers = forward_lua('MiniClue.ensure_all_triggers')
+
+T['ensure_all_triggers()']['works'] = function()
+  child.set_size(10, 40)
+  make_test_map('n', '<Space>a')
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  -- Create buffer-local mappings **after** enabling triggers which disrupts
+  -- trigger mapping (although it is `<nowait>`). `ensure_all_triggers()`
+  -- should fix this for all buffers.
+  child.api.nvim_buf_set_keymap(0, 'n', '<Space>b', ':echo 1CR>', {})
+
+  local buf_id_new = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_keymap(buf_id_new, 'n', '<Space>c', ':echo 2CR>', {})
+
+  ensure_all_triggers()
+
+  type_keys(' ')
+  child.expect_screenshot()
+  type_keys('<Esc>')
+
+  child.api.nvim_set_current_buf(buf_id_new)
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
+T['ensure_buf_triggers()'] = new_set()
+
+local ensure_buf_triggers = forward_lua('MiniClue.ensure_buf_triggers')
+
+T['ensure_buf_triggers()']['works'] = function()
+  child.set_size(10, 40)
+  make_test_map('n', '<Space>a')
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  -- Create a buffer-local mapping **after** enabling triggers which disrupts
+  -- trigger mapping (although it is `<nowait>`). `ensure_buf_triggers()`
+  -- should fix this.
+  child.api.nvim_buf_set_keymap(0, 'n', '<Space>b', ':echo 1CR>', {})
+
+  ensure_buf_triggers()
+
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
+T['ensure_buf_triggers()']['validates arguments'] = function()
+  load_module()
+  expect.error(function() ensure_buf_triggers('a') end, '`buf_id`.*buffer identifier')
 end
 
 T['gen_clues'] = new_set()
