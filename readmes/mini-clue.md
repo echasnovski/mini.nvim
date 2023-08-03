@@ -39,7 +39,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/ea931966-067c-48af-93e9
 
     - Ends when there is at most one target left or user pressed `<CR>`. Results into emulating pressing all query keys plus possible postkeys.
 
-- Show window (after configurable delay) with clues. It lists available next keys along with their descriptions (auto generated from descriptions present keymaps and user-supplied clues).
+- Show window (after configurable delay) with clues. It lists available next keys along with their descriptions (auto generated from descriptions present keymaps and user-supplied clues; preferring the former).
 
 - Configurable "postkeys" for key combinations - keys which will be emulated after combination is reached during key query process.
 
@@ -78,6 +78,8 @@ Notes:
       To check if trigger is the most recent buffer-local mapping, execute `:<mode-char>map <trigger-keys>` (like `:nmap g` for previous example). Mapping for trigger should be the first listed.
 
       This module makes the best effort to work out of the box and cover most common cases, but it is not full proof. The solution here is to ensure that triggers are created after making all buffer-local mappings: run either `MiniClue.setup()` or `MiniClue.ensure_buf_triggers()`.
+
+- Descriptions from existing mappings take precedence over user-supplied clues. This is to ensure that information shown in clue window is as relevant as possible. To add/customize description of an already existing mapping, use `MiniClue.set_mapping_desc()`.
 
 - Due to technical difficulties, there is no full proof support for Operator-pending mode triggers (like `a`/`i` from 'mini.ai'):
     - Doesn't work as part of a command in "temporary Normal mode" (like after `<C-o>` in Insert mode) due to implementation difficulties.

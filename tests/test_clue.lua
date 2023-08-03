@@ -626,6 +626,83 @@ T['ensure_buf_triggers()']['validates arguments'] = function()
   expect.error(function() ensure_buf_triggers('a') end, '`buf_id`.*buffer identifier')
 end
 
+T['set_mapping_desc()'] = new_set()
+
+local set_mapping_desc = forward_lua('MiniClue.set_mapping_desc')
+
+local validate_mapping_desc =
+  function(mode, lhs, ref_desc) eq(child.fn.maparg(lhs, mode, false, true).desc, ref_desc) end
+
+T['set_mapping_desc()']['adds new description'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', {})
+
+  load_module()
+  set_mapping_desc('n', '<Space>a', 'New desc')
+  validate_mapping_desc('n', '<Space>a', 'New desc')
+end
+
+T['set_mapping_desc()']['updates existing description'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', { desc = 'Old desc' })
+
+  load_module()
+  set_mapping_desc('n', '<Space>a', 'New desc')
+  validate_mapping_desc('n', '<Space>a', 'New desc')
+end
+
+T['set_mapping_desc()']['prefers buffer-local mapping'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', {})
+  child.api.nvim_buf_set_keymap(0, 'n', '<Space>a', ':echo 2<CR>', {})
+
+  load_module()
+  set_mapping_desc('n', '<Space>a', 'New desc')
+  validate_mapping_desc('n', '<Space>a', 'New desc')
+
+  child.api.nvim_buf_del_keymap(0, 'n', '<Space>a')
+  child.lua([[_G.map_data = vim.fn.maparg('<Space>a', 'n', false, true)]])
+  eq(child.lua_get('_G.map_data.desc'), vim.NIL)
+  eq(child.lua_get('_G.map_data.buffer'), 0)
+end
+
+T['set_mapping_desc()']['works for mapping with callback'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  child.lua([[vim.keymap.set('n', '<Space>a', function() _G.been_here = true end)]])
+
+  load_module()
+  set_mapping_desc('n', '<Space>a', 'New desc')
+  child.lua([[_G.map_data = vim.fn.maparg('<Space>a', 'n', false, true)]])
+  eq(child.lua_get('_G.map_data.desc'), 'New desc')
+  eq(child.lua_get('type(_G.map_data.callback)'), 'function')
+end
+
+T['set_mapping_desc()']['validates input'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  load_module()
+  expect.error(function() set_mapping_desc(1, 'aaa', 'New') end, '`mode`.*string')
+  expect.error(function() set_mapping_desc('n', 1, 'New') end, '`lhs`.*string')
+  expect.error(function() set_mapping_desc('n', 'aaa', 1) end, '`desc`.*string')
+end
+
+T['set_mapping_desc()']['handles incorrect usage'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
+
+  load_module()
+
+  -- When no mapping found
+  expect.error(function() set_mapping_desc('n', 'aaa', 'New') end, 'No mapping found for mode "n" and LHS "aaa"')
+
+  -- When input is not valid
+  make_test_map('n', 'aaa')
+  expect.error(function() set_mapping_desc('n', 'aaa', 'Improper desc\0') end, 'not a valid desc')
+end
+
 T['gen_clues'] = new_set()
 
 T['gen_clues']['g()'] = new_set()

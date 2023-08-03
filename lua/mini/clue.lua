@@ -19,7 +19,7 @@
 ---
 --- - Show window (after configurable delay) with clues. It lists available
 ---   next keys along with their descriptions (auto generated from descriptions
----   present keymaps and user-supplied clues).
+---   present keymaps and user-supplied clues; preferring the former).
 ---
 --- - Configurable "postkeys" for key combinations - keys which will be emulated
 ---   after combination is reached during key query process.
@@ -75,6 +75,11 @@
 ---       most common cases, but it is not full proof. The solution here is to
 ---       ensure that triggers are created after making all buffer-local mappings:
 ---       run either |MiniClue.setup()| or |MiniClue.ensure_buf_triggers()|.
+---
+--- - Descriptions from existing mappings take precedence over user-supplied
+---   clues. This is to ensure that information shown in clue window is as
+---   relevant as possible. To add/customize description of an already existing
+---   mapping, use |MiniClue.set_mapping_desc()|.
 ---
 --- - Due to technical difficulties, there is no full proof support for
 ---   Operator-pending mode triggers (like `a`/`i` from |mini.ai|):
@@ -634,6 +639,34 @@ end
 MiniClue.ensure_buf_triggers = function(buf_id)
   MiniClue.disable_buf_triggers(buf_id)
   MiniClue.enable_buf_triggers(buf_id)
+end
+
+--- Update description of an existing mapping
+---
+--- Notes:
+--- - Uses buffer-local mapping in case there are both global and buffer-local
+---   mappings with same mode and LHS. Similar to |maparg()|.
+--- - Requires Neovim>=0.8.
+---
+---@param mode string Mapping mode (as in `maparg()`).
+---@param lhs string Mapping left hand side (as `name` in `maparg()`).
+---@param desc string New description to set.
+MiniClue.set_mapping_desc = function(mode, lhs, desc)
+  if vim.fn.has('nvim-0.8') == 0 then H.error('`set_mapping_desc()` requires Neovim>=0.8.') end
+
+  if type(mode) ~= 'string' then H.error('`mode` should be string.') end
+  if type(lhs) ~= 'string' then H.error('`lhs` should be string.') end
+  if type(desc) ~= 'string' then H.error('`desc` should be string.') end
+
+  local ok_get, map_data = pcall(vim.fn.maparg, lhs, mode, false, true)
+  if not ok_get or vim.tbl_count(map_data) == 0 then
+    local msg = string.format('No mapping found for mode %s and LHS %s.', vim.inspect(mode), vim.inspect(lhs))
+    H.error(msg)
+  end
+
+  map_data.desc = desc
+  local ok_set = pcall(vim.fn.mapset, mode, false, map_data)
+  if not ok_set then H.error(vim.inspect(desc) .. ' is not a valid description.') end
 end
 
 --- Generate pre-configured clues
