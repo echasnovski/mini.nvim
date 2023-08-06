@@ -2141,6 +2141,30 @@ T['Reproducing keys']['respects `[count]` in Normal mode'] = function()
   validate_move1d('aa bb cc', 6, { '2', 'g', 'e' }, 1)
 end
 
+T['Reproducing keys']['respects `[register]` in Normal mode'] = function()
+  child.lua([[
+    _G.track_register = function()
+      _G.register = vim.v.register
+      vim.cmd('normal! g~iw')
+    end
+    vim.keymap.set('n', 'ge', _G.track_register)
+
+    _G.track_register_expr = function()
+      _G.register_expr = vim.v.register
+      return 'g~iw'
+    end
+    vim.keymap.set('n', 'gE', _G.track_register_expr, { expr = true })
+  ]])
+  load_module({ triggers = { { mode = 'n', keys = 'g' } } })
+  validate_trigger_keymap('n', 'g')
+
+  validate_edit1d('AaA', 0, { '"x', 'g', 'e' }, 'aAa', 0)
+  eq(child.lua_get('_G.register'), 'x')
+
+  validate_edit1d('AaA', 0, { '"y', 'g', 'E' }, 'aAa', 0)
+  eq(child.lua_get('_G.register_expr'), 'y')
+end
+
 T['Reproducing keys']['works in temporary Normal mode'] = function()
   load_module({
     triggers = { { mode = 'n', keys = 'g' }, { mode = 'o', keys = 'i' } },
@@ -2255,6 +2279,30 @@ T['Reproducing keys']['respects `[count]` in Visual mode'] = function()
   validate_trigger_keymap('x', 'a')
 
   validate_selection1d('aa bb cc', 0, { 'v', '2', 'a', 'w' }, 0, 5)
+end
+
+T['Reproducing keys']['respects `[register]` in Visual mode'] = function()
+  child.lua([[
+    _G.track_register = function()
+      _G.register = vim.v.register
+      vim.fn.feedkeys('g~', 'nx')
+    end
+    vim.keymap.set('x', 'ge', _G.track_register)
+
+    _G.track_register_expr = function()
+      _G.register_expr = vim.v.register
+      return 'g~'
+    end
+    vim.keymap.set('x', 'gE', _G.track_register_expr, { expr = true })
+  ]])
+  load_module({ triggers = { { mode = 'x', keys = 'g' } } })
+  validate_trigger_keymap('x', 'g')
+
+  validate_edit1d('AaA', 0, { 'viw', '"x', 'g', 'e' }, 'aAa', 0)
+  eq(child.lua_get('_G.register'), 'x')
+
+  validate_edit1d('AaA', 0, { 'viw', '"y', 'g', 'E' }, 'aAa', 0)
+  eq(child.lua_get('_G.register_expr'), 'y')
 end
 
 T['Reproducing keys']['works in Select mode'] = function()
@@ -2776,8 +2824,6 @@ T['Reproducing keys']['works with macros'] = function()
   validate_trigger_keymap('n', 'g')
   validate_trigger_keymap('o', 'i')
 
-  -- Should work for macro to operate inside multiple buffers
-  -- BUT CURRENTLY IT DOESN'T
   local init_buf_id = child.api.nvim_get_current_buf()
   local new_buf_id = child.api.nvim_create_buf(true, false)
 

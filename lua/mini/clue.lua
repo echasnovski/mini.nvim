@@ -1434,6 +1434,9 @@ H.compute_exec_keys = function()
   if cur_mode:find('^no') ~= nil then
     local operator_tweak = H.operator_tweaks[vim.v.operator] or function(x) return x end
     res = operator_tweak(vim.v.operator .. H.get_forced_submode() .. res)
+  elseif H.get_default_register() ~= vim.v.register then
+    -- Force a non-default register
+    res = '"' .. vim.v.register .. res
   end
 
   -- `feedkeys()` inside "temporary" Normal mode is executed **after** it is
@@ -1896,6 +1899,13 @@ H.get_forced_submode = function()
   local mode = vim.fn.mode(1)
   if not mode:sub(1, 2) == 'no' then return '' end
   return mode:sub(3)
+end
+
+H.get_default_register = function()
+  local clipboard = vim.o.clipboard
+  if clipboard:find('unnamed') ~= nil then return '*' end
+  if clipboard:find('unnamedplus') ~= nil then return '+' end
+  return '"'
 end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
