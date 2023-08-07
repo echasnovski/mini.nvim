@@ -297,7 +297,7 @@ T['setup()']['creates `config` field'] = function()
   )
   expect_config(
     'mappings["\'"]',
-    { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } }
+    { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\&].', register = { cr = false } }
   )
   expect_config(
     "mappings['`']",
@@ -362,7 +362,7 @@ T['setup()']['makes default `config.mappings`'] = function()
   eq(has_map(']', [[v:lua.MiniPairs.close("[]", "[^\\].")]]), true)
   eq(has_map('}', [[v:lua.MiniPairs.close("{}", "[^\\].")]]), true)
   eq(has_map('"', [[v:lua.MiniPairs.closeopen('""', "[^\\].")]]), true)
-  eq(has_map("'", [[v:lua.MiniPairs.closeopen("''", "[^%a\\].")]]), true)
+  eq(has_map("'", [[v:lua.MiniPairs.closeopen("''", "[^%a\\&].")]]), true)
   eq(has_map('`', [[v:lua.MiniPairs.closeopen("``", "[^\\].")]]), true)
 
   eq(has_map('<CR>', 'v:lua.MiniPairs.cr()'), true)

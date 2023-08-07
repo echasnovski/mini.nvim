@@ -121,7 +121,7 @@ MiniPairs.config = {
   -- - <action> - one of "open", "close", "closeopen".
   -- - <pair> - two character string for pair to be used.
   -- By default pair is not inserted after `\`, quotes are not recognized by
-  -- `<CR>`, `'` does not insert pair after a letter.
+  -- `<CR>`, `'` does not insert pair after a letter or `&`.
   -- Only parts of tables can be tweaked (others will use these defaults).
   -- Supply `false` instead of table to not map particular key.
   mappings = {
@@ -134,7 +134,7 @@ MiniPairs.config = {
     ['}'] = { action = 'close', pair = '{}', neigh_pattern = '[^\\].' },
 
     ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].', register = { cr = false } },
-    ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } },
+    ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\&].', register = { cr = false } },
     ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
   },
 }
