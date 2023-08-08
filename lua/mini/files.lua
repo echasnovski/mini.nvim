@@ -351,6 +351,14 @@
 
 --- Common configuration examples ~
 ---
+--- # Toggle explorer ~
+---
+--- Use a combination of |MiniFiles.open()| and |MiniFiles.close()|: >
+---
+---   local minifiles_toggle = function(...)
+---     if not MiniFiles.close() then MiniFiles.open(...) end
+---   end
+---
 --- # Customize windows ~
 ---
 --- Create an autocommand for `MiniFilesWindowOpen` event: >
