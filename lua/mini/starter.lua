@@ -490,12 +490,16 @@ end
 ---   directory and its subdirectories. Default: `false`.
 ---@param show_path boolean|nil Whether to append file name with its full path.
 ---   Default: `true`.
+---@param path_modifier function|nil Modifier to apply to full path of file name.
+---   Expected to be function that accepts a string and returns a string
+---   Default: 'nil'.
 ---
 ---@return __starter_section_fun
-MiniStarter.sections.recent_files = function(n, current_dir, show_path)
+MiniStarter.sections.recent_files = function(n, current_dir, show_path, path_modifier)
   n = n or 5
   if current_dir == nil then current_dir = false end
   if show_path == nil then show_path = true end
+  if path_modifier == nil then path_modifier = (function(str) return str end) end
 
   return function()
     local section = ('Recent files%s'):format(current_dir and ' (current directory)' or '')
@@ -523,7 +527,7 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
     local items = {}
     local fmodify = vim.fn.fnamemodify
     for _, f in ipairs(vim.list_slice(files, 1, n)) do
-      local path = show_path and (' (%s)'):format(fmodify(f, ':~:.')) or ''
+      local path = show_path and (' (%s)'):format(path_modifier(fmodify(f, ':~:.'))) or ''
       local name = ('%s%s'):format(fmodify(f, ':t'), path)
       table.insert(items, { action = ('edit %s'):format(fmodify(f, ':p')), name = name, section = section })
     end
