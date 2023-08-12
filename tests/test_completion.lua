@@ -549,11 +549,30 @@ T['Information window']['respects `config.window.info`'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['accounts for border when picking side'] = function()
+  child.set_size(10, 40)
+  child.lua([[MiniCompletion.config.window.info.border = 'single']])
+
+  set_lines({ 'aaaaaaaaaaaa ' })
+  type_keys('A', 'J', '<C-Space>', '<C-n>')
+  sleep(test_times.info + 10)
+  child.expect_screenshot()
+end
+
 T['Information window']['has minimal dimensions for small text'] = function()
   child.set_size(10, 40)
   local win_config = { height = 1, width = 9 }
   child.lua('MiniCompletion.config.window.info = ' .. vim.inspect(win_config))
   validate_info_window_config('J', { 'January', 'June', 'July' }, win_config)
+  child.expect_screenshot()
+end
+
+T['Information window']['adjusts window width'] = function()
+  child.set_size(10, 27)
+  child.lua([[MiniCompletion.config.window.info= { height = 15, width = 10, border = 'single' }]])
+
+  type_keys('i', 'J', '<C-Space>', '<C-n>')
+  sleep(test_times.info + 10)
   child.expect_screenshot()
 end
 
@@ -650,10 +669,10 @@ end
 
 T['Signature help']['respects `config.window.signature`'] = function()
   local keys = { 'l', 'o', 'n', 'g', '(' }
-  local win_config = { height = 20, width = 40, border = 'single' }
+  local win_config = { height = 15, width = 40, border = 'single' }
   child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
   validate_signature_window_config(keys, {
-    height = 20,
+    height = 15,
     width = 40,
     border = { '┌', '─', '┐', '│', '┘', '─', '└', '│' },
   })
@@ -668,12 +687,30 @@ T['Signature help']['respects `config.window.signature`'] = function()
   child.expect_screenshot()
 end
 
+T['Signature help']['accounts for border when picking side'] = function()
+  child.set_size(10, 40)
+  child.lua([[MiniCompletion.config.window.signature.border = 'single']])
+
+  type_keys('o<CR>', 'abc(')
+  sleep(test_times.signature + 10)
+  child.expect_screenshot()
+end
+
 T['Signature help']['has minimal dimensions for small text'] = function()
   child.set_size(5, 30)
   local keys = { 'a', 'b', 'c', '(' }
   local win_config = { height = 1, width = 19 }
   child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
   validate_signature_window_config(keys, win_config)
+  child.expect_screenshot()
+end
+
+T['Signature help']['adjusts window height'] = function()
+  child.set_size(10, 25)
+  child.lua([[MiniCompletion.config.window.signature = { height = 15, width = 10, border = 'single' }]])
+
+  type_keys('i', 'long(')
+  sleep(test_times.signature + 10)
   child.expect_screenshot()
 end
 

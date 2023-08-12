@@ -1014,10 +1014,12 @@ H.info_window_options = function()
   local left_to_pum = event.col - 1
   local right_to_pum = event.col + event.width + (event.scrollbar and 1 or 0)
 
-  local space_left, space_right = left_to_pum, vim.o.columns - right_to_pum
+  local border_offset = win_config.border == 'none' and 0 or 2
+  local space_left = left_to_pum - border_offset
+  local space_right = vim.o.columns - right_to_pum - border_offset
 
-  local anchor, col, space
   -- Decide side at which info window will be displayed
+  local anchor, col, space
   if info_width <= space_right or space_left <= space_right then
     anchor, col, space = 'NW', right_to_pum, space_right
   else
@@ -1199,7 +1201,9 @@ H.signature_window_opts = function()
 
   -- Compute position
   local win_line = vim.fn.winline()
-  local space_above, space_below = win_line - 1, vim.fn.winheight(0) - win_line
+  local border_offset = win_config.border == 'none' and 0 or 2
+  local space_above = win_line - 1 - border_offset
+  local space_below = vim.api.nvim_win_get_height(0) - win_line - border_offset
 
   local anchor, row, space
   if height <= space_above or space_below <= space_above then
@@ -1243,6 +1247,8 @@ end
 
 -- Returns tuple of height and width
 H.floating_dimensions = function(lines, max_height, max_width)
+  max_height, max_width = math.max(max_height, 1), math.max(max_width, 1)
+
   -- Simulate how lines will look in window with `wrap` and `linebreak`.
   -- This is not 100% accurate (mostly when multibyte characters are present
   -- manifesting into empty space at bottom), but does the job
