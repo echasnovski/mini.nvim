@@ -1289,6 +1289,15 @@ MiniTest.new_child_neovim = function()
     return child.api.nvim_exec_lua('return ' .. str, args or {})
   end
 
+  child.lua_func = function(f, ...)
+    ensure_running()
+    prevent_hanging('lua_func')
+    return child.api.nvim_exec_lua(
+      'local f = ...; return assert(loadstring(f))(select(2, ...))',
+      { string.dump(f), ... }
+    )
+  end
+
   child.is_blocked = function()
     ensure_running()
     return child.api.nvim_get_mode()['blocking']
@@ -1407,6 +1416,9 @@ end
 ---@field lua_notify function Execute Lua code without waiting for output.
 ---@field lua_get function Execute Lua code and return result. A wrapper
 ---   for |nvim_exec_lua()| but prepends string code with `return`.
+---@field lua_func function Execute Lua function and return it's result.
+---   Function will be called with all extra parameters (second one and later).
+---   Note: usage of upvalues (data from outside function scope) is not allowed.
 ---
 ---@field is_blocked function Check whether child process is blocked.
 ---@field is_running function Check whether child process is currently running.

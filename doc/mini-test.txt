@@ -761,6 +761,9 @@ Fields~
 {lua_notify} `(function)` Execute Lua code without waiting for output.
 {lua_get} `(function)` Execute Lua code and return result. A wrapper
   for |nvim_exec_lua()| but prepends string code with `return`.
+{lua_func} `(function)` Execute Lua function and return it's result.
+  Function will be called with all extra parameters (second one and later).
+  Note: usage of upvalues (data from outside function scope) is not allowed.
 
 {is_blocked} `(function)` Check whether child process is blocked.
 {is_running} `(function)` Check whether child process is currently running.

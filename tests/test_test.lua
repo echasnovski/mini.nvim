@@ -1101,6 +1101,33 @@ T['child']['lua_get()'] = function()
   validate_child_method(method, { name = 'lua_get' })
 end
 
+T['child']['lua_func()'] = function()
+  -- Works
+  local method = function()
+    return child.lua_func(function() return 1 + 1 end)
+  end
+  eq(method(), 2)
+
+  -- Actually executes function in child neovim
+  child.lua('_G.var = 1')
+  child.lua_func(function() _G.var = 10 end)
+  eq(child.lua_get('_G.var'), 10)
+
+  -- Can take arguments
+  eq(child.lua_func(function(a, b) return a + b end, 1, 2), 3)
+
+  -- Has no side effects
+  child.lua_func(function() end)
+  eq(child.lua_get('f'), vim.NIL)
+
+  -- Can error
+  expect.error(function()
+    return child.lua_func(function() error('test error') end)
+  end, 'test error')
+
+  validate_child_method(method, { name = 'lua_func' })
+end
+
 T['child']['is_blocked()'] = function()
   eq(child.is_blocked(), false)
 
