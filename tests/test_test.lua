@@ -1099,6 +1099,37 @@ T['child']['lua_get()'] = function()
   validate_child_method(method, { name = 'lua_get' })
 end
 
+T['child']['lua_func()'] = function()
+  -- Can execute functions in child neovim
+  local method = function()
+    return child.lua_func(function() _G.n = 0 end)
+  end
+
+  eq(child.lua_get('_G.n'), vim.NIL)
+  method()
+  eq(child.lua_get('_G.n'), 0)
+
+  -- Can return values
+  method = function()
+    return child.lua_func(function() return 1 + 1 end)
+  end
+  eq(method(), 2)
+
+  -- Can error
+  method = function()
+    return child.lua_func(function() error('test error') end)
+  end
+  expect.error(method, 'test error')
+
+  -- Can take arguments
+  method = function()
+    return child.lua_func(function(a, b) return a + b end, 1, 2)
+  end
+  eq(method(), 3)
+
+  validate_child_method(method, { name = 'lua_func' })
+end
+
 T['child']['is_blocked()'] = function()
   eq(child.is_blocked(), false)
 
