@@ -601,6 +601,7 @@ MiniClue.enable_all_triggers = function()
     -- Map only inside valid listed buffers
     if vim.fn.buflisted(buf_id) == 1 then H.map_buf_triggers(buf_id) end
   end
+  H.state.disable_autocmd_triggers = false
 end
 
 --- Enable triggers in buffer
@@ -617,6 +618,7 @@ MiniClue.disable_all_triggers = function()
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
     H.unmap_buf_triggers(buf_id)
   end
+  H.state.disable_autocmd_triggers = true
 end
 
 --- Disable triggers in buffer
@@ -1190,6 +1192,10 @@ H.create_autocommands = function(config)
   au('RecordingLeave', '*', MiniClue.enable_all_triggers, 'Enable all triggers')
 
   au('VimResized', '*', H.window_update, 'Update window on resize')
+
+  if vim.fn.has('nvim-0.10') == 1 then
+    au('ModeChanged', 'n:no', function() H.start_query({ mode = "o", keys = "" }) end, 'Trigger on change to operator-pending mode')
+  end
 end
 
 --stylua: ignore
@@ -1229,6 +1235,31 @@ H.get_buf_var = function(buf_id, name)
 end
 
 -- Triggers -------------------------------------------------------------------
+H.start_query = function(trigger)
+  if vim.fn.has('nvim-0.10') == 1 and vim.fn.state('m') ~= '' then
+    return
+  end
+
+  if H.state.disable_autocmd_triggers then
+    return
+  end
+
+  -- Don't act if for some reason entered another trigger is already active
+  local is_in_exec = type(H.exec_trigger) == 'table'
+  if is_in_exec then
+    return
+  end
+
+  -- Start user query
+  H.state_set(trigger, { trigger.keys })
+
+  -- Do not advance if no other clues to query. NOTE: it is `<= 1` and not
+  -- `<= 0` because the "init query" mapping should match.
+  if vim.tbl_count(H.state.clues) <= 1 then return H.state_exec() end
+
+  H.state_advance()
+end
+
 H.map_buf_triggers = function(buf_id)
   if not H.is_valid_buf(buf_id) or H.is_disabled(buf_id) then return end
 
@@ -1252,33 +1283,13 @@ H.map_trigger = function(buf_id, trigger)
   trigger.keys = H.replace_termcodes(trigger.keys)
   local keys_trans = H.keytrans(trigger.keys)
 
-  local rhs = function()
-    -- Don't act if for some reason entered the same trigger during state exec
-    local is_in_exec = type(H.exec_trigger) == 'table'
-      and H.exec_trigger.mode == trigger.mode
-      and H.exec_trigger.keys == trigger.keys
-    if is_in_exec then
-      H.exec_trigger = nil
-      return
-    end
-
-    -- Start user query
-    H.state_set(trigger, { trigger.keys })
-
-    -- Do not advance if no other clues to query. NOTE: it is `<= 1` and not
-    -- `<= 0` because the "init query" mapping should match.
-    if vim.tbl_count(H.state.clues) <= 1 then return H.state_exec() end
-
-    H.state_advance()
-  end
-
   -- Use buffer-local mappings and `nowait` to make it a primary source of
   -- keymap execution
   local desc = string.format('Query keys after "%s"', keys_trans)
   local opts = { buffer = buf_id, nowait = true, desc = desc }
 
   -- Create mapping. Use translated variant to make it work with <F*> keys.
-  vim.keymap.set(trigger.mode, keys_trans, rhs, opts)
+  vim.keymap.set(trigger.mode, keys_trans, function() H.start_query(trigger) end, opts)
 end
 
 H.unmap_trigger = function(buf_id, trigger)
@@ -1372,11 +1383,11 @@ H.state_exec = function()
   local has_postkeys = (clue or {}).postkeys ~= nil
   H.state_reset(has_postkeys)
 
-  -- Disable trigger !!!VERY IMPORTANT!!!
+  -- Disable triggers !!!VERY IMPORTANT!!!
   -- This is a workaround against infinite recursion (like if `g` is trigger
   -- then typing `gg`/`g~` would introduce infinite recursion).
   local buf_id = vim.api.nvim_get_current_buf()
-  H.unmap_trigger(buf_id, trigger)
+  MiniClue.disable_all_triggers()
 
   -- Execute keys. The `i` flag is used to fully support Operator-pending mode.
   -- Flag `t` imitates keys as if user typed, which is reasonable but has small
@@ -1384,8 +1395,8 @@ H.state_exec = function()
   -- meaning second time (at least in Normal mode).
   vim.api.nvim_feedkeys(keys_to_type, 'mit', false)
 
-  -- Enable trigger back after it can no longer harm
-  vim.schedule(function() H.map_trigger(buf_id, trigger) end)
+  -- Enable triggers back after it can no longer harm
+  vim.schedule(function() MiniClue.enable_all_triggers() end)
 
   -- Apply postkeys (in scheduled fashion)
   if has_postkeys then H.state_apply_postkeys(clue.postkeys) end
@@ -1438,8 +1449,11 @@ H.compute_exec_keys = function()
   -- Using `feedkeys()` inside Operator-pending mode leads to its cancel into
   -- Normal/Insert mode so extra work should be done to rebuild all keys
   if vim.startswith(cur_mode, 'no') then
-    local operator_tweak = H.operator_tweaks[vim.v.operator] or function(x) return x end
-    res = operator_tweak(vim.v.operator .. H.get_forced_submode() .. res)
+    res = H.get_forced_submode() .. res
+    if H.state.trigger.keys ~= "" then
+      local operator_tweak = H.operator_tweaks[vim.v.operator] or function(x) return x end
+      res = operator_tweak(vim.v.operator .. res)
+    end
   elseif not vim.startswith(cur_mode, 'i') and H.get_default_register() ~= vim.v.register then
     -- Force non-default register but not in Insert mode
     res = '"' .. vim.v.register .. res
