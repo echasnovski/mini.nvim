@@ -477,7 +477,7 @@ local H = {}
 ---@param config table|nil Module config table. See |MiniClue.config|.
 ---
 ---@usage `require('mini.clue').setup({})` (replace `{}` with your `config` table).
---- **Neds to have triggers configured**.
+--- **Needs to have triggers configured**.
 MiniClue.setup = function(config)
   -- Export module
   _G.MiniClue = MiniClue
@@ -595,10 +595,11 @@ MiniClue.config = {
 }
 --minidoc_afterlines_end
 
---- Enable triggers in all buffers
+--- Enable triggers in all listed buffers
 MiniClue.enable_all_triggers = function()
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    H.map_buf_triggers(buf_id)
+    -- Map only inside valid listed buffers
+    if vim.fn.buflisted(buf_id) == 1 then H.map_buf_triggers(buf_id) end
   end
 end
 
@@ -1224,8 +1225,7 @@ end
 
 -- Triggers -------------------------------------------------------------------
 H.map_buf_triggers = function(buf_id)
-  -- Map only inside valid listed buffers
-  if not H.is_valid_buf(buf_id) or vim.fn.buflisted(buf_id) == 0 or H.is_disabled(buf_id) then return end
+  if not H.is_valid_buf(buf_id) or H.is_disabled(buf_id) then return end
 
   for _, trigger in ipairs(H.get_config(nil, buf_id).triggers) do
     H.map_trigger(buf_id, trigger)

@@ -475,7 +475,7 @@ Parameters~
 
 Usage~
 `require('mini.clue').setup({})` (replace `{}` with your `config` table).
-**Neds to have triggers configured**.
+**Needs to have triggers configured**.
 
 ------------------------------------------------------------------------------
                                                                *MiniClue.config*
@@ -582,7 +582,7 @@ either of them.
 ------------------------------------------------------------------------------
                                                 *MiniClue.enable_all_triggers()*
                         `MiniClue.enable_all_triggers`()
-Enable triggers in all buffers
+Enable triggers in all listed buffers
 
 ------------------------------------------------------------------------------
                                                 *MiniClue.enable_buf_triggers()*

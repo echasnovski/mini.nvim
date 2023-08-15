@@ -470,6 +470,31 @@ T['enable_buf_triggers()']['respects `buf_id`'] = function()
   validate_no_trigger_keymap('n', '<Space>', other_buf_id)
 end
 
+T['enable_buf_triggers()']['can be used in non-listed buffers'] = function()
+  child.g.miniclue_disable = true
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
+
+  -- Scratch
+  local buf_id_scratch = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(buf_id_scratch)
+  validate_no_trigger_keymap('n', '<Space>')
+
+  child.g.miniclue_disable = false
+
+  enable_buf_triggers()
+  validate_trigger_keymap('n', '<Space>')
+
+  -- Help
+  child.g.miniclue_disable = true
+  child.cmd('help')
+  validate_no_trigger_keymap('n', '<Space>')
+
+  child.g.miniclue_disable = false
+
+  enable_buf_triggers()
+  validate_trigger_keymap('n', '<Space>')
+end
+
 T['enable_buf_triggers()']['validates arguments'] = function()
   load_module()
   expect.error(function() enable_buf_triggers('a') end, '`buf_id`.*buffer identifier')
