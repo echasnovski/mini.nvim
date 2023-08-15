@@ -56,12 +56,15 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 - Update main README to mention new module in table of contents.
 - Update 'CHANGELOG.md' to mention introduction of new module.
 - Update 'CONTRIBUTING.md' to mention new highlight groups (if there are any).
-- Commit changes with message '(mini.xxx) NEW MODULE: initial commit.'. NOTE: synchronize standalone repositories prior to this commit.
+- Commit changes with message '(mini.xxx) NEW MODULE: initial commit.'. NOTE: it is cleaner to synchronize standalone repositories prior to this commit.
+- If there are new highlight groups, follow up with adding explicit support in color scheme modules.
 - Make standalone plugin:
     - Create new empty GitHub repository. Disable Issues and limit PRs.
-    - Create initial structure. For list of tracked files see 'scripts/dual_sync.sh'. Initially they are 'doc/mini-xxx.txt', 'lua/mini/xxx.lua', 'LICENSE', and 'readmes/mini-xxx.md' (copied to be 'README.md' in standalone repository). NOTE: Modify 'README.md' to have appropriate relative links (see patch script).
-    - Make initial commit and push.
-- Force update `sync` branch to point to latest commit with `git branch --force sync`.
+    - Synchronize standalone repositories. It should have created new git repository with single initial commit.
+    - Make sure that all tracked files are synchronized. For list of tracked files see 'scripts/dual_sync.sh'. Initially they are 'doc/mini-xxx.txt', 'lua/mini/xxx.lua', 'LICENSE', and 'readmes/mini-xxx.md' (copied to be 'README.md' in standalone repository).
+    - Make sure that 'README.md' in standalone repository has appropriate relative links (see patch script).
+    - **Amend** initial commit and push.
+- Push `main` and sync dual distribution.
 
 ## Making stable release
 
