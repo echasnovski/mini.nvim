@@ -40,6 +40,10 @@ Introduction of a new module.
 
 - FEATURE: Add `gen_union_spotter()` to allow combining separate spotters into one.
 
+## mini.operators
+
+Introduction of a new module.
+
 ## mini.pairs
 
 - FEATURE: Allow `false` in `config.mappings` to not map the key.

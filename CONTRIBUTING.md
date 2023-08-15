@@ -130,6 +130,9 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniMapSymbolLine`
     - `MiniMapSymbolView`
 
+- 'mini.operators':
+    - `MiniOperatorsExchangeFrom`
+
 - 'mini.starter':
     - `MiniStarterCurrent`
     - `MiniStarterFooter`

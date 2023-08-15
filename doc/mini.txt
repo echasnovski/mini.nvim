@@ -36,6 +36,7 @@ Table of contents:
   Window with buffer text overview ................................ |mini.map|
   Miscellaneous functions ........................................ |mini.misc|
   Move any selection in any direction ............................ |mini.move|
+  Text edit operators ....................................... |mini.operators|
   Autopairs ..................................................... |mini.pairs|
   Session management ......................................... |mini.sessions|
   Split and join arguments .................................. |mini.splitjoin|
@@ -208,6 +209,10 @@ Table of contents:
 - |MiniMisc| - collection of miscellaneous useful functions. Like `put()`
   and `put_text()` which print Lua objects to command line and current
   buffer respectively.
+
+- |MiniOperators| - various text edit operators: replace, exchange,
+  multiply, sort, evaluate. Creates mappings to operate on textobject,
+  line, and visual selection. Supports |[count]| and dot-repeat.
 
 - |MiniMove| - move any selection in any direction. Supports any Visual
   mode (charwise, linewise, blockwise) and Normal mode (current line) for

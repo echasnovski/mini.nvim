@@ -36,6 +36,7 @@ local test_actions = {
   ['map']         = function() require('mini.map').setup() end,
   ['misc']        = function() require('mini.misc').setup() end,
   ['move']        = function() require('mini.move').setup() end,
+  ['operators']   = function() require('mini.operators').setup() end,
   ['pairs']       = function() require('mini.pairs').setup() end,
   ['sessions']    = function() require('mini.sessions').setup({ directory = '' }) end,
   ['splitjoin']   = function() require('mini.splitjoin').setup() end,

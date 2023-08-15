@@ -26,6 +26,7 @@ local modules = {
   'map',
   'misc',
   'move',
+  'operators',
   'pairs',
   'sessions',
   'splitjoin',
