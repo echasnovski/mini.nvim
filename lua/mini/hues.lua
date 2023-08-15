@@ -973,6 +973,8 @@ H.apply_colorscheme = function(config)
     hi('MiniMapSymbolLine',  { fg=p.accent,  bg=nil })
     hi('MiniMapSymbolView',  { fg=p.accent,  bg=nil })
 
+    hi('MiniOperatorsExchangeFrom', { link='IncSearch' })
+
     hi('MiniStarterCurrent',    { link='MiniStarterItem' })
     hi('MiniStarterFooter',     { link='Comment' })
     hi('MiniStarterHeader',     { fg=p.accent,  bg=nil, bold=true })
