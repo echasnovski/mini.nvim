@@ -896,6 +896,61 @@ T['Exchange']['works for same region'] = function()
   validate_edit({ 'ab', 'cd' }, { 1, 0 }, { '<C-v>jgx', '<C-v>jgx' }, { 'ab', 'cd' }, { 2, 0 })
 end
 
+T['Exchange']['works with multibyte characters'] = function()
+  child.set_size(5, 12)
+
+  -- Charwise 2 bytes
+  set_lines({ '  ыыы ффф' })
+  set_cursor(1, 2)
+  type_keys('gx2l')
+  -- - Should properly highlight range
+  child.expect_screenshot()
+
+  type_keys('w', 'gx2l')
+  eq(get_lines(), { '  ффы ыыф' })
+  eq(get_cursor(), { 1, 9 })
+
+  -- Charwise 3 bytes
+  set_lines({ '  ╔═╗ ╚═╝' })
+  set_cursor(1, 2)
+  type_keys('gx2l')
+  child.expect_screenshot()
+
+  type_keys('w', 'gx2l')
+  eq(get_lines(), { '  ╚═╗ ╔═╝' })
+  eq(get_cursor(), { 1, 12 })
+
+  -- Charwise 4 bytes
+  set_lines({ '  🬕🬂🬨  🬲🬭🬷' })
+  set_cursor(1, 2)
+  type_keys('gx2l')
+  child.expect_screenshot()
+
+  type_keys('w', 'gx2l')
+  eq(get_lines(), { '  🬲🬭🬨  🬕🬂🬷' })
+  eq(get_cursor(), { 1, 16 })
+
+  -- Linewise
+  set_lines({ '  ыыы ффф', '  эээ ююю' })
+  set_cursor(1, 2)
+  type_keys('gx_')
+  child.expect_screenshot()
+
+  type_keys('j', 'gx_')
+  eq(get_lines(), { '  эээ ююю', '  ыыы ффф' })
+  eq(get_cursor(), { 2, 0 })
+
+  -- Blockwise
+  set_lines({ '  ыыы ффф', '  эээ ююю' })
+  set_cursor(1, 2)
+  type_keys('<C-v>jl', 'gx')
+  child.expect_screenshot()
+
+  type_keys('w', '<C-v>jl', 'gx')
+  eq(get_lines(), { '  ффы ыыф', '  ююэ ээю' })
+  eq(get_cursor(), { 1, 9 })
+end
+
 T['Exchange']['does not have side effects'] = function()
   set_lines({ 'rst', 'aa', 'bb' })
 

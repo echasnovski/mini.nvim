@@ -805,7 +805,7 @@ H.exchange_set_region_extmark = function(mode, add_highlight)
 
   -- Compute extmark's range for target region
   local extmark_from = { markcoords_from[1] - 1, markcoords_from[2] }
-  local extmark_to = { markcoords_to[1] - 1, markcoords_to[2] + 1 }
+  local extmark_to = { markcoords_to[1] - 1, H.get_next_char_bytecol(markcoords_to) }
 
   -- Adjust for visual selection in case of 'selection=exclusive'
   if region_data.mark_to == '>' and vim.o.selection == 'exclusive' then extmark_to[2] = extmark_to[2] - 1 end
@@ -1153,6 +1153,12 @@ end
 H.get_mark = function(mark_name) return vim.api.nvim_buf_get_mark(0, mark_name) end
 
 H.set_mark = function(mark_name, mark_data) vim.api.nvim_buf_set_mark(0, mark_name, mark_data[1], mark_data[2], {}) end
+
+H.get_next_char_bytecol = function(markcoords)
+  local line = vim.fn.getline(markcoords[1])
+  local utf_index = vim.str_utfindex(line, math.min(line:len(), markcoords[2] + 1))
+  return vim.str_byteindex(line, utf_index)
+end
 
 -- Indent ---------------------------------------------------------------------
 H.compute_indent = function(lines)
