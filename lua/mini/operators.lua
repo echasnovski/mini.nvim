@@ -206,6 +206,9 @@ end
 --- `exchange.prefix` is a string used to automatically infer operator mappings keys
 --- during |MiniOperators.setup()|. See |MiniOperators-mappings|.
 ---
+--- Note: default value "gx" overrides |netrw-gx| and |gx| / |v_gx|. If you prefer
+--- using its original functionality, choose different `config.prefix`.
+---
 --- `exchange.reindent_linewise` is a boolean indicating whether newly put linewise
 --- text should preserve indent of replaced text. In other words, if `false`,
 --- regions are exchanged preserving their indents; if `true` - without them.
