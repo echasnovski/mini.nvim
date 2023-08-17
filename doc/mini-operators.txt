@@ -433,6 +433,9 @@ Notes:
 - Sort is done with |table.sort()| on an array of lines, which doesn't treat
   whitespace or digits specially. Use |:sort| for more complicated tasks.
 
+- Pattern is allowed to be an empty string in which case split results into
+  all characters as parts.
+
 - Pad pattern in `split_patterns` with `%s*` to include whitespace into separator.
   Example: line "b _ a" with "_" pattern will be sorted as " a_b " (because
   it is split as "b ", "_", " a" ) while with "%s*_%s*" pattern it results
@@ -447,7 +450,7 @@ Parameters~
     Default: direct compare with `<`.
   - <split_patterns> `(table)` - array of split Lua patterns to be used for
     charwise submode. Order is important.
-    Default: `{ '%s*,%s*', '%s*;%s*', '%s+' }`.
+    Default: `{ '%s*,%s*', '%s*;%s*', '%s+', '' }`.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

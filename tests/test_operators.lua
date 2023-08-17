@@ -188,13 +188,15 @@ T['default_sort_func()']['works for charwise'] = function()
   validate({ 'b, a' }, { 'a, b' })
   validate({ 'b; a' }, { 'a; b' })
   validate({ 'b a' }, { 'a b' })
+  validate({ 'ba' }, { 'ab' })
 
   -- Already sorted
   validate({ 'a, b' }, { 'a, b' })
 
-  -- Correctly picks split pattern (',' > ';' > '%s*')
+  -- Correctly picks split pattern (',' > ';' > '%s*' > '')
   validate({ 'c, a; b' }, { 'a; b, c' })
   validate({ 'c a; b' }, { 'b; c a' })
+  validate({ 'c a b' }, { 'a b c' })
 
   -- Works with whitespace (preserves and sorts without it)
   validate({ 'e ,  d,   b    ,a,c' }, { 'a ,  b,   c    ,d,e' })
@@ -266,6 +268,12 @@ T['default_sort_func()']['respects `opts.split_patterns`'] = function()
   -- Correctly picks in order
   validate({ 'c+b-a' }, { 'b-a+c' }, { '%+', '%-' })
   validate({ 'c-b-a' }, { 'a-b-c' }, { '%+', '%-' })
+
+  -- Allows empty string as pattern
+  validate({ 'c a b' }, { '  abc' }, { '' })
+
+  -- Does nothing if no pattern is found
+  validate({ 'c a b' }, { 'c a b' }, { ',' })
 end
 
 T['default_sort_func()']['validates arguments'] = function()
@@ -1741,9 +1749,8 @@ T['Sort']['works charwise in Normal mode'] = function()
 
   -- Correctly picks split pattern
   validate_edit1d('b, a; c', 0, { 'gs$' }, 'a; c, b', 0)
-
-  -- Without detected separators
-  validate_edit1d('ba', 0, { 'gs$' }, 'ba', 0)
+  validate_edit1d('b a c', 0, { 'gs$' }, 'a b c', 0)
+  validate_edit1d('bac', 0, { 'gs$' }, 'abc', 0)
 
   -- Works with empty parts
   validate_edit1d('a,,b,', 0, { 'gs$' }, ',,a,b', 0)

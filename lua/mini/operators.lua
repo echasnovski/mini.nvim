@@ -575,6 +575,9 @@ end
 --- - Sort is done with |table.sort()| on an array of lines, which doesn't treat
 ---   whitespace or digits specially. Use |:sort| for more complicated tasks.
 ---
+--- - Pattern is allowed to be an empty string in which case split results into
+---   all characters as parts.
+---
 --- - Pad pattern in `split_patterns` with `%s*` to include whitespace into separator.
 ---   Example: line "b _ a" with "_" pattern will be sorted as " a_b " (because
 ---   it is split as "b ", "_", " a" ) while with "%s*_%s*" pattern it results
@@ -586,7 +589,7 @@ end
 ---     Default: direct compare with `<`.
 ---   - <split_patterns> `(table)` - array of split Lua patterns to be used for
 ---     charwise submode. Order is important.
----     Default: `{ '%s*,%s*', '%s*;%s*', '%s+' }`.
+---     Default: `{ '%s*,%s*', '%s*;%s*', '%s+', '' }`.
 MiniOperators.default_sort_func = function(content, opts)
   if not H.is_content(content) then H.error('`content` should be a content table.') end
 
@@ -595,7 +598,7 @@ MiniOperators.default_sort_func = function(content, opts)
   local compare_fun = opts.compare_fun or function(a, b) return a < b end
   if not vim.is_callable(compare_fun) then H.error('`opts.compare_fun` should be callable.') end
 
-  local split_patterns = opts.split_patterns or { '%s*,%s*', '%s*;%s*', '%s+' }
+  local split_patterns = opts.split_patterns or { '%s*,%s*', '%s*;%s*', '%s+', '' }
   if not vim.tbl_islist(split_patterns) then H.error('`opts.split_patterns` should be array.') end
 
   -- Prepare lines to sort
@@ -1009,6 +1012,13 @@ H.sort_charwise_split = function(lines, split_patterns)
   end
 
   if pat == nil then return lines, {} end
+
+  -- Allow pattern to be an empty string to get every character
+  if pat == '' then
+    local parts = vim.split(lines_str, '')
+    local seps = vim.fn['repeat']({ '' }, #parts - 1)
+    return parts, seps
+  end
 
   -- Split into parts and separators
   local parts, seps = {}, {}
