@@ -2937,6 +2937,39 @@ T['Reproducing keys']['does not register new triggers'] = function()
   validate_trigger_keymap('o', 'i')
 end
 
+T['Reproducing keys']["respects 'clipboard'"] = function()
+  -- Mock constant clipboard for better reproducibility of system registers
+  -- (mostly on CI).
+  child.lua([[
+    local empty = function() return '' end
+    vim.g.clipboard = {
+      name  = 'myClipboard',
+      copy  = { ['+'] = empty, ['*'] = empty },
+      paste = { ['+'] = empty, ['*'] = empty },
+    }
+  ]])
+
+  load_module({ triggers = { { mode = 'c', keys = 'g' }, { mode = 'i', keys = 'g' } } })
+  validate_trigger_keymap('c', 'g')
+  validate_trigger_keymap('i', 'g')
+
+  local validate_clipboard = function(clipboard_value)
+    child.ensure_normal_mode()
+    set_lines({})
+
+    child.o.clipboard = clipboard_value
+
+    child.ensure_normal_mode()
+    type_keys('i', 'g')
+    eq(get_lines(), { 'g' })
+  end
+
+  validate_clipboard('unnamed')
+  validate_clipboard('unnamedplus')
+  validate_clipboard('unnamed,unnamedplus')
+  validate_clipboard('unnamedplus,unnamed')
+end
+
 T["'mini.nvim' compatibility"] = new_set({
   hooks = {
     pre_case = function()

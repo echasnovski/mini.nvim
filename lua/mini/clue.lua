@@ -1903,8 +1903,8 @@ end
 
 H.get_default_register = function()
   local clipboard = vim.o.clipboard
-  if clipboard:find('unnamed') ~= nil then return '*' end
   if clipboard:find('unnamedplus') ~= nil then return '+' end
+  if clipboard:find('unnamed') ~= nil then return '*' end
   return '"'
 end
 
