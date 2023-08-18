@@ -987,8 +987,14 @@ MiniAi.select_textobject = function(ai_type, id, opts)
   local cache_eventignore = vim.o.eventignore
 
   pcall(function()
-    -- Do nothing in Operator-pending mode for empty region (except `c` or `d`)
-    if tobj_is_empty and opts.operator_pending and not (vim.v.operator == 'c' or vim.v.operator == 'd') then
+    -- Do nothing in Operator-pending mode for empty region (except `c`, `d`,
+    -- or "replace" from 'mini.operators'). These are hand picked because they
+    -- completely remove selected text, which is necessary for currently only
+    -- possible empty region selection implementation.
+    local is_empty_opending = tobj_is_empty and opts.operator_pending
+    local is_minioperators_replace = vim.v.operator == 'g@' and vim.o.operatorfunc:find('MiniOperators%.replace') ~= nil
+    local is_allowed_empty_opending = vim.v.operator == 'c' or vim.v.operator == 'd' or is_minioperators_replace
+    if is_empty_opending and not is_allowed_empty_opending then
       H.message('Textobject region is empty. Nothing is done.')
       return
     end
@@ -1009,7 +1015,7 @@ MiniAi.select_textobject = function(ai_type, id, opts)
     vim.cmd('normal! ' .. vis_mode)
     set_cursor(tobj.from)
 
-    if tobj_is_empty and opts.operator_pending then
+    if is_empty_opending then
       -- Add single space (without triggering events) and visually select it.
       -- Seems like the only way to make `ci)` and `di)` move inside empty
       -- brackets. Original idea is from 'wellle/targets.vim'.

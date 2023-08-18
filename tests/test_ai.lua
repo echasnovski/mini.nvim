@@ -2042,6 +2042,22 @@ T['Builtin']['Bracket']['is balanced'] = function(key)
 end
 
 T['Builtin']['Bracket']['works with empty region'] = function(key)
+  -- Emulate "replace" from 'mini.operators'
+  child.lua([[
+    _G.MiniOperators = {}
+    _G.MiniOperators.replace = function(mode)
+      if mode == nil then
+        vim.o.operatorfunc = 'v:lua.MiniOperators.replace'
+        return 'g@'
+      end
+      vim.fn.setreg('a', 'xxx')
+      vim.cmd('normal! `[v`]"aP`[')
+    end
+
+    vim.keymap.set('n', 'gr', _G.MiniOperators.replace, { expr = true })
+  ]])
+
+  -- Validate
   local left, right, _ = unpack(brackets[key])
 
   local line = 'a' .. left .. right
@@ -2049,6 +2065,8 @@ T['Builtin']['Bracket']['works with empty region'] = function(key)
     validate_tobj1d(line, i, { 'i', key }, { 3, 3 })
     validate_edit1d(line, i, line, 2, { 'ci', key })
     validate_edit1d(line, i, line, 2, { 'di', key })
+
+    validate_edit1d(line, i, 'a' .. left .. 'xxx' .. right, 2, { 'gri', key })
   end
 end
 
