@@ -338,6 +338,22 @@ T['default_evaluate_func()']['works for blockwise'] = function()
   validate({ '_G.y + 1' }, { '2' })
 end
 
+T['default_evaluate_func()']['does not modify input'] = function()
+  local validate = function(content)
+    local lua_cmd = string.format(
+      [[_G.content = %s
+        MiniOperators.default_evaluate_func(_G.content)]],
+      vim.inspect(content)
+    )
+    child.lua(lua_cmd)
+    eq(child.lua_get('_G.content'), content)
+  end
+
+  validate({ lines = { '1 + 1' }, submode = 'v' })
+  validate({ lines = { '1 + 1' }, submode = 'V' })
+  validate({ lines = { '1 + 1', '1 + 2' }, submode = '\22' })
+end
+
 T['default_evaluate_func()']['validates arguments'] = function()
   expect.error(default_evaluate_func, '`content`', 1)
   expect.error(default_evaluate_func, '`content`', {})

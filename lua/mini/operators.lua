@@ -710,10 +710,11 @@ H.create_default_hl =
 
 -- Evaluate -------------------------------------------------------------------
 H.eval_lua_lines = function(lines)
-  local n = #lines
-  lines[n] = (lines[n]:find('^%s*return%s+') == nil and 'return ' or '') .. lines[n]
+  -- Copy to not modify input
+  local lines_copy, n = vim.deepcopy(lines), #lines
+  lines_copy[n] = (lines_copy[n]:find('^%s*return%s+') == nil and 'return ' or '') .. lines_copy[n]
 
-  local str_to_eval = table.concat(lines, '\n')
+  local str_to_eval = table.concat(lines_copy, '\n')
 
   -- Allow returning tuple with any value(s) being `nil`
   return H.inspect_objects(assert(loadstring(str_to_eval))())
