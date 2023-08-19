@@ -190,6 +190,9 @@ Default values:
     -- Multiply (duplicate) text
     multiply = {
       prefix = 'gm',
+
+      -- Function which can modify text before multiplying
+      func = nil,
     },
 
     -- Replace text with register
@@ -241,6 +244,12 @@ regions are exchanged preserving their indents; if `true` - without them.
 
 `multiply.prefix` is a string used to automatically infer operator mappings keys
 during |MiniOperators.setup()|. See |MiniOperators-mappings|.
+
+`multiply.func` is a function used to optionally update multiplied text.
+If `nil` (default), text used as is.
+
+Takes content table as input (see "Evaluate" section) and should return
+array of lines as output.
 
 # Replace ~
 

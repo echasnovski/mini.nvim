@@ -75,6 +75,9 @@ T['setup()']['creates `config` field'] = function()
   expect_config('exchange.prefix', 'gx')
   expect_config('exchange.reindent_linewise', true)
 
+  expect_config('multiply.prefix', 'gm')
+  expect_config('multiply.func', vim.NIL)
+
   expect_config('replace.prefix', 'gr')
   expect_config('replace.reindent_linewise', true)
 
@@ -102,6 +105,10 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ exchange = 'a' }, 'exchange', 'table')
   expect_config_error({ exchange = { prefix = 1 } }, 'exchange.prefix', 'string')
   expect_config_error({ exchange = { reindent_linewise = 'a' } }, 'exchange.reindent_linewise', 'boolean')
+
+  expect_config_error({ multiply = 'a' }, 'multiply', 'table')
+  expect_config_error({ multiply = { prefix = 1 } }, 'multiply.prefix', 'string')
+  expect_config_error({ multiply = { func = 'a' } }, 'multiply.func', 'function')
 
   expect_config_error({ replace = 'a' }, 'replace', 'table')
   expect_config_error({ replace = { prefix = 1 } }, 'replace.prefix', 'string')
@@ -1286,6 +1293,20 @@ T['Multiply']['works in edge cases'] = function()
   validate_edit({ 'aa', 'bb' }, { 2, 0 }, { 'gm_' }, { 'aa', 'bb', 'bb' }, { 3, 0 })
 end
 
+T['Multiply']['respects `config.multiply.func`'] = function()
+  -- Indent by two spaces only for linewise content
+  child.lua([[MiniOperators.config.multiply.func = function(content)
+    if content.submode ~= 'V' then return content.lines end
+    return vim.tbl_map(function(l) return '  ' .. l end, content.lines)
+  end]])
+
+  validate_edit1d('aa bb', 0, { 'gmiw' }, 'aaaa bb', 2)
+  validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gmip' }, { 'aa', 'bb', '  aa', '  bb', '', 'cc' }, { 3, 2 })
+
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
+  validate_edit({ 'ab', 'cd' }, { 1, 0 }, { '<C-v>j', 'gm' }, { 'aab', 'ccd' }, { 1, 1 })
+end
+
 T['Multiply']["works with 'y' in 'cpoptions'"] = function()
   child.cmd('set cpoptions+=y')
 
@@ -1421,6 +1442,17 @@ T['Multiply']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
     validate_edit1d('aa bb', 0, { 'gmiw' }, 'waa bb', 1)
   end,
 })
+
+T['Multiply']['respects `vim.b.minioperators_config`'] = function()
+  -- Indent by two spaces
+  child.lua([[_G.multiply_func = function(content)
+    return vim.tbl_map(function(l) return '  ' .. l end, content.lines)
+  end
+  vim.b.minioperators_config = { multiply = { func = _G.multiply_func } }
+  ]])
+
+  validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gmip' }, { 'aa', 'bb', '  aa', '  bb', '', 'cc' }, { 3, 2 })
+end
 
 T['Replace'] = new_set()
 

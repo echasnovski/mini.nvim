@@ -22,7 +22,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://github.com/echasnovski/mini.nvim/assets/24854248/aaa9df18-fe39-4556-89d4-a0591edf31a3
+https://github.com/echasnovski/mini.nvim/assets/24854248/8a3656c4-c92a-4d9f-9711-8d6a751b3e5a
 
 ## Features
 
@@ -178,6 +178,9 @@ Here are code snippets for some common installation methods (use only one):
   -- Multiply (duplicate) text
   multiply = {
     prefix = 'gm',
+
+    -- Function which can modify text before multiplying
+    func = nil,
   },
 
   -- Replace text with register

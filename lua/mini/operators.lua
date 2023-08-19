@@ -218,6 +218,12 @@ end
 --- `multiply.prefix` is a string used to automatically infer operator mappings keys
 --- during |MiniOperators.setup()|. See |MiniOperators-mappings|.
 ---
+--- `multiply.func` is a function used to optionally update multiplied text.
+--- If `nil` (default), text used as is.
+---
+--- Takes content table as input (see "Evaluate" section) and should return
+--- array of lines as output.
+---
 --- # Replace ~
 ---
 --- `replace.prefix` is a string used to automatically infer operator mappings keys
@@ -275,6 +281,9 @@ MiniOperators.config = {
   -- Multiply (duplicate) text
   multiply = {
     prefix = 'gm',
+
+    -- Function which can modify text before multiplying
+    func = nil,
   },
 
   -- Replace text with register
@@ -403,6 +412,12 @@ MiniOperators.multiply = function(mode)
     -- Yank to temporary "x" register
     local yank_data = { mark_from = mark_from, mark_to = mark_to, submode = submode, mode = mode, register = 'x' }
     H.do_between_marks('y', yank_data)
+
+    -- Modify lines in "x" register
+    local func = H.get_config().multiply.func or function(content) return content.lines end
+    local x_reginfo = vim.fn.getreginfo('x')
+    x_reginfo.regcontents = func({ lines = x_reginfo.regcontents, submode = submode })
+    vim.fn.setreg('x', x_reginfo)
 
     -- Adjust cursor for a proper paste
     local ref_coords = H.multiply_get_ref_coords(mark_from, mark_to, submode)
@@ -664,6 +679,7 @@ H.setup_config = function(config)
     ['exchange.reindent_linewise'] = { config.exchange.reindent_linewise, 'boolean' },
 
     ['multiply.prefix'] = { config.multiply.prefix, 'string' },
+    ['multiply.func'] = { config.multiply.func, 'function', true },
 
     ['replace.prefix'] = { config.replace.prefix, 'string' },
     ['replace.reindent_linewise'] = { config.replace.reindent_linewise, 'boolean' },
