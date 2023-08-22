@@ -1245,6 +1245,7 @@ H.map_trigger = function(buf_id, trigger)
 
   -- Compute mapping RHS
   trigger.keys = H.replace_termcodes(trigger.keys)
+  local keys_trans = H.keytrans(trigger.keys)
 
   local rhs = function()
     -- Don't act if for some reason entered the same trigger during state exec
@@ -1268,11 +1269,11 @@ H.map_trigger = function(buf_id, trigger)
 
   -- Use buffer-local mappings and `nowait` to make it a primary source of
   -- keymap execution
-  local desc = string.format('Query keys after "%s"', H.keytrans(trigger.keys))
+  local desc = string.format('Query keys after "%s"', keys_trans)
   local opts = { buffer = buf_id, nowait = true, desc = desc }
 
-  -- Create mapping
-  vim.keymap.set(trigger.mode, trigger.keys, rhs, opts)
+  -- Create mapping. Use translated variant to make it work with <F*> keys.
+  vim.keymap.set(trigger.mode, keys_trans, rhs, opts)
 end
 
 H.unmap_trigger = function(buf_id, trigger)
@@ -1879,7 +1880,9 @@ end
 
 H.replace_termcodes = function(x)
   if x == nil then return nil end
-  return vim.api.nvim_replace_termcodes(x, true, true, true)
+  -- Use `keytrans` prior replacing termcodes to work correctly on already
+  -- replaced variant of `<F*>` keys
+  return vim.api.nvim_replace_termcodes(H.keytrans(x), true, true, true)
 end
 
 -- TODO: Remove after compatibility with Neovim=0.7 is dropped

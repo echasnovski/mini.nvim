@@ -2970,6 +2970,25 @@ T['Reproducing keys']["respects 'clipboard'"] = function()
   validate_clipboard('unnamedplus,unnamed')
 end
 
+T['Reproducing keys']['works with <F*> keys'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Neovim 0.7 has issues with <F*> keys.') end
+
+  child.lua([[vim.g.mapleader = vim.api.nvim_replace_termcodes('<F2>', true, true, true)]])
+  child.cmd('nnoremap <Leader>a <Cmd>lua _G.n = (_G.n or 0) + 1<CR>')
+  child.cmd('nnoremap <F3>b <Cmd>lua _G.m = (_G.m or 0) + 1<CR>')
+
+  load_module({
+    clues = { { mode = 'n', keys = '<Leader>a', postkeys = '<Leader>' } },
+    triggers = { { mode = 'n', keys = '<Leader>' }, { mode = 'n', keys = '<F3>' } },
+  })
+
+  type_keys('<F2>', 'a', 'a', '<Esc>')
+  eq(child.lua_get('_G.n'), 2)
+
+  type_keys('<F3>', 'b')
+  eq(child.lua_get('_G.m'), 1)
+end
+
 T["'mini.nvim' compatibility"] = new_set({
   hooks = {
     pre_case = function()
