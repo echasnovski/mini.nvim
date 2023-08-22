@@ -1432,11 +1432,11 @@ H.compute_exec_keys = function()
 
   -- Using `feedkeys()` inside Operator-pending mode leads to its cancel into
   -- Normal/Insert mode so extra work should be done to rebuild all keys
-  if cur_mode:find('^no') ~= nil then
+  if vim.startswith(cur_mode, 'no') then
     local operator_tweak = H.operator_tweaks[vim.v.operator] or function(x) return x end
     res = operator_tweak(vim.v.operator .. H.get_forced_submode() .. res)
-  elseif H.get_default_register() ~= vim.v.register then
-    -- Force a non-default register
+  elseif not vim.startswith(cur_mode, 'i') and H.get_default_register() ~= vim.v.register then
+    -- Force non-default register but not in Insert mode
     res = '"' .. vim.v.register .. res
   end
 
