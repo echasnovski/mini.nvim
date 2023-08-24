@@ -1104,6 +1104,11 @@ H.keys = {
   ctrl_u = vim.api.nvim_replace_termcodes('<C-u>', true, true, true),
 }
 
+-- Timers
+H.timers = {
+  getcharstr = vim.loop.new_timer(),
+}
+
 -- Undo command which depends on Neovim version
 H.undo_autocommand = 'au ModeChanged * ++once undo' .. (vim.fn.has('nvim-0.8') == 1 and '!' or '')
 
@@ -1915,8 +1920,13 @@ H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nv
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
 
+H.redraw_scheduled = vim.schedule_wrap(function() vim.cmd('redraw') end)
+
 H.getcharstr = function()
+  -- Ensure redraws still happen
+  H.timers.getcharstr:start(0, 50, H.redraw_scheduled)
   local ok, char = pcall(vim.fn.getcharstr)
+  H.timers.getcharstr:stop()
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == '\27' or char == '' then return end
   return H.get_langmap()[char] or char

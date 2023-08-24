@@ -1916,6 +1916,36 @@ T['Querying keys']['works'] = function()
   eq(get_test_map_count('n', ' f'), 2)
 end
 
+T['Querying keys']['does not entirely block redraws'] = function()
+  child.set_size(10, 40)
+  set_lines({ 'aaaa' })
+  child.lua([[
+    local ns_id = vim.api.nvim_create_namespace('test')
+    local n = 0
+    _G.add_hl = function()
+      local col = n
+      vim.defer_fn(function()
+        vim.highlight.range(0, ns_id, 'Comment', { 0, col }, { 0, col + 1 }, {})
+      end, 5)
+      n = n + 1
+    end
+    vim.keymap.set('n', '<Space>f', _G.add_hl, { desc = 'Add hl' })]])
+
+  load_module({
+    clues = { { mode = 'n', keys = '<Space>f', postkeys = '<Space>' } },
+    triggers = { { mode = 'n', keys = '<Space>' } },
+  })
+
+  type_keys('<Space>', 'f')
+  -- - Redraws don't happen immediately but inside a repeating timer
+  sleep(50 + 5)
+  child.expect_screenshot()
+
+  type_keys('f')
+  sleep(50 + 5)
+  child.expect_screenshot()
+end
+
 T['Querying keys']['allows trigger with more than one character'] = function()
   make_test_map('n', '<Space>aa')
   load_module({ triggers = { { mode = 'n', keys = '<Space>a' } } })
