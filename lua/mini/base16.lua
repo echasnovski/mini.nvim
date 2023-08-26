@@ -638,6 +638,10 @@ H.apply_palette = function(palette, use_cterm)
     hi('@keyword.return', {fg=p.base08, bg=nil, attr=nil, sp=nil})
     hi('@symbol',         {fg=p.base0E, bg=nil, attr=nil, sp=nil})
     hi('@variable',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
+
+    hi('@text.strong',   {fg=nil, bg=nil, attr='bold',          sp=nil})
+    hi('@text.emphasis', {fg=nil, bg=nil, attr='italic',        sp=nil})
+    hi('@text.strike',   {fg=nil, bg=nil, attr='strikethrough', sp=nil})
   end
 
   -- Semantic tokens
@@ -656,13 +660,13 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniAnimateCursor',      {fg=nil, bg=nil, attr='reverse,nocombine', sp=nil})
     hi('MiniAnimateNormalFloat', {link='NormalFloat'})
 
-    hi('MiniClueBorder',              {link='FloatBorder'})
+    hi('MiniClueBorder',              {link='NormalFloat'})
     hi('MiniClueDescGroup',           {link='DiagnosticFloatingWarn'})
     hi('MiniClueDescSingle',          {link='NormalFloat'})
     hi('MiniClueNextKey',             {link='DiagnosticFloatingHint'})
     hi('MiniClueNextKeyWithPostkeys', {link='DiagnosticFloatingError'})
     hi('MiniClueSeparator',           {link='DiagnosticFloatingInfo'})
-    hi('MiniClueTitle',               {link='FloatTitle'})
+    hi('MiniClueTitle',               {fg=p.base0D, bg=p.base01, attr='bold', sp=nil})
 
     hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
 
