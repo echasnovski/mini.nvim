@@ -43,8 +43,8 @@ Notes:
   |MiniAnimate.config.resize| for more details.
 
 - Although all animations work in all supported versions of Neovim, scroll
-  and resize animations have best experience with Neovim>=0.9 (current nightly
-  release). This is due to updated implementation of |WinScrolled| event.
+  and resize animations have best experience with Neovim>=0.9. This is due
+  to updated implementation of |WinScrolled| event.
 
 # Setup ~
 
