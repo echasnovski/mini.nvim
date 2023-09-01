@@ -2288,28 +2288,30 @@ T['Open'] = new_set({
 
 --stylua: ignore
 T['Open']['works'] = function()
+  local win_id = child.fn.has('nvim-0.10') == 1 and 1002 or 1003
   child.cmd('topleft vertical new')
   sleep(small_time)
   validate_floats({
-    [1003] = {
+    [win_id] = {
       anchor = 'NW', external = false, focusable = false, relative = 'editor', zindex = 1,
       row = 0, col = 0, width = 6, height = 6, winblend = 80,
     },
   })
-  eq(child.lua_get('vim.wo[1003].winhighlight'), 'Normal:MiniAnimateNormalFloat')
+  eq(child.api.nvim_win_get_option(win_id, 'winhighlight'), 'Normal:MiniAnimateNormalFloat')
 
   sleep(step_time)
-  validate_floats({ [1003] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
+  validate_floats({ [win_id] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
 
   sleep(step_time)
-  validate_floats({ [1003] = false })
+  validate_floats({ [win_id] = false })
 end
 
 T['Open']['works for a new tabpage'] = function()
+  local win_id = child.fn.has('nvim-0.10') == 1 and 1002 or 1003
   child.cmd('tabedit')
   sleep(small_time)
   validate_floats({
-    [1003] = { relative = 'editor', row = 1, col = 0, width = 12, height = 5, winblend = 80 },
+    [win_id] = { relative = 'editor', row = 1, col = 0, width = 12, height = 5, winblend = 80 },
   })
   sleep(2 * 20)
   child.cmd('tabclose')
@@ -2317,23 +2319,24 @@ T['Open']['works for a new tabpage'] = function()
   -- Should also work second time (testing correct usage of tabpage number)
   child.cmd('tabedit')
   validate_floats({
-    [1005] = { relative = 'editor', row = 1, col = 0, width = 12, height = 5, winblend = 80 },
+    [win_id + 2] = { relative = 'editor', row = 1, col = 0, width = 12, height = 5, winblend = 80 },
   })
 end
 
 T['Open']['allows only one active animation'] = function()
+  local win_id = child.fn.has('nvim-0.10') == 1 and 1002 or 1003
   child.cmd('topleft vertical new')
   sleep(small_time)
   validate_floats({
-    [1003] = { relative = 'editor', row = 0, col = 0, width = 6, height = 6, winblend = 80 },
+    [win_id] = { relative = 'editor', row = 0, col = 0, width = 6, height = 6, winblend = 80 },
   })
 
   child.cmd('botright new')
   sleep(step_time + small_time)
   --stylua: ignore
   validate_floats({
-    [1003] = false,
-    [1005] = {
+    [win_id] = false,
+    [win_id + 2] = {
       -- It is already a second step with quarter coverage
       relative = 'editor', row = 3, col = 0, width = 6, height = 2, winblend = 90,
     },
@@ -2341,10 +2344,11 @@ T['Open']['allows only one active animation'] = function()
 end
 
 T['Open']['reopens floating window if it was closed manually'] = function()
+  local win_id = child.fn.has('nvim-0.10') == 1 and 1002 or 1003
   child.cmd('topleft vertical new')
   sleep(small_time)
   validate_floats({
-    [1003] = { relative = 'editor', row = 0, col = 0, width = 6, height = 6, winblend = 80 },
+    [win_id] = { relative = 'editor', row = 0, col = 0, width = 6, height = 6, winblend = 80 },
   })
   child.cmd('only')
   eq(child.api.nvim_list_wins(), { 1001 })
@@ -2352,7 +2356,7 @@ T['Open']['reopens floating window if it was closed manually'] = function()
   sleep(step_time)
   validate_floats({
     -- It is already a second step with quarter coverage
-    [1004] = { relative = 'editor', row = 0, col = 0, width = 3, height = 3, winblend = 90 },
+    [win_id + 1] = { relative = 'editor', row = 0, col = 0, width = 3, height = 3, winblend = 90 },
   })
 end
 
@@ -2422,6 +2426,7 @@ T['Open']['respects `vim.{g,b}.minianimate_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
+    local win_id = child.fn.has('nvim-0.10') == 1 and 1003 or 1004
     child[var_type].minianimate_disable = true
     child.cmd('wincmd v')
     -- Should open without animation
@@ -2431,7 +2436,7 @@ T['Open']['respects `vim.{g,b}.minianimate_disable`'] = new_set({
     child.cmd('wincmd v')
     -- Should open with animation
     sleep(small_time)
-    validate_floats({ [1004] = { relative = 'editor' } })
+    validate_floats({ [win_id] = { relative = 'editor' } })
   end,
 })
 
@@ -2471,22 +2476,23 @@ T['Close'] = new_set({
 
 --stylua: ignore
 T['Close']['works'] = function()
+  local win_id = child.fn.has('nvim-0.10') == 1 and 1002 or 1003
   child.cmd('topleft vertical new')
   child.cmd('close')
   sleep(small_time)
   validate_floats({
-    [1003] = {
+    [win_id] = {
       anchor = 'NW', external = false, focusable = false, relative = 'editor', zindex = 1,
       row = 0, col = 0, width = 6, height = 6, winblend = 80,
     },
   })
-  eq(child.lua_get('vim.wo[1003].winhighlight'), 'Normal:MiniAnimateNormalFloat')
+  eq(child.api.nvim_win_get_option(win_id, 'winhighlight'), 'Normal:MiniAnimateNormalFloat')
 
   sleep(step_time)
-  validate_floats({ [1003] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
+  validate_floats({ [win_id] = { row = 0, col = 0, width = 3, height = 3, winblend = 90 } })
 
   sleep(step_time)
-  validate_floats({ [1003] = false })
+  validate_floats({ [win_id] = false })
 end
 
 T['Close']['respects `enable` config setting'] = function()
