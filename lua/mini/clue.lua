@@ -1300,7 +1300,7 @@ H.state_advance = function(opts)
   H.state.timer:stop()
   local show_immediately = H.is_valid_win(H.state.win_id) or H.state.is_after_postkeys
   local delay = show_immediately and 0 or config_window.delay
-  H.state.timer:start(delay, 0, function() H.window_update(opts.scroll_to_start) end)
+  H.state.timer:start(delay, 0, function() H.window_update(opts.same_content) end)
 
   -- Reset postkeys right now to not flicker when trying to close window during
   -- "not querying" check
@@ -1318,7 +1318,7 @@ H.state_advance = function(opts)
   local is_scroll_up = key == H.replace_termcodes(config_window.scroll_up)
   if is_scroll_down or is_scroll_up then
     H.window_scroll(is_scroll_down and H.keys.ctrl_d or H.keys.ctrl_u)
-    return H.state_advance({ scroll_to_start = false })
+    return H.state_advance({ same_content = true })
   end
 
   if key == H.keys.bs then
@@ -1505,31 +1505,33 @@ H.query_to_keys = function(query) return table.concat(query, '') end
 H.query_to_title = function(query) return H.keytrans(H.query_to_keys(query)) end
 
 -- Window ---------------------------------------------------------------------
-H.window_update = vim.schedule_wrap(function(scroll_to_start)
+H.window_update = vim.schedule_wrap(function(same_content)
   -- Make sure that outdated windows are not shown
   if #H.state.query == 0 then return H.window_close() end
+  local win_id = H.state.win_id
 
   -- Close window if it is not in current tabpage (as only window is tracked)
-  local is_different_tabpage = H.is_valid_win(H.state.win_id)
-    and vim.api.nvim_win_get_tabpage(H.state.win_id) ~= vim.api.nvim_get_current_tabpage()
+  local is_different_tabpage = H.is_valid_win(win_id)
+    and vim.api.nvim_win_get_tabpage(win_id) ~= vim.api.nvim_get_current_tabpage()
   if is_different_tabpage then H.window_close() end
 
   -- Create-update buffer showing clues
-  H.state.buf_id = H.buffer_update()
+  if not same_content then H.state.buf_id = H.buffer_update() end
 
   -- Create-update window showing buffer
   local win_config = H.window_get_config()
-  if not H.is_valid_win(H.state.win_id) then
-    H.state.win_id = H.window_open(win_config)
+  if not H.is_valid_win(win_id) then
+    win_id = H.window_open(win_config)
+    H.state.win_id = win_id
   else
-    vim.api.nvim_win_set_config(H.state.win_id, win_config)
+    vim.api.nvim_win_set_config(win_id, win_config)
+    vim.wo[win_id].list = true
   end
 
   -- Make scroll not persist. NOTE: Don't use 'normal! gg' inside target window
   -- as it resets `v:count` and `v:register` which results into invalid keys
   -- reproduction in Operator-pending mode.
-  if scroll_to_start == nil then scroll_to_start = true end
-  if scroll_to_start then vim.api.nvim_win_set_cursor(H.state.win_id, { 1, 0 }) end
+  if not same_content then vim.api.nvim_win_set_cursor(win_id, { 1, 0 }) end
 
   -- Add redraw because Neovim won't do it when `getcharstr()` is active
   vim.cmd('redraw')
