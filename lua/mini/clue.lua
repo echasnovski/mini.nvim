@@ -1851,30 +1851,6 @@ H.is_array_of = function(x, predicate)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.echo = function(msg, is_important)
-  -- Construct message chunks
-  msg = type(msg) == 'string' and { { msg } } or msg
-  table.insert(msg, 1, { '(mini.clue) ', 'WarningMsg' })
-
-  -- Avoid hit-enter-prompt
-  local max_width = vim.o.columns * math.max(vim.o.cmdheight - 1, 0) + vim.v.echospace
-  local chunks, tot_width = {}, 0
-  for _, ch in ipairs(msg) do
-    local new_ch = { vim.fn.strcharpart(ch[1], 0, max_width - tot_width), ch[2] }
-    table.insert(chunks, new_ch)
-    tot_width = tot_width + vim.fn.strdisplaywidth(new_ch[1])
-    if tot_width >= max_width then break end
-  end
-
-  -- Echo. Force redraw to ensure that it is effective (`:h echo-redraw`)
-  vim.cmd([[echo '' | redraw]])
-  vim.api.nvim_echo(chunks, is_important, {})
-end
-
-H.unecho = function() vim.cmd([[echo '' | redraw]]) end
-
-H.message = function(msg) H.echo(msg, true) end
-
 H.error = function(msg) error(string.format('(mini.clue) %s', msg), 0) end
 
 H.map = function(mode, lhs, rhs, opts)
