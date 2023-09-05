@@ -44,14 +44,10 @@ See `*MiniOperators-overview*` and `*MiniOperators.config*` tags in help for mor
 
 This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
 
-<!-- TODO: Uncomment use of `stable` branch before 0.10.0 release -->
-
-<!-- There are two branches to install from: -->
-
-During beta-testing phase there is only one branch to install from:
+There are two branches to install from:
 
 - `main` (default, **recommended**) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled).
-<!-- - `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch. -->
+- `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch.
 
 Here are code snippets for some common installation methods (use only one):
 
@@ -66,21 +62,19 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
-            <td rowspan=1>'mini.nvim' library</td>
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <!-- <td rowspan=2>Standalone plugin</td> -->
-            <td rowspan=1>Standalone plugin</td>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+        </tr>
+        <tr>
+            <td rowspan=2>Standalone plugin</td>
             <td>Main</td> <td><code>{ 'echasnovski/mini.operators', version = false },</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini.operators', version = '*' },</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.operators', version = '*' },</code></td>
+        </tr>
     </tbody>
 </table>
 </details>
@@ -96,20 +90,18 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
-            <td rowspan=1>'mini.nvim' library</td>
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>use 'echasnovski/mini.nvim'</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>use { 'echasnovski/mini.nvim', branch = 'stable' }</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <!-- <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.operators'</code></td> -->
-            <td rowspan=1>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.operators'</code></td>
+            <td>Stable</td> <td><code>use { 'echasnovski/mini.nvim', branch = 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>use { 'echasnovski/mini.operators', branch = 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>use 'echasnovski/mini.operators'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>use { 'echasnovski/mini.operators', branch = 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 </details>
@@ -125,20 +117,18 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <!-- <td rowspan=2>'mini.nvim' library</td> -->
-            <td rowspan=1>'mini.nvim' library</td>
+            <td rowspan=2>'mini.nvim' library</td>
             <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <!-- <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.operators'</code></td> -->
-            <td rowspan=1>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.operators'</code></td>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.operators', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.operators'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.operators', { 'branch': 'stable' }</code></td>
+        </tr>
     </tbody>
 </table>
 </details>
