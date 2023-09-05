@@ -1,4 +1,4 @@
-# Version 0.9.0.9000
+# Version 0.10.0
 
 ## mini.ai
 
