@@ -76,7 +76,8 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 - Check that all CI has passed.
 - Make GitHub release. Get description from copying entries of version's 'CHANGELOG.md' section.
 - Move `stable` branch to point at new tag.
-- Manage standalone repositories. It should be enough to use 'scripts/dual_release.sh' like so:
+- Synchronize standalone repositories.
+- Release standalone repositories. It should be enough to use 'scripts/dual_release.sh' like so:
 ```
 # REPLACE `xx` with your version number
 TAG_NAME="v0.xx.0" TAG_MESSAGE="Version 0.xx.0" make dual_release
