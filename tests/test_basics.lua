@@ -143,12 +143,12 @@ end
 T['Options']['do not override manually set options'] = function()
   -- Shouldn't modify options manually set to non-default value
   child.g.mapleader = ';'
-  child.o.signcolumn = 'no'
-  child.o.pumblend = 50
+  child.cmd('set signcolumn=no')
+  child.cmd('set pumblend=50')
 
   -- Shouldn't modify option manually set to default value
-  child.o.number = false
-  child.o.list = false
+  child.cmd('set nonumber')
+  child.cmd('set nolist')
 
   load_module({ options = { basic = true, extra_ui = true } })
 
