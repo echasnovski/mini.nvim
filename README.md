@@ -137,8 +137,12 @@ Activate them as regular `colorscheme` (for example, `:colorscheme randomhue` or
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
+- 'mini.cycle' - cycle through alternatives with pre-defined rules. Something like [monaqa/dial.nvim](https://github.com/monaqa/dial.nvim) and [AndrewRadev/switch.vim](https://github.com/AndrewRadev/switch.vim)
+- 'mini.git' - utilities for more convenient work with Git. Actual scope is to be defined.
 - 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
+- 'mini.notify' - minimal UI to show Neovim notifications (like coming from LSP server, etc.).
 - 'mini.pick' - fuzzy picker. A very simplified version of [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- 'mini.places' - persistent track of common places per working directory. Something like [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon).
 - 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
 - 'mini.statuscolumn' - customizable 'statuscolumn'.
 - 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
