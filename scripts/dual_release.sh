@@ -22,7 +22,7 @@ for repo in $local_repos; do
 
   # Ensure branch on latest `main`
   printf "\033[4mMaking \`stable\` point to latest \`main\`\033[0m\n"
-  git checkout -b stable
+  git checkout -B stable
   git checkout main
   echo ''
 
