@@ -30,7 +30,6 @@
 ---     - 'ggandor/lightspeed.nvim'
 ---     - 'glepnir/dashboard-nvim'
 ---     - 'glepnir/lspsaga.nvim'
----     - 'HiPhish/nvim-ts-rainbow2'
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
@@ -876,17 +875,6 @@ H.apply_palette = function(palette, use_cterm)
     hi('OutlineFoldPrefix',      {fg=p.base08, bg=nil, attr=nil, sp=nil})
     hi('OutlineIndentEvn',       {fg=p.base04, bg=nil, attr=nil, sp=nil})
     hi('OutlineIndentOdd',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
-  end
-
-  -- TODO: Remove after 'mini.nvim' 0.10.0 release
-  if H.has_integration('HiPhish/nvim-ts-rainbow2') then
-    hi('TSRainbowBlue',   {fg=p.base0D, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowCyan',   {fg=p.base0C, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowGreen',  {fg=p.base0B, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowOrange', {fg=p.base09, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowRed',    {fg=p.base08, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowViolet', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
-    hi('TSRainbowYellow', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
   end
 
   if H.has_integration('HiPhish/rainbow-delimiters.nvim') then

@@ -30,7 +30,6 @@ Supported highlight groups:
     - 'ggandor/lightspeed.nvim'
     - 'glepnir/dashboard-nvim'
     - 'glepnir/lspsaga.nvim'
-    - 'HiPhish/nvim-ts-rainbow2'
     - 'HiPhish/rainbow-delimiters.nvim'
     - 'hrsh7th/nvim-cmp'
     - 'justinmk/vim-sneak'

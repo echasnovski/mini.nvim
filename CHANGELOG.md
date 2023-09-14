@@ -1,5 +1,9 @@
 # Version 0.10.0.9000
 
+## mini.base16
+
+- BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
+
 ## mini.hues
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
