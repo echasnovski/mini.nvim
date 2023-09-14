@@ -314,7 +314,10 @@ T['start()']['does not account for current cursor position during label computat
 })
 
 T['start()']['uses `<CR>` to jump to first available spot'] = function()
-  set_lines({ string.rep('- ', 28) })
+  child.set_size(5, 20)
+  local win_width = child.fn.winwidth(0)
+  local line = string.rep('- ', math.floor(0.5 * win_width))
+  set_lines(vim.fn['repeat']({ line }, child.fn.winheight(0)))
 
   -- On first step
   set_cursor(1, 9)
@@ -325,7 +328,7 @@ T['start()']['uses `<CR>` to jump to first available spot'] = function()
   -- On later steps
   set_cursor(1, 9)
   start()
-  -- Spots should be labeled `a a b b c d e...`
+  -- Spots should be labeled `a a b b c c ...`
   child.expect_screenshot()
   type_keys(1, 'b', '<CR>')
   eq(get_cursor(), { 1, 4 })
