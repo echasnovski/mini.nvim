@@ -46,7 +46,6 @@
 ---     - 'ggandor/leap.nvim'
 ---     - 'glepnir/dashboard-nvim'
 ---     - 'glepnir/lspsaga.nvim'
----     - 'HiPhish/nvim-ts-rainbow2'
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
@@ -1139,17 +1138,6 @@ H.apply_colorscheme = function(config)
     hi('OutlineFoldPrefix',      { fg=p.yellow,  bg=nil })
     hi('OutlineIndentEvn',       { fg=p.fg_mid2, bg=nil })
     hi('OutlineIndentOdd',       { fg=p.fg,      bg=nil })
-  end
-
-  -- TODO: Remove after 'mini.nvim' 0.10.0 release
-  if has_integration('HiPhish/nvim-ts-rainbow2') then
-    hi('TSRainbowBlue',   { fg=p.azure,  bg=nil })
-    hi('TSRainbowCyan',   { fg=p.cyan,   bg=nil })
-    hi('TSRainbowGreen',  { fg=p.green,  bg=nil })
-    hi('TSRainbowOrange', { fg=p.orange, bg=nil })
-    hi('TSRainbowRed',    { fg=p.red,    bg=nil })
-    hi('TSRainbowViolet', { fg=p.purple, bg=nil })
-    hi('TSRainbowYellow', { fg=p.yellow, bg=nil })
   end
 
   if has_integration('HiPhish/rainbow-delimiters.nvim') then
