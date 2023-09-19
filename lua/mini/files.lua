@@ -2406,9 +2406,13 @@ H.fs_copy = function(from, to)
   -- Don't override existing path
   if H.fs_is_present_path(to) then return false end
 
-  -- Copy file directly
   local from_type = H.fs_get_type(from)
   if from_type == nil then return false end
+
+  -- Allow copying inside non-existing directory
+  vim.fn.mkdir(H.fs_get_parent(to), 'p')
+
+  -- Copy file directly
   if from_type == 'file' then return vim.loop.fs_copyfile(from, to) end
 
   -- Recursively copy a directory

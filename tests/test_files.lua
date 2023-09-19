@@ -2865,6 +2865,29 @@ T['File manipulation']['can copy file'] = function()
   validate_confirm_args(ref_pattern_2)
 end
 
+T['File manipulation']['can copy file inside new directory'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  open(temp_dir)
+
+  -- Write lines in moved file to check actual move and not "delete-create"
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+
+  -- Perform manipulation
+  type_keys('yy', 'p')
+  type_keys('i', 'new-dir/new-subdir/', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+
+  validate_file(temp_dir, 'file')
+  validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
+  validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
+end
+
 T['File manipulation']['can copy directory'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/nested/', 'dir-target/' })
   open(temp_dir)
@@ -2910,6 +2933,35 @@ T['File manipulation']['can copy directory'] = function()
   local target_path_2 = short_path(temp_dir, 'dir-copy')
   local ref_pattern_2 = string.format([[    COPY: 'dir' to '%s']], vim.pesc(target_path_2))
   validate_confirm_args(ref_pattern_2)
+end
+
+T['File manipulation']['can copy directory inside new directory'] = function()
+  child.set_size(10, 60)
+
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/nested/' })
+  open(temp_dir)
+
+  -- Write lines in copied file to check actual copy and not create
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
+
+  -- Perform manipulation
+  type_keys('yy', 'p')
+  type_keys('i', 'new-dir/new-subdir/', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+
+  validate_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'dir', 'nested')
+  validate_file(temp_dir, 'dir', 'file')
+  validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
+
+  validate_directory(temp_dir, 'new-dir', 'new-subdir', 'dir')
+  validate_directory(temp_dir, 'new-dir', 'new-subdir', 'dir', 'nested')
+  validate_file(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file')
+  validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file'), { 'File' })
 end
 
 T['File manipulation']['copy does not override existing entry'] = function()
