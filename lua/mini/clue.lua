@@ -1521,6 +1521,7 @@ H.window_update = vim.schedule_wrap(function(same_content)
   -- Create-update window showing buffer
   local win_config = H.window_get_config()
   if not H.is_valid_win(win_id) then
+    win_config.noautocmd = true
     win_id = H.window_open(win_config)
     H.state.win_id = win_id
   else

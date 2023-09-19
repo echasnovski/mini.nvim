@@ -1549,6 +1549,20 @@ T['Showing keys']['works in Command-line window'] = function()
   type_keys(':q<CR>')
 end
 
+T['Showing keys']['does not trigger unnecessary events'] = function()
+  make_test_map('n', '<Space>aa')
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  -- Window should be shown after debounced delay
+  child.cmd('au BufEnter,BufWinEnter,BufLeave * lua _G.n_events = (_G.n_events or 0) + 1')
+  type_keys(' ')
+  child.expect_screenshot()
+
+  type_keys('a', 'a')
+  eq(get_test_map_count('n', ' aa'), 1)
+  eq(child.lua_get('_G.n_events'), vim.NIL)
+end
+
 T['Showing keys']['respects `vim.b.miniclue_config`'] = function()
   make_test_map('n', '<Space>a')
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
