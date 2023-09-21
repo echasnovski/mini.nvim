@@ -1816,6 +1816,18 @@ T['Scroll']["does not automatically animate result of 'incsearch'"] = function()
   child.expect_screenshot()
 end
 
+T['Scroll']['does not animate in Select mode'] = function()
+  child.cmd('smap <M-m> <Cmd>call winrestview({ "topline": 3 })<CR>')
+
+  set_cursor(4, 0)
+  type_keys('v<C-g>')
+  eq(child.fn.mode(), 's')
+
+  type_keys('<M-m>')
+  child.expect_screenshot()
+  eq(child.fn.mode(), 's')
+end
+
 T['Scroll']['handles mappings with <Cmd><CR>'] = function()
   child.api.nvim_set_keymap('n', 'G', 'G<Cmd>lua _G.n = 0<CR>', {})
 

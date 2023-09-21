@@ -1474,9 +1474,11 @@ end
 
 -- Scroll ---------------------------------------------------------------------
 H.make_scroll_step = function(state_from, state_to, opts)
-  local from_line, to_line = state_from.view.topline, state_to.view.topline
+  -- Do not animate in Select mode because it resets it
+  if H.is_select_mode() then return end
 
   -- Compute how subscrolling is done
+  local from_line, to_line = state_from.view.topline, state_to.view.topline
   local total_scroll = H.get_n_visible_lines(from_line, to_line) - 1
   local step_scrolls = opts.subscroll(total_scroll)
 
@@ -2138,5 +2140,7 @@ else
 
   H.virtcol = vim.fn.col
 end
+
+H.is_select_mode = function() return ({ s = true, S = true, ['\19'] = true })[vim.fn.mode()] end
 
 return MiniAnimate
