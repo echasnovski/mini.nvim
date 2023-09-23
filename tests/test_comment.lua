@@ -44,7 +44,7 @@ end
 local example_lines = { 'aa', ' aa', '  aa', '', '  aa', ' aa', 'aa' }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

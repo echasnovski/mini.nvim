@@ -30,7 +30,7 @@ local default_section_names = {
 --stylua: ignore end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

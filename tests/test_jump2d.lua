@@ -82,7 +82,7 @@ local setup_two_windows = function()
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

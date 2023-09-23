@@ -35,7 +35,7 @@ end
 local small_time = 15
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
@@ -1705,7 +1705,6 @@ T['animate()']['works'] = function()
 
   -- Check slightly after half-way
   local validate_after_half = function()
-    local test_single_hl = nil
     eq(
       child.lua_get('_G.get_relevant_cs_data()'),
       {

@@ -163,7 +163,7 @@ end
 
 -- Output test set ============================================================
 local layout
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

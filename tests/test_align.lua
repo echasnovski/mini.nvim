@@ -52,7 +52,7 @@ local eq_tostring = function(var_name1, var_name2)
 end
 
 -- Output test set
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

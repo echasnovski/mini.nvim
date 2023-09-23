@@ -66,7 +66,7 @@ end
 local unmock_file = function() pcall(vim.fn.delete, mocked_filepath) end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

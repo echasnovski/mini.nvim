@@ -31,7 +31,7 @@ local validate_line_state = function(lines, cursor)
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

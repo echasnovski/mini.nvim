@@ -86,7 +86,7 @@ end
 local get_n_shown_windows = function() return #child.api.nvim_tabpage_list_wins(0) end
 
 -- Output test set
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

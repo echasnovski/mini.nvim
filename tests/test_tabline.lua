@@ -34,7 +34,7 @@ local eval_tabline = function(show_hl, show_action)
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

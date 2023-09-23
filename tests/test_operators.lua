@@ -40,7 +40,7 @@ local validate_edit1d = function(line_before, col_before, keys, line_after, col_
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

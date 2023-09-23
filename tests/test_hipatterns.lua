@@ -41,7 +41,7 @@ local small_time = 5
 local test_lines = { 'abcd abcd', 'Abcd ABCD', 'abcdaabcd' }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
@@ -725,7 +725,7 @@ T['get_enabled_buffers()'] = new_set()
 T['get_enabled_buffers()']['works'] = function()
   local create_buf = function() return child.api.nvim_create_buf(true, false) end
   local buf_id_1 = create_buf()
-  local buf_id_2 = create_buf()
+  create_buf()
   local buf_id_3 = create_buf()
   local buf_id_4 = create_buf()
 

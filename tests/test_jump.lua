@@ -29,7 +29,7 @@ local example_lines = {
 local test_times = { highlight = 250 }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

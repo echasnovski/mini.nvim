@@ -145,7 +145,7 @@ end
 local test_files = { 'file-a', 'file-b', 'file-c', 'file-d', 'file-e' }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
@@ -2905,7 +2905,7 @@ T['yank()'] = new_set()
 ---   - String. Will be yanked in charwise mode.
 ---   - Table. First element is array of lines, second - keys used to yank them
 ---     (assuming Normal mode and cursor being {1, 0}).
----@return table Array of arrays with yank history lines.
+---@return ... Array of arrays with yank history lines and its validator.
 ---@private
 local setup_yank = function(...)
   local yank_entries = vim.tbl_map(function(x)

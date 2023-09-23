@@ -7,7 +7,6 @@ local new_set = MiniTest.new_set
 -- Helpers with child processes
 --stylua: ignore start
 local load_module = function(config) child.mini_load('clue', config) end
-local unload_module = function() child.mini_unload('clue') end
 local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
@@ -166,7 +165,7 @@ end
 -- Data =======================================================================
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function() child.setup() end,
     post_once = child.stop,
@@ -965,23 +964,6 @@ T['gen_clues']['windows()']['respects `opts.submode_resize`'] = function()
   local win_init = get_window()
   local get_height = function() return child.api.nvim_win_get_height(0) end
   local get_width = function() return child.api.nvim_win_get_width(0) end
-  local validate = function(keys_dims)
-    -- Set up
-    set_window(win_init)
-    type_keys('<C-w>')
-
-    -- Test
-    for _, v in ipairs(keys_dims) do
-      type_keys(v[1])
-      eq(child.api.nvim_win_get_height(0), v[2][1])
-      eq(child.api.nvim_win_get_width(0), v[2][2])
-    end
-
-    -- Clean up
-    type_keys('<Esc>')
-    set_window(win_init)
-    child.cmd('only')
-  end
 
   -- Width
   set_window(win_init)

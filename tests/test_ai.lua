@@ -53,7 +53,7 @@ local mock_treesitter_builtin = function() child.cmd('source tests/dir-ai/mock-l
 local mock_treesitter_plugin = function() child.cmd('set rtp+=tests/dir-ai') end
 
 -- Output test set
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

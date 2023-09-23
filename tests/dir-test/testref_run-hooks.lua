@@ -1,13 +1,11 @@
 local new_set = MiniTest.new_set
 
-local T = new_set()
-
 local erroring = function(x)
   return function() error(x, 0) end
 end
 
 -- Track order of hook execution via error messages in `exec.fails`
-T = new_set()
+local T = new_set()
 
 T['order'] = new_set({
   hooks = {

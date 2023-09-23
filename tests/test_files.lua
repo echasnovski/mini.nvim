@@ -45,7 +45,7 @@ end
 
 local make_temp_dir = function(name, children)
   -- Make temporary directory and make sure it is removed after test is done
-  local temp_dir = make_test_path('temp')
+  local temp_dir = make_test_path(name or 'temp')
   vim.fn.mkdir(temp_dir, 'p')
 
   MiniTest.finally(function() vim.fn.delete(temp_dir, 'rf') end)
@@ -165,7 +165,7 @@ local test_fs_entries = {
 }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
@@ -1238,8 +1238,6 @@ end
 T['trim_left()']['works when no explorer is opened'] = function() expect.no_error(trim_left) end
 
 T['trim_right()'] = new_set()
-
-local trim_right = forward_lua('MiniFiles.trim_right')
 
 T['trim_right()']['works'] = function()
   open(make_test_path('nested'))

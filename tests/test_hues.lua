@@ -20,7 +20,7 @@ local bg = '#11262d'
 local fg = '#c0c8cc'
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

@@ -32,6 +32,7 @@ local get_current_all_cases = function()
   -- Decode functions in current process
   res = vim.tbl_map(function(case)
     case.hooks = { pre = vim.tbl_map(loadstring, case.hooks.pre), post = vim.tbl_map(loadstring, case.hooks.post) }
+    ---@diagnostic disable-next-line:param-type-mismatch
     case.test = loadstring(case.test)
     return case
   end, res)
@@ -68,7 +69,7 @@ local expect_all_state = function(cases, state)
 end
 
 -- Output test set
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
@@ -645,6 +646,7 @@ T['expect']['error()']['works'] = function()
 end
 
 T['expect']['error()']['respects `pattern` argument'] = function()
+  ---@diagnostic disable-next-line:param-type-mismatch
   expect.error(function() MiniTest.expect.error(error, 1) end, 'pattern.*expected string')
 
   -- `nil` and `''` are placeholders for 'any error'

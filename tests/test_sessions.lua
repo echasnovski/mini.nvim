@@ -129,7 +129,7 @@ local validate_executed_hook = function(pre_post, action, value)
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

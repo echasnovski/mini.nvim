@@ -68,7 +68,7 @@ end
 local test_times = { completion = 100, info = 100, signature = 50 }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

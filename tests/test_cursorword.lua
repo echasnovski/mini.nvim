@@ -42,7 +42,7 @@ local example_lines = { 'aa', 'aa', 'aaa' }
 local test_times = { delay = 100 }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

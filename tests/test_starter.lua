@@ -76,7 +76,7 @@ local example_itemstring = '{ '
   .. ' }'
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

@@ -256,7 +256,7 @@ local apply_unmap = function(fun_name, args_string)
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

@@ -622,7 +622,7 @@ You can customize which files will be sourced and which cases will be later exec
 ```lua
 local new_set = MiniTest.new_set
 
-T = new_set()
+local T = new_set()
 
 -- Use `data` field to pass custom information for easier test management
 T['fast'] = new_set({ data = { type = 'fast' } })

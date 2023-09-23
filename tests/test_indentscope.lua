@@ -53,7 +53,7 @@ local example_lines_nested = { 'aa', ' aa', '  aa', '   aa', '   aa', '   aa', '
 local test_times = { delay = 100, animation_step = 20 }
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()

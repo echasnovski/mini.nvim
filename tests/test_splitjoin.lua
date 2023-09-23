@@ -47,7 +47,7 @@ local validate_keys = function(lines_before, cursor_before, lines_after, cursor_
 end
 
 -- Output test set ============================================================
-T = new_set({
+local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
