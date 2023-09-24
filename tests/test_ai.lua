@@ -839,21 +839,6 @@ T['select_textobject()']['respects `opts.vis_mode`'] = function()
   validate_select(lines, cursor, { 'a', ')', { vis_mode = '<C-v>' } }, { { 1, 1 }, { 3, 2 } })
 end
 
-T['select_textobject()']['respects `opts.operator_pending`'] = function()
-  -- This currently has effect only for empty regions. More testing is done in
-  -- integration tests.
-  child.o.eventignore = ''
-  set_lines({ 'a()' })
-  set_cursor(1, 0)
-
-  child.v.operator = 'y'
-  child.lua([[MiniAi.select_textobject('i', ')', { operator_pending = true })]])
-  eq(child.fn.mode(), 'n')
-  eq(get_cursor(), { 1, 0 })
-  eq(get_latest_message(), '(mini.ai) Textobject region is empty. Nothing is done.')
-  eq(child.o.eventignore, '')
-end
-
 T['select_textobject()']['works with empty region'] = function() validate_select1d('a()', 0, { 'i', ')' }, { 3, 3 }) end
 
 T['select_textobject()']['allows selecting past line end'] = function()
@@ -1718,6 +1703,18 @@ T['Textobject']['shows message if no textobject is found'] = function()
     '2i]',
     [[(mini.ai) No textobject "i]" found covering region 2 times within 1 line and `search_method = 'cover'`.]]
   )
+end
+
+T['Textobject']['shows message for empty textobject in Operator-pending mode'] = function()
+  child.o.eventignore = ''
+  set_lines({ 'a()' })
+  set_cursor(1, 0)
+
+  type_keys('yi)')
+  eq(child.fn.mode(), 'n')
+  eq(get_cursor(), { 1, 0 })
+  eq(get_latest_message(), '(mini.ai) Textobject region is empty. Nothing is done.')
+  eq(child.o.eventignore, '')
 end
 
 T['Textobject']['respects `vim.{g,b}.miniai_disable`'] = new_set({
