@@ -1226,14 +1226,16 @@ MiniTest.new_child_neovim = function()
     local keys = has_wait and { ... } or { wait, ... }
     keys = vim.tbl_flatten(keys)
 
+    -- From `nvim_input` docs: "On execution error: does not fail, but
+    -- updates v:errmsg.". So capture it manually. NOTE: Have it global to
+    -- allow sending keys which will block in the middle (like `[[<C-\>]]` and
+    -- `<C-n>`). Otherwise, later check will assume that there was an error.
+    local cur_errmsg
     for _, k in ipairs(keys) do
       if type(k) ~= 'string' then
         error('In `type_keys()` each argument should be either string or array of strings.')
       end
 
-      -- From `nvim_input` docs: "On execution error: does not fail, but
-      -- updates v:errmsg.". So capture it manually.
-      local cur_errmsg
       -- But do that only if Neovim is not "blocked". Otherwise, usage of
       -- `child.v` will block execution.
       if not child.is_blocked() then
@@ -1249,7 +1251,7 @@ MiniTest.new_child_neovim = function()
         if child.v.errmsg ~= '' then
           error(child.v.errmsg, 2)
         else
-          child.v.errmsg = cur_errmsg
+          child.v.errmsg = cur_errmsg or ''
         end
       end
 
