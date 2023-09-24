@@ -20,6 +20,9 @@ T['second group']['fail with notes'] = function()
   MiniTest.add_note('Failed note #2')
   error('Custom error after note #2', 0)
 end
+
+T['third group with \n in name'] = new_set()
+T['third group with \n in name']['case with \n in name'] = function() MiniTest.add_note('Passed note #3') end
 --stylua: ignore end
 
 return T

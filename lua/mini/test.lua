@@ -1774,7 +1774,7 @@ H.set_to_testcases = function(set, template, hooks_once)
 
       local cur_template = H.extend_template(template, {
         args = args,
-        desc = key,
+        desc = type(key) == 'string' and key:gsub('\n', '\\n') or key,
         hooks = { pre = hooks.pre_case, post = hooks.post_case },
         data = data,
       })
@@ -2023,7 +2023,7 @@ H.buffer_reporter.set_lines = function(buf_id, lines, start, finish)
   local new_lines, hl_ranges = {}, {}
   for i, l in ipairs(lines) do
     local n_removed = 0
-    local new_l = l:gsub('()(\27%[.-m)(.-)\27%[0m', function(...)
+    local new_l = l:gsub('\n', '\\n'):gsub('()(\27%[.-m)(.-)\27%[0m', function(...)
       local dots = { ... }
       local left = dots[1] - n_removed
       table.insert(

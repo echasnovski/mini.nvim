@@ -1268,7 +1268,7 @@ T['gen_reporter']['buffer'] = new_set({
   hooks = {
     pre_case = function()
       child.o.termguicolors = true
-      child.set_size(60, 120)
+      child.set_size(70, 120)
     end,
   },
   parametrize = {
