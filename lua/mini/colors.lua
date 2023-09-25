@@ -2047,7 +2047,7 @@ H.infer_color_space = function(x)
   local is_num = H.is_number
   if is_num(x.l) then
     if is_num(x.c) then return 'oklch' end
-    if is_num(x.a) and is_num(x.a) then return 'oklab' end
+    if is_num(x.a) and is_num(x.b) then return 'oklab' end
     if is_num(x.s) then return 'okhsl' end
   end
 

@@ -2041,6 +2041,7 @@ T['convert()']['validates arguments'] = function()
   expect.error(function() convert('aaaaaa', 'rgb') end, 'Can not infer color space of "aaaaaa"')
   expect.error(function() convert('##aaaaaa', 'rgb') end, 'Can not infer')
   expect.error(function() convert({}, 'rgb') end, 'Can not infer color space of {}')
+  expect.error(function() convert({ l = 50, a = 1 }, 'rgb') end, 'Can not infer color space of')
 
   -- - `nil` is allowed as input
   eq(child.lua_get([[MiniColors.convert(nil, 'hex')]]), vim.NIL)
