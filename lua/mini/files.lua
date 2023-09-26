@@ -577,10 +577,6 @@ end
 --- simultaneously. For example, use value 1 to always show single window.
 --- There is no constraint by default.
 ---
---- `windows.max_preview_bytes ` is a maximum size in bytes that is preview buffer
---- allowed to have in order to start syntax highlighting. For example, use value
---- 50 * 1024 start syntax highlighting only in buffers that have less than 50 KiB.
----
 --- `windows.preview` is a boolean indicating whether to show preview of
 --- file/directory under cursor.
 ---
@@ -625,8 +621,6 @@ MiniFiles.config = {
   windows = {
     -- Maximum number of windows to show side by side
     max_number = math.huge,
-    -- Maximum size of preview buffer in bytes to start syntax highlighting
-    max_preview_bytes = 50 * 1024,
     -- Whether to show preview of file/directory under cursor
     preview = false,
     -- Width of focused window
@@ -1094,7 +1088,6 @@ H.setup_config = function(config)
     ['options.permanent_delete'] = { config.options.permanent_delete, 'boolean' },
 
     ['windows.max_number'] = { config.windows.max_number, 'number' },
-    ['windows.max_preview_bytes'] = { config.windows.max_preview_bytes, 'number' },
     ['windows.preview'] = { config.windows.preview, 'boolean' },
     ['windows.width_focus'] = { config.windows.width_focus, 'number' },
     ['windows.width_nofocus'] = { config.windows.width_nofocus, 'number' },
@@ -1958,7 +1951,7 @@ H.buffer_update_file = function(buf_id, path, opts)
   H.set_buflines(buf_id, lines)
 
   -- Add highlighting on Neovim>=0.8 which has stabilized API
-  if vim.fn.has('nvim-0.8') == 1 and H.get_buf_bytes(buf_id) <= opts.windows.max_preview_bytes then
+  if vim.fn.has('nvim-0.8') == 1 and H.get_buf_bytes(buf_id) <= vim.o.lines * 1000 then
     local ft = vim.filetype.match({ buf = buf_id, filename = path })
     local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
     local has_ts, _ = pcall(vim.treesitter.start, buf_id, has_lang and lang or ft)
