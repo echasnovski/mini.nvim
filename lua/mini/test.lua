@@ -1400,6 +1400,7 @@ end
 ---   capture output. A wrapper for |nvim_exec()| with capturing output.
 ---
 ---@field lua function Execute Lua code. A wrapper for |nvim_exec_lua()|.
+---@field lua_notify function Execute Lua code without waiting for output.
 ---@field lua_get function Execute Lua code and return result. A wrapper
 ---   for |nvim_exec_lua()| but prepends string code with `return`.
 ---
