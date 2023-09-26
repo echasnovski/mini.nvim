@@ -531,6 +531,8 @@ Default values:
     windows = {
       -- Maximum number of windows to show side by side
       max_number = math.huge,
+      -- Maximum size of preview buffer in bytes to start syntax highlighting
+      max_preview_bytes = 50 * 1024,
       -- Whether to show preview of file/directory under cursor
       preview = false,
       -- Width of focused window
@@ -609,6 +611,10 @@ directory (execute `:echo stdpath('data')` to see its path in your case).
 `windows.max_number` is a maximum number of windows allowed to be open
 simultaneously. For example, use value 1 to always show single window.
 There is no constraint by default.
+
+`windows.max_preview_bytes ` is a maximum size in bytes that is preview buffer
+allowed to have in order to start syntax highlighting. For example, use value
+50 * 1024 start syntax highlighting only in buffers that have less than 50 KiB.
 
 `windows.preview` is a boolean indicating whether to show preview of
 file/directory under cursor.
