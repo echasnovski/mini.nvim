@@ -804,6 +804,9 @@ end
 ---   { mode = 'x', keys = '`' }
 ---   { mode = 'x', keys = 'g`' }
 ---
+--- Note: if you use "g" as trigger (like to enable |MiniClue.gen_clues.g()|),
+--- don't add "g'" and "g`" as triggers: they already will be taken into account.
+---
 ---@return table Array of clues.
 ---
 ---@seealso |mark-motions|
