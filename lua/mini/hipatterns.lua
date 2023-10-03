@@ -267,7 +267,7 @@ end
 ---           }
 ---         }
 --- <
----     - Use callable `pattern` with confition. For example: >
+---     - Use callable `pattern` with condition. For example: >
 ---
 ---       require('mini.hipatterns').setup({
 ---         highlighters = {
