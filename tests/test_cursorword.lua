@@ -272,4 +272,23 @@ T['Autohighlighting']['respects `vim.{g,b}.minicursorword_disable`'] = new_set({
   end,
 })
 
+T['Autohighlighting']['respects deferred `vim.{g,b}.minicursorword_disable`'] = new_set({
+  parametrize = { { 'g' }, { 'b' } },
+}, {
+  test = function(var_type)
+    set_cursor(1, 1)
+
+    local lua_cmd = string.format(
+      'vim.defer_fn(function() vim.%s.minicursorword_disable = true end, %d)',
+      var_type,
+      math.floor(0.5 * test_times.delay)
+    )
+    child.lua(lua_cmd)
+    set_cursor(1, 0)
+
+    sleep(test_times.delay)
+    eq(word_is_highlighted('aa'), false)
+  end,
+})
+
 return T

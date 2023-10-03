@@ -178,10 +178,7 @@ H.auto_highlight = function()
 
   -- Stop highlighting immediately if module is disabled when cursor is not on
   -- 'keyword'
-  if H.is_disabled() or not H.is_cursor_on_keyword() then
-    H.unhighlight()
-    return
-  end
+  if not H.should_highlight() then return H.unhighlight() end
 
   -- Get current information
   local win_id = vim.api.nvim_get_current_win()
@@ -229,6 +226,8 @@ H.highlight = function(only_current)
   local win_id = vim.api.nvim_get_current_win()
   if not vim.api.nvim_win_is_valid(win_id) then return end
 
+  if not H.should_highlight() then return end
+
   H.window_matches[win_id] = H.window_matches[win_id] or {}
 
   -- Add match highlight for current word under cursor
@@ -271,6 +270,8 @@ H.unhighlight = function(only_current)
     H.window_matches[win_id] = nil
   end
 end
+
+H.should_highlight = function() return not H.is_disabled() and H.is_cursor_on_keyword() end
 
 H.is_cursor_on_keyword = function()
   local col = vim.fn.col('.')
