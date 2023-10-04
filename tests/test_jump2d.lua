@@ -247,6 +247,8 @@ T['start()']['works'] = function()
 end
 
 T['start()']['works in Visual mode'] = function()
+  child.set_size(5, 15)
+
   type_keys('v')
 
   start()

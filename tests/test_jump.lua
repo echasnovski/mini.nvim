@@ -988,6 +988,8 @@ T['Delayed highlighting']['updates immediately within same jumping'] = function(
 end
 
 T['Delayed highlighting']['never highlights in Insert mode'] = function()
+  child.set_size(5, 15)
+
   set_lines({ '1e2f' })
 
   set_cursor(1, 0)

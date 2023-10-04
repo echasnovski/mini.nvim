@@ -1817,6 +1817,7 @@ T['Scroll']["does not automatically animate result of 'incsearch'"] = function()
 end
 
 T['Scroll']['does not animate in Select mode'] = function()
+  child.set_size(5, 15)
   child.cmd('smap <M-m> <Cmd>call winrestview({ "topline": 3 })<CR>')
 
   set_cursor(4, 0)

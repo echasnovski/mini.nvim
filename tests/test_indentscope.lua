@@ -572,6 +572,8 @@ T['Auto drawing']['respects common events'] = new_set({
 })
 
 T['Auto drawing']['respects ModeChanged event'] = function()
+  child.set_size(15, 15)
+
   -- Add disabling in Insert mode
   child.cmd([[
       augroup InsertDisable
@@ -642,6 +644,8 @@ T['Auto drawing']['respects `vim.{g,b}.miniindentscope_disable`'] = new_set({
 })
 
 T['Auto drawing']['works in Insert mode'] = function()
+  child.set_size(15, 15)
+
   set_cursor(5, 4)
   type_keys('i')
 
@@ -659,6 +663,8 @@ T['Auto drawing']['works in Insert mode'] = function()
 end
 
 T['Auto drawing']['updates immediately when scopes intersect'] = function()
+  child.set_size(15, 15)
+
   set_cursor(5, 4)
   sleep(test_times.delay + test_times.animation_step + 10)
   -- Full scope should be shown

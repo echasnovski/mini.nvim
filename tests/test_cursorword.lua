@@ -134,6 +134,7 @@ T['Highlighting']['works with multiple windows'] = function()
 end
 
 T['Highlighting']['can stop'] = function()
+  child.set_size(5, 15)
   type_keys('i')
   child.expect_screenshot()
 end
