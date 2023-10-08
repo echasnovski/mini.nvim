@@ -1425,14 +1425,14 @@ H.apply_colorscheme = function(config)
   vim.g.terminal_color_5  = p.purple
   vim.g.terminal_color_6  = p.cyan
   vim.g.terminal_color_7  = p.fg
-  vim.g.terminal_color_8  = p.bg
-  vim.g.terminal_color_9  = p.red
-  vim.g.terminal_color_10 = p.green
-  vim.g.terminal_color_11 = p.yellow
-  vim.g.terminal_color_12 = p.azure
-  vim.g.terminal_color_13 = p.purple
-  vim.g.terminal_color_14 = p.cyan
-  vim.g.terminal_color_15 = p.fg
+  vim.g.terminal_color_8  = p.bg_mid2
+  vim.g.terminal_color_9  = p.red_mid2
+  vim.g.terminal_color_10 = p.green_mid2
+  vim.g.terminal_color_11 = p.yellow_mid2
+  vim.g.terminal_color_12 = p.azure_mid2
+  vim.g.terminal_color_13 = p.purple_mid2
+  vim.g.terminal_color_14 = p.cyan_mid2
+  vim.g.terminal_color_15 = p.fg_mid2
 end
 
 -- Color conversion -----------------------------------------------------------
