@@ -607,7 +607,7 @@ MiniJump2d.builtin_opts.query = user_input_opts(function() return H.input('Enter
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniJump2d.config
+H.default_config = vim.deepcopy(MiniJump2d.config)
 
 -- Namespaces to be used withing module
 H.ns_id = {
@@ -641,7 +641,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   vim.validate({
     spotter = { config.spotter, 'function', true },

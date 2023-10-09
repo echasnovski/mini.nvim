@@ -124,9 +124,9 @@ end
 T['default_hooks'] = new_set()
 
 T['default_hooks']['is same as default `MiniDoc.config.hooks`'] = function()
-  -- `tostring()` when applied to table returns string with its hex id. So this
-  -- checks for *exact* equality of two tables.
-  eq(child.lua_get('tostring(MiniDoc.default_hooks) == tostring(MiniDoc.config.hooks)'), true)
+  -- `vim.deep_equal()` tests equality of functions by their address, so this
+  -- indeed tests what it should
+  eq(child.lua_get('vim.deep_equal(MiniDoc.default_hooks, MiniDoc.config.hooks)'), true)
 end
 
 -- General overview of testing workflow:

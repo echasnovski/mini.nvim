@@ -406,7 +406,7 @@ MiniCompletion.default_process_items =
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniCompletion.config
+H.default_config = vim.deepcopy(MiniCompletion.config)
 
 -- Track Insert mode changes
 H.text_changed_id = 0
@@ -464,7 +464,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   -- Validate per nesting level to produce correct error message
   vim.validate({

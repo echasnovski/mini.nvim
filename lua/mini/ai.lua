@@ -1033,7 +1033,7 @@ end
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniAi.config
+H.default_config = vim.deepcopy(MiniAi.config)
 
 -- Cache for various operations
 H.cache = {}
@@ -1096,7 +1096,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   vim.validate({
     custom_textobjects = { config.custom_textobjects, 'table', true },

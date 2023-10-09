@@ -130,7 +130,7 @@ end
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniTabline.config
+H.default_config = vim.deepcopy(MiniTabline.config)
 
 -- Table to keep track of tabs
 H.tabs = {}
@@ -156,7 +156,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   vim.validate({
     show_icons = { config.show_icons, 'boolean' },

@@ -1007,7 +1007,7 @@ end
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniColors.config
+H.default_config = vim.deepcopy(MiniColors.config)
 
 -- Color conversion constants
 H.tau = 2 * math.pi
@@ -1134,7 +1134,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   return config
 end

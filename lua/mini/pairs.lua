@@ -371,7 +371,7 @@ end
 
 -- Helper data ================================================================
 -- Module default config
-H.default_config = MiniPairs.config
+H.default_config = vim.deepcopy(MiniPairs.config)
 
 -- Default value of `pair_info` for mapping functions
 H.default_pair_info = { neigh_pattern = '..', register = { bs = true, cr = true } }
@@ -405,7 +405,7 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', H.default_config, config or {})
+  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   -- Validate per nesting level to produce correct error message
   vim.validate({
