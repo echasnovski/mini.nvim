@@ -1148,22 +1148,17 @@ end
 
 -- Autocommands ---------------------------------------------------------------
 H.track_dir_edit = function(data)
-  local buf_id = data.buf
-
   -- Make early returns
-  if vim.b[buf_id].minifiles_processed_dir then
-    vim.api.nvim_buf_delete(buf_id, { force = true })
-    return
-  end
+  if vim.api.nvim_get_current_buf() ~= data.buf then return end
 
-  if vim.api.nvim_get_current_buf() ~= buf_id then return end
+  if vim.b.minifiles_processed_dir then return vim.api.nvim_buf_delete(0, { force = true }) end
 
-  local path = vim.api.nvim_buf_get_name(buf_id)
+  local path = vim.api.nvim_buf_get_name(0)
   if vim.fn.isdirectory(path) ~= 1 then return end
 
   -- Make directory buffer disappear when it is not needed
-  vim.bo[buf_id].bufhidden = 'wipe'
-  vim.b[buf_id].minifiles_processed_dir = true
+  vim.bo.bufhidden = 'wipe'
+  vim.b.minifiles_processed_dir = true
 
   -- Open directory without history
   vim.schedule(function() MiniFiles.open(path, false) end)
