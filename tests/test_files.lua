@@ -1729,8 +1729,10 @@ T['Windows']['uses correct UI highlight groups'] = function()
 
   -- Simply going in Insert mode should not add "modified"
   type_keys('i')
-  validate_winhl_match(win_id_2, 'FloatBorder', 'MiniFilesBorder')
-  validate_winhl_match(win_id_2, 'FloatBorder', 'MiniFilesBorder')
+  validate_winhl_match(win_id_1, 'FloatBorder', 'MiniFilesBorder')
+  -- Disable on Neovim>=0.10 due to https://github.com/vim/vim/issues/13265
+  -- TODO: revert back after issue is resolved
+  if child.fn.has('nvim-0.10') == 0 then validate_winhl_match(win_id_2, 'FloatBorder', 'MiniFilesBorder') end
 
   type_keys('x')
   validate_winhl_match(win_id_1, 'FloatBorder', 'MiniFilesBorder')
