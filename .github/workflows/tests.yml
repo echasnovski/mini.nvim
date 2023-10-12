@@ -1,5 +1,8 @@
 name: Run tests
 
+env:
+  IS_CI: true
+
 on:
   push:
     branches-ignore: [ sync, stable ]
