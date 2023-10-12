@@ -1122,18 +1122,27 @@ T['go_in()']['works on files with problematic names'] = function()
   eq(get_lines(), { 'aaa' })
 end
 
-T['go_in()']['uses already opened buffer without `:edit`'] = function()
+T['go_in()']['uses already opened listed buffer without `:edit`'] = function()
   local temp_dir = make_temp_dir('temp', { 'file' })
   local file_path = join_path(temp_dir, 'file')
 
   child.cmd('edit ' .. vim.fn.fnameescape(file_path))
   local buf_id = child.api.nvim_get_current_buf()
+  child.fn.writefile({ 'New changes' }, file_path)
 
   open(temp_dir)
-  child.fn.writefile({ 'New changes' }, file_path)
   go_in()
-  -- If `:edit`  was reused, then content would have changed
+  -- If `:edit` was used, then content would have changed
   eq(child.api.nvim_buf_get_lines(buf_id, 0, -1, false), { '' })
+  close(temp_dir)
+
+  -- Should make unlisted buffer become listed
+  child.cmd('bdelete ' .. buf_id)
+  eq(child.api.nvim_buf_get_option(buf_id, 'buflisted'), false)
+
+  open(temp_dir)
+  go_in()
+  eq(child.api.nvim_buf_get_option(buf_id, 'buflisted'), true)
 end
 
 T['go_in()']['uses proper target window'] = function()

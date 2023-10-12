@@ -1511,7 +1511,8 @@ H.explorer_open_file = function(explorer, path)
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
   local path_buf_id
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    if H.is_valid_buf(buf_id) and vim.api.nvim_buf_get_name(buf_id) == path then path_buf_id = buf_id end
+    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
+    if is_target then path_buf_id = buf_id end
   end
 
   if path_buf_id ~= nil then

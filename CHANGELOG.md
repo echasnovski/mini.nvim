@@ -4,6 +4,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.files
+
+- BREAKING: Opening file which is present in unlisted buffer now makes the buffer listed.
+
 ## mini.hues
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
