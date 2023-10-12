@@ -12,6 +12,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.pick
+
+Introduction of a new module.
+
 
 # Version 0.10.0
 

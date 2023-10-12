@@ -38,6 +38,7 @@ local test_actions = {
   ['move']        = function() require('mini.move').setup() end,
   ['operators']   = function() require('mini.operators').setup() end,
   ['pairs']       = function() require('mini.pairs').setup() end,
+  ['pick']        = function() require('mini.pick').setup() end,
   ['sessions']    = function() require('mini.sessions').setup({ directory = '' }) end,
   ['splitjoin']   = function() require('mini.splitjoin').setup() end,
   ['starter']     = function() require('mini.starter').setup() end,

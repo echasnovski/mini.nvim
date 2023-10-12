@@ -28,6 +28,7 @@ local modules = {
   'move',
   'operators',
   'pairs',
+  'pick',
   'sessions',
   'splitjoin',
   'starter',

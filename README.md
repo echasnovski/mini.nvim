@@ -87,6 +87,7 @@ Here are code snippets for some common installation methods:
 | mini.move        | Move any selection in any direction      | [README](readmes/mini-move.md)        | [Help file](doc/mini-move.txt)        |
 | mini.operators   | Text edit operators                      | [README](readmes/mini-operators.md)   | [Help file](doc/mini-operators.txt)   |
 | mini.pairs       | Autopairs                                | [README](readmes/mini-pairs.md)       | [Help file](doc/mini-pairs.txt)       |
+| mini.pick        | Pick anything                            | [README](readmes/mini-pick.md)        | [Help file](doc/mini-pick.txt)        |
 | mini.sessions    | Session management                       | [README](readmes/mini-sessions.md)    | [Help file](doc/mini-sessions.txt)    |
 | mini.splitjoin   | Split and join arguments                 | [README](readmes/mini-splitjoin.md)   | [Help file](doc/mini-splitjoin.txt)   |
 | mini.starter     | Start screen                             | [README](readmes/mini-starter.md)     | [Help file](doc/mini-starter.txt)     |
@@ -141,7 +142,6 @@ This is the list of modules I currently intend to implement eventually (as my fr
 - 'mini.git' - utilities for more convenient work with Git. Actual scope is to be defined.
 - 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
 - 'mini.notify' - minimal UI to show Neovim notifications (like coming from LSP server, etc.).
-- 'mini.pick' - fuzzy picker. A very simplified version of [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - 'mini.places' - persistent track of common places per working directory. Something like [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon).
 - 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
 - 'mini.statuscolumn' - customizable 'statuscolumn'.

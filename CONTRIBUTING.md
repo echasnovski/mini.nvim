@@ -133,6 +133,22 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
 - 'mini.operators':
     - `MiniOperatorsExchangeFrom`
 
+- 'mini.pick':
+
+    - `MiniPickBorder`
+    - `MiniPickBorderBusy`
+    - `MiniPickBorderText`
+    - `MiniPickIconDirectory`
+    - `MiniPickIconFile`
+    - `MiniPickHeader`
+    - `MiniPickMatchCurrent`
+    - `MiniPickMatchMarked`
+    - `MiniPickMatchRanges`
+    - `MiniPickNormal`
+    - `MiniPickPreviewLine`
+    - `MiniPickPreviewRegion`
+    - `MiniPickPrompt`
+
 - 'mini.starter':
     - `MiniStarterCurrent`
     - `MiniStarterFooter`
