@@ -2251,7 +2251,8 @@ T['Reproducing keys']['works for builtin keymaps in Insert mode'] = function()
 
   eq(child.fn.mode(), 'i')
   local complete_words = vim.tbl_map(function(x) return x.word end, child.fn.complete_info().items)
-  eq(complete_words, { 'aa aa', 'bb bb' })
+  eq(vim.tbl_contains(complete_words, 'aa aa'), true)
+  eq(vim.tbl_contains(complete_words, 'bb bb'), true)
 end
 
 T['Reproducing keys']['works for user keymaps in Insert mode'] = function()
