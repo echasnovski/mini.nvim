@@ -92,7 +92,7 @@ General idea is to take array of objects, display them with interactive filter/s
   Example: `MiniPick.builtin.files({ tool = 'git' })`
 
 - Use `:Pick` command which uses customizable pickers from `MiniPick.registry`.<br>
-  Example: `:Pick files tool=git`
+  Example: `:Pick files tool='git'`
 
 ### User interface
 
