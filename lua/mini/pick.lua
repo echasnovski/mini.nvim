@@ -144,7 +144,7 @@
 ---   Example: `MiniPick.builtin.files({ tool = 'git' })`
 ---
 --- - Use |:Pick| command which uses customizable pickers from |MiniPick.registry|.
----   Example: `:Pick files tool=git`
+---   Example: `:Pick files tool='git'`
 ---
 --- ## User interface ~
 ---
