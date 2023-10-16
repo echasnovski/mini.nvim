@@ -328,6 +328,8 @@ end
 --- completely non-transparent, 100 - completely transparent (content is still
 --- visible, but with slightly different highlights).
 ---
+--- `window.zindex` - value of 'zindex' for map window. Default: 10.
+---
 --- # Pure scrollbar config ~
 ---
 --- "Pure scrollbar" is a configuration when window width is not enough to show
@@ -385,6 +387,9 @@ MiniMap.config = {
 
     -- Value of 'winblend' option
     winblend = 25,
+
+    -- Z-index of map window
+    zindex = 10,
   },
 }
 --minidoc_afterlines_end
@@ -1313,10 +1318,10 @@ H.normalize_window_options = function(win_opts, full)
     -- Can be updated at `VimResized` event
     height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0),
     focusable = win_opts.focusable,
+    zindex = win_opts.zindex,
   }
   if not full then return res end
 
-  res.zindex = 10
   res.style = 'minimal'
   return res
 end

@@ -218,6 +218,9 @@ Default values:
 
       -- Value of 'winblend' option
       winblend = 25,
+
+      -- Z-index of map window
+      zindex = 10,
     },
   }
 <
@@ -341,6 +344,8 @@ integration count column. Default: 10.
 `window.winblend` - value of 'winblend' for map window. Value 0 makes it
 completely non-transparent, 100 - completely transparent (content is still
 visible, but with slightly different highlights).
+
+`window.zindex` - value of 'zindex' for map window. Default: 10.
 
 # Pure scrollbar config ~
 

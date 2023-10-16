@@ -410,7 +410,7 @@ end
 T['open()']['respects `opts.window` argument'] = function()
   set_lines(example_lines)
   local opts =
-    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50, zindex = 10 } }
   map_open(opts)
 
   child.expect_screenshot()
@@ -648,7 +648,7 @@ T['refresh()']['respects `opts.window` argument'] = function()
   map_open()
 
   local opts =
-    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50, zindex = 10 } }
   map_refresh(opts)
 
   child.expect_screenshot()
