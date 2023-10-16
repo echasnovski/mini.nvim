@@ -83,8 +83,8 @@ which you can use for scripting or manually (with `:lua MiniPick.*`).
 See |MiniPick.config| for available config settings.
 
 You can override runtime config settings locally to buffer inside
-`vim.b.minioperators_config` which should have same structure as
-`MiniPick.config`. See |mini.nvim-buffer-local-config| for more details.
+`vim.b.minipick_config` which should have same structure as `MiniPick.config`.
+See |mini.nvim-buffer-local-config| for more details.
 
 # Comparisons ~
 
