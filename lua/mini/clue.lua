@@ -1241,7 +1241,7 @@ H.map_buf_triggers = function(buf_id)
 end
 
 H.unmap_buf_triggers = function(buf_id)
-  if not H.is_valid_buf(buf_id) then return end
+  if not H.is_valid_buf(buf_id) or H.is_disabled(buf_id) then return end
 
   for _, trigger in ipairs(H.get_config(nil, buf_id).triggers) do
     H.unmap_trigger(buf_id, trigger)

@@ -393,17 +393,22 @@ local enable_all_triggers = forward_lua('MiniClue.enable_all_triggers')
 T['enable_all_triggers()']['works'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
   local other_buf_id = child.api.nvim_create_buf(true, false)
+  local disabled_buf_id = child.api.nvim_create_buf(true, false)
   child.g.miniclue_disable = true
+  -- Should respect `vim.b.miniclue_disable`
+  child.api.nvim_buf_set_var(disabled_buf_id, 'miniclue_disable', true)
 
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
   validate_no_trigger_keymap('n', '<Space>', init_buf_id)
   validate_no_trigger_keymap('n', '<Space>', other_buf_id)
+  validate_no_trigger_keymap('n', '<Space>', disabled_buf_id)
 
   child.g.miniclue_disable = false
 
   enable_all_triggers()
   validate_trigger_keymap('n', '<Space>', init_buf_id)
   validate_trigger_keymap('n', '<Space>', other_buf_id)
+  validate_no_trigger_keymap('n', '<Space>', disabled_buf_id)
 end
 
 T['enable_all_triggers()']['respects `vim.b.miniclue_config`'] = function()
@@ -519,14 +524,27 @@ local disable_all_triggers = forward_lua('MiniClue.disable_all_triggers')
 T['disable_all_triggers()']['works'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
   local other_buf_id = child.api.nvim_create_buf(true, false)
+  local disabled_buf_id = child.api.nvim_create_buf(true, false)
+
+  -- Should respect `vim.b.miniclue_disable` and do nothing in disabled buffers
+  child.api.nvim_buf_set_var(disabled_buf_id, 'miniclue_disable', true)
+  child.api.nvim_buf_set_keymap(disabled_buf_id, 'n', '<Space>', '<Cmd>echo 1<CR>', {})
+  local has_custom_mapping_in_disabled_buffer = function()
+    local lua_cmd =
+      string.format([[vim.api.nvim_buf_call(%d, function() return vim.fn.maparg(' ', 'n') end)]], disabled_buf_id)
+    local rhs = child.lua_get(lua_cmd)
+    return rhs:find('echo 1') ~= nil
+  end
 
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
   validate_trigger_keymap('n', '<Space>', init_buf_id)
   validate_trigger_keymap('n', '<Space>', other_buf_id)
+  eq(has_custom_mapping_in_disabled_buffer(), true)
 
   disable_all_triggers()
   validate_no_trigger_keymap('n', '<Space>', init_buf_id)
   validate_no_trigger_keymap('n', '<Space>', other_buf_id)
+  eq(has_custom_mapping_in_disabled_buffer(), true)
 end
 
 T['disable_all_triggers()']['respects `vim.b.miniclue_config`'] = function()
