@@ -1302,9 +1302,11 @@ MiniTest.new_child_neovim = function()
     child.type_keys([[<C-\>]], '<C-n>')
   end
 
-  child.get_screenshot = function()
+  child.get_screenshot = function(opts)
     ensure_running()
     prevent_hanging('get_screenshot')
+
+    opts = vim.tbl_deep_extend('force', { redraw = true }, opts or {})
 
     -- Add note if there is a visible floating window but `screen*()` functions
     -- don't support them (Neovim<0.8).
@@ -1324,6 +1326,8 @@ MiniTest.new_child_neovim = function()
         return
       end
     end
+
+    if opts.redraw then child.cmd('redraw') end
 
     local res = child.lua([[
       local text, attr = {}, {}
@@ -1410,6 +1414,7 @@ end
 ---@field ensure_normal_mode function Ensure normal mode.
 ---@field get_screenshot function Returns table with two "2d arrays" of single
 ---   characters representing what is displayed on screen and how it looks.
+---   Has `opts` table argument for optional configuratnion.
 ---
 ---@field job table|nil Information about current job. If `nil`, child is not running.
 ---
@@ -1507,6 +1512,10 @@ end
 ---   `screenattr()` are coded with single character symbols. Those are taken from
 ---   94 characters (ASCII codes between 33 and 126), so there will be duplicates
 ---   in case of more than 94 different ways text is displayed on screen.
+---
+---@param opts table|nil Options. Possieble fields:
+---   - <redraw> `(boolean)` - whether to call |:redraw| prior to computing
+---     screenshot. Default: `true`.
 ---
 ---@return table|nil Screenshot table with the following fields:
 ---   - <text> - "2d array" (row-column) of single characters displayed at

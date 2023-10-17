@@ -768,6 +768,7 @@ Fields~
 {ensure_normal_mode} `(function)` Ensure normal mode.
 {get_screenshot} `(function)` Returns table with two "2d arrays" of single
   characters representing what is displayed on screen and how it looks.
+  Has `opts` table argument for optional configuratnion.
 
 {job} `(table|nil)` Information about current job. If `nil`, child is not running.
 
@@ -872,6 +873,11 @@ Notes:
   `screenattr()` are coded with single character symbols. Those are taken from
   94 characters (ASCII codes between 33 and 126), so there will be duplicates
   in case of more than 94 different ways text is displayed on screen.
+
+Parameters~
+{opts} `(table|nil)` Options. Possieble fields:
+  - <redraw> `(boolean)` - whether to call |:redraw| prior to computing
+    screenshot. Default: `true`.
 
 Return~
 `(table|nil)` Screenshot table with the following fields:

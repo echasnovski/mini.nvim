@@ -16,6 +16,10 @@
 
 Introduction of a new module.
 
+## mini.test
+
+- BREAKING FEATURE: `child.get_screenshot()` now by default calls `:redraw` prior to computing screenshot. Can be disabled by new `opts.redraw` argument.
+
 
 # Version 0.10.0
 

@@ -1168,6 +1168,18 @@ T['child']['get_screenshot()']['works'] = function()
   expect.no_equality(screenshot.attr[1][1], screenshot.attr[2][1])
 end
 
+T['child']['get_screenshot()']['respects `opts.redraw`'] = function()
+  -- This blocks redraw until explicitly called
+  child.lua_notify('vim.fn.getchar()')
+  set_lines({ 'Should be visible only after redraw' })
+
+  local screenshot = child.get_screenshot({ redraw = false })
+  expect.match(table.concat(screenshot.text[1]), '^   ')
+  -- - Should be `redraw = true` by default
+  screenshot = child.get_screenshot()
+  expect.match(table.concat(screenshot.text[1]), '^Should be visible')
+end
+
 T['child']['get_screenshot()']['`tostring()`'] = new_set()
 
 T['child']['get_screenshot()']['`tostring()`']['works'] = function()
