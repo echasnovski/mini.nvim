@@ -1319,6 +1319,16 @@ end
 
 --- Pick from buffers
 ---
+--- Notes:
+--- - There are not built-in mappings for buffer manipulation. Here is an example
+---   of how to call this function with mapping to wipeout the current item: >
+---
+---   local wipeout_cur = function()
+---     vim.api.nvim_buf_delete(MiniPick.get_picker_matches().current.bufnr, {})
+---   end
+---   local buffer_mappings = { wipeout = { char = '<C-d>', func = wipeout_cur } }
+---   MiniPick.builtin.buffers(local_opts, { mappings = buffer_mappings })
+---
 ---@param local_opts __pick_builtin_local_opts
 ---   Possible fields:
 ---   - <include_current> `(boolean)` - whether to include current buffer in
