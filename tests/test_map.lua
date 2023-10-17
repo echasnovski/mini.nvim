@@ -1288,6 +1288,8 @@ T['Window']['can be made focusable by mouse with `window.focusable = true`'] = f
   set_lines(example_lines)
   map_open({ window = { focusable = true, side = 'left' } })
 
+  -- Ensure drawn floating window (github.com/neovim/neovim/issues/25643)
+  child.cmd('redraw')
   child.api.nvim_input_mouse('left', 'press', '', 0, 5, 5)
   eq(child.api.nvim_get_current_win(), get_map_win_id())
 end

@@ -882,11 +882,11 @@ T['refresh()']['handles presence of modified buffers'] = function()
 
   -- On no confirm should not update buffers, but still apply other changes
   type_keys('o', 'new-file-2', '<Esc>')
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   mock_confirm(2)
   child.lua('MiniFiles.refresh({ content = { filter = function() return true end }, windows = { width_focus = 15 } })')
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 end
 
 T['refresh()']['works when no explorer is opened'] = function() expect.no_error(refresh) end
@@ -1651,7 +1651,7 @@ T['Windows']['is in sync with cursor'] = function()
   -- Also trims if cursor is moved in Insert mode
   go_out()
   child.expect_screenshot()
-  type_keys('o')
+  type_keys('A<CR>')
   child.expect_screenshot()
 end
 
@@ -1739,9 +1739,7 @@ T['Windows']['uses correct UI highlight groups'] = function()
   -- Simply going in Insert mode should not add "modified"
   type_keys('i')
   validate_winhl_match(win_id_1, 'FloatBorder', 'MiniFilesBorder')
-  -- Disable on Neovim>=0.10 due to https://github.com/vim/vim/issues/13265
-  -- TODO: revert back after issue is resolved
-  if child.fn.has('nvim-0.10') == 0 then validate_winhl_match(win_id_2, 'FloatBorder', 'MiniFilesBorder') end
+  validate_winhl_match(win_id_2, 'FloatBorder', 'MiniFilesBorder')
 
   type_keys('x')
   validate_winhl_match(win_id_1, 'FloatBorder', 'MiniFilesBorder')
@@ -1787,6 +1785,7 @@ T['Windows']['can be closed manually'] = function()
 end
 
 T['Windows']['never shows past end of buffer'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for 0.10.') end
   mock_confirm(1)
 
   -- Modifying buffer in Insert mode
@@ -3134,11 +3133,11 @@ T['File manipulation']['works with problematic names'] = function()
   type_keys('C', 'c file', '<Esc>')
   -- - Create
   type_keys('o', 'd file', '<Esc>')
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   mock_confirm(1)
   synchronize()
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   validate_no_file(temp_dir, [[a %file-]])
   validate_no_file(temp_dir, 'b file')

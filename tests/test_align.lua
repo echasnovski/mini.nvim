@@ -1340,6 +1340,7 @@ T['Align']['prompts helper message after one idle second'] = new_set({
     -- https://github.com/neovim/neovim/pull/20476
     if child.fn.has('nvim-0.9') == 0 then return end
 
+    local expect_screenshot = function() child.expect_screenshot({ redraw = false }) end
     child.set_size(12, 20)
     child.o.cmdheight = 5
 
@@ -1351,27 +1352,27 @@ T['Align']['prompts helper message after one idle second'] = new_set({
 
     sleep(1000 - 15)
     -- Should show no message
-    child.expect_screenshot()
+    expect_screenshot()
     type_keys('j')
     -- Should show message of modifier 'j'
-    child.expect_screenshot()
+    expect_screenshot()
     type_keys('r')
     -- Should show effect of hitting `r` and redraw if `showmode` is set (which
     -- it is by default)
     sleep(1000 - 15)
     -- Should still not show helper message
-    child.expect_screenshot()
+    expect_screenshot()
     sleep(15 + 15)
     -- Should now show helper message
-    child.expect_screenshot()
+    expect_screenshot()
 
     -- Should show message immediately if it was already shown
     type_keys('j', 'c')
-    child.expect_screenshot()
+    expect_screenshot()
 
     -- Ending alignment should remove shown message
     type_keys('_')
-    child.expect_screenshot()
+    expect_screenshot()
   end,
 })
 

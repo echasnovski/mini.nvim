@@ -1672,11 +1672,11 @@ T['Textobject']['prompts helper message after one idle second'] = new_set({ para
     -- Should show helper message without adding it to `:messages` and causing
     -- hit-enter-prompt
     eq(get_latest_message(), '')
-    child.expect_screenshot()
+    child.expect_screenshot({ redraw = false })
 
     -- Should clear afterwards
     type_keys(')')
-    child.expect_screenshot()
+    child.expect_screenshot({ redraw = false })
   end,
 })
 

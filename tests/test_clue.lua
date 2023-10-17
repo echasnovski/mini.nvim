@@ -3165,7 +3165,7 @@ T["'mini.nvim' compatibility"]['mini.align'] = function()
     set_lines({ 'a_b', 'aa_b' })
     set_cursor(1, 0)
     type_keys(keys)
-    child.expect_screenshot()
+    child.expect_screenshot({ redraw = false })
     type_keys('_<CR>')
     eq(get_lines(), { 'a _b', 'aa_b' })
   end

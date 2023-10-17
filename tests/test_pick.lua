@@ -686,7 +686,7 @@ T['start()']['respects `delay.async`'] = function()
   local validate = function(n, lines)
     eq(child.lua_get('_G.n'), n)
     eq(child.lua_get('vim.api.nvim_buf_get_lines(_G.buf_id, 0, -1, false)'), lines)
-    child.expect_screenshot()
+    child.expect_screenshot({ redraw = false })
   end
 
   child.lua_notify([[MiniPick.start({ source = { items = { 'a' } }, delay = { async = 80 } })]])
@@ -4897,7 +4897,7 @@ T['Paste']['respects `delay.async` when waiting for register label'] = function(
   local validate = function(n, lines)
     eq(child.lua_get('_G.n'), n)
     eq(child.lua_get('vim.api.nvim_buf_get_lines(_G.buf_id, 0, -1, false)'), lines)
-    child.expect_screenshot()
+    child.expect_screenshot({ redraw = false })
   end
 
   child.lua_notify([[MiniPick.start({ source = { items = { 'a' } }, delay = { async = 80 } })]])
