@@ -73,6 +73,8 @@
 ---     - `rg` ('github.com/BurntSushi/ripgrep'; enough for all three; recommended).
 ---     - `fd` ('github.com/sharkdp/fd'; for `files` only).
 ---     - `git` ('github.com/git/git'; enough for all three).
+---   Note: CLI tools are called only with basic arguments needed to get items.
+---   To customize the output, use their respective configuration approaches.
 ---
 --- # Setup ~
 ---

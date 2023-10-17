@@ -71,6 +71,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/65849d1e-3f96-4085-a4cf
 
 Notes:
 - Works on all supported versions but using Neovim>=0.9 is recommended. Neovim>=0.10 will give more visual feedback in floating window footer.
+- CLI tools are called only with basic arguments needed to get items. To customize the output, use their respective configuration approaches. For example, here is the [suggested approach for `ripgrep`](https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file).
 
 Read more information, see these tags in help file:
 - `*MiniPick-overview*`
