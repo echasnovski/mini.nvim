@@ -60,6 +60,12 @@ Here are code snippets for some common installation methods:
 
 ## Modules
 
+If you are browsing without particular objective and don't know which module to look at:
+
+- To improve your editing experience, start with 'mini.ai', 'mini.operators', 'mini.surround'.
+- To improve your general workflow, start with 'mini.bracketed', 'mini.files', 'mini.jump2d', 'mini.pick'.
+- To make your Neovim more beautiful, start with 'mini.animate', 'mini.hipatterns', 'mini.hues'.
+
 | Module           | Description                              | Overview                              | Details                               |
 |------------------|------------------------------------------|---------------------------------------|---------------------------------------|
 | mini.ai          | Extend and create `a`/`i` textobjects    | [README](readmes/mini-ai.md)          | [Help file](doc/mini-ai.txt)          |
