@@ -730,8 +730,10 @@ end
 ---   total number of times it was called inside current case. If there is no
 ---   file at `path`, it is created with content of `screenshot`.
 ---@param opts table|nil Options:
----   - <force> - whether to forcefuly create reference screenshot.
+---   - <force> `(boolean)` - whether to forcefuly create reference screenshot.
 ---     Temporary useful during test writing. Default: `false`.
+---   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
+---     Default: `nil` to check all lines.
 MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if screenshot == nil then return true end
 
@@ -770,7 +772,7 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   local reference = H.screenshot_read(path)
 
   -- Compare
-  local are_same, cause = H.screenshot_compare(reference, screenshot)
+  local are_same, cause = H.screenshot_compare(reference, screenshot, opts)
 
   if are_same then return true end
 
@@ -2202,7 +2204,7 @@ H.screenshot_encode_attr = function(attr)
   return res
 end
 
-H.screenshot_compare = function(screen_ref, screen_obs)
+H.screenshot_compare = function(screen_ref, screen_obs, opts)
   local compare = function(x, y, desc)
     if x ~= y then
       return false, ('Different %s. Reference: %s. Observed: %s.'):format(desc, vim.inspect(x), vim.inspect(y))
@@ -2217,7 +2219,12 @@ H.screenshot_compare = function(screen_ref, screen_obs)
   ok, cause = compare(#screen_ref.attr, #screen_obs.attr, 'number of `attr` lines')
   if not ok then return ok, cause end
 
+  local lines_to_check, ignore_lines = {}, opts.ignore_lines or {}
   for i = 1, #screen_ref.text do
+    if not vim.tbl_contains(ignore_lines, i) then table.insert(lines_to_check, i) end
+  end
+
+  for _, i in ipairs(lines_to_check) do
     ok, cause = compare(#screen_ref.text[i], #screen_obs.text[i], 'number of columns in `text` line ' .. i)
     if not ok then return ok, cause end
     ok, cause = compare(#screen_ref.attr[i], #screen_obs.attr[i], 'number of columns in `attr` line ' .. i)

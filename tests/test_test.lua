@@ -824,7 +824,7 @@ T['expect']['reference_screenshot()']['creates refernce if it does not exist'] =
   eq(MiniTest.current.case.exec.notes, {})
 end
 
-T['expect']['reference_screenshot()']['respects `opts` argument'] = function()
+T['expect']['reference_screenshot()']['respects `opts.force` argument'] = function()
   local path = get_ref_path('force-reference-screenshot')
   local notes = { 'Created reference screenshot at path ' .. vim.inspect(path) }
 
@@ -842,6 +842,27 @@ T['expect']['reference_screenshot()']['respects `opts` argument'] = function()
   set_lines({ 'This should be forced' })
   eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { force = true }), true)
   eq(MiniTest.current.case.exec.notes, notes)
+end
+
+T['expect']['reference_screenshot()']['respects `opts.ignore_lines`'] = function()
+  local path = get_ref_path('reference-screenshot')
+  child.set_size(5, 12)
+  local validate = function(ignore_lines, ref)
+    eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_lines = ignore_lines }), ref)
+  end
+
+  set_lines({ 'aaa' })
+  validate(nil, true)
+
+  set_lines({ 'aaa', 'bbb' })
+  validate({ 2 }, true)
+  validate({ 1, 2, 3 }, true)
+
+  set_lines({ 'ccc', 'bbb' })
+  expect.error(
+    function() MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_lines = { 2 } }) end,
+    'screenshot equality to reference at ' .. vim.pesc(vim.inspect(path)) .. '.*Reference:.*Observed:'
+  )
 end
 
 T['expect']['reference_screenshot()']['works with multibyte characters'] = function()

@@ -565,8 +565,10 @@ Parameters~
   total number of times it was called inside current case. If there is no
   file at `path`, it is created with content of `screenshot`.
 {opts} `(table|nil)` Options:
-  - <force> - whether to forcefuly create reference screenshot.
+  - <force> `(boolean)` - whether to forcefuly create reference screenshot.
     Temporary useful during test writing. Default: `false`.
+  - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
+    Default: `nil` to check all lines.
 
 ------------------------------------------------------------------------------
                                                     *MiniTest.new_expectation()*
