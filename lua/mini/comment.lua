@@ -122,6 +122,9 @@ MiniComment.config = {
     -- Toggle comment on current line
     comment_line = 'gcc',
 
+    -- Toggle comment on visual selection
+    comment_visual = 'gc',
+
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
     textobject = 'gc',
   },
@@ -387,6 +390,7 @@ H.setup_config = function(config)
     ['options.pad_comment_parts'] = { config.options.pad_comment_parts, 'boolean' },
     ['mappings.comment'] = { config.mappings.comment, 'string' },
     ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
+    ['mappings.comment_visual'] = { config.mappings.comment_visual, 'string' },
     ['mappings.textobject'] = { config.mappings.textobject, 'string' },
     ['hooks.pre'] = { config.hooks.pre, 'function' },
     ['hooks.post'] = { config.hooks.post, 'function' },
@@ -402,7 +406,7 @@ H.apply_config = function(config)
   H.map('n', config.mappings.comment, function() return MiniComment.operator() end, { expr = true, desc = 'Comment' })
   H.map(
     'x',
-    config.mappings.comment,
+    config.mappings.comment_visual,
     -- Using `:<c-u>` instead of `<cmd>` as latter results into executing before
     -- proper update of `'<` and `'>` marks which is needed to work correctly.
     [[:<c-u>lua MiniComment.operator('visual')<cr>]],

@@ -4,6 +4,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.comment
+
+- FEATURE: Implement `config.mappings.comment_visual` to configure mapped keys in Visual mode.
+
 ## mini.files
 
 - BREAKING: Opening file which is present in unlisted buffer now makes the buffer listed.

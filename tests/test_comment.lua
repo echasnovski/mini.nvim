@@ -74,6 +74,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('options.pad_comment_parts', true)
   expect_config('mappings.comment', 'gc')
   expect_config('mappings.comment_line', 'gcc')
+  expect_config('mappings.comment_visual', 'gc')
   expect_config('mappings.textobject', 'gc')
 end
 
@@ -99,6 +100,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { comment = 1 } }, 'mappings.comment', 'string')
   expect_config_error({ mappings = { comment_line = 1 } }, 'mappings.comment_line', 'string')
+  expect_config_error({ mappings = { comment_visual = 1 } }, 'mappings.comment_visual', 'string')
   expect_config_error({ mappings = { textobject = 1 } }, 'mappings.textobject', 'string')
   expect_config_error({ hooks = 'a' }, 'hooks', 'table')
   expect_config_error({ hooks = { pre = 1 } }, 'hooks.pre', 'function')
@@ -503,10 +505,17 @@ T['Commenting']['works in Visual mode'] = function()
 end
 
 T['Commenting']['works with different mapping'] = function()
-  reload_module({ mappings = { comment = 'gC' } })
+  reload_module({ mappings = { comment = 'gC', comment_visual = 'C' } })
 
+  -- Normal mode
   set_cursor(2, 2)
   type_keys('gC', 'ap')
+  eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
+
+  -- Visual mode
+  set_lines(example_lines)
+  set_cursor(2, 2)
+  type_keys('v', 'ap', 'C')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
 end
 
