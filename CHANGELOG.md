@@ -22,8 +22,9 @@ Introduction of a new module.
 
 ## mini.test
 
+- BREAKING: Error in any "pre" hook now leads to test case not being executed (with note).
 - BREAKING FEATURE: `child.get_screenshot()` now by default calls `:redraw` prior to computing screenshot. Can be disabled by new `opts.redraw` argument.
-- FEATURE: new method `child.lua_func()` can execute simple functions inside child process and return the result (stasjok, #437).
+- FEATURE: New method `child.lua_func()` can execute simple functions inside child process and return the result (stasjok, #437).
 - FEATURE: `expect.reference_screenshot()` now has `ignore_lines` option allowing to ignore specified lines during screenshot compare.
 
 

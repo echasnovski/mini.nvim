@@ -270,39 +270,32 @@ end
 
 T['run()']['handles `hooks`'] = function()
   local res = testrun_ref_file('testref_run-hooks.lua')
-  local order_cases = vim.tbl_map(function(c)
-    return {
-      desc = vim.list_slice(c.desc, 2),
-      fails = vim.tbl_map(function(x) return x:gsub('\n  Traceback.*$', '') end, c.exec.fails),
-      n_hooks = { pre = #c.hooks.pre, post = #c.hooks.post },
-    }
-  end, filter_by_desc(res, 2, 'order'))
+  --stylua: ignore
+  eq(child.lua_get('_G.log'), {
+    -- Test order
+    "pre_once_1",
+    "pre_case_1", "First level test", "post_case_1",
+    "pre_once_2",
+    "pre_case_1", "pre_case_2", "Nested #1", "post_case_2", "post_case_1",
+    "pre_case_1", "pre_case_2", "Nested #2", "post_case_2", "post_case_1",
+    "post_once_2",
+    "post_once_1",
 
-  eq(order_cases[1], {
-    desc = { 'order', 'first level' },
-    fails = { 'pre_once_1', 'pre_case_1', 'First level test', 'post_case_1' },
-    n_hooks = { pre = 2, post = 1 },
-  })
-  eq(order_cases[2], {
-    desc = { 'order', 'nested', 'first' },
-    fails = { 'pre_once_2', 'pre_case_1', 'pre_case_2', 'Nested #1', 'post_case_2', 'post_case_1' },
-    n_hooks = { pre = 3, post = 2 },
-  })
-  eq(order_cases[3], {
-    desc = { 'order', 'nested', 'second' },
-    fails = { 'pre_case_1', 'pre_case_2', 'Nested #2', 'post_case_2', 'post_case_1', 'post_once_2', 'post_once_1' },
-    n_hooks = { pre = 2, post = 4 },
-  })
-end
+    -- Test skip case on hook error. All hooks should still be called.
+    "pre_case_3", "post_case_3", "post_once_3",
+    "pre_once_4", "post_case_4", "post_once_4",
 
-T['run()']['handles same function in `*_once` hooks'] = function()
-  local res = testrun_ref_file('testref_run-hooks.lua')
-  local case = filter_by_desc(res, 2, 'same `*_once` hooks')[1]
+    -- Using same function in `*_once` hooks should still lead to its multiple
+    -- execution.
+    "Same function",
+    "Same function",
+    "Same hook test",
+    "Same function",
+    "Same function",
+  })
 
-  -- The fact that it was called 4 times indicates that using same function in
-  -- `*_once` hooks leads to its correct multiple execution
-  local fails = vim.tbl_map(function(x) return x:gsub('\n  Traceback.*$', '') end, case.exec.fails)
-  eq(fails, { 'Same function', 'Same function', 'Same hook test', 'Same function', 'Same function' })
+  -- Skipping test case due to hook errors should add a note
+  expect.match(filter_by_desc(res, 2, 'skip_case_on_hook_error #1')[1].exec.notes[1], '^Skip.*error.*hooks')
 end
 
 T['run()']['appends traceback to fails'] = function()

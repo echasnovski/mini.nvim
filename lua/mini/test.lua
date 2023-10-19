@@ -601,24 +601,22 @@ MiniTest.execute = function(cases, opts)
     vim.schedule(function() MiniTest.current.case = cur_case end)
 
     for i, hook_pre in ipairs(cur_case.hooks.pre) do
-      schedule_step(hook_pre, [[Executing 'pre' hook #]] .. i)
+      schedule_step(hook_pre, 'hook_pre', [[Executing 'pre' hook #]] .. i)
     end
 
-    schedule_step(function() cur_case.test(unpack(cur_case.args)) end, 'Executing test')
+    schedule_step(function() cur_case.test(unpack(cur_case.args)) end, 'case', 'Executing test')
 
     for i, hook_post in ipairs(cur_case.hooks.post) do
-      schedule_step(hook_post, [[Executing 'post' hook #]] .. i)
+      schedule_step(hook_post, 'hook_post', [[Executing 'post' hook #]] .. i)
     end
 
     -- Finalize state
-    schedule_step(nil, function() return H.case_final_state(cur_case) end)
+    schedule_step(nil, 'finalize', function() return H.case_final_state(cur_case) end)
   end
 
-  --stylua: ignore start
   vim.schedule(function() H.exec_callable(reporter.finish) end)
   -- Use separate call to ensure that `reporter.finish` error won't interfere
   vim.schedule(function() H.cache.is_executing = false end)
-  --stylua: ignore end
 end
 
 --- Stop test execution
@@ -1740,11 +1738,16 @@ H.make_step_scheduler = function(case, case_num, opts)
     end
   end
 
-  return function(f, state)
+  return function(f, f_type, state)
     f = f or function() end
 
     vim.schedule(function()
       if H.cache.should_stop_execution then return end
+
+      local n_fails = case.exec == nil and 0 or #case.exec.fails
+      if f_type == 'case' and n_fails > 0 then
+        f = function() table.insert(case.exec.notes, 'Skip case due to error(s) in hooks.') end
+      end
 
       H.cache.n_screenshots = 0
       case.exec = case.exec or { fails = {}, notes = {} }
