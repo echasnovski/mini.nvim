@@ -117,7 +117,7 @@ Parameters~
 
 ------------------------------------------------------------------------------
                                                     *MiniMisc.setup_auto_root()*
-                      `MiniMisc.setup_auto_root`({names})
+                `MiniMisc.setup_auto_root`({names}, {fallback})
 Set up automated change of current directory
 
 What it does:
@@ -129,9 +129,8 @@ What it does:
 Note: requires |vim.fs| module (present in Neovim>=0.8).
 
 Parameters~
-{names} `(table|function|nil)` Array of file names or a callable used to
-  identify a root directory. Forwarded to |MiniMisc.find_root()|.
-  Default: `{ '.git', 'Makefile' }`.
+{names} `(table|function|nil)` Forwarded to |MiniMisc.find_root()|.
+{fallback} `(function|nil)` Forwarded to |MiniMisc.find_root()|.
 
 Usage~
 >
@@ -140,7 +139,7 @@ Usage~
 
 ------------------------------------------------------------------------------
                                                           *MiniMisc.find_root()*
-                    `MiniMisc.find_root`({buf_id}, {names})
+              `MiniMisc.find_root`({buf_id}, {names}, {fallback})
 Find root directory
 
 Based on a buffer name (full path to file opened in a buffer) find a root
@@ -162,6 +161,9 @@ Parameters~
 {names} `(table|function|nil)` Array of file names or a callable used to
   identify a root directory. Forwarded to |vim.fs.find()|.
   Default: `{ '.git', 'Makefile' }`.
+{fallback} `(function|nil)` Callable fallback to use if no root is found
+  with |vim.fs.find()|. Will be called with a buffer path and should return
+  a valid directory path.
 
 ------------------------------------------------------------------------------
                                                *MiniMisc.setup_restore_cursor()*

@@ -179,14 +179,13 @@ end
 ---
 --- Note: requires |vim.fs| module (present in Neovim>=0.8).
 ---
----@param names table|function|nil Array of file names or a callable used to
----   identify a root directory. Forwarded to |MiniMisc.find_root()|.
----   Default: `{ '.git', 'Makefile' }`.
+---@param names table|function|nil Forwarded to |MiniMisc.find_root()|.
+---@param fallback function|nil Forwarded to |MiniMisc.find_root()|.
 ---
 ---@usage >
 ---   require('mini.misc').setup()
 ---   MiniMisc.setup_auto_root()
-MiniMisc.setup_auto_root = function(names)
+MiniMisc.setup_auto_root = function(names, fallback)
   if vim.fs == nil then
     vim.notify('(mini.misc) `setup_auto_root()` requires `vim.fs` module (present in Neovim>=0.8).')
     return
@@ -197,12 +196,15 @@ MiniMisc.setup_auto_root = function(names)
     H.error('Argument `names` of `setup_auto_root()` should be array of string file names or a callable.')
   end
 
+  fallback = fallback or function() return nil end
+  if not vim.is_callable(fallback) then H.error('Argument `fallback` of `setup_auto_root()` should be callable.') end
+
   -- Disable conflicting option
   vim.o.autochdir = false
 
   -- Create autocommand
-  local set_root = function()
-    local root = MiniMisc.find_root(0, names)
+  local set_root = function(data)
+    local root = MiniMisc.find_root(data.buf, names, fallback)
     if root == nil then return end
     vim.fn.chdir(root)
   end
@@ -233,14 +235,19 @@ end
 ---@param names table|function|nil Array of file names or a callable used to
 ---   identify a root directory. Forwarded to |vim.fs.find()|.
 ---   Default: `{ '.git', 'Makefile' }`.
-MiniMisc.find_root = function(buf_id, names)
+---@param fallback function|nil Callable fallback to use if no root is found
+---   with |vim.fs.find()|. Will be called with a buffer path and should return
+---   a valid directory path.
+MiniMisc.find_root = function(buf_id, names, fallback)
   buf_id = buf_id or 0
   names = names or { '.git', 'Makefile' }
+  fallback = fallback or function() return nil end
 
   if type(buf_id) ~= 'number' then H.error('Argument `buf_id` of `find_root()` should be number.') end
   if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
     H.error('Argument `names` of `find_root()` should be array of string file names or a callable.')
   end
+  if not vim.is_callable(fallback) then H.error('Argument `fallback` of `find_root()` should be callable.') end
 
   -- Compute directory to start search from. NOTEs on why not using file path:
   -- - This has better performance because `vim.fs.find()` is called less.
@@ -249,19 +256,27 @@ MiniMisc.find_root = function(buf_id, names)
   --   should work for detecting buffer directory as root.
   local path = vim.api.nvim_buf_get_name(buf_id)
   if path == '' then return end
-  path = vim.fs.dirname(path)
+  local dir_path = vim.fs.dirname(path)
 
   -- Try using cache
-  local res = H.root_cache[path]
+  local res = H.root_cache[dir_path]
   if res ~= nil then return res end
 
   -- Find root
-  local root_file = vim.fs.find(names, { path = path, upward = true })[1]
-  if root_file == nil then return end
+  local root_file = vim.fs.find(names, { path = dir_path, upward = true })[1]
+  if root_file ~= nil then
+    res = vim.fs.dirname(root_file)
+  else
+    res = fallback(path)
+  end
 
-  -- Use absolute path and cache result
-  res = vim.fn.fnamemodify(vim.fs.dirname(root_file), ':p')
-  H.root_cache[path] = res
+  -- Use absolute path to an existing directory
+  if type(res) ~= 'string' then return end
+  res = vim.fn.fnamemodify(res, ':p')
+  if vim.fn.isdirectory(res) == 0 then return end
+
+  -- Cache result per directory path
+  H.root_cache[dir_path] = res
 
   return res
 end

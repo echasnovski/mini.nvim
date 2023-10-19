@@ -303,6 +303,7 @@ T['setup_auto_root()']['validates input'] = function()
 
   expect.error(function() setup_auto_root('a') end, '`names`.*array')
   expect.error(function() setup_auto_root({ 1 }) end, '`names`.*string')
+  expect.error(function() setup_auto_root({ '.git' }, 1) end, '`fallback`.*callable')
 end
 
 T['setup_auto_root()']['respects `names` argument'] = function()
@@ -324,6 +325,22 @@ T['setup_auto_root()']['allows callable `names`'] = function()
   -- Should not stop on git repo directory, but continue going up
   child.cmd('edit ' .. test_file_git)
   eq(child.lua_get('MiniMisc.find_root(0, _G.find_aaa)'), dir_misc_path)
+  eq(getcwd(), dir_misc_path)
+end
+
+T['setup_auto_root()']['respects `fallback` argument'] = function()
+  skip_if_no_fs()
+
+  -- Should return and cache fallback result if not found root by going up
+  -- NOTE: More tests are done in `find_root()`
+  local lua_cmd = string.format(
+    [[MiniMisc.setup_auto_root({ 'non-existing' }, function(path) _G.path_arg = path; return %s end)]],
+    vim.inspect(dir_misc_path)
+  )
+  child.lua(lua_cmd)
+
+  child.cmd('edit ' .. test_file_git)
+  eq(child.lua_get('_G.path_arg'), child.api.nvim_buf_get_name(0))
   eq(getcwd(), dir_misc_path)
 end
 
@@ -367,6 +384,7 @@ T['find_root()']['validates arguments'] = function()
   expect.error(function() find_root('a') end, '`buf_id`.*number')
   expect.error(function() find_root(0, 1) end, '`names`.*string')
   expect.error(function() find_root(0, '.git') end, '`names`.*array')
+  expect.error(function() find_root(0, { '.git' }, 1) end, '`fallback`.*callable')
 end
 
 T['find_root()']['respects `buf_id` argument'] = function()
@@ -397,6 +415,42 @@ T['find_root()']['allows callable `names`'] = function()
 
   child.lua([[_G.find_aaa = function(x) return x == 'aaa.lua' end]])
   eq(child.lua_get('MiniMisc.find_root(0, _G.find_aaa)'), dir_misc_path)
+end
+
+T['find_root()']['respects `fallback` argument'] = function()
+  skip_if_no_fs()
+
+  local validate = function(fallback_output, ref)
+    local lua_cmd = string.format(
+      [[MiniMisc.find_root(
+        0,
+        { 'non-existing' },
+        function(path) _G.path_arg = path; return %s end
+      )]],
+      vim.inspect(fallback_output)
+    )
+    eq(child.lua_get(lua_cmd), ref)
+
+    -- Fallback should be called with buffer path
+    eq(child.lua_get('_G.path_arg'), child.api.nvim_buf_get_name(0))
+
+    -- Cleanup
+    child.lua('_G.path_arg = nil')
+  end
+
+  child.cmd('edit ' .. test_file_git)
+
+  -- Should handle incorrect fallback return without setting it to cache
+  validate(nil, vim.NIL)
+  validate(1, vim.NIL)
+  validate('non-existing', vim.NIL)
+
+  -- Should return and cache fallback result if not found root by going up
+  validate(dir_misc_path, dir_misc_path)
+
+  local after_cache = child.lua_get([[MiniMisc.find_root(0, { 'non-existing' }, function() _G.been_here = true end)]])
+  eq(after_cache, dir_misc_path)
+  eq(child.lua_get('_G.been_here'), vim.NIL)
 end
 
 T['find_root()']['works in buffers without path'] = function()
