@@ -111,7 +111,7 @@
 --- Recipes:
 --- - Tweak lightness: >
 ---
----   -- Invert to dark/light color scheme to be light/dark
+---   -- Invert dark/light color scheme to be light/dark
 ---   chan_invert('lightness', { gamut_clip = 'cusp' })
 ---
 ---   -- Ensure constant contrast ratio
@@ -830,6 +830,14 @@ MiniColors.interactive = function(opts)
     '--   Reset: ' .. maps.Reset,
     '--   Quit:  ' .. maps.Quit,
     '--   Write: ' .. maps.Write,
+    '--',
+    '-- Examples:',
+    '--',
+    '-- Invert dark/light color scheme to be light/dark',
+    "-- chan_invert('lightness', { gamut_clip = 'cusp' })",
+    '--',
+    '-- Make foreground text more saturated',
+    "-- chan_add('saturation', 20,  { filter = 'fg' })",
     '',
     '',
   }

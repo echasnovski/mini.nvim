@@ -2267,9 +2267,11 @@ T['interactive()']['works'] = function()
 
   -- Check screenshots only on Neovim>=0.9 as there are slight differences in
   -- highlighting
-  local check_screenshot = child.fn.has('nvim-0.9') == 1
+  local expect_screenshot = function()
+    if child.fn.has('nvim-0.9') == 1 then child.expect_screenshot() end
+  end
 
-  child.set_size(20, 60)
+  child.set_size(30, 60)
   child.o.cmdheight = 3
 
   child.g.colors_name = 'test_interactive'
@@ -2278,10 +2280,10 @@ T['interactive()']['works'] = function()
   child.lua('MiniColors.interactive()')
 
   -- General data
-  if check_screenshot then child.expect_screenshot() end
+  expect_screenshot()
 
   eq(child.bo.filetype, 'lua')
-  eq(child.get_cursor(), { 14, 0 })
+  eq(child.get_cursor(), { 22, 0 })
   eq(child.api.nvim_get_mode().mode, 'n')
 
   -- Applying transformations using direct calls to methods
@@ -2292,7 +2294,7 @@ T['interactive()']['works'] = function()
   -- Writing
   -- - Write
   type_keys('<A-w>')
-  if check_screenshot then child.expect_screenshot() end
+  expect_screenshot()
   type_keys('<C-w>new_cs<CR>')
 
   -- - Verify

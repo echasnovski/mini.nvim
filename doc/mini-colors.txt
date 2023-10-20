@@ -113,7 +113,7 @@ To apply single method to current color scheme, use >
 Recipes:
 - Tweak lightness: >
 
-  -- Invert to dark/light color scheme to be light/dark
+  -- Invert dark/light color scheme to be light/dark
   chan_invert('lightness', { gamut_clip = 'cusp' })
 
   -- Ensure constant contrast ratio
