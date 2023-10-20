@@ -218,6 +218,9 @@ Default values:
 
       -- Value of 'winblend' option
       winblend = 25,
+
+      -- Z-index
+      zindex = 10,
     },
   }
 <
@@ -338,9 +341,11 @@ map line. Default: `true`.
 `window.width` - width of floating window, including scrollbar and
 integration count column. Default: 10.
 
-`window.winblend` - value of 'winblend' for map window. Value 0 makes it
+`window.winblend` - value of 'winblend' of floating window. Value 0 makes it
 completely non-transparent, 100 - completely transparent (content is still
 visible, but with slightly different highlights).
+
+`window.zindex` - z-index of floating window. Default: 10.
 
 # Pure scrollbar config ~
 

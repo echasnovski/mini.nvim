@@ -165,6 +165,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('window.show_integration_count', true)
   expect_config('window.width', 10)
   expect_config('window.winblend', 25)
+  expect_config('window.zindex', 10)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -222,6 +223,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { show_integration_count = 1 } }, 'window.show_integration_count', 'boolean')
   expect_config_error({ window = { width = 'a' } }, 'window.width', 'number')
   expect_config_error({ window = { winblend = 'a' } }, 'window.winblend', 'number')
+  expect_config_error({ window = { zindex = 'a' } }, 'window.zindex', 'number')
 end
 
 local encode_strings = function(strings, opts)
@@ -409,12 +411,15 @@ end
 
 T['open()']['respects `opts.window` argument'] = function()
   set_lines(example_lines)
-  local opts =
-    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+  --stylua: ignore
+  local opts = {
+    window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50, zindex = 20 },
+  }
   map_open(opts)
 
   child.expect_screenshot()
   eq(child.api.nvim_win_get_option(get_map_win_id(), 'winblend'), 50)
+  eq(child.api.nvim_win_get_config(get_map_win_id()).zindex, 20)
 
   -- Map window should be focusable
   child.cmd('wincmd w')
@@ -647,12 +652,15 @@ T['refresh()']['respects `opts.window` argument'] = function()
   set_lines(example_lines)
   map_open()
 
-  local opts =
-    { window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50 } }
+  --stylua: ignore
+  local opts = {
+    window = { focusable = true, side = 'left', show_integration_count = false, width = 15, winblend = 50, zindex = 20 },
+  }
   map_refresh(opts)
 
   child.expect_screenshot()
   eq(child.api.nvim_win_get_option(get_map_win_id(), 'winblend'), 50)
+  eq(child.api.nvim_win_get_config(get_map_win_id()).zindex, 20)
 
   -- Updates current data accordingly
   eq(child.lua_get('MiniMap.current.opts.window'), opts.window)

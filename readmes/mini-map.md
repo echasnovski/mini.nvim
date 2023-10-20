@@ -185,6 +185,9 @@ Here are code snippets for some common installation methods (use only one):
 
     -- Value of 'winblend' option
     winblend = 25,
+
+    -- Z-index
+    zindex = 10,
   },
 }
 ```

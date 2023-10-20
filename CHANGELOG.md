@@ -18,6 +18,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.map
+
+- FEATURE: Implement `config.window.zindex` to configure z-index of map window.
+
 ## mini.misc
 
 - FEATURE: `setup_auto_root()` and `find_root()` now have `fallback` argument to be applied when no root is found with `vim.fn.find()`.

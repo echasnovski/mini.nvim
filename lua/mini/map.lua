@@ -324,9 +324,11 @@ end
 --- `window.width` - width of floating window, including scrollbar and
 --- integration count column. Default: 10.
 ---
---- `window.winblend` - value of 'winblend' for map window. Value 0 makes it
+--- `window.winblend` - value of 'winblend' of floating window. Value 0 makes it
 --- completely non-transparent, 100 - completely transparent (content is still
 --- visible, but with slightly different highlights).
+---
+--- `window.zindex` - z-index of floating window. Default: 10.
 ---
 --- # Pure scrollbar config ~
 ---
@@ -385,6 +387,9 @@ MiniMap.config = {
 
     -- Value of 'winblend' option
     winblend = 25,
+
+    -- Z-index
+    zindex = 10,
   },
 }
 --minidoc_afterlines_end
@@ -1288,6 +1293,11 @@ H.is_valid_config_window = function(x, x_name)
     return false, H.msg_config(x_name .. '.winblend', 'number between 0 and 100')
   end
 
+  -- Z-index
+  if not (type(x.zindex) == 'number' and x.zindex > 0) then
+    return false, H.msg_config(x_name .. '.zindex', 'positive number')
+  end
+
   return true
 end
 
@@ -1313,10 +1323,10 @@ H.normalize_window_options = function(win_opts, full)
     -- Can be updated at `VimResized` event
     height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0),
     focusable = win_opts.focusable,
+    zindex = win_opts.zindex,
   }
   if not full then return res end
 
-  res.zindex = 10
   res.style = 'minimal'
   return res
 end
