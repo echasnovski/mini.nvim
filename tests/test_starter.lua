@@ -941,6 +941,26 @@ T['sections']['recent_files()']['respects files in subdirectories'] = function()
   child.expect_screenshot()
 end
 
+T['sections']['recent_files()']['respects `show_path`'] = function()
+  local test_file = 'tests/dir-starter/aaa.txt'
+  child.fn.writefile({ '' }, test_file)
+  MiniTest.finally(function() vim.fn.delete(test_file, 'rf') end)
+
+  child.v.oldfiles = { child.fn.fnamemodify(test_file, ':p') }
+
+  child.lua([[MiniStarter.config.items = {
+    MiniStarter.sections.recent_files(5, false, function() return '__hello__' end ),
+  }]])
+  child.lua('MiniStarter.open()')
+  child.expect_screenshot()
+
+  -- Should validate it
+  expect.error(
+    function() child.lua('MiniStarter.sections.recent_files(5, false, 1)') end,
+    '`show_path`.*boolean or callable'
+  )
+end
+
 -- Work with query ------------------------------------------------------------
 T['set_query()'] = new_set({
   hooks = {

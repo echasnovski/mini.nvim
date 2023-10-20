@@ -366,8 +366,9 @@ Parameters~
 {n} `(number|nil)` Number of returned items. Default: 5.
 {current_dir} `(boolean|nil)` Whether to return files only from current working
   directory and its subdirectories. Default: `false`.
-{show_path} `(boolean|nil)` Whether to append file name with its full path.
-  Default: `true`.
+{show_path} `(boolean|function|nil)` Whether to append file name with its path.
+  If callable, will be called with full path and should return string to be
+  directly appended to file name. Default: `true`.
 
 Return~
 `(function)` Function which returns array of items.

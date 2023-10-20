@@ -488,17 +488,24 @@ end
 ---@param n number|nil Number of returned items. Default: 5.
 ---@param current_dir boolean|nil Whether to return files only from current working
 ---   directory and its subdirectories. Default: `false`.
----@param show_path boolean|nil Whether to append file name with its full path.
----   Default: `true`.
+---@param show_path boolean|function|nil Whether to append file name with its path.
+---   If callable, will be called with full path and should return string to be
+---   directly appended to file name. Default: `true`.
 ---
 ---@return __starter_section_fun
 MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   n = n or 5
   if current_dir == nil then current_dir = false end
+
   if show_path == nil then show_path = true end
+  if show_path == false then show_path = function() return '' end end
+  if show_path == true then
+    show_path = function(path) return string.format(' (%s)', vim.fn.fnamemodify(path, ':~:.')) end
+  end
+  if not vim.is_callable(show_path) then H.error('`show_path` should be boolean or callable.') end
 
   return function()
-    local section = ('Recent files%s'):format(current_dir and ' (current directory)' or '')
+    local section = string.format('Recent files%s', current_dir and ' (current directory)' or '')
 
     -- Use only actual readable files
     local files = vim.tbl_filter(function(f) return vim.fn.filereadable(f) == 1 end, vim.v.oldfiles or {})
@@ -512,7 +519,7 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
       local sep = vim.loop.os_uname().sysname == 'Windows_NT' and [[%\]] or '%/'
       local cwd_pattern = '^' .. vim.pesc(vim.fn.getcwd()) .. sep
       -- Use only files from current directory and its subdirectories
-      files = vim.tbl_filter(function(f) return vim.fn.fnamemodify(f, ':p'):find(cwd_pattern) ~= nil end, files)
+      files = vim.tbl_filter(function(f) return f:find(cwd_pattern) ~= nil end, files)
     end
 
     if #files == 0 then
@@ -521,11 +528,9 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
 
     -- Create items
     local items = {}
-    local fmodify = vim.fn.fnamemodify
     for _, f in ipairs(vim.list_slice(files, 1, n)) do
-      local path = show_path and (' (%s)'):format(fmodify(f, ':~:.')) or ''
-      local name = ('%s%s'):format(fmodify(f, ':t'), path)
-      table.insert(items, { action = ('edit %s'):format(fmodify(f, ':p')), name = name, section = section })
+      local name = vim.fn.fnamemodify(f, ':t') .. show_path(f)
+      table.insert(items, { action = 'edit ' .. f, name = name, section = section })
     end
 
     return items

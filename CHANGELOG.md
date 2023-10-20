@@ -24,6 +24,10 @@
 
 Introduction of a new module.
 
+## mini.starter
+
+- FEATURE: `show_path` in `sections.recent_files()` can now be callable for more control on how full path is displayed.
+
 ## mini.test
 
 - BREAKING: Error in any "pre" hook now leads to test case not being executed (with note).
