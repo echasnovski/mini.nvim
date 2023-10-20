@@ -578,7 +578,9 @@ end
 --- There is no constraint by default.
 ---
 --- `windows.preview` is a boolean indicating whether to show preview of
---- file/directory under cursor.
+--- file/directory under cursor. Note: it is shown with highlighting if Neovim
+--- version is sufficient and file is small enough (less than 1K bytes per line
+--- or 1M bytes in total).
 ---
 --- `windows.width_focus` and `windows.width_nofocus` are number of columns used
 --- as `width` for focused and non-focused windows respectively.
@@ -1946,8 +1948,8 @@ H.buffer_update_file = function(buf_id, path, opts)
   -- Set lines
   H.set_buflines(buf_id, lines)
 
-  -- Add highlighting on Neovim>=0.8 which has stabilized API
-  if vim.fn.has('nvim-0.8') == 1 then
+  -- Add highlighting if reasonable (for performance or functionality reasons)
+  if H.buffer_should_highlight(buf_id) then
     local ft = vim.filetype.match({ buf = buf_id, filename = path })
     local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
     local has_ts, _ = pcall(vim.treesitter.start, buf_id, has_lang and lang or ft)
@@ -1995,6 +1997,15 @@ H.buffer_compute_fs_diff = function(buf_id, ref_path_ids)
   end
 
   return res
+end
+
+H.buffer_should_highlight = function(buf_id)
+  -- Neovim>=0.8 has more stable API
+  if vim.fn.has('nvim-0.8') == 0 then return false end
+
+  -- Highlight if buffer size is not too big, both in total and per line
+  local buf_size = vim.api.nvim_buf_call(buf_id, function() return vim.fn.line2byte(vim.fn.line('$') + 1) end)
+  return buf_size <= 1000000 and buf_size <= 1000 * vim.api.nvim_buf_line_count(buf_id)
 end
 
 H.is_opened_buffer = function(buf_id) return H.opened_buffers[buf_id] ~= nil end

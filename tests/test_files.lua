@@ -1865,6 +1865,23 @@ T['Preview']['works for files'] = function()
   child.expect_screenshot()
 end
 
+T['Preview']['does not highlight big files'] = function()
+  local big_file = make_test_path('big.lua')
+  MiniTest.finally(function() child.fn.delete(big_file, 'rf') end)
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 25')
+
+  -- Has limit per line
+  child.fn.writefile({ string.format('local a = "%s"', string.rep('a', 1000)) }, big_file)
+  open(big_file)
+  child.expect_screenshot()
+  close()
+
+  -- It also should have total limit, but it is not tested to not overuse file
+  -- system accesses during test
+end
+
 T['Preview']['is not removed when going out'] = function()
   child.lua('MiniFiles.config.windows.preview = true')
   child.lua('MiniFiles.config.windows.width_focus = 15')

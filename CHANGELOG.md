@@ -11,6 +11,7 @@
 ## mini.files
 
 - BREAKING: Opening file which is present in unlisted buffer now makes the buffer listed.
+- BREAKING: Highlight in preview now is not enabled if file is sufficiently large.
 
 ## mini.hues
 
