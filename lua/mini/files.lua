@@ -699,6 +699,9 @@ MiniFiles.open = function(path, use_latest, opts)
 
   -- Register latest used path
   H.latest_paths[vim.api.nvim_get_current_tabpage()] = path
+
+  -- Track lost focus
+  H.explorer_track_lost_focus()
 end
 
 --- Refresh explorer
@@ -771,6 +774,9 @@ end
 MiniFiles.close = function()
   local explorer = H.explorer_get()
   if explorer == nil then return nil end
+
+  -- Stop tracking lost focus
+  pcall(vim.loop.timer_stop, H.timers.focus)
 
   -- Confirm close if there is modified buffer
   if not H.explorer_confirm_modified(explorer, 'close') then return false end
@@ -1027,6 +1033,11 @@ H.ns_id = {
   highlight = vim.api.nvim_create_namespace('MiniFilesHighlight'),
 }
 
+-- Timers
+H.timers = {
+  focus = vim.loop.new_timer(),
+}
+
 -- Index of all visited files
 H.path_index = {}
 
@@ -1277,6 +1288,17 @@ H.explorer_refresh = function(explorer, opts)
   H.opened_explorers[tabpage_id] = explorer
 
   return explorer
+end
+
+H.explorer_track_lost_focus = function()
+  local track = vim.schedule_wrap(function()
+    local ft = vim.bo.filetype
+    if ft == 'minifiles' or ft == 'minifiles-help' then return end
+    local cur_win_id = vim.api.nvim_get_current_win()
+    MiniFiles.close()
+    pcall(vim.api.nvim_set_current_win, cur_win_id)
+  end)
+  H.timers.focus:start(1000, 1000, track)
 end
 
 H.explorer_normalize = function(explorer)

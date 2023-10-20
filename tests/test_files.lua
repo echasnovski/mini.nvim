@@ -13,6 +13,8 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
+local poke_eventloop = function() child.api.nvim_eval('1') end
+local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
 -- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as it introduced
@@ -779,6 +781,24 @@ T['open()']['properly closes currently opened explorer with modified buffers'] =
   mock_confirm(1)
   open(path_2)
   validate_confirm_args('modified buffer.*close without sync')
+end
+
+T['open()']['tracks lost focus'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+
+  local validate = function(loose_focus)
+    open(test_dir_path)
+    loose_focus()
+    -- Tracking is done by checking every second
+    sleep(1000 + 10)
+    validate_n_wins(1)
+    eq(#child.api.nvim_list_bufs(), 1)
+  end
+
+  local init_win_id = child.api.nvim_get_current_win()
+  validate(function() child.api.nvim_set_current_win(init_win_id) end)
+
+  validate(function() child.cmd('quit') end)
 end
 
 T['open()']['validates input'] = function()
