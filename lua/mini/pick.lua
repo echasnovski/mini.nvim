@@ -2961,7 +2961,7 @@ H.preview_set_lines = function(buf_id, lines, extra)
   -- Highlighting
   H.preview_highlight_region(buf_id, extra.lnum, extra.col, extra.end_lnum, extra.end_col)
 
-  if vim.fn.has('nvim-0.8') == 1 then
+  if H.preview_should_highlight(buf_id) then
     local ft = extra.filetype or vim.filetype.match({ buf = buf_id, filename = extra.path })
     local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
     local has_ts, _ = pcall(vim.treesitter.start, buf_id, has_lang and lang or ft)
@@ -2974,6 +2974,15 @@ H.preview_set_lines = function(buf_id, lines, extra)
   H.set_cursor(win_id, extra.lnum, extra.col)
   local pos_keys = ({ top = 'zt', center = 'zz', bottom = 'zb' })[extra.line_position] or 'zt'
   pcall(vim.api.nvim_win_call, win_id, function() vim.cmd('normal! ' .. pos_keys) end)
+end
+
+H.preview_should_highlight = function(buf_id)
+  -- Neovim>=0.8 has more stable API
+  if vim.fn.has('nvim-0.8') == 0 then return false end
+
+  -- Highlight if buffer size is not too big, both in total and per line
+  local buf_size = vim.api.nvim_buf_call(buf_id, function() return vim.fn.line2byte(vim.fn.line('$') + 1) end)
+  return buf_size <= 1000000 and buf_size <= 1000 * vim.api.nvim_buf_line_count(buf_id)
 end
 
 H.preview_highlight_region = function(buf_id, lnum, col, end_lnum, end_col)

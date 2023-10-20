@@ -1527,6 +1527,21 @@ T['default_preview()']['has fallback'] = function()
   validate_preview({ -1, { text = 'Random table' } })
 end
 
+T['default_preview()']['does not highlight big files'] = function()
+  local big_file = real_file('big.lua')
+  MiniTest.finally(function() child.fn.delete(big_file, 'rf') end)
+
+  -- Has limit per line
+  child.fn.writefile({ string.format('local a = "%s"', string.rep('a', 1000)) }, big_file)
+  child.cmd('edit ' .. big_file)
+  local buf_id = child.api.nvim_get_current_buf()
+  child.cmd('enew')
+  validate_preview({ big_file, { bufnr = buf_id, text = 'Buffer item' } })
+
+  -- It also should have total limit, but it is not tested to not overuse file
+  -- system accesses during test
+end
+
 T['default_preview()']['respects `opts.n_context_lines`'] = function()
   child.lua([[MiniPick.config.source.preview = function(buf_id, item)
     return MiniPick.default_preview(buf_id, item, { n_context_lines = 2 })
