@@ -553,9 +553,10 @@ should start. Each element is a trigger table with the fields <mode> and
 `config.window.delay` is a number of milliseconds after which clue window will
 appear. Can be 0 to show immediately.
 
-`config.window.config` is a table defining floating window characteristics.
-It should have the same structure as in |nvim_open_win()| with the following
-enhancements:
+`config.window.config` is a table defining floating window characteristics
+or a callable returning such table (will be called with identifier of
+window's buffer already showing all clues). It should have the same
+structure as in |nvim_open_win()| with the following enhancements:
 - <width> field can be equal to `"auto"` leading to window width being
   computed automatically based on its content. Default is fixed width of 30.
 - <row> and <col> can be equal to `"auto"` in which case they will be

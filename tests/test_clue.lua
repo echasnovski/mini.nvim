@@ -230,7 +230,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error({ window = 'a' }, 'window', 'table')
   expect_config_error({ window = { delay = 'a' } }, 'window.delay', 'number')
-  expect_config_error({ window = { config = 'a' } }, 'window.config', 'table')
+  expect_config_error({ window = { config = 'a' } }, 'window.config', 'table or callable')
   expect_config_error({ window = { scroll_down = 1 } }, 'window.scroll_down', 'string')
   expect_config_error({ window = { scroll_up = 1 } }, 'window.scroll_up', 'string')
 end
@@ -1246,6 +1246,20 @@ T['Showing keys']['can have `config.window.config.width="auto"`'] = function()
     window = { delay = 0, config = { width = 'auto' } },
   })
 
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
+T['Showing keys']['can have callable `config.window.config`'] = function()
+  make_test_map('n', '<Space>a')
+  make_test_map('n', '<Space>b')
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  -- Should be called with buffer identifier with already set lines
+  child.lua([[MiniClue.config.window.config = function(buf_id)
+    -- Should also allow special non-built-in values
+    return { height = vim.api.nvim_buf_line_count(buf_id) + 2, width = 'auto' }
+  end]])
   type_keys(' ')
   child.expect_screenshot()
 end

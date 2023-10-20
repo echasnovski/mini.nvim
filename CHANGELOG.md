@@ -4,6 +4,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.clue
+
+- FEATURE: `config.window.config` now can be callable returning window config.
+
 ## mini.comment
 
 - FEATURE: Implement `config.mappings.comment_visual` to configure mapped keys in Visual mode.

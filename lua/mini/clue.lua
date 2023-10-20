@@ -547,9 +547,10 @@ end
 --- `config.window.delay` is a number of milliseconds after which clue window will
 --- appear. Can be 0 to show immediately.
 ---
---- `config.window.config` is a table defining floating window characteristics.
---- It should have the same structure as in |nvim_open_win()| with the following
---- enhancements:
+--- `config.window.config` is a table defining floating window characteristics
+--- or a callable returning such table (will be called with identifier of
+--- window's buffer already showing all clues). It should have the same
+--- structure as in |nvim_open_win()| with the following enhancements:
 --- - <width> field can be equal to `"auto"` leading to window width being
 ---   computed automatically based on its content. Default is fixed width of 30.
 --- - <row> and <col> can be equal to `"auto"` in which case they will be
@@ -1129,9 +1130,10 @@ H.setup_config = function(config)
     window = { config.window, 'table' },
   })
 
+  local is_table_or_callable = function(x) return type(x) == 'table' or vim.is_callable(x) end
   vim.validate({
     ['window.delay'] = { config.window.delay, 'number' },
-    ['window.config'] = { config.window.config, 'table' },
+    ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
     ['window.scroll_down'] = { config.window.scroll_down, 'string' },
     ['window.scroll_up'] = { config.window.scroll_up, 'string' },
   })
@@ -1584,13 +1586,15 @@ H.window_get_config = function()
   -- Remove 2 from maximum height to account for top and bottom borders
   local max_height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0) - 2
 
+  local buf_id = H.state.buf_id
   local cur_config_fields = {
     row = vim.o.lines - vim.o.cmdheight - (has_statusline and 1 or 0),
     col = vim.o.columns,
-    height = math.min(vim.api.nvim_buf_line_count(H.state.buf_id), max_height),
+    height = math.min(vim.api.nvim_buf_line_count(buf_id), max_height),
     title = H.query_to_title(H.state.query),
   }
-  local res = vim.tbl_deep_extend('force', H.default_win_config, cur_config_fields, H.get_config().window.config)
+  local user_config = H.expand_callable(H.get_config().window.config, buf_id) or {}
+  local res = vim.tbl_deep_extend('force', H.default_win_config, cur_config_fields, user_config)
 
   -- Tweak "auto" fields
   if res.width == 'auto' then res.width = H.buffer_get_width() + 1 end
@@ -1674,9 +1678,8 @@ H.clues_get_all = function(mode)
 
     local res_data = res[lhsraw] or {}
 
-    local desc = clue.desc
     -- - Allow callable clue description
-    if vim.is_callable(desc) then desc = desc() end
+    local desc = H.expand_callable(clue.desc)
     -- - Fall back to possibly already present fields to allow partial
     --   overwrite in later clues. Like to add `postkeys` and inherit `desc`.
     res_data.desc = desc or res_data.desc
@@ -1706,7 +1709,7 @@ H.clues_normalize = function(clues)
   local res = {}
   local process
   process = function(x)
-    if vim.is_callable(x) then x = x() end
+    x = H.expand_callable(x)
     if H.is_clue(x) then return table.insert(res, x) end
     if not vim.tbl_islist(x) then return nil end
     for _, y in ipairs(x) do
@@ -1901,6 +1904,11 @@ end
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
+
+H.expand_callable = function(x, ...)
+  if vim.is_callable(x) then return x(...) end
+  return x
+end
 
 H.redraw_scheduled = vim.schedule_wrap(function() vim.cmd('redraw') end)
 
