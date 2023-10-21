@@ -2896,16 +2896,12 @@ H.parse_path = function(x)
   -- Verify that path is real
   local path_type = H.get_fs_type(path)
   if path_type == 'none' then
-    path = string.format('%s/%s', H.get_cwd(), path)
+    local cwd = H.pickers.active == nil and vim.fn.getcwd() or H.pickers.active.opts.source.cwd
+    path = string.format('%s/%s', cwd, path)
     path_type = H.get_fs_type(path)
   end
 
   return path_type, path, tonumber(lnum), tonumber(col), rest or ''
-end
-
-H.get_cwd = function()
-  if H.pickers.active == nil then return vim.fn.getcwd() end
-  return H.pickers.active.opts.source.cwd
 end
 
 H.get_fs_type = function(path)
@@ -3019,8 +3015,10 @@ H.choose_path = function(win_target, item_data)
   if path_buf_id ~= nil then
     H.set_winbuf(win_target, path_buf_id)
   else
+    -- Use relative path for a better initial view in `:buffers`
+    local path_norm = vim.fn.fnameescape(vim.fn.fnamemodify(path, ':.'))
     -- Use `pcall()` to avoid possible `:edit` errors, like present swap file
-    vim.api.nvim_win_call(win_target, function() pcall(vim.cmd, 'edit ' .. vim.fn.fnameescape(path)) end)
+    vim.api.nvim_win_call(win_target, function() pcall(vim.cmd, 'edit ' .. path_norm) end)
   end
 
   H.choose_set_cursor(win_target, item_data.lnum, item_data.col)

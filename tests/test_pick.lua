@@ -1382,6 +1382,14 @@ T['default_preview()']['works for file path'] = function()
   validate_preview(items)
 end
 
+T['default_preview()']['works for relative file path'] = function()
+  local lua_cmd =
+    string.format([[MiniPick.start({ source = { items = { 'a.lua' }, cwd = '%s' } })]], full_path(real_files_dir))
+  child.lua_notify(lua_cmd)
+  type_keys('<Tab>')
+  child.expect_screenshot()
+end
+
 T['default_preview()']['shows line in file path'] = function()
   local path = real_file('b.txt')
   local items = {
@@ -1665,6 +1673,17 @@ T['default_choose()']['works for file path'] = function()
 
   -- Path with region
   validate({ text = path, path = path, lnum = 12, col = 5, end_lnum = 14, end_col = 3 }, path, { 12, 4 })
+end
+
+T['default_choose()']['works for relative file path'] = function()
+  local lua_cmd =
+    string.format([[MiniPick.start({ source = { items = { 'a.lua' }, cwd = '%s' } })]], full_path(real_files_dir))
+  child.lua_notify(lua_cmd)
+  type_keys('<CR>')
+  validate_buf_name(0, real_file('a.lua'))
+
+  -- Should open with relative path to have better view in `:buffers`
+  expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(real_files_dir))
 end
 
 T['default_choose()']['reuses opened listed buffer for file path'] = function()
