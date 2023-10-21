@@ -138,7 +138,7 @@
 ---     local timer = vim.loop.new_timer()
 ---     local n_seconds = 0
 ---     timer:start(0, 1000, vim.schedule_wrap(function()
----       if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'starter' then
+---       if vim.bo.filetype ~= 'starter' then
 ---         timer:stop()
 ---         return
 ---       end

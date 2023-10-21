@@ -786,7 +786,8 @@ H.has_lsp_clients = function(capability)
 end
 
 H.has_lsp_completion = function()
-  local func = vim.api.nvim_buf_get_option(0, H.get_config().lsp_completion.source_func)
+  local source_func = H.get_config().lsp_completion.source_func
+  local func = vim.bo[source_func]
   return func == 'v:lua.MiniCompletion.completefunc_lsp'
 end
 

@@ -61,7 +61,7 @@
 --- >
 ---   _G.cursorword_blocklist = function()
 ---     local curword = vim.fn.expand('<cword>')
----     local filetype = vim.api.nvim_buf_get_option(0, 'filetype')
+---     local filetype = vim.bo.filetype
 ---
 ---     -- Add any disabling global or filetype-specific logic here
 ---     local blocklist = {}

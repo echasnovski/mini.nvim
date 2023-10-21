@@ -266,7 +266,7 @@ end
 H.can_remove = function(buf_id, force, fun_name)
   if force then return true end
 
-  if vim.api.nvim_buf_get_option(buf_id, 'modified') then
+  if vim.bo[buf_id].modified then
     H.message(
       string.format(
         'Buffer %d has unsaved changes. Use `MiniBufremove.%s(%d, true)` to force.',

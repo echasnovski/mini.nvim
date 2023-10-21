@@ -151,10 +151,10 @@ end
 
 H.default_text_width = function(win_id)
   local buf = vim.api.nvim_win_get_buf(win_id)
-  local textwidth = vim.api.nvim_buf_get_option(buf, 'textwidth')
+  local textwidth = vim.bo[buf].textwidth
   textwidth = (textwidth == 0) and math.min(vim.o.columns, 79) or textwidth
 
-  local colorcolumn = vim.api.nvim_win_get_option(win_id, 'colorcolumn')
+  local colorcolumn = vim.wo[win_id].colorcolumn
   if colorcolumn ~= '' then
     local cc = vim.split(colorcolumn, ',')[1]
     local is_cc_relative = vim.tbl_contains({ '-', '+' }, cc:sub(1, 1))
@@ -473,7 +473,7 @@ end
 MiniMisc.use_nested_comments = function(buf_id)
   buf_id = buf_id or 0
 
-  local commentstring = vim.api.nvim_buf_get_option(buf_id, 'commentstring')
+  local commentstring = vim.bo[buf_id].commentstring
   if commentstring == '' then return end
 
   -- Extract raw comment leader from 'commentstring' option
@@ -485,7 +485,7 @@ MiniMisc.use_nested_comments = function(buf_id)
   -- Get comment leader by removing whitespace
   local leader = vim.trim(comment_parts[1])
 
-  local comments = vim.api.nvim_buf_get_option(buf_id, 'comments')
+  local comments = vim.bo[buf_id].comments
   local new_comments = string.format('n:%s,%s', leader, comments)
   vim.api.nvim_buf_set_option(buf_id, 'comments', new_comments)
 end

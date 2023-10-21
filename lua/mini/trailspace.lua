@@ -183,7 +183,7 @@ H.track_normal_buffer = function()
   end
 end
 
-H.is_buffer_normal = function(buf_id) return vim.api.nvim_buf_get_option(buf_id or 0, 'buftype') == '' end
+H.is_buffer_normal = function(buf_id) return vim.bo[buf_id or 0].buftype == '' end
 
 H.get_match_id = function()
   -- NOTE: this can be replaced with more efficient custom tracking of id per

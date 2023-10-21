@@ -236,7 +236,7 @@ H.list_tabs = function()
   H.tabs = tabs
 end
 
-H.is_buffer_in_minitabline = function(buf_id) return vim.api.nvim_buf_get_option(buf_id, 'buflisted') end
+H.is_buffer_in_minitabline = function(buf_id) return vim.bo[buf_id].buflisted end
 
 -- Tab's highlight group
 H.construct_highlight = function(buf_id)
@@ -248,7 +248,7 @@ H.construct_highlight = function(buf_id)
   else
     hl_type = 'Hidden'
   end
-  if vim.api.nvim_buf_get_option(buf_id, 'modified') then hl_type = 'Modified' .. hl_type end
+  if vim.bo[buf_id].modified then hl_type = 'Modified' .. hl_type end
 
   return string.format('%%#MiniTabline%s#', hl_type)
 end
@@ -299,7 +299,7 @@ end
 -- - Tab label for third one remains the same.
 H.make_unnamed_label = function(buf_id)
   local label
-  if vim.api.nvim_buf_get_option(buf_id, 'buftype') == 'quickfix' then
+  if vim.bo[buf_id].buftype == 'quickfix' then
     -- It would be great to differentiate for buffer `buf_id` between quickfix
     -- and location lists but it seems there is no reliable way to do so.
     -- The only one is to use `getwininfo(bufwinid(buf_id))` and look for
@@ -318,7 +318,7 @@ H.make_unnamed_label = function(buf_id)
 end
 
 H.is_buffer_scratch = function(buf_id)
-  local buftype = vim.api.nvim_buf_get_option(buf_id, 'buftype')
+  local buftype = vim.bo[buf_id].buftype
   return (buftype == 'acwrite') or (buftype == 'nofile')
 end
 

@@ -320,7 +320,7 @@ end
 ---
 ---@return string Relevant value of 'commentstring'.
 MiniComment.get_commentstring = function(ref_position)
-  local buf_cs = vim.api.nvim_buf_get_option(0, 'commentstring')
+  local buf_cs = vim.bo.commentstring
 
   -- Neovim<0.9 can only have buffer 'commentstring'
   if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
