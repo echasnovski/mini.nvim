@@ -1542,8 +1542,10 @@ H.explorer_open_file = function(explorer, path)
   if path_buf_id ~= nil then
     vim.api.nvim_win_set_buf(explorer.target_window, path_buf_id)
   else
-    -- Avoid possible errors with `:edit`, like present swap file
-    pcall(vim.fn.win_execute, explorer.target_window, 'edit ' .. vim.fn.fnameescape(path))
+    -- Use relative path for a better initial view in `:buffers`
+    local path_norm = vim.fn.fnameescape(vim.fn.fnamemodify(path, ':.'))
+    -- Use `pcall()` to avoid possible `:edit` errors, like present swap file
+    pcall(vim.fn.win_execute, explorer.target_window, 'edit ' .. path_norm)
   end
 
   return explorer

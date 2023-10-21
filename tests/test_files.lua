@@ -1127,6 +1127,9 @@ T['go_in()']['works on file'] = function()
 
   expect.match(child.api.nvim_buf_get_name(0), '%.a%-file$')
   eq(get_lines(), { '.a-file' })
+
+  -- Should open with relative path to have better view in `:buffers`
+  expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(test_dir_path))
 end
 
 T['go_in()']['works on files with problematic names'] = function()
