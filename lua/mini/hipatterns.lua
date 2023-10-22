@@ -11,7 +11,7 @@
 ---
 --- - Highlighting is updated asynchronously with configurable debounce delay.
 ---
---- See |MiniHipatterns.config| for examples of common use cases.
+--- See |MiniHipatterns-examples| for common configuration examples.
 ---
 --- Notes:
 --- - It does not define any highlighters by default. Add to `config.highlighters`
@@ -100,6 +100,112 @@
 --- Considering high number of different scenarios and customization
 --- intentions, writing exact rules for disabling module's functionality is
 --- left to user. See |mini.nvim-disabling-recipes| for common recipes.
+
+--- # Common configuration examples ~
+---
+--- - Special words used to convey different level of attention: >
+---
+---   require('mini.hipatterns').setup({
+---     highlighters = {
+---       fixme = { pattern = 'FIXME', group = 'MiniHipatternsFixme' },
+---       hack  = { pattern = 'HACK',  group = 'MiniHipatternsHack'  },
+---       todo  = { pattern = 'TODO',  group = 'MiniHipatternsTodo'  },
+---       note  = { pattern = 'NOTE',  group = 'MiniHipatternsNote'  },
+---     }
+---   })
+--- <
+--- - To match only when pattern appears as a standalone word, use frontier
+---   patterns `%f`. For example, instead of `'TODO'` pattern use
+---   `'%f[%w]()TODO()%f[%W]'`. In this case, for example, 'TODOING' or 'MYTODO'
+---   won't match, but 'TODO' and 'TODO:' will.
+---
+--- - Color hex (like `#rrggbb`) highlighting: >
+---
+---   local hipatterns = require('mini.hipatterns')
+---   hipatterns.setup({
+---     highlighters = {
+---       hex_color = hipatterns.gen_highlighter.hex_color(),
+---     }
+---   })
+--- <
+---   You can customize which part of hex color is highlighted by using `style`
+---   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
+---
+--- - Colored words: >
+---
+---   local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
+---   local word_color_group = function(_, match)
+---     local hex = words[match]
+---     if hex == nil then return nil end
+---     return MiniHipatterns.compute_hex_color_group(hex, 'bg')
+---   end
+---
+---   local hipatterns = require('mini.hipatterns')
+---   hipatterns.setup({
+---     highlighters = {
+---       word_color = { pattern = '%S+', group = word_color_group },
+---     },
+---   })
+---
+--- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
+---
+---   { pattern = '%f[%s]%s*$', group = 'Error' }
+---
+--- - Censor certain sensitive information: >
+---
+---   local censor_extmark_opts = function(_, match, _)
+---     local mask = string.rep('x', vim.fn.strchars(match))
+---     return {
+---       virt_text = { { mask, 'Comment' } }, virt_text_pos = 'overlay',
+---       priority = 200, right_gravity = false,
+---     }
+---   end
+---
+---   require('mini.hipatterns').setup({
+---     highlighters = {
+---       censor = {
+---         pattern = 'password: ()%S+()',
+---         group = '',
+---         extmark_opts = censor_extmark_opts,
+---       },
+---     },
+---   })
+---
+--- - Enable only in certain filetypes. There are at least these ways to do it:
+---     - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
+---       Basically, create "after/ftplugin/<filetype>.lua" file in your config
+---       directory (see |$XDG_CONFIG_HOME|) and define `vim.b.minihipatterns_config`
+---       there with filetype specific highlighters.
+---
+---       This assumes `require('mini.hipatterns').setup()` call.
+---
+---       For example, to highlight keywords in EmmyLua comments in Lua files,
+---       create "after/ftplugin/lua.lua" with the following content: >
+---
+---         vim.b.minihipatterns_config = {
+---           highlighters = {
+---             emmylua = { pattern = '^%s*%-%-%-()@%w+()', group = 'Special' }
+---           }
+---         }
+--- <
+---     - Use callable `pattern` with condition. For example: >
+---
+---       require('mini.hipatterns').setup({
+---         highlighters = {
+---           emmylua = {
+---             pattern = function(buf_id)
+---               if vim.bo[buf_id].filetype ~= 'lua' then return nil end
+---               return '^%s*%-%-%-()@%w+()'
+---             end,
+---             group = 'Special',
+---           },
+---         },
+---       })
+--- <
+--- - Disable only in certain filetypes. Enable with |MiniHipatterns.setup()|
+---   and set `vim.b.minihipatterns_disable` buffer-local variable to `true` for
+---   buffer you want disabled. See |mini.nvim-disabling-recipes| for more examples.
+---@tag MiniHipatterns-examples
 
 ---@alias __hipatterns_buf_id number|nil Buffer identifier in which to enable highlighting.
 ---   Default: 0 for current buffer.
@@ -209,111 +315,6 @@ end
 --- `delay.scroll` is used to delay updating highlights in current window view
 --- during scrolling (see |WinScrolled| event). These updates are present to
 --- ensure up to date highlighting after scroll.
----
---- # Common use cases ~
----
---- - Special words used to convey different level of attention: >
----
----   require('mini.hipatterns').setup({
----     highlighters = {
----       fixme = { pattern = 'FIXME', group = 'MiniHipatternsFixme' },
----       hack  = { pattern = 'HACK',  group = 'MiniHipatternsHack'  },
----       todo  = { pattern = 'TODO',  group = 'MiniHipatternsTodo'  },
----       note  = { pattern = 'NOTE',  group = 'MiniHipatternsNote'  },
----     }
----   })
---- <
---- - To match only when pattern appears as a standalone word, use frontier
----   patterns `%f`. For example, instead of `'TODO'` pattern use
----   `'%f[%w]()TODO()%f[%W]'`. In this case, for example, 'TODOING' or 'MYTODO'
----   won't match, but 'TODO' and 'TODO:' will.
----
---- - Color hex (like `#rrggbb`) highlighting: >
----
----   local hipatterns = require('mini.hipatterns')
----   hipatterns.setup({
----     highlighters = {
----       hex_color = hipatterns.gen_highlighter.hex_color(),
----     }
----   })
---- <
----   You can customize which part of hex color is highlighted by using `style`
----   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
----
---- - Colored words: >
----
----   local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
----   local word_color_group = function(_, match)
----     local hex = words[match]
----     if hex == nil then return nil end
----     return MiniHipatterns.compute_hex_color_group(hex, 'bg')
----   end
----
----   local hipatterns = require('mini.hipatterns')
----   hipatterns.setup({
----     highlighters = {
----       word_color = { pattern = '%S+', group = word_color_group },
----     },
----   })
----
---- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
----
----   { pattern = '%f[%s]%s*$', group = 'Error' }
----
---- - Censor certain sensitive information: >
----
----   local censor_extmark_opts = function(_, match, _)
----     local mask = string.rep('x', vim.fn.strchars(match))
----     return {
----       virt_text = { { mask, 'Comment' } }, virt_text_pos = 'overlay',
----       priority = 200, right_gravity = false,
----     }
----   end
----
----   require('mini.hipatterns').setup({
----     highlighters = {
----       censor = {
----         pattern = 'password: ()%S+()',
----         group = '',
----         extmark_opts = censor_extmark_opts,
----       },
----     },
----   })
----
---- - Enable only in certain filetypes. There are at least these ways to do it:
----     - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
----       Basically, create "after/ftplugin/<filetype>.lua" file in your config
----       directory (see |$XDG_CONFIG_HOME|) and define `vim.b.minihipatterns_config`
----       there with filetype specific highlighters.
----
----       This assumes `require('mini.hipatterns').setup()` call.
----
----       For example, to highlight keywords in EmmyLua comments in Lua files,
----       create "after/ftplugin/lua.lua" with the following content: >
----
----         vim.b.minihipatterns_config = {
----           highlighters = {
----             emmylua = { pattern = '^%s*%-%-%-()@%w+()', group = 'Special' }
----           }
----         }
---- <
----     - Use callable `pattern` with condition. For example: >
----
----       require('mini.hipatterns').setup({
----         highlighters = {
----           emmylua = {
----             pattern = function(buf_id)
----               if vim.bo[buf_id].filetype ~= 'lua' then return nil end
----               return '^%s*%-%-%-()@%w+()'
----             end,
----             group = 'Special',
----           },
----         },
----       })
---- <
---- - Disable only in certain filetypes. Enable with |MiniHipatterns.setup()|
----   and set `vim.b.minihipatterns_disable` buffer-local variable to `true` for
----   buffer you want disabled. See |mini.nvim-disabling-recipes| for more examples.
 MiniHipatterns.config = {
   -- Table with highlighters (see |MiniHipatterns.config| for more details).
   -- Nothing is defined by default. Add manually for visible effect.

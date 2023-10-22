@@ -30,7 +30,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/130374e2-4e6c-43cf-af33
 
 - Highlighting is updated asynchronously with configurable debounce delay.
 
-See `*MiniHipatterns.config*` tag in help page for examples of common use cases.
+See `*MiniHipatterns-examples*` tag in help page for examples of common use cases.
 
 Notes:
 

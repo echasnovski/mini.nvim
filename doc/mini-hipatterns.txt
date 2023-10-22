@@ -11,7 +11,7 @@ Features:
 
 - Highlighting is updated asynchronously with configurable debounce delay.
 
-See |MiniHipatterns.config| for examples of common use cases.
+See |MiniHipatterns-examples| for common configuration examples.
 
 Notes:
 - It does not define any highlighters by default. Add to `config.highlighters`
@@ -102,108 +102,8 @@ intentions, writing exact rules for disabling module's functionality is
 left to user. See |mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
-                                                        *MiniHipatterns.setup()*
-                        `MiniHipatterns.setup`({config})
-Module setup
-
-Parameters~
-{config} `(table|nil)` Module config table. See |MiniHipatterns.config|.
-
-Usage~
-`require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
-
-Note: no highlighters is defined by default. Add them for visible effect.
-
-------------------------------------------------------------------------------
-                                                         *MiniHipatterns.config*
-                            `MiniHipatterns.config`
-Module config
-
-Default values:
->
-  MiniHipatterns.config = {
-    -- Table with highlighters (see |MiniHipatterns.config| for more details).
-    -- Nothing is defined by default. Add manually for visible effect.
-    highlighters = {},
-
-    -- Delays (in ms) defining asynchronous highlighting process
-    delay = {
-      -- How much to wait for update after every text change
-      text_change = 200,
-
-      -- How much to wait for update after window scroll
-      scroll = 50,
-    },
-  }
-<
-# Options ~
-
-## Highlighters ~
-
-`highlighters` table defines which patterns will be highlighted by placing
-|extmark| at the match start. It might or might not have explicitly named
-fields, but having them is recommended and is required for proper use of
-`vim.b.minihipatterns_config` as buffer-local config. By default it is
-empty expecting user definition.
-
-Each entry defines single highlighter as a table with the following fields:
-- <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
-  or callable returning the string.
-  If string:
-    - It can have submatch delimited by placing `()` on start and end, NOT
-      by surrounding with it. Otherwise it will result in error containing
-      `number expected, got string`. Example: `xx()abcd()xx` will match `abcd`
-      only if `xx` is placed before and after it.
-
-  If callable:
-    - It will be called for every enabled buffer with its identifier as input.
-
-    - It can return `nil` meaning this particular highlighter will not work
-      in this particular buffer.
-
-- <group> `(string|function)` - name of highlight group to use. Can be either
-  string or callable returning the string.
-  If callable:
-    - It will be called for every pattern match with the following arguments:
-        - `buf_id` - buffer identifier.
-        - `match` - string pattern match to be highlighted.
-        - `data` - extra table with information about the match.
-          It has at least these fields:
-            - <full_match> - string with full pattern match.
-            - <line> - match line number (1-indexed).
-            - <from_col> - match starting byte column (1-indexed).
-            - <to_col> - match ending byte column (1-indexed, inclusive).
-
-    - It can return `nil` meaning this particular match will not be highlighted.
-
-- <extmark_opts> `(table|function|nil)` - optional extra options
-  for |nvim_buf_set_extmark()|. If callable, will be called in the same way
-  as callable <group> (`data` will also contain `hl_group` key with <group>
-  value) and should return a table with all options for extmark (including
-  `end_row`, `end_col`, `hl_group`, and `priority`).
-  Note: if <extmark_opts> is supplied, <priority> is ignored.
-
-- <priority> `(number|nil)` - SOFT DEPRECATED in favor
-  of `extmark_opts = { priority = <value> }`.
-  Optional highlighting priority (as in |nvim_buf_set_extmark()|).
-  Default: 200. See also |vim.highlight.priorities|.
-
-See "Common use cases" section for the examples.
-
-## Delay ~
-
-`delay` is a table defining delays in milliseconds used for asynchronous
-highlighting process.
-
-`delay.text_change` is used to delay highlighting updates by accumulating
-them (in debounce fashion). Smaller values will lead to faster response but
-more frequent updates. Bigger - slower response but less frequent updates.
-
-`delay.scroll` is used to delay updating highlights in current window view
-during scrolling (see |WinScrolled| event). These updates are present to
-ensure up to date highlighting after scroll.
-
-# Common use cases ~
+                                                       *MiniHipatterns-examples*
+# Common configuration examples ~
 
 - Special words used to convey different level of attention: >
 
@@ -307,6 +207,108 @@ ensure up to date highlighting after scroll.
 - Disable only in certain filetypes. Enable with |MiniHipatterns.setup()|
   and set `vim.b.minihipatterns_disable` buffer-local variable to `true` for
   buffer you want disabled. See |mini.nvim-disabling-recipes| for more examples.
+
+------------------------------------------------------------------------------
+                                                        *MiniHipatterns.setup()*
+                        `MiniHipatterns.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniHipatterns.config|.
+
+Usage~
+`require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
+
+Note: no highlighters is defined by default. Add them for visible effect.
+
+------------------------------------------------------------------------------
+                                                         *MiniHipatterns.config*
+                            `MiniHipatterns.config`
+Module config
+
+Default values:
+>
+  MiniHipatterns.config = {
+    -- Table with highlighters (see |MiniHipatterns.config| for more details).
+    -- Nothing is defined by default. Add manually for visible effect.
+    highlighters = {},
+
+    -- Delays (in ms) defining asynchronous highlighting process
+    delay = {
+      -- How much to wait for update after every text change
+      text_change = 200,
+
+      -- How much to wait for update after window scroll
+      scroll = 50,
+    },
+  }
+<
+# Options ~
+
+## Highlighters ~
+
+`highlighters` table defines which patterns will be highlighted by placing
+|extmark| at the match start. It might or might not have explicitly named
+fields, but having them is recommended and is required for proper use of
+`vim.b.minihipatterns_config` as buffer-local config. By default it is
+empty expecting user definition.
+
+Each entry defines single highlighter as a table with the following fields:
+- <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
+  or callable returning the string.
+  If string:
+    - It can have submatch delimited by placing `()` on start and end, NOT
+      by surrounding with it. Otherwise it will result in error containing
+      `number expected, got string`. Example: `xx()abcd()xx` will match `abcd`
+      only if `xx` is placed before and after it.
+
+  If callable:
+    - It will be called for every enabled buffer with its identifier as input.
+
+    - It can return `nil` meaning this particular highlighter will not work
+      in this particular buffer.
+
+- <group> `(string|function)` - name of highlight group to use. Can be either
+  string or callable returning the string.
+  If callable:
+    - It will be called for every pattern match with the following arguments:
+        - `buf_id` - buffer identifier.
+        - `match` - string pattern match to be highlighted.
+        - `data` - extra table with information about the match.
+          It has at least these fields:
+            - <full_match> - string with full pattern match.
+            - <line> - match line number (1-indexed).
+            - <from_col> - match starting byte column (1-indexed).
+            - <to_col> - match ending byte column (1-indexed, inclusive).
+
+    - It can return `nil` meaning this particular match will not be highlighted.
+
+- <extmark_opts> `(table|function|nil)` - optional extra options
+  for |nvim_buf_set_extmark()|. If callable, will be called in the same way
+  as callable <group> (`data` will also contain `hl_group` key with <group>
+  value) and should return a table with all options for extmark (including
+  `end_row`, `end_col`, `hl_group`, and `priority`).
+  Note: if <extmark_opts> is supplied, <priority> is ignored.
+
+- <priority> `(number|nil)` - SOFT DEPRECATED in favor
+  of `extmark_opts = { priority = <value> }`.
+  Optional highlighting priority (as in |nvim_buf_set_extmark()|).
+  Default: 200. See also |vim.highlight.priorities|.
+
+See "Common use cases" section for the examples.
+
+## Delay ~
+
+`delay` is a table defining delays in milliseconds used for asynchronous
+highlighting process.
+
+`delay.text_change` is used to delay highlighting updates by accumulating
+them (in debounce fashion). Smaller values will lead to faster response but
+more frequent updates. Bigger - slower response but less frequent updates.
+
+`delay.scroll` is used to delay updating highlights in current window view
+during scrolling (see |WinScrolled| event). These updates are present to
+ensure up to date highlighting after scroll.
 
 ------------------------------------------------------------------------------
                                                        *MiniHipatterns.enable()*
