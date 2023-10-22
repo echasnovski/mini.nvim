@@ -744,7 +744,9 @@ end
 
 -- Processing -----------------------------------------------------------------
 H.process_lines = vim.schedule_wrap(function(buf_id, from_line, to_line, delay_ms)
-  table.insert(H.change_queue, { buf_id, from_line, to_line })
+  -- Make sure that that at least one line is processed (important to react
+  -- after deleting line with extmark non-trivial `extmark_opts`)
+  table.insert(H.change_queue, { buf_id, math.min(from_line, to_line), math.max(from_line, to_line) })
 
   -- Debounce
   H.timer_debounce:stop()

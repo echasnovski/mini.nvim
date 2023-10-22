@@ -354,6 +354,26 @@ T['enable()']['reacts to window scroll'] = function()
   child.expect_screenshot()
 end
 
+T['enable()']['reacts to delete of line with match'] = function()
+  set_lines({ 'xxx', 'xxx', 'abcd', 'xxx', 'xxx' })
+
+  local hi_abcd = {
+    pattern = 'abcd',
+    group = '',
+    extmark_opts = { virt_text = { { 'Hello', 'Error' } }, virt_text_pos = 'right_align' },
+  }
+  local config = { highlighters = { abcd = hi_abcd }, delay = { text_change = 30, scroll = 10 } }
+  enable(0, config)
+
+  sleep(30 + 2)
+  child.expect_screenshot()
+
+  child.api.nvim_win_set_cursor(0, { 3, 0 })
+  type_keys('dd')
+  sleep(30 + 2)
+  child.expect_screenshot()
+end
+
 T['Highlighters'] = new_set()
 
 T['Highlighters']['silently skips wrong entries'] = function()
