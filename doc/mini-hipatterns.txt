@@ -406,11 +406,15 @@ Parameters~
   - <style> `(string)` - one of:
       - `'full'` -  highlight background of whole hex string with it. Default.
       - `'#'` - highlight background of only `#`.
-      - `'line'` highlight underline with that color.
+      - `'line'` - highlight underline with that color.
+      - `'inline'` - highlight text of <inline_text>.
+        Note: requires Neovim>=0.10.
   - <priority> `(number)` - priority of highlighting. Default: 200.
   - <filter> `(function)` - callable object used to filter buffers in which
     highlighting will take place. It should take buffer identifier as input
     and return `false` or `nil` to not highlight inside this buffer.
+  - <inline_text> `(string)` - string to be placed and highlighted with color
+    to the right of match in case <style> is "inline". Default: "█".
 
 Return~
 `(table)` Highlighter table ready to be used as part of `config.highlighters`.

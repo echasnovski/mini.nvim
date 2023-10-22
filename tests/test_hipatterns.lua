@@ -883,6 +883,23 @@ T['gen_highlighter']['hex_color()']["works with style 'line'"] = function()
   expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'gui=underline guisp=#ffffff')
 end
 
+T['gen_highlighter']['hex_color()']["works with style 'inline'"] = function()
+  if child.fn.has('nvim-0.10') == 0 then
+    expect.error(function() enable_hex_color({ style = 'inline' }) end, '"inline".*hex_color.*0%.10')
+    return
+  end
+
+  child.set_size(5, 25)
+  set_lines({ '#000000 #ffffff' })
+
+  enable_hex_color({ style = 'inline' })
+  child.expect_screenshot()
+
+  -- Should use correct highlight groups
+  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'guifg=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'guifg=#ffffff')
+end
+
 T['gen_highlighter']['hex_color()']['correctly computes highlight group'] = function()
   set_lines({ '#767676 #777777', '#098777 #178d7c' })
 

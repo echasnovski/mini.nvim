@@ -26,6 +26,7 @@
 
 - FEATURE: Implement `extmark_opts` in highlighter definitions for a more control over extmarks placed at matches.
 - FEATURE: Update `compute_hex_color_group()` to allow `style = 'fg'`.
+- FEATURE: Update `gen_highlighter.hex_color()` to allow `style = 'inline'` (requires Neovim>=0.10 with support of inline extmarks).
 
 ## mini.hues
 

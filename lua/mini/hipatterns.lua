@@ -500,11 +500,15 @@ MiniHipatterns.gen_highlighter = {}
 ---   - <style> `(string)` - one of:
 ---       - `'full'` -  highlight background of whole hex string with it. Default.
 ---       - `'#'` - highlight background of only `#`.
----       - `'line'` highlight underline with that color.
+---       - `'line'` - highlight underline with that color.
+---       - `'inline'` - highlight text of <inline_text>.
+---         Note: requires Neovim>=0.10.
 ---   - <priority> `(number)` - priority of highlighting. Default: 200.
 ---   - <filter> `(function)` - callable object used to filter buffers in which
 ---     highlighting will take place. It should take buffer identifier as input
 ---     and return `false` or `nil` to not highlight inside this buffer.
+---   - <inline_text> `(string)` - string to be placed and highlighted with color
+---     to the right of match in case <style> is "inline". Default: "█".
 ---
 ---@return table Highlighter table ready to be used as part of `config.highlighters`.
 ---   Both `pattern` and `group` are callable.
@@ -517,15 +521,31 @@ MiniHipatterns.gen_highlighter = {}
 ---     }
 ---   })
 MiniHipatterns.gen_highlighter.hex_color = function(opts)
-  opts = vim.tbl_deep_extend('force', { style = 'full', priority = 200, filter = H.always_true }, opts or {})
+  local default_opts = { style = 'full', priority = 200, filter = H.always_true, inline_text = '█' }
+  opts = vim.tbl_deep_extend('force', default_opts, opts or {})
 
-  local pattern = opts.style == '#' and '()#()%x%x%x%x%x%x%f[%X]' or '#%x%x%x%x%x%x%f[%X]'
-  local style = opts.style == 'line' and 'line' or 'bg'
+  local style = opts.style
+  if style == 'inline' and vim.fn.has('nvim-0.10') == 0 then
+    H.error('Style "inline" in `gen_highlighter.hex_color()` requires Neovim>=0.10.')
+  end
+
+  local pattern = style == '#' and '()#()%x%x%x%x%x%x%f[%X]' or '#%x%x%x%x%x%x%f[%X]'
+  local hl_style = ({ full = 'bg', ['#'] = 'bg', line = 'line', inline = 'fg' })[style] or 'bg'
+
+  local extmark_opts = { priority = opts.priority }
+  if opts.style == 'inline' then
+    local priority, inline_text = opts.priority, opts.inline_text
+    ---@diagnostic disable:cast-local-type
+    extmark_opts = function(_, _, data)
+      local virt_text = { { inline_text, data.hl_group } }
+      return { virt_text = virt_text, virt_text_pos = 'inline', priority = priority, right_gravity = false }
+    end
+  end
 
   return {
     pattern = H.wrap_pattern_with_filter(pattern, opts.filter),
-    group = function(_, _, data) return MiniHipatterns.compute_hex_color_group(data.full_match, style) end,
-    priority = opts.priority,
+    group = function(_, _, data) return MiniHipatterns.compute_hex_color_group(data.full_match, hl_style) end,
+    extmark_opts = extmark_opts,
   }
 end
 
