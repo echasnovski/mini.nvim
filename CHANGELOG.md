@@ -22,6 +22,10 @@
 - BREAKING: Highlight in preview now is not enabled if file is sufficiently large.
 - FEATURE: Explorer now tracks if focus is lost and properly closes on detection.
 
+## mini.hipatterns
+
+- FEATURE: Implement `extmark_opts` in highlighter definitions for a more control over extmarks placed at matches.
+
 ## mini.hues
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.

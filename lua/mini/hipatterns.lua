@@ -147,10 +147,11 @@ end
 ---
 --- ## Highlighters ~
 ---
---- `highlighters` table defines which patterns will be highlighted. It might
---- or might not have explicitly named fields, but having them is recommended
---- and is required for proper use of `vim.b.minihipatterns_config` as
---- buffer-local config. By default it is empty expecting user definition.
+--- `highlighters` table defines which patterns will be highlighted by placing
+--- |extmark| at the match start. It might or might not have explicitly named
+--- fields, but having them is recommended and is required for proper use of
+--- `vim.b.minihipatterns_config` as buffer-local config. By default it is
+--- empty expecting user definition.
 ---
 --- Each entry defines single highlighter as a table with the following fields:
 --- - <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
@@ -178,12 +179,21 @@ end
 ---             - <full_match> - string with full pattern match.
 ---             - <line> - match line number (1-indexed).
 ---             - <from_col> - match starting byte column (1-indexed).
----             - <end_col> - match ending byte column (1-indexed, inclusive).
+---             - <to_col> - match ending byte column (1-indexed, inclusive).
 ---
 ---     - It can return `nil` meaning this particular match will not be highlighted.
 ---
---- - <priority> `(number|nil)` - optional highlighting priority (as
----   in |nvim_buf_set_extmark()|). Default: 200. See also |vim.highlight.priorities|.
+--- - <extmark_opts> `(table|function|nil)` - optional extra options
+---   for |nvim_buf_set_extmark()|. If callable, will be called in the same way
+---   as callable <group> (`data` will also contain `hl_group` key with <group>
+---   value) and should return a table with all options for extmark (including
+---   `end_row`, `end_col`, `hl_group`, and `priority`).
+---   Note: if <extmark_opts> is supplied, <priority> is ignored.
+---
+--- - <priority> `(number|nil)` - SOFT DEPRECATED in favor
+---   of `extmark_opts = { priority = <value> }`.
+---   Optional highlighting priority (as in |nvim_buf_set_extmark()|).
+---   Default: 200. See also |vim.highlight.priorities|.
 ---
 --- See "Common use cases" section for the examples.
 ---
@@ -249,6 +259,26 @@ end
 --- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
 ---
 ---   { pattern = '%f[%s]%s*$', group = 'Error' }
+---
+--- - Censor certain sensitive information: >
+---
+---   local censor_extmark_opts = function(_, match, _)
+---     local mask = string.rep('x', vim.fn.strchars(match))
+---     return {
+---       virt_text = { { mask, 'Comment' } }, virt_text_pos = 'overlay',
+---       priority = 200, right_gravity = false,
+---     }
+---   end
+---
+---   require('mini.hipatterns').setup({
+---     highlighters = {
+---       censor = {
+---         pattern = 'password: ()%S+()',
+---         group = '',
+---         extmark_opts = censor_extmark_opts,
+---       },
+---     },
+---   })
 ---
 --- - Enable only in certain filetypes. There are at least these ways to do it:
 ---     - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
@@ -686,12 +716,25 @@ end
 H.normalize_highlighters = function(highlighters)
   local res = {}
   for _, hi in pairs(highlighters) do
-    local pattern = type(hi.pattern) == 'string' and function(...) return hi.pattern end or hi.pattern
-    local group = type(hi.group) == 'string' and function(...) return hi.group end or hi.group
-    local priority = hi.priority or 200
+    local pattern = type(hi.pattern) == 'string' and function() return hi.pattern end or hi.pattern
+    local group = type(hi.group) == 'string' and function() return hi.group end or hi.group
 
-    if vim.is_callable(pattern) and vim.is_callable(group) and type(priority) == 'number' then
-      table.insert(res, { pattern = pattern, group = group, priority = priority })
+    -- TODO: Soft deprecate `priority` with `vim.notify_once`
+    local extmark_opts = hi.extmark_opts or { priority = hi.priority or 200 }
+    if type(extmark_opts) == 'table' then
+      local t = extmark_opts
+      ---@diagnostic disable:cast-local-type
+      extmark_opts = function(_, _, data)
+        local opts = vim.deepcopy(t)
+        opts.hl_group = opts.hl_group or data.hl_group
+        opts.end_row = opts.end_row or (data.line - 1)
+        opts.end_col = opts.end_col or data.to_col
+        return opts
+      end
+    end
+
+    if vim.is_callable(pattern) and vim.is_callable(group) and vim.is_callable(extmark_opts) then
+      table.insert(res, { pattern = pattern, group = group, extmark_opts = extmark_opts })
     end
   end
 
@@ -766,14 +809,12 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
 end)
 
 H.apply_highlighter = vim.schedule_wrap(function(hi, buf_id, lines_to_process)
-  local pattern, group = hi.pattern(buf_id), hi.group
+  local pattern, group, extmark_opts = hi.pattern(buf_id), hi.group, hi.extmark_opts
   if type(pattern) ~= 'string' then return end
   local pattern_has_line_start = pattern:sub(1, 1) == '^'
 
   -- Apply per proper line
   local ns = H.ns_id.highlight
-  local extmark_opts = { priority = hi.priority }
-
   for l_num, _ in pairs(lines_to_process) do
     local line = H.get_line(buf_id, l_num)
     local from, to, sub_from, sub_to = line:find(pattern)
@@ -789,10 +830,12 @@ H.apply_highlighter = vim.schedule_wrap(function(hi, buf_id, lines_to_process)
       local match = line:sub(sub_from, sub_to)
 
       -- Set extmark based on submatch
-      extmark_opts.hl_group =
-        group(buf_id, match, { full_match = full_match, line = l_num, from_col = sub_from, to_col = sub_to })
-      extmark_opts.end_col = sub_to
-      if extmark_opts.hl_group ~= nil then H.set_extmark(buf_id, ns, l_num - 1, sub_from - 1, extmark_opts) end
+      local data = { full_match = full_match, line = l_num, from_col = sub_from, to_col = sub_to }
+      local hl_group = group(buf_id, match, data)
+      if hl_group ~= nil then
+        data.hl_group = hl_group
+        H.set_extmark(buf_id, ns, l_num - 1, sub_from - 1, extmark_opts(buf_id, match, data))
+      end
 
       -- Overcome an issue that `string.find()` doesn't recognize `^` when
       -- `init` is more than 1

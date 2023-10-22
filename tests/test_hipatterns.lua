@@ -461,7 +461,7 @@ T['Highlighters']['allows callable `group`'] = function()
   child.lua([[_G.hi_callable_group = {
     pattern = 'abcd',
     group = function(...)
-      _G.args = { ... }
+      _G.args = vim.deepcopy({ ... })
       return 'Error'
     end,
   }]])
@@ -515,7 +515,7 @@ T['Highlighters']['allows return `nil` `group` to not highlight'] = function()
 end
 
 T['Highlighters']['respects `priority`'] = function()
-  local config = { highlighters = { abcd = { pattern = 'abcd', group = 'Error' } }, delay = { text_change = 20 } }
+  local config = { highlighters = { abcd = { pattern = 'abcd', group = 'Error' } } }
   set_lines({ 'abcd', 'abcd', 'abcd' })
   enable(0, config)
   child.expect_screenshot()
@@ -535,6 +535,54 @@ T['Highlighters']['respects `priority`'] = function()
   config.highlighters.abcd.priority = 202
   enable(0, config)
   child.expect_screenshot()
+end
+
+T['Highlighters']['respects `extmark_opts`'] = function()
+  child.lua([[_G.hi_abcd = { pattern = 'abcd', group = 'Error', extmark_opts = { priority = 100 } }]])
+  child.lua([[_G.hi_efgh = {
+    pattern = 'efgh',
+    group = function() return 'Comment' end,
+    extmark_opts = function(buf_id, match, data)
+      _G.extmark_args = { buf_id = buf_id, match = match, data = vim.deepcopy(data) }
+      return { hl_group = data.hl_group, end_row = data.line - 1, end_col = data.to_col - 2 }
+    end,
+  }]])
+
+  set_lines({ 'abcd', 'efgh' })
+  child.lua([[require('mini.hipatterns').enable(
+    0,
+    { highlighters = { abcd = _G.hi_abcd, efgh = _G.hi_efgh } }
+  )]])
+
+  child.expect_screenshot()
+
+  -- Check actual extmark details
+  local ns_id = child.api.nvim_get_namespaces()['MiniHipatternsHighlight']
+  local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
+  -- - Ensure persistent order
+  table.sort(extmarks, function(a, b) return a[2] < b[2] end)
+
+  local validate_full_extmark = function(extmark, row, col, details)
+    eq({ row = extmark[2], col = extmark[3] }, { row = row, col = col })
+    local real_details = {}
+    for key, _ in pairs(details) do
+      real_details[key] = extmark[4][key]
+    end
+    eq(real_details, details)
+  end
+
+  -- As table (should set options needed for highlighting region)
+  validate_full_extmark(extmarks[1], 0, 0, { priority = 100, hl_group = 'Error', end_row = 0, end_col = 4 })
+
+  -- As callable
+  validate_full_extmark(extmarks[2], 1, 0, { hl_group = 'Comment', end_row = 1, end_col = 2 })
+
+  -- - Should be called with correct arguments
+  eq(child.lua_get('_G.extmark_args'), {
+    buf_id = child.api.nvim_get_current_buf(),
+    match = 'efgh',
+    data = { from_col = 1, full_match = 'efgh', hl_group = 'Comment', line = 2, to_col = 4 },
+  })
 end
 
 T['enable()']['validates arguments'] = function()
