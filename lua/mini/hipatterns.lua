@@ -540,8 +540,10 @@ end
 ---
 ---@param hex_color string Hex color string in format `#rrggbb`.
 ---@param style string One of:
----   - `'bg'` -  highlight background with `hex_color`. Default.
----   - `'line'` highlight underline with `hex_color`.
+---   - `'bg'` - highlight background with `hex_color` and foreground with black or
+---     white (whichever is more visible). Default.
+---   - `'fg'` - highlight foreground with `hex_color`.
+---   - `'line'` - highlight underline with `hex_color`.
 ---
 ---@return string Name of created highlight group appropriate to show `hex_color`.
 MiniHipatterns.compute_hex_color_group = function(hex_color, style)
@@ -558,6 +560,8 @@ MiniHipatterns.compute_hex_color_group = function(hex_color, style)
     local opposite = H.compute_opposite_color(hex)
     vim.api.nvim_set_hl(0, group_name, { fg = opposite, bg = hex_color })
   end
+
+  if style == 'fg' then vim.api.nvim_set_hl(0, group_name, { fg = hex_color }) end
 
   if style == 'line' then vim.api.nvim_set_hl(0, group_name, { sp = hex_color, underline = true }) end
 

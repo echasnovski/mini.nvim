@@ -25,6 +25,7 @@
 ## mini.hipatterns
 
 - FEATURE: Implement `extmark_opts` in highlighter definitions for a more control over extmarks placed at matches.
+- FEATURE: Update `compute_hex_color_group()` to allow `style = 'fg'`.
 
 ## mini.hues
 

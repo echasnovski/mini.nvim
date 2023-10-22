@@ -997,6 +997,8 @@ end
 T['compute_hex_color_group()']['respects `style` argument'] = function()
   eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns000000')
   validate_hl_group('MiniHipatterns000000', 'gui=underline guisp=#000000')
+  eq(compute_hex_color_group('#aaaaaa', 'fg'), 'MiniHipatternsaaaaaa')
+  validate_hl_group('MiniHipatternsaaaaaa', 'guifg=#aaaaaa')
 end
 
 T['compute_hex_color_group()']['clears cache after `:colorscheme`'] = function()

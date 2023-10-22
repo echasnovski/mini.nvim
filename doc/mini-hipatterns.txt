@@ -440,8 +440,10 @@ Notes:
 Parameters~
 {hex_color} `(string)` Hex color string in format `#rrggbb`.
 {style} `(string)` One of:
-  - `'bg'` -  highlight background with `hex_color`. Default.
-  - `'line'` highlight underline with `hex_color`.
+  - `'bg'` - highlight background with `hex_color` and foreground with black or
+    white (whichever is more visible). Default.
+  - `'fg'` - highlight foreground with `hex_color`.
+  - `'line'` - highlight underline with `hex_color`.
 
 Return~
 `(string)` Name of created highlight group appropriate to show `hex_color`.
