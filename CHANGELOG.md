@@ -4,6 +4,10 @@
 
 - BREAKING: Stop supporting deprecated 'HiPhish/nvim-ts-rainbow2'.
 
+## mini.bufremove
+
+- BREAKING FEATURE: Applying `delete()` and `wipeout()` without `force` in a modified buffer now asks for confirmation instead of declining and showing message.
+
 ## mini.clue
 
 - FEATURE: `config.window.config` now can be callable returning window config.

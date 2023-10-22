@@ -75,7 +75,8 @@ Parameters~
 {buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to use.
   Default: 0 for current.
 {force} `(boolean|nil)` Whether to ignore unsaved changes (using `!` version of
-  command). Default: `false`.
+  command). If `false`, calling with unsaved changes will prompt confirm dialog.
+  Default: `false`.
 
 Return~
 `(boolean|nil)` Whether operation was successful. If `nil`, no operation was done.
@@ -89,7 +90,8 @@ Parameters~
 {buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to use.
   Default: 0 for current.
 {force} `(boolean|nil)` Whether to ignore unsaved changes (using `!` version of
-  command). Default: `false`.
+  command). If `false`, calling with unsaved changes will prompt confirm dialog.
+  Default: `false`.
 
 Return~
 `(boolean|nil)` Whether operation was successful. If `nil`, no operation was done.
