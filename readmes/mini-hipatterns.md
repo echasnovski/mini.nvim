@@ -30,6 +30,8 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/130374e2-4e6c-43cf-af33
 
 - Highlighting is updated asynchronously with configurable debounce delay.
 
+- Function to get matches in a buffer.
+
 See `*MiniHipatterns-examples*` tag in help page for examples of common use cases.
 
 Notes:

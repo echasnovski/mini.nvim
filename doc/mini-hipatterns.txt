@@ -11,6 +11,8 @@ Features:
 
 - Highlighting is updated asynchronously with configurable debounce delay.
 
+- Function to get matches in a buffer (see |MiniHipatterns.get_matches()|).
+
 See |MiniHipatterns-examples| for common configuration examples.
 
 Notes:
@@ -382,6 +384,32 @@ Get an array of enabled buffers
 
 Return~
 `(table)` Array of buffer identifiers with enabled highlighting.
+
+------------------------------------------------------------------------------
+                                                  *MiniHipatterns.get_matches()*
+             `MiniHipatterns.get_matches`({buf_id}, {highlighters})
+Get buffer matches
+
+Parameters~
+{buf_id} `(number|nil)` Buffer identifier for which to return matches.
+  Default: `nil` for current buffer.
+{highlighters} `(table|nil)` Array of highlighter identifiers (as in
+  `highlighters` field of |MiniHipatterns.config|) for which to return matches.
+  Default: all available highlighters (ordered by string representation).
+
+Return~
+`(table)` Array of buffer matches which are tables with following fields:
+  - <bufnr> `(number)` - buffer identifier of a match.
+  - <highlighter> `(any)` - highlighter identifier which produced the match.
+  - <lnum> `(number)` - line number of the match start (starts with 1).
+  - <col> `(number)` - column number of the match start (starts with 1).
+  - <end_lnum> `(number|nil)` - line number of the match end (starts with 1).
+  - <end_col> `(number|nil)` - column number next to the match end
+    (implements end-exclusive region; starts with 1).
+  - <hl_group> `(string|nil)` - name of match's highlight group.
+
+  Matches are ordered first by supplied `highlighters`, then by line and
+  column of match start.
 
 ------------------------------------------------------------------------------
                                                 *MiniHipatterns.gen_highlighter*

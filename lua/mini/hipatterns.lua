@@ -11,6 +11,8 @@
 ---
 --- - Highlighting is updated asynchronously with configurable debounce delay.
 ---
+--- - Function to get matches in a buffer (see |MiniHipatterns.get_matches()|).
+---
 --- See |MiniHipatterns-examples| for common configuration examples.
 ---
 --- Notes:
@@ -485,6 +487,60 @@ MiniHipatterns.get_enabled_buffers = function()
   return res
 end
 
+--- Get buffer matches
+---
+---@param buf_id number|nil Buffer identifier for which to return matches.
+---   Default: `nil` for current buffer.
+---@param highlighters table|nil Array of highlighter identifiers (as in
+---   `highlighters` field of |MiniHipatterns.config|) for which to return matches.
+---   Default: all available highlighters (ordered by string representation).
+---
+---@return table Array of buffer matches which are tables with following fields:
+---   - <bufnr> `(number)` - buffer identifier of a match.
+---   - <highlighter> `(any)` - highlighter identifier which produced the match.
+---   - <lnum> `(number)` - line number of the match start (starts with 1).
+---   - <col> `(number)` - column number of the match start (starts with 1).
+---   - <end_lnum> `(number|nil)` - line number of the match end (starts with 1).
+---   - <end_col> `(number|nil)` - column number next to the match end
+---     (implements end-exclusive region; starts with 1).
+---   - <hl_group> `(string|nil)` - name of match's highlight group.
+---
+---   Matches are ordered first by supplied `highlighters`, then by line and
+---   column of match start.
+MiniHipatterns.get_matches = function(buf_id, highlighters)
+  buf_id = (buf_id == nil or buf_id == 0) and vim.api.nvim_get_current_buf() or buf_id
+  if not (type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id)) then
+    H.error('`buf_id` is not valid buffer identifier.')
+  end
+
+  local all_highlighters = H.get_all_highlighters()
+  highlighters = highlighters or all_highlighters
+  if not vim.tbl_islist(highlighters) then H.error('`highlighters` should be an array.') end
+  highlighters = vim.tbl_filter(function(x) return vim.tbl_contains(all_highlighters, x) end, highlighters)
+
+  local position_compare = function(a, b) return a[2] < b[2] or (a[2] == b[2] and a[3] < b[3]) end
+  local res = {}
+  for _, hi_id in ipairs(highlighters) do
+    local extmarks = H.get_extmarks(buf_id, H.ns_id[hi_id], 0, -1, { details = true })
+    table.sort(extmarks, position_compare)
+
+    for _, extmark in ipairs(extmarks) do
+      local end_lnum, end_col = extmark[4].end_row, extmark[4].end_col
+      end_lnum = type(end_lnum) == 'number' and (end_lnum + 1) or end_lnum
+      end_col = type(end_col) == 'number' and (end_col + 1) or end_col
+      --stylua: ignore
+      local entry = {
+        bufnr = buf_id,        highlighter = hi_id,
+        lnum = extmark[2] + 1, col = extmark[3] + 1,
+        end_lnum = end_lnum,   end_col = end_col,
+        hl_group = extmark[4].hl_group,
+      }
+      table.insert(res, entry)
+    end
+  end
+  return res
+end
+
 --- Generate builtin highlighters
 ---
 --- This is a table with function elements. Call to actually get highlighter.
@@ -769,6 +825,12 @@ H.normalize_highlighters = function(highlighters)
   return res
 end
 
+H.get_all_highlighters = function()
+  local hi_arr = vim.tbl_map(function(x) return { x, tostring(x) } end, vim.tbl_keys(H.ns_id))
+  table.sort(hi_arr, function(a, b) return a[2] < b[2] end)
+  return vim.tbl_map(function(x) return x[1] end, hi_arr)
+end
+
 -- Processing -----------------------------------------------------------------
 H.process_lines = vim.schedule_wrap(function(buf_id, from_line, to_line, delay_ms)
   -- Make sure that that at least one line is processed (important to react
@@ -920,6 +982,12 @@ H.get_line =
   function(buf_id, line_num) return vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1] or '' end
 
 H.set_extmark = function(...) pcall(vim.api.nvim_buf_set_extmark, ...) end
+
+H.get_extmarks = function(...)
+  local ok, res = pcall(vim.api.nvim_buf_get_extmarks, ...)
+  if not ok then return {} end
+  return res
+end
 
 H.clear_namespace = function(...) pcall(vim.api.nvim_buf_clear_namespace, ...) end
 

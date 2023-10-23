@@ -13,6 +13,11 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
+local forward_lua = function(fun_str)
+  local lua_cmd = fun_str .. '(...)'
+  return function(...) return child.lua_get(lua_cmd, { ... }) end
+end
+
 -- Module helpers
 local get_hi_namespaces = function()
   local res = {}
@@ -204,10 +209,8 @@ end
 
 T['enable()'] = new_set()
 
-local enable = function(...) child.lua([[require('mini.hipatterns').enable(...)]], { ... }) end
-
-local get_enabled_buffers =
-  function(...) return child.lua_get([[require('mini.hipatterns').get_enabled_buffers(...)]], { ... }) end
+local enable = forward_lua([[require('mini.hipatterns').enable]])
+local get_enabled_buffers = forward_lua([[require('mini.hipatterns').get_enabled_buffers]])
 
 T['enable()']['works'] = function()
   set_lines(test_lines)
@@ -667,7 +670,7 @@ end
 
 T['disable()'] = new_set()
 
-local disable = function(...) child.lua([[require('mini.hipatterns').disable(...)]], { ... }) end
+local disable = forward_lua([[require('mini.hipatterns').disable]])
 
 T['disable()']['works'] = function()
   local cur_buf_id = child.api.nvim_get_current_buf()
@@ -710,7 +713,7 @@ end
 
 T['toggle()'] = new_set()
 
-local toggle = function(...) child.lua([[require('mini.hipatterns').toggle(...)]], { ... }) end
+local toggle = forward_lua([[require('mini.hipatterns').toggle]])
 
 T['toggle()']['works'] = function()
   local cur_buf_id = child.api.nvim_get_current_buf()
@@ -741,7 +744,7 @@ end
 
 T['update()'] = new_set()
 
-local update = function(...) child.lua([[require('mini.hipatterns').update(...)]], { ... }) end
+local update = forward_lua([[require('mini.hipatterns').update]])
 
 T['update()']['works'] = function()
   child.lua([[_G.hi_conditional_pattern = {
@@ -827,6 +830,97 @@ T['get_enabled_buffers()']['works'] = function()
   -- Does not return invalid buffers
   child.api.nvim_buf_delete(buf_id_4, {})
   eq(get_enabled_buffers(), { buf_id_1 })
+end
+
+T['get_matches'] = new_set()
+
+local get_matches = forward_lua([[require('mini.hipatterns').get_matches]])
+
+T['get_matches']['works'] = function()
+  local buf_id_1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(buf_id_1, 0, -1, false, { 'aaa bbb', '  aaa', '  bbb' })
+  local buf_id_2 = child.api.nvim_create_buf(true, false)
+
+  child.lua([[require('mini.hipatterns').setup({
+    highlighters = {
+      -- Common highlighter
+      aaa = { pattern = 'aaa', group = 'Comment' },
+      -- Highlighter with non-string name and callable `extmark_opts` without
+      -- `end_row`/`end_col`
+      [10] = {
+        pattern = 'bbb',
+        group = '',
+        extmark_opts = function(_, _, data)
+          return { virt_text = { { 'xxx', 'Error' } }, virt_text_pos = 'overlay' }
+        end,
+      },
+    },
+    delay = { text_change = 20 },
+  })]])
+
+  enable(buf_id_1)
+  sleep(20 + small_time)
+  local matches = get_matches(buf_id_1)
+
+  -- Order should be guaranteed (as tostring(10) is less than 'aaa')
+  eq(matches, {
+    { bufnr = 2, highlighter = 10, lnum = 1, col = 5 },
+    { bufnr = 2, highlighter = 10, lnum = 3, col = 3 },
+    { bufnr = 2, highlighter = 'aaa', lnum = 1, col = 1, end_lnum = 1, end_col = 4, hl_group = 'Comment' },
+    { bufnr = 2, highlighter = 'aaa', lnum = 2, col = 3, end_lnum = 2, end_col = 6, hl_group = 'Comment' },
+  })
+
+  -- Should return empty table if disabled
+  disable(buf_id_1)
+  eq(get_matches(buf_id_1), {})
+
+  -- Should return empty table if no matches
+  enable(buf_id_2)
+  sleep(20 + small_time)
+  eq(get_matches(buf_id_2), {})
+end
+
+T['get_matches']['respects `buf_id` argument'] = function()
+  local buf_id = child.api.nvim_get_current_buf()
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb aaa' })
+  child.lua([[require('mini.hipatterns').setup({
+    highlighters = {  aaa = { pattern = 'aaa', group = 'Error' }  },
+    delay = { text_change = 20 },
+  })]])
+  enable(buf_id)
+  sleep(20 + small_time)
+
+  -- Should allow both `nil` and `0` to mean current buffer
+  local ref_output =
+    { { bufnr = buf_id, highlighter = 'aaa', hl_group = 'Error', lnum = 1, col = 5, end_lnum = 1, end_col = 8 } }
+  eq(get_matches(), ref_output)
+  eq(get_matches(0), ref_output)
+end
+
+T['get_matches']['respects `highlighters` argument'] = function()
+  local buf_id = child.api.nvim_get_current_buf()
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb aaa' })
+  child.lua([[require('mini.hipatterns').setup({
+    highlighters = {
+      aaa = { pattern = 'aaa', group = 'Error' },
+      bbb = { pattern = 'bbb', group = 'Comment' },
+    },
+    delay = { text_change = 20 },
+  })]])
+  enable(buf_id)
+  sleep(20 + small_time)
+
+  -- Should respect order of `highlighters` in output and discard any not
+  -- present highlighter identifiers
+  eq(get_matches(buf_id, { 'bbb', 'xxx', 'aaa' }), {
+    { bufnr = buf_id, highlighter = 'bbb', hl_group = 'Comment', lnum = 1, col = 1, end_lnum = 1, end_col = 4 },
+    { bufnr = buf_id, highlighter = 'aaa', hl_group = 'Error', lnum = 1, col = 5, end_lnum = 1, end_col = 8 },
+  })
+end
+
+T['get_matches']['validates arguments'] = function()
+  expect.error(function() get_matches('a') end, '`buf_id`.*not valid')
+  expect.error(function() get_matches(child.api.nvim_get_current_buf(), 1) end, '`highlighters`.*array')
 end
 
 T['gen_highlighter'] = new_set()
@@ -1007,8 +1101,7 @@ end
 
 T['compute_hex_color_group()'] = new_set()
 
-local compute_hex_color_group =
-  function(...) return child.lua_get([[require('mini.hipatterns').compute_hex_color_group(...)]], { ... }) end
+local compute_hex_color_group = forward_lua([[require('mini.hipatterns').compute_hex_color_group]])
 
 T['compute_hex_color_group()']['works'] = function()
   eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns000000')
