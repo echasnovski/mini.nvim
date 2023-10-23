@@ -1255,6 +1255,7 @@ T['default_show()']['respects `opts.show_icons`'] = function()
   child.set_size(10, 45)
   local items = vim.tbl_map(real_file, vim.fn.readdir(real_files_dir))
   table.insert(items, test_dir)
+  table.insert(items, join_path(test_dir, 'file'))
   table.insert(items, 'non-existing')
   table.insert(items, { text = 'non-string' })
   local query = { 'i', 'i' }
@@ -1266,6 +1267,27 @@ T['default_show()']['respects `opts.show_icons`'] = function()
   -- With 'nvim-web-devicons'
   child.cmd('set rtp+=tests/dir-pick')
   default_show(0, items, query, { show_icons = true })
+  child.expect_screenshot()
+end
+
+T['default_show()']['respects `opts.icons`'] = function()
+  child.set_size(10, 45)
+  local items = vim.tbl_map(real_file, vim.fn.readdir(real_files_dir))
+  table.insert(items, test_dir)
+  table.insert(items, join_path(test_dir, 'file'))
+  table.insert(items, 'non-existing')
+  table.insert(items, { text = 'non-string' })
+  local query = { 'i', 'i' }
+
+  local icon_opts = { show_icons = true, icons = { directory = 'DD', file = 'FF', none = 'NN' } }
+
+  -- Without 'nvim-web-devicons'
+  default_show(0, items, query, icon_opts)
+  child.expect_screenshot()
+
+  -- With 'nvim-web-devicons'
+  child.cmd('set rtp+=tests/dir-pick')
+  default_show(0, items, query, icon_opts)
   child.expect_screenshot()
 end
 

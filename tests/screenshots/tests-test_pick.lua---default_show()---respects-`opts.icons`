@@ -1,13 +1,13 @@
 --|---------|---------|---------|---------|-----
-01| tests/dir-pick/real-files/LICENSE          
-02| tests/dir-pick/real-files/Makefile         
-03| tests/dir-pick/real-files/a.lua            
-04| tests/dir-pick/real-files/b.txt            
-05| tests/dir-pick/real-files/c.gif            
-06| tests/dir-pick                             
-07| tests/dir-pick/file                        
-08|  non-existing                               
-09|  non-string                                 
+01|FFtests/dir-pick/real-files/LICENSE          
+02|FFtests/dir-pick/real-files/Makefile         
+03|FFtests/dir-pick/real-files/a.lua            
+04|FFtests/dir-pick/real-files/b.txt            
+05|FFtests/dir-pick/real-files/c.gif            
+06|DDtests/dir-pick                             
+07|FFtests/dir-pick/file                        
+08|NNnon-existing                               
+09|NNnon-string                                 
 10|                                             
 
 --|---------|---------|---------|---------|-----

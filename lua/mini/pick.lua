@@ -991,15 +991,21 @@ end
 ---     empty space otherwise.
 ---     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
 ---     paths use `true` by default.
+---   - <icons> `(table)` - table with fallback icons. Can have fields:
+---       - <directory> `(string)` - icon for directory. Default: " ".
+---       - <file> `(string)` - icon for file. Default: " ".
+---       - <none> `(string)` - icon for non-valid path. Default: "  ".
 MiniPick.default_show = function(buf_id, items, query, opts)
-  opts = vim.tbl_deep_extend('force', { show_icons = false }, opts or {})
+  local default_icons = { directory = ' ', file = ' ', none = '  ' }
+  opts = vim.tbl_deep_extend('force', { show_icons = false, icons = default_icons }, opts or {})
 
   -- Compute and set lines
   local lines = vim.tbl_map(H.item_to_string, items)
   local tab_spaces = string.rep(' ', vim.o.tabstop)
   lines = vim.tbl_map(function(l) return l:gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
 
-  local get_prefix_data = opts.show_icons and H.get_icon or function() return { text = '' } end
+  local get_prefix_data = opts.show_icons and function(line) return H.get_icon(line, opts.icons) end
+    or function() return { text = '' } end
   local prefix_data = vim.tbl_map(get_prefix_data, lines)
 
   local lines_to_show = {}
@@ -2831,16 +2837,17 @@ H.match_sort = function(match_data)
 end
 
 -- Default show ---------------------------------------------------------------
-H.get_icon = function(x)
+H.get_icon = function(x, icons)
   local path_type, path = H.parse_path(x)
   if path_type == nil then return { text = '' } end
-  if path_type == 'directory' then return { text = ' ', hl = 'MiniPickIconDirectory' } end
-  if path_type == 'none' then return { text = '  ', hl = 'MiniPickNormal' } end
+  if path_type == 'directory' then return { text = icons.directory, hl = 'MiniPickIconDirectory' } end
+  if path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-  if not has_devicons then return { text = ' ', hl = 'MiniPickIconFile' } end
+  if not has_devicons then return { text = icons.file, hl = 'MiniPickIconFile' } end
 
   local icon, hl = devicons.get_icon(vim.fn.fnamemodify(path, ':t'), nil, { default = false })
-  return { text = (icon or '') .. ' ', hl = hl or 'MiniPickIconFile' }
+  icon = type(icon) == 'string' and (icon .. ' ') or icons.file
+  return { text = icon, hl = hl or 'MiniPickIconFile' }
 end
 
 H.show_with_icons =

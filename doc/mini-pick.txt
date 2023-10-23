@@ -937,6 +937,10 @@ Parameters~
     empty space otherwise.
     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
     paths use `true` by default.
+  - <icons> `(table)` - table with fallback icons. Can have fields:
+      - <directory> `(string)` - icon for directory. Default: " ".
+      - <file> `(string)` - icon for file. Default: " ".
+      - <none> `(string)` - icon for non-valid path. Default: "  ".
 
 ------------------------------------------------------------------------------
                                                     *MiniPick.default_preview()*
