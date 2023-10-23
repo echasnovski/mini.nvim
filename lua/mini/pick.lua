@@ -70,11 +70,16 @@
 ---                                                             *MiniPick-cli-tools*
 --- - CLI tool(s) to power |MiniPick.builtin.files()|, |MiniPick.builtin.grep()|, and
 ---   |MiniPick.builtin.grep_live()| built-in pickers:
----     - `rg` ('github.com/BurntSushi/ripgrep'; enough for all three; recommended).
----     - `fd` ('github.com/sharkdp/fd'; for `files` only).
----     - `git` ('github.com/git/git'; enough for all three).
+---     - `rg` (github.com/BurntSushi/ripgrep; enough for all three; recommended).
+---     - `fd` (github.com/sharkdp/fd; for `files` only).
+---     - `git` (github.com/git/git; enough for all three).
+---
 ---   Note: CLI tools are called only with basic arguments needed to get items.
 ---   To customize the output, use their respective configuration approaches.
+---   Here are some examples of where to start:
+---     - github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file
+---     - github.com/sharkdp/fd#excluding-specific-files-or-directories
+---     - git-scm.com/docs/gitignore
 ---
 --- # Setup ~
 ---
@@ -1185,9 +1190,12 @@ MiniPick.builtin = {}
 
 --- Pick from files
 ---
---- Lists all files: recursively in all subdirectories including hidden files.
---- Tries to use one of the CLI tools to create items (see |MiniPick-cli-tools|):
---- `rg`, `fd`, `git`. If none is present, uses fallback which utilizes |vim.fs.dir()|.
+--- Lists all files recursively in all subdirectories. Tries to use one of the
+--- CLI tools to create items (see |MiniPick-cli-tools|): `rg`, `fd`, `git`.
+--- If none is present, uses fallback which utilizes |vim.fs.dir()|.
+---
+--- To customize CLI tool search, either use tool's global configuration approach
+--- or directly |MiniPick.builtin.cli()| with specific command.
 ---
 ---@param local_opts __pick_builtin_local_opts
 ---   Possible fields:
@@ -1211,11 +1219,13 @@ end
 
 --- Pick from pattern matches
 ---
---- Lists all pattern matches: recursively in all subdirectories including
---- hidden files.
+--- Lists all pattern matches recursively in all subdirectories.
 --- Tries to use one of the CLI tools to create items (see |MiniPick-cli-tools|):
 --- `rg`, `git`. If none is present, uses fallback which utilizes |vim.fs.dir()| and
 --- Lua pattern matches (NOT recommended in large directories).
+---
+--- To customize CLI tool search, either use tool's global configuration approach
+--- or directly |MiniPick.builtin.cli()| with specific command.
 ---
 ---@param local_opts __pick_builtin_local_opts
 ---   Possible fields:
@@ -1247,6 +1257,8 @@ end
 --- matching.
 --- Tries to use one of the CLI tools to create items (see |MiniPick-cli-tools|):
 --- `rg`, `git`. If none is present, error is thrown (for performance reasons).
+---
+--- To customize search, use tool's global configuration approach.
 ---
 ---@param local_opts __pick_builtin_local_opts
 ---   Possible fields:
@@ -3058,8 +3070,8 @@ H.files_get_tool = function()
 end
 
 H.files_get_command = function(tool)
-  if tool == 'rg' then return { 'rg', '--files', '--hidden', '--no-follow', '--color=never', '-g', '!.git' } end
-  if tool == 'fd' then return { 'fd', '--type=f', '--hidden', '--no-follow', '--color=never', '--exclude=.git' } end
+  if tool == 'rg' then return { 'rg', '--files', '--no-follow', '--color=never' } end
+  if tool == 'fd' then return { 'fd', '--type=f', '--no-follow', '--color=never' } end
   if tool == 'git' then return { 'git', 'ls-files', '--cached', '--others', '--exclude-standard' } end
   H.error([[Wrong 'tool' for `files` builtin.]])
 end
@@ -3089,10 +3101,7 @@ end
 --stylua: ignore
 H.grep_get_command = function(tool, pattern)
   if tool == 'rg' then
-    return {
-      'rg', '--column', '--line-number', '--no-heading', '--hidden', '--no-follow', '--color=never', '--smart-case',
-      '--', pattern,
-    }
+    return { 'rg', '--column', '--line-number', '--no-heading', '--no-follow', '--color=never', '--', pattern }
   end
   if tool == 'git' then
     local res = { 'git', 'grep', '--column', '--line-number', '--color=never', '--', pattern }

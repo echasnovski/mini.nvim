@@ -2211,8 +2211,8 @@ T['builtin.files()']['respects `local_opts.tool`'] = function()
     clear_spawn_log()
   end
 
-  validate('rg', { '--files', '--hidden', '--no-follow' })
-  validate('fd', { '--type=f', '--hidden', '--no-follow' })
+  validate('rg', { '--files', '--no-follow' })
+  validate('fd', { '--type=f', '--no-follow' })
   validate('git', { 'ls-files', '--cached', '--others' })
 end
 
@@ -2329,7 +2329,7 @@ T['builtin.grep()']['respects `local_opts.tool`'] = new_set({ parametrize = { { 
       clear_spawn_log()
     end
 
-    validate('rg', { '--column', '--line-number', '--no-heading', '--hidden', '--smart-case', '--', 'test' })
+    validate('rg', { '--column', '--line-number', '--no-heading', '--', 'test' })
     validate('git', { 'grep', '--column', '--line-number', '--', 'test' })
   end,
 })
@@ -2535,7 +2535,7 @@ T['builtin.grep_live()']['respects `local_opts.tool`'] = function()
     clear_spawn_log()
   end
 
-  validate('rg', { '--column', '--line-number', '--no-heading', '--hidden', '--smart-case', '--', 'b' })
+  validate('rg', { '--column', '--line-number', '--no-heading', '--', 'b' })
   validate('git', { 'grep', '--column', '--line-number', '--', 'b' })
 
   -- Should not accept "fallback" tool
