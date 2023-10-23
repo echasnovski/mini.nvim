@@ -355,7 +355,7 @@ T['enable()']['reacts to window scroll'] = function()
 end
 
 T['enable()']['reacts to delete of line with match'] = function()
-  set_lines({ 'xxx', 'xxx', 'abcd', 'xxx', 'xxx' })
+  set_lines({ 'abcd', 'xxx', 'xxx', 'abcd', 'xxx', 'xxx', 'abcd' })
 
   local hi_abcd = {
     pattern = 'abcd',
@@ -365,13 +365,19 @@ T['enable()']['reacts to delete of line with match'] = function()
   local config = { highlighters = { abcd = hi_abcd }, delay = { text_change = 30, scroll = 10 } }
   enable(0, config)
 
-  sleep(30 + 2)
+  sleep(30 + small_time)
   child.expect_screenshot()
 
-  child.api.nvim_win_set_cursor(0, { 3, 0 })
-  type_keys('dd')
-  sleep(30 + 2)
-  child.expect_screenshot()
+  local validate = function(line_to_delete)
+    child.api.nvim_win_set_cursor(0, { line_to_delete, 0 })
+    type_keys('dd')
+    sleep(30 + small_time)
+    child.expect_screenshot()
+  end
+
+  validate(1)
+  validate(3)
+  validate(5)
 end
 
 T['Highlighters'] = new_set()

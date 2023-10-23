@@ -421,7 +421,7 @@ MiniHipatterns.disable = function(buf_id)
   H.cache[buf_id] = nil
 
   vim.api.nvim_del_augroup_by_id(buf_cache.augroup)
-  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id.highlight, 0, -1)
+  H.clear_namespace(buf_id, H.ns_id.highlight, 0, -1)
 end
 
 --- Toggle highlighting in buffer
@@ -825,7 +825,7 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
   -- Remove current highlights
   local ns = H.ns_id.highlight
   for l_num, _ in pairs(lines_to_process) do
-    vim.api.nvim_buf_clear_namespace(buf_id, ns, l_num - 1, l_num)
+    H.clear_namespace(buf_id, ns, l_num - 1, l_num)
   end
 
   -- Add new highlights
@@ -918,6 +918,8 @@ H.get_line =
   function(buf_id, line_num) return vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1] or '' end
 
 H.set_extmark = function(...) pcall(vim.api.nvim_buf_set_extmark, ...) end
+
+H.clear_namespace = function(...) pcall(vim.api.nvim_buf_clear_namespace, ...) end
 
 H.always_true = function() return true end
 
