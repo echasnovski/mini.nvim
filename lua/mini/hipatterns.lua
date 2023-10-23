@@ -421,7 +421,9 @@ MiniHipatterns.disable = function(buf_id)
   H.cache[buf_id] = nil
 
   vim.api.nvim_del_augroup_by_id(buf_cache.augroup)
-  H.clear_namespace(buf_id, H.ns_id.highlight, 0, -1)
+  for _, ns in pairs(H.ns_id) do
+    H.clear_namespace(buf_id, ns, 0, -1)
+  end
 end
 
 --- Toggle highlighting in buffer
@@ -599,8 +601,8 @@ H.default_config = vim.deepcopy(MiniHipatterns.config)
 H.timer_debounce = vim.loop.new_timer()
 H.timer_view = vim.loop.new_timer()
 
--- Namespaces
-H.ns_id = { highlight = vim.api.nvim_create_namespace('MiniHipatternsHighlight') }
+-- Namespaces per highlighter name
+H.ns_id = {}
 
 -- Cache of queued changes used for debounced highlighting
 H.change_queue = {}
@@ -740,12 +742,12 @@ end
 
 H.normalize_highlighters = function(highlighters)
   local res = {}
-  for _, hi in pairs(highlighters) do
+  for hi_name, hi in pairs(highlighters) do
     local pattern = type(hi.pattern) == 'string' and function() return hi.pattern end or hi.pattern
     local group = type(hi.group) == 'string' and function() return hi.group end or hi.group
 
     -- TODO: Soft deprecate `priority` with `vim.notify_once`
-    local extmark_opts = hi.extmark_opts or { priority = hi.priority or 200 }
+    local extmark_opts = hi.extmark_opts or { priority = type(hi.priority) == 'number' and hi.priority or 200 }
     if type(extmark_opts) == 'table' then
       local t = extmark_opts
       ---@diagnostic disable:cast-local-type
@@ -759,7 +761,8 @@ H.normalize_highlighters = function(highlighters)
     end
 
     if vim.is_callable(pattern) and vim.is_callable(group) and vim.is_callable(extmark_opts) then
-      table.insert(res, { pattern = pattern, group = group, extmark_opts = extmark_opts })
+      res[hi_name] = { pattern = pattern, group = group, extmark_opts = extmark_opts }
+      H.ns_id[hi_name] = vim.api.nvim_create_namespace('MiniHipatterns-' .. hi_name)
     end
   end
 
@@ -822,26 +825,25 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
   -- Optimizations are done assuming small-ish number of highlighters and
   -- large-ish number of lines to process
 
-  -- Remove current highlights
-  local ns = H.ns_id.highlight
-  for l_num, _ in pairs(lines_to_process) do
-    H.clear_namespace(buf_id, ns, l_num - 1, l_num)
-  end
+  -- Process highlighters
+  for hi_name, hi in pairs(buf_cache.highlighters) do
+    -- Remove current highlights
+    local ns = H.ns_id[hi_name]
+    for l_num, _ in pairs(lines_to_process) do
+      H.clear_namespace(buf_id, ns, l_num - 1, l_num)
+    end
 
-  -- Add new highlights
-  local highlighters = buf_cache.highlighters
-  for _, hi in ipairs(highlighters) do
-    H.apply_highlighter(hi, buf_id, lines_to_process)
+    -- Add new highlights
+    H.apply_highlighter(hi, buf_id, ns, lines_to_process)
   end
 end)
 
-H.apply_highlighter = vim.schedule_wrap(function(hi, buf_id, lines_to_process)
+H.apply_highlighter = vim.schedule_wrap(function(hi, buf_id, ns, lines_to_process)
   local pattern, group, extmark_opts = hi.pattern(buf_id), hi.group, hi.extmark_opts
   if type(pattern) ~= 'string' then return end
   local pattern_has_line_start = pattern:sub(1, 1) == '^'
 
   -- Apply per proper line
-  local ns = H.ns_id.highlight
   for l_num, _ in pairs(lines_to_process) do
     local line = H.get_line(buf_id, l_num)
     local from, to, sub_from, sub_to = line:find(pattern)

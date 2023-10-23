@@ -14,18 +14,30 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
 -- Module helpers
-local get_hipatterns_extmarks = function(buf_id)
-  local ns_id = child.api.nvim_get_namespaces()['MiniHipatternsHighlight']
+local get_hi_namespaces = function()
+  local res = {}
+  for name, ns_id in pairs(child.api.nvim_get_namespaces()) do
+    local hi_name = name:match('^MiniHipatterns%-(.*)$')
+    if hi_name ~= nil then res[hi_name] = ns_id end
+  end
+  return res
+end
+
+local get_hipatterns_extmarks = function(buf_id, hi_names)
+  local hi_namespaces = get_hi_namespaces()
+  hi_names = hi_names or vim.tbl_keys(hi_namespaces)
+
+  local full_extmarks = {}
+  for _, hi_name in ipairs(hi_names) do
+    vim.list_extend(
+      full_extmarks,
+      child.api.nvim_buf_get_extmarks(buf_id, hi_namespaces[hi_name], 0, -1, { details = true })
+    )
+  end
+
   return vim.tbl_map(
-    function(full_extmark)
-      return {
-        line = full_extmark[2] + 1,
-        from_col = full_extmark[3] + 1,
-        to_col = full_extmark[4].end_col,
-        hl_group = full_extmark[4].hl_group,
-      }
-    end,
-    child.api.nvim_buf_get_extmarks(buf_id, ns_id, 0, -1, { details = true })
+    function(ext) return { line = ext[2] + 1, from_col = ext[3] + 1, to_col = ext[4].end_col, hl_group = ext[4].hl_group } end,
+    full_extmarks
   )
 end
 
@@ -389,7 +401,7 @@ T['Highlighters']['silently skips wrong entries'] = function()
     pattern_wrong_type = { pattern = 1, group = 'Error' },
     group_absent = { pattern = 'aaa' },
     group_wrong_type = { pattern = 'aaa', group = 1 },
-    priority_wrong_type = { pattern = 'aaa', group = 'Error', priority = 'a' },
+    priority_wrong_type = { pattern = 'aaa', group = 'Error', extmark_opts = 'a' },
   }
   enable(0, { highlighters = highlighters, delay = { text_change = 20 } })
 
@@ -583,11 +595,6 @@ T['Highlighters']['respects `extmark_opts`'] = function()
   child.expect_screenshot()
 
   -- Check actual extmark details
-  local ns_id = child.api.nvim_get_namespaces()['MiniHipatternsHighlight']
-  local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
-  -- - Ensure persistent order
-  table.sort(extmarks, function(a, b) return a[2] < b[2] end)
-
   local validate_full_extmark = function(extmark, row, col, details)
     eq({ row = extmark[2], col = extmark[3] }, { row = row, col = col })
     local real_details = {}
@@ -597,11 +604,17 @@ T['Highlighters']['respects `extmark_opts`'] = function()
     eq(real_details, details)
   end
 
+  local hi_namespaces = get_hi_namespaces()
+
   -- As table (should set options needed for highlighting region)
-  validate_full_extmark(extmarks[1], 0, 0, { priority = 100, hl_group = 'Error', end_row = 0, end_col = 4 })
+  local abcd_extmarks = child.api.nvim_buf_get_extmarks(0, hi_namespaces['abcd'], 0, -1, { details = true })
+  eq(#abcd_extmarks, 1)
+  validate_full_extmark(abcd_extmarks[1], 0, 0, { priority = 100, hl_group = 'Error', end_row = 0, end_col = 4 })
 
   -- As callable
-  validate_full_extmark(extmarks[2], 1, 0, { hl_group = 'Comment', end_row = 1, end_col = 2 })
+  local efgh_extmarks = child.api.nvim_buf_get_extmarks(0, hi_namespaces['efgh'], 0, -1, { details = true })
+  eq(#efgh_extmarks, 1)
+  validate_full_extmark(efgh_extmarks[1], 1, 0, { hl_group = 'Comment', end_row = 1, end_col = 2 })
 
   -- - Should be called with correct arguments
   eq(child.lua_get('_G.extmark_args'), {
