@@ -849,9 +849,10 @@ MiniPick.start = function(opts)
     end, 0.5)
   end
 
+  H.cache = {}
   opts = H.validate_picker_opts(opts)
   local picker = H.picker_new(opts)
-  H.pickers.active, H.cache = picker, {}
+  H.pickers.active = picker
 
   H.picker_set_busy(picker, true)
   local items = H.expand_callable(opts.source.items)
@@ -2044,9 +2045,14 @@ H.picker_new_buf = function()
 end
 
 H.picker_new_win = function(buf_id, win_config)
-  -- Create window and focus on it. Focus cursor on Command line to not see it.
+  -- Focus cursor on Command line to not see it
+  if vim.fn.mode() == 'n' then
+    H.cache.cmdheight = vim.o.cmdheight
+    vim.o.cmdheight = 1
+    vim.cmd('noautocmd normal! :')
+  end
+  -- Create window and focus on it
   local win_id = vim.api.nvim_open_win(buf_id, true, H.picker_compute_win_config(win_config, true))
-  if vim.fn.mode() == 'n' then vim.cmd('noautocmd normal! :') end
 
   -- Set window-local data
   vim.wo[win_id].foldenable = false
@@ -2348,6 +2354,7 @@ end
 
 H.picker_stop = function(picker, abort)
   vim.tbl_map(function(timer) pcall(vim.loop.timer_stop, timer) end, H.timers)
+  pcall(function() vim.o.cmdheight = H.cache.cmdheight end)
 
   if picker == nil then return end
 

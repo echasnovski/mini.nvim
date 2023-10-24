@@ -3972,13 +3972,23 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
 
   child.o.showtabline, child.o.laststatus = 0, 0
   validate()
+end
+
+T['Overall view']["respects 'cmdheight'"] = function()
+  local validate = function(cmdheight)
+    child.o.cmdheight = cmdheight
+    start_with_items({ 'a' }, 'My name')
+    -- Should *temporarily* force 'cmdheight=1' to both have place where to hide
+    -- cursor (in case of `cmdheight=0`) and increase available space for picker
+    eq(child.o.cmdheight, 1)
+    type_keys('<C-c>')
+    eq(child.o.cmdheight, cmdheight)
+  end
+
+  validate(3)
 
   if child.fn.has('nvim-0.8') == 0 then return end
-  child.o.cmdheight = 0
-  validate()
-
-  child.o.cmdheight = 3
-  validate()
+  validate(0)
 end
 
 T['Overall view']['allows very large dimensions'] = function()
