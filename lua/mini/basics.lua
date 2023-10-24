@@ -646,10 +646,10 @@ H.apply_mappings = function(config)
     map('n', '<C-L>', '<C-w>l', { desc = 'Focus on right window' })
 
     -- Window resize (respecting `v:count`)
-    map('n', '<C-Left>',  '"<Cmd>vertical resize -" . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Decrease window width' })
-    map('n', '<C-Down>',  '"<Cmd>resize -"          . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Decrease window height' })
-    map('n', '<C-Up>',    '"<Cmd>resize +"          . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Increase window height' })
-    map('n', '<C-Right>', '"<Cmd>vertical resize +" . v:count1 . "<CR>"', { expr = true, replace_keycodes = false, desc = 'Increase window width' })
+    map('n', '<C-Left>',  '(v:count ? "" : 4) . (winnr() == winnr("l") ? "<C-w>>" : "<C-w><")', { expr = true, replace_keycodes = false, desc = 'Decrease window width' })
+    map('n', '<C-Down>',  '(v:count ? "<C-w>-" : "1<C-w>-")', { expr = true, replace_keycodes = false, desc = 'Decrease window height' })
+    map('n', '<C-Up>',    '(v:count ? "<C-w>+" : "1<C-w>+")', { expr = true, replace_keycodes = false, desc = 'Increase window height' })
+    map('n', '<C-Right>', '(v:count ? "" : 4) . (winnr() == winnr("l") ? "<C-w><" : "<C-w>>")', { expr = true, replace_keycodes = false, desc = 'Increase window width' })
   end
 
   if config.mappings.move_with_alt then
