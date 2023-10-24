@@ -1114,7 +1114,7 @@ end
 --- Implements default value for |MiniPick-source.choose_marked|.
 ---
 ---@param items table Array of items to choose.
----@param opts Options. Possible fields:
+---@param opts table|nil Options. Possible fields:
 ---   - <list_type> `(string)` - which type of list to open. One of "quickfix"
 ---     or "location". Default: "quickfix".
 MiniPick.default_choose_marked = function(items, opts)
@@ -1145,6 +1145,7 @@ MiniPick.default_choose_marked = function(items, opts)
   -- Set as quickfix or location list
   local title = '<No picker>'
   if is_active then
+    ---@diagnostic disable:param-type-mismatch
     local source_name, prompt = MiniPick.get_picker_opts().source.name, table.concat(MiniPick.get_picker_query())
     title = source_name .. (prompt == '' and '' or (' : ' .. prompt))
   end
@@ -3229,7 +3230,10 @@ H.replace_termcodes = function(x)
   return vim.api.nvim_replace_termcodes(x, true, true, true)
 end
 
-H.expand_callable = function(x) return vim.is_callable(x) and x() or x end
+H.expand_callable = function(x, ...)
+  if vim.is_callable(x) then return x(...) end
+  return x
+end
 
 H.expandcmd = function(x)
   local ok, res = pcall(vim.fn.expandcmd, x)

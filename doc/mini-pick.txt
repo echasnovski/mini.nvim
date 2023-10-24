@@ -999,7 +999,7 @@ Implements default value for |MiniPick-source.choose_marked|.
 
 Parameters~
 {items} `(table)` Array of items to choose.
-{opts} Options. Possible fields:
+{opts} `(table|nil)` Options. Possible fields:
   - <list_type> `(string)` - which type of list to open. One of "quickfix"
     or "location". Default: "quickfix".
 
