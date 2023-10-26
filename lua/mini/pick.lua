@@ -179,7 +179,7 @@
 ---   Overview of how it matches:
 ---     - If query starts with `'`, the match is exact.
 ---     - If query starts with `^`, the match is exact at start.
----     - If query starts with `$`, the match is exact at end.
+---     - If query ends with `$`, the match is exact at end.
 ---     - If query starts with `*`, the match is forced to be fuzzy.
 ---     - Otherwise match is fuzzy.
 ---     - Sorting is done to first minimize match width and then match start.
@@ -3315,6 +3315,6 @@ H.is_file_text = function(path)
   return is_text
 end
 
-H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('/$', '')) end
+H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$', '%1')) end
 
 return MiniPick

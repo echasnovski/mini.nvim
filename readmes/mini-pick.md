@@ -120,7 +120,7 @@ When picker is busy (like if there are no items yet set or matching is active) w
   Overview of how it matches:
     - If query starts with `'`, the match is exact.
     - If query starts with `^`, the match is exact at start.
-    - If query starts with `$`, the match is exact at end.
+    - If query ends with `$`, the match is exact at end.
     - If query starts with `*`, the match is forced to be fuzzy.
     - Otherwise match is fuzzy.
     - Sorting is done to first minimize match width and then match start.
