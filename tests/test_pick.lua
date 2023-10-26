@@ -1361,6 +1361,14 @@ T['default_show()']['works with non-single-char-entries queries'] = function()
   validate({ 'a b', ' ', 'c' })
 end
 
+T['default_show()']['handles edge cases'] = function()
+  child.set_size(5, 15)
+
+  -- Should not treat empty string as directory
+  default_show(0, { ':1', ':1:1' }, {}, { show_icons = true })
+  child.expect_screenshot()
+end
+
 T['default_preview()'] = new_set()
 
 local default_preview = forward_lua('MiniPick.default_preview')

@@ -2923,7 +2923,7 @@ H.parse_path = function(x)
 
   -- Verify that path is real
   local path_type = H.get_fs_type(path)
-  if path_type == 'none' then
+  if path_type == 'none' and path ~= '' then
     local cwd = H.pickers.active == nil and vim.fn.getcwd() or H.pickers.active.opts.source.cwd
     path = string.format('%s/%s', cwd, path)
     path_type = H.get_fs_type(path)
@@ -2933,6 +2933,7 @@ H.parse_path = function(x)
 end
 
 H.get_fs_type = function(path)
+  if path == '' then return 'none' end
   if vim.fn.filereadable(path) == 1 then return 'file' end
   if vim.fn.isdirectory(path) == 1 then return 'directory' end
   return 'none'
