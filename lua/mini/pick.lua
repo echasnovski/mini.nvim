@@ -2919,6 +2919,7 @@ H.parse_path = function(x)
   local location_pattern = ':(%d+):?(%d*):?(.*)$'
   local lnum, col, rest = x:match(location_pattern)
   local path = x:gsub(location_pattern, '', 1)
+  path = path:sub(1, 1) == '~' and (vim.loop.os_homedir() or '~') .. path:sub(2) or path
 
   -- Verify that path is real
   local path_type = H.get_fs_type(path)
@@ -2932,7 +2933,6 @@ H.parse_path = function(x)
 end
 
 H.get_fs_type = function(path)
-  if path:find('^~') then path = vim.loop.os_homedir() .. path:sub(2) end
   if vim.fn.filereadable(path) == 1 then return 'file' end
   if vim.fn.isdirectory(path) == 1 then return 'directory' end
   return 'none'

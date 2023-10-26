@@ -1412,6 +1412,15 @@ T['default_preview()']['works for relative file path'] = function()
   child.expect_screenshot()
 end
 
+T['default_preview()']['works for file path with tilde'] = function()
+  local path = real_file('LICENSE')
+  local path_tilde = child.fn.fnamemodify(full_path(path), ':~')
+  if path_tilde:sub(1, 1) ~= '~' then return end
+
+  child.set_size(5, 15)
+  validate_preview({ path_tilde })
+end
+
 T['default_preview()']['shows line in file path'] = function()
   local path = real_file('b.txt')
   local items = {
@@ -1706,6 +1715,17 @@ T['default_choose()']['works for relative file path'] = function()
 
   -- Should open with relative path to have better view in `:buffers`
   expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(real_files_dir))
+end
+
+T['default_choose()']['works for file path with tilde'] = function()
+  local path = real_file('LICENSE')
+  local path_tilde = child.fn.fnamemodify(full_path(path), ':~')
+  if path_tilde:sub(1, 1) ~= '~' then return end
+
+  child.set_size(5, 15)
+  start_with_items({ path_tilde })
+  type_keys('<CR>')
+  validate_buf_name(0, path)
 end
 
 T['default_choose()']['reuses opened listed buffer for file path'] = function()
