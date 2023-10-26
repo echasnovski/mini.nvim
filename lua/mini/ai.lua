@@ -877,7 +877,7 @@ end
 ---   your |$XDG_CONFIG_HOME| directory. It should contain queries with
 ---   captures (later used to define textobjects). See |lua-treesitter-query|.
 --- To verify that query file is reachable, run (example for "lua" language)
---- `:lua print(vim.inspect(vim.treesitter.get_query_files('lua', 'textobjects')))`
+--- `:lua print(vim.inspect(vim.treesitter.query.get_files('lua', 'textobjects')))`
 --- (output should have at least an intended file).
 ---
 --- Example configuration for function definition textobject with
