@@ -1311,11 +1311,13 @@ MiniPick.builtin.help = function(local_opts, opts)
   vim.api.nvim_buf_delete(help_buf, { force = true })
   vim.tbl_map(function(t) t.text = t.name end, tags)
 
-  -- NOTE: Choosing is done after returning item. This is done to properly
-  -- overcome special nature of `:help {subject}` command. For example, it
-  -- didn't quite work when choosing tags in same file consecutively.
-  local choose = function(item) end
-  local choose_marked = function(items) end
+  -- NOTE: Choosing is done on next event loop to properly overcome special
+  -- nature of `:help {subject}` command. For example, it didn't quite work
+  -- when choosing tags in same file consecutively.
+  local choose = function(item)
+    if item == nil then return end
+    vim.schedule(function() vim.cmd('help ' .. (item.name or '')) end)
+  end
   local preview = function(buf_id, item)
     -- Take advantage of `taglist` output on how to open tag
     vim.api.nvim_buf_call(buf_id, function()
@@ -1334,9 +1336,7 @@ MiniPick.builtin.help = function(local_opts, opts)
 
   local source = { items = tags, name = 'Help', choose = choose, choose_marked = choose_marked, preview = preview }
   opts = vim.tbl_deep_extend('force', { source = source }, opts or {})
-  local item = MiniPick.start(opts)
-  if item ~= nil then vim.cmd('help ' .. (item.name or '')) end
-  return item
+  return MiniPick.start(opts)
 end
 
 --- Pick from buffers

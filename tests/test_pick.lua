@@ -2700,6 +2700,22 @@ T['builtin.help()']['handles consecutive applications'] = function()
   child.expect_screenshot()
 end
 
+T['builtin.help()']['works with `builtin.resume()`'] = function()
+  builtin_help()
+  set_picker_query({ ':help' })
+  type_keys('<CR>')
+  sleep(2)
+  child.expect_screenshot()
+
+  child.cmd('close')
+  eq(#child.api.nvim_list_wins(), 1)
+
+  child.lua_notify('MiniPick.builtin.resume()')
+  type_keys('<CR>')
+  sleep(2)
+  child.expect_screenshot()
+end
+
 T['builtin.help()']['respects `opts`'] = function()
   builtin_help({}, { source = { name = 'My name' } })
   validate_picker_option('source.name', 'My name')
