@@ -1674,7 +1674,7 @@ T['Windows']['is in sync with cursor'] = function()
   -- Also trims if cursor is moved in Insert mode
   go_out()
   child.expect_screenshot()
-  type_keys('A<CR>')
+  type_keys('o')
   child.expect_screenshot()
 end
 
