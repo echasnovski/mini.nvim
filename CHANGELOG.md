@@ -25,6 +25,7 @@
 ## mini.hipatterns
 
 - FEATURE: Implement `extmark_opts` in highlighter definitions for a more control over extmarks placed at matches.
+- BREAKING: Field `priority` in highlighter definitions is soft deprecated in favor of `extmark_opts = { priority = <value> }`.
 - FEATURE: Update `compute_hex_color_group()` to allow `style = 'fg'`.
 - FEATURE: Update `gen_highlighter.hex_color()` to allow `style = 'inline'` (requires Neovim>=0.10 with support of inline extmarks).
 - FEATURE: Implement `get_matches()` to get buffer matches.

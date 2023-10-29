@@ -555,7 +555,19 @@ T['Highlighters']['allows return `nil` `group` to not highlight'] = function()
   child.expect_screenshot()
 end
 
-T['Highlighters']['respects `priority`'] = function()
+T['Highlighters']['warns about soft deprecated `priority`'] = function()
+  -- TODO: Remove after Neovim 0.11 is released
+  child.set_size(25, 80)
+  child.o.cmdheight = 10
+  local config = { highlighters = { abcd = { pattern = 'abcd', group = 'Error', priority = 100 } } }
+  enable(0, config)
+  expect.match(
+    child.cmd_capture('1messages'),
+    '`priority`.*soft deprecated.*Use `extmark_opts = { priority = <value> }`.*removed.*stable release.'
+  )
+end
+
+T['Highlighters']['respects `extmark_opts.priority`'] = function()
   local config = { highlighters = { abcd = { pattern = 'abcd', group = 'Error' } } }
   set_lines({ 'abcd', 'abcd', 'abcd' })
   enable(0, config)
@@ -571,9 +583,9 @@ T['Highlighters']['respects `priority`'] = function()
   set_extmark(3, 201)
   child.expect_screenshot()
 
-  -- Should respect priority in `highlighters` entry
+  -- Should respect extmark_opts.priority in `highlighters` entry
   child.lua([[require('mini.hipatterns').disable(0)]])
-  config.highlighters.abcd.priority = 202
+  config.highlighters.abcd.extmark_opts = { priority = 202 }
   enable(0, config)
   child.expect_screenshot()
 end

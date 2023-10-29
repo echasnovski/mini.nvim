@@ -802,8 +802,15 @@ H.normalize_highlighters = function(highlighters)
     local pattern = type(hi.pattern) == 'string' and function() return hi.pattern end or hi.pattern
     local group = type(hi.group) == 'string' and function() return hi.group end or hi.group
 
-    -- TODO: Soft deprecate `priority` with `vim.notify_once`
-    local extmark_opts = hi.extmark_opts or { priority = type(hi.priority) == 'number' and hi.priority or 200 }
+    -- TODO: Remove after Neovim 0.11 is released
+    local has_raw_priority = type(hi.priority) == 'number'
+    if has_raw_priority then
+      local msg = '`priority` field of highlighter is soft deprecated.'
+        .. ' Use `extmark_opts = { priority = <value> }`.'
+        .. ' This works for now but will be removed after the next stable release.'
+      vim.notify_once(msg, vim.log.levels.WARN)
+    end
+    local extmark_opts = hi.extmark_opts or { priority = has_raw_priority and hi.priority or 200 }
     if type(extmark_opts) == 'table' then
       local t = extmark_opts
       ---@diagnostic disable:cast-local-type
