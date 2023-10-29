@@ -498,6 +498,33 @@ T['Highlighters']['allows return `nil` `pattern` to not highlight'] = function()
   child.expect_screenshot()
 end
 
+T['Highlighters']['allows array `pattern`'] = function()
+  -- Should allow both string and callable elements
+  child.lua([[_G.hi_array = {
+    pattern = {
+      'abcd',
+      function(buf_id)
+        if vim.b[buf_id].not_highlight then return nil end
+        return 'efgh'
+      end
+    } ,
+    group = 'Error'
+  }]])
+  child.lua([[require('mini.hipatterns').enable(
+    0,
+    { highlighters = { array = _G.hi_array }, delay = { text_change = 20 } }
+  )]])
+
+  set_lines({ 'xxabcd', 'xxefgh' })
+  sleep(20 + 2)
+  child.expect_screenshot()
+
+  child.b.not_highlight = true
+  set_lines({ 'xxabcd', 'xxefgh' })
+  sleep(20 + 2)
+  child.expect_screenshot()
+end
+
 T['Highlighters']['allows callable `group`'] = function()
   child.lua([[_G.hi_callable_group = {
     pattern = 'abcd',
@@ -844,11 +871,11 @@ T['get_enabled_buffers()']['works'] = function()
   eq(get_enabled_buffers(), { buf_id_1 })
 end
 
-T['get_matches'] = new_set()
+T['get_matches()'] = new_set()
 
 local get_matches = forward_lua([[require('mini.hipatterns').get_matches]])
 
-T['get_matches']['works'] = function()
+T['get_matches()']['works'] = function()
   local buf_id_1 = child.api.nvim_create_buf(true, false)
   child.api.nvim_buf_set_lines(buf_id_1, 0, -1, false, { 'aaa bbb', '  aaa', '  bbb' })
   local buf_id_2 = child.api.nvim_create_buf(true, false)
@@ -892,7 +919,7 @@ T['get_matches']['works'] = function()
   eq(get_matches(buf_id_2), {})
 end
 
-T['get_matches']['respects `buf_id` argument'] = function()
+T['get_matches()']['respects `buf_id` argument'] = function()
   local buf_id = child.api.nvim_get_current_buf()
   child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb aaa' })
   child.lua([[require('mini.hipatterns').setup({
@@ -909,12 +936,13 @@ T['get_matches']['respects `buf_id` argument'] = function()
   eq(get_matches(0), ref_output)
 end
 
-T['get_matches']['respects `highlighters` argument'] = function()
+T['get_matches()']['respects `highlighters` argument'] = function()
   local buf_id = child.api.nvim_get_current_buf()
-  child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb aaa' })
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb AAA aaa' })
   child.lua([[require('mini.hipatterns').setup({
     highlighters = {
-      aaa = { pattern = 'aaa', group = 'Error' },
+      -- Should respect `pattern` array
+      aaa = { pattern = { 'aaa', 'AAA' }, group = 'Error' },
       bbb = { pattern = 'bbb', group = 'Comment' },
     },
     delay = { text_change = 20 },
@@ -927,10 +955,11 @@ T['get_matches']['respects `highlighters` argument'] = function()
   eq(get_matches(buf_id, { 'bbb', 'xxx', 'aaa' }), {
     { bufnr = buf_id, highlighter = 'bbb', hl_group = 'Comment', lnum = 1, col = 1, end_lnum = 1, end_col = 4 },
     { bufnr = buf_id, highlighter = 'aaa', hl_group = 'Error', lnum = 1, col = 5, end_lnum = 1, end_col = 8 },
+    { bufnr = buf_id, highlighter = 'aaa', hl_group = 'Error', lnum = 1, col = 9, end_lnum = 1, end_col = 12 },
   })
 end
 
-T['get_matches']['validates arguments'] = function()
+T['get_matches()']['validates arguments'] = function()
   expect.error(function() get_matches('a') end, '`buf_id`.*not valid')
   expect.error(function() get_matches(child.api.nvim_get_current_buf(), 1) end, '`highlighters`.*array')
 end

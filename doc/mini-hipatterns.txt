@@ -256,8 +256,8 @@ fields, but having them is recommended and is required for proper use of
 empty expecting user definition.
 
 Each entry defines single highlighter as a table with the following fields:
-- <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
-  or callable returning the string.
+- <pattern> `(string|function|table)` - Lua pattern to highlight. Can be
+  either string, callable returning the string, or an array of those.
   If string:
     - It can have submatch delimited by placing `()` on start and end, NOT
       by surrounding with it. Otherwise it will result in error containing
@@ -269,6 +269,9 @@ Each entry defines single highlighter as a table with the following fields:
 
     - It can return `nil` meaning this particular highlighter will not work
       in this particular buffer.
+
+  If array:
+    - Each element is matched and highlighted with the same highlight group.
 
 - <group> `(string|function)` - name of highlight group to use. Can be either
   string or callable returning the string.

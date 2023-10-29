@@ -24,6 +24,7 @@
 
 ## mini.hipatterns
 
+- FEATURE: Allow `pattern` in highlighter definitions to be an array to highlight several patterns under the same highlighter name.
 - FEATURE: Implement `extmark_opts` in highlighter definitions for a more control over extmarks placed at matches.
 - BREAKING: Field `priority` in highlighter definitions is soft deprecated in favor of `extmark_opts = { priority = <value> }`.
 - FEATURE: Update `compute_hex_color_group()` to allow `style = 'fg'`.

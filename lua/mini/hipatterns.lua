@@ -262,8 +262,8 @@ end
 --- empty expecting user definition.
 ---
 --- Each entry defines single highlighter as a table with the following fields:
---- - <pattern> `(string|function)` - Lua pattern to highlight. Can be either string
----   or callable returning the string.
+--- - <pattern> `(string|function|table)` - Lua pattern to highlight. Can be
+---   either string, callable returning the string, or an array of those.
 ---   If string:
 ---     - It can have submatch delimited by placing `()` on start and end, NOT
 ---       by surrounding with it. Otherwise it will result in error containing
@@ -275,6 +275,9 @@ end
 ---
 ---     - It can return `nil` meaning this particular highlighter will not work
 ---       in this particular buffer.
+---
+---   If array:
+---     - Each element is matched and highlighted with the same highlight group.
 ---
 --- - <group> `(string|function)` - name of highlight group to use. Can be either
 ---   string or callable returning the string.
@@ -799,7 +802,18 @@ end
 H.normalize_highlighters = function(highlighters)
   local res = {}
   for hi_name, hi in pairs(highlighters) do
+    -- Allow pattern to be string, callable, or array of those. Convert all
+    -- valid cases into array of callables.
     local pattern = type(hi.pattern) == 'string' and function() return hi.pattern end or hi.pattern
+    if vim.is_callable(pattern) then pattern = { pattern } end
+    local is_pattern_ok = vim.tbl_islist(pattern)
+    if is_pattern_ok then
+      for i, pat in ipairs(pattern) do
+        pattern[i] = type(pat) == 'string' and function() return pat end or pat
+        is_pattern_ok = is_pattern_ok and vim.is_callable(pattern[i])
+      end
+    end
+
     local group = type(hi.group) == 'string' and function() return hi.group end or hi.group
 
     -- TODO: Remove after Neovim 0.11 is released
@@ -823,7 +837,7 @@ H.normalize_highlighters = function(highlighters)
       end
     end
 
-    if vim.is_callable(pattern) and vim.is_callable(group) and vim.is_callable(extmark_opts) then
+    if is_pattern_ok and vim.is_callable(group) and vim.is_callable(extmark_opts) then
       res[hi_name] = { pattern = pattern, group = group, extmark_opts = extmark_opts }
       H.ns_id[hi_name] = vim.api.nvim_create_namespace('MiniHipatterns-' .. hi_name)
     end
@@ -903,13 +917,15 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
     end
 
     -- Add new highlights
-    H.apply_highlighter(hi, buf_id, ns, lines_to_process)
+    for _, pattern in ipairs(hi.pattern) do
+      H.apply_highlighter_pattern(pattern(buf_id), hi, buf_id, ns, lines_to_process)
+    end
   end
 end)
 
-H.apply_highlighter = vim.schedule_wrap(function(hi, buf_id, ns, lines_to_process)
-  local pattern, group, extmark_opts = hi.pattern(buf_id), hi.group, hi.extmark_opts
+H.apply_highlighter_pattern = vim.schedule_wrap(function(pattern, hi, buf_id, ns, lines_to_process)
   if type(pattern) ~= 'string' then return end
+  local group, extmark_opts = hi.group, hi.extmark_opts
   local pattern_has_line_start = pattern:sub(1, 1) == '^'
 
   -- Apply per proper line
