@@ -326,12 +326,14 @@ T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function
 end
 
 T['Autocompletion']['respects string `config.fallback_action`'] = function()
+  child.set_size(10, 25)
   child.lua([[MiniCompletion.config.fallback_action = '<C-x><C-l>']])
+
   set_lines({ 'Line number 1', '' })
   set_cursor(2, 0)
   type_keys('i', 'L')
   sleep(test_times.completion + 1)
-  eq(get_completion(), { 'Line number 1' })
+  child.expect_screenshot()
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
@@ -340,7 +342,7 @@ T['Autocompletion']['respects string `config.fallback_action`'] = function()
   set_cursor(2, 0)
   type_keys('i', 'L')
   sleep(test_times.completion + 1)
-  eq(get_completion(), { 'Line' })
+  child.expect_screenshot()
 end
 
 T['Autocompletion']['respects function `config.fallback_action`'] = function()
