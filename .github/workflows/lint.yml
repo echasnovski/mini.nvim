@@ -6,13 +6,17 @@ on:
   pull_request:
     branches-ignore: [ sync, stable ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.actor }}
+  cancel-in-progress: true
+
 jobs:
   stylua:
     name: Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: JohnnyMorganz/stylua-action@1.0.0
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v0.14.0
@@ -25,10 +29,9 @@ jobs:
     steps:
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
-        id: neovim
         with:
           neovim: true
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Generate documentation
         run: make --silent documentation
       - name: Check for changes
@@ -38,7 +41,7 @@ jobs:
     name: File case sensitivity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Check Case Sensitivity
@@ -55,7 +58,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup neovim
         uses: rhysd/action-setup-vim@v1
         with:

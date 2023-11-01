@@ -1,8 +1,5 @@
 name: Run tests
 
-env:
-  IS_CI: true
-
 on:
   push:
     branches-ignore: [ sync, stable ]
@@ -10,6 +7,10 @@ on:
   pull_request:
     branches-ignore: [ sync, stable ]
     paths: [ 'colors/**', 'lua/**', 'tests/**' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.actor }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -22,13 +23,7 @@ jobs:
         neovim_version: ['v0.7.2', 'v0.8.3', 'v0.9.4', 'nightly']
 
     steps:
-      - uses: actions/checkout@v3
-      - run: date +%F > todays-date
-      - name: Restore cache for today's nightly.
-        uses: actions/cache@v3
-        with:
-          path: _neovim
-          key: ${{ runner.os }}-x64-${{ hashFiles('todays-date') }}
+      - uses: actions/checkout@v4
       - name: Setup neovim
         uses: rhysd/action-setup-vim@v1
         with:
