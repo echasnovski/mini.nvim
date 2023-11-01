@@ -530,7 +530,7 @@ H.make_uncomment_function = function(comment_parts)
   local lpad = (options.pad_comment_parts and l ~= '') and '[ ]?' or ''
   local rpad = (options.pad_comment_parts and r ~= '') and '[ ]?' or ''
 
-  -- Usage of `lpad` and `rpad` as possbile single space enables uncommenting
+  -- Usage of `lpad` and `rpad` as possible single space enables uncommenting
   -- of commented empty lines without trailing whitespace (like '  #').
   local uncomment_regex = string.format('^(%%s*)%s%s(.-)%s%s%%s-$', vim.pesc(l), lpad, rpad, vim.pesc(r))
 

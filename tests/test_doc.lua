@@ -143,7 +143,7 @@ end
 --     - Update files in existing test scope and regenerate reference file (run
 --       corresponding `MiniDoc.generate()` manually and save it to correct
 --       '***_reference.txt' file).
---     - Add new test scope: create direcotry, add files, generate reference
+--     - Add new test scope: create directory, add files, generate reference
 --       help file, add separate test case.
 T['generate()'] = new_set({
   hooks = {

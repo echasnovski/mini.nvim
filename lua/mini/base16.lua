@@ -220,7 +220,7 @@ MiniBase16.config = {
 ---   which is a cylindrical representation of a perceptually uniform CIELUV
 ---   color space. It defines color by three values: lightness L (values from 0
 ---   to 100), chroma (positive values), and hue (circular values from 0 to 360
----   degress). Useful converting tool: https://www.easyrgb.com/en/convert.php
+---   degrees). Useful converting tool: https://www.easyrgb.com/en/convert.php
 --- - There are four important lightness values: background, foreground, focus
 ---   (around the middle of background and foreground, leaning towards
 ---   foreground), and edge (extreme lightness closest to foreground).
@@ -1413,7 +1413,7 @@ H.xyz2rgb = function(xyz)
 end
 
 -- XYZ <-> CIELuv
--- Using white reference for D65 and 2 degress
+-- Using white reference for D65 and 2 degrees
 H.ref_u = (4 * 95.047) / (95.047 + (15 * 100) + (3 * 108.883))
 H.ref_v = (9 * 100) / (95.047 + (15 * 100) + (3 * 108.883))
 

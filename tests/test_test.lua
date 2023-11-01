@@ -798,7 +798,7 @@ T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = n
 T['expect']['reference_screenshot()']['correctly sanitizes path for Windows '] = validate_path_sanitize
 T['expect']['reference_screenshot()']['correctly sanitizes path for Windows #2.'] = validate_path_sanitize
 
-T['expect']['reference_screenshot()']['creates refernce if it does not exist'] = function()
+T['expect']['reference_screenshot()']['creates reference if it does not exist'] = function()
   local path = get_ref_path('nonexistent-reference-screenshot')
   child.fn.delete(path)
   finally(function()
@@ -1229,7 +1229,7 @@ T['child']['get_screenshot()']['`tostring()`']['works'] = function()
   local lines = vim.split(tostring(screenshot), '\n')
   local n_lines, n_cols = child.o.lines, child.o.columns
 
-  -- "Ruler" + "Lines" + "Emptry line" + "Ruler" + "Lines"
+  -- "Ruler" + "Lines" + "Empty line" + "Ruler" + "Lines"
   eq(#lines, 2 * n_lines + 3)
   eq(lines[n_lines + 2], '')
 

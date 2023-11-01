@@ -123,7 +123,7 @@ header/footer, and content hooks:
     function()
       return {
         { name = 'Item #1 from function', action = [[echo 'Item #1']], section = 'From function' },
-        { name = 'Placeholder (always incative) item', action = '', section = 'From function' },
+        { name = 'Placeholder (always inactive) item', action = '', section = 'From function' },
         function()
           return {
             name = 'Item #1 from double function',
@@ -534,7 +534,7 @@ element of content units with type "item". This also:
 - Computes some helper information about how item will be actually
   displayed (after |MiniStarter.content_to_lines|) and minimum number of
   prefix characters needed for a particular item to be queried single.
-- Modifies item's `name` element taking it from corresponing `string`
+- Modifies item's `name` element taking it from corresponding `string`
   element of content unit. This allows modifying item's `name` at the stage
   of content hooks (like, for example, in |MiniStarter.gen_hook.indexing|).
 

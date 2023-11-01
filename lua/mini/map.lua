@@ -118,7 +118,7 @@
 ---     - 'mini.map' has fully extendable highlight integrations, while
 ---       'nvim-scrollbar' only supports diagnostic and search (with dependency).
 --- - 'lewis6991/satellite.nvim':
----     - Almost the same differencies as with 'dstein64/nvim-scrollview', except
+---     - Almost the same differences as with 'dstein64/nvim-scrollview', except
 ---       'satellite.nvim' can display some set of integration highlights.
 ---
 --- # Highlight groups~
@@ -1163,7 +1163,7 @@ H.mask_rescale = function(mask, opts)
 end
 
 --- Convert extended map mask to strings. Each bin with resolution dimensions
---- is transformed into encode symbol. Single convertable `(resolution.row,
+--- is transformed into encode symbol. Single convertible `(resolution.row,
 --- resolution.col)` boolean mask is treated as binary digit: `true` as 1;
 --- `false` as 0; traversing left-right, top-bottom (top-left is lowest bit,
 --- bottom-right - highest).
@@ -1503,7 +1503,7 @@ H.update_map_integrations = function()
       local cur_count = line_counts[map_line] or 0
       line_counts[map_line] = cur_count + 1
 
-      -- Actually highlight only first map line occurence
+      -- Actually highlight only first map line occurrence
       if cur_count == 0 then H.add_line_hl(buf_id, ns_id, lh.hl_group, map_line - 1) end
     end
   end

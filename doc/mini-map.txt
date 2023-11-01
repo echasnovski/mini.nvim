@@ -118,7 +118,7 @@ Suggested dependencies (provide extra functionality for integrations):
     - 'mini.map' has fully extendable highlight integrations, while
       'nvim-scrollbar' only supports diagnostic and search (with dependency).
 - 'lewis6991/satellite.nvim':
-    - Almost the same differencies as with 'dstein64/nvim-scrollview', except
+    - Almost the same differences as with 'dstein64/nvim-scrollview', except
       'satellite.nvim' can display some set of integration highlights.
 
 # Highlight groups~

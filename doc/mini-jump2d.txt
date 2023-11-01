@@ -227,7 +227,7 @@ it is a good idea to use this with a spotter which doesn't result into many
 jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
 Default is 0 to not show anything ahead as it reduces visual noise.
 
-Option `view.dim` contols whether to dim lines with at least one jump spot.
+Option `view.dim` controls whether to dim lines with at least one jump spot.
 Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
 
 ## Allowed lines~
@@ -389,10 +389,10 @@ Default spotter function
 
 Spot is possible for jump if it is one of the following:
 - Start or end of non-whitespace character group.
-- Alphanumeric character followed or preceeded by punctuation (useful for
+- Alphanumeric character followed or preceded by punctuation (useful for
   snake case names).
 - Start of uppercase character group (useful for camel case names). Usually
-  only Lating alphabet is recognized due to Lua patterns shortcomings.
+  only Latin alphabet is recognized due to Lua patterns shortcomings.
 
 These rules are derived in an attempt to balance between two intentions:
 - Allow as much useful jumping spots as possible.

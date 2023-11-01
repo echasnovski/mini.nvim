@@ -728,7 +728,7 @@ end
 ---   total number of times it was called inside current case. If there is no
 ---   file at `path`, it is created with content of `screenshot`.
 ---@param opts table|nil Options:
----   - <force> `(boolean)` - whether to forcefuly create reference screenshot.
+---   - <force> `(boolean)` - whether to forcefully create reference screenshot.
 ---     Temporary useful during test writing. Default: `false`.
 ---   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
 ---     Default: `nil` to check all lines.
@@ -741,7 +741,7 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
 
   if path == nil then
     -- Sanitize path. Replace any control characters, whitespace, OS specific
-    -- forbidden characters with '-' (with some usefule exception)
+    -- forbidden characters with '-' (with some useful exception)
     local linux_forbidden = [[/]]
     local windows_forbidden = [[<>:"/\|?*]]
     local pattern = string.format('[%%c%%s%s%s]', vim.pesc(linux_forbidden), vim.pesc(windows_forbidden))
@@ -879,7 +879,7 @@ MiniTest.gen_reporter.buffer = function(opts)
   local set_cursor =
     function(line) vim.api.nvim_win_set_cursor(win_id, { line or vim.api.nvim_buf_line_count(buf_id), 0 }) end
 
-  -- Define "write from crusor line" function with throttled redraw
+  -- Define "write from cursor line" function with throttled redraw
   local latest_draw_time = 0
   local replace_last = function(n_replace, lines, force)
     H.buffer_reporter.set_lines(buf_id, lines, -n_replace - 1, -1)
@@ -1210,7 +1210,7 @@ MiniTest.new_child_neovim = function()
     'diagnostic', 'fn', 'highlight', 'json', 'loop', 'lsp', 'mpack', 'spell', 'treesitter', 'ui',
     -- Variables
     'g', 'b', 'w', 't', 'v', 'env',
-    -- Options (no 'opt' becuase not really usefult due to use of metatables)
+    -- Options (no 'opt' because not really useful due to use of metatables)
     'o', 'go', 'bo', 'wo',
   }
   --stylua: ignore end

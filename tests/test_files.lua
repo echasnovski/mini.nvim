@@ -681,7 +681,7 @@ T['open()']['respects `mappings`'] = function()
   child.expect_screenshot()
 end
 
-T['open()']['does not create mapping for emptry string'] = function()
+T['open()']['does not create mapping for empty string'] = function()
   local has_map = function(lhs, pattern) return child.cmd_capture('nmap ' .. lhs):find(pattern) ~= nil end
 
   -- Supplying empty string should mean "don't create keymap"
@@ -3062,7 +3062,7 @@ T['File manipulation']['can copy directory inside itself'] = function()
   validate_confirm_args(ref_pattern)
 end
 
-T['File manipulation']['handles simultanious copy and move'] = function()
+T['File manipulation']['handles simultaneous copy and move'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
 
@@ -3095,7 +3095,7 @@ T['File manipulation']['handles simultanious copy and move'] = function()
   validate_confirm_args('    MOVE:')
 end
 
-T['File manipulation']['handles simultanious copy and rename'] = function()
+T['File manipulation']['handles simultaneous copy and rename'] = function()
   local temp_dir = make_temp_dir('temp', { 'file' })
   open(temp_dir)
 

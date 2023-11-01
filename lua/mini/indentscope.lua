@@ -139,7 +139,7 @@ end
 ---   It also controls how empty lines are treated: they are included in scope
 ---   only if followed by a border. Another way of looking at it is that indent
 ---   of blank line is computed based on value of `border` option.
----   Here is an illustration of how `border` works in presense of empty lines:
+---   Here is an illustration of how `border` works in presence of empty lines:
 --- >
 ---                              |both|bottom|top|none|
 ---   1|function foo()           | 0  |  0   | 0 | 0  |
@@ -279,7 +279,7 @@ MiniIndentscope.config = {
 ---
 ---@return table Table with scope information:
 ---   - <body> - table with <top> (top line of scope, inclusive), <bottom>
----     (bottom line of scope, inclusive), and <indent> (minimum indent withing
+---     (bottom line of scope, inclusive), and <indent> (minimum indent within
 ---     scope) keys. Line numbers start at 1.
 ---   - <border> - table with <top> (line of top border, might be `nil`),
 ---     <bottom> (line of bottom border, might be `nil`), and <indent> (indent
@@ -327,7 +327,7 @@ end
 
 --- Draw scope manually
 ---
---- Scope is visualized as a vertical line withing scope's body range at column
+--- Scope is visualized as a vertical line within scope's body range at column
 --- equal to border indent plus one (or body indent if border is absent).
 --- Numbering starts from one.
 ---
@@ -433,7 +433,7 @@ MiniIndentscope.gen_animation.exponential =
 --- Cursor is placed on a first non-blank character of target line.
 ---
 ---@param side string One of "top" or "bottom".
----@param use_border boolean|nil Whether to move to border or withing scope's body.
+---@param use_border boolean|nil Whether to move to border or within scope's body.
 ---   If particular border is absent, body is used.
 ---@param scope table|nil Scope to use. Default: output of |MiniIndentscope.get_scope()|.
 MiniIndentscope.move_cursor = function(side, use_border, scope)
@@ -830,7 +830,7 @@ H.draw_scope = function(scope, opts)
 end
 
 H.draw_indicator_animation = function(indicator, draw_fun, animation_fun)
-  -- Draw from origin (cursor line but wihtin indicator range)
+  -- Draw from origin (cursor line but within indicator range)
   local top, bottom = indicator.top, indicator.bottom
   local origin = math.min(math.max(vim.fn.line('.'), top), bottom)
 
@@ -950,7 +950,7 @@ end
 -- Animations -----------------------------------------------------------------
 --- Imitate common power easing function
 ---
---- Every step is preceeded by waiting time decreasing/increasing in power
+--- Every step is preceded by waiting time decreasing/increasing in power
 --- series fashion (`d` is "delta", ensures total duration time):
 --- - "in":  d*n^p; d*(n-1)^p; ... ; d*2^p;     d*1^p
 --- - "out": d*1^p; d*2^p;     ... ; d*(n-1)^p; d*n^p
@@ -1006,7 +1006,7 @@ end
 
 --- Imitate common exponential easing function
 ---
---- Every step is preceeded by waiting time decreasing/increasing in geometric
+--- Every step is preceded by waiting time decreasing/increasing in geometric
 --- progression fashion (`d` is 'delta', ensures total duration time):
 --- - 'in':  (d-1)*d^(n-1); (d-1)*d^(n-2); ...; (d-1)*d^1;     (d-1)*d^0
 --- - 'out': (d-1)*d^0;     (d-1)*d^1;     ...; (d-1)*d^(n-2); (d-1)*d^(n-1)

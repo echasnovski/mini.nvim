@@ -96,7 +96,7 @@
 ---     - Along with textobject functionality provides a curated and maintained
 ---       set of popular textobject queries for many languages (which can power
 ---       |MiniAi.gen_spec.treesitter()| functionality).
----     - Operates with custome treesitter directives (see
+---     - Operates with custom treesitter directives (see
 ---       |lua-treesitter-directives|) allowing more fine-tuned textobjects.
 ---     - Implements only textobjects based on treesitter.
 ---     - Doesn't support |v:count|.
@@ -1382,7 +1382,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
   local final_span = extract(find_res.span, find_res.extract_pattern)
 
   -- Ensure that output region is different from reference. This is needed if
-  -- final span was shrinked during extraction and resulted into equal to input
+  -- final span was shrunk during extraction and resulted into equal to input
   -- reference. This powers consecutive application of most `i` textobjects.
   if H.is_span_covering(reference_span, final_span) then
     find_res = find_next(find_res.span)
@@ -1578,7 +1578,7 @@ end
 -- NOTE: spans are end-exclusive to allow empty spans via `from == to`
 H.new_span = function(from, to) return { from = from, to = to == nil and from or (to + 1) } end
 
----@param candidate table Candidate span to test agains `current`.
+---@param candidate table Candidate span to test against `current`.
 ---@param current table|nil Current best span.
 ---@param reference table Reference span to cover.
 ---@param opts table Fields: <search_method>.

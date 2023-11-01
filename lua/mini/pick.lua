@@ -1954,7 +1954,7 @@ H.picker_new = function(opts)
   local win_target = vim.api.nvim_get_current_win()
   local win_id = H.picker_new_win(buf_id, opts.window.config)
 
-  -- Constuct and return object
+  -- Construct and return object
   local picker = {
     -- Permanent data about picker (should not change)
     opts = opts,

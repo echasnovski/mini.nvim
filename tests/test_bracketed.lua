@@ -474,7 +474,7 @@ T['comment()']['works on first/last lines comments'] = function()
   end
 end
 
-T['comment()']['works whith one comment or less'] = function()
+T['comment()']['works with one comment or less'] = function()
   child.o.commentstring = '## %s'
   local lines
 
@@ -801,7 +801,7 @@ T['conflict()']['works on first/last lines conflicts'] = function()
   end
 end
 
-T['conflict()']['works whith one conflict or less'] = function()
+T['conflict()']['works with one conflict or less'] = function()
   local m = conflict_marks
   local lines
 
@@ -1042,7 +1042,7 @@ T['diagnostic()']['works on first/last diagnostic'] = function()
   validate({ 1, 2 }, 'last', positions[1], { n_times = 2 })
 end
 
-T['diagnostic()']['works whith one diagnostic or less'] = function()
+T['diagnostic()']['works with one diagnostic or less'] = function()
   -- No diagnostic. Should not move cursor.
   set_lines({ 'aaa', 'Error', 'aaa' })
 
@@ -2605,7 +2605,7 @@ T['undo()']['works with `:undo!` advancing'] = function()
 end
 
 T['undo()']['does not register undo actions without `register_undo_state()`'] = function()
-  -- It would be **great** to implement that, but seems imposible
+  -- It would be **great** to implement that, but seems impossible
   type_keys('i', 'one', '<Esc>')
   type_keys('A', ' two', '<Esc>')
   type_keys('A', ' three', '<Esc>')
@@ -3293,7 +3293,7 @@ T['yank()']['tracks yanking right after advancing'] = function()
 end
 
 T['yank()']['does not detect correct region mode when pasted with register'] = function()
-  -- It would be **great** to make it work but seems imposible right now
+  -- It would be **great** to make it work but seems impossible right now
   -- See https://github.com/vim/vim/issues/12003
   setup_yank({ { 'a', 'b' }, '<C-v>j"ay' }, { { 'aaa' }, 'yy' })
 

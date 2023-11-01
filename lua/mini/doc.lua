@@ -338,7 +338,7 @@ MiniDoc.config = {
       H.apply_recursively(function(x)
         if not (type(x) == 'table' and x.type == 'section') then return end
 
-        -- Add headings before first occurence of a section which type usually
+        -- Add headings before first occurrence of a section which type usually
         -- appear several times
         if not found_param and x.info.id == '@param' then
           H.add_section_heading(x, 'Parameters')
@@ -462,7 +462,7 @@ MiniDoc.current = { aliases = {}, toc = {} }
 --- - Hooks for sections which supposed to have "type-like" data ('@field',
 ---   '@param', '@return', '@type') automatically enclose *first found*
 ---   "type-like" word and its neighbor characters in '`(<type>)`' (expect
----   false positives). Algoritm is far from being 100% correct, but seems to
+---   false positives). Algorithm is far from being 100% correct, but seems to
 ---   work with present allowed type annotation. For allowed types see
 ---   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
 ---   or, better yet, look in source code of this module.
@@ -484,7 +484,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 -- Module functionality =======================================================
 --- Generate help file
 ---
---- # Algoritm~
+--- # Algorithm~
 ---
 --- - Main parameters for help generation are an array of input file paths and
 ---   path to output help file.
@@ -503,7 +503,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 --- - Apply structure hooks (they should modify its input in place, which is
 ---   possible due to 'table nature' of all inputs):
 ---     - Each block is processed by `MiniDoc.config.hooks.block_pre`. This is a
----       designated step for auto-generation of sections from descibed
+---       designated step for auto-generation of sections from described
 ---       annotation subject (like sections with id `@tag`, `@type`).
 ---     - Each section is processed by `MiniDoc.config.hooks.section_pre`.
 ---     - Each section is processed by corresponding
@@ -991,7 +991,7 @@ H.toc_insert = function(s)
     local lines = {}
     for i = 1, math.max(#toc_entry, #tag_section) do
       local left = toc_entry[i] or ''
-      -- Use tag refernce instead of tag enclosure
+      -- Use tag reference instead of tag enclosure
       local right = vim.trim((tag_section[i] or ''):gsub('%*', '|'))
       -- Add visual line only at first entry (while not adding trailing space)
       local filler = i == 1 and '.' or (right == '' and '' or ' ')

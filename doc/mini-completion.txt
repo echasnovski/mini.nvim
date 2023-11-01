@@ -43,7 +43,7 @@ Features:
 - User can force two-stage completion via
   |MiniCompletion.complete_twostage()| (by default is mapped to
   `<C-Space>`) or fallback completion via
-  |MiniCompletion.complete_fallback()| (maped to `<M-Space>`).
+  |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 
 What it doesn't do:
 - Snippet expansion.
@@ -73,7 +73,7 @@ You can override runtime config settings locally to buffer inside
     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
       `v:lua.MiniCompletion.completefunc_lsp`.
-- If you have trouble using custom (overriden) |vim.ui.input| (like from
+- If you have trouble using custom (overridden) |vim.ui.input| (like from
   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
   for input buffer. For example, currently for 'dressing.nvim' it can be
   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.

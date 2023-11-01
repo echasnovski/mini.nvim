@@ -572,7 +572,7 @@ T['Mouse click']['works'] = function()
   click(3)
   eq(child.fn.bufname(), 'aaa')
 
-  -- Clicking to the right of actual lable shouldn't do anything
+  -- Clicking to the right of actual label shouldn't do anything
   click(9)
   eq(child.fn.bufname(), 'bbb')
   edit('aaa')

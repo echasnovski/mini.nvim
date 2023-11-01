@@ -532,7 +532,7 @@ end
 ---
 --- `content.sort` describes in which order directory entries should be shown
 --- in directory buffer. Takes as input and returns as output an array of file
---- system entry data. Note: techincally, it can be used to filter and modify
+--- system entry data. Note: technically, it can be used to filter and modify
 --- its elements as well.
 --- Uses |MiniFiles.default_sort()| by default.
 ---
@@ -2045,7 +2045,7 @@ end
 H.match_line_entry_name = function(l)
   if l == nil then return nil end
   local offset = H.match_line_offset(l)
-  -- Go up until first occurence of path separator allowing to track entries
+  -- Go up until first occurrence of path separator allowing to track entries
   -- like `a/b.lua` when creating nested structure
   local res = l:sub(offset):gsub('/.*$', '')
   return res
@@ -2138,7 +2138,7 @@ H.window_update = function(win_id, config)
   -- Reset basic highlighting (removes possible "focused" highlight group)
   H.window_update_highlight(win_id, 'FloatTitle', 'MiniFilesTitle')
 
-  -- Make sure that 'cursorline' is not overriden by `config.style`
+  -- Make sure that 'cursorline' is not overridden by `config.style`
   vim.wo[win_id].cursorline = true
 
   -- Make sure proper `conceallevel` (can be not the case with 'noice.nvim')

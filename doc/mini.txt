@@ -142,7 +142,7 @@ Table of contents:
   if it was manually created.
 
 - |MiniBracketed| - go forward/backward with square brackets. Among others,
-  supports variaty of non-trivial targets: comments, files on disk, indent
+  supports variety of non-trivial targets: comments, files on disk, indent
   changes, tree-sitter nodes, linear undo states, yank history entries.
 
 - |MiniBufremove| - buffer removing (unshow, delete, wipeout) while saving

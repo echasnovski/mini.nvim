@@ -140,7 +140,7 @@ mapping (as string) it expects table with pair information:
 - `register` - optional table with information about whether this pair
   should be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in
   |MiniPairs.cr|). Should have boolean elements `bs` and `cr` which are
-  both `true` by default (if not overriden explicitly).
+  both `true` by default (if not overridden explicitly).
 
 Using this function instead of |nvim_set_keymap()| allows automatic
 registration of pairs which will be recognized by `<BS>` and `<CR>`.

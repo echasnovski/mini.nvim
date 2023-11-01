@@ -2660,7 +2660,7 @@ end
 T['builtin.help()']['has proper preview'] = function()
   child.set_size(15, 80)
 
-  -- Shouldn't have side effects for serach pattern and `v:hlsearch`
+  -- Shouldn't have side effects for search pattern and `v:hlsearch`
   child.api.nvim_buf_set_lines(0, 0, -1, false, { 'aa', 'bb', 'aa' })
   type_keys('/', 'aa', '<CR>')
   child.cmd('let v:hlsearch=0')
@@ -2681,7 +2681,7 @@ T['builtin.help()']['works for help tags with special characters'] = function()
   child.expect_screenshot()
 end
 
-T['builtin.help()']['works when help window is alreay opened'] = function()
+T['builtin.help()']['works when help window is already opened'] = function()
   -- Open non-current help window
   child.cmd('help')
   child.cmd('wincmd w')

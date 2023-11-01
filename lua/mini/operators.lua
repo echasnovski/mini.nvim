@@ -338,7 +338,7 @@ end
 --- Notes:
 --- - Use `<C-c>` to stop exchanging after the first step.
 ---
---- - Exchanched regions can have different (char,line,block)-wise submodes.
+--- - Exchanged regions can have different (char,line,block)-wise submodes.
 ---
 --- - Works with most cases of intersecting regions, but not officially supported.
 ---

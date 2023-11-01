@@ -942,7 +942,7 @@ MiniAnimate.gen_winconfig = {}
 ---
 ---@param opts __animate_winconfig_opts_common
 ---   - <n_steps> `(number)` - number of output steps, all with same config.
----     Usefule to tweak smoothness of transparency animation (done inside
+---     Useful to tweak smoothness of transparency animation (done inside
 ---     `winblend` config option). Default: 25.
 ---
 ---@return __animate_winconfig_return
@@ -1506,7 +1506,7 @@ H.make_scroll_step = function(state_from, state_to, opts)
       local is_same_win_buf = vim.api.nvim_get_current_buf() == buf_id and vim.api.nvim_get_current_win() == win_id
       if not is_same_win_buf then return H.stop_scroll() end
 
-      -- Compute intermideate cursor position. This relies on `virtualedit=all`
+      -- Compute intermediate cursor position. This relies on `virtualedit=all`
       -- to be able to place cursor anywhere on screen (has better animation;
       -- at least for default equally spread subscrolls).
       local coef = step / n_steps
@@ -1514,7 +1514,7 @@ H.make_scroll_step = function(state_from, state_to, opts)
       local cursor_virtcol = H.convex_point(from_cur_virtcol, to_cur_virtcol, coef)
       local cursor_data = { line = cursor_line, virtcol = cursor_virtcol }
 
-      -- Preform scroll. Possibly stop on error.
+      -- Perform scroll. Possibly stop on error.
       local ok, _ = pcall(H.scroll_action, scroll_key, step_scrolls[step], cursor_data)
       if not ok then return H.stop_scroll(state_to) end
 
@@ -1623,7 +1623,7 @@ H.make_resize_step = function(state_from, state_to, opts)
       -- `stop_resize()` because it will also stop parallel animation.
       if H.cache.resize_event_id ~= event_id then return false end
 
-      -- Preform animation. Possibly stop on error.
+      -- Perform animation. Possibly stop on error.
       -- Use `false` to not restore cursor position to avoid horizontal flicker
       local ok, _ = pcall(H.apply_resize_state, { sizes = step_sizes[step] }, false)
       if not ok then return H.stop_resize(state_to) end
@@ -1690,7 +1690,7 @@ end
 
 H.apply_resize_state = function(state, full_view)
   -- Set window sizes while ensuring that 'cmdheight' will not change. Can
-  -- happen if chaning height of window main row layout or increase terminal
+  -- happen if changing height of window main row layout or increase terminal
   -- height quickly (see #270)
   local cache_cmdheight = vim.o.cmdheight
 
@@ -1812,7 +1812,7 @@ end
 
 --- Imitate common power easing function
 ---
---- Every step is preceeded by waiting time decreasing/increasing in power
+--- Every step is preceded by waiting time decreasing/increasing in power
 --- series fashion (`d` is "delta", ensures total duration time):
 --- - "in":  d*n^p; d*(n-1)^p; ... ; d*2^p;     d*1^p
 --- - "out": d*1^p; d*2^p;     ... ; d*(n-1)^p; d*n^p
@@ -1868,7 +1868,7 @@ end
 
 --- Imitate common exponential easing function
 ---
---- Every step is preceeded by waiting time decreasing/increasing in geometric
+--- Every step is preceded by waiting time decreasing/increasing in geometric
 --- progression fashion (`d` is 'delta', ensures total duration time):
 --- - 'in':  (d-1)*d^(n-1); (d-1)*d^(n-2); ...; (d-1)*d^1;     (d-1)*d^0
 --- - 'out': (d-1)*d^0;     (d-1)*d^1;     ...; (d-1)*d^(n-2); (d-1)*d^(n-1)
@@ -2127,7 +2127,7 @@ if vim.fn.exists('*virtcol2col') == 1 then
   H.virtcol2col = function(line, virtcol)
     local col = vim.fn.virtcol2col(0, line, virtcol)
 
-    -- Corrent for virtual column being outside of line's last virtual column
+    -- Current for virtual column being outside of line's last virtual column
     local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
     if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
 

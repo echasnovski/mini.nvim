@@ -362,7 +362,7 @@
 --- # Output surrounding ~
 ---
 --- A table with <left> (plain text string) and <right> (plain text string)
---- fields. Strings can contain new lines charater `\n` to add multiline parts.
+--- fields. Strings can contain new lines character `\n` to add multiline parts.
 ---
 --- Examples:
 --- - Lua block string: `{ left = '[[', right = ']]' }`
@@ -527,7 +527,7 @@ end
 ---     },
 ---   })
 ---
----   -- Create custom surrouding for Lua's block string `[[...]]`. Use this inside
+---   -- Create custom surrounding for Lua's block string `[[...]]`. Use this inside
 ---   -- autocommand or 'after/ftplugin/lua.lua' file.
 ---   vim.b.minisurround_config = {
 ---     custom_surroundings = {
@@ -1018,7 +1018,7 @@ end
 -- Module default config
 H.default_config = vim.deepcopy(MiniSurround.config)
 
--- Namespaces to be used withing module
+-- Namespaces to be used within module
 H.ns_id = {
   highlight = vim.api.nvim_create_namespace('MiniSurroundHighlight'),
   input = vim.api.nvim_create_namespace('MiniSurroundInput'),
@@ -1454,7 +1454,7 @@ H.get_matched_node_pairs_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
   local ts_parsers = require('nvim-treesitter.parsers')
 
-  -- This is a modifed version of `ts_queries.get_capture_matches_recursively`
+  -- This is a modified version of `ts_queries.get_capture_matches_recursively`
   -- source code which keeps track of match language
   local matches = {}
   local parser = ts_parsers.get_parser(0)
@@ -1627,7 +1627,7 @@ end
 -- NOTE: spans are end-exclusive to allow empty spans via `from == to`
 H.new_span = function(from, to) return { from = from, to = to == nil and from or (to + 1) } end
 
----@param candidate table Candidate span to test agains `current`.
+---@param candidate table Candidate span to test against `current`.
 ---@param current table|nil Current best span.
 ---@param reference table Reference span to cover.
 ---@param opts table Fields: <search_method>.
@@ -1938,7 +1938,7 @@ H.region_replace = function(region, text)
   -- Allow single string as replacement
   if type(text) == 'string' then text = { text } end
 
-  -- Allow `\n` in string to denote new liness
+  -- Allow `\n` in string to denote new lines
   if #text > 0 then text = vim.split(table.concat(text, '\n'), '\n') end
 
   -- Replace. Use `pcall()` to do nothing if some position is out of bounds.

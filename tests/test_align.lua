@@ -288,7 +288,7 @@ end
 T['align_strings()']['respects `steps.split` argument'] = function()
   local step_str, cmd
 
-  -- Action output should be parts or convertable to it.
+  -- Action output should be parts or convertible to it.
   step_str = [[MiniAlign.new_step('tmp', function(strings) return { { 'a', 'b' }, {'aa', 'b'} } end)]]
   cmd = string.format([[MiniAlign.align_strings({ 'a=b', 'aa=b' }, {}, { split = %s })]], step_str)
   eq(child.lua_get(cmd), { 'a b', 'aab' })
@@ -304,10 +304,10 @@ T['align_strings()']['respects `steps.split` argument'] = function()
   })
   validate_align_strings({ 'a,b', 'aa,b' }, {}, { 'a b', 'aab' })
 
-  -- Should validate that step's output is convertable to parts
+  -- Should validate that step's output is convertible to parts
   step_str = [[MiniAlign.new_step('tmp', function(strings) return { { 'a', 1 }, {'aa', 'b'} } end)]]
   cmd = string.format([[MiniAlign.align_strings({ 'a=b', 'aa=b' }, {}, { split = %s })]], step_str)
-  expect.error(child.lua, 'convertable to parts', cmd)
+  expect.error(child.lua, 'convertible to parts', cmd)
 
   -- Is called with `opts`
   step_str = [[MiniAlign.new_step('tmp', function(strings, opts) return MiniAlign.as_parts(opts.tmp) end)]]
@@ -1258,7 +1258,7 @@ T['Align']['registers visual selection'] = function()
   eq(child.fn.getpos('v'), { 0, 1, 1, 0 })
 end
 
-T['Align']['works with differnt mapping'] = function()
+T['Align']['works with different mapping'] = function()
   unload_module()
   child.api.nvim_del_keymap('n', 'ga')
   child.api.nvim_del_keymap('x', 'ga')

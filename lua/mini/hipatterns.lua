@@ -901,7 +901,7 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
   -- Return early if buffer is not proper.
   -- Also check if buffer is enabled here mostly for better resilience. It
   -- might be actually needed due to various `schedule_wrap`s leading to change
-  -- queue entery with not target (and improper) buffer.
+  -- queue entry with not target (and improper) buffer.
   local buf_cache = H.cache[buf_id]
   if not vim.api.nvim_buf_is_valid(buf_id) or H.is_disabled(buf_id) or buf_cache == nil then return end
 
