@@ -170,7 +170,7 @@ Helpers.mark_flaky = function()
 end
 
 -- Detect CI
-Helpers.is_ci = function() return os.getenv('IS_CI') ~= nil end
+Helpers.is_ci = function() return os.getenv('CI') ~= nil end
 Helpers.skip_in_ci = function(msg)
   if Helpers.is_ci() then MiniTest.skip(msg) end
 end
