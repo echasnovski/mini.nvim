@@ -838,7 +838,7 @@ Parameters~
     returns boolean value indicating whether animation should be done.
     Default: always `true`.
   - <n_steps> `(number)` - number of output steps, all with same config.
-    Usefule to tweak smoothness of transparency animation (done inside
+    Useful to tweak smoothness of transparency animation (done inside
     `winblend` config option). Default: 25.
 
 Return~

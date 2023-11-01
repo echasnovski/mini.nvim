@@ -686,7 +686,7 @@ MiniAlign.align_strings = function(strings, opts, steps)
     if H.can_be_parts(parts) then
       parts = MiniAlign.as_parts(parts)
     else
-      H.error('Output of `split` step should be convertable to parts. See `:h MiniAlign.as_parts()`.')
+      H.error('Output of `split` step should be convertible to parts. See `:h MiniAlign.as_parts()`.')
     end
   end
 
@@ -750,7 +750,7 @@ MiniAlign.align_user = function(mode)
     local id = H.user_modifier(with_preview, H.make_status_msg_chunks(opts, steps))
     n_iter = n_iter + 1
 
-    -- Stop in case user supplied inappropriate modifer id (abort)
+    -- Stop in case user supplied inappropriate modifier id (abort)
     -- Also stop in case of too many iterations (guard from infinite cycle)
     if id == nil or n_iter > 1000 then
       if lines_were_set then H.undo() end

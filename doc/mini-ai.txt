@@ -96,7 +96,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
     - Along with textobject functionality provides a curated and maintained
       set of popular textobject queries for many languages (which can power
       |MiniAi.gen_spec.treesitter()| functionality).
-    - Operates with custome treesitter directives (see
+    - Operates with custom treesitter directives (see
       |lua-treesitter-directives|) allowing more fine-tuned textobjects.
     - Implements only textobjects based on treesitter.
     - Doesn't support |v:count|.

@@ -215,7 +215,7 @@ H.auto_unhighlight = function()
 end
 
 -- Highlighting ---------------------------------------------------------------
----@param only_current boolean|nil Whether to forcefuly highlight only current word
+---@param only_current boolean|nil Whether to forcefully highlight only current word
 ---   under cursor.
 ---@private
 H.highlight = function(only_current)

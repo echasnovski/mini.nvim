@@ -46,7 +46,7 @@ sync_module () {
   # Tweak patch:
   # - Move 'readmes/mini-xxx.md' to 'README.md'.
   # - This also means move all references used in it one step higher (and hope
-  #   that it doesn't occure anywhere else in patch).
+  #   that it doesn't occur anywhere else in patch).
   sed -i "s/readmes\/mini-$module\.md/README.md/" $patch
   sed -i "s/\[help file\](\.\.\//[help file](/" $patch
 

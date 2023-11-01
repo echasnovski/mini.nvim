@@ -175,7 +175,7 @@ Default values:
   It also controls how empty lines are treated: they are included in scope
   only if followed by a border. Another way of looking at it is that indent
   of blank line is computed based on value of `border` option.
-  Here is an illustration of how `border` works in presense of empty lines:
+  Here is an illustration of how `border` works in presence of empty lines:
 >
                              |both|bottom|top|none|
   1|function foo()           | 0  |  0   | 0 | 0  |
@@ -270,7 +270,7 @@ Parameters~
 Return~
 `(table)` Table with scope information:
   - <body> - table with <top> (top line of scope, inclusive), <bottom>
-    (bottom line of scope, inclusive), and <indent> (minimum indent withing
+    (bottom line of scope, inclusive), and <indent> (minimum indent within
     scope) keys. Line numbers start at 1.
   - <border> - table with <top> (line of top border, might be `nil`),
     <bottom> (line of bottom border, might be `nil`), and <indent> (indent
@@ -284,7 +284,7 @@ Return~
                     `MiniIndentscope.draw`({scope}, {opts})
 Draw scope manually
 
-Scope is visualized as a vertical line withing scope's body range at column
+Scope is visualized as a vertical line within scope's body range at column
 equal to border indent plus one (or body indent if border is absent).
 Numbering starts from one.
 
@@ -429,7 +429,7 @@ Cursor is placed on a first non-blank character of target line.
 
 Parameters~
 {side} `(string)` One of "top" or "bottom".
-{use_border} `(boolean|nil)` Whether to move to border or withing scope's body.
+{use_border} `(boolean|nil)` Whether to move to border or within scope's body.
   If particular border is absent, body is used.
 {scope} `(table|nil)` Scope to use. Default: output of |MiniIndentscope.get_scope()|.
 

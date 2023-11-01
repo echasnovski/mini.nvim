@@ -43,7 +43,7 @@
 --- - User can force two-stage completion via
 ---   |MiniCompletion.complete_twostage()| (by default is mapped to
 ---   `<C-Space>`) or fallback completion via
----   |MiniCompletion.complete_fallback()| (maped to `<M-Space>`).
+---   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 ---
 --- What it doesn't do:
 --- - Snippet expansion.
@@ -73,7 +73,7 @@
 ---     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
 ---     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
 ---       `v:lua.MiniCompletion.completefunc_lsp`.
---- - If you have trouble using custom (overriden) |vim.ui.input| (like from
+--- - If you have trouble using custom (overridden) |vim.ui.input| (like from
 ---   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
 ---   for input buffer. For example, currently for 'dressing.nvim' it can be
 ---   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
@@ -894,7 +894,7 @@ H.apply_additional_text_edits = function()
   if edits == nil then return end
   client_id = client_id or 0
 
-  -- Use extmark to track relevant cursor postion after text edits
+  -- Use extmark to track relevant cursor position after text edits
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   local extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
 

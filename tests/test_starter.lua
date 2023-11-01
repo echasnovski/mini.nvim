@@ -172,7 +172,7 @@ T['open()']['sets buffer options'] = function()
   -- Open Starter buffer
   child.lua('MiniStarter.open()')
 
-  -- Should set essential buffer options (not all actualy set are tested)
+  -- Should set essential buffer options (not all actually set are tested)
   eq(child.bo.bufhidden, 'wipe')
   eq(child.bo.buflisted, false)
   eq(child.bo.buftype, 'nofile')
@@ -616,7 +616,7 @@ T['get_content()']['works'] = function()
   child.lua('MiniStarter.open()')
   child.expect_screenshot()
 
-  -- Every element of array should contain conent for a particular line
+  -- Every element of array should contain content for a particular line
   local content = child.lua_get('MiniStarter.get_content()')
   eq(content[1], { { hl = 'MiniStarterHeader', string = 'Hello', type = 'header' } })
   eq(content[2], { { string = '', type = 'empty' } })

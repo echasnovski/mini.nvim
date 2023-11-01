@@ -366,7 +366,7 @@ More examples:
 # Output surrounding ~
 
 A table with <left> (plain text string) and <right> (plain text string)
-fields. Strings can contain new lines charater `\n` to add multiline parts.
+fields. Strings can contain new lines character `\n` to add multiline parts.
 
 Examples:
 - Lua block string: `{ left = '[[', right = ']]' }`
@@ -563,7 +563,7 @@ Examples of using `config.custom_surroundings` (see more examples at
     },
   })
 
-  -- Create custom surrouding for Lua's block string `[[...]]`. Use this inside
+  -- Create custom surrounding for Lua's block string `[[...]]`. Use this inside
   -- autocommand or 'after/ftplugin/lua.lua' file.
   vim.b.minisurround_config = {
     custom_surroundings = {

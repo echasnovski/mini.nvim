@@ -274,7 +274,7 @@ Some more insight about their behavior:
 - Hooks for sections which supposed to have "type-like" data ('@field',
   '@param', '@return', '@type') automatically enclose *first found*
   "type-like" word and its neighbor characters in '`(<type>)`' (expect
-  false positives). Algoritm is far from being 100% correct, but seems to
+  false positives). Algorithm is far from being 100% correct, but seems to
   work with present allowed type annotation. For allowed types see
   https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type
   or, better yet, look in source code of this module.
@@ -297,7 +297,7 @@ Some more insight about their behavior:
                 `MiniDoc.generate`({input}, {output}, {config})
 Generate help file
 
-# Algoritm~
+# Algorithm~
 
 - Main parameters for help generation are an array of input file paths and
   path to output help file.
@@ -316,7 +316,7 @@ Generate help file
 - Apply structure hooks (they should modify its input in place, which is
   possible due to 'table nature' of all inputs):
     - Each block is processed by `MiniDoc.config.hooks.block_pre`. This is a
-      designated step for auto-generation of sections from descibed
+      designated step for auto-generation of sections from described
       annotation subject (like sections with id `@tag`, `@type`).
     - Each section is processed by `MiniDoc.config.hooks.section_pre`.
     - Each section is processed by corresponding

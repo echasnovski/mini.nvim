@@ -191,7 +191,7 @@ end
 --- jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
 --- Default is 0 to not show anything ahead as it reduces visual noise.
 ---
---- Option `view.dim` contols whether to dim lines with at least one jump spot.
+--- Option `view.dim` controls whether to dim lines with at least one jump spot.
 --- Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
 ---
 --- ## Allowed lines~
@@ -493,10 +493,10 @@ end
 ---
 --- Spot is possible for jump if it is one of the following:
 --- - Start or end of non-whitespace character group.
---- - Alphanumeric character followed or preceeded by punctuation (useful for
+--- - Alphanumeric character followed or preceded by punctuation (useful for
 ---   snake case names).
 --- - Start of uppercase character group (useful for camel case names). Usually
----   only Lating alphabet is recognized due to Lua patterns shortcomings.
+---   only Latin alphabet is recognized due to Lua patterns shortcomings.
 ---
 --- These rules are derived in an attempt to balance between two intentions:
 --- - Allow as much useful jumping spots as possible.
@@ -609,7 +609,7 @@ MiniJump2d.builtin_opts.query = user_input_opts(function() return H.input('Enter
 -- Module default config
 H.default_config = vim.deepcopy(MiniJump2d.config)
 
--- Namespaces to be used withing module
+-- Namespaces to be used within module
 H.ns_id = {
   dim = vim.api.nvim_create_namespace('MiniJump2dDim'),
   spots = vim.api.nvim_create_namespace('MiniJump2dSpots'),
@@ -695,7 +695,7 @@ H.create_autocommands = function(config)
     vim.api.nvim_create_autocmd(event, { pattern = pattern, group = augroup, callback = callback, desc = desc })
   end
 
-  -- Corrections for default `<CR>` mapping to not interfer with popular usages
+  -- Corrections for default `<CR>` mapping to not interfere with popular usages
   if config.mappings.start_jumping == '<CR>' then
     local revert_cr = function() vim.keymap.set('n', '<CR>', '<CR>', { buffer = true }) end
     au('FileType', 'qf', revert_cr, 'Revert <CR>')

@@ -1451,7 +1451,7 @@ T['Scroll']['works when movement is triggered by outside command'] = function()
 end
 
 T['Scroll']['allows immediate another scroll animation'] = function()
-  -- This should also properly restore some termporary set options
+  -- This should also properly restore some temporary set options
   child.o.scrolloff, child.o.virtualedit = 1, 'block'
 
   type_keys('10<C-e>')

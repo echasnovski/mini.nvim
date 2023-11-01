@@ -1048,7 +1048,7 @@ T['default_spotter()']['works (almost) with multibyte character'] = function()
   set_lines({ 'ы ыы ыыы ы_ы ыЫыы' })
   start_default_spotter()
   -- NOTE: ideally it should end with 'hi j' but 'Ы' is not recognized as
-  -- captial letter in Lua patterns (because of different locale)
+  -- capital letter in Lua patterns (because of different locale)
   child.expect_screenshot()
 end
 

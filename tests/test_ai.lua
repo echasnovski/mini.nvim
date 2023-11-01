@@ -682,7 +682,7 @@ T['gen_spec']['treesitter()'] = new_set({
       -- Start editing reference file
       child.cmd('edit tests/dir-ai/lua-file.lua')
 
-      -- Defin "function definition" textobject
+      -- Define "function definition" textobject
       child.lua([[MiniAi.config.custom_textobjects = {
         F = MiniAi.gen_spec.treesitter({ a = '@function.outer', i = '@function.inner' })
       }]])

@@ -222,7 +222,7 @@ end
 ---
 --- Root directory is a directory containing at least one of pre-defined files.
 --- It is searched using |vim.fn.find()| with `upward = true` starting from
---- directory of current buffer file until first occurence of root file(s).
+--- directory of current buffer file until first occurrence of root file(s).
 ---
 --- Notes:
 --- - Requires |vim.fs| module (present in Neovim>=0.8).

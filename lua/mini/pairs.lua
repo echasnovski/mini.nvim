@@ -154,7 +154,7 @@ MiniPairs.config = {
 --- - `register` - optional table with information about whether this pair
 ---   should be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in
 ---   |MiniPairs.cr|). Should have boolean elements `bs` and `cr` which are
----   both `true` by default (if not overriden explicitly).
+---   both `true` by default (if not overridden explicitly).
 ---
 --- Using this function instead of |nvim_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
@@ -201,7 +201,7 @@ MiniPairs.map_buf = function(buffer, mode, lhs, pair_info, opts)
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
 
-  -- Ensure that `<BS>` and `<CR>` are mapped for inpu mode
+  -- Ensure that `<BS>` and `<CR>` are mapped for input mode
   H.ensure_cr_bs(mode)
 end
 

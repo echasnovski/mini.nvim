@@ -1189,7 +1189,7 @@ H.create_autocommands = function(config)
   local events = vim.fn.has('nvim-0.8') == 1 and { 'BufAdd', 'LspAttach' } or { 'BufAdd' }
   au(events, '*', ensure_triggers, 'Ensure buffer-local trigger keymaps')
 
-  -- Disable all triggers when recording macro as they interfer with what is
+  -- Disable all triggers when recording macro as they interfere with what is
   -- actually recorded
   au('RecordingEnter', '*', MiniClue.disable_all_triggers, 'Disable all triggers')
   au('RecordingLeave', '*', MiniClue.enable_all_triggers, 'Enable all triggers')
@@ -1368,7 +1368,7 @@ H.state_exec = function()
   -- Compute keys to type
   local keys_to_type = H.compute_exec_keys()
 
-  -- Add extra (redundant) safety flag to try to avoid inifinite recursion
+  -- Add extra (redundant) safety flag to try to avoid infinite recursion
   local trigger, clue = H.state.trigger, H.state_get_query_clue()
   H.exec_trigger = trigger
   vim.schedule(function() H.exec_trigger = nil end)

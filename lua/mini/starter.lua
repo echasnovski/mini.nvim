@@ -121,7 +121,7 @@
 ---     function()
 ---       return {
 ---         { name = 'Item #1 from function', action = [[echo 'Item #1']], section = 'From function' },
----         { name = 'Placeholder (always incative) item', action = '', section = 'From function' },
+---         { name = 'Placeholder (always inactive) item', action = '', section = 'From function' },
 ---         function()
 ---           return {
 ---             name = 'Item #1 from double function',
@@ -804,7 +804,7 @@ end
 --- - Computes some helper information about how item will be actually
 ---   displayed (after |MiniStarter.content_to_lines|) and minimum number of
 ---   prefix characters needed for a particular item to be queried single.
---- - Modifies item's `name` element taking it from corresponing `string`
+--- - Modifies item's `name` element taking it from corresponding `string`
 ---   element of content unit. This allows modifying item's `name` at the stage
 ---   of content hooks (like, for example, in |MiniStarter.gen_hook.indexing|).
 ---
@@ -1164,8 +1164,8 @@ H.items_flatten = function(items)
 end
 
 H.items_sort = function(items)
-  -- Order first by section and then by item id (both in order of appearence)
-  -- Gather items grouped per section in order of their appearence
+  -- Order first by section and then by item id (both in order of appearance)
+  -- Gather items grouped per section in order of their appearance
   local sections, section_order = {}, {}
   for _, item in ipairs(items) do
     local sec = item.section
@@ -1501,7 +1501,7 @@ end
 
 H.unique_nprefix = function(strings)
   -- For every string compute minimum width of unique prefix. NOTE: this can be
-  -- done simpler but it would be O(n^2) which *will* have noticable effect
+  -- done simpler but it would be O(n^2) which *will* have noticeable effect
   -- when there are a) many items and b) some of them are identical and have
   -- big length (like recent files with full paths).
 

@@ -837,7 +837,7 @@ T['as_colorscheme() methods']['chan_modify()']['respects `opts.filter`'] = funct
   end]])
 
   eq(child.lua_get([[vim.deep_equal(_G.cs, _G.cs:chan_modify('lightness', _G.f, { filter = _G.filter }))]]), true)
-  -- Ensure consistent order in history as there is no order guarnatee in how
+  -- Ensure consistent order in history as there is no order guarantee in how
   -- filter is applied
   child.lua('table.sort(_G.args_history, function(a, b) return a[2].attr < b[2].attr end)')
   eq(child.lua_get('_G.args_history'), {
@@ -903,7 +903,7 @@ T['as_colorscheme() methods']['chan_repel()'] = new_set({ hooks = { pre_case = c
 
 T['as_colorscheme() methods']['chan_repel()']['works with linear channels'] = function()
   -- Tested only with `lightness` as linear scale in hope that all others
-  -- (excpet hue) are implemented the same
+  -- (except hue) are implemented the same
   local ref_lch = child.lua_get([[MiniColors.convert(_G.cs.groups.Normal.fg, 'oklch')]])
   local ref_l = ref_lch.l
 

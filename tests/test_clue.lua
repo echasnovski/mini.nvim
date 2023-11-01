@@ -1769,8 +1769,8 @@ T['Clues']['silently ignores non-valid clues'] = function()
   child.expect_screenshot()
 end
 
-T['Clues']['can be overriden in later entries'] = function()
-  -- Like if there is table entry which later is partially overriden in
+T['Clues']['can be overridden in later entries'] = function()
+  -- Like if there is table entry which later is partially overridden in
   -- user-supplied one
   load_module({
     clues = {
@@ -2949,7 +2949,7 @@ T['Reproducing keys']['works with macros'] = function()
 
   eq(child.fn.getreg('q', 1, 1), { 'g~iwgcip:bnext\rg~iwgcip' })
 
-  -- Should work reproducing multiple times with differnt keys
+  -- Should work reproducing multiple times with different keys
   setup()
   type_keys('@q')
   validate()

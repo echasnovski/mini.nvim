@@ -408,7 +408,7 @@ T['Jumping with f/t/F/T']['allows dot-repeat'] = new_set({
   parametrize = { { 'f' }, { 't' }, { 'F' }, { 'T' } },
 }, {
   test = function(key)
-    -- Start with two equal lines (wth enough targets) to check equal effect
+    -- Start with two equal lines (with enough targets) to check equal effect
     set_lines({ ' 1e2e3e4e_ ', ' 1e2e3e4e_ ' })
 
     local lines = get_lines()

@@ -175,7 +175,7 @@
 ---
 ---       chan_modify('hue', function() return math.random(0, 359) end)
 --- <
---- - For color scheme creators use |MiniColors-colorscheme:simualte_cvd()| to
+--- - For color scheme creators use |MiniColors-colorscheme:simulate_cvd()| to
 ---   simulate various color vision deficiency types to see how color scheme
 ---   would look in the eyes of color blind person.
 ---@tag MiniColors-recipes
@@ -801,7 +801,7 @@ end
 ---       - <Quit> `(string)` - close interactive buffer. Default: `'<M-q>'`.
 ---       - <Write> `(string)` - write result of buffer code into a file.
 ---         Prompts for file name with |vim.ui.input()| and then
----         uses |MiniColors-colorscheme:wirte()| with other options being default.
+---         uses |MiniColors-colorscheme:write()| with other options being default.
 ---         Default: `'<M-w>'`.
 MiniColors.interactive = function(opts)
   opts = vim.tbl_deep_extend(
@@ -983,7 +983,7 @@ end
 ---`'tritan'`, or `'mono'` (equivalent to converting to graysacle).
 ---@param severity number|nil Severity of CVD. A number between 0 and 1 (default).
 ---
----@return string|nil Hex string of simualted color or `nil` if input is `nil`.
+---@return string|nil Hex string of simulated color or `nil` if input is `nil`.
 MiniColors.simulate_cvd = function(x, cvd_type, severity)
   if x == nil then return nil end
   if not (cvd_type == 'protan' or cvd_type == 'deutan' or cvd_type == 'tritan' or cvd_type == 'mono') then
@@ -1984,7 +1984,7 @@ end
 
 H.add_circle_sources = function(sources)
   local res = {}
-  -- Adding two new sources in periodic fashion makes repel mroe periodic
+  -- Adding two new sources in periodic fashion makes repel more periodic
   for _, src in ipairs(sources) do
     table.insert(res, src)
     table.insert(res, src - 360)

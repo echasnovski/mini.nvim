@@ -566,7 +566,7 @@ H.make_hues = function(bg_h, fg_h, n_hues)
   local period = 360 / n_hues
   local half_period = 0.5 * period
 
-  -- - Compute delta which determines the furtherst grid
+  -- - Compute delta which determines the furthest grid
   local d
   if bg_h == nil and fg_h == nil then d = 0 end
   if bg_h ~= nil and fg_h == nil then d = (bg_h % period + half_period) % period end

@@ -926,7 +926,7 @@ T['select()']['makes detected sessions up to date'] = function()
   eq(child.lua_get('_G.ui_select_args[1]'), { 'Session.vim', 'session_b' })
 end
 
-T['select()']['verifies presense of `vim.ui` and `vim.ui.select`'] = function()
+T['select()']['verifies presence of `vim.ui` and `vim.ui.select`'] = function()
   child.lua('vim.ui = 1')
   expect.error(function() child.lua('MiniSessions.select()') end, '%(mini%.sessions%).*vim%.ui')
 

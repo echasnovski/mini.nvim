@@ -177,7 +177,7 @@ Recipes:
 
       chan_modify('hue', function() return math.random(0, 359) end)
 <
-- For color scheme creators use |MiniColors-colorscheme:simualte_cvd()| to
+- For color scheme creators use |MiniColors-colorscheme:simulate_cvd()| to
   simulate various color vision deficiency types to see how color scheme
   would look in the eyes of color blind person.
 
@@ -755,7 +755,7 @@ Parameters~
       - <Quit> `(string)` - close interactive buffer. Default: `'<M-q>'`.
       - <Write> `(string)` - write result of buffer code into a file.
         Prompts for file name with |vim.ui.input()| and then
-        uses |MiniColors-colorscheme:wirte()| with other options being default.
+        uses |MiniColors-colorscheme:write()| with other options being default.
         Default: `'<M-w>'`.
 
 ------------------------------------------------------------------------------
@@ -828,7 +828,7 @@ or `'mono'` (equivalent to converting to graysacle).
 {severity} `(number|nil)` Severity of CVD. A number between 0 and 1 (default).
 
 Return~
-`(string|nil)` Hex string of simualted color or `nil` if input is `nil`.
+`(string|nil)` Hex string of simulated color or `nil` if input is `nil`.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
