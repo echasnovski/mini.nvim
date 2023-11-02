@@ -53,6 +53,8 @@ Notes:
 - Works on all supported versions but using Neovim>=0.9 is recommended.
   Neovim>=0.10 will give more visual feedback in floating window footer.
 
+- For more pickers see |MiniExtra.pickers|.
+
 Sources with more details:
 - |MiniPick-overview|
 - |MiniPick-source|
@@ -103,7 +105,7 @@ See |mini.nvim-buffer-local-config| for more details.
     - Default match algorithm is somewhat slow, while this module should
       match relatively lag-free for at least 100K+ items.
     - Has many built-in pickers, while this module has handful at its core
-      relying on other 'mini.nvim' modules to provide more.
+      relying on other 'mini.nvim' modules to provide more (see |MiniExtra|).
 
 - 'ibhagwan/fzf-lua':
     - Mostly same comparison as with 'nvim-telescope/telescope.nvim'.
