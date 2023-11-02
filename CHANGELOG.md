@@ -16,6 +16,10 @@
 
 - FEATURE: Implement `config.mappings.comment_visual` to configure mapped keys in Visual mode.
 
+## mini.extra
+
+Introduction of a new module.
+
 ## mini.files
 
 - BREAKING: Opening file which is present in unlisted buffer now makes the buffer listed.

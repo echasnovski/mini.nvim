@@ -26,6 +26,7 @@ local test_actions = {
   ['completion']  = function() require('mini.completion').setup() end,
   ['cursorword']  = function() require('mini.cursorword').setup() end,
   ['doc']         = function() require('mini.doc').setup() end,
+  ['extra']       = function() require('mini.extra').setup() end,
   ['files']       = function() require('mini.files').setup() end,
   ['fuzzy']       = function() require('mini.fuzzy').setup() end,
   ['hipatterns']  = function() require('mini.hipatterns').setup() end,

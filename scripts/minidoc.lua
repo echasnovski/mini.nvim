@@ -16,6 +16,7 @@ local modules = {
   'completion',
   'cursorword',
   'doc',
+  'extra',
   'files',
   'fuzzy',
   'hipatterns',

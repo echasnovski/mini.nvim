@@ -26,6 +26,7 @@ Table of contents:
   Completion and signature help ............................ |mini.completion|
   Autohighlight word under cursor .......................... |mini.cursorword|
   Generate Neovim help files ...................................... |mini.doc|
+  Extra 'mini.nvim' functionality ............................... |mini.extra|
   Navigate and manipulate file system............................ |mini.files|
   Fuzzy matching ................................................ |mini.fuzzy|
   Highlight patterns in text ............................... |mini.hipatterns|
@@ -173,6 +174,9 @@ Table of contents:
 - |MiniDoc| - generation of help files from EmmyLua-like annotations.
   Allows flexible customization of output via hook functions. Used for
   documenting this plugin.
+
+- |MiniExtra| - extra 'mini.nvim' functionality. Contains 'mini.pick' pickers,
+  'mini.ai' textobjects, and more.
 
 - |MiniFiles| - navigate and manipulate file system. A file explorer with
   column view capable of manipulating file system by editing text. Can

@@ -1,0 +1,729 @@
+*mini.extra* Extra 'mini.nvim' functionality
+*MiniExtra*
+
+MIT License Copyright (c) 2023 Evgeni Chasnovski
+
+==============================================================================
+
+Extra useful functionality which is not essential enough for other 'mini.nvim'
+modules to include directly.
+
+Features:
+
+- Various pickers for 'mini.pick':
+    - Built-in diagnostic (|MiniExtra.pickers.diagnostic()|).
+    - File explorer (|MiniExtra.pickers.explorer()|).
+    - Git branches/commits/files/hunks (|MiniExtra.pickers.git_hunks()|, etc.).
+    - Command/search/input history (|MiniExtra.pickers.history()|).
+    - LSP references/symbols/etc. (|MiniExtra.pickers.lsp()|).
+    - Tree-sitter nodes (|MiniExtra.pickers.treesitter()|).
+    - And much more.
+  See |MiniExtra.pickers| for more.
+
+- Various textobject specifications for 'mini.ai'. See |MiniExtra.gen_ai_spec|.
+
+- Various highlighters for 'mini.hipatterns'. See |MiniExtra.gen_highlighter|.
+
+Notes:
+- This module requires only those 'mini.nvim' modules which are needed for
+  a particular functionality: 'mini.pick' for pickers, etc.
+
+# Setup ~
+
+This module needs a setup with `require('mini.extra').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniExtra`
+which you can use for scripting or manually (with `:lua MiniExtra.*`).
+
+See |MiniExtra.config| for `config` structure and default values.
+
+This module doesn't have runtime options, so using `vim.b.miniextra_config`
+will have no effect here.
+
+# Comparisons ~
+
+- 'nvim-telescope/telescope.nvim':
+    - With |MiniExtra.pickers|, 'mini.pick' is reasonably on par when it comes
+      to built-in pickers.
+
+- 'ibhagwan/fzf-lua':
+    - Same as 'nvim-telescope/telescope.nvim'.
+
+------------------------------------------------------------------------------
+                                                             *MiniExtra.setup()*
+                          `MiniExtra.setup`({config})
+Module setup
+
+Parameters~
+{config} `(table|nil)` Module config table. See |MiniExtra.config|.
+
+Usage~
+`require('mini.extra').setup({})` (replace `{}` with your `config` table).
+
+------------------------------------------------------------------------------
+                                                              *MiniExtra.config*
+                               `MiniExtra.config`
+Module config
+
+Default values:
+>
+  MiniExtra.config = {}
+<
+
+------------------------------------------------------------------------------
+                                                         *MiniExtra.gen_ai_spec*
+                            `MiniExtra.gen_ai_spec`
+'mini.ai' textobject specification generators
+
+This is a table with function elements. Call to actually get specification.
+
+Assumed to be used as part of |MiniAi.setup()|. Example: >
+
+  local gen_ai_spec = require('mini.extra').gen_ai_spec
+  require('mini.ai').setup({
+    custom_textobjects = {
+      B = gen_ai_spec.buffer(),
+      D = gen_ai_spec.diagnostic(),
+      I = gen_ai_spec.indent(),
+      L = gen_ai_spec.line(),
+      N = gen_ai_spec.number(),
+    },
+  })
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.gen_ai_spec.buffer()*
+                        `MiniExtra.gen_ai_spec.buffer`()
+Current buffer textobject
+
+Notes:
+- `a` textobject selects all lines in a buffer.
+- `i` textobject selects all lines except blank lines at start and end.
+
+Return~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+
+------------------------------------------------------------------------------
+                                            *MiniExtra.gen_ai_spec.diagnostic()*
+                 `MiniExtra.gen_ai_spec.diagnostic`({severity})
+Current buffer diagnostic textobject
+
+Notes:
+- Both `a` and `i` textobjects return |vim.diagnostic.get()| output for the
+  current buffer. It is modified to fit |MiniAi-textobject-specification|.
+
+Parameters~
+{severity} `(any)` Which severity to use. Forwarded to |vim.diagnostic.get()|.
+  Default: `nil` to use all diagnostic entries.
+
+Return~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.gen_ai_spec.indent()*
+                        `MiniExtra.gen_ai_spec.indent`()
+Current buffer indent scopes textobject
+
+Indent scope is a set of consecutive lines with the following properties:
+- Lines above first and below last are non-blank. They are called borders.
+- There is at least one non-blank line in a set.
+- All non-blank lines between borders have strictly greater indent
+  (perceived leading space respecting |tabstop|) than either of borders.
+
+Notes:
+- `a` textobject selects scope including borders.
+- `i` textobject selects the scope charwise.
+- Differences with |MiniIndentscope.textobject|:
+    - This textobject always treats blank lines on top and bottom of `i`
+      textobject as part of it, while 'mini.indentscope' can configure that.
+    - This textobject can select non-covering scopes, while 'mini.indentscope'
+      can not (by design).
+    - In this textobject scope computation is done only by "casting rays" from
+      top to bottom and not in both ways as in 'mini.indentscope'.
+      This works in most common scenarios and doesn't work only if indent of
+      of the bottom border is expected to be larger than the top.
+
+Return~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+  It returns array of regions representing all indent scopes in the buffer
+  ordered increasingly by the start line.
+
+------------------------------------------------------------------------------
+                                                  *MiniExtra.gen_ai_spec.line()*
+                         `MiniExtra.gen_ai_spec.line`()
+Current line textobject
+
+Notes:
+- `a` textobject selects whole line.
+- `i` textobject selects line after initial indent.
+
+Return~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.gen_ai_spec.number()*
+                        `MiniExtra.gen_ai_spec.number`()
+Number textobject
+
+Notes:
+- `a` textobject selects a whole number possibly preceded with "-" and
+  possibly followed by decimal part (dot and digits).
+- `i` textobject selects consecutive digits.
+
+Return~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+
+------------------------------------------------------------------------------
+                                                     *MiniExtra.gen_highlighter*
+                          `MiniExtra.gen_highlighter`
+'mini.hipatterns' highlighter generators
+
+This is a table with function elements. Call to actually get specification.
+
+Assumed to be used as part of |MiniHipatterns.setup()|. Example: >
+
+  local hi_words = require('mini.extra').gen_highlighter.words
+  require('mini.hipatterns').setup({
+    highlighters = {
+      todo = hi_words({ 'TODO', 'Todo', 'todo' }, 'MiniHipatternsTodo'),
+    },
+  })
+
+------------------------------------------------------------------------------
+                                             *MiniExtra.gen_highlighter.words()*
+      `MiniExtra.gen_highlighter.words`({words}, {group}, {extmark_opts})
+Highlight words
+
+Notes:
+- Words should start and end with alphanumeric symbol (latin letter or digit).
+- Words will be highlighted only in full and not if part bigger word, i.e.
+  there should not be alphanumeric symbole before and after it.
+
+Parameters~
+{words} `(table)` Array of words to highlight. Will be matched as is, not
+  as Lua pattern.
+{group} `(string|function)` Proper `group` field for `highlighter`.
+  See |MiniHipatterns.config|.
+{extmark_opts} `(any)` Proper `extmark_opts` field for `highlighter`.
+  See |MiniHipatterns.config|.
+
+------------------------------------------------------------------------------
+                                                             *MiniExtra.pickers*
+                              `MiniExtra.pickers`
+'mini.pick' pickers
+
+A table with |MiniPick| pickers (which is a hard dependency).
+Notes:
+- All have the same signature:
+    - <local_opts> - optional table with options local to picker.
+    - <opts> - optional table with options forwarded to |MiniPick.start()|.
+- All of them are automatically registered in |MiniPick.registry|.
+- All use default versions of |MiniPick-source.preview|, |MiniPick-source.choose|,
+  and |MiniPick-source.choose_marked| if not stated otherwise.
+  Shown text and |MiniPick-source.show| are targeted to the picked items.
+
+Examples of usage:
+- As Lua code: `MiniExtra.pickers.buf_lines()`.
+- With |:Pick| command: `:Pick buf_lines scope='current'`
+  Note: this requires calling |MiniExtra.setup()|.
+
+------------------------------------------------------------------------------
+                                                 *MiniExtra.pickers.buf_lines()*
+              `MiniExtra.pickers.buf_lines`({local_opts}, {opts})
+Buffer lines picker
+
+Pick from buffer lines. Notes:
+- Loads all target buffers which are currently unloaded.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - one of "all" (normal listed buffers) or "current".
+    Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                  *MiniExtra.pickers.commands()*
+               `MiniExtra.pickers.commands`({local_opts}, {opts})
+Neovim commands picker
+
+Pick from Neovim built-in (|ex-commands|) and |user-commands|.
+Notes:
+- Preview shows information about the command (if available).
+- Choosing either executes command (if reliably known that it doesn't need
+  arguments) or populates Command line with the command.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.pickers.diagnostic()*
+              `MiniExtra.pickers.diagnostic`({local_opts}, {opts})
+Built-in diagnostic picker
+
+Pick from |vim.diagnostic| using |vim.diagnostic.get()|.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <get_opts> `(table)` - options for |vim.diagnostic.get()|. Can be used
+    to limit severity or namespace. Default: `{}`.
+  - <scope> `(string)` - one of "all" (available) or "current" (buffer).
+    Default: "all".
+  - <sort_by> `(string)` - sort priority. One of "severity", "path", "none".
+    Default: "severity".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                  *MiniExtra.pickers.explorer()*
+               `MiniExtra.pickers.explorer`({local_opts}, {opts})
+File explorer picker
+
+Explore file system and open file.
+Notes:
+- Choosing a directory navigates inside it, changing picker's items and
+  current working directory.
+- Query and preview work as usual (not only `move_next`/`move_prev` can be used).
+- Preview works for any item.
+
+Examples ~
+
+- `MiniExtra.pickers.explorer()`
+- `:Pick explorer cwd='..'` - open explorer in parent directory.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <cwd> `(string)` - initial directory to explore. Should be a valid
+    directory path. Default: `nil` for |current-directory|.
+  - <filter> `(function)` - callable predicate to filter items to show.
+    Will be called for every item and should return `true` if it should be
+    shown. Each item is a table with the following fields:
+      - <fs_type> `(string)` - path type. One of "directory" or "file".
+      - <path> `(string)` - item path.
+      - <text> `(string)` - shown text (path's basename).
+  - <sort> `(function)` - callable item sorter. Will be called with array
+    of items (each element with structure as described above) and should
+    return sorted array of items.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                              *MiniExtra.pickers.git_branches()*
+             `MiniExtra.pickers.git_branches`({local_opts}, {opts})
+Git branches picker
+
+Pick from Git branches using `git branch`.
+Notes:
+- Requires executable `git`.
+- Requires target path to be part of git repository.
+- Present for exploration and navigation purposes. Doing any Git operations
+  is suggested to be done in a dedicated Git client and is not planned.
+- On choose opens scratch buffer with branch's history.
+
+Examples ~
+
+- `MiniExtra.pickers.git_branches({ scope = 'local' })` - local branches of
+  the |current-directory| parent Git repository.
+- `:Pick git_branches path='%'` - all branches of the current file parent
+  Git repository.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <path> `(string|nil)` - target path for Git operation (if required). Also
+    used to find Git repository inside which to construct items.
+    Default: `nil` for root of Git repository containing |current-directory|.
+  - <scope> `(string)` - branch scope to show. One of "all", "local", "remotes".
+    Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                               *MiniExtra.pickers.git_commits()*
+             `MiniExtra.pickers.git_commits`({local_opts}, {opts})
+Git commits picker
+
+Pick from Git commits using `git log`.
+Notes:
+- Requires executable `git`.
+- Requires target path to be part of git repository.
+- Present for exploration and navigation purposes. Doing any Git operations
+  is suggested to be done in a dedicated Git client and is not planned.
+- On choose opens scratch buffer with commit's diff.
+
+Examples ~
+
+- `MiniExtra.pickers.git_commits()` - all commits from parent Git
+  repository of |current-directory|.
+- `MiniExtra.pickers.git_commits({ path = 'subdir' })` - commits affecting
+  files from 'subdir' subdirectory.
+- `:Pick git_commits path='%'` commits affecting current file.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <path> `(string|nil)` - target path for Git operation (if required). Also
+    used to find Git repository inside which to construct items.
+    Default: `nil` for root of Git repository containing |current-directory|.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                 *MiniExtra.pickers.git_files()*
+              `MiniExtra.pickers.git_files`({local_opts}, {opts})
+Git files picker
+
+Pick from Git files using `git ls-files`.
+Notes:
+- Requires executable `git`.
+- Requires target path to be part of git repository.
+- Present for exploration and navigation purposes. Doing any Git operations
+  is suggested to be done in a dedicated Git client and is not planned.
+
+Examples ~
+
+- `MiniExtra.pickers.git_files({ scope = 'ignored' })` - ignored files from
+  parent Git repository of |current-directory|.
+- `:Pick git_files path='subdir' scope='modified'` - files from 'subdir'
+  subdirectory which are ignored by Git.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <path> `(string|nil)` - target path for Git operation (if required). Also
+    used to find Git repository inside which to construct items.
+    Default: `nil` for root of Git repository containing |current-directory|.
+  - <scope> `(string)` - files scope to show. One of
+      - "tracked"   (`--cached`   Git flag).
+      - "modified"  (`--modified` Git flag).
+      - "untracked" (`--others`   Git flag).
+      - "ignored"   (`--ignored`  Git flag).
+      - "deleted"   (`--deleted`  Git flag).
+    Default: "tracked".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                 *MiniExtra.pickers.git_hunks()*
+              `MiniExtra.pickers.git_hunks`({local_opts}, {opts})
+Git hunks picker
+
+Pick from Git hunks using `git diff`.
+Notes:
+- Requires executable `git`.
+- Requires target path to be part of git repository.
+- Present for exploration and navigation purposes. Doing any Git operations
+  is suggested to be done in a dedicated Git client and is not planned.
+- On choose navigates to hunk's first change.
+
+Examples ~
+
+- `MiniExtra.pickers.git_hunks({ scope = 'staged' })` - staged hunks from
+  parent Git repository of |current-directory|.
+- `:Pick git_hunks path='%' n_context=0` - hunks from current file computed
+  with no context.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <n_context> `(number)` - number of context lines to show in hunk's preview.
+    Default: 3.
+  - <path> `(string|nil)` - target path for Git operation (if required). Also
+    used to find Git repository inside which to construct items.
+    Default: `nil` for root of Git repository containing |current-directory|.
+  - <scope> `(string)` - hunks scope to show. One of "unstaged" or "staged".
+    Default: "unstaged".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.pickers.hipatterns()*
+              `MiniExtra.pickers.hipatterns`({local_opts}, {opts})
+Matches from 'mini.hipatterns' picker
+
+Pick from |MiniHipatterns| matches using |MiniHipatterns.get_matches()|.
+Notes:
+- Requires 'mini.hipatterns'.
+- Highlighter identifier is highlighted with its highlight group.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - one of "all" (buffers with enabled 'mini.hipatterns')
+    or "current" (buffer). Default: "all".
+  - <highlighters> `(table|nil)` - highlighters for which to find matches.
+    Forwarded to |MiniHipatterns.get_matches()|. Default: `nil`.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                   *MiniExtra.pickers.history()*
+               `MiniExtra.pickers.history`({local_opts}, {opts})
+Neovim history picker
+
+Pick from output of |:history|.
+Notes:
+- Has no preview.
+- Choosing action depends on scope:
+    - For "cmd" / ":" scopes, the command is executed.
+    - For "search" / "/" / "?" scopes, search is redone.
+    - For other scopes nothing is done (but chosen item is still returned).
+
+Examples ~
+
+- Command history: `MiniExtra.pickers.history({ scope = ':' })`
+- Search history: `:Pick history scope='/'`
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - any allowed {name} flag of |:history| command.
+    Note: word abbreviations are not allowed. Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                 *MiniExtra.pickers.hl_groups()*
+              `MiniExtra.pickers.hl_groups`({local_opts}, {opts})
+Highlight groups picker
+
+Pick and preview highlight groups.
+Notes:
+- Item line is colored with same highlight group it represents.
+- Preview shows highlight's definition (as in |:highlight| with {group-name}).
+- Choosing places highlight definition in Command line to update and apply.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                   *MiniExtra.pickers.keymaps()*
+               `MiniExtra.pickers.keymaps`({local_opts}, {opts})
+Neovim keymaps picker
+
+Pick and preview data about Neovim keymaps.
+Notes:
+- Item line contains data about keymap mode, whether it is buffer local, its
+  left hand side, and inferred description.
+- Preview shows keymap data or callback source (if present and reachable).
+- Choosing emulates pressing the left hand side of the keymap.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <mode> `(string)` - modes to show. One of "all" or appropriate mode
+    for |nvim_set_keymap()|. Default: "all".
+  - <scope> `(string)` - scope to show. One of "all", "global", "buf".
+    Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                      *MiniExtra.pickers.list()*
+                 `MiniExtra.pickers.list`({local_opts}, {opts})
+Neovim lists picker
+
+Pick and navigate to elements of the following Neovim lists:
+- |quickfix| list.
+- |location-list| of current window.
+- |jumplist|.
+- |changelist|.
+
+Note: it requires explicit `scope`.
+
+Examples ~
+
+- `MiniExtra.pickers.list({ scope = 'quickfix' })` - quickfix list.
+- `:Pick list scope='jump'` - jump list.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - type of list to show. One of "quickfix", "location",
+    "jump", "change". Default: `nil` which means explicit scope is needed.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                       *MiniExtra.pickers.lsp()*
+                 `MiniExtra.pickers.lsp`({local_opts}, {opts})
+LSP picker
+
+Pick and navigate with LSP methods.
+Notes:
+- Needs an explicit scope from a list of supported ones:
+    - "declaration".
+    - "definition".
+    - "document_symbol".
+    - "implementation".
+    - "references".
+    - "type_definition".
+    - "workspace_symbol".
+- Requires Neovim>=0.8.
+- Directly relies on `vim.lsp.buf` methods which support |lsp-on-list-handler|.
+  In particular, it means that picker is started only if LSP server returns
+  list of locations and not a single location.
+- Doesn't return anything due to async nature of `vim.lsp.buf` methods.
+
+Examples ~
+
+- `MiniExtra.pickers.lsp({ scope = 'references' })` - references of the symbol
+  under cursor.
+- `:Pick lsp scope='document_symbol'` - symbols in current file.
+
+Parameters~
+{local_opts} `(table)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - LSP method to use. One of the supported ones (see
+    list above). Default: `nil` which means explicit scope is needed.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(nil)` Nothing is returned.
+
+------------------------------------------------------------------------------
+                                                     *MiniExtra.pickers.marks()*
+                `MiniExtra.pickers.marks`({local_opts}, {opts})
+Neovim marks picker
+
+Pick and preview position of Neovim |mark|s.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - scope to show. One of "all", "global", "buf".
+    Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                  *MiniExtra.pickers.oldfiles()*
+               `MiniExtra.pickers.oldfiles`({local_opts}, {opts})
+Old files picker
+
+Pick from |v:oldfiles| entries representing readable files.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                   *MiniExtra.pickers.options()*
+               `MiniExtra.pickers.options`({local_opts}, {opts})
+Neovim options picker
+
+Pick and preview data about Neovim options.
+Notes:
+- Item line is colored based on whether it was set (dimmed if wasn't).
+- Preview shows option value in target window and its general information.
+- Choosing places option name in Command line to update and apply.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <scope> `(string)` - options to show. One of "all", "global", "win", "buf".
+    Default: "all".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                 *MiniExtra.pickers.registers()*
+              `MiniExtra.pickers.registers`({local_opts}, {opts})
+Neovim registers picker
+
+Pick from Neovim |registers|.
+Notes:
+- There is no preview (all information is in the item's text).
+- Choosing pastes content of a register: with |i_CTRL-R| in Insert mode,
+  |c_CTRL-R| in Command-line mode, and |P| otherwise.
+  Expression register |quote=| is reevaluated (if present) and pasted.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                              *MiniExtra.pickers.spellsuggest()*
+             `MiniExtra.pickers.spellsuggest`({local_opts}, {opts})
+Neovim spell suggestions picker
+
+Pick and apply spell suggestions.
+Notes:
+- No preview is available.
+- Choosing replaces current word (|<cword>|) with suggestion.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <n_suggestions> `(number)` - number of spell suggestions. Default: 25.
+
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                                *MiniExtra.pickers.treesitter()*
+              `MiniExtra.pickers.treesitter`({local_opts}, {opts})
+Tree-sitter nodes picker
+
+Pick and navigate to |treesitter| nodes of current buffer.
+Notes:
+- Requires Neovim>=0.8.
+- Requires active tree-sitter parser in the current buffer.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

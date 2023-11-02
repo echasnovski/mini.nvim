@@ -1,0 +1,23 @@
+diff --git a/git-files/git-file-1 b/git-files/git-file-1
+index c139d4e..234d24d 100644
+--- a/git-files/git-file-1
++++ b/git-files/git-file-1
+@@ -1 +0,0 @@
+-Line 1-1
+@@ -11,0 +11 @@ Line 1-11
++Line new
+@@ -21 +21 @@ Line 1-20
+-Line 1-21
++Line changed
+diff --git a/git-files/git-file-2 b/git-files/git-file-2
+index e45e3de..bd830d0 100644
+--- a/git-files/git-file-2
++++ b/git-files/git-file-2
+@@ -2 +1,0 @@ Line 2-1
+-Line 2-2
+@@ -12,0 +12 @@ Line 2-12
++Line new
+@@ -16 +16 @@ Line 2-15
+-Line 2-16
++Line changed
+
