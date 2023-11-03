@@ -87,6 +87,7 @@
 ---
 --- * `MiniFilesBorder` - border of regular windows.
 --- * `MiniFilesBorderModified` - border of windows showing modified buffer.
+--- * `MiniFilesCursorLine` - cursor line in explorer windows.
 --- * `MiniFilesDirectory` - text and icon representing directory.
 --- * `MiniFilesFile` - text representing file.
 --- * `MiniFilesNormal` - basic foreground/background highlighting.
@@ -1140,6 +1141,7 @@ H.create_default_hl = function()
 
   hi('MiniFilesBorder',         { link = 'FloatBorder' })
   hi('MiniFilesBorderModified', { link = 'DiagnosticFloatingWarn' })
+  hi('MiniFilesCursorLine',     { link = 'CursorLine' })
   hi('MiniFilesDirectory',      { link = 'Directory'   })
   hi('MiniFilesFile',           {})
   hi('MiniFilesNormal',         { link = 'NormalFloat' })
@@ -1650,6 +1652,7 @@ H.explorer_show_help = function(explorer_buf_id, explorer_win_id)
   local win_id = vim.api.nvim_open_win(buf_id, false, config)
   H.window_update_highlight(win_id, 'NormalFloat', 'MiniFilesNormal')
   H.window_update_highlight(win_id, 'FloatTitle', 'MiniFilesTitle')
+  H.window_update_highlight(win_id, 'CursorLine', 'MiniFilesCursorLine')
   vim.wo[win_id].cursorline = true
 
   vim.api.nvim_set_current_win(win_id)
@@ -2096,6 +2099,7 @@ H.window_open = function(buf_id, config)
   -- Set permanent window highlights
   H.window_update_highlight(win_id, 'NormalFloat', 'MiniFilesNormal')
   H.window_update_highlight(win_id, 'FloatTitle', 'MiniFilesTitle')
+  H.window_update_highlight(win_id, 'CursorLine', 'MiniFilesCursorLine')
 
   -- Trigger dedicated event
   H.trigger_event('MiniFilesWindowOpen', { buf_id = buf_id, win_id = win_id })
