@@ -4633,6 +4633,24 @@ T['Matching']['uses proper `tolower` for ignoring case'] = function()
   validate_last_match_log({ items, { 1, 2, 3 }, { 'ы', 'Ф' } })
 end
 
+T['Matching']["works with non-default 'regexpengine'"] = function()
+  child.o.regexpengine = 1
+
+  -- Determining if query is smartcase should be unaffected
+  child.o.ignorecase, child.o.smartcase = true, true
+  start_with_items_matchlog({ 'ab', 'Ab', 'AB' })
+  type_keys('a')
+  validate_last_match_log({ { 'ab', 'ab', 'ab' }, { 1, 2, 3 }, { 'a' } })
+
+  -- Matching keyword should be unaffected
+  type_keys(' ', 'b', 'b')
+  eq(get_picker_query(), { 'a', ' ', 'b', 'b' })
+  type_keys('<C-w>')
+  eq(get_picker_query(), { 'a', ' ' })
+  type_keys('<C-w>')
+  eq(get_picker_query(), { 'a' })
+end
+
 T['Key query process'] = new_set()
 
 T['Key query process']['respects mouse click'] = function()

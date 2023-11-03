@@ -2272,7 +2272,8 @@ end
 H.query_is_ignorecase = function(query)
   if not vim.o.ignorecase then return false end
   if not vim.o.smartcase then return true end
-  return vim.fn.match(table.concat(query), '[[:upper:]]') < 0
+  local prompt = table.concat(query)
+  return prompt == vim.fn.tolower(prompt)
 end
 
 H.picker_get_char_data = function(picker, skip_alternatives)
