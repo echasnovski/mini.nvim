@@ -674,6 +674,7 @@ H.apply_palette = function(palette, use_cterm)
 
     hi('MiniFilesBorder',         {link='NormalFloat'})
     hi('MiniFilesBorderModified', {link='DiagnosticFloatingWarn'})
+    hi('MiniFilesCursorLine',     {fg=nil,      bg=p.base02, attr=nil,    sp=nil})
     hi('MiniFilesDirectory',      {link='Directory'})
     hi('MiniFilesFile',           {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
     hi('MiniFilesNormal',         {link='NormalFloat'})
