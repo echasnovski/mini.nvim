@@ -105,6 +105,16 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniCursorword`
     - `MiniCursorwordCurrent`
 
+- 'mini.files':
+    - `MiniFilesBorder`
+    - `MiniFilesBorderModified`
+    - `MiniFilesCursorLine`
+    - `MiniFilesDirectory`
+    - `MiniFilesFile`
+    - `MiniFilesNormal`
+    - `MiniFilesTitle`
+    - `MiniFilesTitleFocused`
+
 - 'mini.hipatterns':
     - `MiniHipatternsFixme`
     - `MiniHipatternsHack`
