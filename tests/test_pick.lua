@@ -2160,6 +2160,18 @@ T['ui_select()']['preserves target window after `on_choice`'] = function()
   eq(child.api.nvim_get_current_win(), win_id_2)
 end
 
+T['ui_select()']['calls `on_choice` with target window being current'] = function()
+  local buf_target = child.api.nvim_get_current_buf()
+  local win_target = child.api.nvim_get_current_win()
+  ui_select(
+    { -1, -2 },
+    {},
+    'function() _G.cur_data = { buf = vim.api.nvim_get_current_buf(), win = vim.api.nvim_get_current_win() } end'
+  )
+  type_keys('<CR>')
+  eq(child.lua_get('_G.cur_data'), { buf = buf_target, win = win_target })
+end
+
 T['ui_select()']['respects `opts.prompt` and `opts.kind`'] = function()
   local validate = function(opts, source_name)
     ui_select({ -1, -2 }, opts)

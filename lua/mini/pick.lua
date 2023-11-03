@@ -1171,6 +1171,9 @@ end
 ---
 --- Implements the required by `vim.ui.select()` signature. Plus allows extra
 --- `opts.preview_item` to serve as preview.
+---
+--- Notes:
+--- - `on_choice` is called when target window is current.
 MiniPick.ui_select = function(items, opts, on_choice)
   local format_item = opts.format_item or H.item_to_string
   local items_ext = {}
@@ -1186,8 +1189,12 @@ MiniPick.ui_select = function(items, opts, on_choice)
   local choose = function(item)
     was_aborted = false
     if item == nil then return end
-    on_choice(item.item, item.index)
-    MiniPick.set_picker_target_window(vim.api.nvim_get_current_win())
+    local win_target = MiniPick.get_picker_state().windows.target
+    if not H.is_valid_win(win_target) then win_target = H.get_first_valid_normal_window() end
+    vim.api.nvim_win_call(win_target, function()
+      on_choice(item.item, item.index)
+      MiniPick.set_picker_target_window(vim.api.nvim_get_current_win())
+    end)
   end
 
   local source = { items = items_ext, name = opts.kind or opts.prompt, preview = preview, choose = choose }

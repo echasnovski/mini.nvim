@@ -1016,6 +1016,9 @@ Function which can be used to directly override |vim.ui.select()| to use
 Implements the required by `vim.ui.select()` signature. Plus allows extra
 `opts.preview_item` to serve as preview.
 
+Notes:
+- `on_choice` is called when target window is current.
+
 ------------------------------------------------------------------------------
                                                               *MiniPick.builtin*
                                `MiniPick.builtin`
