@@ -16,6 +16,10 @@
 
 - FEATURE: Implement `config.mappings.comment_visual` to configure mapped keys in Visual mode.
 
+## mini.completion
+
+- FEATURE: Start adding `C` flag to `shortmess` option on Neovim>=0.9.
+
 ## mini.extra
 
 Introduction of a new module.
