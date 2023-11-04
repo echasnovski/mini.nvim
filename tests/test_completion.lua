@@ -197,6 +197,9 @@ end
 T['setup()']['respects `config.set_vim_settings`'] = function()
   reload_module({ set_vim_settings = true })
   expect.match(child.api.nvim_get_option('shortmess'), 'c')
+  if child.fn.has('nvim-0.9') == 1 then
+    expect.match(child.api.nvim_get_option('shortmess'), 'C')
+  end
   eq(child.api.nvim_get_option('completeopt'), 'menuone,noinsert,noselect')
 end
 
