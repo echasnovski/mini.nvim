@@ -996,6 +996,15 @@ T['pickers']['diagnostic()']['does not modify diagnostic table'] = function()
   eq(child.lua_get('vim.diagnostic.get()'), diagnostic_current)
 end
 
+T['pickers']['diagnostic()']["forces 'buflisted' on opened buffer"] = function()
+  -- This matters for project wide diagnostic done inside unlisted buffers
+  child.api.nvim_buf_set_option(child.lua_get('_G.buf_id_2'), 'buflisted', false)
+
+  pick_diagnostic()
+  type_keys('<C-p>', '<CR>')
+  eq(child.bo.buflisted, true)
+end
+
 T['pickers']['diagnostic()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.diagnostic(...)', { local_opts }) end, error_pattern)

@@ -466,7 +466,8 @@ MiniExtra.pickers.diagnostic = function(local_opts, opts)
     end
   end
 
-  return H.pick_start(items, { source = { name = string.format('Diagnostic (%s)', scope), show = show } }, opts)
+  local name = string.format('Diagnostic (%s)', scope)
+  return H.pick_start(items, { source = { name = name, choose = H.choose_with_buflisted, show = show } }, opts)
 end
 
 --- File explorer picker
@@ -1045,16 +1046,8 @@ MiniExtra.pickers.list = function(local_opts, opts)
   items = vim.tbl_filter(function(x) return H.is_valid_buf(x.bufnr) end, items)
   items = vim.tbl_map(H.list_enhance_item, items)
 
-  local choose = function(item)
-    pick.default_choose(item)
-
-    -- Force 'buflisted' on opened item
-    local win_target = pick.get_picker_state().windows.target
-    local buf_id = vim.api.nvim_win_get_buf(win_target)
-    vim.bo[buf_id].buflisted = true
-  end
-
-  return H.pick_start(items, { source = { name = string.format('List (%s)', scope), choose = choose } }, opts)
+  local name = string.format('List (%s)', scope)
+  return H.pick_start(items, { source = { name = name, choose = H.choose_with_buflisted } }, opts)
 end
 
 --- LSP picker
@@ -1536,6 +1529,16 @@ end
 
 H.show_with_icons =
   function(buf_id, items, query) require('mini.pick').default_show(buf_id, items, query, { show_icons = true }) end
+
+H.choose_with_buflisted = function(item)
+  local pick = require('mini.pick')
+  pick.default_choose(item)
+
+  -- Force 'buflisted' on opened item
+  local win_target = pick.get_picker_state().windows.target
+  local buf_id = vim.api.nvim_win_get_buf(win_target)
+  vim.bo[buf_id].buflisted = true
+end
 
 -- Diagnostic picker ----------------------------------------------------------
 H.diagnostic_make_compare = function(sort_by)
