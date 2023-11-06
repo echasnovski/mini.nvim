@@ -2140,6 +2140,8 @@ T['pickers']['keymaps()']['works'] = function()
 end
 
 T['pickers']['keymaps()']['can be chosen in non-Normal modes'] = function()
+  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip() end
+
   setup_keymaps()
   local validate = function(mode, init_keys)
     type_keys(init_keys)
@@ -2150,10 +2152,7 @@ T['pickers']['keymaps()']['can be chosen in non-Normal modes'] = function()
   end
 
   validate('i', 'i')
-  -- Doesn't really work in Visual mode because 'mini.pick' doesn't
-  -- validate('x', 'v')
-  -- Doesn't really work in Select mode because 'mini.pick' doesn't
-  -- validate('s', 'gh')
+  validate('x', 'v')
   validate('o', 'd')
   validate('c', ':')
 end

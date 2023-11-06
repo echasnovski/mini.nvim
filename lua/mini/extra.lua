@@ -1003,6 +1003,8 @@ MiniExtra.pickers.keymaps = function(local_opts, opts)
 
   local choose = function(item)
     local keys = vim.api.nvim_replace_termcodes(item.maparg.lhs, true, true, true)
+    -- Restore Visual mode (should be active previously at least once)
+    if item.maparg.mode == 'x' then keys = 'gv' .. keys end
     vim.schedule(function() vim.fn.feedkeys(keys) end)
   end
 
