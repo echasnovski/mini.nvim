@@ -846,6 +846,38 @@ T['start()']['triggers `MiniPickStart` User event'] = function()
   eq(child.lua_get('_G.event_log'), { #test_items })
 end
 
+T['start()']['can be called in non-Normal modes'] = function()
+  child.lua('_G.choose = function() vim.schedule(function() _G.cur_mode = vim.fn.mode(1) end) end')
+  local validate = function()
+    local cur_mode = child.fn.mode(1)
+    eq(cur_mode ~= 'n', true)
+    child.lua_notify([[MiniPick.start({ source = { items = { 'a' }, choose = _G.choose } })]])
+    type_keys('<CR>')
+    eq(child.lua_get('_G.cur_mode'), cur_mode)
+
+    -- Cleanup
+    child.lua('_G.cur_mode = nil')
+  end
+
+  -- Insert mode
+  type_keys('i')
+  validate()
+  child.ensure_normal_mode()
+
+  -- Command mode
+  type_keys(':')
+  validate()
+  child.ensure_normal_mode()
+
+  -- Operator-pending mode
+  type_keys('d')
+  validate()
+  child.ensure_normal_mode()
+
+  -- Doesn't work in Visual mode as opening floating window stops it.
+  -- Use `gv` in picker if want to preserve Visual mode.
+end
+
 T['start()']['respects global config'] = function()
   child.lua([[MiniPick.config.window.config = { anchor = 'NW', row = 1 }]])
   start_with_items({ 'a', 'b', 'c' })
