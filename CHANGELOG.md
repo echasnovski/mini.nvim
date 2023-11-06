@@ -18,7 +18,7 @@
 
 ## mini.completion
 
-- FEATURE: Start adding `C` flag to `shortmess` option on Neovim>=0.9.
+- FEATURE: Start adding `C` flag to `shortmess` option on Neovim>=0.9. (@yamin-shihab, PR #554)
 
 ## mini.extra
 
@@ -50,6 +50,7 @@ Introduction of a new module.
 
 ## mini.misc
 
+- FEATURE: Add `MiniMisc.setup_mkdir_missing()` for automatically creating missing directories before every save. (@yamin-shihab, PR #555)
 - FEATURE: `setup_auto_root()` and `find_root()` now have `fallback` argument to be applied when no root is found with `vim.fn.find()`.
 
 ## mini.pick

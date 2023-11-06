@@ -166,6 +166,20 @@ Parameters~
   a valid directory path.
 
 ------------------------------------------------------------------------------
+                                                *MiniMisc.setup_mkdir_missing()*
+                        `MiniMisc.setup_mkdir_missing`()
+Automatically create any missing directories before every save
+
+When saving a file located in a directory that doesn't exist, this will create
+that directory and any other missing directories in between so that the file
+saves properly. This also works with netrw URls; see |netrw-transparent| for
+details.
+
+Usage~
+>
+  require('mini.misc').setup_mkdir_missing()
+
+------------------------------------------------------------------------------
                                                *MiniMisc.setup_restore_cursor()*
                     `MiniMisc.setup_restore_cursor`({opts})
 Restore cursor position on file open

@@ -474,6 +474,27 @@ T['find_root()']['uses cache'] = function()
   eq(find_root(), dir_misc_path)
 end
 
+local mkdir_missing_test_file = make_path(dir_misc_path, 'mkdir-missing/nested/mkdir-missing.lua')
+local mkdir_missing_test_directory = make_path(dir_misc_path, 'mkdir-missing')
+local mkdir_missing_init_file = make_path(dir_misc_path, 'init-mkdir-missing.lua')
+
+T['setup_mkdir_missing()'] = new_set({
+  hooks = {
+    post_case = function()
+      -- Clean up created directories
+      child.fn.delete(mkdir_missing_test_directory, 'rf')
+    end,
+  },
+})
+
+T['setup_mkdir_missing()']['works'] = function()
+  child.restart({ '-u', mkdir_missing_init_file, '--', mkdir_missing_test_file })
+  child.cmd('w')
+
+  -- Should create directory
+  eq(child.fn.isdirectory(mkdir_missing_test_directory), 1)
+end
+
 local restore_cursor_test_file = make_path(dir_misc_path, 'restore-cursor.lua')
 local restore_cursor_init_file = make_path(dir_misc_path, 'init-restore-cursor.lua')
 local restore_cursor_shada_path = make_path(dir_misc_path, 'restore-cursor.shada')

@@ -283,6 +283,32 @@ end
 
 H.root_cache = {}
 
+--- Automatically create any missing directories before every save
+---
+--- When saving a file located in a directory that doesn't exist, this will create
+--- that directory and any other missing directories in between so that the file
+--- saves properly. This also works with netrw URls; see |netrw-transparent| for
+--- details.
+---
+---@usage >
+---   require('mini.misc').setup_mkdir_missing()
+MiniMisc.setup_mkdir_missing = function()
+  -- Create autocommand which runs on every `BufWrite`
+  local augroup = vim.api.nvim_create_augroup('MiniMiscMkdirMissing', {})
+  vim.api.nvim_create_autocmd('BufWrite', {
+    group = augroup,
+    callback = function()
+      local dir = vim.fn.expand('<afile>:p:h')
+
+      -- Correctly handle URLs using netrw
+      -- Source: https://github.com/jghauser/mkdir.nvim/pull/7
+      if dir:find('%l+://') == 1 then return end
+
+      if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, 'p') end
+    end,
+  })
+end
+
 --- Restore cursor position on file open
 ---
 --- When reopening a file this will make sure the cursor is placed back to the
