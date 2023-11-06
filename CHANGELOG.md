@@ -18,7 +18,7 @@
 
 ## mini.completion
 
-- FEATURE: Start adding `C` flag to `shortmess` option on Neovim>=0.9.
+- FEATURE: Start adding `C` flag to `shortmess` option on Neovim>=0.9. By @yamin-shihab, PR #554.
 
 ## mini.extra
 
