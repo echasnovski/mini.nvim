@@ -593,6 +593,17 @@ T['Information window']['implements debounce-style delay'] = function()
   validate_single_floating_win({ lines = { 'Month #06' } })
 end
 
+T['Information window']['handles all buffer wipeout'] = function()
+  validate_info_win(test_times.info)
+  child.ensure_normal_mode()
+
+  child.cmd('%bw!')
+  new_buffer()
+  mock_lsp()
+
+  validate_info_win(test_times.info)
+end
+
 T['Information window']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -728,6 +739,17 @@ T['Signature help']['implements debounce-style delay'] = function()
   type_keys(',')
   sleep(test_times.signature + 1)
   validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
+end
+
+T['Signature help']['handles all buffer wipeout'] = function()
+  validate_signature_win(test_times.signature)
+  child.ensure_normal_mode()
+
+  child.cmd('%bw!')
+  new_buffer()
+  mock_lsp()
+
+  validate_signature_win(test_times.signature)
 end
 
 T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({

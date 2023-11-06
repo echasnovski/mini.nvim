@@ -1240,7 +1240,7 @@ end
 
 -- Helpers for floating windows -----------------------------------------------
 H.ensure_buffer = function(cache, name)
-  if cache.bufnr then return end
+  if type(cache.bufnr) == 'number' and vim.api.nvim_buf_is_valid(cache.bufnr) then return end
 
   cache.bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(cache.bufnr, name)
