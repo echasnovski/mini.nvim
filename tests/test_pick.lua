@@ -2707,6 +2707,28 @@ T['builtin.help()']['has proper preview'] = function()
   eq(child.fn.getreg('/'), 'aa')
 end
 
+T['builtin.help()']['has customized `choose` modifications'] = function()
+  local has_help = function()
+    for _, win_id in ipairs(child.api.nvim_tabpage_list_wins(0)) do
+      if child.api.nvim_buf_get_option(child.api.nvim_win_get_buf(win_id), 'buftype') == 'help' then return true end
+    end
+    return false
+  end
+
+  local validate = function(key, win_layout, n_tabpages)
+    builtin_help()
+    type_keys(key)
+    eq(child.fn.winlayout()[1], win_layout)
+    eq(#child.api.nvim_list_tabpages(), n_tabpages)
+    eq(has_help(), true)
+    child.cmd('%bw')
+  end
+
+  validate('<C-s>', 'col', 1)
+  validate('<C-v>', 'row', 1)
+  validate('<C-t>', 'leaf', 2)
+end
+
 T['builtin.help()']['works for help tags with special characters'] = function()
   child.set_size(15, 80)
   builtin_help()

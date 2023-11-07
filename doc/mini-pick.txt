@@ -1090,6 +1090,10 @@ Parameters~
                  `MiniPick.builtin.help`({local_opts}, {opts})
 Pick from help tags
 
+Notes:
+- On choose executes |:help| command with appropriate modifier
+  (|:horizontal|, |:vertical|, |:tab|) due to the effect of custom mappings.
+
 Parameters~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.

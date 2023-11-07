@@ -1309,6 +1309,10 @@ end
 
 --- Pick from help tags
 ---
+--- Notes:
+--- - On choose executes |:help| command with appropriate modifier
+---   (|:horizontal|, |:vertical|, |:tab|) due to the effect of custom mappings.
+---
 ---@param local_opts __pick_builtin_local_opts
 ---   Not used at the moment.
 ---@param opts __pick_builtin_opts
@@ -1323,9 +1327,9 @@ MiniPick.builtin.help = function(local_opts, opts)
   -- NOTE: Choosing is done on next event loop to properly overcome special
   -- nature of `:help {subject}` command. For example, it didn't quite work
   -- when choosing tags in same file consecutively.
-  local choose = function(item)
+  local choose = function(item, modifier)
     if item == nil then return end
-    vim.schedule(function() vim.cmd('help ' .. (item.name or '')) end)
+    vim.schedule(function() vim.cmd((modifier or '') .. 'help ' .. (item.name or '')) end)
   end
   local preview = function(buf_id, item)
     -- Take advantage of `taglist` output on how to open tag
@@ -1343,8 +1347,24 @@ MiniPick.builtin.help = function(local_opts, opts)
     end)
   end
 
-  local source = { items = tags, name = 'Help', choose = choose, choose_marked = choose_marked, preview = preview }
-  opts = vim.tbl_deep_extend('force', { source = source }, opts or {})
+  -- Modify default mappings to work with special `:help` command
+  local map_custom = function(char, modifier)
+    local f = function()
+      choose(MiniPick.get_picker_matches().current, modifier .. ' ')
+      return true
+    end
+    return { char = char, func = f }
+  end
+
+  --stylua: ignore
+  local mappings = {
+    choose_in_split   = '', show_help_in_split   = map_custom('<C-s>', ''),
+    choose_in_vsplit  = '', show_help_in_vsplit  = map_custom('<C-v>', 'vertical'),
+    choose_in_tabpage = '', show_help_in_tabpage = map_custom('<C-t>', 'tab'),
+  }
+
+  local source = { items = tags, name = 'Help', choose = choose, preview = preview }
+  opts = vim.tbl_deep_extend('force', { source = source, mappings = mappings }, opts or {})
   return MiniPick.start(opts)
 end
 
