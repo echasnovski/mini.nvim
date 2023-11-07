@@ -2700,6 +2700,8 @@ T['builtin.help()']['has proper preview'] = function()
   builtin_help()
   type_keys('<Tab>')
   child.expect_screenshot()
+  eq(child.bo.buftype, 'nofile')
+  eq(child.bo.syntax, 'help')
 
   eq(child.v.hlsearch, 0)
   eq(child.fn.getreg('/'), 'aa')
