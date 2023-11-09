@@ -157,6 +157,12 @@ local mock_no_git_repo = function()
   ]])
 end
 
+local validate_git_repo_check = function(target_dir)
+  eq(child.lua_get('_G.systemlist_args'), { { 'git', '-C', target_dir, 'rev-parse', '--show-toplevel' } })
+end
+
+local clear_git_repo_check = function() child.lua('_G.systemlist_args = nil') end
+
 local mock_spawn = function()
   local mock_file = join_path(test_dir, 'mocks', 'spawn.lua')
   local lua_cmd = string.format('dofile(%s)', vim.inspect(mock_file))
@@ -1255,10 +1261,12 @@ T['pickers']['git_branches()']['respects `local_opts.path`'] = function()
     pick_git_branches({ path = path })
     eq(get_spawn_log()[1].options, { args = { 'branch', '--all', '-v', '--no-color', '--list' }, cwd = ref_repo_dir })
     validate_picker_cwd(ref_repo_dir)
+    validate_git_repo_check(dir_path_full)
 
     -- Cleanup
     stop_picker()
     clear_spawn_log()
+    clear_git_repo_check()
   end
 
   -- Should always use parent repository path
@@ -1393,10 +1401,12 @@ T['pickers']['git_commits()']['respects `local_opts.path`'] = function()
     )
     validate_picker_cwd(ref_repo_dir)
     validate_picker_name(path == nil and 'Git commits (all)' or 'Git commits (for path)')
+    validate_git_repo_check(dir_path_full)
 
     -- Cleanup
     stop_picker()
     clear_spawn_log()
+    clear_git_repo_check()
   end
 
   -- Should always use repo dir as cwd and use path verbatim
@@ -1488,10 +1498,12 @@ T['pickers']['git_files()']['respects `local_opts.path`'] = function()
     pick_git_files({ path = path })
     eq(get_spawn_log()[1].options, { args = { '-C', ref_cwd, 'ls-files', '--cached' }, cwd = ref_cwd })
     validate_picker_cwd(ref_cwd)
+    validate_git_repo_check(dir_path_full)
 
     -- Cleanup
     stop_picker()
     clear_spawn_log()
+    clear_git_repo_check()
   end
 
   -- Directory path
@@ -1681,10 +1693,12 @@ T['pickers']['git_hunks()']['respects `local_opts.path`'] = function()
     )
     validate_picker_cwd(ref_repo_dir)
     validate_picker_name(path == nil and 'Git hunks (unstaged all)' or 'Git hunks (unstaged for path)')
+    validate_git_repo_check(dir_path_full)
 
     -- Cleanup
     stop_picker()
     clear_spawn_log()
+    clear_git_repo_check()
   end
 
   -- Should always use repo dir as cwd and use path verbatim

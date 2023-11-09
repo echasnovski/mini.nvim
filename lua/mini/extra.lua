@@ -1588,7 +1588,7 @@ end
 
 H.git_get_repo_dir = function(path, path_type, picker_name)
   local path_dir = path_type == 'directory' and path or vim.fn.fnamemodify(path, ':h')
-  local repo_dir = vim.fn.systemlist('git -C ' .. path_dir .. ' rev-parse --show-toplevel')[1]
+  local repo_dir = vim.fn.systemlist({ 'git', '-C', path_dir, 'rev-parse', '--show-toplevel' })[1]
   if vim.v.shell_error ~= 0 then
     local msg = string.format('`pickers.%s` could not find Git repo for %s.', picker_name, path)
     H.error(msg)
