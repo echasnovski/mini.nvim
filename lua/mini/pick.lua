@@ -948,13 +948,15 @@ end
 ---@param inds table Array of `stritems` indexes to match. All of them should point
 ---   at string elements of `stritems`. No check is done for performance reasons.
 ---@param query table Array of strings.
+---@param do_sync boolean|nil Whether to match synchronously. Default: `nil`.
 ---
----@return table|nil Depending of whether there is an active picker:
----   - If yes, `nil` is returned with |MiniPick.set_picker_match_inds()| used later.
----   - If no, array of `stritems` indexes matching the `query` (from best to worst).
-MiniPick.default_match = function(stritems, inds, query)
-  local is_active = MiniPick.is_picker_active()
-  local set_match_inds = is_active and MiniPick.set_picker_match_inds or function(x) return x end
+---@return table|nil Depending on whether computation is synchronous (either `do_sync`
+---   is truthy or there is an active picker):
+---   - If yes, array of `stritems` indexes matching the `query` (from best to worst).
+---   - If no, `nil` is returned with |MiniPick.set_picker_match_inds()| used later.
+MiniPick.default_match = function(stritems, inds, query, do_sync)
+  local is_sync = do_sync or not MiniPick.is_picker_active()
+  local set_match_inds = is_sync and function(x) return x end or MiniPick.set_picker_match_inds
   local f = function()
     if #query == 0 then return set_match_inds(H.seq_along(stritems)) end
     local match_data, match_type = H.match_filter(inds, stritems, query)
@@ -965,7 +967,7 @@ MiniPick.default_match = function(stritems, inds, query)
     return set_match_inds(match_inds)
   end
 
-  if not is_active then return f() end
+  if is_sync then return f() end
   coroutine.resume(coroutine.create(f))
 end
 

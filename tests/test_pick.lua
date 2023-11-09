@@ -1252,6 +1252,13 @@ T['default_match()']['respects case'] = function()
   validate_match({ 'ab', 'aB', 'Ba', 'AB' }, { 'a', 'B' }, { 2 })
 end
 
+T['default_match()']['respects `do_sync` argument'] = function()
+  start_with_items({ 'aa', 'ab', 'bb' })
+  -- Should process synchronously and return output even if picker is active
+  eq(child.lua_get([[MiniPick.default_match({'xx', 'xy', 'yy'}, { 1, 2, 3 }, { 'y' }, true)]]), { 3, 2 })
+  eq(get_picker_matches().all, { 'aa', 'ab', 'bb' })
+end
+
 T['default_show()'] = new_set({ hooks = { pre_case = function() child.set_size(10, 20) end } })
 
 local default_show = forward_lua('MiniPick.default_show')
