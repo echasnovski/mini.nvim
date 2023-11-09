@@ -2801,8 +2801,8 @@ local pick_registers = forward_lua_notify('MiniExtra.pickers.registers')
 local setup_registers = function()
   child.fn.setreg('a', 'Register a')
   child.fn.setreg('=', '1 + 1')
-  set_lines({ 'Yank register' })
-  type_keys('yy')
+  set_lines({ 'Yank register', 'Contains multiline text' })
+  type_keys('yj')
   set_lines({})
 end
 
@@ -2826,7 +2826,7 @@ T['pickers']['registers()']['works'] = function()
   validate_picker_name('Registers')
   child.expect_screenshot()
 
-  -- Should have no preview
+  -- Should preview register content (even multiline)
   type_keys('<Tab>')
   child.expect_screenshot()
 

@@ -1272,7 +1272,7 @@ MiniExtra.pickers.registers = function(local_opts, opts)
     vim.fn.feedkeys(keys)
   end)
 
-  local preview = H.pick_make_no_preview('registers')
+  local preview = function(buf_id, item) H.set_buflines(buf_id, vim.split(item.regcontents, '\n')) end
 
   return H.pick_start(items, { source = { name = 'Registers', preview = preview, choose = choose } }, opts)
 end
