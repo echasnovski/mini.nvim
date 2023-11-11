@@ -2686,7 +2686,8 @@ T['pickers']['oldfiles()']['respects `opts.source.cwd`'] = function()
   pick_oldfiles({}, { source = { cwd = real_files_dir } })
   local items = get_picker_items()
   eq(items[1], 'LICENSE')
-  expect.match(items[2], vim.pesc(ref_oldfiles[2]))
+  -- - For paths not from `cwd` it should shorten home directory to `~`
+  expect.match(items[2], vim.pesc(child.fn.fnamemodify(ref_oldfiles[2], ':~')))
 end
 
 T['pickers']['options()'] = new_set()

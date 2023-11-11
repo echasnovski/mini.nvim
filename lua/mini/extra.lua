@@ -1865,7 +1865,7 @@ H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$'
 
 H.short_path = function(path, cwd)
   cwd = cwd or vim.fn.getcwd()
-  if not vim.startswith(path, cwd) then return path end
+  if not vim.startswith(path, cwd) then return vim.fn.fnamemodify(path, ':~') end
   local res = path:sub(cwd:len() + 1):gsub('^/+', ''):gsub('/+$', '')
   return res
 end
