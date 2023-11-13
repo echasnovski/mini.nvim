@@ -456,8 +456,11 @@ Default values:
     -- information with examples, see `:h MiniSurround.config`.
     custom_surroundings = nil,
 
-    -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
+    -- Duration (in ms) of highlight when calling `MiniSurround.highlight()` or when calling `MiniSurround.find()` with `highlight_input` option being `true`.
     highlight_duration = 500,
+
+    -- Highlight input surrounding when calling `MiniSurround.delete()` or `Mini.Surround.replace()`
+    highlight_input = false,
 
     -- Module mappings. Use `''` (empty string) to disable one.
     mappings = {

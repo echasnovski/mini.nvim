@@ -618,8 +618,11 @@ MiniSurround.config = {
   -- information with examples, see `:h MiniSurround.config`.
   custom_surroundings = nil,
 
-  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
+  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()` or when calling `MiniSurround.find()` with `highlight_input` option being `true`.
   highlight_duration = 500,
+
+  -- Highlight input surrounding when calling `MiniSurround.delete()` or `Mini.Surround.replace()`
+  highlight_input = false,
 
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {
@@ -745,9 +748,25 @@ MiniSurround.delete = function()
   local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
+  -- Highlight input surrounding region
+  local config = H.get_config()
+  local buf_id = vim.api.nvim_get_current_buf()
+  if config.highlight_input then
+    H.region_highlight(buf_id, surr.left)
+    H.region_highlight(buf_id, surr.right)
+    vim.cmd('redraw')
+  end
+
   -- Delete surrounding region. Begin with right to not break column numbers.
   H.region_replace(surr.right, {})
   H.region_replace(surr.left, {})
+
+  -- Unhighlight input surrounding region
+  -- Without it, undo will highlight the region again
+  if config.highlight_input then
+    H.region_unhighlight(buf_id, surr.left)
+    H.region_unhighlight(buf_id, surr.right)
+  end
 
   -- Set cursor to be on the right of deleted left surrounding
   local from = surr.left.from
@@ -781,8 +800,25 @@ MiniSurround.replace = function()
   local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
 
+  -- Highlight input surrounding region
+  local config = H.get_config()
+  local buf_id = vim.api.nvim_get_current_buf()
+  if config.highlight_input then
+    H.region_highlight(buf_id, surr.left)
+    H.region_highlight(buf_id, surr.right)
+    vim.cmd('redraw')
+  end
+
   -- Get output surround info
   local new_surr_info = H.get_surround_spec('output', true)
+
+  -- Unhighlight input surrounding region
+  if config.highlight_input then
+    H.region_unhighlight(buf_id, surr.left)
+    H.region_unhighlight(buf_id, surr.right)
+  end
+
+  -- Abort if no output surround info
   if new_surr_info == nil then return '<Esc>' end
 
   -- Replace by parts starting from right to not break column numbers
@@ -801,6 +837,18 @@ MiniSurround.find = function()
   -- Find surrounding region
   local surr = H.find_surrounding(H.get_surround_spec('input', true))
   if surr == nil then return '<Esc>' end
+
+  -- Highlight input surrounding region
+  local config = H.get_config()
+  local buf_id = vim.api.nvim_get_current_buf()
+  if config.highlight_input then
+    H.region_highlight(buf_id, surr.left)
+    H.region_highlight(buf_id, surr.right)
+    vim.defer_fn(function()
+      H.region_unhighlight(buf_id, surr.left)
+      H.region_unhighlight(buf_id, surr.right)
+    end, config.highlight_duration)
+  end
 
   -- Make array of unique positions to cycle through
   local pos_array = H.surr_to_pos_array(surr)
@@ -1101,6 +1149,7 @@ H.setup_config = function(config)
   vim.validate({
     custom_surroundings = { config.custom_surroundings, 'table', true },
     highlight_duration = { config.highlight_duration, 'number' },
+    highlight_input = { config.highlight_input, 'boolean', true },
     mappings = { config.mappings, 'table' },
     n_lines = { config.n_lines, 'number' },
     respect_selection_type = { config.respect_selection_type, 'boolean' },
