@@ -2445,6 +2445,7 @@ local validate_symbol_scope = function(scope)
   pick_lsp({ scope = scope })
   validate_picker_name('LSP (' .. scope .. ')')
   eq(child.lua_get('_G.lsp_buf_calls'), { scope })
+  if scope == 'workspace_symbol' then eq(child.lua_get('_G.workspace_symbol_query'), '') end
   child.expect_screenshot()
 
   -- Should highlight some symbols
@@ -2517,6 +2518,14 @@ end
 T['pickers']['lsp()']['works for `type_definition`'] = function() validate_location_scope('type_definition') end
 
 T['pickers']['lsp()']['works for `workspace_symbol`'] = function() validate_symbol_scope('workspace_symbol') end
+
+T['pickers']['lsp()']['respects `local_opts.symbol_query`'] = function()
+  if child.fn.has('nvim-0.8') == 0 then return end
+  setup_lsp()
+
+  pick_lsp({ scope = 'workspace_symbol', symbol_query = 'aaa' })
+  eq(child.lua_get('_G.workspace_symbol_query'), 'aaa')
+end
 
 T['pickers']['lsp()']['throws error on Neovim<0.8'] = function()
   if child.fn.has('nvim-0.8') == 1 then return end

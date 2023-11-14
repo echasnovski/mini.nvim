@@ -79,8 +79,9 @@ vim.lsp.buf.type_definition = function(opts)
   opts.on_list(data)
 end
 
-vim.lsp.buf.workspace_symbol = function(_, opts)
+vim.lsp.buf.workspace_symbol = function(query, opts)
   table.insert(_G.lsp_buf_calls, 'workspace_symbol')
+  _G.workspace_symbol_query = query
   local data = {
     context = make_context('textDocument/workspaceSymbol'),
     items = {

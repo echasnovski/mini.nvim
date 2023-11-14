@@ -1080,13 +1080,15 @@ end
 ---   Possible fields:
 ---   - <scope> `(string)` - LSP method to use. One of the supported ones (see
 ---     list above). Default: `nil` which means explicit scope is needed.
+---   - <symbol_query> `(string)` - query for |vim.lsp.buf.workspace_symbol()|.
+---     Default: empty string for all symbols (according to LSP specification).
 ---@param opts __extra_pickers_opts
 ---
 ---@return nil Nothing is returned.
 MiniExtra.pickers.lsp = function(local_opts, opts)
   if vim.fn.has('nvim-0.8') == 0 then H.error('`pickers.lsp` requires Neovim>=0.8.') end
   local pick = H.validate_pick('lsp')
-  local_opts = vim.tbl_deep_extend('force', { scope = nil }, local_opts or {})
+  local_opts = vim.tbl_deep_extend('force', { scope = nil, symbol_query = '' }, local_opts or {})
 
   if local_opts.scope == nil then H.error('`pickers.lsp` needs an explicit scope.') end
   --stylua: ignore
@@ -1096,7 +1098,10 @@ MiniExtra.pickers.lsp = function(local_opts, opts)
   local scope = H.pick_validate_scope(local_opts, allowed_scopes, 'lsp')
 
   if scope == 'references' then return vim.lsp.buf[scope](nil, { on_list = H.lsp_make_on_list(scope, opts) }) end
-  if scope == 'workspace_symbol' then return vim.lsp.buf[scope]('', { on_list = H.lsp_make_on_list(scope, opts) }) end
+  if scope == 'workspace_symbol' then
+    local query = tostring(local_opts.symbol_query)
+    return vim.lsp.buf[scope](query, { on_list = H.lsp_make_on_list(scope, opts) })
+  end
   vim.lsp.buf[scope]({ on_list = H.lsp_make_on_list(scope, opts) })
 end
 

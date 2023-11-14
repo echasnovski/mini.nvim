@@ -609,6 +609,8 @@ Parameters~
   Possible fields:
   - <scope> `(string)` - LSP method to use. One of the supported ones (see
     list above). Default: `nil` which means explicit scope is needed.
+  - <symbol_query> `(string)` - query for |vim.lsp.buf.workspace_symbol()|.
+    Default: empty string for all symbols (according to LSP specification).
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 Return~
