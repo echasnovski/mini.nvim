@@ -212,7 +212,6 @@ end
 ---  | #     | Visual          | Search backward for current visual selection  |
 ---  | <C-s> | Normal, Visual, | Save and go to Normal mode                    |
 ---  |       |     Insert      |                                               |
----  | <C-z> | Normal, Insert  | Correct latest misspelled word                |
 --- <
 --- Notes:
 --- - See |[count]| for its meaning.
@@ -596,14 +595,6 @@ H.apply_mappings = function(config)
     -- NOTE: Adding `redraw` helps with `cmdheight=0` if buffer is not modified
     map(  'n',        '<C-S>', '<Cmd>silent! update | redraw<CR>',      { desc = 'Save' })
     map({ 'i', 'x' }, '<C-S>', '<Esc><Cmd>silent! update | redraw<CR>', { desc = 'Save and go to Normal mode' })
-
-    -- Correct latest misspelled word by taking first suggestion.
-    -- Use `<C-g>u` in Insert mode to mark this as separate undoable action.
-    -- Source: https://stackoverflow.com/a/16481737
-    -- NOTE: this remaps `<C-z>` in Normal mode (completely stops Neovim), but
-    -- it seems to be too harmful anyway.
-    map('n', '<C-Z>', '[s1z=',                     { desc = 'Correct latest misspelled word' })
-    map('i', '<C-Z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
   end
 
   local toggle_prefix = config.mappings.option_toggle_prefix

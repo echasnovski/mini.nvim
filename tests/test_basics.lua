@@ -539,42 +539,6 @@ T['Mappings']['Basic']['<C-s>'] = function()
   eq(child.fn.mode(), 'n')
 end
 
-T['Mappings']['Basic']['<C-z>'] = function()
-  load_module()
-  child.o.spell = true
-
-  -- Should correct latest misspelled
-  set_lines({ 'Helo to arl the wolld!' })
-  set_cursor(1, 18)
-  type_keys('<C-z>')
-  eq(get_lines(), { 'Helo to arl the world!' })
-
-  -- Should respect `[count]`
-  set_lines({ 'Helo to arl the wolld!' })
-  set_cursor(1, 18)
-  type_keys('2<C-z>')
-  eq(get_lines(), { 'Helo to all the wolld!' })
-
-  -- Should also work in Insert mode with separate undo block
-  set_lines({ 'Helo ' })
-  type_keys('A', 'to all')
-
-  type_keys('<C-z>')
-  eq(get_lines(), { 'Hello to all' })
-  eq(child.fn.mode(), 'i')
-
-  type_keys(' the world!', '<Esc>')
-  eq(get_lines(), { 'Hello to all the world!' })
-  eq(child.fn.mode(), 'n')
-
-  type_keys('u')
-  eq(get_lines(), { 'Hello to all' })
-  type_keys('u')
-  eq(get_lines(), { 'Helo to all' })
-  type_keys('u')
-  eq(get_lines(), { 'Helo ' })
-end
-
 T['Mappings']['Toggle options'] = new_set()
 
 T['Mappings']['Toggle options']['work'] = function()

@@ -1,5 +1,14 @@
 # Version 0.11.0.9999
 
+## mini.basics
+
+- BREAKING: Remove `<C-z>` mapping, as it is more useful in most terminal emulators for suspending Neovim process (to later resume with `fg` command). To correct latest misspelled word, use mappings like this:
+
+```lua
+vim.keymap.set('n', '<C-z>', '[s1z=',                     { desc = 'Correct latest misspelled word' })
+vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
+```
+
 ## mini.statusline
 
 - BREAKING FEATURE: Add `search_count` section to default active content.

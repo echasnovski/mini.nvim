@@ -241,7 +241,6 @@ Here is a table with created mappings : >
  | #     | Visual          | Search backward for current visual selection  |
  | <C-s> | Normal, Visual, | Save and go to Normal mode                    |
  |       |     Insert      |                                               |
- | <C-z> | Normal, Insert  | Correct latest misspelled word                |
 <
 Notes:
 - See |[count]| for its meaning.
