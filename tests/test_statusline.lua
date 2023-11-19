@@ -542,6 +542,8 @@ T['section_searchcount()']['respects `args.trunc_width`'] = function()
 end
 
 T['section_searchcount()']['respects `args.options`'] = function()
+  -- Disable recomputation from section in default content
+  child.lua([[MiniStatusline.config.content.active = function() return '%f' end]])
   set_lines({ '', 'a a a ' })
   type_keys('/', 'a', '<CR>')
 
@@ -574,6 +576,7 @@ T['Default content']['active'] = new_set({
       -- Mock filename section to use relative path for consistent screenshots
       child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
       child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
+      type_keys('/a', '<CR>')
     end,
     post_case = unmock_file,
   },

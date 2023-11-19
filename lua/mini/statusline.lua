@@ -83,6 +83,7 @@
 ---     local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
 ---     local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
 ---     local location      = MiniStatusline.section_location({ trunc_width = 75 })
+---     local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
 ---
 ---     return MiniStatusline.combine_groups({
 ---       { hl = mode_hl,                  strings = { mode } },
@@ -91,7 +92,7 @@
 ---       { hl = 'MiniStatuslineFilename', strings = { filename } },
 ---       '%=', -- End left alignment
 ---       { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
----       { hl = mode_hl,                  strings = { location } },
+---       { hl = mode_hl,                  strings = { search, location } },
 ---     })
 ---   end
 --- <
@@ -389,10 +390,10 @@ end
 --- window width is lower than `args.trunc_width`, search highlighting is not
 --- on (see |v:hlsearch|), or if number of search result is 0.
 ---
---- `args.options` is forwarded to |searchcount()|.  By default it recomputes
+--- `args.options` is forwarded to |searchcount()|. By default it recomputes
 --- data on every call which can be computationally expensive (although still
---- usually same order of magnitude as 0.1 ms). To prevent this, supply
---- `args.options = {recompute = false}`.
+--- usually on 0.1 ms order of magnitude). To prevent this, supply
+--- `args.options = { recompute = false }`.
 ---
 ---@param args __statusline_args
 ---
@@ -534,6 +535,7 @@ H.default_content_active = function()
   local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
   local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
   local location      = MiniStatusline.section_location({ trunc_width = 75 })
+  local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
 
   -- Usage of `MiniStatusline.combine_groups()` ensures highlighting and
   -- correct padding with spaces between groups (accounts for 'missing'
@@ -545,7 +547,7 @@ H.default_content_active = function()
     { hl = 'MiniStatuslineFilename', strings = { filename } },
     '%=', -- End left alignment
     { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
-    { hl = mode_hl,                  strings = { location } },
+    { hl = mode_hl,                  strings = { search, location } },
   })
   -- stylua: ignore end
 end

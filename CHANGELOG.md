@@ -1,5 +1,9 @@
 # Version 0.11.0.9999
 
+## mini.statusline
+
+- BREAKING FEATURE: Add `search_count` section to default active content.
+
 
 # Version 0.11.0
 
