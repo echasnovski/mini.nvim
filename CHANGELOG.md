@@ -9,6 +9,8 @@ vim.keymap.set('n', '<C-z>', '[s1z=',                     { desc = 'Correct late
 vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct latest misspelled word' })
 ```
 
+- FEATURE: Add `tab:> ` to 'listchars' option when `options.extra_ui` is set. This prevents showing `^I` instead of a tab and actual value comes from Neovim's default.
+
 ## mini.statusline
 
 - BREAKING FEATURE: Add `search_count` section to default active content.

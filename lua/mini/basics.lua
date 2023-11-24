@@ -490,8 +490,11 @@ H.apply_options = function(config)
     o.pumheight = 10 -- Make popup menu smaller
     o.winblend  = 10 -- Make floating windows slightly transparent
 
-    o.listchars = 'extends:…,precedes:…,nbsp:␣' -- Define which helper symbols to show
-    o.list      = true                          -- Show some helper symbols
+    -- NOTE: Having `tab` present is needed because `^I` will be shown if
+    -- omitted (documented in `:h listchars`).
+    -- Having it equal to a default value should be less intrusive.
+    o.listchars = 'tab:> ,extends:…,precedes:…,nbsp:␣' -- Define which helper symbols to show
+    o.list      = true                                 -- Show some helper symbols
 
     -- Enable syntax highlighting if it wasn't already (as it is time consuming)
     if vim.fn.exists("syntax_on") ~= 1 then vim.cmd([[syntax enable]]) end

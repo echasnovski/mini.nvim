@@ -179,6 +179,9 @@ T['Options']['respect `config.options.extra_ui`'] = function()
 
   eq(child.o.pumblend, 10)
   eq(child.o.list, true)
+
+  -- 'listchars' should have `tab` defined to not show `^I` instead of tab
+  expect.match(child.o.listchars, 'tab')
 end
 
 T['Options']['respect `config.options.win_borders`'] = function()
