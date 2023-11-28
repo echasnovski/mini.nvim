@@ -48,6 +48,7 @@
 ---   Tabline ..................................................... |mini.tabline|
 ---   Test Neovim plugins ............................................ |mini.test|
 ---   Trailspace (highlight and remove)......................... |mini.trailspace|
+---   Track and reuse file system visits ........................... |mini.visits|
 ---
 --- # General principles~
 ---
@@ -272,6 +273,11 @@
 ---
 --- - |MiniTrailspace| - automatic highlighting of trailing whitespace with
 ---   functionality to remove it.
+---
+--- - |MiniVisits| - track and reuse file system visits. Tracks data about each
+---   file/directory visit (after delay) and stores it (only) locally. This can be
+---   used to get a list of "recent"/"frequent"/"frecent" visits.
+---   Allows persistently adding labels to visits enabling flexible workflow.
 
 --- Common recipes for disabling functionality
 ---

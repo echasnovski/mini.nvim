@@ -48,6 +48,7 @@ local test_actions = {
   ['tabline']     = function() require('mini.tabline').setup() end,
   ['test']        = function() require('mini.test').setup() end,
   ['trailspace']  = function() require('mini.trailspace').setup() end,
+  ['visits']      = function() require('mini.visits').setup() end,
 }
 
 for module, test_fun in pairs(test_actions) do

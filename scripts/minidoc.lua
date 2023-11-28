@@ -38,6 +38,7 @@ local modules = {
   'tabline',
   'test',
   'trailspace',
+  'visits',
 }
 
 local hooks = vim.deepcopy(MiniDoc.default_hooks)

@@ -103,6 +103,7 @@ If you are browsing without particular objective and don't know which module to 
 | mini.tabline     | Tabline                                  | [README](readmes/mini-tabline.md)     | [Help file](doc/mini-tabline.txt)     |
 | mini.test        | Test Neovim plugins                      | [README](readmes/mini-test.md)        | [Help file](doc/mini-test.txt)        |
 | mini.trailspace  | Trailspace (highlight and remove)        | [README](readmes/mini-trailspace.md)  | [Help file](doc/mini-trailspace.txt)  |
+| mini.visits      | Track and reuse file system visits       | [README](readmes/mini-visits.md)      | [Help file](doc/mini-visits.txt)      |
 
 ## General principles
 
@@ -149,7 +150,6 @@ This is the list of modules I currently intend to implement eventually (as my fr
 - 'mini.git' - utilities for more convenient work with Git. Actual scope is to be defined.
 - 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
 - 'mini.notify' - minimal UI to show Neovim notifications (like coming from LSP server, etc.).
-- 'mini.places' - persistent track of common places per working directory. Something like [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon).
 - 'mini.snippets' - work with snippets. Something like [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip) but only with more straightforward functionality.
 - 'mini.statuscolumn' - customizable 'statuscolumn'.
 - 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).

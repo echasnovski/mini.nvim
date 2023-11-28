@@ -15,6 +15,10 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 
 - BREAKING FEATURE: Add `search_count` section to default active content.
 
+## mini.visits
+
+Introduction of a new module.
+
 
 # Version 0.11.0
 
