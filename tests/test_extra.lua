@@ -7,7 +7,6 @@ local new_set = MiniTest.new_set
 -- Helpers with child processes
 --stylua: ignore start
 local load_module = function(config) child.mini_load('extra', config) end
-local unload_module = function() child.mini_unload('extra') end
 local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
@@ -3032,6 +3031,197 @@ T['pickers']['treesitter()']['respects `opts`'] = function()
   setup_treesitter()
   pick_treesitter({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+local setup_visits = function()
+  --stylua: ignore
+  local visit_index = {
+    [test_dir_absolute] = {
+      [join_path(test_dir_absolute, 'file-xyyx')] = { count = 5, latest = 5 },
+      [join_path(test_dir_absolute, 'file-xx')] = { count = 1, labels = { xxx = true, uuu = true }, latest = 10 },
+      [join_path(test_dir_absolute, 'file-xyx')] = { count = 10, labels = { xxx = true }, latest = 2 },
+      [join_path(test_dir_absolute, 'real-files', 'a.lua')] = { count = 3, labels = { yyy = true }, latest = 3 },
+    },
+    [join_path(test_dir_absolute, 'git-files')] = {
+      [full_path(make_testpath('git-files', 'git-file-1'))] = { count = 0, labels = { xxx = true, www = true }, latest = 0 },
+      [full_path(make_testpath('git-files', 'git-file-2'))] = { count = 100, latest = 100 },
+    },
+  }
+
+  child.lua([[require('mini.visits').set_index(...)]], { visit_index })
+  child.fn.chdir(test_dir_absolute)
+end
+
+T['pickers']['visit_paths()'] = new_set({ hooks = { pre_case = setup_visits } })
+
+local pick_visit_paths = forward_lua_notify('MiniExtra.pickers.visit_paths')
+
+T['pickers']['visit_paths()']['works'] = function()
+  child.set_size(15, 60)
+
+  child.lua_notify('_G.return_item = MiniExtra.pickers.visit_paths()')
+  validate_picker_name('Visit paths (cwd)')
+  child.expect_screenshot()
+
+  -- Can preview path
+  type_keys('<C-p>', '<Tab>')
+  child.expect_screenshot()
+
+  -- Should properly choose
+  type_keys('<CR>')
+  validate_buf_name(0, join_path('real-files', 'a.lua'))
+
+  -- Should return chosen value
+  eq(child.lua_get('_G.return_item'), join_path('real-files', 'a.lua'))
+end
+
+T['pickers']['visit_paths()']['respects `local_opts.cwd`'] = function()
+  pick_visit_paths({ cwd = '' })
+  validate_picker_name('Visit paths (all)')
+  eq(get_picker_items(), {
+    -- Should use short paths relative to the current working directory
+    join_path('git-files', 'git-file-2'),
+    'file-xyyx',
+    'file-xx',
+    'file-xyx',
+    join_path('real-files', 'a.lua'),
+    join_path('git-files', 'git-file-1'),
+  })
+end
+
+T['pickers']['visit_paths()']['respects `local_opts.filter`'] = function()
+  pick_visit_paths({ filter = 'xxx' })
+  eq(get_picker_items(), { 'file-xx', 'file-xyx' })
+end
+
+T['pickers']['visit_paths()']['respects `local_opts.preserve_order`'] = function()
+  -- Should not preserve original sort by default
+  pick_visit_paths()
+  type_keys('x', 'x')
+  eq(get_picker_matches().all, { 'file-xx', 'file-xyx', 'file-xyyx' })
+  type_keys('<Esc>')
+
+  -- Should preserve original order with `preserve_order`
+  pick_visit_paths({ preserve_order = true })
+  type_keys('x', 'x')
+  eq(get_picker_matches().all, { 'file-xyyx', 'file-xx', 'file-xyx' })
+  type_keys('<Esc>')
+end
+
+T['pickers']['visit_paths()']['respects `local_opts.recency_weight`'] = function()
+  pick_visit_paths({ recency_weight = 1 })
+  eq(get_picker_items(), { 'file-xx', 'file-xyyx', join_path('real-files', 'a.lua'), 'file-xyx' })
+end
+
+T['pickers']['visit_paths()']['respects `local_opts.sort`'] = function()
+  child.lua([[_G.sort = function() return { { path = vim.fn.getcwd() .. '/aaa' } } end]])
+  child.lua_notify([[MiniExtra.pickers.visit_paths({ sort = _G.sort })]])
+  eq(get_picker_items(), { 'aaa' })
+end
+
+T['pickers']['visit_paths()']['can not show icons'] = function()
+  child.set_size(15, 60)
+  child.lua('MiniPick.config.source.show = MiniPick.default_show')
+  pick_visit_paths()
+  child.expect_screenshot()
+end
+
+T['pickers']['visit_paths()']['respects `opts`'] = function()
+  pick_visit_paths({}, { source = { name = 'My name' } })
+  validate_picker_name('My name')
+end
+
+T['pickers']['visit_paths()']["checks for present 'mini.visits'"] = function()
+  child.lua([[
+    local require_orig = require
+    require = function(x)
+      if x == 'mini.visits' then error() end
+      require_orig(x)
+    end
+  ]])
+  expect.error(function() child.lua('MiniExtra.pickers.visit_paths()') end, '`pickers%.visit_paths`.*mini%.visits')
+end
+
+T['pickers']['visit_labels()'] = new_set({ hooks = { pre_case = setup_visits } })
+
+local pick_visit_labels = forward_lua_notify('MiniExtra.pickers.visit_labels')
+
+T['pickers']['visit_labels()']['works'] = function()
+  child.set_size(15, 60)
+
+  child.lua_notify('_G.return_item = MiniExtra.pickers.visit_labels()')
+  validate_picker_name('Visit labels (cwd)')
+  child.expect_screenshot()
+
+  -- Can preview label by showing paths with it
+  type_keys('<Tab>')
+  child.expect_screenshot()
+
+  -- Should properly choose by starting picking from label paths
+  type_keys('<C-p>', '<CR>')
+  child.expect_screenshot()
+
+  -- Should properly choose path
+  type_keys('<CR>')
+  validate_buf_name(0, join_path('real-files', 'a.lua'))
+
+  -- Should return chosen path
+  eq(child.lua_get('_G.return_item'), join_path('real-files', 'a.lua'))
+end
+
+T['pickers']['visit_labels()']['respects `local_opts.cwd`'] = function()
+  pick_visit_labels({ cwd = '' })
+  validate_picker_name('Visit labels (all)')
+  eq(get_picker_items(), { 'xxx', 'uuu', 'www', 'yyy' })
+end
+
+T['pickers']['visit_labels()']['respects `local_opts.filter`'] = function()
+  child.lua([[_G.filter = function(path_data) return string.find(path_data.path, 'xx') ~= nil end]])
+  child.lua_notify('MiniExtra.pickers.visit_labels({ filter = _G.filter })')
+  eq(get_picker_items(), { 'uuu', 'xxx' })
+end
+
+T['pickers']['visit_labels()']['respects `local_opts.path`'] = function()
+  pick_visit_labels({ path = full_path(join_path('real-files', 'a.lua')) })
+  eq(get_picker_items(), { 'yyy' })
+end
+
+T['pickers']['visit_labels()']['respects `local_opts.sort`'] = function()
+  child.set_size(15, 60)
+  child.lua([[_G.sort = function() return { { path = vim.fn.getcwd() .. '/aaa' } } end]])
+  child.lua_notify([[MiniExtra.pickers.visit_labels({ sort = _G.sort })]])
+  eq(get_picker_items(), { 'xxx', 'uuu', 'yyy' })
+
+  -- Sorting should affect both preview and after choosing
+  type_keys('<Tab>')
+  child.expect_screenshot()
+
+  type_keys('<CR>')
+  eq(get_picker_items(), { 'aaa' })
+end
+
+T['pickers']['visit_labels()']['can not show icons after choosing'] = function()
+  child.set_size(15, 60)
+  child.lua('MiniPick.config.source.show = MiniPick.default_show')
+  pick_visit_labels()
+  type_keys('<CR>')
+  child.expect_screenshot()
+end
+
+T['pickers']['visit_labels()']['respects `opts`'] = function()
+  pick_visit_labels({}, { source = { name = 'My name' } })
+  validate_picker_name('My name')
+end
+
+T['pickers']['visit_labels()']["checks for present 'mini.visits'"] = function()
+  child.lua([[
+    local require_orig = require
+    require = function(x)
+      if x == 'mini.visits' then error() end
+      require_orig(x)
+    end
+  ]])
+  expect.error(function() child.lua('MiniExtra.pickers.visit_labels()') end, '`pickers%.visit_labels`.*mini%.visits')
 end
 
 return T

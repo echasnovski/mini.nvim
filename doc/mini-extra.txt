@@ -727,5 +727,75 @@ Parameters~
 Return~
 `(any)` Output of the called picker.
 
+------------------------------------------------------------------------------
+                                               *MiniExtra.pickers.visit_paths()*
+             `MiniExtra.pickers.visit_paths`({local_opts}, {opts})
+Visit paths from 'mini.visits' picker
+
+Pick paths from |MiniVisits| using |MiniVisits.list_paths()|.
+Notes:
+- Requires 'mini.visits'.
+
+Examples ~
+
+- `MiniExtra.pickers.visit_paths()` - visits registered for |current-directory|
+  and ordered by "robust frecency".
+- `:Pick visit_paths cwd='' recency_weight=1 filter='core'` - all visits with
+  "core" label ordered from most to least recent.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <cwd> `(string)` - forwarded to |MiniVisits.list_paths()|.
+    Default: `nil` to get paths registered for |current-directory|.
+  - <filter> `(function|string)` - forwarded to |MiniVisits.list_paths()|.
+    Default: `nil` to use all paths.
+  - <preserve_order> `(boolean)` - whether to preserve original order
+    during query. Default: `false`.
+  - <recency_weight> `(number)` - forwarded to |MiniVisits.gen_sort.default()|.
+    Default: 0.5 to use "robust frecency" sorting.
+  - <sort> `(function)` - forwarded to |MiniVisits.list_paths()|.
+    Default: `nil` to use "robust frecency".
+    Note: if supplied, has precedence over `recency_weight`.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
+                                              *MiniExtra.pickers.visit_labels()*
+             `MiniExtra.pickers.visit_labels`({local_opts}, {opts})
+Visit labels from 'mini.visits' picker
+
+Pick labels from |MiniVisits| using |MiniVisits.list_labels()|
+and |MiniVisits.list_paths()|.
+Notes:
+- Requires 'mini.visits'.
+- Preview shows target visit paths filtered to those having previewed label.
+- Choosing essentially starts |MiniExtra.pickers.visit_paths()| for paths
+  with the chosen label.
+
+Examples ~
+
+- `MiniExtra.pickers.visit_labels()` - labels from visits registered
+  for |current-directory|.
+- `:Pick visit_labels cwd=''` - labels from all visits.
+
+Parameters~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <cwd> `(string)` - forwarded to |MiniVisits.list_labels()|.
+    Default: `nil` to get labels from visits registered for |current-directory|.
+  - <filter> `(function|string)` - forwarded to |MiniVisits.list_labels()|.
+    Default: `nil` to use all visits.
+  - <path> `(string)` - forwarded to |MiniVisits.list_labels()|.
+    Default: `""` to get labels from all visits for target `cwd`.
+  - <sort> `(function)` - forwarded to |MiniVisits.list_paths()| for
+    preview and choose. Default: `nil` to use "robust frecency".
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return~
+Chosen path.
+
 
  vim:tw=78:ts=8:noet:ft=help:norl:

@@ -1363,6 +1363,146 @@ MiniExtra.pickers.treesitter = function(local_opts, opts)
   return H.pick_start(items, { source = { name = 'Tree-sitter nodes' } }, opts)
 end
 
+--- Visit paths from 'mini.visits' picker
+---
+--- Pick paths from |MiniVisits| using |MiniVisits.list_paths()|.
+--- Notes:
+--- - Requires 'mini.visits'.
+---
+--- Examples ~
+---
+--- - `MiniExtra.pickers.visit_paths()` - visits registered for |current-directory|
+---   and ordered by "robust frecency".
+--- - `:Pick visit_paths cwd='' recency_weight=1 filter='core'` - all visits with
+---   "core" label ordered from most to least recent.
+---
+---@param local_opts __extra_pickers_local_opts
+---   Possible fields:
+---   - <cwd> `(string)` - forwarded to |MiniVisits.list_paths()|.
+---     Default: `nil` to get paths registered for |current-directory|.
+---   - <filter> `(function|string)` - forwarded to |MiniVisits.list_paths()|.
+---     Default: `nil` to use all paths.
+---   - <preserve_order> `(boolean)` - whether to preserve original order
+---     during query. Default: `false`.
+---   - <recency_weight> `(number)` - forwarded to |MiniVisits.gen_sort.default()|.
+---     Default: 0.5 to use "robust frecency" sorting.
+---   - <sort> `(function)` - forwarded to |MiniVisits.list_paths()|.
+---     Default: `nil` to use "robust frecency".
+---     Note: if supplied, has precedence over `recency_weight`.
+---@param opts __extra_pickers_opts
+---
+---@return __extra_pickers_return
+MiniExtra.pickers.visit_paths = function(local_opts, opts)
+  local pick = H.validate_pick('visit_paths')
+  local has_visits, visits = pcall(require, 'mini.visits')
+  if not has_visits then H.error([[`pickers.visit_paths` requires 'mini.visits' which can not be found.]]) end
+
+  local default_local_opts = { cwd = nil, filter = nil, preserve_order = false, recency_weight = 0.5, sort = nil }
+  local_opts = vim.tbl_deep_extend('force', default_local_opts, local_opts or {})
+
+  local cwd = local_opts.cwd or vim.fn.getcwd()
+  -- NOTE: Use separate cwd to allow `cwd = ''` to not mean "current directory"
+  local is_for_cwd = cwd ~= ''
+  local picker_cwd = cwd == '' and vim.fn.getcwd() or H.full_path(cwd)
+
+  -- Define source
+  local filter = local_opts.filter or visits.gen_filter.default()
+  local sort = local_opts.sort or visits.gen_sort.default({ recency_weight = local_opts.recency_weight })
+  local items = vim.schedule_wrap(function()
+    local paths = visits.list_paths(cwd, { filter = filter, sort = sort })
+    paths = vim.tbl_map(function(x) return H.short_path(x, picker_cwd) end, paths)
+    pick.set_picker_items(paths)
+  end)
+
+  local show = H.pick_get_config().source.show or H.show_with_icons
+
+  local match
+  if local_opts.preserve_order then
+    match = function(stritems, inds, query)
+      -- Return makes call synchronous, but it shouldn't be too big problem
+      local res = pick.default_match(stritems, inds, query, true) or {}
+      table.sort(res)
+      return res
+    end
+  end
+
+  local name = string.format('Visit paths (%s)', is_for_cwd and 'cwd' or 'all')
+  local default_source = { name = name, cwd = picker_cwd, match = match, show = show }
+  opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {}, { source = { items = items } })
+  return pick.start(opts)
+end
+
+--- Visit labels from 'mini.visits' picker
+---
+--- Pick labels from |MiniVisits| using |MiniVisits.list_labels()|
+--- and |MiniVisits.list_paths()|.
+--- Notes:
+--- - Requires 'mini.visits'.
+--- - Preview shows target visit paths filtered to those having previewed label.
+--- - Choosing essentially starts |MiniExtra.pickers.visit_paths()| for paths
+---   with the chosen label.
+---
+--- Examples ~
+---
+--- - `MiniExtra.pickers.visit_labels()` - labels from visits registered
+---   for |current-directory|.
+--- - `:Pick visit_labels cwd=''` - labels from all visits.
+---
+---@param local_opts __extra_pickers_local_opts
+---   Possible fields:
+---   - <cwd> `(string)` - forwarded to |MiniVisits.list_labels()|.
+---     Default: `nil` to get labels from visits registered for |current-directory|.
+---   - <filter> `(function|string)` - forwarded to |MiniVisits.list_labels()|.
+---     Default: `nil` to use all visits.
+---   - <path> `(string)` - forwarded to |MiniVisits.list_labels()|.
+---     Default: `""` to get labels from all visits for target `cwd`.
+---   - <sort> `(function)` - forwarded to |MiniVisits.list_paths()| for
+---     preview and choose. Default: `nil` to use "robust frecency".
+---@param opts __extra_pickers_opts
+---
+---@return Chosen path.
+MiniExtra.pickers.visit_labels = function(local_opts, opts)
+  local pick = H.validate_pick('visit_labels')
+  local has_visits, visits = pcall(require, 'mini.visits')
+  if not has_visits then H.error([[`pickers.visit_labels` requires 'mini.visits' which can not be found.]]) end
+
+  local default_local_opts = { cwd = nil, filter = nil, path = '', sort = nil }
+  local_opts = vim.tbl_deep_extend('force', default_local_opts, local_opts or {})
+
+  local cwd = local_opts.cwd or vim.fn.getcwd()
+  -- NOTE: Use separate cwd to allow `cwd = ''` to not mean "current directory"
+  local is_for_cwd = cwd ~= ''
+  local picker_cwd = cwd == '' and vim.fn.getcwd() or H.full_path(cwd)
+
+  local filter = local_opts.filter or visits.gen_filter.default()
+  local items = visits.list_labels(local_opts.path, local_opts.cwd, { filter = filter })
+
+  -- Define source
+  local list_label_paths = function(label)
+    local new_filter =
+      function(path_data) return filter(path_data) and type(path_data.labels) == 'table' and path_data.labels[label] end
+    local all_paths = visits.list_paths(local_opts.cwd, { filter = new_filter, sort = local_opts.sort })
+    return vim.tbl_map(function(path) return H.short_path(path, picker_cwd) end, all_paths)
+  end
+
+  local preview = function(buf_id, label) vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, list_label_paths(label)) end
+  local choose = function(label)
+    if label == nil then return end
+
+    pick.set_picker_items(list_label_paths(label), { do_match = false })
+    pick.set_picker_query({})
+    local name = string.format('Paths for %s label', vim.inspect(label))
+    local show = H.pick_get_config().source.show or H.show_with_icons
+    pick.set_picker_opts({ source = { name = name, show = show, choose = pick.default_choose } })
+    return true
+  end
+
+  local name = string.format('Visit labels (%s)', is_for_cwd and 'cwd' or 'all')
+  local default_source = { name = name, cwd = picker_cwd, preview = preview, choose = choose }
+  opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {}, { source = { items = items } })
+  return pick.start(opts)
+end
+
 -- Register in 'mini.pick'
 if type(_G.MiniPick) == 'table' then
   for name, f in pairs(MiniExtra.pickers) do
