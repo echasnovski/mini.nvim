@@ -913,6 +913,7 @@ Steps:
       entry from particular cwd (it can still be present in others).
     - If either first (cwd) or second (path) level key doesn't represent an
       actual path on disk, remove the whole associated value.
+    - NOTE: if visit has any label, it is not automatically pruned.
 
 - Decay visits, i.e. possibly make visits more outdated. This is an important
   part to the whole usability: together with pruning it results into automated

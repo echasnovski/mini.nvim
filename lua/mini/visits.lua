@@ -1129,6 +1129,7 @@ MiniVisits.gen_normalize = {}
 ---       entry from particular cwd (it can still be present in others).
 ---     - If either first (cwd) or second (path) level key doesn't represent an
 ---       actual path on disk, remove the whole associated value.
+---     - NOTE: if visit has any label, it is not automatically pruned.
 ---
 --- - Decay visits, i.e. possibly make visits more outdated. This is an important
 ---   part to the whole usability: together with pruning it results into automated
@@ -1375,7 +1376,9 @@ H.index_prune = function(index, prune_paths, threshold)
     for path, path_tbl in pairs(cwd_tbl) do
       local should_prune_path = prune_paths and not (vim.fn.filereadable(path) == 1 or vim.fn.isdirectory(path) == 1)
       local should_prune = should_prune_path or path_tbl.count < threshold
-      if should_prune then cwd_tbl[path] = nil end
+      -- Don't prune if visit has labels (can happen if label was added
+      -- manually without actual visit, thus `count = 0`)
+      if path_tbl.labels == nil and should_prune then cwd_tbl[path] = nil end
     end
   end
 

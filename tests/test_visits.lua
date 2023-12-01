@@ -1907,6 +1907,12 @@ T['gen_normalize']['default()']['prunes before and after decay'] = function()
   })
 end
 
+T['gen_normalize']['default()']['does not prune if visit has label'] = function()
+  local path, cwd = make_testpath('file'), child.fn.getcwd()
+  local index = { [cwd] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } }
+  validate_default_normalize({}, index, index)
+end
+
 T['gen_normalize']['default()']['respects `opts.decay_threshold`'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
   local cwd = child.fn.getcwd()
