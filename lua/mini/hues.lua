@@ -762,12 +762,12 @@ H.apply_colorscheme = function(config)
   hi('Italic',     { fg=nil,      bg=nil, italic=true })
   hi('Underlined', { fg=nil,      bg=nil, underline=true })
 
-  -- Git diff
-  hi('DiffAdded',   { link='DiffAdd' })
-  hi('DiffFile',    { fg=nil, bg=p.yellow_bg })
-  hi('DiffLine',    { fg=nil, bg=p.blue_bg })
-  hi('DiffNewFile', { link='DiffAdded' })
-  hi('DiffRemoved', { link='DiffFile' })
+  -- Patch diff
+  hi('diffAdded',   { link='DiffAdd' })
+  hi('diffFile',    { fg=nil, bg=p.yellow_bg })
+  hi('diffLine',    { fg=nil, bg=p.blue_bg })
+  hi('diffNewFile', { link='DiffFile' })
+  hi('diffRemoved', { link='DiffDelete' })
 
   -- Git commit
   hi('gitcommitBranch',        { fg=p.orange, bg=nil, bold=true })
