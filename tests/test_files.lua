@@ -793,7 +793,7 @@ T['open()']['tracks lost focus'] = function()
     open(test_dir_path)
     loose_focus()
     -- Tracking is done by checking every second
-    sleep(1000 + 10)
+    sleep(1000 + 20)
     validate_n_wins(1)
     eq(#child.api.nvim_list_bufs(), 1)
   end
@@ -802,6 +802,15 @@ T['open()']['tracks lost focus'] = function()
   validate(function() child.api.nvim_set_current_win(init_win_id) end)
 
   validate(function() child.cmd('quit') end)
+
+  validate(function()
+    go_in()
+    type_keys('ZZ')
+  end)
+
+  -- Should still be possible to open same explorer afterwards
+  open(test_dir_path)
+  validate_n_wins(3)
 end
 
 T['open()']['validates input'] = function()

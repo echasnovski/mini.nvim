@@ -1197,6 +1197,8 @@ end
 ---   history and for `reset()` operation.
 ---@field target_window number Id of window in which files will be opened.
 ---@field opts table Options used for this particular explorer.
+---@field is_corrupted boolean Whether this particular explorer can not be
+---   normalized and should be closed.
 ---@private
 H.explorer_new = function(path)
   return {
@@ -1230,6 +1232,12 @@ end
 
 H.explorer_refresh = function(explorer, opts)
   explorer = H.explorer_normalize(explorer)
+  if explorer.is_corrupted then
+    -- Make sure that same explorer can be opened later from history
+    explorer.is_corrupted = false
+    MiniFiles.close()
+    return
+  end
   if #explorer.branch == 0 then return end
   opts = opts or {}
 
@@ -1320,6 +1328,11 @@ H.explorer_normalize = function(explorer)
   for i = cur_max_depth + 1, #explorer.windows do
     H.window_close(explorer.windows[i])
     explorer.windows[i] = nil
+  end
+
+  -- Compute if explorer is corrupted and should not operate further
+  for _, win_id in pairs(explorer.windows) do
+    if not H.is_valid_win(win_id) then explorer.is_corrupted = true end
   end
 
   return explorer
