@@ -235,6 +235,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniPick'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   local validate_hl_group = function(name, ref) expect.match(child.cmd_capture('hi ' .. name), ref) end
 
   -- - Make sure to clear highlight groups defined for better screenshots

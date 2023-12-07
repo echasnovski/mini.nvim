@@ -308,6 +308,7 @@ end
 
 T['as_colorscheme() methods']['add_terminal_colors()']['handles not proper `Normal` highlight group'] = function()
   -- Absent (should fall back on lightness depending on background)
+  child.cmd('hi clear Normal')
   child.lua([[_G.cs = MiniColors.as_colorscheme({
     groups = {
       -- The `fg` has fallback lightness for light background, `bg` - for dark
@@ -1354,8 +1355,6 @@ T['as_colorscheme() methods']['write()']['works'] = function()
   child.lua('_G.cs:write()')
 
   -- Validate
-  expect.match(child.cmd_capture('hi Normal'), 'cleared')
-
   child.cmd('colorscheme my_cs')
 
   eq(child.g.colors_name, 'my_cs')

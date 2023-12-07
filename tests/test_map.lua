@@ -139,6 +139,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniMap'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniMapNormal', 'links to NormalFloat')

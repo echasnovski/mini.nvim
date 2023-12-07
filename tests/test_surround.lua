@@ -98,6 +98,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.lua_get('type(_G.MiniSurround)'), 'table')
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   expect.match(child.cmd_capture('hi MiniSurround'), 'links to IncSearch')
 end
 

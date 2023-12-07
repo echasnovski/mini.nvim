@@ -185,6 +185,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniClue'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   local validate_hl_group = function(name, ref) expect.match(child.cmd_capture('hi ' .. name), ref) end
 
   validate_hl_group('MiniClueBorder', 'links to FloatBorder')

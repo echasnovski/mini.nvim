@@ -50,6 +50,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniJump'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   expect.match(child.cmd_capture('hi MiniJump'), 'links to SpellRare')
 end
 

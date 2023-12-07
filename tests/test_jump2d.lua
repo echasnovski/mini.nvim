@@ -107,6 +107,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniJump2d'), 1)
 
   -- Highlight groups, depending on background
+  child.cmd('hi clear')
   child.o.background = 'dark'
   reload_module()
   expect.match(child.cmd_capture('hi MiniJump2dSpot'), 'gui=bold,nocombine guifg=[Ww]hite guibg=[Bb]lack')

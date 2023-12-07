@@ -47,6 +47,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniTrailspace'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   expect.match(child.cmd_capture('hi MiniTrailspace'), 'links to Error')
 end
 

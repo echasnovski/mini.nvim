@@ -81,6 +81,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniHipatterns'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'links to DiagnosticError')
   expect.match(child.cmd_capture('hi MiniHipatternsHack'), 'links to DiagnosticWarn')
   expect.match(child.cmd_capture('hi MiniHipatternsTodo'), 'links to DiagnosticInfo')
@@ -199,12 +201,12 @@ T['Autocommands']['resets on color scheme change'] = function()
 
   -- After `:hi clear` highlighting disappears as highlight group is cleared
   child.cmd('hi clear')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { child.o.lines } })
 
-  -- Calling `colorscheme` triggers `ColorScheme` event which should lead to
-  -- highlight reevaluation of all enabled buffers
-  child.cmd('colorscheme blue')
-  child.expect_screenshot()
+  -- `ColorScheme` event which should lead to highlight reevaluation of all
+  -- enabled buffers
+  child.cmd('doautocmd ColorScheme')
+  child.expect_screenshot({ ignore_lines = { child.o.lines } })
 end
 
 T['enable()'] = new_set()

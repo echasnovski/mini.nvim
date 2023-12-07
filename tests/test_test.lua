@@ -87,6 +87,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.lua_get('type(_G.MiniTest)'), 'table')
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   expect.match(child.cmd_capture('hi MiniTestFail'), 'gui=bold')
   expect.match(child.cmd_capture('hi MiniTestPass'), 'gui=bold')
   expect.match(child.cmd_capture('hi MiniTestEmphasis'), 'gui=bold')
@@ -1364,7 +1366,9 @@ T['gen_reporter']['stdout'] = new_set({
     mark_flaky()
 
     -- Testing "in dynamic" is left for manual approach
-    child.fn.termopen(env_var .. [[ nvim --headless --clean -n -u 'tests/dir-test/init_stdout-reporter_works.lua']])
+    local path = 'tests/dir-test/init_stdout-reporter_works.lua'
+    local command = string.format([[%s %s --headless --clean -n -u %s]], env_var, vim.v.progpath, vim.inspect(path))
+    child.fn.termopen(command)
     -- Wait until check is done and possible process is ended
     vim.loop.sleep(500)
     child.expect_screenshot()

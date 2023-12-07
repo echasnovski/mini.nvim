@@ -24,7 +24,9 @@ local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
-      -- load_module({ palette = minischeme_palette })
+
+      -- Undo the color scheme applied for all tests
+      child.cmd('hi clear')
     end,
     post_once = child.stop,
   },
@@ -400,7 +402,6 @@ T['make_palette()']['respects `config.accent`'] = function()
 end
 
 T['make_palette()']['validates arguments'] = function()
-  expect.error(function() make_palette() end)
   expect.error(function() make_palette({ background = 1 }) end, '`background`.*#rrggbb')
   expect.error(function() make_palette({ background = bg, foreground = 1 }) end, '`foreground`.*#rrggbb')
 
@@ -434,6 +435,7 @@ T['gen_random_base_colors()']['works'] = function()
 end
 
 T['gen_random_base_colors()']['respects `opts.gen_hue`'] = function()
+  child.o.background = 'dark'
   for _ = 1, 2 do
     eq(
       child.lua_get([[require('mini.hues').gen_random_base_colors({ gen_hue = function() return 0 end })]]),

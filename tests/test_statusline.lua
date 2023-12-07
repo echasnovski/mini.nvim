@@ -91,6 +91,8 @@ T['setup()']['creates side effects'] = function()
   eq(child.fn.exists('#MiniStatusline'), 1)
 
   -- Highlight groups
+  child.cmd('hi clear')
+  load_module()
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniStatuslineModeNormal', 'links to Cursor')

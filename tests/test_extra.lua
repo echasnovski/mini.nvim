@@ -2049,7 +2049,6 @@ T['pickers']['hl_groups()'] = new_set()
 local pick_hl_groups = forward_lua_notify('MiniExtra.pickers.hl_groups')
 
 T['pickers']['hl_groups()']['works'] = function()
-  child.cmd('colorscheme default')
   child.set_size(10, 80)
 
   child.lua_notify('_G.return_item = MiniExtra.pickers.hl_groups()')
@@ -2072,8 +2071,8 @@ T['pickers']['hl_groups()']['works'] = function()
 
   -- Should properly choose
   type_keys('<CR>')
-  eq(child.fn.getcmdline(), 'hi DiffAdd ctermbg=4 guibg=DarkBlue')
-  eq(child.fn.getcmdpos(), 36)
+  eq(child.fn.getcmdline(), 'hi DiffAdd guibg=#343700')
+  eq(child.fn.getcmdpos(), 25)
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), 'DiffAdd')

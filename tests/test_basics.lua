@@ -119,7 +119,8 @@ T['Options'] = new_set()
 T['Options']['work'] = function()
   -- Basic options (should be set by default)
   eq(child.g.mapleader, vim.NIL)
-  eq(child.o.termguicolors, false)
+  -- - `termguicolors` is enabled in Neovim=0.10 by default (if possible)
+  if child.fn.has('nvim-0.10') == 0 then eq(child.o.termguicolors, false) end
   eq(child.o.number, false)
   eq(child.o.signcolumn, 'auto')
   eq(child.o.fillchars, '')
@@ -549,7 +550,7 @@ T['Mappings']['Toggle options']['work'] = function()
   -- But there doesn't seem to be a way of testing it without screenshots.
   -- So later test only for 'spell'.
   local validate = function(keys, option, before, after)
-    eq(child.o[option], before)
+    child.o[option] = before
     type_keys(keys)
     eq(child.o[option], after)
     type_keys(keys)
