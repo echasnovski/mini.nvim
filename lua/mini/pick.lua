@@ -3323,7 +3323,9 @@ end
 
 H.win_get_bottom_border = function(win_id)
   local border = vim.api.nvim_win_get_config(win_id).border or {}
-  return border[6] or ' '
+  local res = border[6]
+  if type(res) == 'table' then res = res[1] end
+  return res or ' '
 end
 
 H.seq_along = function(arr)

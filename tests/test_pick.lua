@@ -4034,6 +4034,13 @@ T['Overall view']['correctly infers footer empty space'] = function()
   -- Check both `border = 'double'` and `border = <custom_array>`
   validate({ border = 'double' })
   validate({ border = { '!', '@', '#', '$', '%', '^', '&', '*' } })
+  --stylua: ignore
+  validate({
+    border = {
+      { '!', 'Normal' }, { '@', 'Normal' }, { '#', 'Normal' }, { '$', 'Normal' },
+      { '%', 'Normal' }, { '^', 'Normal' }, { '&', 'Normal' }, { '*', 'Normal' }
+    },
+  })
 end
 
 T['Overall view']['does not show footer if items are not set'] = function()
