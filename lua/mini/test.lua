@@ -876,8 +876,9 @@ MiniTest.gen_reporter.buffer = function(opts)
   local is_valid_buf_win = function() return vim.api.nvim_buf_is_valid(buf_id) and vim.api.nvim_win_is_valid(win_id) end
 
   -- Helpers
-  local set_cursor =
-    function(line) vim.api.nvim_win_set_cursor(win_id, { line or vim.api.nvim_buf_line_count(buf_id), 0 }) end
+  local set_cursor = function(line)
+    vim.api.nvim_win_set_cursor(win_id, { line or vim.api.nvim_buf_line_count(buf_id), 0 })
+  end
 
   -- Define "write from cursor line" function with throttled redraw
   local latest_draw_time = 0
@@ -1651,8 +1652,9 @@ end
 
 H.is_disabled = function() return vim.g.minitest_disable == true or vim.b.minitest_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniTest.config, vim.b.minitest_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniTest.config, vim.b.minitest_config or {}, config or {})
+end
 
 -- Work with collection -------------------------------------------------------
 H.busted_emulate = function(set)

@@ -284,8 +284,9 @@ end
 
 T['make_palette()']['correctly shifts hue of non-base colors'] = function()
   -- Chromatic background, gray foreground
-  local validate_bg =
-    function(input_bg, ref_red) eq(make_palette({ background = input_bg, foreground = '#dddddd' }).red, ref_red) end
+  local validate_bg = function(input_bg, ref_red)
+    eq(make_palette({ background = input_bg, foreground = '#dddddd' }).red, ref_red)
+  end
 
   validate_bg('#2e1c24', '#ffc6cb')
   validate_bg('#2f1c22', '#ffc7c4')
@@ -294,8 +295,9 @@ T['make_palette()']['correctly shifts hue of non-base colors'] = function()
   validate_bg('#2f1d1a', '#ffc6d2')
 
   -- Gray background, chromatic foreground
-  local validate_fg =
-    function(input_fg, ref_red) eq(make_palette({ background = '#dddddd', foreground = input_fg }).red, ref_red) end
+  local validate_fg = function(input_fg, ref_red)
+    eq(make_palette({ background = '#dddddd', foreground = input_fg }).red, ref_red)
+  end
 
   validate_fg('#2e1c24', '#400c16')
   validate_fg('#2f1c22', '#410d10')
@@ -304,8 +306,9 @@ T['make_palette()']['correctly shifts hue of non-base colors'] = function()
   validate_fg('#2f1d1a', '#400c1b')
 
   -- Chromatic background, chromatic foreground
-  local validate_both =
-    function(input_fg, ref_red) eq(make_palette({ background = '#2f1c22', foreground = input_fg }).red, ref_red) end
+  local validate_both = function(input_fg, ref_red)
+    eq(make_palette({ background = '#2f1c22', foreground = input_fg }).red, ref_red)
+  end
 
   validate_both('#d8bfc6', '#f7b2b0')
   validate_both('#d9bfc2', '#ecb2d5')

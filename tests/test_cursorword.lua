@@ -192,8 +192,7 @@ end
 
 T['Autohighlighting']['highlights immediately inside current word'] = function() validate_immediate('normal! l') end
 
-T['Autohighlighting']['highlights immediately same word in other place'] =
-  function() validate_immediate('normal! k') end
+T['Autohighlighting']['highlights immediately same word in other place'] = function() validate_immediate('normal! k') end
 
 T['Autohighlighting']['highlights only "keyword" symbols'] = function()
   local validate_highlighted = function(cursor_pos, hl_word)

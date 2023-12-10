@@ -41,7 +41,9 @@ local get_hipatterns_extmarks = function(buf_id, hi_names)
   end
 
   return vim.tbl_map(
-    function(ext) return { line = ext[2] + 1, from_col = ext[3] + 1, to_col = ext[4].end_col, hl_group = ext[4].hl_group } end,
+    function(ext)
+      return { line = ext[2] + 1, from_col = ext[3] + 1, to_col = ext[4].end_col, hl_group = ext[4].hl_group }
+    end,
     full_extmarks
   )
 end

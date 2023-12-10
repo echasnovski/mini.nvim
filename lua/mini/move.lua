@@ -432,8 +432,9 @@ end
 
 H.is_disabled = function() return vim.g.minimove_disable == true or vim.b.minimove_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniMove.config, vim.b.minimove_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniMove.config, vim.b.minimove_config or {}, config or {})
+end
 
 -- Utilities ------------------------------------------------------------------
 H.map = function(mode, lhs, rhs, opts)

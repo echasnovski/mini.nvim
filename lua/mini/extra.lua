@@ -1479,8 +1479,9 @@ MiniExtra.pickers.visit_labels = function(local_opts, opts)
 
   -- Define source
   local list_label_paths = function(label)
-    local new_filter =
-      function(path_data) return filter(path_data) and type(path_data.labels) == 'table' and path_data.labels[label] end
+    local new_filter = function(path_data)
+      return filter(path_data) and type(path_data.labels) == 'table' and path_data.labels[label]
+    end
     local all_paths = visits.list_paths(local_opts.cwd, { filter = new_filter, sort = local_opts.sort })
     return vim.tbl_map(function(path) return H.short_path(path, picker_cwd) end, all_paths)
   end
@@ -1674,8 +1675,9 @@ H.make_show_in_target_win = function(fun_name, show_fun)
   end
 end
 
-H.show_with_icons =
-  function(buf_id, items, query) require('mini.pick').default_show(buf_id, items, query, { show_icons = true }) end
+H.show_with_icons = function(buf_id, items, query)
+  require('mini.pick').default_show(buf_id, items, query, { show_icons = true })
+end
 
 H.choose_with_buflisted = function(item)
   local pick = require('mini.pick')

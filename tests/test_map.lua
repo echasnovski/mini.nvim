@@ -24,8 +24,7 @@ local map_close = function() child.lua('MiniMap.close()') end
 -- Helpers related to 'mini.map'
 local get_resolution_test_file = function(id) return 'tests/dir-map/resolution_' .. id end
 
-local get_map_win_id =
-  function() return child.lua_get('MiniMap.current.win_data[vim.api.nvim_get_current_tabpage()]') end
+local get_map_win_id = function() return child.lua_get('MiniMap.current.win_data[vim.api.nvim_get_current_tabpage()]') end
 
 local get_map_win_side = function()
   local win_config = child.api.nvim_win_get_config(get_map_win_id())
@@ -62,8 +61,9 @@ local mock_test_integration = function()
   ]])
 end
 
-local source_test_encode_symbols =
-  function() child.lua([[_G.test_encode_symbols = { '1', '2', '3', '4', resolution = { row = 1, col = 2 } }]]) end
+local source_test_encode_symbols = function()
+  child.lua([[_G.test_encode_symbols = { '1', '2', '3', '4', resolution = { row = 1, col = 2 } }]])
+end
 
 -- Various utilities
 local tbl_repeat = function(x, n)
@@ -276,11 +276,13 @@ T['encode_strings()']['respects `opts.symbols`'] = function()
   )
 end
 
-T['encode_strings()']['works with empty strings'] =
-  function() eq(encode_strings({ 'aaaa', '', 'aaaa', '' }), { '🬰🬰', '  ' }) end
+T['encode_strings()']['works with empty strings'] = function()
+  eq(encode_strings({ 'aaaa', '', 'aaaa', '' }), { '🬰🬰', '  ' })
+end
 
-T['encode_strings()']['correctly computes default dimensions'] =
-  function() eq(encode_strings({ 'a', 'aa', 'aaa', 'aaaa', 'aaaaa', '' }), { '🬺🬏 ', '🬎🬎🬃' }) end
+T['encode_strings()']['correctly computes default dimensions'] = function()
+  eq(encode_strings({ 'a', 'aa', 'aaa', 'aaaa', 'aaaaa', '' }), { '🬺🬏 ', '🬎🬎🬃' })
+end
 
 T['encode_strings()']['does not trim whitespace'] = function()
   eq(encode_strings({ ' ' }), { ' ' })
@@ -1158,8 +1160,9 @@ T['gen_integration']['gitsigns()']['updates when appropriate'] = function()
   child.expect_screenshot()
 end
 
-T['gen_integration']['gitsigns()']['works if no "gitsigns" is detected'] =
-  function() eq(child.lua_get('MiniMap.gen_integration.gitsigns()()'), {}) end
+T['gen_integration']['gitsigns()']['works if no "gitsigns" is detected'] = function()
+  eq(child.lua_get('MiniMap.gen_integration.gitsigns()()'), {})
+end
 
 -- Integration tests ==========================================================
 T['Window'] = new_set()

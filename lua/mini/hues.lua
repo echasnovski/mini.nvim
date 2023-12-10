@@ -1547,8 +1547,9 @@ H.degree2rad = function(x) return (x % 360) * H.tau / 360 end
 -- https://bottosson.github.io/posts/colorwrong/#what-can-we-do%3F
 H.correct_channel = function(x) return 0.04045 < x and math.pow((x + 0.055) / 1.055, 2.4) or (x / 12.92) end
 
-H.correct_channel_inv =
-  function(x) return (0.0031308 >= x) and (12.92 * x) or (1.055 * math.pow(x, 0.416666667) - 0.055) end
+H.correct_channel_inv = function(x)
+  return (0.0031308 >= x) and (12.92 * x) or (1.055 * math.pow(x, 0.416666667) - 0.055)
+end
 
 -- Functions for lightness correction
 -- https://bottosson.github.io/posts/colorpicker/#intermission---a-new-lightness-estimate-for-oklab

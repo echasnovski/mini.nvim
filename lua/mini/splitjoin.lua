@@ -981,8 +981,7 @@ H.get_neighborhood = function()
   end
 
   -- Convert 2d region to 1d span
-  local region_to_span =
-    function(region) return { from = pos_to_offset(region.from), to = pos_to_offset(region.to) } end
+  local region_to_span = function(region) return { from = pos_to_offset(region.from), to = pos_to_offset(region.to) } end
 
   -- Convert 1d span to 2d region
   local span_to_region = function(span) return { from = offset_to_pos(span.from), to = offset_to_pos(span.to) } end

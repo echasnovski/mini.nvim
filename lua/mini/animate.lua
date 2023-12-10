@@ -451,7 +451,9 @@ MiniAnimate.config = {
 
     -- Floating window config generator visualizing specific window
     --minidoc_replace_start winconfig = --<function: implements static window for 25 steps>,
-    winconfig = function(win_id) return H.winconfig_static(win_id, { predicate = H.default_winconfig_predicate, n_steps = 25 }) end,
+    winconfig = function(win_id)
+      return H.winconfig_static(win_id, { predicate = H.default_winconfig_predicate, n_steps = 25 })
+    end,
     --minidoc_replace_end
 
     -- 'winblend' (window transparency) generator for floating window
@@ -472,7 +474,9 @@ MiniAnimate.config = {
 
     -- Floating window config generator visualizing specific window
     --minidoc_replace_start winconfig = --<function: implements static window for 25 steps>,
-    winconfig = function(win_id) return H.winconfig_static(win_id, { predicate = H.default_winconfig_predicate, n_steps = 25 }) end,
+    winconfig = function(win_id)
+      return H.winconfig_static(win_id, { predicate = H.default_winconfig_predicate, n_steps = 25 })
+    end,
     --minidoc_replace_end
 
     -- 'winblend' (window transparency) generator for floating window
@@ -1394,8 +1398,7 @@ H.auto_openclose = function(action_type)
 end
 
 -- General animation ----------------------------------------------------------
-H.trigger_done_event =
-  function(animation_type) vim.cmd('doautocmd User ' .. H.animation_done_events[animation_type]) end
+H.trigger_done_event = function(animation_type) vim.cmd('doautocmd User ' .. H.animation_done_events[animation_type]) end
 
 -- Cursor ---------------------------------------------------------------------
 H.make_cursor_step = function(state_from, state_to, opts)

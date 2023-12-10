@@ -667,8 +667,9 @@ T['content_to_lines()'] = new_set({
   },
 })
 
-T['content_to_lines()']['works'] =
-  function() eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.get_content())'), get_lines()) end
+T['content_to_lines()']['works'] = function()
+  eq(child.lua_get('MiniStarter.content_to_lines(MiniStarter.get_content())'), get_lines())
+end
 
 T['content_to_items()'] = new_set()
 

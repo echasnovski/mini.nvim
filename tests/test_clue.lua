@@ -107,11 +107,13 @@ local validate_edit1d = function(line_before, col_before, keys, line_after, col_
   validate_edit({ line_before }, { 1, col_before }, keys, { line_after }, { 1, col_after })
 end
 
-local validate_move =
-  function(lines, cursor_before, keys, cursor_after) validate_edit(lines, cursor_before, keys, lines, cursor_after) end
+local validate_move = function(lines, cursor_before, keys, cursor_after)
+  validate_edit(lines, cursor_before, keys, lines, cursor_after)
+end
 
-local validate_move1d =
-  function(line, col_before, keys, col_after) validate_edit1d(line, col_before, keys, line, col_after) end
+local validate_move1d = function(line, col_before, keys, col_after)
+  validate_edit1d(line, col_before, keys, line, col_after)
+end
 
 local validate_selection = function(lines, cursor, keys, selection_from, selection_to, visual_mode)
   visual_mode = visual_mode or 'v'
@@ -674,8 +676,7 @@ T['set_mapping_desc()'] = new_set()
 
 local set_mapping_desc = forward_lua('MiniClue.set_mapping_desc')
 
-local validate_mapping_desc =
-  function(mode, lhs, ref_desc) eq(child.fn.maparg(lhs, mode, false, true).desc, ref_desc) end
+local validate_mapping_desc = function(mode, lhs, ref_desc) eq(child.fn.maparg(lhs, mode, false, true).desc, ref_desc) end
 
 T['set_mapping_desc()']['adds new description'] = function()
   if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end

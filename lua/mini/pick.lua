@@ -1842,8 +1842,9 @@ end
 
 H.apply_config = function(config) MiniPick.config = config end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniPick.config, vim.b.minipick_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniPick.config, vim.b.minipick_config or {}, config or {})
+end
 
 H.create_autocommands = function(config)
   local augroup = vim.api.nvim_create_augroup('MiniPick', {})
@@ -2890,8 +2891,7 @@ H.get_icon = function(x, icons)
   return { text = icon, hl = hl or 'MiniPickIconFile' }
 end
 
-H.show_with_icons =
-  function(buf_id, items, query) MiniPick.default_show(buf_id, items, query, { show_icons = true }) end
+H.show_with_icons = function(buf_id, items, query) MiniPick.default_show(buf_id, items, query, { show_icons = true }) end
 
 -- Items helpers for default functions ----------------------------------------
 H.parse_item = function(item)

@@ -393,40 +393,45 @@ end
 ---@param opts __indentscope_animation_opts
 ---
 ---@return __indentscope_animation_return
-MiniIndentscope.gen_animation.linear =
-  function(opts) return H.animation_arithmetic_powers(0, H.normalize_animation_opts(opts)) end
+MiniIndentscope.gen_animation.linear = function(opts)
+  return H.animation_arithmetic_powers(0, H.normalize_animation_opts(opts))
+end
 
 --- Generate quadratic progression
 ---
 ---@param opts __indentscope_animation_opts
 ---
 ---@return __indentscope_animation_return
-MiniIndentscope.gen_animation.quadratic =
-  function(opts) return H.animation_arithmetic_powers(1, H.normalize_animation_opts(opts)) end
+MiniIndentscope.gen_animation.quadratic = function(opts)
+  return H.animation_arithmetic_powers(1, H.normalize_animation_opts(opts))
+end
 
 --- Generate cubic progression
 ---
 ---@param opts __indentscope_animation_opts
 ---
 ---@return __indentscope_animation_return
-MiniIndentscope.gen_animation.cubic =
-  function(opts) return H.animation_arithmetic_powers(2, H.normalize_animation_opts(opts)) end
+MiniIndentscope.gen_animation.cubic = function(opts)
+  return H.animation_arithmetic_powers(2, H.normalize_animation_opts(opts))
+end
 
 --- Generate quartic progression
 ---
 ---@param opts __indentscope_animation_opts
 ---
 ---@return __indentscope_animation_return
-MiniIndentscope.gen_animation.quartic =
-  function(opts) return H.animation_arithmetic_powers(3, H.normalize_animation_opts(opts)) end
+MiniIndentscope.gen_animation.quartic = function(opts)
+  return H.animation_arithmetic_powers(3, H.normalize_animation_opts(opts))
+end
 
 --- Generate exponential progression
 ---
 ---@param opts __indentscope_animation_opts
 ---
 ---@return __indentscope_animation_return
-MiniIndentscope.gen_animation.exponential =
-  function(opts) return H.animation_geometrical_powers(H.normalize_animation_opts(opts)) end
+MiniIndentscope.gen_animation.exponential = function(opts)
+  return H.animation_geometrical_powers(H.normalize_animation_opts(opts))
+end
 
 --- Move cursor within scope
 ---
@@ -553,7 +558,9 @@ H.blank_indent_funs = {
 H.border_from_body = {
   ['none'] = function(body, opts) return {} end,
   ['top'] = function(body, opts) return { top = body.top - 1, indent = H.get_line_indent(body.top - 1, opts) } end,
-  ['bottom'] = function(body, opts) return { bottom = body.bottom + 1, indent = H.get_line_indent(body.bottom + 1, opts) } end,
+  ['bottom'] = function(body, opts)
+    return { bottom = body.bottom + 1, indent = H.get_line_indent(body.bottom + 1, opts) }
+  end,
   ['both'] = function(body, opts)
     return {
       top = body.top - 1,

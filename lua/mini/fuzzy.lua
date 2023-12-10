@@ -236,8 +236,9 @@ H.apply_config = function(config) MiniFuzzy.config = config end
 
 H.is_disabled = function() return vim.g.minifuzzy_disable == true or vim.b.minifuzzy_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniFuzzy.config, vim.b.minifuzzy_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniFuzzy.config, vim.b.minifuzzy_config or {}, config or {})
+end
 
 -- Fuzzy matching -------------------------------------------------------------
 ---@param letters table Array of letters from input word

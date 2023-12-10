@@ -1425,8 +1425,9 @@ H.state_apply_postkeys = vim.schedule_wrap(function(postkeys)
   end, 50)
 end)
 
-H.state_is_at_target =
-  function() return vim.tbl_count(H.state.clues) == 1 and H.state.clues[H.query_to_keys(H.state.query)] ~= nil end
+H.state_is_at_target = function()
+  return vim.tbl_count(H.state.clues) == 1 and H.state.clues[H.query_to_keys(H.state.query)] ~= nil
+end
 
 H.state_get_query_clue = function()
   local keys = H.query_to_keys(H.state.query)

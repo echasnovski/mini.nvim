@@ -1157,8 +1157,9 @@ end
 
 H.is_disabled = function() return vim.g.miniai_disable == true or vim.b.miniai_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniAi.config, vim.b.miniai_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniAi.config, vim.b.miniai_config or {}, config or {})
+end
 
 H.is_search_method = function(x, x_name)
   x = x or H.get_config().search_method

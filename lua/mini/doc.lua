@@ -769,8 +769,9 @@ end
 
 H.apply_config = function(config) MiniDoc.config = config end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniDoc.config, vim.b.minidoc_config or {}, config or {})
+end
 
 -- Work with project specific script ==========================================
 H.execute_project_script = function(input, output, config)

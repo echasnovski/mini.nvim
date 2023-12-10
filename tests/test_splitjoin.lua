@@ -306,8 +306,9 @@ T['split()']['works inside comments'] = function()
   validate_edit({ '-\t(aaa)' }, { 1, 2 }, { '-\t(', '\taaa', ')' }, { 1, 2 }, split)
 end
 
-T['split()']['works with trailing separator'] =
-  function() validate_edit({ '(aa, b,)' }, { 1, 0 }, { '(', '\taa,', '\tb,', ')' }, { 1, 0 }, split) end
+T['split()']['works with trailing separator'] = function()
+  validate_edit({ '(aa, b,)' }, { 1, 0 }, { '(', '\taa,', '\tb,', ')' }, { 1, 0 }, split)
+end
 
 T['split()']['correctly increases indent of commented line in non-commented block'] = function()
   child.bo.commentstring = '# %s'
@@ -485,8 +486,9 @@ T['join()']['works'] = function()
   validate_edit({ ' \t(', 'aaa)' }, { 1, 2 }, { ' \t(aaa)' }, { 1, 2 }, join)
 end
 
-T['join()']['does nothing if arguments are on single line'] =
-  function() validate_edit({ '(aa, b)' }, { 1, 0 }, { '(aa, b)' }, { 1, 0 }, join) end
+T['join()']['does nothing if arguments are on single line'] = function()
+  validate_edit({ '(aa, b)' }, { 1, 0 }, { '(aa, b)' }, { 1, 0 }, join)
+end
 
 T['join()']['works inside comments'] = function()
   -- After 'commentstring'

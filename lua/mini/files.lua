@@ -1149,8 +1149,9 @@ H.create_default_hl = function()
   hi('MiniFilesTitleFocused',   { link = 'FloatTitle' })
 end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniFiles.config, vim.b.minifiles_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniFiles.config, vim.b.minifiles_config or {}, config or {})
+end
 
 H.normalize_opts = function(explorer_opts, opts)
   opts = vim.tbl_deep_extend('force', H.get_config(), explorer_opts or {}, opts or {})

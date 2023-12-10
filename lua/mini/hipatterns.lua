@@ -1001,8 +1001,9 @@ end
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.hipatterns) %s', msg), 0) end
 
-H.get_line =
-  function(buf_id, line_num) return vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1] or '' end
+H.get_line = function(buf_id, line_num)
+  return vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1] or ''
+end
 
 H.set_extmark = function(...) pcall(vim.api.nvim_buf_set_extmark, ...) end
 

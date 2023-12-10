@@ -96,8 +96,7 @@ local validate_selection = function(selection_from, selection_to, visual_mode)
   eq(to, selection_to)
 end
 
-local validate_picker_name =
-  function(ref_name) eq(child.lua_get('MiniPick.get_picker_opts().source.name'), ref_name) end
+local validate_picker_name = function(ref_name) eq(child.lua_get('MiniPick.get_picker_opts().source.name'), ref_name) end
 
 local validate_picker_cwd = function(ref_cwd) eq(child.lua_get('MiniPick.get_picker_opts().source.cwd'), ref_cwd) end
 
@@ -250,8 +249,9 @@ T['gen_ai_spec']['buffer()']['works as `a` textobject'] = function()
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'caB', 'xx', '<Esc>' }, { 'xx' }, { 1, 1 })
   validate_edit({ 'aa', 'bb' }, { 2, 0 }, { 'caB', 'xx', '<Esc>' }, { 'xx' }, { 1, 1 })
 
-  local validate_delete =
-    function(lines_before, cursor_before) validate_edit(lines_before, cursor_before, { 'daB' }, { '' }, { 1, 0 }) end
+  local validate_delete = function(lines_before, cursor_before)
+    validate_edit(lines_before, cursor_before, { 'daB' }, { '' }, { 1, 0 })
+  end
 
   validate_delete({ '', ' ', '\t', 'aa', '\t', ' ', '' }, { 1, 0 })
   validate_delete({ '', ' ', '\t', 'aa', '\t', ' ', '' }, { 4, 0 })
@@ -1817,7 +1817,9 @@ T['pickers']['hipatterns()']['works'] = function()
   local ns_id = child.api.nvim_get_namespaces().MiniExtraPickers
   local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
   local extmark_data = vim.tbl_map(
-    function(x) return { row = x[2], row_end = x[4].end_row, col = x[3], col_end = x[4].end_col, hl_group = x[4].hl_group } end,
+    function(x)
+      return { row = x[2], row_end = x[4].end_row, col = x[3], col_end = x[4].end_col, hl_group = x[4].hl_group }
+    end,
     extmarks
   )
   --stylua: ignore

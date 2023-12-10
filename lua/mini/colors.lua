@@ -922,8 +922,7 @@ MiniColors.animate = function(cs_array, opts)
     if #cs_array < cs_id then return end
 
     -- Wait before starting another animation
-    local callback =
-      function() H.animate_single_transition(cs_oklab[cs_id - 1], cs_oklab[cs_id], after_action, opts) end
+    local callback = function() H.animate_single_transition(cs_oklab[cs_id - 1], cs_oklab[cs_id], after_action, opts) end
 
     vim.defer_fn(callback, opts.show_duration)
   end
@@ -1513,8 +1512,7 @@ H.cs_write = function(self, opts)
   return self
 end
 
-H.is_colorscheme =
-  function(x) return type(x) == 'table' and type(x.groups) == 'table' and type(x.terminal) == 'table' end
+H.is_colorscheme = function(x) return type(x) == 'table' and type(x.groups) == 'table' and type(x.terminal) == 'table' end
 
 H.normalize_f = function(f)
   if not vim.is_callable(f) then H.error('Argument `f` should be callable.') end
@@ -2187,8 +2185,9 @@ H.degree2rad = function(x) return (x % 360) * H.tau / 360 end
 -- https://bottosson.github.io/posts/colorwrong/#what-can-we-do%3F
 H.correct_channel = function(x) return 0.04045 < x and math.pow((x + 0.055) / 1.055, 2.4) or (x / 12.92) end
 
-H.correct_channel_inv =
-  function(x) return (0.0031308 >= x) and (12.92 * x) or (1.055 * math.pow(x, 0.416666667) - 0.055) end
+H.correct_channel_inv = function(x)
+  return (0.0031308 >= x) and (12.92 * x) or (1.055 * math.pow(x, 0.416666667) - 0.055)
+end
 
 -- Functions for lightness correction
 -- https://bottosson.github.io/posts/colorpicker/#intermission---a-new-lightness-estimate-for-oklab

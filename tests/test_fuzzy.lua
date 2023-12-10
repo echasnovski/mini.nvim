@@ -90,8 +90,9 @@ end
 
 T['match()']['respects order of letters'] = function() validate_match('abc', 'bcacbac', { 3, 5, 7 }) end
 
-T['match()']['handles special characters'] =
-  function() validate_match('(.+*%-)', 'a(a.a+a*a%a-a)', { 2, 4, 6, 8, 10, 12, 14 }) end
+T['match()']['handles special characters'] = function()
+  validate_match('(.+*%-)', 'a(a.a+a*a%a-a)', { 2, 4, 6, 8, 10, 12, 14 })
+end
 
 T['match()']['finds best match in presence of many'] = function()
   validate_match('ab', 'a__b_a__b_ab', { 11, 12 })
@@ -227,7 +228,6 @@ end
 
 T['get_telescope_sorter()'] = new_set()
 
-T['get_telescope_sorter()']['is present'] =
-  function() eq(child.lua_get('MiniFuzzy.get_telescope_sorter ~= nil'), true) end
+T['get_telescope_sorter()']['is present'] = function() eq(child.lua_get('MiniFuzzy.get_telescope_sorter ~= nil'), true) end
 
 return T

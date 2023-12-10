@@ -133,8 +133,9 @@ T['setup()']['creates `config` field'] = function()
 
   -- Check default values
   local expect_config = function(field, value) eq(child.lua_get('MiniAnimate.config.' .. field), value) end
-  local expect_config_function =
-    function(field) eq(child.lua_get('type(MiniAnimate.config.' .. field .. ')'), 'function') end
+  local expect_config_function = function(field)
+    eq(child.lua_get('type(MiniAnimate.config.' .. field .. ')'), 'function')
+  end
 
   expect_config('cursor.enable', true)
   expect_config_function('cursor.timing')
@@ -701,8 +702,9 @@ end
 
 T['gen_subscroll'] = new_set()
 
-local validate_subscroll =
-  function(total_scroll, output) eq(child.lua_get('_G.test_subscroll(...)', { total_scroll }), output) end
+local validate_subscroll = function(total_scroll, output)
+  eq(child.lua_get('_G.test_subscroll(...)', { total_scroll }), output)
+end
 
 T['gen_subscroll']['equal()'] = new_set()
 

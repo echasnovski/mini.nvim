@@ -1021,8 +1021,9 @@ end
 
 H.message = function(msg) H.echo(msg, true) end
 
-H.is_operator_pending =
-  function() return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1)) end
+H.is_operator_pending = function()
+  return vim.tbl_contains({ 'no', 'noV', H.keys.block_operator_pending }, vim.fn.mode(1))
+end
 
 H.getcharstr = function(msg)
   local needs_help_msg = true

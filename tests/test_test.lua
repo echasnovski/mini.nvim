@@ -774,27 +774,30 @@ local suffix = useful_punctuation .. linux_forbidden .. windows_forbidden .. whi
 
 -- Don't permanently create reference file because its name is very long. This
 -- might hurt Windows users which are not interested in testing this plugin.
-T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = new_set({ parametrize = { { suffix } } }, {
-  test = function()
-    local expected_filename = table.concat({
-      'tests/screenshots/',
-      'tests-test_test.lua---',
-      'expect---',
-      'reference_screenshot()---',
-      'correctly-sanitizes-path-',
-      [[_-+{}()[]''----'-------------]],
-      'test-+-args-',
-      [[{-'_-+{}()[]'-'-----'-------t--0-1-31'-}]],
-    }, '')
-    finally(function()
-      MiniTest.current.case.exec.notes = {}
-      vim.fn.delete(expected_filename)
-    end)
-    eq(vim.fn.filereadable(expected_filename), 0)
-    validate_path_sanitize()
-    eq(vim.fn.filereadable(expected_filename), 1)
-  end,
-})
+T['expect']['reference_screenshot()']['correctly sanitizes path ' .. suffix] = new_set(
+  { parametrize = { { suffix } } },
+  {
+    test = function()
+      local expected_filename = table.concat({
+        'tests/screenshots/',
+        'tests-test_test.lua---',
+        'expect---',
+        'reference_screenshot()---',
+        'correctly-sanitizes-path-',
+        [[_-+{}()[]''----'-------------]],
+        'test-+-args-',
+        [[{-'_-+{}()[]'-'-----'-------t--0-1-31'-}]],
+      }, '')
+      finally(function()
+        MiniTest.current.case.exec.notes = {}
+        vim.fn.delete(expected_filename)
+      end)
+      eq(vim.fn.filereadable(expected_filename), 0)
+      validate_path_sanitize()
+      eq(vim.fn.filereadable(expected_filename), 1)
+    end,
+  }
+)
 
 -- Paths should not end with whitespace or dot
 T['expect']['reference_screenshot()']['correctly sanitizes path for Windows '] = validate_path_sanitize
@@ -1039,8 +1042,9 @@ T['child']['scoped options']['method'] = function(tbl_name, field_name, _)
   validate_child_method(method, { name = tbl_name })
 end
 
-T['child']['scoped options']['field'] =
-  function(tbl_name, field_name, value) validate_child_field(tbl_name, field_name, value) end
+T['child']['scoped options']['field'] = function(tbl_name, field_name, value)
+  validate_child_field(tbl_name, field_name, value)
+end
 
 T['child']['type_keys()'] = new_set()
 
@@ -1061,8 +1065,9 @@ T['child']['type_keys()']['validates input'] = function()
   expect.error(child.type_keys, pattern, 'a', { 'a', 1 })
 end
 
-T['child']['type_keys()']['throws error explicitly'] =
-  function() expect.error(child.type_keys, 'E492: Not an editor command: aaa', ':aaa<CR>') end
+T['child']['type_keys()']['throws error explicitly'] = function()
+  expect.error(child.type_keys, 'E492: Not an editor command: aaa', ':aaa<CR>')
+end
 
 T['child']['type_keys()']['respects `wait` argument'] = function()
   local start_time = vim.loop.hrtime()
@@ -1171,13 +1176,15 @@ T['child']['ensure_normal_mode()']['works'] = new_set({ parametrize = { { 'i' },
   end,
 })
 
-T['child']['ensure_normal_mode()']['ensures running'] =
-  function() validate_child_method(child.ensure_normal_mode, { prevent_hanging = false }) end
+T['child']['ensure_normal_mode()']['ensures running'] = function()
+  validate_child_method(child.ensure_normal_mode, { prevent_hanging = false })
+end
 
 T['child']['get_screenshot()'] = new_set()
 
-T['child']['get_screenshot()']['ensures running'] =
-  function() validate_child_method(child.get_screenshot, { name = 'get_screenshot' }) end
+T['child']['get_screenshot()']['ensures running'] = function()
+  validate_child_method(child.get_screenshot, { name = 'get_screenshot' })
+end
 
 T['child']['get_screenshot()']['works'] = function()
   set_lines({ 'aaa' })

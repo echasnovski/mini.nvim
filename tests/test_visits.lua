@@ -725,8 +725,9 @@ T['list_paths()']['works'] = function()
   }
   set_index_from_ref(ref_index)
 
-  local validate_dir_1 =
-    function(cwd) eq(list_paths(cwd), { make_testpath('dir_1', 'file_1-1'), make_testpath('dir_1', 'file_1-2') }) end
+  local validate_dir_1 = function(cwd)
+    eq(list_paths(cwd), { make_testpath('dir_1', 'file_1-1'), make_testpath('dir_1', 'file_1-2') })
+  end
 
   -- Should work with relative path `cwd`
   local rel_cwd = join_path(test_dir, 'dir_1')

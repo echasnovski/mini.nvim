@@ -1324,8 +1324,9 @@ end
 
 H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minialign_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {})
+end
 
 -- Mappings -------------------------------------------------------------------
 H.make_action_normal = function(with_preview)

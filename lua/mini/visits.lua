@@ -1549,8 +1549,7 @@ H.edit_path = function(path)
   end
 end
 
-H.full_path =
-  function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
+H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
 
 H.short_path = function(path, cwd)
   cwd = cwd or vim.fn.getcwd()

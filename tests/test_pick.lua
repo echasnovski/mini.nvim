@@ -81,11 +81,13 @@ local start = function(...) child.lua_notify('MiniPick.start(...)', { ... }) end
 local start_with_items = function(items, name) start({ source = { items = items, name = name } }) end
 
 -- Common test helpers
-local validate_buf_option =
-  function(buf_id, option_name, option_value) eq(child.api.nvim_buf_get_option(buf_id, option_name), option_value) end
+local validate_buf_option = function(buf_id, option_name, option_value)
+  eq(child.api.nvim_buf_get_option(buf_id, option_name), option_value)
+end
 
-local validate_win_option =
-  function(win_id, option_name, option_value) eq(child.api.nvim_win_get_option(win_id, option_name), option_value) end
+local validate_win_option = function(win_id, option_name, option_value)
+  eq(child.api.nvim_win_get_option(win_id, option_name), option_value)
+end
 
 local validate_buf_name = function(buf_id, name)
   buf_id = buf_id or child.api.nvim_get_current_buf()
@@ -114,8 +116,9 @@ local validate_picker_option = function(string_index, ref)
   eq(value, ref)
 end
 
-local validate_picker_view =
-  function(view_name) eq(child.api.nvim_get_current_buf(), get_picker_state().buffers[view_name]) end
+local validate_picker_view = function(view_name)
+  eq(child.api.nvim_get_current_buf(), get_picker_state().buffers[view_name])
+end
 
 local validate_current_ind = function(ref_ind) eq(get_picker_matches().current_ind, ref_ind) end
 
@@ -957,8 +960,9 @@ T['default_match()'] = new_set()
 
 local default_match = forward_lua('MiniPick.default_match')
 
-local validate_match =
-  function(stritems, query, output_ref) eq(default_match(stritems, seq_along(stritems), query), output_ref) end
+local validate_match = function(stritems, query, output_ref)
+  eq(default_match(stritems, seq_along(stritems), query), output_ref)
+end
 
 T['default_match()']['works with active picker'] = function()
   start_with_items(test_items)
@@ -1520,8 +1524,9 @@ T['default_preview()']['loads context in file path'] = function()
   child.expect_screenshot()
 end
 
-T['default_preview()']['works for directory path'] =
-  function() validate_preview({ test_dir, { text = real_files_dir, path = real_files_dir } }) end
+T['default_preview()']['works for directory path'] = function()
+  validate_preview({ test_dir, { text = real_files_dir, path = real_files_dir } })
+end
 
 T['default_preview()']['works for buffer'] = function()
   local buf_id_1 = child.api.nvim_create_buf(false, false)
@@ -4167,8 +4172,9 @@ end
 T['Main view'] = new_set()
 
 T['Main view']['uses dedicated highlight groups'] = function()
-  local validate_extmark =
-    function(extmark_data, line, hl_group) eq({ extmark_data[2], extmark_data[4].hl_group }, { line - 1, hl_group }) end
+  local validate_extmark = function(extmark_data, line, hl_group)
+    eq({ extmark_data[2], extmark_data[4].hl_group }, { line - 1, hl_group })
+  end
 
   child.lua([[MiniPick.config.source.show = function(buf_id, items, query)
     return MiniPick.default_show(buf_id, items, query, { show_icons = true })
@@ -4354,8 +4360,9 @@ T['Info view']['respects custom mappings'] = function()
 end
 
 T['Info view']['uses dedicated highlight groups'] = function()
-  local validate_extmark =
-    function(extmark_data, line, hl_group) eq({ extmark_data[2], extmark_data[4].hl_group }, { line - 1, hl_group }) end
+  local validate_extmark = function(extmark_data, line, hl_group)
+    eq({ extmark_data[2], extmark_data[4].hl_group }, { line - 1, hl_group })
+  end
 
   child.lua([[MiniPick.config.mappings.custom_action = { char = '<C-d>', func = function() print('Hello') end }]])
   start_with_items({ 'a', 'b', 'bb' }, 'My name')

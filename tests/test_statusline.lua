@@ -174,8 +174,7 @@ local example_groups = {
   { hl = 'CC', strings = { 'c1' } },
 }
 
-T['combine_groups()']['works'] =
-  function() eq(combine_groups(example_groups), '%#AA# a1 a2 %#BB# b1 b2 %=%#CC# c1 ') end
+T['combine_groups()']['works'] = function() eq(combine_groups(example_groups), '%#AA# a1 a2 %#BB# b1 b2 %=%#CC# c1 ') end
 
 T['combine_groups()']['handles non-table elements'] = function()
   -- Strings should be used as is, other non-table elements - filtered out
@@ -184,8 +183,9 @@ T['combine_groups()']['handles non-table elements'] = function()
   eq(combine_groups({ 'xxx', 'yyy' }), 'xxxyyy')
 end
 
-T['combine_groups()']['uses only non-empty strings from `strings` field'] =
-  function() eq(combine_groups({ { hl = 'AA', strings = { 'a', 1, {}, true, '', 'b' } } }), '%#AA# a b ') end
+T['combine_groups()']['uses only non-empty strings from `strings` field'] = function()
+  eq(combine_groups({ { hl = 'AA', strings = { 'a', 1, {}, true, '', 'b' } } }), '%#AA# a b ')
+end
 
 T['combine_groups()']['allows empty `hl` to use previous highlight group'] = function()
   eq(combine_groups({ { strings = { 'a' } }, { hl = 'BB', strings = { 'b' } } }), ' a %#BB# b ')
@@ -434,8 +434,9 @@ end
 
 T['section_location()'] = new_set()
 
-T['section_location()']['works'] =
-  function() eq(child.lua_get('MiniStatusline.section_location({})'), '%l|%L│%2v|%-2{virtcol("$") - 1}') end
+T['section_location()']['works'] = function()
+  eq(child.lua_get('MiniStatusline.section_location({})'), '%l|%L│%2v|%-2{virtcol("$") - 1}')
+end
 
 T['section_location()']['respects `args.trunc_width`'] = function()
   set_width(100)
@@ -496,8 +497,9 @@ T['section_searchcount()'] = new_set({
   },
 })
 
-local section_searchcount =
-  function(args) return child.lua_get('MiniStatusline.section_searchcount(...)', { args or {} }) end
+local section_searchcount = function(args)
+  return child.lua_get('MiniStatusline.section_searchcount(...)', { args or {} })
+end
 
 T['section_searchcount()']['works'] = function()
   set_lines({ '', 'a a a ' })

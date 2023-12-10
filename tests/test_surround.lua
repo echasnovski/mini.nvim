@@ -2103,8 +2103,9 @@ T['Builtin']['Tag']['does not work in some cases'] = function()
   has_message_about_not_found('t')
 end
 
-T['Builtin']['Tag']['detects tag with the same name'] =
-  function() validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_') end
+T['Builtin']['Tag']['detects tag with the same name'] = function()
+  validate_edit({ '<x><y>a</x></y>' }, { 1, 1 }, { '_<y>a_</y>' }, { 1, 1 }, type_keys, 'sr', 't', '_')
+end
 
 T['Builtin']['Tag']['allows extra symbols in opening tag on input'] = function()
   validate_edit({ '<x bbb cc_dd!>aaa</x>' }, { 1, 15 }, { '_aaa_' }, { 1, 1 }, type_keys, 'sr', 't', '_')

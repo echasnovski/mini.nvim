@@ -205,8 +205,9 @@ T['mini_palette()']['validates arguments'] = function()
   validate({ '#000000', '#FFFFFF', -1 }, 'accent_chroma.*positive')
 end
 
-T['mini_palette()']['works'] =
-  function() eq(child.lua_get([[MiniBase16.mini_palette('#112641', '#e2e98f', 75)]]), minischeme_palette) end
+T['mini_palette()']['works'] = function()
+  eq(child.lua_get([[MiniBase16.mini_palette('#112641', '#e2e98f', 75)]]), minischeme_palette)
+end
 
 T['rgb_palette_to_cterm_palette()'] = new_set()
 

@@ -401,8 +401,9 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
 end
 
 --- Default `MiniCompletion.config.lsp_completion.process_items`
-MiniCompletion.default_process_items =
-  function(items, base) return H.default_config.lsp_completion.process_items(items, base) end
+MiniCompletion.default_process_items = function(items, base)
+  return H.default_config.lsp_completion.process_items(items, base)
+end
 
 -- Helper data ================================================================
 -- Module default config
@@ -567,8 +568,9 @@ H.create_autocommands = function(config)
   au('FileType', 'TelescopePrompt', function() vim.b.minicompletion_disable = true end, 'Disable locally')
 end
 
-H.create_default_hl =
-  function() vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true }) end
+H.create_default_hl = function()
+  vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true })
+end
 
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
 

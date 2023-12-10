@@ -1822,8 +1822,9 @@ T['location()']['adds to jumplist'] = function()
   set_location(2)
   local init_buf_id = child.api.nvim_get_current_buf()
   local init_cursor = get_cursor()
-  local is_at_init_position =
-    function() return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor) end
+  local is_at_init_position = function()
+    return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor)
+  end
 
   child.lua([[MiniBracketed.location('forward')]])
   eq(get_location(), 3)
@@ -2156,8 +2157,9 @@ T['quickfix()']['adds to jumplist'] = function()
   set_quickfix(2)
   local init_buf_id = child.api.nvim_get_current_buf()
   local init_cursor = get_cursor()
-  local is_at_init_position =
-    function() return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor) end
+  local is_at_init_position = function()
+    return child.api.nvim_get_current_buf() == init_buf_id and vim.deep_equal(get_cursor(), init_cursor)
+  end
 
   child.lua([[MiniBracketed.quickfix('forward')]])
   eq(get_quickfix(), 3)
@@ -2811,8 +2813,9 @@ end
 -- Most tests are done in `undo()`
 T['register_undo_state()'] = new_set()
 
-T['register_undo_state()']['is present'] =
-  function() eq(child.lua_get('type(MiniBracketed.register_undo_state)'), 'function') end
+T['register_undo_state()']['is present'] = function()
+  eq(child.lua_get('type(MiniBracketed.register_undo_state)'), 'function')
+end
 
 T['window()'] = new_set()
 
@@ -3574,8 +3577,9 @@ end
 -- Main tests are in `yank()`
 T['register_put_region()'] = new_set()
 
-T['register_put_region()']['is present'] =
-  function() eq(child.lua_get('type(MiniBracketed.register_put_region)'), 'function') end
+T['register_put_region()']['is present'] = function()
+  eq(child.lua_get('type(MiniBracketed.register_put_region)'), 'function')
+end
 
 T['register_put_region()']['uses `[` and `]` marks'] = function()
   set_lines({ 'xaa', 'bbb', 'ccc' })
@@ -3629,8 +3633,9 @@ local make_iterator = function(init_state)
   child.lua('_G.iterator.state = ' .. tostring(init_state))
 end
 
-local advance =
-  function(direction, opts) return child.lua_get('MiniBracketed.advance(iterator, ...)', { direction, opts }) end
+local advance = function(direction, opts)
+  return child.lua_get('MiniBracketed.advance(iterator, ...)', { direction, opts })
+end
 
 T['advance()']['works'] = function()
   make_iterator(3)

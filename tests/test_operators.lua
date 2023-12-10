@@ -190,8 +190,9 @@ T['default_sort_func()'] = new_set()
 local default_sort_func = forward_lua('MiniOperators.default_sort_func')
 
 T['default_sort_func()']['works for charwise'] = function()
-  local validate =
-    function(lines_input, ref_output) eq(default_sort_func({ lines = lines_input, submode = 'v' }), ref_output) end
+  local validate = function(lines_input, ref_output)
+    eq(default_sort_func({ lines = lines_input, submode = 'v' }), ref_output)
+  end
 
   -- Basic tests
   validate({ 'b, a' }, { 'a, b' })
@@ -223,8 +224,9 @@ T['default_sort_func()']['works for charwise'] = function()
 end
 
 T['default_sort_func()']['works for linewise'] = function()
-  local validate =
-    function(lines_input, ref_output) eq(default_sort_func({ lines = lines_input, submode = 'V' }), ref_output) end
+  local validate = function(lines_input, ref_output)
+    eq(default_sort_func({ lines = lines_input, submode = 'V' }), ref_output)
+  end
 
   validate({ 'c', 'a', 'b' }, { 'a', 'b', 'c' })
   validate({ 'xc', 'xa', 'xb' }, { 'xa', 'xb', 'xc' })
@@ -237,8 +239,9 @@ T['default_sort_func()']['works for linewise'] = function()
 end
 
 T['default_sort_func()']['works for blockwise'] = function()
-  local validate =
-    function(lines_input, ref_output) eq(default_sort_func({ lines = lines_input, submode = '\22' }), ref_output) end
+  local validate = function(lines_input, ref_output)
+    eq(default_sort_func({ lines = lines_input, submode = '\22' }), ref_output)
+  end
 
   validate({ 'c', 'a', 'b' }, { 'a', 'b', 'c' })
   validate({ 'xc', 'xa', 'xb' }, { 'xa', 'xb', 'xc' })
@@ -814,17 +817,20 @@ T['Exchange']['respects `config.exchange.reindent_linewise`'] = function()
   validate_edit({ '\taa', 'bb' }, { 1, 0 }, { 'gx_', 'j', 'gx_' }, { 'bb', '\taa' }, { 2, 0 })
 end
 
-T['Exchange']['highlights first step'] = new_set({ parametrize = { { 'charwise' }, { 'linewise' }, { 'blockwise' } } }, {
-  test = function(mode)
-    child.set_size(5, 12)
-    local keys = ({ charwise = 'gxiw', linewise = 'gx_', blockwise = '<C-v>jlgx' })[mode]
+T['Exchange']['highlights first step'] = new_set(
+  { parametrize = { { 'charwise' }, { 'linewise' }, { 'blockwise' } } },
+  {
+    test = function(mode)
+      child.set_size(5, 12)
+      local keys = ({ charwise = 'gxiw', linewise = 'gx_', blockwise = '<C-v>jlgx' })[mode]
 
-    set_lines({ 'aa aa', 'bb' })
-    set_cursor(1, 0)
-    type_keys(keys)
-    child.expect_screenshot()
-  end,
-})
+      set_lines({ 'aa aa', 'bb' })
+      set_cursor(1, 0)
+      type_keys(keys)
+      child.expect_screenshot()
+    end,
+  }
+)
 
 T['Exchange']["correctly highlights first step with 'selection=exclusive'"] = function()
   child.set_size(5, 12)
@@ -1659,8 +1665,9 @@ T['Replace']['correctly reindents linewise in Visual mode'] = function()
   validate_edit({ 'aa', '\t\t', '\t' }, { 1, 0 }, { 'yy', 'j', 'Vj', 'gr' }, { 'aa', '\taa' }, { 2, 0 })
 end
 
-T['Replace']['works with `[count]` in Visual mode'] =
-  function() validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', '2gr' }, 'aa aaaa', 3) end
+T['Replace']['works with `[count]` in Visual mode'] = function()
+  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', '2gr' }, 'aa aaaa', 3)
+end
 
 T['Replace']['respects `config.replace.reindent_linewise`'] = function()
   child.lua('MiniOperators.config.replace.reindent_linewise = false')

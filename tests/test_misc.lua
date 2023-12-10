@@ -621,8 +621,9 @@ T['stat_summary()']['validates input'] = function()
   expect.error(stat_summary, 'numbers', { 'a' })
 end
 
-T['stat_summary()']['works with one number'] =
-  function() eq(stat_summary(10), { minimum = 10, mean = 10, median = 10, maximum = 10, n = 1, sd = 0 }) end
+T['stat_summary()']['works with one number'] = function()
+  eq(stat_summary(10), { minimum = 10, mean = 10, median = 10, maximum = 10, n = 1, sd = 0 })
+end
 
 T['stat_summary()']['handles even/odd number of elements for `median`'] = function()
   eq(stat_summary(1, 2).median, 1.5)

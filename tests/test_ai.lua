@@ -164,11 +164,11 @@ T['find_textobject()'] = new_set()
 
 T['find_textobject()']['works'] = function() validate_find1d('aa(bb)cc', 3, { 'a', ')' }, { 3, 6 }) end
 
-T['find_textobject()']['respects `id` argument'] =
-  function() validate_find1d('(aa[bb]cc)', 4, { 'a', ']' }, { 4, 7 }) end
+T['find_textobject()']['respects `id` argument'] = function() validate_find1d('(aa[bb]cc)', 4, { 'a', ']' }, { 4, 7 }) end
 
-T['find_textobject()']['respects `ai_type` argument'] =
-  function() validate_find1d('aa(bb)cc', 3, { 'i', ')' }, { 4, 5 }) end
+T['find_textobject()']['respects `ai_type` argument'] = function()
+  validate_find1d('aa(bb)cc', 3, { 'i', ')' }, { 4, 5 })
+end
 
 T['find_textobject()']['respects `opts.n_lines`'] = function()
   local lines = { '(', '', 'a', '', ')' }
@@ -463,8 +463,9 @@ local validate_move = function(lines, cursor, args, expected)
   eq(get_cursor(), { expected[1], expected[2] })
 end
 
-local validate_move1d =
-  function(line, column, args, expected) validate_move({ line }, { 1, column }, args, { 1, expected }) end
+local validate_move1d = function(line, column, args, expected)
+  validate_move({ line }, { 1, column }, args, { 1, expected })
+end
 
 T['move_cursor()'] = new_set()
 
@@ -493,8 +494,9 @@ end
 
 T['move_cursor()']['respects `id` argument'] = function() validate_move1d('aa[bbb]', 4, { 'left', 'a', ']' }, 2) end
 
-T['move_cursor()']['respects `opts` argument'] =
-  function() validate_move1d('aa(bbb)cc(ddd)', 4, { 'left', 'a', ')', { n_times = 2 } }, 9) end
+T['move_cursor()']['respects `opts` argument'] = function()
+  validate_move1d('aa(bbb)cc(ddd)', 4, { 'left', 'a', ')', { n_times = 2 } }, 9)
+end
 
 T['move_cursor()']['always jumps exactly `opts.n_times` times'] = function()
   -- It can be not that way if cursor is on edge of one of target textobjects
@@ -821,16 +823,18 @@ T['select_textobject()'] = new_set()
 
 T['select_textobject()']['works'] = function() validate_select1d('aa(bb)', 3, { 'a', ')' }, { 3, 6 }) end
 
-T['select_textobject()']['respects `ai_type` argument'] =
-  function() validate_select1d('aa(bb)', 3, { 'i', ')' }, { 4, 5 }) end
+T['select_textobject()']['respects `ai_type` argument'] = function()
+  validate_select1d('aa(bb)', 3, { 'i', ')' }, { 4, 5 })
+end
 
 T['select_textobject()']['respects `id` argument'] = function()
   validate_select1d('aa[bb]', 3, { 'a', ']' }, { 3, 6 })
   validate_select1d('aa[bb]', 3, { 'i', ']' }, { 4, 5 })
 end
 
-T['select_textobject()']['respects `opts` argument'] =
-  function() validate_select1d('aa(bb)cc(dd)', 4, { 'a', ')', { n_times = 2 } }, { 9, 12 }) end
+T['select_textobject()']['respects `opts` argument'] = function()
+  validate_select1d('aa(bb)cc(dd)', 4, { 'a', ')', { n_times = 2 } }, { 9, 12 })
+end
 
 T['select_textobject()']['respects `opts.vis_mode`'] = function()
   local lines, cursor = { '(a', 'a', 'a)' }, { 2, 0 }
@@ -1859,8 +1863,9 @@ local validate_motion = function(lines, cursor, keys, expected)
   eq(get_cursor(), { expected[1], expected[2] })
 end
 
-local validate_motion1d =
-  function(line, column, keys, expected) validate_motion({ line }, { 1, column }, keys, { 1, expected }) end
+local validate_motion1d = function(line, column, keys, expected)
+  validate_motion({ line }, { 1, column }, keys, { 1, expected })
+end
 
 T['Motion'] = new_set()
 
@@ -2676,8 +2681,7 @@ T['Builtin']['User prompt']['works consecutively'] = function()
   validate_next_region1d(keys, { 10, 17 })
 end
 
-T['Builtin']['User prompt']['works with empty region'] =
-  function() validate_tobj1d('_eo', 0, 'i?e<CR>o<CR>', { 3, 3 }) end
+T['Builtin']['User prompt']['works with empty region'] = function() validate_tobj1d('_eo', 0, 'i?e<CR>o<CR>', { 3, 3 }) end
 
 T['Builtin']['User prompt']['can not be covering'] = function()
   set_lines({ 'e_e_o_o' })

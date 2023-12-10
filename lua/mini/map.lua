@@ -1026,8 +1026,9 @@ end
 
 H.is_disabled = function() return vim.g.minimap_disable == true or vim.b.minimap_disable == true end
 
-H.get_config =
-  function(config) return vim.tbl_deep_extend('force', MiniMap.config, vim.b.minimap_config or {}, config or {}) end
+H.get_config = function(config)
+  return vim.tbl_deep_extend('force', MiniMap.config, vim.b.minimap_config or {}, config or {})
+end
 
 -- Autocommands ---------------------------------------------------------------
 H.on_content_change = vim.schedule_wrap(function()

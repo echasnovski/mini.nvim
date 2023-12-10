@@ -47,8 +47,9 @@ end
 
 local get_latest_message = function() return child.cmd_capture('1messages') end
 
-local get_buf_names =
-  function() return child.lua_get('vim.tbl_map(function(x) return vim.fn.bufname(x) end, vim.api.nvim_list_bufs())') end
+local get_buf_names = function()
+  return child.lua_get('vim.tbl_map(function(x) return vim.fn.bufname(x) end, vim.api.nvim_list_bufs())')
+end
 
 local compare_buffer_names = function(x, y)
   -- Don't test exact equality because different Neovim versions create
@@ -309,8 +310,9 @@ T['detected']['is present'] = function()
   eq(child.lua_get('type(MiniSessions.detected)'), 'table')
 end
 
-T['detected']['is an empty table if no sessions are detected'] =
-  function() eq(child.lua_get('MiniSessions.detected'), {}) end
+T['detected']['is an empty table if no sessions are detected'] = function()
+  eq(child.lua_get('MiniSessions.detected'), {})
+end
 
 T['read()'] = new_set()
 

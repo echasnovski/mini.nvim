@@ -721,8 +721,9 @@ H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniOperators.config, vim.b.minioperators_config or {}, config or {})
 end
 
-H.create_default_hl =
-  function() vim.api.nvim_set_hl(0, 'MiniOperatorsExchangeFrom', { default = true, link = 'IncSearch' }) end
+H.create_default_hl = function()
+  vim.api.nvim_set_hl(0, 'MiniOperatorsExchangeFrom', { default = true, link = 'IncSearch' })
+end
 
 -- Evaluate -------------------------------------------------------------------
 H.eval_lua_lines = function(lines)

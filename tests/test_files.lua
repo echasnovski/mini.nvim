@@ -97,8 +97,9 @@ end
 
 local make_plain_pattern = function(...) return table.concat(vim.tbl_map(vim.pesc, { ... }), '.*') end
 
-local is_file_in_buffer =
-  function(buf_id, path) return string.find(child.api.nvim_buf_get_name(buf_id), vim.pesc(path) .. '$') ~= nil end
+local is_file_in_buffer = function(buf_id, path)
+  return string.find(child.api.nvim_buf_get_name(buf_id), vim.pesc(path) .. '$') ~= nil
+end
 
 local is_file_in_window = function(win_id, path) return is_file_in_buffer(child.api.nvim_win_get_buf(win_id), path) end
 

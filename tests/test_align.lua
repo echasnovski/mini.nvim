@@ -75,8 +75,9 @@ T['setup()']['creates `config` field'] = function()
 
   -- Check default values
   local expect_config = function(field, value) eq(child.lua_get('MiniAlign.config.' .. field), value) end
-  local expect_config_type =
-    function(field, type_val) eq(child.lua_get('type(MiniAlign.config.' .. field .. ')'), type_val) end
+  local expect_config_type = function(field, type_val)
+    eq(child.lua_get('type(MiniAlign.config.' .. field .. ')'), type_val)
+  end
 
   -- Check default values
   expect_config('mappings.start', 'ga')
@@ -158,16 +159,18 @@ end
 
 T['align_strings()'] = new_set()
 
-T['align_strings()']['works'] =
-  function() validate_align_strings({ 'a=b', 'aa=b' }, { split_pattern = '=' }, { 'a =b', 'aa=b' }) end
+T['align_strings()']['works'] = function()
+  validate_align_strings({ 'a=b', 'aa=b' }, { split_pattern = '=' }, { 'a =b', 'aa=b' })
+end
 
 T['align_strings()']['validates `strings` argument'] = function()
   expect.error(function() child.lua([[MiniAlign.align_strings({'a', 1})]]) end, 'string')
   expect.error(function() child.lua([[MiniAlign.align_strings('a')]]) end, 'array')
 end
 
-T['align_strings()']['respects `strings` argument'] =
-  function() validate_align_strings({ 'aaa=b', 'aa=b' }, { split_pattern = '=' }, { 'aaa=b', 'aa =b' }) end
+T['align_strings()']['respects `strings` argument'] = function()
+  validate_align_strings({ 'aaa=b', 'aa=b' }, { split_pattern = '=' }, { 'aaa=b', 'aa =b' })
+end
 
 T['align_strings()']['respects `opts` argument'] = function()
   -- Should take default values from `MiniAlign.config.options`
@@ -826,6 +829,7 @@ T['gen_step']['default_split()']['works with special exclude patterns'] = functi
   validate_align_strings(lines, { split_pattern = '=', split_exclude_patterns = { '^a.*$' } }, output_lines)
 end
 
+--stylua: ignore
 T['gen_step']['default_split()']['matches inside forbidden spans do not affect split pattern recycling'] = function()
   validate_align_strings(
     { [[a,"b=b"=c,d]], 'aa,bb=cc,dd' },
