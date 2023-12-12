@@ -537,23 +537,26 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
   end
 end
 
--- stylua: ignore start
+-- stylua: ignore
 --- Section with basic Telescope pickers relevant to start screen
+---
+--- Notes:
+--- - All actions require 'nvim-telescope/telescope.nvim' plugin.
+--- - "Browser" item requires 'nvim-telescope/telescope-file-browser.nvim'.
 ---
 ---@return __starter_section_fun
 MiniStarter.sections.telescope = function()
   return function()
     return {
-      {action = 'Telescope file_browser',    name = 'Browser',         section = 'Telescope'},
-      {action = 'Telescope command_history', name = 'Command history', section = 'Telescope'},
-      {action = 'Telescope find_files',      name = 'Files',           section = 'Telescope'},
-      {action = 'Telescope help_tags',       name = 'Help tags',       section = 'Telescope'},
-      {action = 'Telescope live_grep',       name = 'Live grep',       section = 'Telescope'},
-      {action = 'Telescope oldfiles',        name = 'Old files',       section = 'Telescope'},
+      { action = 'Telescope file_browser',    name = 'Browser',         section = 'Telescope' },
+      { action = 'Telescope command_history', name = 'Command history', section = 'Telescope' },
+      { action = 'Telescope find_files',      name = 'Files',           section = 'Telescope' },
+      { action = 'Telescope help_tags',       name = 'Help tags',       section = 'Telescope' },
+      { action = 'Telescope live_grep',       name = 'Live grep',       section = 'Telescope' },
+      { action = 'Telescope oldfiles',        name = 'Old files',       section = 'Telescope' },
     }
   end
 end
--- stylua: ignore end
 
 -- Content hooks --------------------------------------------------------------
 --- Table with pre-configured content hook generators

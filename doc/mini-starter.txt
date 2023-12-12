@@ -378,6 +378,10 @@ Return~
                        `MiniStarter.sections.telescope`()
 Section with basic Telescope pickers relevant to start screen
 
+Notes:
+- All actions require 'nvim-telescope/telescope.nvim' plugin.
+- "Browser" item requires 'nvim-telescope/telescope-file-browser.nvim'.
+
 Return~
 `(function)` Function which returns array of items.
 
