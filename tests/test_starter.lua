@@ -877,10 +877,12 @@ T['gen_hook']['padding()']['respects arguments'] = new_set({
 T['sections'] = new_set()
 
 T['sections']['works'] = function()
+  child.set_size(30, 60)
   child.lua([[MiniStarter.config.items = {
     MiniStarter.sections.builtin_actions,
     MiniStarter.sections.recent_files,
     MiniStarter.sections.sessions,
+    MiniStarter.sections.pick,
     MiniStarter.sections.telescope,
   }]])
   child.lua([[MiniStarter.config.header = '']])
@@ -891,7 +893,11 @@ end
 
 T['sections']['has correct items'] = function()
   local types = child.lua_get('vim.tbl_map(type, MiniStarter.sections)')
-  eq(types, { builtin_actions = 'function', recent_files = 'function', sessions = 'function', telescope = 'function' })
+  --stylua: ignore
+  eq(
+    types,
+    { builtin_actions = 'function', recent_files = 'function', sessions = 'function', pick = 'function', telescope = 'function' }
+  )
 end
 
 T['sections']['recent_files()'] = new_set()

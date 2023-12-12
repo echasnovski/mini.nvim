@@ -538,6 +538,29 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
 end
 
 -- stylua: ignore
+--- Section with 'mini.pick' pickers
+---
+--- Notes:
+--- - All actions require |mini.pick| module of 'mini.nvim'.
+--- - "Command history", "Explorer", and "Visited paths" items
+---   require |mini.extra| module of 'mini.nvim'.
+--- - "Visited paths" items requires |mini.visits| module of 'mini.nvim'.
+---
+---@return __starter_section_fun
+MiniStarter.sections.pick = function()
+  return function()
+    return {
+      { action = 'Pick history scope=":"', name = 'Command history', section = 'Pick' },
+      { action = 'Pick explorer',          name = 'Explorer',        section = 'Pick' },
+      { action = 'Pick files',             name = 'Files',           section = 'Pick' },
+      { action = 'Pick grep_live',         name = 'Grep live',       section = 'Pick' },
+      { action = 'Pick help',              name = 'Help tags',       section = 'Pick' },
+      { action = 'Pick visit_paths',       name = 'Visited paths',   section = 'Pick' },
+    }
+  end
+end
+
+-- stylua: ignore
 --- Section with basic Telescope pickers relevant to start screen
 ---
 --- Notes:

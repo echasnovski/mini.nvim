@@ -374,6 +374,20 @@ Return~
 `(function)` Function which returns array of items.
 
 ------------------------------------------------------------------------------
+                                                   *MiniStarter.sections.pick()*
+                         `MiniStarter.sections.pick`()
+Section with 'mini.pick' pickers
+
+Notes:
+- All actions require |mini.pick| module of 'mini.nvim'.
+- "Command history", "Explorer", and "Visited paths" items
+  require |mini.extra| module of 'mini.nvim'.
+- "Visited paths" items requires |mini.visits| module of 'mini.nvim'.
+
+Return~
+`(function)` Function which returns array of items.
+
+------------------------------------------------------------------------------
                                               *MiniStarter.sections.telescope()*
                        `MiniStarter.sections.telescope`()
 Section with basic Telescope pickers relevant to start screen
