@@ -832,6 +832,17 @@ MiniFiles.go_in = function()
   H.explorer_refresh(explorer)
 end
 
+--- Like |MiniFiles.go_in()|, but closes explorer after opening a file.
+MiniFiles.go_in_plus = function()
+  for _ = 1, vim.v.count1 - 1 do
+    MiniFiles.go_in()
+  end
+  local fs_entry = MiniFiles.get_fs_entry()
+  local is_at_file = fs_entry ~= nil and fs_entry.fs_type == 'file'
+  MiniFiles.go_in()
+  if is_at_file then MiniFiles.close() end
+end
+
 --- Go out to parent directory
 ---
 --- - Focus on window to the left showing parent of current directory.
@@ -847,6 +858,15 @@ MiniFiles.go_out = function()
 
   H.explorer_refresh(explorer)
 end
+
+--- Like |MiniFiles.go_out()|, but trims the right part of the branch.
+MiniFiles.go_out_plus = function()
+  for _ = 1, vim.v.count1 do
+    MiniFiles.go_out()
+  end
+  MiniFiles.trim_right()
+end
+
 
 --- Trim left part of branch
 ---
@@ -1851,25 +1871,10 @@ H.buffer_make_mappings = function(buf_id, mappings)
     end
   end
 
-  local go_in_plus = function()
-    for _ = 1, vim.v.count1 - 1 do
-      MiniFiles.go_in()
-    end
-    local fs_entry = MiniFiles.get_fs_entry()
-    local is_at_file = fs_entry ~= nil and fs_entry.fs_type == 'file'
-    MiniFiles.go_in()
-    if is_at_file then MiniFiles.close() end
-  end
-
   local go_out_with_count = function()
     for _ = 1, vim.v.count1 do
       MiniFiles.go_out()
     end
-  end
-
-  local go_out_plus = function()
-    go_out_with_count()
-    MiniFiles.trim_right()
   end
 
   local go_in_visual = function()
@@ -1897,9 +1902,9 @@ H.buffer_make_mappings = function(buf_id, mappings)
   --stylua: ignore start
   buf_map('n', mappings.close,       MiniFiles.close,       'Close')
   buf_map('n', mappings.go_in,       go_in_with_count,      'Go in entry')
-  buf_map('n', mappings.go_in_plus,  go_in_plus,            'Go in entry plus')
+  buf_map('n', mappings.go_in_plus,  MiniFiles.go_in_plus,  'Go in entry plus')
   buf_map('n', mappings.go_out,      go_out_with_count,     'Go out of directory')
-  buf_map('n', mappings.go_out_plus, go_out_plus,           'Go out of directory plus')
+  buf_map('n', mappings.go_out_plus, MiniFiles.go_out_plus, 'Go out of directory plus')
   buf_map('n', mappings.reset,       MiniFiles.reset,       'Reset')
   buf_map('n', mappings.reveal_cwd,  MiniFiles.reveal_cwd,  'Reveal cwd')
   buf_map('n', mappings.show_help,   MiniFiles.show_help,   'Show Help')

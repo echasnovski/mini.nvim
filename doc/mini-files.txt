@@ -700,11 +700,21 @@ Depends on entry under cursor:
   Explorer is not closed after that.
 
 ------------------------------------------------------------------------------
+                                                        *MiniFiles.go_in_plus()*
+                            `MiniFiles.go_in_plus`()
+Like |MiniFiles.go_in()|, but closes explorer after opening a file.
+
+------------------------------------------------------------------------------
                                                             *MiniFiles.go_out()*
                               `MiniFiles.go_out`()
 Go out to parent directory
 
 - Focus on window to the left showing parent of current directory.
+
+------------------------------------------------------------------------------
+                                                       *MiniFiles.go_out_plus()*
+                           `MiniFiles.go_out_plus`()
+Like |MiniFiles.go_out()|, but trims the right part of the branch.
 
 ------------------------------------------------------------------------------
                                                          *MiniFiles.trim_left()*
