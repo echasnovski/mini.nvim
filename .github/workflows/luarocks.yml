@@ -1,0 +1,25 @@
+name: Push to Luarocks
+
+on:
+  push:
+    tags:
+      - '*'
+  pull_request: # Tests a local luarocks install without publishing on PRs
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  luarocks-upload:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: LuaRocks Upload
+        uses: nvim-neorocks/luarocks-tag-release@v5
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+        with:
+          labels: |
+            neovim
+          detailed_description: |
+            Library of 30+ independent Lua modules improving overall Neovim (version 0.7 and higher) experience with minimal effort.
+            They all share same configuration approaches and general design principles.
