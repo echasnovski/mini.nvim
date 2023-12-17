@@ -35,7 +35,7 @@ Features:
 
 - Configurable severity level of all actions.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.sessions').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -47,7 +47,7 @@ See |MiniSessions.config| for `config` structure and default values.
 This module doesn't benefit from buffer local configuration, so using
 `vim.b.minisessions_config` will have no effect here.
 
-# Disabling~
+# Disabling ~
 
 To disable core functionality, set `vim.g.minisessions_disable` (globally) or
 `vim.b.minisessions_disable` (for a buffer) to `true`. Considering high
@@ -60,10 +60,10 @@ rules for disabling module's functionality is left to user. See
                          `MiniSessions.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniSessions.config|.
 
-Usage~
+Usage ~
 `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ What it does:
   beforehand for unsaved listed buffers and stops if there is any.
 - Source session with supplied name.
 
-Parameters~
+Parameters ~
 {session_name} `(string|nil)` Name of detected session file to read. Default:
   `nil` for default session: local (if detected) or latest session (see
   |MiniSessions.get_latest|).
@@ -157,7 +157,7 @@ What it does:
       session).
 - Update |MiniSessions.detected|.
 
-Parameters~
+Parameters ~
 {session_name} `(string|nil)` Name of session file to write. Default: `nil` for
   current session (|v:this_session|).
 {opts} `(table|nil)` Table with options. Current allowed keys:
@@ -181,7 +181,7 @@ What it does:
 - Delete session.
 - Update |MiniSessions.detected|.
 
-Parameters~
+Parameters ~
 {session_name} `(string|nil)` Name of detected session file to delete. Default:
   `nil` for name of current session (taken from |v:this_session|).
 {opts} `(table|nil)` Table with options. Current allowed keys:
@@ -203,7 +203,7 @@ Note: this uses |vim.ui.select()| function. For more user-friendly
 experience, override it (for example, with external plugins like
 "stevearc/dressing.nvim").
 
-Parameters~
+Parameters ~
 {action} `(string|nil)` Action to perform. Should be one of "read" (default),
   "write", or "delete".
 {opts} `(table|nil)` Options for specified action.
@@ -216,7 +216,7 @@ Get name of latest detected session
 Latest session is the session with the latest modification time determined
 by |getftime|.
 
-Return~
+Return ~
 `(string|nil)` Name of latest session or `nil` if there is no sessions.
 
 

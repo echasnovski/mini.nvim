@@ -84,7 +84,7 @@ as `MiniAnimate.config`. See |mini.nvim-buffer-local-config| for more details.
       similarly to 'windows.nvim' in Neovim>=0.9 with appropriate
       'winheight' / 'winwidth' and 'winminheight' / 'winminwidth').
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniAnimateCursor` - highlight of cursor during its animated movement.
 * `MiniAnimateNormalFloat` - highlight of floating window for `open` and
@@ -92,7 +92,7 @@ as `MiniAnimate.config`. See |mini.nvim-buffer-local-config| for more details.
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minianimate_disable` (globally) or
 `vim.b.minianimate_disable` (for a buffer) to `true`. Considering high
@@ -105,10 +105,10 @@ rules for disabling module's functionality is left to user. See
                          `MiniAnimate.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniAnimate.config|.
 
-Usage~
+Usage ~
 `require('mini.animate').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -445,11 +445,11 @@ event is triggered for `open` and `close` animation respectively.
                    `MiniAnimate.is_active`({animation_type})
 Check animation activity
 
-Parameters~
+Parameters ~
 {animation_type} `(string)` One of supported animation types
   (entries of |MiniAnimate.config|, like `'cursor'`, etc.).
 
-Return~
+Return ~
 `(boolean)` Whether the animation is currently active.
 
 ------------------------------------------------------------------------------
@@ -471,7 +471,7 @@ should have this right hand side: >
 
   <Cmd>lua vim.cmd('normal! n'); MiniAnimate.execute_after('scroll', 'normal! zvzz')<CR>
 
-Parameters~
+Parameters ~
 {animation_type} `(string)` One of supported animation types
   (as in |MiniAnimate.is_active()|).
 {action} `(string|function)` Action to be executed. If string, executed as
@@ -501,7 +501,7 @@ Notes:
     - Any wait time less than 1 ms means that action will be executed
       immediately.
 
-Parameters~
+Parameters ~
 {step_action} `(function|table)` Callable which takes `step` (integer 0, 1, 2,
   etc. indicating current step) and executes some action. Its return value
   defines when animation should stop: values `false` and `nil` (equivalent
@@ -531,7 +531,7 @@ Example: >
     },
   })
 
-See also~
+See also ~
 |MiniIndentscope.gen_animation| for similar concept in 'mini.indentscope'.
 
 ------------------------------------------------------------------------------
@@ -547,7 +547,7 @@ if you want to disable animation.
                     `MiniAnimate.gen_timing.linear`({opts})
 Generate timing with linear progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -557,7 +557,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Timing function (see |MiniAnimate-timing|).
 
 ------------------------------------------------------------------------------
@@ -565,7 +565,7 @@ Return~
                    `MiniAnimate.gen_timing.quadratic`({opts})
 Generate timing with quadratic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -575,7 +575,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Timing function (see |MiniAnimate-timing|).
 
 ------------------------------------------------------------------------------
@@ -583,7 +583,7 @@ Return~
                      `MiniAnimate.gen_timing.cubic`({opts})
 Generate timing with cubic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -593,7 +593,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Timing function (see |MiniAnimate-timing|).
 
 ------------------------------------------------------------------------------
@@ -601,7 +601,7 @@ Return~
                     `MiniAnimate.gen_timing.quartic`({opts})
 Generate timing with quartic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -611,7 +611,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Timing function (see |MiniAnimate-timing|).
 
 ------------------------------------------------------------------------------
@@ -619,7 +619,7 @@ Return~
                   `MiniAnimate.gen_timing.exponential`({opts})
 Generate timing with exponential progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -629,7 +629,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Timing function (see |MiniAnimate-timing|).
 
 ------------------------------------------------------------------------------
@@ -656,14 +656,14 @@ Example: >
                       `MiniAnimate.gen_path.line`({opts})
 Generate path as shortest line
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
     flickering), `true` otherwise.
 
-Return~
+Return ~
 `(function)` Path function (see |MiniAnimate.config.cursor|).
 
 ------------------------------------------------------------------------------
@@ -671,7 +671,7 @@ Return~
                       `MiniAnimate.gen_path.angle`({opts})
 Generate path as line/column angle
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
@@ -681,7 +681,7 @@ Parameters~
     across initial line first) or `"vertical"` (animates across initial
     column first).
 
-Return~
+Return ~
 `(function)` Path function (see |MiniAnimate.config.cursor|).
 
 ------------------------------------------------------------------------------
@@ -689,7 +689,7 @@ Return~
                       `MiniAnimate.gen_path.walls`({opts})
 Generate path as closing walls at final position
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
@@ -697,7 +697,7 @@ Parameters~
     flickering), `true` otherwise.
   - <width> `(number)` - initial width of left and right walls. Default: 10.
 
-Return~
+Return ~
 `(function)` Path function (see |MiniAnimate.config.cursor|).
 
 ------------------------------------------------------------------------------
@@ -705,7 +705,7 @@ Return~
                      `MiniAnimate.gen_path.spiral`({opts})
 Generate path as diminishing spiral at final position
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `destination` as input and
     returns boolean value indicating whether animation should be done.
@@ -713,7 +713,7 @@ Parameters~
     flickering), `true` otherwise.
   - <width> `(number)` - initial width of spiral. Default: 2.
 
-Return~
+Return ~
 `(function)` Path function (see |MiniAnimate.config.cursor|).
 
 ------------------------------------------------------------------------------
@@ -740,7 +740,7 @@ Example: >
                    `MiniAnimate.gen_subscroll.equal`({opts})
 Generate subscroll with equal steps
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `total_scroll` as
     input and returns boolean value indicating whether animation should be
@@ -750,7 +750,7 @@ Parameters~
     Adjust this to reduce computations in expense of reduced smoothness.
     Default: 60.
 
-Return~
+Return ~
 `(function)` Subscroll function (see |MiniAnimate.config.scroll|).
 
 ------------------------------------------------------------------------------
@@ -780,13 +780,13 @@ Example: >
                    `MiniAnimate.gen_subresize.equal`({opts})
 Generate subresize with equal steps
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `sizes_from` and
     `sizes_to` as input and returns boolean value indicating whether
     animation should be done. Default: always `true`.
 
-Return~
+Return ~
 `(function)` Subresize function (see |MiniAnimate.config.resize|).
 
 ------------------------------------------------------------------------------
@@ -832,7 +832,7 @@ Generate winconfig for static floating window
 This will result into floating window statically covering whole target
 window.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
@@ -841,7 +841,7 @@ Parameters~
     Useful to tweak smoothness of transparency animation (done inside
     `winblend` config option). Default: 25.
 
-Return~
+Return ~
 `(function)` Winconfig function (see |MiniAnimate.config.open|
   or |MiniAnimate.config.close|).
 
@@ -853,7 +853,7 @@ Generate winconfig for center-focused animated floating window
 This will result into floating window growing from or shrinking to the
 target window center.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
@@ -862,7 +862,7 @@ Parameters~
     shrink from full coverage to center) or `"from_center"` (window will
     grow from center to full coverage).
 
-Return~
+Return ~
 `(function)` Winconfig function (see |MiniAnimate.config.open|
   or |MiniAnimate.config.close|).
 
@@ -876,7 +876,7 @@ nearest edge. This also takes into account the split type of target window:
 vertically split window will progress towards vertical edge; horizontally -
 towards horizontal.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <predicate> `(function)` - a callable which takes `win_id` as input and
     returns boolean value indicating whether animation should be done.
@@ -885,7 +885,7 @@ Parameters~
     shrink from full coverage to nearest edge) or `"from_edge"` (window
     will grow from edge to full coverage).
 
-Return~
+Return ~
 `(function)` Winconfig function (see |MiniAnimate.config.open|
   or |MiniAnimate.config.close|).
 
@@ -918,12 +918,12 @@ Example: >
                    `MiniAnimate.gen_winblend.linear`({opts})
 Generate linear `winblend` progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control generator. Possible keys:
   - <from> `(number)` - initial value of 'winblend'.
   - <to> `(number)` - final value of 'winblend'.
 
-Return~
+Return ~
 `(function)` Winblend function (see |MiniAnimate.config.open|
   or |MiniAnimate.config.close|).
 

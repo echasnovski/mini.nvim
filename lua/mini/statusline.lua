@@ -17,7 +17,7 @@
 --- - Sections can hide information when window is too narrow (specific window
 ---   width is configurable per section).
 ---
---- # Dependencies~
+--- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality, statusline will work
 --- without them):
@@ -27,7 +27,7 @@
 --- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons in
 ---   `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.statusline').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -41,7 +41,7 @@
 --- `vim.b.ministatusline_config` which should have same structure as
 --- `MiniStatusline.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- Highlight depending on mode (second output from |MiniStatusline.section_mode|):
 --- * `MiniStatuslineModeNormal` - Normal mode.
@@ -62,7 +62,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable (show empty statusline), set `vim.g.ministatusline_disable`
 --- (globally) or `vim.b.ministatusline_disable` (for a buffer) to `true`.
@@ -72,7 +72,7 @@
 
 --- Example content
 ---
---- # Default content~
+--- # Default content ~
 ---
 --- This function is used as default value for active content:
 --- >
@@ -96,7 +96,7 @@
 ---     })
 ---   end
 --- <
---- # Show boolean options~
+--- # Show boolean options ~
 ---
 --- To compute section string for boolean option use variation of this code
 --- snippet inside content function (you can modify option itself, truncation

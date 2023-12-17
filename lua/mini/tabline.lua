@@ -25,14 +25,14 @@
 --- What it doesn't do:
 --- - Custom buffer order is not supported.
 ---
---- # Dependencies~
+--- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality, tabline will work
 --- without them):
 --- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the buffer
 ---   name. If missing, no icons will be shown.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.tabline').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -45,7 +45,7 @@
 --- `vim.b.minitabline_config` which should have same structure as
 --- `MiniTabline.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniTablineCurrent` - buffer is current (has cursor in it).
 --- * `MiniTablineVisible` - buffer is visible (displayed in some window).
@@ -58,7 +58,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable (show empty tabline), set `vim.g.minitabline_disable` (globally) or
 --- `vim.b.minitabline_disable` (for a buffer) to `true`. Considering high number

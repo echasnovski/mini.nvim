@@ -35,7 +35,7 @@
 ---
 --- - Configurable severity level of all actions.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.sessions').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -47,7 +47,7 @@
 --- This module doesn't benefit from buffer local configuration, so using
 --- `vim.b.minisessions_config` will have no effect here.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.minisessions_disable` (globally) or
 --- `vim.b.minisessions_disable` (for a buffer) to `true`. Considering high

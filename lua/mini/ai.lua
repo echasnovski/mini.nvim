@@ -59,7 +59,7 @@
 ---   in 'targets.vim'). Whitespace handling is assumed to be done inside
 ---   textobject specification (like `i(` and `i)` handle whitespace differently).
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.ai').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniAi`
@@ -73,7 +73,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'wellle/targets.vim':
 ---     - Has limited support for creating own textobjects: it is constrained
@@ -103,7 +103,7 @@
 ---     - Doesn't support multiple search method (basically, only 'cover').
 ---     - Doesn't support consecutive application of target textobject.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.miniai_disable` (globally) or `vim.b.miniai_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios
@@ -111,7 +111,7 @@
 --- functionality is left to user. See |mini.nvim-disabling-recipes| for common
 --- recipes.
 
---- Builtin textobjects~
+--- Builtin textobjects ~
 ---
 --- This table describes all builtin textobjects along with what they
 --- represent. Explanation:
@@ -445,7 +445,7 @@ end
 --- <
 --- There are more example specifications in |MiniAi-textobject-specification|.
 ---
---- ## Search method~
+--- ## Search method ~
 ---
 --- Value of `config.search_method` defines how best match search is done.
 --- Based on its value, one of the following matches will be selected:
@@ -486,7 +486,7 @@ end
 --- - `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
 --- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 ---
---- ## Mappings~
+--- ## Mappings ~
 ---
 --- Mappings `around_next`/`inside_next` and `around_last`/`inside_last` are
 --- essentially `around`/`inside` but using search method `'next'` and `'prev'`.

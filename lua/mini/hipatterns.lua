@@ -82,7 +82,7 @@
 ---     - Has more than color highlighting functionality, which is compared to
 ---       this module in the same way as 'NvChad/nvim-colorizer.lua'.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniHipatternsFixme` - suggested group to use for `FIXME`-like patterns.
 --- * `MiniHipatternsHack` - suggested group to use for `HACK`-like patterns.

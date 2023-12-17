@@ -66,7 +66,7 @@
 ---       order while allowing reporting progress in asynchronous fashion.
 ---       Detected errors means test case fail; otherwise - pass.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.test').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniTest`
@@ -80,7 +80,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - Testing infrastructure from 'nvim-lua/plenary.nvim':
 ---     - Executes each file in separate headless Neovim process with customizable
@@ -117,7 +117,7 @@
 ---   `before_each()` and `after_each` to `pre_case` and `post_case` hooks.
 --- - Make test cases from `it` blocks.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniTestEmphasis` - emphasis highlighting. By default it is a bold text.
 --- * `MiniTestFail` - highlighting of failed cases. By default it is a bold
@@ -127,7 +127,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minitest_disable` (globally) or `vim.b.minitest_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios
@@ -1460,7 +1460,7 @@ end
 ---@field wo table Redirection table for |vim.wo|.
 ---@tag MiniTest-child-neovim
 
---- child.start(args, opts)~
+--- child.start(args, opts) ~
 ---
 --- Start child process and connect to it. Won't work if child is already running.
 ---
@@ -1481,7 +1481,7 @@ end
 ---   child.start({ '-u', 'scripts/minimal_init.lua' })
 ---@tag MiniTest-child-neovim.start()
 
---- child.type_keys(wait, ...)~
+--- child.type_keys(wait, ...) ~
 ---
 --- Basically a wrapper for |nvim_input()| applied inside child process.
 --- Differences:
@@ -1508,7 +1508,7 @@ end
 ---   child.type_keys('i', 'Hello world', '<Esc>')
 ---@tag MiniTest-child-neovim.type_keys()
 
---- child.get_screenshot()~
+--- child.get_screenshot() ~
 ---
 --- Compute what is displayed on (default TUI) screen and how it is displayed.
 --- This basically calls |screenstring()| and |screenattr()| for every visible

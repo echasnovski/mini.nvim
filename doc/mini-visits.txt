@@ -340,10 +340,10 @@ Here is an example of keymaps to add/remove label equal to branch name: >
                           `MiniVisits.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniVisits.config|.
 
-Usage~
+Usage ~
 `require('mini.visits').setup({})` (replace `{}` with your `config` table).
 
 ------------------------------------------------------------------------------
@@ -467,7 +467,7 @@ Steps:
 - Add 1 to visit `count`.
 - Set `latest` visit time to equal current time.
 
-Parameters~
+Parameters ~
 {path} `(string|nil)` Visit path. Default: path of current buffer.
 {cwd} `(string|nil)` Visit cwd (project directory). Default: |current-directory|.
 
@@ -480,7 +480,7 @@ Ensures that there is a (one or more) entry for path-cwd pair. If entry is
 already present, does nothing. If not - creates it with both `count` and
 `latest` set to 0.
 
-Parameters~
+Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
   paths for `cwd`". Default: path of current buffer.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
@@ -495,7 +495,7 @@ Steps:
 - Ensure that there is an entry for path-cwd pair.
 - Add label to the entry.
 
-Parameters~
+Parameters ~
 {label} `(string|nil)` Label string. Default: `nil` to ask from user.
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
   paths for `cwd`". Default: path of current buffer.
@@ -514,7 +514,7 @@ Notes:
 - Affects only in-session Lua variable. Call |MiniVisits.write_index()| to
   make it persistent.
 
-Parameters~
+Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
   paths for `cwd`". Default: path of current buffer.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
@@ -529,7 +529,7 @@ Steps:
 - Remove label from (one or more) index entry.
 - If it was last label in an entry, remove `labels` key.
 
-Parameters~
+Parameters ~
 {label} `(string|nil)` Label string. Default: `nil` to ask from user.
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
   paths for `cwd`". Default: path of current buffer.
@@ -562,7 +562,7 @@ Examples:
   end
   MiniVisits.list_paths(nil, { filter = is_not_hidden })
 <
-Parameters~
+Parameters ~
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 {opts} `(table|nil)` Options. Possible fields:
@@ -575,7 +575,7 @@ Parameters~
     Default: value of `config.list.sort` or |MiniVisits.gen_filter.sort()|
     as its default.
 
-Return~
+Return ~
 `(table)` Array of visited paths.
 
 ------------------------------------------------------------------------------
@@ -603,7 +603,7 @@ Examples:
   end
   MiniVisits.list_labels('', '', { filter = is_not_hidden })
 <
-Parameters~
+Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
   paths for `cwd`". Default: path of current buffer.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
@@ -618,7 +618,7 @@ Parameters~
     Default: value of `config.list.sort` or |MiniVisits.gen_filter.sort()|
     as its default.
 
-Return~
+Return ~
 `(table)` Array of available labels.
 
 ------------------------------------------------------------------------------
@@ -640,7 +640,7 @@ Examples:
   local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
   MiniVisits.select_path(nil, { sort = sort_recent })
 <
-Parameters~
+Parameters ~
 {cwd} `(string|nil)` Forwarded to |MiniVisits.list_paths()|.
 {opts} `(table|nil)` Forwarded to |MiniVisits.list_paths()|.
 
@@ -666,7 +666,7 @@ Examples:
   local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
   MiniVisits.select_label('', nil, { sort = sort_recent })
 <
-Parameters~
+Parameters ~
 {path} `(string|nil)` Forwarded to |MiniVisits.list_labels()|.
 {cwd} `(string|nil)` Forwarded to |MiniVisits.list_labels()|.
 {opts} `(table|nil)` Forwarded to both |MiniVisits.list_labels()|
@@ -704,7 +704,7 @@ Examples assuming underlying array of files `{ "file1", "file2", "file3" }`:
 - `MiniVisits("forward", { n_times = 10 })` from "file1" results into "file3".
 - `MiniVisits("last", { n_times = 4, wrap = true })` results into "file3".
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {cwd} `(string|nil)` Forwarded to |MiniVisits.list_paths()|.
 {opts} `(table|nil)` Options. Possible fields:
@@ -719,7 +719,7 @@ Parameters~
                             `MiniVisits.get_index`()
 Get active visit index
 
-Return~
+Return ~
 `(table)` Copy of currently active visit index table.
 
 ------------------------------------------------------------------------------
@@ -727,7 +727,7 @@ Return~
                         `MiniVisits.set_index`({index})
 Set active visit index
 
-Parameters~
+Parameters ~
 {index} `(table)` Visit index table.
 
 ------------------------------------------------------------------------------
@@ -747,10 +747,10 @@ Applies `config.store.normalize` (|MiniVisits.gen_normalize.default()| by defaul
 to the input index object and returns the output (if it fits in the definition
 of index object; see |MiniVisits-index-specification|).
 
-Parameters~
+Parameters ~
 {index} `(table|nil)` Index object. Default: copy of the current index.
 
-Return~
+Return ~
 `(table)` Normalized index object.
 
 ------------------------------------------------------------------------------
@@ -758,14 +758,14 @@ Return~
                      `MiniVisits.read_index`({store_path})
 Read visit index from disk
 
-Parameters~
+Parameters ~
 {store_path} `(string|nil)` Path on the disk containing visit index data.
   Default: `config.store.path`.
   Notes:
     - Can return `nil` if path is empty string or file is not readable.
     - File is sourced with |dofile()| as a regular Lua file.
 
-Return~
+Return ~
 `(table|nil)` Output of the file source.
 
 ------------------------------------------------------------------------------
@@ -779,7 +779,7 @@ Steps:
 - Write index object to the path so that it is readable
   with |MiniVisits.read_index()|.
 
-Parameters~
+Parameters ~
 {store_path} `(string|nil)` Path on the disk where to write visit index data.
   Default: `config.store.path`. Note: if empty string, nothing is written.
 {index} `(table|nil)` Index object to write to disk.
@@ -805,13 +805,13 @@ before and after rename/move, here is an example to update current index: >
   local new_index = MiniVisits.rename_in_index(path_from, path_to)
   MiniVisits.set_index(new_index)
 <
-Parameters~
+Parameters ~
 {path_from} `(string)` Full path to be renamed.
 {path_to} `(string)` Full path to be replaced with.
 {index} `(table|nil)` Index object inside which to perform renaming.
   Default: current session index.
 
-Return~
+Return ~
 `(table)` Index object with renamed path.
 
 ------------------------------------------------------------------------------
@@ -828,7 +828,7 @@ Default filter
 
 Always returns `true` resulting in no actual filter.
 
-Return~
+Return ~
 `(function)` Visit filter function. See |MiniVisits.config.list| for more details.
 
 ------------------------------------------------------------------------------
@@ -836,7 +836,7 @@ Return~
                      `MiniVisits.gen_filter.this_session`()
 Filter visits from current session
 
-Return~
+Return ~
 `(function)` Visit filter function. See |MiniVisits.config.list| for more details.
 
 ------------------------------------------------------------------------------
@@ -877,12 +877,12 @@ Examples:
 
 - Having recency weight 0 results into "from most to least frequent" sorting.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Option. Possible fields:
   - <recency_weight> `(number)` - a number between 0 and 1 for recency weight.
     Default: 0.5.
 
-Return~
+Return ~
 `(function)` Visit sort function. See |MiniVisits.config.list| for more details.
 
 ------------------------------------------------------------------------------
@@ -892,7 +892,7 @@ Z sort
 
 Sort as in https://github.com/rupa/z.
 
-Return~
+Return ~
 `(function)` Visit sort function. See |MiniVisits.config.list| for more details.
 
 ------------------------------------------------------------------------------
@@ -926,14 +926,14 @@ Steps:
 
 - Prune once more to ensure that there are no outdated paths after decay.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
   - <decay_threshold> `(number)` - decay threshold. Default: 1000.
   - <decay_target> `(number)` - decay target. Default: 800.
   - <prune_threshold> `(number)` - prune threshold. Default: 0.5.
   - <prune_paths> `(boolean)` - whether to prune outdated paths. Default: `true`.
 
-Return~
+Return ~
 `(function)` Visit index normalize function. See "Store" in |MiniVisits.config|.
 
 

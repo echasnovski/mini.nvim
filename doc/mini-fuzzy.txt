@@ -15,7 +15,7 @@ Features:
 
 - Generator of |telescope.nvim| sorter: |MiniFuzzy.get_telescope_sorter()|.
 
-# Setup~
+# Setup ~
 
 This module doesn't need setup, but it can be done to improve usability.
 Setup with `require('mini.fuzzy').setup({})` (replace `{}` with your
@@ -29,7 +29,7 @@ You can override runtime config settings locally to buffer inside
 `MiniFuzzy.config`.
 See |mini.nvim-buffer-local-config| for more details.
 
-# Notes~
+# Notes ~
 
 1. Currently there is no explicit design to work with multibyte symbols,
    but simple examples should work.
@@ -38,7 +38,7 @@ See |mini.nvim-buffer-local-config| for more details.
 
 ------------------------------------------------------------------------------
                                                            *MiniFuzzy-algorithm*
-# Algorithm design~
+# Algorithm design ~
 
 General design uses only width of found match and index of first letter
 match. No special characters or positions (like in fzy and fzf) are used.
@@ -70,10 +70,10 @@ Given input `word` and target `candidate`:
                           `MiniFuzzy.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniFuzzy.config|.
 
-Usage~
+Usage ~
 `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -102,11 +102,11 @@ and string `candidate`. Returns table with elements:
 - `score` - positive number representing how good the match is (lower is
   better). Or `-1` if no match.
 
-Parameters~
+Parameters ~
 {word} `(string)` Input word (usually user input).
 {candidate} `(string)` Target word (usually with which matching is done).
 
-Return~
+Return ~
 `(table)` Table with matching information (see function's description).
 
 ------------------------------------------------------------------------------
@@ -118,12 +118,12 @@ This leaves only those elements of input array which matched with `word`
 and sorts from best to worst matches (based on score and index in original
 array, both lower is better).
 
-Parameters~
+Parameters ~
 {word} `(string)` String which will be searched.
 {candidate_array} `(table)` Lua array of strings inside which word will be
   searched.
 
-Return~
+Return ~
 `(...)` Arrays of matched candidates and their indexes in original input.
 
 ------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ Return~
                  `MiniFuzzy.process_lsp_items`({items}, {base})
 Fuzzy matching for `lsp_completion.process_items` of |MiniCompletion.config|
 
-Parameters~
+Parameters ~
 {items} `(table)` Array with LSP 'textDocument/completion' response items.
 {base} `(string)` Word to complete.
 
@@ -143,10 +143,10 @@ Custom getter for `telescope.nvim` sorter
 Designed to be used as value for |telescope.defaults.file_sorter| and
 |telescope.defaults.generic_sorter| inside `setup()` call.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options (currently not used).
 
-Usage~
+Usage ~
 >
   require('telescope').setup({
     defaults = {

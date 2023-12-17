@@ -66,7 +66,7 @@ For more information see:
       order while allowing reporting progress in asynchronous fashion.
       Detected errors means test case fail; otherwise - pass.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.test').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniTest`
@@ -80,7 +80,7 @@ See |mini.nvim-buffer-local-config| for more details.
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Comparisons~
+# Comparisons ~
 
 - Testing infrastructure from 'nvim-lua/plenary.nvim':
     - Executes each file in separate headless Neovim process with customizable
@@ -117,7 +117,7 @@ Some hints for converting from 'plenary.nvim' tests to 'mini.test':
   `before_each()` and `after_each` to `pre_case` and `post_case` hooks.
 - Make test cases from `it` blocks.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniTestEmphasis` - emphasis highlighting. By default it is a bold text.
 * `MiniTestFail` - highlighting of failed cases. By default it is a bold
@@ -127,7 +127,7 @@ Some hints for converting from 'plenary.nvim' tests to 'mini.test':
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minitest_disable` (globally) or `vim.b.minitest_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -140,10 +140,10 @@ recipes.
                            `MiniTest.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniTest.config|.
 
-Usage~
+Usage ~
 `require('mini.test').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ Notes:
 - Supplied options `opts` are stored in `opts` field of metatable
   (`getmetatable(set).opts`).
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Allowed options:
   - <hooks> - table with fields:
       - <pre_once> - executed before first filtered node.
@@ -259,10 +259,10 @@ Parameters~
 {tbl} `(table|nil)` Initial test items (possibly nested). Will be executed
   without any guarantees on order.
 
-Return~
+Return ~
 `(table)` A single test set.
 
-Usage~
+Usage ~
 >
   -- Use with defaults
   T = MiniTest.new_set()
@@ -297,10 +297,10 @@ Execution of test case goes by the following rules:
   hook will lead to test fail.
 - State (`exec.state`) is changed before every call and after last call.
 
-Class~
+Class ~
 {Test-case}
 
-Fields~
+Fields ~
 {args} `(table)` Array of arguments with which `test` will be called.
 {data} `(table)` User data: all fields of `opts.data` from nested test sets.
 {desc} `(table)` Description: array of fields from nested test sets.
@@ -327,7 +327,7 @@ Skip rest of current callable execution
 Can be used inside hooks and main test callable of test case. Note: at the
 moment implemented as a specially handled type of error.
 
-Parameters~
+Parameters ~
 {msg} `(string|nil)` Message to be added to current case notes.
 
 ------------------------------------------------------------------------------
@@ -337,7 +337,7 @@ Add note to currently executed test case
 
 Appends `msg` to `exec.notes` field of |MiniTest.current.case|.
 
-Parameters~
+Parameters ~
 {msg} `(string)` Note to add.
 
 ------------------------------------------------------------------------------
@@ -347,7 +347,7 @@ Register callable execution after current callable
 
 Can be used inside hooks and main test callable of test case.
 
-Parameters~
+Parameters ~
 {f} `(function|table)` Callable to be executed after current callable is
   finished executing (regardless of whether it ended with error or not).
 
@@ -361,7 +361,7 @@ Run tests
 - Collect cases with |MiniTest.collect()| and `opts.collect`.
 - Execute collected cases with |MiniTest.execute()| and `opts.execute`.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options with structure similar to |MiniTest.config|.
   Absent values are inferred from there.
 
@@ -372,7 +372,7 @@ Run specific test file
 
 Basically a |MiniTest.run()| wrapper with custom `collect.find_files` option.
 
-Parameters~
+Parameters ~
 {file} `(string|nil)` Path to test file. By default a path of current buffer.
 {opts} `(table|nil)` Options for |MiniTest.run()|.
 
@@ -389,7 +389,7 @@ option in |MiniTest.new_set()|).
 
 Basically a |MiniTest.run()| wrapper with custom `collect.find_files` option.
 
-Parameters~
+Parameters ~
 {location} `(table|nil)` Table with fields <file> (path to file) and <line>
   (line number in that file). Default is taken from current cursor position.
 
@@ -427,7 +427,7 @@ Overview of collection process:
   all hooks, as `*_once` hooks will be added after filtration.
 - Add `*_once` hooks to appropriate cases.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options controlling case collection. Possible fields:
   - <emulate_busted> - whether to emulate 'Olivine-Labs/busted' interface.
     It emulates these global functions: `describe`, `it`, `setup`, `teardown`,
@@ -440,7 +440,7 @@ Parameters~
     (see |MiniTest-test-case|) returns `false` if this case should be filtered
     out; `true` otherwise.
 
-Return~
+Return ~
 `(table)` Array of test cases ready to be used by |MiniTest.execute()|.
 
 ------------------------------------------------------------------------------
@@ -465,7 +465,7 @@ Notes:
   place with proper `exec` field. Use `all_cases` at |MiniTest.current| to
   look at execution result.
 
-Parameters~
+Parameters ~
 {cases} `(table)` Array of test cases (see |MiniTest-test-case|).
 {opts} `(table|nil)` Options controlling case collection. Possible fields:
   - <reporter> - table with possible callable fields `start`, `update`,
@@ -479,7 +479,7 @@ Parameters~
                             `MiniTest.stop`({opts})
 Stop test execution
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options with fields:
   - <close_all_child_neovim> - whether to close all child neovim processes
     created with |MiniTest.new_child_neovim()|. Default: `true`.
@@ -489,7 +489,7 @@ Parameters~
                            `MiniTest.is_executing`()
 Check if tests are being executed
 
-Return~
+Return ~
 `(boolean)`
 
 ------------------------------------------------------------------------------
@@ -503,7 +503,7 @@ Each function has the following behavior:
 
 Mostly designed to be used within 'mini.test' framework.
 
-Usage~
+Usage ~
 >
   local x = 1 + 1
   MiniTest.expect.equality(x, 2) -- passes
@@ -516,7 +516,7 @@ Expect equality of two objects
 
 Equality is tested via |vim.deep_equal()|.
 
-Parameters~
+Parameters ~
 {left} `(any)` First object.
 {right} `(any)` Second object.
 
@@ -527,7 +527,7 @@ Expect no equality of two objects
 
 Equality is tested via |vim.deep_equal()|.
 
-Parameters~
+Parameters ~
 {left} `(any)` First object.
 {right} `(any)` Second object.
 
@@ -536,7 +536,7 @@ Parameters~
                  `MiniTest.expect.error`({f}, {pattern}, {...})
 Expect function call to raise error
 
-Parameters~
+Parameters ~
 {f} `(function|table)` Callable to be tested for raising error.
 {pattern} `(string|nil)` Pattern which error message should match.
   Use `nil` or empty string to not test for pattern matching.
@@ -547,7 +547,7 @@ Parameters~
                      `MiniTest.expect.no_error`({f}, {...})
 Expect function call to not raise error
 
-Parameters~
+Parameters ~
 {f} `(function|table)` Callable to be tested for raising error.
 {...} `(any)` Extra arguments with which `f` will be called.
 
@@ -556,7 +556,7 @@ Parameters~
       `MiniTest.expect.reference_screenshot`({screenshot}, {path}, {opts})
 Expect equality to reference screenshot
 
-Parameters~
+Parameters ~
 {screenshot} `(table|nil)` Array with screenshot information. Usually an output
   of `child.get_screenshot()` (see |MiniTest-child-neovim.get_screenshot()|).
   If `nil`, expectation passed.
@@ -578,7 +578,7 @@ Create new expectation function
 Helper for writing custom functions with behavior similar to other methods
 of |MiniTest.expect|.
 
-Parameters~
+Parameters ~
 {subject} `(string|function|table)` Subject of expectation. If callable,
   called with expectation input arguments to produce string value.
 {predicate} `(function|table)` Predicate callable. Called with expectation
@@ -586,10 +586,10 @@ Parameters~
 {fail_context} `(string|function|table)` Information about fail. If callable,
   called with expectation input arguments to produce string value.
 
-Return~
+Return ~
 `(function)` Expectation function.
 
-Usage~
+Usage ~
 >
   local expect_truthy = MiniTest.new_expectation(
     'truthy',
@@ -631,7 +631,7 @@ General idea:
     - `X` - fail with notes.
 - In `finish()` show all fails and notes ordered by case.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Table with options. Used fields:
   - <group_depth> - number of first elements of case description (can be zero)
     used for grouping. Higher values mean higher granularity of output.
@@ -659,7 +659,7 @@ It has same general idea as |MiniTest.gen_reporter.buffer()| with slightly
 less output (it doesn't overwrite previous text) to overcome typical
 terminal limitations.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Table with options. Used fields:
   - <group_depth> - number of first elements of case description (can be zero)
     used for grouping. Higher values mean higher granularity of output.
@@ -679,10 +679,10 @@ it through |RPC| messages.
 
 For more information see |MiniTest-child-neovim|.
 
-Return~
+Return ~
 `child` Object of |MiniTest-child-neovim|.
 
-Usage~
+Usage ~
 >
   -- Initiate
   local child = MiniTest.new_child_neovim()
@@ -741,10 +741,10 @@ Notes:
   then return value). See for `*_notify` variant to use |vim.rpcnotify()|.
 - All fields and methods should be called with `.`, not `:`.
 
-Class~
+Class ~
 {child}
 
-Fields~
+Fields ~
 {start} `(function)` Start child process. See |MiniTest-child-neovim.start()|.
 {stop} `(function)` Stop current child process.
 {restart} `(function)` Restart child process: stop if running and then
@@ -807,11 +807,11 @@ Fields~
 
 ------------------------------------------------------------------------------
                                                  *MiniTest-child-neovim.start()*
-child.start(args, opts)~
+child.start(args, opts) ~
 
 Start child process and connect to it. Won't work if child is already running.
 
-Parameters~
+Parameters ~
 {args} `(table)` Array with arguments for executable. Will be prepended
   with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
 {opts} `(table|nil)` Options:
@@ -819,7 +819,7 @@ Parameters~
   - <connection_timeout> - stop trying to connect after this amount of
     milliseconds. Default: 5000.
 
-Usage~
+Usage ~
 >
   child = MiniTest.new_child_neovim()
 
@@ -831,7 +831,7 @@ Usage~
 
 ------------------------------------------------------------------------------
                                              *MiniTest-child-neovim.type_keys()*
-child.type_keys(wait, ...)~
+child.type_keys(wait, ...) ~
 
 Basically a wrapper for |nvim_input()| applied inside child process.
 Differences:
@@ -840,13 +840,13 @@ Differences:
   |v:errmsg| was updated).
 - Key '<' as separate entry may not be escaped as '<LT>'.
 
-Parameters~
+Parameters ~
 {wait} `(number|nil)` Number of milliseconds to wait after each entry. May be
   omitted, in which case no waiting is done.
 {...} `(string|table<number,string>)` Separate entries for |nvim_input()|,
   after which `wait` will be applied. Can be either string or array of strings.
 
-Usage~
+Usage ~
 >
   -- All of these type keys 'c', 'a', 'w'
   child.type_keys('caw')
@@ -861,7 +861,7 @@ Usage~
 
 ------------------------------------------------------------------------------
                                         *MiniTest-child-neovim.get_screenshot()*
-child.get_screenshot()~
+child.get_screenshot() ~
 
 Compute what is displayed on (default TUI) screen and how it is displayed.
 This basically calls |screenstring()| and |screenattr()| for every visible
@@ -879,12 +879,12 @@ Notes:
   94 characters (ASCII codes between 33 and 126), so there will be duplicates
   in case of more than 94 different ways text is displayed on screen.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possieble fields:
   - <redraw> `(boolean)` - whether to call |:redraw| prior to computing
     screenshot. Default: `true`.
 
-Return~
+Return ~
 `(table|nil)` Screenshot table with the following fields:
   - <text> - "2d array" (row-column) of single characters displayed at
     particular cells.
@@ -899,7 +899,7 @@ Return~
   above content and line numbers for each line.
   Returns `nil` if couldn't get a reasonable screenshot.
 
-Usage~
+Usage ~
 >
   local screenshot = child.get_screenshot()
 

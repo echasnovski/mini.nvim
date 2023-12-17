@@ -45,7 +45,7 @@
 ---     - In case of missing file, check its or its parent read permissions.
 ---     - In case of no manipulation result, check write permissions.
 ---
---- # Dependencies~
+--- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality, will work without them):
 --- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the entry

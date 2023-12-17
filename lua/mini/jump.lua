@@ -23,7 +23,7 @@
 --- 'smartcase' is also set, f, F, t, T will only match lowercase
 --- characters case-insensitively.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.jump').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -38,13 +38,13 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniJump` - all possible cursor positions.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.minijump_disable` (globally) or
 --- `vim.b.minijump_disable` (for a buffer) to `true`. Considering high number of

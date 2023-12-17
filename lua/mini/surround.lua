@@ -52,7 +52,7 @@
 ---   Overall it is pretty good, but certain cases won't work. Like self-nested
 ---   tags won't match correctly on both ends: '<a><a></a></a>'.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.surround').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -67,7 +67,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Example usage~
+--- # Example usage ~
 ---
 --- Regular mappings:
 --- - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
@@ -87,7 +87,7 @@
 --- - `2sfnt` - find (`sf`) second (2) next (`n`) tag (`t`).
 --- - `shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'tpope/vim-surround':
 ---     - 'vim-surround' has completely different, with other focus set of
@@ -123,13 +123,13 @@
 ---         - Default behavior in 'mini.ai' selects one of the edges into `a`
 ---           textobject, while 'mini.surround' - both.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniSurround` - highlighting of requested surrounding.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minisurround_disable` (globally) or
 --- `vim.b.minisurround_disable` (for a buffer) to `true`. Considering high
@@ -137,7 +137,7 @@
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
 
---- Builtin surroundings~
+--- Builtin surroundings ~
 ---
 --- This table describes all builtin surroundings along with what they
 --- represent. Explanation:
@@ -456,7 +456,7 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 ---@text                                               *MiniSurround-vim-surround-config*
---- # Setup similar to 'tpope/vim-surround'~
+--- # Setup similar to 'tpope/vim-surround' ~
 ---
 --- This module is primarily designed after 'machakann/vim-sandwich'. To get
 --- behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
@@ -485,9 +485,9 @@ end
 ---   -- Make special mapping for "add surrounding for line"
 ---   vim.keymap.set('n', 'yss', 'ys_', { remap = true })
 --- <
---- # Options~
+--- # Options ~
 ---
---- ## Custom surroundings~
+--- ## Custom surroundings ~
 ---
 --- User can define own surroundings by supplying `config.custom_surroundings`.
 --- It should be a **table** with keys being single character surrounding
@@ -593,7 +593,7 @@ end
 --- - `'prev'`:          `(a) bbb (c)` -> `[a] bbb (c)`. Same outcome for `(bbb)`.
 --- - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 ---
---- ## Search suffixes~
+--- ## Search suffixes ~
 ---
 --- To provide more searching possibilities, 'mini.surround' creates extended
 --- mappings force "prev" and "next" methods for particular search. It does so

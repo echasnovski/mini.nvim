@@ -68,7 +68,7 @@ What it doesn't do:
     \   { buffer = true }
     \ )]])
 <
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.map').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniMap`
@@ -80,13 +80,13 @@ You can override runtime config settings (like `config.modifiers`) locally
 to buffer inside `vim.b.minimap_config` which should have same structure
 as `MiniMap.config`. See |mini.nvim-buffer-local-config| for more details.
 
-# Dependencies~
+# Dependencies ~
 
 Suggested dependencies (provide extra functionality for integrations):
 - Plugin 'lewis6991/gitsigns.nvim' for Git status highlighting via
   |MiniMap.gen_integration.gitsigns()|. If missing, no highlighting is added.
 
-# Comparisons~
+# Comparisons ~
 
 - 'wfxr/minimap.vim':
     - 'mini.map' doesn't have dependencies while being as fast as written
@@ -121,7 +121,7 @@ Suggested dependencies (provide extra functionality for integrations):
     - Almost the same differences as with 'dstein64/nvim-scrollview', except
       'satellite.nvim' can display some set of integration highlights.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniMapNormal` - basic highlight of whole window.
 * `MiniMapSymbolCount` - counts of per-line integration items.
@@ -130,7 +130,7 @@ Suggested dependencies (provide extra functionality for integrations):
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minimap_disable` (globally) or `vim.b.minimap_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -173,10 +173,10 @@ When you think content is not up to date, try one of these:
                            `MiniMap.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniMap.config|.
 
-Usage~
+Usage ~
 `require('mini.map').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ Steps:
   ▌▌
   █
 <
-Parameters~
+Parameters ~
 {strings} `(table)` Array of arbitrary strings.
 {opts} `(table|nil)` Options. Possible fields:
   - <n_rows> - number of rows in output encoding. If too big, will be
@@ -475,7 +475,7 @@ Parameters~
     symbols" section of |MiniMap.config| for more details. Default: output
     of |MiniMap.gen_encode_symbols.block()| with `'3x2'` identifier.
 
-Return~
+Return ~
 `(table)` Array of encoded strings.
 
 ------------------------------------------------------------------------------
@@ -489,7 +489,7 @@ two steps:
   visual indicators) and map window.
 - Call |MiniMap.refresh()|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options used to define map configuration. Same structure
   as |MiniMap.config|. Will have effect until at least one tabpage has opened
   map window. Default values are taken in the following order:
@@ -506,7 +506,7 @@ This function serves two purposes:
 - Update current map configuration via `opts`.
 - Update parts of displayed content via `parts`.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options used to define map configuration. Same structure
   as |MiniMap.config|. Will have effect until at least one tabpage has opened
   map window. Default values are taken in the following order:
@@ -534,7 +534,7 @@ Toggle map window
 
 Open if not shown in current tabpage, close otherwise.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Input for |MiniMap.open()|.
 
 ------------------------------------------------------------------------------
@@ -555,7 +555,7 @@ There are at least these extra methods to focus back from map window:
 - Press `<Esc>` to go back to original position prior focusing on map window.
   Equivalent to calling this function with `true` argument.
 
-Parameters~
+Parameters ~
 {use_previous_cursor} `(boolean|nil)` Whether to focus on source window at
   original cursor position (the one prior focusing on map window).
 
@@ -585,7 +585,7 @@ Generate block encode symbols
 
 Outputs use solid block to encode binary data. Example: '🬗', '▟', '█'.
 
-Parameters~
+Parameters ~
 {id} `(string)` Resolution identifier.
   Available values: `'1x2'`, `'2x1'`, `'2x2'`, `'3x2'` (default in 'mini.map').
 
@@ -596,7 +596,7 @@ Generate dot encode symbols
 
 Outputs use dots to encode binary data. Example: '⡪', '⣼', '⣿'.
 
-Parameters~
+Parameters ~
 {id} `(string)` Resolution identifier. Available values: `'4x2'`, `'3x2'`.
 
 ------------------------------------------------------------------------------
@@ -607,7 +607,7 @@ Generate shade encode symbols
 Outputs use whole cell shades to encode binary data. They use same set of
 characters ('░', '▒', '▒', '▓), but with different resolution.
 
-Parameters~
+Parameters ~
 {id} `(string)` Resolution identifier. Available values: `'1x2'`, `'2x1'`.
 
 ------------------------------------------------------------------------------
@@ -642,7 +642,7 @@ To enable highlight update on this keys, make custom mappings. Like this: >
     )
   end
 <
-Parameters~
+Parameters ~
 {hl_groups} `(table|nil)` Table defining highlight groups. Can have the
   following fields:
   - <search> - highlight group for search matches. Default: |hl-Search|.
@@ -659,7 +659,7 @@ It prompts integration highlighting update on every |DiagnosticChanged| event.
 Diagnostic items with higher severity (see |vim.diagnostic.severity|) have
 higher highlight priority (errors will be shown over all others, etc.).
 
-Parameters~
+Parameters ~
 {hl_groups} `(table|nil)` Table defining highlight groups. Supplied fields
   also define which diagnostic severity to highlight.
   Can have the following fields:
@@ -669,7 +669,7 @@ Parameters~
   - <info> - highlight group for info items. Default: `nil` (not shown).
   - <hint> - highlight group for hint items. Default: `nil` (not shown).
 
-Usage~
+Usage ~
 Show all diagnostic levels: >
   local map = require('mini.map')
   local diagnostic_integration = map.gen_integration.diagnostic({
@@ -693,7 +693,7 @@ buffer lines (except dealing with rescaled input on "first seen" bases; see
 
 It prompts integration highlighting update on every |gitsigns-event|.
 
-Parameters~
+Parameters ~
 {hl_groups} `(table|nil)` Table defining highlight groups. If `nil` (not
   supplied), this status is not highlighted. Can have the following fields:
   - <add> - highlight group for added lines. Default: "GitSignsAdd".

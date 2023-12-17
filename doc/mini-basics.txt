@@ -60,10 +60,10 @@ To stop module from showing non-error feedback, set `config.silent = true`.
                           `MiniBasics.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniBasics.config|.
 
-Usage~
+Usage ~
 `require('mini.basics').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -348,7 +348,7 @@ Toggle diagnostic for current buffer
 This uses |vim.diagnostic.enable()| and |vim.diagnostic.disable()| on
 per buffer basis.
 
-Return~
+Return ~
 `(string)` String indicator for new state. Similar to what |:set| `{option}?` shows.
 
 

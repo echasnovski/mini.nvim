@@ -67,7 +67,7 @@
 ---     - 'stevearc/aerial.nvim'
 ---     - 'williamboman/mason.nvim'
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.hues').setup({})` and
 --- **mandatory `background` and `foreground` fields** (add more fields to fit
@@ -90,7 +90,7 @@
 ---     },
 ---   })
 --- <
---- # Notes~
+--- # Notes ~
 ---
 --- - Using `setup()` doesn't actually create a |colorscheme|. It basically
 ---   creates a coordinated set of |highlight|s. To create your own scheme:

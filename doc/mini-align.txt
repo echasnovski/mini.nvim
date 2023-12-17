@@ -40,7 +40,7 @@ Features:
 - Every user interaction is accompanied with helper status message showing
   relevant information about current alignment process.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.align').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniAlign`
@@ -54,7 +54,7 @@ as `MiniAlign.config`. See |mini.nvim-buffer-local-config| for more details.
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Comparisons~
+# Comparisons ~
 
 - 'junegunn/vim-easy-align':
     - 'mini.align' is mostly designed after 'junegunn/vim-easy-align', so
@@ -86,7 +86,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
       desirable. 'mini.align' does not by design: use Visual selection or
       textobject/motion to explicitly define region to align.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minialign_disable` (globally) or `vim.b.minialign_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -412,10 +412,10 @@ Key sequences:
                           `MiniAlign.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniAlign.config|.
 
-Usage~
+Usage ~
 `require('mini.align').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -552,7 +552,7 @@ Align strings
 
 For details about alignment process see |MiniAlign-algorithm|.
 
-Parameters~
+Parameters ~
 {strings} `(table)` Array of strings.
 {opts} `(table|nil)` Options. Its copy will be passed to steps as second
   argument. Extended with `MiniAlign.config.options`.
@@ -586,7 +586,7 @@ Will use |MiniAlign.align_strings()| and set the following options in `opts`:
   used to create more advanced steps.
 - `mode` - mode of selection (see |MiniAlign-glossary|).
 
-Parameters~
+Parameters ~
 {mode} `(string)` Selection mode. One of "char", "line", "block".
 
 ------------------------------------------------------------------------------
@@ -597,10 +597,10 @@ Convert 2d array of strings to parts
 This function verifies if input is a proper 2d array of strings and adds
 methods to its copy.
 
-Class~
+Class ~
 {parts}
 
-Fields~
+Fields ~
 {apply} `(function)` Takes callable `f` and applies it to every part.
   Callable should have signature `(s, data)`: `s` is a string part,
   `data` - table with its data (<row> has row number, <col> has column number).
@@ -647,7 +647,7 @@ Fields~
   in a row). Value "keep" keeps it; "low" makes all indent equal to the
   lowest across rows; "high" - highest across rows; "remove" - removes indent.
 
-Usage~
+Usage ~
 >
   parts = MiniAlign.as_parts({ { 'a', 'b' }, { 'c' } })
   print(vim.inspect(parts.get_dims())) -- Should be { row = 2, col = 2 }
@@ -668,12 +668,12 @@ Create step
 A step is basically a named callable object. Having a name bundled with
 some action powers helper status message during interactive alignment process.
 
-Parameters~
+Parameters ~
 {name} `(string)` Step name.
 {action} `(function|table)` Step action. Should be a callable object
   (see |vim.is_callable()|).
 
-Return~
+Return ~
 `(table)` A table with keys: <name> with `name` argument, <action> with `action`.
 
 ------------------------------------------------------------------------------
@@ -695,7 +695,7 @@ Outputs of other elements depend on both step generator input values and
 options supplied at execution. This design is mostly because their output
 can be used several times in pre-steps.
 
-Usage~
+Usage ~
 >
   local align = require('mini.align')
   align.setup({
@@ -741,10 +741,10 @@ Output uses following options (as part second argument, `opts` table):
 - <split_exclude_patterns> - array of strings defining which regions to
   exclude from being matched. Default: `{}`. Examples: `{ '".-"', '^%s*#.*' }`.
 
-Return~
+Return ~
 `(table)` A step named "split" and with appropriate callable action.
 
-See also~
+See also ~
 |MiniAlign.gen_step.ignore_split()| heavily uses `split_exclude_patterns`.
 
 ------------------------------------------------------------------------------
@@ -779,7 +779,7 @@ Output uses following options (as part second argument, `opts` table):
   left edge is not on the first column. Default: array of zeros. Set
   automatically during interactive alignment in charwise mode.
 
-Return~
+Return ~
 `(table)` A step named "justify" and with appropriate callable action.
 
 ------------------------------------------------------------------------------
@@ -802,7 +802,7 @@ Output uses following options (as part second argument, `opts` table):
 - <merge_delimiter> - string or array of strings. Default: `''`.
   Examples: `' '`, `{ '', ' ' }`.
 
-Return~
+Return ~
 `(table)` A step named "merge" and with appropriate callable action.
 
 ------------------------------------------------------------------------------
@@ -840,10 +840,10 @@ Tips:
 - Filtering by last equal sign usually can be done with `n >= (N - 1)`
   (because there is usually something to the right of it).
 
-Parameters~
+Parameters ~
 {expr} `(string)` Lua expression as a string which will be used as predicate.
 
-Return~
+Return ~
 `(table|nil)` A step named "filter" and with appropriate callable action.
 
 ------------------------------------------------------------------------------
@@ -854,7 +854,7 @@ Generate ignore step
 Output adds certain values to `split_exclude_patterns` option. Should be
 used as pre-split step.
 
-Parameters~
+Parameters ~
 {patterns} `(table)` Array of patterns to be added to
   `split_exclude_patterns` as is. Default: `{ [[".-"]] }` (excludes strings
   for most cases).
@@ -862,10 +862,10 @@ Parameters~
   `split_exclude_patterns`. Comment pattern is derived from 'commentstring'
   option. Default: `true`.
 
-Return~
+Return ~
 `(table)` A step named "ignore" and with appropriate callable action.
 
-See also~
+See also ~
 |MiniAlign.gen_step.default_split()| for details about
   `split_exclude_patterns` option.
 
@@ -877,11 +877,11 @@ Generate pair step
 Output calls `pair()` method of parts (see |MiniAlign.as_parts()|) with
 supplied `direction` argument.
 
-Parameters~
+Parameters ~
 {direction} `(string)` Which direction to pair. One of "left" (default) or
 
 
-Return~
+Return ~
 `(table)` A step named "pair" and with appropriate callable action.
 
 ------------------------------------------------------------------------------
@@ -892,13 +892,13 @@ Generate trim step
 Output calls `trim()` method of parts (see |MiniAlign.as_parts()|) with
 supplied `direction` and `indent` arguments.
 
-Parameters~
+Parameters ~
 {direction} `(string|nil)` Which sides to trim whitespace. One of "both"
   (default), "left", "right", "none".
 {indent} `(string|nil)` What to do with possible indent (left whitespace
   of first string in a row). One of "keep" (default), "low", "high", "remove".
 
-Return~
+Return ~
 `(table)` A step named "trim" and with appropriate callable action.
 
 

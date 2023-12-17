@@ -71,7 +71,7 @@
 --- - If only some highlight groups can be made better, adjust them manually
 ---   inside written color scheme file.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.colors').setup({})` (replace `{}` with your

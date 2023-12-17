@@ -17,7 +17,7 @@ Features:
 - Sections can hide information when window is too narrow (specific window
   width is configurable per section).
 
-# Dependencies~
+# Dependencies ~
 
 Suggested dependencies (provide extra functionality, statusline will work
 without them):
@@ -27,7 +27,7 @@ without them):
 - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons in
   `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.statusline').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -41,7 +41,7 @@ You can override runtime config settings locally to buffer inside
 `vim.b.ministatusline_config` which should have same structure as
 `MiniStatusline.config`. See |mini.nvim-buffer-local-config| for more details.
 
-# Highlight groups~
+# Highlight groups ~
 
 Highlight depending on mode (second output from |MiniStatusline.section_mode|):
 * `MiniStatuslineModeNormal` - Normal mode.
@@ -62,7 +62,7 @@ Other groups:
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable (show empty statusline), set `vim.g.ministatusline_disable`
 (globally) or `vim.b.ministatusline_disable` (for a buffer) to `true`.
@@ -74,7 +74,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
                                                 *MiniStatusline-example-content*
 Example content
 
-# Default content~
+# Default content ~
 
 This function is used as default value for active content:
 >
@@ -98,7 +98,7 @@ This function is used as default value for active content:
     })
   end
 <
-# Show boolean options~
+# Show boolean options ~
 
 To compute section string for boolean option use variation of this code
 snippet inside content function (you can modify option itself, truncation
@@ -114,10 +114,10 @@ is `true`-ish then return `y`, if not - return `z`.
                         `MiniStatusline.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniStatusline.config|.
 
-Usage~
+Usage ~
 `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -172,10 +172,10 @@ General idea of this function is as follows;
   strings from `strings` are separated by one space. Non-empty groups are
   separated by two spaces (one for each highlighting).
 
-Parameters~
+Parameters ~
 {groups} `(table)` Array of groups.
 
-Return~
+Return ~
 `(string)` String suitable for 'statusline'.
 
 ------------------------------------------------------------------------------
@@ -189,10 +189,10 @@ default.
 
 Use this to manually decide if section needs truncation or not.
 
-Parameters~
+Parameters ~
 {trunc_width} `(number|nil)` Truncation width. If `nil`, output is `false`.
 
-Return~
+Return ~
 `(boolean)` Whether to truncate.
 
 ------------------------------------------------------------------------------
@@ -202,10 +202,10 @@ Section for Vim |mode()|
 
 Short output is returned if window width is lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments.
 
-Return~
+Return ~
 `(...)` Section string and mode's highlight group.
 
 ------------------------------------------------------------------------------
@@ -219,10 +219,10 @@ Note: requires 'lewis6991/gitsigns' plugin.
 
 Short output is returned if window width is lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments. Use `args.icon` to supply your own icon.
 
-Return~
+Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
@@ -236,10 +236,10 @@ errors ('E'), warnings ('W'), information ('I'), and hints ('H').
 
 Short output is returned if window width is lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments. Use `args.icon` to supply your own icon.
 
-Return~
+Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
@@ -251,10 +251,10 @@ Show full file name or relative in short output.
 
 Short output is returned if window width is lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments.
 
-Return~
+Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
@@ -265,10 +265,10 @@ Section for file information
 Short output contains only extension and is returned if window width is
 lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments.
 
-Return~
+Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
@@ -282,10 +282,10 @@ Show location inside buffer in the form:
 
 Short output is returned if window width is lower than `args.trunc_width`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments.
 
-Return~
+Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
@@ -302,10 +302,10 @@ data on every call which can be computationally expensive (although still
 usually on 0.1 ms order of magnitude). To prevent this, supply
 `args.options = { recompute = false }`.
 
-Parameters~
+Parameters ~
 {args} `(table)` Section arguments.
 
-Return~
+Return ~
 `(string)` Section string.
 
 

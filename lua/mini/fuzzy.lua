@@ -15,7 +15,7 @@
 ---
 --- - Generator of |telescope.nvim| sorter: |MiniFuzzy.get_telescope_sorter()|.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.fuzzy').setup({})` (replace `{}` with your
@@ -29,14 +29,14 @@
 --- `MiniFuzzy.config`.
 --- See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Notes~
+--- # Notes ~
 ---
 --- 1. Currently there is no explicit design to work with multibyte symbols,
 ---    but simple examples should work.
 --- 2. Smart case is used: case insensitive if input word (which is usually a
 ---     user input) is all lower case. Case sensitive otherwise.
 
---- # Algorithm design~
+--- # Algorithm design ~
 ---
 --- General design uses only width of found match and index of first letter
 --- match. No special characters or positions (like in fzy and fzf) are used.

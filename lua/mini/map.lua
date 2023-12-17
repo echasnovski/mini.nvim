@@ -68,7 +68,7 @@
 ---     \   { buffer = true }
 ---     \ )]])
 --- <
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.map').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniMap`
@@ -80,13 +80,13 @@
 --- to buffer inside `vim.b.minimap_config` which should have same structure
 --- as `MiniMap.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Dependencies~
+--- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality for integrations):
 --- - Plugin 'lewis6991/gitsigns.nvim' for Git status highlighting via
 ---   |MiniMap.gen_integration.gitsigns()|. If missing, no highlighting is added.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'wfxr/minimap.vim':
 ---     - 'mini.map' doesn't have dependencies while being as fast as written
@@ -121,7 +121,7 @@
 ---     - Almost the same differences as with 'dstein64/nvim-scrollview', except
 ---       'satellite.nvim' can display some set of integration highlights.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniMapNormal` - basic highlight of whole window.
 --- * `MiniMapSymbolCount` - counts of per-line integration items.
@@ -130,7 +130,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minimap_disable` (globally) or `vim.b.minimap_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios

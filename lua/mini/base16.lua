@@ -51,7 +51,7 @@
 ---     - 'stevearc/aerial.nvim'
 ---     - 'williamboman/mason.nvim'
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.base16').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
@@ -91,7 +91,7 @@
 ---     },
 ---   })
 --- <
---- # Notes~
+--- # Notes ~
 ---
 --- 1. This is used to create plugin's colorschemes (see |mini.nvim-color-schemes|).
 --- 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
@@ -111,7 +111,7 @@
 --- <
 --- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
 ---
---- ## minischeme~
+--- ## minischeme ~
 ---
 --- Blue and yellow main colors with high contrast and saturation palette.
 --- Palettes are:
@@ -120,7 +120,7 @@
 --- - For light 'background':
 ---   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
 ---
---- ## minicyan~
+--- ## minicyan ~
 ---
 --- Cyan and grey main colors with moderate contrast and saturation palette.
 --- Palettes are:
@@ -213,7 +213,7 @@ MiniBase16.config = {
 --- background and foreground with optional setting of accent chroma (see
 --- details).
 ---
---- # Algorithm design~
+--- # Algorithm design ~
 ---
 --- - Main operating color space is
 ---   [CIELCh(uv)](https://en.wikipedia.org/wiki/CIELUV#Cylindrical_representation_(CIELCh))

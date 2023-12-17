@@ -51,7 +51,7 @@ Supported highlight groups:
     - 'stevearc/aerial.nvim'
     - 'williamboman/mason.nvim'
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.base16').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table
@@ -91,7 +91,7 @@ Example:
     },
   })
 <
-# Notes~
+# Notes ~
 
 1. This is used to create plugin's colorschemes (see |mini.nvim-color-schemes|).
 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
@@ -115,7 +115,7 @@ This module comes with several pre-built color schemes. All of them are a
 <
 Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
 
-## minischeme~
+## minischeme ~
 
 Blue and yellow main colors with high contrast and saturation palette.
 Palettes are:
@@ -124,7 +124,7 @@ Palettes are:
 - For light 'background':
   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
 
-## minicyan~
+## minicyan ~
 
 Cyan and grey main colors with moderate contrast and saturation palette.
 Palettes are:
@@ -151,10 +151,10 @@ By default only 'gui highlighting' (see |highlight-gui| and
 - Table with similar structure to `palette` but having terminal colors
   (integers from 0 to 255) instead of hex strings.
 
-Parameters~
+Parameters ~
 {config} `(table)` Module config table. See |MiniBase16.config|.
 
-Usage~
+Usage ~
 `require('mini.base16').setup({})` (replace `{}` with your `config`
   table; `config.palette` should be a table with colors)
 
@@ -210,7 +210,7 @@ Create base16 palette based on the HEX (string '#RRGGBB') colors of main
 background and foreground with optional setting of accent chroma (see
 details).
 
-# Algorithm design~
+# Algorithm design ~
 
 - Main operating color space is
   [CIELCh(uv)](https://en.wikipedia.org/wiki/CIELUV#Cylindrical_representation_(CIELCh))
@@ -246,16 +246,16 @@ details).
   `base0D` and `base0F` have same hues because they usually represent
   functions and delimiter (brackets included).
 
-Parameters~
+Parameters ~
 {background} `(string)` Background HEX color (formatted as `#RRGGBB`).
 {foreground} `(string)` Foreground HEX color (formatted as `#RRGGBB`).
 {accent_chroma} `(number)` Optional positive number (usually between 0
   and 100). Default: chroma of foreground color.
 
-Return~
+Return ~
 `(table)` Table with base16 palette.
 
-Usage~
+Usage ~
 `local palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
 `require('mini.base16').setup({palette = palette})`
 
@@ -266,11 +266,11 @@ Converts palette with RGB colors to terminal colors
 
 Useful for caching `use_cterm` variable to increase speed.
 
-Parameters~
+Parameters ~
 {palette} `(table)` Table with base16 palette (same as in
   `MiniBase16.config.palette`).
 
-Return~
+Return ~
 `(table)` Table with base16 palette using |highlight-cterm|.
 
 

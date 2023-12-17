@@ -31,7 +31,7 @@ What it doesn't do:
       does by default).
     - Disable module for buffer (see 'Disabling' section).
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.pairs').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -43,7 +43,7 @@ See |MiniPairs.config| for `config` structure and default values.
 This module doesn't have runtime options, so using `vim.b.minipairs_config`
 will have no effect here.
 
-# Example mappings~
+# Example mappings ~
 
 - Register quotes inside `config` of |MiniPairs.setup|: >
   mappings = {
@@ -58,7 +58,7 @@ will have no effect here.
 - Create symmetrical `$$` pair only in Tex files: >
   au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})
 <
-# Notes~
+# Notes ~
 
 - Make sure to make proper mapping of `<CR>` in order to support completion
   plugin of your choice:
@@ -70,7 +70,7 @@ will have no effect here.
     - Autopairing capabilities of interpretators (`ipython`, `radian`).
     - Vim mode of terminal itself.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minipairs_disable` (globally) or `vim.b.minipairs_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -83,10 +83,10 @@ recipes.
                           `MiniPairs.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniPairs.config|.
 
-Usage~
+Usage ~
 `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ Using this function instead of |nvim_set_keymap()| allows automatic
 registration of pairs which will be recognized by `<BS>` and `<CR>`.
 For Neovim>=0.7 it also infers mapping description from `pair_info`.
 
-Parameters~
+Parameters ~
 {mode} `(string)` `mode` for |nvim_set_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_set_keymap()|.
 {pair_info} `(table)` Table with pair information.
@@ -166,7 +166,7 @@ Using this function instead of |nvim_buf_set_keymap()| allows automatic
 registration of pairs which will be recognized by `<BS>` and `<CR>`.
 For Neovim>=0.7 it also infers mapping description from `pair_info`.
 
-Parameters~
+Parameters ~
 {buffer} `(number)` `buffer` for |nvim_buf_set_keymap()|.
 {mode} `(string)` `mode` for |nvim_buf_set_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_buf_set_keymap()|.
@@ -181,7 +181,7 @@ Remove global mapping
 
 A wrapper for |nvim_del_keymap()| which registers supplied `pair`.
 
-Parameters~
+Parameters ~
 {mode} `(string)` `mode` for |nvim_del_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_del_keymap()|.
 {pair} `(string)` Pair which should be unregistered from both
@@ -200,7 +200,7 @@ done with |MiniPairs.map|, unmap for buffer in usual Neovim manner:
 `inoremap <buffer> <*> <*>` (this maps `<*>` key to do the same it does by
 default).
 
-Parameters~
+Parameters ~
 {buffer} `(number)` `buffer` for |nvim_buf_del_keymap()|.
 {mode} `(string)` `mode` for |nvim_buf_del_keymap()|.
 {lhs} `(string)` `lhs` for |nvim_buf_del_keymap()|.
@@ -220,12 +220,12 @@ with |<Left>|.
 
 Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
-Parameters~
+Parameters ~
 {pair} `(string)` String with two characters representing pair.
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
-Return~
+Return ~
 `(string)` Keys performing "open" action.
 
 ------------------------------------------------------------------------------
@@ -241,12 +241,12 @@ otherwise.
 
 Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
-Parameters~
+Parameters ~
 {pair} `(string)` String with two characters representing pair.
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
-Return~
+Return ~
 `(string)` Keys performing "close" action.
 
 ------------------------------------------------------------------------------
@@ -261,12 +261,12 @@ conditionally paste pair otherwise (with |MiniPairs.open()|).
 
 Used inside |MiniPairs.map| and |MiniPairs.map_buf| for an actual mapping.
 
-Parameters~
+Parameters ~
 {pair} `(string)` String with two characters representing pair.
 {neigh_pattern} `(string|nil)` Pattern for two neighborhood characters.
   Character "\r" indicates line start, "\n" - line end.
 
-Return~
+Return ~
 `(string)` Keys performing "closeopen" action.
 
 ------------------------------------------------------------------------------
@@ -293,10 +293,10 @@ pair. Examples: >
   map_bs('<C-w>', 'v:lua.MiniPairs.bs("\23")')
   map_bs('<C-u>', 'v:lua.MiniPairs.bs("\21")')
 
-Parameters~
+Parameters ~
 {key} `(string|nil)` Key to use. Default: `<BS>`.
 
-Return~
+Return ~
 `(string)` Keys performing "backspace" action.
 
 ------------------------------------------------------------------------------
@@ -312,10 +312,10 @@ registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
 Mapped by default inside |MiniPairs.setup|.
 
-Parameters~
+Parameters ~
 {key} `(string|nil)` Key to use. Default: `<CR>`.
 
-Return~
+Return ~
 `(string)` Keys performing "new line" action.
 
 

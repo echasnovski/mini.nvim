@@ -29,7 +29,7 @@
 ---   should be `''` (empty string). This is the default value in Neovim>=0.9,
 ---   so make sure to not set it manually.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.comment').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
@@ -42,7 +42,7 @@
 --- `vim.b.minicomment_config` which should have same structure as
 --- `MiniComment.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.minicomment_disable` (globally) or
 --- `vim.b.minicomment_disable` (for a buffer) to `true`. Considering high number

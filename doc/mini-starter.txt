@@ -38,7 +38,7 @@ Key design ideas:
 What is doesn't do:
 - It doesn't support fuzzy query for items. And probably will never do.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.starter').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -57,7 +57,7 @@ buffer allowing full customization.
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniStarterCurrent` - current item.
 * `MiniStarterFooter` - footer units.
@@ -71,7 +71,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable core functionality, set `vim.g.ministarter_disable` (globally) or
 `vim.b.ministarter_disable` (for a buffer) to `true`. Considering high number
@@ -172,7 +172,7 @@ header/footer, and content hooks:
 
 ------------------------------------------------------------------------------
                                                          *MiniStarter-lifecycle*
-# Lifecycle of Starter buffer~
+# Lifecycle of Starter buffer ~
 
 - Open with |MiniStarter.open()|. It includes creating buffer with
   appropriate options, mappings, behavior; call to |MiniStarter.refresh()|;
@@ -193,10 +193,10 @@ header/footer, and content hooks:
                          `MiniStarter.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniStarter.config|.
 
-Usage~
+Usage ~
 `require('mini.starter').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ Note: to fully use it in autocommand, it is recommended to utilize
 |autocmd-nested|. Example:
 `autocmd TabNewEntered * ++nested lua MiniStarter.open()`
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Identifier of existing valid buffer (see |bufnr()|) to
   open inside. Default: create a new one.
 
@@ -307,7 +307,7 @@ Refresh Starter buffer
 Note: this function is executed on every |VimResized| to allow more
 responsive behavior.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
 
@@ -316,7 +316,7 @@ Parameters~
                          `MiniStarter.close`({buf_id})
 Close Starter buffer
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
 
@@ -330,7 +330,7 @@ Table of pre-configured sections
                     `MiniStarter.sections.builtin_actions`()
 Section with builtin actions
 
-Return~
+Return ~
 `(table)` Array of items.
 
 ------------------------------------------------------------------------------
@@ -347,12 +347,12 @@ Sessions are taken from |MiniSessions.detected|. Notes:
   stored (see |MiniSessions.setup|).
 - Local session (if detected) is always displayed first.
 
-Parameters~
+Parameters ~
 {n} `(number|nil)` Number of returned items. Default: 5.
 {recent} `(boolean|nil)` Whether to use recent sessions (instead of
   alphabetically by name). Default: true.
 
-Return~
+Return ~
 `(function)` Function which returns array of items.
 
 ------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ Section with most recently used files
 
 Files are taken from |vim.v.oldfiles|.
 
-Parameters~
+Parameters ~
 {n} `(number|nil)` Number of returned items. Default: 5.
 {current_dir} `(boolean|nil)` Whether to return files only from current working
   directory and its subdirectories. Default: `false`.
@@ -370,7 +370,7 @@ Parameters~
   If callable, will be called with full path and should return string to be
   directly appended to file name. Default: `true`.
 
-Return~
+Return ~
 `(function)` Function which returns array of items.
 
 ------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ Notes:
   require |mini.extra| module of 'mini.nvim'.
 - "Visited paths" items requires |mini.visits| module of 'mini.nvim'.
 
-Return~
+Return ~
 `(function)` Function which returns array of items.
 
 ------------------------------------------------------------------------------
@@ -396,7 +396,7 @@ Notes:
 - All actions require 'nvim-telescope/telescope.nvim' plugin.
 - "Browser" item requires 'nvim-telescope/telescope-file-browser.nvim'.
 
-Return~
+Return ~
 `(function)` Function which returns array of items.
 
 ------------------------------------------------------------------------------
@@ -415,13 +415,13 @@ Hook generator for padding
 Output is a content hook which adds constant padding from left and top.
 This allows tweaking the screen position of buffer content.
 
-Parameters~
+Parameters ~
 {left} `(number|nil)` Number of empty spaces to add to start of each content
   line. Default: 0.
 {top} `(number|nil)` Number of empty lines to add to start of content.
   Default: 0.
 
-Return~
+Return ~
 `(function)` Content hook.
 
 ------------------------------------------------------------------------------
@@ -432,13 +432,13 @@ Hook generator for adding bullet to items
 Output is a content hook which adds supplied string to be displayed to the
 left of item.
 
-Parameters~
+Parameters ~
 {bullet} `(string|nil)` String to be placed to the left of item name.
   Default: "░ ".
 {place_cursor} `(boolean|nil)` Whether to place cursor on the first character
   of bullet when corresponding item becomes current. Default: true.
 
-Return~
+Return ~
 `(function)` Content hook.
 
 ------------------------------------------------------------------------------
@@ -450,13 +450,13 @@ Output is a content hook which adds unique index to the start of item's
 name. It results into shortening queries required to choose an item (at
 expense of clarity).
 
-Parameters~
+Parameters ~
 {grouping} `(string|nil)` One of "all" (number indexing across all sections) or
   "section" (letter-number indexing within each section). Default: "all".
 {exclude_sections} `(table|nil)` Array of section names (values of `section`
   element of item) for which index won't be added. Default: `{}`.
 
-Return~
+Return ~
 `(function)` Content hook.
 
 ------------------------------------------------------------------------------
@@ -471,11 +471,11 @@ tabpage displaying the starter buffer.
 Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
 such that output lines would appear aligned in certain way.
 
-Parameters~
+Parameters ~
 {horizontal} `(string|nil)` One of "left", "center", "right". Default: "left".
 {vertical} `(string|nil)` One of "top", "center", "bottom". Default: "top".
 
-Return~
+Return ~
 `(function)` Content hook.
 
 ------------------------------------------------------------------------------
@@ -502,7 +502,7 @@ Notes:
   information about an item it represents. Those elements are used directly
   to create an array of items used for query.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
 
@@ -515,7 +515,7 @@ Basically, this traverses content "2d array" (in depth-first fashion; top
 to bottom, left to right) and returns "coordinates" of units for which
 `predicate` is true-ish.
 
-Parameters~
+Parameters ~
 {content} `(table|nil)` Content "2d array". Default: content of current buffer.
 {predicate} `(function|string|nil)` Predictate to filter units. If it is:
    - Function, then it is evaluated with unit as input.
@@ -523,7 +523,7 @@ Parameters~
      units with some type).
    - `nil`, all units are kept.
 
-Return~
+Return ~
 `(table)` Array of resulting units' coordinates. Each coordinate is a
   table with <line> and <unit> keys. To retrieve actual unit from coordinate
   `c`, use `content[c.line][c.unit]`.
@@ -536,10 +536,10 @@ Convert content to buffer lines
 One buffer line is made by concatenating `string` element of units within
 same content line.
 
-Parameters~
+Parameters ~
 {content} `(table|nil)` Content "2d array". Default: content of current buffer.
 
-Return~
+Return ~
 `(table)` Array of strings for each buffer line.
 
 ------------------------------------------------------------------------------
@@ -556,10 +556,10 @@ element of content units with type "item". This also:
   element of content unit. This allows modifying item's `name` at the stage
   of content hooks (like, for example, in |MiniStarter.gen_hook.indexing|).
 
-Parameters~
+Parameters ~
 {content} `(table|nil)` Content "2d array". Default: content of current buffer.
 
-Return~
+Return ~
 `(table)` Array of items.
 
 ------------------------------------------------------------------------------
@@ -570,7 +570,7 @@ Evaluate current item
 Note that it resets current query before evaluation, as it is rarely needed
 any more.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
 
@@ -581,7 +581,7 @@ Update current item
 
 This makes next (with respect to `direction`) active item to be current.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "next" or "previous".
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
   Default: current buffer.
@@ -598,7 +598,7 @@ Add character to current query
 - Update highlighting: whole strings for "inactive" items, current query
   for "active" items.
 
-Parameters~
+Parameters ~
 {char} `(string|nil)` Single character to be added to query. If `nil`, deletes
   latest character from query.
 {buf_id} `(number|nil)` Buffer identifier of a valid Starter buffer.
@@ -609,7 +609,7 @@ Parameters~
                    `MiniStarter.set_query`({query}, {buf_id})
 Set current query
 
-Parameters~
+Parameters ~
 {query} `(string|nil)` Query to be set (only if it results into at least one
   active item). Default: `nil` for setting query to empty string, which
   essentially resets query.

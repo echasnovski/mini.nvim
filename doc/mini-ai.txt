@@ -59,7 +59,7 @@ What it doesn't (and probably won't) do:
   in 'targets.vim'). Whitespace handling is assumed to be done inside
   textobject specification (like `i(` and `i)` handle whitespace differently).
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.ai').setup({})` (replace
 `{}` with your `config` table). It will create global Lua table `MiniAi`
@@ -73,7 +73,7 @@ as `MiniAi.config`. See |mini.nvim-buffer-local-config| for more details.
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Comparisons~
+# Comparisons ~
 
 - 'wellle/targets.vim':
     - Has limited support for creating own textobjects: it is constrained
@@ -103,7 +103,7 @@ To stop module from showing non-error feedback, set `config.silent = true`.
     - Doesn't support multiple search method (basically, only 'cover').
     - Doesn't support consecutive application of target textobject.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.miniai_disable` (globally) or `vim.b.miniai_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -113,7 +113,7 @@ recipes.
 
 ------------------------------------------------------------------------------
                                                      *MiniAi-textobject-builtin*
-Builtin textobjects~
+Builtin textobjects ~
 
 This table describes all builtin textobjects along with what they
 represent. Explanation:
@@ -383,10 +383,10 @@ Notes:
                             `MiniAi.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniAi.config|.
 
-Usage~
+Usage ~
 `require('mini.ai').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -477,7 +477,7 @@ Examples:
 <
 There are more example specifications in |MiniAi-textobject-specification|.
 
-## Search method~
+## Search method ~
 
 Value of `config.search_method` defines how best match search is done.
 Based on its value, one of the following matches will be selected:
@@ -518,7 +518,7 @@ Here is an example of what `a)` textobject is based on a value of
 - `'prev'`: `(a) bbb (c)` -> `(a)`. Same outcome for `(bbb)`.
 - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 
-## Mappings~
+## Mappings ~
 
 Mappings `around_next`/`inside_next` and `around_last`/`inside_last` are
 essentially `around`/`inside` but using search method `'next'` and `'prev'`.
@@ -528,7 +528,7 @@ essentially `around`/`inside` but using search method `'next'` and `'prev'`.
                `MiniAi.find_textobject`({ai_type}, {id}, {opts})
 Find textobject region
 
-Parameters~
+Parameters ~
 {ai_type} `(string)` One of `'a'` or `'i'`.
 {id} `(string)` Single character string representing textobject id. It is
   used to get specification which is later used to compute textobject region.
@@ -545,7 +545,7 @@ Parameters~
     Default: empty region at cursor position.
   - <search_method> - Search method. Default: `config.search_method`.
 
-Return~
+Return ~
 `(table|nil)` Region of textobject or `nil` if no textobject different
   from `opts.reference_region` was consecutively found `opts.n_times` times.
 
@@ -554,7 +554,7 @@ Return~
              `MiniAi.move_cursor`({side}, {ai_type}, {id}, {opts})
 Move cursor to edge of textobject
 
-Parameters~
+Parameters ~
 {side} `(string)` One of `'left'` or `'right'`.
 {ai_type} `(string)` One of `'a'` or `'i'`.
 {id} `(string)` Single character string representing textobject id.
@@ -603,7 +603,7 @@ Examples:
 - `argument({ exclude_regions = { '%b()' } })` will exclude separators
   which are inside balanced `()` (inside outer brackets).
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Allowed fields:
   - <brackets> - array of patterns for outer balanced brackets.
     Default: `{ '%b()', '%b[]', '%b{}' }` (any `()`, `[]`, or `{}` can
@@ -634,7 +634,7 @@ Example:
 - `function_call({ name_pattern = '[%w_]' })` will recognize function name with
   only alphanumeric or underscore (not dot).
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Optsion. Allowed fields:
   - <name_pattern> - string pattern of character set allowed in function name.
     Default: `'[%w_%.]'` (alphanumeric, underscore, or dot).
@@ -662,7 +662,7 @@ both `left` and `right`:
   consecutively selects '__a__' and '__b_'. Note: both `left` and `right`
   should be single character.
 
-Parameters~
+Parameters ~
 {left} `(string)` Left edge.
 {right} `(string)` Right edge.
 {opts} `(table|nil)` Options. Possible fields:
@@ -722,7 +722,7 @@ Notes:
   fast though (one search should be magnitude of milliseconds or tens of
   milliseconds on really large file).
 
-Parameters~
+Parameters ~
 {ai_captures} `(table)` Captures for `a` and `i` textobjects: table with
   <a> and <i> fields with captures for `a` and `i` textobjects respectively.
   Each value can be either a string capture (should start with `'@'`) or an
@@ -733,12 +733,12 @@ Parameters~
     cost of increased execution time. Provides more coherent experience if
     'nvim-treesitter-textobjects' queries are used. Default: `true`.
 
-Return~
+Return ~
 `(function)` Function with |MiniAi.find_textobject()| signature which
   returns array of current buffer regions representing matches for
   corresponding (`a` or `i`) treesitter capture.
 
-See also~
+See also ~
 |MiniAi-textobject-specification| for how this type of textobject
   specification is processed.
 |get_query()| for how query is fetched in case of no 'nvim-treesitter'.
@@ -752,7 +752,7 @@ Visually select textobject region
 
 Does nothing if no region is found.
 
-Parameters~
+Parameters ~
 {ai_type} `(string)` One of `'a'` or `'i'`.
 {id} `(string)` Single character string representing textobject id.
 {opts} `(table|nil)` Same as in |MiniAi.find_textobject()|. Extra fields:

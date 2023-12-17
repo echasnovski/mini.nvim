@@ -23,7 +23,7 @@ This module follows vim's 'ignorecase' and 'smartcase' options. When
 'smartcase' is also set, f, F, t, T will only match lowercase
 characters case-insensitively.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.jump').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -38,13 +38,13 @@ You can override runtime config settings locally to buffer inside
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniJump` - all possible cursor positions.
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable core functionality, set `vim.g.minijump_disable` (globally) or
 `vim.b.minijump_disable` (for a buffer) to `true`. Considering high number of
@@ -57,10 +57,10 @@ disabling module's functionality is left to user. See
                            `MiniJump.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniJump.config|.
 
-Usage~
+Usage ~
 `require('mini.jump').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -104,10 +104,10 @@ It stores various information used in this module. All elements, except
 `jumping`, is about the latest jump. They are used as default values for
 similar arguments.
 
-Class~
+Class ~
 {JumpingState}
 
-Fields~
+Fields ~
 {target} `(string|nil)` The string to jump to.
 {backward} `(boolean|nil)` Whether to jump backward.
 {till} `(boolean|nil)` Whether to jump just before/after the match instead of
@@ -140,7 +140,7 @@ Takes a string and jumps to its first occurrence in desired direction.
 
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
-Parameters~
+Parameters ~
 {target} `(string|nil)` The string to jump to.
 {backward} `(boolean|nil)` Whether to jump backward.
 {till} `(boolean|nil)` Whether to jump just before/after the match instead of
@@ -159,7 +159,7 @@ Otherwise, wait for a target input (via |getcharstr()|). Respects |v:count|.
 
 All default values are taken from |MiniJump.state| to emulate latest jump.
 
-Parameters~
+Parameters ~
 {backward} `(boolean|nil)` Whether to jump backward.
 {till} `(boolean|nil)` Whether to jump just before/after the match instead of
   exactly on target. This includes positioning cursor past the end of

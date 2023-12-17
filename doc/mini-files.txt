@@ -45,7 +45,7 @@ Notes:
     - In case of missing file, check its or its parent read permissions.
     - In case of no manipulation result, check write permissions.
 
-# Dependencies~
+# Dependencies ~
 
 Suggested dependencies (provide extra functionality, will work without them):
 - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the entry
@@ -480,10 +480,10 @@ Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >
                           `MiniFiles.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniFiles.config|.
 
-Usage~
+Usage ~
 `require('mini.files').setup({})` (replace `{}` with your `config` table).
 
 ------------------------------------------------------------------------------
@@ -639,7 +639,7 @@ Common ways to use this function:
 - `MiniFiles.open(MiniFiles.get_latest_path())` - open last used `path`
   (per tabpage). Current working directory for the first time.
 
-Parameters~
+Parameters ~
 {path} `(string|nil)` A valid file system path used as anchor.
   If it is a path to directory, used directly.
   If it is a path to file, its parent directory is used as anchor while
@@ -659,7 +659,7 @@ Notes:
 - If in `opts` at least one of `content` entry is not `nil`, all directory
   buffers are forced to update.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Table of options to update.
 
 ------------------------------------------------------------------------------
@@ -686,7 +686,7 @@ Reset explorer
                               `MiniFiles.close`()
 Close explorer
 
-Return~
+Return ~
 `(boolean|nil)` Whether closing was done or `nil` if there was nothing to close.
 
 ------------------------------------------------------------------------------
@@ -743,13 +743,13 @@ Show help window
                    `MiniFiles.get_fs_entry`({buf_id}, {line})
 Get file system entry data
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier of valid directory buffer.
   Default: current buffer.
 {line} `(number|nil)` Line number of entry for which to return information.
   Default: cursor line.
 
-Return~
+Return ~
 `(table|nil)` Table of file system entry data with the following fields:
   - <fs_type> `(string)` - one of "file" or "directory".
   - <name> `(string)` - basename of an entry (including extension).
@@ -762,7 +762,7 @@ Returns `nil` if there is no proper file system entry path at the line.
                         `MiniFiles.get_target_window`()
 Get target window
 
-Return~
+Return ~
 `(number|nil)` Window identifier inside which file will be opened or
   `nil` if no explorer is opened.
 
@@ -771,7 +771,7 @@ Return~
                     `MiniFiles.set_target_window`({win_id})
 Set target window
 
-Parameters~
+Parameters ~
 {win_id} `(number)` Window identifier inside which file will be opened.
 
 ------------------------------------------------------------------------------
@@ -789,13 +789,13 @@ Default filter of file system entries
 
 Currently does not filter anything out.
 
-Parameters~
+Parameters ~
 {fs_entry} `(table)` Table with the following fields:
   - <fs_type> `(string)` - one of "file" or "directory".
   - <name> `(string)` - basename of an entry (including extension).
   - <path> `(string)` - full path of an entry.
 
-Return~
+Return ~
 `(boolean)` Always `true`.
 
 ------------------------------------------------------------------------------
@@ -807,13 +807,13 @@ Default prefix of file system entries
 - For file try to use `get_icon()` from 'nvim-tree/nvim-web-devicons'.
   If missing, return fixed icon and 'MiniFilesFile' highlight group.
 
-Parameters~
+Parameters ~
 {fs_entry} `(table)` Table with the following fields:
   - <fs_type> `(string)` - one of "file" or "directory".
   - <name> `(string)` - basename of an entry (including extension).
   - <path> `(string)` - full path of an entry.
 
-Return~
+Return ~
 `(...)` Icon and highlight group name. For more details, see |MiniFiles.config|
   and |MiniFiles-examples|.
 
@@ -825,14 +825,14 @@ Default sort of file system entries
 Sort directories and files separately (alphabetically ignoring case) and
 put directories first.
 
-Parameters~
+Parameters ~
 {fs_entries} `(table)` Array of file system entry data.
   Each one is a table with the following fields:
   - <fs_type> `(string)` - one of "file" or "directory".
   - <name> `(string)` - basename of an entry (including extension).
   - <path> `(string)` - full path of an entry.
 
-Return~
+Return ~
 `(table)` Sorted array of file system entries.
 
 

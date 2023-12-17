@@ -98,7 +98,7 @@ as `MiniBracketed.config`. See |mini.nvim-buffer-local-config| for more details.
       indent scope, like how to treat empty lines near border or whether to
       compute indent at cursor.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minibracketed_disable` (globally) or
 `vim.b.minibracketed_disable` (for a buffer) to `true`. Considering high
@@ -111,10 +111,10 @@ rules for disabling module's functionality is left to user. See
                         `MiniBracketed.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniBracketed.config|.
 
-Usage~
+Usage ~
 `require('mini.bracketed').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ Go to next/previous listed buffer. Order by their number (see |bufnr()|).
 
 Direction "forward" increases number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -226,7 +226,7 @@ Go to next/previous comment block. Only linewise comments using
 
 Direction "forward" increases line number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -254,7 +254,7 @@ Notes:
     - Execute one of these: `d]x[xdd` (choose upper part) or
       `d[x]xdd` (choose lower part).
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -283,7 +283,7 @@ Notes:
   MiniBracketed.diagnostic('forward', { severity = severity_error })
   MiniBracketed.diagnostic('backward', { severity = severity_error })
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -305,7 +305,7 @@ doesn't go inside subdirectories.
 
 Direction "forward" goes forward alphabetically, "backward" - backward.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -328,7 +328,7 @@ Notes:
 
 Direction "forward" increases line number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -350,7 +350,7 @@ Notes:
 
 Direction "forward" increases jump number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -367,7 +367,7 @@ wrapping around edges and |[count]| for "first"/"last" direction.
 
 Direction "forward" increases location number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -390,7 +390,7 @@ Notes:
   change is done not through this target (like with |MiniBracketed.buffer()|),
   it updates recency of last advanced and new buffers.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -407,7 +407,7 @@ wrapping around edges and |[count]| for "first"/"last" direction.
 
 Direction "forward" increases location number, "backward" - decreases.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -432,7 +432,7 @@ Notes:
 Direction "forward" moves cursor forward to node's end, "backward" - backward
 to node's start.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -491,7 +491,7 @@ built-in functionality, here is an example:
       **previously visited** by the user. Another `[u` restores `one two three`.
       Use `]U` to go to latest visited undo state.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -517,7 +517,7 @@ Direction "forward" increases window number, "backward" - decreases.
 
 Only normal (non-floating) windows are used.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -572,7 +572,7 @@ For users there are these approaches to manage which region will be used:
       vim.keymap.set({ 'n', 'x' }, lhs, rhs, { expr = true })
     end
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
@@ -594,10 +594,10 @@ This function should be called after put register becomes relevant
 Designed to be used in a user-facing expression mapping (see |:map-expression|).
 For mapping examples see |MiniBracketed.yank()|.
 
-Parameters~
+Parameters ~
 {put_key} `(string)` Put keys to be remapped.
 
-Return~
+Return ~
 `(string)` Returns `put_key` for a better usage inside expression mappings.
 
 ------------------------------------------------------------------------------
@@ -616,7 +616,7 @@ Notes:
 - Iterators `next()` and `prev()` methods should be able to handle `nil` as input.
 - This function only returns new state and doesn't modify `iterator.state`.
 
-Parameters~
+Parameters ~
 {iterator} `(table)` Table:
   - Methods:
       - <next> - given state, return state in forward direction (no wrap).
@@ -634,7 +634,7 @@ Parameters~
   - <wrap> `(boolean)` - whether to wrap around edges when `next()` or
     `prev()` return `nil`. Default: `true`.
 
-Return~
+Return ~
 `(any)` Result state. If `nil`, could not reach any valid result state.
 
 

@@ -67,7 +67,7 @@ Supported highlight groups:
     - 'stevearc/aerial.nvim'
     - 'williamboman/mason.nvim'
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.hues').setup({})` and
 **mandatory `background` and `foreground` fields** (add more fields to fit
@@ -90,7 +90,7 @@ Example:
     },
   })
 <
-# Notes~
+# Notes ~
 
 - Using `setup()` doesn't actually create a |colorscheme|. It basically
   creates a coordinated set of |highlight|s. To create your own scheme:
@@ -124,7 +124,7 @@ Activate it as regular |colorscheme|. Get currently active config with
                            `MiniHues.setup`({config})
 Module setup
 
-Usage~
+Usage ~
 
 `require('mini.hues').setup({ background = '#11262d', foreground = '#c0c8cc' })`
 (add/change input table as you like)
@@ -279,11 +279,11 @@ Notes:
 - Not all colors are actually used in highlight groups and are present for the
   sake of completeness.
 
-Parameters~
+Parameters ~
 {config} `(table)` Configuration for palette. Same structure as |MiniHues.config|.
   Needs to have <background> and <foreground> fields.
 
-Return~
+Return ~
 `(table)` Palette with the following fields:
   - <bg> and <fg> with supplied `background` and `foreground` colors.
   - Fields like <bg_*> and <fg_*> are essentially <bg> and <fg> but with
@@ -325,13 +325,13 @@ Notes:
   math.randomseed(vim.loop.hrtime())
   hues.setup(hues.gen_random_base_colors())
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible values:
   - <gen_hue> `(function)` - callable which will return single number for
     output hue. Can be used to limit which hues will be generated.
     Default: random integer between 0 and 359.
 
-Return~
+Return ~
 `(table)` Table with <background> and <foreground> fields containing
   color hex strings.
 

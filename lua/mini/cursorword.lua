@@ -17,7 +17,7 @@
 --- - "Word under cursor" is meant as in Vim's |<cword>|: something user would
 ---   get as 'iw' text object.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.cursorword').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -30,7 +30,7 @@
 --- `vim.b.minicursorword_config` which should have same structure as
 --- `MiniCursorword.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniCursorword` - highlight group of a non-current cursor word.
 ---   Default: plain underline.
@@ -44,7 +44,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.minicursorword_disable` (globally) or
 --- `vim.b.minicursorword_disable` (for a buffer) to `true`. Considering high

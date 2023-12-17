@@ -136,7 +136,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable creating triggers, set `vim.g.miniclue_disable` (globally) or
 --- `vim.b.miniclue_disable` (for a buffer) to `true`. Considering high number

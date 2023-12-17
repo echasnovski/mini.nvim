@@ -30,7 +30,7 @@ Features:
 - There are textobjects and motions to operate on scope. Support |count|
   and dot-repeat (in operator pending mode).
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.indentscope').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -43,7 +43,7 @@ You can override runtime config settings locally to buffer inside
 `vim.b.miniindentscope_config` which should have same structure as
 `MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more details.
 
-# Comparisons~
+# Comparisons ~
 
 - 'lukas-reineke/indent-blankline.nvim':
     - Its main functionality is about showing static guides of indent levels.
@@ -52,7 +52,7 @@ You can override runtime config settings locally to buffer inside
       even on blank lines). They can be used simultaneously, but it will
       lead to one of the visualizations being on top (hiding) of another.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniIndentscopeSymbol` - symbol showing on every line of scope if its
   indent is multiple of 'shiftwidth'.
@@ -62,7 +62,7 @@ You can override runtime config settings locally to buffer inside
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable autodrawing, set `vim.g.miniindentscope_disable` (globally) or
 `vim.b.miniindentscope_disable` (for a buffer) to `true`. Considering high
@@ -89,7 +89,7 @@ following design:
   a discrete inverse version of its derivative. Such interface proved to be
   more appropriate for kind of task at hand.
 
-Special cases~
+Special cases ~
 
 - When scope to be drawn intersects (same indent, ranges overlap) currently
   visible one (at process or finished drawing), drawing is done immediately
@@ -104,10 +104,10 @@ Special cases~
                        `MiniIndentscope.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniIndentscope.config|.
 
-Usage~
+Usage ~
 `require('mini.indentscope').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ Options controlling actual computation is taken from these places in order:
   Useful to define local behavior (for example, for a certain filetype).
 - Global options from |MiniIndentscope.config|.
 
-Algorithm overview~
+Algorithm overview ~
 
 - Compute reference "indent at column". Reference line is an input `line`
   which might be modified to one of its neighbors if `try_as_border` option
@@ -246,7 +246,7 @@ Algorithm overview~
   indent minus one in case of no border). This is used during drawing
   visual indicator.
 
-Indent computation~
+Indent computation ~
 
 For every line indent is intended to be computed unambiguously:
 - For "normal" lines indent is an output of |indent()|.
@@ -257,7 +257,7 @@ For every line indent is intended to be computed unambiguously:
   lines at edge of scope's body if there is no border there. See
   |MiniIndentscope.config| for a details example.
 
-Parameters~
+Parameters ~
 {line} `(number|nil)` Input line number (starts from 1). Can be modified to a
   neighbor if `try_as_border` is `true`. Default: cursor line.
 {col} `(number|nil)` Column number (starts from 1). Default: if
@@ -267,7 +267,7 @@ Parameters~
 {opts} `(table|nil)` Options to override global or buffer local ones (see
   |MiniIndentscope.config|).
 
-Return~
+Return ~
 `(table)` Table with scope information:
   - <body> - table with <top> (top line of scope, inclusive), <bottom>
     (bottom line of scope, inclusive), and <indent> (minimum indent within
@@ -288,7 +288,7 @@ Scope is visualized as a vertical line within scope's body range at column
 equal to border indent plus one (or body indent if border is absent).
 Numbering starts from one.
 
-Parameters~
+Parameters ~
 {scope} `(table|nil)` Scope. Default: output of |MiniIndentscope.get_scope|
   with default arguments.
 {opts} `(table|nil)` Options. Currently supported:
@@ -320,7 +320,7 @@ Examples ~
 - Use quadratic "out" easing with total duration of 1000 ms:
   `gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })`
 
-See also~
+See also ~
 |MiniIndentscope-drawing| for more information about how drawing is done.
 
 ------------------------------------------------------------------------------
@@ -335,7 +335,7 @@ Show indicator immediately. Same as animation function always returning 0.
                  `MiniIndentscope.gen_animation.linear`({opts})
 Generate linear progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -345,7 +345,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
@@ -353,7 +353,7 @@ Return~
                `MiniIndentscope.gen_animation.quadratic`({opts})
 Generate quadratic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -363,7 +363,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
@@ -371,7 +371,7 @@ Return~
                  `MiniIndentscope.gen_animation.cubic`({opts})
 Generate cubic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -381,7 +381,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ Return~
                 `MiniIndentscope.gen_animation.quartic`({opts})
 Generate quartic progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -399,7 +399,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
@@ -407,7 +407,7 @@ Return~
               `MiniIndentscope.gen_animation.exponential`({opts})
 Generate exponential progression
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options that control progression. Possible keys:
   - <easing> `(string)` - a subtype of progression. One of "in"
     (accelerating from zero speed), "out" (decelerating to zero speed),
@@ -417,7 +417,7 @@ Parameters~
     of "step" (default; ensures average duration of step to be `opts.duration`)
     or "total" (ensures fixed total duration regardless of scope's range).
 
-Return~
+Return ~
 `(function)` Animation function (see |MiniIndentscope-drawing|).
 
 ------------------------------------------------------------------------------
@@ -427,7 +427,7 @@ Move cursor within scope
 
 Cursor is placed on a first non-blank character of target line.
 
-Parameters~
+Parameters ~
 {side} `(string)` One of "top" or "bottom".
 {use_border} `(boolean|nil)` Whether to move to border or within scope's body.
   If particular border is absent, body is used.
@@ -442,7 +442,7 @@ Move to a certain side of border. Respects |count| and dot-repeat (in
 operator-pending mode). Doesn't move cursor for scope that is not shown
 (drawing indent less that zero).
 
-Parameters~
+Parameters ~
 {side} `(string)` One of "top" or "bottom".
 {add_to_jumplist} `(boolean|nil)` Whether to add movement to jump list. It is
   `true` only for Normal mode mappings.
@@ -455,7 +455,7 @@ Function for textobject mappings
 Respects |count| and dot-repeat (in operator-pending mode). Doesn't work
 for scope that is not shown (drawing indent less that zero).
 
-Parameters~
+Parameters ~
 {use_border} `(boolean|nil)` Whether to include border in textobject. When
   `true` and `try_as_border` option is `false`, allows "chaining" calls for
   incremental selection.

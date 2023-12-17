@@ -74,7 +74,7 @@
 ---       some edge cases, but **requires** tree-sitter parser.
 ---     - Doesn't work inside comments or strings.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `g:minisplitjoin_disable` (globally) or `b:minisplitjoin_disable`
 --- (for a buffer) to `v:true`. Considering high number of different scenarios

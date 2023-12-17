@@ -74,7 +74,7 @@ as `MiniSplitjoin.config`. See |mini.nvim-buffer-local-config| for more details.
       some edge cases, but **requires** tree-sitter parser.
     - Doesn't work inside comments or strings.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `g:minisplitjoin_disable` (globally) or `b:minisplitjoin_disable`
 (for a buffer) to `v:true`. Considering high number of different scenarios
@@ -97,10 +97,10 @@ recipes.
                         `MiniSplitjoin.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniSplitjoin.config|.
 
-Usage~
+Usage ~
 `require('mini.splitjoin').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ Overview:
 - If region spans single line, use |MiniSplitjoin.split()| with found region.
   Otherwise use |MiniSplitjoin.join()|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
   inheriting its default values.
 
@@ -255,7 +255,7 @@ Parameters~
     See |MiniSplitjoin-glossary| for the structure.
     Default: `nil` to automatically detect region.
 
-Return~
+Return ~
 `(any)` Output of chosen `split()` or `join()` action.
 
 ------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ Note:
 - By design, it doesn't detect if argument **should** be split, so application
   on arguments spanning multiple lines can lead to undesirable result.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
   inheriting its default values.
 
@@ -305,7 +305,7 @@ Parameters~
     See |MiniSplitjoin-glossary| for the structure.
     Default: `nil` to automatically detect region.
 
-Return~
+Return ~
 `(any)` Output of last `opts.split.hooks_post` or `nil` if no split positions
   found. Default: return value of |MiniSplitjoin.split_at()| application.
 
@@ -333,7 +333,7 @@ Overview:
   plus region's right end for easier hook code.
   Output of last one is used as function return value.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Has structure from |MiniSplitjoin.config|
   inheriting its default values.
 
@@ -346,7 +346,7 @@ Parameters~
     See |MiniSplitjoin-glossary| for the structure.
     Default: `nil` to automatically detect region.
 
-Return~
+Return ~
 `(any)` Output of last `opts.split.hooks_post` or `nil` of no join positions
   found. Default: return value of |MiniSplitjoin.join_at()| application.
 
@@ -387,7 +387,7 @@ Generate hook to pad brackets
 
 This is a join post-hook. Use in `join.hooks_post` of |MiniSplitjoin.config|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
    - <pad> `(string)` - pad to add after first and before last join positions.
      Default: `' '` (single space).
@@ -396,7 +396,7 @@ Parameters~
      in |MiniSplitjoin.config.detect|.
      Default: `MiniSplitjoin.config.detect.brackets`.
 
-Return~
+Return ~
 `(function)` A hook which adds inner pad to first and last join positions and
   returns updated input join positions.
 
@@ -407,7 +407,7 @@ Generate hook to add trailing separator
 
 This is a split post-hook. Use in `split.hooks_post` of |MiniSplitjoin.config|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
    - <sep> `(string)` - separator to add before last split position.
      Default: `','`.
@@ -416,7 +416,7 @@ Parameters~
      in |MiniSplitjoin.config.detect|.
      Default: `MiniSplitjoin.config.detect.brackets`.
 
-Return~
+Return ~
 `(function)` A hook which adds separator before last split position and
   returns updated input split positions.
 
@@ -427,7 +427,7 @@ Generate hook to delete trailing separator
 
 This is a join post-hook. Use in `join.hooks_post` of |MiniSplitjoin.config|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
    - <sep> `(string)` - separator to remove before last join position.
      Default: `','`.
@@ -436,7 +436,7 @@ Parameters~
      in |MiniSplitjoin.config.detect|.
      Default: `MiniSplitjoin.config.detect.brackets`.
 
-Return~
+Return ~
 `(function)` A hook which adds separator before last split position and
   returns updated input split positions.
 
@@ -457,13 +457,13 @@ Notes:
 - Cursor is adjusted to follow text updates.
 - Use output of this function to keep track of input positions.
 
-Parameters~
+Parameters ~
 {positions} `(table)` Array of positions at which to perform split.
   See |MiniSplitjoin-glossary| for their structure. Note: they don't have
   to be ordered, but first and last ones will be used to infer lines for
   which indent will be increased.
 
-Return~
+Return ~
 `(table)` Array of new positions to where input `positions` were moved.
 
 ------------------------------------------------------------------------------
@@ -482,12 +482,12 @@ Notes:
 - Cursor is adjusted to follow text updates.
 - Use output of this function to keep track of input positions.
 
-Parameters~
+Parameters ~
 {positions} `(table)` Array of positions at which to perform join.
   See |MiniSplitjoin-glossary| for their structure. Note: they don't have
   to be ordered, but first and last ones will have different pad string.
 
-Return~
+Return ~
 `(table)` Array of new positions to where input `positions` were moved.
 
 ------------------------------------------------------------------------------
@@ -502,7 +502,7 @@ Note:
 - Both marks are included in region, so for better
 - In linewise Visual mode
 
-Return~
+Return ~
 `(table)` A region. See |MiniSplitjoin-glossary| for exact structure.
 
 ------------------------------------------------------------------------------
@@ -510,12 +510,12 @@ Return~
           `MiniSplitjoin.get_indent_part`({line}, {respect_comments})
 Get string's indent part
 
-Parameters~
+Parameters ~
 {line} `(string)` String for which to compute indent.
 {respect_comments} `(boolean|nil)` Whether to respect comments as indent part.
   Default: `true`.
 
-Return~
+Return ~
 `(string)` Part of input representing line's indent. Can be empty string.
   Use `string.len()` to compute indent in bytes.
 
@@ -527,7 +527,7 @@ Operator for Normal mode mappings
 Main function to be used in expression mappings. No need to use it
 directly, everything is setup in |MiniSplitjoin.setup()|.
 
-Parameters~
+Parameters ~
 {task} `(string)` Name of task.
 
 

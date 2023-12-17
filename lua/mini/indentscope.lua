@@ -30,7 +30,7 @@
 --- - There are textobjects and motions to operate on scope. Support |count|
 ---   and dot-repeat (in operator pending mode).
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.indentscope').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -43,7 +43,7 @@
 --- `vim.b.miniindentscope_config` which should have same structure as
 --- `MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'lukas-reineke/indent-blankline.nvim':
 ---     - Its main functionality is about showing static guides of indent levels.
@@ -52,7 +52,7 @@
 ---       even on blank lines). They can be used simultaneously, but it will
 ---       lead to one of the visualizations being on top (hiding) of another.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniIndentscopeSymbol` - symbol showing on every line of scope if its
 ---   indent is multiple of 'shiftwidth'.
@@ -62,7 +62,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable autodrawing, set `vim.g.miniindentscope_disable` (globally) or
 --- `vim.b.miniindentscope_disable` (for a buffer) to `true`. Considering high
@@ -87,7 +87,7 @@
 ---   a discrete inverse version of its derivative. Such interface proved to be
 ---   more appropriate for kind of task at hand.
 ---
---- Special cases~
+--- Special cases ~
 ---
 --- - When scope to be drawn intersects (same indent, ranges overlap) currently
 ---   visible one (at process or finished drawing), drawing is done immediately
@@ -239,7 +239,7 @@ MiniIndentscope.config = {
 ---   Useful to define local behavior (for example, for a certain filetype).
 --- - Global options from |MiniIndentscope.config|.
 ---
---- Algorithm overview~
+--- Algorithm overview ~
 ---
 --- - Compute reference "indent at column". Reference line is an input `line`
 ---   which might be modified to one of its neighbors if `try_as_border` option
@@ -257,7 +257,7 @@ MiniIndentscope.config = {
 ---   indent minus one in case of no border). This is used during drawing
 ---   visual indicator.
 ---
---- Indent computation~
+--- Indent computation ~
 ---
 --- For every line indent is intended to be computed unambiguously:
 --- - For "normal" lines indent is an output of |indent()|.

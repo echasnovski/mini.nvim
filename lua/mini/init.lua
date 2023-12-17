@@ -50,7 +50,7 @@
 ---   Trailspace (highlight and remove)......................... |mini.trailspace|
 ---   Track and reuse file system visits ........................... |mini.visits|
 ---
---- # General principles~
+--- # General principles ~
 ---
 --- - <Design>. Each module is designed to solve a particular problem targeting
 ---   balance between feature-richness (handling as many edge-cases as
@@ -114,7 +114,7 @@
 ---   non-bugfix backward-incompatible change will be released gradually as
 ---   much as possible.
 ---
---- # List of modules~
+--- # List of modules ~
 ---
 --- - |MiniAi| - extend and create `a`/`i` textobjects (like in `di(` or
 ---   `va"`). It enhances some builtin |text-objects| (like |a(|, |a)|, |a'|,
@@ -295,7 +295,7 @@
 --- Considering high number of different scenarios and customization intentions,
 --- writing exact rules for disabling module's functionality is left to user.
 ---
---- # Manual disabling~
+--- # Manual disabling ~
 ---
 --- - Disable globally:
 ---   Lua       - `:lua vim.g.minicursorword_disable=true`
@@ -307,7 +307,7 @@
 ---   Globally   - `:lua vim.g.minicursorword_disable = not vim.g.minicursorword_disable`
 ---   For buffer - `:lua vim.b.minicursorword_disable = not vim.b.minicursorword_disable`
 ---
---- # Automated disabling~
+--- # Automated disabling ~
 ---
 --- - Disable for a certain |filetype| (for example, "markdown"):
 ---   `autocmd Filetype markdown lua vim.b.minicursorword_disable = true`

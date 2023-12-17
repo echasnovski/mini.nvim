@@ -84,7 +84,7 @@
 ---       similarly to 'windows.nvim' in Neovim>=0.9 with appropriate
 ---       'winheight' / 'winwidth' and 'winminheight' / 'winminwidth').
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniAnimateCursor` - highlight of cursor during its animated movement.
 --- * `MiniAnimateNormalFloat` - highlight of floating window for `open` and
@@ -92,7 +92,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minianimate_disable` (globally) or
 --- `vim.b.minianimate_disable` (for a buffer) to `true`. Considering high

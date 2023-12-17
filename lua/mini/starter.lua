@@ -38,7 +38,7 @@
 --- What is doesn't do:
 --- - It doesn't support fuzzy query for items. And probably will never do.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.starter').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -57,7 +57,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniStarterCurrent` - current item.
 --- * `MiniStarterFooter` - footer units.
@@ -71,7 +71,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.ministarter_disable` (globally) or
 --- `vim.b.ministarter_disable` (for a buffer) to `true`. Considering high number
@@ -169,7 +169,7 @@
 --- <
 ---@tag MiniStarter-example-config
 
---- # Lifecycle of Starter buffer~
+--- # Lifecycle of Starter buffer ~
 ---
 --- - Open with |MiniStarter.open()|. It includes creating buffer with
 ---   appropriate options, mappings, behavior; call to |MiniStarter.refresh()|;

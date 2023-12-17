@@ -61,7 +61,7 @@
 ---     - Has extra functionality beyond moving text, like duplication.
 ---       While 'mini.move' concentrates only on moving functionality.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minimove_disable` (globally) or `vim.b.minimove_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios

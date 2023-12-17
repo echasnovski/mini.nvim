@@ -28,7 +28,7 @@ Features the following functions:
 
 - And more.
 
-# Setup~
+# Setup ~
 
 This module doesn't need setup, but it can be done to improve usability.
 Setup with `require('mini.misc').setup({})` (replace `{}` with your
@@ -45,10 +45,10 @@ will have no effect here.
                            `MiniMisc.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniMisc.config|.
 
-Usage~
+Usage ~
 `require('mini.misc').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -69,12 +69,12 @@ Default values:
                      `MiniMisc.bench_time`({f}, {n}, {...})
 Execute `f` several times and time how long it took
 
-Parameters~
+Parameters ~
 {f} `(function)` Function which execution to benchmark.
 {n} `(number|nil)` Number of times to execute `f(...)`. Default: 1.
 {...} `(any)` Arguments when calling `f`.
 
-Return~
+Return ~
 `(...)` Table with durations (in seconds; up to microseconds) and
   output of (last) function execution.
 
@@ -83,7 +83,7 @@ Return~
                      `MiniMisc.get_gutter_width`({win_id})
 Compute width of gutter (info column on the left of the window)
 
-Parameters~
+Parameters ~
 {win_id} `(number|nil)` Window identifier (see |win_getid()|) for which gutter
   width is computed. Default: 0 for current.
 
@@ -92,7 +92,7 @@ Parameters~
                              `MiniMisc.put`({...})
 Print Lua objects in command line
 
-Parameters~
+Parameters ~
 {...} `(any)` Any number of objects to be printed each on separate line.
 
 ------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ Parameters~
                            `MiniMisc.put_text`({...})
 Print Lua objects in current buffer
 
-Parameters~
+Parameters ~
 {...} `(any)` Any number of objects to be printed each on separate line.
 
 ------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ Parameters~
                 `MiniMisc.resize_window`({win_id}, {text_width})
 Resize window to have exact number of editable columns
 
-Parameters~
+Parameters ~
 {win_id} `(number|nil)` Window identifier (see |win_getid()|) to be resized.
   Default: 0 for current.
 {text_width} `(number|nil)` Number of editable columns resized window will
@@ -128,11 +128,11 @@ What it does:
 
 Note: requires |vim.fs| module (present in Neovim>=0.8).
 
-Parameters~
+Parameters ~
 {names} `(table|function|nil)` Forwarded to |MiniMisc.find_root()|.
 {fallback} `(function|nil)` Forwarded to |MiniMisc.find_root()|.
 
-Usage~
+Usage ~
 >
   require('mini.misc').setup()
   MiniMisc.setup_auto_root()
@@ -155,7 +155,7 @@ Notes:
   changes in root directory will be detected after directory path was already
   used in this function. Reload Neovim to account for that.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to use.
   Default: 0 for current.
 {names} `(table|function|nil)` Array of file names or a callable used to
@@ -178,14 +178,14 @@ a normal buffer (see 'buftype').
 Note: it relies on file mark data stored in 'shadafile' (see |shada-f|).
 Be sure to enable it.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options for |MiniMisc.restore_cursor|. Possible fields:
   - <center> - (boolean) Center the window after we restored the cursor.
     Default: `true`.
   - <ignore_filetype> - Array with file types to be ignored (see 'filetype').
     Default: `{ "gitcommit", "gitrebase" }`.
 
-Usage~
+Usage ~
 >
   require('mini.misc').setup_restore_cursor()
 
@@ -197,10 +197,10 @@ Compute summary statistics of numerical array
 This might be useful to compute summary of time benchmarking with
 |MiniMisc.bench_time|.
 
-Parameters~
+Parameters ~
 {t} `(table)` Array (table suitable for `ipairs`) of numbers.
 
-Return~
+Return ~
 `(table)` Table with summary values under following keys (may be
   extended in the future): <maximum>, <mean>, <median>, <minimum>, <n>
   (number of elements), <sd> (sample standard deviation).
@@ -212,11 +212,11 @@ Return "first" elements of table as decided by `pairs`
 
 Note: order of elements might vary.
 
-Parameters~
+Parameters ~
 {t} `(table)` Input table.
 {n} `(number|nil)` Maximum number of first elements. Default: 5.
 
-Return~
+Return ~
 `(table)` Table with at most `n` first elements of `t` (with same keys).
 
 ------------------------------------------------------------------------------
@@ -230,11 +230,11 @@ This function makes two passes through elements of `t`:
 
 Note: order of elements might vary.
 
-Parameters~
+Parameters ~
 {t} `(table)` Input table.
 {n} `(number|nil)` Maximum number of last elements. Default: 5.
 
-Return~
+Return ~
 `(table)` Table with at most `n` last elements of `t` (with same keys).
 
 ------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ Note: for most filetypes 'commentstring' option is added only when buffer
 with this filetype is entered, so using non-current `buf_id` can not lead
 to desired effect.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) in which function
   will operate. Default: 0 for current.
 
@@ -273,7 +273,7 @@ This function is useful when working with multiple windows but temporarily
 needing to zoom into one to see more of the code from that buffer. Call it
 again (without arguments) to zoom out.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier (see |bufnr()|) to be zoomed.
   Default: 0 for current.
 {config} `(table|nil)` Optional config for window (as for |nvim_open_win()|).

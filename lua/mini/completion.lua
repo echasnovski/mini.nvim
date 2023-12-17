@@ -51,7 +51,7 @@
 --- - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
 ---   variable user expectations. See 'Helpful key mappings' for suggestions.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.completion').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -64,7 +64,7 @@
 --- `vim.b.minicompletion_config` which should have same structure as
 --- `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
---- # Notes~
+--- # Notes ~
 ---
 --- - More appropriate, albeit slightly advanced, LSP completion setup is to set
 ---   it not on every `BufEnter` event (default), but on every attach of LSP
@@ -86,7 +86,7 @@
 ---       to trigger such request, i.e. select completion item and wait for
 ---       `MiniCompletion.config.delay.info` time plus server response time.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'nvim-cmp':
 ---     - More complex design which allows multiple sources each in form of
@@ -96,7 +96,7 @@
 ---     - Doesn't allow fallback action.
 ---     - Doesn't provide signature help.
 ---
---- # Helpful key mappings~
+--- # Helpful key mappings ~
 ---
 --- To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 --- these key mappings:
@@ -126,14 +126,14 @@
 ---
 ---   vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
 --- <
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniCompletionActiveParameter` - highlighting of signature active parameter.
 ---   By default displayed as plain underline.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minicompletion_disable` (globally) or
 --- `vim.b.minicompletion_disable` (for a buffer) to `true`. Considering high

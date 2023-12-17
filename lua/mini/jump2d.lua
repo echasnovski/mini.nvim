@@ -48,7 +48,7 @@
 ---   to jump to first available jump spot. Typing anything else stops jumping
 ---    without moving cursor.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.jump2d').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table
@@ -63,7 +63,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Example usage~
+--- # Example usage ~
 ---
 --- - Modify default jumping to use only current window at or after cursor line: >
 ---   require('mini.jump2d').setup({
@@ -77,7 +77,7 @@
 ---   to single character typed after executing this command.
 --- - See more examples in |MiniJump2d.start| and |MiniJump2d.builtin_opts|.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'phaazon/hop.nvim':
 ---     - Both are fast, customizable, and extensible (user can write their own
@@ -99,7 +99,7 @@
 ---     - 'mini.jump2d' has opinionated default algorithm of computing jump
 ---       spots. See |MiniJump2d.default_spotter|.
 ---
---- # Highlight groups~
+--- # Highlight groups ~
 ---
 --- * `MiniJump2dSpot` - highlighting of jump spot's next step. By default it
 ---   uses label with highest contrast while not being too visually demanding:
@@ -123,7 +123,7 @@
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minijump2d_disable` (globally) or
 --- `vim.b.minijump2d_disable` (for a buffer) to `true`. Considering high
@@ -161,9 +161,9 @@ end
 ---
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
----@text # Options~
+---@text # Options ~
 ---
---- ## Spotter function~
+--- ## Spotter function ~
 ---
 --- Actual computation of possible jump spots is done through spotter function.
 --- It should have the following arguments:
@@ -194,7 +194,7 @@ end
 --- Option `view.dim` controls whether to dim lines with at least one jump spot.
 --- Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
 ---
---- ## Allowed lines~
+--- ## Allowed lines ~
 ---
 --- Option `allowed_lines` controls which lines will be used for computing
 --- possible jump spots:
@@ -206,7 +206,7 @@ end
 ---   (at, after) cursor line of all processed windows are forwarded to spotter
 ---   function. Otherwise, they don't. This allows control of jump "direction".
 ---
---- ## Hooks~
+--- ## Hooks ~
 ---
 --- Following hook functions can be used to further tweak jumping experience:
 --- - `before_start` - called without arguments first thing when jump starts.
@@ -268,7 +268,7 @@ MiniJump2d.config = {
 ---
 --- Compute possible jump spots, visualize them and wait for iterative filtering.
 ---
---- First computation of possible jump spots~
+--- First computation of possible jump spots ~
 ---
 --- - Process allowed windows (current and/or not current; controlled by
 ---   `allowed_windows` option) by visible lines from top to bottom. For each
@@ -286,12 +286,12 @@ MiniJump2d.config = {
 ---   spot over another. Basically, it means "use all labels at each step of
 ---   iterative filtering as equally as possible".
 ---
---- Visualization~
+--- Visualization ~
 ---
 --- Current label for each possible jump spot is shown at that position
 --- overriding everything underneath it.
 ---
---- Iterative filtering~
+--- Iterative filtering ~
 ---
 --- Labels of possible jump spots are computed in order to use them as equally
 --- as possible.

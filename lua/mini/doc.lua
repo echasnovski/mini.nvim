@@ -30,7 +30,7 @@
 ---   tasks (parsing annotations, formatting, auto-generating tags, etc.). This
 ---   is done to manage complexity and be dependency free.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.doc').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniDoc`
@@ -44,7 +44,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Tips~
+--- # Tips ~
 ---
 --- - Some settings tips that might make writing annotation comments easier:
 ---     - Set up appropriate 'comments' for `lua` file type to respect
@@ -61,7 +61,7 @@
 ---   best practice when using this module is this whole plugin. Look at source
 ---   code for the reference.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'tjdevries/tree-sitter-lua':
 ---     - Its key design is to use treesitter grammar to parse both Lua code
@@ -484,7 +484,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 -- Module functionality =======================================================
 --- Generate help file
 ---
---- # Algorithm~
+--- # Algorithm ~
 ---
 --- - Main parameters for help generation are an array of input file paths and
 ---   path to output help file.
@@ -531,7 +531,7 @@ MiniDoc.default_hooks = MiniDoc.config.hooks
 ---   feedback and making actions involving newly updated help file (like
 ---   generate tags, etc.).
 ---
---- # Project specific script~
+--- # Project specific script ~
 ---
 --- If all arguments have default `nil` values, first there is an attempt to
 --- source project specific script. This is basically a `luafile

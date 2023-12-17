@@ -61,7 +61,7 @@ as `MiniMove.config`. See |mini.nvim-buffer-local-config| for more details.
     - Has extra functionality beyond moving text, like duplication.
       While 'mini.move' concentrates only on moving functionality.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minimove_disable` (globally) or `vim.b.minimove_disable`
 (for a buffer) to `true`. Considering high number of different scenarios
@@ -74,10 +74,10 @@ recipes.
                            `MiniMove.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniMove.config|.
 
-Usage~
+Usage ~
 `require('mini.move').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -150,7 +150,7 @@ Notes:
 - Vertical movement in linewise mode is followed up by reindent with |v_=|.
 - Horizontal movement in linewise mode is same as |v_<| and |v_>|.
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "left", "down", "up", "right".
 {opts} `(table|nil)` Options. Same structure as `options` in |MiniMove.config|
   (with its values as defaults) plus these allowed extra fields:
@@ -170,7 +170,7 @@ Notes:
   handling of |v:count| (multiplies shift effect instead of modifying that
   number of lines).
 
-Parameters~
+Parameters ~
 {direction} `(string)` One of "left", "down", "up", "right".
 {opts} `(table|nil)` Options. Same structure as `options` in |MiniMove.config|
   (with its values as defaults) plus these allowed extra fields:

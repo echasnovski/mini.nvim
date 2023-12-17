@@ -51,7 +51,7 @@ What it doesn't do:
 - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
   variable user expectations. See 'Helpful key mappings' for suggestions.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.completion').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -64,7 +64,7 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minicompletion_config` which should have same structure as
 `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 
-# Notes~
+# Notes ~
 
 - More appropriate, albeit slightly advanced, LSP completion setup is to set
   it not on every `BufEnter` event (default), but on every attach of LSP
@@ -86,7 +86,7 @@ You can override runtime config settings locally to buffer inside
       to trigger such request, i.e. select completion item and wait for
       `MiniCompletion.config.delay.info` time plus server response time.
 
-# Comparisons~
+# Comparisons ~
 
 - 'nvim-cmp':
     - More complex design which allows multiple sources each in form of
@@ -96,7 +96,7 @@ You can override runtime config settings locally to buffer inside
     - Doesn't allow fallback action.
     - Doesn't provide signature help.
 
-# Helpful key mappings~
+# Helpful key mappings ~
 
 To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 these key mappings:
@@ -126,14 +126,14 @@ your 'init.lua' to make customized mapping: >
 
   vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
 <
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniCompletionActiveParameter` - highlighting of signature active parameter.
   By default displayed as plain underline.
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minicompletion_disable` (globally) or
 `vim.b.minicompletion_disable` (for a buffer) to `true`. Considering high
@@ -146,10 +146,10 @@ rules for disabling module's functionality is left to user. See
                         `MiniCompletion.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniCompletion.config|.
 
-Usage~
+Usage ~
 `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ Default values:
             `MiniCompletion.complete_twostage`({fallback}, {force})
 Run two-stage completion
 
-Parameters~
+Parameters ~
 {fallback} `(boolean|nil)` Whether to use fallback completion. Default: `true`.
 {force} `(boolean|nil)` Whether to force update of completion popup.
   Default: `true`.
@@ -234,7 +234,7 @@ actions.
 Designed to be used with |autocmd|. No need to use it directly, everything
 is setup in |MiniCompletion.setup|.
 
-Parameters~
+Parameters ~
 {actions} `(table|nil)` Array containing any of 'completion', 'info', or
   'signature' string. Default: array containing all of them.
 

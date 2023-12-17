@@ -9,7 +9,7 @@
 --- - Unshow, delete, and wipeout buffer while saving window layout
 ---   (opposite to builtin Neovim's commands).
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.bufremove').setup({})` (replace `{}` with your
@@ -23,7 +23,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Notes~
+--- # Notes ~
 ---
 --- 1. Which buffer to show in window(s) after its current buffer is removed is
 ---    decided by the algorithm:
@@ -31,7 +31,7 @@
 ---    - If previous listed buffer (see |bprevious|) is different, use it.
 ---    - Otherwise create a new one with `nvim_create_buf(true, false)` and use it.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable core functionality, set `vim.g.minibufremove_disable` (globally) or
 --- `vim.b.minibufremove_disable` (for a buffer) to `true`. Considering high

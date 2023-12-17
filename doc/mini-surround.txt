@@ -52,7 +52,7 @@ Known issues which won't be resolved:
   Overall it is pretty good, but certain cases won't work. Like self-nested
   tags won't match correctly on both ends: '<a><a></a></a>'.
 
-# Setup~
+# Setup ~
 
 This module needs a setup with `require('mini.surround').setup({})`
 (replace `{}` with your `config` table). It will create global Lua table
@@ -67,7 +67,7 @@ You can override runtime config settings locally to buffer inside
 
 To stop module from showing non-error feedback, set `config.silent = true`.
 
-# Example usage~
+# Example usage ~
 
 Regular mappings:
 - `saiw)` - add (`sa`) for inner word (`iw`) parenthesis (`)`).
@@ -87,7 +87,7 @@ Extended mappings (temporary force "prev"/"next" search methods):
 - `2sfnt` - find (`sf`) second (2) next (`n`) tag (`t`).
 - `shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
 
-# Comparisons~
+# Comparisons ~
 
 - 'tpope/vim-surround':
     - 'vim-surround' has completely different, with other focus set of
@@ -123,13 +123,13 @@ Extended mappings (temporary force "prev"/"next" search methods):
         - Default behavior in 'mini.ai' selects one of the edges into `a`
           textobject, while 'mini.surround' - both.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniSurround` - highlighting of requested surrounding.
 
 To change any highlight group, modify it directly with |:highlight|.
 
-# Disabling~
+# Disabling ~
 
 To disable, set `vim.g.minisurround_disable` (globally) or
 `vim.b.minisurround_disable` (for a buffer) to `true`. Considering high
@@ -139,7 +139,7 @@ rules for disabling module's functionality is left to user. See
 
 ------------------------------------------------------------------------------
                                                  *MiniSurround-surround-builtin*
-Builtin surroundings~
+Builtin surroundings ~
 
 This table describes all builtin surroundings along with what they
 represent. Explanation:
@@ -438,10 +438,10 @@ Notes:
                          `MiniSurround.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniSurround.config|.
 
-Usage~
+Usage ~
 `require('mini.surround').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -492,7 +492,7 @@ Default values:
   }
 <
                                               *MiniSurround-vim-surround-config*
-# Setup similar to 'tpope/vim-surround'~
+# Setup similar to 'tpope/vim-surround' ~
 
 This module is primarily designed after 'machakann/vim-sandwich'. To get
 behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
@@ -521,9 +521,9 @@ behavior closest to 'tpope/vim-surround' (but not identical), use this setup:
   -- Make special mapping for "add surrounding for line"
   vim.keymap.set('n', 'yss', 'ys_', { remap = true })
 <
-# Options~
+# Options ~
 
-## Custom surroundings~
+## Custom surroundings ~
 
 User can define own surroundings by supplying `config.custom_surroundings`.
 It should be a **table** with keys being single character surrounding
@@ -629,7 +629,7 @@ on a value of `'config.search_method'` when cursor is inside `bbb` word:
 - `'prev'`:          `(a) bbb (c)` -> `[a] bbb (c)`. Same outcome for `(bbb)`.
 - `'nearest'`: depends on cursor position (same as in `'cover_or_nearest'`).
 
-## Search suffixes~
+## Search suffixes ~
 
 To provide more searching possibilities, 'mini.surround' creates extended
 mappings force "prev" and "next" methods for particular search. It does so
@@ -657,7 +657,7 @@ Add surrounding
 
 No need to use it directly, everything is setup in |MiniSurround.setup|.
 
-Parameters~
+Parameters ~
 {mode} `(string)` Mapping mode (normal by default).
 
 ------------------------------------------------------------------------------
@@ -725,7 +725,7 @@ Example: >
     }
   })
 
-See also~
+See also ~
 |MiniAi.gen_spec|
 
 ------------------------------------------------------------------------------
@@ -780,7 +780,7 @@ Notes:
   fast though (one search should be magnitude of milliseconds or tens of
   milliseconds on really large file).
 
-Parameters~
+Parameters ~
 {captures} `(table)` Captures for outer and inner parts of region pair:
   table with <outer> and <inner> fields with captures for outer
   (`[left.form; right.to]`) and inner (`(left.to; right.from)` both edges
@@ -792,11 +792,11 @@ Parameters~
     cost of increased execution time. Provides more coherent experience if
     'nvim-treesitter-textobjects' queries are used. Default: `true`.
 
-Return~
+Return ~
 `(function)` Function which returns array of current buffer region pairs
   representing differences between outer and inner captures.
 
-See also~
+See also ~
 |MiniSurround-surround-specification| for how this type of
   surrounding specification is processed.
 |get_query()| for how query is fetched in case of no 'nvim-treesitter'.

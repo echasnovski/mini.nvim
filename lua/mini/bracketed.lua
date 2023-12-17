@@ -98,7 +98,7 @@
 ---       indent scope, like how to treat empty lines near border or whether to
 ---       compute indent at cursor.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minibracketed_disable` (globally) or
 --- `vim.b.minibracketed_disable` (for a buffer) to `true`. Considering high

@@ -53,10 +53,10 @@ will have no effect here.
                           `MiniExtra.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniExtra.config|.
 
-Usage~
+Usage ~
 `require('mini.extra').setup({})` (replace `{}` with your `config` table).
 
 ------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Notes:
 - `a` textobject selects all lines in a buffer.
 - `i` textobject selects all lines except blank lines at start and end.
 
-Return~
+Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
 
 ------------------------------------------------------------------------------
@@ -110,11 +110,11 @@ Notes:
 - Both `a` and `i` textobjects return |vim.diagnostic.get()| output for the
   current buffer. It is modified to fit |MiniAi-textobject-specification|.
 
-Parameters~
+Parameters ~
 {severity} `(any)` Which severity to use. Forwarded to |vim.diagnostic.get()|.
   Default: `nil` to use all diagnostic entries.
 
-Return~
+Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
 
 ------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ Notes:
       This works in most common scenarios and doesn't work only if indent of
       of the bottom border is expected to be larger than the top.
 
-Return~
+Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
   It returns array of regions representing all indent scopes in the buffer
   ordered increasingly by the start line.
@@ -155,7 +155,7 @@ Notes:
 - `a` textobject selects whole line.
 - `i` textobject selects line after initial indent.
 
-Return~
+Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
 
 ------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ Notes:
   possibly followed by decimal part (dot and digits).
 - `i` textobject selects consecutive digits.
 
-Return~
+Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
 
 ------------------------------------------------------------------------------
@@ -197,7 +197,7 @@ Notes:
 - Words will be highlighted only in full and not if part bigger word, i.e.
   there should not be alphanumeric symbole before and after it.
 
-Parameters~
+Parameters ~
 {words} `(table)` Array of words to highlight. Will be matched as is, not
   as Lua pattern.
 {group} `(string|function)` Proper `group` field for `highlighter`.
@@ -233,14 +233,14 @@ Buffer lines picker
 Pick from buffer lines. Notes:
 - Loads all target buffers which are currently unloaded.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - one of "all" (normal listed buffers) or "current".
     Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -254,12 +254,12 @@ Notes:
 - Choosing either executes command (if reliably known that it doesn't need
   arguments) or populates Command line with the command.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -269,7 +269,7 @@ Built-in diagnostic picker
 
 Pick from |vim.diagnostic| using |vim.diagnostic.get()|.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <get_opts> `(table)` - options for |vim.diagnostic.get()|. Can be used
@@ -280,7 +280,7 @@ Parameters~
     Default: "severity".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ Examples ~
 - `MiniExtra.pickers.explorer()`
 - `:Pick explorer cwd='..'` - open explorer in parent directory.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <cwd> `(string)` - initial directory to explore. Should be a valid
@@ -316,7 +316,7 @@ Parameters~
     return sorted array of items.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -339,7 +339,7 @@ Examples ~
 - `:Pick git_branches path='%'` - all branches of the current file parent
   Git repository.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <path> `(string|nil)` - target path for Git operation (if required). Also
@@ -349,7 +349,7 @@ Parameters~
     Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -373,7 +373,7 @@ Examples ~
   files from 'subdir' subdirectory.
 - `:Pick git_commits path='%'` commits affecting current file.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <path> `(string|nil)` - target path for Git operation (if required). Also
@@ -381,7 +381,7 @@ Parameters~
     Default: `nil` for root of Git repository containing |current-directory|.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ Examples ~
 - `:Pick git_files path='subdir' scope='modified'` - files from 'subdir'
   subdirectory which are ignored by Git.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <path> `(string|nil)` - target path for Git operation (if required). Also
@@ -418,7 +418,7 @@ Parameters~
     Default: "tracked".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -441,7 +441,7 @@ Examples ~
 - `:Pick git_hunks path='%' n_context=0` - hunks from current file computed
   with no context.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <n_context> `(number)` - number of context lines to show in hunk's preview.
@@ -453,7 +453,7 @@ Parameters~
     Default: "unstaged".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ Notes:
 - Requires 'mini.hipatterns'.
 - Highlighter identifier is highlighted with its highlight group.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - one of "all" (buffers with enabled 'mini.hipatterns')
@@ -475,7 +475,7 @@ Parameters~
     Forwarded to |MiniHipatterns.get_matches()|. Default: `nil`.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -496,14 +496,14 @@ Examples ~
 - Command history: `MiniExtra.pickers.history({ scope = ':' })`
 - Search history: `:Pick history scope='/'`
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - any allowed {name} flag of |:history| command.
     Note: word abbreviations are not allowed. Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -517,12 +517,12 @@ Notes:
 - Preview shows highlight's definition (as in |:highlight| with {group-name}).
 - Choosing places highlight definition in Command line to update and apply.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -537,7 +537,7 @@ Notes:
 - Preview shows keymap data or callback source (if present and reachable).
 - Choosing emulates pressing the left hand side of the keymap.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <mode> `(string)` - modes to show. One of "all" or appropriate mode
@@ -546,7 +546,7 @@ Parameters~
     Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -567,14 +567,14 @@ Examples ~
 - `MiniExtra.pickers.list({ scope = 'quickfix' })` - quickfix list.
 - `:Pick list scope='jump'` - jump list.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - type of list to show. One of "quickfix", "location",
     "jump", "change". Default: `nil` which means explicit scope is needed.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -604,7 +604,7 @@ Examples ~
   under cursor.
 - `:Pick lsp scope='document_symbol'` - symbols in current file.
 
-Parameters~
+Parameters ~
 {local_opts} `(table)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - LSP method to use. One of the supported ones (see
@@ -613,7 +613,7 @@ Parameters~
     Default: empty string for all symbols (according to LSP specification).
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(nil)` Nothing is returned.
 
 ------------------------------------------------------------------------------
@@ -623,14 +623,14 @@ Neovim marks picker
 
 Pick and preview position of Neovim |mark|s.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - scope to show. One of "all", "global", "buf".
     Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -640,12 +640,12 @@ Old files picker
 
 Pick from |v:oldfiles| entries representing readable files.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -659,14 +659,14 @@ Notes:
 - Preview shows option value in target window and its general information.
 - Choosing places option name in Command line to update and apply.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - options to show. One of "all", "global", "win", "buf".
     Default: "all".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -681,12 +681,12 @@ Notes:
   |c_CTRL-R| in Command-line mode, and |P| otherwise.
   Expression register |quote=| is reevaluated (if present) and pasted.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -699,14 +699,14 @@ Notes:
 - No preview is available.
 - Choosing replaces current word (|<cword>|) with suggestion.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <n_suggestions> `(number)` - number of spell suggestions. Default: 25.
 
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -719,12 +719,12 @@ Notes:
 - Requires Neovim>=0.8.
 - Requires active tree-sitter parser in the current buffer.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -743,7 +743,7 @@ Examples ~
 - `:Pick visit_paths cwd='' recency_weight=1 filter='core'` - all visits with
   "core" label ordered from most to least recent.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <cwd> `(string)` - forwarded to |MiniVisits.list_paths()|.
@@ -759,7 +759,7 @@ Parameters~
     Note: if supplied, has precedence over `recency_weight`.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
@@ -781,7 +781,7 @@ Examples ~
   for |current-directory|.
 - `:Pick visit_labels cwd=''` - labels from all visits.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <cwd> `(string)` - forwarded to |MiniVisits.list_labels()|.
@@ -794,7 +794,7 @@ Parameters~
     preview and choose. Default: `nil` to use "robust frecency".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
-Return~
+Return ~
 Chosen path.
 
 

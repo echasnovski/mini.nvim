@@ -82,7 +82,7 @@ See |mini.nvim-buffer-local-config| for more details.
     - Has more than color highlighting functionality, which is compared to
       this module in the same way as 'NvChad/nvim-colorizer.lua'.
 
-# Highlight groups~
+# Highlight groups ~
 
 * `MiniHipatternsFixme` - suggested group to use for `FIXME`-like patterns.
 * `MiniHipatternsHack` - suggested group to use for `HACK`-like patterns.
@@ -215,10 +215,10 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
                         `MiniHipatterns.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniHipatterns.config|.
 
-Usage~
+Usage ~
 `require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
 
 Note: no highlighters is defined by default. Add them for visible effect.
@@ -331,7 +331,7 @@ Notes:
   buffer. In order for highlighting to persist after `:edit`, call
   |MiniHipatterns.setup()|.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
   Default: 0 for current buffer.
 {config} `(table|nil)` Optional buffer-local config. Should have the same
@@ -350,7 +350,7 @@ Note that if |MiniHipatterns.setup()| was called, the effect is present
 until the next auto-enabling event. To permanently disable highlighting in
 buffer, set `vim.b.minihipatterns_disable` to `true`
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
   Default: 0 for current buffer.
 
@@ -361,7 +361,7 @@ Toggle highlighting in buffer
 
 Call |MiniHipatterns.disable()| if enabled; |MiniHipatterns.enable()| otherwise.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
   Default: 0 for current buffer.
 {config} `(table|nil)` Forwarded to |MiniHipatterns.enable()|.
@@ -374,7 +374,7 @@ Update highlighting in range
 Works only in buffer with enabled highlighting. Effect takes immediately
 without delay.
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier in which to enable highlighting.
   Default: 0 for current buffer.
 {from_line} `(number|nil)` Start line from which to update (1-indexed).
@@ -385,7 +385,7 @@ Parameters~
                      `MiniHipatterns.get_enabled_buffers`()
 Get an array of enabled buffers
 
-Return~
+Return ~
 `(table)` Array of buffer identifiers with enabled highlighting.
 
 ------------------------------------------------------------------------------
@@ -393,14 +393,14 @@ Return~
              `MiniHipatterns.get_matches`({buf_id}, {highlighters})
 Get buffer matches
 
-Parameters~
+Parameters ~
 {buf_id} `(number|nil)` Buffer identifier for which to return matches.
   Default: `nil` for current buffer.
 {highlighters} `(table|nil)` Array of highlighter identifiers (as in
   `highlighters` field of |MiniHipatterns.config|) for which to return matches.
   Default: all available highlighters (ordered by string representation).
 
-Return~
+Return ~
 `(table)` Array of buffer matches which are tables with following fields:
   - <bufnr> `(number)` - buffer identifier of a match.
   - <highlighter> `(any)` - highlighter identifier which produced the match.
@@ -432,7 +432,7 @@ according to `opts.style` displaying matched color.
 Highlight group is computed using |MiniHipatterns.compute_hex_color_group()|,
 so all its usage notes apply here.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
   - <style> `(string)` - one of:
       - `'full'` -  highlight background of whole hex string with it. Default.
@@ -447,11 +447,11 @@ Parameters~
   - <inline_text> `(string)` - string to be placed and highlighted with color
     to the right of match in case <style> is "inline". Default: "█".
 
-Return~
+Return ~
 `(table)` Highlighter table ready to be used as part of `config.highlighters`.
   Both `pattern` and `group` are callable.
 
-Usage~
+Usage ~
 >
   local hipatterns = require('mini.hipatterns')
   hipatterns.setup({
@@ -472,7 +472,7 @@ Notes:
   you want to try different style in current Neovim session, execute
   |:colorscheme| command to clear cache. Needs a call to |MiniHipatterns.setup()|.
 
-Parameters~
+Parameters ~
 {hex_color} `(string)` Hex color string in format `#rrggbb`.
 {style} `(string)` One of:
   - `'bg'` - highlight background with `hex_color` and foreground with black or
@@ -480,7 +480,7 @@ Parameters~
   - `'fg'` - highlight foreground with `hex_color`.
   - `'line'` - highlight underline with `hex_color`.
 
-Return~
+Return ~
 `(string)` Name of created highlight group appropriate to show `hex_color`.
 
 

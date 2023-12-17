@@ -153,10 +153,10 @@ There are two suggested ways to customize mappings:
                         `MiniOperators.setup`({config})
 Module setup
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniOperators.config|.
 
-Usage~
+Usage ~
 `require('mini.operators').setup({})` (replace `{}` with your `config` table).
 
 ------------------------------------------------------------------------------
@@ -294,7 +294,7 @@ It replaces the region with the output of `config.evaluate.func`.
 By default it is |MiniOperators.default_evaluate_func()| which evaluates
 text as Lua code depending on the region submode.
 
-Parameters~
+Parameters ~
 {mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
 
 ------------------------------------------------------------------------------
@@ -315,7 +315,7 @@ Notes:
 
 - Works with most cases of intersecting regions, but not officially supported.
 
-Parameters~
+Parameters ~
 {mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
 
 ------------------------------------------------------------------------------
@@ -339,7 +339,7 @@ Notes:
    - In most cases separate steps would be "yank" + "move cursor" + "paste",
      while "multiply" makes it at once.
 
-Parameters~
+Parameters ~
 {mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
 
 ------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ Notes:
      multiple replacing is needed.
    - Can automatically reindent.
 
-Parameters~
+Parameters ~
 {mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
 
 ------------------------------------------------------------------------------
@@ -376,7 +376,7 @@ Notes:
 - "line" mapping is charwise (as there is not much sense in sorting
   linewise a single line). This also results into no |[count]| support.
 
-Parameters~
+Parameters ~
 {mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
 
 ------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ Parameters~
            `MiniOperators.make_mappings`({operator_name}, {lhs_tbl})
 Make operator mappings
 
-Parameters~
+Parameters ~
 {operator_name} `(string)` Name of existing operator from this module.
 {lhs_tbl} `(table)` Table with mappings keys. Should have these fields:
   - <textobject> `(string)` - Normal mode mapping to operate on textobject.
@@ -397,7 +397,7 @@ Parameters~
   Supply empty string to not create particular mapping. Note: creating `line`
   mapping needs `textobject` mapping to be set.
 
-Usage~
+Usage ~
 >
   require('mini.operators').make_mappings(
     'replace',
@@ -420,7 +420,7 @@ Behavior depends on region submode:
   of outputs. This allows separate execution of lines in order to provide
   something different compared to linewise region.
 
-Parameters~
+Parameters ~
 {content} `(table)` Table with the following fields:
   - <lines> `(table)` - array with content lines.
   - <submode> `(string)` - region submode. One of `'v'`, `'V'`, `'<C-v>'` (escaped).
@@ -453,7 +453,7 @@ Notes:
   it is split as "b ", "_", " a" ) while with "%s*_%s*" pattern it results
   into "a _ b" (split as "b", " _ ", "a").
 
-Parameters~
+Parameters ~
 {content} `(table)` Table with the following fields:
   - <lines> `(table)` - array with content lines.
   - <submode> `(string)` - region submode. One of `'v'`, `'V'`, `'<C-v>'` (escaped).

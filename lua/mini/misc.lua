@@ -28,7 +28,7 @@
 ---
 --- - And more.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module doesn't need setup, but it can be done to improve usability.
 --- Setup with `require('mini.misc').setup({})` (replace `{}` with your

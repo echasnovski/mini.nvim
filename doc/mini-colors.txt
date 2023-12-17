@@ -71,7 +71,7 @@ Tweak quick start ~
 - If only some highlight groups can be made better, adjust them manually
   inside written color scheme file.
 
-# Setup~
+# Setup ~
 
 This module doesn't need setup, but it can be done to improve usability.
 Setup with `require('mini.colors').setup({})` (replace `{}` with your
@@ -351,12 +351,12 @@ object with |MiniColors.get_colorscheme()|: >
   -- Get registered color scheme by name
   MiniColors.get_colorscheme('minischeme', { new_name = 'maxischeme' })
 
-Class~
+Class ~
 {Colorscheme}
 
                                                  *MiniColors-colorscheme-fields*
 
-Fields~
+Fields ~
 {name} `(string|nil)` Name of the color scheme (as in |g:colors_name|).
 
 {groups} `(table|nil)` Table with highlight groups data. Keys are group
@@ -665,10 +665,10 @@ more registered color scheme names and performs animated transition between
 them (starting from currently active color scheme).
 It uses |MiniColors.animte()| with default options.
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniColors.config|.
 
-Usage~
+Usage ~
 `require('mini.colors').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
@@ -686,10 +686,10 @@ Default values:
                         `MiniColors.as_colorscheme`({x})
 Create colorscheme object
 
-Parameters~
+Parameters ~
 {x} `(table)` Table to be transformed into |MiniColors-colorscheme| object.
 
-Return~
+Return ~
 `(table)` Copy of `x` transformed into a colorscheme object.
 
 ------------------------------------------------------------------------------
@@ -697,7 +697,7 @@ Return~
                   `MiniColors.get_colorscheme`({name}, {opts})
 Get colorscheme object from registered color scheme
 
-Parameters~
+Parameters ~
 {name} `(string|nil)` Name of color scheme to use. If `nil` (default) creates
  colorscheme object based on currently active data (|g:colors_name|,
  highlight groups, terminal colors). If string, converts color scheme with
@@ -705,7 +705,7 @@ Parameters~
 {opts} `(table|nil)` Options. Possible fields:
   - <new_name> `(string|nil)` - new name of colorscheme object.
 
-Return~
+Return ~
 `(table)` Colorscheme object |(MiniColors-colorscheme|).
 
 ------------------------------------------------------------------------------
@@ -744,7 +744,7 @@ Example of interactive buffer content: >
   add_cterm_attributes()
   add_terminal_colors()
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
   - <colorscheme> `(table|nil)` - |MiniColors-colorscheme| object to be
     used as initial colorscheme for executed code. By default uses current
@@ -767,7 +767,7 @@ Start from currently active color scheme and loop through `cs_array`.
 
 Powers |:Colorscheme| user command created in |MiniColors.setup()|.
 
-Parameters~
+Parameters ~
 {cs_array} `(`(table)`)` Array of |MiniColors-colorscheme| objects.
 {opts} `(table|nil)` Options. Possible fields:
   - <transition_steps> `(number)` - number of intermediate steps to show
@@ -786,7 +786,7 @@ Convert between color spaces
 
 For a list of supported colors spaces see |MiniColors-color-spaces|.
 
-Parameters~
+Parameters ~
 {x} `(table|string|number|nil)` Color to convert from. Its color space is
   inferred automatically.
 {to_space} `(string)` Id of allowed color space.
@@ -794,7 +794,7 @@ Parameters~
   - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
     Default: `'chroma'`.
 
-Return~
+Return ~
 `(table|string|number|nil)` Color in space `to_space` or `nil` if input is `nil`.
 
 ------------------------------------------------------------------------------
@@ -802,7 +802,7 @@ Return~
             `MiniColors.modify_channel`({x}, {channel}, {f}, {opts})
 Modify channel
 
-Parameters~
+Parameters ~
 {x} `(table|string|number|nil)` Color which channel will be modified. Color
   space is inferred automatically.
 {channel} `(string)` One of supported |MiniColors-channels|.
@@ -812,7 +812,7 @@ Parameters~
   - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
     Default: `'chroma'`.
 
-Return~
+Return ~
 `(string|nil)` Hex string of color with modified channel or `nil` if input is `nil`.
 
 ------------------------------------------------------------------------------
@@ -820,14 +820,14 @@ Return~
              `MiniColors.simulate_cvd`({x}, {cvd_type}, {severity})
 Simulate color vision deficiency
 
-Parameters~
+Parameters ~
 {x} `(table|string|number|nil)` Color to convert from. Its color space is
   inferred automatically.
 {cvd_type} `(string)` Type of CVD. One of `'protan'`, `'deutan'`,
 or `'mono'` (equivalent to converting to graysacle).
 {severity} `(number|nil)` Severity of CVD. A number between 0 and 1 (default).
 
-Return~
+Return ~
 `(string|nil)` Hex string of simulated color or `nil` if input is `nil`.
 
 

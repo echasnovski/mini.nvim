@@ -31,7 +31,7 @@
 ---       does by default).
 ---     - Disable module for buffer (see 'Disabling' section).
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.pairs').setup({})`
 --- (replace `{}` with your `config` table). It will create global Lua table
@@ -43,7 +43,7 @@
 --- This module doesn't have runtime options, so using `vim.b.minipairs_config`
 --- will have no effect here.
 ---
---- # Example mappings~
+--- # Example mappings ~
 ---
 --- - Register quotes inside `config` of |MiniPairs.setup|: >
 ---   mappings = {
@@ -58,7 +58,7 @@
 --- - Create symmetrical `$$` pair only in Tex files: >
 ---   au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})
 --- <
---- # Notes~
+--- # Notes ~
 ---
 --- - Make sure to make proper mapping of `<CR>` in order to support completion
 ---   plugin of your choice:
@@ -70,7 +70,7 @@
 ---     - Autopairing capabilities of interpretators (`ipython`, `radian`).
 ---     - Vim mode of terminal itself.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minipairs_disable` (globally) or `vim.b.minipairs_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios

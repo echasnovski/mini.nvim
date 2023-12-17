@@ -661,10 +661,10 @@ Example: >
   :Pick files tool='git'
   :Pick grep pattern='<cword>'
 
-Parameters~
+Parameters ~
 {config} `(table|nil)` Module config table. See |MiniPick.config|.
 
-Usage~
+Usage ~
 `require('mini.pick').setup({})` (replace `{}` with your `config` table).
 
 ------------------------------------------------------------------------------
@@ -812,12 +812,12 @@ Notes:
 - Current window at the moment of this function call is treated as "target".
   See |MiniPick.get_picker_state()| and |MiniPick.set_picker_target_window()|.
 
-Parameters~
+Parameters ~
 {opts} `(table|nil)` Options. Should have same structure as |MiniPick.config|.
   Default values are inferred from there.
   Usually should have proper |MiniPick-source.items| defined.
 
-Return~
+Return ~
 `(any)` Item which was current when picker is stopped; `nil` if aborted.
 
 ------------------------------------------------------------------------------
@@ -899,14 +899,14 @@ You can have a feel of how this works with this command: >
 
   MiniPick.start({ source = { items = { '_abc', 'a_bc', 'ab_c', 'abc_' } } })
 
-Parameters~
+Parameters ~
 {stritems} `(table)` Array of all stritems.
 {inds} `(table)` Array of `stritems` indexes to match. All of them should point
   at string elements of `stritems`. No check is done for performance reasons.
 {query} `(table)` Array of strings.
 {do_sync} `(boolean|nil)` Whether to match synchronously. Default: `nil`.
 
-Return~
+Return ~
 `(table|nil)` Depending on whether computation is synchronous (either `do_sync`
   is truthy or there is an active picker):
   - If yes, array of `stritems` indexes matching the `query` (from best to worst).
@@ -931,7 +931,7 @@ Uses the following highlight groups (see |MiniPick| for their description):
 * `MiniPickMatchMarked`
 * `MiniPickMatchRanges`
 
-Parameters~
+Parameters ~
 {buf_id} `(number)` Identifier of target buffer.
 {items} `(table)` Array of items to show.
 {query} `(table)` Array of strings representing query.
@@ -964,7 +964,7 @@ Uses the following highlight groups (see |MiniPick| for their description):
 * `MiniPickPreviewLine`
 * `MiniPickPreviewRegion`
 
-Parameters~
+Parameters ~
 {buf_id} `(number)` Identifier of target buffer.
 {item} `(any)` Item to preview.
 {opts} `(table|nil)` Options. Possible values:
@@ -986,7 +986,7 @@ Choose item. Logic follows the rules in |MiniPick-source.items-common|:
 
 Implements default value for |MiniPick-source.choose|.
 
-Parameters~
+Parameters ~
 {item} `(any)` Item to choose.
 
 ------------------------------------------------------------------------------
@@ -1001,7 +1001,7 @@ Choose marked items. Logic follows the rules in |MiniPick-source.items-common|:
 
 Implements default value for |MiniPick-source.choose_marked|.
 
-Parameters~
+Parameters ~
 {items} `(table)` Array of items to choose.
 {opts} `(table|nil)` Options. Possible fields:
   - <list_type> `(string)` - which type of list to open. One of "quickfix"
@@ -1038,7 +1038,7 @@ If none is present, uses fallback which utilizes |vim.fs.dir()|.
 To customize CLI tool search, either use tool's global configuration approach
 or directly |MiniPick.builtin.cli()| with specific command.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <tool> `(string)` - which tool to use. One of "rg", "fd", "git", "fallback".
@@ -1058,7 +1058,7 @@ Lua pattern matches (NOT recommended in large directories).
 To customize CLI tool search, either use tool's global configuration approach
 or directly |MiniPick.builtin.cli()| with specific command.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <tool> `(string)` - which tool to use. One of "rg", "git", "fallback".
@@ -1080,7 +1080,7 @@ Tries to use one of the CLI tools to create items (see |MiniPick-cli-tools|):
 
 To customize search, use tool's global configuration approach.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <tool> `(string)` - which tool to use. One of "rg", "git".
@@ -1096,7 +1096,7 @@ Notes:
 - On choose executes |:help| command with appropriate modifier
   (|:horizontal|, |:vertical|, |:tab|) due to the effect of custom mappings.
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Not used at the moment.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
@@ -1116,7 +1116,7 @@ Notes:
   local buffer_mappings = { wipeout = { char = '<C-d>', func = wipeout_cur } }
   MiniPick.builtin.buffers(local_opts, { mappings = buffer_mappings })
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <include_current> `(boolean)` - whether to include current buffer in
@@ -1135,7 +1135,7 @@ Uses |MiniPick.set_picker_items_from_cli()|.
 
 Example: `MiniPick.builtin.cli({ command = { 'echo', 'a\nb\nc' } })`
 
-Parameters~
+Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <command> `(table)` - forwarded to `set_picker_items_from_cli()`.
@@ -1183,10 +1183,10 @@ Customization examples: >
                          `MiniPick.get_picker_items`()
 Get items of active picker
 
-Return~
+Return ~
 `(table|nil)` Picker items or `nil` if no active picker.
 
-See also~
+See also ~
 |MiniPick.set_picker_items()| and |MiniPick.set_picker_items_from_cli()|
 
 ------------------------------------------------------------------------------
@@ -1194,11 +1194,11 @@ See also~
                         `MiniPick.get_picker_stritems`()
 Get stritems of active picker
 
-Return~
+Return ~
 `(table|nil)` Picker stritems (|MiniPick-source.items-stritems|) or `nil` if
   no active picker.
 
-See also~
+See also ~
 |MiniPick.set_picker_items()| and |MiniPick.set_picker_items_from_cli()|
 
 ------------------------------------------------------------------------------
@@ -1206,7 +1206,7 @@ See also~
                         `MiniPick.get_picker_matches`()
 Get matches of active picker
 
-Return~
+Return ~
 `(table|nil)` Picker matches or `nil` if no active picker. Matches is a table
   with the following fields:
   - <all> `(table|nil)` - all currently matched items.
@@ -1216,7 +1216,7 @@ Return~
   - <marked> `(table|nil)` - marked items.
   - <marked_inds> `(table|nil)` - indexes of marked items.
 
-See also~
+See also ~
 |MiniPick.set_picker_match_inds()|
 
 ------------------------------------------------------------------------------
@@ -1224,11 +1224,11 @@ See also~
                           `MiniPick.get_picker_opts`()
 Get config of active picker
 
-Return~
+Return ~
 `(table|nil)` Picker config (`start()`'s input `opts` table) or `nil` if
   no active picker.
 
-See also~
+See also ~
 |MiniPick.set_picker_opts()|
 
 ------------------------------------------------------------------------------
@@ -1236,7 +1236,7 @@ See also~
                          `MiniPick.get_picker_state`()
 Get state data of active picker
 
-Return~
+Return ~
 `(table|nil)` Table with picker state data or `nil` if no active picker.
   State data is a table with the following fields:
   - <buffers> `(table)` - table with `main`, `preview`, `info` fields representing
@@ -1246,7 +1246,7 @@ Return~
   - <caret> `(number)` - caret column.
   - <is_bust> `(boolean)` - whether picker is busy with computations.
 
-See also~
+See also ~
 |MiniPick.set_picker_target_window()|
 
 ------------------------------------------------------------------------------
@@ -1254,10 +1254,10 @@ See also~
                          `MiniPick.get_picker_query`()
 Get query of active picker
 
-Return~
+Return ~
 `(table|nil)` Array of picker query or `nil` if no active picker.
 
-See also~
+See also ~
 |MiniPick.set_picker_query()|
 
 ------------------------------------------------------------------------------
@@ -1267,7 +1267,7 @@ Set items for active picker
 
 Note: sets items asynchronously in non-blocking fashion.
 
-Parameters~
+Parameters ~
 {items} `(table)` Array of items.
 {opts} `(table|nil)` Options. Possible fields:
   - <do_match> `(boolean)` - whether to perform match after setting items.
@@ -1276,7 +1276,7 @@ Parameters~
     to periodically check against when setting items. If checked querytick
     differs from supplied, no items are set.
 
-See also~
+See also ~
 |MiniPick.get_picker_items()| and |MiniPick.get_picker_stritems()|
 
 ------------------------------------------------------------------------------
@@ -1292,7 +1292,7 @@ Example: >
   end)
   MiniPick.start({ source = { items = items, name = 'Echo abc' } })
 
-Parameters~
+Parameters ~
 {command} `(table)` Array with (at least one) string command parts.
 {opts} `(table|nil)` Options. Possible fields:
   - <postprocess> `(function)` - callable performing postprocessing of output.
@@ -1301,7 +1301,7 @@ Parameters~
   - <spawn_opts> `(table)` - `options` for |uv.spawn|, except `args` and `stdio` fields.
   - <set_items_opts> `(table)` - table forwarded to |MiniPick.set_picker_items()|.
 
-See also~
+See also ~
 |MiniPick.get_picker_items()| and |MiniPick.get_picker_stritems()|
 
 ------------------------------------------------------------------------------
@@ -1312,11 +1312,11 @@ Set match indexes for active picker
 This is intended to be used inside custom asynchronous |MiniPick-source.match|
 implementations. See |MiniPick.poke_is_picker_active()| for an example.
 
-Parameters~
+Parameters ~
 {match_inds} `(table)` Array of numbers indicating which elements of picker's
   stritems match the query.
 
-See also~
+See also ~
 |MiniPick.get_picker_matches()|
 
 ------------------------------------------------------------------------------
@@ -1324,10 +1324,10 @@ See also~
                        `MiniPick.set_picker_opts`({opts})
 Set config for active picker
 
-Parameters~
+Parameters ~
 {opts} `(table)` Table overriding initial `opts` input of |MiniPick.start()|.
 
-See also~
+See also ~
 |MiniPick.get_picker_opts()|
 
 ------------------------------------------------------------------------------
@@ -1335,10 +1335,10 @@ See also~
                  `MiniPick.set_picker_target_window`({win_id})
 Set target window for active picker
 
-Parameters~
+Parameters ~
 {win_id} `(number)` Valid window identifier to be used as the new target window.
 
-See also~
+See also ~
 |MiniPick.get_picker_state()|
 
 ------------------------------------------------------------------------------
@@ -1346,10 +1346,10 @@ See also~
                       `MiniPick.set_picker_query`({query})
 Set query for active picker
 
-Parameters~
+Parameters ~
 {query} `(table)` Array of strings to be set as the new picker query.
 
-See also~
+See also ~
 |MiniPick.get_picker_query()|
 
 ------------------------------------------------------------------------------
@@ -1363,7 +1363,7 @@ functionality. Updates after any query change, picker start and stop.
 
 See |MiniPick.poke_is_picker_active()| for usage example.
 
-Return~
+Return ~
 `(number)` Query tick.
 
 ------------------------------------------------------------------------------
@@ -1371,10 +1371,10 @@ Return~
                          `MiniPick.is_picker_active`()
 Check if there is an active picker
 
-Return~
+Return ~
 `(boolean)` Whether there is currently an active picker.
 
-See also~
+See also ~
 |MiniPick.poke_is_picker_active()|
 
 ------------------------------------------------------------------------------
@@ -1409,10 +1409,10 @@ Example of non-blocking exact `match` (as demo; can be optimized further): >
     coroutine.resume(coroutine.create(f))
   end
 
-Return~
+Return ~
 `(boolean)` Whether there is an active picker.
 
-See also~
+See also ~
 |MiniPick.is_picker_active()|
 
 

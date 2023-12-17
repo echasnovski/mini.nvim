@@ -40,7 +40,7 @@
 --- - Every user interaction is accompanied with helper status message showing
 ---   relevant information about current alignment process.
 ---
---- # Setup~
+--- # Setup ~
 ---
 --- This module needs a setup with `require('mini.align').setup({})` (replace
 --- `{}` with your `config` table). It will create global Lua table `MiniAlign`
@@ -54,7 +54,7 @@
 ---
 --- To stop module from showing non-error feedback, set `config.silent = true`.
 ---
---- # Comparisons~
+--- # Comparisons ~
 ---
 --- - 'junegunn/vim-easy-align':
 ---     - 'mini.align' is mostly designed after 'junegunn/vim-easy-align', so
@@ -86,7 +86,7 @@
 ---       desirable. 'mini.align' does not by design: use Visual selection or
 ---       textobject/motion to explicitly define region to align.
 ---
---- # Disabling~
+--- # Disabling ~
 ---
 --- To disable, set `vim.g.minialign_disable` (globally) or `vim.b.minialign_disable`
 --- (for a buffer) to `true`. Considering high number of different scenarios
