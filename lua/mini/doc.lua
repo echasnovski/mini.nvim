@@ -1016,7 +1016,7 @@ H.add_section_heading = function(s, heading)
   if #s == 0 or s.type ~= 'section' then return end
 
   -- Add heading
-  s:insert(1, ('%s~'):format(heading))
+  s:insert(1, ('%s ~'):format(heading))
 end
 
 H.mark_optional = function(s)

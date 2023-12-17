@@ -4,15 +4,15 @@
                                     `M.User`
 Test for `@class`, `@field`, and `@type`
 
-Class~
+Class ~
 {User}
 
-Fields~
+Fields ~
 {login} `(string)` User login.
 {password} `(string)` User password.
 {address} `(optional)` `(string)` User address (should expand to optional).
 
-Type~
+Type ~
 `(table)`
 
 ------------------------------------------------------------------------------
@@ -20,10 +20,10 @@ Type~
                                  `f`({x}, {y})
 Test `@diagnostic` (should be ignored in output) and `@overload`
 
-Parameters~
+Parameters ~
 {x} `(string)` Variable.
 
-Overload~
+Overload ~
 `fun(x: string)`
 
 ------------------------------------------------------------------------------
@@ -31,10 +31,10 @@ Overload~
                                `M.fun`({a}, {b})
 Test for `@seealso` and `@usage`
 
-Usage~
+Usage ~
 `M.fun(1, 2)`
 
-See also~
+See also ~
 |test-f| |f-test-different-line|
 
 ------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ Test for `@signature` and `@tag`
 ------------------------------------------------------------------------------
 Test for `@text`
 
-Parameters~
+Parameters ~
 {a} `(string)`
 
 This illustrates some code:
@@ -65,7 +65,7 @@ This illustrates some code:
 Test `@alias` section
 
 ------------------------------------------------------------------------------
-Parameters~
+Parameters ~
 {x}   `(fun(type: string, data: any))`
 {y} Another data structure.
   Its description spans over multiple lines.
@@ -119,7 +119,7 @@ Tests for `@param` section
 ------------------------------------------------------------------------------
 Test for general cases
 
-Parameters~
+Parameters ~
 {b} `(number)` Number.
 {a} `(string)` Some string. Multiline description:
   - Item 1.
@@ -131,7 +131,7 @@ Parameters~
 ------------------------------------------------------------------------------
 Test for expanding `?` to `(optional)`
 
-Parameters~
+Parameters ~
 {x} `(optional)` `(string)` This should add `(optional)`
 {y} `(string?)` This should not add `(optional)` as `?` is not after first word.
 {abc} `(string)` Having ? inside comment shouldn't trigger `(optional)`.
@@ -139,7 +139,7 @@ Parameters~
 ------------------------------------------------------------------------------
 Test for enclosing type
 
-Parameters~
+Parameters ~
 {a} `(number)` Should work.
 {b} `(number[])` Should work.
 {c} `(number|nil)` Should work.
@@ -160,37 +160,37 @@ Tests for `@return` section
 ------------------------------------------------------------------------------
 Test for general cases
 
-Return~
+Return ~
 `(number)` Some number.
 
 ------------------------------------------------------------------------------
 Test for expanding `?` to `(optional)`
 
-Return~
+Return ~
 `(number)` `(optional)`
-Return~
+Return ~
 `(boolean)` `(optional)` Second ? shouldn't trigger anything.
 
 ------------------------------------------------------------------------------
 Test for enclosing type
 
-Return~
+Return ~
 `(number)` Should work.
-Return~
+Return ~
 `(number[])` Should work.
-Return~
+Return ~
 `(number|nil)` Should work.
-Return~
+Return ~
 `(table<string, number>)` Should work.
-Return~
+Return ~
 `(fun(a: string, b:number))` Should work.
-Return~
+Return ~
 `(fun(a: string, b:number): table)` Should work.
-Return~
+Return ~
 NUMBER Shouldn't work.
-Return~
+Return ~
 `(function)` Should not enclose second time: function .
-Return~
+Return ~
 `(...)` Should work.
 
 
