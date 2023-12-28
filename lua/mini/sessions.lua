@@ -187,7 +187,7 @@ MiniSessions.read = function(session_name, opts)
   H.possibly_execute(opts.hooks.pre, data)
 
   -- Wipeout all buffers
-  vim.cmd('%bwipeout!')
+  vim.cmd('silent! %bwipeout!')
 
   -- Read session file
   local session_path = data.path
