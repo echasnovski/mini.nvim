@@ -57,7 +57,7 @@
 
 -- Module definition ==========================================================
 local MiniSessions = {}
-local H = { path_sep = package.config:sub(1, 1) }
+local H = {}
 
 --- Module setup
 ---
@@ -91,7 +91,7 @@ MiniSessions.config = {
 
   -- Directory where global sessions are stored (use `''` to disable)
   --minidoc_replace_start directory = --<"session" subdir of user data directory from |stdpath()|>,
-  directory = ('%s%ssession'):format(vim.fn.stdpath('data'), H.path_sep),
+  directory = vim.fn.stdpath('data') .. '/session',
   --minidoc_replace_end
 
   -- File for local session (use `''` to disable)
@@ -504,7 +504,7 @@ H.detect_sessions_global = function(global_dir)
 end
 
 H.detect_sessions_local = function(local_file)
-  local f = H.joinpath(vim.fn.getcwd(), local_file)
+  local f = H.join_path(vim.fn.getcwd(), local_file)
 
   if not H.is_readable_file(f) then return {} end
 
@@ -557,7 +557,7 @@ H.name_to_path = function(session_name)
   if session_name == '' then H.error('Supply non-empty session name.') end
 
   local session_dir = (session_name == MiniSessions.config.file) and vim.fn.getcwd() or MiniSessions.config.directory
-  local path = H.joinpath(session_dir, session_name)
+  local path = H.join_path(session_dir, session_name)
   return H.full_path(path)
 end
 
@@ -597,7 +597,9 @@ end
 
 H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 
-H.joinpath = function(directory, filename) return ('%s%s%s'):format(directory, H.path_sep, tostring(filename)) end
+H.join_path = function(directory, filename)
+  return (string.format('%s/%s', directory, filename):gsub('\\', '/'):gsub('/+', '/'))
+end
 
 H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
 
