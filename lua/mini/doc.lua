@@ -413,10 +413,7 @@ MiniDoc.config = {
       end
 
       -- Notify
-      local msg = ('Help file %s is successfully generated (%s).'):format(
-        vim.inspect(output),
-        vim.fn.strftime('%Y-%m-%d %H:%M:%S')
-      )
+      local msg = ('Help file %s is successfully generated.'):format(vim.inspect(output))
       vim.notify(msg, vim.log.levels.INFO)
     end,
     --minidoc_replace_end

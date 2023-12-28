@@ -14,6 +14,7 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 ## mini.doc
 
 - BREAKING: Stop using `:echo` to display messages and warnings in favor of `vim.notify()`.
+- BREAKING: Update default `write_post` hook to not display current time in success message.
 - Update to include space before `~` in generated section headings.
 
 ## mini.starter
