@@ -479,6 +479,18 @@ T['read()']['does not stop on source error'] = function()
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'This should be preserved in session' })
 end
 
+T['read()']['writes current session prior to reading a new one'] = function()
+  local cur_session = project_root .. '/tests/dir-sessions/global/current-session'
+  MiniTest.finally(function() child.fn.delete(cur_session) end)
+
+  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
+  child.v.this_session = cur_session
+
+  eq(child.fn.filereadable(cur_session), 0)
+  child.lua([[MiniSessions.read('session1')]])
+  eq(child.fn.filereadable(cur_session), 1)
+end
+
 T['read()']['respects hooks from `config` and `opts` argument'] = new_set({
   parametrize = { { 'pre' }, { 'post' } },
 }, {
@@ -494,6 +506,8 @@ T['read()']['respects hooks from `config` and `opts` argument'] = new_set({
 
     validate_session_loaded('global/session1')
     validate_executed_hook(pre_post, 'read', 'config')
+    -- - Make sure that current session is not written
+    child.v.this_session = ''
 
     -- Should prefer `opts` over `config`
     local hook_string_opts = make_hook_string(pre_post, 'read', 'opts')
@@ -511,6 +525,8 @@ T['read()']['respects `verbose` from `config` and `opts` argument'] = function()
   child.lua([[MiniSessions.read('session1')]])
   validate_session_loaded('global/session1')
   expect.match(get_latest_message(), '%(mini%.sessions%) Read session.*session1')
+  -- - Make sure that current session is not written
+  child.v.this_session = ''
 
   -- Should prefer `opts` over `config`
   reset_session_indicator()

@@ -128,6 +128,7 @@ MiniSessions.detected = {}
 --- Read detected session
 ---
 --- What it does:
+--- - If there is an active session, write it with |MiniSessions.write()|.
 --- - Delete all current buffers with |bwipeout|. This is needed to correctly
 ---   restore buffers from target session. If `force` is not `true`, checks
 ---   beforehand for unsaved listed buffers and stops if there is any.
@@ -178,6 +179,9 @@ MiniSessions.read = function(session_name, opts)
       H.error(('There are unsaved listed buffers: %s.'):format(buf_list))
     end
   end
+
+  -- Write current session to allow proper switching between sessions
+  if vim.v.this_session ~= '' then MiniSessions.write(nil, { force = true, verbose = false }) end
 
   -- Execute 'pre' hook
   H.possibly_execute(opts.hooks.pre, data)

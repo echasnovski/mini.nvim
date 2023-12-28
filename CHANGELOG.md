@@ -17,6 +17,10 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 - BREAKING: Update default `write_post` hook to not display current time in success message.
 - Update to include space before `~` in generated section headings.
 
+## mini.sessions
+
+- FEATURE: Update `read()` to first `write()` current session (if there is any).
+
 ## mini.starter
 
 - FEATURE: Add `sections.pick()` with 'mini.pick' pickers.

@@ -120,6 +120,7 @@ change):
 Read detected session
 
 What it does:
+- If there is an active session, write it with |MiniSessions.write()|.
 - Delete all current buffers with |bwipeout|. This is needed to correctly
   restore buffers from target session. If `force` is not `true`, checks
   beforehand for unsaved listed buffers and stops if there is any.
