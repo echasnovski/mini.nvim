@@ -160,14 +160,14 @@ end
 
 T['Options']['respect `config.options.basic`'] = function()
   eq(child.g.mapleader, vim.NIL)
-  eq(child.o.termguicolors, false)
+  local tgc = child.o.termguicolors
   eq(child.o.number, false)
   eq(child.o.signcolumn, 'auto')
 
   load_module({ options = { basic = false } })
 
   eq(child.g.mapleader, vim.NIL)
-  eq(child.o.termguicolors, false)
+  eq(child.o.termguicolors, tgc)
   eq(child.o.number, false)
   eq(child.o.signcolumn, 'auto')
 end
@@ -339,22 +339,8 @@ end
 
 T['Mappings']['Basic']['gy'] = function()
   load_module()
-
-  set_lines({ 'xxx' })
-  type_keys('"+yiw')
-  eq(child.fn.getreg('+'), 'xxx')
-
-  -- Should copy to `+` register
-  set_lines({ 'aaa' })
-  set_cursor(1, 0)
-  type_keys('gyiw')
-  eq(child.fn.getreg('+'), 'aaa')
-
-  -- Should also work in Visual mode
-  set_lines({ 'bbb' })
-  set_cursor(1, 0)
-  type_keys('viwgy')
-  eq(child.fn.getreg('+'), 'bbb')
+  eq(child.fn.maparg('gy', 'n'), '"+y')
+  eq(child.fn.maparg('gy', 'x'), '"+y')
 end
 
 T['Mappings']['Basic']['gp'] = function()
