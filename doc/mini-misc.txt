@@ -75,7 +75,7 @@ Parameters ~
 {...} `(any)` Arguments when calling `f`.
 
 Return ~
-`(...)` Table with durations (in seconds; up to microseconds) and
+`(...)` Table with durations (in seconds; up to nanoseconds) and
   output of (last) function execution.
 
 ------------------------------------------------------------------------------

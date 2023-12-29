@@ -77,16 +77,16 @@ MiniMisc.config = {
 ---@param n number|nil Number of times to execute `f(...)`. Default: 1.
 ---@param ... any Arguments when calling `f`.
 ---
----@return ... Table with durations (in seconds; up to microseconds) and
+---@return ... Table with durations (in seconds; up to nanoseconds) and
 ---   output of (last) function execution.
 MiniMisc.bench_time = function(f, n, ...)
   n = n or 1
   local durations, output = {}, nil
   for _ = 1, n do
-    local start_sec, start_usec = vim.loop.gettimeofday()
+    local start_time = vim.loop.hrtime()
     output = f(...)
-    local end_sec, end_usec = vim.loop.gettimeofday()
-    table.insert(durations, (end_sec - start_sec) + 0.000001 * (end_usec - start_usec))
+    local end_time = vim.loop.hrtime()
+    table.insert(durations, 0.000000001 * (end_time - start_time))
   end
 
   return durations, output
