@@ -22,6 +22,10 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 
 - Update `bench_time()` to use `vim.loop.hrtime()` (as better designed for benchmarking) instead of `vim.loop.gettimeofday()`.
 
+## mini.pick
+
+- FEATURE: Implement `window.prompt_cursor` and `window.prompt_prefix` config options.
+
 ## mini.sessions
 
 - FEATURE: Update `read()` to first `write()` current session (if there is any).

@@ -310,6 +310,8 @@ T['setup()']['creates `config` field'] = function()
   expect_config('source.choose_marked', vim.NIL)
 
   expect_config('window.config', vim.NIL)
+  expect_config('window.prompt_cursor', '▏')
+  expect_config('window.prompt_prefix', '> ')
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -374,6 +376,8 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error({ window = 'a' }, 'window', 'table')
   expect_config_error({ window = { config = 1 } }, 'window.config', 'table or callable')
+  expect_config_error({ window = { prompt_cursor = 1 } }, 'window.prompt_cursor', 'string')
+  expect_config_error({ window = { prompt_prefix = 1 } }, 'window.prompt_prefix', 'string')
 end
 
 -- This set mostly contains general function testing which doesn't fit into
@@ -820,6 +824,20 @@ T['start()']['respects `window.config`'] = function()
   })]])
   child.expect_screenshot()
   stop()
+end
+
+T['start()']['respects `window.prompt_cursor`'] = function()
+  start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_cursor = '+' } })
+  child.expect_screenshot()
+  type_keys('a', 'b', '<Left>')
+  child.expect_screenshot()
+end
+
+T['start()']['respects `window.prompt_prefix`'] = function()
+  start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_prefix = '$>  ' } })
+  child.expect_screenshot()
+  type_keys('a', 'b', '<Left>')
+  child.expect_screenshot()
 end
 
 T['start()']['stops currently active picker'] = function()

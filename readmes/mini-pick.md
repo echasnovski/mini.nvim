@@ -319,6 +319,12 @@ Here are code snippets for some common installation methods (use only one):
   window = {
     -- Float window config (table or callable returning it)
     config = nil,
+
+    -- String to use as cursor in prompt
+    prompt_cursor = '▏',
+
+    -- String to use as prefix in prompt
+    prompt_prefix = '> ',
   },
 }
 ```

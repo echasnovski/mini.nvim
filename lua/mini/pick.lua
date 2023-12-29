@@ -745,6 +745,12 @@ end
 --- `window.config` defines a (parts of) default floating window config for the main
 --- picker window. This can be either a table overriding some parts or a callable
 --- returning such table. See |MiniPick-examples| for some examples.
+---
+--- `window.prompt_cursor` defines how cursor is displayed in window's prompt.
+--- Default: '▏'.
+---
+--- `window.prompt_prefix` defines what prefix is used in window's prompt.
+--- Default: '> '.
 MiniPick.config = {
   -- Delays (in ms; should be at least 1)
   delay = {
@@ -821,6 +827,12 @@ MiniPick.config = {
   window = {
     -- Float window config (table or callable returning it)
     config = nil,
+
+    -- String to use as cursor in prompt
+    prompt_cursor = '▏',
+
+    -- String to use as prefix in prompt
+    prompt_prefix = '> ',
   },
 }
 --minidoc_afterlines_end
@@ -1787,6 +1799,7 @@ H.setup_config = function(config)
     window = { config.window, 'table' },
   })
 
+  local is_table_or_callable = function(x) return x == nil or type(x) == 'table' or vim.is_callable(x) end
   vim.validate({
     ['delay.async'] = { config.delay.async, 'number' },
     ['delay.busy'] = { config.delay.busy, 'number' },
@@ -1830,11 +1843,9 @@ H.setup_config = function(config)
     ['source.choose'] = { config.source.choose, 'function', true },
     ['source.choose_marked'] = { config.source.choose_marked, 'function', true },
 
-    ['window.config'] = {
-      config.window.config,
-      function(x) return x == nil or type(x) == 'table' or vim.is_callable(x) end,
-      'table or callable',
-    },
+    ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
+    ['window.prompt_cursor'] = { config.window.prompt_cursor, 'string' },
+    ['window.prompt_prefix'] = { config.window.prompt_prefix, 'string' },
   })
 
   return config
@@ -2322,6 +2333,7 @@ H.picker_get_char_data = function(picker, skip_alternatives)
 end
 
 H.picker_set_bordertext = function(picker)
+  local opts = picker.opts
   local win_id = picker.windows.main
   if not H.is_valid_win(win_id) then return end
 
@@ -2332,7 +2344,7 @@ H.picker_set_bordertext = function(picker)
     local query, caret = picker.query, picker.caret
     local before_caret = table.concat(vim.list_slice(query, 1, caret - 1), '')
     local after_caret = table.concat(vim.list_slice(query, caret, #query), '')
-    local prompt_text = '> ' .. before_caret .. '▏' .. after_caret
+    local prompt_text = opts.window.prompt_prefix .. before_caret .. opts.window.prompt_cursor .. after_caret
     local prompt = { { H.win_trim_to_width(win_id, prompt_text), 'MiniPickPrompt' } }
     config = { title = prompt }
   end
@@ -2357,7 +2369,7 @@ H.picker_set_bordertext = function(picker)
   end
 
   -- Respect `options.content_from_bottom`
-  if nvim_has_window_footer and picker.opts.options.content_from_bottom then
+  if nvim_has_window_footer and opts.options.content_from_bottom then
     config.title, config.footer = config.footer, config.title
   end
 

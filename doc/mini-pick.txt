@@ -750,6 +750,12 @@ Default values:
     window = {
       -- Float window config (table or callable returning it)
       config = nil,
+
+      -- String to use as cursor in prompt
+      prompt_cursor = '▏',
+
+      -- String to use as prefix in prompt
+      prompt_prefix = '> ',
     },
   }
 <
@@ -800,6 +806,12 @@ See |MiniPick-source| for more information.
 `window.config` defines a (parts of) default floating window config for the main
 picker window. This can be either a table overriding some parts or a callable
 returning such table. See |MiniPick-examples| for some examples.
+
+`window.prompt_cursor` defines how cursor is displayed in window's prompt.
+Default: '▏'.
+
+`window.prompt_prefix` defines what prefix is used in window's prompt.
+Default: '> '.
 
 ------------------------------------------------------------------------------
                                                               *MiniPick.start()*
