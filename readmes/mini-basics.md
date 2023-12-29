@@ -146,7 +146,7 @@ Here are code snippets for some common installation methods (use only one):
 {
   -- Options. Set to `false` to disable.
   options = {
-    -- Basic options ('termguicolors', 'number', 'ignorecase', and many more)
+    -- Basic options ('number', 'ignorecase', and many more)
     basic = true,
 
     -- Extra UI features ('winblend', 'cmdheight=0', ...)

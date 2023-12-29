@@ -128,7 +128,7 @@ end
 ---     - |splitbelow|
 ---     - |splitkeep| (on Neovim>=0.9)
 ---     - |splitright|
----     - |termguicolors|
+---     - |termguicolors| (on Neovim<0.10; later versions have it smartly enabled)
 ---     - |wrap|
 --- - Editing
 ---     - |completeopt|
@@ -313,7 +313,7 @@ end
 MiniBasics.config = {
   -- Options. Set to `false` to disable.
   options = {
-    -- Basic options ('termguicolors', 'number', 'ignorecase', and many more)
+    -- Basic options ('number', 'ignorecase', and many more)
     basic = true,
 
     -- Extra UI features ('winblend', 'cmdheight=0', ...)
@@ -455,7 +455,6 @@ H.apply_options = function(config)
     o.number        = true    -- Show line numbers
     o.splitbelow    = true    -- Horizontal splits will be below
     o.splitright    = true    -- Vertical splits will be to the right
-    o.termguicolors = true    -- Enable gui colors
 
     o.ruler         = false   -- Don't show cursor position in command line
     o.showmode      = false   -- Don't show mode in command line
@@ -481,6 +480,10 @@ H.apply_options = function(config)
       o.splitkeep = 'screen'      -- Reduce scroll during window split
     else
       opt.shortmess:append('Wc')  -- Reduce command line messages
+    end
+
+    if vim.fn.has('nvim-0.10') == 0 then
+      o.termguicolors = true -- Enable gui colors
     end
   end
 

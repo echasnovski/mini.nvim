@@ -131,7 +131,7 @@ T['Options']['work'] = function()
   load_module()
 
   eq(child.g.mapleader, ' ')
-  eq(child.o.termguicolors, true)
+  if child.fn.has('nvim-0.10') == 0 then eq(child.o.termguicolors, true) end
   eq(child.o.number, true)
   eq(child.o.signcolumn, 'yes')
   eq(child.o.fillchars, 'eob: ')

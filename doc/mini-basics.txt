@@ -76,7 +76,7 @@ Default values:
   MiniBasics.config = {
     -- Options. Set to `false` to disable.
     options = {
-      -- Basic options ('termguicolors', 'number', 'ignorecase', and many more)
+      -- Basic options ('number', 'ignorecase', and many more)
       basic = true,
 
       -- Extra UI features ('winblend', 'cmdheight=0', ...)
@@ -157,7 +157,7 @@ Here is the list of affected options (put cursor on it and press |CTRL-]|):
     - |splitbelow|
     - |splitkeep| (on Neovim>=0.9)
     - |splitright|
-    - |termguicolors|
+    - |termguicolors| (on Neovim<0.10; later versions have it smartly enabled)
     - |wrap|
 - Editing
     - |completeopt|
