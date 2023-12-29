@@ -25,6 +25,7 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 ## mini.pick
 
 - FEATURE: Implement `window.prompt_cursor` and `window.prompt_prefix` config options.
+- FEATURE: Update `builtin.help()` to use tree-sitter highlighting (if there is any).
 
 ## mini.sessions
 

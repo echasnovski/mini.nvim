@@ -1349,7 +1349,9 @@ MiniPick.builtin.help = function(local_opts, opts)
     -- Take advantage of `taglist` output on how to open tag
     vim.api.nvim_buf_call(buf_id, function()
       vim.cmd('noautocmd edit ' .. vim.fn.fnameescape(item.filename))
-      vim.bo.buftype, vim.bo.buflisted, vim.bo.bufhidden, vim.bo.syntax = 'nofile', false, 'wipe', 'help'
+      vim.bo.buftype, vim.bo.buflisted, vim.bo.bufhidden = 'nofile', false, 'wipe'
+      local has_ts = pcall(vim.treesitter.start, 0)
+      if not has_ts then vim.bo.syntax = 'help' end
 
       local cache_hlsearch = vim.v.hlsearch
       -- Make a "very nomagic" search to account for special characters in tag

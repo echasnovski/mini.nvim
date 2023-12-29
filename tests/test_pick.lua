@@ -2733,7 +2733,8 @@ T['builtin.help()']['has proper preview'] = function()
   type_keys('<Tab>')
   child.expect_screenshot()
   eq(child.bo.buftype, 'nofile')
-  eq(child.bo.syntax, 'help')
+  -- Neovim<0.8 should use built-in syntax, while Neovim>=0.8 - tree-sitter
+  if child.fn.has('nvim-0.8') == 0 then eq(child.bo.syntax, 'help') end
 
   eq(child.v.hlsearch, 0)
   eq(child.fn.getreg('/'), 'aa')
