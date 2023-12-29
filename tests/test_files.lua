@@ -1145,6 +1145,16 @@ T['go_in()']['works on file'] = function()
   expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(test_dir_path))
 end
 
+T['go_in()']['respects `opts.close_on_file`'] = function()
+  open(test_dir_path)
+  type_keys('/', [[\.a-file]], '<CR>')
+  go_in({ close_on_file = true })
+  expect.match(child.api.nvim_buf_get_name(0), '%.a%-file$')
+  eq(get_lines(), { '.a-file' })
+
+  validate_n_wins(1)
+end
+
 T['go_in()']['works on files with problematic names'] = function()
   local bad_name = '%a bad-file-name'
   local temp_dir = make_temp_dir('temp', { bad_name })

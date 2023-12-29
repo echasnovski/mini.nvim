@@ -691,13 +691,19 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                              *MiniFiles.go_in()*
-                              `MiniFiles.go_in`()
+                           `MiniFiles.go_in`({opts})
 Go in entry under cursor
 
 Depends on entry under cursor:
 - If directory, focus on it in the window to the right.
 - If file, open it in the window which was current during |MiniFiles.open()|.
   Explorer is not closed after that.
+
+Parameters ~
+{opts} Options. Possible fields:
+  - <close_on_file> `(boolean)` - whether to close explorer after going
+    inside a file. Powers the `go_in_plus` mapping.
+    Default: `false`.
 
 ------------------------------------------------------------------------------
                                                             *MiniFiles.go_out()*

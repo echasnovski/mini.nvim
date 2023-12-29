@@ -18,6 +18,10 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 - BREAKING: Update default `write_post` hook to not display current time in success message.
 - Update to include space before `~` in generated section headings.
 
+## mini.files
+
+- FEATURE: Update `go_in()` to have `close_on_file` option.
+
 ## mini.misc
 
 - Update `bench_time()` to use `vim.loop.hrtime()` (as better designed for benchmarking) instead of `vim.loop.gettimeofday()`.

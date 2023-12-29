@@ -822,14 +822,29 @@ end
 --- - If directory, focus on it in the window to the right.
 --- - If file, open it in the window which was current during |MiniFiles.open()|.
 ---   Explorer is not closed after that.
-MiniFiles.go_in = function()
+---
+---@param opts Options. Possible fields:
+---   - <close_on_file> `(boolean)` - whether to close explorer after going
+---     inside a file. Powers the `go_in_plus` mapping.
+---     Default: `false`.
+MiniFiles.go_in = function(opts)
   local explorer = H.explorer_get()
   if explorer == nil then return end
+
+  opts = vim.tbl_deep_extend('force', { close_on_file = false }, opts or {})
+
+  local should_close = opts.close_on_file
+  if should_close then
+    local fs_entry = MiniFiles.get_fs_entry()
+    should_close = fs_entry ~= nil and fs_entry.fs_type == 'file'
+  end
 
   local cur_line = vim.fn.line('.')
   explorer = H.explorer_go_in_range(explorer, vim.api.nvim_get_current_buf(), cur_line, cur_line)
 
   H.explorer_refresh(explorer)
+
+  if should_close then MiniFiles.close() end
 end
 
 --- Go out to parent directory
@@ -1852,13 +1867,9 @@ H.buffer_make_mappings = function(buf_id, mappings)
   end
 
   local go_in_plus = function()
-    for _ = 1, vim.v.count1 - 1 do
-      MiniFiles.go_in()
+    for _ = 1, vim.v.count1 do
+      MiniFiles.go_in({ close_on_file = true })
     end
-    local fs_entry = MiniFiles.get_fs_entry()
-    local is_at_file = fs_entry ~= nil and fs_entry.fs_type == 'file'
-    MiniFiles.go_in()
-    if is_at_file then MiniFiles.close() end
   end
 
   local go_out_with_count = function()
