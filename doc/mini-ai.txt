@@ -187,14 +187,17 @@ Notes:
     - <vis_mode> for which Visual mode will be used to select textobject.
       See `opts` argument of |MiniAi.select_textobject()|.
       One of `'v'`, `'V'`, `'\22'` (escaped `'<C-v>'`).
-  Examples:
-  - `{ from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }`
-  - Force linewise mode: >
+  Examples: >lua
+    { from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }
+<
+  - Force linewise mode: >lua
     {
       from = { line = 1, col = 1 }, to = { line = 2, col = 1 },
       vis_mode = 'V',
     }
-<  - Empty region: `{ from = { line = 10, col = 10 } }`
+<  - Empty region: >lua
+    { from = { line = 10, col = 10 } }
+
 - PATTERN - string describing Lua pattern.
 - SPAN - interval inside a string (end-exclusive). Like [1, 5). Equal
   `from` and `to` edges describe empty span at that point.
@@ -250,16 +253,14 @@ Textobject specification has a structure of composed pattern (see
       arguments as |MiniAi.find_textobject()| and should return one of:
         - Composed pattern. Useful for implementing user input. Example of
           simplified variant of textobject for function call with name taken
-          from user prompt:
->
+          from user prompt: >lua
           function()
             local left_edge = vim.pesc(vim.fn.input('Function name: '))
             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
           end
 <
         - Single output region. Useful to allow full control over
-          textobject. Will be taken as is. Example of returning whole buffer:
->
+          textobject. Will be taken as is. Example of returning whole buffer: >lua
           function()
             local from = { line = 1, col = 1 }
             local to = {
@@ -273,8 +274,7 @@ Textobject specification has a structure of composed pattern (see
           instruments, like treesitter (see |MiniAi.gen_spec.treesitter()|).
           The best region will be picked in the same manner as with composed
           pattern (respecting options `n_lines`, `search_method`, etc.).
-          Example of selecting "best" line with display width more than 80:
->
+          Example of selecting "best" line with display width more than 80: >lua
           function(_, _, _)
             local res = {}
             for i = 1, vim.api.nvim_buf_line_count(0) do
@@ -297,8 +297,7 @@ Textobject specification has a structure of composed pattern (see
       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
       to the left of `init` (it will lead to infinite loop). Not allowed as
       last item (as it should be pattern with captures).
-      Example of matching only balanced parenthesis with big enough width:
->
+      Example of matching only balanced parenthesis with big enough width: >lua
         {
           '%b()',
           function(s, init)
@@ -395,7 +394,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniAi.config = {
     -- Table with textobject id as fields, textobject specification as values.
     -- Also use this to disable builtin textobjects. See |MiniAi.config|.
@@ -441,7 +440,7 @@ Supply non-valid input (not in specification format) to disable module's
 builtin textobject in favor of external or Neovim's builtin mapping.
 
 Examples:
->
+>lua
   require('mini.ai').setup({
     custom_textobjects = {
       -- Tweak argument textobject
@@ -569,7 +568,7 @@ Generate common textobject specifications
 
 This is a table with function elements. Call to actually get specification.
 
-Example: >
+Example: >lua
   local gen_spec = require('mini.ai').gen_spec
   require('mini.ai').setup({
     custom_textobjects = {
@@ -699,7 +698,7 @@ To verify that query file is reachable, run (example for "lua" language)
 
 Example configuration for function definition textobject with
 'nvim-treesitter/nvim-treesitter-textobjects' captures:
->
+>lua
   local spec_treesitter = require('mini.ai').gen_spec.treesitter
   require('mini.ai').setup({
     custom_textobjects = {
