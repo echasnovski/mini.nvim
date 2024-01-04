@@ -976,6 +976,10 @@ H.apply_colorscheme = function(config)
     hi('MiniMapSymbolLine',  { fg=p.accent,  bg=nil })
     hi('MiniMapSymbolView',  { fg=p.accent,  bg=nil })
 
+    hi('MiniNotifyBorder', { link='FloatBorder' })
+    hi('MiniNotifyNormal', { link='NormalFloat' })
+    hi('MiniNotifyTitle',  { link='FloatTitle'  })
+
     hi('MiniOperatorsExchangeFrom', { link='IncSearch' })
 
     hi('MiniPickBorder',        { link='FloatBorder' })
