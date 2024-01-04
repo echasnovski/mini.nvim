@@ -250,7 +250,7 @@ T['gen_spec']['input']['treesitter()']['works with empty region'] = function()
   type_keys('sh', 'o')
   poke_eventloop()
   -- It highlights `local` differently from other places
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   -- Edge case for empty region on end of last line
   set_lines(lines)
