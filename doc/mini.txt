@@ -37,6 +37,7 @@ Table of contents:
   Window with buffer text overview ................................ |mini.map|
   Miscellaneous functions ........................................ |mini.misc|
   Move any selection in any direction ............................ |mini.move|
+  Show notifications ........................................... |mini.notify|
   Text edit operators ....................................... |mini.operators|
   Autopairs ..................................................... |mini.pairs|
   Pick anything .................................................. |mini.pick|
@@ -216,13 +217,17 @@ Table of contents:
   and `put_text()` which print Lua objects to command line and current
   buffer respectively.
 
-- |MiniOperators| - various text edit operators: replace, exchange,
-  multiply, sort, evaluate. Creates mappings to operate on textobject,
-  line, and visual selection. Supports |[count]| and dot-repeat.
-
 - |MiniMove| - move any selection in any direction. Supports any Visual
   mode (charwise, linewise, blockwise) and Normal mode (current line) for
   all four directions (left, right, down, up). Respects `count` and undo.
+
+- |MiniNotify| - show one or more highlighted notifications in a single window.
+  Provides both low-level functions (add, update, remove, clear) and maker
+  of |vim.notify()| implementation. Sets up automated LSP progress updates.
+
+- |MiniOperators| - various text edit operators: replace, exchange,
+  multiply, sort, evaluate. Creates mappings to operate on textobject,
+  line, and visual selection. Supports |[count]| and dot-repeat.
 
 - |MiniPairs| - autopairs plugin which has minimal defaults and
   functionality to do per-key expression mappings.

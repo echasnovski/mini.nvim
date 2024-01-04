@@ -27,6 +27,7 @@ local modules = {
   'map',
   'misc',
   'move',
+  'notify',
   'operators',
   'pairs',
   'pick',

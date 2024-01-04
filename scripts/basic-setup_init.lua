@@ -37,6 +37,7 @@ local test_actions = {
   ['map']         = function() require('mini.map').setup() end,
   ['misc']        = function() require('mini.misc').setup() end,
   ['move']        = function() require('mini.move').setup() end,
+  ['notify']      = function() require('mini.notify').setup() end,
   ['operators']   = function() require('mini.operators').setup() end,
   ['pairs']       = function() require('mini.pairs').setup() end,
   ['pick']        = function() require('mini.pick').setup() end,

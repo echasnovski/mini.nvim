@@ -1,0 +1,379 @@
+*mini.notify* Show notifications
+*MiniNotify*
+
+MIT License Copyright (c) 2024 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+
+- Show one or more highlighted notifications in a single floating window.
+
+- Manage notifications (add, update, remove, clear).
+
+- |vim.notify()| wrapper generator (see |MiniNotify.make_notify()|).
+
+- Automated show of LSP progress report.
+
+- Track history which can be accessed with |MiniNotify.get_all()|
+  and shown with |MiniNotify.show_history()|.
+
+# Setup ~
+
+This module needs a setup with `require('mini.notify').setup({})` (replace
+`{}` with your `config` table). It will create global Lua table `MiniNotify`
+which you can use for scripting or manually (with `:lua MiniNotify.*`).
+
+See |MiniNotify.config| for `config` structure and default values.
+
+You can override runtime config settings locally to buffer inside
+`vim.b.mininotify_config` which should have same structure as
+`MiniNotify.config`. See |mini.nvim-buffer-local-config| for more details.
+
+# Comparisons ~
+
+- 'j-hui/fidget.nvim':
+    - Basic goals of providing interface for notifications are similar.
+    - Has more configuration options and visual effects, while this module
+      does not (by design).
+
+- 'rcarriga/nvim-notify':
+    - Similar to 'j-hui/fidget.nvim'.
+
+# Highlight groups ~
+
+* `MiniNotifyBorder` - window border.
+* `MiniNotifyNormal` - basic foreground/background highlighting.
+* `MiniNotifyTitle` - window title.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+# Disabling ~
+
+To disable showing notifications, set `vim.g.mininotify_disable` (globally) or
+`vim.b.mininotify_disable` (for a buffer) to `true`. Considering high number
+of different scenarios and customization intentions, writing exact rules
+for disabling module's functionality is left to user. See
+|mini.nvim-disabling-recipes| for common recipes.
+
+------------------------------------------------------------------------------
+                                                      *MiniNotify-specification*
+# Notification specification ~
+
+Notification is a table with the following keys:
+
+- <msg> `(string)` - single string with notification message.
+  Use `\n` to delimit several lines.
+- <level> `(string)` - notification level as key of |vim.log.levels|.
+  Like "ERROR", "WARN", "INFO", etc.
+- <hl_group> `(string)` - highlight group with which notification is shown.
+- <ts_add> `(number)` - timestamp of when notification is added.
+- <ts_update> `(number)` - timestamp of the latest notification update.
+- <ts_remove> `(number|nil)` - timestamp of when notification is removed.
+  It is `nil` if notification was never removed and thus considered "active".
+
+Notes:
+- Timestamps are compatible with |strftime()| and have fractional part.
+
+------------------------------------------------------------------------------
+                                                            *MiniNotify.setup()*
+                          `MiniNotify.setup`({config})
+Module setup
+
+Parameters ~
+{config} `(table|nil)` Module config table. See |MiniNotify.config|.
+
+Usage ~
+`require('mini.notify').setup({})` (replace `{}` with your `config` table).
+
+------------------------------------------------------------------------------
+                                                             *MiniNotify.config*
+                              `MiniNotify.config`
+Module config
+
+Default values:
+>
+  MiniNotify.config = {
+    -- Content management
+    content = {
+      -- Function which formats the notification message
+      -- By default prepends message with notification time
+      format = nil,
+
+      -- Function which orders notification array from most to least important
+      -- By default orders first by level and then by update timestamp
+      sort = nil,
+    },
+
+    -- Notifications about LSP progress
+    lsp_progress = {
+      -- Whether to enable showing
+      enable = true,
+
+      -- Duration (in ms) of how long last message should be shown
+      duration_last = 1000,
+    },
+
+    -- Window options
+    window = {
+      -- Floating window config
+      config = {},
+
+      -- Value of 'winblend' option
+      winblend = 25,
+    },
+  }
+<
+# Content ~
+
+`config.content` defines how notifications are shown.
+
+`content.format` is a function which takes single notification object
+(see |MiniNotify-specification|) and returns a string to be used directly
+when showing notification.
+Default: `nil` for |MiniNotify.default_format()|.
+
+`content.sort` is a function which takes array of notification objects
+(see |MiniNotify-specification|) and returns an array of such objects.
+It can be used to define custom order and/or filter for notifications which
+are shown simultaneously.
+Note: Input contains notifications before applying `content.format`.
+Default: `nil` for |MiniNotify.default_sort()|.
+
+Example:
+>
+  require('mini.notify').setup({
+    content = {
+      -- Use notification message as is
+      format = function(notif) return notif.msg end,
+
+      -- Show more recent notifications first
+      sort = function(notif_arr)
+        table.sort(
+          notif_arr,
+          function(a, b) return a.ts_update > b.ts_update end
+        )
+        return notif_arr
+      end,
+    },
+  })
+<
+# LSP progress ~
+
+`config.lsp_progress` defines automated notifications for LSP progress.
+It is implemented as a single updating notification with all information
+about the progress.
+Setting up is done inside |MiniNotify.setup()| via |vim.schedule()|'ed setting
+of |lsp-handler| for "$/progress" method.
+
+`lsp_progress.enable` is a boolean indicating whether LSP progress should
+be shown in notifications. Can be disabled in current session.
+Default: `true`. Note: Should be `true` during |MiniNotify.setup()| call to be able
+to enable it in current session.
+
+`lsp_progress.duration_last` is a number of milliseconds for the last progress
+report to be shown on screen before removing it.
+Default: 1000.
+
+Notes:
+- This respects previously set handler by saving and calling it.
+- Overrding "$/progress" method of `vim.lsp.handlers` disables notifications.
+
+# Window ~
+
+`config.window` defines behavior of notification window.
+
+`window.config` is a table defining floating window characteristics
+or a callable returning such table (will be called with identifier of
+window's buffer already showing notifications). It should have the same
+structure as in |nvim_open_win()|. It has the following default values
+which show notifications in the upper right corner with upper limit on width:
+- `width` is chosen to fit buffer content but not more than 38.2% of 'columns'.
+  To have higher maximum width, use function in `config.window` which computes
+  dimensions inside of it (based on buffer content).
+- `height` is chosen to fit buffer content with enabled 'wrap' (assuming
+  default value of `width`).
+- `anchor`, `col`, and `row` are "NE", 'columns', and 0 or 1 (depending on tabline).
+- `border` is "single".
+- `zindex` is 999 to be as much on top as reasonably possible.
+
+`window.winblend` defines 'winblend' value for notification window.
+Default: 25.
+
+------------------------------------------------------------------------------
+                                                      *MiniNotify.make_notify()*
+                        `MiniNotify.make_notify`({opts})
+Make vim.notify wrapper
+
+Calling this function creates an implementation of |vim.notify()| powered
+by this module. General idea is that notification is shown immediately and
+removed after a configurable amount of time.
+
+Examples:
+>
+  -- Defaults
+  vim.notify = require('mini.notify').make_notify()
+
+  -- Change duration for errors to show them longer
+  local opts = { ERROR = { duration = 10000 } }
+  vim.notify = require('mini.notify').make_notify(opts)
+<
+Parameters ~
+{opts} `(table|nil)` Options to configure behavior of notification `level`
+  (as in |MiniNotfiy.add()|). Fields are the same as names of `vim.log.levels`
+  with values being tables with possible fields:
+    - <duration> `(number)` - duration (in ms) of how much a notification
+      should be shown. If 0 or negative, notification is not shown at all.
+    - <hl_group> `(string)` - highlight group of notification.
+  Only data different to default can be supplied.
+
+  Default: >
+    {
+      ERROR = { duration = 5000, hl_group = 'DiagnosticError'  },
+      WARN  = { duration = 5000, hl_group = 'DiagnosticWarn'   },
+      INFO  = { duration = 5000, hl_group = 'DiagnosticInfo'   },
+      DEBUG = { duration = 0,    hl_group = 'DiagnosticHint'   },
+      TRACE = { duration = 0,    hl_group = 'DiagnosticOk'     },
+      OFF   = { duration = 0,    hl_group = 'MiniNotifyNormal' },
+    }
+
+------------------------------------------------------------------------------
+                                                              *MiniNotify.add()*
+                  `MiniNotify.add`({msg}, {level}, {hl_group})
+Add notification
+
+Add notification to history. It is considered "active" and is shown.
+To hide, call |MiniNotfiy.remove()| with identifier this function returns.
+
+Example:
+>
+  local id = MiniNotify.add('Hello', 'WARN', 'Comment')
+  vim.defer_fn(function() MiniNotify.remove(id) end, 1000)
+<
+Parameters ~
+{msg} `(string)` Notification message.
+{level} `(string|nil)` Notification level as key of |vim.log.levels|.
+  Default: `'INFO'`.
+{hl_group} `(string|nil)` Notification highlight group.
+  Default: `'MiniNotifyNormal'`.
+
+Return ~
+`(number)` Notification identifier.
+
+------------------------------------------------------------------------------
+                                                           *MiniNotify.update()*
+                     `MiniNotify.update`({id}, {new_data})
+Update active notification
+
+Modify data of active notification.
+
+Parameters ~
+{id} `(number)` Identifier of currently active notification as returned
+  by |MiniNotify.add()|.
+{new_data} `(table)` Table with data to update. Keys should be as non-timestamp
+  fields of |MiniNotify-specification| and values - new notification values.
+
+------------------------------------------------------------------------------
+                                                           *MiniNotify.remove()*
+                           `MiniNotify.remove`({id})
+Remove notification
+
+If notification is active, make it not active (by setting `ts_remove` field).
+If not active, do nothing.
+
+Parameters ~
+{id} `(number|nil)` Identifier of previously added notification.
+  If it is not, nothing is done (silently).
+
+------------------------------------------------------------------------------
+                                                            *MiniNotify.clear()*
+                              `MiniNotify.clear`()
+Remove all active notifications
+
+Hide all active notifications and stop showing window (if shown).
+
+------------------------------------------------------------------------------
+                                                          *MiniNotify.refresh()*
+                             `MiniNotify.refresh`()
+Refresh notification window
+
+Make notification window show relevant data:
+- Create an array of active notifications (see |MiniNotify-specification|).
+- Apply `config.content.sort` to an array. If output has zero notifications,
+  make notification window to not show.
+- Apply `config.content.format` to each element of notification array and
+  update its message.
+- Construct content from notifications and show them in a window.
+
+------------------------------------------------------------------------------
+                                                              *MiniNotify.get()*
+                             `MiniNotify.get`({id})
+Get previously added notification by id
+
+Parameters ~
+{id} `(number)` Identifier of notification.
+
+Return ~
+`(table)` Notification object (see |MiniNotify-specification|).
+
+------------------------------------------------------------------------------
+                                                          *MiniNotify.get_all()*
+                             `MiniNotify.get_all`()
+Get all previously added notifications
+
+Get map of used notifications with keys being notification identifiers.
+
+Can be used to get only active notification objects. Example: >
+
+  -- Get active notifications
+  vim.tbl_filter(
+    function(notif) return notif.ts_remove == nil end,
+    MiniNotify.get_all()
+  )
+<
+Return ~
+`(table)` Map with notification object values (see |MiniNotify-specification|).
+  Note: messages are taken from last valid update.
+
+------------------------------------------------------------------------------
+                                                     *MiniNotify.show_history()*
+                          `MiniNotify.show_history`()
+Show history
+
+Open or reuse a scratch buffer with all previously shown notifications.
+
+Notes:
+- Content is ordered from oldest to newest based on latest update time.
+- Message is formatted with `config.content.format`.
+
+------------------------------------------------------------------------------
+                                                   *MiniNotify.default_format()*
+                      `MiniNotify.default_format`({notif})
+Default content format
+
+Used by default as `config.content.format`. Prepends notification message
+with the human readable update time and a separator.
+
+Parameters ~
+{notif} `(table)` Notification object (see |MiniNotify-specification|).
+
+Return ~
+`(string)` Formatted notification message.
+
+------------------------------------------------------------------------------
+                                                     *MiniNotify.default_sort()*
+                     `MiniNotify.default_sort`({notif_arr})
+Default content sort
+
+Used by default as `config.content.sort`. First sorts by notification's `level`
+("ERROR" > "WARN" > "INFO" > "DEBUG" > "TRACE" > "OFF"; the bigger the more
+important); if draw - by latest update time (the later the more important).
+
+Parameters ~
+{notif_arr} `(table)` Array of notifications (see |MiniNotify-specification|).
+
+Return ~
+`(table)` Sorted array of notifications.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
