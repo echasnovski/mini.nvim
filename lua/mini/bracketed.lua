@@ -31,38 +31,40 @@
 --- - Supported targets (for more information see help for corresponding Lua
 ---   function):
 ---
----   `Target`                           `Mappings`         `Lua function`
+---   `Target`                           `Mappings`                               `Lua function`
 ---
----   Buffer.......................... `[B` `[b` `]b` `]B` .... |MiniBracketed.buffer()|
+---  Buffer.......................... `[B` `[b` `]b` `]B` ........................ |MiniBracketed.buffer()|
 ---
----   Comment block................... `[C` `[c` `]c` `]C` .... |MiniBracketed.comment()|
+---  Comment block................... `[C` `[c` `]c` `]C` ........................ |MiniBracketed.comment()|
 ---
----   Conflict marker................. `[X` `[x` `]x` `]X` .... |MiniBracketed.conflict()|
+---  Conflict marker................. `[X` `[x` `]x` `]X` ........................ |MiniBracketed.conflict()|
 ---
----   Diagnostic...................... `[D` `[d` `]d` `]D` .... |MiniBracketed.diagnostic()|
+---  Diagnostic...................... `[D` `[d` `]d` `]D` ........................ |MiniBracketed.diagnostic()|
 ---
----   File on disk.................... `[F` `[f` `]f` `]F` .... |MiniBracketed.file()|
+---  File on disk.................... `[F` `[f` `]f` `]F` ........................ |MiniBracketed.file()|
 ---
----   Indent change................... `[I` `[i` `]i` `]I` .... |MiniBracketed.indent()|
+---  Indent change................... `[I` `[i` `]i` `]I` ........................ |MiniBracketed.indent()|
 ---
----   Jump from |jumplist|
----   inside current buffer........... `[J` `[j` `]j` `]J` .... |MiniBracketed.jump()|
+---  Jump from |jumplist|
+---  inside current buffer........... `[J` `[j` `]j` `]J` ........................ |MiniBracketed.jump()|
 ---
----   Location from |location-list|..... `[L` `[l` `]l` `]L` .... |MiniBracketed.location()|
+---  Location from |location-list|..... `[L` `[l` `]l` `]L` ........................ |MiniBracketed.location()|
 ---
----   Old files....................... `[O` `[o` `]o` `]O` .... |MiniBracketed.oldfile()|
+---  Old files....................... `[O` `[o` `]o` `]O` ........................ |MiniBracketed.oldfile()|
 ---
----   Quickfix entry from |Quickfix|.... `[Q` `[q` `]q` `]Q` .... |MiniBracketed.quickfix()|
+---  Quickfix entry from |Quickfix|.... `[Q` `[q` `]q` `]Q` ........................ |MiniBracketed.quickfix()|
 ---
----   Tree-sitter node and parents.... `[T` `[t` `]t` `]T` .... |MiniBracketed.treesitter()|
+---  Tabpage......................... `[<S-Tab>` `[<tab>` `]<tab>` `]<S-Tab>` .... |MiniBracketed.tabpage()|
 ---
----   Undo states from specially
----   tracked linear history.......... `[U` `[u` `]u` `]U` .... |MiniBracketed.undo()|
+---  Tree-sitter node and parents.... `[T` `[t` `]t` `]T` ........................ |MiniBracketed.treesitter()|
 ---
----   Window in current tab........... `[W` `[w` `]w` `]W` .... |MiniBracketed.window()|
+---  Undo states from specially
+---  tracked linear history.......... `[U` `[u` `]u` `]U` ........................ |MiniBracketed.undo()|
 ---
----   Yank selection replacing
----   latest put region................`[Y` `[y` `]y` `]Y` .... |MiniBracketed.yank()|
+---  Window in current tab........... `[W` `[w` `]w` `]W` ........................ |MiniBracketed.window()|
+---
+---  Yank selection replacing
+---  latest put region............... `[Y` `[y` `]y` `]Y` ........................ |MiniBracketed.yank()|
 ---
 --- Notes:
 --- - The `undo` target remaps |u| and |<C-R>| keys to register undo state
@@ -204,20 +206,21 @@ MiniBracketed.config = {
   --
   -- See `:h MiniBracketed.config` for more info.
 
-  buffer     = { suffix = 'b', options = {} },
-  comment    = { suffix = 'c', options = {} },
-  conflict   = { suffix = 'x', options = {} },
-  diagnostic = { suffix = 'd', options = {} },
-  file       = { suffix = 'f', options = {} },
-  indent     = { suffix = 'i', options = {} },
-  jump       = { suffix = 'j', options = {} },
-  location   = { suffix = 'l', options = {} },
-  oldfile    = { suffix = 'o', options = {} },
-  quickfix   = { suffix = 'q', options = {} },
-  treesitter = { suffix = 't', options = {} },
-  undo       = { suffix = 'u', options = {} },
-  window     = { suffix = 'w', options = {} },
-  yank       = { suffix = 'y', options = {} },
+  buffer     = { suffix = 'b',     options = {} },
+  comment    = { suffix = 'c',     options = {} },
+  conflict   = { suffix = 'x',     options = {} },
+  diagnostic = { suffix = 'd',     options = {} },
+  file       = { suffix = 'f',     options = {} },
+  indent     = { suffix = 'i',     options = {} },
+  jump       = { suffix = 'j',     options = {} },
+  location   = { suffix = 'l',     options = {} },
+  oldfile    = { suffix = 'o',     options = {} },
+  quickfix   = { suffix = 'q',     options = {} },
+  tabpage    = { suffix = '<tab>', options = {} },
+  treesitter = { suffix = 't',     options = {} },
+  undo       = { suffix = 'u',     options = {} },
+  window     = { suffix = 'w',     options = {} },
+  yank       = { suffix = 'y',     options = {} },
 }
 --minidoc_afterlines_end
 
@@ -800,6 +803,49 @@ MiniBracketed.quickfix = function(direction, opts)
   H.qf_loc_implementation('quickfix', direction, opts)
 end
 
+--- Tabpage
+---
+--- Go to next/previous tabpage. Order by their number (see |tabpagenr()|).
+---
+--- Direction "forward" increases number, "backward" - decreases.
+---
+---@param direction __bracketed_direction
+---@param opts __bracketed_opts
+MiniBracketed.tabpage = function(direction, opts)
+  if H.is_disabled() then return end
+
+  H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'tabpage')
+  opts =
+    vim.tbl_deep_extend('force', { n_times = vim.v.count1, wrap = true }, H.get_config().tabpage.options, opts or {})
+
+  local tab_list = vim.api.nvim_list_tabpages()
+
+  local iterator = {}
+
+  iterator.next = function(tab_id)
+    for id = tab_id + 1, tab_list[#tab_list] do
+      if vim.api.nvim_tabpage_is_valid(id) then return id end
+    end
+  end
+
+  iterator.prev = function(tab_id)
+    for id = tab_id - 1, tab_list[1], -1 do
+      if vim.api.nvim_tabpage_is_valid(id) then return id end
+    end
+  end
+
+  iterator.state = vim.api.nvim_get_current_tabpage()
+  iterator.start_edge = tab_list[1] - 1
+  iterator.end_edge = tab_list[#tab_list] + 1
+
+  -- Iterate
+  local res_tab_id = MiniBracketed.advance(iterator, direction, opts)
+  if res_tab_id == iterator.state then return end
+
+  -- Apply
+  vim.api.nvim_set_current_tabpage(res_tab_id)
+end
+
 --- Tree-sitter node
 ---
 --- Go to end/start of current tree-sitter node and its parents (except root).
@@ -1354,6 +1400,7 @@ H.setup_config = function(config)
     ['location']   = { config.location,   'table' },
     ['oldfile']    = { config.oldfile,    'table' },
     ['quickfix']   = { config.quickfix,   'table' },
+    ['tabpage']    = { config.tabpage,    'table' },
     ['treesitter'] = { config.treesitter, 'table' },
     ['undo']       = { config.undo,       'table' },
     ['window']     = { config.window,     'table' },
@@ -1391,6 +1438,9 @@ H.setup_config = function(config)
 
     ['quickfix.suffix']  = { config.quickfix.suffix, 'string' },
     ['quickfix.options'] = { config.quickfix.options, 'table' },
+
+    ['tabpage.suffix']  = { config.tabpage.suffix, 'string' },
+    ['tabpage.options'] = { config.tabpage.options, 'table' },
 
     ['treesitter.suffix']  = { config.treesitter.suffix, 'string' },
     ['treesitter.options'] = { config.treesitter.options, 'table' },
@@ -1546,6 +1596,25 @@ H.apply_config = function(config)
     H.map('n', ']' .. low, "<Cmd>lua MiniBracketed.quickfix('forward')<CR>",  { desc = 'Quickfix forward' })
   end
 
+  if config.tabpage.suffix ~= '' then
+    local low, up = H.get_suffix_variants(config.tabpage.suffix)
+    H.map('n', '[' .. up, "<Cmd>lua MiniBracketed.tabpage('first')<CR>",  { desc = 'Tabpage first' })
+    H.map('x', '[' .. up, "<Cmd>lua MiniBracketed.tabpage('first')<CR>",  { desc = 'Tabpage first' })
+    H.map('o', '[' .. up, "v<Cmd>lua MiniBracketed.tabpage('first')<CR>", { desc = 'Tabpage first' })
+
+    H.map('n', ']' .. up, "<Cmd>lua MiniBracketed.tabpage('last')<CR>",  { desc = 'Tabpage last' })
+    H.map('x', ']' .. up, "<Cmd>lua MiniBracketed.tabpage('last')<CR>",  { desc = 'Tabpage last' })
+    H.map('o', ']' .. up, "v<Cmd>lua MiniBracketed.tabpage('last')<CR>", { desc = 'Tabpage last' })
+
+    H.map('n', '[' .. low, "<Cmd>lua MiniBracketed.tabpage('backward')<CR>",  { desc = 'Tabpage backward' })
+    H.map('x', '[' .. low, "<Cmd>lua MiniBracketed.tabpage('backward')<CR>",  { desc = 'Tabpage backward' })
+    H.map('o', '[' .. low, "v<Cmd>lua MiniBracketed.tabpage('backward')<CR>", { desc = 'Tabpage backward' })
+
+    H.map('n', ']' .. low, "<Cmd>lua MiniBracketed.tabpage('forward')<CR>",  { desc = 'Tabpage forward' })
+    H.map('x', ']' .. low, "<Cmd>lua MiniBracketed.tabpage('forward')<CR>",  { desc = 'Tabpage forward' })
+    H.map('o', ']' .. low, "v<Cmd>lua MiniBracketed.tabpage('forward')<CR>", { desc = 'Tabpage forward' })
+  end
+
   if config.treesitter.suffix ~= '' then
     local low, up = H.get_suffix_variants(config.treesitter.suffix)
     H.map('n', '[' .. up, "<Cmd>lua MiniBracketed.treesitter('first')<CR>",  { desc = 'Treesitter first' })
@@ -1593,7 +1662,14 @@ H.apply_config = function(config)
   end
 end
 
-H.get_suffix_variants = function(char) return char:lower(), char:upper() end
+H.get_suffix_variants = function(char)
+  -- Check if the string starts with '<'
+  if char:sub(1, 1) == '<' then
+    return char, '<S-' .. char:sub(2)
+  else
+    return char:lower(), char:upper()
+  end
+end
 
 H.create_autocommands = function()
   local augroup = vim.api.nvim_create_augroup('MiniBracketed', {})

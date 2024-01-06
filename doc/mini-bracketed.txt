@@ -31,38 +31,40 @@ Features:
 - Supported targets (for more information see help for corresponding Lua
   function):
 
-  `Target`                           `Mappings`         `Lua function`
+  `Target`                           `Mappings`                               `Lua function`
 
-  Buffer.......................... `[B` `[b` `]b` `]B` .... |MiniBracketed.buffer()|
+ Buffer.......................... `[B` `[b` `]b` `]B` ........................ |MiniBracketed.buffer()|
 
-  Comment block................... `[C` `[c` `]c` `]C` .... |MiniBracketed.comment()|
+ Comment block................... `[C` `[c` `]c` `]C` ........................ |MiniBracketed.comment()|
 
-  Conflict marker................. `[X` `[x` `]x` `]X` .... |MiniBracketed.conflict()|
+ Conflict marker................. `[X` `[x` `]x` `]X` ........................ |MiniBracketed.conflict()|
 
-  Diagnostic...................... `[D` `[d` `]d` `]D` .... |MiniBracketed.diagnostic()|
+ Diagnostic...................... `[D` `[d` `]d` `]D` ........................ |MiniBracketed.diagnostic()|
 
-  File on disk.................... `[F` `[f` `]f` `]F` .... |MiniBracketed.file()|
+ File on disk.................... `[F` `[f` `]f` `]F` ........................ |MiniBracketed.file()|
 
-  Indent change................... `[I` `[i` `]i` `]I` .... |MiniBracketed.indent()|
+ Indent change................... `[I` `[i` `]i` `]I` ........................ |MiniBracketed.indent()|
 
-  Jump from |jumplist|
-  inside current buffer........... `[J` `[j` `]j` `]J` .... |MiniBracketed.jump()|
+ Jump from |jumplist|
+ inside current buffer........... `[J` `[j` `]j` `]J` ........................ |MiniBracketed.jump()|
 
-  Location from |location-list|..... `[L` `[l` `]l` `]L` .... |MiniBracketed.location()|
+ Location from |location-list|..... `[L` `[l` `]l` `]L` ........................ |MiniBracketed.location()|
 
-  Old files....................... `[O` `[o` `]o` `]O` .... |MiniBracketed.oldfile()|
+ Old files....................... `[O` `[o` `]o` `]O` ........................ |MiniBracketed.oldfile()|
 
-  Quickfix entry from |Quickfix|.... `[Q` `[q` `]q` `]Q` .... |MiniBracketed.quickfix()|
+ Quickfix entry from |Quickfix|.... `[Q` `[q` `]q` `]Q` ........................ |MiniBracketed.quickfix()|
 
-  Tree-sitter node and parents.... `[T` `[t` `]t` `]T` .... |MiniBracketed.treesitter()|
+ Tabpage......................... `[<S-Tab>` `[<tab>` `]<tab>` `]<S-Tab>` .... |MiniBracketed.tabpage()|
 
-  Undo states from specially
-  tracked linear history.......... `[U` `[u` `]u` `]U` .... |MiniBracketed.undo()|
+ Tree-sitter node and parents.... `[T` `[t` `]t` `]T` ........................ |MiniBracketed.treesitter()|
 
-  Window in current tab........... `[W` `[w` `]w` `]W` .... |MiniBracketed.window()|
+ Undo states from specially
+ tracked linear history.......... `[U` `[u` `]u` `]U` ........................ |MiniBracketed.undo()|
 
-  Yank selection replacing
-  latest put region................`[Y` `[y` `]y` `]Y` .... |MiniBracketed.yank()|
+ Window in current tab........... `[W` `[w` `]w` `]W` ........................ |MiniBracketed.window()|
+
+ Yank selection replacing
+ latest put region............... `[Y` `[y` `]y` `]Y` ........................ |MiniBracketed.yank()|
 
 Notes:
 - The `undo` target remaps |u| and |<C-R>| keys to register undo state
@@ -135,20 +137,21 @@ Default values:
     --
     -- See `:h MiniBracketed.config` for more info.
 
-    buffer     = { suffix = 'b', options = {} },
-    comment    = { suffix = 'c', options = {} },
-    conflict   = { suffix = 'x', options = {} },
-    diagnostic = { suffix = 'd', options = {} },
-    file       = { suffix = 'f', options = {} },
-    indent     = { suffix = 'i', options = {} },
-    jump       = { suffix = 'j', options = {} },
-    location   = { suffix = 'l', options = {} },
-    oldfile    = { suffix = 'o', options = {} },
-    quickfix   = { suffix = 'q', options = {} },
-    treesitter = { suffix = 't', options = {} },
-    undo       = { suffix = 'u', options = {} },
-    window     = { suffix = 'w', options = {} },
-    yank       = { suffix = 'y', options = {} },
+    buffer     = { suffix = 'b',     options = {} },
+    comment    = { suffix = 'c',     options = {} },
+    conflict   = { suffix = 'x',     options = {} },
+    diagnostic = { suffix = 'd',     options = {} },
+    file       = { suffix = 'f',     options = {} },
+    indent     = { suffix = 'i',     options = {} },
+    jump       = { suffix = 'j',     options = {} },
+    location   = { suffix = 'l',     options = {} },
+    oldfile    = { suffix = 'o',     options = {} },
+    quickfix   = { suffix = 'q',     options = {} },
+    tabpage    = { suffix = '<tab>', options = {} },
+    treesitter = { suffix = 't',     options = {} },
+    undo       = { suffix = 'u',     options = {} },
+    window     = { suffix = 'w',     options = {} },
+    yank       = { suffix = 'y',     options = {} },
   }
 <
 Options ~
@@ -406,6 +409,21 @@ Go to next/previous entry from |quickfix| list. This is similar to
 wrapping around edges and |[count]| for "first"/"last" direction.
 
 Direction "forward" increases location number, "backward" - decreases.
+
+Parameters ~
+{direction} `(string)` One of "first", "backward", "forward", "last".
+{opts} `(table|nil)` Options. A table with fields:
+  - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
+  - <wrap> `(boolean)` - Whether to wrap around edges. Default: `true`.
+
+------------------------------------------------------------------------------
+                                                       *MiniBracketed.tabpage()*
+                  `MiniBracketed.tabpage`({direction}, {opts})
+Tabpage
+
+Go to next/previous tabpage. Order by their number (see |tabpagenr()|).
+
+Direction "forward" increases number, "backward" - decreases.
 
 Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
