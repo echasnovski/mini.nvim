@@ -1667,11 +1667,11 @@ T['pickers']['git_hunks()']['respects `local_opts.n_context`'] = new_set({ param
 
     -- - Choose
     type_keys('<CR>')
-    if context == 0 then
+    if n_context == 0 then
       validate_buf_name(0, join_path('git-files', 'git-file-1'))
       eq(get_cursor(), { 11, 0 })
     end
-    if context == 20 then
+    if n_context == 20 then
       validate_buf_name(0, join_path('git-files', 'git-file-2'))
       eq(get_cursor(), { 2, 0 })
     end
