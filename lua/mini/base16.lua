@@ -569,12 +569,15 @@ H.apply_palette = function(palette, use_cterm)
   hi('TooLong',    {fg=p.base08, bg=nil, attr=nil,         sp=nil})
   hi('Underlined', {fg=nil,      bg=nil, attr='underline', sp=nil})
 
-  -- Git diff
-  hi('DiffAdded',   {fg=p.base0B, bg=p.base00, attr=nil, sp=nil})
-  hi('DiffFile',    {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
-  hi('DiffLine',    {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
-  hi('DiffNewFile', {link='DiffAdded'})
-  hi('DiffRemoved', {link='DiffFile'})
+  -- Patch diff
+  hi('diffAdded',   {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('diffChanged', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+  hi('diffFile',    {fg=p.base09, bg=nil, attr=nil, sp=nil})
+  hi('diffLine',    {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('diffRemoved', {fg=p.base08, bg=nil, attr=nil, sp=nil})
+  hi('Added',       {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('Changed',     {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+  hi('Removed',     {fg=p.base08, bg=nil, attr=nil, sp=nil})
 
   -- Git commit
   hi('gitcommitBranch',        {fg=p.base09, bg=nil, attr='bold', sp=nil})
