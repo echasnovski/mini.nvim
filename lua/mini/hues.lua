@@ -763,11 +763,14 @@ H.apply_colorscheme = function(config)
   hi('Underlined', { fg=nil,      bg=nil, underline=true })
 
   -- Patch diff
-  hi('diffAdded',   { link='DiffAdd' })
-  hi('diffFile',    { fg=nil, bg=p.yellow_bg })
-  hi('diffLine',    { fg=nil, bg=p.blue_bg })
-  hi('diffNewFile', { link='DiffFile' })
-  hi('diffRemoved', { link='DiffDelete' })
+  hi('diffAdded',   { fg=p.green,  bg=nil })
+  hi('diffChanged', { fg=p.cyan,   bg=nil })
+  hi('diffFile',    { fg=p.yellow, bg=nil })
+  hi('diffLine',    { fg=p.blue,   bg=nil })
+  hi('diffRemoved', { fg=p.red,    bg=nil })
+  hi('Added',       { fg=p.green,  bg=nil })
+  hi('Changed',     { fg=p.cyan,   bg=nil })
+  hi('Removed',     { fg=p.red,    bg=nil })
 
   -- Git commit
   hi('gitcommitBranch',        { fg=p.orange, bg=nil, bold=true })
