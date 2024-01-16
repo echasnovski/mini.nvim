@@ -2297,6 +2297,14 @@ H.add_path_to_index = function(path)
   return new_id
 end
 
+H.replace_path_in_index = function(from, to)
+  local from_id, to_id = H.path_index[from], H.path_index[to]
+  H.path_index[from_id], H.path_index[to] = to, from_id
+  if to_id then H.path_index[to_id] = nil end
+  -- Remove `from` from index assuming it doesn't exist anymore (no duplicates)
+  H.path_index[from] = nil
+end
+
 H.compare_fs_entries = function(a, b)
   -- Put directory first
   if a.is_dir and not b.is_dir then return true end
@@ -2510,6 +2518,12 @@ H.fs_move = function(from, to)
   -- Move while allowing to create directory
   vim.fn.mkdir(H.fs_get_parent(to), 'p')
   local success = vim.loop.fs_rename(from, to)
+
+  if not success then return success end
+
+  -- Update path index to allow consecutive moves after undo (which also
+  -- restores previous concealed path index)
+  H.replace_path_in_index(from, to)
 
   -- Rename in loaded buffers
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do

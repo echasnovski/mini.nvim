@@ -2746,6 +2746,36 @@ T['File manipulation']['renames even if lines are rearranged'] = function()
   validate_confirm_args([[RENAME: 'file%-1' to 'new%-file%-1']])
 end
 
+T['File manipulation']['rename works again after undo'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  open(temp_dir)
+
+  type_keys('C', 'file-new', '<Esc>')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_file(temp_dir, 'file-new')
+
+  -- Validate confirmation messages
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  validate_confirm_args(ref_pattern)
+  validate_confirm_args([[  RENAME: 'file' to 'file%-new']])
+
+  -- Undo and synchronize should cleanly rename back
+  type_keys('u', 'u')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+
+  validate_confirm_args([[  RENAME: 'file%-new' to 'file']])
+  validate_file(temp_dir, 'file')
+  validate_no_file(temp_dir, 'file-new')
+end
+
 T['File manipulation']['can move file'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
@@ -2895,6 +2925,48 @@ T['File manipulation']['can move inside new directory'] = function()
   validate_no_file(temp_dir, 'file')
   validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
+end
+
+T['File manipulation']['move works again after undo'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
+  open(temp_dir)
+
+  -- Perform manipulation
+  type_keys('G', 'dd')
+  go_in()
+  type_keys('V', 'P')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_file(temp_dir, 'dir', 'file')
+
+  -- Validate confirmation messages
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  validate_confirm_args(ref_pattern)
+
+  -- - Target path should be absolute but can with `~` for home directory
+  local target_path = short_path(temp_dir, 'dir', 'file')
+  local ref_pattern_2 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path))
+  validate_confirm_args(ref_pattern_2)
+
+  -- Undos and synchronize should cleanly move back
+  type_keys('u', 'u')
+  go_out()
+  type_keys('u', 'u')
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file')
+  validate_no_file(temp_dir, 'dir', 'file')
+
+  local target_path_2 = short_path(temp_dir, 'file')
+  local ref_pattern_3 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path_2))
+  validate_confirm_args(ref_pattern_3)
 end
 
 T['File manipulation']['can copy file'] = function()
