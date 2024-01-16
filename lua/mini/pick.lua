@@ -684,13 +684,8 @@ MiniPick.setup = function(config)
   -- Create default highlighting
   H.create_default_hl()
 
-  -- Create user command
-  vim.api.nvim_create_user_command('Pick', function(input)
-    local name, local_opts = H.command_parse_fargs(input.fargs)
-    local f = MiniPick.registry[name]
-    if f == nil then H.error(string.format('There is no picker named "%s" in registry.', name)) end
-    f(local_opts)
-  end, { nargs = '+', complete = H.command_complete, desc = "Pick from 'mini.pick' registry" })
+  -- Create user commands
+  H.create_user_commands()
 end
 
 --stylua: ignore
@@ -1889,6 +1884,17 @@ H.create_default_hl = function()
   hi('MiniPickPreviewLine',   { link = 'CursorLine' })
   hi('MiniPickPreviewRegion', { link = 'IncSearch' })
   hi('MiniPickPrompt',        { link = 'DiagnosticFloatingInfo' })
+end
+
+H.create_user_commands = function()
+  local callback = function(input)
+    local name, local_opts = H.command_parse_fargs(input.fargs)
+    local f = MiniPick.registry[name]
+    if f == nil then H.error(string.format('There is no picker named "%s" in registry.', name)) end
+    f(local_opts)
+  end
+  local opts = { nargs = '+', complete = H.command_complete, desc = "Pick from 'mini.pick' registry" }
+  vim.api.nvim_create_user_command('Pick', callback, opts)
 end
 
 -- Command --------------------------------------------------------------------

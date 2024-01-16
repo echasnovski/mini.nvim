@@ -645,11 +645,8 @@ MiniColors.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
-  -- Create user command
-  vim.api.nvim_create_user_command('Colorscheme', function(input)
-    local cs_array = vim.tbl_map(MiniColors.get_colorscheme, input.fargs)
-    MiniColors.animate(cs_array)
-  end, { nargs = '+', complete = 'color' })
+  -- Create user commands
+  H.create_user_commands()
 end
 
 --- Module config
@@ -1150,6 +1147,14 @@ H.apply_config = function(config) MiniColors.config = config end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniColors.config, vim.b.minicolors_config or {}, config or {})
+end
+
+H.create_user_commands = function()
+  local callback = function(input)
+    local cs_array = vim.tbl_map(MiniColors.get_colorscheme, input.fargs)
+    MiniColors.animate(cs_array)
+  end
+  vim.api.nvim_create_user_command('Colorscheme', callback, { nargs = '+', complete = 'color' })
 end
 
 -- Color scheme methods -------------------------------------------------------
