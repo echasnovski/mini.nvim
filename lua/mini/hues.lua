@@ -63,7 +63,6 @@
 ---     - 'rcarriga/nvim-notify'
 ---     - 'rlane/pounce.nvim'
 ---     - 'romgrk/barbar.nvim'
----     - 'simrat39/symbols-outline.nvim'
 ---     - 'stevearc/aerial.nvim'
 ---     - 'williamboman/mason.nvim'
 ---
@@ -1414,9 +1413,6 @@ H.apply_colorscheme = function(config)
     hi('BufferVisibleSign',    { link='BufferVisible' })
     hi('BufferVisibleTarget',  { fg=p.fg,     bg=p.bg_mid2, bold=true })
   end
-
-  -- simrat39/symbols-outline.nvim
-  -- Everything works correctly out of the box
 
   -- stevearc/aerial.nvim
   -- Everything works correctly out of the box
