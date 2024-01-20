@@ -47,7 +47,6 @@
 ---     - 'rcarriga/nvim-notify'
 ---     - 'rlane/pounce.nvim'
 ---     - 'romgrk/barbar.nvim'
----     - 'simrat39/symbols-outline.nvim'
 ---     - 'stevearc/aerial.nvim'
 ---     - 'williamboman/mason.nvim'
 ---
@@ -1151,9 +1150,6 @@ H.apply_palette = function(palette, use_cterm)
     hi('BufferVisibleSign',   {link='BufferVisible'})
     hi('BufferVisibleTarget', {fg=p.base0E, bg=p.base01, attr='bold', sp=nil})
   end
-
-  -- simrat39/symbols-outline.nvim
-  -- Everything works correctly out of the box
 
   -- stevearc/aerial.nvim
   -- Everything works correctly out of the box
