@@ -112,7 +112,7 @@ T['setup()']['defines LSP semantic token highlights'] = function()
   if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('LSP semantic token groups are defined for Neovim>=0.9') end
 
   load_module({ background = '#222222', foreground = '#dddddd' })
-  validate_hl_group('@lsp.type.variable', 'cleared')
+  validate_hl_group('@lsp.type.variable', 'links to @variable')
 end
 
 T['setup()']['defines terminal colors'] = function()

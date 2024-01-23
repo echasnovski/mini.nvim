@@ -1879,18 +1879,23 @@ T['Preview']['works for directories'] = function()
 end
 
 T['Preview']['works for files'] = function()
+  local expect_screenshot = function()
+    -- Test only on Neovim>=0.10 because there was major tree-sitter update
+    if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+  end
+
   child.lua('MiniFiles.config.windows.preview = true')
   child.lua('MiniFiles.config.windows.width_focus = 25')
 
   open(make_test_path('real'))
 
   -- Should preview Lua file with highlighting
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Should preview text file (also with enabled highlighting but as there is
   -- none defined, non should be visible)
   type_keys('j')
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Should read only maximum necessary amount of lines
   local buffers = child.api.nvim_list_bufs()
@@ -1902,15 +1907,15 @@ T['Preview']['works for files'] = function()
 
   -- Should recognize binary files and show placeholder preview
   type_keys('j')
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Should work for empty files
   type_keys('j')
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Should fall back to built-in syntax highlighting in case of no tree-sitter
   type_keys('j')
-  child.expect_screenshot()
+  expect_screenshot()
 end
 
 T['Preview']['does not highlight big files'] = function()

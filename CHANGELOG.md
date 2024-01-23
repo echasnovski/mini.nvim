@@ -22,6 +22,10 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 
 - FEATURE: Update `go_in()` to have `close_on_file` option.
 
+## mini.hues
+
+- FEATURE: Add support for new standard tree-sitter captures on Neovim>=0.10 (see https://github.com/neovim/neovim/pull/27067).
+
 ## mini.misc
 
 - Update `bench_time()` to use `vim.loop.hrtime()` (as better designed for benchmarking) instead of `vim.loop.gettimeofday()`.
