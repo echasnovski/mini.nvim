@@ -655,6 +655,16 @@ H.apply_palette = function(palette, use_cterm)
     hi('@lsp.mod.deprecated',     {fg=p.base08, bg=nil, attr=nil, sp=nil})
   end
 
+  -- New tree-sitter groups
+  if vim.fn.has('nvim-0.10') == 1 then
+    -- Source: `:h treesitter-highlight-groups`
+    -- Included only those differing from default links
+    hi('@markup.strong',        {link='@text.strong'})
+    hi('@markup.italic',        {link='@text.emphasis'})
+    hi('@markup.strikethrough', {link='@text.strikethrough'})
+    hi('@markup.underline',     {link='@text.underline'})
+  end
+
   -- Plugins
   -- echasnovski/mini.nvim
   if H.has_integration('echasnovski/mini.nvim') then
