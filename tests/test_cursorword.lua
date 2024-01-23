@@ -99,6 +99,19 @@ T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = funct
   expect.match(child.cmd_capture('hi MiniCursorwordCurrent'), 'links to MiniCursorword')
 end
 
+T['setup()']['properly resets module highlighting'] = function()
+  child.lua('MiniCursorword.config.delay = 0')
+  set_lines({ 'aa a aaa aa a aaa', 'a aa aaa a aa aaa' })
+  set_cursor(1, 0)
+  eq(#child.fn.getmatches(), 2)
+
+  child.lua([[package.loaded['mini.cursorword'] = nil]])
+  load_module({ delay = 0 })
+  eq(#child.fn.getmatches(), 0)
+  set_cursor(2, 0)
+  eq(#child.fn.getmatches(), 2)
+end
+
 -- Integration tests ==========================================================
 T['Highlighting'] = new_set({
   hooks = {

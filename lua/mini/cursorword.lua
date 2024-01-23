@@ -142,7 +142,14 @@ H.setup_config = function(config)
   return config
 end
 
-H.apply_config = function(config) MiniCursorword.config = config end
+H.apply_config = function(config)
+  MiniCursorword.config = config
+
+  -- Make `setup()` to proper reset module
+  for _, m in ipairs(vim.fn.getmatches()) do
+    if vim.startswith(m.group, 'MiniCursorword') then vim.fn.matchdelete(m.id) end
+  end
+end
 
 H.create_autocommands = function()
   local augroup = vim.api.nvim_create_augroup('MiniCursorword', {})
