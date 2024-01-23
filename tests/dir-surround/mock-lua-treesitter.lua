@@ -27,7 +27,7 @@ local new_node = function(range, id)
   }
 end
 
-vim.treesitter.get_query = function(lang, _)
+local get_query = function(lang, _)
   if lang ~= 'lua' then error([[There is query only for 'lua' language.]]) end
 
   local query = {}
@@ -76,4 +76,15 @@ vim.treesitter.get_query = function(lang, _)
   end
 
   return query
+end
+
+vim.treesitter.get_query = function(...)
+  if vim.fn.has('nvim-0.9') == 1 then error('Use `vim.treesitter.query.get`.') end
+  return get_query(...)
+end
+
+vim.treesitter.query = vim.treesitter.query or {}
+vim.treesitter.query.get = function(...)
+  if vim.fn.has('nvim-0.9') == 0 then error('This does not yet exist in Neovim<0.9.') end
+  return get_query(...)
 end

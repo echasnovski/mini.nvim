@@ -344,7 +344,12 @@ T['gen_spec']['input']['treesitter()']['validates builtin treesitter presence'] 
   child.cmdheight = 40
 
   -- Query
-  child.lua('vim.treesitter.get_query = function() return nil end')
+  local lua_cmd = string.format(
+    'vim.treesitter.%s = function() return nil end',
+    child.fn.has('nvim-0.9') == 1 and 'query.get' or 'get_query'
+  )
+  child.lua(lua_cmd)
+
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
     vim.pesc([[(mini.surround) Can not get query for buffer 1 and language 'lua'.]])
