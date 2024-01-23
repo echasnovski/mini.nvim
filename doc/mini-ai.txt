@@ -680,11 +680,12 @@ array of regions that match corresponding (`a` or `i`) capture.
 
 In order for this to work, apart from working treesitter parser for desired
 language, user should have a reachable language-specific 'textobjects'
-query (see |get_query()|). The most straightforward way for this is to have
-'textobjects.scm' query file with treesitter captures stored in some
-recognized path. This is primarily designed to be compatible with
-'nvim-treesitter/nvim-treesitter-textobjects' plugin, but can be used
-without it.
+query (see |vim.treesitter.query.get()| or |get_query()|, depending on your
+Neovim version).
+The most straightforward way for this is to have 'textobjects.scm' query
+file with treesitter captures stored in some recognized path. This is
+primarily designed to be compatible with plugin
+'nvim-treesitter/nvim-treesitter-textobjects', but can be used without it.
 
 Two most common approaches for having a query file:
 - Install 'nvim-treesitter/nvim-treesitter-textobjects'. It has curated and

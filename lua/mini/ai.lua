@@ -863,11 +863,12 @@ end
 ---
 --- In order for this to work, apart from working treesitter parser for desired
 --- language, user should have a reachable language-specific 'textobjects'
---- query (see |get_query()|). The most straightforward way for this is to have
---- 'textobjects.scm' query file with treesitter captures stored in some
---- recognized path. This is primarily designed to be compatible with
---- 'nvim-treesitter/nvim-treesitter-textobjects' plugin, but can be used
---- without it.
+--- query (see |vim.treesitter.query.get()| or |get_query()|, depending on your
+--- Neovim version).
+--- The most straightforward way for this is to have 'textobjects.scm' query
+--- file with treesitter captures stored in some recognized path. This is
+--- primarily designed to be compatible with plugin
+--- 'nvim-treesitter/nvim-treesitter-textobjects', but can be used without it.
 ---
 --- Two most common approaches for having a query file:
 --- - Install 'nvim-treesitter/nvim-treesitter-textobjects'. It has curated and
@@ -931,7 +932,7 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
   return function(ai_type, _, _)
     -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
-    local has_nvim_treesitter, _ = pcall(require, 'nvim-treesitter')
+    local has_nvim_treesitter = pcall(require, 'nvim-treesitter') and pcall(require, 'nvim-treesitter.query')
     local node_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_nodes_plugin
       or H.get_matched_nodes_builtin
     local matched_nodes = node_querier(target_captures)
@@ -1466,7 +1467,6 @@ H.prepare_ai_captures = function(ai_captures)
 end
 
 H.get_matched_nodes_plugin = function(captures)
-  -- Hope that 'nvim-treesitter.query' is stable enough
   local ts_queries = require('nvim-treesitter.query')
   return vim.tbl_map(
     function(match) return match.node end,
@@ -1481,7 +1481,8 @@ H.get_matched_nodes_builtin = function(captures)
   local ok, parser = pcall(vim.treesitter.get_parser, 0, lang)
   if not ok then H.error_treesitter('parser', lang) end
 
-  local query = vim.treesitter.get_query(lang, 'textobjects')
+  local get_query = vim.fn.has('nvim-0.9') == 1 and vim.treesitter.query.get or vim.treesitter.get_query
+  local query = get_query(lang, 'textobjects')
   if query == nil then H.error_treesitter('query', lang) end
 
   -- Compute matched captures
