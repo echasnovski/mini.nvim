@@ -840,10 +840,10 @@ H.apply_palette = function(palette, use_cterm)
   end
 
   if H.has_integration('ggandor/leap.nvim') then
-    hi('LeapMatch',          {fg=p.base0E, bg=nil, attr='bold,nocombine', sp=nil})
-    hi('LeapLabelPrimary',   {fg=p.base08, bg=nil, attr='bold,nocombine', sp=nil})
-    hi('LeapLabelSecondary', {fg=p.base05, bg=nil, attr='bold,nocombine', sp=nil})
-    hi('LeapLabelSelected',  {fg=p.base09, bg=nil, attr='bold,nocombine', sp=nil})
+    hi('LeapMatch',          {fg=p.base0E, bg=nil, attr='bold,nocombine,underline', sp=nil})
+    hi('LeapLabelPrimary',   {fg=p.base08, bg=nil, attr='bold,nocombine',           sp=nil})
+    hi('LeapLabelSecondary', {fg=p.base05, bg=nil, attr='bold,nocombine',           sp=nil})
+    hi('LeapLabelSelected',  {fg=p.base09, bg=nil, attr='bold,nocombine',           sp=nil})
     hi('LeapBackdrop',       {link='Comment'})
   end
 
