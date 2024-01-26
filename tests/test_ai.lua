@@ -2602,6 +2602,9 @@ T['Builtin']['Tag']['allows extra symbols in opening tag'] = function()
 
   -- Symbol `<` is not allowed
   validate_no_tobj1d('<x <>aaa</x>', 0, 'at')
+
+  -- It does not mistake an arrow function for a closing tag
+  validate_tobj1d('<x on:click={() => 1}>aaa</x>', 0, 'it', { 23, 25 })
 end
 
 T['Builtin']['Tag']['detects covering with smallest width'] = function()
