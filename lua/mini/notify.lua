@@ -582,7 +582,7 @@ H.create_autocommands = function(config)
     vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
   end
 
-  au('TabEnter', '*', function() MiniNotify.refresh() end, 'Refresh in notifications in new tabpage')
+  au({ 'TabEnter', 'VimResized' }, '*', function() MiniNotify.refresh() end, 'Refresh notifications')
 end
 
 --stylua: ignore

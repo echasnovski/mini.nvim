@@ -831,6 +831,26 @@ T['Window']['persists across tabpages'] = function()
   eq(is_notif_window_shown(new_tabpage_id), false)
 end
 
+T['Window']['fully updates on vim resize'] = function()
+  -- With default window config
+  child.set_size(10, 50)
+  add('A very long notification')
+  child.expect_screenshot()
+  child.o.columns = 25
+  child.expect_screenshot()
+  clear()
+
+  -- With callable window config
+  child.set_size(15, 50)
+  child.lua([[MiniNotify.config.window.config = function()
+    return { row = math.floor(0.2 * vim.o.lines), col = math.floor(0.8 * vim.o.columns) }
+  end]])
+  add('A very long notification')
+  child.expect_screenshot()
+  child.o.lines, child.o.columns = 10, 25
+  child.expect_screenshot()
+end
+
 T['Window']['does not affect normal window navigation'] = function()
   local win_id_1 = child.api.nvim_get_current_win()
   child.cmd('botright wincmd v')
