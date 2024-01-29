@@ -139,8 +139,8 @@ end
 ---   It also controls how empty lines are treated: they are included in scope
 ---   only if followed by a border. Another way of looking at it is that indent
 ---   of blank line is computed based on value of `border` option.
----   Here is an illustration of how `border` works in presence of empty lines:
---- >
+---   Here is an illustration of how `border` works in presence of empty lines: >
+---
 ---                              |both|bottom|top|none|
 ---   1|function foo()           | 0  |  0   | 0 | 0  |
 ---   2|                         | 4  |  0   | 4 | 0  |
@@ -160,8 +160,8 @@ end
 ---   computation of scope. If `true`, reference indent is a minimum of
 ---   reference line's indent and cursor column. In main example, here how
 ---   scope's body range differs depending on cursor column and `indent_at_cursor`
----   value (assuming cursor is on line 3 and it is whole buffer):
---- >
+---   value (assuming cursor is on line 3 and it is whole buffer): >
+---
 ---     Column\Option true|false
 ---        1 and 2    2-5 | 2-4
 ---      3 and more   2-4 | 2-4

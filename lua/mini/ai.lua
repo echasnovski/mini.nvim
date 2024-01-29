@@ -246,16 +246,16 @@
 ---       arguments as |MiniAi.find_textobject()| and should return one of:
 ---         - Composed pattern. Useful for implementing user input. Example of
 ---           simplified variant of textobject for function call with name taken
----           from user prompt:
---- >
+---           from user prompt: >
+---
 ---           function()
 ---             local left_edge = vim.pesc(vim.fn.input('Function name: '))
 ---             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
 ---           end
 --- <
 ---         - Single output region. Useful to allow full control over
----           textobject. Will be taken as is. Example of returning whole buffer:
---- >
+---           textobject. Will be taken as is. Example of returning whole buffer: >
+---
 ---           function()
 ---             local from = { line = 1, col = 1 }
 ---             local to = {
@@ -269,8 +269,8 @@
 ---           instruments, like treesitter (see |MiniAi.gen_spec.treesitter()|).
 ---           The best region will be picked in the same manner as with composed
 ---           pattern (respecting options `n_lines`, `search_method`, etc.).
----           Example of selecting "best" line with display width more than 80:
---- >
+---           Example of selecting "best" line with display width more than 80: >
+---
 ---           function(_, _, _)
 ---             local res = {}
 ---             for i = 1, vim.api.nvim_buf_line_count(0) do
@@ -293,8 +293,8 @@
 ---       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
 ---       to the left of `init` (it will lead to infinite loop). Not allowed as
 ---       last item (as it should be pattern with captures).
----       Example of matching only balanced parenthesis with big enough width:
---- >
+---       Example of matching only balanced parenthesis with big enough width: >
+---
 ---         {
 ---           '%b()',
 ---           function(s, init)
@@ -303,7 +303,7 @@
 ---           end,
 ---           '^.().*().$'
 ---         }
---- >
+--- <
 --- More examples:
 --- - See |MiniAi.gen_spec| for function wrappers to create commonly used
 ---   textobject specifications.
@@ -894,8 +894,7 @@ end
 ---       })
 ---     }
 ---   })
---- >
----
+--- <
 --- Notes:
 --- - By default query is done using 'nvim-treesitter' plugin if it is present
 ---   (falls back to builtin methods otherwise). This allows for a more

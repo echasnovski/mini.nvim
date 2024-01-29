@@ -281,8 +281,8 @@
 ---       arguments and should return one of:
 ---         - Composed pattern. Useful for implementing user input. Example of
 ---           simplified variant of input surrounding for function call with
----           name taken from user prompt:
---- >
+---           name taken from user prompt: >
+---
 ---           function()
 ---             local left_edge = vim.pesc(vim.fn.input('Function name: '))
 ---             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
@@ -290,8 +290,8 @@
 --- <
 ---         - Single region pair (see |MiniSurround-glossary|). Useful to allow
 ---           full control over surrounding. Will be taken as is. Example of
----           returning first and last lines of a buffer:
---- >
+---           returning first and last lines of a buffer: >
+---
 ---           function()
 ---             local n_lines = vim.fn.line('$')
 ---             return {
@@ -311,8 +311,8 @@
 ---           best region pair will be picked in the same manner as with composed
 ---           pattern (respecting options `n_lines`, `search_method`, etc.) using
 ---           output region (from start of left region to end of right region).
----           Example using edges of "best" line with display width more than 80:
---- >
+---           Example using edges of "best" line with display width more than 80: >
+---
 ---           function()
 ---             local make_line_region_pair = function(n)
 ---               local left = { line = n, col = 1 }
@@ -339,8 +339,8 @@
 ---       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
 ---       to the left of `init` (it will lead to infinite loop). Not allowed as
 ---       last item (as it should be pattern with captures).
----       Example of matching only balanced parenthesis with big enough width:
---- >
+---       Example of matching only balanced parenthesis with big enough width: >
+---
 ---         {
 ---           '%b()',
 ---           function(s, init)
@@ -349,7 +349,7 @@
 ---           end,
 ---           '^.().*().$'
 ---         }
---- >
+--- <
 --- More examples:
 --- - See |MiniSurround.gen_spec| for function wrappers to create commonly used
 ---   surrounding specifications.
@@ -947,8 +947,7 @@ MiniSurround.gen_spec = { input = {}, output = {} }
 ---       f = ts_input({ outer = '@call.outer', inner = '@call.inner' }),
 ---     }
 ---   })
---- >
----
+--- <
 --- Notes:
 --- - By default query is done using 'nvim-treesitter' plugin if it is present
 ---   (falls back to builtin methods otherwise). This allows for a more

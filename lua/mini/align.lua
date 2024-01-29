@@ -442,14 +442,14 @@ end
 --- - Has signature `(steps, opts)` and should modify any of its input in place.
 ---
 --- Examples:
---- - Modifier function used for default 'i' modifier:
---- >
+--- - Modifier function used for default 'i' modifier: >
+---
 ---   function(steps, _)
 ---     table.insert(steps.pre_split, MiniAlign.gen_step.ignore_split())
 ---   end
 --- <
---- - Tweak 't' modifier to use highest indentation instead of keeping it:
---- >
+--- - Tweak 't' modifier to use highest indentation instead of keeping it: >
+---
 ---   require('mini.align').setup({
 ---     modifiers = {
 ---       t = function(steps, _)
@@ -460,8 +460,8 @@ end
 ---   })
 --- <
 --- - Tweak `j` modifier to cycle through available "justify_side" option
----   values (like in 'junegunn/vim-easy-align'):
---- >
+---   values (like in 'junegunn/vim-easy-align'): >
+---
 ---   require('mini.align').setup({
 ---     modifiers = {
 ---       j = function(_, opts)
@@ -490,8 +490,8 @@ end
 --- alignment process.
 ---
 --- Examples:
---- - Align by default only first pair of columns:
---- >
+--- - Align by default only first pair of columns: >
+---
 ---   local align = require('mini.align')
 ---   align.setup({
 ---     steps = {

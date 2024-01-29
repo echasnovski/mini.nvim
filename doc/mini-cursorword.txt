@@ -57,8 +57,8 @@ highlighting update.
 Module-specific disabling:
 - Don't show highlighting if cursor is on the word that is in a blocklist
   of current filetype. In this example, blocklist for "lua" is "local" and
-  "require" words, for "javascript" - "import":
->
+  "require" words, for "javascript" - "import": >
+
   _G.cursorword_blocklist = function()
     local curword = vim.fn.expand('<cword>')
     local filetype = vim.bo.filetype
