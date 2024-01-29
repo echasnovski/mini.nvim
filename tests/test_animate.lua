@@ -1779,11 +1779,13 @@ T['Scroll']['works properly inside terminal'] = function()
   -- compared with what was at Terminal mode start
   local many_lines = string.rep([[a\n]], 20)
   type_keys(10, 'i', 'echo -e "' .. many_lines .. '"', '<CR>')
+  sleep(step_time)
 
   -- There should not be any scroll animation after exiting Terminal mode
+  local init_line = child.fn.line('w0')
   type_keys([[<C-\>]], '<C-n>')
-  sleep(step_time)
-  eq(child.fn.line('w0'), 18)
+  sleep(2 * step_time)
+  eq(child.fn.line('w0'), init_line)
 end
 
 T['Scroll']['does not automatically animate after buffer change'] = function()
