@@ -105,6 +105,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('lsp_progress.duration_last', 1000)
 
   expect_config('window.config', {})
+  expect_config('window.max_width_share', 0.382)
   expect_config('window.winblend', 25)
 end
 
@@ -132,6 +133,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error({ window = 'a' }, 'window', 'table')
   expect_config_error({ window = { config = 'a' } }, 'window.config', 'table or callable')
+  expect_config_error({ window = { max_width_share = 'a' } }, 'window.max_width_share', 'number')
   expect_config_error({ window = { winblend = 'a' } }, 'window.winblend', 'number')
 end
 
@@ -754,6 +756,24 @@ T['Window']['respects `window.config`'] = function()
   -- Allows title
   if child.fn.has('nvim-0.9') == 0 then return end
   child.lua([[MiniNotify.config.window.config = { border = 'single', title = 'Notif' }]])
+  refresh()
+  child.expect_screenshot()
+end
+
+T['Window']['respects `window.max_width_share`'] = function()
+  child.lua('MiniNotify.config.window.max_width_share = 0.75')
+  add('A very-very-very-very-very long notification')
+  child.expect_screenshot()
+  child.lua('MiniNotify.config.window.max_width_share = 1')
+  refresh()
+  child.expect_screenshot()
+
+  -- Handles out of range values
+  child.lua('MiniNotify.config.window.max_width_share = 10')
+  refresh()
+  child.expect_screenshot()
+
+  child.lua('MiniNotify.config.window.max_width_share = 0')
   refresh()
   child.expect_screenshot()
 end

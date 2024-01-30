@@ -175,7 +175,8 @@ end
 --- window's buffer already showing notifications). It should have the same
 --- structure as in |nvim_open_win()|. It has the following default values
 --- which show notifications in the upper right corner with upper limit on width:
---- - `width` is chosen to fit buffer content but not more than 38.2% of 'columns'.
+--- - `width` is chosen to fit buffer content but at most `window.max_width_share`
+---   share of 'columns'.
 ---   To have higher maximum width, use function in `config.window` which computes
 ---   dimensions inside of it (based on buffer content).
 --- - `height` is chosen to fit buffer content with enabled 'wrap' (assuming
@@ -183,6 +184,10 @@ end
 --- - `anchor`, `col`, and `row` are "NE", 'columns', and 0 or 1 (depending on tabline).
 --- - `border` is "single".
 --- - `zindex` is 999 to be as much on top as reasonably possible.
+---
+--- `window.max_width_share` defines maximum window width as a share of 'columns'.
+--- Should be a number between 0 (not included) and 1.
+--- Default: 0.382.
 ---
 --- `window.winblend` defines 'winblend' value for notification window.
 --- Default: 25.
@@ -211,6 +216,9 @@ MiniNotify.config = {
   window = {
     -- Floating window config
     config = {},
+
+    -- Maximum window width as share (between 0 and 1) of available columns
+    max_width_share = 0.382,
 
     -- Value of 'winblend' option
     winblend = 25,
@@ -553,6 +561,7 @@ H.setup_config = function(config)
     ['lsp_progress.enable'] = { config.lsp_progress.enable, 'boolean' },
     ['lsp_progress.duration_last'] = { config.lsp_progress.duration_last, 'number' },
     ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
+    ['window.max_width_share'] = { config.window.max_width_share, 'number' },
     ['window.winblend'] = { config.window.winblend, 'number' },
   })
 
@@ -692,7 +701,7 @@ H.buffer_refresh = function(buf_id, notif_arr)
   end
 end
 
-H.buffer_default_dimensions = function(buf_id)
+H.buffer_default_dimensions = function(buf_id, max_width_share)
   local line_widths = vim.tbl_map(vim.fn.strdisplaywidth, vim.api.nvim_buf_get_lines(buf_id, 0, -1, true))
 
   -- Compute width so as to fit all lines
@@ -701,7 +710,9 @@ H.buffer_default_dimensions = function(buf_id)
     width = math.max(width, l_w)
   end
   -- - Limit from above for better visuals
-  width = math.min(width, math.floor(0.382 * vim.o.columns))
+  max_width_share = math.min(math.max(max_width_share, 0), 1)
+  local max_width = math.max(math.floor(max_width_share * vim.o.columns), 1)
+  width = math.min(width, max_width)
 
   -- Compute height based on the width so as to fit all lines with 'wrap' on
   local height = 0
@@ -734,14 +745,15 @@ H.window_compute_config = function(buf_id, is_for_open)
   local max_height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0)
   local max_width = vim.o.columns
 
+  local config_win = H.get_config().window
   local default_config = { relative = 'editor', style = 'minimal', noautocmd = is_for_open, zindex = 999 }
   default_config.anchor, default_config.col, default_config.row = 'NE', vim.o.columns, has_tabline and 1 or 0
-  default_config.width, default_config.height = H.buffer_default_dimensions(buf_id)
+  default_config.width, default_config.height = H.buffer_default_dimensions(buf_id, config_win.max_width_share)
   default_config.border = 'single'
   -- Don't allow focus to not disrupt window navigation
   default_config.focusable = false
 
-  local win_config = H.get_config().window.config
+  local win_config = config_win.config
   if vim.is_callable(win_config) then win_config = win_config(buf_id) end
   local config = vim.tbl_deep_extend('force', default_config, win_config or {})
 
