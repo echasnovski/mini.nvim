@@ -260,7 +260,8 @@ T['section_diagnostics()']['works'] = function()
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   -- Should return predefined string if no diagnostic output
-  child.lua('vim.lsp.diagnostic.get_count = function(...) return 0 end')
+  child.lua('vim.diagnostic.get = function(...) return {} end')
+  child.lua('vim.diagnostic.count = function(...) return {} end')
   child.lua('vim.diagnostic.get = function(...) return {} end')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' -')
 

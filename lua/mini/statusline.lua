@@ -299,10 +299,11 @@ MiniStatusline.section_diagnostics = function(args)
   local dont_show_lsp = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or hasnt_attached_client
   if dont_show_lsp then return '' end
 
-  -- Construct diagnostic info using predefined order
-  local t = {}
+  -- Construct string parts
+  local counts = H.get_diagnostic_count()
+  local severity, t = vim.diagnostic.severity, {}
   for _, level in ipairs(H.diagnostic_levels) do
-    local n = H.get_diagnostic_count(level.id)
+    local n = counts[severity[level.name]] or 0
     -- Add level info only if diagnostic is present
     if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
   end
@@ -419,10 +420,10 @@ H.default_config = vim.deepcopy(MiniStatusline.config)
 
 -- Showed diagnostic levels
 H.diagnostic_levels = {
-  { id = vim.diagnostic.severity.ERROR, sign = 'E' },
-  { id = vim.diagnostic.severity.WARN, sign = 'W' },
-  { id = vim.diagnostic.severity.INFO, sign = 'I' },
-  { id = vim.diagnostic.severity.HINT, sign = 'H' },
+  { name = 'ERROR', sign = 'E' },
+  { name = 'WARN', sign = 'W' },
+  { name = 'INFO', sign = 'I' },
+  { name = 'HINT', sign = 'H' },
 }
 
 -- Helper functionality =======================================================
@@ -582,6 +583,14 @@ H.get_filetype_icon = function()
   return devicons.get_icon(file_name, file_ext, { default = true })
 end
 
-H.get_diagnostic_count = function(id) return #vim.diagnostic.get(0, { severity = id }) end
+H.get_diagnostic_count = function()
+  local res = {}
+  for _, d in ipairs(vim.diagnostic.get(0)) do
+    res[d.severity] = (res[d.severity] or 0) + 1
+  end
+  return res
+end
+
+if vim.fn.has('nvim-0.10') == 1 then H.get_diagnostic_count = function() return vim.diagnostic.count(0) end end
 
 return MiniStatusline
