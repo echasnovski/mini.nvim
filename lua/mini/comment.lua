@@ -126,6 +126,7 @@ MiniComment.config = {
     comment_visual = 'gc',
 
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+    -- Works also in Visual mode if mapping differs from `comment_visual`
     textobject = 'gc',
   },
 
@@ -295,6 +296,9 @@ MiniComment.textobject = function()
       line_end = line_end + 1
     end
 
+    local is_visual = vim.tbl_contains({ 'v', 'V', '\22' }, vim.fn.mode())
+    if is_visual then vim.cmd('normal! \27') end
+
     -- This visual selection doesn't seem to change `'<` and `'>` marks when
     -- executed as `onoremap` mapping
     vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
@@ -420,7 +424,8 @@ H.apply_config = function(config)
   )
   -- Use `<Cmd>...<CR>` to have proper dot-repeat
   -- See https://github.com/neovim/neovim/issues/23406
-  H.map('o', config.mappings.textobject, '<Cmd>lua MiniComment.textobject()<CR>', { desc = 'Comment textobject' })
+  local modes = config.mappings.textobject == config.mappings.comment_visual and { 'o' } or { 'x', 'o' }
+  H.map(modes, config.mappings.textobject, '<Cmd>lua MiniComment.textobject()<CR>', { desc = 'Comment textobject' })
 end
 
 H.is_disabled = function() return vim.g.minicomment_disable == true or vim.b.minicomment_disable == true end

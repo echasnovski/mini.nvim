@@ -885,6 +885,12 @@ T['Comment textobject']['works with different mapping'] = function()
   set_cursor(2, 0)
   type_keys('d', 'gC')
   eq(get_lines(), { 'aa', 'aa' })
+
+  -- Should work in Visual mode as it differs from `comment_visual` mapping
+  set_lines({ 'aa', '# bb', '# cc', '# dd', 'ee' })
+  set_cursor(3, 0)
+  type_keys('v', 'gC', 'd')
+  eq(get_lines(), { 'aa', 'ee' })
 end
 
 T['Comment textobject']['respects tree-sitter injections'] = function()

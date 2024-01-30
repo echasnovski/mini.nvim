@@ -169,6 +169,7 @@ Here are code snippets for some common installation methods (use only one):
     comment_visual = 'gc',
 
     -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+    -- Works also in Visual mode if mapping differs from `comment_visual`
     textobject = 'gc',
   },
 
