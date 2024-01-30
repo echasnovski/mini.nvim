@@ -267,6 +267,7 @@ T['section_diagnostics()']['works'] = function()
 
   -- Should return empty string if no LSP client attached
   child.lua('vim.lsp.buf_get_clients = function() return {} end')
+  if child.fn.has('nvim-0.8') == 1 then child.lua('_G.detach_lsp()') end
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
@@ -575,12 +576,12 @@ T['Default content']['active'] = new_set({
 
       mock_devicons()
       mock_gitsigns()
-      mock_diagnostics()
       mock_file(10)
 
       -- Mock filename section to use relative path for consistent screenshots
       child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
       child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
+      mock_diagnostics()
       type_keys('/a', '<CR>')
     end,
     post_case = unmock_file,

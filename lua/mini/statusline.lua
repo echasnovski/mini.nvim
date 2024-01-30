@@ -293,11 +293,9 @@ end
 ---
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
-  -- Assumption: there are no attached clients if table
-  -- `vim.lsp.buf_get_clients()` is empty
-  local hasnt_attached_client = next(vim.lsp.buf_get_clients()) == nil
-  local dont_show_lsp = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or hasnt_attached_client
-  if dont_show_lsp then return '' end
+  _G.n_attached_lsp = H.n_attached_lsp
+  local dont_show = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or H.has_no_lsp_attached()
+  if dont_show then return '' end
 
   -- Construct string parts
   local counts = H.get_diagnostic_count()
@@ -426,6 +424,9 @@ H.diagnostic_levels = {
   { name = 'HINT', sign = 'H' },
 }
 
+-- Count of attached LSP clients per buffer id
+H.n_attached_lsp = {}
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
@@ -470,6 +471,14 @@ H.create_autocommands = function()
 
   local set_inactive = function() vim.wo.statusline = '%!v:lua.MiniStatusline.inactive()' end
   au({ 'WinLeave', 'BufLeave' }, '*', set_inactive, 'Set inactive statusline')
+
+  if vim.fn.has('nvim-0.8') == 1 then
+    local make_track_lsp = function(increment)
+      return function(data) H.n_attached_lsp[data.buf] = (H.n_attached_lsp[data.buf] or 0) + increment end
+    end
+    au('LspAttach', '*', make_track_lsp(1), 'Track LSP clients')
+    au('LspDetach', '*', make_track_lsp(-1), 'Track LSP clients')
+  end
 end
 
 --stylua: ignore
@@ -582,6 +591,10 @@ H.get_filetype_icon = function()
   local file_name, file_ext = vim.fn.expand('%:t'), vim.fn.expand('%:e')
   return devicons.get_icon(file_name, file_ext, { default = true })
 end
+
+H.has_no_lsp_attached = function() return (H.n_attached_lsp[vim.api.nvim_get_current_buf()] or 0) == 0 end
+
+if vim.fn.has('nvim-0.8') == 0 then H.has_no_lsp_attached = function() return #vim.lsp.buf_get_clients() == 0 end end
 
 H.get_diagnostic_count = function()
   local res = {}
