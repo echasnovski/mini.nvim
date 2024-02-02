@@ -1100,8 +1100,8 @@ end
 T['Autoopening']['does not autoopen if Neovim started to show something'] = function()
   local init_autoopen = 'tests/dir-starter/init-files/test-init.lua'
 
-  -- Current buffer has any lines (something opened explicitly)
-  child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
+  -- There are files in arguments (like `nvim foo.txt` with new file).
+  child.restart({ '-u', init_autoopen, 'new-file.txt' })
   validate_starter_not_shown()
 
   -- Several buffers are listed (like session with placeholder buffers)
@@ -1112,8 +1112,8 @@ T['Autoopening']['does not autoopen if Neovim started to show something'] = func
   child.restart({ '-u', init_autoopen, '-c', 'e foo | set nobuflisted | e bar | set buflisted' })
   validate_starter_shown()
 
-  -- There are files in arguments (like `nvim foo.txt` with new file).
-  child.restart({ '-u', init_autoopen, 'new-file.txt' })
+  -- Current buffer has any lines (something opened explicitly)
+  child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
   validate_starter_not_shown()
 end
 
