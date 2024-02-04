@@ -243,7 +243,8 @@ MiniCompletion.config = {
     process_items = function(items, base)
       local res = vim.tbl_filter(function(item)
         -- Keep items which match the base and are not snippets
-        return vim.startswith(H.get_completion_word(item), base) and item.kind ~= 15
+        local text = item.filterText or H.get_completion_word(item)
+        return vim.startswith(text, base) and item.kind ~= 15
       end, items)
 
       table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)

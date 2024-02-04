@@ -471,13 +471,39 @@ end
 T['Manual completion']['prefers completion range from LSP response'] = function()
   set_lines({})
   type_keys('i', 'months.')
-  child.lua('_G.mock_textEdit_pos = vim.api.nvim_win_get_cursor(0)')
+  -- Mock `textEdit` as in `tsserver` when called after `.`
+  child.lua([[_G.mock_textEdit = {
+    pos = vim.api.nvim_win_get_cursor(0),
+    new_text = function(name) return '.' .. name end,
+  } ]])
   type_keys('<C-space>')
 
-  eq(get_completion(), { '.April', '.August' })
+  eq(get_completion('abbr'), { 'April', 'August' })
+  eq(get_completion('word'), { '.April', '.August' })
   type_keys('<C-n>', '<C-y>')
   eq(get_lines(), { 'months.April' })
   eq(get_cursor(), { 1, 12 })
+end
+
+T['Manual completion']['respects `filterText` from LSP response'] = function()
+  set_lines({})
+  type_keys('i', 'months.')
+  -- Mock `textEdit` and `filterText` as in `tsserver` when called after `.`
+  -- (see https://github.com/echasnovski/mini.nvim/issues/306#issuecomment-1602245446)
+  child.lua([[
+    _G.mock_textEdit = {
+      pos = vim.api.nvim_win_get_cursor(0),
+      new_text = function(name) return '[' .. name .. ']' end,
+    }
+    _G.mock_filterText = function(name) return '.' .. name end
+  ]])
+  type_keys('<C-space>')
+
+  eq(get_completion('abbr'), { 'April', 'August' })
+  eq(get_completion('word'), { '[April]', '[August]' })
+  type_keys('<C-n>', '<C-y>')
+  eq(get_lines(), { 'months[April]' })
+  eq(get_cursor(), { 1, 13 })
 end
 
 T['Manual completion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
