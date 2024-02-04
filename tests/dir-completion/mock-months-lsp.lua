@@ -44,15 +44,29 @@ local construct_additionTextEdits = function(id, name)
   }
 end
 
+local construct_textEdit = function(name)
+  local pos = _G.mock_textEdit_pos
+  if pos == nil then return end
+  return {
+    newText = '.' .. name,
+    range = {
+      start = { line = pos[1] - 1, character = pos[2] - 1 },
+      ['end'] = { line = pos[1] - 1, character = pos[2] },
+    },
+  }
+end
+
 Months.requests = {
   ['textDocument/completion'] = function(params)
     local items = {}
     for i, item in ipairs(Months.items) do
       local res = { label = item.name, kind = item.kind, sortText = ('%03d'):format(i) }
-      -- Mock additionalTextEdits as in `pyright`
+      -- Mock `additionalTextEdits` as in `pyright`
       if vim.tbl_contains({ 'September', 'November' }, item.name) then
         res.additionalTextEdits = construct_additionTextEdits('completion', item.name)
       end
+      -- Mock `textEdit` as in `tsserver` when called after `.`
+      if vim.tbl_contains({ 'April', 'August' }, item.name) then res.textEdit = construct_textEdit(item.name) end
       table.insert(items, res)
     end
 

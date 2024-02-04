@@ -468,6 +468,18 @@ T['Manual completion']['applies `additionalTextEdits` from "completionItem/resol
   eq(get_lines(), { 'January' })
 end
 
+T['Manual completion']['prefers completion range from LSP response'] = function()
+  set_lines({})
+  type_keys('i', 'months.')
+  child.lua('_G.mock_textEdit_pos = vim.api.nvim_win_get_cursor(0)')
+  type_keys('<C-space>')
+
+  eq(get_completion(), { '.April', '.August' })
+  type_keys('<C-n>', '<C-y>')
+  eq(get_lines(), { 'months.April' })
+  eq(get_cursor(), { 1, 12 })
+end
+
 T['Manual completion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {

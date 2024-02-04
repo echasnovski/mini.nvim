@@ -368,7 +368,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     if findstart == 1 then return -3 end
     return {}
   else
-    if findstart == 1 then return H.get_completion_start() end
+    if findstart == 1 then return H.get_completion_start(H.completion.lsp.result) end
 
     local process_items = H.get_config().lsp_completion.process_items
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
@@ -1285,12 +1285,29 @@ end
 
 H.pumvisible = function() return vim.fn.pumvisible() > 0 end
 
-H.get_completion_start = function()
-  -- Compute start position of latest keyword (as in `vim.lsp.omnifunc`)
+H.get_completion_start = function(lsp_result)
   local pos = vim.api.nvim_win_get_cursor(0)
+
+  -- Prefer completion start from LSP response(s)
+  for _, response_data in pairs(lsp_result or {}) do
+    local server_start = H.get_completion_start_server(response_data, pos[1] - 1)
+    if server_start ~= nil then return server_start end
+  end
+
+  -- Fall back to start position of latest keyword
   local line = vim.api.nvim_get_current_line()
-  local line_to_cursor = line:sub(1, pos[2])
-  return vim.fn.match(line_to_cursor, '\\k*$')
+  return vim.fn.match(line:sub(1, pos[2]), '\\k*$')
+end
+
+H.get_completion_start_server = function(response_data, line_num)
+  if response_data.err or type(response_data.result) ~= 'table' then return end
+  local items = response_data.result.items or response_data.result
+  for _, item in pairs(items) do
+    if type(item.textEdit) == 'table' and item.textEdit.range.start.line == line_num then
+      -- NOTE: Ignore case when items contain several conflicting starts
+      return item.textEdit.range.start.character
+    end
+  end
 end
 
 H.is_whitespace = function(s)
