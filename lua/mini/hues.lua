@@ -841,7 +841,7 @@ H.apply_colorscheme = function(config)
     -- Sources:
     -- - `:h treesitter-highlight-groups`
     -- - https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights
-    hi('@text.literal',   { link='Comment' })
+    hi('@text.literal',   { link='Special' })
     hi('@text.reference', { link='Identifier' })
     hi('@text.title',     { link='Title' })
     hi('@text.uri',       { link='Underlined' })

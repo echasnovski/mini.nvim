@@ -24,6 +24,7 @@ vim.keymap.set('i', '<C-z>', '<C-g>u<Esc>[s1z=`]a<C-g>u', { desc = 'Correct late
 
 ## mini.hues
 
+- BREAKING FEATURE: Update verbatim text (`@text.literal` and `@markup.raw`) color to be distinctive instead of dimmed.
 - FEATURE: Add support for new standard tree-sitter captures on Neovim>=0.10 (see https://github.com/neovim/neovim/pull/27067).
 
 ## mini.misc
