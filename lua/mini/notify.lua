@@ -397,7 +397,7 @@ end
 ---   update its message.
 --- - Construct content from notifications and show them in a window.
 MiniNotify.refresh = function()
-  if H.is_disabled() then return H.window_close() end
+  if H.is_disabled() or type(vim.v.exiting) == 'number' then return H.window_close() end
 
   -- Prepare array of active notifications
   local notif_arr = vim.deepcopy(vim.tbl_values(H.active))
