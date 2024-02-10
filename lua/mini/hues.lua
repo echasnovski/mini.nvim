@@ -931,7 +931,7 @@ H.apply_colorscheme = function(config)
   end
 
   -- New tree-sitter groups
-  if vim.fn.has('nvim-0.10') == 1 then
+  if vim.fn.has('nvim-0.9') == 1 then
     -- Sources:
     -- - `:h treesitter-highlight-groups`
     -- - https://github.com/nvim-treesitter/nvim-treesitter/commit/1ae9b0e4558fe7868f8cda2db65239cfb14836d0
