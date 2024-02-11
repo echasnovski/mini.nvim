@@ -29,19 +29,30 @@ There are two branches to install from:
 
 Here are code snippets for some common installation methods:
 
+- Manually with `git clone` (compatible with [mini.deps](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-deps.md)):
+
+```lua
+-- Put this at the top of 'init.lua'
+local path_package = vim.fn.stdpath('data') .. '/site'
+local mini_path = path_package .. '/pack/deps/start/mini.nvim'
+if not vim.loop.fs_stat(mini_path) then
+  vim.cmd('echo "Installing `mini.nvim`" | redraw')
+  local clone_cmd = {
+    'git', 'clone', '--filter=blob:none',
+    -- Uncomment next line to use 'stable' branch
+    -- '--branch', 'stable',
+    'https://github.com/echasnovski/mini.nvim', mini_path
+  }
+  vim.fn.system(clone_cmd)
+end
+```
+
 - With [folke/lazy.nvim](https://github.com/folke/lazy.nvim):
 
 | Branch | Code snippet                                         |
 |--------|------------------------------------------------------|
 | Main   | `{ 'echasnovski/mini.nvim', version = false },`      |
 | Stable | `{ 'echasnovski/mini.nvim', version = '*' },`        |
-
-- With [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim):
-
-| Branch | Code snippet                                         |
-|--------|------------------------------------------------------|
-| Main   | `use 'echasnovski/mini.nvim'`                        |
-| Stable | `use { 'echasnovski/mini.nvim', branch = 'stable' }` |
 
 - With [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
