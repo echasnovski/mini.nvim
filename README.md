@@ -44,6 +44,7 @@ if not vim.loop.fs_stat(mini_path) then
     'https://github.com/echasnovski/mini.nvim', mini_path
   }
   vim.fn.system(clone_cmd)
+  vim.cmd('packadd mini.nvim | helptags ALL')
 end
 ```
 
