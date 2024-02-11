@@ -25,6 +25,7 @@
 ---   Comment lines ............................................... |mini.comment|
 ---   Completion and signature help ............................ |mini.completion|
 ---   Autohighlight word under cursor .......................... |mini.cursorword|
+---   Plugin manager ................................................. |mini.deps|
 ---   Generate Neovim help files ...................................... |mini.doc|
 ---   Extra 'mini.nvim' functionality ............................... |mini.extra|
 ---   Navigate and manipulate file system............................ |mini.files|
@@ -172,6 +173,9 @@
 --- - |MiniCursorword| - automatic highlighting of word under cursor (displayed
 ---   after customizable delay). Current word under cursor can be highlighted
 ---   differently.
+---
+--- - |MiniDeps| - plugin manager for plugins outside of 'mini.nvim'. Uses Git and
+---   built-in packages to install, update, clean, and snapshot plugins.
 ---
 --- - |MiniDoc| - generation of help files from EmmyLua-like annotations.
 ---   Allows flexible customization of output via hook functions. Used for

@@ -1,0 +1,4 @@
+return {
+  plugin_1 = 'sha1head',
+  plugin_2 = 'sha2head'
+}

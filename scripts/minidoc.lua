@@ -15,6 +15,7 @@ local modules = {
   'comment',
   'completion',
   'cursorword',
+  'deps',
   'doc',
   'extra',
   'files',

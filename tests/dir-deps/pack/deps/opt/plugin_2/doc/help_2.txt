@@ -1,0 +1,2 @@
+  *depstest_plugin_2_tag*
+This is help for plugin_2.

@@ -70,6 +70,7 @@ sync_module "comment"
 sync_module "completion"
 sync_module "cursorword"
 sync_module "doc"
+sync_module "deps" scripts/init-deps-example.lua
 sync_module "extra"
 sync_module "files"
 sync_module "fuzzy"

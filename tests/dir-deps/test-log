@@ -1,0 +1,11 @@
+========== Update 2024-01-02 03:04:05 ==========
++++ plugin_1 +++
+Path:         MOCKDIR/pack/deps/opt/plugin_1
+Source:       https://github.com/user/plugin_1
+State before: sha1head
+State after:  new1head (main)
+
+Pending updates from `main`:
+> new1head | 2024-01-02 01:01:01 +0200 | Neo McVim
+  Added commit in checkout.
+

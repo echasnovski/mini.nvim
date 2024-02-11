@@ -105,6 +105,17 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniCursorword`
     - `MiniCursorwordCurrent`
 
+- 'mini.deps':
+    - `MiniDepsChangeAdded`
+    - `MiniDepsChangeRemoved`
+    - `MiniDepsHint`
+    - `MiniDepsInfo`
+    - `MiniDepsPlaceholder`
+    - `MiniDepsTitle`
+    - `MiniDepsTitleError`
+    - `MiniDepsTitleSame`
+    - `MiniDepsTitleUpdate`
+
 - 'mini.files':
     - `MiniFilesBorder`
     - `MiniFilesBorderModified`
