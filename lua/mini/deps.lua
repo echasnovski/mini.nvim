@@ -440,6 +440,7 @@ MiniDeps.config = {
 ---     - Execute `opts.hooks.post_install`.
 --- - Register spec(s) in current session.
 --- - Make sure plugin(s) can be used in current session (see |:packadd|).
+--- - If not during startup and is needed, source all "after/plugin/" scripts.
 ---
 --- Notes:
 --- - Presence of plugin is checked by its name which is the same as the name
@@ -489,6 +490,19 @@ MiniDeps.add = function(spec, opts)
 
     -- Add to 'runtimepath'
     vim.cmd(cmd .. p.name)
+  end
+
+  -- Execute 'after/' scripts if not during startup (when they will be sourced
+  -- automatically), as `:packadd` only sources plain 'plugin/' files.
+  -- See https://github.com/vim/vim/issues/1994.
+  -- Deliberately do so after executing all currently known 'plugin/' files.
+  local should_load_after_dir = vim.v.vim_did_enter == 1 and not opts.bang and vim.o.loadplugins
+  if not should_load_after_dir then return end
+  for _, p in ipairs(plugs) do
+    -- NOTE: This sources first lua and then vim, not how it is done during
+    -- startup (`:h loadplugins`) for speed (one `glob()` instead of two).
+    local after_paths = vim.fn.glob(p.path .. '/after/plugin/**/*.{vim,lua}', false, true)
+    vim.tbl_map(H.source, after_paths)
   end
 end
 
@@ -1510,6 +1524,10 @@ H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '
 H.readdir = function(path)
   if vim.fn.isdirectory(path) ~= 1 then return {} end
   return vim.tbl_map(function(x) return path .. '/' .. x end, vim.fn.readdir(path))
+end
+
+H.source = function(path)
+  pcall(function() vim.cmd('source ' .. vim.fn.fnameescape(path)) end)
 end
 
 H.buf_set_name = function(buf_id, name)

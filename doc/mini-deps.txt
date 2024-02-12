@@ -424,6 +424,7 @@ Add plugin to current session
     - Execute `opts.hooks.post_install`.
 - Register spec(s) in current session.
 - Make sure plugin(s) can be used in current session (see |:packadd|).
+- If not during startup and is needed, source all "after/plugin/" scripts.
 
 Notes:
 - Presence of plugin is checked by its name which is the same as the name

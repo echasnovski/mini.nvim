@@ -289,8 +289,13 @@ T['add()']['works for present plugins'] = new_set({ parametrize = { { 'plugin_1'
     -- No CLI process should be run as plugin is already present
     eq(get_spawn_log(), {})
 
-    -- Should use `:packadd`, i.e. load 'plugin/', 'ftdetect/', etc.
-    eq(child.lua_get('_G.plugin_1_plugin_dir_was_sourced'), true)
+    -- Should add plugin to 'runtimepath'
+    local rtp = vim.split(child.o.runtimepath, ',')
+    eq(vim.tbl_contains(rtp, ref_path), true)
+    eq(vim.tbl_contains(rtp, ref_path .. '/after'), true)
+
+    -- Should load 'plugin/', 'after/plugin/', etc.
+    eq(child.lua_get('type(_G.plugin_log)'), 'table')
   end,
 })
 
@@ -312,6 +317,45 @@ T['add()']['infers name from source'] = new_set({
     )
   end,
 })
+
+T['add()']["properly sources 'plugin/' and 'after/plugin/'"] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Neovim<0.9 has different sourcing behavior.') end
+
+  add({ name = 'plugin_1', depends = { 'plugin_2' } })
+  --stylua: ignore
+  local ref_plugin_log = {
+          'plugin/plug_2.lua',
+          'plugin/plug_1.vim',       'plugin/plug_1.lua',       'plugin/subdir/plug_1_sub.lua',
+    'after/plugin/plug_2.lua',
+    'after/plugin/plug_1.lua', 'after/plugin/plug_1.vim', 'after/plugin/subdir/plug_1_sub.lua',
+  }
+  eq(child.lua_get('_G.plugin_log'), ref_plugin_log)
+end
+
+T['add()']["does not source 'after/plugin/' when not needed"] = function()
+  -- During startup
+  local setup_cmd =
+    string.format("lua require('mini.deps').setup({ path = { package = %s } })", vim.inspect(test_dir_absolute))
+  child.restart({ '-u', 'NONE', '--cmd', 'set rtp+=.', '--cmd', setup_cmd, '--cmd', "lua MiniDeps.add('plugin_1')" })
+
+  --stylua: ignore
+  eq(child.lua_get('_G.plugin_log'), {
+    -- 'plugin/' directory gets sourced both as part of startup and `:packadd`
+          'plugin/plug_1.vim',       'plugin/plug_1.lua',       'plugin/subdir/plug_1_sub.lua',
+          'plugin/plug_1.vim',       'plugin/plug_1.lua',       'plugin/subdir/plug_1_sub.lua',
+    -- But sourcing 'after/plugin/' in 'mini.deps' should not duplicate startup
+    'after/plugin/plug_1.vim', 'after/plugin/plug_1.lua', 'after/plugin/subdir/plug_1_sub.lua',
+  })
+
+  -- When 'loadplugins = false'
+  child.restart({ '-u', 'NONE', '--cmd', 'set rtp+=.', '--cmd', setup_cmd })
+  child.o.loadplugins = false
+  add('plugin_1')
+
+  -- - `:packadd` does not recognize 'loadplugins' and thus sources them
+  --   But 'after/plugin/' should not be sourced
+  eq(child.lua_get('_G.plugin_log'), { 'plugin/plug_1.vim', 'plugin/plug_1.lua', 'plugin/subdir/plug_1_sub.lua' })
+end
 
 T['add()']['can update session data'] = function()
   add('plugin_1')
@@ -440,7 +484,7 @@ end
 
 T['add()']['respects `opts.bang`'] = function()
   add('plugin_1', { bang = true })
-  eq(child.lua_get('_G.plugin_1_plugin_dir_was_sourced'), vim.NIL)
+  eq(child.lua_get('_G.plugin_log'), vim.NIL)
 end
 
 T['add()']['does not modify input'] = function()
