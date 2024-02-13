@@ -141,6 +141,17 @@ local validate_move = function(cursor_before, keys, cursor_after)
   child.ensure_normal_mode()
 end
 
+-- Common mocks
+local mock_nvim_08 = function()
+  child.lua([[
+    local has_orig = vim.fn.has
+    vim.fn.has = function(x)
+      if vim.startswith(x, 'nvim-0.7') or vim.startswith(x, 'nvim-0.8') then return 1 end
+      return has_orig(x)
+    end
+  ]])
+end
+
 -- Data =======================================================================
 local test_files = { 'file-a', 'file-b', 'file-c', 'file-d', 'file-e' }
 
@@ -2241,8 +2252,9 @@ end
 T['treesitter()'] = new_set({
   hooks = {
     pre_case = function()
-      -- Imitate `get_node_at_pos()` to pass tests with mocks on Neovim<0.8
-      child.lua('vim.treesitter.get_node_at_pos = function() end')
+      if child.fn.has('nvim-0.8') == 1 then return end
+      -- Mock Neovim>=0.8 to pass tests on Neovim<0.8 with mocked TS function
+      mock_nvim_08()
       reload_module()
     end,
   },
@@ -2354,10 +2366,9 @@ T['treesitter()']['handles error when finding node at cursor'] = function()
 end
 
 T['treesitter()']['requires `vim.treesitter.get_node_at_pos()` or `vim.treesitter.get_node()`'] = function()
-  child.lua('vim.treesitter.get_node_at_pos = nil')
-  child.lua('vim.treesitter.get_node = nil')
+  -- Imitate Neovim<0.8
+  child.lua('vim.fn.has = function() return 0 end')
   reload_module()
-
   expect.error(function() forward('treesitter') end, 'get_node_at_pos%(%).*')
 end
 
@@ -4111,8 +4122,9 @@ end
 T['Mappings']['treesitter'] = new_set({
   hooks = {
     pre_case = function()
-      -- Imitate `get_node_at_pos()` to pass tests with mocks on Neovim<0.8
-      child.lua('vim.treesitter.get_node_at_pos = function() end')
+      if child.fn.has('nvim-0.8') == 1 then return end
+      -- Mock Neovim>=0.8 to pass tests on Neovim<0.8 with mocked TS function
+      mock_nvim_08()
       reload_module()
     end,
   },

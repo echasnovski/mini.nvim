@@ -1813,9 +1813,9 @@ H.qf_loc_implementation = function(list_type, direction, opts)
 end
 
 -- Treesitter -----------------------------------------------------------------
-if vim.treesitter.get_node ~= nil then
+if vim.fn.has('nvim-0.9') == 1 then
   H.get_treesitter_node = function(row, col) return vim.treesitter.get_node({ pos = { row, col } }) end
-elseif vim.treesitter.get_node_at_pos ~= nil then
+elseif vim.fn.has('nvim-0.8') == 1 then
   H.get_treesitter_node = function(row, col) return vim.treesitter.get_node_at_pos(0, row, col, {}) end
 end
 

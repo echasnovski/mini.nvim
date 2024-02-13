@@ -56,5 +56,9 @@ new_node = function(row, col, accept_at_cursor)
 end
 
 -- `row` and `col` are both zero-indexed here
-vim.treesitter.get_node_at_pos = function(_, row, col, _) return new_node(row + 1, col + 1) end
-vim.treesitter.get_node = function(opts) return new_node(opts.pos[1] + 1, opts.pos[2] + 1) end
+if vim.fn.has('nvim-0.9') == 1 then
+  vim.treesitter.get_node = function(opts) return new_node(opts.pos[1] + 1, opts.pos[2] + 1) end
+else
+  -- Imitate `get_node_at_pos()` on Neovim<0.8 also to pass tests with mocks
+  vim.treesitter.get_node_at_pos = function(_, row, col, _) return new_node(row + 1, col + 1) end
+end
