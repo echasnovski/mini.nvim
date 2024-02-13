@@ -667,10 +667,9 @@ T['start()']['respects `allowed_windows`'] = new_set({
   parametrize = { { { current = false } }, { { not_current = false } }, { { current = false, not_current = false } } },
 }, {
   test = function(allowed_windows_opts)
-    -- Check this only on Neovim>=0.9, as there is a slight change in
-    -- highlighting command line area. Probably, after
-    -- https://github.com/neovim/neovim/pull/20476
-    if child.fn.has('nvim-0.9') == 0 then return end
+    -- Check this only on Neovim>=0.10, as there is a slight change in
+    -- highlighting command line area
+    if child.fn.has('nvim-0.10') == 0 then return end
 
     child.set_size(6, 40)
     -- Make all showed messages full width
