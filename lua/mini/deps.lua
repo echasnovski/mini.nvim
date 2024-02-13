@@ -47,6 +47,7 @@
 --- # Dependencies ~
 ---
 --- For most of its functionality this plugin relies on `git` CLI tool.
+--- It should be at least version 2.36.0.
 --- See https://git-scm.com/ for more information about how to install it.
 --- Actual knowledge of Git is not required but helpful.
 ---
@@ -158,7 +159,9 @@
 --- - |MiniDeps.now()| safely executes code immediately. Use it to load plugins
 ---   with UI necessary to make initial screen draw.
 --- - |MiniDeps.later()| schedules code to be safely executed later, preserving
----   order. Use it (with caution) for everything else. >
+---   order. Use it (with caution) for everything else which doesn't need precisely
+---   timed effect, as it will be executed some time soon on one of the next
+---   event loops. >
 ---
 ---   local now, later = MiniDeps.now, MiniDeps.later
 ---

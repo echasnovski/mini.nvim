@@ -6,7 +6,7 @@
 
 ### Plugin manager
 
-Depends on [`git`](https://git-scm.com/) CLI tool being installed and callable. Make sure to have it set up.
+Depends on [`git`](https://git-scm.com/) CLI tool (at least version 2.36.0) being installed and callable. Make sure to have it set up.
 
 See more details in [Features](#features) and [help file](../doc/mini-deps.txt).
 
@@ -85,7 +85,7 @@ See and use [example 'init.lua' file](../scripts/init-deps-example.lua) as a qui
 
 ### Directory structure
 
-This module uses built-in |packages| to make plugins usable in current session. It works with "pack/deps" package inside `config.path.package` directory.
+This module uses built-in packages to make plugins usable in current session. It works with "pack/deps" package inside `config.path.package` directory.
 
 By default "opt" subdirectory is used to install optional plugins which are loaded on demand with `MiniDeps.add()`.
 Non-optional plugins in "start" subdirectory are supported but only if moved there manually after initial install.
@@ -147,7 +147,7 @@ Primarily, specification is a table with the following fields (see `*MiniDeps-pl
 
 Any lazy-loading is assumed to be done manually by calling `MiniDeps.add()` at appropriate time. This module provides helpers implementing special safe two-stage loading:
 - `MiniDeps.now()` safely executes code immediately. Use it to load plugins with UI necessary to make initial screen draw.
-- `MiniDeps.later()` schedules code to be safely executed later, preserving order. Use it (with caution) for everything else.
+- `MiniDeps.later()` schedules code to be safely executed later, preserving order. Use it (with caution) for everything else which doesn't need precisely timed effect, as it will be executed some time soon on one of the next event loops.
 
 ```lua
 local now, later = MiniDeps.now, MiniDeps.later
