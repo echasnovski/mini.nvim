@@ -6,7 +6,7 @@
 
 ### Plugin manager
 
-Depends on [`git`](https://git-scm.com/) CLI tool (at least version 2.36.0) being installed and callable. Make sure to have it set up.
+Depends on [`git`](https://git-scm.com/) CLI tool being installed and callable. Make sure to have it set up.
 
 See more details in [Features](#features) and [help file](../doc/mini-deps.txt).
 

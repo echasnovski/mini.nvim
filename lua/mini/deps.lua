@@ -47,7 +47,6 @@
 --- # Dependencies ~
 ---
 --- For most of its functionality this plugin relies on `git` CLI tool.
---- It should be at least version 2.36.0.
 --- See https://git-scm.com/ for more information about how to install it.
 --- Actual knowledge of Git is not required but helpful.
 ---
@@ -891,11 +890,16 @@ H.git_args = {
     return { 'version' }
   end,
   clone = function(source, path)
-    return {
+    local res = {
       'clone', '--quiet', '--filter=blob:none',
       '--recurse-submodules', '--also-filter-submodules', '--origin', 'origin',
       source, path,
     }
+    -- Use `--also-filter-submodules` only with appropriate version
+    if not (H.cache.git_version.major >= 2 and H.cache.git_version.minor >= 36) then
+      table.remove(res, 5)
+    end
+    return res
   end,
   stash = function(timestamp)
     return { 'stash', '--quiet', '--message', '(mini.deps) ' .. timestamp .. ' Stash before checkout' }

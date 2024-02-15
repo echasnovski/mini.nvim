@@ -47,7 +47,6 @@ Sources with more details:
 # Dependencies ~
 
 For most of its functionality this plugin relies on `git` CLI tool.
-It should be at least version 2.36.0.
 See https://git-scm.com/ for more information about how to install it.
 Actual knowledge of Git is not required but helpful.
 

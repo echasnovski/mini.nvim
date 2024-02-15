@@ -576,6 +576,40 @@ T['add()']['Install']['checks for executable Git'] = function()
   expect.error(function() add('user/new_plugin') end, 'Could not find executable `git` CLI tool')
 end
 
+T['add()']['Install']['reacts to early Git version'] = function()
+  child.lua([[
+    _G.stdio_queue = {
+      { out = 'git version 2.35.10'}, -- Check Git executable
+      {},                             -- Clone
+      { out = 'sha0head' },           -- Get `HEAD`
+      { out = 'origin/main' },        -- Get default branch
+      { out = 'origin/main' },        -- Check if `main` is origin branch
+      { out = 'sha0head' },           -- Get commit of `origin/main`
+      {},                             -- Stash changes
+      {},                             -- Checkout changes
+    }
+  ]])
+  add('user/new_plugin')
+
+  -- Should result into a proper sequence of CLI runs
+  --stylua: ignore
+  local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+    {
+      'clone', '--quiet', '--filter=blob:none', '--recurse-submodules', '--origin', 'origin',
+      'https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin',
+    },
+    {
+      args = { 'rev-list', '-1', 'HEAD' },
+      cwd = test_opt_dir .. '/new_plugin',
+    },
+    { 'rev-parse', '--abbrev-ref', 'origin/HEAD' },
+    { 'branch', '--list', '--all', '--format=%(refname:short)', 'origin/main' },
+    { 'rev-list', '-1', 'origin/main' },
+  }
+  validate_git_spawn_log(ref_git_spawn_log)
+end
+
 T['add()']['Install']['checks out non-default target'] = function()
   child.lua([[
     _G.stdio_queue = {
