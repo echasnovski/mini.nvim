@@ -97,6 +97,21 @@ end
 ---       custom_commentstring = function() return vim.bo.commentstring end,
 ---     }
 ---   })
+---
+--- # Hooks ~
+---
+--- `hooks.pre` and `hooks.post` functions are executed before and after successful
+--- commenting action (toggle or computing textobject). They will be called
+--- with a single table argument which has the following fields:
+--- - <action> `(string)` - action name. One of "toggle" (when actual toggle
+---   direction is yet unknown), "comment", "uncomment", "textobject".
+--- - <line_start> `(number|nil)` - action start line. Can be absent if yet unknown.
+--- - <line_end> `(number|nil)` - action end line. Can be absent if yet unknown.
+--- - <ref_position> `(table|nil)` - reference position.
+---
+--- Notes:
+--- - Changing 'commentstring' in `hooks.pre` is allowed and will take effect.
+--- - If hook returns `false`, any further action is terminated.
 MiniComment.config = {
   -- Options which control module behavior
   options = {
@@ -206,10 +221,6 @@ end
 --- whitespace. Toggle commenting not in visual mode is also dot-repeatable
 --- and respects |count|.
 ---
---- Before successful commenting it executes `config.hooks.pre`.
---- After successful commenting it executes `config.hooks.post`.
---- If hook returns `false`, any further action is terminated.
----
 --- # Notes ~
 ---
 --- - Comment structure is inferred from buffer's 'commentstring' option or
@@ -228,7 +239,7 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   if H.is_disabled() then return end
 
   opts = opts or {}
-  local ref_position = opts.ref_position or { line_start, 1 }
+  local ref_position = vim.deepcopy(opts.ref_position) or { line_start, 1 }
 
   local n_lines = vim.api.nvim_buf_line_count(0)
   if not (1 <= line_start and line_start <= n_lines and 1 <= line_end and line_end <= n_lines) then
@@ -238,8 +249,9 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
     error('(mini.comment) `line_start` should be less than or equal to `line_end`.')
   end
 
-  local config = H.get_config()
-  if config.hooks.pre() == false then return end
+  local hooks = H.get_config().hooks
+  local hook_arg = { action = 'toggle', line_start = line_start, line_end = line_end, ref_position = ref_position }
+  if hooks.pre(hook_arg) == false then return end
 
   local comment_parts = H.make_comment_parts(ref_position)
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
@@ -263,34 +275,33 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   --   slower: on 10000 lines 280ms compared to 40ms currently.
   vim.api.nvim_buf_set_lines(0, line_start - 1, line_end, false, lines)
 
-  if config.hooks.post() == false then return end
+  hook_arg.action = is_comment and 'uncomment' or 'comment'
+  if hooks.post(hook_arg) == false then return end
 end
 
 --- Select comment textobject
 ---
 --- This selects all commented lines adjacent to cursor line (if it itself is
 --- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
----
---- Before successful selection it executes `config.hooks.pre`.
---- After successful selection it executes `config.hooks.post`.
---- If hook returns `false`, any further action is terminated.
 MiniComment.textobject = function()
   if H.is_disabled() then return end
 
-  local config = H.get_config()
-  if config.hooks.pre() == false then return end
+  local hooks = H.get_config().hooks
+  local hook_args = { action = 'textobject' }
+  if hooks.pre(hook_args) == false then return end
 
   local comment_parts = H.make_comment_parts({ vim.fn.line('.'), vim.fn.col('.') })
   local comment_check = H.make_comment_check(comment_parts)
   local line_cur = vim.api.nvim_win_get_cursor(0)[1]
+  local line_start, line_end
 
   if comment_check(vim.fn.getline(line_cur)) then
-    local line_start = line_cur
+    line_start = line_cur
     while (line_start >= 2) and comment_check(vim.fn.getline(line_start - 1)) do
       line_start = line_start - 1
     end
 
-    local line_end = line_cur
+    line_end = line_cur
     local n_lines = vim.api.nvim_buf_line_count(0)
     while (line_end <= n_lines - 1) and comment_check(vim.fn.getline(line_end + 1)) do
       line_end = line_end + 1
@@ -304,7 +315,8 @@ MiniComment.textobject = function()
     vim.cmd(string.format('normal! %dGV%dG', line_start, line_end))
   end
 
-  if config.hooks.post() == false then return end
+  hook_args.line_start, hook_args.line_end = line_start, line_end
+  if hooks.post(hook_args) == false then return end
 end
 
 --- Get 'commentstring'

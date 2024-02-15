@@ -19,17 +19,18 @@ local type_keys = function(...) return child.type_keys(...) end
 -- Make helpers
 local reload_with_hooks = function()
   unload_module()
-  child.lua('_G.pre_n = 0; _G.post_n = 0')
-  child.lua([[require('mini.comment').setup({
-    hooks = {
-      pre = function()
-        _G.pre_n = _G.pre_n + 1
-        -- Allow this to successfully change 'commentstring' option
-        vim.bo.commentstring = vim.bo.commentstring == '# %s' and '// %s' or '# %s'
-      end,
-      post = function() _G.post_n = _G.post_n + 1 end,
-    },
-  })]])
+  child.lua([[
+    _G.hook_args = {}
+    require('mini.comment').setup({
+      hooks = {
+        pre = function(...)
+          table.insert(_G.hook_args, { 'pre', vim.deepcopy({ ... }) })
+          -- Allow this to successfully change 'commentstring' option
+          vim.bo.commentstring = vim.bo.commentstring == '# %s' and '// %s' or '# %s'
+        end,
+        post = function(...) table.insert(_G.hook_args, { 'post', vim.deepcopy({ ... }) }) end,
+      },
+    })]])
 end
 
 -- Data =======================================================================
@@ -414,15 +415,30 @@ T['toggle_lines()']['removes trailing whitespace'] = function()
 end
 
 T['toggle_lines()']['applies hooks'] = function()
-  set_lines({ 'aa', 'aa' })
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
+  set_lines({ 'aa', 'aa' })
   child.lua('MiniComment.toggle_lines(1, 2)')
   -- It should allow change of `commentstring` in `pre` hook
   eq(get_lines(), { '// aa', '// aa' })
-  eq(child.lua_get('_G.pre_n'), 1)
-  eq(child.lua_get('_G.post_n'), 1)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
+
+  -- Should correctly identify `action`
+  child.lua('_G.hook_args = {}')
+  set_lines({ '// aa', '// aa' })
+  child.bo.commentstring = '# %s'
+  child.lua('MiniComment.toggle_lines(1, 1)')
+  eq(get_lines(), { 'aa', '// aa' })
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'uncomment' } } },
+  })
 end
 
 T['toggle_lines()']['stops when hook returns `false`'] = function()
@@ -662,25 +678,34 @@ T['Commenting']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
 })
 
 T['Commenting']['applies hooks'] = function()
-  set_lines({ 'aa', 'aa' })
-  set_cursor(1, 0)
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
+  set_lines({ 'aa', 'aa' })
+  set_cursor(1, 0)
   type_keys('gc', 'ip')
   -- It should allow change of `commentstring` in `pre` hook
   eq(get_lines(), { '// aa', '// aa' })
-  eq(child.lua_get('_G.pre_n'), 1)
-  eq(child.lua_get('_G.post_n'), 1)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 
   -- It should work with dot-repeat
+  child.lua('_G.hook_args = {}')
+  set_lines({ '// aa', '// aa', '// aa' })
+  set_cursor(1, 0)
   type_keys('.')
-  eq(get_lines(), { '# // aa', '# // aa' })
-  eq(child.lua_get('_G.pre_n'), 2)
-  eq(child.lua_get('_G.post_n'), 2)
+  eq(get_lines(), { '# // aa', '# // aa', '# // aa' })
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 3, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 3, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 end
 
-T['toggle_lines()']['stops when hook returns `false`'] = function()
+T['Commenting']['stops when hook returns `false`'] = function()
   local lines = { 'aa', 'aa' }
   set_lines(lines)
   set_cursor(1, 0)
@@ -698,9 +723,18 @@ T['Commenting']['respects `vim.b.minicomment_config`'] = function()
   reload_with_hooks()
   child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
 
+  child.lua([[vim.b.minicomment_config = {
+    hooks = {
+      pre = function(...) table.insert(_G.hook_args, { 'buf_pre', vim.deepcopy({ ... }) }) end,
+    },
+  }]])
+
   type_keys('gc', 'ip')
-  eq(child.lua_get('_G.pre_n'), 10)
-  eq(child.lua_get('_G.post_n'), 1)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'buf_pre', { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post',    { { line_start = 1, line_end = 2, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 end
 
 T['Commenting current line'] = new_set({
@@ -809,33 +843,49 @@ T['Commenting current line']['allows dot-repeat'] = function()
 end
 
 T['Commenting current line']['applies hooks'] = function()
-  set_lines({ 'aa', 'aa' })
-  set_cursor(1, 0)
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
+  set_lines({ 'aa', 'aa' })
+  set_cursor(1, 0)
   type_keys('gcc')
   -- It should allow change of `commentstring` in `pre` hook
   eq(get_lines(), { '// aa', 'aa' })
-  eq(child.lua_get('_G.pre_n'), 1)
-  eq(child.lua_get('_G.post_n'), 1)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 
   -- It should work with dot-repeat
+  child.lua('_G.hook_args = {}')
+  set_lines({ '// aa', 'aa' })
+  set_cursor(1, 0)
   type_keys('.')
   eq(get_lines(), { '# // aa', 'aa' })
-  eq(child.lua_get('_G.pre_n'), 2)
-  eq(child.lua_get('_G.post_n'), 2)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'pre',  { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post', { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 end
 
 T['Commenting current line']['respects `vim.b.minicomment_config`'] = function()
   set_lines({ 'aa', 'aa' })
   set_cursor(1, 0)
   reload_with_hooks()
-  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
+  child.lua([[vim.b.minicomment_config = {
+    hooks = {
+      pre = function(...) table.insert(_G.hook_args, { 'buf_pre', vim.deepcopy({ ... }) }) end,
+    },
+  }]])
 
   type_keys('gcc')
-  eq(child.lua_get('_G.pre_n'), 10)
-  eq(child.lua_get('_G.post_n'), 1)
+  --stylua: ignore
+  eq(child.lua_get('_G.hook_args'), {
+    { 'buf_pre', { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'toggle' } } },
+    { 'post',    { { line_start = 1, line_end = 1, ref_position = { 1, 1 }, action = 'comment' } } },
+  })
 end
 
 T['Comment textobject'] = new_set({
@@ -961,43 +1011,48 @@ T['Comment textobject']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
 
 T['Comment textobject']['applies hooks'] = function()
   -- It should allow change of `commentstring` in `pre` hook
-  set_lines({ '// aa', 'aa' })
-  set_cursor(1, 0)
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
-  type_keys('d', 'gc')
-  eq(get_lines(), { 'aa' })
-  eq(child.lua_get('_G.pre_n'), 1)
-  eq(child.lua_get('_G.post_n'), 1)
+  local validate = function(lines_before, keys, lines_after, ref_hook_args)
+    child.lua('_G.hook_args = {}')
+    set_lines(lines_before)
+    set_cursor(1, 0)
+    type_keys(keys)
+    eq(get_lines(), lines_after)
+    eq(child.lua_get('_G.hook_args'), ref_hook_args)
+  end
+
+  local ref_args = {
+    { 'pre', { { action = 'textobject' } } },
+    { 'post', { { line_start = 1, line_end = 1, action = 'textobject' } } },
+  }
+  validate({ '// aa', 'bb' }, { 'd', 'gc' }, { 'bb' }, ref_args)
 
   -- It should work with dot-repeat
-  set_lines({ '# aa', 'aa' })
-  set_cursor(1, 0)
-  type_keys('.')
-  eq(get_lines(), { 'aa' })
-  eq(child.lua_get('_G.pre_n'), 2)
-  eq(child.lua_get('_G.post_n'), 2)
+  validate({ '# aa', 'bb' }, { '.' }, { 'bb' }, ref_args)
 
   -- Correctly not detecting absence of comment textobject should still be
   -- considered a successful usage of a textobject
-  set_lines({ 'aa', 'aa' })
-  set_cursor(1, 0)
-  type_keys('d', 'gc')
-  eq(get_lines(), { 'aa', 'aa' })
-  eq(child.lua_get('_G.pre_n'), 3)
-  eq(child.lua_get('_G.post_n'), 3)
+  ref_args = { { 'pre', { { action = 'textobject' } } }, { 'post', { { action = 'textobject' } } } }
+  validate({ 'aa', 'bb' }, { 'd', 'gc' }, { 'aa', 'bb' }, ref_args)
 end
 
 T['Comment textobject']['respects `vim.b.minicomment_config`'] = function()
+  reload_with_hooks()
+  child.lua([[vim.b.minicomment_config = {
+    hooks = {
+      pre = function(...) table.insert(_G.hook_args, { 'buf_pre', vim.deepcopy({ ... }) }) end,
+    },
+  }]])
+
   set_lines({ '// aa', 'aa' })
   set_cursor(1, 0)
-  reload_with_hooks()
-  child.lua('vim.b.minicomment_config = { hooks = { pre = function() _G.pre_n = _G.pre_n + 10 end } }')
-
   type_keys('d', 'gc')
-  eq(child.lua_get('_G.pre_n'), 10)
-  eq(child.lua_get('_G.post_n'), 1)
+  eq(
+    child.lua_get('_G.hook_args'),
+    { { 'buf_pre', { { action = 'textobject' } } }, { 'post', { { action = 'textobject' } } } }
+  )
 end
 
 return T
