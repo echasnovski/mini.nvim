@@ -175,6 +175,12 @@ local T = new_set({
       mock_win_functions()
       child.set_size(15, 80)
       load_module()
+
+      -- Mock `vim.notify()`
+      child.lua([[
+        _G.notify_log = {}
+        vim.notify = function(...) table.insert(_G.notify_log, { ... }) end
+      ]])
     end,
     post_case = function() vim.fn.delete(make_test_path('data'), 'rf') end,
     post_once = child.stop,
@@ -2508,6 +2514,14 @@ T['File manipulation']['create does not override existing entry'] = function()
   validate_file(file_path)
   validate_file_content(file_path, { 'File' })
   validate_file(temp_dir, 'dir', 'subfile')
+
+  -- Should show warning
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+  local ref_log = {
+    { '(mini.files) Can not create ' .. file_path .. '. Target path already exists.', warn_level },
+    { '(mini.files) Can not create ' .. temp_dir .. '/dir/. Target path already exists.', warn_level },
+  }
+  eq(child.lua_get('_G.notify_log'), ref_log)
 end
 
 T['File manipulation']['creates files in nested directories'] = function()
@@ -2695,6 +2709,14 @@ T['File manipulation']['rename does not override existing entry'] = function()
   mock_confirm(1)
   synchronize()
   child.expect_screenshot()
+
+  -- Should show warning
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+  local ref_log = {
+    { '(mini.files) Can not move or rename ' .. temp_dir .. '/dir. Target path already exists.', warn_level },
+    { '(mini.files) Can not move or rename ' .. temp_dir .. '/file. Target path already exists.', warn_level },
+  }
+  eq(child.lua_get('_G.notify_log'), ref_log)
 end
 
 T['File manipulation']['rename file renames opened buffers'] = function()
@@ -2858,6 +2880,14 @@ T['File manipulation']['move does not override existing entry'] = function()
   mock_confirm(1)
   synchronize()
   child.expect_screenshot()
+
+  -- Should show warning
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+  local ref_log = {
+    { '(mini.files) Can not move or rename ' .. temp_dir .. '/dir. Target path already exists.', warn_level },
+    { '(mini.files) Can not move or rename ' .. temp_dir .. '/file. Target path already exists.', warn_level },
+  }
+  eq(child.lua_get('_G.notify_log'), ref_log)
 end
 
 T['File manipulation']['handles move directory inside itself'] = function()
@@ -3131,6 +3161,14 @@ T['File manipulation']['copy does not override existing entry'] = function()
   mock_confirm(1)
   synchronize()
   child.expect_screenshot()
+
+  -- Should show warning
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+  local ref_log = {
+    { '(mini.files) Can not copy ' .. temp_dir .. '/dir. Target path already exists.', warn_level },
+    { '(mini.files) Can not copy ' .. temp_dir .. '/file. Target path already exists.', warn_level },
+  }
+  eq(child.lua_get('_G.notify_log'), ref_log)
 end
 
 T['File manipulation']['can copy directory inside itself'] = function()

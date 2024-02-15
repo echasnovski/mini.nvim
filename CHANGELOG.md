@@ -29,6 +29,7 @@ Introduction of a new module.
 ## mini.files
 
 - FEATURE: Update `go_in()` to have `close_on_file` option.
+- Show warning if action is set to override existing path.
 
 ## mini.hues
 

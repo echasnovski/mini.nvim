@@ -2461,7 +2461,7 @@ end
 
 H.fs_create = function(path)
   -- Don't override existing path
-  if H.fs_is_present_path(path) then return false end
+  if H.fs_is_present_path(path) then return H.warn_existing_path(path, 'create') end
 
   -- Create parent directory allowing nested names
   vim.fn.mkdir(H.fs_get_parent(path), 'p')
@@ -2477,7 +2477,7 @@ end
 
 H.fs_copy = function(from, to)
   -- Don't override existing path
-  if H.fs_is_present_path(to) then return false end
+  if H.fs_is_present_path(to) then return H.warn_existing_path(from, 'copy') end
 
   local from_type = H.fs_get_type(from)
   if from_type == nil then return false end
@@ -2518,7 +2518,7 @@ end
 
 H.fs_move = function(from, to)
   -- Don't override existing path
-  if H.fs_is_present_path(to) then return false end
+  if H.fs_is_present_path(to) then return H.warn_existing_path(from, 'move or rename') end
 
   -- Move while allowing to create directory
   vim.fn.mkdir(H.fs_get_parent(to), 'p')
@@ -2555,6 +2555,11 @@ H.rename_loaded_buffer = function(buf_id, from, to)
   vim.api.nvim_buf_call(buf_id, function() vim.cmd('silent! write! | edit') end)
 end
 
+H.warn_existing_path = function(path, action)
+  H.notify(string.format('Can not %s %s. Target path already exists.', action, path), 'WARN')
+  return false
+end
+
 -- Validators -----------------------------------------------------------------
 H.validate_opened_buffer = function(x)
   if x == nil or x == 0 then x = vim.api.nvim_get_current_buf() end
@@ -2572,6 +2577,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.files) %s', msg), 0) end
+
+H.notify = function(msg, level_name) vim.notify('(mini.files) ' .. msg, vim.log.levels[level_name]) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
