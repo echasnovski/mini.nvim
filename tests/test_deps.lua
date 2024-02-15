@@ -847,24 +847,54 @@ T['add()']['Install']['properly executes `*_install` hooks'] = function()
     _G.process_mock_data = { [2] = { duration = 10 }, [3] = { duration = 5 } }
 
     -- Add plugin with dependency and hooks
+    _G.args = {}
+    local make_hook = function(msg)
+      return function(...)
+        table.insert(_G.args, { msg, { ... } })
+        vim.notify(msg)
+      end
+    end
+
     local dep_spec = {
       source = 'user/dep_plugin',
       hooks = {
-        pre_install = function() vim.notify('Dependency pre_install') end,
-        post_install = function() vim.notify('Dependency post_install') end,
+        pre_install = make_hook('Dependency pre_install'),
+        post_install = make_hook('Dependency post_install'),
       },
     }
     local spec = {
       source = 'user/new_plugin',
       depends = { dep_spec },
       hooks = {
-        pre_install = function() vim.notify('Target pre_install') end,
-        post_install = function() vim.notify('Target post_install') end,
+        pre_install = make_hook('Target pre_install'),
+        post_install = make_hook('Target post_install'),
       },
     }
 
     MiniDeps.add(spec)
   ]])
+
+  -- Should be called with proper arguments
+  local cwd_new_plugin, cwd_dep_plugin = test_opt_dir .. '/new_plugin', test_opt_dir .. '/dep_plugin'
+  local ref_args = {
+    {
+      'Dependency pre_install',
+      { { path = cwd_dep_plugin, source = 'https://github.com/user/dep_plugin', name = 'dep_plugin' } },
+    },
+    {
+      'Target pre_install',
+      { { path = cwd_new_plugin, source = 'https://github.com/user/new_plugin', name = 'new_plugin' } },
+    },
+    {
+      'Dependency post_install',
+      { { path = cwd_dep_plugin, source = 'https://github.com/user/dep_plugin', name = 'dep_plugin' } },
+    },
+    {
+      'Target post_install',
+      { { path = cwd_new_plugin, source = 'https://github.com/user/new_plugin', name = 'new_plugin' } },
+    },
+  }
+  eq(child.lua_get('_G.args'), ref_args)
 
   -- Should produce notifications
   local ref_notify_log = {
@@ -1378,14 +1408,22 @@ end
 
 T['update()']['properly executes `*_checkout` hooks'] = function()
   child.lua([[
-    -- Add plugin with dependency and hooks
+    -- Add plugins with hooks
+    _G.args = {}
+    local make_hook = function(msg)
+      return function(...)
+        table.insert(_G.args, { msg, { ... } })
+        vim.notify(msg)
+      end
+    end
+
     for i = 1, 3 do
       local name = 'plugin_' .. i
       MiniDeps.add({
         source = 'user/' .. name,
         hooks = {
-          pre_checkout = function() vim.notify(name .. ' pre_checkout') end,
-          post_checkout = function() vim.notify(name .. ' post_checkout') end,
+          pre_checkout = make_hook(name .. ' pre_checkout'),
+          post_checkout = make_hook(name .. ' post_checkout'),
         },
       })
     end
@@ -1419,6 +1457,28 @@ T['update()']['properly executes `*_checkout` hooks'] = function()
     }
   ]])
   child.lua('MiniDeps.update(nil, { force = true })')
+
+  -- Should be called with proper arguments
+  local cwd_plugin_1, cwd_plugin_2 = test_opt_dir .. '/plugin_1', test_opt_dir .. '/plugin_2'
+  local ref_args = {
+    {
+      'plugin_1 pre_checkout',
+      { { path = cwd_plugin_1, source = 'https://github.com/user/plugin_1', name = 'plugin_1' } },
+    },
+    {
+      'plugin_2 pre_checkout',
+      { { path = cwd_plugin_2, source = 'https://github.com/user/plugin_2', name = 'plugin_2' } },
+    },
+    {
+      'plugin_1 post_checkout',
+      { { path = cwd_plugin_1, source = 'https://github.com/user/plugin_1', name = 'plugin_1' } },
+    },
+    {
+      'plugin_2 post_checkout',
+      { { path = cwd_plugin_2, source = 'https://github.com/user/plugin_2', name = 'plugin_2' } },
+    },
+  }
+  eq(child.lua_get('_G.args'), ref_args)
 
   -- Should produce notifications
   local ref_notify_log = {

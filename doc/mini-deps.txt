@@ -277,11 +277,16 @@ Primarily, specification is a table with the following fields:
   Default: `nil` for no dependencies.
 
 - <hooks> `(table|nil)` - table with callable hooks to call on certain events.
-  Each hook is executed without arguments. Possible hook names:
+  Possible hook names:
     - <pre_install>   - before creating plugin directory.
     - <post_install>  - after  creating plugin directory.
     - <pre_checkout>  - before making change in plugin directory.
     - <post_checkout> - after  making change in plugin directory.
+  Each hook is executed with the following table as an argument:
+    - <path> (`string`)   - absolute path to plugin's directory
+      (might not yet exist on disk).
+    - <source> (`string`) - resolved <source> from spec.
+    - <name> (`string`)   - resolved <name> from spec.
   Default: `nil` for no hooks.
 
 ------------------------------------------------------------------------------

@@ -274,11 +274,16 @@
 ---   Default: `nil` for no dependencies.
 ---
 --- - <hooks> `(table|nil)` - table with callable hooks to call on certain events.
----   Each hook is executed without arguments. Possible hook names:
+---   Possible hook names:
 ---     - <pre_install>   - before creating plugin directory.
 ---     - <post_install>  - after  creating plugin directory.
 ---     - <pre_checkout>  - before making change in plugin directory.
 ---     - <post_checkout> - after  making change in plugin directory.
+---   Each hook is executed with the following table as an argument:
+---     - <path> (`string`)   - absolute path to plugin's directory
+---       (might not yet exist on disk).
+---     - <source> (`string`) - resolved <source> from spec.
+---     - <name> (`string`)   - resolved <name> from spec.
 ---   Default: `nil` for no hooks.
 ---@tag MiniDeps-plugin-specification
 
@@ -1001,7 +1006,7 @@ H.plugs_exec_hooks = function(plugs, name)
     local has_error = p.job and #p.job.err > 0
     local should_execute = vim.is_callable(p.hooks[name]) and not has_error
     if should_execute then
-      local ok, err = pcall(p.hooks[name])
+      local ok, err = pcall(p.hooks[name], { path = p.path, source = p.source, name = p.name })
       if not ok then
         local msg = string.format('Error executing %s hook in `%s`:\n%s', name, p.name, err)
         H.notify(msg, 'ERROR')
