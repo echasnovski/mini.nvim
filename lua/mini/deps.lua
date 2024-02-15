@@ -475,6 +475,7 @@ MiniDeps.add = function(spec, opts)
 
   -- Install
   if #plugs_to_install > 0 then
+    H.ensure_git_exec()
     for _, p in ipairs(plugs_to_install) do
       p.job = H.cli_new_job({}, vim.fn.getcwd())
     end
@@ -535,6 +536,7 @@ MiniDeps.update = function(names, opts)
   if #plugs == 0 then return H.notify('Nothing to update') end
 
   -- Prepare repositories and specifications
+  H.ensure_git_exec()
   H.plugs_ensure_origin_source(plugs)
 
   -- Preprocess before downloading
@@ -598,6 +600,7 @@ end
 ---   All plugins in current session are processed.
 MiniDeps.snap_get = function()
   local plugs = H.plugs_from_names()
+  H.ensure_git_exec()
   H.plugs_infer_head(plugs)
   H.plugs_show_job_errors(plugs, 'computing snapshot')
 
@@ -631,6 +634,7 @@ MiniDeps.snap_set = function(snap)
   end
 
   -- Checkout
+  H.ensure_git_exec()
   H.plugs_checkout(plugs)
   H.plugs_show_job_errors(plugs, 'applying snapshot')
 end
@@ -760,6 +764,9 @@ H.cache = {
 
   -- Errors during execution of `now()` or `later()`
   exec_errors = {},
+
+  -- Git version
+  git_version = nil,
 }
 
 -- Buffer name counts
@@ -880,6 +887,9 @@ end
 
 --stylua: ignore
 H.git_args = {
+  version = function()
+    return { 'version' }
+  end,
   clone = function(source, path)
     return {
       'clone', '--quiet', '--filter=blob:none',
@@ -926,6 +936,15 @@ H.git_args = {
     }
   end,
 }
+
+H.ensure_git_exec = function()
+  if H.cache.git_version ~= nil then return end
+  local jobs = { H.cli_new_job(H.git_cmd('version'), vim.fn.getcwd()) }
+  H.cli_run(jobs)
+  if #jobs[1].err > 0 then H.error('Could not find executable `git` CLI tool') end
+  local major, minor = string.match(H.cli_stream_tostring(jobs[1].out), '(%d+)%.(%d+)')
+  H.cache.git_version = { major = tonumber(major), minor = tonumber(minor) }
+end
 
 -- Plugin specification -------------------------------------------------------
 H.expand_spec = function(target, spec)

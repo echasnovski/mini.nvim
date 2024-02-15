@@ -516,13 +516,14 @@ T['add()']['Install'] = new_set({
 T['add()']['Install']['works'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                      -- Clone
-      { out = 'sha0head' },    -- Get `HEAD`
-      { out = 'origin/main' }, -- Get default branch
-      { out = 'origin/main' }, -- Check if `main` is origin branch
-      { out = 'sha0head' },    -- Get commit of `origin/main`
-      {},                      -- Stash changes
-      {},                      -- Checkout changes
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone
+      { out = 'sha0head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      { out = 'origin/main' },       -- Check if `main` is origin branch
+      { out = 'sha0head' },          -- Get commit of `origin/main`
+      {},                            -- Stash changes
+      {},                            -- Checkout changes
     }
 
     -- Mock non-trivial cloning duration
@@ -533,10 +534,8 @@ T['add()']['Install']['works'] = function()
   -- Should result into a proper sequence of CLI runs
   --stylua: ignore
   local ref_git_spawn_log = {
-    {
-      args = clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
-      cwd = child.fn.getcwd(),
-    },
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+    clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
     {
       args = { 'rev-list', '-1', 'HEAD' },
       cwd = test_opt_dir .. '/new_plugin',
@@ -560,6 +559,7 @@ T['add()']['Install']['works'] = function()
       'Stream out for process 3 was closed.', 'Stream err for process 3 was closed.', 'Process 3 was closed.',
       'Stream out for process 4 was closed.', 'Stream err for process 4 was closed.', 'Process 4 was closed.',
       'Stream out for process 5 was closed.', 'Stream err for process 5 was closed.', 'Process 5 was closed.',
+      'Stream out for process 6 was closed.', 'Stream err for process 6 was closed.', 'Process 6 was closed.',
     }
   )
 
@@ -571,16 +571,22 @@ T['add()']['Install']['works'] = function()
   validate_notifications(ref_notify_log)
 end
 
+T['add()']['Install']['checks for executable Git'] = function()
+  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  expect.error(function() add('user/new_plugin') end, 'Could not find executable `git` CLI tool')
+end
+
 T['add()']['Install']['checks out non-default target'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                       -- Clone
-      { out = 'sha0head' },     -- Get `HEAD`
-      { out = 'origin/main' },  -- Get default branch
-      { out = 'origin/hello' }, -- Check if `hello` is origin branch
-      { out = 'new0hello' },    -- Get commit of `hello`
-      {},                       -- Stash changes
-      {},                       -- Checkout changes
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone
+      { out = 'sha0head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      { out = 'origin/hello' },      -- Check if `hello` is origin branch
+      { out = 'new0hello' },         -- Get commit of `hello`
+      {},                            -- Stash changes
+      {},                            -- Checkout changes
     }
 
     -- Mock non-trivial cloning duration
@@ -591,10 +597,8 @@ T['add()']['Install']['checks out non-default target'] = function()
   -- Should result into a proper sequence of CLI runs
   --stylua: ignore
   local ref_git_spawn_log = {
-    {
-      args = clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
-      cwd = child.fn.getcwd(),
-    },
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+    clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
     {
       args = { 'rev-list', '-1', 'HEAD' },
       cwd = test_opt_dir .. '/new_plugin',
@@ -620,13 +624,14 @@ end
 T['add()']['Install']['can checkout to a not branch'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                       -- Clone
-      { out = 'sha0head' },     -- Get `HEAD`
-      { out = 'origin/main' },  -- Get default branch
-      { out = '' },             -- Check if `stable_tag` is origin branch (it is not)
-      { out = 'new0hello' },    -- Get commit of `stable_tag`
-      {},                       -- Stash changes
-      {},                       -- Checkout changes
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone
+      { out = 'sha0head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      { out = '' },                  -- Check if `stable_tag` is origin branch (it is not)
+      { out = 'new0hello' },         -- Get commit of `stable_tag`
+      {},                            -- Stash changes
+      {},                            -- Checkout changes
     }
   ]])
   add({ source = 'user/new_plugin', checkout = 'stable_tag' })
@@ -634,10 +639,8 @@ T['add()']['Install']['can checkout to a not branch'] = function()
   -- Should result into a proper sequence of CLI runs
   --stylua: ignore
   local ref_git_spawn_log = {
-    {
-      args = clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
-      cwd = child.fn.getcwd(),
-    },
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+    clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
     {
       args = { 'rev-list', '-1', 'HEAD' },
       cwd = test_opt_dir .. '/new_plugin',
@@ -664,27 +667,28 @@ end
 T['add()']['Install']['installs dependencies in parallel'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Clone dep_plugin_2
-      {},                        -- Clone dep_plugin_1
-      {},                        -- Clone new_plugin
-      { out = 'sha2head' },      -- Get `HEAD` in dep_plugin_2
-      { out = 'sha1head' },      -- Get `HEAD` in dep_plugin_1
-      { out = 'sha0head' },      -- Get `HEAD` in new_plugin
-      { out = 'origin/trunk' },  -- Get default branch in dep_plugin_2
-      { out = 'origin/master' }, -- Get default branch in dep_plugin_1
-      { out = 'origin/main' },   -- Get default branch in new_plugin
-      { out = 'origin/trunk' },  -- Check if `trunk`  is origin branch in dep_plugin_2
-      { out = 'origin/master' }, -- Check if `master` is origin branch in dep_plugin_1
-      { out = 'origin/main' },   -- Check if `main`   is origin branch in new_plugin
-      { out = 'sha2head' },      -- Get commit of `trunk`  in dep_plugin_2
-      { out = 'new1head' },      -- Get commit of `master` in dep_plugin_1
-      { out = 'sha0head' },      -- Get commit of `main`   in new_plugin
-      {},                        -- Stash changes in dep_plugin_1
-      {},                        -- Checkout changes in dep_plugin_1
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin_2
+      {},                            -- Clone dep_plugin_1
+      {},                            -- Clone new_plugin
+      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in dep_plugin_1
+      { out = 'sha0head' },          -- Get `HEAD` in new_plugin
+      { out = 'origin/trunk' },      -- Get default branch in dep_plugin_2
+      { out = 'origin/master' },     -- Get default branch in dep_plugin_1
+      { out = 'origin/main' },       -- Get default branch in new_plugin
+      { out = 'origin/trunk' },      -- Check if `trunk`  is origin branch in dep_plugin_2
+      { out = 'origin/master' },     -- Check if `master` is origin branch in dep_plugin_1
+      { out = 'origin/main' },       -- Check if `main`   is origin branch in new_plugin
+      { out = 'sha2head' },          -- Get commit of `trunk`  in dep_plugin_2
+      { out = 'new1head' },          -- Get commit of `master` in dep_plugin_1
+      { out = 'sha0head' },          -- Get commit of `main`   in new_plugin
+      {},                            -- Stash changes in dep_plugin_1
+      {},                            -- Checkout changes in dep_plugin_1
     }
 
     -- Mock non-trivial cloning duration
-    _G.process_mock_data = { { duration = 50 }, { duration = 30 }, { duration = 40 } }
+    _G.process_mock_data = { [2] = { duration = 50 }, [3] = { duration = 30 }, [4] = { duration = 40 } }
   ]])
   local start_time = child.loop.hrtime()
   add({
@@ -700,10 +704,9 @@ T['add()']['Install']['installs dependencies in parallel'] = function()
 
   --stylua: ignore
   local ref_git_spawn_log = {
-    {
-      args = clone_args('https://github.com/user/dep_plugin_2', cwd_dep_plugin_2),
-      cwd = child.fn.getcwd(),
-    },
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+
+    clone_args('https://github.com/user/dep_plugin_2', cwd_dep_plugin_2),
     clone_args('https://github.com/user/dep_plugin_1', cwd_dep_plugin_1),
     clone_args('https://github.com/user/new_plugin', cwd_new_plugin),
 
@@ -743,68 +746,71 @@ T['add()']['Install']['installs dependencies in parallel'] = function()
   validate_notifications(ref_notify_log)
 end
 
-T['add()']['Install']['can handle both present and not present plugins'] = function()
-  local validate = function(spec, clone_name)
-    -- Make clean mock
-    mock_spawn()
+T['add()']['Install']['can handle both present and not present plugins'] = new_set({
+  parametrize = {
+    -- Present target, not present dependency
+    { { source = 'user/plugin_1', depends = { 'user/new_plugin' } } },
+    -- Present dependency, not present target
+    { { source = 'user/new_plugin', depends = { 'user/plugin_1' } } },
+  },
+}, {
+  test = function()
+    local validate = function(spec, clone_name)
+      -- Make clean mock
+      mock_spawn()
 
-    child.lua([[
-      _G.stdio_queue = {
-        {},                      -- Clone
-        { out = 'sha0head' },    -- Get `HEAD`
-        { out = 'origin/main' }, -- Get default branch
-        { out = 'origin/main' }, -- Check if `main` is origin branch
-        { out = 'sha0head' },    -- Get commit of `origin/main`
-        {},                      -- Stash changes
-        {},                      -- Checkout changes
+      child.lua([[
+        _G.stdio_queue = {
+          { out = 'git version 2.43.0'}, -- Check Git executable
+          {},                            -- Clone
+          { out = 'sha0head' },          -- Get `HEAD`
+          { out = 'origin/main' },       -- Get default branch
+          { out = 'origin/main' },       -- Check if `main` is origin branch
+          { out = 'sha0head' },          -- Get commit of `origin/main`
+          {},                            -- Stash changes
+          {},                            -- Checkout changes
+        }
+      ]])
+      add(spec)
+
+      -- Should result into a proper sequence of CLI runs
+      --stylua: ignore
+      local ref_git_spawn_log = {
+        { args = { 'version' }, cwd = child.fn.getcwd() },
+        clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
+        {
+          args = { 'rev-list', '-1', 'HEAD' },
+          cwd = test_opt_dir .. '/new_plugin',
+        },
+        { 'rev-parse', '--abbrev-ref', 'origin/HEAD' },
+        { 'branch', '--list', '--all', '--format=%(refname:short)', 'origin/main' },
+        { 'rev-list', '-1', 'origin/main' },
       }
-    ]])
-    add(spec)
-
-    -- Should result into a proper sequence of CLI runs
-    --stylua: ignore
-    local ref_git_spawn_log = {
-      {
-        args = clone_args('https://github.com/user/' .. clone_name, test_opt_dir .. '/' .. clone_name),
-        cwd = child.fn.getcwd(),
-      },
-      {
-        args = { 'rev-list', '-1', 'HEAD' },
-        cwd = test_opt_dir .. '/' .. clone_name,
-      },
-      { 'rev-parse', '--abbrev-ref', 'origin/HEAD' },
-      { 'branch', '--list', '--all', '--format=%(refname:short)', 'origin/main' },
-      { 'rev-list', '-1', 'origin/main' },
-    }
-    validate_git_spawn_log(ref_git_spawn_log)
-  end
-
-  -- Present target, not present dependency
-  validate({ source = 'user/plugin_1', depends = { 'user/new_plugin' } }, 'new_plugin')
-
-  -- Present dependency, not present target
-  validate({ source = 'user/new_plugin', depends = { 'user/plugin_1' } }, 'new_plugin')
-end
+      validate_git_spawn_log(ref_git_spawn_log)
+    end
+  end,
+})
 
 T['add()']['Install']['properly executes `*_install` hooks'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Clone dep_plugin
-      {},                        -- Clone new_plugin
-      { out = 'sha1head' },      -- Get `HEAD` in dep_plugin
-      { out = 'sha0head' },      -- Get `HEAD` in new_plugin
-      { out = 'origin/master' }, -- Get default branch in dep_plugin
-      { out = 'origin/main' },   -- Get default branch in new_plugin
-      { out = 'origin/master' }, -- Check if `master` is origin branch in dep_plugin
-      { out = 'origin/main' },   -- Check if `main`   is origin branch in new_plugin
-      { out = 'new1head' },      -- Get commit of `master` in dep_plugin
-      { out = 'sha0head' },      -- Get commit of `main`   in new_plugin
-      {},                        -- Stash changes in dep_plugin
-      {},                        -- Checkout changes in dep_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin
+      {},                            -- Clone new_plugin
+      { out = 'sha1head' },          -- Get `HEAD` in dep_plugin
+      { out = 'sha0head' },          -- Get `HEAD` in new_plugin
+      { out = 'origin/master' },     -- Get default branch in dep_plugin
+      { out = 'origin/main' },       -- Get default branch in new_plugin
+      { out = 'origin/master' },     -- Check if `master` is origin branch in dep_plugin
+      { out = 'origin/main' },       -- Check if `main`   is origin branch in new_plugin
+      { out = 'new1head' },          -- Get commit of `master` in dep_plugin
+      { out = 'sha0head' },          -- Get commit of `main`   in new_plugin
+      {},                            -- Stash changes in dep_plugin
+      {},                            -- Checkout changes in dep_plugin
     }
 
     -- Mock non-trivial cloning duration to simulate out of order finish
-    _G.process_mock_data = { { duration = 10 }, { duration = 5 } }
+    _G.process_mock_data = { [2] = { duration = 10 }, [3] = { duration = 5 } }
 
     -- Add plugin with dependency and hooks
     local dep_spec = {
@@ -844,6 +850,7 @@ T['add()']['Install']['properly executes `*_install` hooks'] = function()
 end
 
 T['add()']['Install']['handles errors in hooks'] = function()
+  child.lua([[_G.stdio_queue = { { out = 'git version 2.43.0'} } -- Check Git executable]])
   child.lua([[
     MiniDeps.add({
       source = 'user/new_plugin',
@@ -869,30 +876,31 @@ T['add()']['Install']['generates help tags'] = function()
 
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Clone dep_plugin_2
-      {},                        -- Clone dep_plugin_1
-      {},                        -- Clone new_plugin
-      { out = 'sha2head' },      -- Get `HEAD` in dep_plugin_2
-      { out = 'sha1head' },      -- Get `HEAD` in dep_plugin_1
-      { out = 'sha0head' },      -- Get `HEAD` in new_plugin
-      { out = 'origin/trunk' },  -- Get default branch in dep_plugin_2
-      { out = 'origin/master' }, -- Get default branch in dep_plugin_1
-      { out = 'origin/main' },   -- Get default branch in new_plugin
-      { out = 'origin/trunk' },  -- Check if `trunk`  is origin branch in dep_plugin_2
-      { out = 'origin/master' }, -- Check if `master` is origin branch in dep_plugin_1
-      { out = 'origin/main' },   -- Check if `main`   is origin branch in new_plugin
-      { out = 'new2head' },      -- Get commit of `trunk`  in dep_plugin_2
-      { out = 'new1head' },      -- Get commit of `master` in dep_plugin_1
-      { out = 'sha0head' },      -- Get commit of `main`   in new_plugin
-      {},                        -- Stash changes in dep_plugin_1
-      {},                        -- Checkout changes in dep_plugin_1
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin_2
+      {},                            -- Clone dep_plugin_1
+      {},                            -- Clone new_plugin
+      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in dep_plugin_1
+      { out = 'sha0head' },          -- Get `HEAD` in new_plugin
+      { out = 'origin/trunk' },      -- Get default branch in dep_plugin_2
+      { out = 'origin/master' },     -- Get default branch in dep_plugin_1
+      { out = 'origin/main' },       -- Get default branch in new_plugin
+      { out = 'origin/trunk' },      -- Check if `trunk`  is origin branch in dep_plugin_2
+      { out = 'origin/master' },     -- Check if `master` is origin branch in dep_plugin_1
+      { out = 'origin/main' },       -- Check if `main`   is origin branch in new_plugin
+      { out = 'new2head' },          -- Get commit of `trunk`  in dep_plugin_2
+      { out = 'new1head' },          -- Get commit of `master` in dep_plugin_1
+      { out = 'sha0head' },          -- Get commit of `main`   in new_plugin
+      {},                            -- Stash changes in dep_plugin_1
+      {},                            -- Checkout changes in dep_plugin_1
     }
 
     -- Mock action cloning side-effects which creates '/doc' directories
     local opt_dir = _G.temp_package_path .. '/pack/deps/opt'
     _G.process_mock_data = {
       -- 'dep_plugin_2' has '/doc' with already present conflicting '/tag'
-      {
+      [2] = {
         action = function()
           vim.fn.mkdir(opt_dir .. '/dep_plugin_2/doc', 'p')
           vim.fn.writefile({ 'old_dep_2_tag	dep_2.txt	/*old_dep_2_tag*' }, opt_dir .. '/dep_plugin_2/doc/dep_2.txt')
@@ -901,7 +909,7 @@ T['add()']['Install']['generates help tags'] = function()
       },
 
       -- 'dep_plugin_1' has '/doc' with help files and has excplicit checkout
-      {
+      [3] = {
         action = function()
           vim.fn.mkdir(opt_dir .. '/dep_plugin_1/doc', 'p')
           vim.fn.writefile({ '*depstest_dep_1_tag*', 'Help for dep_1.' }, opt_dir .. '/dep_plugin_1/doc/dep_1.txt')
@@ -909,7 +917,7 @@ T['add()']['Install']['generates help tags'] = function()
       },
 
       -- 'new_plugin' has '/doc' with help files and has no excplicit checkout
-      {
+      [4] = {
         action = function()
           vim.fn.mkdir(opt_dir .. '/new_plugin/doc', 'p')
           vim.fn.writefile({ '*depstest_new_tag*', 'Help for new.' }, opt_dir .. '/new_plugin/doc/new.txt')
@@ -945,13 +953,14 @@ end
 T['add()']['Install']['handles process errors'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                          -- Clone dep_plugin
-      { err = 'Could not clone' }, -- Clone new_plugin
-      { out = 'sha2head' },        -- Get `HEAD` in dep_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin
+      { err = 'Could not clone' },   -- Clone new_plugin
+      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin
     }
 
     -- Mock non-zero exit code in getting dep_plugin's head
-    _G.process_mock_data = { [3] = { exit_code = 128 } }
+    _G.process_mock_data = { [4] = { exit_code = 128 } }
   ]])
 
   add({ source = 'user/new_plugin', depends = { 'user/dep_plugin' } })
@@ -960,10 +969,8 @@ T['add()']['Install']['handles process errors'] = function()
   -- that particular plugin should not be done
   --stylua: ignore
   local ref_git_spawn_log = {
-    {
-      args = clone_args('https://github.com/user/dep_plugin', test_opt_dir .. '/dep_plugin'),
-      cwd = child.fn.getcwd(),
-    },
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+    clone_args('https://github.com/user/dep_plugin', test_opt_dir .. '/dep_plugin'),
     clone_args('https://github.com/user/new_plugin', test_opt_dir .. '/new_plugin'),
     {
       args = { 'rev-list', '-1', 'HEAD' },
@@ -986,6 +993,7 @@ T['add()']['Install']['handles process errors'] = function()
 end
 
 T['add()']['Install']['handles no `source` for absent plugin'] = function()
+  child.lua([[_G.stdio_queue = { { out = 'git version 2.43.0'} } -- Check Git executable]])
   add({ name = 'new_plugin' })
   local ref_notify_log = {
     { '(mini.deps) Installing `new_plugin`', 'INFO' },
@@ -1000,20 +1008,21 @@ end
 T['add()']['Install']['respects `config.job.n_threads`'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Clone dep_plugin
-      {},                        -- Clone new_plugin
-      { out = 'sha2head' },      -- Get `HEAD` in dep_plugin
-      { out = 'sha0head' },      -- Get `HEAD` in new_plugin
-      { out = 'origin/trunk' },  -- Get default branch in dep_plugin
-      { out = 'origin/main' },   -- Get default branch in new_plugin
-      { out = 'origin/trunk' },  -- Check if `trunk`  is origin branch in dep_plugin
-      { out = 'origin/main' },   -- Check if `main`   is origin branch in new_plugin
-      { out = 'sha2head' },      -- Get commit of `trunk`  in dep_plugin
-      { out = 'sha0head' },      -- Get commit of `main`   in new_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin
+      {},                            -- Clone new_plugin
+      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin
+      { out = 'sha0head' },          -- Get `HEAD` in new_plugin
+      { out = 'origin/trunk' },      -- Get default branch in dep_plugin
+      { out = 'origin/main' },       -- Get default branch in new_plugin
+      { out = 'origin/trunk' },      -- Check if `trunk`  is origin branch in dep_plugin
+      { out = 'origin/main' },       -- Check if `main`   is origin branch in new_plugin
+      { out = 'sha2head' },          -- Get commit of `trunk`  in dep_plugin
+      { out = 'sha0head' },          -- Get commit of `main`   in new_plugin
     }
 
     -- Mock non-trivial cloning duration
-    _G.process_mock_data = { { duration = 30 }, { duration = 30 } }
+    _G.process_mock_data = { [2] = { duration = 30 }, [3] = { duration = 30 } }
   ]])
 
   child.lua('MiniDeps.config.job.n_threads = 1')
@@ -1027,13 +1036,14 @@ end
 T['add()']['Install']['respects `config.job.timeout`'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                   -- Clone dep_plugin
-      {},                   -- Clone new_plugin
-      { out = 'sha2head' }, -- Get `HEAD` in dep_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone dep_plugin
+      {},                            -- Clone new_plugin
+      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin
     }
 
     -- Mock long execution of some jobs
-    _G.process_mock_data = { { duration = 20 }, { duration = 0 }, { duration = 20 } }
+    _G.process_mock_data = { [2] = { duration = 20 }, [3] = { duration = 0 }, [4] = { duration = 20 } }
   ]])
 
   child.lua('MiniDeps.config.job.timeout = 10')
@@ -1051,13 +1061,14 @@ end
 T['add()']['Install']['respects `config.silent`'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                       -- Clone
-      { out = 'sha0head' },     -- Get `HEAD`
-      { out = 'origin/main' },  -- Get default branch
-      { out = 'origin/hello' }, -- Check if `hello` is origin branch
-      { out = 'new0hello' },    -- Get commit of `hello`
-      {},                       -- Stash changes
-      {},                       -- Checkout changes
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone
+      { out = 'sha0head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      { out = 'origin/hello' },      -- Check if `hello` is origin branch
+      { out = 'new0hello' },         -- Get commit of `hello`
+      {},                            -- Stash changes
+      {},                            -- Checkout changes
     }
   ]])
   child.lua('MiniDeps.config.silent = true')
@@ -1068,6 +1079,7 @@ T['add()']['Install']['respects `config.silent`'] = function()
 end
 
 T['add()']['Install']['does not affect newly added session data'] = function()
+  child.lua([[_G.stdio_queue = { { out = 'git version 2.43.0'} } -- Check Git executable]])
   add('user/new_plugin')
   eq(get_session(), {
     {
@@ -1112,24 +1124,25 @@ T['update()']['works'] = function()
 
   child.lua([[
     _G.stdio_queue = {
+      { out = 'git version 2.43.0'}, -- Check Git executable
       { out = 'https://github.com/user/plugin_1' }, -- Get source from `origin` in plugin_1
       {},                                           -- Set `origin` to source in plugin_2
       { err = 'Error computing origin' },           -- Get source from `origin` in plugin_3
-      { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-      { out = 'sha2head' },      -- Get `HEAD` in plugin_2
-      { out = 'origin/main' },   -- Get default branch in plugin_1
-      { out = 'origin/master' }, -- Get default branch in plugin_2
-      {},                        -- Fetch in plugin_1
-      {},                        -- Fetch in plugin_2
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch in plugin_1
-      { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_2
-      { out = 'sha1head' },      -- Get commit of `checkout` in plugin_1
-      { out = 'new2head' },      -- Get commit of `checkout` in plugin_2
-      { out = _G.plugin_2_log }, -- Get log of `checkout` changes in plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in plugin_2
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      { out = 'origin/master' },     -- Get default branch in plugin_2
+      {},                            -- Fetch in plugin_1
+      {},                            -- Fetch in plugin_2
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_2
+      { out = 'sha1head' },          -- Get commit of `checkout` in plugin_1
+      { out = 'new2head' },          -- Get commit of `checkout` in plugin_2
+      { out = _G.plugin_2_log },     -- Get log of `checkout` changes in plugin_2
     }
 
     -- Mock non-trivial fetch duration
-    _G.process_mock_data = { [8] = { duration = 50 }, [9] = { duration = 40 } }
+    _G.process_mock_data = { [9] = { duration = 50 }, [10] = { duration = 40 } }
   ]])
 
   -- Update should be done in parallel
@@ -1143,6 +1156,8 @@ T['update()']['works'] = function()
     test_opt_dir .. '/plugin_1', test_opt_dir .. '/plugin_2', test_opt_dir .. '/plugin_3'
   --stylua: ignore
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+
     { args = { 'remote', 'get-url', 'origin' },                                cwd = cwd_plugin_1 },
     { args = { 'remote', 'set-url', 'origin', 'https://new_source/plugin_2' }, cwd = cwd_plugin_2 },
     { args = { 'remote', 'get-url', 'origin' },                                cwd = cwd_plugin_3 },
@@ -1182,6 +1197,12 @@ T['update()']['works'] = function()
   validate_confirm_buf('mini-deps://confirm-update')
 end
 
+T['update()']['checks for executable Git'] = function()
+  add('plugin_1')
+  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  expect.error(function() update() end, 'Could not find executable `git` CLI tool')
+end
+
 T['update()']['Confirm buffer'] = new_set({
   hooks = {
     pre_case = function()
@@ -1192,25 +1213,26 @@ T['update()']['Confirm buffer'] = new_set({
         _G.plugin_1_log = '> new1head | 2024-01-02 01:01:01 +0200 | Neo McVim\n  Added commit in plugin_1.'
         _G.plugin_2_log = '> new2head | 2024-01-02 02:02:02 +0200 | Neo McVim\n  Added commit in plugin_2.'
         _G.stdio_queue = {
+          { out = 'git version 2.43.0'}, -- Check Git executable
           { out = 'https://github.com/user/plugin_1' }, -- Get source from `origin` in plugin_1
           { out = 'https://github.com/user/plugin_2' }, -- Get source from `origin` in plugin_2
-          { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-          { out = 'sha2head' },      -- Get `HEAD` in plugin_2
-          { out = 'origin/main' },   -- Get default branch in plugin_1
-          { out = 'origin/master' }, -- Get default branch in plugin_2
-          {},                        -- Fetch in plugin_1
-          {},                        -- Fetch in plugin_2
-          { out = 'origin/main' },   -- Check if `checkout` is origin branch in plugin_1
-          { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_2
-          { out = 'new1head' },      -- Get commit of `checkout` in plugin_1
-          { out = 'new2head' },      -- Get commit of `checkout` in plugin_2
-          { out = _G.plugin_1_log }, -- Get log of `checkout` changes in plugin_1
-          { out = _G.plugin_2_log }, -- Get log of `checkout` changes in plugin_2
+          { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+          { out = 'sha2head' },          -- Get `HEAD` in plugin_2
+          { out = 'origin/main' },       -- Get default branch in plugin_1
+          { out = 'origin/master' },     -- Get default branch in plugin_2
+          {},                            -- Fetch in plugin_1
+          {},                            -- Fetch in plugin_2
+          { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+          { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_2
+          { out = 'new1head' },          -- Get commit of `checkout` in plugin_1
+          { out = 'new2head' },          -- Get commit of `checkout` in plugin_2
+          { out = _G.plugin_1_log },     -- Get log of `checkout` changes in plugin_1
+          { out = _G.plugin_2_log },     -- Get log of `checkout` changes in plugin_2
         }
       ]])
 
       update()
-      eq(#get_spawn_log(), 14)
+      eq(#get_spawn_log(), 15)
       eq(#get_notify_log(), 3)
       validate_confirm_buf('mini-deps://confirm-update')
 
@@ -1255,18 +1277,19 @@ T['update()']['can work with non-default branches'] = function()
     _G.checkout_log = '> new1head | 2024-01-02 01:01:01 +0200 | Neo McVim\n  Added commit in checkout.'
     _G.monitor_log = '> new2head | 2024-01-02 02:02:02 +0200 | Neo McVim\n  Added commit in monitor.'
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
       -- NOTE: Don't get default branch as both every target is explicit
-      { out = 'origin/world' },  -- Check if `monitor` is origin branch
-      { out = 'sha2head' },      -- Get commit of `monitor`
-      {},                        -- Fetch
-      { out = 'origin/hello' },  -- Check if `checkout` is origin branch (it is)
-      { out = 'new1head' },      -- Get commit of `checkout`
-      { out = 'origin/world' },  -- Check if `monitor` is origin branch (it is)
-      { out = 'new2head' },      -- Get commit of `monitor`
-      { out = _G.checkout_log }, -- Get log of `checkout` changes
-      { out = _G.monitor_log },  -- Get log of `monitor` changes
+      { out = 'origin/world' },      -- Check if `monitor` is origin branch
+      { out = 'sha2head' },          -- Get commit of `monitor`
+      {},                            -- Fetch
+      { out = 'origin/hello' },      -- Check if `checkout` is origin branch (it is)
+      { out = 'new1head' },          -- Get commit of `checkout`
+      { out = 'origin/world' },      -- Check if `monitor` is origin branch (it is)
+      { out = 'new2head' },          -- Get commit of `monitor`
+      { out = _G.checkout_log },     -- Get log of `checkout` changes
+      { out = _G.monitor_log },      -- Get log of `monitor` changes
     }
   ]])
   update()
@@ -1274,6 +1297,7 @@ T['update()']['can work with non-default branches'] = function()
   -- Should result into a proper sequence of CLI runs
   --stylua: ignore
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
     { args = { 'remote', 'set-url', 'origin', 'https://github.com/user/plugin_1' }, cwd = test_opt_dir .. '/plugin_1' },
     { 'rev-list', '-1', 'HEAD' },
     { 'branch', '--list', '--all', '--format=%(refname:short)', 'origin/world' },
@@ -1299,16 +1323,17 @@ T['update()']['shows empty monitor log'] = function()
   add({ source = 'user/plugin_1', checkout = 'hello', monitor = 'world' })
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
       -- NOTE: Don't get default branch as both every target is explicit
-      { out = 'origin/world' },  -- Check if `monitor` is origin branch
-      { out = 'sha2head' },      -- Get commit of `monitor`
-      {},                        -- Fetch
-      { out = 'origin/hello' },  -- Check if `checkout` is origin branch (it is)
-      { out = 'sha1head' },      -- Get commit of `checkout`
-      { out = 'origin/world' },  -- Check if `monitor` is origin branch (it is)
-      { out = 'sha2head' },      -- Get commit of `monitor`
+      { out = 'origin/world' },      -- Check if `monitor` is origin branch
+      { out = 'sha2head' },          -- Get commit of `monitor`
+      {},                            -- Fetch
+      { out = 'origin/hello' },      -- Check if `checkout` is origin branch (it is)
+      { out = 'sha1head' },          -- Get commit of `checkout`
+      { out = 'origin/world' },      -- Check if `monitor` is origin branch (it is)
+      { out = 'sha2head' },          -- Get commit of `monitor`
     }
   ]])
   update()
@@ -1332,30 +1357,31 @@ T['update()']['properly executes `*_checkout` hooks'] = function()
     end
 
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source in plugin_1
-      {},                        -- Set `origin` to source in plugin_2
-      {},                        -- Set `origin` to source in plugin_3
-      { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-      { out = 'sha2head' },      -- Get `HEAD` in plugin_2
-      { out = 'sha3head' },      -- Get `HEAD` in plugin_3
-      { out = 'origin/main' },   -- Get default branch in plugin_1
-      { out = 'origin/master' }, -- Get default branch in plugin_2
-      { out = 'origin/master' }, -- Get default branch in plugin_3
-      {},                        -- Fetch in plugin_1
-      {},                        -- Fetch in plugin_2
-      {},                        -- Fetch in plugin_3
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch in plugin_1
-      { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_2
-      { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_3
-      { out = 'new1head' },      -- Get commit of `checkout` in plugin_1
-      { out = 'new2head' },      -- Get commit of `checkout` in plugin_2
-      { out = 'sha3head' },      -- Get commit of `checkout` in plugin_3
-      { out = 'Log 1' },         -- Get log of `checkout` changes in plugin_1
-      { out = 'Log 2' },         -- Get log of `checkout` changes in plugin_2
-      {},                        -- Stash in plugin_1
-      {},                        -- Stash in plugin_2
-      {},                        -- Checkout in plugin_1
-      {},                        -- Checkout in plugin_2
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      {},                            -- Set `origin` to source in plugin_2
+      {},                            -- Set `origin` to source in plugin_3
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in plugin_2
+      { out = 'sha3head' },          -- Get `HEAD` in plugin_3
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      { out = 'origin/master' },     -- Get default branch in plugin_2
+      { out = 'origin/master' },     -- Get default branch in plugin_3
+      {},                            -- Fetch in plugin_1
+      {},                            -- Fetch in plugin_2
+      {},                            -- Fetch in plugin_3
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_2
+      { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_3
+      { out = 'new1head' },          -- Get commit of `checkout` in plugin_1
+      { out = 'new2head' },          -- Get commit of `checkout` in plugin_2
+      { out = 'sha3head' },          -- Get commit of `checkout` in plugin_3
+      { out = 'Log 1' },             -- Get log of `checkout` changes in plugin_1
+      { out = 'Log 2' },             -- Get log of `checkout` changes in plugin_2
+      {},                            -- Stash in plugin_1
+      {},                            -- Stash in plugin_2
+      {},                            -- Checkout in plugin_1
+      {},                            -- Checkout in plugin_2
     }
   ]])
   child.lua('MiniDeps.update(nil, { force = true })')
@@ -1384,15 +1410,16 @@ T['update()']['handles errors in hooks'] = function()
       hooks = { pre_checkout = function() error('Error in `pre_checkout`') end },
     })
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
-      { out = 'origin/main' },   -- Get default branch
-      {},                        -- Fetch
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch
-      { out = 'new1head' },      -- Get commit of `checkout`
-      { out = 'Log 1' },         -- Get log of `checkout` changes
-      {},                        -- Stash
-      {},                        -- Checkout
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      {},                            -- Fetch
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch
+      { out = 'new1head' },          -- Get commit of `checkout`
+      { out = 'Log 1' },             -- Get log of `checkout` changes
+      {},                            -- Stash
+      {},                            -- Checkout
     }
   ]])
   child.lua('MiniDeps.update(nil, { force = true, offline = true })')
@@ -1406,21 +1433,22 @@ end
 T['update()']['generates help tags'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source in plugin_1
-      {},                        -- Set `origin` to source in plugin_2
-      { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-      { out = 'sha2head' },      -- Get `HEAD` in plugin_2
-      { out = 'origin/main' },   -- Get default branch in plugin_1
-      { out = 'origin/master' }, -- Get default branch in plugin_2
-      {},                        -- Fetch in plugin_1
-      {},                        -- Fetch in plugin_2
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch in plugin_1
-      { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_2
-      { out = 'new1head' },      -- Get commit of `checkout` in plugin_1
-      { out = 'sha2head' },      -- Get commit of `checkout` in plugin_2
-      { out = 'Log 1' },         -- Get log of `checkout` changes in plugin_1
-      {},                        -- Stash in plugin_1
-      {},                        -- Checkout in plugin_1
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      {},                            -- Set `origin` to source in plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in plugin_2
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      { out = 'origin/master' },     -- Get default branch in plugin_2
+      {},                            -- Fetch in plugin_1
+      {},                            -- Fetch in plugin_2
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_2
+      { out = 'new1head' },          -- Get commit of `checkout` in plugin_1
+      { out = 'sha2head' },          -- Get commit of `checkout` in plugin_2
+      { out = 'Log 1' },             -- Get log of `checkout` changes in plugin_1
+      {},                            -- Stash in plugin_1
+      {},                            -- Checkout in plugin_1
     }
   ]])
   add('user/plugin_1')
@@ -1473,21 +1501,23 @@ T['update()']['respects `opts.force`'] = function()
   child.lua([[
     _G.checkout_log = '> new1head | 2024-01-02 01:01:01 +0200 | Neo McVim\n  Added commit in checkout.'
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
-      { out = 'origin/main' },   -- Get default branch
-      {},                        -- Fetch
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch (it is)
-      { out = 'new1head' },      -- Get commit of `checkout`
-      { out = _G.checkout_log }, -- Get log of `checkout` changes
-      {},                        -- Stash
-      {},                        -- Checkout
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      {},                            -- Fetch
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch (it is)
+      { out = 'new1head' },          -- Get commit of `checkout`
+      { out = _G.checkout_log },     -- Get log of `checkout` changes
+      {},                            -- Stash
+      {},                            -- Checkout
     }
   ]])
   child.lua('MiniDeps.update(nil, { force = true })')
 
   -- Should result into a proper sequence of CLI runs
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
     {
       args = { 'remote', 'set-url', 'origin', 'https://github.com/user/plugin_1' },
       cwd = test_opt_dir .. '/plugin_1',
@@ -1541,19 +1571,21 @@ T['update()']['respects `opts.offline`'] = function()
 
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
-      { out = 'origin/main' },   -- Get default branch
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
       -- No fetch with `opts.offline`
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch (it is)
-      { out = 'new1head' },      -- Get commit of `checkout`
-      { out = 'Log 1' },         -- Get log of `checkout` changes
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch (it is)
+      { out = 'new1head' },          -- Get commit of `checkout`
+      { out = 'Log 1' },             -- Get log of `checkout` changes
     }
   ]])
   child.lua('MiniDeps.update(nil, { offline = true })')
 
   -- Should result into a proper sequence of CLI runs
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
     {
       args = { 'remote', 'set-url', 'origin', 'https://github.com/user/plugin_1' },
       cwd = test_opt_dir .. '/plugin_1',
@@ -1574,22 +1606,23 @@ end
 T['update()']['respects `config.job.n_threads`'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source in plugin_1
-      {},                        -- Set `origin` to source in plugin_2
-      { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-      { out = 'sha2head' },      -- Get `HEAD` in plugin_2
-      { out = 'origin/main' },   -- Get default branch in plugin_1
-      { out = 'origin/master' }, -- Get default branch in plugin_2
-      {},                        -- Fetch in plugin_1
-      {},                        -- Fetch in plugin_2
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch in plugin_1
-      { out = 'origin/master' }, -- Check if `checkout` is origin branch in plugin_2
-      { out = 'sha1head' },      -- Get commit of `checkout` in plugin_1
-      { out = 'sha2head' },      -- Get commit of `checkout` in plugin_2
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      {},                            -- Set `origin` to source in plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in plugin_2
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      { out = 'origin/master' },     -- Get default branch in plugin_2
+      {},                            -- Fetch in plugin_1
+      {},                            -- Fetch in plugin_2
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'origin/master' },     -- Check if `checkout` is origin branch in plugin_2
+      { out = 'sha1head' },          -- Get commit of `checkout` in plugin_1
+      { out = 'sha2head' },          -- Get commit of `checkout` in plugin_2
     }
 
     -- Mock non-trivial fetch duration
-    _G.process_mock_data = { [7] = { duration = 30 }, [8] = { duration = 30 } }
+    _G.process_mock_data = { [8] = { duration = 30 }, [9] = { duration = 30 } }
   ]])
   add('user/plugin_1')
   add('user/plugin_2')
@@ -1604,15 +1637,16 @@ end
 T['update()']['respects `config.job.timeout`'] = function()
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source in plugin_1
-      {},                        -- Set `origin` to source in plugin_2
-      { out = 'sha1head' },      -- Get `HEAD` in plugin_1
-      { out = 'origin/main' },   -- Get default branch in plugin_1
-      {},                        -- Fetch in plugin_1
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      {},                            -- Set `origin` to source in plugin_2
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      {},                            -- Fetch in plugin_1
     }
 
     -- Mock non-trivial durations
-    _G.process_mock_data = { [2] = { duration = 20 }, [5] = { duration = 20 } }
+    _G.process_mock_data = { [3] = { duration = 20 }, [6] = { duration = 20 } }
   ]])
   add('user/plugin_1')
   add('user/plugin_2')
@@ -1632,15 +1666,16 @@ T['update()']['respects `config.silent`'] = function()
 
   child.lua([[
     _G.stdio_queue = {
-      {},                        -- Set `origin` to source
-      { out = 'sha1head' },      -- Get `HEAD`
-      { out = 'origin/main' },   -- Get default branch
-      {},                        -- Fetch
-      { out = 'origin/main' },   -- Check if `checkout` is origin branch (it is)
-      { out = 'new1head' },      -- Get commit of `checkout`
-      { out = 'Log 1' },         -- Get log of `checkout` changes
-      {},                        -- Stash
-      {},                        -- Checkout
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source
+      { out = 'sha1head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      {},                            -- Fetch
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch (it is)
+      { out = 'new1head' },          -- Get commit of `checkout`
+      { out = 'Log 1' },             -- Get log of `checkout` changes
+      {},                            -- Stash
+      {},                            -- Checkout
     }
   ]])
 
@@ -1657,13 +1692,14 @@ T['update()']['handles process errors'] = function()
 
   child.lua([[
     _G.stdio_queue = {
-      {},                      -- Set `origin` to source in plugin_1
-      { err = 'Bad `origin`'}, -- Set `origin` to source in plugin_2
-      { out = 'sha2head' },    -- Get `HEAD` in plugin_1
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      { err = 'Bad `origin`'},       -- Set `origin` to source in plugin_2
+      { out = 'sha2head' },          -- Get `HEAD` in plugin_1
     }
 
     -- Mock non-zero exit code in getting plugin_1's head
-    _G.process_mock_data = { [3] = { exit_code = 128 } }
+    _G.process_mock_data = { [4] = { exit_code = 128 } }
   ]])
 
   update()
@@ -1671,6 +1707,7 @@ T['update()']['handles process errors'] = function()
   -- If any error (from `stderr` or exit code) is encountered, all CLI jobs for
   -- that particular plugin should not be done
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
     { args = { 'remote', 'set-url', 'origin', 'https://github.com/user/plugin_1' }, cwd = test_opt_dir .. '/plugin_1' },
     { args = { 'remote', 'set-url', 'origin', 'https://github.com/user/plugin_2' }, cwd = test_opt_dir .. '/plugin_2' },
     { args = { 'rev-list', '-1', 'HEAD' }, cwd = test_opt_dir .. '/plugin_1' },
@@ -1809,8 +1846,9 @@ local snap_get = forward_lua('MiniDeps.snap_get')
 T['snap_get()']['works'] = function()
   child.lua([[
     _G.stdio_queue = {
-      { out = 'sha1head' }, -- Get `HEAD` in plugin_1
-      { out = 'sha2head' }, -- Get `HEAD` in start_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in start_plugin
     }
   ]])
 
@@ -1823,11 +1861,18 @@ T['snap_get()']['works'] = function()
   validate_notifications({})
 end
 
+T['snap_get()']['checks for executable Git'] = function()
+  add('plugin_1')
+  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  expect.error(snap_get, 'Could not find executable `git` CLI tool')
+end
+
 T['snap_get()']['handles process errors'] = function()
   child.lua([[
     _G.stdio_queue = {
-      { err = 'Some error' }, -- Get `HEAD` in plugin_1
-      { out = 'sha2head' },   -- Get `HEAD` in start_plugin
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      { err = 'Some error' },        -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },          -- Get `HEAD` in start_plugin
     }
   ]])
 
@@ -1861,6 +1906,7 @@ T['snap_set()']['works'] = function()
   local init_session = get_session()
   child.lua([[
     _G.stdio_queue = {
+      { out = 'git version 2.43.0'},  -- Check Git executable
       { out = 'sha1head' },           -- Get `HEAD` in plugin_1
       -- Should stop other steps for plugin after first error
       { err = 'Error getting HEAD' }, -- Get `HEAD` in plugin_2
@@ -1882,6 +1928,8 @@ T['snap_set()']['works'] = function()
   local cwd_plugin_1, cwd_plugin_2, cwd_start_plugin =
     test_opt_dir .. '/plugin_1', test_opt_dir .. '/plugin_2', test_dir_absolute .. '/pack/deps/start/start_plugin'
   local ref_git_spawn_log = {
+    { args = { 'version' }, cwd = child.fn.getcwd() },
+
     { args = { 'rev-list', '-1', 'HEAD' }, cwd = cwd_plugin_1 },
     { args = { 'rev-list', '-1', 'HEAD' }, cwd = cwd_plugin_2 },
     { args = { 'rev-list', '-1', 'HEAD' }, cwd = cwd_start_plugin },
@@ -1922,6 +1970,12 @@ T['snap_set()']['works'] = function()
 
   -- Should not affect current session data
   eq(get_session(), init_session)
+end
+
+T['snap_set()']['checks for executable Git'] = function()
+  add('plugin_1')
+  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  expect.error(function() snap_set({}) end, 'Could not find executable `git` CLI tool')
 end
 
 T['snap_set()']['validates arguments'] = function()
