@@ -1117,14 +1117,17 @@ T['close()']['handles invalid target window'] = function()
   child.o.showtabline = 0
   child.o.laststatus = 0
 
-  child.cmd('tabfind ' .. test_dir_path)
+  child.cmd('wincmd v')
+  local target_win_id = child.api.nvim_get_current_win()
+  open(test_dir_path)
   child.expect_screenshot()
-  eq(#child.api.nvim_list_tabpages(), 2)
+  eq(#child.api.nvim_list_wins(), 3)
 
+  child.api.nvim_win_close(target_win_id, true)
   close()
   child.expect_screenshot()
   eq(#child.api.nvim_list_bufs(), 1)
-  eq(#child.api.nvim_list_tabpages(), 1)
+  eq(#child.api.nvim_list_wins(), 1)
   eq(child.cmd('messages'), '')
 end
 
@@ -3860,13 +3863,15 @@ end
 
 T['Default explorer']['handles close without opening file'] = function()
   child.o.laststatus = 0
+  child.cmd('wincmd v')
   child.cmd('edit ' .. test_dir_path)
   child.expect_screenshot()
 
-  -- Should close and delete "scratch directory buffer"
+  -- Should close and smartly (preserving layout) delete "directory buffer"
   close()
   child.expect_screenshot()
   eq(child.api.nvim_buf_get_name(0), '')
+  eq(#child.api.nvim_list_bufs(), 1)
 end
 
 return T
