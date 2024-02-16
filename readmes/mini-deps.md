@@ -77,6 +77,8 @@ require('mini.deps').setup({ path = { package = path_package } })
 
 To install from standalone repository, replace any occurrence of 'mini.nvim' in the code snippet to 'mini.deps'.
 
+NOTE: 'mini.nvim' is installed in 'pack/deps/start' and not 'pack/deps/opt' to always be included in 'mini.deps' session. If you want to make it "opt" plugin (as any other installed plugin), use 'pack/deps/opt' but add `MiniDeps.add('mini.nvim')` call after 'mini.deps' is set up.
+
 ## Overview
 
 See and use [example 'init.lua' file](../scripts/init-deps-example.lua) as a quick demo of how 'mini.deps' can be used:
