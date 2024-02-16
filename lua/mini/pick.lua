@@ -2115,6 +2115,7 @@ H.picker_new_win = function(buf_id, win_config)
   vim.wo[win_id].wrap = false
   H.win_update_hl(win_id, 'NormalFloat', 'MiniPickNormal')
   H.win_update_hl(win_id, 'FloatBorder', 'MiniPickBorder')
+  vim.fn.clearmatches(win_id)
 
   return win_id
 end

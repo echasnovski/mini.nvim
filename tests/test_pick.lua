@@ -4373,6 +4373,18 @@ T['Main view']['properly computes items range to show'] = function()
   end
 end
 
+T['Main view']['does not inherit highlighting from `matchparen`'] = function()
+  -- child.set_lines({ 'hello', 'world' })
+  -- child.fn.matchaddpos('Comment', { { 1, 1 }, { 1, 3 } })
+  child.cmd('packadd matchparen')
+  child.set_lines({ '(  )' })
+  child.set_cursor(1, 0)
+  if #child.fn.getmatches() == 0 then return MiniTest.skip('No "matchparen"') end
+
+  start_with_items({ 'aaaaaaaa' })
+  eq(child.fn.getmatches(get_picker_state().windows.main), {})
+end
+
 T['Info view'] = new_set()
 
 T['Info view']['works'] = function()
