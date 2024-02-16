@@ -4772,8 +4772,6 @@ end
 T['Key query process'] = new_set()
 
 T['Key query process']['respects mouse click'] = function()
-  helpers.skip_in_ci('Can not make this work consistently in CI.')
-
   child.set_size(10, 15)
 
   -- Should ignore if inside main window
@@ -4799,6 +4797,7 @@ T['Key query process']['respects mouse click'] = function()
   -- Should stop picker if outside of main window
   local validate_press_outside = function(button, row, col)
     start_with_items({ 'a' })
+    sleep(10)
     child.api.nvim_input_mouse(button, 'press', '', 0, row, col)
     sleep(10)
     eq(is_picker_active(), false)
