@@ -1295,10 +1295,15 @@ T['update()']['Confirm buffer'] = new_set({
         }
       ]])
 
+      -- Confirmation buffer should be configurable in `FileType` event with
+      -- window being current (so as to `vim.wo` can work)
+      child.cmd('au FileType minideps-confirm lua _G.minideps_ft_win_id = vim.api.nvim_get_current_win()')
+
       update()
       eq(#get_spawn_log(), 15)
       eq(#get_notify_log(), 3)
       validate_confirm_buf('mini-deps://confirm-update')
+      eq(child.lua_get('_G.minideps_ft_win_id') == child.api.nvim_get_current_win(), true)
 
       child.lua([[
         _G.prev_update = MiniDeps.update
@@ -1855,6 +1860,10 @@ local clean = forward_lua('MiniDeps.clean')
 T['clean()']['works'] = function()
   child.set_size(15, 80)
 
+  -- Confirmation buffer should be configurable in `FileType` event with
+  -- window being current (so as to `vim.wo` can work)
+  child.cmd('au FileType minideps-confirm lua _G.minideps_ft_win_id = vim.api.nvim_get_current_win()')
+
   clean()
 
   -- By default should show confirmation buffer
@@ -1862,6 +1871,7 @@ T['clean()']['works'] = function()
   child.wo.wrap = false
   child.expect_screenshot()
   validate_confirm_buf('mini-deps://confirm-clean')
+  eq(child.lua_get('_G.minideps_ft_win_id') == child.api.nvim_get_current_win(), true)
 
   -- Should reveal concealed full path
   child.set_cursor(9, 0)

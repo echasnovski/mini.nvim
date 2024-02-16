@@ -1401,8 +1401,8 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
   local buf_id = vim.api.nvim_create_buf(true, true)
   H.buf_set_name(buf_id, name)
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
-  vim.bo[buf_id].buftype, vim.bo[buf_id].filetype, vim.bo[buf_id].modified = 'acwrite', 'minideps-confirm', false
   vim.cmd('tab sbuffer ' .. buf_id)
+  vim.bo[buf_id].buftype, vim.bo[buf_id].filetype, vim.bo[buf_id].modified = 'acwrite', 'minideps-confirm', false
   local tab_num, win_id = vim.api.nvim_tabpage_get_number(0), vim.api.nvim_get_current_win()
 
   local delete_buffer = vim.schedule_wrap(function()
