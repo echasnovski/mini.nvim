@@ -3080,6 +3080,26 @@ T['builtin.resume()']['can be called consecutively'] = function()
   type_keys('<C-c>')
 end
 
+T['builtin.resume()']["restores 'cmdheight'"] = function()
+  start_with_items({ 'a' }, 'My name')
+  type_keys('<C-c>')
+
+  local validate = function(cmdheight)
+    child.o.cmdheight = cmdheight
+    builtin_resume()
+    -- Should *temporarily* force 'cmdheight=1' to both have place where to hide
+    -- cursor (in case of `cmdheight=0`) and increase available space for picker
+    eq(child.o.cmdheight, 1)
+    type_keys('<C-c>')
+    eq(child.o.cmdheight, cmdheight)
+  end
+
+  validate(3)
+
+  if child.fn.has('nvim-0.8') == 0 then return end
+  validate(0)
+end
+
 T['builtin.resume()']['validates if no picker was previously called'] = function()
   expect.error(function() child.lua('MiniPick.builtin.resume()') end, 'no picker to resume')
 end

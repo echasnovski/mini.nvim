@@ -1448,14 +1448,15 @@ MiniPick.builtin.resume = function()
   local picker = H.pickers.latest
   if picker == nil then H.error('There is no picker to resume.') end
 
+  H.cache = {}
   local buf_id = H.picker_new_buf()
   local win_target = vim.api.nvim_get_current_win()
   local win_id = H.picker_new_win(buf_id, picker.opts.window.config)
   picker.buffers = { main = buf_id }
   picker.windows = { main = win_id, target = win_target }
   picker.view_state = 'main'
+  H.pickers.active = picker
 
-  H.pickers.active, H.cache = picker, {}
   return H.picker_advance(picker)
 end
 
