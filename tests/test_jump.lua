@@ -379,11 +379,8 @@ T['Jumping with f/t/F/T']['works in Operator-pending mode'] = new_set({
   test = function(key, line_seq)
     set_lines({ ' 1e2e3e4e5e_ ' })
 
-    if key == key:lower() then
-      set_cursor(1, 0)
-    else
-      set_cursor(1, 12)
-    end
+    local start_col = key == key:lower() and 0 or 12
+    set_cursor(1, start_col)
 
     -- Apply once
     type_keys('d', key, 'e')
@@ -519,18 +516,62 @@ T['Jumping with f/t/F/T']['enters jumping mode even if first jump is impossible'
 end
 
 T['Jumping with f/t/F/T']['does nothing if there is no place to jump'] = function()
-  set_lines({ 'aaaaaaa' })
-
-  for _, key in ipairs({ 'f', 't', 'F', 'T' }) do
-    local start_col = key == key:lower() and 0 or 6
+  -- Normal mode
+  local validate_normal = function(keys, start_col, ref_mode)
+    set_lines({ 'abcdefg' })
     set_cursor(1, start_col)
-    type_keys(key, 'e')
-    -- It shouldn't move anywhere
+
+    type_keys(keys, 'd')
+
+    -- It shouldn't move anywhere and should not modify text
     eq(get_cursor(), { 1, start_col })
-    -- If implemented incorrectly, this can also fail because of consecutive
-    -- tests for different letters. Ensure there is no jumping.
+    eq(get_lines(), { 'abcdefg' })
+    eq(child.fn.mode(), ref_mode)
+
+    -- Ensure there is no jumping
     child.lua('MiniJump.stop_jumping()')
+    child.ensure_normal_mode()
   end
+
+  validate_normal('f', 4, 'n')
+  validate_normal('t', 4, 'n')
+  validate_normal('F', 2, 'n')
+  validate_normal('T', 2, 'n')
+
+  validate_normal('vf', 4, 'v')
+  validate_normal('vt', 4, 'v')
+  validate_normal('vF', 2, 'v')
+  validate_normal('vT', 2, 'v')
+
+  validate_normal('df', 4, 'n')
+  validate_normal('dt', 4, 'n')
+  validate_normal('dF', 2, 'n')
+  validate_normal('dT', 2, 'n')
+end
+
+T['Jumping with f/t/F/T']['can be dot-repeated if did not jump at first'] = function()
+  -- Normal mode
+  local validate = function(keys, col_1, col_2, line_2)
+    set_lines({ 'abcdefg' })
+    set_cursor(1, col_1)
+
+    type_keys(keys, 'd')
+    eq(get_cursor(), { 1, col_1 })
+    eq(get_lines(), { 'abcdefg' })
+
+    set_cursor(1, col_2)
+    type_keys('.')
+    eq(get_lines(), { line_2 })
+
+    -- Ensure there is no jumping
+    child.lua('MiniJump.stop_jumping()')
+    child.ensure_normal_mode()
+  end
+
+  validate('df', 5, 1, 'aefg')
+  validate('dt', 5, 1, 'adefg')
+  validate('dF', 1, 5, 'abcg')
+  validate('dT', 1, 5, 'abcdg')
 end
 
 T['Jumping with f/t/F/T']['stops prompting for target if hit `<Esc>` or `<C-c>`'] = new_set({
