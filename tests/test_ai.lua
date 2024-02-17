@@ -1413,6 +1413,28 @@ T['Textobject']['works in Operator-pending mode'] = function()
   validate_edit(lines, cursor, { 'aabb', 'ccc', 'ddee' }, { 1, 2 }, 'd<C-v>a)')
 end
 
+T['Textobject']['can be cancelled'] = function()
+  local validate = function(keys, mode)
+    set_lines({ 'aaa' })
+    set_cursor(1, 1)
+    type_keys(keys, '<Esc>')
+
+    eq(child.api.nvim_get_mode().mode, mode)
+    type_keys('<Esc>')
+
+    eq(get_lines(), { 'aaa' })
+    eq(get_cursor(), { 1, 1 })
+
+    child.ensure_normal_mode()
+  end
+
+  -- Visual mode should be cancelled without leaving Visual mode
+  validate({ 'v', 'i' }, 'v')
+
+  -- Operator-pending mode should be cancelled into Normal mode
+  validate({ 'd', 'i' }, 'n')
+end
+
 T['Textobject']['works with different mappings'] = function()
   reload_module({ mappings = { around = 'A', inside = 'I' } })
 

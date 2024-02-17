@@ -1183,7 +1183,7 @@ end
 H.expr_textobject = function(mode, ai_type, opts)
   local tobj_id = H.user_textobject_id(ai_type)
 
-  if tobj_id == nil then return '' end
+  if tobj_id == nil then return mode == 'o' and '<Esc>' or '' end
 
   -- Possibly fall back to builtin `a`/`i` textobjects
   if H.is_disabled() or not H.is_valid_textobject_id(tobj_id) then
