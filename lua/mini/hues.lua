@@ -1373,21 +1373,6 @@ H.apply_colorscheme = function(config)
   end
 
   if has_integration('neoclide/coc.nvim') then
-    hi('CocErrorHighlight',   { link='DiagnosticError' })
-    hi('CocHintHighlight',    { link='DiagnosticHint' })
-    hi('CocInfoHighlight',    { link='DiagnosticInfo' })
-    hi('CocWarningHighlight', { link='DiagnosticWarn' })
-
-    hi('CocErrorFloat',   { link='DiagnosticFloatingError' })
-    hi('CocHintFloat',    { link='DiagnosticFloatingHint' })
-    hi('CocInfoFloat',    { link='DiagnosticFloatingInfo' })
-    hi('CocWarningFloat', { link='DiagnosticFloatingWarn' })
-
-    hi('CocErrorSign',   { link='DiagnosticSignError' })
-    hi('CocHintSign',    { link='DiagnosticSignHint' })
-    hi('CocInfoSign',    { link='DiagnosticSignInfo' })
-    hi('CocWarningSign', { link='DiagnosticSignWarn' })
-
     hi('CocCodeLens',             { link='LspCodeLens' })
     hi('CocDisabled',             { link='Comment' })
     hi('CocMarkdownLink',         { fg=p.blue,   bg=nil })
