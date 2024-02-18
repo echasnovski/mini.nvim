@@ -1171,7 +1171,7 @@ T['update()'] = new_set({
 local update = forward_lua('MiniDeps.update')
 
 T['update()']['works'] = function()
-  child.set_size(35, 80)
+  child.set_size(40, 80)
 
   -- By default should update all plugins in session
   add('plugin_1')
@@ -1338,8 +1338,68 @@ T['update()']['Confirm buffer']['can open several'] = function()
   validate_confirm_buf('mini-deps://confirm-update_2')
 end
 
-T['update()']['can work with non-default branches'] = function()
+T['update()']['can fold in cofirm buffer'] = function()
   child.set_size(30, 80)
+
+  -- Confirmation buffer should enable local folds
+  child.o.foldenable = false
+  child.o.foldmethod = 'indent'
+  child.o.foldlevel = 0
+  child.o.foldtext = '"  >> ".getline(v:foldstart)'
+
+  add('user/plugin_1')
+  add('user/plugin_2')
+  add('user/plugin_3')
+
+  local plugin_2_log = table.concat({
+    '< sha2head | 2024-01-02 01:01:01 +0200 | Neo McVim',
+    '  Removed commit in plugin_2.',
+    '> new2head | 2024-01-02 02:02:02 +0200 | Neo McVim',
+    '  Added commit in plugin_2.',
+  }, '\n')
+  child.lua('_G.plugin_2_log = ' .. vim.inspect(plugin_2_log))
+
+  child.lua([[
+    _G.stdio_queue = {
+      { out = 'git version 2.43.0'},    -- Check Git executable
+      {},                               -- Set `origin` to source in plugin_1
+      {},                               -- Set `origin` to source in plugin_2
+      { err = 'Error setting origin' }, -- Set `origin` to source in plugin_3
+      { out = 'sha1head' },             -- Get `HEAD` in plugin_1
+      { out = 'sha2head' },             -- Get `HEAD` in plugin_2
+      { out = 'origin/main' },          -- Get default branch in plugin_1
+      { out = 'origin/master' },        -- Get default branch in plugin_2
+      {},                               -- Fetch in plugin_1
+      {},                               -- Fetch in plugin_2
+      { out = 'origin/main' },          -- Check if `checkout` is origin branch in plugin_1
+      { out = 'origin/master' },        -- Check if `checkout` is origin branch in plugin_2
+      { out = 'sha1head' },             -- Get commit of `checkout` in plugin_1
+      { out = 'new2head' },             -- Get commit of `checkout` in plugin_2
+      { out = _G.plugin_2_log },        -- Get log of `checkout` changes in plugin_2
+    }
+  ]])
+
+  update()
+  mock_hide_path(test_dir_absolute)
+
+  child.type_keys('gg', 'zM')
+  child.expect_screenshot()
+
+  -- Should not preserve fold options in new buffer in same window
+  child.cmd('enew')
+  eq(child.wo.foldenable, false)
+  eq(child.wo.foldmethod, 'indent')
+  eq(child.wo.foldlevel, 0)
+
+  -- Should not preserve fold options when quit
+  child.cmd('quit')
+  eq(child.wo.foldenable, false)
+  eq(child.wo.foldmethod, 'indent')
+  eq(child.wo.foldlevel, 0)
+end
+
+T['update()']['can work with non-default branches'] = function()
+  child.set_size(32, 80)
 
   add({ source = 'user/plugin_1', checkout = 'hello', monitor = 'world' })
   child.lua([[
@@ -1387,7 +1447,7 @@ T['update()']['can work with non-default branches'] = function()
 end
 
 T['update()']['shows empty monitor log'] = function()
-  child.set_size(25, 80)
+  child.set_size(27, 80)
 
   add({ source = 'user/plugin_1', checkout = 'hello', monitor = 'world' })
   child.lua([[

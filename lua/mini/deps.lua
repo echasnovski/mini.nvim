@@ -1343,6 +1343,7 @@ H.update_feedback_confirm = function(lines)
     "Line `!!! <plugin_name> !!!` means plugin had an error and won't be updated.",
     'See error details below it.',
     '',
+    'Use regular fold keys (`zM`, `zR`, etc.) to manage shorter view.',
     'To finish update, write this buffer (for example, with `:write` command).',
     'To cancel update, close this window (for example, with `:close` command).',
     '',
@@ -1368,6 +1369,20 @@ H.update_feedback_confirm = function(lines)
   -- Define basic highlighting
   vim.cmd('syntax region MiniDepsHint start="^\\%1l" end="\\%' .. n_header .. 'l$"')
   H.update_add_syntax()
+
+  -- Enable folding
+  local is_title = function(l) return l:find('^%-%-%-') or l:find('^%+%+%+') or l:find('^%!%!%!') end
+  --stylua: ignore
+  MiniDeps._confirm_foldexpr = function(lnum)
+    if lnum == 1 then return 0 end
+    if is_title(vim.fn.getline(lnum - 1)) then return 1 end
+    if is_title(vim.fn.getline(lnum + 1)) then return 0 end
+    return '='
+  end
+  -- - Use `:setlocal` for these options to not be inherited if some other
+  --   buffer is opened in the same window.
+  vim.cmd('setlocal foldenable foldmethod=expr foldlevel=999')
+  vim.cmd('setlocal foldexpr=v:lua.MiniDeps._confirm_foldexpr(v:lnum)')
 end
 
 H.update_add_syntax = function()
@@ -1402,7 +1417,7 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
   H.buf_set_name(buf_id, name)
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
   vim.cmd('tab sbuffer ' .. buf_id)
-  vim.bo[buf_id].buftype, vim.bo[buf_id].filetype, vim.bo[buf_id].modified = 'acwrite', 'minideps-confirm', false
+  vim.bo.buftype, vim.bo.filetype, vim.bo.modified = 'acwrite', 'minideps-confirm', false
   local tab_num, win_id = vim.api.nvim_tabpage_get_number(0), vim.api.nvim_get_current_win()
 
   local delete_buffer = vim.schedule_wrap(function()
@@ -1413,6 +1428,7 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
 
   -- Define action on accepting confirm
   local finish = function()
+    MiniDeps._confirm_foldexpr = nil
     exec_on_write(buf_id)
     delete_buffer()
   end
@@ -1422,6 +1438,7 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
   -- Define action to cancel confirm
   local cancel_au_id
   local on_cancel = function(data)
+    MiniDeps._confirm_foldexpr = nil
     if tonumber(data.match) ~= win_id then return end
     pcall(vim.api.nvim_del_autocmd, cancel_au_id)
     delete_buffer()
