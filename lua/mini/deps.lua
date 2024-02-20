@@ -1241,7 +1241,7 @@ H.clean_confirm = function(paths)
     if #paths_to_delete == 0 then return H.notify('Nothing to delete') end
     H.clean_delete(paths_to_delete)
   end
-  H.show_confirm_buf(lines, 'mini-deps://confirm-clean', finish_clean)
+  H.show_confirm_buf(lines, { name = 'mini-deps://confirm-clean', exec_on_write = finish_clean })
 
   -- Define basic highlighting
   vim.cmd('syntax region MiniDepsHint start="^\\%1l" end="\\%' .. n_header .. 'l$"')
@@ -1364,25 +1364,11 @@ H.update_feedback_confirm = function(lines)
     MiniDeps.update(names, { force = true, offline = true })
   end
 
-  H.show_confirm_buf(report, 'mini-deps://confirm-update', finish_update)
+  H.show_confirm_buf(report, { name = 'mini-deps://confirm-update', exec_on_write = finish_update, setup_folds = true })
 
   -- Define basic highlighting
   vim.cmd('syntax region MiniDepsHint start="^\\%1l" end="\\%' .. n_header .. 'l$"')
   H.update_add_syntax()
-
-  -- Enable folding
-  local is_title = function(l) return l:find('^%-%-%-') or l:find('^%+%+%+') or l:find('^%!%!%!') end
-  --stylua: ignore
-  MiniDeps._confirm_foldexpr = function(lnum)
-    if lnum == 1 then return 0 end
-    if is_title(vim.fn.getline(lnum - 1)) then return 1 end
-    if is_title(vim.fn.getline(lnum + 1)) then return 0 end
-    return '='
-  end
-  -- - Use `:setlocal` for these options to not be inherited if some other
-  --   buffer is opened in the same window.
-  vim.cmd('setlocal foldenable foldmethod=expr foldlevel=999')
-  vim.cmd('setlocal foldexpr=v:lua.MiniDeps._confirm_foldexpr(v:lnum)')
 end
 
 H.update_add_syntax = function()
@@ -1411,13 +1397,12 @@ H.update_feedback_log = function(lines)
 end
 
 -- Confirm --------------------------------------------------------------------
-H.show_confirm_buf = function(lines, name, exec_on_write)
+H.show_confirm_buf = function(lines, opts)
   -- Show buffer
   local buf_id = vim.api.nvim_create_buf(true, true)
-  H.buf_set_name(buf_id, name)
+  H.buf_set_name(buf_id, opts.name)
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
   vim.cmd('tab sbuffer ' .. buf_id)
-  vim.bo.buftype, vim.bo.filetype, vim.bo.modified = 'acwrite', 'minideps-confirm', false
   local tab_num, win_id = vim.api.nvim_tabpage_get_number(0), vim.api.nvim_get_current_win()
 
   local delete_buffer = vim.schedule_wrap(function()
@@ -1426,10 +1411,27 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
     vim.cmd('redraw')
   end)
 
+  -- Define folding
+  local is_title = function(l) return l:find('^%-%-%-') or l:find('^%+%+%+') or l:find('^%!%!%!') end
+  --stylua: ignore
+  MiniDeps._confirm_foldexpr = function(lnum)
+    if lnum == 1 then return 0 end
+    if is_title(vim.fn.getline(lnum - 1)) then return 1 end
+    if is_title(vim.fn.getline(lnum + 1)) then return 0 end
+    return '='
+  end
+
+  -- Possibly set up folding. Use `:setlocal` for these options to not be
+  -- inherited if some other buffer is opened in the same window.
+  if opts.setup_folds then
+    vim.cmd('setlocal foldenable foldmethod=expr foldlevel=999')
+    vim.cmd('setlocal foldexpr=v:lua.MiniDeps._confirm_foldexpr(v:lnum)')
+  end
+
   -- Define action on accepting confirm
   local finish = function()
     MiniDeps._confirm_foldexpr = nil
-    exec_on_write(buf_id)
+    opts.exec_on_write(buf_id)
     delete_buffer()
   end
   -- - Use `nested` to allow other events (`WinEnter` for 'mini.statusline')
@@ -1444,6 +1446,9 @@ H.show_confirm_buf = function(lines, name, exec_on_write)
     delete_buffer()
   end
   cancel_au_id = vim.api.nvim_create_autocmd('WinClosed', { nested = true, callback = on_cancel })
+
+  -- Set buffer-local options last (so that user autocmmands could override)
+  vim.bo.buftype, vim.bo.filetype, vim.bo.modified = 'acwrite', 'minideps-confirm', false
 end
 
 -- CLI ------------------------------------------------------------------------

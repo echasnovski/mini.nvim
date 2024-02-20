@@ -1347,6 +1347,9 @@ T['update()']['can fold in cofirm buffer'] = function()
   child.o.foldlevel = 0
   child.o.foldtext = '"  >> ".getline(v:foldstart)'
 
+  -- Should be possible to automatically show folds on start
+  child.cmd('au FileType minideps-confirm setlocal foldlevel=0')
+
   add('user/plugin_1')
   add('user/plugin_2')
   add('user/plugin_3')
@@ -1382,7 +1385,6 @@ T['update()']['can fold in cofirm buffer'] = function()
   update()
   mock_hide_path(test_dir_absolute)
 
-  child.type_keys('gg', 'zM')
   child.expect_screenshot()
 
   -- Should not preserve fold options in new buffer in same window
