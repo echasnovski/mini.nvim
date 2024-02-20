@@ -44,15 +44,18 @@ local construct_additionTextEdits = function(id, name)
   }
 end
 
-local construct_textEdit = function(name)
+local construct_textEdit = function(name, kind)
   if _G.mock_textEdit == nil then return end
   local new_text, pos = _G.mock_textEdit.new_text, _G.mock_textEdit.pos
+  local is_insertreplaceedit = kind == 'InsertReplaceEdit'
+  local range = {
+    start = { line = pos[1] - 1, character = pos[2] - 1 },
+    ['end'] = { line = pos[1] - 1, character = pos[2] },
+  }
   return {
     newText = new_text(name),
-    range = {
-      start = { line = pos[1] - 1, character = pos[2] - 1 },
-      ['end'] = { line = pos[1] - 1, character = pos[2] },
-    },
+    [is_insertreplaceedit and 'insert' or 'range'] = range,
+    replace = is_insertreplaceedit and range or nil,
   }
 end
 
@@ -71,8 +74,12 @@ Months.requests = {
         res.additionalTextEdits = construct_additionTextEdits('completion', item.name)
       end
 
-      if vim.tbl_contains({ 'April', 'August' }, item.name) then
-        res.textEdit = construct_textEdit(item.name)
+      if item.name == 'April' then
+        res.textEdit = construct_textEdit(item.name, 'InsertReplaceEdit')
+        res.filterText = construct_filterText(item.name)
+      end
+      if item.name == 'August' then
+        res.textEdit = construct_textEdit(item.name, 'textEdit')
         res.filterText = construct_filterText(item.name)
       end
 

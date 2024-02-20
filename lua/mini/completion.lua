@@ -1304,9 +1304,11 @@ H.get_completion_start_server = function(response_data, line_num)
   if response_data.err or type(response_data.result) ~= 'table' then return end
   local items = response_data.result.items or response_data.result
   for _, item in pairs(items) do
-    if type(item.textEdit) == 'table' and item.textEdit.range.start.line == line_num then
-      -- NOTE: Ignore case when items contain several conflicting starts
-      return item.textEdit.range.start.character
+    if type(item.textEdit) == 'table' then
+      -- NOTE: As per LSP spec, `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
+      local range = type(item.textEdit.range) == 'table' and item.textEdit.range or item.textEdit.insert
+      -- NOTE: Return immediately, ignoring possibly several conflicting starts
+      return range.start.character
     end
   end
 end
