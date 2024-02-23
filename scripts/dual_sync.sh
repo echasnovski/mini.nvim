@@ -44,10 +44,14 @@ sync_module () {
   fi
 
   # Tweak patch:
-  # - Move 'readmes/mini-xxx.md' to 'README.md'.
-  # - This also means move all references used in it one step higher (and hope
-  #   that it doesn't occur anywhere else in patch).
-  sed -i "s/readmes\/mini-$module\.md/README.md/" $patch
+  # - Move 'readmes/mini-xxx.md' to 'README.md'. This should modify only patch
+  #   metadata, and not text (assuming it uses 'readmes/mini-xxx.md' on
+  #   purpose; as in "use [this link](https://.../readmes/mini-xxx.md)").
+  sed -i "s/readmes\/mini-$module\.md\([^)]\)/README.md\\1/" $patch
+  sed -i "s/readmes\/mini-$module\.md$/README.md/" $patch
+  # - Move all known relative links one step higher (and hope that it doesn't
+  #   occur anywhere else in patch). NOTE: There can be other relative links
+  #   which should be corrected manually
   sed -i "s/\[help file\](\.\.\//[help file](/" $patch
 
   # Apply patch
