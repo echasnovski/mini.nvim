@@ -277,8 +277,8 @@
 ---   Possible hook names:
 ---     - <pre_install>   - before creating plugin directory.
 ---     - <post_install>  - after  creating plugin directory.
----     - <pre_checkout>  - before making change in plugin directory.
----     - <post_checkout> - after  making change in plugin directory.
+---     - <pre_checkout>  - before making change in existing plugin.
+---     - <post_checkout> - after  making change in existing plugin.
 ---   Each hook is executed with the following table as an argument:
 ---     - <path> (`string`)   - absolute path to plugin's directory
 ---       (might not yet exist on disk).
