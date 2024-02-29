@@ -1,4 +1,4 @@
-# Version 0.11.0.9999
+# Version 0.12.0
 
 ## mini.basics
 
