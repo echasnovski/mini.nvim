@@ -76,6 +76,8 @@ end
 require('mini.deps').setup({ path = { package = path_package } })
 ```
 
+Using default 'main' branch is OK, as changes there rarely accidentally break something (so far). However, if you want to be extra safe and use only stable releases of 'mini.nvim', add `MiniDeps.add({ name = 'mini.nvim', checkout = 'stable' })` call after 'mini.deps' is set up and execute `:DepsUpdateOffline mini.nvim`.
+
 To install from standalone repository, replace any occurrence of 'mini.nvim' in the code snippet to 'mini.deps'.
 
 **NOTE**: 'mini.nvim' is installed in 'pack/deps/start' and not 'pack/deps/opt' to always be included in 'mini.deps' session. If you want to make it "opt" plugin (as any other installed plugin), use 'pack/deps/opt' but add `MiniDeps.add('mini.nvim')` call after 'mini.deps' is set up.
