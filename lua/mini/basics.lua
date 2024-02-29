@@ -361,7 +361,12 @@ MiniBasics.config = {
 ---@return string String indicator for new state. Similar to what |:set| `{option}?` shows.
 MiniBasics.toggle_diagnostic = function()
   local buf_id = vim.api.nvim_get_current_buf()
-  local buf_state = H.buffer_diagnostic_state[buf_id]
+  local buf_state
+  if vim.fn.has('nvim-0.9') == 0 then
+    buf_state = H.buffer_diagnostic_state[buf_id]
+  else
+    buf_state = not vim.diagnostic.is_disabled(buf_id)
+  end
   if buf_state == nil then buf_state = true end
 
   if buf_state then
@@ -371,7 +376,7 @@ MiniBasics.toggle_diagnostic = function()
   end
 
   local new_buf_state = not buf_state
-  H.buffer_diagnostic_state[buf_id] = new_buf_state
+  if vim.fn.has('nvim-0.9') == 0 then H.buffer_diagnostic_state[buf_id] = new_buf_state end
 
   return new_buf_state and '  diagnostic' or 'nodiagnostic'
 end
@@ -381,7 +386,7 @@ end
 H.default_config = vim.deepcopy(MiniBasics.config)
 
 -- Diagnostic state per buffer
-H.buffer_diagnostic_state = {}
+if vim.fn.has('nvim-0.9') == 0 then H.buffer_diagnostic_state = {} end
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
