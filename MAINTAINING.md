@@ -56,7 +56,7 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 - Update main README to mention new module in table of contents.
 - Update 'CHANGELOG.md' to mention introduction of new module.
 - Update 'CONTRIBUTING.md' to mention new highlight groups (if there are any).
-- Commit changes with message '(mini.xxx) NEW MODULE: initial commit.'. NOTE: it is cleaner to synchronize standalone repositories prior to this commit.
+- Commit changes with message 'feat(xxx): add NEW MODULE'. NOTE: it is cleaner to synchronize standalone repositories prior to this commit.
 - If there are new highlight groups, follow up with adding explicit support in color scheme modules.
 - Make standalone plugin:
     - Create new empty GitHub repository. Disable Issues and limit PRs.

@@ -20,38 +20,65 @@ All well-intentioned, polite, and respectful contributions are always welcome! T
 ## Commit messages
 
 - Try to make commit message as concise as possible while giving enough information about nature of a change. Think about whether it will be easy to understand in one year time when browsing through commit history.
-- Use two part structure:
-    - First part is a change overview in present tense, preferably in single line under 80 characters. Should end with a period. Usually should be enough.
 
-      **If commit affects only one particular module (as it usually should), prepend with "(mini.\<module-name\>) ".** If commit ensures something for all modules but not necessary touches all of them, use "(all) ".
+- Single commit should change either zero or one module, or affect all modules (i.e. enforcing some universal rule but not necessarily change files). Changes for two or more modules should be split in several module-specific commits.
 
-    - Second part is optional and should contain details about the change after empty line and "Details:". Use bullet list with `-`.
+- Use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) style:
+    - Messages should have the following structure:
 
-      Use "Resolves #xxx" as separate entry if this commit resolves issue or PR.
+        ```
+        <type>[optional scope][!]: <description>
+        <empty line>
+        [optional body]
+        <empty line>
+        [optional footer(s)]
+        ```
 
-- Use these prefixes after initial module name in described situations:
-    - "FEATURE:" - if change implements new feature (like option or function).
-    - "BREAKING:" - if change breaks current documented behavior.
-    - "BREAKING FEATURE:" - if change introduces new feature while breaking current documented behavior.
-    - "NEW MODULE:" - if change introduces new module (see 'MAINTAINING.md').
+    - `<type>` is **mandatory** and can be one of:
+        - `ci` - change in how automation (GitHub actions, dual distribution scripts, etc.) is done.
+        - `docs` - change in user facing documentation (help, README, CONTRIBUTING, etc.).
+        - `feat` - adding new user facing feature.
+        - `fix` - resolving user facing issue.
+        - `refactor` - change in code or documentation that should not affect users.
+        - `style` - change in convention of how something should be done (formatting, wording, etc.) and its effects.
+        - `test` - change in tests.
+      For temporary commits which later should be squashed (when working on PR, for example), use `fixup` type.
+    - `[optional scope]`, if present, should be done in parenthesis `()`. If commit changes single module (as it usually should), using scope with module name is **mandatory**. If commit enforces something for all modules, use `ALL` scope.
+    - Breaking change, if present, should be expressed with `!` before `:`.
+    - `<description>` is a change overview in imperative, present tense ("change" not "changed" nor "changes"). Should result into first line under 72 characters. Should start with not capitalized word and NOT end with sentence ending punctuation (i.e. one of `.,?!;`).
+    - `[optional body]`, if present, should contain details and motivation about the change in plain language. Should be formatted to have maximum 80 characters in line.
+    - `[optional footer(s)]`, if present, should be instruction(s) to Git or Github. Use "Resolve #xxx" on separate line if this commit resolves issue or PR.
 
 - Use module's function and field names without module's name. Like `add()` and not `MiniSurround.add()`.
 
 Examples:
 
 ```
-Fix typo in 'README.md'.
+feat(deps): add folds in update confirmation buffer
 ```
 
 ```
-(mini.animate) Update `cursor` to use virtual columns.
+fix(jump): make operator not delete one character if target is not found
 
-Details:
-- Resolves #258.
+One main goal is to do that in a dot-repeatable way, because this is very
+likely to be repeated after an unfortunate first try.
+
+Resolve #688
 ```
 
 ```
-(mini.comment) FEATURE: add `options.pad_comment_leaders` option.
+refactor(bracketed): do not source 'vim.treesitter' on `require()`
+
+Although less explicit, this considerably reduces startup footprint of
+'mini.bracketed' in isolation.
+```
+
+```
+feat(hues)!: update verbatim text to be distinctive
+```
+
+```
+test(ALL): update screenshots to work on Nightly
 ```
 
 ## Generating help file
@@ -74,9 +101,9 @@ If you have Windows or MacOS and want to contribute code related change, make yo
 
 ## Formatting
 
-This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.14.0 for formatting Lua code. Before making changes to code, please:
+This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.19.0 for formatting Lua code. Before making changes to code, please:
 
-- [Install StyLua](https://github.com/JohnnyMorganz/StyLua#installation). NOTE: use `v0.14.0`.
+- [Install StyLua](https://github.com/JohnnyMorganz/StyLua#installation). NOTE: use `v0.19.0`.
 - Format with it. Currently there are two ways to do this:
     - Manually run `stylua .` from the root directory of this project.
     - [Install pre-commit](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.
