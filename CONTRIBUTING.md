@@ -81,6 +81,11 @@ feat(hues)!: update verbatim text to be distinctive
 test(ALL): update screenshots to work on Nightly
 ```
 
+### Automated commit linting
+
+- To lint messages of already done commits, execute `scripts/lintcommit-ci.sh <git-log-range>`. For example, to lint currently latest commit use `scripts/lintcommit-ci.sh HEAD~..HEAD`.
+- To lint commit message before doing commit, [install `pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit install --hook-type commit-msg` (from the root directory). NOTE: requires `nvim` executable. If it throws (usually descriptive) error - recommit with proper message.
+
 ## Generating help file
 
 If your contribution updates annotations used to generate help file, please regenerate it. You can make this with one of the following (assuming current directory being project root):

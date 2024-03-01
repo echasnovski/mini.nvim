@@ -10,4 +10,10 @@ repos:
         name: Gendocs
         language: system
         entry: make --silent documentation
-        types: []
+        types: [lua]
+      - id: lintcommit
+        name: LintCommit
+        language: system
+        entry: nvim
+        args: ['--headless', '--noplugin', '-u', 'scripts/lintcommit.lua', '--']
+        stages: ['commit-msg']

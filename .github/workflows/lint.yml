@@ -37,6 +37,22 @@ jobs:
       - name: Check for changes
         run: if [[ -n $(git status -s) ]]; then exit 1; fi
 
+  lintcommit:
+    name: Lint commits
+    runs-on: ubuntu-latest
+    env:
+      LINTCOMMIT_FAIL_ON_FIXUP: true
+    steps:
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint new commits
+        run: make --silent lintcommit-ci
+
   case-sensitivity:
     name: File case sensitivity
     runs-on: ubuntu-latest
