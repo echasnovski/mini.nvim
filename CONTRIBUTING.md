@@ -5,14 +5,14 @@ Thank you for your willingness to contribute to 'mini.nvim'. It means a lot!
 You can make contributions in the following ways:
 
 - **Mention it** somehow to help reach broader audience. This helps a lot.
-- **Create a GitHub issue**. It can be one of two types:
+- **Create a GitHub issue**. It can be one of the following types:
     - **Bug report**. Describe your actions in a reproducible way along with their effect and what you expected should happen. Before making one, please make your best efforts to make sure that it is not an intended behavior (not described in documentation as such).
     - **Feature request**. A concise and justified description of what one or several modules should be able to do. Before making one, please make your best efforts to make sure that it is not a feature that won't get implemented (these should be described in documentation; for example: block comments in 'mini.comment').
-- **Create a pull request (PR)**. It can be one of two types:
-    - **Code related**. For example, fix a bug or implement a feature. **Before even starting one, please make sure that it is aligned with project vision and goals**. The best way to do it is to receive a positive feedback from maintainer on your initiative in one of the GitHub issues (existing one or created by you otherwise). Please, make sure to regenerate latest help file and that all tests are passed (see later sections).
-    - **Add plugin integration to 'mini.base16' color scheme**. See [](#implementation-notes) for checklist.
+- **Create a pull request (PR)**. It can be one of the following types:
+    - **Code related**. For example, fix a bug or implement a feature. **Before even starting one, please make sure that it is aligned with project vision and goals**. The best way to do so is to receive a positive feedback from maintainer on your initiative in one of the GitHub issues (existing or created by you). Please, make sure to regenerate latest help file and that all tests pass (see later sections).
     - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation; see later section). Feel free to make these without creating a GitHub issue.
-- **Add explicit support to colorschemes**. Any 'mini.nvim' module supports any colorscheme right out of the box. This is done by making most highlight groups be linked to a semantically similar builtin highlight group. Other groups are hard-coded based on personal preference. However, these choices might be out of tune with a particular colorscheme. Updating as many colorschemes as possible to have explicit 'mini.nvim' support is highly appreciated. For your convenience, there is a list of all highlight groups in later section of this file.
+    - **Add plugin integration to 'mini.base16' and 'mini.hues' modules**.
+- **Add explicit support to other colorschemes**. Every 'mini.nvim' module supports any colorscheme right out of the box. This is done by making most highlight groups be linked to a semantically similar builtin highlight group. Other groups are hard-coded based on personal preference. However, these choices might be out of tune with a particular colorscheme. Updating as many colorschemes as possible to have explicit 'mini.nvim' support is highly appreciated. For your convenience, there is a list of all highlight groups in later section of this file.
 - **Participate in [discussions](https://github.com/echasnovski/mini.nvim/discussions)**.
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
@@ -84,25 +84,34 @@ test(ALL): update screenshots to work on Nightly
 ### Automated commit linting
 
 - To lint messages of already done commits, execute `scripts/lintcommit-ci.sh <git-log-range>`. For example, to lint currently latest commit use `scripts/lintcommit-ci.sh HEAD~..HEAD`.
-- To lint commit message before doing commit, [install `pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit install --hook-type commit-msg` (from the root directory). NOTE: requires `nvim` executable. If it throws (usually descriptive) error - recommit with proper message.
+- To lint commit message before doing commit, install [`pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit install --hook-type commit-msg` (from the root directory). NOTE: requires `nvim` executable. If it throws (usually descriptive) error - recommit with proper message.
 
 ## Generating help file
 
 If your contribution updates annotations used to generate help file, please regenerate it. You can make this with one of the following (assuming current directory being project root):
 
 - From command line execute `make documentation`.
-- Inside Neovim instance run `:luafile scripts/minidoc.lua`.
+- Inside Neovim instance run `:luafile scripts/minidoc.lua` or `:lua require('mini.doc').generate()`.
 
-## Running tests
+## Testing
 
 If your contribution updates code and you use Linux (not Windows or MacOS), please make sure that it doesn't break existing tests. If it adds new functionality or fixes a recognized bug, add new test case(s). There are two ways of running tests:
 
-- From command line execute `make test` to run all tests or `FILE=<name of file> make test_file` to run tests only from file `<name of file>`.
+- From command line:
+    - Execute `make test` to run all tests (with `nvim` as executable).
+    - Execute `FILE=tests/test_xxx.lua make test_file` to run tests only from file `tests/test_xxx.lua` (with `nvim` as executable).
+    - If you have multiple Neovim executables (say, `nvim_07`, `nvim_08`, `nvim_09`, `nvim_010`), you can use `NVIM_EXEC` variable to tests against multiple versions like this:
+      `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" make test` or `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" FILE=tests/test_xxx.lua make test_file`.
 - Inside Neovim instance execute `:lua require('mini.test').setup(); MiniTest.run()` to run all tests or `:lua require('mini.test').setup(); MiniTest.run_file()` to run tests only from current buffer.
 
-This plugin uses 'mini.test' to manage its tests. For more hands-on introduction, see [TESTING.md](TESTING.md).
+This plugin uses 'mini.test' to manage its tests. For a more hands-on introduction, see [TESTING.md](TESTING.md).
 
-If you have Windows or MacOS and want to contribute code related change, make you best effort to not break existing behavior. It will later be tested automatically after making Pull Request. The reason for this distinction is that tests are not well designed to be run on those operating systems.
+**Notes**:
+- If you have Windows or MacOS and want to contribute code related change, make your best effort to not break existing behavior. It will later be tested automatically after making Pull Request. The reason for this distinction is that tests are not well designed to be run on those operating systems.
+- If new functionality relies on an external dependency (`git` CLI tool, LSP server, etc.), use mocking (writing Lua code which emulates dependency usage as close as reasonably possible). For examples, take a look at tests for 'mini.pick', 'mini.completion', and 'mini.statusline'.
+- There is a certain number of tests that are flaky (i.e. will sometimes report an error due to other reasons than actual functionality being broke). It is usually the ones which test time related functionality (i.e. that certain action was done after specific amount of delay).
+    A commonly used way to know if the test is flaky is that it fails on non-nightly Neovim version yet there were no changes to its tested module after it had passed in the past. For example, some 'mini.animate' test is shown to break but there were no changes to it since test passed in CI couple of days before.
+    In case there is some test breaking which reasonably should not, rerun that test (or the whole file) at least several times.
 
 ## Formatting
 
@@ -111,7 +120,7 @@ This project uses [StyLua](https://github.com/JohnnyMorganz/StyLua) version 0.19
 - [Install StyLua](https://github.com/JohnnyMorganz/StyLua#installation). NOTE: use `v0.19.0`.
 - Format with it. Currently there are two ways to do this:
     - Manually run `stylua .` from the root directory of this project.
-    - [Install pre-commit](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.
+    - Install [`pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit install` (from the root directory). This will auto-format relevant code before making commits.
 
 ## List of highlight groups
 
