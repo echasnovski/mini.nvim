@@ -454,9 +454,10 @@ H.apply_config = function(config)
   MiniStatusline.config = config
 
   -- Set settings to ensure statusline is displayed properly
-  if config.set_vim_settings then
-    vim.o.laststatus = 2 -- Always show statusline
-  end
+  if config.set_vim_settings then vim.o.laststatus = 2 end
+
+  -- Ensure proper 'statusline' values (to not rely on autocommands trigger)
+  H.ensure_content()
 end
 
 H.create_autocommands = function()
@@ -466,11 +467,7 @@ H.create_autocommands = function()
     vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
   end
 
-  local set_active = function() vim.wo.statusline = '%!v:lua.MiniStatusline.active()' end
-  au({ 'WinEnter', 'BufEnter' }, '*', set_active, 'Set active statusline')
-
-  local set_inactive = function() vim.wo.statusline = '%!v:lua.MiniStatusline.inactive()' end
-  au({ 'WinLeave', 'BufLeave' }, '*', set_inactive, 'Set inactive statusline')
+  au({ 'WinEnter', 'BufWinEnter' }, '*', H.ensure_content, 'Ensure statusline content')
 
   if vim.fn.has('nvim-0.8') == 1 then
     local make_track_lsp = function(increment)
@@ -505,6 +502,15 @@ H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniStatusline.config, vim.b.ministatusline_config or {}, config or {})
+end
+
+-- Content --------------------------------------------------------------------
+H.ensure_content = function()
+  local cur_win_id = vim.api.nvim_get_current_win()
+  for _, win_id in ipairs(vim.api.nvim_list_wins()) do
+    vim.wo[win_id].statusline = win_id == cur_win_id and '%!v:lua.MiniStatusline.active()'
+      or '%!v:lua.MiniStatusline.inactive()'
+  end
 end
 
 -- Mode -----------------------------------------------------------------------

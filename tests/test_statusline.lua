@@ -163,6 +163,22 @@ T['setup()']['disables built-in statusline in quickfix window'] = function()
   expect.match(child.o.statusline, 'MiniStatusline')
 end
 
+T['setup()']['ensure content when working with built-in terminal'] = function()
+  local init_buf_id = child.api.nvim_get_current_buf()
+
+  child.cmd('terminal! bash --noprofile --norc')
+  -- Wait for terminal to get active
+  child.loop.sleep(50)
+  expect.match(child.wo.statusline, 'MiniStatusline%.active')
+  eq(child.api.nvim_get_current_buf() == init_buf_id, false)
+
+  type_keys('i', 'exit', '<CR>')
+  child.loop.sleep(50)
+  type_keys('<CR>')
+  expect.match(child.wo.statusline, 'MiniStatusline%.active')
+  eq(child.api.nvim_get_current_buf() == init_buf_id, true)
+end
+
 T['combine_groups()'] = new_set()
 
 local combine_groups = function(...) return child.lua_get('MiniStatusline.combine_groups(...)', { ... }) end
