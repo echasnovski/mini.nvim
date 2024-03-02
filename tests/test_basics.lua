@@ -81,10 +81,14 @@ end
 
 T['toggle_diagnostic()'] = new_set()
 
+local toggle_diagnostic = function() return child.lua_get('MiniBasics.toggle_diagnostic()') end
+
 T['toggle_diagnostic()']['works'] = function()
-  local toggle_diagnostic = function() return child.lua_get('MiniBasics.toggle_diagnostic()') end
   child.lua([[vim.diagnostic.enable = function() vim.b.diag_status = 'enabled' end]])
   child.lua([[vim.diagnostic.disable = function() vim.b.diag_status = 'disabled' end]])
+  if child.fn.has('nvim-0.9') == 1 then
+    child.lua([[vim.diagnostic.is_disabled = function() return vim.b.diag_status == 'disabled' end]])
+  end
 
   load_module()
 
@@ -111,6 +115,22 @@ T['toggle_diagnostic()']['works'] = function()
   eq(child.b.diag_status, 'disabled')
   eq(toggle_diagnostic(), '  diagnostic')
   eq(child.b.diag_status, 'enabled')
+end
+
+T['toggle_diagnostic()']['works if initially disabled'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip('Requires presence of `vim.diagnostic.is_disabled` which is Neovim>=0.9.')
+  end
+
+  load_module()
+  local buf_id = child.api.nvim_get_current_buf()
+
+  child.diagnostic.disable(buf_id)
+  eq(child.diagnostic.is_disabled(buf_id), true)
+  toggle_diagnostic()
+  eq(child.diagnostic.is_disabled(buf_id), false)
+  toggle_diagnostic()
+  eq(child.diagnostic.is_disabled(buf_id), true)
 end
 
 -- Integration tests ==========================================================
@@ -569,6 +589,9 @@ end
 T['Mappings']['Toggle options']['works with diagnostic'] = function()
   child.lua([[vim.diagnostic.enable = function() vim.b.diag_status = 'enabled' end]])
   child.lua([[vim.diagnostic.disable = function() vim.b.diag_status = 'disabled' end]])
+  if child.fn.has('nvim-0.9') == 1 then
+    child.lua([[vim.diagnostic.is_disabled = function() return vim.b.diag_status == 'disabled' end]])
+  end
 
   load_module()
 
