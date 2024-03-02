@@ -313,6 +313,16 @@ T['section_diagnostics()']['is shown only in normal buffers'] = function()
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
+T['section_diagnostics()']['is not shown if diagnostics is disabled'] = function()
+  if child.fn.has('nvim-0.9') == 0 then
+    MiniTest.skip('Requires presence of `vim.diagnostic.is_disabled` which is Neovim>=0.9.')
+  end
+
+  local buf_id = child.api.nvim_get_current_buf()
+  child.diagnostic.disable(buf_id)
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
+end
+
 T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_devicons, post_case = unmock_file } })
 
 local validate_fileinfo = function(args, pattern)

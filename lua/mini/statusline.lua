@@ -293,15 +293,14 @@ end
 ---
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
-  _G.n_attached_lsp = H.n_attached_lsp
   local dont_show = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or H.has_no_lsp_attached()
-  if dont_show then return '' end
+  if dont_show or H.diagnostic_is_disabled() then return '' end
 
   -- Construct string parts
-  local counts = H.get_diagnostic_count()
+  local count = H.diagnostic_get_count()
   local severity, t = vim.diagnostic.severity, {}
   for _, level in ipairs(H.diagnostic_levels) do
-    local n = counts[severity[level.name]] or 0
+    local n = count[severity[level.name]] or 0
     -- Add level info only if diagnostic is present
     if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
   end
@@ -599,10 +598,9 @@ H.get_filetype_icon = function()
 end
 
 H.has_no_lsp_attached = function() return (H.n_attached_lsp[vim.api.nvim_get_current_buf()] or 0) == 0 end
-
 if vim.fn.has('nvim-0.8') == 0 then H.has_no_lsp_attached = function() return #vim.lsp.buf_get_clients() == 0 end end
 
-H.get_diagnostic_count = function()
+H.diagnostic_get_count = function()
   local res = {}
   for _, d in ipairs(vim.diagnostic.get(0)) do
     res[d.severity] = (res[d.severity] or 0) + 1
@@ -610,6 +608,9 @@ H.get_diagnostic_count = function()
   return res
 end
 
-if vim.fn.has('nvim-0.10') == 1 then H.get_diagnostic_count = function() return vim.diagnostic.count(0) end end
+if vim.fn.has('nvim-0.10') == 1 then H.diagnostic_get_count = function() return vim.diagnostic.count(0) end end
+
+H.diagnostic_is_disabled = function() return vim.diagnostic.is_disabled(0) end
+if vim.fn.has('nvim-0.9') == 0 then H.diagnostic_is_disabled = function(_) return false end end
 
 return MiniStatusline
