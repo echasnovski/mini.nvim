@@ -565,8 +565,8 @@ MiniDeps.update = function(names, opts)
   local feedback = opts.force and H.update_feedback_log or H.update_feedback_confirm
   feedback(lines)
 
-  -- Show job errors
-  H.plugs_show_job_errors(plugs, 'update')
+  -- Show job warnings and errors
+  H.plugs_show_job_notifications(plugs, 'update')
 end
 
 --- Clean plugins
@@ -606,7 +606,7 @@ MiniDeps.snap_get = function()
   local plugs = H.plugs_from_names()
   H.ensure_git_exec()
   H.plugs_infer_head(plugs)
-  H.plugs_show_job_errors(plugs, 'computing snapshot')
+  H.plugs_show_job_notifications(plugs, 'computing snapshot')
 
   local snap = {}
   for _, p in ipairs(plugs) do
@@ -640,7 +640,7 @@ MiniDeps.snap_set = function(snap)
   -- Checkout
   H.ensure_git_exec()
   H.plugs_checkout(plugs)
-  H.plugs_show_job_errors(plugs, 'applying snapshot')
+  H.plugs_show_job_notifications(plugs, 'applying snapshot')
 end
 
 --- Save snapshot
@@ -1028,8 +1028,8 @@ H.plugs_install = function(plugs)
   vim.tbl_map(function(p) p.job.cwd = p.path end, plugs)
   H.plugs_checkout(plugs, { exec_hooks = false, all_helptags = true })
 
-  -- Show errors
-  H.plugs_show_job_errors(plugs, 'installing plugin')
+  -- Show warnings and errors
+  H.plugs_show_job_notifications(plugs, 'installing plugin')
 end
 
 H.plugs_download_updates = function(plugs)
@@ -1118,8 +1118,13 @@ H.plugs_run_jobs = function(plugs, prepare, process)
   end
 end
 
-H.plugs_show_job_errors = function(plugs, action_name)
+H.plugs_show_job_notifications = function(plugs, action_name)
   for _, p in ipairs(plugs) do
+    local warn = H.cli_stream_tostring(p.job.warn)
+    if warn ~= '' then
+      local msg = string.format('Warnings in `%s` during %s\n%s', p.name, action_name, warn)
+      H.notify(msg, 'WARN')
+    end
     local err = H.cli_stream_tostring(p.job.err)
     if err ~= '' then
       local msg = string.format('Error in `%s` during %s\n%s', p.name, action_name, err)
@@ -1467,7 +1472,6 @@ H.cli_run = function(jobs)
 
   local n_total, id_started, n_finished = #jobs, 0, 0
   if n_total == 0 then return end
-  local is_finished = function() return n_total <= n_finished end
 
   local run_next
   run_next = function()
@@ -1477,21 +1481,32 @@ H.cli_run = function(jobs)
     local job = jobs[id_started]
     local command, cwd, exit_msg = job.command or {}, job.cwd, job.exit_msg
 
-    if vim.fn.isdirectory(cwd) == 0 and #job.err == 0 then job.err = { vim.inspect(cwd) .. ' is not a directory.' } end
-
     -- Prepare data for `vim.loop.spawn`
     local executable, args = command[1], vim.list_slice(command, 2, #command)
     local process, stdout, stderr = nil, vim.loop.new_pipe(), vim.loop.new_pipe()
     local spawn_opts = { args = args, cwd = cwd, stdio = { nil, stdout, stderr } }
 
-    -- Register job finish and start a new one from the queue
     local on_exit = function(code)
-      if code ~= 0 then table.insert(job.err, 1, 'PROCESS EXITED WITH ERROR CODE ' .. code .. '\n') end
-      if not process:is_closing() then process:close() end
+      -- Process only not already closing job
+      if process:is_closing() then return end
+      process:close()
+
+      -- Process exit code: if 0 treat `stderr` as warning; error otherwise
+      if code == 0 then
+        vim.list_extend(job.warn, job.err)
+        -- NOTE: This is valid as only jobs with `err = {}` are filtered to run
+        job.err = {}
+      else
+        table.insert(job.err, 1, 'ERROR CODE ' .. code .. '\n')
+      end
+
+      -- Finalize job
       n_finished = n_finished + 1
       if type(exit_msg) == 'string' and #job.err == 0 then
         H.notify(string.format('(%d/%d) %s', n_finished, n_total, exit_msg))
       end
+
+      -- Start next parallel job
       run_next()
     end
 
@@ -1499,9 +1514,9 @@ H.cli_run = function(jobs)
     H.cli_read_stream(stdout, job.out)
     H.cli_read_stream(stderr, job.err)
     vim.defer_fn(function()
-      if is_finished() then return end
-      pcall(vim.loop.process_kill, process, 15)
-      if #job.err == 0 then job.err = { 'PROCESS REACHED TIMEOUT.' } end
+      if not process:is_active() then return end
+      table.insert(job.err, 'PROCESS REACHED TIMEOUT.')
+      on_exit(1)
     end, timeout)
   end
 
@@ -1509,7 +1524,7 @@ H.cli_run = function(jobs)
     run_next()
   end
 
-  vim.wait(timeout * n_total, is_finished, 1)
+  vim.wait(timeout * n_total, function() return n_total <= n_finished end, 1)
 end
 
 H.cli_read_stream = function(stream, feed)
@@ -1524,7 +1539,7 @@ end
 H.cli_stream_tostring = function(stream) return (table.concat(stream):gsub('\n+$', '')) end
 
 H.cli_new_job = function(command, cwd, exit_msg)
-  return { command = command, cwd = cwd, exit_msg = exit_msg, out = {}, err = {} }
+  return { command = command, cwd = cwd, exit_msg = exit_msg, out = {}, warn = {}, err = {} }
 end
 
 -- Two-stage execution --------------------------------------------------------

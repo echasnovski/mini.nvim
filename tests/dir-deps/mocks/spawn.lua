@@ -2,10 +2,15 @@ _G.process_log = {}
 
 local process_id = 1
 local new_process = function(pid)
+  local is_active, is_closing = true, false
   return {
     pid = pid,
-    close = function(_) table.insert(_G.process_log, 'Process ' .. pid .. ' was closed.') end,
-    is_closing = function(_) return false end,
+    close = function(_)
+      table.insert(_G.process_log, 'Process ' .. pid .. ' was closed.')
+      is_active, is_closing = false, true
+    end,
+    is_closing = function(_) return is_closing end,
+    is_active = function(_) return is_active end,
   }
 end
 

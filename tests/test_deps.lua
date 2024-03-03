@@ -572,7 +572,10 @@ T['add()']['Install']['works'] = function()
 end
 
 T['add()']['Install']['checks for executable Git'] = function()
-  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  child.lua([[
+    _G.stdio_queue = { { err = 'No Git'} }
+    _G.process_mock_data = { { exit_code = 1 } }
+  ]])
   expect.error(function() add('user/new_plugin') end, 'Could not find executable `git` CLI tool')
 end
 
@@ -1014,23 +1017,24 @@ T['add()']['Install']['generates help tags'] = function()
   eq(help_tags, { 'depstest_dep_1_tag', 'depstest_dep_2_tag', 'depstest_new_tag' })
 end
 
-T['add()']['Install']['handles process errors'] = function()
+T['add()']['Install']['handles process errors and warnings'] = function()
   child.lua([[
     _G.stdio_queue = {
-      { out = 'git version 2.43.0'}, -- Check Git executable
-      {},                            -- Clone dep_plugin
-      { err = 'Could not clone' },   -- Clone new_plugin
-      { out = 'sha2head' },          -- Get `HEAD` in dep_plugin
+      { out = 'git version 2.43.0'},                            -- Check Git executable
+      { err = 'filtering not recognized by server, ignoring' }, -- Clone dep_plugin
+      { err = 'Could not clone' },                              -- Clone new_plugin
+      { out = 'sha2head' },                                     -- Get `HEAD` in dep_plugin
     }
 
     -- Mock non-zero exit code in getting dep_plugin's head
-    _G.process_mock_data = { [4] = { exit_code = 128 } }
+    _G.process_mock_data = { [3] = { exit_code = 1 }, [4] = { exit_code = 128 } }
   ]])
 
   add({ source = 'user/new_plugin', depends = { 'user/dep_plugin' } })
 
-  -- If any error (from `stderr` or exit code) is encountered, all CLI jobs for
-  -- that particular plugin should not be done
+  -- Errors should be treated as follows:
+  -- - If exit code is non-zero, it should error notify it with `stderr` output
+  -- - If exit code is zero, then process did not error and `stderr` is warning
   --stylua: ignore
   local ref_git_spawn_log = {
     { args = { 'version' }, cwd = child.fn.getcwd() },
@@ -1048,10 +1052,11 @@ T['add()']['Install']['handles process errors'] = function()
     { '(mini.deps) Installing `new_plugin`', 'INFO' },
     { '(mini.deps) (1/2) Installed `dep_plugin`', 'INFO' },
     {
-      '(mini.deps) Error in `dep_plugin` during installing plugin\nPROCESS EXITED WITH ERROR CODE 128',
-      'ERROR',
+      '(mini.deps) Warnings in `dep_plugin` during installing plugin\nfiltering not recognized by server, ignoring',
+      'WARN',
     },
-    { '(mini.deps) Error in `new_plugin` during installing plugin\nCould not clone', 'ERROR' },
+    { '(mini.deps) Error in `dep_plugin` during installing plugin\nERROR CODE 128', 'ERROR' },
+    { '(mini.deps) Error in `new_plugin` during installing plugin\nERROR CODE 1\nCould not clone', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 end
@@ -1116,8 +1121,8 @@ T['add()']['Install']['respects `config.job.timeout`'] = function()
   local ref_notify_log = {
     { '(mini.deps) Installing `new_plugin`', 'INFO' },
     { '(mini.deps) (1/2) Installed `new_plugin`', 'INFO' },
-    { '(mini.deps) Error in `dep_plugin` during installing plugin\nPROCESS REACHED TIMEOUT.', 'ERROR' },
-    { '(mini.deps) Error in `new_plugin` during installing plugin\nPROCESS REACHED TIMEOUT.', 'ERROR' },
+    { '(mini.deps) Error in `dep_plugin` during installing plugin\nERROR CODE 1\nPROCESS REACHED TIMEOUT.', 'ERROR' },
+    { '(mini.deps) Error in `new_plugin` during installing plugin\nERROR CODE 1\nPROCESS REACHED TIMEOUT.', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 end
@@ -1190,7 +1195,7 @@ T['update()']['works'] = function()
     _G.stdio_queue = {
       { out = 'git version 2.43.0'}, -- Check Git executable
       { out = 'https://github.com/user/plugin_1' }, -- Get source from `origin` in plugin_1
-      {},                                           -- Set `origin` to source in plugin_2
+      { err = 'Some warning' },                     -- Set `origin` to source in plugin_2
       { err = 'Error computing origin' },           -- Get source from `origin` in plugin_3
       { out = 'sha1head' },          -- Get `HEAD` in plugin_1
       { out = 'sha2head' },          -- Get `HEAD` in plugin_2
@@ -1206,7 +1211,7 @@ T['update()']['works'] = function()
     }
 
     -- Mock non-trivial fetch duration
-    _G.process_mock_data = { [9] = { duration = 50 }, [10] = { duration = 40 } }
+    _G.process_mock_data = { [4] = { exit_code = 1 }, [9] = { duration = 50 }, [10] = { duration = 40 } }
   ]])
 
   -- Update should be done in parallel
@@ -1250,7 +1255,8 @@ T['update()']['works'] = function()
     { '(mini.deps) Downloading 2 updates', 'INFO' },
     { '(mini.deps) (1/2) Downloaded update for `plugin_2`', 'INFO' },
     { '(mini.deps) (2/2) Downloaded update for `plugin_1`', 'INFO' },
-    { '(mini.deps) Error in `plugin_3` during update\nError computing origin', 'ERROR' },
+    { '(mini.deps) Warnings in `plugin_2` during update\nSome warning', 'WARN' },
+    { '(mini.deps) Error in `plugin_3` during update\nERROR CODE 1\nError computing origin', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 
@@ -1263,7 +1269,10 @@ end
 
 T['update()']['checks for executable Git'] = function()
   add('plugin_1')
-  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  child.lua([[
+    _G.stdio_queue = { { err = 'No Git'} }
+    _G.process_mock_data = { { exit_code = 1 } }
+  ]])
   expect.error(function() update() end, 'Could not find executable `git` CLI tool')
 end
 
@@ -1380,6 +1389,8 @@ T['update()']['can fold in cofirm buffer'] = function()
       { out = 'new2head' },             -- Get commit of `checkout` in plugin_2
       { out = _G.plugin_2_log },        -- Get log of `checkout` changes in plugin_2
     }
+
+    _G.process_mock_data = { [4] = { exit_code = 1 } }
   ]])
 
   update()
@@ -1816,8 +1827,9 @@ T['update()']['respects `config.job.timeout`'] = function()
   update()
 
   local ref_notify_log = {
-    { '(mini.deps) Error in `plugin_1` during update\nPROCESS REACHED TIMEOUT.', 'ERROR' },
-    { '(mini.deps) Error in `plugin_2` during update\nPROCESS REACHED TIMEOUT.', 'ERROR' },
+    { '(mini.deps) Downloading 1 update', 'INFO' },
+    { '(mini.deps) Error in `plugin_1` during update\nERROR CODE 1\nPROCESS REACHED TIMEOUT.', 'ERROR' },
+    { '(mini.deps) Error in `plugin_2` during update\nERROR CODE 1\nPROCESS REACHED TIMEOUT.', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 end
@@ -1847,20 +1859,20 @@ T['update()']['respects `config.silent`'] = function()
   validate_notifications({})
 end
 
-T['update()']['handles process errors'] = function()
+T['update()']['handles process errors and warnings'] = function()
   add('user/plugin_1')
   add('user/plugin_2')
 
   child.lua([[
     _G.stdio_queue = {
       { out = 'git version 2.43.0'}, -- Check Git executable
-      {},                            -- Set `origin` to source in plugin_1
+      { err = 'Some warning' },      -- Set `origin` to source in plugin_1
       { err = 'Bad `origin`'},       -- Set `origin` to source in plugin_2
       { out = 'sha2head' },          -- Get `HEAD` in plugin_1
     }
 
     -- Mock non-zero exit code in getting plugin_1's head
-    _G.process_mock_data = { [4] = { exit_code = 128 } }
+    _G.process_mock_data = { [3] = { exit_code = 1 }, [4] = { exit_code = 128 } }
   ]])
 
   update()
@@ -1877,8 +1889,9 @@ T['update()']['handles process errors'] = function()
 
   -- Should produce notifications
   local ref_notify_log = {
-    { '(mini.deps) Error in `plugin_1` during update\nPROCESS EXITED WITH ERROR CODE 128', 'ERROR' },
-    { '(mini.deps) Error in `plugin_2` during update\nBad `origin`', 'ERROR' },
+    { '(mini.deps) Warnings in `plugin_1` during update\nSome warning', 'WARN' },
+    { '(mini.deps) Error in `plugin_1` during update\nERROR CODE 128', 'ERROR' },
+    { '(mini.deps) Error in `plugin_2` during update\nERROR CODE 1\nBad `origin`', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 end
@@ -2029,7 +2042,10 @@ end
 
 T['snap_get()']['checks for executable Git'] = function()
   add('plugin_1')
-  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  child.lua([[
+    _G.stdio_queue = { { err = 'No Git'} }
+    _G.process_mock_data = { { exit_code = 1 } }
+  ]])
   expect.error(snap_get, 'Could not find executable `git` CLI tool')
 end
 
@@ -2040,6 +2056,7 @@ T['snap_get()']['handles process errors'] = function()
       { err = 'Some error' },        -- Get `HEAD` in plugin_1
       { out = 'sha2head' },          -- Get `HEAD` in start_plugin
     }
+    _G.process_mock_data = { [2] = { exit_code = 1 } }
   ]])
 
   -- Should still return snapshot but without data for errored plugins
@@ -2047,7 +2064,9 @@ T['snap_get()']['handles process errors'] = function()
   eq(snap, { start_plugin = 'sha2head' })
 
   -- Should show error notifications
-  validate_notifications({ { '(mini.deps) Error in `plugin_1` during computing snapshot\nSome error', 'ERROR' } })
+  validate_notifications({
+    { '(mini.deps) Error in `plugin_1` during computing snapshot\nERROR CODE 1\nSome error', 'ERROR' },
+  })
 end
 
 T['snap_set()'] = new_set({
@@ -2086,6 +2105,7 @@ T['snap_set()']['works'] = function()
       {},                             -- Stash in start_plugin
       {},                             -- Checkout in start_plugin
     }
+    _G.process_mock_data = { [3] = { exit_code = 1 } }
   ]])
 
   -- Should apply only to plugins inside current session
@@ -2120,7 +2140,7 @@ T['snap_set()']['works'] = function()
   -- Should produce notifications
   local ref_notify_log = {
     { '(mini.deps) (1/1) Checked out `new1head` in `plugin_1`', 'INFO' },
-    { '(mini.deps) Error in `plugin_2` during applying snapshot\nError getting HEAD', 'ERROR' },
+    { '(mini.deps) Error in `plugin_2` during applying snapshot\nERROR CODE 1\nError getting HEAD', 'ERROR' },
   }
   validate_notifications(ref_notify_log)
 
@@ -2140,7 +2160,10 @@ end
 
 T['snap_set()']['checks for executable Git'] = function()
   add('plugin_1')
-  child.lua([[_G.stdio_queue = { { err = 'No Git'} }]])
+  child.lua([[
+    _G.stdio_queue = { { err = 'No Git'} }
+    _G.process_mock_data = { { exit_code = 1 } }
+  ]])
   expect.error(function() snap_set({}) end, 'Could not find executable `git` CLI tool')
 end
 
