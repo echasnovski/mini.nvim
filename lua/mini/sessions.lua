@@ -148,12 +148,12 @@ MiniSessions.detected = {}
 ---     `MiniSessions.config.hooks.post.read`).
 MiniSessions.read = function(session_name, opts)
   if H.is_disabled() then return end
-  if vim.tbl_count(MiniSessions.detected) == 0 then
-    H.error('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
-  end
 
   -- Make sessions up to date
   H.detect_sessions()
+  if vim.tbl_count(MiniSessions.detected) == 0 then
+    return H.message('There is no detected sessions. Change configuration and rerun `MiniSessions.setup()`.')
+  end
 
   -- Get session data
   if session_name == nil then
@@ -443,10 +443,8 @@ H.create_autocommands = function(config)
     local autoread = function()
       if not H.is_something_shown() then MiniSessions.read() end
     end
-    vim.api.nvim_create_autocmd(
-      'VimEnter',
-      { group = augroup, nested = true, once = true, callback = autoread, desc = 'Autoread latest session' }
-    )
+    local opts = { group = augroup, nested = true, once = true, callback = autoread, desc = 'Autoread latest session' }
+    vim.api.nvim_create_autocmd('VimEnter', opts)
   end
 
   if config.autowrite then

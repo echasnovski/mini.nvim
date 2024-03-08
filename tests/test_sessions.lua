@@ -326,7 +326,8 @@ end
 T['read()']['works with no detected sessions'] = function()
   reload_module({ directory = '', file = '' })
   eq(child.lua_get('MiniSessions.detected'), {})
-  expect.error(function() child.lua('MiniSessions.read()') end, '%(mini%.sessions%) There is no detected sessions')
+  expect.no_error(function() child.lua('MiniSessions.read()') end)
+  expect.match(get_latest_message(), '%(mini%.sessions%) There is no detected sessions')
 end
 
 T['read()']['accepts only name of detected session'] = function()
