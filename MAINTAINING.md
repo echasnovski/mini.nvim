@@ -65,6 +65,8 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 
 - Solve the problem.
 - If change is in code, write test which breaks before problem is solved and passes after.
+- If change introduces new config setting, consult with [dedicated checklist](#adding-new-config-settings).
+- If change is worth to be seen by users (notable/breaking feature/fix), update 'CHANGELOG.md' following formatting from previous versions.
 - Make sure that all tests in affected module(s) pass in all supported versions. See [Maintainer setup](#maintainer-setup) and ['Testing' section in CONTRIBUTING.md](CONTRIBUTING.md#testing).
 - Stage and commit changes into a separate Git branch. Push the branch.
 - Make sure that all CI pass.
@@ -74,6 +76,22 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
     - `make dual_sync` to sync.
     - `make dual_log` and look at changes which are about to be applied to standalone repositories. Make sure that they are what you'd expect.
     - `make dual_push` to push changes to standalone repositories.
+
+## Typical workflow for processing a GitHub issue
+
+- Add label with module name issue is about (if any). If issue is worded politely and/or with much details, thank user for opening an issue.
+- Make sure the underlying problem is valid, i.e. it can be reproduced and the root cause is in this project. If it can not be reproduce, politely explain that and ask for more reproduction details. If the cause is not related to the project, politely explain that, close an issue, and direct towards the real root cause.
+- Check already existing issues for possible duplicates. If there is at least one, review its reasoning before making decision about the current issue.
+- Decide whether and how an issue should be resolved. Use ["General principles"](README.md#general-principles), module's help and code documentation while making the decision.
+    - If decision is to not resolve, politely explain that and close an issue (possibly mentioning similar reasoning in the past).
+    - If decision is to resolve, resolve the issue while putting `Resolve #xxx` at the bottom of commit message.
+
+## Typical workflow for processing GitHub pull request
+
+- Add label with module name pull request (PR) is about (if any). If PR is worded politely, thank user for doing that.
+- Make sure the PR is valid, i.e. resolves an issue or adds a feature any of which aligns with the project. Ideally, it should have been agreed in the prior created issue (as per [CONTRIBUTING.md](CONTRIBUTING.md)).
+- Review PR code and iterate towards making it have enough code quality. Use first steps of ["Typical workflow for adding change"](#typical-workflow-for-adding-change) as reference. **Note**: if what is left to do requires some overly specific project knowledge (i.e. can be done _much_ quicker if you know how, but requires non-trivial amount of reading/discovering first time), consider merging PR in a new separate branch and finish it manually (usually with preserving original commit authorship).
+- When change is of enough quality, merge it and proceed treating it as regular change.
 
 ## Adding new config settings
 

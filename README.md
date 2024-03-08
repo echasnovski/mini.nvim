@@ -146,6 +146,8 @@ If you are browsing without particular objective and don't know which module to 
 
 - **Stability**. Each module upon release is considered to be relatively stable: both in terms of setup and functionality. Any non-bugfix backward-incompatible change will be released gradually as much as possible.
 
+- **Not filetype/language specific**. Including functionality which needs several filetype/language specific implementations is an explicit no-goal of this project. This is mostly due to the potential increase in maintenance to keep implementation up to date. However, any part which might need filetype/language specific tuning should be designed to allow it by letting user set proper buffer options and/or local configuration.
+
 ## Plugin colorschemes
 
 This plugin comes with several color schemes (all have both dark and light variants):
