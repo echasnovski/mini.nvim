@@ -1112,10 +1112,10 @@ T['add()']['Install']['respects `config.job.timeout`'] = function()
     }
 
     -- Mock long execution of some jobs
-    _G.process_mock_data = { [2] = { duration = 20 }, [3] = { duration = 0 }, [4] = { duration = 20 } }
+    _G.process_mock_data = { [2] = { duration = 50 }, [3] = { duration = 0 }, [4] = { duration = 50 } }
   ]])
 
-  child.lua('MiniDeps.config.job.timeout = 10')
+  child.lua('MiniDeps.config.job.timeout = 25')
   add({ source = 'user/new_plugin', depends = { 'user/dep_plugin' } })
 
   local ref_notify_log = {
@@ -1818,12 +1818,12 @@ T['update()']['respects `config.job.timeout`'] = function()
     }
 
     -- Mock non-trivial durations
-    _G.process_mock_data = { [3] = { duration = 20 }, [6] = { duration = 20 } }
+    _G.process_mock_data = { [3] = { duration = 50 }, [6] = { duration = 50 } }
   ]])
   add('user/plugin_1')
   add('user/plugin_2')
 
-  child.lua('MiniDeps.config.job.timeout = 10')
+  child.lua('MiniDeps.config.job.timeout = 25')
   update()
 
   local ref_notify_log = {
