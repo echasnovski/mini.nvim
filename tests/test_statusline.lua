@@ -163,7 +163,7 @@ T['setup()']['disables built-in statusline in quickfix window'] = function()
   expect.match(child.o.statusline, 'MiniStatusline')
 end
 
-T['setup()']['ensure content when working with built-in terminal'] = function()
+T['setup()']['ensures content when working with built-in terminal'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
 
   child.cmd('terminal! bash --noprofile --norc')
@@ -177,6 +177,13 @@ T['setup()']['ensure content when working with built-in terminal'] = function()
   type_keys('<CR>')
   expect.match(child.wo.statusline, 'MiniStatusline%.active')
   eq(child.api.nvim_get_current_buf() == init_buf_id, true)
+end
+
+T['setup()']['ensure content when floating window is opened without enter'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  local buf_id = child.api.nvim_create_buf(false, true)
+  child.api.nvim_open_win(buf_id, false, { relative = 'editor', row = 1, col = 1, height = 4, width = 10 })
+  expect.match(child.api.nvim_win_get_option(init_win_id, 'statusline'), 'MiniStatusline%.active')
 end
 
 T['combine_groups()'] = new_set()

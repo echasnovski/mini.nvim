@@ -504,13 +504,15 @@ H.get_config = function(config)
 end
 
 -- Content --------------------------------------------------------------------
-H.ensure_content = function()
+H.ensure_content = vim.schedule_wrap(function()
+  -- NOTE: Use `schedule_wrap()` to properly work inside autocommands because
+  -- they might temporarily change current window
   local cur_win_id = vim.api.nvim_get_current_win()
   for _, win_id in ipairs(vim.api.nvim_list_wins()) do
     vim.wo[win_id].statusline = win_id == cur_win_id and '%!v:lua.MiniStatusline.active()'
       or '%!v:lua.MiniStatusline.inactive()'
   end
-end
+end)
 
 -- Mode -----------------------------------------------------------------------
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
