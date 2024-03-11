@@ -105,6 +105,9 @@ T['setup()']['creates side effects'] = function()
   has_highlight('MiniStatuslineFilename', 'links to StatusLineNC')
   has_highlight('MiniStatuslineFileinfo', 'links to StatusLine')
   has_highlight('MiniStatuslineInactive', 'links to StatusLineNC')
+
+  -- Sets global value of 'statusline'
+  eq(child.go.statusline, '%!v:lua.MiniStatusline.active()')
 end
 
 T['setup()']['creates `config` field'] = function()

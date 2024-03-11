@@ -457,6 +457,10 @@ H.apply_config = function(config)
 
   -- Ensure proper 'statusline' values (to not rely on autocommands trigger)
   H.ensure_content()
+
+  -- Set global value to reduce flickering when first time entering buffer, as
+  -- it is used by default before content is ensured on next loop
+  vim.go.statusline = '%!v:lua.MiniStatusline.active()'
 end
 
 H.create_autocommands = function()
