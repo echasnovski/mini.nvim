@@ -179,11 +179,23 @@ T['setup()']['ensures content when working with built-in terminal'] = function()
   eq(child.api.nvim_get_current_buf() == init_buf_id, true)
 end
 
-T['setup()']['ensure content when floating window is opened without enter'] = function()
+T['setup()']['ensures content when buffer is displayed in non-current window'] = function()
   local init_win_id = child.api.nvim_get_current_win()
+  local validate = function()
+    expect.match(child.api.nvim_win_get_option(init_win_id, 'statusline'), 'MiniStatusline%.active')
+  end
   local buf_id = child.api.nvim_create_buf(false, true)
+
+  -- Normal window
+  child.cmd('leftabove vertical split')
+  local new_win_id = child.api.nvim_get_current_win()
+  child.api.nvim_set_current_win(init_win_id)
+  child.api.nvim_win_set_buf(new_win_id, buf_id)
+  validate()
+
+  -- Floating window
   child.api.nvim_open_win(buf_id, false, { relative = 'editor', row = 1, col = 1, height = 4, width = 10 })
-  expect.match(child.api.nvim_win_get_option(init_win_id, 'statusline'), 'MiniStatusline%.active')
+  validate()
 end
 
 T['combine_groups()'] = new_set()
