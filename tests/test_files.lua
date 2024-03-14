@@ -3645,6 +3645,14 @@ T['Events']['`MiniFilesWindowUpdate` is not triggered for cursor move'] = functi
   validate_event_track({})
 end
 
+T['Events']['`MiniFilesWindowUpdate` is triggered after current buffer is set'] = function()
+  track_event('MiniFilesWindowUpdate')
+  open(test_dir_path)
+  clear_event_track()
+  go_out()
+  validate_event_track({ { buf_id = 2, win_id = 1003 }, { buf_id = 3, win_id = 1002 } }, true)
+end
+
 T['Events']['`MiniFilesActionCreate` triggers'] = function()
   track_event('MiniFilesActionCreate')
 

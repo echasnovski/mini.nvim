@@ -1536,6 +1536,9 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   -- Show view in window
   H.window_set_view(win_id, view)
 
+  -- Trigger dedicated event
+  H.trigger_event('MiniFilesWindowUpdate', { buf_id = vim.api.nvim_win_get_buf(win_id), win_id = win_id })
+
   -- Update explorer data
   explorer.views = views
   explorer.windows = windows
@@ -2173,9 +2176,6 @@ H.window_update = function(win_id, config)
 
   -- Make sure proper `conceallevel` (can be not the case with 'noice.nvim')
   vim.wo[win_id].conceallevel = 3
-
-  -- Trigger dedicated event
-  H.trigger_event('MiniFilesWindowUpdate', { buf_id = vim.api.nvim_win_get_buf(win_id), win_id = win_id })
 end
 
 H.window_update_highlight = function(win_id, new_from, new_to)
