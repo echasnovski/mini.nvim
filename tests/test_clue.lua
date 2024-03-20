@@ -1068,7 +1068,7 @@ T['gen_clues']['marks()']['works'] = function()
       window = { delay = 0, config = { width = 45 } },
     })
   ]])
-  child.set_size(20, 50)
+  child.set_size(20, 48)
 
   -- Normal mode
   type_keys("'")
