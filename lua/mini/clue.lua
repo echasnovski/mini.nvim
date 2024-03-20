@@ -1288,11 +1288,7 @@ end
 
 H.unmap_trigger = function(buf_id, trigger)
   if not H.is_valid_buf(buf_id) then return end
-
-  trigger.keys = H.replace_termcodes(trigger.keys)
-
-  -- Delete mapping
-  pcall(vim.keymap.del, trigger.mode, trigger.keys, { buffer = buf_id })
+  pcall(vim.keymap.del, trigger.mode, H.keytrans(trigger.keys), { buffer = buf_id })
 end
 
 -- State ----------------------------------------------------------------------

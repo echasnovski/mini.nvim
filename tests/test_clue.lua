@@ -71,7 +71,7 @@ local validate_trigger_keymap = function(mode, keys, buf_id)
   local lua_cmd = string.format(
     [[vim.api.nvim_buf_call(%s, function() return vim.fn.maparg(%s, %s, false, true).desc end)]],
     buf_id,
-    vim.inspect(replace_termcodes(keys)),
+    vim.inspect(keys),
     vim.inspect(mode)
   )
   local map_desc = child.lua_get(lua_cmd)
@@ -540,14 +540,18 @@ T['disable_all_triggers()']['works'] = function()
     return rhs:find('echo 1') ~= nil
   end
 
-  load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' }, { mode = 'i', keys = '<C-R>' } } })
   validate_trigger_keymap('n', '<Space>', init_buf_id)
+  validate_trigger_keymap('i', '<C-R>', init_buf_id)
   validate_trigger_keymap('n', '<Space>', other_buf_id)
+  validate_trigger_keymap('i', '<C-R>', other_buf_id)
   eq(has_custom_mapping_in_disabled_buffer(), true)
 
   disable_all_triggers()
   validate_no_trigger_keymap('n', '<Space>', init_buf_id)
+  validate_no_trigger_keymap('i', '<C-R>', init_buf_id)
   validate_no_trigger_keymap('n', '<Space>', other_buf_id)
+  validate_no_trigger_keymap('i', '<C-R>', other_buf_id)
   eq(has_custom_mapping_in_disabled_buffer(), true)
 end
 
@@ -572,12 +576,14 @@ T['disable_buf_triggers()'] = new_set()
 local disable_buf_triggers = forward_lua('MiniClue.disable_buf_triggers')
 
 T['disable_buf_triggers()']['works'] = function()
-  load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' }, { mode = 'i', keys = '<C-R>' } } })
   validate_trigger_keymap('n', '<Space>')
+  validate_trigger_keymap('i', '<C-R>')
 
   -- Uses current buffer by default
   disable_buf_triggers()
   validate_no_trigger_keymap('n', '<Space>')
+  validate_no_trigger_keymap('i', '<C-R>')
 end
 
 T['disable_buf_triggers()']['allows 0 for current buffer'] = function()
