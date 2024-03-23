@@ -1208,7 +1208,7 @@ MiniPick.ui_select = function(items, opts, on_choice)
     end)
   end
 
-  local source = { items = items_ext, name = opts.kind or opts.prompt, preview = preview, choose = choose }
+  local source = { items = items_ext, name = opts.prompt or opts.kind, preview = preview, choose = choose }
   local item = MiniPick.start({ source = source })
   if item == nil and was_aborted then on_choice(nil) end
 end
