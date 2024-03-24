@@ -36,7 +36,11 @@ https://user-images.githubusercontent.com/24854248/227734716-e7b6f2a8-4db1-441d-
     - Allowed lines: whether to process blank or folded lines, lines before/at/after cursor line, etc. Example: user can configure to look for spots only inside current window at or after cursor line.
     Example: user can configure to look for word starts only inside current window at or after cursor line with 'j' and 'k' labels performing some action after jump.
 - Works in Visual and Operator-pending (with dot-repeat) modes.
-- Preconfigured ways of computing jump spots (see help for `MiniJump2d.builtin_opts()`).
+- Preconfigured ways of computing jump spots (see help for `MiniJump2d.builtin_opts()`):
+    - Starts of lines.
+    - Starts of words.
+    - Single character from user input.
+    - Variable length query from user input.
 - Works with multibyte characters.
 
 ## Installation
