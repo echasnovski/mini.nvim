@@ -2243,9 +2243,9 @@ T['ui_select()']['respects `opts.prompt` and `opts.kind`'] = function()
     stop()
   end
 
-  -- Should try using use both as source name (preferring `kind` over `prompt`)
+  -- Should try using use both as source name (preferring `prompt` over `kind`)
   validate({ prompt = 'Prompt' }, 'Prompt')
-  validate({ prompt = 'Prompt', kind = 'Kind' }, 'Kind')
+  validate({ prompt = 'Prompt', kind = 'Kind' }, 'Prompt')
 end
 
 T['ui_select()']['respects `opts.format_item`'] = function()
