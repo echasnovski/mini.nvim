@@ -82,10 +82,10 @@
 ---
 --- Extended mappings (temporary force "prev"/"next" search methods):
 --- - `sdnf` - delete (`sd`) next (`n`) function call (`f`).
---- - `srlf(` - replace (`sd`) last (`l`) function call (`f`) with padded
+--- - `srlf(` - replace (`sr`) last (`l`) function call (`f`) with padded
 ---   bracket (`(`).
 --- - `2sfnt` - find (`sf`) second (2) next (`n`) tag (`t`).
---- - `shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
+--- - `2shl}` - highlight (`sh`) last (`l`) second (`2`) curly bracket (`}`).
 ---
 --- # Comparisons ~
 ---
