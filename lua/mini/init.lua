@@ -26,6 +26,7 @@
 ---   Completion and signature help ............................ |mini.completion|
 ---   Autohighlight word under cursor .......................... |mini.cursorword|
 ---   Plugin manager ................................................. |mini.deps|
+---   Work with diff hunks ........................................... |mini.diff|
 ---   Generate Neovim help files ...................................... |mini.doc|
 ---   Extra 'mini.nvim' functionality ............................... |mini.extra|
 ---   Navigate and manipulate file system............................ |mini.files|
@@ -176,6 +177,11 @@
 ---
 --- - |MiniDeps| - plugin manager for plugins outside of 'mini.nvim'. Uses Git and
 ---   built-in packages to install, update, clean, and snapshot plugins.
+---
+--- - |MiniDiff| - visualize difference between buffer text and its reference
+---   interactively (with colored signs or line numbers). Uses Git index as
+---   default reference. Provides toggleable overview in text area, built-in
+---   apply/reset/textobject/goto mappings.
 ---
 --- - |MiniDoc| - generation of help files from EmmyLua-like annotations.
 ---   Allows flexible customization of output via hook functions. Used for

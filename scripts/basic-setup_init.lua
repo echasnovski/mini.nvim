@@ -26,6 +26,7 @@ local test_actions = {
   ['completion']  = function() require('mini.completion').setup() end,
   ['cursorword']  = function() require('mini.cursorword').setup() end,
   ['deps']        = function() require('mini.deps').setup() end,
+  ['diff']        = function() require('mini.diff').setup() end,
   ['doc']         = function() require('mini.doc').setup() end,
   ['extra']       = function() require('mini.extra').setup() end,
   ['files']       = function() require('mini.files').setup() end,

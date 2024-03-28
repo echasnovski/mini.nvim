@@ -1,5 +1,9 @@
 # Version 0.12.0.9999
 
+## mini.diff
+
+- Introduction of a new module.
+
 ## mini.hues
 
 - BREAKING FEATURE: update some highlight groups for better usability:

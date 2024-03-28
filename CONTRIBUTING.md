@@ -157,6 +157,15 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniDepsTitleSame`
     - `MiniDepsTitleUpdate`
 
+- 'mini.diff':
+    - `MiniDiffSignAdd`
+    - `MiniDiffSignChange`
+    - `MiniDiffSignDelete`
+    - `MiniDiffOverAdd`
+    - `MiniDiffOverChange`
+    - `MiniDiffOverContext`
+    - `MiniDiffOverDelete`
+
 - 'mini.files':
     - `MiniFilesBorder`
     - `MiniFilesBorderModified`

@@ -16,6 +16,7 @@ local modules = {
   'completion',
   'cursorword',
   'deps',
+  'diff',
   'doc',
   'extra',
   'files',
