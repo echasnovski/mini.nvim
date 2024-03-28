@@ -181,6 +181,9 @@ local T = new_set({
         _G.notify_log = {}
         vim.notify = function(...) table.insert(_G.notify_log, { ... }) end
       ]])
+
+      -- Make more robust screenshots
+      child.o.laststatus = 0
     end,
     post_case = function() vim.fn.delete(make_test_path('data'), 'rf') end,
     post_once = child.stop,
