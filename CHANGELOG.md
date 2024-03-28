@@ -1,5 +1,12 @@
 # Version 0.12.0.9999
 
+## mini.hues
+
+- BREAKING FEATURE: update some highlight groups for better usability:
+    - `DiffChange` and `DiffText` - make changed diff lines have colored background.
+    - `Folded` - make folds differ from `CursorLine`.
+    - `QuickFixLine` - make current quickfix item differ from `CursorLine`.
+
 # Version 0.12.0
 
 ## mini.basics
