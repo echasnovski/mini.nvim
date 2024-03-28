@@ -184,6 +184,9 @@ local T = new_set({
 
       -- Make more robust screenshots
       child.o.laststatus = 0
+      -- - Hide intro
+      child.cmd('vsplit')
+      child.cmd('quit')
     end,
     post_case = function() vim.fn.delete(make_test_path('data'), 'rf') end,
     post_once = child.stop,
@@ -1845,7 +1848,6 @@ T['Windows']['can be closed manually'] = function()
 end
 
 T['Windows']['never shows past end of buffer'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for 0.10.') end
   mock_confirm(1)
 
   -- Modifying buffer in Insert mode
@@ -3653,7 +3655,7 @@ T['Events']['`MiniFilesWindowUpdate` is triggered after current buffer is set'] 
   open(test_dir_path)
   clear_event_track()
   go_out()
-  validate_event_track({ { buf_id = 2, win_id = 1003 }, { buf_id = 3, win_id = 1002 } }, true)
+  validate_event_track({ { buf_id = 2, win_id = 1004 }, { buf_id = 3, win_id = 1003 } }, true)
 end
 
 T['Events']['`MiniFilesActionCreate` triggers'] = function()
