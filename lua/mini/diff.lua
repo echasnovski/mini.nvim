@@ -252,7 +252,15 @@ end
 ---@text # View ~
 ---
 --- `config.view` contains settings for how diff hunks are visualized.
+--- Example of using custom signs: >
 ---
+---   require('mini.diff').setup({
+---     view = {
+---       style = 'sign',
+---       signs = { add = '+', change = '~', delete = '-' },
+---     },
+---   })
+--- <
 --- `view.style` is a string defining visualization style. Can be one of "sign"
 --- (as a colored sign in a |sign-column|) or "number" (colored line number).
 --- Default: "number" if |number| option is enabled, "sign" otherwise.
@@ -487,8 +495,7 @@ end
 
 --- Export hunks
 ---
---- Get and convert hunks from current/all buffers.
---- Example of use: >
+--- Get and convert hunks from current/all buffers. Example of using it: >
 ---
 ---   -- Set quickfix list from all available hunks
 ---   vim.fn.setqflist(MiniDiff.export('qf'))
@@ -563,6 +570,10 @@ end
 --- Generate builtin sources
 ---
 --- This is a table with function elements. Call to actually get source.
+--- Example of using |MiniDiff.gen_source.save()|: >
+---
+---   local diff = require('mini.diff')
+---   diff.setup({ source = diff.gen_source.save() })
 MiniDiff.gen_source = {}
 
 --- Git source
@@ -572,8 +583,10 @@ MiniDiff.gen_source = {}
 --- - "Change" hunks represent modified text already present in index.
 --- - "Delete" hunks represent text deleted from index.
 ---
---- Applying hunks means staging, a.k.a adding to index. Note: there is no
---- capability for unstaging hunks. Use full Git client for that.
+--- Applying hunks means staging, a.k.a adding to index.
+--- Notes:
+--- - Requires Git version at least 2.38.0.
+--- - There is no capability for unstaging hunks. Use full Git client for that.
 ---
 ---@return table Source. See |MiniDiff-source-specification|.
 MiniDiff.gen_source.git = function()
