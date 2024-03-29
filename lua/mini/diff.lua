@@ -1386,9 +1386,6 @@ H.get_hunks_in_range = function(hunks, from, to)
 end
 
 H.reset_hunks = function(buf_id, hunks)
-  -- Preserve 'modified' buffer option
-  local cur_modified = vim.bo[buf_id].modified
-
   local ref_lines = vim.split(H.cache[buf_id].ref_text, '\n')
   local offset = 0
   for _, h in ipairs(hunks) do
@@ -1403,15 +1400,6 @@ H.reset_hunks = function(buf_id, hunks)
 
     -- Keep track of current hunk lines shift as a result of previous replaces
     offset = offset + (h.ref_count - h.buf_count)
-  end
-
-  -- Restore 'modified' status
-  if cur_modified then return end
-  if vim.fn.filereadable(vim.api.nvim_buf_get_name(buf_id)) == 1 then
-    -- NOTE: Use `:write` if possible to also trigger dedicated events
-    vim.api.nvim_buf_call(buf_id, function() vim.cmd('write') end)
-  else
-    vim.bo[buf_id].modified = false
   end
 end
 

@@ -1108,7 +1108,7 @@ T['do_hunks()']['works'] = function()
   -- Reset
   do_hunks(0, 'reset')
   eq(get_lines(), { 'AAA', 'BBB', 'CCC' })
-  eq(child.bo.modified, false)
+  eq(child.bo.modified, true)
 end
 
 T['do_hunks()']['works with no hunks'] = function()
@@ -1313,34 +1313,6 @@ T['do_hunks()']['can act on hunk part'] = function()
   -- Reset
   do_hunks(0, 'reset', { line_start = 2, line_end = 4 })
   eq(get_lines(), { 'uuu', 'aaa', 'BBB', 'CCC', 'ccc' })
-end
-
-T['do_hunks()']["preserves 'modified' during reset"] = function()
-  set_lines({ 'aaa', 'BBB' })
-  set_ref_text(0, { 'AAA', 'BBB', 'CCC' })
-
-  -- Reset
-  do_hunks(0, 'reset')
-  eq(get_lines(), { 'AAA', 'BBB', 'CCC' })
-  eq(child.bo.modified, true)
-end
-
-T['do_hunks()']["writes non-'modified' file explicitly after reset"] = function()
-  edit(test_file_path)
-  local init_lines = get_lines()
-  MiniTest.finally(function() child.fn.writefile(init_lines, test_file_path) end)
-
-  type_keys('G', 'o', 'vvv', '<Esc>')
-  child.cmd('write')
-  local new_ref_lines = get_lines()
-  eq(child.fn.readfile(test_file_path), new_ref_lines)
-
-  set_ref_text(0, init_lines)
-  do_hunks(0, 'reset')
-  sleep(10)
-  eq(get_lines(), init_lines)
-  eq(child.fn.readfile(test_file_path), init_lines)
-  eq(child.bo.modified, false)
 end
 
 T['do_hunks()']['validates arguments'] = function()
