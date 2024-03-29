@@ -267,9 +267,9 @@ T['setup()']['creates `config` field'] = function()
   expect_config('options.linematch', 60)
 end
 
-T['setup()']["respects 'number' option when setting default `view.style`"] = function()
-  child.o.number = true
+T['setup()']["respects global 'number' option when setting default `view.style`"] = function()
   unload_module()
+  child.go.number, child.wo.number = true, false
   load_module()
   eq(child.lua_get('MiniDiff.config.view.style'), 'number')
 end

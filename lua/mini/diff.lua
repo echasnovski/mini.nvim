@@ -365,7 +365,8 @@ MiniDiff.config = {
   -- Options for how hunks are visualized
   view = {
     -- Visualization style. Possible values are 'sign' and 'number'.
-    style = vim.o.number and 'number' or 'sign',
+    -- Default: 'number' if line numbers are enabled, 'sign' otherwise.
+    style = vim.go.number and 'number' or 'sign',
 
     -- Signs used for hunks with 'sign' view
     signs = { add = '▒', change = '▒', delete = '▒' },
