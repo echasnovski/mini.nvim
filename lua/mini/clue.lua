@@ -1318,7 +1318,7 @@ H.state_advance = function(opts)
   local is_scroll_down = key == H.replace_termcodes(config_window.scroll_down)
   local is_scroll_up = key == H.replace_termcodes(config_window.scroll_up)
   if is_scroll_down or is_scroll_up then
-    H.window_scroll(is_scroll_down and H.keys.ctrl_d or H.keys.ctrl_u)
+    H.window_scroll(is_scroll_down)
     return H.state_advance({ same_content = true })
   end
 
@@ -1540,8 +1540,16 @@ H.window_update = vim.schedule_wrap(function(same_content)
   vim.cmd('redraw')
 end)
 
-H.window_scroll = function(scroll_key)
-  pcall(vim.api.nvim_win_call, H.state.win_id, function() vim.cmd('normal! ' .. scroll_key) end)
+H.window_scroll = function(is_scroll_down)
+  local scroll_key = is_scroll_down and H.keys.ctrl_d or H.keys.ctrl_u
+  local f = function()
+    local cache_scroll, bot_line, n_lines = vim.wo.scroll, vim.fn.line('w$'), vim.api.nvim_buf_line_count(0)
+    -- Do not scroll past the end of buffer
+    local scroll_count = is_scroll_down and math.min(cache_scroll, n_lines - bot_line) or cache_scroll
+    if scroll_count > 0 then pcall(vim.cmd, 'normal! ' .. scroll_count .. scroll_key) end
+    vim.wo.scroll = cache_scroll
+  end
+  vim.api.nvim_win_call(H.state.win_id, f)
 end
 
 H.window_open = function(config)

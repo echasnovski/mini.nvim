@@ -1333,13 +1333,15 @@ T['Showing keys']['indicates that description is truncated'] = function()
 end
 
 T['Showing keys']['respects `scroll_down` and `scroll_up` in `config.window`'] = function()
-  child.set_size(7, 40)
+  child.set_size(8, 40)
 
   --stylua: ignore
   load_module({
     clues = {
       { mode = 'n', keys = '<Space>a' }, { mode = 'n', keys = '<Space>b' },
       { mode = 'n', keys = '<Space>c' }, { mode = 'n', keys = '<Space>d' },
+      { mode = 'n', keys = '<Space>e' }, { mode = 'n', keys = '<Space>f' },
+      { mode = 'n', keys = '<Space>g' }
     },
     triggers = { { mode = 'n', keys = '<Space>' } },
     window = { delay = 0 },
@@ -1349,17 +1351,24 @@ T['Showing keys']['respects `scroll_down` and `scroll_up` in `config.window`'] =
   type_keys(' ')
   child.expect_screenshot()
 
+  -- Should not change `'scroll'` window option
+  child.lua('_G.clue_win_id = math.max(unpack(vim.api.nvim_list_wins()))')
+  local clue_win_scroll_value = child.lua_get('vim.wo[_G.clue_win_id].scroll')
+  local validate_scroll_opt = function() eq(child.lua_get('vim.wo[_G.clue_win_id].scroll'), clue_win_scroll_value) end
+
   type_keys('<C-d>')
   child.expect_screenshot()
   -- - Should not be able to scroll past edge
   type_keys('<C-d>')
   child.expect_screenshot()
+  validate_scroll_opt()
 
   type_keys('<C-u>')
   child.expect_screenshot()
   -- - Should not be able to scroll past edge
   type_keys('<C-u>')
   child.expect_screenshot()
+  validate_scroll_opt()
 
   type_keys('<Esc>')
 
