@@ -511,6 +511,24 @@ T['Commenting']['works in Normal mode'] = function()
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '#   aa', '#  aa', '# aa' })
 end
 
+T['Commenting']['allows dot-repeat in Normal mode'] = function()
+  local doubly_commented = { '# # aa', '# #  aa', '# #   aa', '# #', '#   aa', '#  aa', '# aa' }
+
+  set_lines(example_lines)
+  set_cursor(2, 2)
+  type_keys('gc', 'ap')
+  type_keys('.')
+  eq(get_lines(), doubly_commented)
+
+  -- Not immediate dot-repeat
+  set_lines(example_lines)
+  set_cursor(2, 2)
+  type_keys('gc', 'ap')
+  set_cursor(7, 0)
+  type_keys('.')
+  eq(get_lines(), doubly_commented)
+end
+
 T['Commenting']['works in Visual mode'] = function()
   set_cursor(2, 2)
   type_keys('v', 'ap', 'gc')
@@ -518,6 +536,25 @@ T['Commenting']['works in Visual mode'] = function()
 
   -- Cursor moves to start line
   eq(get_cursor(), { 1, 0 })
+end
+
+T['Commenting']['allows dot-repeat after initial Visual mode'] = function()
+  -- local example_lines = { 'aa', ' aa', '  aa', '', '  aa', ' aa', 'aa' }
+
+  set_lines(example_lines)
+  set_cursor(2, 2)
+  type_keys('vip', 'gc')
+  eq(get_lines(), { '# aa', '#  aa', '#   aa', '', '  aa', ' aa', 'aa' })
+  eq(get_cursor(), { 1, 0 })
+
+  -- Dot-repeat after first application in Visual mode should apply to the same
+  -- relative region
+  type_keys('.')
+  eq(get_lines(), example_lines)
+
+  set_cursor(3, 0)
+  type_keys('.')
+  eq(get_lines(), { 'aa', ' aa', '  # aa', '  #', '  # aa', ' aa', 'aa' })
 end
 
 T['Commenting']['works with different mapping'] = function()
@@ -637,24 +674,6 @@ T['Commenting']['does not break with loaded tree-sitter'] = function()
 
   type_keys('gcip')
   eq(get_lines(), { '" set background=dark' })
-end
-
-T['Commenting']['allows dot-repeat'] = function()
-  local doubly_commented = { '# # aa', '# #  aa', '# #   aa', '# #', '#   aa', '#  aa', '# aa' }
-
-  set_lines(example_lines)
-  set_cursor(2, 2)
-  type_keys('gc', 'ap')
-  type_keys('.')
-  eq(get_lines(), doubly_commented)
-
-  -- Not immediate dot-repeat
-  set_lines(example_lines)
-  set_cursor(2, 2)
-  type_keys('gc', 'ap')
-  set_cursor(7, 0)
-  type_keys('.')
-  eq(get_lines(), doubly_commented)
 end
 
 T['Commenting']['preserves marks'] = function()

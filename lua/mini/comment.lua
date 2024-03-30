@@ -189,9 +189,6 @@ MiniComment.operator = function(mode)
   -- If called with non-nil `mode`, get target region and perform comment
   -- toggling over it.
   local mark_left, mark_right = '[', ']'
-  if mode == 'visual' then
-    mark_left, mark_right = '<', '>'
-  end
 
   local line_left, col_left = unpack(vim.api.nvim_buf_get_mark(0, mark_left))
   local line_right, col_right = unpack(vim.api.nvim_buf_get_mark(0, mark_right))
@@ -419,15 +416,9 @@ H.apply_config = function(config)
   MiniComment.config = config
 
   -- Make mappings
-  H.map('n', config.mappings.comment, function() return MiniComment.operator() end, { expr = true, desc = 'Comment' })
-  H.map(
-    'x',
-    config.mappings.comment_visual,
-    -- Using `:<c-u>` instead of `<cmd>` as latter results into executing before
-    -- proper update of `'<` and `'>` marks which is needed to work correctly.
-    [[:<c-u>lua MiniComment.operator('visual')<cr>]],
-    { desc = 'Comment selection' }
-  )
+  local operator_rhs = function() return MiniComment.operator() end
+  H.map('n', config.mappings.comment, operator_rhs, { expr = true, desc = 'Comment' })
+  H.map('x', config.mappings.comment_visual, operator_rhs, { expr = true, desc = 'Comment selection' })
   H.map(
     'n',
     config.mappings.comment_line,

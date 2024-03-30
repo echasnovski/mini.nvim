@@ -1,5 +1,9 @@
 # Version 0.12.0.9999
 
+## mini.comment
+
+- FEATURE: Support dot-repeat after initial commenting is done for visual selection; repeating is done for same relative range.
+
 ## mini.diff
 
 - Introduction of a new module.
