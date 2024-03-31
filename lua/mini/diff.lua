@@ -426,6 +426,9 @@ MiniDiff.enable = function(buf_id)
   -- Don't enable more than once
   if H.is_buf_enabled(buf_id) or H.is_disabled(buf_id) then return end
 
+  -- Ensure buffer is loaded (to have up to date lines returned)
+  if not vim.api.nvim_buf_is_loaded(buf_id) then vim.fn.bufload(buf_id) end
+
   -- Register enabled buffer with cached data for performance
   H.update_buf_cache(buf_id)
 

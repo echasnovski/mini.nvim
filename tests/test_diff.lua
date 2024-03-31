@@ -365,6 +365,18 @@ T['enable()']['does not re-enable already enabled buffer'] = function()
   validate_dummy_log({})
 end
 
+T['enable()']['makes sure buffer is loaded'] = function()
+  -- Set up not loaded but existing buffer with lines
+  local new_buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(new_buf_id, 0, -1, false, { 'aaa', 'bbb' })
+  child.api.nvim_buf_set_option(new_buf_id, 'modified', false)
+  child.api.nvim_buf_delete(new_buf_id, { unload = true })
+  eq(child.api.nvim_buf_get_lines(new_buf_id, 0, -1, false), {})
+
+  enable(new_buf_id)
+  eq(child.fn.bufloaded(new_buf_id), 1)
+end
+
 T['enable()']['makes buffer update cache on `BufWinEnter`'] = function()
   eq(get_buf_data().config.delay.text_change, small_time)
   child.b.minidiff_config = { delay = { text_change = 200 } }
