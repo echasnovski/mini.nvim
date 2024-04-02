@@ -3297,6 +3297,8 @@ end
 
 T["'mini.nvim' compatibility"]['mini.comment'] = function()
   child.o.commentstring = '## %s'
+  local moves_to_orig_text_start = child.fn.has('nvim-0.10') == 1
+  local col_after = moves_to_orig_text_start and 3 or 0
 
   local has_comment = setup_mini_module('comment')
   if not has_comment then MiniTest.skip("Could not load 'mini.comment'.") end
@@ -3305,7 +3307,7 @@ T["'mini.nvim' compatibility"]['mini.comment'] = function()
   local has_ai = setup_mini_module('ai')
   if has_ai then
     load_module({ triggers = { { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
-    validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, 0 })
+    validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, col_after })
   end
 
   -- Works with `g` as trigger
@@ -3322,28 +3324,28 @@ T["'mini.nvim' compatibility"]['mini.comment'] = function()
   validate_trigger_keymap('n', 'g')
 
   -- Normal mode
-  validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ap' }, { '## aa', '## bb', '##', 'cc' }, { 1, 0 })
+  validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ap' }, { '## aa', '## bb', '##', 'cc' }, { 1, col_after })
   validate_edit(
     { 'aa', '', 'bb', '', 'cc' },
     { 1, 0 },
     { '2gc', 'ap' },
     { '## aa', '##', '## bb', '##', 'cc' },
-    { 1, 0 }
+    { 1, col_after }
   )
   validate_edit(
     { 'aa', '', 'bb', '', 'cc' },
     { 1, 0 },
     { 'gc', 'ap', '.' },
     { '## ## aa', '## ##', '## bb', '##', 'cc' },
-    { 1, 0 }
+    { 1, col_after }
   )
 
-  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { 'gcc' }, { '## aa', 'bb', '' }, { 1, 0 })
-  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { '2gcc' }, { '## aa', '## bb', '' }, { 1, 0 })
-  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { 'gcc', 'j', '.' }, { '## aa', '## bb', '' }, { 2, 0 })
+  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { 'gcc' }, { '## aa', 'bb', '' }, { 1, col_after })
+  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { '2gcc' }, { '## aa', '## bb', '' }, { 1, col_after })
+  validate_edit({ 'aa', 'bb', '' }, { 1, 0 }, { 'gcc', 'j', '.' }, { '## aa', '## bb', '' }, { 2, col_after })
 
   -- Visual mode
-  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'V', 'gc' }, { '## aa', 'bb' }, { 1, 0 })
+  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'V', 'gc' }, { '## aa', 'bb' }, { 1, col_after })
 
   -- Operator-pending mode
   validate_edit({ '## aa', 'bb' }, { 1, 0 }, { 'dgc' }, { 'bb' }, { 1, 0 })
@@ -3351,7 +3353,7 @@ T["'mini.nvim' compatibility"]['mini.comment'] = function()
 
   -- Works together with 'mini.ai' when `g` is trigger
   if has_ai then
-    validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, 0 })
+    validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, col_after })
   end
 end
 
