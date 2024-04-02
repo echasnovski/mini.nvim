@@ -136,7 +136,7 @@ T['toggle_lines()']['works'] = function()
   eq(get_lines(2, 5), { '  # aa', '  #', '  # aa' })
 
   toggle_lines(3, 5)
-  eq(get_lines(2, 5), { '  aa', '', '  aa' })
+  eq(get_lines(2, 5), { '  aa', '  ', '  aa' })
 end
 
 T['toggle_lines()']['validates arguments'] = function()
@@ -159,7 +159,7 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
   eq(get_lines(2, 5), { '  /* aa */', '  /**/', '  /* aa */' })
 
   toggle_lines(3, 5)
-  eq(get_lines(2, 5), { '  aa', '', '  aa' })
+  eq(get_lines(2, 5), { '  aa', '  ', '  aa' })
 
   -- Right-sided
   set_lines(example_lines)
@@ -168,7 +168,7 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
   eq(get_lines(2, 5), { '  aa #', '  #', '  aa #' })
 
   toggle_lines(3, 5)
-  eq(get_lines(2, 5), { '  aa', '', '  aa' })
+  eq(get_lines(2, 5), { '  aa', '  ', '  aa' })
 
   -- Latex (#25)
   set_lines(example_lines)
@@ -177,7 +177,7 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
   eq(get_lines(2, 5), { '  % aa', '  %', '  % aa' })
 
   toggle_lines(3, 5)
-  eq(get_lines(2, 5), { '  aa', '', '  aa' })
+  eq(get_lines(2, 5), { '  aa', '  ', '  aa' })
 end
 
 T['toggle_lines()']['respects tree-sitter injections'] = function()
@@ -408,11 +408,43 @@ T['toggle_lines()']['adds spaces inside non-empty lines'] = function()
   eq(get_lines(2, 5), { '  aa #', '  #', '  aa #' })
 end
 
-T['toggle_lines()']['removes trailing whitespace'] = function()
-  set_lines({ 'aa', 'aa  ', '  ' })
-  toggle_lines(1, 3)
-  toggle_lines(1, 3)
-  eq(get_lines(), { 'aa', 'aa', '' })
+T['toggle_lines()']['preserves trailing whitespace'] = function()
+  set_lines({ 'aa  ', 'aa\t\t', '  ', '\t\t' })
+  toggle_lines(1, 4)
+  eq(get_lines(), { '# aa  ', '# aa\t\t', '#  ', '#\t\t' })
+  toggle_lines(1, 4)
+  eq(get_lines(), { 'aa  ', 'aa\t\t', '  ', '\t\t' })
+end
+
+T['toggle_lines()']['preserves marks'] = function()
+  local ns_id = child.api.nvim_create_namespace('test')
+  local validate = function(commentstring, left_part_len)
+    child.bo.commentstring = commentstring
+
+    -- Both regular and extended
+    set_cursor(1, 1)
+    type_keys('ma')
+    local mark_id = child.api.nvim_buf_set_extmark(0, ns_id, 1, 2, { end_row = 2, end_col = 1 })
+
+    toggle_lines(1, 3)
+
+    -- Regular marks are not affected by text addition
+    eq(child.api.nvim_buf_get_mark(0, 'a'), { 0, 1 })
+
+    -- Extended marks are affected by text addition
+    local extmark_data = child.api.nvim_buf_get_extmark_by_id(0, ns_id, mark_id, { details = true })
+    eq({ extmark_data[1], extmark_data[2] }, { 1, 2 + left_part_len })
+    eq({ extmark_data[3].end_row, extmark_data[3].end_col }, { 2, 1 + left_part_len })
+
+    -- Cleanup
+    child.api.nvim_buf_del_mark(0, 'a')
+    child.api.nvim_buf_del_extmark(0, ns_id, mark_id)
+  end
+
+  validate('# %s', 2)
+  validate('### %s', 4)
+  validate('/* %s */', 3)
+  validate('%s */', 0)
 end
 
 T['toggle_lines()']['applies hooks'] = function()
@@ -492,11 +524,13 @@ end
 T['Commenting'] = new_set()
 
 T['Commenting']['works in Normal mode'] = function()
-  set_cursor(2, 2)
+  set_cursor(2, 1)
   type_keys('gc', 'ap')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
-  -- Cursor moves to start line
-  eq(get_cursor(), { 1, 0 })
+  -- Cursor moves to start of the first line. On Neovim>=0.10 it also moves to
+  -- start of not commented part.
+  local col = child.fn.has('nvim-0.10') == 1 and 2 or 0
+  eq(get_cursor(), { 1, col })
 
   -- Supports `v:count`
   set_lines(example_lines)
@@ -524,12 +558,14 @@ T['Commenting']['allows dot-repeat in Normal mode'] = function()
 end
 
 T['Commenting']['works in Visual mode'] = function()
-  set_cursor(2, 2)
+  set_cursor(2, 1)
   type_keys('v', 'ap', 'gc')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
 
-  -- Cursor moves to start line
-  eq(get_cursor(), { 1, 0 })
+  -- Cursor moves to start of the first line. On Neovim>=0.10 it also moves to
+  -- start of not commented part.
+  local col = child.fn.has('nvim-0.10') == 1 and 2 or 0
+  eq(get_cursor(), { 1, col })
 end
 
 T['Commenting']['allows dot-repeat after initial Visual mode'] = function()
@@ -539,7 +575,6 @@ T['Commenting']['allows dot-repeat after initial Visual mode'] = function()
   set_cursor(2, 2)
   type_keys('vip', 'gc')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '', '  aa', ' aa', 'aa' })
-  eq(get_cursor(), { 1, 0 })
 
   -- Dot-repeat after first application in Visual mode should apply to the same
   -- relative region

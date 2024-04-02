@@ -249,38 +249,9 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   local f = is_comment and H.make_uncomment_function(comment_parts, config.options)
     or H.make_comment_function(comment_parts, indent, config.options)
 
-  -- NOTE: Direct of `nvim_buf_set_lines()` essentially removes (squashes to
-  -- empty range at either side of the region) both regular and extended marks
-  -- inside region. It can be resolved at least in the following ways:
-  -- 1. Use `lockmarks`. Preserves regular but does nothing for extmarks.
-  -- 2. Use `vim.fn.setline(line_start, new_lines)`. Preserves regular marks,
-  --    but squashes extmarks withing a single line.
-  -- 3. Refactor to use precise editing of lines with `nvim_buf_set_text()`.
-  --    Preserves both regular and extended marks.
-  --
-  -- But:
-  -- - Options 2 and 3 are **significantly** slower for a large-ish regions.
-  --   Toggle of ~4000 lines takes 20 ms for 1, 200 ms for 2, 400 ms for 3.
-  --
-  -- - Preserving extmarks is not a universally good thing to do. It looks like
-  --   a good idea for extmarks which are not used for directly highlighting
-  --   text (like for 'mini.diff' signs or smartly tracking buffer position).
-  --   However, preserving extmarks is not 100% desirable when they highlight
-  --   text area, as every comment toggle at least results in a flickering
-  --   due to those extmarks still highlighting a (un)commented region.
-  --   Main example is LSP semantic token highlighting. Although it can have
-  --   special treatment (precisely clear those extmarks in the target region),
-  --   it is not 100% effective (they are restored after undo, again resulting
-  --   into flicker) and there might be more unnoticed issues.
-  --
-  -- So all in all, computing and replacing whole lines with `lockmarks` is the
-  -- best compromise so far. It also aligns with treating "toggle comment" in
-  -- a semantic way (those lines lines now have completely different meaning)
-  -- rather than in a text edit way (add comment parts to those lines).
-  local new_lines = vim.tbl_map(f, lines)
-  _G._from, _G._to, _G._lines = line_start - 1, line_end, new_lines
-  vim.cmd('lockmarks lua pcall(vim.api.nvim_buf_set_lines, 0, _G._from, _G._to, false, _G._lines)')
-  _G._from, _G._to, _G._lines = nil, nil, nil
+  for i, l in pairs(lines) do
+    f(line_start + i - 1, l)
+  end
 
   hook_arg.action = is_comment and 'uncomment' or 'comment'
   if config.hooks.post(hook_arg) == false then return end
@@ -516,22 +487,21 @@ H.make_comment_function = function(comment_parts, indent, options)
   local lpad = (options.pad_comment_parts and l ~= '') and ' ' or ''
   local rpad = (options.pad_comment_parts and r ~= '') and ' ' or ''
 
-  -- Escape literal '%' symbols in comment parts (like in LaTeX) to be '%%'
-  -- because they have special meaning in `string.format` input.
-  -- NOTE: no `vim.pesc()` here because it also escapes other special
-  -- characters (like '-', '*', etc.).
-  local l_esc = string.gsub(l, '%%', '%%%%')
-  local r_esc = string.gsub(r, '%%', '%%%%')
-  local prefix = options.start_of_line and (l_esc .. indent) or (indent .. l_esc)
-  local nonblank_format = prefix .. lpad .. '%s' .. rpad .. r_esc
-  local nonindent_start = string.len(indent) + 1
+  -- Treat regular and blank lines differently
+  local reg_left_start, reg_left, reg_right = options.start_of_line and 0 or indent:len(), l .. lpad, rpad .. r
+  local blank_left_start, blank_left, blank_right = 0, indent .. l, r
 
-  local ignore_blank_line, blank_comment = options.ignore_blank_line, indent .. l .. r
-  return function(line)
-    -- Line is blank if it consists only from whitespace
-    if string.find(line, '^%s*$') ~= nil then return ignore_blank_line and line or blank_comment end
+  local ignore_blank_line = options.ignore_blank_line
 
-    return string.format(nonblank_format, string.sub(line, nonindent_start))
+  return function(l_num, line)
+    local left_start, left, right = reg_left_start, reg_left, reg_right
+    if H.is_blank(line) then
+      if ignore_blank_line then return end
+      left_start, left, right = blank_left_start, blank_left, blank_right
+    end
+
+    H.insert_in_line(l_num, line:len(), right)
+    H.insert_in_line(l_num, left_start, left)
   end
 end
 
@@ -541,19 +511,24 @@ H.make_uncomment_function = function(comment_parts, options)
   -- of commented empty lines without trailing whitespace (like '  #').
   local lpad = (options.pad_comment_parts and l ~= '') and '[ ]?' or ''
   local rpad = (options.pad_comment_parts and r ~= '') and '[ ]?' or ''
+  local has_lpad, has_rpad = lpad ~= '', rpad ~= ''
 
-  local uncomment_regex = string.format('^(%%s*)%s%s(.-)%s%s%%s-$', vim.pesc(l), lpad, rpad, vim.pesc(r))
+  local uncomment_regex = string.format('^%%s*()%s(%s)()(.-)()(%s)%s()%%s-$', vim.pesc(l), lpad, rpad, vim.pesc(r))
 
-  return function(line)
-    local indent, new_line = string.match(line, uncomment_regex)
+  return function(l_num, line)
+    local left_from, cur_lpad, left_to, cur_text, right_from, cur_rpad, right_to = line:match(uncomment_regex)
 
-    -- Return original if line is not commented
-    if new_line == nil then return line end
+    -- Do nothing if line is not commented
+    if left_from == nil then return end
 
-    -- Remove indent if line is a commented empty line
-    indent = new_line == '' and '' or indent
+    -- Try preserve as much of commented blank line as possible
+    if H.is_blank(cur_text) then
+      if has_lpad then left_to = left_to - cur_lpad:len() end
+      if has_rpad then right_from = right_from + cur_rpad:len() end
+    end
 
-    return string.format('%s%s', indent, new_line)
+    H.delete_in_line(l_num, right_from, right_to - 1)
+    H.delete_in_line(l_num, left_from, left_to - 1)
   end
 end
 
@@ -565,5 +540,11 @@ H.map = function(mode, lhs, rhs, opts)
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
+
+H.is_blank = function(l) return l:find('^%s*$') ~= nil end
+
+H.insert_in_line = function(l_num, col, text) vim.api.nvim_buf_set_text(0, l_num - 1, col, l_num - 1, col, { text }) end
+
+H.delete_in_line = function(l_num, from, to) vim.api.nvim_buf_set_text(0, l_num - 1, from - 1, l_num - 1, to, {}) end
 
 return MiniComment
