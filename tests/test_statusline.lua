@@ -107,7 +107,7 @@ T['setup()']['creates side effects'] = function()
   has_highlight('MiniStatuslineInactive', 'links to StatusLineNC')
 
   -- Sets global value of 'statusline'
-  eq(child.go.statusline, '%!v:lua.MiniStatusline.active()')
+  eq(child.go.statusline, '%{%v:lua.MiniStatusline.active()%}')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -143,7 +143,7 @@ end
 
 T['setup()']['sets proper autocommands'] = function()
   local validate = function(win_id, field)
-    eq(child.api.nvim_win_get_option(win_id, 'statusline'), '%!v:lua.MiniStatusline.' .. field .. '()')
+    eq(child.api.nvim_win_get_option(win_id, 'statusline'), '%{%v:lua.MiniStatusline.' .. field .. '()%}')
   end
 
   local wins = get_two_windows()
@@ -639,7 +639,7 @@ T['Default content']['active'] = new_set({
   parametrize = { { 120 }, { 75 }, { 74 } },
 }, {
   test = function(window_width)
-    eq(child.api.nvim_win_get_option(0, 'statusline'), '%!v:lua.MiniStatusline.active()')
+    eq(child.api.nvim_win_get_option(0, 'statusline'), '%{%v:lua.MiniStatusline.active()%}')
     set_width(window_width)
     child.expect_screenshot()
   end,
@@ -649,10 +649,22 @@ T['Default content']['inactive'] = function()
   local wins = get_two_windows()
 
   -- Check that option is set correctly
-  eq(child.api.nvim_win_get_option(wins.inactive, 'statusline'), '%!v:lua.MiniStatusline.inactive()')
+  eq(child.api.nvim_win_get_option(wins.inactive, 'statusline'), '%{%v:lua.MiniStatusline.inactive()%}')
 
   -- Validate
   eq(child.lua_get('MiniStatusline.inactive()'), '%#MiniStatuslineInactive#%F%=')
+end
+
+T['Default content']['inactive is evaluated in the context of its window'] = function()
+  child.set_size(10, 30)
+  child.lua([[
+    local f = function() return vim.api.nvim_get_current_win() end
+    MiniStatusline.config.content = { active = f, inactive = f }
+  ]])
+  child.cmd('wincmd =')
+  child.cmd('redraw!')
+  child.expect_screenshot()
+  eq(child.api.nvim_get_current_win(), 1001)
 end
 
 return T

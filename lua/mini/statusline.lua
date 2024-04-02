@@ -460,7 +460,7 @@ H.apply_config = function(config)
 
   -- Set global value to reduce flickering when first time entering buffer, as
   -- it is used by default before content is ensured on next loop
-  vim.go.statusline = '%!v:lua.MiniStatusline.active()'
+  vim.go.statusline = '%{%v:lua.MiniStatusline.active()%}'
 end
 
 H.create_autocommands = function()
@@ -513,8 +513,8 @@ H.ensure_content = vim.schedule_wrap(function()
   -- they might temporarily change current window
   local cur_win_id = vim.api.nvim_get_current_win()
   for _, win_id in ipairs(vim.api.nvim_list_wins()) do
-    vim.wo[win_id].statusline = win_id == cur_win_id and '%!v:lua.MiniStatusline.active()'
-      or '%!v:lua.MiniStatusline.inactive()'
+    vim.wo[win_id].statusline = win_id == cur_win_id and '%{%v:lua.MiniStatusline.active()%}'
+      or '%{%v:lua.MiniStatusline.inactive()%}'
   end
 end)
 
