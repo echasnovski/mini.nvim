@@ -253,6 +253,8 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
     f(line_start + i - 1, l)
   end
 
+  H.clear_semantic_tokens(line_start, line_end)
+
   hook_arg.action = is_comment and 'uncomment' or 'comment'
   if config.hooks.post(hook_arg) == false then return end
 end
@@ -531,6 +533,17 @@ H.make_uncomment_function = function(comment_parts, options)
     H.delete_in_line(l_num, left_from, left_to - 1)
   end
 end
+
+-- Semantic tokens ------------------------------------------------------------
+H.clear_semantic_tokens = function(from, to)
+  for name, id in pairs(vim.api.nvim_get_namespaces()) do
+    if type(name) == 'string' and vim.startswith(name, 'vim_lsp_semantic_tokens') then
+      vim.api.nvim_buf_clear_namespace(0, id, from - 1, to)
+    end
+  end
+end
+
+if vim.fn.has('nvim-0.9') == 0 then H.clear_semantic_tokens = function() end end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.comment) %s', msg), 0) end
