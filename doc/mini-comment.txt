@@ -184,8 +184,7 @@ and respects |count|.
 - Comment structure is inferred from buffer's 'commentstring' option or
   local language of tree-sitter parser (if active; only on Neovim>=0.9).
 
-- Currently call to this function will remove marks inside written range.
-  Use |lockmarks| to preserve marks.
+- Call to this function will remove all |extmarks| from target range.
 
 Parameters ~
 {line_start} `(number)` Start line number (inclusive from 1 to number of lines).
