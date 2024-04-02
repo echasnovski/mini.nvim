@@ -16,7 +16,7 @@ local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
--- Make helpers
+-- Common helpers
 local reload_with_hooks = function()
   unload_module()
   child.lua([[
@@ -31,6 +31,11 @@ local reload_with_hooks = function()
         post = function(...) table.insert(_G.hook_args, { 'post', vim.deepcopy({ ... }) }) end,
       },
     })]])
+end
+
+local forward_lua = function(fun_str)
+  local lua_cmd = fun_str .. '(...)'
+  return function(...) return child.lua_get(lua_cmd, { ... }) end
 end
 
 -- Data =======================================================================
@@ -50,6 +55,8 @@ local T = new_set({
     pre_case = function()
       child.setup()
       load_module()
+      set_lines(example_lines)
+      child.bo.commentstring = '# %s'
     end,
     post_once = child.stop,
   },
@@ -120,20 +127,15 @@ T['setup()']['properly handles `config.mappings`'] = function()
   eq(has_map('gc', 'Comment'), false)
 end
 
-T['toggle_lines()'] = new_set({
-  hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-      child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
-    end,
-  },
-})
+T['toggle_lines()'] = new_set()
+
+local toggle_lines = forward_lua('MiniComment.toggle_lines')
 
 T['toggle_lines()']['works'] = function()
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  # aa', '  #', '  # aa' })
 
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa', '', '  aa' })
 end
 
@@ -141,40 +143,40 @@ T['toggle_lines()']['validates arguments'] = function()
   set_lines({ 'aa', 'aa', 'aa' })
 
   --stylua: ignore start
-  expect.error(function() child.lua('MiniComment.toggle_lines(-1, 1)')    end, 'line_start.*1')
-  expect.error(function() child.lua('MiniComment.toggle_lines(100, 101)') end, 'line_start.*3')
-  expect.error(function() child.lua('MiniComment.toggle_lines(1, -1)')    end, 'line_end.*1')
-  expect.error(function() child.lua('MiniComment.toggle_lines(1, 100)')   end, 'line_end.*3')
-  expect.error(function() child.lua('MiniComment.toggle_lines(2, 1)')     end, 'line_start.*less than or equal.*line_end')
+  expect.error(function() toggle_lines(-1, 1)    end, 'line_start.*1')
+  expect.error(function() toggle_lines(100, 101) end, 'line_start.*3')
+  expect.error(function() toggle_lines(1, -1)    end, 'line_end.*1')
+  expect.error(function() toggle_lines(1, 100)   end, 'line_end.*3')
+  expect.error(function() toggle_lines(2, 1)     end, 'line_start.*less than or equal.*line_end')
   --stylua: ignore end
 end
 
 T['toggle_lines()']["works with different 'commentstring' options"] = function()
   -- Two-sided
   set_lines(example_lines)
-  child.api.nvim_buf_set_option(0, 'commentstring', '/* %s */')
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  child.bo.commentstring = '/* %s */'
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  /* aa */', '  /**/', '  /* aa */' })
 
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa', '', '  aa' })
 
   -- Right-sided
   set_lines(example_lines)
-  child.api.nvim_buf_set_option(0, 'commentstring', '%s #')
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  child.bo.commentstring = '%s #'
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa #', '  #', '  aa #' })
 
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa', '', '  aa' })
 
   -- Latex (#25)
   set_lines(example_lines)
-  child.api.nvim_buf_set_option(0, 'commentstring', '%%s')
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  child.bo.commentstring = '%%s'
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  % aa', '  %', '  % aa' })
 
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa', '', '  aa' })
 end
 
@@ -200,7 +202,7 @@ T['toggle_lines()']['respects tree-sitter injections'] = function()
 
   -- Single line comments
   local validate = function(line, ref_output)
-    child.lua(string.format('MiniComment.toggle_lines(%d, %d)', line, line))
+    toggle_lines(line, line)
     eq(get_lines()[line], ref_output)
     -- Cleanup
     set_lines(lines)
@@ -216,7 +218,7 @@ T['toggle_lines()']['respects tree-sitter injections'] = function()
 
   -- Multiline comments should be computed based on first line 'commentstring'
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 3)')
+  toggle_lines(1, 3)
   local out_lines = get_lines()
   eq(out_lines[1], '" set background=dark')
   eq(out_lines[2], '" lua << EOF')
@@ -241,20 +243,20 @@ T['toggle_lines()']['respects `opts.ref_position`'] = function()
 
   -- Vimscript's tree-sitter grammar is (currently) written in a way that Lua's
   -- injection really starts at the first non-blank character
-  child.lua('MiniComment.toggle_lines(2, 2, { ref_position = { 2, 1 } })')
+  toggle_lines(2, 2, { ref_position = { 2, 1 } })
   eq(get_lines()[2], '  " print(1)')
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(2, 2, { ref_position = { 2, 3 } })')
+  toggle_lines(2, 2, { ref_position = { 2, 3 } })
   eq(get_lines()[2], '  -- print(1)')
 end
 
 T['toggle_lines()']['correctly computes indent'] = function()
-  child.lua('MiniComment.toggle_lines(2, 4)')
+  toggle_lines(2, 4)
   eq(get_lines(1, 4), { ' # aa', ' #  aa', ' #' })
 
   set_lines(example_lines)
-  child.lua('MiniComment.toggle_lines(4, 4)')
+  toggle_lines(4, 4)
   eq(get_lines(3, 4), { '#' })
 end
 
@@ -263,19 +265,19 @@ T['toggle_lines()']['correctly detects comment/uncomment'] = function()
 
   -- It should uncomment only if all lines are comments
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(3, 4)')
+  toggle_lines(3, 4)
   eq(get_lines(), { '', 'aa', 'aa', 'aa', 'aa', '' })
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(2, 4)')
+  toggle_lines(2, 4)
   eq(get_lines(), { '', '# aa', '# # aa', '# # aa', 'aa', '' })
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(), { '', 'aa', '# # aa', '# # aa', '# aa', '' })
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 6)')
+  toggle_lines(1, 6)
   eq(get_lines(), { '#', '# aa', '# # aa', '# # aa', '# aa', '#' })
 end
 
@@ -289,22 +291,22 @@ T['toggle_lines()']['respects `config.options.custom_commentstring`'] = function
   end]])
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 2, { ref_position = { 2, 3 } })')
+  toggle_lines(1, 2, { ref_position = { 2, 3 } })
   eq(get_lines(), { '++ aa', '++   aa' })
   eq(child.lua_get('_G.args'), { { 2, 3 } })
 
   -- Allows `nil` output to indicate usage of default rules
   child.lua('MiniComment.config.options.custom_commentstring = function() return nil end')
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), { '# aa', '#   aa' })
 
   -- Validates output
   child.lua('MiniComment.config.options.custom_commentstring = function() return 2 end')
-  expect.error(function() child.lua('MiniComment.toggle_lines(1, 2)') end, "2.*valid 'commentstring'")
+  expect.error(function() toggle_lines(1, 2) end, "2.*valid 'commentstring'")
 
   child.lua('MiniComment.config.options.custom_commentstring = function() return "ab %c" end')
-  expect.error(function() child.lua('MiniComment.toggle_lines(1, 2)') end, [["ab %%c".*valid 'commentstring']])
+  expect.error(function() toggle_lines(1, 2) end, [["ab %%c".*valid 'commentstring']])
 end
 
 T['toggle_lines()']['respects `config.options.start_of_line`'] = function()
@@ -313,15 +315,15 @@ T['toggle_lines()']['respects `config.options.start_of_line`'] = function()
 
   -- Should recognize as commented only lines with zero indent
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), { '#  # aa', '#   # aa', '#aa', '# aa', '#  aa' })
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), lines)
 
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(), { ' # aa', '  # aa', 'aa', 'aa', ' aa' })
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  toggle_lines(3, 5)
   eq(get_lines(), { ' # aa', '  # aa', '# aa', '# aa', '#  aa' })
 end
 
@@ -331,11 +333,11 @@ T['toggle_lines()']['respects `config.options.ignore_blank_line`'] = function()
 
   -- Should not add comment to blank (empty or with only whitespace) lines
   set_lines(lines)
-  child.lua('MiniComment.toggle_lines(1, 5)')
+  toggle_lines(1, 5)
   eq(get_lines(), { '  # aa', '', '  # aa', '  ', '  # aa' })
 
   -- Should ignore blank lines when deciding comment/uncomment action
-  child.lua('MiniComment.toggle_lines(1, 5)')
+  toggle_lines(1, 5)
   eq(get_lines(), lines)
 end
 
@@ -344,8 +346,7 @@ T['toggle_lines()']['respects `config.options.pad_comment_parts`'] = function()
 
   local validate = function(lines_before, lines_after)
     set_lines(lines_before)
-    local lua_command = string.format('MiniComment.toggle_lines(1, %s)', #lines_before)
-    child.lua(lua_command)
+    toggle_lines(1, #lines_before)
     eq(get_lines(), lines_after)
   end
 
@@ -368,8 +369,6 @@ T['toggle_lines()']['respects `config.options.pad_comment_parts`'] = function()
   validate({ 'aa', '  aa', 'aa  ' }, { '#  aa  #', '#    aa  #', '#  aa    #' })
   validate({ '\taa', '\taa', '\taa\t' }, { '\t#  aa  #', '\t#  aa  #', '\t#  aa\t  #' })
 
-  --validate({'# aa  #', '# aa #', '#  aa #'}, {'#  # aa  #  #', '#  # aa #  #', '#  #  aa #  #'})
-  --
   -- - Should correctly uncomment
   validate({ '#  aa  #', '#   a   #' }, { 'aa', ' a ' })
   validate({ '  #  aa  #', '  #   a   #' }, { '  aa', '   a ' })
@@ -378,39 +377,39 @@ end
 
 T['toggle_lines()']['uncomments on inconsistent indent levels'] = function()
   set_lines({ '# aa', ' # aa', '  # aa' })
-  child.lua('MiniComment.toggle_lines(1, 3)')
+  toggle_lines(1, 3)
   eq(get_lines(), { 'aa', ' aa', '  aa' })
 end
 
 T['toggle_lines()']['respects tabs (#20)'] = function()
-  child.api.nvim_buf_set_option(0, 'expandtab', false)
+  child.bo.expandtab = false
   set_lines({ '\t\taa', '\t\taa' })
 
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), { '\t\t# aa', '\t\t# aa' })
 
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), { '\t\taa', '\t\taa' })
 end
 
 T['toggle_lines()']['adds spaces inside non-empty lines'] = function()
   -- Two-sided
   set_lines(example_lines)
-  child.api.nvim_buf_set_option(0, 'commentstring', '/*%s*/')
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  child.bo.commentstring = '/*%s*/'
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  /* aa */', '  /**/', '  /* aa */' })
 
   -- Right-sided
   set_lines(example_lines)
-  child.api.nvim_buf_set_option(0, 'commentstring', '%s#')
-  child.lua('MiniComment.toggle_lines(3, 5)')
+  child.bo.commentstring = '%s#'
+  toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  aa #', '  #', '  aa #' })
 end
 
 T['toggle_lines()']['removes trailing whitespace'] = function()
   set_lines({ 'aa', 'aa  ', '  ' })
-  child.lua('MiniComment.toggle_lines(1, 3)')
-  child.lua('MiniComment.toggle_lines(1, 3)')
+  toggle_lines(1, 3)
+  toggle_lines(1, 3)
   eq(get_lines(), { 'aa', 'aa', '' })
 end
 
@@ -419,7 +418,7 @@ T['toggle_lines()']['applies hooks'] = function()
   eq(child.bo.commentstring, '# %s')
 
   set_lines({ 'aa', 'aa' })
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   -- It should allow change of `commentstring` in `pre` hook
   eq(get_lines(), { '// aa', '// aa' })
   --stylua: ignore
@@ -432,7 +431,7 @@ T['toggle_lines()']['applies hooks'] = function()
   child.lua('_G.hook_args = {}')
   set_lines({ '// aa', '// aa' })
   child.bo.commentstring = '# %s'
-  child.lua('MiniComment.toggle_lines(1, 1)')
+  toggle_lines(1, 1)
   eq(get_lines(), { 'aa', '// aa' })
   --stylua: ignore
   eq(child.lua_get('_G.hook_args'), {
@@ -446,7 +445,7 @@ T['toggle_lines()']['stops when hook returns `false`'] = function()
   set_lines(lines)
 
   child.lua('MiniComment.config.hooks.pre = function() return false end')
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), lines)
 
   -- Currently can't really check for `hooks.post`
@@ -456,7 +455,7 @@ T['toggle_lines()']['respects `vim.b.minicomment_config`'] = function()
   child.lua('vim.b.minicomment_config = { options = { start_of_line = true } }')
   set_lines({ '  # aa', '  # aa' })
 
-  child.lua('MiniComment.toggle_lines(1, 2)')
+  toggle_lines(1, 2)
   eq(get_lines(), { '#   # aa', '#   # aa' })
 end
 
@@ -488,14 +487,7 @@ T['get_commentstring()']['works'] = function()
 end
 
 -- Integration tests ==========================================================
-T['Commenting'] = new_set({
-  hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-      child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
-    end,
-  },
-})
+T['Commenting'] = new_set()
 
 T['Commenting']['works in Normal mode'] = function()
   set_cursor(2, 2)
@@ -573,14 +565,14 @@ T['Commenting']['works with different mapping'] = function()
 end
 
 T['Commenting']["respects 'commentstring'"] = function()
-  child.api.nvim_buf_set_option(0, 'commentstring', '/*%s*/')
+  child.bo.commentstring = '/*%s*/'
   set_cursor(2, 2)
   type_keys('gc', 'ap')
   eq(get_lines(), { '/* aa */', '/*  aa */', '/*   aa */', '/**/', '  aa', ' aa', 'aa' })
 end
 
 T['Commenting']["works with empty 'commentstring'"] = function()
-  child.api.nvim_buf_set_option(0, 'commentstring', '')
+  child.bo.commentstring = ''
   set_cursor(2, 2)
   type_keys('gc', 'ap')
   eq(get_lines(), example_lines)
@@ -756,14 +748,7 @@ T['Commenting']['respects `vim.b.minicomment_config`'] = function()
   })
 end
 
-T['Commenting current line'] = new_set({
-  hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-      child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
-    end,
-  },
-})
+T['Commenting current line'] = new_set()
 
 T['Commenting current line']['works'] = function()
   set_lines(example_lines)
@@ -907,14 +892,7 @@ T['Commenting current line']['respects `vim.b.minicomment_config`'] = function()
   })
 end
 
-T['Comment textobject'] = new_set({
-  hooks = {
-    pre_case = function()
-      set_lines(example_lines)
-      child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
-    end,
-  },
-})
+T['Comment textobject'] = new_set()
 
 T['Comment textobject']['works'] = function()
   set_lines({ 'aa', '# aa', '# aa', 'aa' })
