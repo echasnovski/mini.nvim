@@ -535,10 +535,13 @@ Default values:
       -- Whether to show preview of file/directory under cursor
       preview = false,
       -- Width of focused window
+      -- If set to 0 width will be calculated based on the longest line in the buffer
       width_focus = 50,
       -- Width of non-focused window
+      -- If set to 0 width will be calculated based on the longest line in the buffer
       width_nofocus = 15,
       -- Width of preview window
+      -- If set to 0 width will be calculated based on the longest line in the buffer
       width_preview = 25,
     },
   }

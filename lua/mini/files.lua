@@ -627,10 +627,13 @@ MiniFiles.config = {
     -- Whether to show preview of file/directory under cursor
     preview = false,
     -- Width of focused window
+    -- If set to 0 width will be calculated based on the longest line in the buffer
     width_focus = 50,
     -- Width of non-focused window
+    -- If set to 0 width will be calculated based on the longest line in the buffer
     width_nofocus = 15,
     -- Width of preview window
+    -- If set to 0 width will be calculated based on the longest line in the buffer
     width_preview = 25,
   },
 }
@@ -1499,6 +1502,22 @@ H.explorer_update_cursors = function(explorer)
   return explorer
 end
 
+H.get_cur_width = function(buf_id, default_width)
+  if default_width > 0 then return default_width end
+
+  local max = 0
+  local lines = vim.api.nvim_buf_get_lines(buf_id, 0, vim.api.nvim_buf_line_count(buf_id), false)
+
+  for _, v in pairs(lines) do
+    local len = string.len(v)
+    if len > max then max = len end
+  end
+
+  if max > 0 then return max end
+
+  return 30
+end
+
 H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   local path = explorer.branch[depth]
   local views, windows, opts = explorer.views, explorer.windows, explorer.opts
@@ -1511,8 +1530,17 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   -- Compute width based on window role
   local win_is_focused = depth == explorer.depth_focus
   local win_is_preview = opts.windows.preview and (depth == (explorer.depth_focus + 1))
-  local cur_width = win_is_focused and opts.windows.width_focus
-    or (win_is_preview and opts.windows.width_preview or opts.windows.width_nofocus)
+  local default_width = 0
+
+  if win_is_focused then
+    default_width = opts.windows.width_focus
+  elseif win_is_preview then
+    default_width = opts.windows.width_preview
+  else
+    default_width = opts.windows.width_nofocus
+  end
+
+  local cur_width = H.get_cur_width(view.buf_id, default_width)
 
   -- Create relevant window config
   local config = {
