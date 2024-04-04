@@ -543,8 +543,11 @@ MiniDiff.get_buf_data = function(buf_id)
   })
 end
 
--- Set reference text for the buffer
---
+--- Set reference text for the buffer
+---
+--- Note: this will call |MiniDiff.enable()| for target buffer if it is not
+--- already enabled.
+---
 ---@param buf_id __diff_buf_id
 ---@param text string|table New reference text. Either a string with `\n` used to
 ---   separate lines or array of lines. Use empty table to unset current
@@ -558,6 +561,7 @@ MiniDiff.set_ref_text = function(buf_id, text)
 
   -- Enable if not already enabled
   if not H.is_buf_enabled(buf_id) then MiniDiff.enable(buf_id) end
+  if not H.is_buf_enabled(buf_id) then H.error('Can not set reference text for not enabled buffer.') end
 
   -- Appending '\n' makes more intuitive diffs at end-of-file
   if text ~= nil and string.sub(text, -1) ~= '\n' then text = text .. '\n' end

@@ -469,6 +469,11 @@ Return ~
 ------------------------------------------------------------------------------
                                                        *MiniDiff.set_ref_text()*
                    `MiniDiff.set_ref_text`({buf_id}, {text})
+Set reference text for the buffer
+
+Note: this will call |MiniDiff.enable()| for target buffer if it is not
+already enabled.
+
 Parameters ~
 {buf_id} `(number)` Target buffer identifier. Default: 0 for current buffer.
 {text} `(string|table)` New reference text. Either a string with `\n` used to

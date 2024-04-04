@@ -738,6 +738,11 @@ T['set_ref_text()']['enables not enabled buffer'] = function()
   local buf_id = new_buf()
   set_ref_text(buf_id, { 'aaa' })
   eq(is_buf_enabled(buf_id), true)
+
+  -- Give informative error if could not enable
+  child.lua('MiniDiff.config.source = { attach = function() return false end }')
+  local new_buf_id = new_buf()
+  expect.error(function() set_ref_text(new_buf_id, { 'bbb' }) end, 'not enabled')
 end
 
 T['set_ref_text()']['immediately updates diff data and visualization'] = function()
