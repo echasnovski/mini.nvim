@@ -277,6 +277,9 @@ Default values:
 
       -- The amount of second-stage diff to align lines (in Neovim>=0.9)
       linematch = 60,
+
+      -- Whether to wrap around edges during hunk navigation
+      wrap_goto = false,
     },
   }
 <
@@ -392,6 +395,11 @@ Default: `true`.
 stage diff is executed for a better aligned and more granular hunks.
 Note: present only in Neovim>=0.9.
 Default: 60. See |vim.diff()| and 'diffopt' for more details.
+
+`options.wrap_goto` is a boolean indicating whether to wrap around edges during
+hunk navigation (with |MiniDiff.goto_hunk()| or `goto_*` mappings). Like if
+cursor is after the last hunk, going "next" will put cursor on the first hunk.
+Default: `false`.
 
 ------------------------------------------------------------------------------
                                                              *MiniDiff.enable()*
@@ -568,6 +576,8 @@ Parameters ~
   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
   - <line_start> `(number)` - Line number to start from for directions
     "prev" and "next". Default: cursor line.
+  - <wrap> `(boolean)` - Whether to wrap around edges.
+    Default: `options.wrap` value of the config.
 
 ------------------------------------------------------------------------------
                                                            *MiniDiff.operator()*

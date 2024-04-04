@@ -361,6 +361,11 @@ end
 --- stage diff is executed for a better aligned and more granular hunks.
 --- Note: present only in Neovim>=0.9.
 --- Default: 60. See |vim.diff()| and 'diffopt' for more details.
+---
+--- `options.wrap_goto` is a boolean indicating whether to wrap around edges during
+--- hunk navigation (with |MiniDiff.goto_hunk()| or `goto_*` mappings). Like if
+--- cursor is after the last hunk, going "next" will put cursor on the first hunk.
+--- Default: `false`.
 MiniDiff.config = {
   -- Options for how hunks are visualized
   view = {
@@ -413,6 +418,9 @@ MiniDiff.config = {
 
     -- The amount of second-stage diff to align lines (in Neovim>=0.9)
     linematch = 60,
+
+    -- Whether to wrap around edges during hunk navigation
+    wrap_goto = false,
   },
 }
 --minidoc_afterlines_end
@@ -705,6 +713,8 @@ end
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
 ---   - <line_start> `(number)` - Line number to start from for directions
 ---     "prev" and "next". Default: cursor line.
+---   - <wrap> `(boolean)` - Whether to wrap around edges.
+---     Default: `options.wrap` value of the config.
 MiniDiff.goto_hunk = function(direction, opts)
   local buf_id = vim.api.nvim_get_current_buf()
   local buf_cache = H.cache[buf_id]
@@ -714,26 +724,24 @@ MiniDiff.goto_hunk = function(direction, opts)
     H.error('`direction` should be one of "first", "prev", "next", "last".')
   end
 
-  opts = vim.tbl_deep_extend('force', { n_times = vim.v.count1, line_start = vim.fn.line('.') }, opts or {})
-  local n_times = opts.n_times
-  if not (type(n_times) == 'number' and n_times >= 1) then H.error('`opts.n_times` should be positive number.') end
-  local line_start = opts.line_start
-  if not (type(line_start) == 'number' and line_start >= 1) then
-    H.error('`opts.line_start` should be positive number.')
+  local default_wrap = buf_cache.config.options.wrap_goto
+  local default_opts = { n_times = vim.v.count1, line_start = vim.fn.line('.'), wrap = default_wrap }
+  opts = vim.tbl_deep_extend('force', default_opts, opts or {})
+  if not (type(opts.n_times) == 'number' and opts.n_times >= 1) then
+    H.error('`opts.n_times` should be positive number.')
   end
+  if type(opts.line_start) ~= 'number' then H.error('`opts.line_start` should be number.') end
+  if type(opts.wrap) ~= 'boolean' then H.error('`opts.wrap` should be boolean.') end
 
   -- Prepare ranges to iterate.
   local ranges = H.get_contiguous_hunk_ranges(buf_cache.hunks)
   if #ranges == 0 then return H.notify('No hunks to go to', 'INFO') end
 
-  -- Compute iteration data
-  local iter_dir = (direction == 'first' or direction == 'next') and 'forward' or 'backward'
-  if direction == 'first' then line_start = 0 end
-  if direction == 'last' then line_start = vim.api.nvim_buf_line_count(buf_id) + 1 end
-
   -- Iterate
-  local res_line = H.iterate_hunk_ranges(ranges, iter_dir, line_start, n_times)
-  if res_line == nil then return H.notify('No hunk ranges in direction ' .. vim.inspect(direction), 'INFO') end
+  local res_ind, did_wrap = H.iterate_hunk_ranges(ranges, direction, opts)
+  if res_ind == nil then return H.notify('No hunk ranges in direction ' .. vim.inspect(direction), 'INFO') end
+  local res_line = ranges[res_ind].from
+  if did_wrap then H.notify('Wrapped around edge in direction ' .. vim.inspect(direction), 'INFO') end
 
   -- Add to jumplist
   vim.cmd([[normal! m']])
@@ -887,6 +895,7 @@ H.setup_config = function(config)
     ['options.algorithm'] = { config.options.algorithm, 'string' },
     ['options.indent_heuristic'] = { config.options.indent_heuristic, 'boolean' },
     ['options.linematch'] = { config.options.linematch, 'number' },
+    ['options.wrap_goto'] = { config.options.wrap_goto, 'boolean' },
   })
 
   vim.validate({
@@ -1453,22 +1462,40 @@ H.get_contiguous_hunk_ranges = function(hunks)
   return res
 end
 
-H.iterate_hunk_ranges = function(ranges, direction, line_start, n_times)
-  local from, to, by, should_count = 1, #ranges, 1, function(r) return line_start < r.from end
-  if direction == 'backward' then
-    from, to, by, should_count = #ranges, 1, -1, function(r) return r.to < line_start end
-  end
+H.iterate_hunk_ranges = function(ranges, direction, opts)
+  local n = #ranges
 
-  local res, cur_n = nil, 0
-  for i = from, to, by do
-    local r = ranges[i]
-    if should_count(r) then
-      res, cur_n = r.from, cur_n + 1
-    end
-    if n_times <= cur_n then break end
-  end
+  -- Compute initial index
+  local init_ind
+  if direction == 'first' then init_ind = 0 end
+  if direction == 'prev' then init_ind = H.get_range_id_prev(ranges, opts.line_start) end
+  if direction == 'next' then init_ind = H.get_range_id_next(ranges, opts.line_start) end
+  if direction == 'last' then init_ind = n + 1 end
 
-  return res
+  local is_on_edge = (direction == 'prev' and init_ind == 1) or (direction == 'next' and init_ind == n)
+  if not opts.wrap and is_on_edge then return nil end
+
+  -- Compute destination index
+  local is_move_forward = direction == 'first' or direction == 'next'
+  local res_ind = init_ind + opts.n_times * (is_move_forward and 1 or -1)
+  local did_wrap = opts.wrap and (res_ind < 1 or n < res_ind)
+  res_ind = opts.wrap and ((res_ind - 1) % n + 1) or math.min(math.max(res_ind, 1), n)
+
+  return res_ind, did_wrap
+end
+
+H.get_range_id_next = function(ranges, line_start)
+  for i = #ranges, 1, -1 do
+    if ranges[i].from <= line_start then return i end
+  end
+  return 0
+end
+
+H.get_range_id_prev = function(ranges, line_start)
+  for i = 1, #ranges do
+    if line_start <= ranges[i].to then return i end
+  end
+  return #ranges + 1
 end
 
 H.hunk_order = function(a, b)

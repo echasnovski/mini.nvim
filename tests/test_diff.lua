@@ -265,6 +265,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('options.algorithm', 'histogram')
   expect_config('options.indent_heuristic', true)
   expect_config('options.linematch', 60)
+  expect_config('options.wrap_goto', false)
 end
 
 T['setup()']["respects global 'number' option when setting default `view.style`"] = function()
@@ -311,6 +312,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ options = { algorithm = 1 } }, 'options.algorithm', 'string')
   expect_config_error({ options = { indent_heuristic = 'a' } }, 'options.indent_heuristic', 'boolean')
   expect_config_error({ options = { linematch = 'a' } }, 'options.linematch', 'number')
+  expect_config_error({ options = { wrap_goto = 'a' } }, 'options.wrap_goto', 'boolean')
 end
 
 T['setup()']['auto enables in all existing buffers'] = function()
@@ -1429,6 +1431,7 @@ T['goto_hunk()']['allows too big `opts.n_times`'] = function()
     set_cursor(4, 0)
     goto_hunk(direction, { n_times = 1000 })
     eq(get_cursor(), ref_cursor)
+    validate_notifications({})
   end
 
   -- Should partially go until reaches the end
@@ -1454,9 +1457,45 @@ T['goto_hunk()']['respects `opts.line_start`'] = function()
   validate('last', { 7, 0 })
 end
 
-T['goto_hunk()']['does not wrap around edges'] = function()
-  set_lines({ 'aaa', 'bbb', 'ccc', 'ddd', 'eee' })
-  set_ref_text(0, { 'aaa', 'BBB', 'ccc', 'DDD', 'eee' })
+T['goto_hunk()']['respects `opts.wrap`'] = function()
+  -- Should use `config.options.wrap_goto` as default value
+  child.lua('MiniDiff.config.options.wrap_goto = true')
+
+  set_lines({ 'uuu', 'aaa', 'vvv', 'bbb', 'www', 'ccc', 'xxx' })
+  set_ref_text(0, { 'aaa', 'bbb', 'ccc' })
+
+  local validate = function(direction, init_cursor, ref_cursor, n_times)
+    set_cursor(unpack(init_cursor))
+    goto_hunk(direction, { n_times = n_times })
+    eq(get_cursor(), ref_cursor)
+    validate_notifications({ { '(mini.diff) Wrapped around edge in direction "' .. direction .. '"', 'INFO' } })
+    clear_notify_log()
+  end
+
+  validate('prev', { 1, 0 }, { 7, 0 })
+  validate('next', { 7, 0 }, { 1, 0 })
+
+  validate('prev', { 2, 0 }, { 7, 0 }, 2)
+  validate('next', { 6, 0 }, { 1, 0 }, 2)
+
+  validate('prev', { 2, 0 }, { 7, 0 }, 6)
+  validate('next', { 6, 0 }, { 1, 0 }, 6)
+
+  validate('first', { 4, 0 }, { 1, 0 }, 5)
+  validate('last', { 4, 0 }, { 7, 0 }, 5)
+
+  validate('first', { 4, 0 }, { 3, 0 }, 10)
+  validate('last', { 4, 0 }, { 5, 0 }, 10)
+
+  -- Explicit `opts` should take preference
+  set_cursor(1, 1)
+  goto_hunk('prev', { wrap = false })
+  eq(get_cursor(), { 1, 1 })
+end
+
+T['goto_hunk()']['does not wrap around edges by default'] = function()
+  set_lines({ 'aaa', 'vvv', 'bbb', 'www', 'ccc' })
+  set_ref_text(0, { 'aaa', 'bbb', 'ccc' })
 
   local validate = function(direction, init_cursor)
     set_cursor(unpack(init_cursor))
@@ -1610,7 +1649,6 @@ T['goto_hunk()']['validates arguments'] = function()
   expect.error(function() goto_hunk('next', { n_times = 'a' }) end, '`opts.n_times`.*number')
   expect.error(function() goto_hunk('next', { n_times = 0 }) end, '`opts.n_times`.*positive')
   expect.error(function() goto_hunk('next', { line_start = 'a' }) end, '`opts.line_start`.*number')
-  expect.error(function() goto_hunk('next', { line_start = 0 }) end, '`opts.line_start`.*positive')
 
   disable()
   expect.error(function() goto_hunk() end, 'Buffer.*not enabled')
@@ -2625,27 +2663,28 @@ T['Goto']['works in Visual mode'] = function()
 end
 
 T['Goto']['works in Operator-pending mode'] = function()
-  local validate = function(keys, lines_1, cursor_1, lines_2, cursor_2)
+  local validate = function(keys, ref_lines, ref_cursor)
     set_lines({ 'uuu', 'aaa', 'vvv', 'bbb', 'www', 'ccc', 'xxx' })
     set_ref_text(0, { 'aaa', 'bbb', 'ccc' })
-
     set_cursor(4, 1)
 
     -- Should operate linewise
     type_keys('d', keys)
-    eq(get_lines(), lines_1)
-    eq(get_cursor(), cursor_1)
+    eq(get_lines(), ref_lines)
+    eq(get_cursor(), ref_cursor)
 
     -- With dot-repeat
+    set_lines({ 'uuu', 'aaa', 'vvv', 'bbb', 'www', 'ccc', 'xxx' })
+    set_cursor(4, 1)
     type_keys('.')
-    eq(get_lines(), lines_2)
-    eq(get_cursor(), cursor_2)
+    eq(get_lines(), ref_lines)
+    eq(get_cursor(), ref_cursor)
   end
 
-  validate('[H', { 'www', 'ccc', 'xxx' }, { 1, 1 }, { 'ccc', 'xxx' }, { 1, 1 })
-  validate('[h', { 'uuu', 'aaa', 'www', 'ccc', 'xxx' }, { 3, 1 }, { 'ccc', 'xxx' }, { 1, 1 })
-  validate(']h', { 'uuu', 'aaa', 'vvv', 'ccc', 'xxx' }, { 4, 1 }, { 'uuu', 'aaa', 'vvv' }, { 3, 1 })
-  validate(']H', { 'uuu', 'aaa', 'vvv' }, { 3, 1 }, { 'uuu', 'aaa' }, { 2, 1 })
+  validate('[H', { 'www', 'ccc', 'xxx' }, { 1, 1 })
+  validate('[h', { 'uuu', 'aaa', 'www', 'ccc', 'xxx' }, { 3, 1 })
+  validate(']h', { 'uuu', 'aaa', 'vvv', 'ccc', 'xxx' }, { 4, 1 })
+  validate(']H', { 'uuu', 'aaa', 'vvv' }, { 3, 1 })
 end
 
 T['Goto']['allows dot-repeat across buffers'] = function()
@@ -2678,6 +2717,28 @@ T['Goto']['respects [count]'] = function()
   validate('[h', { 1, 0 })
   validate(']h', { 7, 0 })
   validate(']H', { 5, 0 })
+end
+
+T['Goto']['respects `options.wrap_goto`'] = function()
+  child.lua('MiniDiff.config.options.wrap_goto = true')
+
+  set_lines({ 'uuu', 'aaa', 'vvv', 'bbb', 'www', 'ccc', 'xxx' })
+  set_ref_text(0, { 'aaa', 'bbb', 'ccc' })
+
+  local validate = function(keys, init_cursor, ref_cursor)
+    set_cursor(unpack(init_cursor))
+    type_keys(keys)
+    eq(get_cursor(), ref_cursor)
+  end
+
+  validate('[h', { 1, 0 }, { 7, 0 })
+  validate(']h', { 7, 0 }, { 1, 0 })
+
+  validate('2[h', { 1, 0 }, { 5, 0 })
+  validate('2]h', { 7, 0 }, { 3, 0 })
+
+  validate('6[H', { 4, 0 }, { 3, 0 })
+  validate('6]H', { 4, 0 }, { 5, 0 })
 end
 
 T['Goto']['works with different mappings'] = function()

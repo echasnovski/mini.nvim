@@ -279,6 +279,9 @@ Here are code snippets for some common installation methods (use only one):
 
     -- The amount of second-stage diff to align lines (in Neovim>=0.9)
     linematch = 60,
+
+    -- Whether to wrap around edges during hunk navigation
+    wrap_goto = false,
   },
 }
 ```
