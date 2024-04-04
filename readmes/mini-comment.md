@@ -151,7 +151,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Whether to recognize as comment only lines without indent
     start_of_line = false,
 
-    -- Whether to ensure single space pad for comment parts
+    -- Whether to force single space inner padding for comment parts
     pad_comment_parts = true,
   },
 

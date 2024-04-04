@@ -124,7 +124,7 @@ MiniComment.config = {
     -- Whether to recognize as comment only lines without indent
     start_of_line = false,
 
-    -- Whether to ensure single space pad for comment parts
+    -- Whether to force single space inner padding for comment parts
     pad_comment_parts = true,
   },
 
@@ -242,12 +242,11 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   local hook_arg = { action = 'toggle', line_start = line_start, line_end = line_end, ref_position = ref_position }
   if config.hooks.pre(hook_arg) == false then return end
 
-  local comment_parts = H.make_comment_parts(ref_position, config.options)
+  local parts = H.make_comment_parts(ref_position, config.options)
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
-  local indent, is_comment = H.get_lines_info(lines, comment_parts, config.options)
+  local indent, is_comment = H.get_lines_info(lines, parts, config.options)
 
-  local f = is_comment and H.make_uncomment_function(comment_parts, config.options)
-    or H.make_comment_function(comment_parts, indent, config.options)
+  local f = is_comment and H.make_uncomment_function(parts) or H.make_comment_function(parts, indent, config.options)
 
   -- NOTE: Direct of `nvim_buf_set_lines()` essentially removes (squashes to
   -- empty range at either side of the region) both regular and extended marks
@@ -277,8 +276,7 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   -- best compromise so far. It also aligns with treating "toggle comment" in
   -- a semantic way (those lines lines now have completely different meaning)
   -- rather than in a text edit way (add comment parts to those lines).
-  local new_lines = vim.tbl_map(f, lines)
-  _G._from, _G._to, _G._lines = line_start - 1, line_end, new_lines
+  _G._from, _G._to, _G._lines = line_start - 1, line_end, vim.tbl_map(f, lines)
   vim.cmd('lockmarks lua pcall(vim.api.nvim_buf_set_lines, 0, _G._from, _G._to, false, _G._lines)')
   _G._from, _G._to, _G._lines = nil, nil, nil
 
@@ -297,9 +295,9 @@ MiniComment.textobject = function()
   local hook_args = { action = 'textobject' }
   if config.hooks.pre(hook_args) == false then return end
 
-  local comment_parts = H.make_comment_parts({ vim.fn.line('.'), vim.fn.col('.') }, config.options)
-  local comment_check = H.make_comment_check(comment_parts, config.options)
-  local lnum_cur = vim.api.nvim_win_get_cursor(0)[1]
+  local lnum_cur = vim.fn.line('.')
+  local parts = H.make_comment_parts({ lnum_cur, vim.fn.col('.') }, config.options)
+  local comment_check = H.make_comment_check(parts, config.options)
   local lnum_from, lnum_to
 
   if comment_check(vim.fn.getline(lnum_cur)) then
@@ -319,7 +317,7 @@ MiniComment.textobject = function()
 
     -- This visual selection doesn't seem to change `'<` and `'>` marks when
     -- executed as `onoremap` mapping
-    vim.cmd(string.format('normal! %dGV%dG', lnum_from, lnum_to))
+    vim.cmd('normal! ' .. lnum_from .. 'GV' .. lnum_to .. 'G')
   end
 
   hook_args.line_start, hook_args.line_end = lnum_from, lnum_to
@@ -462,29 +460,33 @@ H.make_comment_parts = function(ref_position, options)
     H.error(vim.inspect(cs) .. " is not a valid 'commentstring'.")
   end
 
-  -- Assumed structure of 'commentstring':
-  -- <whitespace> <left> <'%s'> <right> <whitespace>
-  -- So this extracts parts without surrounding whitespace
-  local left, right = string.match(cs, '^%s*(.*)%%s(.-)%s*$')
-  -- Trim comment parts from inner whitespace to ensure single space pad
+  -- Structure of 'commentstring': <left part> <%s> <right part>
+  local left, right = string.match(cs, '^(.-)%%s(.-)$')
+
+  -- Force single space padding if requested
   if options.pad_comment_parts then
     left, right = vim.trim(left), vim.trim(right)
+    left, right = left == '' and '' or (left .. ' '), right == '' and '' or (' ' .. right)
   end
   return { left = left, right = right }
 end
 
-H.make_comment_check = function(comment_parts, options)
-  local l, r = comment_parts.left, comment_parts.right
-  -- String is commented if it has structure:
-  -- <possible whitespace> <left> <anything> <right> <possible whitespace>
-  local start_blank = options.start_of_line and '' or '%s-'
-  local regex = '^' .. start_blank .. vim.pesc(l) .. '.*' .. vim.pesc(r) .. '%s-$'
+H.make_comment_check = function(parts, options)
+  local l_esc, r_esc = vim.pesc(parts.left), vim.pesc(parts.right)
+  local prefix = options.start_of_line and '' or '%s-'
 
-  return function(line) return string.find(line, regex) ~= nil end
+  -- Commented line has the following structure:
+  -- <possible whitespace> <left> <anything> <right> <possible whitespace>
+  local nonblank_regex = '^' .. prefix .. l_esc .. '.*' .. r_esc .. '%s-$'
+
+  -- Commented blank line can have any amoung of whitespace around parts
+  local blank_regex = '^' .. prefix .. vim.trim(l_esc) .. '%s*' .. vim.trim(r_esc) .. '%s-$'
+
+  return function(line) return string.find(line, nonblank_regex) ~= nil or string.find(line, blank_regex) ~= nil end
 end
 
-H.get_lines_info = function(lines, comment_parts, options)
-  local comment_check = H.make_comment_check(comment_parts, options)
+H.get_lines_info = function(lines, parts, options)
+  local comment_check = H.make_comment_check(parts, options)
   local ignore_blank_line = options.ignore_blank_line
 
   local is_commented = true
@@ -511,59 +513,54 @@ H.get_lines_info = function(lines, comment_parts, options)
   return indent or '', is_commented
 end
 
-H.make_comment_function = function(comment_parts, indent, options)
-  local l, r = comment_parts.left, comment_parts.right
-  local lpad = (options.pad_comment_parts and l ~= '') and ' ' or ''
-  local rpad = (options.pad_comment_parts and r ~= '') and ' ' or ''
-
-  -- Escape literal '%' symbols in comment parts (like in LaTeX) to be '%%'
-  -- because they have special meaning in `string.format` input.
-  -- NOTE: no `vim.pesc()` here because it also escapes other special
-  -- characters (like '-', '*', etc.).
-  local l_esc = string.gsub(l, '%%', '%%%%')
-  local r_esc = string.gsub(r, '%%', '%%%%')
-  local prefix = options.start_of_line and (l_esc .. indent) or (indent .. l_esc)
-  local nonblank_format = prefix .. lpad .. '%s' .. rpad .. r_esc
+H.make_comment_function = function(parts, indent, options)
+  local prefix = options.start_of_line and (parts.left .. indent) or (indent .. parts.left)
   local nonindent_start = string.len(indent) + 1
+  local suffix = parts.right
 
-  local ignore_blank_line, blank_comment = options.ignore_blank_line, indent .. l .. r
+  local blank_comment = indent .. vim.trim(parts.left) .. vim.trim(parts.right)
+  local ignore_blank_line = options.ignore_blank_line
+
   return function(line)
-    -- Line is blank if it consists only from whitespace
-    if string.find(line, '^%s*$') ~= nil then return ignore_blank_line and line or blank_comment end
+    if H.is_blank(line) then return ignore_blank_line and line or blank_comment end
 
-    return string.format(nonblank_format, string.sub(line, nonindent_start))
+    return prefix .. string.sub(line, nonindent_start) .. suffix
   end
 end
 
-H.make_uncomment_function = function(comment_parts, options)
-  local l, r = comment_parts.left, comment_parts.right
-  -- Usage of `lpad` and `rpad` as *possible* single space enables uncommenting
-  -- of commented empty lines without trailing whitespace (like '  #').
-  local lpad = (options.pad_comment_parts and l ~= '') and '[ ]?' or ''
-  local rpad = (options.pad_comment_parts and r ~= '') and '[ ]?' or ''
-
-  local uncomment_regex = string.format('^(%%s*)%s%s(.-)%s%s%%s-$', vim.pesc(l), lpad, rpad, vim.pesc(r))
+H.make_uncomment_function = function(parts)
+  local l_esc, r_esc = vim.pesc(parts.left), vim.pesc(parts.right)
+  local nonblank_regex = '^(%s*)' .. l_esc .. '(.*)' .. r_esc .. '(%s-)$'
+  local blank_regex = '^(%s*)' .. vim.trim(l_esc) .. '(%s*)' .. vim.trim(r_esc) .. '(%s-)$'
 
   return function(line)
-    local indent, new_line = string.match(line, uncomment_regex)
+    -- Try both non-blank and blank regexes
+    local indent, new_line, trail = string.match(line, nonblank_regex)
+    if new_line == nil then
+      indent, new_line, trail = string.match(line, blank_regex)
+    end
 
     -- Return original if line is not commented
     if new_line == nil then return line end
 
-    -- Remove indent if line is a commented empty line
-    indent = new_line == '' and '' or indent
+    -- Prevent trailing whitespace
+    if H.is_blank(new_line) then
+      indent, trail = '', ''
+    end
 
-    return string.format('%s%s', indent, new_line)
+    return indent .. new_line .. trail
   end
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.comment) %s', msg), 0) end
+H.error = function(msg) error('(mini.comment) ' .. msg, 0) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
+
+H.is_blank = function(x) return string.find(x, '^%s*$') ~= nil end
 
 return MiniComment

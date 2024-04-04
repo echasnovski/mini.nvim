@@ -172,7 +172,7 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
 
   -- Latex (#25)
   set_lines(example_lines)
-  child.bo.commentstring = '%%s'
+  child.bo.commentstring = '% %s'
   toggle_lines(3, 5)
   eq(get_lines(2, 5), { '  % aa', '  %', '  % aa' })
 
@@ -260,25 +260,56 @@ T['toggle_lines()']['correctly computes indent'] = function()
   eq(get_lines(3, 4), { '#' })
 end
 
+--stylua: ignore
 T['toggle_lines()']['correctly detects comment/uncomment'] = function()
-  local lines = { '', 'aa', '# aa', '# aa', 'aa', '' }
+  local validate = function(from, to, ref_lines)
+    set_lines({ '', 'aa', '# aa', '# aa', 'aa', '' })
+    toggle_lines(from, to)
+    eq(get_lines(), ref_lines)
+  end
 
   -- It should uncomment only if all lines are comments
-  set_lines(lines)
-  toggle_lines(3, 4)
-  eq(get_lines(), { '', 'aa', 'aa', 'aa', 'aa', '' })
+  validate(3, 4, { '',  'aa',   'aa',     'aa',     'aa',   '' })
+  validate(2, 4, { '',  '# aa', '# # aa', '# # aa', 'aa',   '' })
+  validate(3, 5, { '',  'aa',   '# # aa', '# # aa', '# aa', '' })
+  validate(1, 6, { '#', '# aa', '# # aa', '# # aa', '# aa', '#' })
+end
 
-  set_lines(lines)
-  toggle_lines(2, 4)
-  eq(get_lines(), { '', '# aa', '# # aa', '# # aa', 'aa', '' })
+T['toggle_lines()']['matches comment parts strictly when detecting comment/uncomment'] = function()
+  local validate = function(from, to, ref_lines)
+    set_lines({ '#aa', '# aa', '#  aa' })
+    toggle_lines(from, to)
+    eq(get_lines(), ref_lines)
+  end
 
-  set_lines(lines)
-  toggle_lines(3, 5)
-  eq(get_lines(), { '', 'aa', '# # aa', '# # aa', '# aa', '' })
+  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
+  validate(2, 3, { '#aa', 'aa', ' aa' })
+  validate(3, 3, { '#aa', '# aa', ' aa' })
 
-  set_lines(lines)
-  toggle_lines(1, 6)
-  eq(get_lines(), { '#', '# aa', '# # aa', '# # aa', '# aa', '#' })
+  -- With default `pad_comment_parts = true`, all commentstrings are
+  -- transformed into having single space
+  child.bo.commentstring = '#%s'
+  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
+  validate(2, 3, { '#aa', 'aa', ' aa' })
+  validate(3, 3, { '#aa', '# aa', ' aa' })
+
+  child.bo.commentstring = '#  %s'
+  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
+  validate(2, 3, { '#aa', 'aa', ' aa' })
+  validate(3, 3, { '#aa', '# aa', ' aa' })
+
+  -- With `pad_comment_parts = false` should treat parts as is
+  child.lua('MiniComment.config.options.pad_comment_parts = false')
+
+  child.bo.commentstring = '#%s'
+  validate(1, 3, { 'aa', ' aa', '  aa' })
+  validate(2, 3, { '#aa', ' aa', '  aa' })
+  validate(3, 3, { '#aa', '# aa', '  aa' })
+
+  child.bo.commentstring = '#  %s'
+  validate(1, 3, { '#  #aa', '#  # aa', '#  #  aa' })
+  validate(2, 3, { '#aa', '#  # aa', '#  #  aa' })
+  validate(3, 3, { '#aa', '# aa', 'aa' })
 end
 
 T['toggle_lines()']['respects `config.options.custom_commentstring`'] = function()
@@ -311,20 +342,20 @@ end
 
 T['toggle_lines()']['respects `config.options.start_of_line`'] = function()
   child.lua('MiniComment.config.options.start_of_line = true')
-  local lines = { ' # aa', '  # aa', '#aa', '# aa', '#  aa' }
+  local lines = { ' # aa', '  # aa', '# aa', '#  aa' }
 
   -- Should recognize as commented only lines with zero indent
   set_lines(lines)
-  toggle_lines(1, 2)
-  eq(get_lines(), { '#  # aa', '#   # aa', '#aa', '# aa', '#  aa' })
-  toggle_lines(1, 2)
+  toggle_lines(1, 3)
+  eq(get_lines(), { '#  # aa', '#   # aa', '# # aa', '#  aa' })
+  toggle_lines(1, 3)
   eq(get_lines(), lines)
 
   set_lines(lines)
-  toggle_lines(3, 5)
-  eq(get_lines(), { ' # aa', '  # aa', 'aa', 'aa', ' aa' })
-  toggle_lines(3, 5)
-  eq(get_lines(), { ' # aa', '  # aa', '# aa', '# aa', '#  aa' })
+  toggle_lines(3, 4)
+  eq(get_lines(), { ' # aa', '  # aa', 'aa', ' aa' })
+  toggle_lines(3, 4)
+  eq(get_lines(), { ' # aa', '  # aa', '# aa', '#  aa' })
 end
 
 T['toggle_lines()']['respects `config.options.ignore_blank_line`'] = function()
@@ -344,35 +375,74 @@ end
 T['toggle_lines()']['respects `config.options.pad_comment_parts`'] = function()
   child.lua('MiniComment.config.options.pad_comment_parts = false')
 
-  local validate = function(lines_before, lines_after)
+  local validate = function(lines_before, lines_after, lines_again)
     set_lines(lines_before)
     toggle_lines(1, #lines_before)
     eq(get_lines(), lines_after)
+    toggle_lines(1, #lines_before)
+    eq(get_lines(), lines_again or lines_before)
   end
 
-  -- No whitespace in 'commentstring'
+  -- No whitespace in parts
   child.bo.commentstring = '#%s#'
+  -- - General case
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { '#aa#', '#  aa#', '#aa  #', '#  aa  #' })
+  -- - Tabs
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { '#aa#', '#\taa#', '#aa\t#', '#\taa\t#' })
+  -- - With indent
+  validate({ ' aa', '  aa' }, { ' #aa#', ' # aa#' })
+  -- - With blank/empty lines
+  validate({ '  aa', '', '  ', '\t' }, { '  #aa#', '  ##', '  ##', '  ##' }, { '  aa', '', '', '' })
 
-  -- - Should correctly comment
-  validate({ 'aa', '  aa', 'aa  ' }, { '#aa#', '#  aa#', '#aa  #' })
-  validate({ '\taa', '\taa', '\taa\t' }, { '\t#aa#', '\t#aa#', '\t#aa\t#' })
+  child.bo.commentstring = '#%s'
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { '#aa', '#  aa', '#aa  ', '#  aa  ' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { '#aa', '#\taa', '#aa\t', '#\taa\t' })
+  validate({ ' aa', '  aa' }, { ' #aa', ' # aa' })
+  validate({ '  aa', '', '  ', '\t' }, { '  #aa', '  #', '  #', '  #' }, { '  aa', '', '', '' })
 
-  -- - Should correctly uncomment
-  validate({ '# aa #', '#aa #', '# aa#', '#aa#' }, { ' aa ', 'aa ', ' aa', 'aa' })
-  validate({ '#aa#', '  #aa#' }, { 'aa', '  aa' })
-  validate({ '\t#aa#', '\t#aa#' }, { '\taa', '\taa' })
+  child.bo.commentstring = '%s#'
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { 'aa#', '  aa#', 'aa  #', '  aa  #' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { 'aa#', '\taa#', 'aa\t#', '\taa\t#' })
+  validate({ ' aa', '  aa' }, { ' aa#', '  aa#' })
+  validate({ '  aa', '', '  ', '\t' }, { '  aa#', '  #', '  #', '  #' }, { '  aa', '', '', '' })
 
-  -- Extra whitespace in 'commentstring'
+  -- Whitespace inside comment parts
   child.bo.commentstring = '#  %s  #'
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { '#  aa  #', '#    aa  #', '#  aa    #', '#    aa    #' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { '#  aa  #', '#  \taa  #', '#  aa\t  #', '#  \taa\t  #' })
+  validate({ ' aa', '  aa' }, { ' #  aa  #', ' #   aa  #' })
+  validate({ '  aa', '', '  ', '\t' }, { '  #  aa  #', '  ##', '  ##', '  ##' }, { '  aa', '', '', '' })
 
-  -- - Should correctly comment
-  validate({ 'aa', '  aa', 'aa  ' }, { '#  aa  #', '#    aa  #', '#  aa    #' })
-  validate({ '\taa', '\taa', '\taa\t' }, { '\t#  aa  #', '\t#  aa  #', '\t#  aa\t  #' })
+  child.bo.commentstring = '#  %s'
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { '#  aa', '#    aa', '#  aa  ', '#    aa  ' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { '#  aa', '#  \taa', '#  aa\t', '#  \taa\t' })
+  validate({ ' aa', '  aa' }, { ' #  aa', ' #   aa' })
+  validate({ '  aa', '', '  ', '\t' }, { '  #  aa', '  #', '  #', '  #' }, { '  aa', '', '', '' })
 
-  -- - Should correctly uncomment
-  validate({ '#  aa  #', '#   a   #' }, { 'aa', ' a ' })
-  validate({ '  #  aa  #', '  #   a   #' }, { '  aa', '   a ' })
-  validate({ '\t#  aa  #', '\t#  aa  #' }, { '\taa', '\taa' })
+  child.bo.commentstring = '%s  #'
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { 'aa  #', '  aa  #', 'aa    #', '  aa    #' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { 'aa  #', '\taa  #', 'aa\t  #', '\taa\t  #' })
+  validate({ ' aa', '  aa' }, { ' aa  #', '  aa  #' })
+  validate({ '  aa', '', '  ', '\t' }, { '  aa  #', '  #', '  #', '  #' }, { '  aa', '', '', '' })
+
+  -- Whitespace outside of comment parts
+  child.bo.commentstring = ' # %s # '
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { ' # aa # ', ' #   aa # ', ' # aa   # ', ' #   aa   # ' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { ' # aa # ', ' # \taa # ', ' # aa\t # ', ' # \taa\t # ' })
+  validate({ ' aa', '  aa' }, { '  # aa # ', '  #  aa # ' })
+  validate({ '  aa', '', '  ', '\t' }, { '   # aa # ', '  ##', '  ##', '  ##' }, { '  aa', '', '', '' })
+
+  child.bo.commentstring = ' # %s '
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { ' # aa ', ' #   aa ', ' # aa   ', ' #   aa   ' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { ' # aa ', ' # \taa ', ' # aa\t ', ' # \taa\t ' })
+  validate({ ' aa', '  aa' }, { '  # aa ', '  #  aa ' })
+  validate({ '  aa', '', '  ', '\t' }, { '   # aa ', '  #', '  #', '  #' }, { '  aa', '', '', '' })
+
+  child.bo.commentstring = ' %s # '
+  validate({ 'aa', '  aa', 'aa  ', '  aa  ' }, { ' aa # ', '   aa # ', ' aa   # ', '   aa   # ' })
+  validate({ 'aa', '\taa', 'aa\t', '\taa\t' }, { ' aa # ', ' \taa # ', ' aa\t # ', ' \taa\t # ' })
+  validate({ ' aa', '  aa' }, { '  aa # ', '   aa # ' })
+  validate({ '  aa', '', '  ', '\t' }, { '   aa # ', '  #', '  #', '  #' }, { '  aa', '', '', '' })
 end
 
 T['toggle_lines()']['uncomments on inconsistent indent levels'] = function()
@@ -406,11 +476,28 @@ T['toggle_lines()']['adds spaces inside non-empty lines'] = function()
   eq(get_lines(2, 5), { '  aa #', '  #', '  aa #' })
 end
 
-T['toggle_lines()']['removes trailing whitespace'] = function()
-  set_lines({ 'aa', 'aa  ', '  ' })
+T['toggle_lines()']['works with trailing whitespace'] = function()
+  -- Without right-hand side
+  child.bo.commentstring = '# %s'
+  set_lines({ ' aa', ' aa  ', '  ' })
   toggle_lines(1, 3)
+  eq(get_lines(), { ' # aa', ' # aa  ', ' #' })
   toggle_lines(1, 3)
-  eq(get_lines(), { 'aa', 'aa', '' })
+  eq(get_lines(), { ' aa', ' aa  ', '' })
+
+  -- With right-hand side
+  child.bo.commentstring = '%s #'
+  set_lines({ ' aa', ' aa  ', '  ' })
+  toggle_lines(1, 3)
+  eq(get_lines(), { ' aa #', ' aa   #', ' #' })
+  toggle_lines(1, 3)
+  eq(get_lines(), { ' aa', ' aa  ', '' })
+
+  -- Trailing whitespace after right side should be preserved for non-blanks
+  child.bo.commentstring = '%s #'
+  set_lines({ ' aa #  ', ' aa #\t', ' #  ', ' #\t' })
+  toggle_lines(1, 4)
+  eq(get_lines(), { ' aa  ', ' aa\t', '', '' })
 end
 
 T['toggle_lines()']['applies hooks'] = function()
@@ -981,7 +1068,7 @@ end
 T['Comment textobject']['respects `config.options.start_of_line`'] = function()
   child.lua('MiniComment.config.options.start_of_line = true')
 
-  local lines = { ' # aa', '  # aa', '#aa', '# aa', '#  aa' }
+  local lines = { ' # aa', '  # aa', '# aa', '#  aa' }
   set_lines(lines)
 
   set_cursor(1, 0)

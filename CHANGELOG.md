@@ -2,6 +2,17 @@
 
 ## mini.comment
 
+- BREAKING: Whitespace in comment parts is now treated more strictly. In particular:
+    - Default `options.pad_comment_parts = true` now more explicitly means that any value of 'commentstring' is transformed so that comment parts have exactly single space inner padding.
+
+      Example: any `/*%s*/`, ` /* %s */ `, or `/*  %s  */` is equivalent to having `/* %s */`.
+
+    - During detection whether consecutive lines are commented or not, comment parts should be present *exactly* around non-blank text for line to be treated as commented; while around blank text any padding is allowed. With default `options.pad_comment_parts = true` it means that parts should be padded from inner content by at least one space.
+
+      Example with `/* %s */` 'commentstring' value: `/* this is commented */` while `/*this is not commented */` and `/* this is not commented*/`.
+
+    - Commenting blank lines is done with trimmed comments parts, while uncommenting explicitly results into empty lines.
+
 - FEATURE: Support dot-repeat after initial commenting is done for visual selection; repeating is done for same relative range.
 
 ## mini.diff
