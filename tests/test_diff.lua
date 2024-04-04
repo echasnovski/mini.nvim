@@ -1058,6 +1058,26 @@ T['gen_source']['git()']['should try attaching same buffer exactly once'] = func
   validate_git_spawn_log(ref_git_spawn_log)
 end
 
+T['gen_source']['none()'] = new_set()
+
+T['gen_source']['none()']['works'] = function()
+  child.lua('MiniDiff.config.source = MiniDiff.gen_source.none()')
+
+  -- Should return proper structure
+  eq(child.lua_get('vim.tbl_map(type, MiniDiff.config.source)'), { attach = 'function', name = 'string' })
+  eq(child.lua_get('MiniDiff.config.source.name'), 'none')
+
+  -- Should allow enabling buffer but not set any reference text
+  local buf_id = new_buf()
+  enable(buf_id)
+  eq(is_buf_enabled(buf_id), true)
+  eq(get_buf_data(buf_id).ref_text, nil)
+
+  -- Should allow setting reference text manually
+  set_ref_text(buf_id, { 'aaa' })
+  eq(get_buf_data(buf_id).ref_text, 'aaa\n')
+end
+
 T['gen_source']['save()'] = new_set()
 
 T['gen_source']['save()']['works'] = function()

@@ -624,6 +624,16 @@ MiniDiff.gen_source.git = function()
   return { name = 'git', attach = attach, detach = detach, apply_hunks = apply_hunks }
 end
 
+--- "Do nothing" source
+---
+--- Allows buffers to be enabled while not setting any reference text.
+--- Use this if the goal is to rely on manual |MiniDiff.set_ref_text()| calls.
+---
+---@return table Source. See |MiniDiff-source-specification|.
+MiniDiff.gen_source.none = function()
+  return { name = 'none', attach = function() end }
+end
+
 --- Latest save source
 ---
 --- Uses text at latest save as the reference. This results into diff showing

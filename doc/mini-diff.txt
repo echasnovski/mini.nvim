@@ -512,6 +512,17 @@ Return ~
 `(table)` Source. See |MiniDiff-source-specification|.
 
 ------------------------------------------------------------------------------
+                                                    *MiniDiff.gen_source.none()*
+                          `MiniDiff.gen_source.none`()
+"Do nothing" source
+
+Allows buffers to be enabled while not setting any reference text.
+Use this if the goal is to rely on manual |MiniDiff.set_ref_text()| calls.
+
+Return ~
+`(table)` Source. See |MiniDiff-source-specification|.
+
+------------------------------------------------------------------------------
                                                     *MiniDiff.gen_source.save()*
                           `MiniDiff.gen_source.save`()
 Latest save source
