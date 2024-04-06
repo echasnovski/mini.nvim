@@ -1023,9 +1023,9 @@ end
 --- Create child Neovim process
 ---
 --- This creates an object designed to be a fundamental piece of 'mini.test'
---- methodology. It can start/stop/restart a separate (child) Neovim process in
---- full (non-headless) mode together with convenience helpers to interact with
---- it through |RPC| messages.
+--- methodology. It can start/stop/restart a separate (child) Neovim process
+--- (headless, but fully functioning) together with convenience helpers to
+--- interact with it through |RPC| messages.
 ---
 --- For more information see |MiniTest-child-neovim|.
 ---
@@ -1068,8 +1068,7 @@ MiniTest.new_child_neovim = function()
     H.error_with_emphasis(msg)
   end
 
-  -- Start fully functional Neovim instance (not '--embed' or '--headless',
-  -- because they don't provide full functionality)
+  -- Start headless Neovim instance
   child.start = function(args, opts)
     if child.is_running() then
       H.message('Child process is already running. Use `child.restart()`.')
@@ -1082,17 +1081,23 @@ MiniTest.new_child_neovim = function()
     -- Make unique name for `--listen` pipe
     local job = { address = vim.fn.tempname() }
 
-    local full_args = { opts.nvim_executable, '--clean', '-n', '--listen', job.address }
+    --stylua: ignore
+    local full_args = {
+      opts.nvim_executable, '--clean', '-n', '--listen', job.address,
+      -- Setting 'lines' and 'columns' makes headless process more like
+      -- interactive for closer to reality testing
+      '--headless', '--cmd', 'set lines=24 columns=80'
+    }
     vim.list_extend(full_args, args)
 
-    -- Using 'libuv' for creating a job is crucial for getting this to work in
-    -- Github Actions. Other approaches:
+    -- Using 'jobstart' for creating a job is crucial for getting this to work
+    -- in Github Actions. Other approaches:
     -- - Using `{ pty = true }` seems crucial to make this work on GitHub CI.
     -- - Using `vim.loop.spawn()` is doable, but has issues on Neovim>=0.9:
     --     - https://github.com/neovim/neovim/issues/21630
     --     - https://github.com/neovim/neovim/issues/21886
     --     - https://github.com/neovim/neovim/issues/22018
-    job.id = vim.fn.jobstart(full_args, { pty = true })
+    job.id = vim.fn.jobstart(full_args)
 
     local step = 10
     local connected, i, max_tries = nil, 0, math.floor(opts.connection_timeout / step)
@@ -1464,8 +1469,10 @@ end
 ---
 --- Start child process and connect to it. Won't work if child is already running.
 ---
----@param args table Array with arguments for executable. Will be prepended
----   with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
+---@param args table Array with arguments for executable. Will be prepended with
+---   the following default arguments (see |startup-options|): >
+---   '--clean', '-n', '--listen', <some address>,
+---   '--headless', '--cmd', 'set lines=24 columns=80'
 ---@param opts table|nil Options:
 ---   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
 ---   - <connection_timeout> - stop trying to connect after this amount of

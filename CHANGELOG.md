@@ -28,6 +28,10 @@
     - `Folded` - make folds differ from `CursorLine`.
     - `QuickFixLine` - make current quickfix item differ from `CursorLine`.
 
+## mini.test
+
+- BREAKING FEATURE: child process is now created with extra `--headless --cmd "set lines=24 columns=80"` arguments making it headless but still reasonably similar to fully functioning Neovim during interactive usage. This change should generally not break a lot of things, while enabling a faster and more robust test execution.
+
 # Version 0.12.0
 
 ## mini.basics

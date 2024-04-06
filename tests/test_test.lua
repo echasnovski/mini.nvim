@@ -73,6 +73,8 @@ local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
+      -- Mock UI so that default reporter is as if used interactively
+      child.lua('vim.api.nvim_list_uis = function() return { 1 } end')
       load_module()
     end,
     post_once = child.stop,

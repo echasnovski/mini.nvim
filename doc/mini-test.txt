@@ -673,9 +673,9 @@ Parameters ~
 Create child Neovim process
 
 This creates an object designed to be a fundamental piece of 'mini.test'
-methodology. It can start/stop/restart a separate (child) Neovim process in
-full (non-headless) mode together with convenience helpers to interact with
-it through |RPC| messages.
+methodology. It can start/stop/restart a separate (child) Neovim process
+(headless, but fully functioning) together with convenience helpers to
+interact with it through |RPC| messages.
 
 For more information see |MiniTest-child-neovim|.
 
@@ -812,8 +812,10 @@ child.start(args, opts) ~
 Start child process and connect to it. Won't work if child is already running.
 
 Parameters ~
-{args} `(table)` Array with arguments for executable. Will be prepended
-  with `{'--clean', '-n', '--listen', <some address>}` (see |startup-options|).
+{args} `(table)` Array with arguments for executable. Will be prepended with
+  the following default arguments (see |startup-options|): >
+  '--clean', '-n', '--listen', <some address>,
+  '--headless', '--cmd', 'set lines=24 columns=80'
 {opts} `(table|nil)` Options:
   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
   - <connection_timeout> - stop trying to connect after this amount of

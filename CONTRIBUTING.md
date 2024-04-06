@@ -95,7 +95,7 @@ If your contribution updates annotations used to generate help file, please rege
 
 ## Testing
 
-If your contribution updates code and you use Linux (not Windows or MacOS), please make sure that it doesn't break existing tests. If it adds new functionality or fixes a recognized bug, add new test case(s). There are two ways of running tests:
+If your contribution updates code, please make sure that it doesn't break existing tests. If it adds new functionality or fixes a recognized bug, add new test case(s). There are two ways of running tests:
 
 - From command line:
     - Execute `make test` to run all tests (with `nvim` as executable).
@@ -107,7 +107,6 @@ If your contribution updates code and you use Linux (not Windows or MacOS), plea
 This plugin uses 'mini.test' to manage its tests. For a more hands-on introduction, see [TESTING.md](TESTING.md).
 
 **Notes**:
-- If you have Windows or MacOS and want to contribute code related change, make your best effort to not break existing behavior. It will later be tested automatically after making Pull Request. The reason for this distinction is that tests are not well designed to be run on those operating systems.
 - If new functionality relies on an external dependency (`git` CLI tool, LSP server, etc.), use mocking (writing Lua code which emulates dependency usage as close as reasonably possible). For examples, take a look at tests for 'mini.pick', 'mini.completion', and 'mini.statusline'.
 - There is a certain number of tests that are flaky (i.e. will sometimes report an error due to other reasons than actual functionality being broke). It is usually the ones which test time related functionality (i.e. that certain action was done after specific amount of delay).
     A commonly used way to know if the test is flaky is that it fails on non-nightly Neovim version yet there were no changes to its tested module after it had passed in the past. For example, some 'mini.animate' test is shown to break but there were no changes to it since test passed in CI couple of days before.
