@@ -242,7 +242,7 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   local hook_arg = { action = 'toggle', line_start = line_start, line_end = line_end, ref_position = ref_position }
   if config.hooks.pre(hook_arg) == false then return end
 
-  local parts = H.make_comment_parts(ref_position, config.options)
+  local parts = H.get_comment_parts(ref_position, config.options)
   local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
   local indent, is_comment = H.get_lines_info(lines, parts, config.options)
 
@@ -296,7 +296,7 @@ MiniComment.textobject = function()
   if config.hooks.pre(hook_args) == false then return end
 
   local lnum_cur = vim.fn.line('.')
-  local parts = H.make_comment_parts({ lnum_cur, vim.fn.col('.') }, config.options)
+  local parts = H.get_comment_parts({ lnum_cur, vim.fn.col('.') }, config.options)
   local comment_check = H.make_comment_check(parts, config.options)
   local lnum_from, lnum_to
 
@@ -446,7 +446,7 @@ H.get_config = function(config)
 end
 
 -- Core implementations -------------------------------------------------------
-H.make_comment_parts = function(ref_position, options)
+H.get_comment_parts = function(ref_position, options)
   local cs
   if vim.is_callable(options.custom_commentstring) then cs = options.custom_commentstring(ref_position) end
   cs = cs or MiniComment.get_commentstring(ref_position)
@@ -490,12 +490,11 @@ H.get_lines_info = function(lines, parts, options)
   local ignore_blank_line = options.ignore_blank_line
 
   local is_commented = true
-  local indent_width, indent_width_cur = math.huge, math.huge
-  local indent, indent_cur
+  local indent, indent_width = nil, math.huge
 
   for _, l in ipairs(lines) do
     -- Update lines indent: minimum of all indents except blank lines
-    _, indent_width_cur, indent_cur = string.find(l, '^(%s*)')
+    local _, indent_width_cur, indent_cur = string.find(l, '^(%s*)')
     local is_blank = indent_width_cur == string.len(l)
 
     -- NOTE: Copy of actual indent instead of recreating it with `indent_width`

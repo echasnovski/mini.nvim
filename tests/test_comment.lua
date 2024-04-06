@@ -574,9 +574,9 @@ T['get_commentstring()']['works'] = function()
 end
 
 -- Integration tests ==========================================================
-T['Commenting'] = new_set()
+T['Operator'] = new_set()
 
-T['Commenting']['works in Normal mode'] = function()
+T['Operator']['works in Normal mode'] = function()
   set_cursor(2, 2)
   type_keys('gc', 'ap')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
@@ -590,7 +590,7 @@ T['Commenting']['works in Normal mode'] = function()
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '#   aa', '#  aa', '# aa' })
 end
 
-T['Commenting']['allows dot-repeat in Normal mode'] = function()
+T['Operator']['allows dot-repeat in Normal mode'] = function()
   local doubly_commented = { '# # aa', '# #  aa', '# #   aa', '# #', '#   aa', '#  aa', '# aa' }
 
   set_lines(example_lines)
@@ -608,7 +608,7 @@ T['Commenting']['allows dot-repeat in Normal mode'] = function()
   eq(get_lines(), doubly_commented)
 end
 
-T['Commenting']['works in Visual mode'] = function()
+T['Operator']['works in Visual mode'] = function()
   set_cursor(2, 2)
   type_keys('v', 'ap', 'gc')
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
@@ -617,7 +617,7 @@ T['Commenting']['works in Visual mode'] = function()
   eq(get_cursor(), { 1, 0 })
 end
 
-T['Commenting']['allows dot-repeat after initial Visual mode'] = function()
+T['Operator']['allows dot-repeat after initial Visual mode'] = function()
   -- local example_lines = { 'aa', ' aa', '  aa', '', '  aa', ' aa', 'aa' }
 
   set_lines(example_lines)
@@ -636,7 +636,7 @@ T['Commenting']['allows dot-repeat after initial Visual mode'] = function()
   eq(get_lines(), { 'aa', ' aa', '  # aa', '  #', '  # aa', ' aa', 'aa' })
 end
 
-T['Commenting']['works with different mapping'] = function()
+T['Operator']['works with different mapping'] = function()
   reload_module({ mappings = { comment = 'gC', comment_visual = 'C' } })
 
   -- Normal mode
@@ -651,14 +651,14 @@ T['Commenting']['works with different mapping'] = function()
   eq(get_lines(), { '# aa', '#  aa', '#   aa', '#', '  aa', ' aa', 'aa' })
 end
 
-T['Commenting']["respects 'commentstring'"] = function()
+T['Operator']["respects 'commentstring'"] = function()
   child.bo.commentstring = '/*%s*/'
   set_cursor(2, 2)
   type_keys('gc', 'ap')
   eq(get_lines(), { '/* aa */', '/*  aa */', '/*   aa */', '/**/', '  aa', ' aa', 'aa' })
 end
 
-T['Commenting']["works with empty 'commentstring'"] = function()
+T['Operator']["works with empty 'commentstring'"] = function()
   child.bo.commentstring = ''
   set_cursor(2, 2)
   type_keys('gc', 'ap')
@@ -666,7 +666,7 @@ T['Commenting']["works with empty 'commentstring'"] = function()
   eq(child.cmd_capture('1messages'), [[(mini.comment) Option 'commentstring' is empty.]])
 end
 
-T['Commenting']['respects tree-sitter injections'] = function()
+T['Operator']['respects tree-sitter injections'] = function()
   if child.fn.has('nvim-0.9') == 0 then
     MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
   end
@@ -725,7 +725,7 @@ T['Commenting']['respects tree-sitter injections'] = function()
   eq(out_lines[3], '" print(1)')
 end
 
-T['Commenting']['respects `options.custom_commentstring`'] = function()
+T['Operator']['respects `options.custom_commentstring`'] = function()
   local lines = { 'aa', '  aa' }
 
   -- Works correctly and called with proper arguments
@@ -741,7 +741,7 @@ T['Commenting']['respects `options.custom_commentstring`'] = function()
   eq(child.lua_get('_G.args'), { { 2, 3 } })
 end
 
-T['Commenting']['does not break with loaded tree-sitter'] = function()
+T['Operator']['does not break with loaded tree-sitter'] = function()
   -- TODO: Remove after compatibility with Neovim=0.8 is dropped
   -- This is more of a test for Neovim=0.8, as there is no easy way to load
   -- tree-sitter on Neovim<0.8
@@ -755,7 +755,7 @@ T['Commenting']['does not break with loaded tree-sitter'] = function()
   eq(get_lines(), { '" set background=dark' })
 end
 
-T['Commenting']['preserves marks'] = function()
+T['Operator']['preserves marks'] = function()
   set_cursor(2, 0)
   -- Set '`<' and '`>' marks
   type_keys('VV')
@@ -763,7 +763,7 @@ T['Commenting']['preserves marks'] = function()
   child.expect_visual_marks(2, 2)
 end
 
-T['Commenting']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
+T['Operator']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
@@ -775,7 +775,7 @@ T['Commenting']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
   end,
 })
 
-T['Commenting']['applies hooks'] = function()
+T['Operator']['applies hooks'] = function()
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
@@ -803,7 +803,7 @@ T['Commenting']['applies hooks'] = function()
   })
 end
 
-T['Commenting']['stops when hook returns `false`'] = function()
+T['Operator']['stops when hook returns `false`'] = function()
   local lines = { 'aa', 'aa' }
   set_lines(lines)
   set_cursor(1, 0)
@@ -815,7 +815,7 @@ T['Commenting']['stops when hook returns `false`'] = function()
   -- Currently can't really check for `hooks.post`
 end
 
-T['Commenting']['respects `vim.b.minicomment_config`'] = function()
+T['Operator']['respects `vim.b.minicomment_config`'] = function()
   set_lines({ 'aa', 'aa' })
   set_cursor(1, 0)
   reload_with_hooks()
@@ -835,9 +835,9 @@ T['Commenting']['respects `vim.b.minicomment_config`'] = function()
   })
 end
 
-T['Commenting current line'] = new_set()
+T['Current line'] = new_set()
 
-T['Commenting current line']['works'] = function()
+T['Current line']['works'] = function()
   set_lines(example_lines)
   set_cursor(1, 1)
   type_keys('gcc')
@@ -856,7 +856,7 @@ T['Commenting current line']['works'] = function()
   eq(get_lines(0, 3), { 'aa', ' # aa', ' #  aa' })
 end
 
-T['Commenting current line']['works with different mapping'] = function()
+T['Current line']['works with different mapping'] = function()
   reload_module({ mappings = { comment_line = 'gCC' } })
 
   set_cursor(1, 0)
@@ -864,7 +864,7 @@ T['Commenting current line']['works with different mapping'] = function()
   eq(get_lines(0, 1), { '# aa' })
 end
 
-T['Commenting current line']['respects tree-sitter injections'] = function()
+T['Current line']['respects tree-sitter injections'] = function()
   if child.fn.has('nvim-0.9') == 0 then
     MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
   end
@@ -891,7 +891,7 @@ T['Commenting current line']['respects tree-sitter injections'] = function()
   eq(get_lines(), { '" set background=dark', 'lua << EOF', '-- print(1)', 'EOF' })
 end
 
-T['Commenting current line']["computes local 'commentstring' based on cursor position"] = function()
+T['Current line']["computes local 'commentstring' based on cursor position"] = function()
   if child.fn.has('nvim-0.9') == 0 then
     MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
   end
@@ -917,7 +917,7 @@ T['Commenting current line']["computes local 'commentstring' based on cursor pos
   eq(get_lines()[2], '  -- print(1)')
 end
 
-T['Commenting current line']['allows dot-repeat'] = function()
+T['Current line']['allows dot-repeat'] = function()
   set_lines(example_lines)
   set_cursor(1, 1)
   type_keys('gcc')
@@ -933,7 +933,7 @@ T['Commenting current line']['allows dot-repeat'] = function()
   eq(get_lines(6, 7), { '# aa' })
 end
 
-T['Commenting current line']['applies hooks'] = function()
+T['Current line']['applies hooks'] = function()
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
 
@@ -961,7 +961,7 @@ T['Commenting current line']['applies hooks'] = function()
   })
 end
 
-T['Commenting current line']['respects `vim.b.minicomment_config`'] = function()
+T['Current line']['respects `vim.b.minicomment_config`'] = function()
   set_lines({ 'aa', 'aa' })
   set_cursor(1, 0)
   reload_with_hooks()
@@ -979,16 +979,16 @@ T['Commenting current line']['respects `vim.b.minicomment_config`'] = function()
   })
 end
 
-T['Comment textobject'] = new_set()
+T['Textobject'] = new_set()
 
-T['Comment textobject']['works'] = function()
+T['Textobject']['works'] = function()
   set_lines({ 'aa', '# aa', '# aa', 'aa' })
   set_cursor(2, 0)
   type_keys('d', 'gc')
   eq(get_lines(), { 'aa', 'aa' })
 end
 
-T['Comment textobject']['does nothing when not inside textobject'] = function()
+T['Textobject']['does nothing when not inside textobject'] = function()
   -- Builtin operators
   type_keys('d', 'gc')
   eq(get_lines(), example_lines)
@@ -1012,7 +1012,7 @@ T['Comment textobject']['does nothing when not inside textobject'] = function()
   -- validate_no_action(1, 0)
 end
 
-T['Comment textobject']['works with different mapping'] = function()
+T['Textobject']['works with different mapping'] = function()
   reload_module({ mappings = { textobject = 'gC' } })
 
   set_lines({ 'aa', '# aa', '# aa', 'aa' })
@@ -1027,7 +1027,7 @@ T['Comment textobject']['works with different mapping'] = function()
   eq(get_lines(), { 'aa', 'ee' })
 end
 
-T['Comment textobject']['respects tree-sitter injections'] = function()
+T['Textobject']['respects tree-sitter injections'] = function()
   if child.fn.has('nvim-0.9') == 0 then
     MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
   end
@@ -1056,7 +1056,7 @@ T['Comment textobject']['respects tree-sitter injections'] = function()
   eq(get_lines(), { 'lua << EOF', 'EOF' })
 end
 
-T['Comment textobject']['allows dot-repeat'] = function()
+T['Textobject']['allows dot-repeat'] = function()
   set_lines({ 'aa', '# aa', '# aa', 'aa', '# aa' })
   set_cursor(2, 0)
   type_keys('d', 'gc')
@@ -1065,7 +1065,7 @@ T['Comment textobject']['allows dot-repeat'] = function()
   eq(get_lines(), { 'aa', 'aa' })
 end
 
-T['Comment textobject']['respects `config.options.start_of_line`'] = function()
+T['Textobject']['respects `config.options.start_of_line`'] = function()
   child.lua('MiniComment.config.options.start_of_line = true')
 
   local lines = { ' # aa', '  # aa', '# aa', '#  aa' }
@@ -1080,7 +1080,7 @@ T['Comment textobject']['respects `config.options.start_of_line`'] = function()
   eq(get_lines(), { ' # aa', '  # aa' })
 end
 
-T['Comment textobject']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
+T['Textobject']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
@@ -1093,7 +1093,7 @@ T['Comment textobject']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
   end,
 })
 
-T['Comment textobject']['applies hooks'] = function()
+T['Textobject']['applies hooks'] = function()
   -- It should allow change of `commentstring` in `pre` hook
   reload_with_hooks()
   eq(child.bo.commentstring, '# %s')
@@ -1122,7 +1122,7 @@ T['Comment textobject']['applies hooks'] = function()
   validate({ 'aa', 'bb' }, { 'd', 'gc' }, { 'aa', 'bb' }, ref_args)
 end
 
-T['Comment textobject']['respects `vim.b.minicomment_config`'] = function()
+T['Textobject']['respects `vim.b.minicomment_config`'] = function()
   reload_with_hooks()
   child.lua([[vim.b.minicomment_config = {
     hooks = {
