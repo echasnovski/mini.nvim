@@ -27,9 +27,6 @@ documentation:
 lintcommit-ci:
 	chmod u+x scripts/lintcommit-ci.sh && scripts/lintcommit-ci.sh
 
-basic_setup:
-	$(NVIM_EXEC) --headless --noplugin -u ./scripts/basic-setup_init.lua
-
 dual_sync:
 	chmod u+x scripts/dual_sync.sh && scripts/dual_sync.sh
 

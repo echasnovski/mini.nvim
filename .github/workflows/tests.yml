@@ -20,7 +20,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        neovim_version: ['v0.7.2', 'v0.8.3', 'v0.9.4', 'nightly']
+        os: [ubuntu-latest]
+        neovim_version: ['v0.7.2', 'v0.8.3', 'v0.9.5', 'nightly']
+        include:
+        - os: macos-latest
+          neovim_version: v0.9.5
+        - os: windows-latest
+          neovim_version: v0.9.5
 
     steps:
       - uses: actions/checkout@v4
