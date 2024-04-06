@@ -254,10 +254,6 @@ end
 T['toggle_lines()']['correctly computes indent'] = function()
   toggle_lines(2, 4)
   eq(get_lines(1, 4), { ' # aa', ' #  aa', ' #' })
-
-  set_lines(example_lines)
-  toggle_lines(4, 4)
-  eq(get_lines(3, 4), { '#' })
 end
 
 --stylua: ignore
@@ -273,6 +269,11 @@ T['toggle_lines()']['correctly detects comment/uncomment'] = function()
   validate(2, 4, { '',  '# aa', '# # aa', '# # aa', 'aa',   '' })
   validate(3, 5, { '',  'aa',   '# # aa', '# # aa', '# aa', '' })
   validate(1, 6, { '#', '# aa', '# # aa', '# # aa', '# aa', '#' })
+
+  -- Blank lines should be ignored when making a decision
+  set_lines({ '# aa', '', '  ', '\t', '# aa' })
+  toggle_lines(1, 5)
+  eq(get_lines(), { 'aa', '', '  ', '\t', 'aa' })
 end
 
 T['toggle_lines()']['matches comment parts strictly when detecting comment/uncomment'] = function()
@@ -843,11 +844,11 @@ T['Current line']['works'] = function()
   type_keys('gcc')
   eq(get_lines(0, 2), { '# aa', ' aa' })
 
-  -- Works on empty line
+  -- Does not comment empty line
   set_lines(example_lines)
   set_cursor(4, 0)
   type_keys('gcc')
-  eq(get_lines(2, 5), { '  aa', '#', '  aa' })
+  eq(get_lines(2, 5), { '  aa', '', '  aa' })
 
   -- Supports `v:count`
   set_lines(example_lines)

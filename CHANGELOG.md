@@ -2,6 +2,8 @@
 
 ## mini.comment
 
+- BREAKING FEATURE: blank lines are now completely ignored when deciding the toggling action. In practice this means that if target block consists only from commented and/or blank lines, it will be uncommented rather than commented.
+
 - BREAKING: Whitespace in comment parts is now treated more strictly. In particular:
     - Default `options.pad_comment_parts = true` now more explicitly means that any value of 'commentstring' is transformed so that comment parts have exactly single space inner padding.
 

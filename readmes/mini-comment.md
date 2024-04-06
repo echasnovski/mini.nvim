@@ -145,7 +145,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Function to compute custom 'commentstring' (optional)
     custom_commentstring = nil,
 
-    -- Whether to ignore blank lines
+    -- Whether to ignore blank lines when commenting
     ignore_blank_line = false,
 
     -- Whether to recognize as comment only lines without indent

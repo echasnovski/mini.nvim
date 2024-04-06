@@ -118,7 +118,7 @@ MiniComment.config = {
     -- Function to compute custom 'commentstring' (optional)
     custom_commentstring = nil,
 
-    -- Whether to ignore blank lines
+    -- Whether to ignore blank lines when commenting
     ignore_blank_line = false,
 
     -- Whether to recognize as comment only lines without indent
@@ -487,7 +487,6 @@ end
 
 H.get_lines_info = function(lines, parts, options)
   local comment_check = H.make_comment_check(parts, options)
-  local ignore_blank_line = options.ignore_blank_line
 
   local is_commented = true
   local indent, indent_width = nil, math.huge
@@ -495,17 +494,18 @@ H.get_lines_info = function(lines, parts, options)
   for _, l in ipairs(lines) do
     -- Update lines indent: minimum of all indents except blank lines
     local _, indent_width_cur, indent_cur = string.find(l, '^(%s*)')
-    local is_blank = indent_width_cur == string.len(l)
 
-    -- NOTE: Copy of actual indent instead of recreating it with `indent_width`
-    -- allows to handle both tabs and spaces
-    if indent_width_cur < indent_width and not is_blank then
-      indent_width, indent = indent_width_cur, indent_cur
+    -- Ignore blank lines completely when making a decision
+    if indent_width_cur < l:len() then
+      -- NOTE: Copying actual indent instead of recreating it with `indent_width`
+      -- allows to handle both tabs and spaces
+      if indent_width_cur < indent_width then
+        indent_width, indent = indent_width_cur, indent_cur
+      end
+
+      -- Update comment info: commented if every non-blank line is commented
+      if is_commented then is_commented = comment_check(l) end
     end
-
-    -- Update comment info: lines are commented if every line is commented
-    -- Ignore blank lines for decision if corresponding option is set to `true`
-    if is_commented and not (ignore_blank_line and is_blank) then is_commented = comment_check(l) end
   end
 
   -- `indent` can still be `nil` in case all `lines` are empty
