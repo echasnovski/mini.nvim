@@ -759,6 +759,9 @@ T['gen_clues'] = new_set()
 T['gen_clues']['g()'] = new_set()
 
 T['gen_clues']['g()']['works'] = function()
+  -- Check this only on Neovim>=0.10, as there is a `gc` built-in mapping
+  if child.fn.has('nvim-0.10') == 0 then return end
+
   child.lua([[
     local miniclue = require('mini.clue')
     miniclue.setup({
