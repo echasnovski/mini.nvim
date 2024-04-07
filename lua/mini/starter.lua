@@ -1336,7 +1336,7 @@ H.apply_buffer_options = function(buf_id)
 
   -- Set buffer name
   H.buffer_number = H.buffer_number + 1
-  local name = H.buffer_number <= 1 and 'Starter' or ('Starter_' .. H.buffer_number)
+  local name = H.buffer_number <= 1 and 'mini.starter://Starter' or ('mini.starter://Starter_' .. H.buffer_number)
   vim.api.nvim_buf_set_name(buf_id, name)
 
   -- Having `noautocmd` is crucial for performance: ~9ms without it, ~1.6ms with it
