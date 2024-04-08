@@ -1334,9 +1334,15 @@ H.apply_buffer_options = function(buf_id)
   --   mapping is present (maybe due to non-blocking nature of `nvim_input()`).
   vim.api.nvim_feedkeys('\28\14', 'nx', false)
 
-  -- Set buffer name
+  -- Set unique buffer name. Prefer "Starter" prefix as more user friendly.
   H.buffer_number = H.buffer_number + 1
   local name = H.buffer_number <= 1 and 'Starter' or ('Starter_' .. H.buffer_number)
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ':t') == name then
+      name = 'starter://' .. H.buffer_number
+      break
+    end
+  end
   vim.api.nvim_buf_set_name(buf_id, name)
 
   -- Having `noautocmd` is crucial for performance: ~9ms without it, ~1.6ms with it

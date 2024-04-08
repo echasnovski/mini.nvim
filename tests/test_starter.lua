@@ -287,6 +287,12 @@ T['open()']['creates unique buffer names'] = function()
   child.lua('MiniStarter.close()')
   child.lua('MiniStarter.open()')
   eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
+
+  -- Should not duplicate existing buffer name
+  local buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_name(buf_id, child.fn.getcwd() .. '/Starter_3')
+  child.lua('MiniStarter.open()')
+  eq(child.api.nvim_buf_get_name(0), 'starter://3')
 end
 
 T['open()']['respects `vim.{g,b}.ministarter_disable`'] = new_set({
