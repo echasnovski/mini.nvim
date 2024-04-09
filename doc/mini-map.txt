@@ -27,8 +27,8 @@ Features:
   for common integrations:
     - Builtin search (as result of |/| and similar).
     - Builtin diagnostic (taken from |vim.diagnostic.get()|).
-    - Git line status (with help of 'lewis6991/gitsigns.nvim', see
-      |gitsigns.get_hunks()|).
+    - General diff hunks provided by 'mini.diff'.
+    - Hunks computed provided by 'lewis6991/gitsigns.nvim'.
   For more details see |MiniMap.gen_integration|.
 
 - Focus on map window to quickly browse current (source) buffer. Moving inside
@@ -83,6 +83,8 @@ as `MiniMap.config`. See |mini.nvim-buffer-local-config| for more details.
 # Dependencies ~
 
 Suggested dependencies (provide extra functionality for integrations):
+- Enabled 'mini.diff' module for general diff highlighting via
+  |MiniMap.gen_integration.diff()|. If missing, no highlighting is added.
 - Plugin 'lewis6991/gitsigns.nvim' for Git status highlighting via
   |MiniMap.gen_integration.gitsigns()|. If missing, no highlighting is added.
 
@@ -316,7 +318,7 @@ Example of using `config.integrations`: >
   map.setup({
     integrations = {
       map.gen_integration.builtin_search(),
-      map.gen_integration.gitsigns(),
+      map.gen_integration.diff(),
       map.gen_integration.diagnostic(),
     },
   })
@@ -681,24 +683,34 @@ Show all diagnostic levels: >
   map.setup({ integrations = { diagnostic_integration } })
 
 ------------------------------------------------------------------------------
-                                            *MiniMap.gen_integration.gitsigns()*
-                `MiniMap.gen_integration.gitsigns`({hl_groups})
-Git line status
+                                                *MiniMap.gen_integration.diff()*
+                  `MiniMap.gen_integration.diff`({hl_groups})
+General diff hunks from 'mini.diff'
 
-Highlight lines which have non-trivial Git status. Requires dependency
-'lewis6991/gitsigns.nvim' installed and set up. Uses |gitsigns.get_hunks()|
-and should highlight map lines similarly to how Gitsigns highlights source
-buffer lines (except dealing with rescaled input on "first seen" bases; see
-"Integrations" section in |MiniMap.config|).
-
-It prompts integration highlighting update on every |gitsigns-event|.
+Highlight lines which are part of current diff.
+Requires 'mini.diff' as dependency.
 
 Parameters ~
 {hl_groups} `(table|nil)` Table defining highlight groups. If `nil` (not
   supplied), this status is not highlighted. Can have the following fields:
-  - <add> - highlight group for added lines. Default: "GitSignsAdd".
-  - <change> - highlight group for changed lines. Default: "GitSignsChange".
-  - <delete> - highlight group for deleted lines. Default: "GitSignsDelete".
+  - <add> - group name for "add" hunks. Default: "MiniDiffSignAdd".
+  - <change> - group name for "change" hunks. Default: "MiniDiffSignChange".
+  - <delete> - group name for "delete" hunks. Default: "MiniDiffSignDelete".
+
+------------------------------------------------------------------------------
+                                            *MiniMap.gen_integration.gitsigns()*
+                `MiniMap.gen_integration.gitsigns`({hl_groups})
+Hunks from 'lewis6991/gitsigns.nvim'
+
+Highlight lines which have non-trivial Git status.
+Requires 'lewis6991/gitsigns.nvim' dependency.
+
+Parameters ~
+{hl_groups} `(table|nil)` Table defining highlight groups. If `nil` (not
+  supplied), this status is not highlighted. Can have the following fields:
+  - <add> - group name for added lines. Default: "GitSignsAdd".
+  - <change> - group name for changed lines. Default: "GitSignsChange".
+  - <delete> - group name for deleted lines. Default: "GitSignsDelete".
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

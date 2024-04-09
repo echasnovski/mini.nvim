@@ -37,7 +37,8 @@ https://user-images.githubusercontent.com/24854248/195806215-10e05020-50b7-4bee-
 - Highlight map lines representing certain data in current buffer. This is done via extensible set of callables, called integrations. There are pre-built generators for common integrations:
     - Builtin search.
     - Builtin diagnostic.
-    - Git line status.
+    - General diff hunks provided by ['mini.diff'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-diff.md).
+    - Hunks provided by ['lewis6991/gitsigns.nvim'](https://github.com/lewis6991/gitsigns.nvim).
     For more details see `:h MiniMap.gen_integration`.
 
 - Focus on map window to quickly browse current (source) buffer. Moving inside map window updates cursor position in source window enabling fast and targeted buffer exploration. To focus back, hit `<CR>` to accept current explored position or `<Esc>` to go back to original position. See `:h MiniMap.toggle_focus()`.

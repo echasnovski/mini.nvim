@@ -2,7 +2,7 @@ local get_hunks = function()
   local res = {}
   local add = function(added, removed) table.insert(res, { added = added, removed = removed }) end
 
-  -- Typical usa cases
+  -- Typical use cases
   -- First two lines should be "add"
   add({ start = 1, count = 2 }, { start = 0, count = 0 })
   -- Single line 4 should be "delete"

@@ -27,8 +27,8 @@
 ---   for common integrations:
 ---     - Builtin search (as result of |/| and similar).
 ---     - Builtin diagnostic (taken from |vim.diagnostic.get()|).
----     - Git line status (with help of 'lewis6991/gitsigns.nvim', see
----       |gitsigns.get_hunks()|).
+---     - General diff hunks provided by 'mini.diff'.
+---     - Hunks computed provided by 'lewis6991/gitsigns.nvim'.
 ---   For more details see |MiniMap.gen_integration|.
 ---
 --- - Focus on map window to quickly browse current (source) buffer. Moving inside
@@ -83,6 +83,8 @@
 --- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality for integrations):
+--- - Enabled 'mini.diff' module for general diff highlighting via
+---   |MiniMap.gen_integration.diff()|. If missing, no highlighting is added.
 --- - Plugin 'lewis6991/gitsigns.nvim' for Git status highlighting via
 ---   |MiniMap.gen_integration.gitsigns()|. If missing, no highlighting is added.
 ---
@@ -299,7 +301,7 @@ end
 ---   map.setup({
 ---     integrations = {
 ---       map.gen_integration.builtin_search(),
----       map.gen_integration.gitsigns(),
+---       map.gen_integration.diff(),
 ---       map.gen_integration.diagnostic(),
 ---     },
 ---   })
@@ -846,21 +848,48 @@ MiniMap.gen_integration.diagnostic = function(hl_groups)
   end
 end
 
---- Git line status
+--- General diff hunks from 'mini.diff'
 ---
---- Highlight lines which have non-trivial Git status. Requires dependency
---- 'lewis6991/gitsigns.nvim' installed and set up. Uses |gitsigns.get_hunks()|
---- and should highlight map lines similarly to how Gitsigns highlights source
---- buffer lines (except dealing with rescaled input on "first seen" bases; see
---- "Integrations" section in |MiniMap.config|).
----
---- It prompts integration highlighting update on every |gitsigns-event|.
+--- Highlight lines which are part of current diff.
+--- Requires 'mini.diff' as dependency.
 ---
 ---@param hl_groups table|nil Table defining highlight groups. If `nil` (not
 ---   supplied), this status is not highlighted. Can have the following fields:
----   - <add> - highlight group for added lines. Default: "GitSignsAdd".
----   - <change> - highlight group for changed lines. Default: "GitSignsChange".
----   - <delete> - highlight group for deleted lines. Default: "GitSignsDelete".
+---   - <add> - group name for "add" hunks. Default: "MiniDiffSignAdd".
+---   - <change> - group name for "change" hunks. Default: "MiniDiffSignChange".
+---   - <delete> - group name for "delete" hunks. Default: "MiniDiffSignDelete".
+MiniMap.gen_integration.diff = function(hl_groups)
+  if hl_groups == nil then
+    hl_groups = { add = 'MiniDiffSignAdd', change = 'MiniDiffSignChange', delete = 'MiniDiffSignDelete' }
+  end
+
+  local augroup = vim.api.nvim_create_augroup('MiniMapDiff', {})
+  vim.api.nvim_create_autocmd(
+    'User',
+    { group = augroup, pattern = 'MiniDiffUpdated', callback = H.on_integration_update, desc = 'On MiniDiffUpdated' }
+  )
+
+  return function()
+    local has_diff, diff = pcall(require, 'mini.diff')
+    if not has_diff or diff == nil then return {} end
+
+    local has_buf_data, buf_data = pcall(diff.get_buf_data, MiniMap.current.buf_data.source)
+    if not has_buf_data or buf_data == nil then return {} end
+
+    return H.hunks_to_line_hl(buf_data.hunks, hl_groups)
+  end
+end
+
+--- Hunks from 'lewis6991/gitsigns.nvim'
+---
+--- Highlight lines which have non-trivial Git status.
+--- Requires 'lewis6991/gitsigns.nvim' dependency.
+---
+---@param hl_groups table|nil Table defining highlight groups. If `nil` (not
+---   supplied), this status is not highlighted. Can have the following fields:
+---   - <add> - group name for added lines. Default: "GitSignsAdd".
+---   - <change> - group name for changed lines. Default: "GitSignsChange".
+---   - <delete> - group name for deleted lines. Default: "GitSignsDelete".
 MiniMap.gen_integration.gitsigns = function(hl_groups)
   if hl_groups == nil then hl_groups = { add = 'GitSignsAdd', change = 'GitSignsChange', delete = 'GitSignsDelete' } end
 
@@ -877,23 +906,17 @@ MiniMap.gen_integration.gitsigns = function(hl_groups)
     local has_hunks, hunks = pcall(gitsigns.get_hunks, MiniMap.current.buf_data.source)
     if not has_hunks or hunks == nil then return {} end
 
-    local line_hl = {}
-    for _, hunk in ipairs(hunks) do
-      local from_line = hunk.added.start
-      local n_added, n_removed = hunk.added.count, hunk.removed.count
-      local n_lines = math.max(n_added, 1)
-      -- Highlight similar to 'gitsigns' itself:
-      -- - Delete - single first line if nothing was added.
-      -- - Change - added lines that are within first removed lines.
-      -- - Added - added lines after first removed lines.
-      for i = 1, n_lines do
-        local hl_type = (n_added < i and 'delete') or (i <= n_removed and 'change' or 'add')
-        local hl_group = hl_groups[hl_type]
-        if hl_group ~= nil then table.insert(line_hl, { line = from_line + i - 1, hl_group = hl_group }) end
-      end
+    local diff_hunks = {}
+    for _, h in ipairs(hunks) do
+      --stylua: ignore
+      table.insert( diff_hunks, {
+        type = h.type,
+        buf_start = h.added.start,   buf_count = h.added.count,
+        ref_start = h.removed.start, ref_count = h.removed.count,
+      })
     end
 
-    return line_hl
+    return H.hunks_to_line_hl(diff_hunks, hl_groups)
   end
 end
 
@@ -1540,6 +1563,27 @@ H.mapline_to_sourceline = function(map_line)
   local rescaled_row = (map_line - 1) * data.resolution_row + 1
   local res = math.ceil((rescaled_row - 1) / coef) + 1
   return math.min(math.max(res, 1), data.source_rows)
+end
+
+-- Hunks ----------------------------------------------------------------------
+H.hunks_to_line_hl = function(hunks, hl_groups)
+  local res = {}
+  for _, h in ipairs(hunks) do
+    local from_line = h.buf_start
+    local n_added, n_removed = h.buf_count, h.ref_count
+    local n_lines = math.max(n_added, 1)
+    -- Highlight similar to hunk summary logic:
+    -- - Delete - single first line if nothing was added.
+    -- - Change - added lines that are within first removed lines.
+    -- - Added - added lines after first removed lines.
+    for i = 1, n_lines do
+      local hl_type = (n_added < i and 'delete') or (i <= n_removed and 'change' or 'add')
+      local hl_group = hl_groups[hl_type]
+      if hl_group ~= nil then table.insert(res, { line = from_line + i - 1, hl_group = hl_group }) end
+    end
+  end
+
+  return res
 end
 
 -- Predicates -----------------------------------------------------------------

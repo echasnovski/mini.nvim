@@ -49,6 +49,19 @@ local mock_diagnostic = function() child.cmd('source tests/dir-map/mock-diagnost
 
 local mock_gitsigns = function() child.cmd('set rtp+=tests/dir-map') end
 
+local mock_diff = function()
+  child.lua([[
+    local diff = require('mini.diff')
+    diff.setup({ source = diff.gen_source.none(), options = { linematch = 0 } })
+    local buf_text = { 'uuu', 'vvv', 'aaa', 'bbb', 'ddd', 'EEE', 'FFF', 'GGG', 'HHH', 'III', 'JJJ', 'KKK', 'LLL' }
+    local ref_text = { 'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff' }
+
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, buf_text)
+    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+    diff.set_ref_text(0, ref_text)
+  ]])
+end
+
 local source_test_integration = function() child.cmd('source tests/dir-map/src-test-integration.lua') end
 
 local mock_test_integration = function()
@@ -1162,6 +1175,75 @@ end
 
 T['gen_integration']['gitsigns()']['works if no "gitsigns" is detected'] = function()
   eq(child.lua_get('MiniMap.gen_integration.gitsigns()()'), {})
+end
+
+T['gen_integration']['diff()'] = new_set()
+
+T['gen_integration']['diff()']['works'] = function()
+  child.set_size(20, 30)
+  mock_diff()
+  map_open_with_integration('diff')
+  child.expect_screenshot()
+
+  --stylua: ignore
+  eq(
+    child.lua_get('MiniMap.current.opts.integrations[1]()'),
+    {
+      { line = 1 , hl_group = 'MiniDiffSignAdd'    },
+      { line = 2 , hl_group = 'MiniDiffSignAdd'    },
+      { line = 4 , hl_group = 'MiniDiffSignDelete' },
+      { line = 6 , hl_group = 'MiniDiffSignChange' },
+      { line = 7 , hl_group = 'MiniDiffSignChange' },
+      { line = 8 , hl_group = 'MiniDiffSignAdd'    },
+      { line = 9 , hl_group = 'MiniDiffSignAdd'    },
+      { line = 10, hl_group = 'MiniDiffSignAdd'     },
+      { line = 11, hl_group = 'MiniDiffSignAdd'     },
+      { line = 12, hl_group = 'MiniDiffSignAdd'     },
+      { line = 13, hl_group = 'MiniDiffSignAdd'    },
+    }
+  )
+end
+
+T['gen_integration']['diff()']['respects `hl_groups` argument'] = function()
+  mock_diff()
+  child.lua([[MiniMap.open({
+    integrations = { MiniMap.gen_integration.diff({ delete = 'Special' }) }
+  })]])
+  eq(child.lua_get('MiniMap.current.opts.integrations[1]()'), { { line = 4, hl_group = 'Special' } })
+end
+
+T['gen_integration']['diff()']['updates when appropriate'] = function()
+  map_open()
+
+  mock_diff()
+  child.lua([[
+    MiniMap.current.opts.integrations = { MiniMap.gen_integration.diff() }
+    _G.log = {}
+    local refresh_orig = MiniMap.refresh
+    MiniMap.refresh = function(...)
+      table.insert(_G.log, { ... })
+      refresh_orig(...)
+    end
+  ]])
+  eq(child.lua_get('#_G.log'), 0)
+  child.cmd('doautocmd User MiniDiffUpdated')
+  eq(child.lua_get('#_G.log'), 1)
+end
+
+T['gen_integration']['diff()']['works if no diff data is found'] = function()
+  -- Not enabled buffer
+  mock_diff()
+  child.lua('MiniDiff.disable(0)')
+  eq(child.lua_get('MiniDiff.get_buf_data(0)'), vim.NIL)
+  eq(child.lua_get('MiniMap.gen_integration.diff()()'), {})
+
+  -- No 'mini.diff'
+  child.lua([[
+    MiniDiff = nil
+    package.loaded['mini.diff'] = nil
+    require = function() error() end
+  ]])
+  eq(child.lua_get('MiniMap.gen_integration.diff()()'), {})
 end
 
 -- Integration tests ==========================================================

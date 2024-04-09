@@ -28,6 +28,10 @@
     - `Folded` - make folds differ from `CursorLine`.
     - `QuickFixLine` - make current quickfix item differ from `CursorLine`.
 
+## mini.map
+
+- FEATURE: add `gen_integration.diff()` which highlights general diff hunks from 'mini.diff'.
+
 ## mini.pick
 
 - BREAKING: stop trying to parse path for special format ("path:row" and "path:row:col") if supplied inside a table item. This made impossible working with paths containing ":".
