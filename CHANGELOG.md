@@ -31,6 +31,7 @@
 ## mini.pick
 
 - BREAKING: stop trying to parse path for special format ("path:row" and "path:row:col") if supplied inside a table item. This made impossible working with paths containing ":".
+- Update `builtin.files()` to use table items when string item might be ambiguous.
 
 ## mini.test
 

@@ -1241,7 +1241,15 @@ MiniPick.builtin.files = function(local_opts, opts)
     return MiniPick.start(opts)
   end
 
-  return MiniPick.builtin.cli({ command = H.files_get_command(tool) }, opts)
+  local postprocess = function(lines)
+    local res = H.cli_postprocess(lines)
+    -- Correctly process files with `:` without sacrificing much performance
+    for i = 1, #res do
+      if res[i]:find(':') ~= nil then res[i] = { path = res[i], text = res[i] } end
+    end
+    return res
+  end
+  return MiniPick.builtin.cli({ command = H.files_get_command(tool), postprocess = postprocess }, opts)
 end
 
 --- Pick from pattern matches

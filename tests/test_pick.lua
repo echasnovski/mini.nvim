@@ -2300,6 +2300,25 @@ T['builtin.files()']['works'] = function()
   eq(child.lua_get('_G.file_item'), items[1])
 end
 
+T['builtin.files()']['works with bad file names'] = function()
+  -- Paths with ":" may not be allowed on Windows
+  if child.loop.os_uname().sysname == 'Windows_NT' then return end
+
+  local path = join_path(test_dir, 'file:1')
+  child.fn.writefile({ 'File with ":" in the name' }, path)
+  MiniTest.finally(function() child.fn.delete(path) end)
+
+  mock_fn_executable({ 'rg' })
+  local items = { path }
+  mock_cli_return(items)
+
+  child.lua_notify('_G.file_item = MiniPick.builtin.files()')
+  type_keys('<CR>')
+  eq(child.lua_get('_G.file_item'), { path = path, text = path })
+
+  eq(child.api.nvim_buf_get_name(0), full_path(path))
+end
+
 T['builtin.files()']['correctly chooses default tool'] = function()
   local validate = function(executables, ref_tool)
     mock_fn_executable(executables)
