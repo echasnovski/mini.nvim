@@ -1500,7 +1500,6 @@ T['Scroll']['respects folds'] = function()
 end
 
 T['Scroll']["respects global 'scrolloff'"] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
   child.o.scrolloff = 1
   type_keys('L')
 
@@ -1515,7 +1514,6 @@ T['Scroll']["respects global 'scrolloff'"] = function()
 end
 
 T['Scroll']["respects window-local 'scrolloff'"] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
   child.wo.scrolloff = 1
   type_keys('L')
 
