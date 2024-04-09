@@ -28,6 +28,10 @@
     - `Folded` - make folds differ from `CursorLine`.
     - `QuickFixLine` - make current quickfix item differ from `CursorLine`.
 
+## mini.pick
+
+- BREAKING: stop trying to parse path for special format ("path:row" and "path:row:col") if supplied inside a table item. This made impossible working with paths containing ":".
+
 ## mini.test
 
 - BREAKING FEATURE: child process is now created with extra `--headless --cmd "set lines=24 columns=80"` arguments making it headless but still reasonably similar to fully functioning Neovim during interactive usage. This change should generally not break a lot of things, while enabling a faster and more robust test execution.

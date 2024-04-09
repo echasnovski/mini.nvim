@@ -1496,8 +1496,7 @@ T['default_preview()']['shows line in file path'] = function()
   local path = real_file('b.txt')
   local items = {
     path .. ':3',
-    { text = path .. ':line-in-path', path = path .. ':6' },
-    { text = path .. ':line-separate', path = path, lnum = 8 },
+    { text = path .. ':as-table', path = path, lnum = 6 },
   }
   validate_preview(items)
 end
@@ -1506,8 +1505,7 @@ T['default_preview()']['shows position in file path'] = function()
   local path = real_file('b.txt')
   local items = {
     path .. ':3:4',
-    { text = path .. ':pos-in-path', path = path .. ':6:2' },
-    { text = path .. ':pos-separate', path = path, lnum = 8, col = 3 },
+    { text = path .. ':as-table', path = path, lnum = 6, col = 2 },
   }
   validate_preview(items)
 end

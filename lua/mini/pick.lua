@@ -253,17 +253,16 @@
 ---   Examples: `1`, `'1'`, `{ bufnr = 1 }`, `{ buf_id = 1 }`, `{ buf = 1 }`
 ---
 --- - Line in file or buffer. Use table representation with `lnum` field with line
----   number (starting from 1). Files can use string in "<path>:<line>" format.
+---   number (starting from 1) or string in "<path>:<line>" format.
 ---   Examples: >
----   { path = 'aaa.txt', lnum = 2 }, 'aaa.txt:2', { path = 'aaa.txt:2' },
----   { bufnr = 1, lnum = 3 }
+---   { path = 'aaa.txt', lnum = 2 }, 'aaa.txt:2', { bufnr = 1, lnum = 3 }
 ---
 --- - Position in file or buffer. Use table representation with `lnum` and `col`
----   fields with line and column numbers (starting from 1). Files can use string
----   in "<path>:<line>:<col>" format.
+---   fields with line and column numbers (starting from 1) or string in
+---   "<path>:<line>:<col>" format.
 ---   Examples: >
 ---   { path = 'aaa.txt', lnum = 2, col = 3 }, 'aaa.txt:2:3',
----   { path = 'aaa.txt:2:3' }, { bufnr = 1, lnum = 3, col = 4 }
+---   { bufnr = 1, lnum = 3, col = 4 }
 ---
 --- - Region in file or buffer. Use table representation with `lnum`, `col`,
 ---   `end_lnum`, `end_col` fields for start and end line/column. All numbers
@@ -2951,14 +2950,14 @@ H.parse_item_table = function(item)
 
   -- File or Directory
   if type(item.path) == 'string' then
-    local path_type, path, lnum, col, rest = H.parse_path(item.path)
+    local path_type = H.get_fs_type(item.path)
     if path_type == 'file' then
       --stylua: ignore
       return {
-        type = 'file',            path     = path,
-        lnum = lnum or item.lnum, end_lnum = item.end_lnum,
-        col  = col or item.col,   end_col  = item.end_col,
-        text = rest ~= '' and rest or item.text,
+        type = 'file',    path     = item.path,
+        lnum = item.lnum, end_lnum = item.end_lnum,
+        col  = item.col,  end_col  = item.end_col,
+        text = item.text,
       }
     end
 
