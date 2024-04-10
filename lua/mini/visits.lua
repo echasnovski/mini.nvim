@@ -150,7 +150,7 @@
 ---   for some inspiration.
 ---
 --- - Utilizing custom data. Visit index can be manipulated manually using
----   `_index()` set of functions. All "storeable" (i.e. not functions or
+---   `_index()` set of functions. All "storable" (i.e. not functions or
 ---   metatables) user data inside index is then stored on disk, so it can be
 ---   used to create any kind of workflow user wants.
 ---

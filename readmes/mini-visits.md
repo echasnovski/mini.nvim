@@ -99,7 +99,7 @@ Visit data can be reused in at least these ways:
     There is no one right way to use them, though. See `*MiniVisits-examples*` help tag for some inspiration.
 
 - Utilizing custom data. Visit index can be manipulated manually using
-  `_index()` set of functions. All "storeable" user data inside index is then stored on disk, so it can be used to create any kind of workflow user wants.
+  `_index()` set of functions. All "storable" user data inside index is then stored on disk, so it can be used to create any kind of workflow user wants.
 
 See `*MiniVisits-examples*` help tag for some actual configuration and workflow examples.
 

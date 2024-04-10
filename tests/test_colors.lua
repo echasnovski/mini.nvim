@@ -1234,7 +1234,7 @@ T['as_colorscheme() methods']['compress()']['respects `opts.plugins`'] = functio
 end
 
 T['as_colorscheme() methods']['compress()']['does not have side effects'] = function()
-  -- As checking equavalence to result of `:hi clear` needs to execute it,
+  -- As checking equivalence to result of `:hi clear` needs to execute it,
   -- there should be proper cache and restore of current color scheme
   child.cmd('hi TestRestore guifg=#ffffff')
   child.lua([[_G.cs = MiniColors.as_colorscheme({

@@ -296,7 +296,7 @@
 --- # Match ~
 ---
 --- `source.match` is a callable defining how stritems
---- (see |MiniPick-source.items-stritems|) are matched (filetered and sorted) based
+--- (see |MiniPick-source.items-stritems|) are matched (filtered and sorted) based
 --- on the query.
 ---
 --- It will be called with the following arguments:

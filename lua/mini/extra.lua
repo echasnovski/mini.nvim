@@ -224,7 +224,7 @@ MiniExtra.gen_ai_spec.number = function()
     local from, to = line:find(digits_pattern, init)
     if from == nil then return nil, nil end
 
-    -- Make sure that hese digits were not processed before. This can happen
+    -- Make sure that these digits were not processed before. This can happen
     -- because 'miin.ai' does next with `init = from + 1`, meaning that
     -- "-12.34" was already matched, then it would try to match starting from
     -- "1": we want to avoid matching that right away and avoid matching "34"
@@ -273,7 +273,7 @@ MiniExtra.gen_highlighter = {}
 --- Notes:
 --- - Words should start and end with alphanumeric symbol (latin letter or digit).
 --- - Words will be highlighted only in full and not if part bigger word, i.e.
----   there should not be alphanumeric symbole before and after it.
+---   there should not be alphanumeric symbol before and after it.
 ---
 ---@param words table Array of words to highlight. Will be matched as is, not
 ---   as Lua pattern.

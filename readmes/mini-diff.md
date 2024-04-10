@@ -67,7 +67,7 @@ Although computing diff is a general concept (used on its own, in Git, etc.), th
     - Trigger `MiniDiffUpdated` `User` event. See `*MiniDiff-diff-summary*` help tag for example of how to use it.
 
 Notes:
-- Use `:edit` to reset (disable and reenable) current buffer.
+- Use `:edit` to reset (disable and re-enable) current buffer.
 
 ### Overlay
 

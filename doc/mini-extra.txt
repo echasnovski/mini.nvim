@@ -195,7 +195,7 @@ Highlight words
 Notes:
 - Words should start and end with alphanumeric symbol (latin letter or digit).
 - Words will be highlighted only in full and not if part bigger word, i.e.
-  there should not be alphanumeric symbole before and after it.
+  there should not be alphanumeric symbol before and after it.
 
 Parameters ~
 {words} `(table)` Array of words to highlight. Will be matched as is, not

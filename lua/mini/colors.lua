@@ -1077,7 +1077,7 @@ H.cusps = {
   {27.04,65.51},{26.92,65.40},{26.81,65.30},{26.66,65.16},{26.55,65.06},{26.45,64.96},{26.35,64.87},
 }
 
--- Matricies used to simulate color vision deficiency (CVD; color blindness).
+-- Matrices used to simulate color vision deficiency (CVD; color blindness).
 -- Each first-level entry describes CVD type; second-level - severity times 10.
 -- Source:
 -- https://www.inf.ufrgs.br/~oliveira/pubs_files/CVD_Simulation/CVD_Simulation.html

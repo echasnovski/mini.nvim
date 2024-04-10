@@ -504,7 +504,7 @@ T['start()']['uses `spotter` with correct arguments'] = function()
   })
   child.expect_screenshot()
 
-  -- Should call `spotter` only on jumpt start, not on every step
+  -- Should call `spotter` only on jumped start, not on every step
   child.lua('_G.args_history = {}')
   type_keys(1, 'j', '<CR>')
   eq(child.lua_get('_G.args_history'), {})
@@ -1038,7 +1038,7 @@ T['default_spotter()']['spots first capital letter'] = function()
   child.expect_screenshot()
 end
 
-T['default_spotter()']['corectly merges "overlapping" spots'] = function()
+T['default_spotter()']['correctly merges "overlapping" spots'] = function()
   set_lines({ 'XX () X_X' })
   start_default_spotter()
   child.expect_screenshot()

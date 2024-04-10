@@ -1656,7 +1656,7 @@ T['Scroll']['correctly places cursor in presence of tabs'] = function()
   validate(5, { 5, 0 })
 end
 
-T['Scroll']['can place intermideate cursor outside of line'] = function()
+T['Scroll']['can place intermediate cursor outside of line'] = function()
   set_lines({ 'aaaa', 'a', '', '', '', '', '', 'a', 'aaaa' })
   set_cursor(1, 3)
 
@@ -1671,7 +1671,7 @@ T['Scroll']['can place intermideate cursor outside of line'] = function()
   eq(get_virt_cursor(), { 9, 3 })
 end
 
-T['Scroll']['places cursor on edge lines if intermideate target is not visible'] = function()
+T['Scroll']['places cursor on edge lines if intermediate target is not visible'] = function()
   child.lua('MiniAnimate.config.scroll.subscroll = function(total_scroll) return { 1, total_scroll - 1 } end')
 
   local many_lines = { 'aaaa' }

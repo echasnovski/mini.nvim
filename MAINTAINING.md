@@ -27,7 +27,7 @@ Mandatory:
 Recommended:
 - Have executables for all supported Neovim versions. For example, `nvim_07`, `nvim_08`, `nvim_09`, `nvim_010`. This is useful for running tests on multiple versions.
 - Install [`lua-language-server`](https://github.com/LuaLS/lua-language-server).
-- Install [`pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit intsall` and `pre-commit install --hook-type commit-msg` (run from repository's root).
+- Install [`pre-commit`](https://pre-commit.com/#install) and enable it with `pre-commit install` and `pre-commit install --hook-type commit-msg` (run from repository's root).
 - Set up 'mini.doc' and 'mini.test' and make mappings for the following frequently used commands:
     - `'<Cmd>lua MiniDoc.generate()<CR>'` - to generate documentation.
     - `'<Cmd>lua MiniTest.run_at_location()<CR>'` - to run test under cursor.
@@ -80,7 +80,7 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 ## Typical workflow for processing a GitHub issue
 
 - Add label with module name issue is about (if any). If issue is worded politely and/or with much details, thank user for opening an issue.
-- Make sure the underlying problem is valid, i.e. it can be reproduced and the root cause is in this project. If it can not be reproduce, politely explain that and ask for more reproduction details. If the cause is not related to the project, politely explain that, close an issue, and direct towards the real root cause.
+- Make sure the underlying problem is valid, i.e. it can be reproduced and the root cause is in this project. If it can not be reproduced, politely explain that and ask for more reproduction details. If the cause is not related to the project, politely explain that, close an issue, and direct towards the real root cause.
 - Check already existing issues for possible duplicates. If there is at least one, review its reasoning before making decision about the current issue.
 - Decide whether and how an issue should be resolved. Use ["General principles"](README.md#general-principles), module's help and code documentation while making the decision.
     - If decision is to not resolve, politely explain that and close an issue (possibly mentioning similar reasoning in the past).

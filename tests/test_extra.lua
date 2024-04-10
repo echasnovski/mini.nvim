@@ -694,7 +694,7 @@ T['gen_highlighter']['words()']['works'] = function()
   )
 end
 
-T['gen_highlighter']['words()']['validates arugments'] = function()
+T['gen_highlighter']['words()']['validates arguments'] = function()
   expect.error(function() hi_words('todo', 'Error') end, '`words`.*array')
   expect.error(function() hi_words({ 1 }, 'Error') end, '`words`.*strings')
   expect.error(function() hi_words({ 'todo' }, 1) end, '`group`.*string or callable')

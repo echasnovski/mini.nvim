@@ -126,7 +126,7 @@
 ---       example of how to use it.
 ---
 --- Notes:
---- - Use |:edit| to reset (disable and reenable) current buffer.
+--- - Use |:edit| to reset (disable and re-enable) current buffer.
 ---
 --- # Overlay ~
 ---
@@ -351,7 +351,7 @@ end
 --- `config.options` contains various customization options.
 ---
 --- `options.algorithm` is a string defining which diff algorithm to use.
---- Default: "historgram". See |vim.diff()| for possible values.
+--- Default: "histogram". See |vim.diff()| for possible values.
 ---
 --- `options.indent_heuristic` is a boolean defining whether to use indent
 --- heuristic for a (possibly) more naturally aligned hunks.
@@ -659,7 +659,7 @@ MiniDiff.gen_source.save = function()
       MiniDiff.set_ref_text(buf_id, vim.api.nvim_buf_get_lines(buf_id, 0, -1, false))
     end
 
-    -- Autocommand are more effecient than file watcher as it doesn't read disk
+    -- Autocommand are more efficient than file watcher as it doesn't read disk
     local au_opts = { group = augroup, buffer = buf_id, callback = set_ref, desc = 'Set reference text after save' }
     vim.api.nvim_create_autocmd({ 'BufWritePost', 'FileChangedShellPost' }, au_opts)
     set_ref()
@@ -856,7 +856,7 @@ H.vimdiff_opts = { result_type = 'indices', ctxlen = 0, interhunkctxlen = 0 }
 H.vimdiff_supports_linematch = vim.fn.has('nvim-0.9') == 1
 
 -- Options for `vim.diff()` during word diff. Use `interhunkctxlen = 4` to
--- reduce noisiness (chosen as slightly less than everage English word length)
+-- reduce noisiness (chosen as slightly less than average English word length)
 --stylua: ignore
 H.worddiff_opts = { algorithm = 'minimal', result_type = 'indices', ctxlen = 0, interhunkctxlen = 4, indent_heuristic = false }
 if H.vimdiff_supports_linematch then H.worddiff_opts.linematch = 0 end

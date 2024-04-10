@@ -928,7 +928,7 @@ T['list_labels()']['works'] = function()
   }
   set_index_from_ref(ref_index)
 
-  -- Should first sort by decreasing frequency of appeareance for different
+  -- Should first sort by decreasing frequency of appearance for different
   -- paths. Ties should be resolved alphabetically.
 
   -- Should work with relative paths

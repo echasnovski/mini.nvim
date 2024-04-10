@@ -402,7 +402,7 @@ T['remove()']['works'] = function()
   -- Should update notification window (and remove it completely in this case)
   child.expect_screenshot()
 
-  -- Should only udpate `ts_remove` field
+  -- Should only update `ts_remove` field
   local notif = get(id)
 
   eq(notif.ts_remove, ref_seconds + 1 + ref_microseconds)
