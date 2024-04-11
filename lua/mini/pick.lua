@@ -2960,20 +2960,10 @@ H.parse_item_table = function(item)
   -- File or Directory
   if type(item.path) == 'string' then
     local path_type = H.get_fs_type(item.path)
-    if path_type == 'file' then
+    if path_type == 'file' or path_type == 'uri' then
       --stylua: ignore
       return {
-        type = 'file',    path     = item.path,
-        lnum = item.lnum, end_lnum = item.end_lnum,
-        col  = item.col,  end_col  = item.end_col,
-        text = item.text,
-      }
-    end
-
-    if path_type == 'uri' then
-      --stylua: ignore
-      return {
-        type = 'uri',    path     = item.path,
+        type = path_type, path     = item.path,
         lnum = item.lnum, end_lnum = item.end_lnum,
         col  = item.col,  end_col  = item.end_col,
         text = item.text,
@@ -3052,18 +3042,7 @@ H.preview_buffer = function(buf_id, item_data, opts)
 end
 
 H.preview_uri = function(buf_id, item_data, opts)
-  local path_buf_id = nil
-
-  for _, id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(id) and vim.api.nvim_buf_get_name(id) == item_data.path
-    if is_target then path_buf_id = id end
-  end
-
-  if path_buf_id == nil then
-    return
-  end
-
-  item_data.buf_id = path_buf_id
+  item_data.buf_id = vim.uri_to_bufnr(item_data.path)
   H.preview_buffer(buf_id, item_data, opts)
 end
 
