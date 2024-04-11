@@ -375,8 +375,11 @@ T['enable()']['makes sure buffer is loaded'] = function()
   child.api.nvim_buf_delete(new_buf_id, { unload = true })
   eq(child.api.nvim_buf_get_lines(new_buf_id, 0, -1, false), {})
 
+  -- Should also not trigger `*Enter` events
+  child.cmd('au BufEnter,BufWinEnter * lua _G.n = (_G.n or 0) + 1')
   enable(new_buf_id)
   eq(child.fn.bufloaded(new_buf_id), 1)
+  eq(child.lua_get('_G.n'), vim.NIL)
 end
 
 T['enable()']['makes buffer update cache on `BufWinEnter`'] = function()

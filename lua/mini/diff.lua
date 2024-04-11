@@ -435,7 +435,7 @@ MiniDiff.enable = function(buf_id)
   if H.is_buf_enabled(buf_id) or H.is_disabled(buf_id) then return end
 
   -- Ensure buffer is loaded (to have up to date lines returned)
-  if not vim.api.nvim_buf_is_loaded(buf_id) then vim.fn.bufload(buf_id) end
+  H.buf_ensure_loaded(buf_id)
 
   -- Register enabled buffer with cached data for performance
   H.update_buf_cache(buf_id)
@@ -1696,6 +1696,14 @@ end
 H.error = function(msg) error(string.format('(mini.diff) %s', msg), 0) end
 
 H.notify = function(msg, level_name) vim.notify('(mini.diff) ' .. msg, vim.log.levels[level_name]) end
+
+H.buf_ensure_loaded = function(buf_id)
+  if type(buf_id) ~= 'number' or vim.api.nvim_buf_is_loaded(buf_id) then return end
+  local cache_eventignore = vim.o.eventignore
+  vim.o.eventignore = 'BufEnter,BufWinEnter'
+  pcall(vim.fn.bufload, buf_id)
+  vim.o.eventignore = cache_eventignore
+end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
