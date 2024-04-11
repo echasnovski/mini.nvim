@@ -281,20 +281,34 @@ MiniStatusline.section_git = function(args)
   return string.format('%s %s %s', icon, head, signs)
 end
 
---- Section for Neovim's builtin diagnostics
+--- Section for Neovim's builtin lsp
 ---
---- Shows nothing if there is no attached LSP clients or for short output.
---- Otherwise uses builtin Neovim capabilities to compute and show number of
---- errors ('E'), warnings ('W'), information ('I'), and hints ('H').
----
---- Short output is returned if window width is lower than `args.trunc_width`.
+--- Shows nothing if there is no attached lsp
+--- Uses LspAttach and LspDetach events to determine if an LSP is attached.
 ---
 ---@param args __statusline_args Use `args.icon` to supply your own icon.
 ---
 ---@return __statusline_section
-MiniStatusline.section_diagnostics = function(args)
+MiniStatusline.section_lsp = function(args)
   local dont_show = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or H.has_no_lsp_attached()
-  if dont_show or H.diagnostic_is_disabled() then return '' end
+  if dont_show then return '' end
+
+  local icon = args.icon or (H.get_config().use_icons and '' or 'LSP')
+  return string.format('%s', icon)
+end
+
+--- Section for Neovim's builtin diagnostics
+---
+--- Shows nothing for short output.
+--- Uses builtin Neovim capabilities to compute and show number of
+--- errors ('E'), warnings ('W'), information ('I'), and hints ('H').
+---
+--- Short output is returned if window width is lower than `args.trunc_width`.
+---
+---@return __statusline_section
+MiniStatusline.section_diagnostics = function(args)
+  local dont_show = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or H.diagnostic_is_disabled()
+  if dont_show then return '' end
 
   -- Construct string parts
   local count = H.diagnostic_get_count()
@@ -302,12 +316,11 @@ MiniStatusline.section_diagnostics = function(args)
   for _, level in ipairs(H.diagnostic_levels) do
     local n = count[severity[level.name]] or 0
     -- Add level info only if diagnostic is present
-    if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
+    if n > 0 then table.insert(t, string.format('%s%s', level.sign, n)) end
   end
 
-  local icon = args.icon or (H.get_config().use_icons and '' or 'LSP')
-  if vim.tbl_count(t) == 0 then return ('%s -'):format(icon) end
-  return string.format('%s%s', icon, table.concat(t, ''))
+  if vim.tbl_count(t) == 0 then return '' end
+  return string.format('%s', table.concat(t, ' '))
 end
 
 --- Section for file name
@@ -552,6 +565,7 @@ H.default_content_active = function()
   -- stylua: ignore start
   local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
   local git           = MiniStatusline.section_git({ trunc_width = 75 })
+  local lsp           = MiniStatusline.section_lsp({ trunc_width = 75 })
   local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
   local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
   local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
@@ -563,7 +577,7 @@ H.default_content_active = function()
   -- sections, etc.)
   return MiniStatusline.combine_groups({
     { hl = mode_hl,                  strings = { mode } },
-    { hl = 'MiniStatuslineDevinfo',  strings = { git, diagnostics } },
+    { hl = 'MiniStatuslineDevinfo',  strings = { git, lsp, diagnostics } },
     '%<', -- Mark general truncate point
     { hl = 'MiniStatuslineFilename', strings = { filename } },
     '%=', -- End left alignment

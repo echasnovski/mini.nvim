@@ -295,39 +295,20 @@ T['active()/inactive()']['respects `vim.{g,b}.ministatusline_disable`'] = new_se
 T['section_diagnostics()'] = new_set({ hooks = { pre_case = mock_diagnostics } })
 
 T['section_diagnostics()']['works'] = function()
-  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), 'E4 W3 I2 H1')
 
   -- Should return predefined string if no diagnostic output
   child.lua('vim.diagnostic.get = function(...) return {} end')
   child.lua('vim.diagnostic.count = function(...) return {} end')
   child.lua('vim.diagnostic.get = function(...) return {} end')
-  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' -')
-
-  -- Should return empty string if no LSP client attached
-  child.lua('vim.lsp.buf_get_clients = function() return {} end')
-  if child.fn.has('nvim-0.8') == 1 then child.lua('_G.detach_lsp()') end
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
 T['section_diagnostics()']['respects `args.trunc_width`'] = function()
   set_width(100)
-  eq(child.lua_get('MiniStatusline.section_diagnostics({ trunc_width = 100 })'), ' E4 W3 I2 H1')
+  eq(child.lua_get('MiniStatusline.section_diagnostics({ trunc_width = 100 })'), 'E4 W3 I2 H1')
   set_width(99)
   eq(child.lua_get('MiniStatusline.section_diagnostics({ trunc_width = 100 })'), '')
-end
-
-T['section_diagnostics()']['respects `args.icon`'] = function()
-  eq(child.lua_get([[MiniStatusline.section_diagnostics({icon = 'A'})]]), 'A E4 W3 I2 H1')
-  eq(child.lua_get([[MiniStatusline.section_diagnostics({icon = 'AAA'})]]), 'AAA E4 W3 I2 H1')
-end
-
-T['section_diagnostics()']['respects `config.use_icons`'] = function()
-  child.lua('MiniStatusline.config.use_icons = false')
-  eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'LSP E4 W3 I2 H1')
-
-  -- Should also use buffer local config
-  child.b.ministatusline_config = { use_icons = true }
-  eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), ' E4 W3 I2 H1')
 end
 
 T['section_diagnostics()']['is shown only in normal buffers'] = function()
