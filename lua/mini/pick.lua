@@ -1090,6 +1090,7 @@ MiniPick.default_preview = function(buf_id, item, opts)
   if item_data.type == 'file' then return H.preview_file(buf_id, item_data, opts) end
   if item_data.type == 'directory' then return H.preview_directory(buf_id, item_data) end
   if item_data.type == 'buffer' then return H.preview_buffer(buf_id, item_data, opts) end
+  if item_data.type == 'uri' then return H.preview_uri(buf_id, item_data, opts) end
   H.preview_inspect(buf_id, item)
 end
 
@@ -1111,7 +1112,7 @@ MiniPick.default_choose = function(item)
   if not H.is_valid_win(win_target) then win_target = H.get_first_valid_normal_window() end
 
   local item_data = H.parse_item(item)
-  if item_data.type == 'file' or item_data.type == 'directory' then return H.choose_path(win_target, item_data) end
+  if item_data.type == 'file' or item_data.type == 'directory' or item_data.type == 'uri' then return H.choose_path(win_target, item_data) end
   if item_data.type == 'buffer' then return H.choose_buffer(win_target, item_data) end
   H.choose_print(item)
 end
@@ -1138,7 +1139,7 @@ MiniPick.default_choose_marked = function(items, opts)
   local list = {}
   for _, item in ipairs(items) do
     local item_data = H.parse_item(item)
-    if item_data.type == 'file' or item_data.type == 'buffer' then
+    if item_data.type == 'file' or item_data.type == 'buffer' or item_data.type == 'uri' then
       local entry = { bufnr = item_data.buf_id, filename = item_data.path }
       entry.lnum, entry.col, entry.text = item_data.lnum or 1, item_data.col or 1, item_data.text or ''
       entry.end_lnum, entry.end_col = item_data.end_lnum, item_data.end_col
@@ -2969,6 +2970,16 @@ H.parse_item_table = function(item)
       }
     end
 
+    if path_type == 'uri' then
+      --stylua: ignore
+      return {
+        type = 'uri',    path     = item.path,
+        lnum = item.lnum, end_lnum = item.end_lnum,
+        col  = item.col,  end_col  = item.end_col,
+        text = item.text,
+      }
+    end
+
     if path_type == 'directory' then return { type = 'directory', path = item.path } end
   end
 
@@ -2999,6 +3010,7 @@ H.get_fs_type = function(path)
   if path == '' then return 'none' end
   if vim.fn.filereadable(path) == 1 then return 'file' end
   if vim.fn.isdirectory(path) == 1 then return 'directory' end
+  if pcall(vim.uri_to_fname, path) then return 'uri' end
   return 'none'
 end
 
@@ -3037,6 +3049,22 @@ H.preview_buffer = function(buf_id, item_data, opts)
 
   item_data.filetype, item_data.line_position = vim.bo[buf_id_source].filetype, opts.line_position
   H.preview_set_lines(buf_id, lines, item_data)
+end
+
+H.preview_uri = function(buf_id, item_data, opts)
+  local path_buf_id = nil
+
+  for _, id in ipairs(vim.api.nvim_list_bufs()) do
+    local is_target = H.is_valid_buf(id) and vim.api.nvim_buf_get_name(id) == item_data.path
+    if is_target then path_buf_id = id end
+  end
+
+  if path_buf_id == nil then
+    return
+  end
+
+  item_data.buf_id = path_buf_id
+  H.preview_buffer(buf_id, item_data, opts)
 end
 
 H.preview_inspect = function(buf_id, obj) H.set_buflines(buf_id, vim.split(vim.inspect(obj), '\n')) end
@@ -3098,7 +3126,7 @@ H.choose_path = function(win_target, item_data)
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
   local path, path_buf_id = item_data.path, nil
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
+    local is_target = H.is_valid_buf(buf_id) and vim.api.nvim_buf_get_name(buf_id) == path
     if is_target then path_buf_id = buf_id end
   end
 
