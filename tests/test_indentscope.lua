@@ -509,6 +509,21 @@ T['draw()']['does not round time of every animation step'] = function()
   child.expect_screenshot()
 end
 
+T['draw()']['shows symbols on wrapped lines'] = function()
+  -- Add a long line of text. Set 'breakindent' and 'breakindentopt' to ensure
+  -- the wrapped line has the same indent as the current line
+  set_cursor(6, 1)
+  child.cmd('normal! 10Aa')
+  child.wo.breakindentopt = 'min:0'
+  child.wo.breakindent = true
+
+  -- Move the cursor back to the original position
+  set_cursor(6, 1)
+  child.lua('MiniIndentscope.config.draw.animation = function() return 0 end')
+  child.lua('MiniIndentscope.draw()')
+  child.expect_screenshot()
+end
+
 T['undraw()'] = new_set({
   hooks = {
     pre_case = function()

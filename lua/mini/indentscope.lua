@@ -938,6 +938,8 @@ H.make_draw_function = function(indicator, opts)
     virt_text_pos = 'overlay',
   }
 
+  if vim.fn.has('nvim-0.10') == 1 then extmark_opts.virt_text_repeat_linebreak = true end
+
   local current_event_id = opts.event_id
 
   return function(l)
