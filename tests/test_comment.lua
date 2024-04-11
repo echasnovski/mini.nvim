@@ -241,9 +241,7 @@ T['toggle_lines()']['respects `opts.ref_position`'] = function()
   child.bo.filetype = 'vim'
   child.lua('vim.treesitter.start()')
 
-  -- Vimscript's tree-sitter grammar is (currently) written in a way that Lua's
-  -- injection really starts at the first non-blank character
-  toggle_lines(2, 2, { ref_position = { 2, 1 } })
+  toggle_lines(2, 2, { ref_position = { 1, 0 } })
   eq(get_lines()[2], '  " print(1)')
 
   set_lines(lines)
@@ -906,11 +904,9 @@ T['Current line']["computes local 'commentstring' based on cursor position"] = f
   child.bo.filetype = 'vim'
   child.lua('vim.treesitter.start()')
 
-  -- Vimscript's tree-sitter grammar is (currently) written in a way that Lua's
-  -- injection really starts at the first non-blank character
-  set_cursor(2, 1)
+  set_cursor(1, 0)
   type_keys('gcc')
-  eq(get_lines()[2], '  " print(1)')
+  eq(get_lines()[1], '" lua << EOF')
 
   set_lines(lines)
   set_cursor(2, 2)
