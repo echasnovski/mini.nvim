@@ -105,7 +105,7 @@ local validate_commit_msg = function(lines)
   lines = vim.tbl_filter(function(l) return l:find('^%s*#') == nil end, lines)
   local is_valid, err_msg
 
-  -- Allow all lines to be empty to abort commiting
+  -- Allow all lines to be empty to abort committing
   local all_empty = true
   for _, l in ipairs(lines) do
     if l ~= '' then all_empty = false end

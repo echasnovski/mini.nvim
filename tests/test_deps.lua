@@ -975,7 +975,7 @@ T['add()']['Install']['generates help tags'] = function()
         end
       },
 
-      -- 'dep_plugin_1' has '/doc' with help files and has excplicit checkout
+      -- 'dep_plugin_1' has '/doc' with help files and has explicit checkout
       [3] = {
         action = function()
           vim.fn.mkdir(opt_dir .. '/dep_plugin_1/doc', 'p')
@@ -983,7 +983,7 @@ T['add()']['Install']['generates help tags'] = function()
         end
       },
 
-      -- 'new_plugin' has '/doc' with help files and has no excplicit checkout
+      -- 'new_plugin' has '/doc' with help files and has no explicit checkout
       [4] = {
         action = function()
           vim.fn.mkdir(opt_dir .. '/new_plugin/doc', 'p')
@@ -1002,7 +1002,7 @@ T['add()']['Install']['generates help tags'] = function()
     eq(lines, content)
   end
 
-  -- Already present conflicting `tag` file should be overriden
+  -- Already present conflicting `tag` file should be overridden
   validate_tags('dep_plugin_2', { 'depstest_dep_2_tag\tdep_2.txt\t/*depstest_dep_2_tag*' })
 
   -- With actual checkout
@@ -1347,7 +1347,7 @@ T['update()']['Confirm buffer']['can open several'] = function()
   validate_confirm_buf('mini-deps://confirm-update_2')
 end
 
-T['update()']['can fold in cofirm buffer'] = function()
+T['update()']['can fold in confirm buffer'] = function()
   child.set_size(30, 80)
 
   -- Confirmation buffer should enable local folds

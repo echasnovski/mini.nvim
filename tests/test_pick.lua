@@ -3328,7 +3328,7 @@ T['get_picker_opts()']['works'] = function()
   validate_as_config('options')
   validate_as_config('config')
 
-  -- - Not supplied `source` callables chould be inferred
+  -- - Not supplied `source` callables should be inferred
   eq(child.lua_get('_G.res.source.items'), { 'a', 'b' })
   eq(child.lua_get('_G.res.source.name'), 'My name')
   eq(child.lua_get('_G.res.source.cwd'), full_path(child.fn.getcwd()))
@@ -3977,7 +3977,7 @@ T['poke_is_picker_active()']['works with running coroutine'] = function()
     coroutine.resume(coroutine.create(f))
     _G.is_active_direct = MiniPick.is_picker_active()
 
-    -- Dedect no poking before
+    -- Detect no poking before
     _G.has_not_poked_yet = _G.is_active_poke == nil
   ]])
   eq(child.lua_get('_G.is_active_direct'), true)

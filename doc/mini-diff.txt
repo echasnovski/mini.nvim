@@ -128,7 +128,7 @@ a table with the following fields:
       example of how to use it.
 
 Notes:
-- Use |:edit| to reset (disable and reenable) current buffer.
+- Use |:edit| to reset (disable and re-enable) current buffer.
 
 # Overlay ~
 
@@ -385,7 +385,7 @@ last hunk range in the current buffer.
 `config.options` contains various customization options.
 
 `options.algorithm` is a string defining which diff algorithm to use.
-Default: "historgram". See |vim.diff()| for possible values.
+Default: "histogram". See |vim.diff()| for possible values.
 
 `options.indent_heuristic` is a boolean defining whether to use indent
 heuristic for a (possibly) more naturally aligned hunks.

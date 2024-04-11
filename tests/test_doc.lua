@@ -131,7 +131,7 @@ end
 
 -- General overview of testing workflow:
 -- - Tests are organized per test scope: collection of source code file with
---   annotations demonstating similar functionality. Every test scope organized
+--   annotations demonstrating similar functionality. Every test scope organized
 --   in separate subdirectory of 'tests/dir-doc'.
 -- - Testing is performed by evaluating `MiniDoc.generate()` (with possibly
 --   non-default arguments) with current directory being equal to directory of

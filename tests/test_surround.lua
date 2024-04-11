@@ -468,7 +468,7 @@ T['Add surrounding']['respects `config.respect_selection_type` in blockwise mode
   -- General test in Operator-pending mode
   set_lines({ 'aaaaa', 'bbbbb' })
 
-  -- - Create mark to be able to perform non-trival movement
+  -- - Create mark to be able to perform non-trivial movement
   set_cursor(2, 3)
   type_keys('ma')
 

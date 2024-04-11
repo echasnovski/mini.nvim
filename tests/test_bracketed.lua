@@ -2706,7 +2706,7 @@ T['undo()']['does not append currently advanced state if same as last one'] = fu
   backward('undo')
   validate_undo({ 'one' }, 1)
 
-  -- If currently advanced state was appened, this would repeat state 1
+  -- If currently advanced state was appended, this would repeat state 1
   backward('undo')
   validate_undo({ 'one two' }, 2)
 end

@@ -253,7 +253,7 @@ MiniComment.toggle_lines = function(line_start, line_end, opts)
   -- inside region. It can be resolved at least in the following ways:
   -- 1. Use `lockmarks`. Preserves regular but does nothing for extmarks.
   -- 2. Use `vim.fn.setline(line_start, new_lines)`. Preserves regular marks,
-  --    but squashes extmarks withing a single line.
+  --    but squashes extmarks within a single line.
   -- 3. Refactor to use precise editing of lines with `nvim_buf_set_text()`.
   --    Preserves both regular and extended marks.
   --
@@ -479,7 +479,7 @@ H.make_comment_check = function(parts, options)
   -- <possible whitespace> <left> <anything> <right> <possible whitespace>
   local nonblank_regex = '^' .. prefix .. l_esc .. '.*' .. r_esc .. '%s-$'
 
-  -- Commented blank line can have any amoung of whitespace around parts
+  -- Commented blank line can have any amount of whitespace around parts
   local blank_regex = '^' .. prefix .. vim.trim(l_esc) .. '%s*' .. vim.trim(r_esc) .. '%s-$'
 
   return function(line) return string.find(line, nonblank_regex) ~= nil or string.find(line, blank_regex) ~= nil end

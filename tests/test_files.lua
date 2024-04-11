@@ -2614,7 +2614,7 @@ T['File manipulation']['can delete'] = function()
   child.expect_screenshot()
 
   validate_no_file(temp_dir, 'file')
-  validate_no_directory(temp_dir, 'emptry-dir')
+  validate_no_directory(temp_dir, 'empty-dir')
   validate_no_directory(temp_dir, 'dir')
 
   -- Validate separately because order is not guaranteed
