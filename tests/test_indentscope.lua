@@ -510,6 +510,8 @@ T['draw()']['does not round time of every animation step'] = function()
 end
 
 T['draw()']['shows symbols on wrapped lines'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('virt_text_repeat_linebreak is supported for Neovim>=0.10') end
+
   -- Add a long line of text. Set 'breakindent' and 'breakindentopt' to ensure
   -- the wrapped line has the same indent as the current line
   set_cursor(6, 1)
