@@ -594,6 +594,9 @@ H.border_correctors = {
   end,
 }
 
+-- Whether or not Nvim supports the virt_text_repeat_linebreak extmark feature
+H.has_wrapped_virt_text = vim.fn.has('nvim-0.10') == 1
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
@@ -938,7 +941,7 @@ H.make_draw_function = function(indicator, opts)
     virt_text_pos = 'overlay',
   }
 
-  if vim.fn.has('nvim-0.10') == 1 then extmark_opts.virt_text_repeat_linebreak = true end
+  if H.has_wrapped_virt_text then extmark_opts.virt_text_repeat_linebreak = true end
 
   local current_event_id = opts.event_id
 
