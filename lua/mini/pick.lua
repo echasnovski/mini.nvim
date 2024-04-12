@@ -3105,7 +3105,7 @@ H.choose_path = function(win_target, item_data)
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
   local path, path_buf_id = item_data.path, nil
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(buf_id) and vim.api.nvim_buf_get_name(buf_id) == path and (vim.bo[buf_id].buflisted or pcall(vim.uri_to_fname, buf_id))
+    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
     if is_target then path_buf_id = buf_id end
   end
 
