@@ -2234,6 +2234,17 @@ T['ui_select()']['calls `on_choice` with target window being current'] = functio
   eq(child.lua_get('_G.cur_data'), { buf = buf_target, win = win_target })
 end
 
+T['ui_select()']['calls `on_choice` with the exact item'] = function()
+  -- Should not create copy as `on_choice()` might depend on item being exact
+  child.lua_notify([[
+    local items = { { 'a table' } }
+    local on_choice = function(item, idx) _G.are_same = items[idx] == item end
+    MiniPick.ui_select(items, {}, on_choice)
+  ]])
+  type_keys('<CR>')
+  eq(child.lua_get('_G.are_same'), true)
+end
+
 T['ui_select()']['respects `opts.prompt` and `opts.kind`'] = function()
   local validate = function(opts, source_name)
     ui_select({ -1, -2 }, opts)

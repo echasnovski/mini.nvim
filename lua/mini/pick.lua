@@ -1202,7 +1202,7 @@ MiniPick.ui_select = function(items, opts, on_choice)
     local win_target = MiniPick.get_picker_state().windows.target
     if not H.is_valid_win(win_target) then win_target = H.get_first_valid_normal_window() end
     vim.api.nvim_win_call(win_target, function()
-      on_choice(item.item, item.index)
+      on_choice(items[item.index], item.index)
       MiniPick.set_picker_target_window(vim.api.nvim_get_current_win())
     end)
   end
