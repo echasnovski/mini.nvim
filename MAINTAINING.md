@@ -137,6 +137,10 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 
 ## Making stable release
 
+There is no clear guidelines for when a stable (minor) release should be made. Mostly "when if feels right" but "not too often". If it has to be put in words, it is something like "After 3 new modules have finished beta-testing or 4 months, whichever is sooner". No patch releases have been made yet.
+
+Checklist:
+
 - Check for `TODO`s about actions to be done *before* release.
 - Update READMEs of new modules to mention `stable` branch.
 - Bump version in 'CHANGELOG.md'. Commit.
