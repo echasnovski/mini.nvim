@@ -25,7 +25,7 @@
 ---       followed by balanced '()'). In "input" finds function call, in
 ---       "output" prompts user to enter function name.
 ---     - 't' - tag. In "input" finds tag with same identifier, in "output"
----       prompts user to enter tag name.
+---       prompts user to enter tag name with possible attributes.
 ---     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
 ---       balanced brackets (open - with whitespace pad, close - without), in
 ---       "output" - left and right parts of brackets.
@@ -1070,7 +1070,7 @@ H.builtin_surroundings = {
   ['t'] = {
     input = { '<(%w-)%f[^<%w][^<>]->.-</%1>', '^<.->().*()</[^/]->$' },
     output = function()
-      local tag_full = MiniSurround.user_input('Tag name')
+      local tag_full = MiniSurround.user_input('Tag')
       if tag_full == nil then return nil end
       local tag_name = tag_full:match('^%S*')
       return { left = '<' .. tag_full .. '>', right = '</' .. tag_name .. '>' }

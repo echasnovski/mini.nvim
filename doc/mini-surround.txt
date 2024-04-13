@@ -25,7 +25,7 @@ Features:
       followed by balanced '()'). In "input" finds function call, in
       "output" prompts user to enter function name.
     - 't' - tag. In "input" finds tag with same identifier, in "output"
-      prompts user to enter tag name.
+      prompts user to enter tag name with possible attributes.
     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents
       balanced brackets (open - with whitespace pad, close - without), in
       "output" - left and right parts of brackets.
