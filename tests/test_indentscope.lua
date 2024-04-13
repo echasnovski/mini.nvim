@@ -509,19 +509,28 @@ T['draw()']['does not round time of every animation step'] = function()
   child.expect_screenshot()
 end
 
-T['draw()']['shows symbols on wrapped lines'] = function()
+T['draw()']['shows symbols on wrapped lines without overlapping'] = function()
   if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('virt_text_repeat_linebreak is supported for Neovim>=0.10') end
 
-  -- Add a long line of text. Set 'breakindent' and 'breakindentopt' to ensure
-  -- the wrapped line has the same indent as the current line
-  set_lines({ 'aa', '  aa', '  aaaaaaaaaaaaaaaaaaaa', '  aa', 'aa' })
-  child.wo.breakindentopt = 'min:0'
-  child.wo.breakindent = true
-
-  set_cursor(2, 1)
+  child.set_size(10, 15)
   child.lua('MiniIndentscope.config.draw.animation = function() return 0 end')
-  child.lua('MiniIndentscope.draw()')
-  child.expect_screenshot()
+  set_lines({ 'aa', '  aa', '  ' .. string.rep('a ', 15), '  aa', 'aa' })
+  set_cursor(2, 1)
+
+  local validate = function()
+    child.lua('MiniIndentscope.draw()')
+    child.expect_screenshot()
+    child.lua('MiniIndentscope.undraw()')
+  end
+
+  -- Should try to not overlap text
+  child.wo.breakindent = false
+  validate()
+
+  -- Should show symbols on empty space
+  child.wo.breakindent = true
+  child.wo.breakindentopt = 'min:0'
+  validate()
 end
 
 T['undraw()'] = new_set({
