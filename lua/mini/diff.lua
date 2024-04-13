@@ -69,6 +69,15 @@
 --- * `MiniDiffOverDelete`  - deleted text shown in overlay.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
+---
+--- # Disabling ~
+---
+--- To temporarily disable features without relying on |MiniDiff.disable()|,
+--- set `vim.g.minidiff_disable` (globally) or `vim.b.minidiff_disable` (for
+--- a buffer) to `true`. Considering high number of different scenarios and
+--- customization intentions, writing exact rules for disabling module's
+--- functionality is left to user.
+--- See |mini.nvim-disabling-recipes| for common recipes.
 
 --- # Diffs and hunks ~
 ---
