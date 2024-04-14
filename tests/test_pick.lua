@@ -1492,6 +1492,11 @@ T['default_preview()']['works for file path with tilde'] = function()
   validate_preview({ path_tilde })
 end
 
+T['default_preview()']['works for URI path'] = function()
+  local items = { { text = real_file('LICENSE'), path = 'file:' .. full_path(real_file('LICENSE')) } }
+  validate_preview(items)
+end
+
 T['default_preview()']['shows line in file path'] = function()
   local path = real_file('b.txt')
   local items = {
@@ -1785,6 +1790,16 @@ T['default_choose()']['works for relative file path'] = function()
 
   -- Should open with relative path to have better view in `:buffers`
   expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(real_files_dir))
+end
+
+T['default_choose()']['works for URI path'] = function()
+  local path = full_path(real_file('LICENSE'))
+  local item = { path = 'file:' .. path }
+  local win_id = child.api.nvim_get_current_win()
+  default_choose(item)
+
+  local buf_id = child.api.nvim_win_get_buf(win_id)
+  validate_buf_name(buf_id, path)
 end
 
 T['default_choose()']['works for file path with tilde'] = function()
@@ -2104,6 +2119,9 @@ T['default_choose_marked()']['creates quickfix list from file/buffer positions']
 
     { text = 'buffer', bufnr = buf_id, lnum = 7, col = 7, end_lnum = 8, end_col = 8 },
     { text = 'buffer', bufnr = buf_id, lnum = 7, col = 8, end_lnum = 8 },
+
+    -- URI
+    { path = 'file:' .. full_path(path) },
   }
 
   start_with_items(items)
@@ -2129,6 +2147,8 @@ T['default_choose_marked()']['creates quickfix list from file/buffer positions']
   validate_qfitem(qflist[15], { bufnr = buf_id, lnum = 6, col = 6, end_lnum = 0, end_col = 0 })
   validate_qfitem(qflist[16], { bufnr = buf_id, lnum = 7, col = 7, end_lnum = 8, end_col = 8 })
   validate_qfitem(qflist[17], { bufnr = buf_id, lnum = 7, col = 8, end_lnum = 8, end_col = 0 })
+
+  validate_qfitem(qflist[18], { filename = full_path(path), lnum = 1, col = 1, end_lnum = 0, end_col = 0 })
 end
 
 T['default_choose_marked()']['falls back to choosing first item'] = function()

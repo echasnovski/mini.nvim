@@ -249,7 +249,8 @@ out of the box with |MiniPick.default_show()|, |MiniPick.default_preview()|,
 |MiniPick.default_choose()|, |MiniPick.default_choose_marked()|:
 
 - Path (file or directory). Use string or `path` field of a table. Path can
-  be either absolute or relative to the `source.cwd`.
+  be either absolute, relative to the `source.cwd`, or have a general URI format
+  (only if supplied as table field).
   Examples: `'aaa.txt'`, `{ path = 'aaa.txt' }`
 
 - Buffer. Use buffer id as number, string, or `bufnr` / `buf_id` / `buf`
