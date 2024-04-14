@@ -726,17 +726,19 @@ MiniMap.gen_integration = {}
 --- Integration count reflects number of actual matches.
 ---
 --- It prompts integration highlighting update on every change of |hlsearch| option
---- (see |OptionSet|). Note, that it doesn't do that when search is
---- started with |n|, |N|, or similar (there is no good approach for this yet).
---- To enable highlight update on this keys, make custom mappings. Like this: >
+--- (see |OptionSet|). Note that it is not happening for some keys:
+--- - Toggle search highlight with |CTRL-L-default| or `\h` from 'mini.basics'.
+---   Use custom mapping which changes mode. Like this: >
+---
+---   vim.keymap.set('n', [[\h]], ':let v:hlsearch = 1 - v:hlsearch<CR>')
+--- <
+--- - After starting search with |n|, |N|, |star|, or |#|.
+---   To enable highlight update on this keys, make custom mappings. Like this: >
 ---
 ---   for _, key in ipairs({ 'n', 'N', '*', '#' }) do
----     vim.keymap.set(
----       'n',
----       key,
----       key ..
----         '<Cmd>lua MiniMap.refresh({}, {lines = false, scrollbar = false})<CR>'
----     )
+---     local rhs = key ..
+---       '<Cmd>lua MiniMap.refresh({}, {lines = false, scrollbar = false})<CR>'
+---     vim.keymap.set('n', key, rhs)
 ---   end
 --- <
 ---@param hl_groups table|nil Table defining highlight groups. Can have the
