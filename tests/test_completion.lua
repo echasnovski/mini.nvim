@@ -288,6 +288,35 @@ T['Autocompletion']['uses fallback'] = function()
   eq(get_completion(), { 'Jackpot' })
 end
 
+T['Autocompletion']['forces new completion at LSP trigger'] = new_set(
+  -- Test with different source functions because they (may) differ slightly on
+  -- how certain completion events (`CompleteDonePre`) are triggered, which
+  -- affects whether autocompletion is done in certain cases (for example, when
+  -- completion candidate is fully typed).
+  -- See https://github.com/echasnovski/mini.nvim/issues/813
+  { parametrize = { { 'completefunc' }, { 'omnifunc' } } },
+  {
+    test = function(source_func)
+      child.set_size(16, 20)
+      reload_module({ lsp_completion = { source_func = source_func } })
+      child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+      --stylua: ignore
+      local all_months = {
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+      }
+      type_keys('i', '<C-Space>')
+      eq(get_completion(), all_months)
+
+      type_keys('May.')
+      sleep(test_times.completion + 10)
+      eq(get_completion(), all_months)
+      child.expect_screenshot()
+    end,
+  }
+)
+
 T['Autocompletion']['respects `config.delay.completion`'] = function()
   child.lua('MiniCompletion.config.delay.completion = 300')
 

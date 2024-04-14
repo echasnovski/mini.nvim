@@ -572,6 +572,17 @@ H.auto_completion = function()
 
   H.completion.timer:stop()
 
+  -- If character is LSP trigger, force new completion.
+  -- Do this before checking for pumvisible because it should be forced even if
+  -- there are visible candidates. Also `H.pumvisible()` might return `true`
+  -- even if there is no popup, which is common when manually typing candidate
+  -- followed by an LSP trigger (like ".").
+  if H.is_lsp_trigger(vim.v.char, 'completion') then
+    local force_completion = vim.schedule_wrap(function() MiniCompletion.complete_twostage(true, true) end)
+    H.completion.timer:start(H.get_config().delay.completion, 0, force_completion)
+    return
+  end
+
   -- Don't do anything if popup is visible
   if H.pumvisible() then
     -- Keep completion source as it is needed all time when popup is visible
@@ -580,16 +591,10 @@ H.auto_completion = function()
   end
 
   -- Stop everything if inserted character is not appropriate
-  local char_is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
-  if not (H.is_char_keyword(vim.v.char) or char_is_trigger) then
-    H.stop_completion(false)
-    return
-  end
+  if not H.is_char_keyword(vim.v.char) then return H.stop_completion(false) end
 
-  -- If character is purely lsp trigger, make new LSP request without fallback
-  -- and force new completion
-  if char_is_trigger then H.cancel_lsp() end
-  H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
+  -- Start non-forced completion with fallback
+  H.completion.fallback, H.completion.force = true, false
 
   -- Cache id of Insert mode "text changed" event for a later tracking (reduces
   -- false positive delayed triggers). The intention is to trigger completion
@@ -1284,6 +1289,9 @@ H.is_char_keyword = function(char)
   return vim.fn.match(char, '[[:keyword:]]') >= 0
 end
 
+-- NOTE: Might return `true` even if there is no visible completion popup, but
+-- built-in completion is still "active" (`<BS>` will show previous completion
+-- immediately).
 H.pumvisible = function() return vim.fn.pumvisible() > 0 end
 
 H.get_completion_start = function(lsp_result)
