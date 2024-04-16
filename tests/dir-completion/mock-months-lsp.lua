@@ -66,6 +66,10 @@ end
 
 Months.requests = {
   ['textDocument/completion'] = function(params)
+    -- Imitate returning nothing in comments
+    local line = vim.fn.getline(params.position.line + 1)
+    if line:find('^%s*#') ~= nil then return { { result = { items = {} } } } end
+
     local items = {}
     for i, item in ipairs(Months.items) do
       local res = { label = item.name, kind = item.kind, sortText = ('%03d'):format(i) }

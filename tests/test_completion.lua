@@ -288,7 +288,7 @@ T['Autocompletion']['uses fallback'] = function()
   eq(get_completion(), { 'Jackpot' })
 end
 
-T['Autocompletion']['forces new completion at LSP trigger'] = new_set(
+T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
   -- Test with different source functions because they (may) differ slightly on
   -- how certain completion events (`CompleteDonePre`) are triggered, which
   -- affects whether autocompletion is done in certain cases (for example, when
@@ -310,8 +310,18 @@ T['Autocompletion']['forces new completion at LSP trigger'] = new_set(
       eq(get_completion(), all_months)
 
       type_keys('May.')
-      sleep(test_times.completion + 10)
+      eq(child.fn.pumvisible(), 0)
+      sleep(test_times.completion - 10)
+      eq(child.fn.pumvisible(), 0)
+      sleep(10 + 10)
       eq(get_completion(), all_months)
+      child.expect_screenshot()
+
+      -- Should show only LSP without fallback, i.e. typing LSP trigger should
+      -- show no completion if there is no LSP completion (as is imitated
+      -- inside commented lines).
+      type_keys('<Esc>o', '# .')
+      sleep(test_times.completion + 10)
       child.expect_screenshot()
     end,
   }

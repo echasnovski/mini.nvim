@@ -572,29 +572,26 @@ H.auto_completion = function()
 
   H.completion.timer:stop()
 
-  -- If character is LSP trigger, force new completion.
-  -- Do this before checking for pumvisible because it should be forced even if
-  -- there are visible candidates. Also `H.pumvisible()` might return `true`
-  -- even if there is no popup, which is common when manually typing candidate
-  -- followed by an LSP trigger (like ".").
-  if H.is_lsp_trigger(vim.v.char, 'completion') then
-    local force_completion = vim.schedule_wrap(function() MiniCompletion.complete_twostage(true, true) end)
-    H.completion.timer:start(H.get_config().delay.completion, 0, force_completion)
-    return
+  local char_is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
+  if char_is_trigger then
+    -- If character is LSP trigger, force fresh LSP completion later
+    -- Check LSP trigger before checking for pumvisible because it should be
+    -- forced even if there are visible candidates
+    H.stop_completion(false)
+  elseif H.pumvisible() then
+    -- Do nothing if popup is visible. `H.pumvisible()` might be `true` even if
+    -- there is no popup. It is common when manually typing candidate followed
+    -- by an LSP trigger (like ".").
+    -- Keep completion source as it is needed all time when popup is visible.
+    return H.stop_completion(true)
+  elseif not H.is_char_keyword(vim.v.char) then
+    -- Stop everything if inserted character is not appropriate. Check this
+    -- after popup check to allow completion candidates to have bad characters.
+    return H.stop_completion(false)
   end
 
-  -- Don't do anything if popup is visible
-  if H.pumvisible() then
-    -- Keep completion source as it is needed all time when popup is visible
-    H.stop_completion(true)
-    return
-  end
-
-  -- Stop everything if inserted character is not appropriate
-  if not H.is_char_keyword(vim.v.char) then return H.stop_completion(false) end
-
-  -- Start non-forced completion with fallback
-  H.completion.fallback, H.completion.force = true, false
+  -- Start non-forced completion with fallback or forced LSP source for trigger
+  H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
 
   -- Cache id of Insert mode "text changed" event for a later tracking (reduces
   -- false positive delayed triggers). The intention is to trigger completion
