@@ -309,6 +309,10 @@
 ---
 --- UI events ~
 ---
+--- - `MiniFilesExplorerOpen` - just after explorer finishes opening.
+---
+--- - `MiniFilesExplorerClose` - just before explorer starts closing.
+---
 --- - `MiniFilesBufferCreate` - when buffer is created to show a particular
 ---   directory. Triggered once per directory during one explorer session.
 ---   Can be used to create buffer-local mappings.
@@ -703,6 +707,9 @@ MiniFiles.open = function(path, use_latest, opts)
 
   -- Track lost focus
   H.explorer_track_lost_focus()
+
+  -- Trigger appropriate event
+  H.trigger_event('MiniFilesExplorerOpen')
 end
 
 --- Refresh explorer
@@ -781,6 +788,9 @@ MiniFiles.close = function()
 
   -- Confirm close if there is modified buffer
   if not H.explorer_confirm_modified(explorer, 'close') then return false end
+
+  -- Trigger appropriate event
+  H.trigger_event('MiniFilesExplorerClose')
 
   -- Focus on target window
   explorer = H.explorer_ensure_target_window(explorer)

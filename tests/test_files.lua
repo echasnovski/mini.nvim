@@ -787,6 +787,7 @@ T['open()']['properly closes currently opened explorer'] = function()
 end
 
 T['open()']['properly closes currently opened explorer with modified buffers'] = function()
+  child.cmd('au User MiniFilesExplorerClose lua _G.had_close_event = true')
   child.set_size(100, 100)
 
   local path_1, path_2 = make_test_path('common'), make_test_path('common/a-dir')
@@ -797,6 +798,9 @@ T['open()']['properly closes currently opened explorer with modified buffers'] =
   mock_confirm(1)
   open(path_2)
   validate_confirm_args('modified buffer.*close without sync')
+
+  -- Should trigger proper event for closing explorer
+  eq(child.lua_get('_G.had_close_event'), true)
 end
 
 T['open()']['tracks lost focus'] = function()
@@ -1084,6 +1088,7 @@ T['close()']['works per tabpage'] = function()
 end
 
 T['close()']['checks for modified buffers'] = function()
+  child.cmd('au User MiniFilesExplorerClose lua _G.had_close_event = true')
   open(test_dir_path)
   type_keys('o', 'new', '<Esc>')
   child.expect_screenshot()
@@ -1093,6 +1098,9 @@ T['close()']['checks for modified buffers'] = function()
   eq(close(), false)
   child.expect_screenshot()
   validate_confirm_args('modified buffer.*Confirm close without sync')
+
+  -- - Should not trigger close event (as there was no closing)
+  eq(child.lua_get('_G.had_close_event'), vim.NIL)
 
   -- Should close if there is confirm
   mock_confirm(1)
@@ -3484,6 +3492,45 @@ local validate_event_track = function(ref, do_sort)
 end
 
 local validate_n_events = function(n_ref) eq(#child.lua_get('_G.callback_args_data'), n_ref) end
+
+T['Events']['`MiniFilesExplorerOpen` triggers'] = function()
+  track_event('MiniFilesExplorerOpen')
+  child.cmd('au User MiniFilesExplorerOpen lua _G.windows = vim.api.nvim_list_wins()')
+
+  open(test_dir_path)
+  validate_event_track({ {} })
+  -- Should trigger after all windows are opened
+  eq(#child.lua_get('_G.windows'), 2)
+  clear_event_track()
+
+  close()
+  validate_event_track({})
+
+  open(test_dir_path)
+  validate_event_track({ {} })
+end
+
+T['Events']['`MiniFilesExplorerClose` triggers'] = function()
+  track_event('MiniFilesExplorerClose')
+  child.cmd('au User MiniFilesExplorerClose lua _G.windows = vim.api.nvim_list_wins()')
+
+  open(test_dir_path)
+  validate_event_track({})
+  clear_event_track()
+
+  close()
+  validate_event_track({ {} })
+  -- Should trigger before all windows are closed
+  eq(#child.lua_get('_G.windows'), 2)
+  clear_event_track()
+
+  open(test_dir_path)
+  validate_event_track({})
+  clear_event_track()
+
+  close()
+  validate_event_track({ {} })
+end
 
 T['Events']['`MiniFilesBufferCreate` triggers'] = function()
   track_event('MiniFilesBufferCreate')

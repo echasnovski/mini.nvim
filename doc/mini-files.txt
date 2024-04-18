@@ -313,6 +313,10 @@ autocommand events are triggered under common circumstances.
 
 UI events ~
 
+- `MiniFilesExplorerOpen` - just after explorer finishes opening.
+
+- `MiniFilesExplorerClose` - just before explorer starts closing.
+
 - `MiniFilesBufferCreate` - when buffer is created to show a particular
   directory. Triggered once per directory during one explorer session.
   Can be used to create buffer-local mappings.
