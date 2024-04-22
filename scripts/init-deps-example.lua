@@ -41,7 +41,7 @@ now(function()
   require('nvim-web-devicons').setup()
 end)
 
-later(function()
+now(function()
   -- Supply dependencies near target plugin
   add({ source = 'neovim/nvim-lspconfig', depends = { 'williamboman/mason.nvim' } })
 end)
