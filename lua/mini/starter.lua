@@ -1456,6 +1456,9 @@ H.is_something_shown = function()
   )
   if #listed_buffers > 1 then return true end
 
+  -- - Current buffer is meant to show something else
+  if vim.bo.filetype ~= '' then return true end
+
   -- - Current buffer has any lines (something opened explicitly).
   -- NOTE: Usage of `line2byte(line('$') + 1) < 0` seemed to be fine, but it
   -- doesn't work if some automated changed was made to buffer while leaving it

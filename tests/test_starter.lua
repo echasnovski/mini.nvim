@@ -1118,6 +1118,10 @@ T['Autoopening']['does not autoopen if Neovim started to show something'] = func
   child.restart({ '-u', init_autoopen, '-c', 'e foo | set nobuflisted | e bar | set buflisted' })
   validate_starter_shown()
 
+  -- Several windows are shown (like from other plugin action at startup)
+  child.restart({ '-u', init_autoopen, '-c', 'set filetype=text' })
+  validate_starter_not_shown()
+
   -- Current buffer has any lines (something opened explicitly)
   child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
   validate_starter_not_shown()
