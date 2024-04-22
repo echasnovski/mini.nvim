@@ -1389,6 +1389,19 @@ T['Window']['can be made focusable by mouse with `window.focusable = true`'] = f
   eq(child.api.nvim_get_current_win(), get_map_win_id())
 end
 
+T['Window']['ensures target window is valid'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('wincmd s')
+  local target_win_id = child.api.nvim_get_current_win()
+  map_open()
+  child.lua('MiniMap.toggle_focus()')
+
+  -- Closing target window should result into recomputing new target window
+  child.api.nvim_win_close(target_win_id, true)
+  child.lua('MiniMap.toggle_focus()')
+  eq(child.api.nvim_get_current_win(), init_win_id)
+end
+
 T['Scrollbar'] = new_set()
 
 T['Scrollbar']['updates on cursor movement'] = function()

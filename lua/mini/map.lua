@@ -655,7 +655,7 @@ MiniMap.toggle_focus = function(use_previous_cursor)
 
     -- Use either previous cursor or first non-whitespace character (if this
     -- was the result of cursor movement inside map window)
-    if use_previous_cursor then
+    if use_previous_cursor and H.cache.previous_win.cursor ~= nil then
       vim.api.nvim_win_set_cursor(0, H.cache.previous_win.cursor)
     elseif H.cache.n_map_cursor_moves > 1 then
       vim.cmd('normal! ^')
@@ -1033,6 +1033,7 @@ H.create_autocommands = function()
   au({ 'BufEnter', 'BufWritePost', 'TextChanged', 'VimResized' }, '*', H.on_content_change, 'On content change')
   au({ 'CursorMoved', 'WinScrolled' }, '*', H.on_view_change, 'On view change')
   au('WinLeave', '*', H.on_winleave, 'On WinLeave')
+  au('WinClosed', '*', H.on_winclosed, 'On WinClosed')
   au('ModeChanged', '*:n', H.on_content_change, 'On return to Normal mode')
 end
 
@@ -1079,6 +1080,19 @@ H.on_winleave = function()
 
   H.cache.previous_win.id = vim.api.nvim_get_current_win()
   H.cache.previous_win.cursor = vim.api.nvim_win_get_cursor(0)
+end
+
+H.on_winclosed = function(data)
+  -- Ensure that `H.cache.previous_win` always points to a valid normal window
+  local ok, closed_win_id = pcall(tonumber, data.match)
+  if not ok or closed_win_id ~= H.cache.previous_win.id then return end
+
+  for _, win_id in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if win_id ~= closed_win_id and vim.api.nvim_win_get_config(win_id).relative == '' then
+      H.cache.previous_win = { id = win_id }
+      return
+    end
+  end
 end
 
 H.track_map_cursor = function()
