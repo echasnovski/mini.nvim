@@ -794,7 +794,7 @@ H.is_notification = function(x)
 end
 
 H.is_notification_array = function(x)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for _, y in ipairs(x) do
     if not H.is_notification(y) then return false end
   end
@@ -829,5 +829,8 @@ H.get_timestamp = function()
   local seconds, microseconds = vim.loop.gettimeofday()
   return seconds + 0.000001 * microseconds
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniNotify

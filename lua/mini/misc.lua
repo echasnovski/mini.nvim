@@ -559,7 +559,7 @@ end
 H.error = function(msg) error(string.format('(mini.misc) %s', msg)) end
 
 H.is_array_of = function(x, predicate)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for _, v in ipairs(x) do
     if not predicate(v) then return false end
   end
@@ -569,5 +569,8 @@ end
 H.is_number = function(x) return type(x) == 'number' end
 
 H.is_string = function(x) return type(x) == 'string' end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniMisc

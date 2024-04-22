@@ -282,7 +282,7 @@ MiniExtra.gen_highlighter = {}
 ---@param extmark_opts any Proper `extmark_opts` field for `highlighter`.
 ---   See |MiniHipatterns.config|.
 MiniExtra.gen_highlighter.words = function(words, group, extmark_opts)
-  if not vim.tbl_islist(words) then H.error('`words` should be an array.') end
+  if not H.islist(words) then H.error('`words` should be an array.') end
   if not (type(group) == 'string' or vim.is_callable(group)) then H.error('`group` should be string or callable.') end
   local pattern = vim.tbl_map(function(x)
     if type(x) ~= 'string' then H.error('All elements of `words` should be strings.') end
@@ -771,7 +771,7 @@ MiniExtra.pickers.hipatterns = function(local_opts, opts)
   if not has_hipatterns then H.error([[`pickers.hipatterns` requires 'mini.hipatterns' which can not be found.]]) end
 
   local_opts = vim.tbl_deep_extend('force', { highlighters = nil, scope = 'all' }, local_opts or {})
-  if local_opts.highlighters ~= nil and not vim.tbl_islist(local_opts.highlighters) then
+  if local_opts.highlighters ~= nil and not H.islist(local_opts.highlighters) then
     H.error('`local_opts.highlighters` should be an array of highlighter identifiers.')
   end
   local highlighters = local_opts.highlighters
@@ -1156,7 +1156,7 @@ end
 MiniExtra.pickers.oldfiles = function(local_opts, opts)
   local pick = H.validate_pick('oldfiles')
   local oldfiles = vim.v.oldfiles
-  if not vim.tbl_islist(oldfiles) then H.error('`pickers.oldfiles` picker needs valid `v:oldfiles`.') end
+  if not H.islist(oldfiles) then H.error('`pickers.oldfiles` picker needs valid `v:oldfiles`.') end
 
   local items = vim.schedule_wrap(function()
     local cwd = pick.get_picker_opts().source.cwd
@@ -2016,5 +2016,8 @@ H.short_path = function(path, cwd)
   local res = path:sub(cwd:len() + 1):gsub('^/+', ''):gsub('/+$', '')
   return res
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniExtra

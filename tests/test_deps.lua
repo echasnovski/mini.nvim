@@ -12,6 +12,9 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
 local test_dir = 'tests/dir-deps'
 local test_dir_absolute = vim.fn.fnamemodify(test_dir, ':p'):gsub('(.)/$', '%1')
 local test_opt_dir = test_dir_absolute .. '/pack/deps/opt'
@@ -107,7 +110,7 @@ local validate_git_spawn_log = function(ref_log)
       eq('Real spawn log does not have entry for present reference log entry', ref)
     elseif ref == nil then
       eq(real, 'Reference does not have entry for present spawn log entry')
-    elseif vim.tbl_islist(ref) then
+    elseif islist(ref) then
       -- Assume default `git` options
       local args = { '-c', 'gc.auto=0' }
       vim.list_extend(args, ref)

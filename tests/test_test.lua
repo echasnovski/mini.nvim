@@ -16,6 +16,9 @@ local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 --stylua: ignore end
 
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
 local get_latest_message = function() return child.cmd_capture('1messages') end
 
 local get_ref_path = function(name) return string.format('tests/dir-test/%s', name) end
@@ -361,8 +364,11 @@ T['collect()'] = new_set()
 T['collect()']['works'] = function()
   child.lua('_G.cases = MiniTest.collect()')
 
+  -- TODO: Remove after compatibility with Neovim=0.9 is dropped
+  child.lua([[_G.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist]])
+
   -- Should return array of cases
-  eq(child.lua_get('vim.tbl_islist(_G.cases)'), true)
+  eq(child.lua_get('_G.islist(_G.cases)'), true)
 
   local keys = child.lua_get('vim.tbl_keys(_G.cases[1])')
   table.sort(keys)
@@ -1194,8 +1200,8 @@ T['child']['get_screenshot()']['works'] = function()
 
   -- Structure
   eq(type(screenshot), 'table')
-  eq(vim.tbl_islist(screenshot.text), true)
-  eq(vim.tbl_islist(screenshot.attr), true)
+  eq(islist(screenshot.text), true)
+  eq(islist(screenshot.attr), true)
 
   local n_lines, n_cols = child.o.lines, child.o.columns
 
@@ -1203,8 +1209,8 @@ T['child']['get_screenshot()']['works'] = function()
   eq(#screenshot.attr, n_lines)
 
   for i = 1, n_lines do
-    eq(vim.tbl_islist(screenshot.text[i]), true)
-    eq(vim.tbl_islist(screenshot.attr[i]), true)
+    eq(islist(screenshot.text[i]), true)
+    eq(islist(screenshot.attr[i]), true)
 
     eq(#screenshot.text[i], n_cols)
     eq(#screenshot.attr[i], n_cols)

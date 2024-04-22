@@ -492,7 +492,7 @@ H.setup_config = function(config)
     ['mappings.force_fallback'] = { config.mappings.force_fallback, 'string' },
   })
 
-  local is_string_or_array = function(x) return type(x) == 'string' or vim.tbl_islist(x) end
+  local is_string_or_array = function(x) return type(x) == 'string' or H.islist(x) end
   vim.validate({
     ['window.info.height'] = { config.window.info.height, 'number' },
     ['window.info.width'] = { config.window.info.width, 'number' },
@@ -1379,5 +1379,8 @@ H.map = function(mode, lhs, rhs, opts)
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniCompletion

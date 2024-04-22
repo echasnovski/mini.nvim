@@ -1846,7 +1846,7 @@ end
 
 -- Predicates -----------------------------------------------------------------
 H.is_array_of = function(x, predicate)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for _, v in ipairs(x) do
     if not predicate(v) then return false end
   end
@@ -2026,5 +2026,8 @@ H.undo = function()
     vim.cmd('silent! lockmarks normal! u')
   end
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniAlign

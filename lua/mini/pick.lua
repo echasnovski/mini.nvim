@@ -868,7 +868,7 @@ MiniPick.start = function(opts)
   H.picker_set_busy(picker, true)
   local items = H.expand_callable(opts.source.items)
   -- - Set items on next event loop to not block when computing stritems
-  if vim.tbl_islist(items) then vim.schedule(function() MiniPick.set_picker_items(items) end) end
+  if H.islist(items) then vim.schedule(function() MiniPick.set_picker_items(items) end) end
 
   H.picker_track_lost_focus(picker)
   return H.picker_advance(picker)
@@ -1134,7 +1134,7 @@ end
 ---   - <list_type> `(string)` - which type of list to open. One of "quickfix"
 ---     or "location". Default: "quickfix".
 MiniPick.default_choose_marked = function(items, opts)
-  if not vim.tbl_islist(items) then H.error('`items` should be an array') end
+  if not H.islist(items) then H.error('`items` should be an array') end
   if #items == 0 then return end
   opts = vim.tbl_deep_extend('force', { list_type = 'quickfix' }, opts or {})
 
@@ -1603,7 +1603,7 @@ MiniPick.get_picker_query = function() return vim.deepcopy((H.pickers.active or 
 ---
 ---@seealso |MiniPick.get_picker_items()| and |MiniPick.get_picker_stritems()|
 MiniPick.set_picker_items = function(items, opts)
-  if not vim.tbl_islist(items) then H.error('`items` should be an array.') end
+  if not H.islist(items) then H.error('`items` should be an array.') end
   if not MiniPick.is_picker_active() then return end
   opts = vim.tbl_deep_extend('force', { do_match = true, querytick = nil }, opts or {})
 
@@ -1947,7 +1947,7 @@ H.validate_picker_opts = function(opts)
   local source = opts.source
 
   local items = source.items or {}
-  local is_valid_items = vim.tbl_islist(items) or vim.is_callable(items)
+  local is_valid_items = H.islist(items) or vim.is_callable(items)
   if not is_valid_items then H.error('`source.items` should be array or callable.') end
 
   source.name = tostring(source.name or '<No name>')
@@ -3262,7 +3262,7 @@ H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nv
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
 
 H.is_array_of = function(x, ref_type)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for i = 1, #x do
     if type(x[i]) ~= ref_type then return false end
   end
@@ -3395,5 +3395,8 @@ H.is_file_text = function(path)
 end
 
 H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$', '%1')) end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniPick

@@ -518,7 +518,7 @@ MiniHipatterns.get_matches = function(buf_id, highlighters)
 
   local all_highlighters = H.get_all_highlighters()
   highlighters = highlighters or all_highlighters
-  if not vim.tbl_islist(highlighters) then H.error('`highlighters` should be an array.') end
+  if not H.islist(highlighters) then H.error('`highlighters` should be an array.') end
   highlighters = vim.tbl_filter(function(x) return vim.tbl_contains(all_highlighters, x) end, highlighters)
 
   local position_compare = function(a, b) return a[2] < b[2] or (a[2] == b[2] and a[3] < b[3]) end
@@ -806,7 +806,7 @@ H.normalize_highlighters = function(highlighters)
     -- valid cases into array of callables.
     local pattern = type(hi.pattern) == 'string' and function() return hi.pattern end or hi.pattern
     if vim.is_callable(pattern) then pattern = { pattern } end
-    local is_pattern_ok = vim.tbl_islist(pattern)
+    local is_pattern_ok = H.islist(pattern)
     if is_pattern_ok then
       for i, pat in ipairs(pattern) do
         pattern[i] = type(pat) == 'string' and function() return pat end or pat
@@ -1018,5 +1018,8 @@ H.clear_namespace = function(...) pcall(vim.api.nvim_buf_clear_namespace, ...) e
 H.always_true = function() return true end
 
 H.cuberoot = function(x) return math.pow(x, 0.333333) end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniHipatterns

@@ -16,6 +16,9 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
 -- Tweak `expect_screenshot()` to test only on Neovim=0.9 (as it introduced
 -- titles and 0.10 introduced footer).
 -- Use `child.expect_screenshot_orig()` for original testing.
@@ -1164,7 +1167,7 @@ T['pickers']['explorer()']['respects `local_opts.sort`'] = function()
   -- Should be called with proper arguments
   local sort_log = child.lua_get('_G.sort_log')
   eq(#sort_log, 2)
-  eq(vim.tbl_islist(sort_log[1]), true)
+  eq(islist(sort_log[1]), true)
   eq(sort_log[1][1], { fs_type = 'directory', path = test_dir_absolute, text = '..' })
 end
 

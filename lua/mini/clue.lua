@@ -1716,7 +1716,7 @@ H.clues_normalize = function(clues)
   process = function(x)
     x = H.expand_callable(x)
     if H.is_clue(x) then return table.insert(res, x) end
-    if not vim.tbl_islist(x) then return nil end
+    if not H.islist(x) then return nil end
     for _, y in ipairs(x) do
       process(y)
     end
@@ -1857,7 +1857,7 @@ H.is_clue = function(x)
 end
 
 H.is_array_of = function(x, predicate)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for _, v in ipairs(x) do
     if not predicate(v) then return false end
   end
@@ -1978,5 +1978,8 @@ H.list_concat = function(...)
   end
   return res
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniClue

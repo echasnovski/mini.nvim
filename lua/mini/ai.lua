@@ -1308,7 +1308,7 @@ H.is_region = function(x)
 end
 
 H.is_region_array = function(x)
-  if not vim.tbl_islist(x) then return false end
+  if not H.islist(x) then return false end
   for _, v in ipairs(x) do
     if not H.is_region(v) then return false end
   end
@@ -1316,7 +1316,7 @@ H.is_region_array = function(x)
 end
 
 H.is_composed_pattern = function(x)
-  if not (vim.tbl_islist(x) and #x > 0) then return false end
+  if not (H.islist(x) and #x > 0) then return false end
   for _, val in ipairs(x) do
     local val_type = type(val)
     if not (val_type == 'table' or val_type == 'string' or vim.is_callable(val)) then return false end
@@ -1445,7 +1445,7 @@ end
 H.prepare_ai_captures = function(ai_captures)
   local is_capture = function(x)
     if type(x) == 'string' then x = { x } end
-    if not vim.tbl_islist(x) then return false end
+    if not H.islist(x) then return false end
 
     for _, v in ipairs(x) do
       if not (type(v) == 'string' and v:sub(1, 1) == '@') then return false end
@@ -1995,7 +1995,7 @@ end
 ---@private
 H.cartesian_product = function(arr)
   if not (type(arr) == 'table' and #arr > 0) then return {} end
-  arr = vim.tbl_map(function(x) return vim.tbl_islist(x) and x or { x } end, arr)
+  arr = vim.tbl_map(function(x) return H.islist(x) and x or { x } end, arr)
 
   local res, cur_item = {}, {}
   local process
@@ -2020,5 +2020,8 @@ H.wrap_callable_table = function(x)
   if vim.is_callable(x) and type(x) == 'table' then return function(...) return x(...) end end
   return x
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniAi

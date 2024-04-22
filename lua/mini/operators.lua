@@ -617,7 +617,7 @@ MiniOperators.default_sort_func = function(content, opts)
   if not vim.is_callable(compare_fun) then H.error('`opts.compare_fun` should be callable.') end
 
   local split_patterns = opts.split_patterns or { '%s*,%s*', '%s*;%s*', '%s+', '' }
-  if not vim.tbl_islist(split_patterns) then H.error('`opts.split_patterns` should be array.') end
+  if not H.islist(split_patterns) then H.error('`opts.split_patterns` should be array.') end
 
   -- Prepare lines to sort
   local lines, submode = content.lines, content.submode
@@ -1126,7 +1126,7 @@ H.do_between_marks = function(operator, data)
   vim.o.selection = cache_selection
 end
 
-H.is_content = function(x) return type(x) == 'table' and vim.tbl_islist(x.lines) and type(x.submode) == 'string' end
+H.is_content = function(x) return type(x) == 'table' and H.islist(x.lines) and type(x.submode) == 'string' end
 
 -- Registers ------------------------------------------------------------------
 H.get_reg_type = function(regname) return vim.fn.getregtype(regname):sub(1, 1) end
@@ -1274,5 +1274,8 @@ H.cmd_normal = function(command, opts)
 
   if cancel_redo then H.cancel_redo() end
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniOperators

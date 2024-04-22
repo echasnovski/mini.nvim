@@ -992,7 +992,7 @@ H.expand_spec = function(target, spec)
 
   -- Expand dependencies recursively before adding current spec to target
   spec.depends = vim.deepcopy(spec.depends) or {}
-  if not vim.tbl_islist(spec.depends) then H.error('`depends` in plugin spec should be array.') end
+  if not H.islist(spec.depends) then H.error('`depends` in plugin spec should be array.') end
   for _, dep_spec in ipairs(spec.depends) do
     H.expand_spec(target, dep_spec)
   end
@@ -1089,7 +1089,7 @@ end
 
 -- Plugin operation helpers ---------------------------------------------------
 H.plugs_from_names = function(names)
-  if names and not vim.tbl_islist(names) then H.error('`names` should be array.') end
+  if names and not H.islist(names) then H.error('`names` should be array.') end
   for _, name in ipairs(names or {}) do
     if type(name) ~= 'string' then H.error('`names` should contain only strings.') end
   end
@@ -1604,5 +1604,8 @@ H.buf_set_name = function(buf_id, name)
   local suffix = n == 1 and '' or ('_' .. n)
   vim.api.nvim_buf_set_name(buf_id, name .. suffix)
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniDeps
