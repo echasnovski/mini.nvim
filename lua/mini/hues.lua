@@ -1383,6 +1383,7 @@ H.apply_colorscheme = function(config)
   if has_integration('neoclide/coc.nvim') then
     hi('CocCodeLens',             { link='LspCodeLens' })
     hi('CocDisabled',             { link='Comment' })
+    hi('CocFadeOut',              { link='Comment' })
     hi('CocMarkdownLink',         { fg=p.blue,   bg=nil })
     hi('CocMenuSel',              { fg=nil,      bg=p.bg_mid2 })
     hi('CocNotificationProgress', { link='CocMarkdownLink' })
