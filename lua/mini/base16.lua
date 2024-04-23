@@ -1015,6 +1015,7 @@ H.apply_palette = function(palette, use_cterm)
   if H.has_integration('neoclide/coc.nvim') then
     hi('CocCodeLens',             {link='LspCodeLens'})
     hi('CocDisabled',             {link='Comment'})
+    hi('CocFadeOut',              {link='Comment'})
     hi('CocMarkdownLink',         {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
     hi('CocMenuSel',              {fg=nil,      bg=p.base02, attr=nil, sp=nil})
     hi('CocNotificationProgress', {link='CocMarkdownLink'})
