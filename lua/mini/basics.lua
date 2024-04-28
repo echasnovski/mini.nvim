@@ -683,10 +683,11 @@ end
 
 H.is_default_keymap = function(mode, lhs, map_info)
   if map_info == nil then return true end
-  local rhs = map_info.rhs or ''
+  local rhs, desc = map_info.rhs or '', map_info.desc or ''
 
   -- Some mappings are set by default in Neovim
   if mode == 'n' and lhs == '<C-L>' then return rhs:find('nohl') ~= nil end
+  if mode == 'i' and lhs == '<C-S>' then return desc:find('signature') ~= nil end
   if mode == 'x' and lhs == '*' then return rhs == [[y/\V<C-R>"<CR>]] end
   if mode == 'x' and lhs == '#' then return rhs == [[y?\V<C-R>"<CR>]] end
 end
