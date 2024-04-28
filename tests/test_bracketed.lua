@@ -984,6 +984,13 @@ end
 
 T['diagnostic()'] = new_set()
 
+local diagnostic = function(direction, opts)
+  opts = opts or {}
+  -- Force traversing of all diagnostics. It is needed on Neovim>=0.10.
+  opts.severity = opts.severity or { min = child.lua_get('vim.diagnostic.severity.HINT') }
+  return child.lua_get('MiniBracketed.diagnostic(...)', { direction, opts })
+end
+
 local setup_diagnostic = function()
   local mock_data = dofile(make_testpath('mock/diagnostic.lua'))
   set_lines(mock_data.lines)
@@ -995,7 +1002,7 @@ local setup_diagnostic = function()
   local cursor_position_tbl = mock_data.cursor_positions
   local validate = function(pos_before, direction, pos_after, opts)
     set_cursor(unpack(pos_before))
-    child.lua('MiniBracketed.diagnostic(...)', { direction, opts })
+    diagnostic(direction, opts)
     eq(get_cursor(), pos_after)
   end
 
@@ -1036,7 +1043,7 @@ T['diagnostic()']['works on first/last diagnostic'] = function()
 
   local validate = function(pos_before, direction, pos_after, opts)
     set_cursor(unpack(pos_before))
-    child.lua('MiniBracketed.diagnostic(...)', { direction, opts })
+    diagnostic(direction, opts)
     eq(get_cursor(), pos_after)
   end
 
@@ -1101,7 +1108,7 @@ T['diagnostic()']['opens floating window'] = function()
 
   -- From not diagnostic position and not showing floating window
   set_cursor(1, 2)
-  forward('diagnostic')
+  diagnostic('forward')
   eq(get_cursor(), all[2])
 
   -- -- Actual testing of floating window fails for some unimagniable reason.
@@ -1110,7 +1117,7 @@ T['diagnostic()']['opens floating window'] = function()
   -- eq(#windows, 2)
 
   -- From diagnostic position and showing floating window
-  forward('diagnostic')
+  diagnostic('forward')
   eq(get_cursor(), all[3])
 
   -- -- Again, can't test, but seems to works fine.
@@ -1119,8 +1126,8 @@ T['diagnostic()']['opens floating window'] = function()
 end
 
 T['diagnostic()']['validates `direction`'] = function()
-  expect.error(function() child.lua('MiniBracketed.diagnostic(1)') end, 'diagnostic%(%).*direction.*one of')
-  expect.error(function() child.lua([[MiniBracketed.diagnostic('next')]]) end, 'diagnostic%(%).*direction.*one of')
+  expect.error(function() diagnostic(1) end, 'diagnostic%(%).*direction.*one of')
+  expect.error(function() diagnostic('next') end, 'diagnostic%(%).*direction.*one of')
 end
 
 T['diagnostic()']['adds to jumplist'] = function()
@@ -1128,7 +1135,7 @@ T['diagnostic()']['adds to jumplist'] = function()
   local all = cur_pos_tbl.all
 
   set_cursor(all[2][1], all[2][2])
-  child.lua([[MiniBracketed.diagnostic('forward', { n_times = 4 })]])
+  diagnostic('forward', { n_times = 4 })
 
   eq(get_cursor(), all[6])
 
@@ -1147,7 +1154,7 @@ T['diagnostic()']['respects `opts.n_times`'] = function()
 
   local validate = function(id_before, direction, id_ref, opts)
     set_cursor(unpack(all[id_before]))
-    child.lua('MiniBracketed.diagnostic(...)', { direction, opts })
+    diagnostic(direction, opts)
     eq(get_cursor(), all[id_ref])
   end
 
@@ -1171,7 +1178,7 @@ T['diagnostic()']['respects `opts.severity`'] = new_set({
 
     local validate = function(id_before, direction, id_ref)
       set_cursor(unpack(positions[id_before]))
-      child.lua('MiniBracketed.diagnostic(...)', { direction, { severity = severity } })
+      diagnostic(direction, { severity = severity })
       eq(get_cursor(), positions[id_ref])
     end
 
@@ -1185,7 +1192,7 @@ T['diagnostic()']['respects `opts.wrap`'] = function()
 
   local validate = function(id_before, direction, id_ref, opts)
     set_cursor(unpack(all[id_before]))
-    child.lua('MiniBracketed.diagnostic(...)', { direction, opts })
+    diagnostic(direction, opts)
     eq(get_cursor(), all[id_ref])
   end
 
@@ -3846,6 +3853,8 @@ T['Mappings']['diagnostic']['works'] = function()
   local all = cur_pos_tbl.all
   local n = #all
 
+  child.lua('MiniBracketed.config.diagnostic.options = { severity = { min = vim.diagnostic.severity.HINT } }')
+
   -- Normal mode
   validate_move(all[3], '[D', all[1])
   validate_move(all[2], '2[d', all[n])
@@ -3881,7 +3890,7 @@ T['Mappings']['diagnostic']['works'] = function()
 end
 
 T['Mappings']['diagnostic']['allows non-letter suffix'] = function()
-  reload_module({ diagnostic = { suffix = ',' } })
+  reload_module({ diagnostic = { suffix = ',', options = { severity = { min = vim.diagnostic.severity.HINT } } } })
 
   local cur_pos_tbl = setup_diagnostic()
   local all = cur_pos_tbl.all
