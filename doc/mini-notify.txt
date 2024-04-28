@@ -214,8 +214,9 @@ Default: 25.
 Make vim.notify wrapper
 
 Calling this function creates an implementation of |vim.notify()| powered
-by this module. General idea is that notification is shown immediately and
-removed after a configurable amount of time.
+by this module. General idea is that notification is shown right away (as
+soon as safely possible, see |vim.schedule()|) and removed after a configurable
+amount of time.
 
 Examples:
 >

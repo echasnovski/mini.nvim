@@ -229,8 +229,9 @@ MiniNotify.config = {
 --- Make vim.notify wrapper
 ---
 --- Calling this function creates an implementation of |vim.notify()| powered
---- by this module. General idea is that notification is shown immediately and
---- removed after a configurable amount of time.
+--- by this module. General idea is that notification is shown right away (as
+--- soon as safely possible, see |vim.schedule()|) and removed after a configurable
+--- amount of time.
 ---
 --- Examples:
 --- >
@@ -282,7 +283,8 @@ MiniNotify.make_notify = function(opts)
     if type(val.hl_group) ~= 'string' then H.error('`hl_group` in level data should be string.') end
   end
 
-  return function(msg, level)
+  -- Use `vim.schedule_wrap` for output to be usable inside `vim.uv` callbacks
+  return vim.schedule_wrap(function(msg, level)
     level = level or vim.log.levels.INFO
     local level_name = level_names[level]
     if level_name == nil then H.error('Only valid values of `vim.log.levels` are supported.') end
@@ -292,7 +294,7 @@ MiniNotify.make_notify = function(opts)
 
     local id = MiniNotify.add(msg, level_name, level_data.hl_group)
     vim.defer_fn(function() MiniNotify.remove(id) end, level_data.duration)
-  end
+  end)
 end
 
 --- Add notification
