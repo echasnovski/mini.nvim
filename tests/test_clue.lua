@@ -759,7 +759,7 @@ T['gen_clues'] = new_set()
 T['gen_clues']['g()'] = new_set()
 
 T['gen_clues']['g()']['works'] = function()
-  -- Check this only on Neovim>=0.10, as there is a `gc` built-in mapping
+  -- Check this only on Neovim>=0.10, as there are many new built-in mappings
   if child.fn.has('nvim-0.10') == 0 then return end
 
   child.lua([[
@@ -808,6 +808,9 @@ end
 T['gen_clues']['windows()'] = new_set()
 
 T['gen_clues']['windows()']['works'] = function()
+  -- Check this only on Neovim>=0.10, as there are many new built-in mappings
+  if child.fn.has('nvim-0.10') == 0 then return end
+
   child.lua([[
     local miniclue = require('mini.clue')
     miniclue.setup({
@@ -1941,6 +1944,9 @@ T['Postkeys']['closes window if postkeys do not end up key querying'] = function
 end
 
 T['Postkeys']['persists window if action changes tabpage'] = function()
+  -- Check this only on Neovim>=0.10, as there are many new built-in mappings
+  if child.fn.has('nvim-0.10') == 0 then return end
+
   load_module({
     clues = { { mode = 'n', keys = '<C-w>T', desc = 'Move to new tabpage', postkeys = '<C-w>' } },
     triggers = { { mode = 'n', keys = '<C-w>' } },

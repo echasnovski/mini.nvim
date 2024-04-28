@@ -2192,7 +2192,10 @@ T['pickers']['keymaps()']['respects `local_opts.mode`'] = function()
   child.lua([[
     _G.all_items_same_mode = function(mode)
       for _, item in ipairs(MiniPick.get_picker_items()) do
-        if not vim.startswith(item.text, mode) then return false end
+        local char = item.text:sub(1, 1)
+        -- Allow 'v' mode mappings when 'x' or 's' is requested
+        local is_v_mode = mode == 'x' or mode == 's'
+        if not (char == mode or (is_v_mode and char == 'v')) then return false end
       end
       return true
     end

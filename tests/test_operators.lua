@@ -1760,11 +1760,11 @@ T['Replace']['respects `config.replace.prefix`'] = function()
   child.api.nvim_del_keymap('n', 'grr')
   child.api.nvim_del_keymap('x', 'gr')
 
-  load_module({ replace = { prefix = 'cr' } })
+  load_module({ replace = { prefix = 'gR' } })
 
-  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'criw' }, 'aa aa', 3)
-  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'yy', 'j', 'crr' }, { 'aa', 'aa' }, { 2, 0 })
-  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', 'cr' }, 'aa aa', 3)
+  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'gRiw' }, 'aa aa', 3)
+  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'yy', 'j', 'gRR' }, { 'aa', 'aa' }, { 2, 0 })
+  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', 'gR' }, 'aa aa', 3)
 end
 
 T['Replace']['works with `make_mappings()`'] = function()
@@ -1773,11 +1773,11 @@ T['Replace']['works with `make_mappings()`'] = function()
   child.api.nvim_del_keymap('x', 'gr')
 
   load_module({ replace = { prefix = '' } })
-  make_mappings('replace', { textobject = 'cr', line = 'crr', selection = 'cr' })
+  make_mappings('replace', { textobject = 'gR', line = 'gRr', selection = 'gR' })
 
-  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'criw' }, 'aa aa', 3)
-  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'yy', 'j', 'crr' }, { 'aa', 'aa' }, { 2, 0 })
-  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', 'cr' }, 'aa aa', 3)
+  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'gRiw' }, 'aa aa', 3)
+  validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'yy', 'j', 'gRr' }, { 'aa', 'aa' }, { 2, 0 })
+  validate_edit1d('aa bb', 0, { 'yiw', 'w', 'viw', 'gR' }, 'aa aa', 3)
 end
 
 T['Replace']['respects `selection=exclusive`'] = function()

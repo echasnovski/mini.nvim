@@ -29,7 +29,7 @@
 28|~  │ Q     │ Switch to "Ex" mode                      │
 29|~  │ q     │ Format text (operator)                   │
 30|~  │ R     │ Enter Virtual Replace mode               │
-31|~  │ r     │ Virtual replace with character           │
+31|~  │ r     │ vim.lsp.buf.references()                 │
 32|~  │ s     │ Sleep                                    │
 33|~  │ T     │ Go to previous tabpage                   │
 34|~  │ t     │ Go to next tabpage                       │
