@@ -310,6 +310,9 @@ pair recognized for current buffer. Pair is recognized for current buffer
 if it is registered for global or current buffer mapping. Pair is
 registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 
+Note: some relevant mode changing events are temporarily ignored
+(with |eventignore|) to counter effect of using |i_CTRL-O|.
+
 Mapped by default inside |MiniPairs.setup|.
 
 Parameters ~

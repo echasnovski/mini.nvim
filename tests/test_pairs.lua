@@ -170,23 +170,19 @@ end
 ---@private
 local validate_cr = function(pair)
   local test = function()
-    -- Reference pass
+    -- Reference pass to get baseline data for default behavior
     set_lines({ pair })
-    set_cursor(1, 1)
-
-    type_keys('<Esc>')
-    -- Use `exe "..."` to allow special characters (as per `:h :normal`)
-    child.cmd([[exe "normal! a\<CR>\<C-o>O"]])
+    set_cursor(1, 0)
+    local keys = child.api.nvim_replace_termcodes('<Esc>a<CR><C-o>O', true, true, true)
+    child.api.nvim_feedkeys(keys, 'nx', false)
 
     local ref_lines, ref_cursor = get_lines(), get_cursor()
 
-    -- Intermediate cleanup
     -- Test pass
     set_lines({ pair })
-    set_cursor(1, 1)
+    set_cursor(1, 0)
+    type_keys('<Esc>', 'a', '<CR>')
 
-    poke_eventloop()
-    type_keys('i', '<CR>')
     eq(get_lines(), ref_lines)
     eq(get_cursor(), ref_cursor)
     eq(child.fn.mode(), 'i')
@@ -919,6 +915,27 @@ T['<CR> action']['does not break undo sequence in Insert mode'] = function()
   type_keys('<CR>', 'a', '<Esc>')
   type_keys('u')
   eq(get_lines(), { '()' })
+end
+
+T['<CR> action']['reindents the line'] = function()
+  child.bo.cindent = true
+  set_lines({ '{}' })
+  set_cursor(1, 1)
+  child.cmd('startinsert')
+
+  type_keys('<CR>')
+  eq(get_lines(), { '{', '\t', '}' })
+end
+
+T['<CR> action']['does not trigger mode change'] = function()
+  child.o.eventignore = 'CursorHold'
+  set_lines({ '{}' })
+  set_cursor(1, 1)
+  child.cmd('startinsert')
+  child.cmd('au InsertLeave,InsertLeavePre,InsertEnter,ModeChanged * lua _G.n = (_G.n or 0) + 1')
+  type_keys('<CR>')
+  eq(child.lua_get('_G.n'), vim.NIL)
+  eq(child.o.eventignore, 'CursorHold')
 end
 
 local reload_unregister_cr = function()

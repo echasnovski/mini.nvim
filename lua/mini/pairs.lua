@@ -353,6 +353,9 @@ end
 --- if it is registered for global or current buffer mapping. Pair is
 --- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
 ---
+--- Note: some relevant mode changing events are temporarily ignored
+--- (with |eventignore|) to counter effect of using |i_CTRL-O|.
+---
 --- Mapped by default inside |MiniPairs.setup|.
 ---
 ---@param key string|nil Key to use. Default: `<CR>`.
@@ -363,6 +366,12 @@ MiniPairs.cr = function(key)
 
   local neigh = H.get_cursor_neigh(0, 1)
   if not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 0, 'cr') then
+    -- Temporarily ignore mode change to not trigger some common expensive
+    -- autocommands (like diagnostic check, etc.)
+    local cache_eventignore = vim.o.eventignore
+    vim.o.eventignore = 'InsertLeave,InsertLeavePre,InsertEnter,ModeChanged'
+    H.restore_eventignore(cache_eventignore)
+
     res = ('%s%s'):format(res, H.keys.above)
   end
 
@@ -610,5 +619,7 @@ H.map = function(mode, lhs, rhs, opts)
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
 end
+
+H.restore_eventignore = vim.schedule_wrap(function(val) vim.o.eventignore = val end)
 
 return MiniPairs
