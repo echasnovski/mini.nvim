@@ -284,7 +284,7 @@ MiniNotify.make_notify = function(opts)
   end
 
   -- Use `vim.schedule_wrap` for output to be usable inside `vim.uv` callbacks
-  return vim.schedule_wrap(function(msg, level)
+  local notify = function(msg, level)
     level = level or vim.log.levels.INFO
     local level_name = level_names[level]
     if level_name == nil then H.error('Only valid values of `vim.log.levels` are supported.') end
@@ -294,7 +294,11 @@ MiniNotify.make_notify = function(opts)
 
     local id = MiniNotify.add(msg, level_name, level_data.hl_group)
     vim.defer_fn(function() MiniNotify.remove(id) end, level_data.duration)
-  end)
+  end
+  return function(msg, level)
+    if not vim.in_fast_event() then return notify(msg, level) end
+    vim.schedule(function() notify(msg, level) end)
+  end
 end
 
 --- Add notification

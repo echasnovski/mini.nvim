@@ -259,12 +259,8 @@ T['make_notify()']['has output working in `libuv` callbacks'] = function()
 end
 
 T['make_notify()']['has output validating arguments'] = function()
-  -- Take into account that output is under `vim.schedule_wrap()`
-  child.set_size(20, 80)
-  child.o.cmdheight = 10
-  child.lua([[vim.notify = MiniNotify.make_notify(); vim.notify('Hello', 'ERROR')]])
-  poke_eventloop()
-  expect.match(child.cmd_capture('messages'), 'valid values.*vim%.log%.levels')
+  child.lua('vim.notify = MiniNotify.make_notify()')
+  expect.error(function() child.lua([[vim.notify('Hello', 'ERROR')]]) end, 'valid values.*vim%.log%.levels')
 end
 
 T['make_notify()']['allows non-positive `duration`'] = function()
