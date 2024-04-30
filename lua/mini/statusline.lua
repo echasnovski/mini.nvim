@@ -511,9 +511,9 @@ end
 H.ensure_content = vim.schedule_wrap(function()
   -- NOTE: Use `schedule_wrap()` to properly work inside autocommands because
   -- they might temporarily change current window
-  local cur_win_id = vim.api.nvim_get_current_win()
+  local cur_win_id, is_global_stl = vim.api.nvim_get_current_win(), vim.o.laststatus == 3
   for _, win_id in ipairs(vim.api.nvim_list_wins()) do
-    vim.wo[win_id].statusline = win_id == cur_win_id and '%{%v:lua.MiniStatusline.active()%}'
+    vim.wo[win_id].statusline = (win_id == cur_win_id or is_global_stl) and '%{%v:lua.MiniStatusline.active()%}'
       or '%{%v:lua.MiniStatusline.inactive()%}'
   end
 end)

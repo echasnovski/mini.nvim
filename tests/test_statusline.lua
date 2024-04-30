@@ -201,6 +201,24 @@ T['setup()']['ensures content when buffer is displayed in non-current window'] =
   validate()
 end
 
+T['setup()']['handles `laststatus=3`'] = function()
+  local validate_active = function(win_id)
+    expect.match(child.api.nvim_win_get_option(win_id, 'statusline'), 'MiniStatusline%.active')
+  end
+
+  -- Should set same 'statusline' value for global statusline to reduce flicker
+  child.o.laststatus = 3
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('leftabove vertical split')
+  local new_win_id = child.api.nvim_get_current_win()
+  validate_active(init_win_id)
+  validate_active(new_win_id)
+
+  child.cmd('wincmd w')
+  validate_active(init_win_id)
+  validate_active(new_win_id)
+end
+
 T['combine_groups()'] = new_set()
 
 local combine_groups = function(...) return child.lua_get('MiniStatusline.combine_groups(...)', { ... }) end
