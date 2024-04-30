@@ -1384,6 +1384,7 @@ T['pickers']['git_commits()']['works'] = function()
   eq(buf_init ~= child.api.nvim_get_current_buf(), true)
   eq(child.bo.buftype, 'nofile')
   eq(child.bo.syntax, 'git')
+  eq(child.bo.filetype, 'git')
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), log_lines[#log_lines])

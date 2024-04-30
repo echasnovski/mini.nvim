@@ -617,13 +617,18 @@ MiniExtra.pickers.git_commits = function(local_opts, opts)
   if local_opts.path == nil then path = repo_dir end
 
   -- Define source
-  local show_patch = function(buf_id, item)
+  local preview = function(buf_id, item)
     if type(item) ~= 'string' then return end
+    -- Only define syntax highlighting to avoid costly `FileType` autocommands
     vim.bo[buf_id].syntax = 'git'
     H.cli_show_output(buf_id, { 'git', '-C', repo_dir, '--no-pager', 'show', item:match('^(%S+)') })
   end
-  local preview = show_patch
-  local choose = H.make_show_in_target_win('git_commits', show_patch)
+  local choose_show = function(buf_id, item)
+    preview(buf_id, item)
+    -- Set filetype on opened buffer to trigger appropriate `FileType` event
+    vim.bo[buf_id].filetype = 'git'
+  end
+  local choose = H.make_show_in_target_win('git_commits', choose_show)
 
   local command = { 'git', 'log', [[--format=format:%h %s]], '--', path }
 
