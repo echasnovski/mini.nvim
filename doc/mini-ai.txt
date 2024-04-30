@@ -25,7 +25,7 @@ Features:
     - Argument.
     - Tag.
     - Derived from user prompt.
-    - Default for punctuation, digit, or whitespace single character.
+    - Default for punctuation, digit, space, or tab.
 
 - Motions for jumping to left/right edge of textobject.
 
@@ -117,8 +117,8 @@ Builtin textobjects ~
 
 This table describes all builtin textobjects along with what they
 represent. Explanation:
-- `Key` represents the textobject identifier: single character which should
-  be typed after `a`/`i`.
+- `Key` represents the textobject identifier: single alphanumeric,
+  punctuation, space, or tab character which should be typed after `a`/`i`.
 - `Name` is a description of textobject.
 - `Example line` contains a string for which examples are constructed. The
   `*` denotes the cursor position.

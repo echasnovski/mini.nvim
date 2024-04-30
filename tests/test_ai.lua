@@ -1977,6 +1977,8 @@ T['Motion']['works with multibyte characters'] = function()
   validate_motion1d(' (ыыы) ', 0, 'g])', 8)
 end
 
+T['Motion']['works with special textobject id'] = function() validate_motion1d([[aa\bb\cc]], 4, [[g[\]], 3) end
+
 T['Motion']['respects `vim.{g,b}.miniai_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -2794,11 +2796,11 @@ end
 T['Builtin']['Default'] = new_set()
 
 T['Builtin']['Default']['works'] = function()
-  -- Should allow only punctuation, digits, and whitespace
+  -- Should allow only punctuation, digits, space, or tab
   -- Should include only right edge
 
-  local sample_keys = { ',', '.', '_', '*', '-', '0', '1', ' ', '\t' }
-  for _, key in ipairs(sample_keys) do
+  local good_keys = { ',', '.', '_', '*', '-', '0', '1', ' ', '\t', '\\' }
+  for _, key in ipairs(good_keys) do
     -- Single line
     validate_tobj1d('a' .. key .. 'bb' .. key, 0, 'a' .. key, { 3, 5 })
     validate_tobj1d('a' .. key .. 'bb' .. key, 0, 'i' .. key, { 3, 4 })
@@ -2806,6 +2808,17 @@ T['Builtin']['Default']['works'] = function()
     -- Multiple lines
     validate_tobj({ key, 'aa', key }, { 2, 0 }, 'a' .. key, { { 1, 2 }, { 3, 1 } })
     validate_tobj({ key, 'aa', key }, { 2, 0 }, 'i' .. key, { { 1, 2 }, { 2, 3 } })
+  end
+
+  -- Should stop with message on bad keys
+  child.set_size(10, 80)
+  child.o.cmdheight = 5
+  local bad_keys = { '\n', '\r', '\1', child.api.nvim_replace_termcodes('<BS>', true, true, true) }
+  for _, key in ipairs(bad_keys) do
+    set_lines({ 'aaa' })
+    type_keys('d', 'a', key)
+    expect.match(child.cmd_capture('1messages'), 'alphanumeric, punctuation, space, or tab')
+    child.cmd('messages clear')
   end
 end
 

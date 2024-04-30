@@ -25,7 +25,7 @@
 ---     - Argument.
 ---     - Tag.
 ---     - Derived from user prompt.
----     - Default for punctuation, digit, or whitespace single character.
+---     - Default for punctuation, digit, space, or tab.
 ---
 --- - Motions for jumping to left/right edge of textobject.
 ---
@@ -115,8 +115,8 @@
 ---
 --- This table describes all builtin textobjects along with what they
 --- represent. Explanation:
---- - `Key` represents the textobject identifier: single character which should
----   be typed after `a`/`i`.
+--- - `Key` represents the textobject identifier: single alphanumeric,
+---   punctuation, space, or tab character which should be typed after `a`/`i`.
 --- - `Name` is a description of textobject.
 --- - `Example line` contains a string for which examples are constructed. The
 ---   `*` denotes the cursor position.
@@ -1223,7 +1223,7 @@ H.expr_textobject = function(mode, ai_type, opts)
     .. string.format(
       [[MiniAi.select_textobject('%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
       ai_type,
-      vim.fn.escape(tobj_id, "'"),
+      vim.fn.escape(tobj_id, "'\\"),
       opts.search_method,
       vim.v.count1,
       reference_region_field,
@@ -1250,7 +1250,7 @@ H.expr_motion = function(side)
     .. string.format(
       [[MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })]],
       side,
-      vim.fn.escape(tobj_id, "'"),
+      vim.fn.escape(tobj_id, "'\\"),
       vim.v.count1
     )
     .. '<CR>'
@@ -1859,8 +1859,8 @@ H.user_textobject_id = function(ai_type)
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == '\27' then return nil end
 
-  if char:find('^[%w%p%s]$') == nil then
-    H.message('Input must be single character: alphanumeric, punctuation, or space.')
+  if char:find('^[%w%p \t]$') == nil then
+    H.message('Input must be single character: alphanumeric, punctuation, space, or tab.')
     return nil
   end
 
