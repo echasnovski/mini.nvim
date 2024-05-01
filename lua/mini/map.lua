@@ -57,7 +57,8 @@
 ---   |MiniMap.toggle_side()|. Works best with global statusline.
 --- - Provide autoopen functionality. Due to vast differences in user preference
 ---   of when map window should be shown, set up of automatic opening is left to
----   user. A common approach would be to call `MiniMap.open()` on |VimEnter| event.
+---   user. A common approach would be to call `MiniMap.open()` on |VimEnter| or
+---   |UIEnter| event.
 ---   If you use |MiniStarter|, you can modify `<CR>` buffer mapping: >
 ---
 ---   vim.cmd([[autocmd User MiniStarterOpened
@@ -357,6 +358,59 @@ end
 ---       show_integration_count = false,
 ---     }
 ---   })
+--- <
+---
+--- # A fancier scrollbar (like pure scrollbar, but with signs) ~
+---
+--- To achieve this, override the |MiniMap.encode_strings()| function to
+--- produce placeholder symbols of our choice. Then set both their background
+--- and foreground to the color of your scrollbar background. This way, the
+--- symbols column will be invisible when no signs are present.
+---
+--- Config: >
+---
+---   local mini_map = require('mini.map')
+---   mini_map.setup({
+---     symbols = {
+---       -- indicators: --  -- ▶ -- ▸ -- ◆ -- ► --
+---       scroll_line = '►',
+---       -- left aligned: -- ▏-- ▎ -- ▍ -- ▌ -- ▋ -- ▊ -- ▉ -- █ --
+---       -- centered: -- │ -- ┃ --
+---       scroll_view = '▋',
+---     },
+---     window = {
+---       -- set to true if you want to see count, also set width = 3
+---       show_integration_count = false,
+---       width = 2,
+---       winblend = 0,
+---     },
+---     integrations = {
+---       mini_map.gen_integration.builtin_search({ search = 'MyMiniMapSearch' }),
+---       mini_map.gen_integration.diagnostic({
+---         error = 'DiagnosticError',
+---         warn = 'DiagnosticWarn',
+---       }),
+---       mini_map.gen_integration.gitsigns({
+---         add = 'DiffAdd',
+---         change = 'DiffChange',
+---         delete = 'DiffDelete',
+---       }),
+---     },
+---   })
+---
+---   ---@diagnostic disable-next-line: duplicate-set-field
+---   mini_map.encode_strings = function(strings)
+---     local res = {}
+---     local placeholder = '▐' -- right-aligned: -- ▕ -- ▐ --
+---     for _ = 1, #strings do
+---       table.insert(res, placeholder)
+---     end
+---     return res
+---   end
+---
+---   -- replace 'black' with your background color for the scrollbar
+---   vim.api.nvim_set_hl(0, 'MiniMapNormal', { fg = 'black', bg = 'black' })
+--- <
 MiniMap.config = {
   -- Highlight integrations (none by default)
   integrations = nil,
