@@ -1205,11 +1205,20 @@ H.update_buf_diff = vim.schedule_wrap(function(buf_id)
 
   -- Force redraw. NOTE: Using 'redraw' not always works (`<Cmd>update<CR>`
   -- from keymap with "save" source will not redraw) while 'redraw!' flickers.
-  vim.api.nvim__buf_redraw_range(buf_id, 0, -1)
+  H.redraw_buffer(buf_id)
 
   -- Redraw statusline to have possible statusline component up to date
   vim.cmd('redrawstatus')
 end)
+
+H.redraw_buffer = function(buf_id)
+  -- nvim__redraw replaced nvim__buf_redraw_range during the 0.10 release cycle
+  if vim.api.nvim__redraw then
+    vim.api.nvim__redraw({ buf = buf_id, valid = true })
+  else
+    vim.api.nvim__buf_redraw_range(buf_id, 0, -1)
+  end
+end
 
 H.update_hunk_data = function(diff, buf_cache, buf_lines)
   local do_overlay = buf_cache.overlay
