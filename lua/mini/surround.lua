@@ -487,6 +487,16 @@ end
 --- <
 --- # Options ~
 ---
+--- ## Mappings ~
+---
+--- `config.mappings` defines what mappings are set up for particular actions.
+--- By default it uses "prefix style" left hand side starting with "s" (for
+--- "surround"): `sa` - "surround add", `sd` - "surround delete", etc.
+---
+--- Note: if 'timeoutlen' is low enough to cause occasional usage of |s| key
+--- (that deletes character under cursor), disable it with the following call:
+---     `vim.keymap.set({ 'n', 'x' }, 's', '<Nop>')`
+---
 --- ## Custom surroundings ~
 ---
 --- User can define own surroundings by supplying `config.custom_surroundings`.
