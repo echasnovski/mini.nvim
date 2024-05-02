@@ -101,8 +101,20 @@ local validate_bad_wording = function(msg)
 end
 
 local validate_commit_msg = function(lines)
-  -- Ignore Git comments
-  lines = vim.tbl_filter(function(l) return l:find('^%s*#') == nil end, lines)
+  -- Ignore Git comments and all lines beyond the scissor line
+  local t = {}
+  for i = 1, #lines do
+    local l = lines[i]
+    if l:find('------------------------ >8 ------------------------') then
+      -- Found scissor line. Ignore everything that follows
+      break
+    end
+
+    if not l:find('^%s*#') then t[#t + 1] = l end
+  end
+
+  lines = t
+
   local is_valid, err_msg
 
   -- Allow all lines to be empty to abort committing
@@ -213,6 +225,7 @@ local test_cases = {
   ['ci: desc\nSecond line is not empty'] = false,
   ['ci: desc\n\n First body line starts with whitespace'] = false,
   ['ci: desc\n\nBody\nwith\nVery very very very very very very very very very very very very looong body line'] = false,
+  ['ci: desc\n\nBody\nwith\n# ------------------------ >8 ------------------------\nVery very very very very very very long line after scissor line'] = true,
 
   ['ci: only two lines\n\n'] = false,
   ['ci: desc\n\nLast line is empty\n\n'] = false,
