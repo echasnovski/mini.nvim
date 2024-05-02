@@ -248,7 +248,8 @@ T['start()']['works'] = function()
 end
 
 T['start()']['works in Visual mode'] = function()
-  child.set_size(5, 15)
+  child.set_size(5, 40)
+  child.o.showcmd = false
 
   type_keys('v')
 

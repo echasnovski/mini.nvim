@@ -1764,6 +1764,7 @@ T['Textobject']['respects `vim.{g,b}.miniai_disable`'] = new_set({
 
 T['Textobject']['respects `config.silent`'] = function()
   child.set_size(5, 40)
+  child.o.showcmd = false
   child.lua('MiniAi.config.silent = true')
 
   child.o.timeoutlen = 50
