@@ -25,7 +25,7 @@ documentation:
 	$(NVIM_EXEC) --headless --noplugin -u ./scripts/minimal_init.lua -c "lua require('mini.doc').generate()" -c "qa!"
 
 lintcommit-ci:
-	chmod u+x scripts/lintcommit-ci.sh && scripts/lintcommit-ci.sh
+	export LINTCOMMIT_STRICT=true && chmod u+x scripts/lintcommit-ci.sh && scripts/lintcommit-ci.sh
 
 basic_setup:
 	$(NVIM_EXEC) --headless --noplugin -u ./scripts/basic-setup_init.lua

@@ -18,9 +18,9 @@ end
 local validate_subject = function(line)
   -- Possibly allow starting with 'fixup' to disable commit linting
   if vim.startswith(line, 'fixup') then
-    local fail_on_fixup = vim.loop.os_getenv('LINTCOMMIT_FAIL_ON_FIXUP') ~= nil
-    local msg = fail_on_fixup and 'No "fixup" commits are allowed.' or ''
-    return not fail_on_fixup, msg
+    local is_strict = vim.loop.os_getenv('LINTCOMMIT_STRICT') ~= nil
+    local msg = is_strict and 'No "fixup" commits are allowed.' or ''
+    return not is_strict, msg
   end
 
   -- Should match overall conventional commit spec
@@ -100,10 +100,32 @@ local validate_bad_wording = function(msg)
   return true, nil
 end
 
+local remove_cleanup_lines = function(lines)
+  -- Remove lines which are assumed to be later cleaned up by Git itself
+  -- See `git help commit` for option `--cleanup` (assumes default value)
+  local res = {}
+  for _, l in ipairs(lines) do
+    -- Ignore anything past and including scissors line
+    if l == '# ------------------------ >8 ------------------------' then break end
+    -- Ignore comments
+    if l:find('^%s*#') == nil then table.insert(res, l) end
+  end
+
+  -- Ignore trailing blank lines
+  for i = #res, 1, -1 do
+    if res[i]:find('%S') ~= nil then break end
+    res[i] = nil
+  end
+
+  return res
+end
+
 local validate_commit_msg = function(lines)
-  -- Ignore Git comments
-  lines = vim.tbl_filter(function(l) return l:find('^%s*#') == nil end, lines)
   local is_valid, err_msg
+
+  -- If not in strict context, ignore lines which will be later cleaned up
+  local is_strict = vim.loop.os_getenv('LINTCOMMIT_STRICT') ~= nil
+  if not is_strict then lines = remove_cleanup_lines(lines) end
 
   -- Allow all lines to be empty to abort committing
   local all_empty = true
@@ -212,11 +234,16 @@ local test_cases = {
 
   ['ci: desc\nSecond line is not empty'] = false,
   ['ci: desc\n\n First body line starts with whitespace'] = false,
-  ['ci: desc\n\nBody\nwith\nVery very very very very very very very very very very very very looong body line'] = false,
 
-  ['ci: only two lines\n\n'] = false,
-  ['ci: desc\n\nLast line is empty\n\n'] = false,
-  ['ci: desc\n\nLast line is blank\n  '] = false,
+  -- Line width should be checked only in not cleaned up lines
+  ['ci: desc\n\nBody\nwith\nVery very very very very very very very very very very very very looong body line'] = false,
+  ['ci: desc\n\nBody\nwith\n# Comment with very very very very very very very very very very looong body line'] = true,
+  ['ci: desc\n\nBody\nwith\n# ------------------------ >8 ------------------------\nVery very very very very very very very very very very very very looong body line'] = true,
+
+  -- Trailing blank lines are allowed in not strict context
+  ['ci: only two lines\n\n'] = true,
+  ['ci: desc\n\nLast line is empty\n\n'] = true,
+  ['ci: desc\n\nLast line is blank\n  '] = true,
 
   -- Footer
   -- No validation for footer
@@ -256,7 +283,7 @@ local test_cases = {
   ['ci: desc\n\nthis Resolves #1'] = false,
   ['ci: desc\n\nthis resolves #1'] = false,
 
-  -- Ignore comments
+  -- Comments are allowed in not strict context
   ['# Comment\nci: desc'] = true,
   [' # Comment\nci: desc'] = true,
   ['ci: desc\n# Comment\n\nBody'] = true,
@@ -269,7 +296,7 @@ local test_cases = {
 
 _G.test_cases_failed = {}
 
-vim.loop.os_unsetenv('LINTCOMMIT_FAIL_ON_FIXUP')
+vim.loop.os_unsetenv('LINTCOMMIT_STRICT')
 for message, expected in pairs(test_cases) do
   local lines = vim.split(message, '\n')
   local is_valid = validate_commit_msg(lines)
@@ -278,19 +305,39 @@ for message, expected in pairs(test_cases) do
   end
 end
 
-local fixup_test_cases = {
+vim.loop.os_setenv('LINTCOMMIT_STRICT', 'true')
+local strict_test_cases = {
+  -- Fixup commit type is not allowed
   ['fixup'] = false,
   ['fixup: should fail'] = false,
   ['fixup! should fail'] = false,
 
-  -- Should only matter in subject
+  -- - Should only matter in subject
   ['ci: desc\n\nfixup'] = true,
+
+  -- Do not allow comments outside of commit body
+  ['# Comment\nci: desc'] = false,
+  [' # Comment\nci: desc'] = false,
+  ['ci: desc\n# Comment\n\nBody'] = false,
+
+  ['ci: desc\n\nBody\n# Comment in body'] = true,
+
+  -- Check line width even in previously ignored contexts
+  ['ci: desc\n\nBody\nwith\n# Comment with very very very very very very very very very very looong body line'] = false,
+  ['ci: desc\n\nBody\nwith\n# ------------------------ >8 ------------------------\nVery very very very very very very very very very very very very looong body line'] = false,
+
+  -- Trailing blank lines are not allowed in strict context
+  ['ci: only two lines\n\n'] = false,
+  ['ci: desc\n\nLast line is empty\n\n'] = false,
+  ['ci: desc\n\nLast line is blank\n  '] = false,
 }
-vim.loop.os_setenv('LINTCOMMIT_FAIL_ON_FIXUP', 'true')
-for message, expected in pairs(fixup_test_cases) do
+for message, expected in pairs(strict_test_cases) do
   local lines = vim.split(message, '\n')
   local is_valid = validate_commit_msg(lines)
   if is_valid ~= expected then
     table.insert(_G.test_cases_failed, { msg = message, expected = expected, actual = is_valid })
   end
 end
+
+-- Cleanup
+vim.loop.os_unsetenv('LINTCOMMIT_STRICT')

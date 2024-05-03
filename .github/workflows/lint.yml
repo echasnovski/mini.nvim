@@ -41,7 +41,7 @@ jobs:
     name: Lint commits
     runs-on: ubuntu-latest
     env:
-      LINTCOMMIT_FAIL_ON_FIXUP: true
+      LINTCOMMIT_STRICT: true
     steps:
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
