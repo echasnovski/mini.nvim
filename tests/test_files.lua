@@ -3007,7 +3007,8 @@ T['File manipulation']['move works again after undo'] = function()
   type_keys('u', 'u')
   go_out()
   type_keys('u', 'u')
-  child.expect_screenshot()
+  -- - Highlighting is different on Neovim>=0.10
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   mock_confirm(1)
   synchronize()
