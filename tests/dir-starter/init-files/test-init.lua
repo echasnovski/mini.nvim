@@ -4,4 +4,6 @@ vim.o.cmdheight = 2
 vim.o.swapfile = false
 
 vim.cmd('set rtp+=.')
+_G.n_event = 0
+vim.cmd('autocmd User MiniStarterOpened lua _G.n_event = _G.n_event + 1')
 require('mini.starter').setup({ autoopen = true })

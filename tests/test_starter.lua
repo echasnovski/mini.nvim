@@ -1101,30 +1101,35 @@ T['Autoopening']['works'] = function()
 
   -- It should result into total single buffer
   eq(#child.api.nvim_list_bufs(), 1)
+
+  -- It should trigger `MiniStarterOpened` `User` event
+  eq(child.lua_get('_G.n_event'), 1)
 end
 
 T['Autoopening']['does not autoopen if Neovim started to show something'] = function()
   local init_autoopen = 'tests/dir-starter/init-files/test-init.lua'
+  local validate = function(...)
+    child.restart({ '-u', init_autoopen, ... })
+    validate_starter_not_shown()
+    eq(child.lua_get('_G.n_event'), 0)
+  end
 
   -- There are files in arguments (like `nvim foo.txt` with new file).
-  child.restart({ '-u', init_autoopen, 'new-file.txt' })
-  validate_starter_not_shown()
+  validate('new-file.txt')
 
   -- Several buffers are listed (like session with placeholder buffers)
-  child.restart({ '-u', init_autoopen, '-c', 'e foo | set buflisted | e bar | set buflisted' })
-  validate_starter_not_shown()
+  validate('-c', 'e foo | set buflisted | e bar | set buflisted')
 
   -- Unlisted buffers (like from `nvim-tree`) don't affect decision
   child.restart({ '-u', init_autoopen, '-c', 'e foo | set nobuflisted | e bar | set buflisted' })
   validate_starter_shown()
+  eq(child.lua_get('_G.n_event'), 1)
 
   -- Several windows are shown (like from other plugin action at startup)
-  child.restart({ '-u', init_autoopen, '-c', 'set filetype=text' })
-  validate_starter_not_shown()
+  validate('-c', 'set filetype=text')
 
   -- Current buffer has any lines (something opened explicitly)
-  child.restart({ '-u', init_autoopen, '-c', [[call setline(1, 'a')]] })
-  validate_starter_not_shown()
+  validate('-c', [[call setline(1, 'a')]])
 end
 
 T['Querying'] = new_set()

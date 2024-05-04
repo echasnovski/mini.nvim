@@ -310,8 +310,10 @@ MiniStarter.open = function(buf_id)
   -- Populate buffer
   MiniStarter.refresh()
 
-  -- Issue custom event
-  vim.cmd('doautocmd User MiniStarterOpened')
+  -- Issue custom event. Delay at startup, as it is executed with `noautocmd`.
+  local trigger_event = function() vim.api.nvim_exec_autocmds('User', { pattern = 'MiniStarterOpened' }) end
+  if H.is_in_vimenter then trigger_event = vim.schedule_wrap(trigger_event) end
+  trigger_event()
 
   -- Ensure not being in VimEnter
   H.is_in_vimenter = false
@@ -1053,7 +1055,8 @@ H.create_autocommands = function(config)
 
       -- Set indicator used to make different decision on startup
       H.is_in_vimenter = true
-      MiniStarter.open()
+      -- Use 'noautocmd' for better startup time
+      vim.cmd('noautocmd lua MiniStarter.open()')
     end
 
     vim.api.nvim_create_autocmd(
@@ -1526,7 +1529,8 @@ end
 -- Use `priority` because of the regression bug (highlights are not stacked
 -- properly): https://github.com/neovim/neovim/issues/17358
 H.buf_hl = function(buf_id, ns_id, hl_group, line, col_start, col_end, priority)
-  vim.highlight.range(buf_id, ns_id, hl_group, { line, col_start }, { line, col_end }, { priority = priority })
+  local opts = { end_row = line, end_col = col_end, hl_group = hl_group, priority = priority }
+  vim.api.nvim_buf_set_extmark(buf_id, ns_id, line, col_start, opts)
 end
 
 H.get_buffer_windows = function(buf_id)
