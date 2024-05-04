@@ -238,7 +238,7 @@ Here are code snippets for some common installation methods (use only one):
     signs = { add = '▒', change = '▒', delete = '▒' },
 
     -- Priority of used visualization extmarks
-    priority = vim.highlight.priorities.user - 1,
+    priority = 199,
   },
 
   -- Source for how reference text is computed/updated/etc

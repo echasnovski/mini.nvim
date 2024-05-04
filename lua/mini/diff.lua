@@ -281,8 +281,8 @@ end
 ---
 --- `view.priority` is a number with priority used for visualization and
 --- overlay |extmarks|.
---- Default: one less than `user` in |vim.highlight.priorities| (to have higher
---- priority than automated extmarks but not as in user enabled ones).
+--- Default: 199 which is one less than `user` in |vim.highlight.priorities| to have
+--- higher priority than automated extmarks but not as in user enabled ones.
 ---
 ---                                                  *MiniDiff-source-specification*
 --- # Source ~
@@ -386,7 +386,7 @@ MiniDiff.config = {
     signs = { add = '▒', change = '▒', delete = '▒' },
 
     -- Priority of used visualization extmarks
-    priority = vim.highlight.priorities.user - 1,
+    priority = 199,
   },
 
   -- Source for how reference text is computed/updated/etc
