@@ -929,7 +929,7 @@ H.show_info_window = function()
 
   -- Add `lines` to info buffer. Use `wrap_at` to have proper width of
   -- 'non-UTF8' section separators.
-  vim.lsp.util.stylize_markdown(H.info.bufnr, lines, { wrap_at = H.get_config().window.info.width })
+  H.stylize_markdown(H.info.bufnr, lines, { wrap_at = H.get_config().window.info.width })
 
   -- Compute floating window options
   local opts = H.info_window_options()
@@ -1084,7 +1084,7 @@ H.show_signature_window = function()
   -- Add `lines` to signature buffer. Use `wrap_at` to have proper width of
   -- 'non-UTF8' section separators.
   local buf_id = H.signature.bufnr
-  vim.lsp.util.stylize_markdown(buf_id, lines, { wrap_at = H.get_config().window.signature.width })
+  H.stylize_markdown(buf_id, lines, { wrap_at = H.get_config().window.signature.width })
 
   -- Add highlighting of active parameter
   for i, hl_range in ipairs(hl_ranges) do
@@ -1378,6 +1378,12 @@ H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
+end
+
+H.stylize_markdown = function(buf_id, lines, opts)
+  -- Handle "\n" characters in lines. Should be not needed on Neovim>=0.10.
+  lines = vim.split(table.concat(lines, '\n'), '\n')
+  return vim.lsp.util.stylize_markdown(buf_id, lines, opts)
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
