@@ -3,9 +3,9 @@
 02|                                        
 03|~                                       
 04|~       ┌<C-W>─────────────────────────┐
-05|~       │ d     │ Open a floating wind…│
+05|~       │ d     │ Show diagnostics und…│
 06|~       │ T     │ Move to new tabpage  │
-07|~       │ <C-D> │ Open a floating wind…│
+07|~       │ <C-D> │ Show diagnostics und…│
 08|~       └──────────────────────────────┘
 09|[No Name]             0,0-1          All
 10|                                        
