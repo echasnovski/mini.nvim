@@ -577,6 +577,9 @@ MiniClue.config = {
   -- Array of extra clues to show
   clues = {},
 
+  -- Custom key labels
+  key_labels = {},
+
   -- Array of opt-in triggers which start custom key query process.
   -- **Needs to have something in order to show clues**.
   triggers = {},
@@ -1128,6 +1131,7 @@ H.setup_config = function(config)
     clues = { config.clues, 'table' },
     triggers = { config.triggers, 'table' },
     window = { config.window, 'table' },
+    key_labels = { config.key_labels, 'table' },
   })
 
   local is_table_or_callable = function(x) return type(x) == 'table' or vim.is_callable(x) end
@@ -1222,6 +1226,7 @@ H.get_config = function(config, buf_id)
   local res = {
     clues = H.list_concat(global_config.clues, buf_config.clues, config.clues),
     triggers = H.list_concat(global_config.triggers, buf_config.triggers, config.triggers),
+    key_labels = H.list_concat(global_config.key_labels, buf_config.key_labels, config.key_labels),
     window = vim.tbl_deep_extend('force', global_config.window, buf_config.window or {}, config.window or {}),
   }
   return res
@@ -1630,15 +1635,10 @@ H.buffer_update = function()
   local keys = H.query_to_keys(H.state.query)
   local content = H.clues_to_buffer_content(H.state.clues, keys)
 
-  local key_labels = {
-    ['f'] = 'files',
-    ['<Space>'] = 'SCP',
-    ['b'] = 'buffers',
-  }
   -- Add lines
   local lines = {}
   for _, line_content in ipairs(content) do
-    for default_label, custom_label in pairs(key_labels) do
+    for default_label, custom_label in pairs(H.get_config.key_labels) do
       if line_content.next_key:gsub('%s+', '') == default_label then line_content.next_key = custom_label end
     end
     table.insert(lines, string.format(' %s │ %s', line_content.next_key, line_content.desc))
@@ -1744,11 +1744,6 @@ end
 
 H.clues_to_buffer_content = function(clues, keys)
   -- Use translated keys to properly handle cases like `<Del>`, `<End>`, etc.
-  local key_labels = {
-    ['f'] = 'files',
-    ['<Space>'] = 'SC',
-    ['b'] = 'buffers',
-  }
   keys = H.keytrans(keys)
 
   -- Gather clue data
@@ -1778,6 +1773,7 @@ H.clues_to_buffer_content = function(clues, keys)
       next_key_data[next_key] = data
 
       -- Update width data
+      local key_labels = H.get_config.key_labels
       local next_key_width = key_labels[next_key] and vim.fn.strchars(key_labels[next_key]) or vim.fn.strchars(next_key)
       data.next_key_width = next_key_width
       next_key_max_width = math.max(next_key_max_width, next_key_width)
@@ -1797,7 +1793,7 @@ H.clues_to_buffer_content = function(clues, keys)
     local data = next_key_data[key]
     local is_group = data.n_choices > 1
     local desc = data.desc or string.format('+%d choice%s', data.n_choices, is_group and 's' or '')
-    key = key_labels[key] or key
+    key = H.get_config.key_labels[key] or key
     local next_key = key .. string.rep(' ', next_key_max_width - data.next_key_width)
     table.insert(res, { next_key = next_key, desc = desc, is_group = is_group, has_postkeys = data.has_postkeys })
   end
