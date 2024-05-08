@@ -1630,9 +1630,17 @@ H.buffer_update = function()
   local keys = H.query_to_keys(H.state.query)
   local content = H.clues_to_buffer_content(H.state.clues, keys)
 
+  local key_labels = {
+    ['f'] = 'files',
+    ['<Space>'] = 'SCP',
+    ['b'] = 'buffers',
+  }
   -- Add lines
   local lines = {}
   for _, line_content in ipairs(content) do
+    for default_label, custom_label in pairs(key_labels) do
+      if line_content.next_key:gsub('%s+', '') == default_label then line_content.next_key = custom_label end
+    end
     table.insert(lines, string.format(' %s │ %s', line_content.next_key, line_content.desc))
   end
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
@@ -1736,6 +1744,11 @@ end
 
 H.clues_to_buffer_content = function(clues, keys)
   -- Use translated keys to properly handle cases like `<Del>`, `<End>`, etc.
+  local key_labels = {
+    ['f'] = 'files',
+    ['<Space>'] = 'SC',
+    ['b'] = 'buffers',
+  }
   keys = H.keytrans(keys)
 
   -- Gather clue data
@@ -1765,7 +1778,7 @@ H.clues_to_buffer_content = function(clues, keys)
       next_key_data[next_key] = data
 
       -- Update width data
-      local next_key_width = vim.fn.strchars(next_key)
+      local next_key_width = key_labels[next_key] and vim.fn.strchars(key_labels[next_key]) or vim.fn.strchars(next_key)
       data.next_key_width = next_key_width
       next_key_max_width = math.max(next_key_max_width, next_key_width)
     end
@@ -1784,6 +1797,7 @@ H.clues_to_buffer_content = function(clues, keys)
     local data = next_key_data[key]
     local is_group = data.n_choices > 1
     local desc = data.desc or string.format('+%d choice%s', data.n_choices, is_group and 's' or '')
+    key = key_labels[key] or key
     local next_key = key .. string.rep(' ', next_key_max_width - data.next_key_width)
     table.insert(res, { next_key = next_key, desc = desc, is_group = is_group, has_postkeys = data.has_postkeys })
   end
