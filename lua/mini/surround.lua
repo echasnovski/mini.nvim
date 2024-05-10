@@ -361,13 +361,19 @@
 ---
 --- # Output surrounding ~
 ---
---- A table with <left> (plain text string) and <right> (plain text string)
---- fields. Strings can contain new lines character `\n` to add multiline parts.
+--- Specification for output can be either a table with <left> and <right> fields,
+--- or a callable returning such table (will be called with no arguments).
+--- Strings can contain new lines character "\n" to add multiline parts.
 ---
 --- Examples:
 --- - Lua block string: `{ left = '[[', right = ']]' }`
 --- - Brackets on separate lines (indentation is not preserved):
 ---   `{ left = '(\n', right = '\n)' }`
+--- - Function call: >
+---   function()
+---     local function_name = MiniSurround.user_input('Function name')
+---     return { left = function_name .. '(', right = ')' }
+---   end
 ---@tag MiniSurround-surround-specification
 
 --- Count with actions
