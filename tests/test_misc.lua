@@ -491,7 +491,7 @@ T['setup_restore_cursor()'] = new_set({
     end,
     post_case = function()
       -- Don't save new shada file on child stop
-      child.o.shadafile = ''
+      child.o.shadafile = 'NONE'
 
       -- Clean up
       child.fn.delete(restore_cursor_shada_path)

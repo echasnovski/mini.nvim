@@ -1932,6 +1932,9 @@ local setup_oldfile = function()
     child.lua('MiniBracketed.oldfile(...)', { direction, opts })
     validate_test_file(file_arr[id_ref])
   end
+  -- Make sure that shada is not written before qutting child process as it
+  -- affects the same shada file that user uses
+  child.o.shadafile = 'NONE'
   return file_arr, validate
 end
 
@@ -1992,16 +1995,16 @@ end
 T['oldfile()']['is initialized with `v:oldfiles`'] = function()
   -- Enable shada
   local shada_path = make_testpath('oldfile.shada')
-  child.o.shadafile = ''
   MiniTest.finally(function() child.fn.delete(shada_path) end)
 
   -- Set up `v:oldfiles`
   setup_oldfile()
+  child.o.shadafile = shada_path
   child.cmd('wshada! ' .. shada_path)
 
   child.restart()
   load_module()
-  child.o.shadafile = ''
+  child.o.shadafile = shada_path
   child.cmd('rshada! ' .. shada_path)
 
   -- Notes:
@@ -2020,6 +2023,8 @@ T['oldfile()']['is initialized with `v:oldfiles`'] = function()
 
   backward('oldfile', { n_times = 2 })
   eq(get_bufname(), files[n - 1])
+
+  child.o.shadafile = 'NONE'
 end
 
 T['oldfile()']['validates `direction`'] = function()
