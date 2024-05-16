@@ -613,10 +613,14 @@ H.diagnostic_get_count = function()
   end
   return res
 end
-
 if vim.fn.has('nvim-0.10') == 1 then H.diagnostic_get_count = function() return vim.diagnostic.count(0) end end
 
-H.diagnostic_is_disabled = function() return vim.diagnostic.is_disabled(0) end
-if vim.fn.has('nvim-0.9') == 0 then H.diagnostic_is_disabled = function(_) return false end end
+if vim.fn.has('nvim-0.10') == 1 then
+  H.diagnostic_is_disabled = function(_) return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
+elseif vim.fn.has('nvim-0.9') == 1 then
+  H.diagnostic_is_disabled = function(_) return vim.diagnostic.is_disabled(0) end
+else
+  H.diagnostic_is_disabled = function(_) return false end
+end
 
 return MiniStatusline

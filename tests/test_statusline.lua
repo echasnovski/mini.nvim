@@ -355,11 +355,15 @@ end
 
 T['section_diagnostics()']['is not shown if diagnostics is disabled'] = function()
   if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip('Requires presence of `vim.diagnostic.is_disabled` which is Neovim>=0.9.')
+    MiniTest.skip('Requires `vim.diagnostic.is_disabled` / `vim.diagnostic.is_enabled` which are Neovim>=0.9.')
   end
 
   local buf_id = child.api.nvim_get_current_buf()
-  child.diagnostic.disable(buf_id)
+  if child.fn.has('nvim-0.10') == 1 then
+    child.diagnostic.enable(false, { bufnr = buf_id })
+  else
+    child.diagnostic.disable(buf_id)
+  end
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
