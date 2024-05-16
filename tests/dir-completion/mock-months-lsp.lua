@@ -144,7 +144,7 @@ vim.lsp.buf_request_all = function(bufnr, method, params, callback)
   callback(requests(params))
 end
 
-vim.lsp.buf_get_clients = function(bufnr)
+local get_lsp_clients = function()
   return {
     {
       name = 'months-lsp',
@@ -157,4 +157,7 @@ vim.lsp.buf_get_clients = function(bufnr)
   }
 end
 
-vim.lsp.get_client_by_id = function(client_id) return vim.lsp.buf_get_clients(0)[client_id] end
+if vim.fn.has('nvim-0.10') == 0 then vim.lsp.buf_get_clients = get_lsp_clients end
+if vim.fn.has('nvim-0.10') == 1 then vim.lsp.get_clients = get_lsp_clients end
+
+vim.lsp.get_client_by_id = function(client_id) return get_lsp_clients()[client_id] end

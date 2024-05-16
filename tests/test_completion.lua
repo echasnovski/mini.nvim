@@ -241,6 +241,7 @@ end
 T['Autocompletion']['works without LSP clients'] = function()
   -- Mock absence of LSP
   child.lsp.buf_get_clients = function() return {} end
+  child.lsp.get_clients = function() return {} end
 
   type_keys('i', 'aab aac aba a')
   eq(get_completion(), {})

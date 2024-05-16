@@ -770,7 +770,7 @@ H.stop_actions = {
 ---@return boolean Whether at least one LSP client supports `capability`.
 ---@private
 H.has_lsp_clients = function(capability)
-  local clients = vim.lsp.buf_get_clients()
+  local clients = H.get_buf_lsp_clients()
   if vim.tbl_isempty(clients) then return false end
   if not capability then return true end
 
@@ -791,7 +791,7 @@ H.is_lsp_trigger = function(char, type)
   local triggers
   local providers = { completion = 'completionProvider', signature = 'signatureHelpProvider' }
 
-  for _, client in pairs(vim.lsp.buf_get_clients()) do
+  for _, client in pairs(H.get_buf_lsp_clients()) do
     triggers = H.table_get(client, { 'server_capabilities', providers[type], 'triggerCharacters' })
     if vim.tbl_contains(triggers or {}, char) then return true end
   end
@@ -1388,5 +1388,8 @@ end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
+H.get_buf_lsp_clients = function() return vim.lsp.get_clients({ bufnr = 0 }) end
+if vim.fn.has('nvim-0.10') == 0 then H.get_buf_lsp_clients = function() return vim.lsp.buf_get_clients() end end
 
 return MiniCompletion
