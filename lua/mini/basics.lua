@@ -244,7 +244,7 @@ end
 --- - `b` - |'background'|.
 --- - `c` - |'cursorline'|.
 --- - `C` - |'cursorcolumn'|.
---- - `d` - diagnostic (via |vim.diagnostic.enable()| and |vim.diagnostic.disable()|).
+--- - `d` - diagnostic (via |vim.diagnostic| functions).
 --- - `h` - |'hlsearch'| (or |v:hlsearch| to be precise).
 --- - `i` - |'ignorecase'|.
 --- - `l` - |'list'|.
@@ -355,15 +355,19 @@ MiniBasics.config = {
 
 --- Toggle diagnostic for current buffer
 ---
---- This uses |vim.diagnostic.enable()| and |vim.diagnostic.disable()| on
---- per buffer basis.
+--- This uses |vim.diagnostic| functions per buffer.
 ---
 ---@return string String indicator for new state. Similar to what |:set| `{option}?` shows.
 MiniBasics.toggle_diagnostic = function()
   local buf_id = vim.api.nvim_get_current_buf()
   local is_enabled = H.diagnostic_is_enabled(buf_id)
 
-  local f = is_enabled and vim.diagnostic.disable or vim.diagnostic.enable
+  local f
+  if vim.fn.has('nvim-0.10') == 1 then
+    f = function(bufnr) vim.diagnostic.enable(not is_enabled, { bufnr = bufnr }) end
+  else
+    f = is_enabled and vim.diagnostic.disable or vim.diagnostic.enable
+  end
   f(buf_id)
 
   local new_buf_state = not is_enabled
@@ -744,14 +748,16 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-H.diagnostic_is_enabled = function(buf_id)
-  local res = H.buffer_diagnostic_state[buf_id]
-  if res == nil then res = true end
-  return res
-end
-
-if vim.fn.has('nvim-0.9') == 1 then
+if vim.fn.has('nvim-0.10') == 1 then
+  H.diagnostic_is_enabled = function(buf_id) return vim.diagnostic.is_enabled({ bufnr = buf_id }) end
+elseif vim.fn.has('nvim-0.9') == 1 then
   H.diagnostic_is_enabled = function(buf_id) return not vim.diagnostic.is_disabled(buf_id) end
+else
+  H.diagnostic_is_enabled = function(buf_id)
+    local res = H.buffer_diagnostic_state[buf_id]
+    if res == nil then res = true end
+    return res
+  end
 end
 
 return MiniBasics

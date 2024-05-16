@@ -273,7 +273,7 @@ Here is a list of suffixes for created toggling mappings (all in Normal mode):
 - `b` - |'background'|.
 - `c` - |'cursorline'|.
 - `C` - |'cursorcolumn'|.
-- `d` - diagnostic (via |vim.diagnostic.enable()| and |vim.diagnostic.disable()|).
+- `d` - diagnostic (via |vim.diagnostic| functions).
 - `h` - |'hlsearch'| (or |v:hlsearch| to be precise).
 - `i` - |'ignorecase'|.
 - `l` - |'list'|.
@@ -345,8 +345,7 @@ otherwise. See |ModeChanged|.
                         `MiniBasics.toggle_diagnostic`()
 Toggle diagnostic for current buffer
 
-This uses |vim.diagnostic.enable()| and |vim.diagnostic.disable()| on
-per buffer basis.
+This uses |vim.diagnostic| functions per buffer.
 
 Return ~
 `(string)` String indicator for new state. Similar to what |:set| `{option}?` shows.
