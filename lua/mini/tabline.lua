@@ -387,7 +387,7 @@ H.get_nonunique_tab_ids = function()
   end
 
   -- Collect tab-array-ids with non-unique labels
-  return vim.tbl_flatten(vim.tbl_filter(function(x) return #x > 1 end, label_tab_ids))
+  return H.tbl_flatten(vim.tbl_filter(function(x) return #x > 1 end, label_tab_ids))
 end
 
 -- Fit tabline to maximum displayed width -------------------------------------
@@ -490,5 +490,9 @@ H.concat_tabs = function()
 
   return res
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.tbl_flatten = vim.fn.has('nvim-0.10') == 1 and function(x) return vim.iter(x):flatten(math.huge):totable() end
+  or vim.tbl_flatten
 
 return MiniTabline

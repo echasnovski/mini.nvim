@@ -1230,7 +1230,7 @@ MiniTest.new_child_neovim = function()
 
     local has_wait = type(wait) == 'number'
     local keys = has_wait and { ... } or { wait, ... }
-    keys = vim.tbl_flatten(keys)
+    keys = H.tbl_flatten(keys)
 
     -- From `nvim_input` docs: "On execution error: does not fail, but
     -- updates v:errmsg.". So capture it manually. NOTE: Have it global to
@@ -2317,5 +2317,9 @@ H.string_to_chars = function(s)
   end
   return res
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.tbl_flatten = vim.fn.has('nvim-0.10') == 1 and function(x) return vim.iter(x):flatten(math.huge):totable() end
+  or vim.tbl_flatten
 
 return MiniTest

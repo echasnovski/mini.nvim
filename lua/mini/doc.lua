@@ -825,7 +825,7 @@ H.default_input = function()
     table.insert(res, files)
   end
 
-  return vim.tbl_flatten(res)
+  return H.tbl_flatten(res)
 end
 
 H.default_output = function()
@@ -1004,7 +1004,7 @@ H.toc_insert = function(s)
     toc_entry:clear_lines()
   end
 
-  for _, l in ipairs(vim.tbl_flatten(toc_lines)) do
+  for _, l in ipairs(H.tbl_flatten(toc_lines)) do
     s:insert(l)
   end
 end
@@ -1277,7 +1277,7 @@ H.collect_strings = function(x)
     end
   end, x)
   -- Flatten to only have strings and not table of strings (from `vim.split`)
-  return vim.tbl_flatten(res)
+  return H.tbl_flatten(res)
 end
 
 H.file_read = function(path)
@@ -1311,5 +1311,7 @@ H.is_string = function(x) return type(x) == 'string' end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+H.tbl_flatten = vim.fn.has('nvim-0.10') == 1 and function(x) return vim.iter(x):flatten(math.huge):totable() end
+  or vim.tbl_flatten
 
 return MiniDoc
