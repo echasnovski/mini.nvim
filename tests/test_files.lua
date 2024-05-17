@@ -345,6 +345,14 @@ T['open()']['handles problematic entry names'] = function()
   child.expect_screenshot()
 end
 
+T['open()']['handles backslash on Unix'] = function()
+  if child.lua_get('vim.loop.os_uname().sysname') == 'Windows_NT' then MiniTest.skip('Test is not for Windows.') end
+
+  local temp_dir = make_temp_dir('temp', { '\\', 'hello\\', 'wo\\rld' })
+  open(temp_dir)
+  child.expect_screenshot()
+end
+
 T['open()']["uses 'nvim-web-devicons' if present"] = function()
   -- Mock 'nvim-web-devicons'
   child.cmd('set rtp+=tests/dir-files')
@@ -3340,6 +3348,31 @@ T['File manipulation']['works with problematic names'] = function()
   validate_no_file(temp_dir, 'b file')
   validate_file(temp_dir, 'c file')
   validate_file(temp_dir, 'd file')
+end
+
+T['File manipulation']['handles backslash on Unix'] = function()
+  if child.lua_get('vim.loop.os_uname().sysname') == 'Windows_NT' then MiniTest.skip('Test is not for Windows.') end
+
+  local temp_dir = make_temp_dir('temp', { '\\', 'hello\\', 'wo\\rld' })
+  open(temp_dir)
+
+  -- Perform manipulation
+  -- - Delete
+  type_keys('dd')
+  -- - Rename
+  type_keys('C', 'new-hello', '<Esc>')
+  -- - Create
+  type_keys('o', 'bad\\file', '<Esc>')
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+
+  mock_confirm(1)
+  synchronize()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+
+  validate_no_file(temp_dir, [[\]])
+  validate_no_file(temp_dir, [[hello\]])
+  validate_file(temp_dir, 'new-hello')
+  validate_file(temp_dir, [[bad\file]])
 end
 
 T['File manipulation']['ignores blank lines'] = function()

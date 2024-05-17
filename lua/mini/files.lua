@@ -2332,7 +2332,7 @@ end
 H.fs_normalize_path = function(path)
   -- Use only forward slashes (for proper work on Windows)
   -- Don't use trailing slashes for proper 'get_parent' (account for plain '/')
-  local res = path:gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')
+  local res = (H.is_windows and path:gsub('\\', '/') or path):gsub('/+', '/'):gsub('(.)/$', '%1')
   return res
 end
 
