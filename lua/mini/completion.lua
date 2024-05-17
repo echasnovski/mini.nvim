@@ -1258,7 +1258,7 @@ H.floating_dimensions = function(lines, max_height, max_width)
   -- in case"
   width = math.min(width, max_width)
 
-  return height, width
+  return math.max(height, 1), math.max(width, 1)
 end
 
 H.open_action_window = function(cache, opts)
