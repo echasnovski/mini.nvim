@@ -97,6 +97,14 @@ MiniTabline.setup = function(config)
   H.create_default_hl()
 end
 
+--- Default formatting of tab's label
+---
+--- Return label without changes.
+---
+---@param buf_id number Identifier of tab's buffer.
+---@param label string Tab's label.
+MiniTabline.default_format = function(buf_id, label) return label end
+
 --- Module config
 ---
 --- Default values:
@@ -112,6 +120,22 @@ MiniTabline.config = {
   -- Where to show tabpage section in case of multiple vim tabpages.
   -- One of 'left', 'right', 'none'.
   tabpage_section = 'left',
+
+  -- A callable defining how tab's label is formatted.
+  --
+  -- It will be called with the following arguments:
+  -- - `buf_id` - identifier of tab's buffer.
+  -- - `label` - tab's label.
+  --
+  -- It should return a string, which will be used as tab's label.
+  --
+  -- Example (adding marker to modified tabs): >
+  --
+  --   local format = function(buf_id, label)
+  --     local modified = vim.api.nvim_get_option_value('modified', { buf = buf_id })
+  --     if modified then return string.format('%s [+]', label) else return label end
+  --   end
+  format = MiniTabline.default_format,
 }
 --minidoc_afterlines_end
 
@@ -162,6 +186,7 @@ H.setup_config = function(config)
     show_icons = { config.show_icons, 'boolean' },
     set_vim_settings = { config.set_vim_settings, 'boolean' },
     tabpage_section = { config.tabpage_section, 'string' },
+    format = { config.format, 'function' },
   })
 
   return config
@@ -362,12 +387,13 @@ H.finalize_labels = function()
   end
 
   for _, tab in pairs(H.tabs) do
+    local formatted_label = H.get_config().format(tab.buf_id, tab.label)
     if show_icons and has_devicons then
       local extension = vim.fn.fnamemodify(tab.label, ':e')
       local icon = devicons.get_icon(tab.label, extension, { default = true })
-      tab.label = string.format(' %s %s ', icon, tab.label)
+      tab.label = string.format(' %s %s ', icon, formatted_label)
     else
-      tab.label = string.format(' %s ', tab.label)
+      tab.label = string.format(' %s ', formatted_label)
     end
   end
 end

@@ -75,6 +75,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('show_icons', true)
   expect_config('set_vim_settings', true)
   expect_config('tabpage_section', 'left')
+  eq(child.lua_get('MiniTabline.config.format == MiniTabline.default_format'), true)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -93,6 +94,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ show_icons = 'a' }, 'show_icons', 'boolean')
   expect_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
   expect_config_error({ tabpage_section = 1 }, 'tabpage_section', 'string')
+  expect_config_error({ format = 'a' }, 'format', 'function')
 end
 
 T['setup()']["sets proper 'tabline' option"] = function()
@@ -256,6 +258,24 @@ T['make_tabline_string()']['respects `config.show_icons`'] = function()
   child.b.minitabline_config = { show_icons = true }
   poke_eventloop()
   eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  aaa.lua %#MiniTablineFill#')
+end
+
+T['make_tabline_string()']['respects `config.format`'] = function()
+  child.cmd('edit aaa | edit bbb')
+  eq(eval_tabline(true), '%#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#')
+
+  child.lua(
+    [[MiniTabline.config.format = function(buf_id, label) return string.format('[%d] |%s|', buf_id, label) end]]
+  )
+  child.cmd('bnext')
+  eq(eval_tabline(true), '%#MiniTablineCurrent# [1] |aaa| %#MiniTablineHidden# [2] |bbb| %#MiniTablineFill#')
+
+  -- Should also use buffer local config
+  child.lua(
+    [[vim.b.minitabline_config = { format = function(buf_id, label) return string.format('{%s} (%d)', label, buf_id) end }]]
+  )
+  poke_eventloop()
+  eq(eval_tabline(true), '%#MiniTablineCurrent# {aaa} (1) %#MiniTablineHidden# {bbb} (2) %#MiniTablineFill#')
 end
 
 T['make_tabline_string()']['deduplicates named labels'] = function()

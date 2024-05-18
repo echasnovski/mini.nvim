@@ -150,6 +150,22 @@ Here are code snippets for some common installation methods (use only one):
   -- Where to show tabpage section in case of multiple vim tabpages.
   -- One of 'left', 'right', 'none'.
   tabpage_section = 'left',
+
+  -- A callable defining how tab's label is formatted.
+  --
+  -- It will be called with the following arguments:
+  -- - `buf_id` - identifier of tab's buffer.
+  -- - `label` - tab's label.
+  --
+  -- It should return a string, which will be used as tab's label.
+  --
+  -- Example (adding marker to modified tabs): >
+  --
+  --   local format = function(buf_id, label)
+  --     local modified = vim.api.nvim_get_option_value('modified', { buf = buf_id })
+  --     if modified then return string.format('%s [+]', label) else return label end
+  --   end
+  format = MiniTabline.default_format,
 }
 ```
 

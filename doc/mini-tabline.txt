@@ -78,6 +78,17 @@ Usage ~
 `require('mini.tabline').setup({})` (replace `{}` with your `config` table)
 
 ------------------------------------------------------------------------------
+                                                  *MiniTabline.default_format()*
+                `MiniTabline.default_format`({buf_id}, {label})
+Default formatting of tab's label
+
+Return label without changes.
+
+Parameters ~
+{buf_id} `(number)` Identifier of tab's buffer.
+{label} `(string)` Tab's label.
+
+------------------------------------------------------------------------------
                                                             *MiniTabline.config*
                               `MiniTabline.config`
 Module config
@@ -95,6 +106,22 @@ Default values:
     -- Where to show tabpage section in case of multiple vim tabpages.
     -- One of 'left', 'right', 'none'.
     tabpage_section = 'left',
+
+    -- A callable defining how tab's label is formatted.
+    --
+    -- It will be called with the following arguments:
+    -- - `buf_id` - identifier of tab's buffer.
+    -- - `label` - tab's label.
+    --
+    -- It should return a string, which will be used as tab's label.
+    --
+    -- Example (adding marker to modified tabs): >
+    --
+    --   local format = function(buf_id, label)
+    --     local modified = vim.api.nvim_get_option_value('modified', { buf = buf_id })
+    --     if modified then return string.format('%s [+]', label) else return label end
+    --   end
+    format = MiniTabline.default_format,
   }
 <
 
