@@ -88,6 +88,10 @@ Default values:
     -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
     show_icons = true,
 
+    -- Function which formats the tab label
+    -- By default surrounds with space and possibly prepends with icon
+    format = nil,
+
     -- Whether to set Vim's settings for tabline (make it always shown and
     -- allow hidden buffers)
     set_vim_settings = true,
@@ -97,11 +101,41 @@ Default values:
     tabpage_section = 'left',
   }
 <
+# Format ~
+
+`config.format` is a callable that takes buffer identifier and pre-computed
+label as arguments and returns a string with formatted label.
+This function will be called for all displayable in tabline buffers.
+Default: |MiniTabline.default_format()|.
+
+Example of adding "+" suffix for modified buffers: >
+
+  function(buf_id, label)
+    local suffix = vim.bo[buf_id].modified and '+ ' or ''
+    return MiniTabline.default_format(buf_id, label) .. suffix
+  end
 
 ------------------------------------------------------------------------------
                                              *MiniTabline.make_tabline_string()*
                       `MiniTabline.make_tabline_string`()
 Make string for |tabline|
+
+------------------------------------------------------------------------------
+                                                  *MiniTabline.default_format()*
+                `MiniTabline.default_format`({buf_id}, {label})
+Default tab format
+
+Used by default as `config.format`.
+Prepends label with padded icon (if `show_icon` from |MiniTabline.config|
+is `true`) and surrounds label with single space.
+Note: it is meant to be used only as part of `format` in |MiniTabline.config|.
+
+Parameters ~
+{buf_id} `(number)` Buffer identifier.
+{label} `(string)` Pre-computed label.
+
+Return ~
+`(string)` Formatted label.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

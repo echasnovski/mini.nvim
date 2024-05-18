@@ -143,6 +143,10 @@ Here are code snippets for some common installation methods (use only one):
   -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
   show_icons = true,
 
+  -- Function which formats the tab label
+  -- By default surrounds with space and possibly prepends with icon
+  format = nil,
+
   -- Whether to set Vim's settings for tabline (make it always shown and
   -- allow hidden buffers)
   set_vim_settings = true,

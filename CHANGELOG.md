@@ -46,6 +46,10 @@
 
 - Explicitly block all events in `open()` during startup for a better performance.
 
+## mini.tabline
+
+- FEATURE: Implement `config.format` for custom label formatting.
+
 ## mini.test
 
 - BREAKING FEATURE: child process is now created with extra `--headless --cmd "set lines=24 columns=80"` arguments making it headless but still reasonably similar to fully functioning Neovim during interactive usage. This change should generally not break a lot of things, while enabling a faster and more robust test execution.
