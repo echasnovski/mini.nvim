@@ -184,6 +184,7 @@ Here are code snippets for some common installation methods (use only one):
 
 ## Similar plugins
 
+- [Built-in commenting on Neovim>=0.10](https://neovim.io/doc/user/various.html#commenting) (implemented with 'mini.comment' as reference)
 - [numToStr/Comment.nvim](https://github.com/numToStr/Comment.nvim)
 - [tpope/vim-commentary](https://github.com/tpope/vim-commentary)
 - [preservim/nerdcommenter](https://github.com/preservim/nerdcommenter)
