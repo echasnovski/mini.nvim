@@ -192,6 +192,7 @@
 ---         - If a key for scrolling clue window (`scroll_down` / `scroll_up`
 ---           in `config.window`; `<C-d>` / `<C-u>` by default), scroll clue window
 ---           and wait for the next user key.
+---           Note: if clue window is not shown, treated as a not special key.
 ---
 ---     - Not special key. Add key to the query while filtering all available
 ---       key combinations to start with the current key query. Advance:
@@ -1315,9 +1316,10 @@ H.state_advance = function(opts)
 
   if key == H.keys.cr then return H.state_exec() end
 
+  local is_window_shown = H.is_valid_win(H.state.win_id)
   local is_scroll_down = key == H.replace_termcodes(config_window.scroll_down)
   local is_scroll_up = key == H.replace_termcodes(config_window.scroll_up)
-  if is_scroll_down or is_scroll_up then
+  if is_window_shown and (is_scroll_down or is_scroll_up) then
     H.window_scroll(is_scroll_down)
     return H.state_advance({ same_content = true })
   end

@@ -2102,6 +2102,23 @@ T['Querying keys']['can `<BS>` on first element'] = function()
   eq(get_test_map_count('n', ',gg'), 1)
 end
 
+T['Querying keys']['can use scroll keys when window is not shown'] = function()
+  make_test_map('n', '<Space>f')
+  make_test_map('n', '<Space><C-f>')
+  make_test_map('n', '<Space><C-b>')
+  load_module({
+    triggers = { { mode = 'n', keys = '<Space>' } },
+    window = { scroll_down = '<C-f>', scroll_up = '<C-b>' },
+  })
+  validate_trigger_keymap('n', '<Space>')
+
+  type_keys(' ', '<C-f>')
+  eq(get_test_map_count('n', ' <C-f>'), 1)
+
+  type_keys(' ', '<C-b>')
+  eq(get_test_map_count('n', ' <C-b>'), 1)
+end
+
 T['Querying keys']['allows reaching longest keymap'] = function()
   make_test_map('n', '<Space>f')
   make_test_map('n', '<Space>fff')

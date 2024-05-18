@@ -194,6 +194,7 @@ mode but works in all other main modes: Visual, Insert, Operator-pending
         - If a key for scrolling clue window (`scroll_down` / `scroll_up`
           in `config.window`; `<C-d>` / `<C-u>` by default), scroll clue window
           and wait for the next user key.
+          Note: if clue window is not shown, treated as a not special key.
 
     - Not special key. Add key to the query while filtering all available
       key combinations to start with the current key query. Advance:
