@@ -179,12 +179,13 @@ Here are code snippets for some common installation methods (use only one):
 {
   -- Table with names from `base00` to `base0F` and values being strings of
   -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
-  -- supplied in `setup()`.
+  -- supplied in `setup()` if `config.use_cterm` is not supplied as a table.
   palette = nil,
 
   -- Whether to support cterm colors. Can be boolean, `nil` (same as
   -- `false`), or table with cterm colors. See `setup()` documentation for
-  -- more information.
+  -- more information. NOTE: this should be explicitly supplied in `setup()` as a
+  -- table with cterm colors if `config.palette` is not supplied.
   use_cterm = nil,
 
   -- Plugin integrations. Use `default = false` to disable all integrations.

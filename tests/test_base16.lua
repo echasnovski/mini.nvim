@@ -104,6 +104,7 @@ T['setup()']['validates `config` argument'] = function()
   end
 
   expect_config_error('a', 'config', 'table')
+  expect_config_error({ use_cterm = true }, 'config.use_cterm', 'table')
   expect_config_error({ palette = 'a' }, 'config.palette', 'table')
   expect_config_error({ palette = { 'a' } }, 'config.palette', 'base00')
   expect_config_error({ palette = { base00 = 1 } }, 'config.palette', 'HEX')
@@ -155,6 +156,12 @@ T['setup()']['respects `config.use_cterm`'] = function()
   )
 
   reload_module({ palette = minischeme_palette, use_cterm = p_cterm })
+  validate_hl_group(
+    'Normal',
+    ('ctermfg=%s ctermbg=%s guifg=%s guibg=%s'):format(p_cterm.base05, p_cterm.base00, p.base05, p.base00)
+  )
+
+  reload_module({ use_cterm = p_cterm })
   validate_hl_group(
     'Normal',
     ('ctermfg=%s ctermbg=%s guifg=%s guibg=%s'):format(p_cterm.base05, p_cterm.base00, p.base05, p.base00)

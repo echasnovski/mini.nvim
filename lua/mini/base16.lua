@@ -143,9 +143,9 @@ local H = {}
 --- good idea to have `config.palette` respect the original [styling
 --- principles](https://github.com/chriskempson/base16/blob/master/styling.md).
 ---
---- By default only 'gui highlighting' (see |highlight-gui| and
---- |termguicolors|) is supported. To support 'cterm highlighting' (see
---- |highlight-cterm|) supply `config.use_cterm` argument in one of the formats:
+--- To support 'gui highlighting' (see |highlight-gui| and |termguicolors|), supply
+--- `config.palette`. To support 'cterm highlighting' (see |highlight-cterm|),
+--- supply `config.use_cterm` argument in one of the formats:
 --- - `true` to auto-generate from `palette` (as closest colors).
 --- - Table with similar structure to `palette` but having terminal colors
 ---   (integers from 0 to 255) instead of hex strings.
@@ -153,7 +153,8 @@ local H = {}
 ---@param config table Module config table. See |MiniBase16.config|.
 ---
 ---@usage `require('mini.base16').setup({})` (replace `{}` with your `config`
----   table; `config.palette` should be a table with colors)
+---   table; either or both of `config.palette` and `config.use_term` should be a
+---   table with colors)
 MiniBase16.setup = function(config)
   -- Export module
   _G.MiniBase16 = MiniBase16
@@ -191,12 +192,13 @@ end
 MiniBase16.config = {
   -- Table with names from `base00` to `base0F` and values being strings of
   -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
-  -- supplied in `setup()`.
+  -- supplied in `setup()` if `config.use_cterm` is not supplied as a table.
   palette = nil,
 
   -- Whether to support cterm colors. Can be boolean, `nil` (same as
   -- `false`), or table with cterm colors. See `setup()` documentation for
-  -- more information.
+  -- more information. NOTE: this should be explicitly supplied in `setup()` as a
+  -- table with cterm colors if `config.palette` is not supplied.
   use_cterm = nil,
 
   -- Plugin integrations. Use `default = false` to disable all integrations.
@@ -350,8 +352,7 @@ H.setup_config = function(config)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   -- Validate settings
-  H.validate_base16_palette(config.palette, 'config.palette')
-  H.validate_use_cterm(config.use_cterm, 'config.use_cterm')
+  H.validate_config_arg(config)
   vim.validate({ plugins = { config.plugins, 'table' } })
 
   return config
@@ -383,7 +384,18 @@ H.base16_names = {
   'base0F',
 }
 
+H.validate_config_arg = function(x)
+  if type(x.palette) ~= 'table' and type(x.use_cterm) ~= 'table' then
+    error(string.format('(mini.base16) either or both of `config.palette` and `config.use_cterm` should be a table.'))
+  end
+
+  H.validate_base16_palette(x.palette, 'config.palette')
+  H.validate_use_cterm(x.use_cterm, 'config.use_cterm')
+end
+
 H.validate_base16_palette = function(x, x_name)
+  if not x then return true end
+
   if type(x) ~= 'table' then error(string.format('(mini.base16) `%s` is not a table.', x_name)) end
 
   for _, color_name in pairs(H.base16_names) do
@@ -443,10 +455,12 @@ H.apply_palette = function(palette, use_cterm)
   vim.g.colors_name = nil
 
   local p, hi
-  if use_cterm then
+  if palette and use_cterm then
     p, hi = H.make_compound_palette(palette, use_cterm), H.highlight_both
-  else
+  elseif palette then
     p, hi = palette, H.highlight_gui
+  else
+    p, hi = use_cterm, H.highlight_cterm
   end
 
   -- NOTE: recommendations for adding new highlight groups:
@@ -1187,22 +1201,24 @@ H.apply_palette = function(palette, use_cterm)
   -- stylua: ignore end
 
   -- Terminal colors
-  vim.g.terminal_color_0 = palette.base00
-  vim.g.terminal_color_1 = palette.base08
-  vim.g.terminal_color_2 = palette.base0B
-  vim.g.terminal_color_3 = palette.base0A
-  vim.g.terminal_color_4 = palette.base0D
-  vim.g.terminal_color_5 = palette.base0E
-  vim.g.terminal_color_6 = palette.base0C
-  vim.g.terminal_color_7 = palette.base05
-  vim.g.terminal_color_8 = palette.base03
-  vim.g.terminal_color_9 = palette.base08
-  vim.g.terminal_color_10 = palette.base0B
-  vim.g.terminal_color_11 = palette.base0A
-  vim.g.terminal_color_12 = palette.base0D
-  vim.g.terminal_color_13 = palette.base0E
-  vim.g.terminal_color_14 = palette.base0C
-  vim.g.terminal_color_15 = palette.base07
+  if palette then
+    vim.g.terminal_color_0 = palette.base00
+    vim.g.terminal_color_1 = palette.base08
+    vim.g.terminal_color_2 = palette.base0B
+    vim.g.terminal_color_3 = palette.base0A
+    vim.g.terminal_color_4 = palette.base0D
+    vim.g.terminal_color_5 = palette.base0E
+    vim.g.terminal_color_6 = palette.base0C
+    vim.g.terminal_color_7 = palette.base05
+    vim.g.terminal_color_8 = palette.base03
+    vim.g.terminal_color_9 = palette.base08
+    vim.g.terminal_color_10 = palette.base0B
+    vim.g.terminal_color_11 = palette.base0A
+    vim.g.terminal_color_12 = palette.base0D
+    vim.g.terminal_color_13 = palette.base0E
+    vim.g.terminal_color_14 = palette.base0C
+    vim.g.terminal_color_15 = palette.base07
+  end
 end
 
 H.has_integration = function(name)
@@ -1226,6 +1242,22 @@ H.highlight_gui = function(group, args)
       args.bg or 'NONE',
       args.attr or 'NONE',
       args.sp or 'NONE'
+    )
+  end
+  vim.cmd(command)
+end
+
+H.highlight_cterm = function(group, args)
+  local command
+  if args.link ~= nil then
+    command = string.format('highlight! link %s %s', group, args.link)
+  else
+    command = string.format(
+      'highlight %s ctermfg=%s ctermbg=%s cterm=%s',
+      group,
+      args.fg or 'NONE',
+      args.bg or 'NONE',
+      args.attr or 'NONE'
     )
   end
   vim.cmd(command)

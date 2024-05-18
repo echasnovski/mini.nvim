@@ -143,9 +143,9 @@ groups make an extended set from original
 good idea to have `config.palette` respect the original [styling
 principles](https://github.com/chriskempson/base16/blob/master/styling.md).
 
-By default only 'gui highlighting' (see |highlight-gui| and
-|termguicolors|) is supported. To support 'cterm highlighting' (see
-|highlight-cterm|) supply `config.use_cterm` argument in one of the formats:
+To support 'gui highlighting' (see |highlight-gui| and |termguicolors|), supply
+`config.palette`. To support 'cterm highlighting' (see |highlight-cterm|),
+supply `config.use_cterm` argument in one of the formats:
 - `true` to auto-generate from `palette` (as closest colors).
 - Table with similar structure to `palette` but having terminal colors
   (integers from 0 to 255) instead of hex strings.
@@ -155,7 +155,8 @@ Parameters ~
 
 Usage ~
 `require('mini.base16').setup({})` (replace `{}` with your `config`
-  table; `config.palette` should be a table with colors)
+  table; either or both of `config.palette` and `config.use_term` should be a
+  table with colors)
 
 ------------------------------------------------------------------------------
                                                              *MiniBase16.config*
@@ -167,12 +168,13 @@ Default values:
   MiniBase16.config = {
     -- Table with names from `base00` to `base0F` and values being strings of
     -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
-    -- supplied in `setup()`.
+    -- supplied in `setup()` if `config.use_cterm` is not supplied as a table.
     palette = nil,
 
     -- Whether to support cterm colors. Can be boolean, `nil` (same as
     -- `false`), or table with cterm colors. See `setup()` documentation for
-    -- more information.
+    -- more information. NOTE: this should be explicitly supplied in `setup()` as a
+    -- table with cterm colors if `config.palette` is not supplied.
     use_cterm = nil,
 
     -- Plugin integrations. Use `default = false` to disable all integrations.
