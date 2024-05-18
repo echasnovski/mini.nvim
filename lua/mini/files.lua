@@ -2329,11 +2329,9 @@ H.compare_fs_entries = function(a, b)
   return a.lower_name < b.lower_name
 end
 
-H.fs_normalize_path = function(path)
-  -- Use only forward slashes (for proper work on Windows)
-  -- Don't use trailing slashes for proper 'get_parent' (account for plain '/')
-  local res = (H.is_windows and path:gsub('\\', '/') or path):gsub('/+', '/'):gsub('(.)/$', '%1')
-  return res
+H.fs_normalize_path = function(path) return (path:gsub('/+', '/'):gsub('(.)/$', '%1')) end
+if H.is_windows then
+  H.fs_normalize_path = function(path) return (path:gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
 end
 
 H.fs_is_present_path = function(path) return vim.loop.fs_stat(path) ~= nil end
