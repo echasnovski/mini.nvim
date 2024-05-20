@@ -15,13 +15,11 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim=0.9 (as it introduced
--- titles and 0.10 introduced footer).
--- Use `child.expect_screenshot_orig()` for original testing.
+-- Tweak `expect_screenshot()` to test only on Neovim>=0.10 (as it has floating
+-- window footer). Use `child.expect_screenshot_orig()` for original testing.
 child.expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(opts, allow_past_09)
-  -- TODO: Regenerate all screenshots with 0.10 after its stable release
-  if child.fn.has('nvim-0.9') == 0 or child.fn.has('nvim-0.10') == 1 then return end
+child.expect_screenshot = function(opts)
+  if child.fn.has('nvim-0.10') == 0 then return end
   child.expect_screenshot_orig(opts)
 end
 
@@ -2755,7 +2753,8 @@ local builtin_help = forward_lua_notify('MiniPick.builtin.help')
 
 T['builtin.help()']['works'] = function()
   child.lua_notify('_G.help_item = MiniPick.builtin.help()')
-  child.expect_screenshot()
+  -- Ignore footer as it contains non-reliable number of help tags
+  child.expect_screenshot({ ignore_lines = { 14 } })
 
   -- Should set correct name
   validate_picker_option('source.name', 'Help')
@@ -2779,7 +2778,8 @@ T['builtin.help()']['has proper preview'] = function()
 
   builtin_help()
   type_keys('<Tab>')
-  child.expect_screenshot()
+  -- Ignore footer as it contains non-reliable number of help tags
+  child.expect_screenshot({ ignore_lines = { 14 } })
   eq(child.bo.buftype, 'nofile')
   -- Neovim<0.8 should use built-in syntax, while Neovim>=0.8 - tree-sitter
   if child.fn.has('nvim-0.8') == 0 then eq(child.bo.syntax, 'help') end
@@ -2815,7 +2815,8 @@ T['builtin.help()']['works for help tags with special characters'] = function()
   builtin_help()
   set_picker_query({ 'c_CTRL-K' })
   type_keys('<Tab>')
-  child.expect_screenshot()
+  -- Ignore footer as it contains non-reliable number of help tags
+  child.expect_screenshot({ ignore_lines = { 14 } })
 end
 
 T['builtin.help()']['works when help window is already opened'] = function()

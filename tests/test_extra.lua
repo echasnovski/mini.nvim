@@ -19,13 +19,11 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
--- Tweak `expect_screenshot()` to test only on Neovim=0.9 (as it introduced
--- titles and 0.10 introduced footer).
--- Use `child.expect_screenshot_orig()` for original testing.
+-- Tweak `expect_screenshot()` to test only on Neovim>=0.10 (as it has floating
+-- window footer). Use `child.expect_screenshot_orig()` for original testing.
 child.expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(opts, allow_past_09)
-  -- TODO: Regenerate all screenshots with 0.10 after its stable release
-  if child.fn.has('nvim-0.9') == 0 or child.fn.has('nvim-0.10') == 1 then return end
+child.expect_screenshot = function(opts)
+  if child.fn.has('nvim-0.10') == 0 then return end
   child.expect_screenshot_orig(opts)
 end
 
@@ -2130,7 +2128,7 @@ local setup_keymaps = function()
 end
 
 T['pickers']['keymaps()']['works'] = function()
-  child.set_size(27, 80)
+  child.set_size(30, 80)
   setup_keymaps()
 
   child.lua_notify('_G.return_item = MiniExtra.pickers.keymaps()')
