@@ -136,6 +136,7 @@ Overview of full file structure used in for testing 'hello_lines' plugin:
 │   └── hello_lines
 │       └── init.lua # Mandatory
 ├── Makefile # Recommended
+├── .luarc.json # Recommended
 ├── scripts
 │   ├── minimal_init.lua # Mandatory
 │   └── minitest.lua # Recommended
@@ -212,6 +213,20 @@ test_file: deps/mini.nvim
 deps/mini.nvim:
 	@mkdir -p deps
 	git clone --filter=blob:none https://github.com/echasnovski/mini.nvim $@
+```
+
+</details><br>
+
+- **.luarc.json**. If you would like to get completions for mini.test in your editor from `lua-language-server`, it is recommended to set up a `.luarc.json` file that knows about `deps/` and to explicitly require `mini.test` in your test files (ex: `local MiniTest = require('mini.test')`)
+
+<details><summary>Template for '.luarc.json'</summary>
+
+```
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "LuaJIT",
+  "workspace.library": ["./lua", "deps/mini.nvim/lua"]
+}
 ```
 
 </details><br>
