@@ -690,20 +690,21 @@ T['Default content']['active'] = new_set({
       child.set_size(5, 150)
 
       mock_devicons()
-      mock_gitsigns()
       mock_file(10)
 
       -- Mock filename section to use relative path for consistent screenshots
       child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
       child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
       mock_diagnostics()
+      mock_minigit()
+      mock_minidiff()
       type_keys('/a', '<CR>')
     end,
     post_case = unmock_file,
   },
   -- There should also be test for 140, but it is for truncating in
   -- `section_filename` from full to relative paths
-  parametrize = { { 120 }, { 75 }, { 74 } },
+  parametrize = { { 120 }, { 75 }, { 40 }, { 39 } },
 }, {
   test = function(window_width)
     eq(child.api.nvim_win_get_option(0, 'statusline'), '%{%v:lua.MiniStatusline.active()%}')
