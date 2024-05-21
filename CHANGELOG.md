@@ -50,6 +50,10 @@
 
 - Explicitly block all events in `open()` during startup for a better performance.
 
+## mini.statusline
+
+- BREAKING FEATURE: `section_git()` now prefers using data from 'mini.git' with fallback on pure HEAD data from 'lewis6991/gistigns.nvim'.
+
 ## mini.tabline
 
 - FEATURE: Implement `config.format` for custom label formatting.

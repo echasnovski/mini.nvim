@@ -22,10 +22,12 @@
 --- Suggested dependencies (provide extra functionality, statusline will work
 --- without them):
 --- - Nerd font (to support extra icons).
---- - Plugin 'lewis6991/gitsigns.nvim' for Git information in
----   |MiniStatusline.section_git|. If missing, no section will be shown.
---- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons in
----   `MiniStatusline.section_fileinfo`. If missing, no icons will be shown.
+---
+--- - Enabled |MiniGit| module for |MiniStatusline.section_git()|.
+---   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
+---
+--- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons
+---   in |MiniStatusline.section_fileinfo()|. If missing, no icons will be shown.
 ---
 --- # Setup ~
 ---
@@ -258,27 +260,26 @@ end
 
 --- Section for Git information
 ---
---- Normal output contains name of `HEAD` (via |b:gitsigns_head|) and chunk
---- information (via |b:gitsigns_status|). Short output - only name of `HEAD`.
---- Note: requires 'lewis6991/gitsigns' plugin.
+--- Shows Git summary from |MiniGit| (should be set up; recommended). To tweak
+--- formatting of what data is shown, modify buffer-local summary string directly
+--- as described in |MiniGit-examples|.
 ---
---- Short output is returned if window width is lower than `args.trunc_width`.
+--- If 'mini.git' is not set up, section falls back on 'lewis6991/gitsigns' data
+--- or showing empty string.
+---
+--- Empty string is returned if window width is lower than `args.trunc_width`.
 ---
 ---@param args __statusline_args Use `args.icon` to supply your own icon.
 ---
 ---@return __statusline_section
 MiniStatusline.section_git = function(args)
-  if H.isnt_normal_buffer() then return '' end
+  if MiniStatusline.is_truncated(args.trunc_width) then return '' end
 
-  local head = vim.b.gitsigns_head or '-'
-  local signs = MiniStatusline.is_truncated(args.trunc_width) and '' or (vim.b.gitsigns_status or '')
+  local summary = vim.b.minigit_summary_string or vim.b.gitsigns_head
+  if summary == nil then return '' end
+
   local icon = args.icon or (H.get_config().use_icons and '' or 'Git')
-
-  if signs == '' then
-    if head == '-' or head == '' then return '' end
-    return string.format('%s %s', icon, head)
-  end
-  return string.format('%s %s %s', icon, head, signs)
+  return string.format('%s %s', icon, summary == '' and '-' or summary)
 end
 
 --- Section for Neovim's builtin diagnostics

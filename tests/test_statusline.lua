@@ -37,21 +37,11 @@ end
 -- Mocks
 local mock_devicons = function() child.cmd('set rtp+=tests/dir-statusline') end
 
-local mock_gitsigns = function(head, status)
-  local cmd_head = ([[lua vim.b.gitsigns_head = '%s']]):format(head or 'main')
-  local cmd_status = ([[lua vim.b.gitsigns_status = '%s']]):format(status or '+1 ~2 -3')
-
-  -- Mock for current buffer
-  child.cmd(cmd_head)
-  child.cmd(cmd_status)
-
-  -- Mock for future buffers
-  child.cmd('augroup MockGitsigns')
-  child.cmd('au!')
-  child.cmd(('au BufEnter * %s'):format(cmd_head))
-  child.cmd(('au BufEnter * %s'):format(cmd_status))
-  child.cmd('augroup END')
+local mock_gitsigns = function()
+  child.b.gitsigns_head, child.b.gitsigns_status = 'main', '+1 ~2 -3'
 end
+
+local mock_minigit = function() child.b.minigit_summary_string = 'main|bisect (MM)' end
 
 local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua') end
 
@@ -457,51 +447,54 @@ T['section_filename()']['respects `args.trunc_width`'] = function()
   eq(child.lua_get('MiniStatusline.section_filename({ trunc_width = 100 })'), '%f%m%r')
 end
 
-T['section_git()'] = new_set({ hooks = { pre_case = mock_gitsigns } })
+T['section_git()'] = new_set({ hooks = { pre_case = mock_minigit } })
 
 T['section_git()']['works'] = function()
-  eq(child.lua_get('MiniStatusline.section_git({})'), ' main +1 ~2 -3')
+  eq(child.lua_get('MiniStatusline.section_git({})'), ' main|bisect (MM)')
 
-  -- Should show signs even if there is no branch
-  child.b.gitsigns_head = nil
-  eq(child.lua_get('MiniStatusline.section_git({})'), ' - +1 ~2 -3')
+  -- Should return non-empty string even if there is no branch
+  child.b.minigit_summary_string = ''
+  eq(child.lua_get('MiniStatusline.section_git({})'), ' -')
 
-  -- Should not have trailing whitespace if git status is empty
-  child.b.gitsigns_head, child.b.gitsigns_status = 'main', ''
+  -- Should return empty string if no Git data is found
+  child.b.minigit_summary_string = nil
+  eq(child.lua_get('MiniStatusline.section_git({})'), '')
+end
+
+T['section_git()']["falls back to 'gitsigns.nvim'"] = function()
+  child.b.minigit_summary_string = nil
+  mock_gitsigns()
+
   eq(child.lua_get('MiniStatusline.section_git({})'), ' main')
 
-  -- Should return empty string if no Git is found
-  child.b.gitsigns_head, child.b.gitsigns_status = nil, nil
-  eq(child.lua_get('MiniStatusline.section_git({})'), '')
+  -- Should return non-empty string even if there is no branch
+  child.b.gitsigns_head = ''
+  eq(child.lua_get('MiniStatusline.section_git({})'), ' -')
 
-  child.b.gitsigns_head, child.b.gitsigns_status = '', ''
+  -- Should return empty string if no Git data is found
+  child.b.gitsigns_head = nil
   eq(child.lua_get('MiniStatusline.section_git({})'), '')
 end
 
 T['section_git()']['respects `args.trunc_width`'] = function()
   set_width(100)
-  eq(child.lua_get('MiniStatusline.section_git({ trunc_width = 100 })'), ' main +1 ~2 -3')
+  eq(child.lua_get('MiniStatusline.section_git({ trunc_width = 100 })'), ' main|bisect (MM)')
   set_width(99)
-  eq(child.lua_get('MiniStatusline.section_git({ trunc_width = 100 })'), ' main')
+  eq(child.lua_get('MiniStatusline.section_git({ trunc_width = 100 })'), '')
 end
 
 T['section_git()']['respects `args.icon`'] = function()
-  eq(child.lua_get([[MiniStatusline.section_git({icon = 'A'})]]), 'A main +1 ~2 -3')
-  eq(child.lua_get([[MiniStatusline.section_git({icon = 'AAA'})]]), 'AAA main +1 ~2 -3')
+  eq(child.lua_get([[MiniStatusline.section_git({ icon = 'A' })]]), 'A main|bisect (MM)')
+  eq(child.lua_get([[MiniStatusline.section_git({ icon = 'AAA' })]]), 'AAA main|bisect (MM)')
 end
 
 T['section_git()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
-  eq(child.lua_get([[MiniStatusline.section_git({})]]), 'Git main +1 ~2 -3')
+  eq(child.lua_get([[MiniStatusline.section_git({})]]), 'Git main|bisect (MM)')
 
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
-  eq(child.lua_get([[MiniStatusline.section_git({})]]), ' main +1 ~2 -3')
-end
-
-T['section_git()']['is shown only in normal buffers'] = function()
-  child.cmd('help')
-  eq(child.lua_get('MiniStatusline.section_git({})'), '')
+  eq(child.lua_get([[MiniStatusline.section_git({})]]), ' main|bisect (MM)')
 end
 
 T['section_location()'] = new_set()

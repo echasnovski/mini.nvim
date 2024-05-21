@@ -6,7 +6,10 @@
 
 ### Minimal and fast statusline module with opinionated default look
 
-For full experience needs [Nerd font](https://www.nerdfonts.com/), [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin (but works without any of them).
+For full experience needs (still works without any of suggestions):
+
+- [Nerd font](https://www.nerdfonts.com/) and [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin to show icons.
+- Enabled ['mini.git'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-git.md) modules to show Git related information. Can fall back to using [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin.
 
 See more details in [Features](#features) and [help file](../doc/mini-statusline.txt).
 
@@ -161,4 +164,3 @@ Here are code snippets for some common installation methods (use only one):
 ## Similar plugins
 
 - [nvim-lualine/lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
-- [famiu/feline.nvim](https://github.com/famiu/feline.nvim)
