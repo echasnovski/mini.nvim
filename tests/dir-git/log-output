@@ -1,0 +1,60 @@
+commit 5ed8432441b495fa9bd4ad2e4f635bae64e95cc2
+Author: Neo McVim <neo.mcvim@gmail.com>
+Date:   Sat May 4 16:24:15 2024 +0300
+
+    Commit 1
+    
+    Important details about commit.
+    Even more details about commit.
+
+diff --git a/dir/file-before b/dir/file-after
+index dd2b945..b81ef66 100644
+--- a/dir/file-before
++++ b/dir/file-after
+@@ -1,3 +1,3 @@ Hunk header 1
+       Line 1
+-      Previous line 2
++      Current line 2
+     Line 3
+@@ -317,4 +317,4 @@
+ Line 11
++Added line 12
++Added line 13
+ 
+diff --git a/file b/file
+index a0a225b..9f8c05f 100644
+--- a/file
++++ b/file
+@@ -283,4 +283,4 @@
+ +++
+-+++ Deleted line 112
+---- Deleted line 113
+ ---
+
+commit 7264474d3bda16d0098a7f89a4143fe4db3d82cf
+Author: Neo McVim <neo.mcvim@gmail.com>
+Date:   Sat May 4 16:20:29 2024 +0300
+
+    Commit 2
+
+diff --git a/dir/file1 b/dir/file1
+index dd2b945..b81ef66 100644
+--- a/dir/file1
++++ b/dir/file1
+@@ -247 +247 @@ Hunk header 1
+-      Previous line 02
++      Current line 02
+@@ -317,4 +317,4 @@
+ Line 011
++Added line 012
++Added line 013
+ 
+diff --git a/file.lua b/file.lua
+index a0a225b..9f8c05f 100644
+--- a/file.lua
++++ b/file.lua
+@@ -1,4 +1,4 @@
+ +++
+-+++ local a = 'deleted'
+---- local b = 'lines'
+ ---

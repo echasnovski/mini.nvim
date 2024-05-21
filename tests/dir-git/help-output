@@ -1,0 +1,62 @@
+
+GIT-PUSH(1)                        Git Manual                       GIT-PUSH(1)
+
+NAME
+       git-push - Update remote refs along with associated objects
+
+SYNOPSIS
+       git push [--all | --branches | --mirror | --tags] [--follow-tags] [--atomic] [-n | --dry-run] [--receive-pack=<git-receive-pack>]
+                  [--repo=<repository>] [-f | --force] [-d | --delete] [--prune] [-q | --quiet] [-v | --verbose]
+                  [-u | --set-upstream] [-o <string> | --push-option=<string>]
+                  [--[no-]signed|--signed=(true|false|if-asked)]
+                  [--force-with-lease[=<refname>[:<expect>]] [--force-if-includes]]
+                  [--no-verify] [<repository> [<refspec>...]]
+
+DESCRIPTION
+       A truncated output of `git help push` for testing purposes
+
+OPTIONS
+       <repository>
+           The "remote" repository. Should be parsed as option.
+
+       <refspec>...
+           Specify what destination ref to update with what source object.
+           Some other very important information.
+
+       --all, --branches
+           Push all branches (i.e. refs under refs/heads/); cannot be used with
+           other <refspec>.
+
+       --prune
+           Remove remote branches that don’t have a local counterpart.
+
+           This line contains --do-not-parse flag which should not be parsed.
+
+           --another-no-parse
+
+       -n, --dry-run
+           Do everything except actually send the updates.
+
+       -vv
+           A single dash flag but with two letters afterwards.
+
+       --[no-]signed, --signed=(true|false|if-asked)
+           This is some hard to parse options.
+           Should prefer '--signed' over '--signed='.
+
+       --receive-pack=<git-receive-pack>, --exec=<git-receive-pack>
+           Another hard to parse.
+
+       --[no-]force-with-lease, --force-with-lease=<refname>,
+       --force-with-lease=<refname>:<expect>
+           An entry which documents same flag several times.
+
+       -4, --ipv4
+           Use IPv4 addresses only, ignoring IPv6 addresses.
+
+       -6, --ipv6
+           Use IPv6 addresses only, ignoring IPv4 addresses.
+
+NEW SECTION
+       --not-an-option
+           Although formatted as an option, it is not in an appropriate section.

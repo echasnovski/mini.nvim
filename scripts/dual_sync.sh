@@ -20,7 +20,10 @@ sync_module () {
   if [[ ! -d $repo ]]
   then
     printf "Pulling\n"
-    git clone --filter=blob:none https://github.com/echasnovski/mini.$module.git $repo
+    # Handle 'mini.git' differently because GitHub repo is named 'mini-git'
+    # (".git" suffix is not allowed as repo name on GitHub)
+    if [ $module = "git" ]; then github_repo="mini-git"; else github_repo="mini.$module"; fi
+    git clone --filter=blob:none https://github.com/echasnovski/$github_repo.git $repo
   else
     printf "No pulling (already present)\n"
   fi
@@ -79,6 +82,7 @@ sync_module "doc"
 sync_module "extra"
 sync_module "files"
 sync_module "fuzzy"
+sync_module "git"
 sync_module "hipatterns"
 sync_module "hues" colors/randomhue.lua
 sync_module "indentscope"

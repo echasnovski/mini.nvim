@@ -1,0 +1,23 @@
+diff --git a/dir/file1 b/dir/file1
+index dd2b945..b81ef66 100644
+--- a/dir/file1
++++ b/dir/file1
+@@ -247,3 +247,3 @@ Hunk header 1
+       Line 1
+-      Previous line 2
++      Current line 2
+     Line 3
+@@ -317,4 +317,4 @@
+ Line 11
++Added line 12
++Added line 13
+ 
+diff --git a/file b/file
+index a0a225b..9f8c05f 100644
+--- a/file
++++ b/file
+@@ -283,4 +283,4 @@
+ +++
+-+++ Deleted line 112
+---- Deleted line 113
+ ---

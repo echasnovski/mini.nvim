@@ -31,6 +31,7 @@ local test_actions = {
   ['extra']       = function() require('mini.extra').setup() end,
   ['files']       = function() require('mini.files').setup() end,
   ['fuzzy']       = function() require('mini.fuzzy').setup() end,
+  ['git']         = function() require('mini.git').setup() end,
   ['hipatterns']  = function() require('mini.hipatterns').setup() end,
   ['hues']        = function() require('mini.hues').setup({ background = '#000000', foreground = '#ffffff' }) end,
   ['indentscope'] = function() require('mini.indentscope').setup() end,

@@ -25,6 +25,10 @@
 
 - FEATURE: add new `MiniFilesExplorerOpen` and `MiniFilesExplorerClose` events.
 
+## mini.git
+
+- Introduction of a new module.
+
 ## mini.hues
 
 - BREAKING FEATURE: update some highlight groups for better usability:

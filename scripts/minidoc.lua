@@ -21,6 +21,7 @@ local modules = {
   'extra',
   'files',
   'fuzzy',
+  'git',
   'hipatterns',
   'hues',
   'indentscope',

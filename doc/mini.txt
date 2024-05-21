@@ -31,6 +31,7 @@ Table of contents:
   Extra 'mini.nvim' functionality ............................... |mini.extra|
   Navigate and manipulate file system............................ |mini.files|
   Fuzzy matching ................................................ |mini.fuzzy|
+  Git integration ................................................. |mini.git|
   Highlight patterns in text ............................... |mini.hipatterns|
   Generate configurable color scheme ............................. |mini.hues|
   Visualize and work with indent scope .................... |mini.indentscope|
@@ -198,6 +199,10 @@ Table of contents:
 - |MiniFuzzy| - functions for fast and simple fuzzy matching. It has
   not only functions to perform fuzzy matching of one string to others, but
   also a sorter for |telescope.nvim|.
+
+- |MiniGit| - Git integration (https://git-scm.com/). Implements tracking of
+  Git related data (root, branch, etc.), |:Git| command for better integration
+  with running Neovim instance, and various helpers to explore Git history.
 
 - |MiniHipatterns| - highlight patterns in text with configurable highlighters
   (pattern and/or highlight group can be string or callable).
