@@ -26,6 +26,9 @@
 --- - Enabled |MiniGit| module for |MiniStatusline.section_git()|.
 ---   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
 ---
+--- - Enabled |MiniDiff| module for |MiniStatusline.section_diff()|.
+---   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
+---
 --- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons
 ---   in |MiniStatusline.section_fileinfo()|. If missing, no icons will be shown.
 ---
@@ -279,6 +282,30 @@ MiniStatusline.section_git = function(args)
   if summary == nil then return '' end
 
   local icon = args.icon or (H.get_config().use_icons and '' or 'Git')
+  return string.format('%s %s', icon, summary == '' and '-' or summary)
+end
+
+--- Section for diff information
+---
+--- Shows diff summary from |MiniDiff| (should be set up; recommended). To tweak
+--- formatting of what data is shown, modify buffer-local summary string directly
+--- as described in |MiniDiff-diff-summary|.
+---
+--- If 'mini.diff' is not set up, section falls back on 'lewis6991/gitsigns' data
+--- or showing empty string.
+---
+--- Empty string is returned if window width is lower than `args.trunc_width`.
+---
+---@param args __statusline_args Use `args.icon` to supply your own icon.
+---
+---@return __statusline_section
+MiniStatusline.section_diff = function(args)
+  if MiniStatusline.is_truncated(args.trunc_width) then return '' end
+
+  local summary = vim.b.minidiff_summary_string or vim.b.gitsigns_status
+  if summary == nil then return '' end
+
+  local icon = args.icon or (H.get_config().use_icons and '' or 'Diff')
   return string.format('%s %s', icon, summary == '' and '-' or summary)
 end
 

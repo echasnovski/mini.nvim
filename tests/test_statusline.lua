@@ -43,6 +43,8 @@ end
 
 local mock_minigit = function() child.b.minigit_summary_string = 'main|bisect (MM)' end
 
+local mock_minidiff = function() child.b.minidiff_summary_string = '#4 +3 ~2 -1' end
+
 local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua') end
 
 local mocked_filepath = vim.fn.fnamemodify('tests/dir-statusline/mocked.lua', ':p')
@@ -495,6 +497,56 @@ T['section_git()']['respects `config.use_icons`'] = function()
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
   eq(child.lua_get([[MiniStatusline.section_git({})]]), ' main|bisect (MM)')
+end
+
+T['section_diff()'] = new_set({ hooks = { pre_case = mock_minidiff } })
+
+T['section_diff()']['works'] = function()
+  eq(child.lua_get('MiniStatusline.section_diff({})'), ' #4 +3 ~2 -1')
+
+  -- Should return non-empty string even if there is no branch
+  child.b.minidiff_summary_string = ''
+  eq(child.lua_get('MiniStatusline.section_diff({})'), ' -')
+
+  -- Should return empty string if no Git data is found
+  child.b.minidiff_summary_string = nil
+  eq(child.lua_get('MiniStatusline.section_diff({})'), '')
+end
+
+T['section_diff()']["falls back to 'gitsigns.nvim'"] = function()
+  child.b.minidiff_summary_string = nil
+  mock_gitsigns()
+
+  eq(child.lua_get('MiniStatusline.section_diff({})'), ' +1 ~2 -3')
+
+  -- Should return non-empty string even if there is no branch
+  child.b.gitsigns_status = ''
+  eq(child.lua_get('MiniStatusline.section_diff({})'), ' -')
+
+  -- Should return empty string if no Git data is found
+  child.b.gitsigns_status = nil
+  eq(child.lua_get('MiniStatusline.section_diff({})'), '')
+end
+
+T['section_diff()']['respects `args.trunc_width`'] = function()
+  set_width(100)
+  eq(child.lua_get('MiniStatusline.section_diff({ trunc_width = 100 })'), ' #4 +3 ~2 -1')
+  set_width(99)
+  eq(child.lua_get('MiniStatusline.section_diff({ trunc_width = 100 })'), '')
+end
+
+T['section_diff()']['respects `args.icon`'] = function()
+  eq(child.lua_get([[MiniStatusline.section_diff({ icon = 'A' })]]), 'A #4 +3 ~2 -1')
+  eq(child.lua_get([[MiniStatusline.section_diff({ icon = 'AAA' })]]), 'AAA #4 +3 ~2 -1')
+end
+
+T['section_diff()']['respects `config.use_icons`'] = function()
+  child.lua('MiniStatusline.config.use_icons = false')
+  eq(child.lua_get([[MiniStatusline.section_diff({})]]), 'Diff #4 +3 ~2 -1')
+
+  -- Should also use buffer local config
+  child.b.ministatusline_config = { use_icons = true }
+  eq(child.lua_get([[MiniStatusline.section_diff({})]]), ' #4 +3 ~2 -1')
 end
 
 T['section_location()'] = new_set()

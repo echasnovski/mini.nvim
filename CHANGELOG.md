@@ -53,6 +53,7 @@
 ## mini.statusline
 
 - BREAKING FEATURE: `section_git()` now prefers using data from 'mini.git' with fallback on pure HEAD data from 'lewis6991/gistigns.nvim'.
+- FEATURE: add `section_diff()` to show data from 'mini.diff' with fallback on diff data from 'lewis6991/gistigns.nvim'.
 
 ## mini.tabline
 
