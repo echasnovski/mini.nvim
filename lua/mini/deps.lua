@@ -1459,7 +1459,12 @@ end
 -- CLI ------------------------------------------------------------------------
 H.cli_run = function(jobs)
   local config_job = H.get_config().job
-  local n_threads = config_job.n_threads or math.floor(0.8 * #vim.loop.cpu_info())
+  local n_threads = config_job.n_threads
+  if not n_threads then
+    local cpus = vim.loop.cpu_info()
+    local n_cpus = (type(cpus) == 'table') and #cpus or 1
+    n_threads = math.floor(0.8 * n_cpus)
+  end
   local timeout = config_job.timeout or 30000
 
   -- Use only actually runnable jobs
