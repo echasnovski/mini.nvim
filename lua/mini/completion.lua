@@ -909,7 +909,7 @@ H.show_info_window = function()
     lines = H.process_lsp_response(H.info.lsp.result, function(response)
       if not response.documentation then return {} end
       local res = vim.lsp.util.convert_input_to_markdown_lines(response.documentation)
-      return vim.split(table.concat(res, '\n'), '\n', { trimempty = true })
+      return H.trim_empty_lines(res)
     end)
 
     H.info.lsp.status = 'done'
@@ -966,7 +966,7 @@ H.info_window_lines = function(info_id)
   local doc = lsp_completion_item.documentation
   if doc then
     local lines = vim.lsp.util.convert_input_to_markdown_lines(doc)
-    return vim.split(table.concat(lines, '\n'), '\n', { trimempty = true })
+    return H.trim_empty_lines(lines)
   end
 
   -- Finally, try request to resolve current completion to add documentation
@@ -1391,5 +1391,13 @@ H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 H.get_buf_lsp_clients = function() return vim.lsp.get_clients({ bufnr = 0 }) end
 if vim.fn.has('nvim-0.10') == 0 then H.get_buf_lsp_clients = function() return vim.lsp.buf_get_clients() end end
+
+H.trim_empty_lines = function(lines)
+  if vim.fn.has('nvim-0.10') then
+    return vim.split(table.concat(lines, '\n'), '\n', { trimempty = true })
+  else
+    return vim.lsp.util.trim_empty_lines(lines)
+  end
+end
 
 return MiniCompletion
