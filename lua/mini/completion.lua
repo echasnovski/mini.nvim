@@ -909,7 +909,7 @@ H.show_info_window = function()
     lines = H.process_lsp_response(H.info.lsp.result, function(response)
       if not response.documentation then return {} end
       local res = vim.lsp.util.convert_input_to_markdown_lines(response.documentation)
-      return vim.lsp.util.trim_empty_lines(res)
+      return vim.split(table.concat(res, '\n'), '\n', { trimempty = true })
     end)
 
     H.info.lsp.status = 'done'
@@ -966,7 +966,7 @@ H.info_window_lines = function(info_id)
   local doc = lsp_completion_item.documentation
   if doc then
     local lines = vim.lsp.util.convert_input_to_markdown_lines(doc)
-    return vim.lsp.util.trim_empty_lines(lines)
+    return vim.split(table.concat(lines, '\n'), '\n', { trimempty = true })
   end
 
   -- Finally, try request to resolve current completion to add documentation
