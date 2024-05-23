@@ -477,6 +477,9 @@ end
 ---   and in progress action (see |MiniGit.get_buf_data()| for more details).
 ---   See |MiniGit-examples| for how it can be tweaked and used in statusline.
 ---
+--- Note: this function is called automatically for all new normal buffers.
+--- Use it explicitly if buffer was disabled.
+---
 --- `User` event `MiniGitUpdated` is triggered whenever tracking data is updated.
 --- Note that not all data listed in |MiniGit.get_buf_data()| can be present (yet)
 --- at the point of event being triggered.
