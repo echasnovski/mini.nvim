@@ -631,8 +631,8 @@ if vim.fn.has('nvim-0.8') == 0 then
 end
 
 H.compute_attached_lsp = function(buf_id)
-  local names = vim.tbl_map(function() return '+' end, H.get_buf_lsp_clients(buf_id))
-  return table.concat(names, '')
+  local count = vim.tbl_count(H.get_buf_lsp_clients(buf_id))
+  return string.rep('+', count)
 end
 
 H.get_buf_lsp_clients = function(buf_id) return vim.lsp.get_clients({ bufnr = buf_id }) end
