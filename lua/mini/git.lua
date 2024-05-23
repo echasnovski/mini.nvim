@@ -1109,7 +1109,12 @@ H.show_in_split = function(mods, lines, subcmd, name)
   if subcmd == 'log' or subcmd == 'blame' then filetype = 'git' end
   -- TODO: Remove after compatibility with Neovim=0.7 is dropped
   if subcmd == 'show' and vim.fn.has('nvim-0.8') == 1 then filetype = vim.filetype.match({ buf = buf_id }) end
-  if filetype ~= nil then vim.bo[buf_id].filetype = filetype end
+
+  local has_filetype = not (filetype == nil or filetype == '')
+  if has_filetype then vim.bo[buf_id].filetype = filetype end
+
+  -- Completely unfold for no filetype output (like `:Git help`)
+  if not has_filetype then vim.wo[win_stdout].foldlevel = 999 end
 
   return win_source, win_stdout
 end
@@ -1117,7 +1122,6 @@ end
 H.define_minigit_window = function(cleanup)
   local buf_id, win_id = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win()
   vim.bo.swapfile, vim.bo.buflisted = false, false
-  vim.wo.foldlevel = 999
 
   -- Define action to finish editing Git related file
   local finish_au_id

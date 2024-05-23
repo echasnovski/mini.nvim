@@ -548,6 +548,7 @@ T['show_diff_source()']['tries to infer and set filetype'] = function()
   eq(get_lines(), { 'local a = 1', '-- This is a Lua comment' })
   eq(get_cursor(), { 1, 0 })
   eq(child.bo.filetype, 'lua')
+  eq(child.wo.foldlevel, 0)
 end
 
 T['show_diff_source()']['respects `opts.split`'] = new_set(
@@ -1803,9 +1804,9 @@ T[':Git'] = new_set({
       child.lua([[
         _G.stdio_queue = {
           -- Get supported subcommands
-          { { 'out', 'add\nblame\ndiff\nlog\npush\npull\nshow\nreflog\nl' } },
+          { { 'out', 'add\nblame\ndiff\nhelp\nlog\npush\npull\nshow\nreflog\nl' } },
           -- Get "info showing" subcommands
-          { { 'out', 'blame\ndiff\nlog\nshow' } },
+          { { 'out', 'blame\ndiff\nhelp\nlog\nshow' } },
           -- Get aliases
           { { 'out', 'alias.l log -5' } },
         }
@@ -1902,7 +1903,7 @@ T[':Git']['works'] = function()
   eq(child.bo.filetype, 'git')
   eq(child.bo.buflisted, false)
   eq(child.bo.swapfile, false)
-  eq(child.wo.foldlevel, 999)
+  eq(child.wo.foldlevel, 0)
 end
 
 T[':Git']['works asynchronously with bang modifier'] = function()
@@ -1995,22 +1996,28 @@ T[':Git']['output']['sets filetype for common subcommands'] = function()
     table.insert(_G.stdio_queue, { { 'out', 'abc1234 Neo McVim' } })     -- blame
     table.insert(_G.stdio_queue, { { 'out', 'commit abcd1234' } })       -- diff
     table.insert(_G.stdio_queue, { { 'out', 'commit abc1234\nHello' } }) -- log
+    table.insert(_G.stdio_queue, { { 'out', 'Help output' } })           -- help
     table.insert(_G.stdio_queue, { { 'out', 'Hello' } })                 -- show
   ]])
 
   local validate = function(command, filetype)
+    child.cmd('%bwipeout')
     local cur_buf_id = get_buf()
     child.cmd(command)
     eq(cur_buf_id == get_buf(), false)
     eq(child.bo.filetype, filetype)
+    -- Should unfold only if no filetype is inferred
+    eq(child.wo.foldlevel, filetype == '' and 999 or 0)
   end
 
-  validate(':Git blame -- %', 'git')
-  validate(':Git diff', 'diff')
-  validate(':Git log', 'git')
+  validate('Git blame -- %', 'git')
+  validate('Git diff', 'diff')
+  validate('Git log', 'git')
+  validate('Git help commit', '')
 
   if child.fn.has('nvim-0.8') == 0 then return end
-  validate(':Git show HEAD:file.lua', 'lua')
+  child.cmd('au FileType lua setlocal foldlevel=0')
+  validate('Git show HEAD:file.lua', 'lua')
 end
 
 T[':Git']['output']['respects `:silent` modifier'] = function()
@@ -2170,6 +2177,7 @@ T[':Git']['opens Git editor in current instance'] = new_set(
       eq(child.fn.winlayout(), { 'row', { { 'leaf', init_win_id }, { 'leaf', get_win() } } })
       eq(child.bo.filetype, 'gitcommit')
       eq(child.fn.mode(), 'n')
+      eq(child.wo.foldlevel, 0)
 
       -- Should not stop due to timeout
       local is_job_active = function() return child.lua_get('pcall(vim.fn.jobpid, _G.channel)') end
@@ -2322,7 +2330,7 @@ T[':Git']['completion'] = new_set({
       child.lua([[_G.help_lines = vim.fn.readfile('help-output')]])
       child.lua([[_G.help_output = { { 'out', table.concat(_G.help_lines, '\n') } }]])
 
-      child.set_size(16, 32)
+      child.set_size(17, 32)
       child.o.cmdheight = 2
       child.o.laststatus = 0
     end,
