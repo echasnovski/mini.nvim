@@ -103,11 +103,11 @@ Here are code snippets for some common installation methods (use only one):
         <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td> -->
         <!-- </tr> -->
         <tr>
-            <!-- <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini-git', version = false },</code></td> -->
-            <td rowspan=1>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini-git', version = false },</code></td>
+            <!-- <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini-git', version = false, main = 'mini.git' },</code></td> -->
+            <td rowspan=1>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini-git', version = false, main = 'mini.git' },</code></td>
         </tr>
         <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini-git', version = '*' },</code></td> -->
+        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini-git', version = '*', main = 'mini.git' },</code></td> -->
         <!-- </tr> -->
     </tbody>
 </table>
