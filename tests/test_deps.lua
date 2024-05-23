@@ -1105,6 +1105,23 @@ T['add()']['Install']['respects `config.job.n_threads`'] = function()
   eq(40 <= duration, true)
 end
 
+T['add()']['Install']['works when no information about number of cores is available'] = function()
+  child.lua([[
+    _G.stdio_queue = {
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Clone
+      { out = 'sha0head' },          -- Get `HEAD`
+      { out = 'origin/main' },       -- Get default branch
+      { out = 'origin/main' },       -- Check if `main` is origin branch
+      { out = 'sha0head' },          -- Get commit of `origin/main`
+      {},                            -- Stash changes
+      {},                            -- Checkout changes
+    }
+  ]])
+  child.lua('vim.loop.cpu_info = function() return nil end')
+  expect.no_error(function() add('user/new_plugin') end)
+end
+
 T['add()']['Install']['respects `config.job.timeout`'] = function()
   child.lua([[
     _G.stdio_queue = {
@@ -1807,6 +1824,23 @@ T['update()']['respects `config.job.n_threads`'] = function()
   update()
   local duration = 0.000001 * (child.loop.hrtime() - start_time)
   eq(40 <= duration, true)
+end
+
+T['update()']['works when no information about number of cores is available'] = function()
+  child.lua([[
+    _G.stdio_queue = {
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      {},                            -- Set `origin` to source in plugin_1
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      {},                            -- Fetch in plugin_1
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'sha1head' },          -- Get commit of `checkout` in plugin_1
+    }
+  ]])
+  add('user/plugin_1')
+  child.lua('vim.loop.cpu_info = function() return nil end')
+  expect.no_error(update)
 end
 
 T['update()']['respects `config.job.timeout`'] = function()

@@ -1459,8 +1459,7 @@ end
 -- CLI ------------------------------------------------------------------------
 H.cli_run = function(jobs)
   local config_job = H.get_config().job
-  local n_threads = config_job.n_threads or math.floor(0.8 * #vim.loop.cpu_info())
-  local timeout = config_job.timeout or 30000
+  local n_threads = math.max(config_job.n_threads or H.get_n_threads(), 1)
 
   -- Use only actually runnable jobs
   local should_run = function(job)
@@ -1517,14 +1516,14 @@ H.cli_run = function(jobs)
       if not process:is_active() then return end
       table.insert(job.err, 'PROCESS REACHED TIMEOUT.')
       on_exit(1)
-    end, timeout)
+    end, config_job.timeout)
   end
 
-  for _ = 1, math.max(n_threads, 1) do
+  for _ = 1, n_threads do
     run_next()
   end
 
-  vim.wait(timeout * n_total, function() return n_total <= n_finished end, 1)
+  vim.wait(config_job.timeout * n_total, function() return n_total <= n_finished end, 1)
 end
 
 H.cli_read_stream = function(stream, feed)
@@ -1586,6 +1585,8 @@ H.notify = vim.schedule_wrap(function(msg, level)
 end)
 
 H.get_timestamp = function() return vim.fn.strftime('%Y-%m-%d %H:%M:%S') end
+
+H.get_n_threads = function() return math.floor(0.8 * #(vim.loop.cpu_info() or {})) end
 
 H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
 
