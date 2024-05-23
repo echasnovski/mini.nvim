@@ -382,6 +382,14 @@ T['section_lsp()']['works'] = function()
   child.lua('_G.detach_lsp()')
   child.lua('_G.detach_lsp()')
   eq(child.lua_get('MiniStatusline.section_lsp({})'), '')
+
+  -- Should work if attached buffer clients is returned not as array
+  child.lua([[
+    local f = function() return { [2] = { id = 2 }, [4] = { id = 4 } } end
+    vim.lsp.buf_get_clients, vim.lsp.get_clients = f, f
+    if vim.fn.has('nvim-0.8') == 1 then vim.api.nvim_exec_autocmds('LspAttach', {}) end
+  ]])
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 ++')
 end
 
 T['section_lsp()']['respects `args.trunc_width`'] = function()
