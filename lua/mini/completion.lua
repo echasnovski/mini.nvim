@@ -909,7 +909,7 @@ H.show_info_window = function()
     lines = H.process_lsp_response(H.info.lsp.result, function(response)
       if not response.documentation then return {} end
       local res = vim.lsp.util.convert_input_to_markdown_lines(response.documentation)
-      return vim.lsp.util.trim_empty_lines(res)
+      return H.normalize_lines(res)
     end)
 
     H.info.lsp.status = 'done'
@@ -966,7 +966,7 @@ H.info_window_lines = function(info_id)
   local doc = lsp_completion_item.documentation
   if doc then
     local lines = vim.lsp.util.convert_input_to_markdown_lines(doc)
-    return vim.lsp.util.trim_empty_lines(lines)
+    return H.normalize_lines(lines)
   end
 
   -- Finally, try request to resolve current completion to add documentation
@@ -1380,10 +1380,14 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
+H.normalize_lines = function(lines)
+  -- Enaure no newline characters and no leading/trailing empty lines
+  lines = table.concat(lines, '\n'):gsub('^\n+', ''):gsub('\n+$', '')
+  return vim.split(lines, '\n')
+end
+
 H.stylize_markdown = function(buf_id, lines, opts)
-  -- Handle "\n" characters in lines. Should be not needed on Neovim>=0.10.
-  lines = vim.split(table.concat(lines, '\n'), '\n')
-  return vim.lsp.util.stylize_markdown(buf_id, lines, opts)
+  return vim.lsp.util.stylize_markdown(buf_id, H.normalize_lines(lines), opts)
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
