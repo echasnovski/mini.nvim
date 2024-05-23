@@ -335,6 +335,26 @@ MiniStatusline.section_diagnostics = function(args)
   return icon .. table.concat(t, '')
 end
 
+--- Section for attached LSP servers
+---
+--- Shows number of LSP servers (each as separate "+" character) attached to
+--- current buffer or nothing if none is attached.
+--- Nothing is shown if window width is lower than `args.trunc_width`.
+---
+---@param args __statusline_args Use `args.icon` to supply your own icon.
+---
+---@return __statusline_section
+MiniStatusline.section_lsp = function(args)
+  if MiniStatusline.is_truncated(args.trunc_width) then return '' end
+
+  local attached = H.get_attached_lsp()
+  if attached == '' then return '' end
+
+  local use_icons = H.use_icons or H.get_config().use_icons
+  local icon = args.icon or (use_icons and '󰰎' or 'LSP')
+  return icon .. ' ' .. attached
+end
+
 --- Section for file name
 ---
 --- Show full file name or relative in short output.
@@ -447,8 +467,8 @@ H.diagnostic_levels = {
   { name = 'HINT', sign = 'H' },
 }
 
--- Count of attached LSP clients per buffer id
-H.n_attached_lsp = {}
+-- String representation of attached LSP clients per buffer id
+H.attached_lsp = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -497,11 +517,12 @@ H.create_autocommands = function()
   au({ 'WinEnter', 'BufWinEnter' }, '*', H.ensure_content, 'Ensure statusline content')
 
   if vim.fn.has('nvim-0.8') == 1 then
-    local make_track_lsp = function(increment)
-      return function(data) H.n_attached_lsp[data.buf] = (H.n_attached_lsp[data.buf] or 0) + increment end
-    end
-    au('LspAttach', '*', make_track_lsp(1), 'Track LSP clients')
-    au('LspDetach', '*', make_track_lsp(-1), 'Track LSP clients')
+    -- Use `schedule_wrap()` because at `LspDetach` server is still present
+    local track_lsp = vim.schedule_wrap(function(data)
+      H.attached_lsp[data.buf] = H.compute_attached_lsp(data.buf)
+      vim.cmd('redrawstatus')
+    end)
+    au({ 'LspAttach', 'LspDetach' }, '*', track_lsp, 'Track LSP clients')
   end
 end
 
@@ -601,6 +622,40 @@ end
 
 H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' end
 
+-- LSP ------------------------------------------------------------------------
+H.get_attached_lsp = function() return H.attached_lsp[vim.api.nvim_get_current_buf()] or '' end
+if vim.fn.has('nvim-0.8') == 0 then
+  H.get_attached_lsp = function() return H.compute_attached_lsp(vim.api.nvim_get_current_buf()) end
+end
+
+H.compute_attached_lsp = function(buf_id)
+  local names = vim.tbl_map(function() return '+' end, H.get_buf_lsp_clients(buf_id))
+  return table.concat(names, '')
+end
+
+H.get_buf_lsp_clients = function(buf_id) return vim.lsp.get_clients({ bufnr = buf_id }) end
+if vim.fn.has('nvim-0.10') == 0 then
+  H.get_buf_lsp_clients = function(buf_id) return vim.lsp.buf_get_clients(buf_id) end
+end
+
+-- Diagnostics ----------------------------------------------------------------
+H.diagnostic_get_count = function()
+  local res = {}
+  for _, d in ipairs(vim.diagnostic.get(0)) do
+    res[d.severity] = (res[d.severity] or 0) + 1
+  end
+  return res
+end
+if vim.fn.has('nvim-0.10') == 1 then H.diagnostic_get_count = function() return vim.diagnostic.count(0) end end
+
+if vim.fn.has('nvim-0.10') == 1 then
+  H.diagnostic_is_disabled = function(_) return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
+elseif vim.fn.has('nvim-0.9') == 1 then
+  H.diagnostic_is_disabled = function(_) return vim.diagnostic.is_disabled(0) end
+else
+  H.diagnostic_is_disabled = function(_) return false end
+end
+
 -- Utilities ------------------------------------------------------------------
 H.get_filesize = function()
   local size = vim.fn.getfsize(vim.fn.getreg('%'))
@@ -623,26 +678,6 @@ H.ensure_get_icon = function()
       H.get_icon = function() return devicons.get_icon(vim.fn.expand('%:t'), nil, { default = true }) end
     end
   end
-end
-
-H.has_no_lsp_attached = function() return (H.n_attached_lsp[vim.api.nvim_get_current_buf()] or 0) == 0 end
-if vim.fn.has('nvim-0.8') == 0 then H.has_no_lsp_attached = function() return #vim.lsp.buf_get_clients() == 0 end end
-
-H.diagnostic_get_count = function()
-  local res = {}
-  for _, d in ipairs(vim.diagnostic.get(0)) do
-    res[d.severity] = (res[d.severity] or 0) + 1
-  end
-  return res
-end
-if vim.fn.has('nvim-0.10') == 1 then H.diagnostic_get_count = function() return vim.diagnostic.count(0) end end
-
-if vim.fn.has('nvim-0.10') == 1 then
-  H.diagnostic_is_disabled = function(_) return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
-elseif vim.fn.has('nvim-0.9') == 1 then
-  H.diagnostic_is_disabled = function(_) return vim.diagnostic.is_disabled(0) end
-else
-  H.diagnostic_is_disabled = function(_) return false end
 end
 
 return MiniStatusline

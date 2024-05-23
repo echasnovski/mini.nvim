@@ -272,6 +272,21 @@ Return ~
 `(string)` Section string.
 
 ------------------------------------------------------------------------------
+                                                  *MiniStatusline.section_lsp()*
+                      `MiniStatusline.section_lsp`({args})
+Section for attached LSP servers
+
+Shows number of LSP servers (each as separate "+" character) attached to
+current buffer or nothing if none is attached.
+Nothing is shown if window width is lower than `args.trunc_width`.
+
+Parameters ~
+{args} `(table)` Section arguments. Use `args.icon` to supply your own icon.
+
+Return ~
+`(string)` Section string.
+
+------------------------------------------------------------------------------
                                              *MiniStatusline.section_filename()*
                    `MiniStatusline.section_filename`({args})
 Section for file name

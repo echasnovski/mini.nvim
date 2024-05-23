@@ -47,6 +47,8 @@ local mock_minidiff = function() child.b.minidiff_summary_string = '#4 +3 ~2 -1'
 
 local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua') end
 
+local mock_lsp = function() child.cmd('luafile tests/dir-statusline/mock-lsp.lua') end
+
 local mocked_filepath = vim.fn.fnamemodify('tests/dir-statusline/mocked.lua', ':p')
 local mock_file = function(bytes)
   -- Reduce one byte for '\n' at end
@@ -308,8 +310,12 @@ T['section_diagnostics()']['works'] = function()
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   -- Should not depend on LSP server attached
-  child.lua('vim.lsp.buf_get_clients = function() return {} end')
-  if child.fn.has('nvim-0.8') == 1 then child.lua('_G.detach_lsp()') end
+  mock_lsp()
+  eq(child.lua_get('_G.n_lsp_clients'), 1)
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
+
+  child.lua('_G.detach_lsp()')
+  eq(child.lua_get('_G.n_lsp_clients'), 0)
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   -- Should return empty string if no diagnostic entries defined
@@ -361,6 +367,42 @@ T['section_diagnostics()']['is not shown if diagnostics is disabled'] = function
     child.diagnostic.disable(buf_id)
   end
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
+end
+
+T['section_lsp()'] = new_set({ hooks = { pre_case = mock_lsp } })
+
+T['section_lsp()']['works'] = function()
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 +')
+
+  -- Should show number of attached LSP servers
+  child.lua('_G.attach_lsp()')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 ++')
+
+  -- Should show empty string if no attached LSP servers
+  child.lua('_G.detach_lsp()')
+  child.lua('_G.detach_lsp()')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '')
+end
+
+T['section_lsp()']['respects `args.trunc_width`'] = function()
+  set_width(100)
+  eq(child.lua_get('MiniStatusline.section_lsp({ trunc_width = 100 })'), '󰰎 +')
+  set_width(99)
+  eq(child.lua_get('MiniStatusline.section_lsp({ trunc_width = 100 })'), '')
+end
+
+T['section_lsp()']['respects `args.icon`'] = function()
+  eq(child.lua_get([[MiniStatusline.section_lsp({icon = 'A'})]]), 'A +')
+  eq(child.lua_get([[MiniStatusline.section_lsp({icon = 'AAA'})]]), 'AAA +')
+end
+
+T['section_lsp()']['respects `config.use_icons`'] = function()
+  child.lua('MiniStatusline.config.use_icons = false')
+  eq(child.lua_get([[MiniStatusline.section_lsp({})]]), 'LSP +')
+
+  -- Should also use buffer local config
+  child.b.ministatusline_config = { use_icons = true }
+  eq(child.lua_get([[MiniStatusline.section_lsp({})]]), '󰰎 +')
 end
 
 T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_devicons, post_case = unmock_file } })

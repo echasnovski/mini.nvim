@@ -58,6 +58,7 @@
     - Fallback icon is "Diag" instead of "LSP".
 - BREAKING FEATURE: `section_git()` now prefers using data from 'mini.git' with fallback on pure HEAD data from 'lewis6991/gistigns.nvim'.
 - FEATURE: add `section_diff()` to show data from 'mini.diff' with fallback on diff data from 'lewis6991/gistigns.nvim'.
+- FEATURE: add `section_lsp()` to show indicator of LSP servers attached to the buffer.
 - BREAKING FEATURE: update default active content to use both `section_git()` and `section_diff()`.
 
 ## mini.tabline
