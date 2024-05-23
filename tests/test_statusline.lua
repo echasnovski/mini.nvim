@@ -399,7 +399,7 @@ end
 
 T['section_fileinfo()']["correctly asks 'nvim-web-devicons' for icon"] = function()
   child.cmd('e tmp.txt')
-  eq(child.lua_get('_G.devicons_args'), { filename = 'tmp.txt', extension = 'txt', options = { default = true } })
+  eq(child.lua_get('_G.devicons_args'), { filename = 'tmp.txt', options = { default = true } })
 end
 
 T['section_fileinfo()']['uses correct filetype'] = function()

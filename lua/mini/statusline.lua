@@ -202,7 +202,6 @@ end
 ---@return string String suitable for 'statusline'.
 MiniStatusline.combine_groups = function(groups)
   local parts = vim.tbl_map(function(s)
-    --stylua: ignore start
     if type(s) == 'string' then return s end
     if type(s) ~= 'table' then return '' end
 
@@ -210,17 +209,12 @@ MiniStatusline.combine_groups = function(groups)
     local str = table.concat(string_arr, ' ')
 
     -- Use previous highlight group
-    if s.hl == nil then
-      return (' %s '):format(str)
-    end
+    if s.hl == nil then return ' ' .. str .. ' ' end
 
     -- Allow using this highlight group later
-    if str:len() == 0 then
-      return string.format('%%#%s#', s.hl)
-    end
+    if str:len() == 0 then return '%#' .. s.hl .. '#' end
 
     return string.format('%%#%s# %s ', s.hl, str)
-    --stylua: ignore end
   end, groups)
 
   return table.concat(parts, '')
@@ -282,8 +276,9 @@ MiniStatusline.section_git = function(args)
   local summary = vim.b.minigit_summary_string or vim.b.gitsigns_head
   if summary == nil then return '' end
 
-  local icon = args.icon or (H.get_config().use_icons and '' or 'Git')
-  return string.format('%s %s', icon, summary == '' and '-' or summary)
+  local use_icons = H.use_icons or H.get_config().use_icons
+  local icon = args.icon or (use_icons and '' or 'Git')
+  return icon .. ' ' .. (summary == '' and '-' or summary)
 end
 
 --- Section for diff information
@@ -306,8 +301,9 @@ MiniStatusline.section_diff = function(args)
   local summary = vim.b.minidiff_summary_string or vim.b.gitsigns_status
   if summary == nil then return '' end
 
-  local icon = args.icon or (H.get_config().use_icons and '' or 'Diff')
-  return string.format('%s %s', icon, summary == '' and '-' or summary)
+  local use_icons = H.use_icons or H.get_config().use_icons
+  local icon = args.icon or (use_icons and '' or 'Diff')
+  return icon .. ' ' .. (summary == '' and '-' or summary)
 end
 
 --- Section for Neovim's builtin diagnostics
@@ -331,10 +327,11 @@ MiniStatusline.section_diagnostics = function(args)
   for _, level in ipairs(H.diagnostic_levels) do
     local n = count[severity[level.name]] or 0
     -- Add level info only if diagnostic is present
-    if n > 0 then table.insert(t, string.format(' %s%s', level.sign, n)) end
+    if n > 0 then table.insert(t, ' ' .. level.sign .. n) end
   end
 
-  local icon = args.icon or (H.get_config().use_icons and '' or 'LSP')
+  local use_icons = H.use_icons or H.get_config().use_icons
+  local icon = args.icon or (use_icons and '' or 'LSP')
   if vim.tbl_count(t) == 0 then return ('%s -'):format(icon) end
   return string.format('%s%s', icon, table.concat(t, ''))
 end
@@ -378,8 +375,8 @@ MiniStatusline.section_fileinfo = function(args)
   if (filetype == '') or H.isnt_normal_buffer() then return '' end
 
   -- Add filetype icon
-  local icon = H.get_filetype_icon()
-  if icon ~= '' then filetype = string.format('%s %s', icon, filetype) end
+  H.ensure_get_icon()
+  if H.get_icon ~= nil then filetype = H.get_icon() .. ' ' .. filetype end
 
   -- Construct output string if truncated
   if MiniStatusline.is_truncated(args.trunc_width) then return filetype end
@@ -434,10 +431,10 @@ MiniStatusline.section_searchcount = function(args)
 
   if s_count.incomplete == 1 then return '?/?' end
 
-  local too_many = ('>%d'):format(s_count.maxcount)
+  local too_many = '>' .. s_count.maxcount
   local current = s_count.current > s_count.maxcount and too_many or s_count.current
   local total = s_count.total > s_count.maxcount and too_many or s_count.total
-  return ('%s/%s'):format(current, total)
+  return current .. '/' .. total
 end
 
 -- Helper data ================================================================
@@ -577,8 +574,9 @@ H.modes = setmetatable({
 -- stylua: ignore end
 
 -- Default content ------------------------------------------------------------
+--stylua: ignore
 H.default_content_active = function()
-  -- stylua: ignore start
+  H.use_icons = H.get_config().use_icons
   local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
   local git           = MiniStatusline.section_git({ trunc_width = 40 })
   local diff          = MiniStatusline.section_diff({ trunc_width = 75 })
@@ -587,6 +585,7 @@ H.default_content_active = function()
   local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
   local location      = MiniStatusline.section_location({ trunc_width = 75 })
   local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
+  H.use_icons = nil
 
   -- Usage of `MiniStatusline.combine_groups()` ensures highlighting and
   -- correct padding with spaces between groups (accounts for 'missing'
@@ -600,7 +599,6 @@ H.default_content_active = function()
     { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
     { hl = mode_hl,                  strings = { search, location } },
   })
-  -- stylua: ignore end
 end
 
 H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' end
@@ -622,15 +620,16 @@ H.get_filesize = function()
   end
 end
 
-H.get_filetype_icon = function()
-  -- Skip if NerdFonts is disabled
-  if not H.get_config().use_icons then return '' end
-  -- Have this `require()` here to not depend on plugin initialization order
-  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-  if not has_devicons then return '' end
-
-  local file_name, file_ext = vim.fn.expand('%:t'), vim.fn.expand('%:e')
-  return devicons.get_icon(file_name, file_ext, { default = true })
+H.ensure_get_icon = function()
+  local use_icons = H.use_icons or H.get_config().use_icons
+  if not use_icons then H.get_icon = nil end
+  if use_icons and H.get_icon == nil then
+    -- Have this `require()` here to not depend on plugin initialization order
+    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+    if has_devicons then
+      H.get_icon = function() return devicons.get_icon(vim.fn.expand('%:t'), nil, { default = true }) end
+    end
+  end
 end
 
 H.has_no_lsp_attached = function() return (H.n_attached_lsp[vim.api.nvim_get_current_buf()] or 0) == 0 end
