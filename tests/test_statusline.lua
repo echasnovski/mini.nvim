@@ -733,7 +733,7 @@ T['Default content'] = new_set()
 T['Default content']['active'] = new_set({
   hooks = {
     pre_case = function()
-      child.set_size(5, 150)
+      child.set_size(5, 160)
 
       mock_devicons()
       mock_file(10)
@@ -742,6 +742,7 @@ T['Default content']['active'] = new_set({
       child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
       child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
       mock_diagnostics()
+      mock_lsp()
       mock_minigit()
       mock_minidiff()
       type_keys('/a', '<CR>')
