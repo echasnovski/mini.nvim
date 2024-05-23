@@ -307,15 +307,14 @@ T['section_diagnostics()'] = new_set({ hooks = { pre_case = mock_diagnostics } }
 T['section_diagnostics()']['works'] = function()
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
-  -- Should return predefined string if no diagnostic output
-  child.lua('vim.diagnostic.get = function(...) return {} end')
-  child.lua('vim.diagnostic.count = function(...) return {} end')
-  child.lua('vim.diagnostic.get = function(...) return {} end')
-  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' -')
-
-  -- Should return empty string if no LSP client attached
+  -- Should not depend on LSP server attached
   child.lua('vim.lsp.buf_get_clients = function() return {} end')
   if child.fn.has('nvim-0.8') == 1 then child.lua('_G.detach_lsp()') end
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
+
+  -- Should return empty string if no diagnostic entries defined
+  child.lua('vim.diagnostic.get = function(...) return {} end')
+  child.lua('vim.diagnostic.count = function(...) return {} end')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
@@ -333,15 +332,20 @@ end
 
 T['section_diagnostics()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
-  eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'LSP E4 W3 I2 H1')
+  eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'Diag E4 W3 I2 H1')
 
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
   eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), ' E4 W3 I2 H1')
 end
 
-T['section_diagnostics()']['is shown only in normal buffers'] = function()
+T['section_diagnostics()']['works in not normal buffers'] = function()
+  -- Should return empty string if there is no diagnostic defined
   child.cmd('help')
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
+
+  child.lua('vim.diagnostic.get = function(...) return {} end')
+  child.lua('vim.diagnostic.count = function(...) return {} end')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 

@@ -52,6 +52,10 @@
 
 ## mini.statusline
 
+- BREAKING: `section_diagnostics()` now depends only on defined diagnostic. This means:
+    - Something is shown **only** if there is any diagnostic actually present in the buffer. No diagnostic entries - nothing is shown.
+    Previously it did not show if there was no LSP servers attached (as initially diagnostics came only from LSP) or buffer was not normal.
+    - Fallback icon is "Diag" instead of "LSP".
 - BREAKING FEATURE: `section_git()` now prefers using data from 'mini.git' with fallback on pure HEAD data from 'lewis6991/gistigns.nvim'.
 - FEATURE: add `section_diff()` to show data from 'mini.diff' with fallback on diff data from 'lewis6991/gistigns.nvim'.
 - BREAKING FEATURE: update default active content to use both `section_git()` and `section_diff()`.

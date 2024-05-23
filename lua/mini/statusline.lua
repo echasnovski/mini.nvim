@@ -308,8 +308,8 @@ end
 
 --- Section for Neovim's builtin diagnostics
 ---
---- Shows nothing if there is no attached LSP clients or for short output.
---- Otherwise uses builtin Neovim capabilities to compute and show number of
+--- Shows nothing if diagnostics is disabled, no diagnostic is set, or for short
+--- output. Otherwise uses |vim.diagnostic.get()| to compute and show number of
 --- errors ('E'), warnings ('W'), information ('I'), and hints ('H').
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
@@ -318,8 +318,7 @@ end
 ---
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
-  local dont_show = MiniStatusline.is_truncated(args.trunc_width) or H.isnt_normal_buffer() or H.has_no_lsp_attached()
-  if dont_show or H.diagnostic_is_disabled() then return '' end
+  if MiniStatusline.is_truncated(args.trunc_width) or H.diagnostic_is_disabled() then return '' end
 
   -- Construct string parts
   local count = H.diagnostic_get_count()
@@ -329,11 +328,11 @@ MiniStatusline.section_diagnostics = function(args)
     -- Add level info only if diagnostic is present
     if n > 0 then table.insert(t, ' ' .. level.sign .. n) end
   end
+  if #t == 0 then return '' end
 
   local use_icons = H.use_icons or H.get_config().use_icons
-  local icon = args.icon or (use_icons and '' or 'LSP')
-  if vim.tbl_count(t) == 0 then return ('%s -'):format(icon) end
-  return string.format('%s%s', icon, table.concat(t, ''))
+  local icon = args.icon or (use_icons and '' or 'Diag')
+  return icon .. table.concat(t, '')
 end
 
 --- Section for file name
@@ -370,9 +369,8 @@ end
 MiniStatusline.section_fileinfo = function(args)
   local filetype = vim.bo.filetype
 
-  -- Don't show anything if can't detect file type or not inside a "normal
-  -- buffer"
-  if (filetype == '') or H.isnt_normal_buffer() then return '' end
+  -- Don't show anything if no filetype or not inside a "normal buffer"
+  if filetype == '' or vim.bo.buftype ~= '' then return '' end
 
   -- Add filetype icon
   H.ensure_get_icon()
@@ -604,11 +602,6 @@ end
 H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' end
 
 -- Utilities ------------------------------------------------------------------
-H.isnt_normal_buffer = function()
-  -- For more information see ":h buftype"
-  return vim.bo.buftype ~= ''
-end
-
 H.get_filesize = function()
   local size = vim.fn.getfsize(vim.fn.getreg('%'))
   if size < 1024 then

@@ -259,8 +259,8 @@ Return ~
                   `MiniStatusline.section_diagnostics`({args})
 Section for Neovim's builtin diagnostics
 
-Shows nothing if there is no attached LSP clients or for short output.
-Otherwise uses builtin Neovim capabilities to compute and show number of
+Shows nothing if diagnostics is disabled, no diagnostic is set, or for short
+output. Otherwise uses |vim.diagnostic.get()| to compute and show number of
 errors ('E'), warnings ('W'), information ('I'), and hints ('H').
 
 Short output is returned if window width is lower than `args.trunc_width`.
