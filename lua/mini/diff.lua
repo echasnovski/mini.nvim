@@ -185,6 +185,9 @@
 --- - `[H` / `[h` / `]h` / `]H` navigate cursor to the first / previous / next / last
 ---   hunk range of the current buffer.
 ---
+--- Mappings for some functionality are assumed to be done manually.
+--- See |MiniDiff.operator()|.
+---
 --- # Buffer-local variables ~
 ---                                                          *MiniDiff-diff-summary*
 --- Each enabled buffer has the following buffer-local variables which can be
@@ -685,7 +688,10 @@ end
 --- Perform action on hunks in region
 ---
 --- Compute hunks inside a target region (even for hunks only partially inside it)
---- and perform apply/reset operation on them.
+--- and perform apply/reset/yank operation on them.
+---
+--- The "yank" action yanks all reference lines of target hunks into
+--- a specified register (should be one of |registers|).
 ---
 --- Notes:
 --- - Whether hunk is inside a region is computed based on position of its
@@ -695,27 +701,35 @@ end
 ---
 --- Used directly in `config.mappings.apply` and `config.mappings.reset`.
 --- Usually there is no need to use this function manually.
+--- See |MiniDiff.operator()| for how to set up a mapping for "yank".
 ---
 ---@param buf_id __diff_buf_id
----@param action string One of "apply" or "reset".
+---@param action string One of "apply", "reset", "yank".
 ---@param opts table|nil Options. Possible fields:
 ---   - <line_start> `(number)` - start line of the region. Default: 1.
 ---   - <line_end> `(number)` - start line of the region. Default: last buffer line.
+---   - <register> `(string)` - register to yank reference lines into.
+---     Default: |v:register|.
 MiniDiff.do_hunks = function(buf_id, action, opts)
   buf_id = H.validate_buf_id(buf_id)
   local buf_cache = H.cache[buf_id]
   if buf_cache == nil then H.error(string.format('Buffer %d is not enabled.', buf_id)) end
   if type(buf_cache.ref_text) ~= 'string' then H.error(string.format('Buffer %d has no reference text.', buf_id)) end
 
-  if not (action == 'apply' or action == 'reset') then H.error('`action` should be one of "apply", "reset".') end
+  if not (action == 'apply' or action == 'reset' or action == 'yank') then
+    H.error('`action` should be one of "apply", "reset", "yank".')
+  end
 
-  opts = vim.tbl_deep_extend('force', { line_start = 1, line_end = vim.api.nvim_buf_line_count(buf_id) }, opts or {})
+  local default_opts = { line_start = 1, line_end = vim.api.nvim_buf_line_count(buf_id), register = vim.v.register }
+  opts = vim.tbl_deep_extend('force', default_opts, opts or {})
   local line_start, line_end = H.validate_target_lines(buf_id, opts.line_start, opts.line_end)
+  if type(opts.register) ~= 'string' then H.error('`opts.register` should be string.') end
 
   local hunks = H.get_hunks_in_range(buf_cache.hunks, line_start, line_end)
   if #hunks == 0 then return H.notify('No hunks to ' .. action, 'INFO') end
-  local f = action == 'apply' and buf_cache.source.apply_hunks or H.reset_hunks
-  f(buf_id, hunks)
+  if action == 'apply' then buf_cache.source.apply_hunks(buf_id, hunks) end
+  if action == 'reset' then H.reset_hunks(buf_id, hunks) end
+  if action == 'yank' then H.yank_hunks_ref(buf_cache.ref_text, hunks, opts.register) end
 end
 
 --- Go to hunk range in current buffer
@@ -770,31 +784,38 @@ end
 ---
 --- Perform action over region defined by marks. Used in mappings.
 ---
----@param mode string One of "apply", "reset", or the ones used in |g@|.
+--- Example of a mapping to yank reference lines of hunk range under cursor
+--- (assuming default 'config.mappings.textobject'): >
+---
+---   local rhs = function() return MiniDiff.operator('yank') .. 'gh' end
+---   vim.keymap.set('n', 'ghy', rhs, { expr = true, remap = true })
+--- <
+---@param mode string One of "apply", "reset", "yank", or the ones used in |g@|.
 MiniDiff.operator = function(mode)
   local buf_id = vim.api.nvim_get_current_buf()
   if H.is_disabled(buf_id) then return '' end
 
-  if mode == 'apply' or mode == 'reset' then
-    H.operator_cache = { action = mode, win_view = vim.fn.winsaveview() }
+  if mode == 'apply' or mode == 'reset' or mode == 'yank' then
+    H.operator_cache = { action = mode, win_view = vim.fn.winsaveview(), register = vim.v.register }
     vim.o.operatorfunc = 'v:lua.MiniDiff.operator'
     return 'g@'
   end
+  local cache = H.operator_cache
 
   -- NOTE: Using `[` / `]` marks also works in Visual mode as because it is
   -- executed as part of `g@`, which treats visual selection as a result of
   -- Operator-pending mode mechanics (for which visual selection is allowed to
   -- define motion/textobject). The downside is that it sets 'operatorfunc',
   -- but the upside is that it is "dot-repeatable" (for relative selection).
-  local opts = { line_start = vim.fn.line("'["), line_end = vim.fn.line("']") }
+  local opts = { line_start = vim.fn.line("'["), line_end = vim.fn.line("']"), register = cache.register }
   if opts.line_end < opts.line_start then return H.notify('Not a proper textobject', 'INFO') end
-  MiniDiff.do_hunks(buf_id, H.operator_cache.action, opts)
+  MiniDiff.do_hunks(buf_id, cache.action, opts)
 
   -- Restore window view for "apply" (as buffer text should not have changed)
-  if H.operator_cache.action == 'apply' and H.operator_cache.win_view ~= nil then
-    vim.fn.winrestview(H.operator_cache.win_view)
+  if cache.action == 'apply' and cache.win_view ~= nil then
+    vim.fn.winrestview(cache.win_view)
     -- NOTE: Restore only once because during dot-repeat it is not up to date
-    H.operator_cache.win_view = nil
+    cache.win_view = nil
   end
   return ''
 end
@@ -1452,6 +1473,25 @@ H.reset_hunks = function(buf_id, hunks)
     -- Keep track of current hunk lines shift as a result of previous replaces
     offset = offset + (h.ref_count - h.buf_count)
   end
+end
+
+H.yank_hunks_ref = function(ref_text, hunks, register)
+  -- Collect reference lines
+  local ref_lines, out_lines = vim.split(ref_text, '\n'), {}
+  for _, h in ipairs(hunks) do
+    for i = h.ref_start, h.ref_start + h.ref_count - 1 do
+      out_lines[i] = ref_lines[i]
+    end
+  end
+
+  -- Construct reference lines in order
+  local hunk_ref_lines = {}
+  for i = 1, #ref_lines do
+    table.insert(hunk_ref_lines, out_lines[i])
+  end
+
+  -- Put lines into target register
+  vim.fn.setreg(register, hunk_ref_lines, 'l')
 end
 
 H.get_contiguous_hunk_ranges = function(hunks)

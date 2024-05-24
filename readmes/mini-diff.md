@@ -97,6 +97,8 @@ Examples:
 - `dgh` deletes hunk range under cursor.
 - `[H` / `[h` / `]h` / `]H` navigate cursor to the first / previous / next / last hunk range of the current buffer.
 
+Mappings for some functionality are assumed to be done manually. See tag `*MiniDiff.operator()*` in help file.
+
 ### Buffer-local variables
 
 Each enabled buffer has the following buffer-local variables which can be used in custom statusline to show an overview of hunks in current buffer:

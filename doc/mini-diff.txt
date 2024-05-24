@@ -187,6 +187,9 @@ Examples:
 - `[H` / `[h` / `]h` / `]H` navigate cursor to the first / previous / next / last
   hunk range of the current buffer.
 
+Mappings for some functionality are assumed to be done manually.
+See |MiniDiff.operator()|.
+
 # Buffer-local variables ~
                                                          *MiniDiff-diff-summary*
 Each enabled buffer has the following buffer-local variables which can be
@@ -559,7 +562,10 @@ Return ~
 Perform action on hunks in region
 
 Compute hunks inside a target region (even for hunks only partially inside it)
-and perform apply/reset operation on them.
+and perform apply/reset/yank operation on them.
+
+The "yank" action yanks all reference lines of target hunks into
+a specified register (should be one of |registers|).
 
 Notes:
 - Whether hunk is inside a region is computed based on position of its
@@ -569,13 +575,16 @@ Notes:
 
 Used directly in `config.mappings.apply` and `config.mappings.reset`.
 Usually there is no need to use this function manually.
+See |MiniDiff.operator()| for how to set up a mapping for "yank".
 
 Parameters ~
 {buf_id} `(number)` Target buffer identifier. Default: 0 for current buffer.
-{action} `(string)` One of "apply" or "reset".
+{action} `(string)` One of "apply", "reset", "yank".
 {opts} `(table|nil)` Options. Possible fields:
   - <line_start> `(number)` - start line of the region. Default: 1.
   - <line_end> `(number)` - start line of the region. Default: last buffer line.
+  - <register> `(string)` - register to yank reference lines into.
+    Default: |v:register|.
 
 ------------------------------------------------------------------------------
                                                           *MiniDiff.goto_hunk()*
@@ -598,8 +607,14 @@ Perform action over region
 
 Perform action over region defined by marks. Used in mappings.
 
+Example of a mapping to yank reference lines of hunk range under cursor
+(assuming default 'config.mappings.textobject'): >
+
+  local rhs = function() return MiniDiff.operator('yank') .. 'gh' end
+  vim.keymap.set('n', 'ghy', rhs, { expr = true, remap = true })
+<
 Parameters ~
-{mode} `(string)` One of "apply", "reset", or the ones used in |g@|.
+{mode} `(string)` One of "apply", "reset", "yank", or the ones used in |g@|.
 
 ------------------------------------------------------------------------------
                                                          *MiniDiff.textobject()*

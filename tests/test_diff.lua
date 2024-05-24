@@ -1150,6 +1150,10 @@ T['do_hunks()']['works'] = function()
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'AAA\nCCC\n')
+
   -- Reset
   do_hunks(0, 'reset')
   eq(get_lines(), { 'AAA', 'BBB', 'CCC' })
@@ -1164,6 +1168,12 @@ T['do_hunks()']['works with no hunks'] = function()
   do_hunks(0, 'apply')
   validate_dummy_log({})
   validate_notifications({ { '(mini.diff) No hunks to apply', 'INFO' } })
+  clear_notify_log()
+
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), '')
+  validate_notifications({ { '(mini.diff) No hunks to yank', 'INFO' } })
   clear_notify_log()
 
   -- Reset
@@ -1188,6 +1198,11 @@ T['do_hunks()']['works with "add" hunks'] = function()
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank')
+  -- - No reference lines to yank
+  eq(child.fn.getreg('"'), '')
+
   -- Reset
   do_hunks(0, 'reset')
   eq(get_lines(), { 'aaa', 'ccc' })
@@ -1205,6 +1220,10 @@ T['do_hunks()']['works with "change" hunks'] = function()
     { buf_start = 5, buf_count = 2, ref_start = 5, ref_count = 2, type = 'change' },
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
+
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'AAA\nCCC\nEEE\nFFF\n')
 
   -- Reset
   do_hunks(0, 'reset')
@@ -1224,6 +1243,10 @@ T['do_hunks()']['works with "delete" hunks'] = function()
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'aaa\nccc\neee\nfff\n')
+
   -- Reset
   do_hunks(0, 'reset')
   eq(get_lines(), { 'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff' })
@@ -1241,6 +1264,9 @@ T['do_hunks()']['works with "delete" hunks on edges as target'] = function()
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
   clean_dummy_log()
 
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'aaa\n')
+
   do_hunks(0, 'reset', { line_start = 1, line_end = 1 })
   eq(get_lines(), { 'aaa', 'bbb' })
 
@@ -1252,6 +1278,9 @@ T['do_hunks()']['works with "delete" hunks on edges as target'] = function()
   ref_hunks = { { buf_start = 1, buf_count = 0, ref_start = 2, ref_count = 1, type = 'delete' } }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
   clean_dummy_log()
+
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'bbb\n')
 
   do_hunks(0, 'reset', { line_start = 2, line_end = 2 })
   eq(get_lines(), { 'aaa', 'bbb' })
@@ -1274,6 +1303,10 @@ T['do_hunks()']['works when "change" and "delete" hunks overlap'] = function()
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
   clean_dummy_log()
 
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'BBB\nCCC\nDDD\nEEE\n')
+
   -- Reset
   do_hunks(0, 'reset')
   eq(get_lines(), { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
@@ -1287,6 +1320,10 @@ T['do_hunks()']['respects `opts.line_start`'] = function()
   do_hunks(0, 'apply', { line_start = 2 })
   local ref_hunks = { { buf_start = 2, buf_count = 0, ref_start = 3, ref_count = 1, type = 'delete' } }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
+
+  -- Yank
+  do_hunks(0, 'yank', { line_start = 2 })
+  eq(child.fn.getreg('"'), 'CCC\n')
 
   -- Reset
   do_hunks(0, 'reset', { line_start = 2 })
@@ -1302,9 +1339,21 @@ T['do_hunks()']['respects `opts.line_end`'] = function()
   local ref_hunks = { { buf_start = 1, buf_count = 1, ref_start = 1, ref_count = 1, type = 'change' } }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank', { line_end = 1 })
+  eq(child.fn.getreg('"'), 'AAA\n')
+
   -- Reset
   do_hunks(0, 'reset', { line_end = 1 })
   eq(get_lines(), { 'AAA', 'BBB' })
+end
+
+T['do_hunks()']['respects `opts.register`'] = function()
+  set_lines({ 'aaa', 'BBB' })
+  set_ref_text(0, { 'AAA', 'BBB', 'CCC' })
+  do_hunks(0, 'yank', { register = 'a' })
+  eq(child.fn.getreg('a'), 'AAA\nCCC\n')
+  eq(child.fn.getreg('"'), '')
 end
 
 T['do_hunks()']['allows negative target lines'] = function()
@@ -1319,26 +1368,36 @@ T['do_hunks()']['allows negative target lines'] = function()
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank', { line_start = -2, line_end = -1 })
+  eq(child.fn.getreg('"'), 'AAA\nCCC\n')
+
   -- Reset
   do_hunks(0, 'reset', { line_start = -2, line_end = -1 })
   eq(get_lines(), { 'AAA', 'BBB', 'CCC' })
 end
 
 T['do_hunks()']['allows target range to contain lines between hunks'] = function()
-  set_lines({ 'aaa', 'bbb', 'uuu', 'vvv', 'ccc', 'www', 'ddd', 'eee' })
+  set_lines({ 'bbb', 'uuu', 'vvv', 'ccc', 'www', 'ddd' })
   set_ref_text(0, { 'aaa', 'bbb', 'ccc', 'ddd', 'eee' })
 
   -- Apply
-  do_hunks(0, 'apply', { line_start = 2, line_end = 7 })
+  do_hunks(0, 'apply')
   -- - By default should do action on all lines
   local ref_hunks = {
-    { buf_start = 3, buf_count = 2, ref_start = 2, ref_count = 0, type = 'add' },
-    { buf_start = 6, buf_count = 1, ref_start = 3, ref_count = 0, type = 'add' },
+    { buf_start = 0, buf_count = 0, ref_start = 1, ref_count = 1, type = 'delete' },
+    { buf_start = 2, buf_count = 2, ref_start = 2, ref_count = 0, type = 'add' },
+    { buf_start = 5, buf_count = 1, ref_start = 3, ref_count = 0, type = 'add' },
+    { buf_start = 6, buf_count = 0, ref_start = 5, ref_count = 1, type = 'delete' },
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
 
+  -- Yank
+  do_hunks(0, 'yank')
+  eq(child.fn.getreg('"'), 'aaa\neee\n')
+
   -- Reset
-  do_hunks(0, 'reset', { line_start = 2, line_end = 7 })
+  do_hunks(0, 'reset')
   eq(get_lines(), { 'aaa', 'bbb', 'ccc', 'ddd', 'eee' })
 end
 
@@ -1354,6 +1413,10 @@ T['do_hunks()']['can act on hunk part'] = function()
     { buf_start = 4, buf_count = 1, ref_start = 2, ref_count = 2, type = 'change' },
   }
   validate_dummy_log({ { 'apply_hunks', { get_buf(), ref_hunks } } })
+
+  -- Yank
+  do_hunks(0, 'yank', { line_start = 2, line_end = 4 })
+  eq(child.fn.getreg('"'), 'BBB\nCCC\n')
 
   -- Reset
   do_hunks(0, 'reset', { line_start = 2, line_end = 4 })
@@ -1664,6 +1727,25 @@ end
 T['operator()'] = new_set()
 
 T['operator()']['is present'] = function() eq(child.lua_get('type(MiniDiff.operator)'), 'function') end
+
+T['operator()']['can be used in a mapping'] = function()
+  child.lua([[
+    local rhs = function() return MiniDiff.operator('yank') .. 'gh' end
+    vim.keymap.set('n', 'ghy', rhs, { expr = true, remap = true })
+  ]])
+
+  set_lines({ 'ccc', 'DDD', 'EEE', 'fff' })
+  set_ref_text(0, { 'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff' })
+  type_keys('ghy')
+  eq(child.fn.getreg('"'), 'aaa\nbbb\nddd\neee\n')
+
+  -- Can be used with register
+  set_lines({ 'aaa' })
+  set_ref_text(0, { 'aaa', 'bbb' })
+  type_keys('"aghy')
+  eq(child.fn.getreg('a'), 'bbb\n')
+  eq(child.fn.getreg('"'), 'aaa\nbbb\nddd\neee\n')
+end
 
 -- More thorough tests are done in "Integration tests"
 T['textobject()'] = new_set()
