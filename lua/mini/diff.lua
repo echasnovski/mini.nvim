@@ -348,8 +348,10 @@ end
 ---
 --- `mappings.textobject` keys define "hunk range under cursor" textobject
 --- which can be used in Operator-pending mode as target for operator (like
---- |d|, |y|, apply/reset hunks, etc.). It is "hunk range" in a sense that
---- contiguous (back-to-back) hunks are considered as parts of a same hunk range.
+--- |d|, |y|, apply/reset hunks, etc.). It is also set up in Visual mode if
+--- keys do not conflict with `mappings.apply` and `mappings.reset`.
+--- "Hunk range" is used in a sense that contiguous (back-to-back) hunks are
+--- considered as parts of a same hunk range.
 ---
 --- `mappings.goto_first` / `mappings.goto_prev` / `mappings.goto_next` /
 --- `mappings.goto_last` keys can be used to navigate to first / previous / next /
@@ -408,6 +410,7 @@ MiniDiff.config = {
     reset = 'gH',
 
     -- Hunk range textobject to be used inside operator
+    -- Works also in Visual mode if mapping differs from apply and reset
     textobject = 'gh',
 
     -- Go to hunk range in corresponding direction
@@ -927,7 +930,9 @@ H.apply_config = function(config)
   local rhs_reset = function() return MiniDiff.operator('reset') end
   H.map({ 'n', 'x' }, mappings.reset, rhs_reset, { expr = true, desc = 'Reset hunks' })
 
-  H.map('o', mappings.textobject, '<Cmd>lua MiniDiff.textobject()<CR>', { desc = 'Hunk range textobject' })
+  local is_tobj_conflict = mappings.textobject == mappings.apply or mappings.textobject == mappings.reset
+  local modes = is_tobj_conflict and { 'o' } or { 'x', 'o' }
+  H.map(modes, mappings.textobject, '<Cmd>lua MiniDiff.textobject()<CR>', { desc = 'Hunk range textobject' })
 
   --stylua: ignore start
   H.map({ 'n', 'x' }, mappings.goto_first,  "<Cmd>lua MiniDiff.goto_hunk('first')<CR>", { desc = 'First hunk' })

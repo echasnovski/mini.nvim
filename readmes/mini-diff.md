@@ -260,6 +260,7 @@ Here are code snippets for some common installation methods (use only one):
     reset = 'gH',
 
     -- Hunk range textobject to be used inside operator
+    -- Works also in Visual mode if mapping differs from apply and reset
     textobject = 'gh',
 
     -- Go to hunk range in corresponding direction
