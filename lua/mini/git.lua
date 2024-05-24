@@ -333,14 +333,16 @@ end
 
 --- Show diff source
 ---
---- When buffer contains text formatted as unified patch with available commit
---- information (like after `:Git log --patch` or |MiniGit.show_range_history()|),
---- show state of the file at the particular commit.
---- Specific commit, path, and line number are deduced from cursor position.
+--- When buffer contains text formatted as unified patch (like after
+--- `:Git log --patch`, `:Git diff`, or |MiniGit.show_range_history()|),
+--- show state of the file at the particular state. Target commit/state, path,
+--- and line number are deduced from cursor position.
 ---
 --- Notes:
 --- - Needs |current-directory| to be the Git root for relative paths to work.
 --- - Needs cursor to be inside hunk lines or on "---" / "+++" lines with paths.
+--- - Only basic forms of `:Git diff` output is supported: `:Git diff`,
+---   `:Git diff --cached`, and `:Git diff <commit>`.
 ---
 ---@param opts table|nil Options. Possible values:
 ---   - __git_split_field
@@ -363,9 +365,16 @@ MiniGit.show_diff_source = function(opts)
 
   local cwd = H.get_git_cwd()
   local show = function(commit, path, mods)
-    local args = { 'show', commit .. ':' .. path }
-    local lines = H.git_cli_output(args, cwd)
-    if #lines == 0 then return H.notify('Can not show ' .. path .. 'at commit ' .. commit, 'WARN') end
+    local is_worktree, args, lines = commit == true, nil, nil
+    if is_worktree then
+      args, lines = { 'edit', vim.fn.fnameescape(path) }, vim.fn.readfile(path)
+    else
+      args = { 'show', commit .. ':' .. path }
+      lines = H.git_cli_output(args, cwd)
+    end
+    if #lines == 0 and not is_worktree then
+      return H.notify('Can not show ' .. path .. 'at commit ' .. commit, 'WARN')
+    end
     H.show_in_split(mods, lines, 'show', table.concat(args, ' '))
   end
 
@@ -1458,6 +1467,9 @@ H.diff_pos_to_source = function()
   local hunk_lnum = H.diff_parse_hunk(res, lines, lnum)
   local commit_lnum = H.diff_parse_commits(res, lines, lnum)
 
+  -- Try fall back to inferring target commits from 'mini.git' buffer name
+  if res.commit_before == nil or res.commit_after == nil then H.diff_parse_bufname(res) end
+
   local all_present = res.lnum_after and res.path_after and res.commit_after
   local is_in_order = commit_lnum <= paths_lnum and paths_lnum <= hunk_lnum
   if not (all_present and is_in_order) then return nil end
@@ -1513,6 +1525,27 @@ H.diff_parse_commits = function(out, lines, lnum)
   end
   if out.commit_after ~= nil then out.commit_before = out.commit_after .. '~' end
   return lnum + 1
+end
+
+H.diff_parse_bufname = function(out)
+  local buf_name = vim.api.nvim_buf_get_name(0)
+  local diff_command = string.match(buf_name, '^minigit://%d+/.* diff ?(.*)$')
+  if diff_command == nil then return end
+
+  -- Work with output of common `:Git diff` commands
+  diff_command = vim.trim(diff_command)
+  -- `Git diff` - compares index and work tree
+  if diff_command == '' then
+    out.commit_before, out.commit_after = ':0', true
+  end
+  -- `Git diff --cached` - compares HEAD and index
+  if diff_command == '--cached' then
+    out.commit_before, out.commit_after = 'HEAD', ':0'
+  end
+  -- `Git diff HEAD` - compares commit and work tree
+  if diff_command:find('^[^-]%S*$') ~= nil then
+    out.commit_before, out.commit_after = diff_command, true
+  end
 end
 
 H.parse_diff_source_buf_name = function(buf_name) return string.match(buf_name, '^minigit://%d+/.*show (%x+~?):(.*)$') end

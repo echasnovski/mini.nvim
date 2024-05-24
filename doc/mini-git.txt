@@ -284,14 +284,16 @@ Parameters ~
                        `MiniGit.show_diff_source`({opts})
 Show diff source
 
-When buffer contains text formatted as unified patch with available commit
-information (like after `:Git log --patch` or |MiniGit.show_range_history()|),
-show state of the file at the particular commit.
-Specific commit, path, and line number are deduced from cursor position.
+When buffer contains text formatted as unified patch (like after
+`:Git log --patch`, `:Git diff`, or |MiniGit.show_range_history()|),
+show state of the file at the particular state. Target commit/state, path,
+and line number are deduced from cursor position.
 
 Notes:
 - Needs |current-directory| to be the Git root for relative paths to work.
 - Needs cursor to be inside hunk lines or on "---" / "+++" lines with paths.
+- Only basic forms of `:Git diff` output is supported: `:Git diff`,
+  `:Git diff --cached`, and `:Git diff <commit>`.
 
 Parameters ~
 {opts} `(table|nil)` Options. Possible values:

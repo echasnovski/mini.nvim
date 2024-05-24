@@ -482,6 +482,83 @@ T['show_diff_source()']['correctly identifies source'] = function()
   validate_ok(46, commit_after_2, 'dir/file1', 247)
 end
 
+T['show_diff_source()']['correctly identifies source for `:Git diff` output'] = function()
+  local diff_output = {
+    'diff --git a/file b/file',
+    'index a357c5c..7ec2b3c 100644',
+    '--- a/file',
+    '+++ b/file',
+    '@@ -1,2 +1,2 @@',
+    ' aaa',
+    '-uuu',
+    '+UUU',
+  }
+  child.lua('_G.diff_lines = ' .. vim.inspect(table.concat(diff_output, '\n')))
+
+  child.lua([[
+    _G.stdio_queue = {
+      -- Mock initial spawns for gathering subcommand data
+      { { 'out', 'diff\nshow' } }, { { 'out', 'diff\nshow' } }, { { 'out', '' } },
+
+      { { 'out', _G.diff_lines } }, -- :Git diff
+      { { 'out', 'aaa\nuuu' } },    -- "Before" state
+                                    -- No spawn for "after"
+
+      { { 'out', _G.diff_lines } }, -- :Git diff --cached
+      { { 'out', 'aaa\nuuu' } },    -- "Before" state
+      { { 'out', 'aaa\nUUU' } },    -- "After" state
+
+      { { 'out', _G.diff_lines } }, -- :Git diff abc1234
+      { { 'out', 'aaa\nuuu' } },    -- "Before" state
+                                    -- No spawn for "after"
+    }
+  ]])
+
+  child.fn.chdir(test_dir_absolute)
+  local diff_win_id
+
+  local validate = function(lnum, ref_git_spawn_log, ref_lines, ref_cursor)
+    clear_spawn_log()
+    child.api.nvim_set_current_win(diff_win_id)
+    set_cursor(lnum, 0)
+
+    show_diff_source()
+
+    validate_git_spawn_log(ref_git_spawn_log)
+    eq(get_lines(), ref_lines)
+    eq(get_cursor(), ref_cursor)
+
+    child.cmd('bwipeout!')
+  end
+
+  -- Compare index (before) and work tree (after)
+  child.cmd('Git diff')
+  diff_win_id = get_win()
+
+  -- - "Before"
+  validate(7, { { 'show', ':0:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  -- - "After"
+  validate(8, {}, { 'aaa', 'uuu', '', 'xxx' }, { 2, 0 })
+
+  -- Compare HEAD (before) and index (after)
+  child.cmd('Git diff --cached')
+  diff_win_id = get_win()
+
+  -- - "Before"
+  validate(7, { { 'show', 'HEAD:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  -- - "After"
+  validate(8, { { 'show', ':0:file' } }, { 'aaa', 'UUU' }, { 2, 0 })
+
+  -- Compare commit (before) and work tree (after)
+  child.cmd('Git diff abc1234')
+  diff_win_id = get_win()
+
+  -- - "Before"
+  validate(7, { { 'show', 'abc1234:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  -- - "After"
+  validate(8, {}, { 'aaa', 'uuu', '', 'xxx' }, { 2, 0 })
+end
+
 T['show_diff_source()']['works when there is no "before" file'] = function()
   child.lua([[_G.stdio_queue = {
     { { 'out', 'Line 1\nCurrent line 2\nLine 3' } }, -- Diff source
