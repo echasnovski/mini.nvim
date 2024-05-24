@@ -398,7 +398,7 @@ end
 ---@param file string|nil Path to test file. By default a path of current buffer.
 ---@param opts table|nil Options for |MiniTest.run()|.
 MiniTest.run_file = function(file, opts)
-  file = file or vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
+  file = vim.fn.fnamemodify(file or vim.api.nvim_buf_get_name(0), ':p:.')
 
   local stronger_opts = { collect = { find_files = function() return { file } end } }
   opts = vim.tbl_deep_extend('force', opts or {}, stronger_opts)

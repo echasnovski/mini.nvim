@@ -328,6 +328,11 @@ T['run_file()']['works'] = function()
   eq(last_desc, { 'run_at_location()', 'extra case' })
 end
 
+T['run_file()']['normalizes input path'] = function()
+  child.lua('MiniTest.run_file(...)', { './' .. get_ref_path('testref_run.lua') })
+  eq(child.lua_get('MiniTest.current.all_cases[1].desc[1]'), 'tests/dir-test/testref_run.lua')
+end
+
 T['run_at_location()'] = new_set()
 
 T['run_at_location()']['works with non-default input'] = new_set({ parametrize = { { 3 }, { 4 }, { 5 } } }, {
