@@ -772,6 +772,11 @@ T['gen_clues']['g()']['works'] = function()
   ]])
   child.cmd('unmap gx')
   child.cmd('unmap g%')
+  if child.fn.has('nvim-0.11') == 1 then
+    child.cmd('unmap grr')
+    child.cmd('unmap gra')
+    child.cmd('unmap grn')
+  end
 
   child.set_size(66, 55)
   type_keys('g')
