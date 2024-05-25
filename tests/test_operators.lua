@@ -121,6 +121,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ sort = { func = 'a' } }, 'sort.func', 'function')
 end
 
+T['setup()']['removes built-in LSP mappings'] = function()
+  eq(child.fn.maparg('gra'), '')
+  eq(child.fn.maparg('grn'), '')
+end
+
 T['evaluate()'] = new_set()
 
 T['evaluate()']['is present'] = function() eq(child.lua_get('type(MiniOperators.evaluate)'), 'function') end

@@ -110,6 +110,7 @@ For more details about specific operator, see help for its function:
 
 All operators are automatically mapped during |MiniOperators.setup()| execution.
 Mappings keys are deduced from `prefix` field of corresponding `config` entry.
+All built-in conflicting mappings are removed (like |gra|, |grn| in Neovim>=0.11).
 
 For each operator the following mappings are created:
 
