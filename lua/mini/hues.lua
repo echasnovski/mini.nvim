@@ -131,6 +131,15 @@ local H = {}
 --- `require('mini.hues').setup({ background = '#11262d', foreground = '#c0c8cc' })`
 --- (add/change input table as you like)
 MiniHues.setup = function(config)
+  -- TODO: Remove after Neovim<=0.7 support is dropped
+  if vim.fn.has('nvim-0.8') == 0 then
+    vim.notify(
+      '(mini.hues) Neovim<0.8 is soft deprecated (module works but not supported).'
+        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
+        .. ' Please update your Neovim version.'
+    )
+  end
+
   -- Export module
   _G.MiniHues = MiniHues
 

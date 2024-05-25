@@ -95,6 +95,15 @@ local H = {}
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniPairs.setup = function(config)
+  -- TODO: Remove after Neovim<=0.7 support is dropped
+  if vim.fn.has('nvim-0.8') == 0 then
+    vim.notify(
+      '(mini.pairs) Neovim<0.8 is soft deprecated (module works but not supported).'
+        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
+        .. ' Please update your Neovim version.'
+    )
+  end
+
   -- Export module
   _G.MiniPairs = MiniPairs
 
