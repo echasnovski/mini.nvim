@@ -271,6 +271,43 @@ MiniCompletion.config = {
   -- Whether to set Vim's settings for better experience (modifies
   -- `shortmess` and `completeopt`)
   set_vim_settings = true,
+
+  -- Completion icons settings.
+  -- Default icons taken from VSCode intellisense:
+  -- https://code.visualstudio.com/docs/editor/intellisense#_types-of-completions
+  icons = {
+    -- `show` should be false or one of 'label_prefix', 'label_suffix', 'kind_prefix' or 'kind_suffix'.
+    show = false,
+    map = {
+      Namespace     = '',
+      Text          = '',
+      Method        = '',
+      Function      = '',
+      Constructor   = '',
+      Field         = '',
+      Variable      = '',
+      Class         = '',
+      Interface     = '',
+      Module        = '',
+      Property      = '',
+      Unit          = '',
+      Value         = '',
+      Enum          = '',
+      Keyword       = '',
+      Snippet       = '',
+      Color         = '',
+      File          = '',
+      Reference     = '',
+      Folder        = '',
+      EnumMember    = '',
+      Constant      = '',
+      Struct        = '',
+      Event         = '',
+      Operator      = '',
+      TypeParameter = '',
+      Unknown       = '',
+    }
+  },
 }
 --minidoc_afterlines_end
 
@@ -833,7 +870,8 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   if vim.tbl_count(items) == 0 then return {} end
 
   local res = {}
-  local docs, info
+  local icons_config = H.get_config().icons
+  local docs, info, kind, icon, label
   for _, item in pairs(items) do
     -- Documentation info
     docs = item.documentation
@@ -841,10 +879,19 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     if not info and type(docs) == 'string' then info = docs end
     info = info or ''
 
+    label = item.label
+    kind = vim.lsp.protocol.CompletionItemKind[item.kind] or 'Unknown'
+
+    icon = icons_config.map[kind] or ''
+    if icons_config.show == 'label_prefix' then label = icon .. ' ' .. label
+    elseif icons_config.show == 'label_suffix' then label = label .. ' ' .. icon
+    elseif icons_config.show == 'kind_prefix' then kind = icon .. ' ' .. kind
+    elseif icons_config.show == 'kind_suffix' then kind = kind .. ' ' .. icon end
+
     table.insert(res, {
       word = H.get_completion_word(item),
-      abbr = item.label,
-      kind = vim.lsp.protocol.CompletionItemKind[item.kind] or 'Unknown',
+      abbr = label,
+      kind = kind,
       menu = item.detail or '',
       info = info,
       icase = 1,
