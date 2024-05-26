@@ -72,7 +72,7 @@
 --- # Statusline component ~
 ---
 --- Tracked buffer data can be used in statusline via `vim.b.minigit_summary_string`
---- buffer-local variable. It is exepcted to be used as is. To show another info,
+--- buffer-local variable. It is expected to be used as is. To show another info,
 --- tweak buffer-local variable directly inside `MiniGitUpdated` `User` event: >
 ---
 ---   -- Use only HEAD name as summary string
