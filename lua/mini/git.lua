@@ -683,16 +683,13 @@ H.command_impl = function(input)
   -- NOTE: use `vim.v.progpath` to have same runtime
   local editor = vim.v.progpath .. ' --clean --headless -u ' .. H.git_editor_config
 
-  -- Setup all environment variables (`vim.loop.spawn()` by default has none)
-  local environ = vim.loop.os_environ()
+  -- Setup custom environment variables for better reproducibility
+  local env_vars = {}
   -- - Use Git related variables to use instance for editing
-  environ.GIT_EDITOR, environ.GIT_SEQUENCE_EDITOR, environ.GIT_PAGER = editor, editor, ''
+  env_vars.GIT_EDITOR, env_vars.GIT_SEQUENCE_EDITOR, env_vars.GIT_PAGER = editor, editor, ''
   -- - Make output as much machine readable as possible
-  environ.NO_COLOR, environ.TERM = 1, 'dumb'
-  local env = {}
-  for k, v in pairs(environ) do
-    table.insert(env, string.format('%s=%s', k, tostring(v)))
-  end
+  env_vars.NO_COLOR, env_vars.TERM = 1, 'dumb'
+  local env = H.make_spawn_env(env_vars)
 
   -- Setup spawn arguments
   local args = vim.tbl_map(H.expandcmd, input.fargs)
@@ -940,7 +937,8 @@ H.command_complete_option = function(command)
   command = H.git_subcommands.alias[command] or command
 
   -- Find command's flag options by parsing its help page. Needs a bit
-  -- heuristic approach, but seems to work good enough.
+  -- heuristic approach and ensuring proper `git help` output (as it is done
+  -- through `man`), but seems to work good enough.
   -- Alternative is to call command with `--git-completion-helper-all` flag (as
   -- is done in bash and vim-fugitive completion). This has both pros and cons:
   -- - Pros: faster; more targeted suggestions (like for two word subcommands);
@@ -949,9 +947,14 @@ H.command_complete_option = function(command)
   --         pure `git` do not work); does not provide single dash suggestions;
   --         does not work when not inside Git repo; needs recognizing two word
   --         commands before asking for completion.
-  local lines = H.git_cli_output({ 'help', '--man', command })
+  local env = H.make_spawn_env({ MANPAGER = 'cat', NO_COLOR = 1, PAGER = 'cat' })
+  local lines = H.git_cli_output({ 'help', '--man', command }, nil, env)
   -- - Exit early before caching to try again later
   if #lines == 0 then return {} end
+  -- - On some systems (like Mac), output still might contain formatting
+  --   sequences, like "a\ba" and "_\ba" meaning bold and italic.
+  --   See https://github.com/echasnovski/mini.nvim/issues/918
+  lines = vim.tbl_map(function(l) return l:gsub('.\b', '') end, lines)
 
   -- Construct non-duplicating candidates by parsing lines of help page
   local candidates_map = {}
@@ -1162,9 +1165,9 @@ H.define_minigit_window = function(cleanup)
   finish_au_id = vim.api.nvim_create_autocmd(events, opts)
 end
 
-H.git_cli_output = function(args, cwd)
-  local command = { MiniGit.config.job.git_executable, unpack(args) }
-  local res = H.cli_run(command, cwd).out
+H.git_cli_output = function(args, cwd, env)
+  local command = { MiniGit.config.job.git_executable, '--no-pager', unpack(args) }
+  local res = H.cli_run(command, cwd, nil, { env = env }).out
   if res == '' then return {} end
   return vim.split(res, '\n')
 end
@@ -1570,6 +1573,16 @@ H.is_file_entry_header = function(lnum) return vim.fn.getline(lnum):find('^diff 
 H.git_cmd = function(args)
   -- Use '-c gc.auto=0' to disable `stderr` "Auto packing..." messages
   return { MiniGit.config.job.git_executable, '-c', 'gc.auto=0', unpack(args) }
+end
+
+H.make_spawn_env = function(env_vars)
+  -- Setup all environment variables (`vim.loop.spawn()` by default has none)
+  local environ = vim.tbl_deep_extend('force', vim.loop.os_environ(), env_vars)
+  local res = {}
+  for k, v in pairs(environ) do
+    table.insert(res, string.format('%s=%s', k, tostring(v)))
+  end
+  return res
 end
 
 H.cli_run = function(command, cwd, on_done, opts)

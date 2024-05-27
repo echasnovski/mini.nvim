@@ -242,7 +242,7 @@ T['show_at_cursor()']['works on commit'] = function()
 
   show_at_cursor()
 
-  local ref_git_spawn_log = { { args = { 'show', 'abc1234' }, cwd = child.fn.getcwd() } }
+  local ref_git_spawn_log = { { args = { '--no-pager', 'show', 'abc1234' }, cwd = child.fn.getcwd() } }
   validate_git_spawn_log(ref_git_spawn_log)
 
   eq(child.api.nvim_tabpage_get_number(0), 2)
@@ -359,7 +359,7 @@ T['show_diff_source()']['works'] = function()
 
   local ref_git_spawn_log = {
     {
-      args = { 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
+      args = { '--no-pager', 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
       cwd = child.fn.getcwd(),
     },
   }
@@ -400,7 +400,8 @@ T['show_diff_source()']['correctly identifies source'] = function()
     set_cursor(lnum, 0)
 
     show_diff_source()
-    local ref_git_spawn_log = { { args = { 'show', ref_commit .. ':' .. ref_path }, cwd = child.fn.getcwd() } }
+    local ref_git_spawn_log =
+      { { args = { '--no-pager', 'show', ref_commit .. ':' .. ref_path }, cwd = child.fn.getcwd() } }
     validate_git_spawn_log(ref_git_spawn_log)
 
     eq(get_lines(), source_lines)
@@ -536,7 +537,7 @@ T['show_diff_source()']['correctly identifies source for `:Git diff` output'] = 
   diff_win_id = get_win()
 
   -- - "Before"
-  validate(7, { { 'show', ':0:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  validate(7, { { '--no-pager', 'show', ':0:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
   -- - "After"
   validate(8, {}, { 'aaa', 'uuu', '', 'xxx' }, { 2, 0 })
 
@@ -545,16 +546,16 @@ T['show_diff_source()']['correctly identifies source for `:Git diff` output'] = 
   diff_win_id = get_win()
 
   -- - "Before"
-  validate(7, { { 'show', 'HEAD:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  validate(7, { { '--no-pager', 'show', 'HEAD:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
   -- - "After"
-  validate(8, { { 'show', ':0:file' } }, { 'aaa', 'UUU' }, { 2, 0 })
+  validate(8, { { '--no-pager', 'show', ':0:file' } }, { 'aaa', 'UUU' }, { 2, 0 })
 
   -- Compare commit (before) and work tree (after)
   child.cmd('Git diff abc1234')
   diff_win_id = get_win()
 
   -- - "Before"
-  validate(7, { { 'show', 'abc1234:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
+  validate(7, { { '--no-pager', 'show', 'abc1234:file' } }, { 'aaa', 'uuu' }, { 2, 0 })
   -- - "After"
   validate(8, {}, { 'aaa', 'uuu', '', 'xxx' }, { 2, 0 })
 end
@@ -643,7 +644,7 @@ T['show_diff_source()']['respects `opts.split`'] = new_set(
 
       local ref_git_spawn_log = {
         {
-          args = { 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
+          args = { '--no-pager', 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
           cwd = child.fn.getcwd(),
         },
       }
@@ -796,7 +797,7 @@ T['show_diff_source()']['uses correct working directory'] = function()
     -- Should prefer buffer's Git root over Neovim's cwd. This is relevant if,
     -- for some reason, log output is tracked in Git repo.
     {
-      args = { 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
+      args = { '--no-pager', 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' },
       cwd = root,
     },
   }
@@ -833,8 +834,8 @@ T['show_range_history()']['works in Normal mode'] = function()
   show_range_history()
 
   local ref_git_spawn_log = {
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
-    { args = { 'log', '-L1,1:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L1,1:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -853,9 +854,9 @@ T['show_range_history()']['works in Visual mode'] = function()
 
   show_range_history()
   local ref_git_spawn_log = {
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
     -- Should use lines of Visual selection
-    { args = { 'log', '-L2,3:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L2,3:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -882,8 +883,11 @@ T['show_range_history()']['works in output of `show_diff_source()`'] = function(
   show_range_history()
 
   local ref_git_spawn_log = {
-    { args = { 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' }, cwd = git_root_dir },
-    { args = { 'log', '-L2,2:dir/file-after', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'show', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2:dir/file-after' }, cwd = git_root_dir },
+    {
+      args = { '--no-pager', 'log', '-L2,2:dir/file-after', '5ed8432441b495fa9bd4ad2e4f635bae64e95cc2' },
+      cwd = git_root_dir,
+    },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -901,8 +905,8 @@ T['show_range_history()']['respects `opts.line_start` and `opts.line_end`'] = fu
   show_range_history({ line_start = 2, line_end = 3 })
 
   local ref_git_spawn_log = {
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
-    { args = { 'log', '-L2,3:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L2,3:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -913,8 +917,8 @@ T['show_range_history()']['respects `opts.log_args`'] = function()
   show_range_history({ log_args = { '--oneline', '--topo-order' } })
 
   local ref_git_spawn_log = {
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
-    { args = { 'log', '-L1,1:dir/tmp-file', 'HEAD', '--oneline', '--topo-order' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L1,1:dir/tmp-file', 'HEAD', '--oneline', '--topo-order' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -930,8 +934,8 @@ T['show_range_history()']['respects `opts.split`'] = new_set(
       local cur_win_id = get_win()
 
       local ref_git_spawn_log = {
-        { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
-        { args = { 'log', '-L1,1:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
+        { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+        { args = { '--no-pager', 'log', '-L1,1:dir/tmp-file', 'HEAD' }, cwd = git_root_dir },
       }
       validate_git_spawn_log(ref_git_spawn_log)
 
@@ -985,7 +989,7 @@ T['show_range_history()']['does nothing in presence of uncommitted changes'] = f
   show_range_history()
 
   local ref_git_spawn_log = {
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 
@@ -1028,8 +1032,8 @@ T['show_range_history()']['uses correct working directory'] = function()
       cwd = git_root_dir,
     },
     -- Should prefer buffer's Git root over Neovim's cwd
-    { args = { 'diff', '-U0', 'HEAD', '--', 'dir-in-git/file-in-dir-in-git' }, cwd = git_root_dir },
-    { args = { 'log', '-L1,1:dir-in-git/file-in-dir-in-git', 'HEAD' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir-in-git/file-in-dir-in-git' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L1,1:dir-in-git/file-in-dir-in-git', 'HEAD' }, cwd = git_root_dir },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 end
@@ -1910,21 +1914,34 @@ local validate_command_init_setup = function(log_index, executable, cwd)
   }, ',')
   eq(
     spawn_log[log_index],
-    { executable = executable, options = {  args = { '--list-cmds=' .. supported_lists }, cwd = cwd } }
+    { executable = executable, options = {  args = { '--no-pager', '--list-cmds=' .. supported_lists }, cwd = cwd } }
   )
 
   -- Get "info showing" subcommands
   local info_lists = table.concat({ 'list-info', 'list-ancillaryinterrogators', 'list-plumbinginterrogators' }, ',')
   eq(
     spawn_log[log_index + 1],
-    { executable = executable, options = { args = { '--list-cmds=' .. info_lists }, cwd = cwd } }
+    { executable = executable, options = { args = { '--no-pager', '--list-cmds=' .. info_lists }, cwd = cwd } }
   )
 
   -- Get aliases
   eq(
     spawn_log[log_index + 2],
-    { executable = executable, options = { args = { 'config','--get-regexp','alias.*', }, cwd = cwd } }
+    { executable = executable, options = { args = { '--no-pager', 'config','--get-regexp','alias.*', }, cwd = cwd } }
   )
+end
+
+local validate_spawn_env = function(log_index, ref_env)
+  local log_entry = get_spawn_log()[log_index]
+
+  local out_env = {}
+  for _, env_pair in ipairs(log_entry.options.env) do
+    local var, val = string.match(env_pair, '^([^=]+)=(.*)$')
+    local ref_val = ref_env[var]
+    if ref_val ~= nil then out_env[var] = ref_val == true and true or val end
+  end
+
+  eq(out_env, ref_env)
 end
 
 local validate_command_call = function(log_index, args, executable, cwd)
@@ -1937,20 +1954,8 @@ local validate_command_call = function(log_index, args, executable, cwd)
   eq(log_entry.options.args, args)
   eq(log_entry.options.cwd, cwd)
 
-  -- Should set proper environment variables
-  local env_vars = { GIT_EDITOR = false, GIT_SEQUENCE_EDITOR = false, GIT_PAGER = false, NO_COLOR = false }
-
-  for _, env_pair in ipairs(log_entry.options.env) do
-    for var_name, _ in pairs(env_vars) do
-      if vim.startswith(env_pair, var_name .. '=') then env_vars[var_name] = true end
-    end
-  end
-
-  local ref_env_vars = vim.deepcopy(env_vars)
-  for var_name, _ in pairs(ref_env_vars) do
-    ref_env_vars[var_name] = true
-  end
-  eq(env_vars, ref_env_vars)
+  local ref_env = { GIT_EDITOR = true, GIT_SEQUENCE_EDITOR = true, GIT_PAGER = '', NO_COLOR = '1' }
+  validate_spawn_env(log_index, ref_env)
 end
 
 T[':Git']['works'] = function()
@@ -2458,7 +2463,9 @@ T[':Git']['completion']['works with options'] = function()
 
   local spawn_log = get_spawn_log()
   eq(#spawn_log, 4)
-  eq(spawn_log[4].options, { args = { 'help', '--man', 'push' }, cwd = child.fn.getcwd() })
+  eq(spawn_log[4].options.args, { '--no-pager', 'help', '--man', 'push' })
+  eq(spawn_log[4].options.cwd, child.fn.getcwd())
+  validate_spawn_env(4, { MANPAGER = 'cat', NO_COLOR = '1', PAGER = 'cat' })
 
   -- Should work several times
   type_keys(' --', '<Tab>')
@@ -2481,7 +2488,23 @@ T[':Git']['completion']['works with options'] = function()
   spawn_log = get_spawn_log()
   eq(#spawn_log, 5)
   -- - Should try to parse help page for the command it is aliased to
-  eq(spawn_log[5].options, { args = { 'help', '--man', 'log' }, cwd = child.fn.getcwd() })
+  eq(spawn_log[5].options.args, { '--no-pager', 'help', '--man', 'log' })
+  eq(spawn_log[5].options.cwd, child.fn.getcwd())
+  validate_spawn_env(5, { MANPAGER = 'cat', NO_COLOR = '1', PAGER = 'cat' })
+  eq(#spawn_log, 5)
+
+  -- Works with "old" forced formatting in output
+  child.set_size(10, 20)
+  child.lua([[
+    local old_format_lines = {
+      'N\bNA\bAM\bME\bE', 'add', '',
+      'O\bOP\bPT\bTI\bIO\bON\bNS\bS', '',
+      '       --all',
+      '       -v, --verbose',
+    }
+    table.insert(_G.stdio_queue, { { 'out', table.concat(old_format_lines, '\n') } })
+  ]])
+  validate_command_completion(':Git add -')
 end
 
 T[':Git']['completion']['works with explicit paths'] = function()
@@ -2582,67 +2605,67 @@ T[':Git']['completion']['works with subcommand targets'] = function()
   validate_command_completion(':Git grep ')    -- path
 
   validate_command_completion(':Git log ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git show ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git branch ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches' })
 
   validate_command_completion(':Git commit ') -- path
 
   validate_command_completion(':Git merge ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches' })
 
   validate_command_completion(':Git rebase ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches' })
 
   validate_command_completion(':Git reset ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git switch ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches' })
 
   validate_command_completion(':Git tag ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--tags' })
 
   validate_command_completion(':Git fetch ') -- CLI
-  validate_latest_spawn_args({ 'remote' })
+  validate_latest_spawn_args({ '--no-pager', 'remote' })
 
   validate_command_completion(':Git push ') -- CLI
-  validate_latest_spawn_args({ 'remote' })
+  validate_latest_spawn_args({ '--no-pager', 'remote' })
   validate_command_completion(':Git push origin')
-  validate_latest_spawn_args({ 'remote' })
+  validate_latest_spawn_args({ '--no-pager', 'remote' })
   validate_command_completion(':Git push origin ')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git push origin v')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git push origin main ')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git pull ') -- CLI
-  validate_latest_spawn_args({ 'remote' })
+  validate_latest_spawn_args({ '--no-pager', 'remote' })
   validate_command_completion(':Git pull origin')
-  validate_latest_spawn_args({ 'remote' })
+  validate_latest_spawn_args({ '--no-pager', 'remote' })
   validate_command_completion(':Git pull origin ')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git pull origin v')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git pull origin main ')
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git checkout ') -- CLI
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags', '--remotes' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags', '--remotes' })
 
   validate_command_completion(':Git config ') -- CLI
-  validate_latest_spawn_args({ 'help', '--config-for-completion' })
+  validate_latest_spawn_args({ '--no-pager', 'help', '--config-for-completion' })
 
   validate_command_completion(':Git help ') -- Supported commands plus a bit
 
   -- Should also work with aliases
   validate_command_completion(':Git l ') -- CLI, same as log
-  validate_latest_spawn_args({ 'rev-parse', '--symbolic', '--branches', '--tags' })
+  validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 end
 
 T[':Git']['completion']['works with not supported command'] = function()
