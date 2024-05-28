@@ -236,6 +236,7 @@ T['show_at_cursor()'] = new_set({ hooks = { pre_case = load_module } })
 local show_at_cursor = forward_lua('MiniGit.show_at_cursor')
 
 T['show_at_cursor()']['works on commit'] = function()
+  local buf_id = get_buf()
   set_lines({ 'abc1234.def' })
   set_cursor(1, 0)
   child.lua([[_G.stdio_queue = { { { 'out', 'commit abc123456\nHello' } } }]])
@@ -244,16 +245,19 @@ T['show_at_cursor()']['works on commit'] = function()
 
   local ref_git_spawn_log = { { args = { '--no-pager', 'show', 'abc1234' }, cwd = child.fn.getcwd() } }
   validate_git_spawn_log(ref_git_spawn_log)
+  clear_spawn_log()
 
   eq(child.api.nvim_tabpage_get_number(0), 2)
   eq(get_lines(), { 'commit abc123456', 'Hello' })
   eq(child.o.filetype, 'git')
 
   -- Should use `<cword>`
-  child.o.iskeyword = child.o.iskeyword .. ',.'
+  set_buf(buf_id)
+  set_cursor(1, 0)
+  child.bo.iskeyword = child.bo.iskeyword .. ',.'
   show_at_cursor()
-  -- - No extra calls because "abc1234.def" does not match commit pattern
-  validate_git_spawn_log(ref_git_spawn_log)
+  -- - No `git show` calls because "abc1234.def" does not match commit pattern
+  eq(get_spawn_log()[1].options.args, { '--no-pager', 'rev-parse', '--show-toplevel' })
 end
 
 T['show_at_cursor()']['uses correct pattern to match commit'] = function()
@@ -261,17 +265,21 @@ T['show_at_cursor()']['uses correct pattern to match commit'] = function()
 
   set_lines({ 'abc1234', 'abc123', 'abC1234', 'abc123x' })
 
-  local validate = function(line, n_cli_calls)
-    set_cursor(line, 0)
+  local validate = function(cword, ref_is_commit)
+    set_lines({ cword })
+    set_cursor(1, 0)
+    clear_spawn_log()
+
     show_at_cursor()
-    eq(#get_spawn_log(), n_cli_calls)
+    local is_commit = vim.deep_equal(get_spawn_log()[1].options.args, { '--no-pager', 'show', cword })
+    eq(is_commit, ref_is_commit)
   end
 
-  eq(#get_spawn_log(), 0)
-  validate(1, 1)
-  validate(2, 1)
-  validate(3, 1)
-  validate(4, 1)
+  validate('abc1234', true)
+  validate('abc123', false)
+  validate('abC1234', false)
+  validate('abc123x', false)
+  validate('abc1234x', false)
 end
 
 T['show_at_cursor()']['uses `opts` on commit'] = function()
@@ -309,9 +317,23 @@ T['show_at_cursor()']['works for range history in tracked file'] = function()
   edit(git_file_path)
   eq(is_buf_enabled(), true)
 
+  clear_spawn_log()
   local opts = { line_start = 1, line_end = 2, split = 'vertical', log_args = { '--oneline' } }
   show_at_cursor(opts)
   validate_calls({ { 'MiniGit.show_range_history', opts } })
+  -- Should not use spawn to check if buffer is in repo (it is already tracked)
+  validate_git_spawn_log({})
+end
+
+T['show_at_cursor()']['works for range history in not tracked file'] = function()
+  child.lua('MiniGit.show_range_history = function() end')
+  log_calls('MiniGit.show_range_history')
+
+  child.lua([[_G.stdio_queue = { { { 'out', '/home/user/repo-root' } } }]])
+  set_lines({ 'Line 1' })
+  show_at_cursor()
+  validate_git_spawn_log({ { '--no-pager', 'rev-parse', '--show-toplevel' } })
+  validate_calls({ { 'MiniGit.show_range_history' } })
 end
 
 T['show_at_cursor()']['works for range history in `show_diff_source()` output'] = function()

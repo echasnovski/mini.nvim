@@ -318,7 +318,7 @@ MiniGit.show_at_cursor = function(opts)
 
   -- Try showing commit at cursor
   local cword = vim.fn.expand('<cword>')
-  local is_commit = string.find(cword, '^%x%x%x%x%x%x%x') ~= nil and string.lower(cword) == cword
+  local is_commit = string.find(cword, '^%x%x%x%x%x%x%x+$') ~= nil and string.lower(cword) == cword
   if is_commit then
     local split = H.normalize_split_opt((opts or {}).split or 'auto', 'opts.split')
     local args = { 'show', cword }
@@ -332,10 +332,13 @@ MiniGit.show_at_cursor = function(opts)
   -- Try showing diff source
   if H.diff_pos_to_source() ~= nil then return MiniGit.show_diff_source(opts) end
 
-  -- Try showing range history
-  local is_git_enabled = H.is_buf_enabled(vim.api.nvim_get_current_buf())
-  local is_diff_source_output = H.parse_diff_source_buf_name(vim.api.nvim_buf_get_name(0)) ~= nil
-  if is_git_enabled or is_diff_source_output then return MiniGit.show_range_history(opts) end
+  -- Try showing range history if possible: either in Git repo (tracked or not)
+  -- or diff source output.
+  local buf_id, path = vim.api.nvim_get_current_buf(), vim.api.nvim_buf_get_name(0)
+  local is_in_git = H.is_buf_enabled(buf_id)
+    or #H.git_cli_output({ 'rev-parse', '--show-toplevel' }, vim.fn.fnamemodify(path, ':h')) > 0
+  local is_diff_source_output = H.parse_diff_source_buf_name(path) ~= nil
+  if is_in_git or is_diff_source_output then return MiniGit.show_range_history(opts) end
 
   H.notify('Nothing Git-related to show at cursor', 'WARN')
 end
