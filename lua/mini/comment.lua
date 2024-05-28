@@ -485,13 +485,10 @@ H.make_comment_check = function(parts, options)
   local prefix = options.start_of_line and '' or '%s-'
 
   -- Commented line has the following structure:
-  -- <possible whitespace> <left> <anything> <right> <possible whitespace>
-  local nonblank_regex = '^' .. prefix .. l_esc .. '.*' .. r_esc .. '%s-$'
+  -- <whitespace> <trimmed left> <anything> <trimmed right> <whitespace>
+  local regex = '^' .. prefix .. vim.trim(l_esc) .. '.*' .. vim.trim(r_esc) .. '%s-$'
 
-  -- Commented blank line can have any amount of whitespace around parts
-  local blank_regex = '^' .. prefix .. vim.trim(l_esc) .. '%s*' .. vim.trim(r_esc) .. '%s-$'
-
-  return function(line) return string.find(line, nonblank_regex) ~= nil or string.find(line, blank_regex) ~= nil end
+  return function(line) return string.find(line, regex) ~= nil end
 end
 
 H.get_lines_info = function(lines, parts, options)
@@ -538,14 +535,14 @@ end
 
 H.make_uncomment_function = function(parts)
   local l_esc, r_esc = vim.pesc(parts.left), vim.pesc(parts.right)
-  local nonblank_regex = '^(%s*)' .. l_esc .. '(.*)' .. r_esc .. '(%s-)$'
-  local blank_regex = '^(%s*)' .. vim.trim(l_esc) .. '(%s*)' .. vim.trim(r_esc) .. '(%s-)$'
+  local regex = '^(%s*)' .. l_esc .. '(.*)' .. r_esc .. '(%s-)$'
+  local regex_trimmed = '^(%s*)' .. vim.trim(l_esc) .. '(.*)' .. vim.trim(r_esc) .. '(%s-)$'
 
   return function(line)
-    -- Try both non-blank and blank regexes
-    local indent, new_line, trail = string.match(line, nonblank_regex)
+    -- Try regex with exact comment parts first, fall back to trimmed parts
+    local indent, new_line, trail = line:match(regex)
     if new_line == nil then
-      indent, new_line, trail = string.match(line, blank_regex)
+      indent, new_line, trail = line:match(regex_trimmed)
     end
 
     -- Return original if line is not commented

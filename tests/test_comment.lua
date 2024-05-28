@@ -276,39 +276,35 @@ end
 
 T['toggle_lines()']['matches comment parts strictly when detecting comment/uncomment'] = function()
   local validate = function(from, to, ref_lines)
-    set_lines({ '#aa', '# aa', '#  aa' })
+    set_lines({ '/*aa*/', '/* aa */', '/*  aa  */' })
     toggle_lines(from, to)
     eq(get_lines(), ref_lines)
   end
 
-  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
-  validate(2, 3, { '#aa', 'aa', ' aa' })
-  validate(3, 3, { '#aa', '# aa', ' aa' })
-
-  -- With default `pad_comment_parts = true`, all commentstrings are
-  -- transformed into having single space
-  child.bo.commentstring = '#%s'
-  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
-  validate(2, 3, { '#aa', 'aa', ' aa' })
-  validate(3, 3, { '#aa', '# aa', ' aa' })
-
-  child.bo.commentstring = '#  %s'
-  validate(1, 3, { '# #aa', '# # aa', '# #  aa' })
-  validate(2, 3, { '#aa', 'aa', ' aa' })
-  validate(3, 3, { '#aa', '# aa', ' aa' })
+  -- Should first try to match 'commentstring' parts exactly with their
+  -- whitespace, with fallback on trimmed parts
+  child.bo.commentstring = '/* %s */'
+  validate(1, 3, { 'aa', 'aa', ' aa ' })
+  validate(2, 3, { '/*aa*/', 'aa', ' aa ' })
+  validate(3, 3, { '/*aa*/', '/* aa */', ' aa ' })
 
   -- With `pad_comment_parts = false` should treat parts as is
   child.lua('MiniComment.config.options.pad_comment_parts = false')
 
-  child.bo.commentstring = '#%s'
-  validate(1, 3, { 'aa', ' aa', '  aa' })
-  validate(2, 3, { '#aa', ' aa', '  aa' })
-  validate(3, 3, { '#aa', '# aa', '  aa' })
+  child.bo.commentstring = '/*%s*/'
+  validate(1, 3, { 'aa', ' aa ', '  aa  ' })
+  validate(2, 3, { '/*aa*/', ' aa ', '  aa  ' })
+  validate(3, 3, { '/*aa*/', '/* aa */', '  aa  ' })
 
-  child.bo.commentstring = '#  %s'
-  validate(1, 3, { '#  #aa', '#  # aa', '#  #  aa' })
-  validate(2, 3, { '#aa', '#  # aa', '#  #  aa' })
-  validate(3, 3, { '#aa', '# aa', 'aa' })
+  child.bo.commentstring = '/*  %s  */'
+  validate(1, 3, { 'aa', ' aa ', 'aa' })
+  validate(2, 3, { '/*aa*/', ' aa ', 'aa' })
+  validate(3, 3, { '/*aa*/', '/* aa */', 'aa' })
+
+  child.bo.commentstring = ' /*%s*/ '
+  validate(1, 3, { 'aa', ' aa ', '  aa  ' })
+  validate(2, 3, { '/*aa*/', ' aa ', '  aa  ' })
+  validate(3, 3, { '/*aa*/', '/* aa */', '  aa  ' })
 end
 
 T['toggle_lines()']['respects `config.options.custom_commentstring`'] = function()

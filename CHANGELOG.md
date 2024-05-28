@@ -4,14 +4,16 @@
 
 - BREAKING FEATURE: blank lines are now completely ignored when deciding the toggling action. In practice this means that if target block consists only from commented and/or blank lines, it will be uncommented rather than commented.
 
-- BREAKING: Whitespace in comment parts is now treated more strictly. In particular:
+- BREAKING: Whitespace in comment parts is now treated more explicitly. In particular:
     - Default `options.pad_comment_parts = true` now more explicitly means that any value of 'commentstring' is transformed so that comment parts have exactly single space inner padding.
 
       Example: any `/*%s*/`, ` /* %s */ `, or `/*  %s  */` is equivalent to having `/* %s */`.
 
-    - During detection whether consecutive lines are commented or not, comment parts should be present *exactly* around non-blank text for line to be treated as commented; while around blank text any padding is allowed. With default `options.pad_comment_parts = true` it means that parts should be padded from inner content by at least one space.
+    - Detection of whether consecutive lines are commented or not does not depend on whitespace in comment parts. Uncommenting is first attempted with exact comment parts and falls back on trying its trimmed parts.
 
-      Example with `/* %s */` 'commentstring' value: `/* this is commented */` while `/*this is not commented */` and `/* this is not commented*/`.
+      Example of toggling comment on single line with `/* %s */` 'commentstring' value:
+        - `/* this is commented */` -> `this is commented`.
+        - `/*this is also commented */` -> `this is also commented ` (notice trailing space).
 
     - Commenting blank lines is done with trimmed comments parts, while uncommenting explicitly results into empty lines.
 
