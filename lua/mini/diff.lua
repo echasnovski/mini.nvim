@@ -1659,8 +1659,8 @@ H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
     --   inside '.git' directory).
     if exit_code ~= 0 or stdout_feed[1] == nil then return buf_set_ref_text({}) end
 
-    -- Set reference text
-    local text = table.concat(stdout_feed, '')
+    -- Set reference text accounting for possible 'crlf' end of line in index
+    local text = table.concat(stdout_feed, ''):gsub('\r\n', '\n')
     buf_set_ref_text(text)
   end
 
@@ -1672,7 +1672,7 @@ H.git_get_path_data = function(path)
   -- Get path data needed for proper patch header
   local cwd, basename = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
   local stdout = vim.loop.new_pipe()
-  local args = { 'ls-files', '--full-name', '--format=%(objectmode) %(path)', '--', basename }
+  local args = { 'ls-files', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', basename }
   local spawn_opts = { args = args, cwd = cwd, stdio = { nil, stdout, nil } }
 
   local process, stdout_feed, res, did_exit = nil, {}, { cwd = cwd }, false
@@ -1683,7 +1683,7 @@ H.git_get_path_data = function(path)
     if exit_code ~= 0 then return end
     -- Parse data about path
     local out = table.concat(stdout_feed, ''):gsub('\n+$', '')
-    res.mode_bits, res.rel_path = string.match(out, '^(%d+) (.*)$')
+    res.mode_bits, res.eol, res.rel_path = string.match(out, '^(%d+) (%S+) (.*)$')
   end
 
   process = vim.loop.spawn('git', spawn_opts, on_exit)
@@ -1705,16 +1705,17 @@ H.git_format_patch = function(buf_id, hunks, path_data)
 
   -- Take into account changing target ref region as a result of previous hunks
   local offset = 0
+  local cr_eol = path_data.eol == 'crlf' and '\r' or ''
   for _, h in ipairs(hunks) do
     -- "Add" hunks have reference line above target
     local start = h.ref_start + (h.ref_count == 0 and 1 or 0)
 
     table.insert(res, string.format('@@ -%d,%d +%d,%d @@', start, h.ref_count, start + offset, h.buf_count))
     for i = h.ref_start, h.ref_start + h.ref_count - 1 do
-      table.insert(res, '-' .. ref_lines[i])
+      table.insert(res, '-' .. ref_lines[i] .. cr_eol)
     end
     for i = h.buf_start, h.buf_start + h.buf_count - 1 do
-      table.insert(res, '+' .. buf_lines[i])
+      table.insert(res, '+' .. buf_lines[i] .. cr_eol)
     end
     offset = offset + (h.buf_count - h.ref_count)
   end

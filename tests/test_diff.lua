@@ -794,7 +794,7 @@ T['gen_source']['git()'] = new_set({
 T['gen_source']['git()']['works'] = function()
   child.lua([[
     _G.stdio_queue = {
-      { { 'out', _G.git_dir } },       -- Get path to repo's Git dir
+      { { 'out', _G.git_dir } },         -- Get path to repo's Git dir
       { { 'out', 'Line 1\nLine 2\n' } }, -- Get reference text
     }
   ]])
@@ -827,10 +827,10 @@ T['gen_source']['git()']['can apply hunks'] = function()
   child.lua([[
     local ref_text = table.concat({ 'Line -1', 'Line 0', 'Line 1', 'Line 22', 'Line 33', 'Line 4' }, '\n')
     _G.stdio_queue = {
-      { { 'out', _G.git_dir } },           -- Get path to repo's Git dir
-      { { 'out', ref_text } },             -- Get reference text
-      { { 'out', '100644 file-in-git' } }, -- Get path data for the patch
-      { { 'in' } },                        -- Apply patch
+      { { 'out', _G.git_dir } },              -- Get path to repo's Git dir
+      { { 'out', ref_text } },                -- Get reference text
+      { { 'out', '100644 lf file-in-git' } }, -- Get path data for the patch
+      { { 'in' } },                           -- Apply patch
     }
   ]])
 
@@ -855,7 +855,7 @@ T['gen_source']['git()']['can apply hunks'] = function()
     { args = { 'rev-parse', '--path-format=absolute', '--git-dir' }, cwd = git_dir_path },
     { args = { 'show', ':0:./' .. git_file_basename }, cwd = git_dir_path },
     {
-      args = { 'ls-files', '--full-name', '--format=%(objectmode) %(path)', '--', git_file_basename },
+      args = { 'ls-files', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', git_file_basename },
       cwd = git_dir_path,
     },
     { args = { 'apply', '--whitespace=nowarn', '--cached', '--unidiff-zero', '-' }, cwd = git_dir_path },
@@ -896,6 +896,56 @@ T['gen_source']['git()']['can apply hunks'] = function()
     'Stream in for process 4 wrote: @@ -7,0 +5,1 @@',
     'Stream in for process 4 wrote: \n',
     'Stream in for process 4 wrote: +world',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 was shut down.', 'Process 4 was closed.',
+  }
+  eq(get_process_log(), ref_process_log)
+end
+
+T['gen_source']['git()']['handles "crlf" line endings in index'] = function()
+  -- Computing reference text
+  child.lua([[
+    _G.stdio_queue = {
+      { { 'out', _G.git_dir } },                   -- Get path to repo's Git dir
+      { { 'out', 'Line 1\r\nLINE 2\r\nLine 3' } }, -- Get reference text
+      { { 'out', '100644 crlf file-in-git' } },    -- Get path data for the patch
+      { { 'in' } },                                -- Apply patch
+    }
+  ]])
+
+  edit(git_file_path)
+  eq(is_buf_enabled(0), true)
+
+  -- - Should set reference text with only '\n' representing end of line
+  eq(get_buf_data(0).ref_text, 'Line 1\nLINE 2\nLine 3\n')
+
+  -- Applying hunks
+  child.lua([[MiniDiff.do_hunks(0, 'apply')]])
+  --stylua: ignore
+  local ref_process_log = {
+    'Stream out for process 1 was closed.', 'Process 1 was closed.',
+    'Stream out for process 2 was closed.', 'Process 2 was closed.',
+    'Stream out for process 3 was closed.', 'Process 3 was closed.',
+    'Stream in for process 4 wrote: diff --git a/file-in-git b/file-in-git',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: index 000000..000000 100644',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: --- a/file-in-git',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: +++ b/file-in-git',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: @@ -2,1 +2,1 @@',
+    'Stream in for process 4 wrote: \n',
+    -- Should append "\r" at end of line if CRLF is used in index
+    'Stream in for process 4 wrote: -LINE 2\r',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: +Line 2\r',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: @@ -4,0 +4,2 @@',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: +Line 4\r',
+    'Stream in for process 4 wrote: \n',
+    'Stream in for process 4 wrote: +Line 5\r',
     'Stream in for process 4 wrote: \n',
     'Stream in for process 4 was shut down.', 'Process 4 was closed.',
   }
