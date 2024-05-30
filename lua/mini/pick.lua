@@ -697,6 +697,13 @@ MiniPick.setup = function(config)
 
   -- Create user commands
   H.create_user_commands()
+
+  -- Disable terminal emulator's pasting with active picker
+  local paste_orig = vim.paste
+  vim.paste = function(...)
+    if not MiniPick.is_picker_active() then return paste_orig(...) end
+    vim.notify('(mini.pick) Use `mappings.paste` (`<C-r>` by default) with "*" or "+" register.', vim.log.levels.HINT)
+  end
 end
 
 --stylua: ignore
