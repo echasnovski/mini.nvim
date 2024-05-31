@@ -1466,8 +1466,8 @@ H.update_buf_data = function(buf_id, new_data)
   if status ~= '  ' and status ~= '' then summary_string = string.format('%s (%s)', head, status) end
   vim.b[buf_id].minigit_summary_string = summary_string
 
-  -- Trigger dedicated event
-  H.trigger_event('MiniGitUpdated')
+  -- Trigger dedicated event with target current buffer (for proper `data.buf`)
+  vim.api.nvim_buf_call(buf_id, function() H.trigger_event('MiniGitUpdated') end)
 end
 
 -- History navigation ---------------------------------------------------------

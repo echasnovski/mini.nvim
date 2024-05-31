@@ -1546,6 +1546,15 @@ T['Tracking']['updates all buffers from same repo on repo change'] = function()
   local buf_id_2 = get_buf()
   sleep(small_time)
 
+  child.lua([[
+    _G.event_log = {}
+    local callback = function(data)
+      table.insert(_G.event_log, { event = data.event, data_buf = data.buf, cur_buf = vim.api.nvim_get_current_buf() })
+    end
+    vim.api.nvim_create_autocmd('User', { pattern = 'MiniGitUpdated', callback = callback })
+    vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'WinEnter' }, { callback = callback })
+  ]])
+
   -- Make change in '.git' directory
   mock_change_git_index()
   sleep(50 + small_time)
@@ -1598,6 +1607,16 @@ T['Tracking']['updates all buffers from same repo on repo change'] = function()
     },
   }
   validate_git_spawn_log(ref_git_spawn_log)
+
+  -- Should trigger 'MiniGitUpdated' event with target buffer being current
+  -- while not triggering other commong buffer-window events
+  local triggered_buffers = {}
+  for _, t in ipairs(child.lua_get('_G.event_log')) do
+    eq(t.data_buf, t.cur_buf)
+    eq(t.event, 'User')
+    triggered_buffers[t.data_buf] = true
+  end
+  eq(triggered_buffers, { [buf_id_1] = true, [buf_id_2] = true })
 end
 
 T['Tracking']['reacts to content change outside of current session'] = function()
