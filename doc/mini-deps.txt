@@ -92,6 +92,7 @@ default |MiniDeps.update()| and |MiniDeps.clean()|.
 * `MiniDepsChangeRemoved` - removed change (commit) during update.
 * `MiniDepsHint`          - various hints.
 * `MiniDepsInfo`          - various information.
+* `MiniDepsMsgBreaking`   - message for (conventional commit) breaking change.
 * `MiniDepsPlaceholder`   - placeholder when there is no valuable information.
 * `MiniDepsTitle`         - various titles.
 * `MiniDepsTitleError`    - title when plugin had errors during update.

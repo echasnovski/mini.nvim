@@ -2058,7 +2058,7 @@ T['pickers']['hl_groups()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.hl_groups()')
   validate_picker_name('Highlight groups')
   type_keys('^Diff')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 9 } })
 
   -- Should use same group for line highlighting
   local matches = get_picker_matches().all
@@ -2071,7 +2071,7 @@ T['pickers']['hl_groups()']['works'] = function()
 
   -- Should have proper preview
   type_keys('<Tab>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 9 } })
 
   -- Should properly choose
   type_keys('<CR>')

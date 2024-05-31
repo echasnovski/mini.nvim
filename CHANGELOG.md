@@ -19,6 +19,10 @@
 
 - FEATURE: Support dot-repeat after initial commenting is done for visual selection; repeating is done for same relative range.
 
+## mini.deps
+
+- FEATURE: add `MiniDepsMsgBreaking` highlight group for messages indicating a breaking change in a conventional commit style.
+
 ## mini.diff
 
 - Introduction of a new module.

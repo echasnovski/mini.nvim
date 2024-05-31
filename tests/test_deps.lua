@@ -1431,6 +1431,41 @@ T['update()']['can fold in confirm buffer'] = function()
   eq(child.wo.foldlevel, 0)
 end
 
+T['update()']['can highlight breaking changes'] = function()
+  child.set_size(33, 80)
+
+  add('plugin_1')
+
+  local plugin_1_log = table.concat({
+    '< sha2head | 2024-01-02 01:01:01 +0200 | Neo McVim',
+    '  feat!: a breaking feature',
+    '> new2head | 2024-01-02 02:02:02 +0200 | Neo McVim',
+    '  fix(deps)!: a breaking fix',
+    '> wow2head | 2024-01-02 03:03:03 +0200 | Neo McVim',
+    '  fix: not a fix!: breaking change',
+  }, '\n')
+  child.lua('_G.plugin_1_log = ' .. vim.inspect(plugin_1_log))
+
+  child.lua([[
+    _G.stdio_queue = {
+      { out = 'git version 2.43.0'}, -- Check Git executable
+      { out = 'https://github.com/user/plugin_1' }, -- Get source from `origin` in plugin_1
+      { out = 'sha1head' },          -- Get `HEAD` in plugin_1
+      { out = 'origin/main' },       -- Get default branch in plugin_1
+      {},                            -- Fetch in plugin_1
+      { out = 'origin/main' },       -- Check if `checkout` is origin branch in plugin_1
+      { out = 'wow1head' },          -- Get commit of `checkout` in plugin_1
+      { out = _G.plugin_1_log },     -- Get log of `checkout` changes in plugin_1
+    }
+  ]])
+
+  update()
+
+  -- Should show confirmation buffer with highlighted breaking messages
+  mock_hide_path(test_dir_absolute)
+  child.expect_screenshot()
+end
+
 T['update()']['can work with non-default branches'] = function()
   child.set_size(32, 80)
 

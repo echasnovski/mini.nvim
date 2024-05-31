@@ -92,6 +92,7 @@
 --- * `MiniDepsChangeRemoved` - removed change (commit) during update.
 --- * `MiniDepsHint`          - various hints.
 --- * `MiniDepsInfo`          - various information.
+--- * `MiniDepsMsgBreaking`   - message for (conventional commit) breaking change.
 --- * `MiniDepsPlaceholder`   - placeholder when there is no valuable information.
 --- * `MiniDepsTitle`         - various titles.
 --- * `MiniDepsTitleError`    - title when plugin had errors during update.
@@ -837,6 +838,7 @@ H.create_default_hl = function()
   hi('MiniDepsChangeRemoved', { link = has_core_diff_hl and 'Removed' or 'diffRemoved' })
   hi('MiniDepsHint',          { link = 'DiagnosticHint' })
   hi('MiniDepsInfo',          { link = 'DiagnosticInfo' })
+  hi('MiniDepsMsgBreaking',   { link = 'DiagnosticWarn' })
   hi('MiniDepsPlaceholder',   { link = 'Comment' })
   hi('MiniDepsTitle',         { link = 'Title' })
   hi('MiniDepsTitleError',    { link = 'DiffDelete' })
@@ -1396,6 +1398,7 @@ H.update_add_syntax = function()
     syntax match MiniDepsHint          "\(^State.\+\)\@<=(.\+)$"
     syntax match MiniDepsChangeAdded   "^> .*$"
     syntax match MiniDepsChangeRemoved "^< .*$"
+    syntax match MiniDepsMsgBreaking   "^  \S\+!: .*$"
     syntax match MiniDepsPlaceholder   "^<.*>$"
   ]])
 end

@@ -151,6 +151,7 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniDepsChangeRemoved`
     - `MiniDepsHint`
     - `MiniDepsInfo`
+    - `MiniDepsMsgBreaking`
     - `MiniDepsPlaceholder`
     - `MiniDepsTitle`
     - `MiniDepsTitleError`
