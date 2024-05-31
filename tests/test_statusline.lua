@@ -336,6 +336,13 @@ T['section_diagnostics()']['respects `args.icon`'] = function()
   eq(child.lua_get([[MiniStatusline.section_diagnostics({icon = 'AAA'})]]), 'AAA E4 W3 I2 H1')
 end
 
+T['section_diagnostics()']['respects `args.signs`'] = function()
+  local out = child.lua_get(
+    [[MiniStatusline.section_diagnostics({ signs = { ERROR = '!', WARN = '?', INFO = '@', HINT = '*' } })]]
+  )
+  eq(out, ' !4 ?3 @2 *1')
+end
+
 T['section_diagnostics()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
   eq(child.lua_get([[MiniStatusline.section_diagnostics({})]]), 'Diag E4 W3 I2 H1')

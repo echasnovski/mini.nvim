@@ -325,6 +325,8 @@ end
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
 ---@param args __statusline_args Use `args.icon` to supply your own icon.
+---   Use `args.signs` to use custom signs per severity level name. For example:
+---   `{ ERROR = '!', WARN = '?', INFO = '@', HINT = '*' }`
 ---
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
@@ -332,11 +334,11 @@ MiniStatusline.section_diagnostics = function(args)
 
   -- Construct string parts
   local count = H.diagnostic_get_count()
-  local severity, t = vim.diagnostic.severity, {}
+  local severity, signs, t = vim.diagnostic.severity, args.signs or {}, {}
   for _, level in ipairs(H.diagnostic_levels) do
     local n = count[severity[level.name]] or 0
     -- Add level info only if diagnostic is present
-    if n > 0 then table.insert(t, ' ' .. level.sign .. n) end
+    if n > 0 then table.insert(t, ' ' .. (signs[level.name] or level.sign) .. n) end
   end
   if #t == 0 then return '' end
 

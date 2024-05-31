@@ -62,6 +62,7 @@
     - Something is shown **only** if there is any diagnostic actually present in the buffer. No diagnostic entries - nothing is shown.
     Previously it did not show if there was no LSP servers attached (as initially diagnostics came only from LSP) or buffer was not normal.
     - Fallback icon is "Diag" instead of "LSP".
+- FEATURE: `section_diagnostics()` now supports `signs` table option to customize signs for severity levels.
 - BREAKING FEATURE: `section_git()` now prefers using data from 'mini.git' with fallback on pure HEAD data from 'lewis6991/gistigns.nvim'.
 - FEATURE: add `section_diff()` to show data from 'mini.diff' with fallback on diff data from 'lewis6991/gistigns.nvim'.
 - FEATURE: add `section_lsp()` to show indicator of LSP servers attached to the buffer.
