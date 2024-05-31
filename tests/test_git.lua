@@ -1917,6 +1917,52 @@ T['Tracking']['event is triggered'] = function()
   eq(child.b.minigit_summary_string, 'main (??) 6')
 end
 
+T['Tracking']['event is properly triggered on buffer write'] = function()
+  child.lua([[_G.stdio_queue = {
+      { { 'out', _G.rev_parse_track } }, -- Get path to root and repo for first file
+      { { 'out', 'abc1234\nmain' } },    -- Get HEAD data for first file
+      { { 'out', 'MM file-in-git' } },   -- Get file status data for first file
+
+      { { 'out', _G.rev_parse_track } },                 -- Get path to root and repo for second file
+      { { 'out', 'abc1234/main' } },                     -- Get HEAD data for second file
+      { { 'out', '?? dir-in-git/file-in-dir-in-git' } }, -- Get file status data for second file
+
+      -- Reaction to buffer write
+      { { 'out', 'A  dir-in-git/file-in-dir-in-git' } },
+    }
+  ]])
+
+  edit(git_file_path)
+  sleep(small_time)
+  edit(git_root_dir .. '/dir-in-git/file-in-dir-in-git')
+  sleep(small_time)
+  clear_spawn_log()
+
+  -- Should be triggered only for actually written buffer
+  child.lua([[
+    _G.event_log = {}
+    local callback = function(data)
+      table.insert(_G.event_log, data.buf)
+    end
+    vim.api.nvim_create_autocmd('User', { pattern = 'MiniGitUpdated', callback = callback })
+  ]])
+
+  child.cmd('write')
+  for _, buf_id in ipairs(child.lua_get('_G.event_log')) do
+    eq(buf_id, get_buf())
+  end
+
+  --stylua: ignore
+  local ref_git_spawn_log = {
+    {
+      '-c', 'gc.auto=0',
+      'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+      '--', 'dir-in-git/file-in-dir-in-git'
+    }
+  }
+  validate_git_spawn_log(ref_git_spawn_log)
+end
+
 T[':Git'] = new_set({
   hooks = {
     pre_case = function()

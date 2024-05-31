@@ -1332,10 +1332,9 @@ H.setup_path_watch = function(buf_id, repo)
   if not H.is_buf_enabled(buf_id) then return end
 
   local on_file_change = function(data) H.update_git_status(H.cache[buf_id].root, { buf_id }) end
-  vim.api.nvim_create_autocmd(
-    { 'BufWritePost', 'FileChangedShellPost' },
-    { desc = 'Update Git status', group = H.cache[buf_id].augroup, callback = on_file_change }
-  )
+  local opts =
+    { desc = 'Update Git status', group = H.cache[buf_id].augroup, buffer = buf_id, callback = on_file_change }
+  vim.api.nvim_create_autocmd({ 'BufWritePost', 'FileChangedShellPost' }, opts)
 end
 
 H.on_repo_change = function(repo)
