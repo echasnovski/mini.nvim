@@ -673,6 +673,23 @@ T['Information window']['implements debounce-style delay'] = function()
   validate_single_floating_win({ lines = { 'Month #06' } })
 end
 
+T['Information window']['is closed when forced outside of Insert mode'] = new_set(
+  { parametrize = { { '<Esc>' }, { '<C-c>' } } },
+  {
+    test = function(key)
+      type_keys('i', 'J', '<C-Space>')
+      eq(get_completion(), { 'January', 'June', 'July' })
+
+      type_keys('<C-n>')
+      sleep(test_times.info + 5)
+      validate_single_floating_win({ lines = { 'Month #01' } })
+
+      type_keys(key)
+      eq(get_floating_windows(), {})
+    end,
+  }
+)
+
 T['Information window']['handles all buffer wipeout'] = function()
   validate_info_win(test_times.info)
   child.ensure_normal_mode()
@@ -820,6 +837,20 @@ T['Signature help']['implements debounce-style delay'] = function()
   sleep(test_times.signature + 1)
   validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
 end
+
+T['Signature help']['is closed when forced outside of Insert mode'] = new_set(
+  { parametrize = { { '<Esc>' }, { '<C-c>' } } },
+  {
+    test = function(key)
+      type_keys('i', 'abc(')
+      sleep(test_times.signature + 5)
+      validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
+
+      type_keys(key)
+      eq(get_floating_windows(), {})
+    end,
+  }
+)
 
 T['Signature help']['handles all buffer wipeout'] = function()
   validate_signature_win(test_times.signature)
