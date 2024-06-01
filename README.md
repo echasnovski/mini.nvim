@@ -74,9 +74,9 @@ end
 
 If you are browsing without particular objective and don't know which module to look at:
 
-- To improve your editing experience, start with 'mini.ai', 'mini.operators', 'mini.surround'.
+- To improve your editing experience, start with 'mini.ai', 'mini.operators', 'mini.pairs', 'mini.surround'.
 - To improve your general workflow, start with 'mini.bracketed', 'mini.files', 'mini.jump2d', 'mini.pick'.
-- To make your Neovim more beautiful, start with 'mini.animate', 'mini.hipatterns', 'mini.hues'.
+- To make your Neovim more beautiful, start with 'mini.animate', 'mini.hipatterns', 'mini.hues', 'mini.notify'.
 
 | Module           | Description                              | Overview                              | Details                               |
 |------------------|------------------------------------------|---------------------------------------|---------------------------------------|
