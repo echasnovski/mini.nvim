@@ -501,6 +501,7 @@ MiniDiff.disable = function(buf_id)
   H.cache[buf_id] = nil
 
   pcall(vim.api.nvim_del_augroup_by_id, buf_cache.augroup)
+  vim.b[buf_id].minidiff_summary, vim.b[buf_id].minidiff_summary_string = nil, nil
   H.clear_all_diff(buf_id)
   pcall(buf_cache.source.detach, buf_id)
 end

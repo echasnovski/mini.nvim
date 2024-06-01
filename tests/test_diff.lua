@@ -441,12 +441,18 @@ T['disable()']['works'] = function()
   eq(is_buf_enabled(buf_id), true)
   set_lines({ 'aaa', 'bbb' })
   set_ref_text(0, { 'aaa' })
+  eq(child.b.minidiff_summary == vim.NIL, false)
+  eq(child.b.minidiff_summary == vim.NIL, false)
 
   disable(buf_id)
   eq(is_buf_enabled(buf_id), false)
 
   -- Should delete buffer autocommands
   eq(child.api.nvim_get_autocmds({ buffer = buf_id }), {})
+
+  -- Should delete buffer-local variables
+  eq(child.b.minidiff_summary == vim.NIL, true)
+  eq(child.b.minidiff_summary == vim.NIL, true)
 
   -- Should detach source
   validate_dummy_log({ { 'detach', { buf_id } } })
