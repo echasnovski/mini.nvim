@@ -1125,7 +1125,7 @@ T['Autoopening']['does not autoopen if Neovim started to show something'] = func
   validate_starter_shown()
   eq(child.lua_get('_G.n_event'), 1)
 
-  -- Several windows are shown (like from other plugin action at startup)
+  -- Current buffer is meant to show something else
   validate('-c', 'set filetype=text')
 
   -- Current buffer has any lines (something opened explicitly)
