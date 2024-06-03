@@ -1899,6 +1899,60 @@ T['Tracking']['does not react to ".lock" files in repo directory'] = function()
   eq(#get_spawn_log(), 3)
 end
 
+T['Tracking']['redraws statusline when summary is updated'] = function()
+  child.set_size(10, 30)
+  child.lua([[_G.stdio_queue = {
+      { { 'out', _G.rev_parse_track } }, -- Get path to root and repo
+      { { 'out', 'abc1234\nmain' } },    -- Get HEAD data
+      { { 'out', 'MM file-in-git' } },   -- Get file status data
+
+      -- Emulate staging file
+      { { 'out', 'abc1234\nmain' } },  -- Get HEAD data
+      { { 'out', 'M  file-in-git' } }, -- Get file status data
+
+      -- Emulate writing a file
+      { { 'out', 'AM file-in-git' } }, -- Get file status data
+
+      -- Emulate changing branch
+      { { 'out', 'def4321\ntmp' } },   -- Get HEAD data
+      { { 'out', '?? file-in-git' } }, -- Get file status data
+
+      -- Emulate "in progress"
+      { { 'out', 'ghi5678\ntmp-2' } }, -- Get HEAD data
+      { { 'out', '!! file-in-git' } }, -- Get file status data
+    }
+  ]])
+
+  edit(git_file_path)
+  sleep(small_time)
+
+  child.o.laststatus = 2
+  child.o.statusline = '%!b:minigit_summary_string'
+  child.expect_screenshot()
+
+  -- Status change
+  mock_change_git_index()
+  sleep(50 + small_time)
+  child.expect_screenshot()
+
+  -- File content change
+  child.cmd('silent write')
+  sleep(small_time)
+  child.expect_screenshot()
+
+  -- Branch change
+  child.fn.writefile({ 'ref: refs/heads/tmp' }, git_repo_dir .. '/HEAD')
+  sleep(50 + small_time)
+  child.expect_screenshot()
+
+  -- "In progress" change
+  local path = git_repo_dir .. '/BISECT_LOG'
+  child.fn.writefile({ '' }, path)
+  MiniTest.finally(function() child.fn.delete(path) end)
+  sleep(50 + small_time)
+  child.expect_screenshot()
+end
+
 T['Tracking']['event is triggered'] = function()
   child.lua([[
     -- Should be able to override buffer-local variables
