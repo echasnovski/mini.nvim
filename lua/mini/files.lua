@@ -87,6 +87,7 @@
 ---
 --- * `MiniFilesBorder` - border of regular windows.
 --- * `MiniFilesBorderModified` - border of windows showing modified buffer.
+--- * `MiniFilesModified` - basic foreground/background for modified buffer
 --- * `MiniFilesCursorLine` - cursor line in explorer windows.
 --- * `MiniFilesDirectory` - text and icon representing directory.
 --- * `MiniFilesFile` - text representing file.
@@ -598,6 +599,9 @@ end
 ---
 --- `windows.width_focus` and `windows.width_nofocus` are number of columns used
 --- as `width` for focused and non-focused windows respectively.
+---
+--- `windows.title_pos` is the position of the title. It can be left, right or
+--- center
 MiniFiles.config = {
   -- Customization of shown content
   content = {
@@ -645,6 +649,8 @@ MiniFiles.config = {
     width_nofocus = 15,
     -- Width of preview window
     width_preview = 25,
+    -- Position of the title. Valid values are: left(default), right or center
+    title_pos = 'left',
   },
 }
 --minidoc_afterlines_end
@@ -1175,6 +1181,7 @@ H.create_default_hl = function()
 
   hi('MiniFilesBorder',         { link = 'FloatBorder' })
   hi('MiniFilesBorderModified', { link = 'DiagnosticFloatingWarn' })
+  hi('MiniFilesModified',       { link = 'NormalFloat' })
   hi('MiniFilesCursorLine',     { link = 'CursorLine' })
   hi('MiniFilesDirectory',      { link = 'Directory'   })
   hi('MiniFilesFile',           {})
@@ -1532,12 +1539,14 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   local win_is_preview = opts.windows.preview and (depth == (explorer.depth_focus + 1))
   local cur_width = win_is_focused and opts.windows.width_focus
     or (win_is_preview and opts.windows.width_preview or opts.windows.width_nofocus)
+  local title_pos = opts.windows.title_pos or 'left'
 
   -- Create relevant window config
   local config = {
     col = win_col,
     height = vim.api.nvim_buf_line_count(view.buf_id),
     width = cur_width,
+    title_pos = title_pos,
     -- Use shortened full path in left most window
     title = win_count == 1 and H.fs_shorten_path(H.fs_full_path(path)) or H.fs_get_basename(path),
   }
@@ -2267,7 +2276,10 @@ H.window_update_border_hl = function(win_id)
   local buf_id = vim.api.nvim_win_get_buf(win_id)
 
   local border_hl = H.is_modified_buffer(buf_id) and 'MiniFilesBorderModified' or 'MiniFilesBorder'
+  local buffer_hl =  H.is_modified_buffer(buf_id) and 'MiniFilesModified' or 'MiniFilesNormal'
+  
   H.window_update_highlight(win_id, 'FloatBorder', border_hl)
+  H.window_update_highlight(win_id, 'NormalFloat', buffer_hl)
 end
 
 H.window_get_max_height = function()

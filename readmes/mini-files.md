@@ -8,7 +8,7 @@
 
 For full experience needs [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin (but works without it).
 
-See more details in [Features](#features) and [help file](../doc/mini-files.txt).
+See more details in [Features](#features) and [help file](doc/mini-files.txt).
 
 ---
 
@@ -234,6 +234,8 @@ Here are code snippets for some common installation methods (use only one):
     width_nofocus = 15,
     -- Width of preview window
     width_preview = 25,
+    -- Position of the title. It can be left(default), right or center
+    title_pos = 'left',
   },
 }
 ```
