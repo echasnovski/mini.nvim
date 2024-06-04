@@ -375,7 +375,9 @@
 ---
 ---       -- Customize window-local settings
 ---       vim.wo[win_id].winblend = 50
----       vim.api.nvim_win_set_config(win_id, { border = 'double' })
+---       local config = vim.api.nvim_win_get_config(win_id)
+---       config.border, config.title_pos = 'double', 'right'
+---       vim.api.nvim_win_set_config(win_id, config)
 ---     end,
 ---   })
 ---
@@ -2182,7 +2184,9 @@ H.window_update = function(win_id, config)
       title_string = '…' .. vim.fn.strcharpart(title_string, title_chars - width + 1, width - 1)
     end
     config.title = title_string
-    config.border = vim.api.nvim_win_get_config(win_id).border
+    -- Preserve some config values
+    local win_config = vim.api.nvim_win_get_config(win_id)
+    config.border, config.title_pos = win_config.border, win_config.title_pos
   else
     config.title = nil
   end

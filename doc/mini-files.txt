@@ -380,7 +380,9 @@ Create an autocommand for `MiniFilesWindowOpen` event: >
 
       -- Customize window-local settings
       vim.wo[win_id].winblend = 50
-      vim.api.nvim_win_set_config(win_id, { border = 'double' })
+      local config = vim.api.nvim_win_get_config(win_id)
+      config.border, config.title_pos = 'double', 'right'
+      vim.api.nvim_win_set_config(win_id, config)
     end,
   })
 

@@ -3685,14 +3685,17 @@ T['Events']['`MiniFilesWindowOpen` triggers'] = function()
   validate_event_track({ { buf_id = buf_id_2, win_id = win_id_3 } })
 end
 
-T['Events']['`MiniFilesWindowOpen` can be used to create window-local mappings'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
+T['Events']['`MiniFilesWindowOpen` can be used to tweak window config'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tested window config values appeared in Neovim 0.9') end
 
   child.lua([[
     vim.api.nvim_create_autocmd('User', {
       pattern = 'MiniFilesWindowOpen',
       callback = function(args)
-        vim.api.nvim_win_set_config(args.data.win_id, { border = 'double' })
+        local win_id = args.data.win_id
+        local config = vim.api.nvim_win_get_config(win_id)
+        config.border, config.title_pos = 'double', 'right'
+        vim.api.nvim_win_set_config(win_id, config)
       end,
     })
   ]])
