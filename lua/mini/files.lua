@@ -1090,7 +1090,7 @@ H.latest_paths = {}
 -- - <win_id> - id of window this buffer is shown. Can be `nil`.
 -- - <n_modified> - number of modifications since last update from this module.
 --   Values bigger than 0 can be treated as if buffer was modified by user.
---   It uses number instead of boolean is to overcome `TextChanged` event on
+--   It uses number instead of boolean to overcome `TextChanged` event on
 --   initial `buf_set_lines` (`noautocmd` doesn't quick work for this event).
 H.opened_buffers = {}
 
@@ -1681,7 +1681,7 @@ H.explorer_show_help = function(explorer_buf_id, explorer_win_id)
 
   -- Create buffer
   local buf_id = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
+  H.set_buflines(buf_id, lines)
 
   vim.keymap.set('n', 'q', '<Cmd>close<CR>', { buffer = buf_id, desc = 'Close this window' })
 
@@ -1752,7 +1752,11 @@ H.view_ensure_proper = function(view, path, opts)
   if not H.is_valid_buf(view.buf_id) then
     H.buffer_delete(view.buf_id)
     view.buf_id = H.buffer_create(path, opts.mappings)
+    -- Make sure that pressing `u` in new buffer does nothing
+    local cache_undolevels = vim.bo[view.buf_id].undolevels
+    vim.bo[view.buf_id].undolevels = -1
     view.children_path_ids = H.buffer_update(view.buf_id, path, opts)
+    vim.bo[view.buf_id].undolevels = cache_undolevels
   end
 
   -- Ensure proper cursor. If string, find it as line in current buffer.

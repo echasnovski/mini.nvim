@@ -353,6 +353,13 @@ T['open()']['handles backslash on Unix'] = function()
   child.expect_screenshot()
 end
 
+T['open()']['handles undo just after open'] = function()
+  open(test_dir_path)
+  type_keys('u')
+  eq(#get_lines() > 1, true)
+  eq(child.cmd_capture('1messages'), 'Already at oldest change')
+end
+
 T['open()']["uses 'nvim-web-devicons' if present"] = function()
   -- Mock 'nvim-web-devicons'
   child.cmd('set rtp+=tests/dir-files')
