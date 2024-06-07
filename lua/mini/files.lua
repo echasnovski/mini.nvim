@@ -2218,6 +2218,8 @@ end
 
 H.window_focus = function(win_id)
   vim.api.nvim_set_current_win(win_id)
+  local has_buffer, buf_id = pcall(vim.api.nvim_win_get_buf, win_id)
+  if has_buffer and H.opened_buffers[buf_id] ~= nil then H.opened_buffers[buf_id].win_id = win_id end
   H.window_update_highlight(win_id, 'FloatTitle', 'MiniFilesTitleFocused')
 end
 
