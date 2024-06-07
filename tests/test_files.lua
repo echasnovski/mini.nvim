@@ -2069,6 +2069,18 @@ T['Preview']['does not result in flicker'] = function()
   eq(child.lua_get('_G.visible_bufs'), child.lua_get('_G.get_visible_bufs()'))
 end
 
+T['Preview']['always updates with cursor'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 50')
+  -- Exact width is important: it is just enough to fit focused (52) and two
+  -- non-focused (17+17) windows which was the computed visible range range
+  child.set_size(10, 86)
+  open(test_dir)
+  go_in()
+  go_in()
+  type_keys('j')
+  child.expect_screenshot()
+end
+
 T['Mappings'] = new_set()
 
 T['Mappings']['`close` works'] = function()
