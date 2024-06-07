@@ -2041,6 +2041,34 @@ T['Preview']['works after `trim_left()`'] = function()
   child.expect_screenshot()
 end
 
+T['Preview']['does not result in flicker'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 50')
+  -- Exact width is important: it is just enough to fit focused (52) and two
+  -- non-focused (17+17) windows which was the computed visible range range
+  child.set_size(10, 86)
+  child.lua([[
+    _G.get_visible_bufs = function()
+      local res = {}
+      for _, win_id in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        table.insert(res, vim.api.nvim_win_get_buf(win_id))
+      end
+      table.sort(res)
+      return res
+    end
+  ]])
+
+  open(test_dir)
+  child.lua([[
+    MiniFiles.go_in()
+    MiniFiles.go_in()
+    _G.visible_bufs = _G.get_visible_bufs()
+  ]])
+
+  -- State shown initially should be the same as after some time has passed
+  sleep(10)
+  eq(child.lua_get('_G.visible_bufs'), child.lua_get('_G.get_visible_bufs()'))
+end
+
 T['Mappings'] = new_set()
 
 T['Mappings']['`close` works'] = function()

@@ -1413,7 +1413,7 @@ H.explorer_sync_cursor_and_branch = function(explorer, depth)
   -- Show preview to the right of current buffer if needed
   local show_preview = explorer.opts.windows.preview
   local path_is_present = type(cursor_path) == 'string' and H.fs_is_present_path(cursor_path)
-  local is_cur_buf = buf_id == vim.api.nvim_get_current_buf()
+  local is_cur_buf = explorer.depth_focus == depth
   if show_preview and path_is_present and is_cur_buf then table.insert(explorer.branch, cursor_path) end
 
   return explorer
