@@ -1896,12 +1896,16 @@ T['Windows']['never shows past end of buffer'] = function()
   child.expect_screenshot()
 end
 
-T['Preview'] = new_set()
+T['Preview'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.lua('MiniFiles.config.windows.preview = true')
+      child.lua('MiniFiles.config.windows.width_focus = 25')
+    end,
+  },
+})
 
 T['Preview']['works for directories'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
-
   -- Should open preview right after `open()`
   open(test_dir_path)
   child.expect_screenshot()
@@ -1920,9 +1924,6 @@ T['Preview']['works for files'] = function()
     -- Test only on Neovim>=0.10 because there was major tree-sitter update
     if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
   end
-
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
 
   open(make_test_path('real'))
 
@@ -1959,9 +1960,6 @@ T['Preview']['does not highlight big files'] = function()
   local big_file = make_test_path('big.lua')
   MiniTest.finally(function() child.fn.delete(big_file, 'rf') end)
 
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
-
   -- Has limit per line
   child.fn.writefile({ string.format('local a = "%s"', string.rep('a', 1000)) }, big_file)
   open(big_file)
@@ -1973,7 +1971,6 @@ T['Preview']['does not highlight big files'] = function()
 end
 
 T['Preview']['is not removed when going out'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
   child.lua('MiniFiles.config.windows.width_focus = 15')
   child.lua('MiniFiles.config.windows.width_preview = 15')
 
@@ -1994,9 +1991,6 @@ T['Preview']['is not removed when going out'] = function()
 end
 
 T['Preview']['reuses buffers'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
-
   -- Show two previews (for directory and file) and hide them
   open(test_dir_path)
   type_keys('G')
@@ -2011,7 +2005,7 @@ T['Preview']['reuses buffers'] = function()
 end
 
 T['Preview']['is not shown if not enough space'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 50')
   child.set_size(15, 60)
   open(test_dir_path)
   child.expect_screenshot()
@@ -2020,16 +2014,12 @@ end
 T['Preview']['previews only one level deep'] = function()
   child.set_size(10, 80)
 
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
-
   open(make_test_path('nested'))
   child.expect_screenshot()
 end
 
 T['Preview']['handles user created lines'] = function()
-  child.lua('MiniFiles.config.windows.preview = true')
-
+  child.lua('MiniFiles.config.windows.width_focus = 50')
   open(test_dir_path)
   type_keys('o', 'new_entry', '<Esc>')
   type_keys('k')
@@ -2043,8 +2033,6 @@ end
 
 T['Preview']['works after `trim_left()`'] = function()
   child.set_size(10, 80)
-  child.lua('MiniFiles.config.windows.preview = true')
-  child.lua('MiniFiles.config.windows.width_focus = 25')
 
   open(make_test_path('nested'))
   go_in()
