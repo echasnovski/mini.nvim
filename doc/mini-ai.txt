@@ -27,6 +27,8 @@ Features:
     - Derived from user prompt.
     - Default for punctuation, digit, space, or tab.
 
+    For more textobjects see |MiniExtra.gen_ai_spec|.
+
 - Motions for jumping to left/right edge of textobject.
 
 - Set of specification generators to tweak some builtin textobjects (see
