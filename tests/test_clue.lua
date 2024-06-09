@@ -3111,14 +3111,7 @@ T['Reproducing keys']['works with <F*> keys'] = function()
   eq(child.lua_get('_G.m'), 1)
 end
 
-T["'mini.nvim' compatibility"] = new_set({
-  hooks = {
-    pre_case = function()
-      -- TODO: Update during move into 'mini.nvim'
-      child.cmd('set rtp+=deps/mini.nvim')
-    end,
-  },
-})
+T["'mini.nvim' compatibility"] = new_set()
 
 local setup_mini_module = function(name, config)
   local lua_cmd = string.format([[_G.has_module, _G.module = pcall(require, 'mini.%s')]], name)
