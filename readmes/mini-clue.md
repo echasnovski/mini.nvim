@@ -77,11 +77,11 @@ Notes:
 
       To check if trigger is the most recent buffer-local mapping, execute `:<mode-char>map <trigger-keys>` (like `:nmap g` for previous example). Mapping for trigger should be the first listed.
 
-      This module makes the best effort to work out of the box and cover most common cases, but it is not full proof. The solution here is to ensure that triggers are created after making all buffer-local mappings: run either `MiniClue.setup()` or `MiniClue.ensure_buf_triggers()`.
+      This module makes the best effort to work out of the box and cover most common cases, but it is not foolproof. The solution here is to ensure that triggers are created after making all buffer-local mappings: run either `MiniClue.setup()` or `MiniClue.ensure_buf_triggers()`.
 
 - Descriptions from existing mappings take precedence over user-supplied clues. This is to ensure that information shown in clue window is as relevant as possible. To add/customize description of an already existing mapping, use `MiniClue.set_mapping_desc()`.
 
-- Due to technical difficulties, there is no full proof support for Operator-pending mode triggers (like `a`/`i` from 'mini.ai'):
+- Due to technical difficulties, there is no foolproof support for Operator-pending mode triggers (like `a`/`i` from 'mini.ai'):
     - Doesn't work as part of a command in "temporary Normal mode" (like after `<C-o>` in Insert mode) due to implementation difficulties.
     - Can have unexpected behavior with custom operators.
 

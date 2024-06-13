@@ -72,7 +72,7 @@
 ---       Mapping for trigger should be the first listed.
 ---
 ---       This module makes the best effort to work out of the box and cover
----       most common cases, but it is not full proof. The solution here is to
+---       most common cases, but it is not foolproof. The solution here is to
 ---       ensure that triggers are created after making all buffer-local mappings:
 ---       run either |MiniClue.setup()| or |MiniClue.ensure_buf_triggers()|.
 ---
@@ -81,7 +81,7 @@
 ---   relevant as possible. To add/customize description of an already existing
 ---   mapping, use |MiniClue.set_mapping_desc()|.
 ---
---- - Due to technical difficulties, there is no full proof support for
+--- - Due to technical difficulties, there is no foolproof support for
 ---   Operator-pending mode triggers (like `a`/`i` from |mini.ai|):
 ---     - Doesn't work as part of a command in "temporary Normal mode" (like
 ---       after |i_CTRL-O|) due to implementation difficulties.
@@ -166,7 +166,7 @@
 ---
 --- This process is primarily designed for nested `<Leader>` mappings in Normal
 --- mode but works in all other main modes: Visual, Insert, Operator-pending
---- (with caveats; no full proof guarantees), Command-line, Terminal.
+--- (with caveats; no foolproof guarantees), Command-line, Terminal.
 ---
 --- ## Lifecycle ~
 ---
