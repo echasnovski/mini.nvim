@@ -197,9 +197,13 @@ Notes:
   whitespace: open includes it left and right parts, close does not.
 - Output value of `b` alias is same as `)`. For `q` alias - same as `"`.
 - Default surrounding is activated for all characters which are not
-  configured surrounding identifiers. Note: due to special handling of
-  underlying `x.-x` Lua pattern (see |MiniSurround-search-algorithm|), it
-  doesn't really support non-trivial `[count]` for "cover" search method.
+  configured surrounding identifiers. Notes:
+    - Due to special handling of underlying `x.-x` Lua pattern
+      (see |MiniSurround-search-algorithm|), it doesn't really support
+      non-trivial `[count]` for "cover" search method.
+    - When cursor is exactly on the identifier character while there are
+      two matching candidates on both left and right, the one resulting in
+      region with smaller width is preferred.
 
 ------------------------------------------------------------------------------
                                                          *MiniSurround-glossary*
