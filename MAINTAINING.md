@@ -156,5 +156,5 @@ Checklist:
     # REPLACE `xx` with your version number
     TAG_NAME="v0.xx.0" TAG_MESSAGE="Version 0.xx.0" make dual_release
     ```
-- Use development version in 'CHANGELOG.md' ('0.(xx + 1).0.9000'). Commit.
+- Use development version in 'CHANGELOG.md' ('0.xx.0.9000'). Commit.
 - Check for `TODO`s about actions to be done *after* release.
