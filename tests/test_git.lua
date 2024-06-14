@@ -1460,13 +1460,13 @@ T['Auto enable']['properly enables on `BufEnter`'] = function()
   sleep(small_time)
   eq(get_buf_data(buf_id).status, '??')
 
-  -- Should auto enable even in unlisted buffers
+  -- Should auto enable only in listed buffers
   set_buf(new_scratch_buf())
   disable(buf_id)
   child.api.nvim_buf_set_option(buf_id, 'buflisted', false)
   set_buf(buf_id)
   sleep(small_time)
-  eq(get_buf_data(buf_id).status, '??')
+  eq(is_buf_enabled(buf_id), false)
 end
 
 T['Auto enable']['does not enable in not proper buffers'] = function()
