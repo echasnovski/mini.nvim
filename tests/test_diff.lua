@@ -1816,10 +1816,10 @@ T['Auto enable']['properly enables on `BufEnter`'] = function()
   set_buf(buf_id)
   eq(is_buf_enabled(buf_id), true)
 
-  -- Should auto enable even in unlisted buffers
+  -- Should auto enable only in listed buffers
   local buf_id_unlisted = child.api.nvim_create_buf(false, false)
   set_buf(buf_id_unlisted)
-  eq(is_buf_enabled(buf_id_unlisted), true)
+  eq(is_buf_enabled(buf_id_unlisted), false)
 
   -- Should try auto enable in `BufEnter`
   disable(buf_id)

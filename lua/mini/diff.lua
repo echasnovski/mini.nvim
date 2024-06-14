@@ -1029,9 +1029,10 @@ end
 -- Autocommands ---------------------------------------------------------------
 H.auto_enable = vim.schedule_wrap(function(data)
   if H.is_buf_enabled(data.buf) or H.is_disabled(data.buf) then return end
-  if not vim.api.nvim_buf_is_valid(data.buf) or vim.bo[data.buf].buftype ~= '' then return end
-  if not H.is_buf_text(data.buf) then return end
-  MiniDiff.enable(data.buf)
+  local buf = data.buf
+  if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == '' and vim.bo[buf].buflisted) then return end
+  if not H.is_buf_text(buf) then return end
+  MiniDiff.enable(buf)
 end)
 
 H.on_resize = function()
