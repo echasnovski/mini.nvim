@@ -2874,6 +2874,13 @@ T['Builtin']['Default']['can not be covering'] = function()
   expect.match(get_latest_message(), 'a_')
 end
 
+T['Builtin']['Default']['detects covering with smallest width'] = function()
+  validate_edit1d('_a_bb_', 2, '__bb_', 1, 'di_')
+  validate_edit1d('_aa_b_', 3, '_aa__', 4, 'di_')
+
+  validate_edit1d('_a_b_c_b_a_', 5, '_a_b__b_a_', 5, 'di_')
+end
+
 local set_custom_tobj = function(tbl) child.lua('MiniAi.config.custom_textobjects = ' .. vim.inspect(tbl)) end
 
 T['Custom textobject'] = new_set()

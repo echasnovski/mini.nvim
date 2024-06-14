@@ -176,7 +176,10 @@
 ---   punctuation (like `_`, `*`, `,`, etc.), whitespace (space, tab, etc.).
 ---   They are designed to be treated as separators, so include only right edge
 ---   in `a` textobject. To include both edges, use custom textobjects
----   (see |MiniAi-textobject-specification| and |MiniAi.config|).
+---   (see |MiniAi-textobject-specification| and |MiniAi.config|). Note:
+---     - When cursor is exactly on the identifier character while there are
+---       two matching candidates on both left and right, the resulting region
+---       with smaller width is preferred.
 ---@tag MiniAi-textobject-builtin
 
 --- - REGION - table representing region in a buffer. Fields:
