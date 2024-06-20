@@ -997,8 +997,8 @@ H.replace_do = function(data)
   local mark_from, mark_to = data.mark_from, data.mark_to
 
   -- Do nothing with empty/unknown register
-  local register_type = H.get_reg_type(register)
-  if register_type == '' then H.error('Register ' .. vim.inspect(register) .. ' is empty or unknown.') end
+  local reg_info = vim.fn.getreginfo(register)
+  if reg_info.regtype == nil then H.error('Register ' .. vim.inspect(register) .. ' is empty or unknown.') end
 
   -- Determine if region is at edge which is needed for the correct paste key
   local from_line, from_col = unpack(H.get_mark(mark_from))
@@ -1026,16 +1026,18 @@ H.replace_do = function(data)
     { mark_from = mark_from, mark_to = mark_to, submode = forced_motion, mode = data.mode, register = '_' }
   H.do_between_marks('d', delete_data)
 
-  -- Paste register (ensuring same submode type as region)
-  H.with_temp_context({ registers = { register } }, function()
-    H.set_reg_type(register, submode)
+  -- Modify register data to have proper submode and indent
+  local new_reg_info = vim.deepcopy(reg_info)
+  if new_reg_info.regtype:sub(1, 1) ~= submode then new_reg_info.regtype = submode end
+  if should_reindent then new_reg_info.regcontents = H.update_indent(new_reg_info.regcontents, init_indent) end
+  vim.fn.setreg(register, new_reg_info)
 
-    -- Possibly reindent
-    if should_reindent then H.set_reg_indent(register, init_indent) end
+  -- Paste
+  local paste_keys = string.format('%d"%s%s', data.count or 1, register, (is_edge and 'p' or 'P'))
+  H.cmd_normal(paste_keys)
 
-    local paste_keys = string.format('%d"%s%s', data.count or 1, register, (is_edge and 'p' or 'P'))
-    H.cmd_normal(paste_keys)
-  end)
+  -- Restore register data
+  vim.fn.setreg(register, reg_info)
 
   -- Adjust cursor to be at start mark
   vim.api.nvim_win_set_cursor(0, { from_line, from_col })
@@ -1151,26 +1153,6 @@ H.do_between_marks = function(operator, data)
 end
 
 H.is_content = function(x) return type(x) == 'table' and H.islist(x.lines) and type(x.submode) == 'string' end
-
--- Registers ------------------------------------------------------------------
-H.get_reg_type = function(regname) return vim.fn.getregtype(regname):sub(1, 1) end
-
-H.set_reg_type = function(regname, new_regtype)
-  local reg_info = vim.fn.getreginfo(regname)
-  local cur_regtype, n_lines = reg_info.regtype:sub(1, 1), #reg_info.regcontents
-
-  -- Do nothing if already the same type
-  if cur_regtype == new_regtype then return end
-
-  reg_info.regtype = new_regtype
-  vim.fn.setreg(regname, reg_info)
-end
-
-H.set_reg_indent = function(regname, new_indent)
-  local reg_info = vim.fn.getreginfo(regname)
-  reg_info.regcontents = H.update_indent(reg_info.regcontents, new_indent)
-  vim.fn.setreg(regname, reg_info)
-end
 
 -- Marks ----------------------------------------------------------------------
 H.get_region_data = function(mode)
