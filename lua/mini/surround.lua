@@ -921,19 +921,8 @@ end
 --- Generate common surrounding specifications
 ---
 --- This is a table with two sets of generator functions: <input> and <output>
---- (currently empty). Each is a table with values being function generating
+--- (currently empty). Each is a table with function values generating
 --- corresponding surrounding specification.
----
---- Example: >
----   local ts_input = require('mini.surround').gen_spec.input.treesitter
----   require('mini.surround').setup({
----     custom_surroundings = {
----       -- Use tree-sitter to search for function call
----       f = {
----         input = ts_input({ outer = '@call.outer', inner = '@call.inner' })
----       },
----     }
----   })
 ---
 ---@seealso |MiniAi.gen_spec|
 MiniSurround.gen_spec = { input = {}, output = {} }
@@ -972,8 +961,11 @@ MiniSurround.gen_spec = { input = {}, output = {} }
 --- >
 ---   local ts_input = require('mini.surround').gen_spec.input.treesitter
 ---   require('mini.surround').setup({
----     custom_textobjects = {
----       f = ts_input({ outer = '@call.outer', inner = '@call.inner' }),
+---     custom_surroundings = {
+---       -- Use tree-sitter to search for function call
+---       f = {
+---         input = ts_input({ outer = '@call.outer', inner = '@call.inner' })
+---       },
 ---     }
 ---   })
 --- <
