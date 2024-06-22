@@ -11,9 +11,7 @@ vim.lsp.get_clients = mock_buf_clients
 
 _G.attach_lsp = function()
   _G.n_lsp_clients = _G.n_lsp_clients + 1
-  if vim.fn.has('nvim-0.8') == 1 then
-    vim.api.nvim_exec_autocmds('LspAttach', { data = { client_id = _G.n_lsp_clients } })
-  end
+  vim.api.nvim_exec_autocmds('LspAttach', { data = { client_id = _G.n_lsp_clients } })
 end
 
 _G.detach_lsp = function()
@@ -21,7 +19,7 @@ _G.detach_lsp = function()
   if n == 0 then return end
 
   _G.n_lsp_clients = _G.n_lsp_clients - 1
-  if vim.fn.has('nvim-0.8') == 1 then vim.api.nvim_exec_autocmds('LspDetach', { data = { client_id = n } }) end
+  vim.api.nvim_exec_autocmds('LspDetach', { data = { client_id = n } })
 end
 
 _G.attach_lsp()

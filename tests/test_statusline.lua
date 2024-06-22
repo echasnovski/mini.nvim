@@ -394,7 +394,7 @@ T['section_lsp()']['works'] = function()
   child.lua([[
     local f = function() return { [2] = { id = 2 }, [4] = { id = 4 } } end
     vim.lsp.buf_get_clients, vim.lsp.get_clients = f, f
-    if vim.fn.has('nvim-0.8') == 1 then vim.api.nvim_exec_autocmds('LspAttach', {}) end
+    vim.api.nvim_exec_autocmds('LspAttach', {})
   ]])
   eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 ++')
 end

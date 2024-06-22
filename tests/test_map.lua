@@ -505,13 +505,11 @@ T['open()']['respects important options when computing window height'] = functio
   -- Statusline
   validate({ showtabline = 0, laststatus = 1 }, 0, 28)
   validate({ showtabline = 0, laststatus = 2 }, 0, 28)
-
-  if child.fn.has('nvim-0.8') == 1 then validate({ showtabline = 0, laststatus = 3 }, 0, 28) end
+  validate({ showtabline = 0, laststatus = 3 }, 0, 28)
 
   -- Command line
   validate({ showtabline = 0, laststatus = 0, cmdheight = 4 }, 0, 26)
-
-  if child.fn.has('nvim-0.8') == 1 then validate({ showtabline = 0, laststatus = 0, cmdheight = 0 }, 0, 30) end
+  validate({ showtabline = 0, laststatus = 0, cmdheight = 0 }, 0, 30)
 end
 
 T['open()']['can be used with already opened window'] = function()

@@ -480,15 +480,6 @@ local H = {}
 ---@usage `require('mini.clue').setup({})` (replace `{}` with your `config` table).
 --- **Needs to have triggers configured**.
 MiniClue.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.clue) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniClue = MiniClue
 
@@ -658,14 +649,11 @@ end
 --- Notes:
 --- - Uses buffer-local mapping in case there are both global and buffer-local
 ---   mappings with same mode and LHS. Similar to |maparg()|.
---- - Requires Neovim>=0.8.
 ---
 ---@param mode string Mapping mode (as in `maparg()`).
 ---@param lhs string Mapping left hand side (as `name` in `maparg()`).
 ---@param desc string New description to set.
 MiniClue.set_mapping_desc = function(mode, lhs, desc)
-  if vim.fn.has('nvim-0.8') == 0 then H.error('`set_mapping_desc()` requires Neovim>=0.8.') end
-
   if type(mode) ~= 'string' then H.error('`mode` should be string.') end
   if type(lhs) ~= 'string' then H.error('`lhs` should be string.') end
   if type(desc) ~= 'string' then H.error('`desc` should be string.') end
@@ -1123,8 +1111,8 @@ H.timers = {
   getcharstr = vim.loop.new_timer(),
 }
 
--- Undo command which depends on Neovim version
-H.undo_autocommand = 'au ModeChanged * ++once undo' .. (vim.fn.has('nvim-0.8') == 1 and '!' or '')
+-- Undo autocommand to be created for several operator tweaks
+H.undo_autocommand = 'au ModeChanged * ++once undo!'
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -1196,7 +1184,7 @@ H.create_autocommands = function(config)
     MiniClue.ensure_buf_triggers(data.buf)
   end)
   -- - Respect `LspAttach` as it is a common source of buffer-local mappings
-  local events = vim.fn.has('nvim-0.8') == 1 and { 'BufAdd', 'LspAttach' } or { 'BufAdd' }
+  local events = { 'BufAdd', 'LspAttach' }
   au(events, '*', ensure_triggers, 'Ensure buffer-local trigger keymaps')
 
   -- Disable all triggers when recording macro as they interfere with what is
@@ -1571,8 +1559,7 @@ H.window_open = function(config)
   vim.wo[win_id].list = true
   vim.wo[win_id].listchars = 'extends:…'
 
-  -- Neovim=0.7 doesn't support invalid highlight groups in 'winhighlight'
-  local win_hl = 'FloatBorder:MiniClueBorder' .. (vim.fn.has('nvim-0.8') == 1 and ',FloatTitle:MiniClueTitle' or '')
+  local win_hl = 'FloatBorder:MiniClueBorder,FloatTitle:MiniClueTitle'
   vim.wo[win_id].winhighlight = win_hl
 
   return win_id
@@ -1891,17 +1878,9 @@ H.replace_termcodes = function(x)
   return vim.api.nvim_replace_termcodes(H.keytrans(x), true, true, true)
 end
 
--- TODO: Remove after compatibility with Neovim=0.7 is dropped
-if vim.fn.has('nvim-0.8') == 1 then
-  H.keytrans = function(x)
-    local res = vim.fn.keytrans(x):gsub('<lt>', '<')
-    return res
-  end
-else
-  H.keytrans = function(x)
-    local res = x:gsub('<lt>', '<')
-    return res
-  end
+H.keytrans = function(x)
+  local res = vim.fn.keytrans(x):gsub('<lt>', '<')
+  return res
 end
 
 H.get_forced_submode = function()

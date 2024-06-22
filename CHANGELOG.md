@@ -1,5 +1,7 @@
 # Version 0.13.0.9000
 
+- Stop official support of Neovim 0.7.
+
 # Version 0.13.0
 
 ## mini.comment

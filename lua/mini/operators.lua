@@ -168,15 +168,6 @@ local H = {}
 ---
 ---@usage `require('mini.operators').setup({})` (replace `{}` with your `config` table).
 MiniOperators.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.operators) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniOperators = MiniOperators
 
@@ -934,9 +925,8 @@ H.exchange_del_stop_mapping = function()
   local map_data = H.cache.exchange.stop_restore_map_data
   if map_data == nil then return end
 
-  -- Try restore previous mapping if it was set. NOTE: Neovim<0.8 doesn't have
-  -- `mapset()`, so resort to deleting.
-  if vim.tbl_count(map_data) > 0 and vim.fn.has('nvim-0.8') == 1 then
+  -- Try restore previous mapping if it was set
+  if vim.tbl_count(map_data) > 0 then
     vim.fn.mapset('n', false, map_data)
   else
     vim.keymap.del('n', map_data.lhs or '<C-c>')
@@ -960,11 +950,6 @@ H.multiply_get_ref_coords = function(mark_from, mark_to, submode)
   -- In blockwise selection go to top right corner (allowing for presence of
   -- multibyte characters)
   local row = math.min(markcoords_from[1], markcoords_to[1])
-  if vim.fn.has('nvim-0.8') == 0 then
-    -- Neovim<0.8 doesn't have `virtcol2col()`
-    local col = math.max(markcoords_from[2], markcoords_to[2])
-    return { row, col - 1 }
-  end
 
   -- - "from"/"to" may not only be "top-left"/"bottom-right" but also
   --   "top-right" and "bottom-left"

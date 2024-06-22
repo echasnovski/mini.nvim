@@ -870,12 +870,6 @@ This basically calls |screenstring()| and |screenattr()| for every visible
 cell (row from 1 to 'lines', column from 1 to 'columns').
 
 Notes:
-- Due to implementation details of `screenstring()` and `screenattr()` in
-  Neovim<=0.7, this function won't recognize floating windows displayed on
-  screen. It will throw an error if there is a visible floating window. Use
-  Neovim>=0.8 (current nightly) to properly handle floating windows. Details:
-    - https://github.com/neovim/neovim/issues/19013
-    - https://github.com/neovim/neovim/pull/19020
 - To make output more portable and visually useful, outputs of
   `screenattr()` are coded with single character symbols. Those are taken from
   94 characters (ASCII codes between 33 and 126), so there will be duplicates

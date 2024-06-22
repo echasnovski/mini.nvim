@@ -497,15 +497,6 @@ local H = {}
 ---
 ---@usage `require('mini.files').setup({})` (replace `{}` with your `config` table).
 MiniFiles.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.files) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniFiles = MiniFiles
 
@@ -2085,9 +2076,6 @@ H.buffer_compute_fs_diff = function(buf_id, ref_path_ids)
 end
 
 H.buffer_should_highlight = function(buf_id)
-  -- Neovim>=0.8 has more stable API
-  if vim.fn.has('nvim-0.8') == 0 then return false end
-
   -- Highlight if buffer size is not too big, both in total and per line
   local buf_size = vim.api.nvim_buf_call(buf_id, function() return vim.fn.line2byte(vim.fn.line('$') + 1) end)
   return buf_size <= 1000000 and buf_size <= 1000 * vim.api.nvim_buf_line_count(buf_id)
@@ -2211,9 +2199,7 @@ H.window_update_highlight = function(win_id, new_from, new_to)
   local new_winhighlight, n_replace = vim.wo[win_id].winhighlight:gsub(replace_pattern, new_entry)
   if n_replace == 0 then new_winhighlight = new_winhighlight .. ',' .. new_entry end
 
-  -- Use `pcall()` because Neovim<0.8 doesn't allow non-existing highlight
-  -- groups inside `winhighlight` (like `FloatTitle` at the time).
-  pcall(function() vim.wo[win_id].winhighlight = new_winhighlight end)
+  vim.wo[win_id].winhighlight = new_winhighlight
 end
 
 H.window_focus = function(win_id)
@@ -2286,8 +2272,6 @@ H.window_get_max_height = function()
 end
 
 -- File system ----------------------------------------------------------------
--- TODO: Replace with `vim.fs` after Neovim=0.7 compatibility is dropped
-
 ---@class fs_entry
 ---@field name string Base name.
 ---@field fs_type string One of "directory" or "file".
@@ -2613,9 +2597,6 @@ end
 
 H.trigger_event = function(event_name, data)
   if H.block_event_trigger[event_name] then return end
-
-  -- TODO: Remove after compatibility with Neovim=0.7 is dropped
-  if vim.fn.has('nvim-0.8') == 0 then data = nil end
   vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data })
 end
 

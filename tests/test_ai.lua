@@ -1514,8 +1514,7 @@ T['Textobject']['falls back in case of absent textobject id'] = function()
   end
 
   -- Builtin textobject
-  -- TODO: Remove when support for Neovim=0.7 is dropped
-  local pattern = child.fn.has('nvim-0.8') == 0 and 'Lua' or 'mini.*ai'
+  local pattern = 'mini.*ai'
   -- Visual mode
   expect.match(child.fn.maparg('a', 'x'), pattern)
   validate('aaa bbb', 0, { 'a', 'w' }, { 1, 4 })

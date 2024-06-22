@@ -121,15 +121,6 @@ local H = {}
 ---
 ---@usage `require('mini.splitjoin').setup({})` (replace `{}` with your `config` table)
 MiniSplitjoin.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.splitjoin) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniSplitjoin = MiniSplitjoin
 

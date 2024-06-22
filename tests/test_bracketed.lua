@@ -141,17 +141,6 @@ local validate_move = function(cursor_before, keys, cursor_after)
   child.ensure_normal_mode()
 end
 
--- Common mocks
-local mock_nvim_08 = function()
-  child.lua([[
-    local has_orig = vim.fn.has
-    vim.fn.has = function(x)
-      if vim.startswith(x, 'nvim-0.7') or vim.startswith(x, 'nvim-0.8') then return 1 end
-      return has_orig(x)
-    end
-  ]])
-end
-
 -- Data =======================================================================
 local test_files = { 'file-a', 'file-b', 'file-c', 'file-d', 'file-e' }
 
@@ -2261,16 +2250,7 @@ T['quickfix()']['respects `vim.b.minibracketed_config`'] = function()
   eq(get_cursor(), cur_pos)
 end
 
-T['treesitter()'] = new_set({
-  hooks = {
-    pre_case = function()
-      if child.fn.has('nvim-0.8') == 1 then return end
-      -- Mock Neovim>=0.8 to pass tests on Neovim<0.8 with mocked TS function
-      mock_nvim_08()
-      reload_module()
-    end,
-  },
-})
+T['treesitter()'] = new_set()
 
 local setup_treesitter = function()
   -- Make `vim.treesitter.get_node_at_pos()` return mock of tree-sitter node
@@ -2375,13 +2355,6 @@ end
 T['treesitter()']['handles error when finding node at cursor'] = function()
   child.lua('vim.treesitter.get_node_at_pos = function() error("No tree-sitter") end')
   expect.error(function() forward('treesitter') end, 'can not find tree%-sitter node')
-end
-
-T['treesitter()']['requires `vim.treesitter.get_node_at_pos()` or `vim.treesitter.get_node()`'] = function()
-  -- Imitate Neovim<0.8
-  child.lua('vim.fn.has = function() return 0 end')
-  reload_module()
-  expect.error(function() forward('treesitter') end, 'get_node_at_pos%(%).*')
 end
 
 T['treesitter()']['validates `direction`'] = function()
@@ -2556,8 +2529,6 @@ T['undo()']["works with low 'undolevels'"] = function()
 end
 
 T['undo()']['works with `:undo!` when not advancing'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`undo!` was implemented in Neovim 0.8') end
-
   --stylua: ignore
   setup_undo(
     { 'i', 'one',    '<Esc>' }, -- one
@@ -2582,8 +2553,6 @@ T['undo()']['works with `:undo!` when not advancing'] = function()
 end
 
 T['undo()']['works with `:undo!` advancing'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`undo!` was implemented in Neovim 0.8.') end
-
   -- NOTE: Be careful with executing `:undo!` when not in latest undo state
   -- See: https://github.com/neovim/neovim/issues/22298
 
@@ -4133,16 +4102,7 @@ T['Mappings']['quickfix']['allows non-letter suffix'] = function()
   validate_map_quickfix(1, '],', 2)
 end
 
-T['Mappings']['treesitter'] = new_set({
-  hooks = {
-    pre_case = function()
-      if child.fn.has('nvim-0.8') == 1 then return end
-      -- Mock Neovim>=0.8 to pass tests on Neovim<0.8 with mocked TS function
-      mock_nvim_08()
-      reload_module()
-    end,
-  },
-})
+T['Mappings']['treesitter'] = new_set()
 
 T['Mappings']['treesitter']['works'] = function()
   local nodes, _, inside_nodes = setup_treesitter()

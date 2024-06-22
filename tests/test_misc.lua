@@ -284,20 +284,6 @@ T['setup_auto_root()']['works'] = function()
   end
 end
 
-T['setup_auto_root()']['checks if no `vim.fs` is present'] = function()
-  -- Don't test if `vim.fs` is actually present
-  if child.lua_get('type(vim.fs)') == 'table' then return end
-
-  child.o.cmdheight = 10
-  setup_auto_root()
-
-  eq(
-    child.cmd_capture('1messages'),
-    '(mini.misc) `setup_auto_root()` requires `vim.fs` module (present in Neovim>=0.8).'
-  )
-  expect.error(function() child.cmd_capture('au MiniMiscAutoRoot') end, 'No such group or event')
-end
-
 T['setup_auto_root()']['validates input'] = function()
   skip_if_no_fs()
 

@@ -1200,8 +1200,6 @@ T['Querying']['respects `config.evaluate_single`'] = function()
 end
 
 T['Querying']['works with `cmdheight=0`'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
-
   child.set_size(20, 50)
   child.o.cmdheight = 0
   reload_module({ items = example_items })

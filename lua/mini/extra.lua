@@ -78,15 +78,6 @@ local H = {}
 ---
 ---@usage `require('mini.extra').setup({})` (replace `{}` with your `config` table).
 MiniExtra.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.extra) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniExtra = MiniExtra
 
@@ -972,7 +963,6 @@ MiniExtra.pickers.keymaps = function(local_opts, opts)
   local scope = H.pick_validate_scope(local_opts, { 'all', 'global', 'buf' }, 'keymaps')
 
   -- Create items
-  local keytrans = vim.fn.has('nvim-0.8') == 1 and vim.fn.keytrans or function(x) return x end
   local items = {}
   local populate_modes = mode == 'all' and { 'n', 'x', 's', 'o', 'i', 'l', 'c', 't' } or { mode }
   local max_lhs_width = 0
@@ -980,7 +970,7 @@ MiniExtra.pickers.keymaps = function(local_opts, opts)
     for _, m in ipairs(populate_modes) do
       for _, maparg in ipairs(source(m)) do
         local desc = maparg.desc ~= nil and vim.inspect(maparg.desc) or maparg.rhs
-        local lhs = keytrans(maparg.lhsraw or maparg.lhs)
+        local lhs = vim.fn.keytrans(maparg.lhsraw or maparg.lhs)
         max_lhs_width = math.max(vim.fn.strchars(lhs), max_lhs_width)
         table.insert(items, { lhs = lhs, desc = desc, maparg = maparg })
       end
@@ -1078,7 +1068,6 @@ end
 ---     - "references".
 ---     - "type_definition".
 ---     - "workspace_symbol".
---- - Requires Neovim>=0.8.
 --- - Directly relies on `vim.lsp.buf` methods which support |lsp-on-list-handler|.
 ---   In particular, it means that picker is started only if LSP server returns
 ---   list of locations and not a single location.
@@ -1100,7 +1089,6 @@ end
 ---
 ---@return nil Nothing is returned.
 MiniExtra.pickers.lsp = function(local_opts, opts)
-  if vim.fn.has('nvim-0.8') == 0 then H.error('`pickers.lsp` requires Neovim>=0.8.') end
   local pick = H.validate_pick('lsp')
   local_opts = vim.tbl_deep_extend('force', { scope = nil, symbol_query = '' }, local_opts or {})
 
@@ -1338,7 +1326,6 @@ end
 ---
 --- Pick and navigate to |treesitter| nodes of current buffer.
 --- Notes:
---- - Requires Neovim>=0.8.
 --- - Requires active tree-sitter parser in the current buffer.
 ---
 ---@param local_opts __extra_pickers_local_opts
@@ -1347,7 +1334,6 @@ end
 ---
 ---@return __extra_pickers_return
 MiniExtra.pickers.treesitter = function(local_opts, opts)
-  if vim.fn.has('nvim-0.8') == 0 then H.error('`pickers.treesitter` requires Neovim>=0.8.') end
   local pick = H.validate_pick('treesitter')
 
   local buf_id = vim.api.nvim_get_current_buf()
@@ -1830,8 +1816,6 @@ H.lsp_make_on_list = function(source, opts)
   end
 
   -- Highlight items with highlight group corresponding to the symbol kind.
-  -- Note: `@type` groups were introduced in Neovim 0.8 which is minimal
-  -- version for `pickers.lsp` to work.
   local show
   if source == 'document_symbol' or source == 'workspace_symbol' then
     local pick = H.validate_pick()

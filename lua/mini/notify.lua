@@ -91,15 +91,6 @@ local H = {}
 ---
 ---@usage `require('mini.notify').setup({})` (replace `{}` with your `config` table).
 MiniNotify.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.notify) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniNotify = MiniNotify
 
@@ -746,10 +737,7 @@ H.window_open = function(buf_id)
   vim.wo[win_id].foldenable = false
   vim.wo[win_id].wrap = true
   vim.wo[win_id].winblend = H.get_config().window.winblend
-
-  -- Neovim=0.7 doesn't support invalid highlight groups in 'winhighlight'
-  vim.wo[win_id].winhighlight = 'NormalFloat:MiniNotifyNormal,FloatBorder:MiniNotifyBorder'
-    .. (vim.fn.has('nvim-0.8') == 1 and ',FloatTitle:MiniNotifyTitle' or '')
+  vim.wo[win_id].winhighlight = 'NormalFloat:MiniNotifyNormal,FloatBorder:MiniNotifyBorder,FloatTitle:MiniNotifyTitle'
 
   return win_id
 end

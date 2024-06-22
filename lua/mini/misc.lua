@@ -50,15 +50,6 @@ local H = {}
 ---
 ---@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
 MiniMisc.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.misc) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniMisc = MiniMisc
 
@@ -186,8 +177,6 @@ end
 ---   to it (using |chdir()|).
 --- - Resets |autochdir| to `false`.
 ---
---- Note: requires |vim.fs| module (present in Neovim>=0.8).
----
 ---@param names table|function|nil Forwarded to |MiniMisc.find_root()|.
 ---@param fallback function|nil Forwarded to |MiniMisc.find_root()|.
 ---
@@ -195,11 +184,6 @@ end
 ---   require('mini.misc').setup()
 ---   MiniMisc.setup_auto_root()
 MiniMisc.setup_auto_root = function(names, fallback)
-  if vim.fs == nil then
-    vim.notify('(mini.misc) `setup_auto_root()` requires `vim.fs` module (present in Neovim>=0.8).')
-    return
-  end
-
   names = names or { '.git', 'Makefile' }
   if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
     H.error('Argument `names` of `setup_auto_root()` should be array of string file names or a callable.')
@@ -234,7 +218,6 @@ end
 --- directory of current buffer file until first occurrence of root file(s).
 ---
 --- Notes:
---- - Requires |vim.fs| module (present in Neovim>=0.8).
 --- - Uses directory path caching to speed up computations. This means that no
 ---   changes in root directory will be detected after directory path was already
 ---   used in this function. Reload Neovim to account for that.

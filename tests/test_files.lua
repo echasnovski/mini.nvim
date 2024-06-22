@@ -1796,10 +1796,6 @@ end
 
 T['Windows']['uses correct UI highlight groups'] = function()
   local validate_winhl_match = function(win_id, from_hl, to_hl)
-    -- Setting non-existing highlight group in 'winhighlight' is not supported
-    -- in Neovim=0.7
-    if child.fn.has('nvim-0.8') == 0 and from_hl == 'FloatTitle' then return end
-
     local winhl = child.api.nvim_win_get_option(win_id, 'winhighlight')
 
     -- Make sure entry is match in full
@@ -3550,12 +3546,6 @@ local clear_event_track = function() child.lua('_G.callback_args_data = {}') end
 local validate_event_track = function(ref, do_sort)
   local event_track = child.lua_get('_G.callback_args_data')
 
-  -- Neovim<0.8 doesn't have `data` field in event callback
-  if child.fn.has('nvim-0.8') == 0 then
-    eq(#event_track, #ref)
-    return
-  end
-
   if do_sort then table.sort(event_track, function(a, b) return a.buf_id < b.buf_id end) end
   eq(event_track, ref)
 end
@@ -3639,8 +3629,6 @@ T['Events']['`MiniFilesBufferCreate` triggers inside preview'] = function()
 end
 
 T['Events']['`MiniFilesBufferCreate` can be used to create buffer-local mappings'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`data` in autocmd callback was introduced in Neovim=0.8.') end
-
   child.lua([[
     _G.n = 0
     local rhs = function() _G.n = _G.n + 1 end
@@ -3855,11 +3843,6 @@ T['Events']['`MiniFilesActionDelete` triggers for `options.permanent_delete = fa
   synchronize()
 
   local event_track = get_event_track()
-  if child.fn.has('nvim-0.8') == 0 then
-    eq(#event_track, 2)
-    return
-  end
-
   table.sort(event_track, function(a, b) return a.from < b.from end)
   eq(event_track, {
     { action = 'delete', from = join_path(temp_dir, 'dir') },

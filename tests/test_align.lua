@@ -1160,11 +1160,6 @@ local validate_keys = function(input_lines, keys, output_lines)
   eq(get_lines(), output_lines)
 end
 
--- NOTEs:
--- - In Neovim=0.5 some textobjects in Operator-pending mode don't set linewise
---   mode (like `ip`). However in Visual mode they do. So if Neovim=0.5 support
---   is needed, write tests with explicit forcing of linewise selection.
-
 T['Align'] = new_set()
 
 T['Align']['works'] = function()

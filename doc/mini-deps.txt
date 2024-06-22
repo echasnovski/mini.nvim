@@ -411,7 +411,6 @@ Default: "mini-deps-snap" file in "config" standard path (see |stdpath()|).
 `path.log` is a string with path containing log of operations done by module.
 In particular, it contains all changes done after making an update.
 Default: "mini-deps.log" file in "log" standard path (see |stdpath()|).
-Note: In Neovim<0.8 it is in "data" standard path.
 
 # Silent ~
 

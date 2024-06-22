@@ -592,7 +592,6 @@ Notes:
     - "references".
     - "type_definition".
     - "workspace_symbol".
-- Requires Neovim>=0.8.
 - Directly relies on `vim.lsp.buf` methods which support |lsp-on-list-handler|.
   In particular, it means that picker is started only if LSP server returns
   list of locations and not a single location.
@@ -716,7 +715,6 @@ Tree-sitter nodes picker
 
 Pick and navigate to |treesitter| nodes of current buffer.
 Notes:
-- Requires Neovim>=0.8.
 - Requires active tree-sitter parser in the current buffer.
 
 Parameters ~

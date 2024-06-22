@@ -131,15 +131,6 @@ local H = {}
 --- `require('mini.hues').setup({ background = '#11262d', foreground = '#c0c8cc' })`
 --- (add/change input table as you like)
 MiniHues.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.hues) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniHues = MiniHues
 
@@ -846,75 +837,73 @@ H.apply_colorscheme = function(config)
   hi('LspCodeLensSeparator', { link='Comment' })
 
   -- Tree-sitter
-  if vim.fn.has('nvim-0.8') == 1 then
-    -- Sources:
-    -- - `:h treesitter-highlight-groups`
-    -- - https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights
-    hi('@text.literal',   { link='Special' })
-    hi('@text.reference', { link='Identifier' })
-    hi('@text.title',     { link='Title' })
-    hi('@text.uri',       { link='Underlined' })
-    hi('@text.todo',      { link='Todo' })
-    hi('@text.note',      { link='MoreMsg' })
-    hi('@text.warning',   { link='WarningMsg' })
-    hi('@text.danger',    { link='ErrorMsg' })
-    hi('@text.strong',    { fg=nil, bg=nil, bold=true          })
-    hi('@text.emphasis',  { fg=nil, bg=nil, italic=true        })
-    hi('@text.strike',    { fg=nil, bg=nil, strikethrough=true })
-    hi('@text.underline', { link='Underlined' })
+  -- Sources:
+  -- - `:h treesitter-highlight-groups`
+  -- - https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights
+  hi('@text.literal',   { link='Special' })
+  hi('@text.reference', { link='Identifier' })
+  hi('@text.title',     { link='Title' })
+  hi('@text.uri',       { link='Underlined' })
+  hi('@text.todo',      { link='Todo' })
+  hi('@text.note',      { link='MoreMsg' })
+  hi('@text.warning',   { link='WarningMsg' })
+  hi('@text.danger',    { link='ErrorMsg' })
+  hi('@text.strong',    { fg=nil, bg=nil, bold=true          })
+  hi('@text.emphasis',  { fg=nil, bg=nil, italic=true        })
+  hi('@text.strike',    { fg=nil, bg=nil, strikethrough=true })
+  hi('@text.underline', { link='Underlined' })
 
-    hi('@comment',     { link='Comment' })
-    hi('@punctuation', { link='Delimiter' })
+  hi('@comment',     { link='Comment' })
+  hi('@punctuation', { link='Delimiter' })
 
-    hi('@constant',          { link='Constant' })
-    hi('@constant.builtin',  { link='Special' })
-    hi('@constant.macro',    { link='Macro' })
-    hi('@define',            { link='Define' })
-    hi('@macro',             { link='Macro' })
-    hi('@string',            { link='String' })
-    hi('@string.escape',     { link='SpecialChar' })
-    hi('@string.special',    { link='SpecialChar' })
-    hi('@character',         { link='Character' })
-    hi('@character.special', { link='SpecialChar' })
-    hi('@number',            { link='Number' })
-    hi('@boolean',           { link='Boolean' })
-    hi('@float',             { link='Float' })
+  hi('@constant',          { link='Constant' })
+  hi('@constant.builtin',  { link='Special' })
+  hi('@constant.macro',    { link='Macro' })
+  hi('@define',            { link='Define' })
+  hi('@macro',             { link='Macro' })
+  hi('@string',            { link='String' })
+  hi('@string.escape',     { link='SpecialChar' })
+  hi('@string.special',    { link='SpecialChar' })
+  hi('@character',         { link='Character' })
+  hi('@character.special', { link='SpecialChar' })
+  hi('@number',            { link='Number' })
+  hi('@boolean',           { link='Boolean' })
+  hi('@float',             { link='Float' })
 
-    hi('@function',         { link='Function' })
-    hi('@function.builtin', { link='Special' })
-    hi('@function.call',    { link='Function' })
-    hi('@function.macro',   { link='Macro' })
-    hi('@parameter',        { fg=p.blue, bg=nil })
-    hi('@method',           { link='Function' })
-    hi('@method.call',      { link='Function' })
-    hi('@field',            { link='Identifier' })
-    hi('@property',         { link='Identifier' })
-    hi('@constructor',      { link='Special' })
+  hi('@function',         { link='Function' })
+  hi('@function.builtin', { link='Special' })
+  hi('@function.call',    { link='Function' })
+  hi('@function.macro',   { link='Macro' })
+  hi('@parameter',        { fg=p.blue, bg=nil })
+  hi('@method',           { link='Function' })
+  hi('@method.call',      { link='Function' })
+  hi('@field',            { link='Identifier' })
+  hi('@property',         { link='Identifier' })
+  hi('@constructor',      { link='Special' })
 
-    hi('@conditional',    { link='Conditional' })
-    hi('@repeat',         { link='Repeat' })
-    hi('@label',          { link='Label' })
-    hi('@operator',       { link='Operator' })
-    hi('@keyword',        { link='Keyword' })
-    hi('@keyword.return', { fg=p.orange, bg=nil, bold=true })
-    hi('@exception',      { link='Exception' })
+  hi('@conditional',    { link='Conditional' })
+  hi('@repeat',         { link='Repeat' })
+  hi('@label',          { link='Label' })
+  hi('@operator',       { link='Operator' })
+  hi('@keyword',        { link='Keyword' })
+  hi('@keyword.return', { fg=p.orange, bg=nil, bold=true })
+  hi('@exception',      { link='Exception' })
 
-    hi('@variable',         { fg=p.fg, bg=nil })
-    hi('@variable.builtin', { link='Special' })
-    hi('@type',             { link='Type' })
-    hi('@type.builtin',     { link='Special' })
-    hi('@type.definition',  { link='Typedef' })
-    hi('@storageclass',     { link='StorageClass' })
-    hi('@structure',        { link='Structure' })
-    hi('@namespace',        { link='Identifier' })
-    hi('@include',          { link='Include' })
-    hi('@preproc',          { link='PreProc' })
-    hi('@debug',            { link='Debug' })
-    hi('@tag',              { link='Tag' })
+  hi('@variable',         { fg=p.fg, bg=nil })
+  hi('@variable.builtin', { link='Special' })
+  hi('@type',             { link='Type' })
+  hi('@type.builtin',     { link='Special' })
+  hi('@type.definition',  { link='Typedef' })
+  hi('@storageclass',     { link='StorageClass' })
+  hi('@structure',        { link='Structure' })
+  hi('@namespace',        { link='Identifier' })
+  hi('@include',          { link='Include' })
+  hi('@preproc',          { link='PreProc' })
+  hi('@debug',            { link='Debug' })
+  hi('@tag',              { link='Tag' })
 
-    hi('@symbol', { link='Keyword' })
-    hi('@none',   { link='Normal'})
-  end
+  hi('@symbol', { link='Keyword' })
+  hi('@none',   { link='Normal'})
 
   -- Semantic tokens
   if vim.fn.has('nvim-0.9') == 1 then

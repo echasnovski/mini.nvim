@@ -229,15 +229,6 @@ local H = {}
 ---
 ---@usage `require('mini.git').setup({})` (replace `{}` with your `config` table).
 MiniGit.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.git) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniGit = MiniGit
 
@@ -1105,9 +1096,6 @@ H.ensure_mods_is_split = function(mods)
     local split_val = H.normalize_split_opt(MiniGit.config.command.split, '`config.command.split`')
     mods = split_val .. ' ' .. mods
   end
-  -- Support for `:horizontal` was added in Neovim=0.8
-  -- TODO: Remove after compatibility with Neovim=0.7 is dropped
-  if vim.fn.has('nvim-0.8') == 0 then mods = mods:gsub('horizontal ?', '') end
   return mods
 end
 
@@ -1135,8 +1123,7 @@ H.show_in_split = function(mods, lines, subcmd, name)
   local filetype
   if subcmd == 'diff' then filetype = 'diff' end
   if subcmd == 'log' or subcmd == 'blame' then filetype = 'git' end
-  -- TODO: Remove after compatibility with Neovim=0.7 is dropped
-  if subcmd == 'show' and vim.fn.has('nvim-0.8') == 1 then filetype = vim.filetype.match({ buf = buf_id }) end
+  if subcmd == 'show' then filetype = vim.filetype.match({ buf = buf_id }) end
 
   local has_filetype = not (filetype == nil or filetype == '')
   if has_filetype then vim.bo[buf_id].filetype = filetype end
@@ -1652,11 +1639,7 @@ H.error = function(msg) error(string.format('(mini.git) %s', msg), 0) end
 
 H.notify = function(msg, level_name) vim.notify('(mini.git) ' .. msg, vim.log.levels[level_name]) end
 
-H.trigger_event = function(event_name, data)
-  -- TODO: Remove after compatibility with Neovim=0.7 is dropped
-  if vim.fn.has('nvim-0.8') == 0 then data = nil end
-  vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data })
-end
+H.trigger_event = function(event_name, data) vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data }) end
 
 H.is_fs_present = function(path) return vim.loop.fs_stat(path) ~= nil end
 

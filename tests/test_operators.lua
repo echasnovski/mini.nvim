@@ -1016,7 +1016,7 @@ T['Exchange']['does not have side effects'] = function()
   eq(child.fn.getreg('a'), 'r')
   eq(child.fn.getreg('b'), 's')
   eq(child.fn.getreg('"'), 't')
-  if child.fn.has('nvim-0.8') == 1 then eq(child.fn.maparg('<C-c>'), ':echo 1<CR>') end
+  eq(child.fn.maparg('<C-c>'), ':echo 1<CR>')
 end
 
 T['Exchange']['preserves visual marks'] = function()
@@ -1282,8 +1282,6 @@ T['Multiply']['works with multibyte characters'] = function()
 
   -- Linewise
   validate_edit({ 'ыыы', 'aaa', 'x' }, { 1, 0 }, { 'gmj' }, { 'ыыы', 'aaa', 'ыыы', 'aaa', 'x' }, { 3, 0 })
-
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`virtcol2col()` is introduced in Neovim 0.8') end
 
   -- All four blockwise selections
   local validate_blockwise = function(init_cursor, keys)

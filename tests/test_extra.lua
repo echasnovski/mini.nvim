@@ -716,12 +716,6 @@ T['pickers'] = new_set({
 T['pickers']["validate no 'mini.pick'"] = function()
   child.lua([[require = function(module) error() end]])
 
-  -- Possibly exclude some pickers from testing
-  if child.fn.has('nvim-0.8') == 0 then
-    child.lua('MiniExtra.pickers.lsp = nil')
-    child.lua('MiniExtra.pickers.treesitter = nil')
-  end
-
   local extra_pickers = child.lua_get('vim.tbl_keys(MiniExtra.pickers)')
   for _, picker_name in ipairs(extra_pickers) do
     local err_pattern = '%(mini%.extra%) `pickers%.' .. picker_name .. "%(%)` requires 'mini%.pick'"
@@ -2146,18 +2140,15 @@ T['pickers']['keymaps()']['works'] = function()
   -- Should return chosen value
   local ref_maparg = child.fn.maparg(' b', 'n', false, true)
   ref_maparg.lhs = child.api.nvim_replace_termcodes(ref_maparg.lhs, true, true, true)
-  local lhs = child.fn.has('nvim-0.8') == 0 and ' b' or '<Space>b'
   eq(child.lua_get('_G.return_item'), {
     desc = '<Cmd>lua _G.res = "buf"<CR>',
-    lhs = lhs,
+    lhs = '<Space>b',
     maparg = ref_maparg,
-    text = 'n @ │ ' .. lhs .. '   │ <Cmd>lua _G.res = "buf"<CR>',
+    text = 'n @ │ <Space>b   │ <Cmd>lua _G.res = "buf"<CR>',
   })
 end
 
 T['pickers']['keymaps()']['can be chosen in non-Normal modes'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip() end
-
   setup_keymaps()
   local validate = function(mode, init_keys)
     type_keys(init_keys)
@@ -2415,7 +2406,6 @@ local setup_lsp = function()
 end
 
 local validate_location_scope = function(scope)
-  if child.fn.has('nvim-0.8') == 0 then return end
   local file_path, file_path_full = setup_lsp()
 
   pick_lsp({ scope = scope })
@@ -2444,7 +2434,6 @@ local validate_location_scope = function(scope)
 end
 
 local validate_symbol_scope = function(scope)
-  if child.fn.has('nvim-0.8') == 0 then return end
   local file_path, file_path_full = setup_lsp()
 
   pick_lsp({ scope = scope })
@@ -2492,7 +2481,6 @@ T['pickers']['lsp()']['works for `document_symbol`'] = function() validate_symbo
 T['pickers']['lsp()']['works for `implementation`'] = function() validate_location_scope('implementation') end
 
 T['pickers']['lsp()']['works for `references`'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   local file_path, file_path_full = setup_lsp()
 
   pick_lsp({ scope = 'references' })
@@ -2525,27 +2513,19 @@ T['pickers']['lsp()']['works for `type_definition`'] = function() validate_locat
 T['pickers']['lsp()']['works for `workspace_symbol`'] = function() validate_symbol_scope('workspace_symbol') end
 
 T['pickers']['lsp()']['respects `local_opts.symbol_query`'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   setup_lsp()
 
   pick_lsp({ scope = 'workspace_symbol', symbol_query = 'aaa' })
   eq(child.lua_get('_G.workspace_symbol_query'), 'aaa')
 end
 
-T['pickers']['lsp()']['throws error on Neovim<0.8'] = function()
-  if child.fn.has('nvim-0.8') == 1 then return end
-  expect.error(function() child.lua([[MiniExtra.pickers.lsp({ scope = 'references' })]]) end, '`pickers%.lsp`.*0%.8')
-end
-
 T['pickers']['lsp()']['respects `opts`'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   setup_lsp()
   pick_lsp({ scope = 'references' }, { source = { name = 'My name' } })
   validate_picker_name('My name')
 end
 
 T['pickers']['lsp()']['validates arguments'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.lsp(...)', { local_opts }) end, error_pattern)
   end
@@ -2992,7 +2972,6 @@ local setup_treesitter = function()
 end
 
 T['pickers']['treesitter()']['works'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   child.set_size(52, 70)
   local path = setup_treesitter()
 
@@ -3023,17 +3002,10 @@ T['pickers']['treesitter()']['works'] = function()
 end
 
 T['pickers']['treesitter()']['checks for active tree-sitter'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   expect.error(function() child.lua('MiniExtra.pickers.treesitter()') end, '`pickers%.treesitter`.*parser')
 end
 
-T['pickers']['treesitter()']['throws error on Neovim<0.8'] = function()
-  if child.fn.has('nvim-0.8') == 1 then return end
-  expect.error(function() child.lua([[MiniExtra.pickers.treesitter()]]) end, '`pickers%.treesitter`.*0%.8')
-end
-
 T['pickers']['treesitter()']['respects `opts`'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
   setup_treesitter()
   pick_treesitter({}, { source = { name = 'My name' } })
   validate_picker_name('My name')

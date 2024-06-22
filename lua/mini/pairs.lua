@@ -95,15 +95,6 @@ local H = {}
 ---
 ---@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
 MiniPairs.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.pairs) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniPairs = MiniPairs
 
@@ -167,7 +158,7 @@ MiniPairs.config = {
 ---
 --- Using this function instead of |nvim_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
---- For Neovim>=0.7 it also infers mapping description from `pair_info`.
+--- It also infers mapping description from `pair_info`.
 ---
 ---@param mode string `mode` for |nvim_set_keymap()|.
 ---@param lhs string `lhs` for |nvim_set_keymap()|.
@@ -194,7 +185,7 @@ end
 ---
 --- Using this function instead of |nvim_buf_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
---- For Neovim>=0.7 it also infers mapping description from `pair_info`.
+--- It also infers mapping description from `pair_info`.
 ---
 ---@param buffer number `buffer` for |nvim_buf_set_keymap()|.
 ---@param mode string `mode` for |nvim_buf_set_keymap()|.

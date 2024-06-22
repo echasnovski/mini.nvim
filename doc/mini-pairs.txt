@@ -144,7 +144,7 @@ mapping (as string) it expects table with pair information:
 
 Using this function instead of |nvim_set_keymap()| allows automatic
 registration of pairs which will be recognized by `<BS>` and `<CR>`.
-For Neovim>=0.7 it also infers mapping description from `pair_info`.
+It also infers mapping description from `pair_info`.
 
 Parameters ~
 {mode} `(string)` `mode` for |nvim_set_keymap()|.
@@ -164,7 +164,7 @@ in |MiniPairs.map|.
 
 Using this function instead of |nvim_buf_set_keymap()| allows automatic
 registration of pairs which will be recognized by `<BS>` and `<CR>`.
-For Neovim>=0.7 it also infers mapping description from `pair_info`.
+It also infers mapping description from `pair_info`.
 
 Parameters ~
 {buffer} `(number)` `buffer` for |nvim_buf_set_keymap()|.

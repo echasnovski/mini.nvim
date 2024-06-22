@@ -112,15 +112,6 @@ local H = {}
 ---
 ---@usage `require('mini.animate').setup({})` (replace `{}` with your `config` table)
 MiniAnimate.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.animate) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniAnimate = MiniAnimate
 
@@ -1364,7 +1355,7 @@ H.track_scroll_state_partial = function()
   -- a proper state tracking
   if H.cache.scroll_is_active then return end
 
-  H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') }
+  H.cache.scroll_state.cursor = { line = vim.fn.line('.'), virtcol = vim.fn.virtcol('.') }
 end
 
 H.on_cmdline_leave = function()
@@ -1446,7 +1437,7 @@ end
 
 H.get_cursor_state = function()
   -- Use virtual column to respect position outside of line width and tabs
-  return { buf_id = vim.api.nvim_get_current_buf(), pos = { vim.fn.line('.'), H.virtcol('.') } }
+  return { buf_id = vim.api.nvim_get_current_buf(), pos = { vim.fn.line('.'), vim.fn.virtcol('.') } }
 end
 
 H.draw_cursor_mark = function(line, virt_col, buf_id)
@@ -1610,7 +1601,7 @@ H.get_scroll_state = function()
     buf_id = vim.api.nvim_get_current_buf(),
     win_id = vim.api.nvim_get_current_win(),
     view = vim.fn.winsaveview(),
-    cursor = { line = vim.fn.line('.'), virtcol = H.virtcol('.') },
+    cursor = { line = vim.fn.line('.'), virtcol = vim.fn.virtcol('.') },
     scrolloff = H.cache.scroll_is_active and H.cache.scroll_state.scrolloff or vim.wo.scrolloff,
     virtualedit = H.cache.scroll_is_active and H.cache.scroll_state.virtualedit or vim.wo.virtualedit,
   }
@@ -2133,24 +2124,14 @@ end
 
 H.convex_point = function(x, y, coef) return H.round((1 - coef) * x + coef * y) end
 
--- `virtcol2col()` is only present in Neovim>=0.8. Earlier Neovim versions will
--- have troubles dealing with multibyte characters and tabs.
-if vim.fn.exists('*virtcol2col') == 1 then
-  H.virtcol2col = function(line, virtcol)
-    local col = vim.fn.virtcol2col(0, line, virtcol)
+H.virtcol2col = function(line, virtcol)
+  local col = vim.fn.virtcol2col(0, line, virtcol)
 
-    -- Current for virtual column being outside of line's last virtual column
-    local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
-    if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
+  -- Current for virtual column being outside of line's last virtual column
+  local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
+  if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
 
-    return col
-  end
-
-  H.virtcol = vim.fn.virtcol
-else
-  H.virtcol2col = function(_, col) return col end
-
-  H.virtcol = vim.fn.col
+  return col
 end
 
 H.is_select_mode = function() return ({ s = true, S = true, ['\19'] = true })[vim.fn.mode()] end

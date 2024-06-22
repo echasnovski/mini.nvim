@@ -1303,24 +1303,7 @@ T['child']['get_screenshot()']['`tostring()`']['makes proper line numbers'] = fu
   validate({ 1, '001' }, { 10, '010' }, { 100, '100' })
 end
 
-T['child']['get_screenshot()']['adds a note with floating windows in Neovim<=0.7'] = function()
-  if child.fn.has('nvim-0.8') == 1 then return end
-
-  local buf_id = child.api.nvim_create_buf(true, true)
-  child.api.nvim_buf_set_lines(buf_id, 0, -1, true, { 'aaa' })
-  child.api.nvim_open_win(buf_id, false, { relative = 'editor', width = 3, height = 1, row = 0, col = 0 })
-
-  expect.no_error(child.get_screenshot)
-  eq(
-    MiniTest.current.case.exec.notes,
-    { '`child.get_screenshot()` will not show visible floating windows in this version. Use Neovim>=0.8.' }
-  )
-  MiniTest.current.case.exec.notes = {}
-end
-
-T['child']['get_screenshot()']['works with floating windows in Neovim>=0.8'] = function()
-  if child.fn.has('nvim-0.8') == 0 then return end
-
+T['child']['get_screenshot()']['works with floating windows'] = function()
   -- This setup should result into displayed text 'bb a': 'bb ' from floating
   -- window, 'aa' - from underneath text
   set_lines({ 'aaaa' })

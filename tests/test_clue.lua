@@ -77,13 +77,8 @@ local validate_trigger_keymap = function(mode, keys, buf_id)
   local map_desc = child.lua_get(lua_cmd)
   if map_desc == vim.NIL then error('No such trigger.') end
 
-  -- Neovim<0.8 doesn't have `keytrans()` used inside description
-  if child.fn.has('nvim-0.8') == 0 then
-    eq(type(map_desc), 'string')
-  else
-    local desc_pattern = 'keys after.*"' .. vim.pesc(keys) .. '"'
-    expect.match(map_desc, desc_pattern)
-  end
+  local desc_pattern = 'keys after.*"' .. vim.pesc(keys) .. '"'
+  expect.match(map_desc, desc_pattern)
 end
 
 local validate_no_trigger_keymap = function(mode, keys, buf_id)
@@ -322,8 +317,6 @@ T['setup()']['creates triggers only in listed buffers'] = function()
 end
 
 T['setup()']['ensures valid triggers on `LspAttach` event'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`LspAttach` is added in Neovim 0.8') end
-
   child.set_size(10, 40)
   child.cmd([[au LspAttach * lua vim.keymap.set('n', '<Space>a', ':echo 1<CR>', { buffer = true })]])
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
@@ -685,8 +678,6 @@ local set_mapping_desc = forward_lua('MiniClue.set_mapping_desc')
 local validate_mapping_desc = function(mode, lhs, ref_desc) eq(child.fn.maparg(lhs, mode, false, true).desc, ref_desc) end
 
 T['set_mapping_desc()']['adds new description'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', {})
 
   load_module()
@@ -695,8 +686,6 @@ T['set_mapping_desc()']['adds new description'] = function()
 end
 
 T['set_mapping_desc()']['updates existing description'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', { desc = 'Old desc' })
 
   load_module()
@@ -705,8 +694,6 @@ T['set_mapping_desc()']['updates existing description'] = function()
 end
 
 T['set_mapping_desc()']['prefers buffer-local mapping'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   child.api.nvim_set_keymap('n', '<Space>a', ':echo 1<CR>', {})
   child.api.nvim_buf_set_keymap(0, 'n', '<Space>a', ':echo 2<CR>', {})
 
@@ -721,8 +708,6 @@ T['set_mapping_desc()']['prefers buffer-local mapping'] = function()
 end
 
 T['set_mapping_desc()']['works for mapping with callback'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   child.lua([[vim.keymap.set('n', '<Space>a', function() _G.been_here = true end)]])
 
   load_module()
@@ -733,8 +718,6 @@ T['set_mapping_desc()']['works for mapping with callback'] = function()
 end
 
 T['set_mapping_desc()']['validates input'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   load_module()
   expect.error(function() set_mapping_desc(1, 'aaa', 'New') end, '`mode`.*string')
   expect.error(function() set_mapping_desc('n', 1, 'New') end, '`lhs`.*string')
@@ -742,8 +725,6 @@ T['set_mapping_desc()']['validates input'] = function()
 end
 
 T['set_mapping_desc()']['handles incorrect usage'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('`set_mapping_desc()` requires Neovim>=0.8') end
-
   load_module()
 
   -- When no mapping found
@@ -1527,10 +1508,8 @@ T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
   validate()
 
   -- - Zero command line height
-  if child.fn.has('nvim-0.8') == 1 then
-    child.o.cmdheight = 0
-    validate()
-  end
+  child.o.cmdheight = 0
+  validate()
 end
 
 T['Showing keys']['reacts to `VimResized`'] = function()
@@ -3093,8 +3072,6 @@ T['Reproducing keys']["respects 'clipboard'"] = function()
 end
 
 T['Reproducing keys']['works with <F*> keys'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Neovim 0.7 has issues with <F*> keys.') end
-
   child.lua([[vim.g.mapleader = vim.api.nvim_replace_termcodes('<F2>', true, true, true)]])
   child.cmd('nnoremap <Leader>a <Cmd>lua _G.n = (_G.n or 0) + 1<CR>')
   child.cmd('nnoremap <F3>b <Cmd>lua _G.m = (_G.m or 0) + 1<CR>')

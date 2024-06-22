@@ -216,7 +216,7 @@ T['make_notify()']['does not show some levels by default'] = function()
   child.lua('vim.notify = MiniNotify.make_notify()')
   notify('debug', child.lua_get('vim.log.levels.DEBUG'))
   notify('trace', child.lua_get('vim.log.levels.TRACE'))
-  if child.fn.has('nvim-0.8') == 1 then notify('off', child.lua_get('vim.log.levels.OFF')) end
+  notify('off', child.lua_get('vim.log.levels.OFF'))
   eq(get_all(), {})
 end
 
@@ -322,7 +322,7 @@ T['add()']['respects arguments'] = function()
   validate('INFO')
   validate('DEBUG')
   validate('TRACE')
-  if child.fn.has('nvim-0.8') == 1 then validate('OFF') end
+  validate('OFF')
 end
 
 T['add()']['validates arguments'] = function()

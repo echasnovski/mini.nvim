@@ -636,15 +636,6 @@ local H = {}
 ---
 ---@usage `require('mini.colors').setup({})` (replace `{}` with your `config` table)
 MiniColors.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.colors) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniColors = MiniColors
 
@@ -1809,11 +1800,6 @@ H.convex_hl_group = function(from, to, coef)
     underdotted   = H.convex_discrete(from.underdotted,   to.underdotted,   coef),
     underdouble   = H.convex_discrete(from.underdouble,   to.underdouble,   coef),
     underline     = H.convex_discrete(from.underline,     to.underline,     coef),
-    -- Compatibility with Neovim=0.7
-    -- TODO: Remove when support for Neovim=0.7 is dropped
-    underdash     = H.convex_discrete(from.underdash,     to.underdash,     coef),
-    underdot      = H.convex_discrete(from.underdot,      to.underdot,      coef),
-    underlineline = H.convex_discrete(from.underlineline, to.underlineline, coef),
   }
 end
 

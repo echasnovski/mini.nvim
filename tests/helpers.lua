@@ -151,8 +151,6 @@ Helpers.new_child_neovim = function()
   end
 
   child.expect_screenshot = function(opts, path)
-    if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Screenshots are tested for Neovim>=0.8 (for simplicity).') end
-
     opts = opts or {}
     local screenshot_opts = { redraw = opts.redraw }
     opts.redraw = nil

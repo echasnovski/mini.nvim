@@ -358,8 +358,6 @@
 --- Considering high number of different scenarios and customization intentions,
 --- writing exact rules for module's buffer local configuration is left to
 --- user. It is done in similar fashion to |mini.nvim-disabling-recipes|.
----
---- Note: using function values inside buffer variables requires Neovim>=0.7.
 ---@tag mini.nvim-buffer-local-config
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])

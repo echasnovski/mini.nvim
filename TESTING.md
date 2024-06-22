@@ -870,9 +870,6 @@ One of the main difficulties in testing Neovim plugins is verifying that somethi
 Couple of caveats:
 
 - As is apparent from use of `screenattr()`, these screenshots **can't tell how exactly cell is highlighted**, only **if two cells are highlighted the same**. This is due to the currently lacking functionality in Neovim itself. This might change in the future.
-- Due to implementation details of `screenstring()` and `screenattr()` in Neovim<=0.7, this function won't recognize floating windows displayed on screen. It will throw an error if there is a visible floating window. Use Neovim>=0.8 (current nightly) to properly handle floating windows. Details:
-    - https://github.com/neovim/neovim/issues/19013
-    - https://github.com/neovim/neovim/pull/19020
 
 To help manage testing screen state, there is a special `MiniTest.expect.reference_screenshot(screenshot, path, opts)` method. It takes screenshot table along with optional path of where to save this screenshot (if not supplied, inferred from test case description and put in 'tests/screenshots' directory). On first run it will automatically create reference screenshot at `path`. On later runs it will compare current screenshot with reference. Will throw informative error with helpful information if they don't match exactly.
 

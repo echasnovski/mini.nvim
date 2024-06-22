@@ -145,15 +145,6 @@ local H = {}
 ---
 ---@usage `require('mini.test').setup({})` (replace `{}` with your `config` table)
 MiniTest.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.test) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniTest = MiniTest
 
@@ -1332,25 +1323,6 @@ MiniTest.new_child_neovim = function()
 
     opts = vim.tbl_deep_extend('force', { redraw = true }, opts or {})
 
-    -- Add note if there is a visible floating window but `screen*()` functions
-    -- don't support them (Neovim<0.8).
-    -- See https://github.com/neovim/neovim/issues/19013
-    if child.fn.has('nvim-0.8') == 0 then
-      local has_visible_floats = child.lua([[
-        for _, win_id in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-          if vim.api.nvim_win_get_config(win_id).relative ~= '' then return true end
-        end
-        return false
-      ]])
-
-      if has_visible_floats then
-        MiniTest.add_note(
-          '`child.get_screenshot()` will not show visible floating windows in this version. Use Neovim>=0.8.'
-        )
-        return
-      end
-    end
-
     if opts.redraw then child.cmd('redraw') end
 
     local res = child.lua([[
@@ -1531,12 +1503,6 @@ end
 --- cell (row from 1 to 'lines', column from 1 to 'columns').
 ---
 --- Notes:
---- - Due to implementation details of `screenstring()` and `screenattr()` in
----   Neovim<=0.7, this function won't recognize floating windows displayed on
----   screen. It will throw an error if there is a visible floating window. Use
----   Neovim>=0.8 (current nightly) to properly handle floating windows. Details:
----     - https://github.com/neovim/neovim/issues/19013
----     - https://github.com/neovim/neovim/pull/19020
 --- - To make output more portable and visually useful, outputs of
 ---   `screenattr()` are coded with single character symbols. Those are taken from
 ---   94 characters (ASCII codes between 33 and 126), so there will be duplicates

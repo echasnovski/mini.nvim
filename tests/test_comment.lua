@@ -737,11 +737,6 @@ T['Operator']['respects `options.custom_commentstring`'] = function()
 end
 
 T['Operator']['does not break with loaded tree-sitter'] = function()
-  -- TODO: Remove after compatibility with Neovim=0.8 is dropped
-  -- This is more of a test for Neovim=0.8, as there is no easy way to load
-  -- tree-sitter on Neovim<0.8
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('No easy way to test tree-sitter on Neovim<0.8') end
-
   set_lines({ 'set background=dark' })
   child.bo.filetype = 'vim'
   child.lua('vim.treesitter.start()')

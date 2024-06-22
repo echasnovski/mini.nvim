@@ -126,8 +126,6 @@ What it does:
   to it (using |chdir()|).
 - Resets |autochdir| to `false`.
 
-Note: requires |vim.fs| module (present in Neovim>=0.8).
-
 Parameters ~
 {names} `(table|function|nil)` Forwarded to |MiniMisc.find_root()|.
 {fallback} `(function|nil)` Forwarded to |MiniMisc.find_root()|.
@@ -150,7 +148,6 @@ It is searched using |vim.fn.find()| with `upward = true` starting from
 directory of current buffer file until first occurrence of root file(s).
 
 Notes:
-- Requires |vim.fs| module (present in Neovim>=0.8).
 - Uses directory path caching to speed up computations. This means that no
   changes in root directory will be detected after directory path was already
   used in this function. Reload Neovim to account for that.

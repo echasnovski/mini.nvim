@@ -2781,8 +2781,6 @@ T['builtin.help()']['has proper preview'] = function()
   -- Ignore footer as it contains non-reliable number of help tags
   child.expect_screenshot({ ignore_lines = { 14 } })
   eq(child.bo.buftype, 'nofile')
-  -- Neovim<0.8 should use built-in syntax, while Neovim>=0.8 - tree-sitter
-  if child.fn.has('nvim-0.8') == 0 then eq(child.bo.syntax, 'help') end
 
   eq(child.v.hlsearch, 0)
   eq(child.fn.getreg('/'), 'aa')
@@ -3144,8 +3142,6 @@ T['builtin.resume()']["restores 'cmdheight'"] = function()
   end
 
   validate(3)
-
-  if child.fn.has('nvim-0.8') == 0 then return end
   validate(0)
 end
 
@@ -4207,8 +4203,6 @@ T['Overall view']["respects 'cmdheight'"] = function()
   end
 
   validate(3)
-
-  if child.fn.has('nvim-0.8') == 0 then return end
   validate(0)
 end
 

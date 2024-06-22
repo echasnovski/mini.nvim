@@ -102,8 +102,6 @@ T['setup()']['defines builtin highlight groups'] = function()
 end
 
 T['setup()']['defines tree-sitter groups'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Tree-sitter groups are defined for Neovim>=0.8') end
-
   load_module({ background = '#222222', foreground = '#dddddd' })
   validate_hl_group('@variable', 'guifg=#dddddd')
 end

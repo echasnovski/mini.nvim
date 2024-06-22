@@ -628,7 +628,6 @@ Update description of an existing mapping
 Notes:
 - Uses buffer-local mapping in case there are both global and buffer-local
   mappings with same mode and LHS. Similar to |maparg()|.
-- Requires Neovim>=0.8.
 
 Parameters ~
 {mode} `(string)` Mapping mode (as in `maparg()`).

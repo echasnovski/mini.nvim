@@ -19,17 +19,6 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 -- Mock test color scheme
 local mock_cs = function() child.cmd('set rtp+=' .. dir_path .. 'mock_cs/') end
 
--- Account for attribute rename in Neovim=0.8
--- See https://github.com/neovim/neovim/pull/19159
--- TODO: Remove after compatibility with Neovim=0.7 is dropped
-local init_hl_under_attrs = function()
-  if child.fn.has('nvim-0.8') == 0 then
-    child.lua([[underdashed, underdotted, underdouble = 'underdash', 'underdot', 'underlineline']])
-    return
-  end
-  child.lua([[underdashed, underdotted, underdouble = 'underdashed', 'underdotted', 'underdouble']])
-end
-
 -- Data =======================================================================
 -- Small time used to reduce test flackiness
 local small_time = 15
@@ -1543,8 +1532,6 @@ end
 T['animate()'] = new_set({
   hooks = {
     pre_case = function()
-      init_hl_under_attrs()
-
       -- Create two color scheme objects
       child.lua([[_G.cs_1 = MiniColors.as_colorscheme({
         name = 'cs_1',
@@ -1561,9 +1548,9 @@ T['animate()'] = new_set({
           TestStandout      = { fg = '#000000', standout      = true },
           TestStrikethrough = { fg = '#000000', strikethrough = true },
           TestUndercurl     = { fg = '#000000', undercurl     = true },
-          TestUnderdashed   = { fg = '#000000', [underdashed] = true },
-          TestUnderdotted   = { fg = '#000000', [underdotted] = true },
-          TestUnderdouble   = { fg = '#000000', [underdouble] = true },
+          TestUnderdashed   = { fg = '#000000', underdashed   = true },
+          TestUnderdotted   = { fg = '#000000', underdotted   = true },
+          TestUnderdouble   = { fg = '#000000', underdouble   = true },
           TestUnderline     = { fg = '#000000', underline     = true },
         },
         terminal = { [0] = '#190000', [7] = '#001900' }
@@ -1584,9 +1571,9 @@ T['animate()'] = new_set({
           TestStandout      = { fg = '#000000', standout      = false },
           TestStrikethrough = { fg = '#000000', strikethrough = false },
           TestUndercurl     = { fg = '#000000', undercurl     = false },
-          TestUnderdashed   = { fg = '#000000', [underdashed] = false },
-          TestUnderdotted   = { fg = '#000000', [underdotted] = false },
-          TestUnderdouble   = { fg = '#000000', [underdouble] = false },
+          TestUnderdashed   = { fg = '#000000', underdashed   = false },
+          TestUnderdotted   = { fg = '#000000', underdotted   = false },
+          TestUnderdouble   = { fg = '#000000', underdouble   = false },
           TestUnderline     = { fg = '#000000', underline     = false },
         },
         terminal = { [7] = '#000000', [15] = '#000000' }
@@ -1642,10 +1629,6 @@ end
 
 --stylua: ignore
 T['animate()']['works'] = function()
-  local underdashed = child.lua_get('_G.underdashed')
-  local underdotted = child.lua_get('_G.underdotted')
-  local underdouble = child.lua_get('_G.underdouble')
-
   local validate_init = function()
     local cur_cs = child.lua_get('_G.get_relevant_cs_data()')
     eq(cur_cs.name, 'cs_1')
@@ -1666,12 +1649,6 @@ T['animate()']['works'] = function()
 
   -- Check slightly before half-way
   local validate_before_half = function()
-    -- Account for missing `nocombine` field in Neovim=0.7
-    -- See https://github.com/neovim/neovim/pull/19586
-    -- TODO: Remove after compatibility with Neovim=0.7 is dropped
-    local nocombine = nil
-    if child.fn.has('nvim-0.8') == 1 then nocombine = true end
-
     eq(
       child.lua_get('_G.get_relevant_cs_data()'),
       {
@@ -1684,14 +1661,14 @@ T['animate()']['works'] = function()
 
           TestBold          = { fg = '#000000', bold          = true },
           TestItalic        = { fg = '#000000', italic        = true },
-          TestNocombine     = { fg = '#000000', nocombine     = nocombine },
+          TestNocombine     = { fg = '#000000', nocombine     = true },
           TestReverse       = { fg = '#000000', reverse       = true },
           TestStandout      = { fg = '#000000', standout      = true },
           TestStrikethrough = { fg = '#000000', strikethrough = true },
           TestUndercurl     = { fg = '#000000', undercurl     = true },
-          TestUnderdashed   = { fg = '#000000', [underdashed] = true },
-          TestUnderdotted   = { fg = '#000000', [underdotted] = true },
-          TestUnderdouble   = { fg = '#000000', [underdouble] = true },
+          TestUnderdashed   = { fg = '#000000', underdashed   = true },
+          TestUnderdotted   = { fg = '#000000', underdotted   = true },
+          TestUnderdouble   = { fg = '#000000', underdouble   = true },
           TestUnderline     = { fg = '#000000', underline     = true },
         },
         terminal = { { 0, '#190000' }, { 7, '#000901' }, { 15 } },
@@ -2244,7 +2221,7 @@ T[':Colorscheme']['accepts several arguments'] = function()
   expect.match(child.cmd_capture('hi Normal'), 'guifg=#5f87af')
 
   sleep(1000 + 2 * small_time)
-  local blue_normal_fg = child.fn.has('nvim-0.8') == 1 and '#ffd700' or '#ffff00'
+  local blue_normal_fg = '#ffd700'
   expect.match(child.cmd_capture('hi Normal'), 'guifg=' .. blue_normal_fg)
 end
 

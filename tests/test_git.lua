@@ -638,8 +638,6 @@ T['show_diff_source()']['does not depend on cursor column'] = function()
 end
 
 T['show_diff_source()']['tries to infer and set filetype'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Proper filetype detecttion is present only on Neovim>=0.8.') end
-
   child.lua([[_G.stdio_queue = { { { 'out', 'local a = 1\n-- This is a Lua comment' } } }]])
   set_cursor(57, 0)
   show_diff_source()
@@ -2192,10 +2190,8 @@ T[':Git']['output']['in buffer when explicitly asked'] = function()
   validate('vertical')
   validate('vert')
 
-  if child.fn.has('nvim-0.8') == 1 then
-    validate('horizontal')
-    validate('hor')
-  end
+  validate('horizontal')
+  validate('hor')
 end
 
 T[':Git']['output']['in notifications when not in buffer'] = function()
@@ -2238,7 +2234,6 @@ T[':Git']['output']['sets filetype for common subcommands'] = function()
   validate('Git log', 'git')
   validate('Git help commit', '')
 
-  if child.fn.has('nvim-0.8') == 0 then return end
   child.cmd('au FileType lua setlocal foldlevel=0')
   validate('Git show HEAD:file.lua', 'lua')
 end
@@ -2276,7 +2271,7 @@ T[':Git']['output']['respects `:unsilent` modifier'] = function()
 
   -- Should prefer `:unsilent` over `:silent`
   validate('silent unsilent Git log')
-  if child.fn.has('nvim-0.8') == 1 then validate('unsilent silent Git log') end
+  validate('unsilent silent Git log')
 end
 
 T[':Git']['output']['defines proper window/buffer cleanup'] = function()
@@ -2852,9 +2847,6 @@ T[':Git']['events are triggered'] = function()
   local events = vim.tbl_map(function(t) return t.match end, au_log)
   eq(events, { 'MiniGitCommandDone', 'MiniGitCommandSplit', 'MiniGitCommandDone' })
 
-  -- Supplies proper data table in Neovim>=0.8
-  if child.fn.has('nvim-0.8') == 0 then return end
-
   local log_done = au_log[1].data
   eq(type(log_done.cmd_input), 'table')
   eq(log_done.cmd_input.fargs, { 'log' })
@@ -2886,8 +2878,6 @@ T[':Git']['events are triggered'] = function()
 end
 
 T[':Git']['event `MiniGitCommandSplit` can be used to tweak window-local options'] = function()
-  if child.fn.has('nvim-0.8') == 0 then MiniTest.skip('Requires `data` field supplied to autocommand callback.') end
-
   child.lua([[table.insert(_G.stdio_queue, { { 'out', 'abc1234 Hello\ndef4321 World' } })]])
   child.lua([[
     local modify_win_opts = function(data)

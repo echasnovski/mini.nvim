@@ -128,15 +128,6 @@ local H = {}
 ---
 ---@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
 MiniStatusline.setup = function(config)
-  -- TODO: Remove after Neovim<=0.7 support is dropped
-  if vim.fn.has('nvim-0.8') == 0 then
-    vim.notify(
-      '(mini.statusline) Neovim<0.8 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniStatusline = MiniStatusline
 
@@ -174,8 +165,8 @@ MiniStatusline.config = {
   use_icons = true,
 
   -- Whether to set Vim's settings for statusline (make it always shown with
-  -- 'laststatus' set to 2). To use global statusline in Neovim>=0.7.0, set
-  -- this to `false` and 'laststatus' to 3.
+  -- 'laststatus' set to 2).
+  -- To use global statusline, set this to `false` and 'laststatus' to 3.
   set_vim_settings = true,
 }
 --minidoc_afterlines_end
@@ -528,14 +519,12 @@ H.create_autocommands = function()
 
   au({ 'WinEnter', 'BufWinEnter' }, '*', H.ensure_content, 'Ensure statusline content')
 
-  if vim.fn.has('nvim-0.8') == 1 then
-    -- Use `schedule_wrap()` because at `LspDetach` server is still present
-    local track_lsp = vim.schedule_wrap(function(data)
-      H.attached_lsp[data.buf] = H.compute_attached_lsp(data.buf)
-      vim.cmd('redrawstatus')
-    end)
-    au({ 'LspAttach', 'LspDetach' }, '*', track_lsp, 'Track LSP clients')
-  end
+  -- Use `schedule_wrap()` because at `LspDetach` server is still present
+  local track_lsp = vim.schedule_wrap(function(data)
+    H.attached_lsp[data.buf] = H.compute_attached_lsp(data.buf)
+    vim.cmd('redrawstatus')
+  end)
+  au({ 'LspAttach', 'LspDetach' }, '*', track_lsp, 'Track LSP clients')
 end
 
 --stylua: ignore
@@ -637,9 +626,6 @@ H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' e
 
 -- LSP ------------------------------------------------------------------------
 H.get_attached_lsp = function() return H.attached_lsp[vim.api.nvim_get_current_buf()] or '' end
-if vim.fn.has('nvim-0.8') == 0 then
-  H.get_attached_lsp = function() return H.compute_attached_lsp(vim.api.nvim_get_current_buf()) end
-end
 
 H.compute_attached_lsp = function(buf_id) return string.rep('+', vim.tbl_count(H.get_buf_lsp_clients(buf_id))) end
 
