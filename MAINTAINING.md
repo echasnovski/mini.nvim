@@ -93,6 +93,34 @@ Usual workflow involves performing these steps after every commit in 'mini.nvim'
 - Review PR code and iterate towards making it have enough code quality. Use first steps of ["Typical workflow for adding change"](#typical-workflow-for-adding-change) as reference. **Note**: if what is left to do requires some overly specific project knowledge (i.e. can be done _much_ quicker if you know how, but requires non-trivial amount of reading/discovering first time), consider merging PR in a new separate branch and finish it manually (usually with preserving original commit authorship).
 - When change is of enough quality, merge it and proceed treating it as regular change.
 
+## Stopping support for old Neovim version
+
+Begin the process of stopping official support for outdated Neovim version shortly after (week or two) the release of the new stable one. Usually it is stopping support for Neovim 0.x (say, 0.8) shortly after the release of 0.(x+3).0 (say, 0.11.0). The deprecation should be done in two stages:
+
+- Stage 1, soft deprecation (to notify old version users about upcoming support drop):
+    - Add version of the following code snippet at the beginning of `setup()` function body in **every** module:
+
+    ```lua
+    -- TODO: Remove after Neovim=0.8 support is dropped
+    if vim.fn.has('nvim-0.8') == 0 then
+      vim.notify(
+        '(mini.ai) Neovim<0.9 is soft deprecated (module works but not supported).'
+          .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
+          .. ' Please update your Neovim version.'
+      )
+    end
+    ```
+
+    - Modify CI to not test on Neovim 0.x.
+    - Update README and repo description to indicate new oldest supported Neovim version.
+    - Wait for a considerable amount of time (at least about a month) *and* a new 'mini.nvim' stable release (so that there is no actual deprecation in the stable release).
+
+- Stage 2, deprecation:
+    - Remove all notification snippets added in Stage 1.
+    - Adjust code that is conditioned on `vim.fn.has('nvim-0.x')`.
+    - Adjust code/comments/documentation that contains any combination of `Neovim{<,<=,=,>=,>}{0.x,0.(x+1)}` (like `Neovim<0.x`, `Neovim>=0.(x+1)`, etc.).
+    - Add entry "Stop official support of Neovim 0.x." in 'CHANGELOG.md' at the start of current development version block.
+
 ## Adding new config settings
 
 - Add code which uses new setting.
