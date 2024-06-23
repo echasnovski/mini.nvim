@@ -72,7 +72,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniSessions.config = {
     -- Whether to read latest session if Neovim opened without file arguments
     autoread = false,

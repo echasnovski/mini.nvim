@@ -158,7 +158,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniCompletion.config = {
     -- Delay (debounce type, in ms) between certain Neovim event and action.
     -- This can be used to (virtually) disable certain automatic actions by

@@ -65,7 +65,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniExtra.config = {}
 <
 

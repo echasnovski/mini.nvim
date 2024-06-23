@@ -152,7 +152,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniJump2d.config = {
     -- Function producing jump spots (byte indexed) for a particular line.
     -- For more information see |MiniJump2d.start|.

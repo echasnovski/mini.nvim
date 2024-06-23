@@ -675,7 +675,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniPick.config = {
     -- Delays (in ms; should be at least 1)
     delay = {

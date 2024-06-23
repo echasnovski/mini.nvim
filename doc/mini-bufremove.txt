@@ -56,7 +56,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniBufremove.config = {
     -- Whether to set Vim's settings for buffers (allow hidden buffers)
     set_vim_settings = true,

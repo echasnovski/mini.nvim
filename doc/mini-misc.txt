@@ -57,7 +57,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniMisc.config = {
     -- Array of fields to make global (to be used as independent variables)
     make_global = { 'put', 'put_text' },

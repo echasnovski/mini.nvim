@@ -358,7 +358,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniDeps.config = {
     -- Parameters of CLI jobs
     job = {

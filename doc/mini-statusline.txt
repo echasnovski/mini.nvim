@@ -133,7 +133,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniStatusline.config = {
     -- Content of statusline as functions which return statusline string. See
     -- `:h statusline` and code of default contents (used instead of `nil`).

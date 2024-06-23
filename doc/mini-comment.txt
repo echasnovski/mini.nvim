@@ -67,7 +67,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniComment.config = {
     -- Options which control module behavior
     options = {

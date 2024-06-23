@@ -154,7 +154,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniDoc.config = {
     -- Function which extracts part of line used to denote annotation.
     -- For more information see 'Notes' in |MiniDoc.config|.

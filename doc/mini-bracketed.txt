@@ -123,7 +123,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniBracketed.config = {
     -- First-level elements are tables describing behavior of a target:
     --

@@ -236,7 +236,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniDiff.config = {
     -- Options for how hunks are visualized
     view = {

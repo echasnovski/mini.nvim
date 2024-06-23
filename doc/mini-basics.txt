@@ -72,7 +72,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniBasics.config = {
     -- Options. Set to `false` to disable.
     options = {

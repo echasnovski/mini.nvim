@@ -152,7 +152,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniTest.config = {
     -- Options for collection of test cases. See `:h MiniTest.collect()`.
     collect = {

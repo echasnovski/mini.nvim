@@ -86,7 +86,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniMove.config = {
     -- Module mappings. Use `''` (empty string) to disable one.
     mappings = {

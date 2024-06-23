@@ -116,7 +116,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniIndentscope.config = {
     -- Draw options
     draw = {

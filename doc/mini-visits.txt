@@ -352,7 +352,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniVisits.config = {
     -- How visit index is converted to list of paths
     list = {

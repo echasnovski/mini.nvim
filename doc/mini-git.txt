@@ -226,7 +226,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniGit.config = {
     -- General CLI execution
     job = {

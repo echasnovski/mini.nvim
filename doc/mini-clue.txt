@@ -484,7 +484,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniClue.config = {
     -- Array of extra clues to show
     clues = {},

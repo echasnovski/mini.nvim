@@ -83,7 +83,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniTabline.config = {
     -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
     show_icons = true,

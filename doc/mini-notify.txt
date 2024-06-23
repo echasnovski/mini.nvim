@@ -92,7 +92,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniNotify.config = {
     -- Content management
     content = {

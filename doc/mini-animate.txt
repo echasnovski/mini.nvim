@@ -117,7 +117,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniAnimate.config = {
     -- Cursor path
     cursor = {

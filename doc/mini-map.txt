@@ -187,7 +187,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniMap.config = {
     -- Highlight integrations (none by default)
     integrations = nil,

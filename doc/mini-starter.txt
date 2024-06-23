@@ -205,7 +205,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniStarter.config = {
     -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
     -- started with intent to show something else.

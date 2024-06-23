@@ -229,7 +229,7 @@ Note: no highlighters is defined by default. Add them for visible effect.
 Module config
 
 Default values:
->
+>lua
   MiniHipatterns.config = {
     -- Table with highlighters (see |MiniHipatterns.config| for more details).
     -- Nothing is defined by default. Add manually for visible effect.

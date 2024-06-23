@@ -94,7 +94,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniCursorword.config = {
     -- Delay (in ms) between when cursor moved and when highlighting appeared
     delay = 100,

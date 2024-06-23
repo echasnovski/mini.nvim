@@ -166,7 +166,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniOperators.config = {
     -- Each entry configures one operator.
     -- `prefix` defines keys mapped during `setup()`: in Normal mode

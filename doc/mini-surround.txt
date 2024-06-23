@@ -460,7 +460,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniSurround.config = {
     -- Add custom surroundings to be used on top of builtin ones. For more
     -- information with examples, see `:h MiniSurround.config`.

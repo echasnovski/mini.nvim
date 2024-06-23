@@ -400,7 +400,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniAi.config = {
     -- Table with textobject id as fields, textobject specification as values.
     -- Also use this to disable builtin textobjects. See |MiniAi.config|.

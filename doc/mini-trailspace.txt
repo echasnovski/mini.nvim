@@ -59,7 +59,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniTrailspace.config = {
     -- Highlight only in normal buffers (ones with empty 'buftype'). This is
     -- useful to not show trailing whitespace where it usually doesn't matter.

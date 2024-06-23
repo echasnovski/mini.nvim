@@ -69,7 +69,7 @@ Usage ~
 Module config
 
 Default values:
->
+>lua
   MiniJump.config = {
     -- Module mappings. Use `''` (empty string) to disable one.
     mappings = {
@@ -120,7 +120,7 @@ Fields ~
   |MiniJump.smart_jump| and all mappings won't require target.
 
 Initial values:
->
+>lua
   MiniJump.state = {
     target = nil,
     backward = false,

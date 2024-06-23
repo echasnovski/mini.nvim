@@ -137,7 +137,7 @@ See |MiniHues.make_palette()| for more information about how certain
 settings affect output color scheme.
 
 Default values:
->
+>lua
   MiniHues.config = {
     -- **Required** base colors as '#rrggbb' hex strings
     background = nil,
