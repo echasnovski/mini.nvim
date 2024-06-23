@@ -97,7 +97,7 @@ This string is evaluated using local variable. 1 + 1 = 2
                                                                          *M.tab*
                                     `M.tab`
 Usage of `MiniDoc.afterlines_to_code()` and `MiniDoc.current.eval_section`
->
+>lua
   M.tab = {
     -- Some functional setting
         a = <function; should be padded>,

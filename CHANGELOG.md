@@ -2,6 +2,10 @@
 
 - Stop official support of Neovim 0.7.
 
+## mini.doc
+
+- BREAKING FEATURE: update `afterlines_to_code()` to result into Lua code block in help file by using `>lua` at the start instead of `>`. NOTE: users need enabled `help` tree-sitter parser (which is default on Neovim>=0.9) for code blocks to have proper highlighting.
+
 # Version 0.13.0
 
 ## mini.comment
