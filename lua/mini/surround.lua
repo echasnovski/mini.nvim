@@ -534,12 +534,12 @@ end
 ---       -- Use function to compute surrounding info
 ---       ['*'] = {
 ---         input = function()
----           local n_star = MiniSurround.user_input('Number of * to find: ')
+---           local n_star = MiniSurround.user_input('Number of * to find')
 ---           local many_star = string.rep('%*', tonumber(n_star) or 1)
 ---           return { many_star .. '().-()' .. many_star }
 ---         end,
 ---         output = function()
----           local n_star = MiniSurround.user_input('Number of * to output: ')
+---           local n_star = MiniSurround.user_input('Number of * to output')
 ---           local many_star = string.rep('*', tonumber(n_star) or 1)
 ---           return { left = many_star, right = many_star }
 ---         end,
