@@ -1258,7 +1258,7 @@ Return ~
   - <windows> `(table)` - table with `main` and `target` fields representing
     window identifiers for main and target windows.
   - <caret> `(number)` - caret column.
-  - <is_bust> `(boolean)` - whether picker is busy with computations.
+  - <is_busy> `(boolean)` - whether picker is busy with computations.
 
 See also ~
 |MiniPick.set_picker_target_window()|
