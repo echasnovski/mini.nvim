@@ -1577,7 +1577,7 @@ MiniPick.get_picker_opts = function() return vim.deepcopy((H.pickers.active or {
 ---   - <windows> `(table)` - table with `main` and `target` fields representing
 ---     window identifiers for main and target windows.
 ---   - <caret> `(number)` - caret column.
----   - <is_bust> `(boolean)` - whether picker is busy with computations.
+---   - <is_busy> `(boolean)` - whether picker is busy with computations.
 ---
 ---@seealso |MiniPick.set_picker_target_window()|
 MiniPick.get_picker_state = function()
