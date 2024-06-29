@@ -334,7 +334,7 @@ MiniDoc.config = {
       if not b:has_lines() then return end
 
       local found_param, found_field = false, false
-      local n_tag_sections = 0
+      local n_tag_sections, last_line = 0, nil
       H.apply_recursively(function(x)
         if not (type(x) == 'table' and x.type == 'section') then return end
 
@@ -354,10 +354,14 @@ MiniDoc.config = {
           n_tag_sections = n_tag_sections + 1
           x.parent:insert(n_tag_sections, x)
         end
+
+        if type(x[#x]) == 'string' then last_line = x[#x] end
       end, b)
 
       b:insert(1, H.as_struct({ string.rep('-', 78) }, 'section'))
-      b:insert(H.as_struct({ '' }, 'section'))
+      -- Append empty line only if last line is not visibly blank (closing code
+      -- block with "<" is concealed)
+      if string.find(last_line, '^<?%s*$') == nil then b:insert(H.as_struct({ '' }, 'section')) end
     end,
     --minidoc_replace_end
 

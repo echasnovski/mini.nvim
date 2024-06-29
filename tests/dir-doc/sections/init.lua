@@ -39,10 +39,14 @@ M.fun = function(a, b) return true end
 --- `@tag` should enclose non-whitespace group separately.
 ---
 ---@signature fun(x, y)
----
 ---@tag test-f f-test
 --- f-test-different-line
 local f = function() end
+
+
+--- Test for smart empty line append
+--- Some text
+---   
 
 --- Test for `@text`
 ---

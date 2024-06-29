@@ -24,6 +24,7 @@
 --- three lines
 
 --- TOC entry without description
+---
 ---@tag toc-entry-without-description
 ---@toc_entry
 
