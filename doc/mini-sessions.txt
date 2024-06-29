@@ -102,7 +102,6 @@ Default values:
     verbose = { read = false, write = true, delete = true },
   }
 <
-
 ------------------------------------------------------------------------------
                                                          *MiniSessions.detected*
                             `MiniSessions.detected`

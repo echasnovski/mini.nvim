@@ -65,7 +65,6 @@ Default values:
     silent = false,
   }
 <
-
 ------------------------------------------------------------------------------
                                                         *MiniBufremove.delete()*
                    `MiniBufremove.delete`({buf_id}, {force})

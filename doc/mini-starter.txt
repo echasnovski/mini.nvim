@@ -245,7 +245,6 @@ Default values:
     silent = false,
   }
 <
-
 ------------------------------------------------------------------------------
                                                             *MiniStarter.open()*
                           `MiniStarter.open`({buf_id})

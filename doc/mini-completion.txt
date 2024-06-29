@@ -207,7 +207,6 @@ Default values:
     set_vim_settings = true,
   }
 <
-
 ------------------------------------------------------------------------------
                                             *MiniCompletion.complete_twostage()*
             `MiniCompletion.complete_twostage`({fallback}, {force})

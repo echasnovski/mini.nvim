@@ -680,7 +680,6 @@ Default values:
 >lua
   MiniColors.config = {}
 <
-
 ------------------------------------------------------------------------------
                                                    *MiniColors.as_colorscheme()*
                         `MiniColors.as_colorscheme`({x})

@@ -68,7 +68,6 @@ Default values:
 >lua
   MiniExtra.config = {}
 <
-
 ------------------------------------------------------------------------------
                                                          *MiniExtra.gen_ai_spec*
                             `MiniExtra.gen_ai_spec`

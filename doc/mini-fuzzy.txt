@@ -89,7 +89,6 @@ Default values:
     cutoff = 100,
   }
 <
-
 ------------------------------------------------------------------------------
                                                              *MiniFuzzy.match()*
                      `MiniFuzzy.match`({word}, {candidate})

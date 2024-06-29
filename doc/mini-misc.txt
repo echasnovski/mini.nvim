@@ -63,7 +63,6 @@ Default values:
     make_global = { 'put', 'put_text' },
   }
 <
-
 ------------------------------------------------------------------------------
                                                          *MiniMisc.bench_time()*
                      `MiniMisc.bench_time`({f}, {n}, {...})

@@ -123,7 +123,6 @@ Default values:
     },
   }
 <
-
 ------------------------------------------------------------------------------
                                                                *MiniPairs.map()*
               `MiniPairs.map`({mode}, {lhs}, {pair_info}, {opts})

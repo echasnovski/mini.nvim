@@ -94,7 +94,6 @@ Default values:
     silent = false,
   }
 <
-
 ------------------------------------------------------------------------------
                                                                 *MiniJump.state*
                                 `MiniJump.state`
@@ -130,7 +129,6 @@ Initial values:
     jumping = false,
   }
 <
-
 ------------------------------------------------------------------------------
                                                                *MiniJump.jump()*
             `MiniJump.jump`({target}, {backward}, {till}, {n_times})

@@ -430,7 +430,6 @@ Using |MiniJump2d.builtin_opts.line_start| as example:
     hooks = { after_jump = jump_line_start.hooks.after_jump }
   })
 <
-
 ------------------------------------------------------------------------------
                                                *MiniJump2d.builtin_opts.default*
                        `MiniJump2d.builtin_opts.default`
