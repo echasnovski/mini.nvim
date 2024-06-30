@@ -52,6 +52,12 @@ Test for smart empty line append
 Some text
   
 ------------------------------------------------------------------------------
+                                                                 *important-tag*
+Test for smart empty line before tag
+>lua
+  -- This is code block
+<
+------------------------------------------------------------------------------
 Test for `@text`
 
 Parameters ~

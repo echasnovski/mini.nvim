@@ -48,6 +48,12 @@ local f = function() end
 --- Some text
 ---   
 
+--- Test for smart empty line before tag
+--- >lua
+---   -- This is code block
+--- <
+---@tag important-tag
+
 --- Test for `@text`
 ---
 ---@param a string

@@ -353,9 +353,9 @@ MiniDoc.config = {
           x.parent:remove(x.parent_index)
           n_tag_sections = n_tag_sections + 1
           x.parent:insert(n_tag_sections, x)
+        elseif type(x[#x]) == 'string' then
+          last_line = x[#x]
         end
-
-        if type(x[#x]) == 'string' then last_line = x[#x] end
       end, b)
 
       b:insert(1, H.as_struct({ string.rep('-', 78) }, 'section'))
