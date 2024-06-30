@@ -6,6 +6,11 @@
 
 - BREAKING FEATURE: update `afterlines_to_code()` to result into Lua code block in help file by using `>lua` at the start instead of `>`. NOTE: users need enabled `help` tree-sitter parser (which is default on Neovim>=0.9) for code blocks to have proper highlighting.
 
+## mini.extra
+
+- FEATURE: update `pickers.oldfiles()` to have `current_dir` option which if `true` shows files only from picker's working directory. By @abeldekat, PR #997.
+
+
 # Version 0.13.0
 
 ## mini.comment

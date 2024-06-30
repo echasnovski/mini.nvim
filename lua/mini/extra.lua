@@ -1151,20 +1151,26 @@ end
 --- Pick from |v:oldfiles| entries representing readable files.
 ---
 ---@param local_opts __extra_pickers_local_opts
----   Not used at the moment.
+---   Possible fields:
+---   - <current_dir> `(boolean)` - whether to return files only from current
+---     working directory and its subdirectories. Default: `false`.
 ---@param opts __extra_pickers_opts
 ---
 ---@return __extra_pickers_return
 MiniExtra.pickers.oldfiles = function(local_opts, opts)
   local pick = H.validate_pick('oldfiles')
+  local_opts = vim.tbl_deep_extend('force', { current_dir = false }, local_opts or {})
   local oldfiles = vim.v.oldfiles
   if not H.islist(oldfiles) then H.error('`pickers.oldfiles` picker needs valid `v:oldfiles`.') end
 
+  local show_all = not local_opts.current_dir
   local items = vim.schedule_wrap(function()
-    local cwd = pick.get_picker_opts().source.cwd
+    local cwd = pick.get_picker_opts().source.cwd .. '/'
     local res = {}
     for _, path in ipairs(oldfiles) do
-      if vim.fn.filereadable(path) == 1 then table.insert(res, H.short_path(path, cwd)) end
+      if vim.fn.filereadable(path) == 1 and (show_all or vim.startswith(path, cwd)) then
+        table.insert(res, H.short_path(path, cwd))
+      end
     end
     pick.set_picker_items(res)
   end)
@@ -2010,6 +2016,7 @@ H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$'
 
 H.short_path = function(path, cwd)
   cwd = cwd or vim.fn.getcwd()
+  cwd = cwd:sub(-1) == '/' and cwd or (cwd .. '/')
   if not vim.startswith(path, cwd) then return vim.fn.fnamemodify(path, ':~') end
   local res = path:sub(cwd:len() + 1):gsub('^/+', ''):gsub('/+$', '')
   return res

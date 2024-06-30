@@ -640,7 +640,9 @@ Pick from |v:oldfiles| entries representing readable files.
 
 Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
-  Not used at the moment.
+  Possible fields:
+  - <current_dir> `(boolean)` - whether to return files only from current
+    working directory and its subdirectories. Default: `false`.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 Return ~

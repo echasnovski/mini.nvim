@@ -2667,6 +2667,19 @@ T['pickers']['oldfiles()']['can not show icons'] = function()
   child.expect_screenshot()
 end
 
+T['pickers']['oldfiles()']['respects `local_opts.current_dir'] = function()
+  child.set_size(10, 70)
+  local ref_oldfiles = { full_path(real_file('LICENSE')), full_path(make_testpath('mocks', 'diagnostic.lua')) }
+  child.v.oldfiles = ref_oldfiles
+
+  child.fn.chdir(real_files_dir)
+  pick_oldfiles({ current_dir = true })
+  local items = get_picker_items()
+  -- - Only paths inside current directory are shown
+  eq(#items, 1)
+  eq(items[1], 'LICENSE')
+end
+
 T['pickers']['oldfiles()']['respects `opts`'] = function()
   pick_oldfiles({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
