@@ -406,7 +406,6 @@ Key sequences:
 - `=<BS>fn==1<CR>t`
 - `=frow>7<CR>`
 
-
 ------------------------------------------------------------------------------
                                                              *MiniAlign.setup()*
                           `MiniAlign.setup`({config})

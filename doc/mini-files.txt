@@ -303,7 +303,6 @@ at that line (if present) to deduce which file system action to perform.
 
 - Moving directory inside itself is not supported.
 
-
 ------------------------------------------------------------------------------
                                                               *MiniFiles-events*
 Events ~

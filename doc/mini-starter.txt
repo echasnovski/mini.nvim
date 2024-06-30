@@ -169,7 +169,6 @@ header/footer, and content hooks:
     content_hooks = { hook_top_pad_10 },
   })
 <
-
 ------------------------------------------------------------------------------
                                                          *MiniStarter-lifecycle*
 # Lifecycle of Starter buffer ~
