@@ -2684,6 +2684,18 @@ T['pickers']['oldfiles()']['respects `opts.source.cwd`'] = function()
   expect.match(items[2], vim.pesc(child.fn.fnamemodify(ref_oldfiles[2], ':~')))
 end
 
+T['pickers']['oldfiles()']['respects `local_opts.current_dir'] = function()
+  child.set_size(10, 70)
+  local ref_oldfiles = { full_path(real_file('LICENSE')), full_path(make_testpath('mocks', 'diagnostic.lua')) }
+  child.v.oldfiles = ref_oldfiles
+
+  pick_oldfiles({ current_dir = true }, { source = { cwd = real_files_dir } })
+  local items = get_picker_items()
+  -- - Only paths inside `cwd` are shown
+  eq(#items, 1)
+  eq(items[1], 'LICENSE')
+end
+
 T['pickers']['options()'] = new_set()
 
 local pick_options = forward_lua_notify('MiniExtra.pickers.options')

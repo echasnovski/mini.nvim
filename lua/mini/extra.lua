@@ -1151,20 +1151,28 @@ end
 --- Pick from |v:oldfiles| entries representing readable files.
 ---
 ---@param local_opts __extra_pickers_local_opts
----   Not used at the moment.
+---   Possible fields:
+---   - <current_dir> `(boolean|nil)` - whether to return files only from
+---     current working directory and its subdirectories. Default: `false`.
 ---@param opts __extra_pickers_opts
 ---
 ---@return __extra_pickers_return
 MiniExtra.pickers.oldfiles = function(local_opts, opts)
   local pick = H.validate_pick('oldfiles')
+  local_opts = vim.tbl_deep_extend('force', { current_dir = false }, local_opts or {})
   local oldfiles = vim.v.oldfiles
   if not H.islist(oldfiles) then H.error('`pickers.oldfiles` picker needs valid `v:oldfiles`.') end
 
+  local show_all = not local_opts.current_dir
+  local sep = vim.loop.os_uname().sysname == 'Windows_NT' and [[%\]] or '%/'
   local items = vim.schedule_wrap(function()
     local cwd = pick.get_picker_opts().source.cwd
+    local cwd_pattern = '^' .. vim.pesc(cwd) .. sep
     local res = {}
     for _, path in ipairs(oldfiles) do
-      if vim.fn.filereadable(path) == 1 then table.insert(res, H.short_path(path, cwd)) end
+      if vim.fn.filereadable(path) == 1 and (show_all or path:find(cwd_pattern) ~= nil) then
+        table.insert(res, H.short_path(path, cwd))
+      end
     end
     pick.set_picker_items(res)
   end)
