@@ -274,9 +274,9 @@
 
 --- Surround specification is a table with keys:
 --- - <input> - defines how to find and extract surrounding for "input"
----   operations (like `delete`). See more in 'Input surrounding' setction.
+---   operations (like `delete`). See more in "Input surrounding" section.
 --- - <output> - defines what to add on left and right for "output" operations
----   (like `add`). See more in 'Output surrounding' section.
+---   (like `add`). See more in "Output surrounding" section.
 ---
 --- Example of surround info for builtin `)` identifier: >lua
 ---
