@@ -71,11 +71,10 @@
 ---   as "MiniSurround".
 ---
 --- - <Setup>:
----     - Each module (if needed) should be setup separately with
----       `require(<name of module>).setup({})`
----       (possibly replace {} with your config table or omit to use defaults).
----       You can supply only values which differ from defaults, which will be
----       used for the rest ones.
+---     - Each module you want to use should be enabled separately with
+---       `require(<name of module>).setup({})`. Possibly replace `{}` with
+---       your config table or omit altogether to use defaults. You can supply
+---       only parts of config, the rest will be inferred from defaults.
 ---
 ---     - Call to module's `setup()` always creates a global Lua object with
 ---       coherent camel-case name: `require('mini.surround').setup()` creates
@@ -96,8 +95,8 @@
 ---       created once during `setup()`).
 ---
 --- - <Buffer local configuration>. Each module can be additionally configured
----   to use certain runtime config settings locally to buffer. See
----   |mini.nvim-buffer-local-config| for more information.
+---   to use certain runtime config settings locally to buffer.
+---   See |mini.nvim-buffer-local-config| for more information.
 ---
 --- - <Disabling>. Each module's core functionality can be disabled globally or
 ---   locally to buffer. See "Disabling" section in module's help page for more
@@ -107,16 +106,16 @@
 ---   globally or locally to buffer. See "Silencing" section in module's help page
 ---   for more details.
 ---
---- - <Highlight groups>. Appearance of module's output is controlled by
----   certain highlight group (see |highlight-groups|). To customize them, use
----   |highlight| command. Note: currently not many Neovim themes support this
----   plugin's highlight groups; fixing this situation is highly appreciated.
----   To see a more calibrated look, use |MiniBase16| or plugin's colorschemes.
+--- - <Highlighting>. Appearance of module's output is controlled by certain set
+---   of highlight groups (see |highlight-groups|). By default they usually link to
+---   some semantically close built-in highlight group. Use |:highlight| command
+---   or |nvim_set_hl()| Lua function to customize highlighting.
+---   To see a more calibrated look, use |MiniHues|, |MiniBase16|, or plugin's
+---   colorschemes.
 ---
 --- - <Stability>. Each module upon release is considered to be relatively
----   stable: both in terms of setup and functionality. Any
----   non-bugfix backward-incompatible change will be released gradually as
----   much as possible.
+---   stable: both in terms of setup and functionality. Any non-bugfix
+---   backward-incompatible change will be released gradually as much as possible.
 ---
 --- # List of modules ~
 ---
