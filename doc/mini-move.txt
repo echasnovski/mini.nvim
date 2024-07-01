@@ -78,8 +78,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniMove.config|.
 
 Usage ~
-`require('mini.move').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.move').setup() -- use default config
+  -- OR
+  require('mini.move').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                                *MiniMove.config*
                                `MiniMove.config`
@@ -112,9 +115,9 @@ Default values:
 <
 # Mappings ~
 
-Other possible choices of mappings:
+Other possible choices of mappings: >lua
 
-- `HJKL` for moving visual selection (overrides |H|, |L|, |v_J| in Visual mode): >
+  -- `HJKL` for moving visual selection (overrides H, L, J in Visual mode)
   require('mini.move').setup({
     mappings = {
       left  = 'H',
@@ -124,7 +127,7 @@ Other possible choices of mappings:
     }
   })
 
-- Shift + arrows: >
+  -- Shift + arrows
   require('mini.move').setup({
     mappings = {
       left  = '<S-left>',
@@ -138,7 +141,7 @@ Other possible choices of mappings:
       line_up    = '<S-up>',
     }
   })
-
+<
 ------------------------------------------------------------------------------
                                                      *MiniMove.move_selection()*
                  `MiniMove.move_selection`({direction}, {opts})

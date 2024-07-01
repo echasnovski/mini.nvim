@@ -266,7 +266,7 @@
 --- - Rename file or directory by editing its name (not icon or path index to
 ---   the left of it).
 ---
---- - With default mappings for `h`/`l` it might be not convenient to rename
+--- - With default mappings for `h` / `l` it might be not convenient to rename
 ---   only part of an entry. You can adopt any of the following approaches:
 ---     - Use different motions, like |$|, |e|, |f|, etc.
 ---     - Go into Insert mode and navigate inside it.
@@ -275,7 +275,7 @@
 ---
 --- - It is not needed to end directory name with `/`.
 ---
---- - Cyclic renames ('a' to 'b' and 'b' to 'a') are not supported.
+--- - Cyclic renames ("a" to "b" and "b" to "a") are not supported.
 ---
 --- ## Copy ~
 ---
@@ -299,7 +299,6 @@
 ---   (not icon or path index to the left of it).
 ---
 --- - Moving directory inside itself is not supported.
----
 ---@tag MiniFiles-manipulation
 
 --- Events ~
@@ -358,15 +357,15 @@
 ---
 --- # Toggle explorer ~
 ---
---- Use a combination of |MiniFiles.open()| and |MiniFiles.close()|: >
+--- Use a combination of |MiniFiles.open()| and |MiniFiles.close()|: >lua
 ---
 ---   local minifiles_toggle = function(...)
 ---     if not MiniFiles.close() then MiniFiles.open(...) end
 ---   end
----
+--- <
 --- # Customize windows ~
 ---
---- Create an autocommand for `MiniFilesWindowOpen` event: >
+--- Create an autocommand for `MiniFilesWindowOpen` event: >lua
 ---
 ---   vim.api.nvim_create_autocmd('User', {
 ---     pattern = 'MiniFilesWindowOpen',
@@ -380,10 +379,10 @@
 ---       vim.api.nvim_win_set_config(win_id, config)
 ---     end,
 ---   })
----
+--- <
 --- # Customize icons ~
 ---
---- Use different directory icon: >
+--- Use different directory icon: >lua
 ---
 ---   local my_prefix = function(fs_entry)
 ---     if fs_entry.fs_type == 'directory' then
@@ -394,15 +393,15 @@
 ---   end
 ---
 ---   require('mini.files').setup({ content = { prefix = my_prefix } })
----
---- Show no icons: >
+--- <
+--- Show no icons: >lua
 ---
 ---   require('mini.files').setup({ content = { prefix = function() end } })
----
+--- <
 --- # Create mapping to show/hide dot-files ~
 ---
 --- Create an autocommand for `MiniFilesBufferCreate` event which calls
---- |MiniFiles.refresh()| with explicit `content.filter` functions: >
+--- |MiniFiles.refresh()| with explicit `content.filter` functions: >lua
 ---
 ---   local show_dotfiles = true
 ---
@@ -426,10 +425,10 @@
 ---       vim.keymap.set('n', 'g.', toggle_dotfiles, { buffer = buf_id })
 ---     end,
 ---   })
----
+--- <
 --- # Create mappings to modify target window via split ~
 ---
---- Combine |MiniFiles.get_target_window()| and |MiniFiles.set_target_window()|: >
+--- Combine |MiniFiles.get_target_window()| and |MiniFiles.set_target_window()|: >lua
 ---
 ---   local map_split = function(buf_id, lhs, direction)
 ---     local rhs = function()
@@ -457,10 +456,10 @@
 ---       map_split(buf_id, 'gv', 'belowright vertical')
 ---     end,
 ---   })
----
+--- <
 --- # Create mapping to set current working directory ~
 ---
---- Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >
+--- Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >lua
 ---
 ---   local files_set_cwd = function(path)
 ---     -- Works only if cursor is on the valid file system entry
@@ -475,6 +474,7 @@
 ---       vim.keymap.set('n', 'g~', files_set_cwd, { buffer = args.data.buf_id })
 ---     end,
 ---   })
+--- <
 ---@tag MiniFiles-examples
 
 ---@diagnostic disable:luadoc-miss-type-name
@@ -495,7 +495,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniFiles.config|.
 ---
----@usage `require('mini.files').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.files').setup() -- use default config
+---   -- OR
+---   require('mini.files').setup({}) -- replace {} with your config table
+--- <
 MiniFiles.setup = function(config)
   -- Export module
   _G.MiniFiles = MiniFiles
@@ -550,7 +554,7 @@ end
 --- string to not create a particular mapping.
 ---
 --- Default mappings are mostly designed for consistent navigation experience.
---- Here are some alternatives: >
+--- Here are some alternatives: >lua
 ---
 ---   -- Close explorer after opening file with `l`
 ---   mappings = {
@@ -565,7 +569,7 @@ end
 ---     go_out = 'H',
 ---     go_out_plus = '',
 ---   }
----
+--- <
 --- # Options ~
 ---
 --- `options.use_as_default_explorer` is a boolean indicating whether this module
@@ -644,21 +648,24 @@ MiniFiles.config = {
 
 --- Open file explorer
 ---
---- Common ways to use this function:
+--- Common ways to use this function: >lua
 ---
---- - `MiniFiles.open()` - open current working directory in a last used state.
+---   -- Open current working directory in a last used state
+---   MiniFiles.open()
 ---
---- - `MiniFiles.open(nil, false)` - fresh explorer in current working directory.
+---   -- Fresh explorer in current working directory
+---   MiniFiles.open(nil, false)
 ---
---- - `MiniFiles.open(vim.api.nvim_buf_get_name(0))` - open directory of current
----   file (in a last used state) with focus on that file.
+---   -- Open directory of current file (in last used state) focused on the file
+---   MiniFiles.open(vim.api.nvim_buf_get_name(0))
 ---
---- - `MiniFiles.open(vim.api.nvim_buf_get_name(0), false)` - fresh explorer in
----   directory of current file.
+---   -- Fresh explorer in directory of current file
+---   MiniFiles.open(vim.api.nvim_buf_get_name(0), false)
 ---
---- - `MiniFiles.open(MiniFiles.get_latest_path())` - open last used `path`
----   (per tabpage). Current working directory for the first time.
----
+---   -- Open last used `path` (per tabpage)
+---   -- Current working directory for the first time
+---   MiniFiles.open(MiniFiles.get_latest_path())
+--- <
 ---@param path string|nil A valid file system path used as anchor.
 ---   If it is a path to directory, used directly.
 ---   If it is a path to file, its parent directory is used as anchor while

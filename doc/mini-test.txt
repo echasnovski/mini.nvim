@@ -144,8 +144,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniTest.config|.
 
 Usage ~
-`require('mini.test').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.test').setup() -- use default config
+  -- OR
+  require('mini.test').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                                *MiniTest.config*
                                `MiniTest.config`
@@ -262,7 +265,7 @@ Return ~
 `(table)` A single test set.
 
 Usage ~
->
+>lua
   -- Use with defaults
   T = MiniTest.new_set()
   T['works'] = function() MiniTest.expect.equality(1, 1) end
@@ -277,7 +280,7 @@ Usage ~
   T['nested']['works'] = function(x)
     MiniTest.expect.equality(_G.x, x)
   end
-
+<
 ------------------------------------------------------------------------------
                                                             *MiniTest-test-case*
 Test case
@@ -503,11 +506,11 @@ Each function has the following behavior:
 Mostly designed to be used within 'mini.test' framework.
 
 Usage ~
->
+>lua
   local x = 1 + 1
   MiniTest.expect.equality(x, 2) -- passes
   MiniTest.expect.equality(x, 1) -- fails
-
+<
 ------------------------------------------------------------------------------
                                                     *MiniTest.expect.equality()*
                   `MiniTest.expect.equality`({left}, {right})
@@ -589,13 +592,13 @@ Return ~
 `(function)` Expectation function.
 
 Usage ~
->
+>lua
   local expect_truthy = MiniTest.new_expectation(
     'truthy',
     function(x) return x end,
     function(x) return 'Object: ' .. vim.inspect(x) end
   )
-
+<
 ------------------------------------------------------------------------------
                                                          *MiniTest.gen_reporter*
                             `MiniTest.gen_reporter`
@@ -682,7 +685,7 @@ Return ~
 `child` Object of |MiniTest-child-neovim|.
 
 Usage ~
->
+>lua
   -- Initiate
   local child = MiniTest.new_child_neovim()
   child.start()
@@ -703,7 +706,7 @@ Usage ~
 
   -- Always stop process after it is not needed
   child.stop()
-
+<
 ------------------------------------------------------------------------------
                                                          *MiniTest-child-neovim*
 Child class
@@ -812,16 +815,16 @@ Start child process and connect to it. Won't work if child is already running.
 
 Parameters ~
 {args} `(table)` Array with arguments for executable. Will be prepended with
-  the following default arguments (see |startup-options|): >
-  '--clean', '-n', '--listen', <some address>,
-  '--headless', '--cmd', 'set lines=24 columns=80'
+  the following default arguments (see |startup-options|): >lua
+  { '--clean', '-n', '--listen', <some address>,
+    '--headless', '--cmd', 'set lines=24 columns=80' }
 {opts} `(table|nil)` Options:
   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
   - <connection_timeout> - stop trying to connect after this amount of
     milliseconds. Default: 5000.
 
 Usage ~
->
+>lua
   child = MiniTest.new_child_neovim()
 
   -- Start default clean Neovim instance
@@ -829,7 +832,7 @@ Usage ~
 
   -- Start with custom 'init.lua' file
   child.start({ '-u', 'scripts/minimal_init.lua' })
-
+<
 ------------------------------------------------------------------------------
                                              *MiniTest-child-neovim.type_keys()*
 child.type_keys(wait, ...) ~
@@ -848,7 +851,7 @@ Parameters ~
   after which `wait` will be applied. Can be either string or array of strings.
 
 Usage ~
->
+>lua
   -- All of these type keys 'c', 'a', 'w'
   child.type_keys('caw')
   child.type_keys('c', 'a', 'w')
@@ -859,7 +862,7 @@ Usage ~
 
   -- Special keys can also be used
   child.type_keys('i', 'Hello world', '<Esc>')
-
+<
 ------------------------------------------------------------------------------
                                         *MiniTest-child-neovim.get_screenshot()*
 child.get_screenshot() ~
@@ -895,7 +898,7 @@ Return ~
   Returns `nil` if couldn't get a reasonable screenshot.
 
 Usage ~
->
+>lua
   local screenshot = child.get_screenshot()
 
   -- Show character displayed row=3 and column=4
@@ -903,6 +906,6 @@ Usage ~
 
   -- Convert to string
   tostring(screenshot)
-
+<
 
  vim:tw=78:ts=8:noet:ft=help:norl:

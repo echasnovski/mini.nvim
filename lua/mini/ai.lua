@@ -189,14 +189,19 @@
 ---     - <vis_mode> for which Visual mode will be used to select textobject.
 ---       See `opts` argument of |MiniAi.select_textobject()|.
 ---       One of `'v'`, `'V'`, `'\22'` (escaped `'<C-v>'`).
----   Examples:
----   - `{ from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }`
----   - Force linewise mode: >
+---   Examples: >lua
+---
+---     { from = { line = 1, col = 1 }, to = { line = 2, col = 1 } }
+---
+---     -- Forced linewise mode
 ---     {
 ---       from = { line = 1, col = 1 }, to = { line = 2, col = 1 },
 ---       vis_mode = 'V',
 ---     }
---- <  - Empty region: `{ from = { line = 10, col = 10 } }`
+---
+---     -- Empty region
+---     { from = { line = 10, col = 10 } }
+--- <
 --- - PATTERN - string describing Lua pattern.
 --- - SPAN - interval inside a string (end-exclusive). Like [1, 5). Equal
 ---   `from` and `to` edges describe empty span at that point.
@@ -206,10 +211,15 @@
 --- - NESTED PATTERN - array of patterns aimed to describe nested spans.
 --- - SPAN MATCHES NESTED PATTERN if there is a sequence of consecutively
 ---   nested spans each matching corresponding pattern within substring of
----   previous span (or input string for first span). Example:
----     Nested patterns: `{ '%b()', '^. .* .$' }` (balanced `()` with inner space)
----     Input string: `( ( () ( ) ) )`
----                   `123456789012345`
+---   previous span (or input string for first span). Example: >lua
+---
+---     -- Nested patterns for balanced `()` with inner space
+---     { '%b()', '^. .* .$' }
+---
+---     -- Example input string (with columns underneath for easier reading):
+---        "( ( () ( ) ) )"
+---     --  12345678901234
+--- <
 ---   Here are all matching spans [1, 15) and [3, 13). Both [5, 7) and [8, 10)
 ---   match first pattern but not second. All other combinations of `(` and `)`
 ---   don't match first pattern (not balanced).
@@ -217,18 +227,25 @@
 ---   (or array of them) at that place. Composed pattern basically defines all
 ---   possible combinations of nested pattern (their cartesian product).
 ---   Examples:
----     1. Composed pattern: `{ { '%b()', '%b[]' }, '^. .* .$' }`
----        Composed pattern expanded into equivalent array of nested patterns:
----         `{ '%b()', '^. .* .$' }` and `{ '%b[]', '^. .* .$' }`
----        Description: either balanced `()` or balanced `[]` but both with
----        inner edge space.
----     2. Composed pattern:
----        `{ { { '%b()', '^. .* .$' }, { '%b[]', '^.[^ ].*[^ ].$' } }, '.....' }`
----        Composed pattern expanded into equivalent array of nested patterns:
----        `{ '%b()', '^. .* .$', '.....' }` and
----        `{ '%b[]', '^.[^ ].*[^ ].$', '.....' }`
----        Description: either "balanced `()` with inner edge space" or
----        "balanced `[]` with no inner edge space", both with 5 or more characters.
+---     1. Either balanced `()` or balanced `[]` but both with inner edge space: >lua
+---
+---          -- Composed pattern
+---          { { '%b()', '%b[]' }, '^. .* .$' }
+---
+---          -- Composed pattern expanded into equivalent array of nested patterns
+---          { '%b()', '^. .* .$' } -- and
+---          { '%b[]', '^. .* .$' }
+--- <
+---     2. Either "balanced `()` with inner edge space" or "balanced `[]` with
+---        no inner edge space", both with 5 or more characters: >lua
+---
+---          -- Composed pattern
+---          { { { '%b()', '^. .* .$' }, { '%b[]', '^.[^ ].*[^ ].$' } }, '.....' }
+---
+---          -- Composed pattern expanded into equivalent array of nested patterns
+---          { '%b()', '^. .* .$', '.....' } -- and
+---          { '%b[]', '^.[^ ].*[^ ].$', '.....' }
+--- <
 --- - SPAN MATCHES COMPOSED PATTERN if it matches at least one nested pattern
 ---   from expanded composed pattern.
 ---@tag MiniAi-glossary
@@ -251,45 +268,45 @@
 ---       arguments as |MiniAi.find_textobject()| and should return one of:
 ---         - Composed pattern. Useful for implementing user input. Example of
 ---           simplified variant of textobject for function call with name taken
----           from user prompt: >
+---           from user prompt: >lua
 ---
----           function()
----             local left_edge = vim.pesc(vim.fn.input('Function name: '))
----             return { string.format('%s+%%b()', left_edge), '^.-%(().*()%)$' }
----           end
+---             function()
+---               local left_edge = vim.pesc(vim.fn.input('Function name: '))
+---               return { left_edge .. '%b()', '^.-%(().*()%)$' }
+---             end
 --- <
 ---         - Single output region. Useful to allow full control over
----           textobject. Will be taken as is. Example of returning whole buffer: >
+---           textobject. Will be taken as is. Example of returning whole buffer: >lua
 ---
----           function()
----             local from = { line = 1, col = 1 }
----             local to = {
----               line = vim.fn.line('$'),
----               col = math.max(vim.fn.getline('$'):len(), 1)
----             }
----             return { from = from, to = to, vis_mode = 'V' }
----           end
+---             function()
+---               local from = { line = 1, col = 1 }
+---               local to = {
+---                 line = vim.fn.line('$'),
+---                 col = math.max(vim.fn.getline('$'):len(), 1)
+---               }
+---               return { from = from, to = to, vis_mode = 'V' }
+---             end
 --- <
 ---         - Array of output region(s). Useful for incorporating other
 ---           instruments, like treesitter (see |MiniAi.gen_spec.treesitter()|).
 ---           The best region will be picked in the same manner as with composed
 ---           pattern (respecting options `n_lines`, `search_method`, etc.).
----           Example of selecting "best" line with display width more than 80: >
+---           Example of selecting "best" line with display width more than 80: >lua
 ---
----           function(_, _, _)
----             local res = {}
----             for i = 1, vim.api.nvim_buf_line_count(0) do
----               local cur_line = vim.fn.getline(i)
----               if vim.fn.strdisplaywidth(cur_line) > 80 then
----                 local region = {
----                   from = { line = i, col = 1 },
----                   to = { line = i, col = cur_line:len() },
----                 }
----                 table.insert(res, region)
+---             function(_, _, _)
+---               local res = {}
+---               for i = 1, vim.api.nvim_buf_line_count(0) do
+---                 local cur_line = vim.fn.getline(i)
+---                 if vim.fn.strdisplaywidth(cur_line) > 80 then
+---                   local region = {
+---                     from = { line = i, col = 1 },
+---                     to = { line = i, col = cur_line:len() },
+---                   }
+---                   table.insert(res, region)
+---                 end
 ---               end
+---               return res
 ---             end
----             return res
----           end
 --- <
 ---     - If there is a callable instead of assumed string pattern, it is expected
 ---       to have signature `(line, init)` and behave like `pattern:find()`.
@@ -298,7 +315,7 @@
 ---       !IMPORTANT NOTE!: it means that output's `from` shouldn't be strictly
 ---       to the left of `init` (it will lead to infinite loop). Not allowed as
 ---       last item (as it should be pattern with captures).
----       Example of matching only balanced parenthesis with big enough width: >
+---       Example of matching only balanced parenthesis with big enough width: >lua
 ---
 ---         {
 ---           '%b()',
@@ -309,32 +326,36 @@
 ---           '^.().*().$'
 ---         }
 --- <
---- More examples:
---- - See |MiniAi.gen_spec| for function wrappers to create commonly used
----   textobject specifications.
+--- More examples: >lua
 ---
---- - Pair of balanced brackets from set (used for builtin `b` identifier):
----   `{ { '%b()', '%b[]', '%b{}' }, '^.().*().$' }`
+---   -- Pair of balanced brackets from set (used for builtin `b` identifier):
+---   { { '%b()', '%b[]', '%b{}' }, '^.().*().$' }
 ---
---- - Imitate word ignoring digits and punctuation (supports only Latin alphabet):
----   `{ '()()%f[%w]%w+()[ \t]*()' }`
+---   -- Imitate word ignoring digits and punctuation (only for Latin alphabet):
+---   { '()()%f[%w]%w+()[ \t]*()' }
 ---
---- - Word with camel case support (also supports only Latin alphabet):
----   `{`
----     `{`
----       `'%u[%l%d]+%f[^%l%d]',`
----       `'%f[%S][%l%d]+%f[^%l%d]',`
----       `'%f[%P][%l%d]+%f[^%l%d]',`
----       `'^[%l%d]+%f[^%l%d]',`
----     `},`
----     `'^().*()$'`
----   `}`
+---   -- Word with camel case support (also supports only Latin alphabet):
+---   {
+---     {
+---       '%u[%l%d]+%f[^%l%d]',
+---       '%f[%S][%l%d]+%f[^%l%d]',
+---       '%f[%P][%l%d]+%f[^%l%d]',
+---       '^[%l%d]+%f[^%l%d]',
+---     },
+---     '^().*()$'
+---   }
 ---
---- - Number: `{ '%f[%d]%d+' }`
+---   -- Number:
+---   { '%f[%d]%d+' }
 ---
---- - Date in 'YYYY-MM-DD' format: `{ '()%d%d%d%d%-%d%d%-%d%d()' }`
+---   -- Date in 'YYYY-MM-DD' format:
+---   { '()%d%d%d%d%-%d%d%-%d%d()' }
 ---
---- - Lua block string: `{ '%[%[().-()%]%]' }`
+---   -- Lua block string:
+---   { '%[%[().-()%]%]' }
+--- <
+--- See |MiniAi.gen_spec| for function wrappers to create commonly used
+--- textobject specifications.
 ---@tag MiniAi-textobject-specification
 
 --- Algorithm design
@@ -387,7 +408,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniAi.config|.
 ---
----@usage `require('mini.ai').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.ai').setup() -- use default config
+---   -- OR
+---   require('mini.ai').setup({}) -- replace {} with your config table
+--- <
 MiniAi.setup = function(config)
   -- Export module
   _G.MiniAi = MiniAi
@@ -414,7 +439,7 @@ end
 --- builtin textobject in favor of external or Neovim's builtin mapping.
 ---
 --- Examples:
---- >
+--- >lua
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {
 ---       -- Tweak argument textobject
@@ -628,7 +653,8 @@ end
 ---
 --- This is a table with function elements. Call to actually get specification.
 ---
---- Example: >
+--- Example: >lua
+---
 ---   local gen_spec = require('mini.ai').gen_spec
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {
@@ -882,13 +908,14 @@ end
 --- - Manually create file 'after/queries/<language name>/textobjects.scm' in
 ---   your |$XDG_CONFIG_HOME| directory. It should contain queries with
 ---   captures (later used to define textobjects). See |lua-treesitter-query|.
---- To verify that query file is reachable, run (example for "lua" language)
---- `:lua print(vim.inspect(vim.treesitter.query.get_files('lua', 'textobjects')))`
---- (output should have at least an intended file).
+--- To verify that query file is reachable, run (example for "lua" language,
+--- output should have at least an intended file): >vim
 ---
+---   :lua print(vim.inspect(vim.treesitter.query.get_files('lua','textobjects')))
+--- <
 --- Example configuration for function definition textobject with
 --- 'nvim-treesitter/nvim-treesitter-textobjects' captures:
---- >
+--- >lua
 ---   local spec_treesitter = require('mini.ai').gen_spec.treesitter
 ---   require('mini.ai').setup({
 ---     custom_textobjects = {

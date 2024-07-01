@@ -124,7 +124,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniBracketed.config|.
 ---
----@usage `require('mini.bracketed').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.bracketed').setup() -- use default config
+---   -- OR
+---   require('mini.bracketed').setup({}) -- replace {} with your config table
+--- <
 MiniBracketed.setup = function(config)
   -- Export module
   _G.MiniBracketed = MiniBracketed
@@ -149,7 +153,7 @@ end
 --- Each entry configures target with the same name and can have data configuring
 --- mapping suffix and target options.
 ---
---- Example of configuration: >
+--- Example of configuration: >lua
 ---
 ---   require('mini.bracketed').setup({
 ---     -- Map [N, [n, ]n, ]N for conflict marker like in 'tpope/vim-unimpaired'
@@ -172,7 +176,7 @@ end
 ---   map('n', '<Leader>wh', "<Cmd>lua MiniBracketed.window('backward')<CR>")
 ---   map('n', '<Leader>wl', "<Cmd>lua MiniBracketed.window('forward')<CR>")
 ---   map('n', '<Leader>wL', "<Cmd>lua MiniBracketed.window('last')<CR>")
----
+--- <
 --- ## Suffix ~
 ---
 --- The `suffix` key is used to create target mappings.
@@ -415,13 +419,13 @@ end
 ---
 --- Notes:
 --- - Using `severity` option, this target can be used in mappings like "go to
----   next/previous error" (), etc. Using code similar to this: >
+---   next/previous error" (), etc. Using code similar to this: >lua
 ---
 ---   local severity_error = vim.diagnostic.severity.ERROR
 ---   -- Use these inside custom mappings
 ---   MiniBracketed.diagnostic('forward', { severity = severity_error })
 ---   MiniBracketed.diagnostic('backward', { severity = severity_error })
----
+--- <
 ---@param direction __bracketed_direction
 ---@param opts __bracketed_opts
 ---   - <float> `(boolean|table)` - control floating window after movement.
@@ -1114,14 +1118,14 @@ end
 ---
 --- - Remap common put operations to use |MiniBracketed.register_put_region()|.
 ---   After that, only regions from mapped put operations will be used for first
----   advance. Example of custom mappings (note use of |:map-expression|): >
+---   advance. Example of custom mappings (note use of |:map-expression|): >lua
 ---
 ---     local put_keys = { 'p', 'P' }
 ---     for _, lhs in ipairs(put_keys) do
 ---       local rhs = 'v:lua.MiniBracketed.register_put_region("' .. lhs .. '")'
 ---       vim.keymap.set({ 'n', 'x' }, lhs, rhs, { expr = true })
 ---     end
----
+--- <
 ---@param direction __bracketed_direction
 ---@param opts __bracketed_opts
 ---   - <operators> `(table)` - array of operator names ("c", "d", or "y") for

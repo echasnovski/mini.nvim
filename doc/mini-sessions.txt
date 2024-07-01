@@ -64,8 +64,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniSessions.config|.
 
 Usage ~
-`require('mini.sessions').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.sessions').setup() -- use default config
+  -- OR
+  require('mini.sessions').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                            *MiniSessions.config*
                              `MiniSessions.config`

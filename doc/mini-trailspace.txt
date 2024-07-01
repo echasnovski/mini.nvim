@@ -51,8 +51,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniTrailspace.config|.
 
 Usage ~
-`require('mini.trailspace').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.trailspace').setup() -- use default config
+  -- OR
+  require('mini.trailspace').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                          *MiniTrailspace.config*
                             `MiniTrailspace.config`

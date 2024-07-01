@@ -89,7 +89,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniNotify.config|.
 ---
----@usage `require('mini.notify').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.notify').setup() -- use default config
+---   -- OR
+---   require('mini.notify').setup({}) -- replace {} with your config table
+--- <
 MiniNotify.setup = function(config)
   -- Export module
   _G.MiniNotify = MiniNotify
@@ -127,8 +131,8 @@ end
 --- Note: Input contains notifications before applying `content.format`.
 --- Default: `nil` for |MiniNotify.default_sort()|.
 ---
---- Example:
---- >
+--- Example: >lua
+---
 ---   require('mini.notify').setup({
 ---     content = {
 ---       -- Use notification message as is
@@ -233,8 +237,8 @@ MiniNotify.config = {
 --- soon as safely possible, see |vim.schedule()|) and removed after a configurable
 --- amount of time.
 ---
---- Examples:
---- >
+--- Examples: >lua
+---
 ---   -- Defaults
 ---   vim.notify = require('mini.notify').make_notify()
 ---
@@ -250,7 +254,8 @@ MiniNotify.config = {
 ---     - <hl_group> `(string)` - highlight group of notification.
 ---   Only data different to default can be supplied.
 ---
----   Default: >
+---   Default: >lua
+---
 ---     {
 ---       ERROR = { duration = 5000, hl_group = 'DiagnosticError'  },
 ---       WARN  = { duration = 5000, hl_group = 'DiagnosticWarn'   },
@@ -259,6 +264,7 @@ MiniNotify.config = {
 ---       TRACE = { duration = 0,    hl_group = 'DiagnosticOk'     },
 ---       OFF   = { duration = 0,    hl_group = 'MiniNotifyNormal' },
 ---     }
+--- <
 MiniNotify.make_notify = function(opts)
   local level_names = {}
   for k, v in pairs(vim.log.levels) do
@@ -306,8 +312,8 @@ end
 --- Add notification to history. It is considered "active" and is shown.
 --- To hide, call |MiniNotfiy.remove()| with identifier this function returns.
 ---
---- Example:
---- >
+--- Example: >lua
+---
 ---   local id = MiniNotify.add('Hello', 'WARN', 'Comment')
 ---   vim.defer_fn(function() MiniNotify.remove(id) end, 1000)
 --- <
@@ -450,7 +456,7 @@ MiniNotify.get = function(id) return vim.deepcopy(H.history[id]) end
 ---
 --- Get map of used notifications with keys being notification identifiers.
 ---
---- Can be used to get only active notification objects. Example: >
+--- Can be used to get only active notification objects. Example: >lua
 ---
 ---   -- Get active notifications
 ---   vim.tbl_filter(

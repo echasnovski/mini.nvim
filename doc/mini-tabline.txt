@@ -75,8 +75,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniTabline.config|.
 
 Usage ~
-`require('mini.tabline').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.tabline').setup() -- use default config
+  -- OR
+  require('mini.tabline').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                             *MiniTabline.config*
                               `MiniTabline.config`
@@ -108,13 +111,13 @@ label as arguments and returns a string with formatted label.
 This function will be called for all displayable in tabline buffers.
 Default: |MiniTabline.default_format()|.
 
-Example of adding "+" suffix for modified buffers: >
+Example of adding "+" suffix for modified buffers: >lua
 
   function(buf_id, label)
     local suffix = vim.bo[buf_id].modified and '+ ' or ''
     return MiniTabline.default_format(buf_id, label) .. suffix
   end
-
+<
 ------------------------------------------------------------------------------
                                              *MiniTabline.make_tabline_string()*
                       `MiniTabline.make_tabline_string`()

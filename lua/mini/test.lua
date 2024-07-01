@@ -143,7 +143,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniTest.config|.
 ---
----@usage `require('mini.test').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.test').setup() -- use default config
+---   -- OR
+---   require('mini.test').setup({}) -- replace {} with your config table
+--- <
 MiniTest.setup = function(config)
   -- Export module
   _G.MiniTest = MiniTest
@@ -271,7 +275,7 @@ MiniTest.current = { all_cases = nil, case = nil }
 ---
 ---@return table A single test set.
 ---
----@usage >
+---@usage >lua
 ---   -- Use with defaults
 ---   T = MiniTest.new_set()
 ---   T['works'] = function() MiniTest.expect.equality(1, 1) end
@@ -286,6 +290,7 @@ MiniTest.current = { all_cases = nil, case = nil }
 ---   T['nested']['works'] = function(x)
 ---     MiniTest.expect.equality(_G.x, x)
 ---   end
+--- <
 MiniTest.new_set = function(opts, tbl)
   opts = opts or {}
   tbl = tbl or {}
@@ -653,10 +658,11 @@ MiniTest.is_executing = function() return H.cache.is_executing == true end
 ---
 --- Mostly designed to be used within 'mini.test' framework.
 ---
----@usage >
+---@usage >lua
 ---   local x = 1 + 1
 ---   MiniTest.expect.equality(x, 2) -- passes
 ---   MiniTest.expect.equality(x, 1) -- fails
+--- <
 MiniTest.expect = {}
 
 --- Expect equality of two objects
@@ -793,12 +799,13 @@ end
 ---
 ---@return function Expectation function.
 ---
----@usage >
+---@usage >lua
 ---   local expect_truthy = MiniTest.new_expectation(
 ---     'truthy',
 ---     function(x) return x end,
 ---     function(x) return 'Object: ' .. vim.inspect(x) end
 ---   )
+--- <
 MiniTest.new_expectation = function(subject, predicate, fail_context)
   return function(...)
     if predicate(...) then return true end
@@ -1031,7 +1038,7 @@ end
 ---
 ---@return `child` Object of |MiniTest-child-neovim|.
 ---
----@usage >
+---@usage >lua
 ---   -- Initiate
 ---   local child = MiniTest.new_child_neovim()
 ---   child.start()
@@ -1052,6 +1059,7 @@ end
 ---
 ---   -- Always stop process after it is not needed
 ---   child.stop()
+--- <
 MiniTest.new_child_neovim = function()
   local child = {}
   local start_args, start_opts
@@ -1451,15 +1459,15 @@ end
 --- Start child process and connect to it. Won't work if child is already running.
 ---
 ---@param args table Array with arguments for executable. Will be prepended with
----   the following default arguments (see |startup-options|): >
----   '--clean', '-n', '--listen', <some address>,
----   '--headless', '--cmd', 'set lines=24 columns=80'
+---   the following default arguments (see |startup-options|): >lua
+---   { '--clean', '-n', '--listen', <some address>,
+---     '--headless', '--cmd', 'set lines=24 columns=80' }
 ---@param opts table|nil Options:
 ---   - <nvim_executable> - name of Neovim executable. Default: |v:progpath|.
 ---   - <connection_timeout> - stop trying to connect after this amount of
 ---     milliseconds. Default: 5000.
 ---
----@usage >
+---@usage >lua
 ---   child = MiniTest.new_child_neovim()
 ---
 ---   -- Start default clean Neovim instance
@@ -1467,6 +1475,7 @@ end
 ---
 ---   -- Start with custom 'init.lua' file
 ---   child.start({ '-u', 'scripts/minimal_init.lua' })
+--- <
 ---@tag MiniTest-child-neovim.start()
 
 --- child.type_keys(wait, ...) ~
@@ -1483,7 +1492,7 @@ end
 ---@param ... string|table<number,string> Separate entries for |nvim_input()|,
 ---   after which `wait` will be applied. Can be either string or array of strings.
 ---
----@usage >
+---@usage >lua
 ---   -- All of these type keys 'c', 'a', 'w'
 ---   child.type_keys('caw')
 ---   child.type_keys('c', 'a', 'w')
@@ -1494,6 +1503,7 @@ end
 ---
 ---   -- Special keys can also be used
 ---   child.type_keys('i', 'Hello world', '<Esc>')
+--- <
 ---@tag MiniTest-child-neovim.type_keys()
 
 --- child.get_screenshot() ~
@@ -1526,7 +1536,7 @@ end
 ---   above content and line numbers for each line.
 ---   Returns `nil` if couldn't get a reasonable screenshot.
 ---
----@usage >
+---@usage >lua
 ---   local screenshot = child.get_screenshot()
 ---
 ---   -- Show character displayed row=3 and column=4
@@ -1534,6 +1544,7 @@ end
 ---
 ---   -- Convert to string
 ---   tostring(screenshot)
+--- <
 ---@tag MiniTest-child-neovim.get_screenshot()
 
 -- Helper data ================================================================

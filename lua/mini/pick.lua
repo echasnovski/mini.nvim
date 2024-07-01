@@ -168,8 +168,9 @@
 --- Bottom part of window border displays (in Neovim>=0.10) extra visual feedback:
 --- - Left part is a picker name.
 --- - Right part contains information in the format >
----   <current index in matches> | <match count> | <marked count> / <total count>
 ---
+---   <current index in matches> | <match count> | <marked count> / <total count>
+--- <
 --- When picker is busy (like if there are no items yet set or matching is active)
 --- window border changes color to be `MiniPickBorderBusy` after `config.delay.busy`
 --- milliseconds of idle time.
@@ -209,10 +210,10 @@
 --- - |vim.b.minipick_config| - has buffer-local effect.
 --- - `opts.source` in picker call - has effect for that particular call.
 ---
---- Example of source to choose from |arglist|: >
+--- Example of source to choose from |arglist|: >lua
+---
 ---   { items = vim.fn.argv, name = 'Arglist' }
 --- <
----
 --- Note: this is mostly useful for writing pickers. Can safely skip if you
 --- want to just use provided pickers.
 ---
@@ -232,11 +233,11 @@
 --- - String <text> field of table item is used (if present).
 --- - Use output of |vim.inspect()|.
 ---
---- Example: >
+--- Example: >lua
 ---
 ---   items = { 'aaa.txt', { text = 'bbb' }, function() return 'ccc' end }
 ---   -- corresponding stritems are { 'aaa.txt', 'bbb', 'ccc' }
----
+--- <
 --- Default value is `nil`, assuming it always be supplied by the caller.
 ---
 ---                                                   *MiniPick-source.items-common*
@@ -255,24 +256,27 @@
 ---
 --- - Line in file or buffer. Use table representation with `lnum` field with line
 ---   number (starting from 1) or string in "<path>:<line>" format.
----   Examples: >
----   { path = 'aaa.txt', lnum = 2 }, 'aaa.txt:2', { bufnr = 1, lnum = 3 }
+---   Examples: >lua
 ---
+---     { path = 'aaa.txt', lnum = 2 }, 'aaa.txt:2', { bufnr = 1, lnum = 3 }
+--- <
 --- - Position in file or buffer. Use table representation with `lnum` and `col`
 ---   fields with line and column numbers (starting from 1) or string in
 ---   "<path>:<line>:<col>" format.
----   Examples: >
----   { path = 'aaa.txt', lnum = 2, col = 3 }, 'aaa.txt:2:3',
----   { bufnr = 1, lnum = 3, col = 4 }
+---   Examples: >lua
 ---
+---     { path = 'aaa.txt', lnum = 2, col = 3 }, 'aaa.txt:2:3',
+---     { bufnr = 1, lnum = 3, col = 4 }
+--- <
 --- - Region in file or buffer. Use table representation with `lnum`, `col`,
 ---   `end_lnum`, `end_col` fields for start and end line/column. All numbers
 ---   start from 1, end line is inclusive, end column is exclusive.
 ---   This naming is similar to |getqflist()| and |diagnostic-structure|.
----   Examples: >
----   { path = 'aaa.txt', lnum = 2, col = 3, end_lnum = 4, end_col = 5 },
----   { bufnr = 1, lnum = 3, col = 4, end_lnum = 5, end_col = 6 }
+---   Examples: >lua
 ---
+---     { path = 'aaa.txt', lnum = 2, col = 3, end_lnum = 4, end_col = 5 },
+---     { bufnr = 1, lnum = 3, col = 4, end_lnum = 5, end_col = 6 }
+--- <
 --- Note: all table items will benefit from having `text` field for better matching.
 ---
 ---                                                           *MiniPick-source.name*
@@ -329,16 +333,15 @@
 --- - Writing custom `source.match` usually means also changing |MiniPick-source.show|
 ---   because it is used to highlight stritems parts actually matching the query.
 ---
---- Example of simple "exact" `match()` preserving initial order: >
+--- Example of simple "exact" `match()` preserving initial order: >lua
 ---
 ---   local match_exact = function(stritems, inds, query)
 ---     local prompt_pattern = vim.pesc(table.concat(query))
 ---     local f = function(i) return stritems[i]:find(prompt_pattern) ~= nil end
 ---     return vim.tbl_filter(f, inds)
 ---   end
+---   -- For non-blocking version see `:h MiniPick.poke_is_picker_active()`
 --- <
----   For non-blocking version see |MiniPick.poke_is_picker_active()|.
----
 --- Default value is |MiniPick.default_match()|.
 ---
 ---                                                           *MiniPick-source.show*
@@ -357,13 +360,13 @@
 --- `options.content_from_bottom`). This also includes possible visualization
 --- of which parts of stritem actually matched query.
 ---
---- Example (assuming string items; without highlighting): >
+--- Example (assuming string items; without highlighting): >lua
 ---
 ---   local show_prepend = function(buf_id, items_arr, query)
 ---     local lines = vim.tbl_map(function(x) return 'Item: ' .. x end, items_arr)
 ---     vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
 ---   end
----
+--- <
 --- Default value is |MiniPick.default_show()|.
 ---
 ---                                                        *MiniPick-source.preview*
@@ -378,13 +381,13 @@
 ---
 --- It should update buffer `buf_id` to visually represent `item`.
 ---
---- Example: >
+--- Example: >lua
 ---
 ---   local preview_inspect = function(buf_id, item)
 ---     local lines = vim.split(vim.inspect(item), '\n')
 ---     vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
 ---   end
----
+--- <
 --- Default value is |MiniPick.default_preview()|.
 ---
 ---                                                         *MiniPick-source.choose*
@@ -403,7 +406,7 @@
 --- - It is called when picker window is still current. Use `windows.target` value
 ---   from |MiniPick.get_picker_state()| output to do something with target window.
 ---
---- Example: >
+--- Example: >lua
 ---
 ---   local choose_file_continue = function(item)
 ---     if vim.fn.filereadable(item) == 0 then return end
@@ -413,7 +416,7 @@
 ---     )
 ---     return true
 ---   end
----
+--- <
 --- Default value is |MiniPick.default_choose()|.
 ---
 ---                                                  *MiniPick-source.choose_marked*
@@ -434,10 +437,10 @@
 --- - It is called when picker window is still current. Use `windows.target` value
 ---   from |MiniPick.get_picker_state()| output to do something with target window.
 ---
---- Example: >
+--- Example: >lua
 ---
 ---   local choose_marked_print = function(items) print(vim.inspect(items)) end
----
+--- <
 --- Default value is |MiniPick.default_choose_marked()|.
 ---@tag MiniPick-source
 
@@ -588,22 +591,23 @@
 ---   after execution", i.e. returning nothing, `nil`, or `false` continues
 ---   picker while everything else (prefer `true`) stops it.
 ---
---- Example of `execute` custom mapping: >
+--- Example of `execute` custom mapping: >lua
 ---
 ---   execute = {
 ---     char = '<C-e>',
 ---     func = function() vim.cmd(vim.fn.input('Execute: ')) end,
 ---   }
+--- <
 ---@tag MiniPick-actions
 
 --- Common configuration examples ~
 ---
---- - Disable icons in |MiniPick.builtin| pickers related to paths: >
+--- - Disable icons in |MiniPick.builtin| pickers related to paths: >lua
 ---
 ---   local pick = require('mini.pick')
 ---   pick.setup({ source = { show = pick.default_show } })
----
---- - Mappings to switch `toggle_{preview,info}` and `move_{up,down}`: >
+--- <
+--- - Mappings to switch `toggle_{preview,info}` and `move_{up,down}`: >lua
 ---
 ---   require('mini.pick').setup({
 ---     mappings = {
@@ -613,8 +617,8 @@
 ---       move_up        = '<S-Tab>',
 ---     }
 ---   })
----
---- - Different window styles: >
+--- <
+--- - Different window styles: >lua
 ---
 ---   -- Different border
 ---   { window = { config = { border = 'double' } } }
@@ -640,6 +644,7 @@
 ---     }
 ---   end
 ---   { window = { config = win_config } }
+--- <
 ---@tag MiniPick-examples
 
 ---@alias __pick_builtin_opts table|nil Options forwarded to |MiniPick.start()|.
@@ -662,14 +667,18 @@ local H = {}
 --- following (expanded, |expandcmd()|) |<f-args>| combined in a single table.
 --- To add custom pickers, update |MiniPick.registry|.
 ---
---- Example: >
+--- Example: >vim
 ---
 ---   :Pick files tool='git'
 ---   :Pick grep pattern='<cword>'
----
+--- <
 ---@param config table|nil Module config table. See |MiniPick.config|.
 ---
----@usage `require('mini.pick').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.pick').setup() -- use default config
+---   -- OR
+---   require('mini.pick').setup({}) -- replace {} with your config table
+--- <
 MiniPick.setup = function(config)
   -- Export module
   _G.MiniPick = MiniPick
@@ -956,10 +965,10 @@ end
 ---
 --- Having query `{ 'ab', 'c' }` is the same as "ab c" prompt.
 ---
---- You can have a feel of how this works with this command: >
+--- You can have a feel of how this works with this command: >lua
 ---
 ---   MiniPick.start({ source = { items = { '_abc', 'a_bc', 'ab_c', 'abc_' } } })
----
+--- <
 ---@param stritems table Array of all stritems.
 ---@param inds table Array of `stritems` indexes to match. All of them should point
 ---   at string elements of `stritems`. No check is done for performance reasons.
@@ -1404,14 +1413,14 @@ end
 ---
 --- Notes:
 --- - There are not built-in mappings for buffer manipulation. Here is an example
----   of how to call this function with mapping to wipeout the current item: >
+---   of how to call this function with mapping to wipeout the current item: >lua
 ---
 ---   local wipeout_cur = function()
 ---     vim.api.nvim_buf_delete(MiniPick.get_picker_matches().current.bufnr, {})
 ---   end
 ---   local buffer_mappings = { wipeout = { char = '<C-d>', func = wipeout_cur } }
 ---   MiniPick.builtin.buffers(local_opts, { mappings = buffer_mappings })
----
+--- <
 ---@param local_opts __pick_builtin_local_opts
 ---   Possible fields:
 ---   - <include_current> `(boolean)` - whether to include current buffer in
@@ -1488,7 +1497,7 @@ end
 ---
 --- Serves as a source for |:Pick| command.
 ---
---- Customization examples: >
+--- Customization examples: >lua
 ---
 ---   -- Adding custom picker to pick `register` entries
 ---   MiniPick.registry.registry = function()
@@ -1506,6 +1515,7 @@ end
 ---     local_opts.cwd = nil
 ---     return MiniPick.builtin.files(local_opts, opts)
 ---   end
+--- <
 MiniPick.registry = {}
 
 for name, f in pairs(MiniPick.builtin) do
@@ -1622,12 +1632,13 @@ end
 ---
 --- Asynchronously executes `command` and sets items to its postprocessed output.
 ---
---- Example: >
+--- Example: >lua
+---
 ---   local items = vim.schedule_wrap(function()
 ---     MiniPick.set_picker_items_from_cli({ 'echo', 'a\nb\nc' })
 ---   end)
 ---   MiniPick.start({ source = { items = items, name = 'Echo abc' } })
----
+--- <
 ---@param command table Array with (at least one) string command parts.
 ---@param opts table|nil Options. Possible fields:
 ---   - <postprocess> `(function)` - callable performing postprocessing of output.
@@ -1744,7 +1755,7 @@ MiniPick.is_picker_active = function() return H.pickers.active ~= nil end
 --- - If yes, return it after `coroutine.yield()` with `coroutine.resume()`
 ---   called "soon" by the main event-loop (see |vim.schedule()|).
 ---
---- Example of non-blocking exact `match` (as demo; can be optimized further): >
+--- Example of non-blocking exact `match` (as demo; can be optimized further): >lua
 ---
 ---   local match_nonblock = function(match_inds, stritems, query)
 ---     local prompt, querytick = table.concat(query), MiniPick.get_querytick()
@@ -1763,7 +1774,7 @@ MiniPick.is_picker_active = function() return H.pickers.active ~= nil end
 ---
 ---     coroutine.resume(coroutine.create(f))
 ---   end
----
+--- <
 ---@return boolean Whether there is an active picker.
 ---
 ---@seealso |MiniPick.is_picker_active()|

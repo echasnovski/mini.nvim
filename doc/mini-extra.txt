@@ -57,8 +57,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniExtra.config|.
 
 Usage ~
-`require('mini.extra').setup({})` (replace `{}` with your `config` table).
-
+>lua
+  require('mini.extra').setup() -- use default config
+  -- OR
+  require('mini.extra').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                               *MiniExtra.config*
                                `MiniExtra.config`
@@ -75,7 +78,7 @@ Default values:
 
 This is a table with function elements. Call to actually get specification.
 
-Assumed to be used as part of |MiniAi.setup()|. Example: >
+Assumed to be used as part of |MiniAi.setup()|. Example: >lua
 
   local gen_ai_spec = require('mini.extra').gen_ai_spec
   require('mini.ai').setup({
@@ -87,7 +90,7 @@ Assumed to be used as part of |MiniAi.setup()|. Example: >
       N = gen_ai_spec.number(),
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                                 *MiniExtra.gen_ai_spec.buffer()*
                         `MiniExtra.gen_ai_spec.buffer`()
@@ -177,7 +180,7 @@ Return ~
 
 This is a table with function elements. Call to actually get specification.
 
-Assumed to be used as part of |MiniHipatterns.setup()|. Example: >
+Assumed to be used as part of |MiniHipatterns.setup()|. Example: >lua
 
   local hi_words = require('mini.extra').gen_highlighter.words
   require('mini.hipatterns').setup({
@@ -185,7 +188,7 @@ Assumed to be used as part of |MiniHipatterns.setup()|. Example: >
       todo = hi_words({ 'TODO', 'Todo', 'todo' }, 'MiniHipatternsTodo'),
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                              *MiniExtra.gen_highlighter.words()*
       `MiniExtra.gen_highlighter.words`({words}, {group}, {extmark_opts})

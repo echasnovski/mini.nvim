@@ -50,7 +50,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniTrailspace.config|.
 ---
----@usage `require('mini.trailspace').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.trailspace').setup() -- use default config
+---   -- OR
+---   require('mini.trailspace').setup({}) -- replace {} with your config table
+--- <
 MiniTrailspace.setup = function(config)
   -- Export module
   _G.MiniTrailspace = MiniTrailspace

@@ -61,8 +61,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniJump.config|.
 
 Usage ~
-`require('mini.jump').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.jump').setup() -- use default config
+  -- OR
+  require('mini.jump').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                                *MiniJump.config*
                                `MiniJump.config`

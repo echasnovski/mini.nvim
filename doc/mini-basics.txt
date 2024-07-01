@@ -64,8 +64,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniBasics.config|.
 
 Usage ~
-`require('mini.basics').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.basics').setup() -- use default config
+  -- OR
+  require('mini.basics').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                              *MiniBasics.config*
                               `MiniBasics.config`
@@ -118,7 +121,8 @@ Default values:
                                                      *MiniBasics.config.options*
 # Options ~
 
-Usage example: >
+Usage example: >lua
+
   require('mini.basics').setup({
     options = {
       basic = true,
@@ -126,7 +130,7 @@ Usage example: >
       win_borders = 'double',
     }
   })
-
+<
 ## options.basic ~
 
 The `config.options.basic` sets certain options to values which are quite
@@ -199,7 +203,8 @@ Available values:
                                                     *MiniBasics.config.mappings*
 # Mappings ~
 
-Usage example: >
+Usage example: >lua
+
   require('mini.basics').setup({
     mappings = {
       basic = true,
@@ -208,13 +213,9 @@ Usage example: >
       move_with_alt = true,
     }
   })
-
+<
 If you don't want only some mappings to be made at all, use |vim.keymap.del()|
-after calling |MiniMisc.setup()|. For example, to delete `<C-w>` mapping in
-|Terminal-mode| (as it conflicts with `<C-w>` usage in terminal emulators)
-use this code: >
-
-  vim.keymap.del('t', '<C-w>').
+after calling |MiniBasics.setup()|.
 
 ## mappings.basic ~
 
@@ -318,14 +319,15 @@ Here is a list of created mappings (`<M-x>` means `Alt`/`Meta` plus `x`):
                                                 *MiniBasics.config.autocommands*
 # Autocommands ~
 
-Usage example: >
+Usage example: >lua
+
   require('mini.basics').setup({
     autocommands = {
       basic = true,
       relnum_in_visual_mode = true,
     }
   })
-
+<
 ## autocommands.basic ~
 
 The `config.autocommands.basic` creates some common autocommands:

@@ -59,8 +59,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniComment.config|.
 
 Usage ~
-`require('mini.comment').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.comment').setup() -- use default config
+  -- OR
+  require('mini.comment').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                             *MiniComment.config*
                               `MiniComment.config`
@@ -126,14 +129,14 @@ Its output should be a valid 'commentstring' (string containing `%s`).
 If not set or the output is `nil`, |MiniComment.get_commentstring()| is used.
 
 For example, this option can be used to always use buffer 'commentstring'
-even in case of present active tree-sitter parser: >
+even in case of present active tree-sitter parser: >lua
 
   require('mini.comment').setup({
     options = {
       custom_commentstring = function() return vim.bo.commentstring end,
     }
   })
-
+<
 # Hooks ~
 
 `hooks.pre` and `hooks.post` functions are executed before and after successful

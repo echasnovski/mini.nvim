@@ -72,7 +72,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniFuzzy.config|.
 ---
----@usage `require('mini.fuzzy').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.fuzzy').setup() -- use default config
+---   -- OR
+---   require('mini.fuzzy').setup({}) -- replace {} with your config table
+--- <
 MiniFuzzy.setup = function(config)
   -- Export module
   _G.MiniFuzzy = MiniFuzzy
@@ -168,12 +172,13 @@ end
 ---
 ---@param opts table|nil Options (currently not used).
 ---
----@usage >
+---@usage >lua
 ---   require('telescope').setup({
 ---     defaults = {
 ---       generic_sorter = require('mini.fuzzy').get_telescope_sorter
 ---     }
 ---   })
+--- <
 MiniFuzzy.get_telescope_sorter = function(opts)
   opts = opts or {}
 

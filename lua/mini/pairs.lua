@@ -21,9 +21,9 @@
 ---
 --- - It doesn't support dependency on filetype. Use |i_CTRL-V| to insert
 ---   single symbol or `autocmd` command or 'after/ftplugin' approach to:
----     - `lua MiniPairs.map_buf(0, 'i', <*>, <pair_info>)` : make new mapping
+---     - `:lua MiniPairs.map_buf(0, 'i', <*>, <pair_info>)` - make new mapping
 ---       for '<*>' in current buffer.
----     - `lua MiniPairs.unmap_buf(0, 'i', <*>, <pair>)`: unmap key `<*>` while
+---     - `:lua MiniPairs.unmap_buf(0, 'i', <*>, <pair>)` - unmap key `<*>` while
 ---       unregistering `<pair>` pair in current buffer. Note: this reverts
 ---       mapping done by |MiniPairs.map_buf|. If mapping was done with
 ---       |MiniPairs.map|, unmap for buffer in usual Neovim manner:
@@ -44,19 +44,33 @@
 --- will have no effect here.
 ---
 --- # Example mappings ~
----
---- - Register quotes inside `config` of |MiniPairs.setup|: >
+--- >lua
+---   -- Register quotes inside `config` of `MiniPairs.setup()`
 ---   mappings = {
 ---     ['"'] = { register = { cr = true } },
 ---     ["'"] = { register = { cr = true } },
 ---   }
---- <
---- - Insert `<>` pair if `<` is typed at line start, don't register for `<CR>`: >
----   lua MiniPairs.map('i', '<', { action = 'open', pair = '<>', neigh_pattern = '\r.', register = { cr = false } })
----   lua MiniPairs.map('i', '>', { action = 'close', pair = '<>', register = { cr = false } })
---- <
---- - Create symmetrical `$$` pair only in Tex files: >
----   au FileType tex lua MiniPairs.map_buf(0, 'i', '$', {action = 'closeopen', pair = '$$'})
+---
+---   -- Insert `<>` pair if `<` is typed at line start, don't register for `<CR>`
+---   local lt_opts = {
+---     action = 'open',
+---     pair = '<>',
+---     neigh_pattern = '\r.',
+---     register = { cr = false },
+---   }
+---   MiniPairs.map('i', '<', lt_opts)
+---
+---   local gt_opts = { action = 'close', pair = '<>', register = { cr = false } }
+---   MiniPairs.map('i', '>', gt_opts)
+---
+---   -- Create symmetrical `$$` pair only in Tex files
+---   local map_tex = function()
+---     MiniPairs.map_buf(0, 'i', '$', { action = 'closeopen', pair = '$$' })
+---   end
+---   vim.api.nvim_create_autocmd(
+---     'FileType',
+---     { pattern = 'tex', callback = map_tex }
+---   )
 --- <
 --- # Notes ~
 ---
@@ -93,7 +107,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniPairs.config|.
 ---
----@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.pairs').setup() -- use default config
+---   -- OR
+---   require('mini.pairs').setup({}) -- replace {} with your config table
+--- <
 MiniPairs.setup = function(config)
   -- Export module
   _G.MiniPairs = MiniPairs
@@ -108,6 +126,7 @@ MiniPairs.setup = function(config)
   H.create_autocommands()
 end
 
+--stylua: ignore
 --- Module config
 ---
 --- Default values:
@@ -133,9 +152,9 @@ MiniPairs.config = {
     [']'] = { action = 'close', pair = '[]', neigh_pattern = '[^\\].' },
     ['}'] = { action = 'close', pair = '{}', neigh_pattern = '[^\\].' },
 
-    ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].', register = { cr = false } },
+    ['"'] = { action = 'closeopen', pair = '""', neigh_pattern = '[^\\].',   register = { cr = false } },
     ["'"] = { action = 'closeopen', pair = "''", neigh_pattern = '[^%a\\].', register = { cr = false } },
-    ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].', register = { cr = false } },
+    ['`'] = { action = 'closeopen', pair = '``', neigh_pattern = '[^\\].',   register = { cr = false } },
   },
 }
 --minidoc_afterlines_end
@@ -144,17 +163,7 @@ MiniPairs.config = {
 --- Make global mapping
 ---
 --- This is a wrapper for |nvim_set_keymap()| but instead of right hand side of
---- mapping (as string) it expects table with pair information:
---- - `action` - one of "open" (for |MiniPairs.open|), "close" (for
----   |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
---- - `pair` - two character string to be used as argument for action function.
---- - `neigh_pattern` - optional 'two character' neighborhood pattern to be
----   used as argument for action function. Default: '..' (no restriction from
----   neighborhood).
---- - `register` - optional table with information about whether this pair
----   should be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in
----   |MiniPairs.cr|). Should have boolean elements `bs` and `cr` which are
----   both `true` by default (if not overridden explicitly).
+--- mapping (as string) it expects table with pair information.
 ---
 --- Using this function instead of |nvim_set_keymap()| allows automatic
 --- registration of pairs which will be recognized by `<BS>` and `<CR>`.
@@ -162,7 +171,17 @@ MiniPairs.config = {
 ---
 ---@param mode string `mode` for |nvim_set_keymap()|.
 ---@param lhs string `lhs` for |nvim_set_keymap()|.
----@param pair_info table Table with pair information.
+---@param pair_info table Table with pair information. Fields:
+---   - <action> - one of "open" (for |MiniPairs.open|),
+---     "close" (for |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
+---   - <pair> - two character string to be used as argument for action function.
+---   - <neigh_pattern> - optional 'two character' neighborhood pattern to be
+---     used as argument for action function.
+---     Default: `'..'` (no restriction from neighborhood).
+---   - <register> - optional table with information about whether this pair will
+---     be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in |MiniPairs.cr|).
+---     Should have boolean fields <bs> and <cr> which are both `true` by
+---     default (if not overridden explicitly).
 ---@param opts table|nil Optional table `opts` for |nvim_set_keymap()|. Elements
 ---   `expr` and `noremap` won't be recognized (`true` by default).
 MiniPairs.map = function(mode, lhs, pair_info, opts)
@@ -227,10 +246,11 @@ end
 --- Wrapper for |nvim_buf_del_keymap()| which also unregisters supplied `pair`.
 ---
 --- Note: this only reverts mapping done by |MiniPairs.map_buf|. If mapping was
---- done with |MiniPairs.map|, unmap for buffer in usual Neovim manner:
---- `inoremap <buffer> <*> <*>` (this maps `<*>` key to do the same it does by
---- default).
+--- done with |MiniPairs.map|, revert to default behavior for buffer: >lua
 ---
+---   -- Map `X` key to do the same it does by default
+---   vim.keymap.set('i', 'X', 'X', { buffer = true })
+--- <
 ---@param buffer number `buffer` for |nvim_buf_del_keymap()|.
 ---@param mode string `mode` for |nvim_buf_del_keymap()|.
 ---@param lhs string `lhs` for |nvim_buf_del_keymap()|.
@@ -321,7 +341,7 @@ end
 --- Mapped by default inside |MiniPairs.setup|.
 ---
 --- This can be used to modify other Insert mode keys to respect neighborhood
---- pair. Examples: >
+--- pair. Examples: >lua
 ---
 ---   local map_bs = function(lhs, rhs)
 ---     vim.keymap.set('i', lhs, rhs, { expr = true, replace_keycodes = false })
@@ -330,7 +350,7 @@ end
 ---   map_bs('<C-h>', 'v:lua.MiniPairs.bs()')
 ---   map_bs('<C-w>', 'v:lua.MiniPairs.bs("\23")')
 ---   map_bs('<C-u>', 'v:lua.MiniPairs.bs("\21")')
----
+--- <
 ---@param key string|nil Key to use. Default: `<BS>`.
 ---
 ---@return string Keys performing "backspace" action.

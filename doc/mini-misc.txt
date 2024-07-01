@@ -49,8 +49,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniMisc.config|.
 
 Usage ~
-`require('mini.misc').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.misc').setup() -- use default config
+  -- OR
+  require('mini.misc').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                                *MiniMisc.config*
                                `MiniMisc.config`
@@ -130,10 +133,10 @@ Parameters ~
 {fallback} `(function|nil)` Forwarded to |MiniMisc.find_root()|.
 
 Usage ~
->
+>lua
   require('mini.misc').setup()
   MiniMisc.setup_auto_root()
-
+<
 ------------------------------------------------------------------------------
                                                           *MiniMisc.find_root()*
               `MiniMisc.find_root`({buf_id}, {names}, {fallback})
@@ -182,9 +185,9 @@ Parameters ~
     Default: `{ "gitcommit", "gitrebase" }`.
 
 Usage ~
->
+>lua
   require('mini.misc').setup_restore_cursor()
-
+<
 ------------------------------------------------------------------------------
                                                        *MiniMisc.stat_summary()*
                           `MiniMisc.stat_summary`({t})
@@ -249,9 +252,11 @@ nested comments. For example, have in Lua "first-level" comments with '--'
 and "second-level" comments with '----'. With nested comment leader second
 type can be formatted with `gq` in the same way as first one.
 
-Recommended usage is with |autocmd|:
-`autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
+Recommended usage is with |autocmd|: >lua
 
+  local use_nested_comments = function() MiniMisc.use_nested_comments() end
+  vim.api.nvim_create_autocmd('BufEnter', { callback = use_nested_comments })
+<
 Note: for most filetypes 'commentstring' option is added only when buffer
 with this filetype is entered, so using non-current `buf_id` can not lead
 to desired effect.

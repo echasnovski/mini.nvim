@@ -364,35 +364,35 @@ These are modified examples taken from 'junegunn/vim-easy-align'.
 
 Equal sign ~
 
-Lines:
+Lines: >
 
-# This=is=assumed=to be a comment
-"a ="
-a =
-a = 1
-bbbb = 2
-ccccccc = 3
-ccccccccccccccc
-ddd = 4
-eeee === eee = eee = eee=f
-fff = ggg += gg &&= gg
-g != hhhhhhhh == 888
-i   := 5
-i     %= 5
-i       *= 5
-j     =~ 5
-j   >= 5
-aa      =>         123
-aa <<= 123
-aa        >>= 123
-bbb               => 123
-c     => 1233123
-d   =>      123
-dddddd &&= 123
-dddddd ||= 123
-dddddd /= 123
-gg <=> ee
-
+  # This=is=assumed=to be a comment
+  "a ="
+  a =
+  a = 1
+  bbbb = 2
+  ccccccc = 3
+  ccccccccccccccc
+  ddd = 4
+  eeee === eee = eee = eee=f
+  fff = ggg += gg &&= gg
+  g != hhhhhhhh == 888
+  i   := 5
+  i     %= 5
+  i       *= 5
+  j     =~ 5
+  j   >= 5
+  aa      =>         123
+  aa <<= 123
+  aa        >>= 123
+  bbb               => 123
+  c     => 1233123
+  d   =>      123
+  dddddd &&= 123
+  dddddd ||= 123
+  dddddd /= 123
+  gg <=> ee
+<
 Key sequences:
 - `=`
 - `=jc`
@@ -415,8 +415,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniAlign.config|.
 
 Usage ~
-`require('mini.align').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.align').setup() -- use default config
+  -- OR
+  require('mini.align').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                               *MiniAlign.config*
                                `MiniAlign.config`
@@ -487,13 +490,13 @@ Each modifier function:
 - Has signature `(steps, opts)` and should modify any of its input in place.
 
 Examples:
-- Modifier function used for default 'i' modifier: >
+- Modifier function used for default 'i' modifier: >lua
 
   function(steps, _)
     table.insert(steps.pre_split, MiniAlign.gen_step.ignore_split())
   end
 <
-- Tweak 't' modifier to use highest indentation instead of keeping it: >
+- Tweak 't' modifier to use highest indentation instead of keeping it: >lua
 
   require('mini.align').setup({
     modifiers = {
@@ -505,7 +508,7 @@ Examples:
   })
 <
 - Tweak `j` modifier to cycle through available "justify_side" option
-  values (like in 'junegunn/vim-easy-align'): >
+  values (like in 'junegunn/vim-easy-align'): >lua
 
   require('mini.align').setup({
     modifiers = {
@@ -535,7 +538,7 @@ For more details about options see |MiniAlign.align_strings()| and entries of
 alignment process.
 
 Examples:
-- Align by default only first pair of columns: >
+- Align by default only first pair of columns: >lua
 
   local align = require('mini.align')
   align.setup({
@@ -543,7 +546,7 @@ Examples:
       pre_justify = { align.gen_step.filter('n == 1') }
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                                      *MiniAlign.align_strings()*
              `MiniAlign.align_strings`({strings}, {opts}, {steps})
@@ -647,7 +650,7 @@ Fields ~
   lowest across rows; "high" - highest across rows; "remove" - removes indent.
 
 Usage ~
->
+>lua
   parts = MiniAlign.as_parts({ { 'a', 'b' }, { 'c' } })
   print(vim.inspect(parts.get_dims())) -- Should be { row = 2, col = 2 }
 
@@ -658,7 +661,7 @@ Usage ~
 
   parts.trim('both', 'remove').pair()
   print(vim.inspect(parts)) -- Should be { { '1a11b2' }, { '2c1' } }
-
+<
 ------------------------------------------------------------------------------
                                                           *MiniAlign.new_step()*
                      `MiniAlign.new_step`({name}, {action})
@@ -695,7 +698,7 @@ options supplied at execution. This design is mostly because their output
 can be used several times in pre-steps.
 
 Usage ~
->
+>lua
   local align = require('mini.align')
   align.setup({
     modifiers = {
@@ -713,7 +716,7 @@ Usage ~
       pre_justify = { align.gen_step.filter('n == 1') },
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                             *MiniAlign.gen_step.default_split()*
                       `MiniAlign.gen_step.default_split`()

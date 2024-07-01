@@ -48,7 +48,7 @@ General overview of how jump is intended to be performed:
   unique, jump is performed. If it wasn't unique, possible jump spots are
   filtered to those having the same label character.
 
-- Repeat previous step until there is only one possible jump spot or type `<CR>`
+- Repeat previous step until there is only one possible jump spot or type <CR>
   to jump to first available jump spot. Typing anything else stops jumping
    without moving cursor.
 
@@ -69,16 +69,22 @@ To stop module from showing non-error feedback, set `config.silent = true`.
 
 # Example usage ~
 
-- Modify default jumping to use only current window at or after cursor line: >
+- Modify default jumping to use only current window at or after cursor line: >lua
+
   require('mini.jump2d').setup({
     allowed_lines = { cursor_before = false },
     allowed_windows = { not_current = false },
   })
-- `lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)` - jump to word
-  start using combination of options supplied in |MiniJump2d.config| and
-  |MiniJump2d.builtin_opts.line_start|.
-- `lua MiniJump2d.start(MiniJump2d.builtin_opts.single_character)` - jump
-  to single character typed after executing this command.
+<
+- Jump to word start using combination of options supplied in
+  |MiniJump2d.config| and |MiniJump2d.builtin_opts.line_start|: >vim
+
+  :lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)
+<
+- Jump to a single character typed after executing this command: >vim
+
+  :lua MiniJump2d.start(MiniJump2d.builtin_opts.single_character)
+<
 - See more examples in |MiniJump2d.start| and |MiniJump2d.builtin_opts|.
 
 # Comparisons ~
@@ -109,12 +115,17 @@ To stop module from showing non-error feedback, set `config.silent = true`.
   uses label with highest contrast while not being too visually demanding:
   white on black for dark 'background', black on white for light. If it
   doesn't suit your liking, try couple of these alternatives (or choose
-  your own, of course):
-    - `hi MiniJump2dSpot gui=reverse` - reverse underlying highlighting (more
-      colorful while being visible in any colorscheme).
-    - `hi MiniJump2dSpot gui=bold,italic` - bold italic.
-    - `hi MiniJump2dSpot gui=undercurl guisp=red` - red undercurl.
+  your own, of course): >lua
 
+    -- Reverse underlying colors (mostly *very* visible in any colorscheme)
+    vim.api.nvim_set_hl(0, 'MiniJump2dSpot', { reverse = true })
+
+    -- Bold italic
+    vim.api.nvim_set_hl(0, 'MiniJump2dSpot', { bold = true, italic = true })
+
+    -- Red undercurl
+    vim.api.nvim_set_hl(0, 'MiniJump2dSpot', { sp = 'Red', undercurl = true })
+<
 * `MiniJump2dSpotUnique` - highlighting of jump spot's next step if it has
   unique label. By default links to `MiniJump2dSpot`.
 
@@ -144,8 +155,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniJump2d.config|.
 
 Usage ~
-`require('mini.jump2d').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.jump2d').setup() -- use default config
+  -- OR
+  require('mini.jump2d').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                              *MiniJump2d.config*
                               `MiniJump2d.config`
@@ -316,14 +330,18 @@ Parameters ~
       Default: "MiniJump2dSpotDim".
 
 Usage ~
-- Start default jumping:
-  `MiniJump2d.start()`
-- Jump to word start:
-  `MiniJump2d.start(MiniJump2d.builtin_opts.word_start)`
-- Jump to single character from user input (follow by typing one character):
-  `MiniJump2d.start(MiniJump2d.builtin_opts.single_character)`
-- Jump to first character of punctuation group only inside current window
-  which is placed at cursor line; visualize with 'hl-Search': >
+>lua
+  -- Start default jumping
+  MiniJump2d.start()
+
+  -- Jump to word start
+  MiniJump2d.start(MiniJump2d.builtin_opts.word_start)
+
+  -- Jump to single character from user input (follow by typing one character)
+  MiniJump2d.start(MiniJump2d.builtin_opts.single_character)
+
+  -- Jump to first character of punctuation group only inside current window
+  -- which is placed at cursor line; visualize with `Search`
   MiniJump2d.start({
     spotter = MiniJump2d.gen_pattern_spotter('%p+'),
     allowed_lines = { cursor_before = false, cursor_after = false },
@@ -357,16 +375,20 @@ Return ~
 `(function)` Spotter function.
 
 Usage ~
-- Match any punctuation:
-  `MiniJump2d.gen_pattern_spotter('%p')`
-- Match first from line start non-whitespace character:
-  `MiniJump2d.gen_pattern_spotter('^%s*%S', 'end')`
-- Match start of last word:
-  `MiniJump2d.gen_pattern_spotter('[^%s%p]+[%s%p]-$', 'start')`
-- Match letter followed by another letter (example of manual matching
-  inside pattern):
-  `MiniJump2d.gen_pattern_spotter('%a()%a', 'none')`
+>lua
+  -- Match any punctuation
+  MiniJump2d.gen_pattern_spotter('%p')
 
+  -- Match first from line start non-whitespace character
+  MiniJump2d.gen_pattern_spotter('^%s*%S', 'end')
+
+  -- Match start of last word
+  MiniJump2d.gen_pattern_spotter('[^%s%p]+[%s%p]-$', 'start')
+
+  -- Match letter followed by another letter (example of manual matching
+  -- inside pattern)
+  MiniJump2d.gen_pattern_spotter('%a()%a', 'none')
+<
 ------------------------------------------------------------------------------
                                                 *MiniJump2d.gen_union_spotter()*
                      `MiniJump2d.gen_union_spotter`({...})
@@ -380,12 +402,12 @@ Return ~
 `(function)` Spotter producing union of spots.
 
 Usage ~
-- Match start and end of non-blank character groups: >
-
+>lua
+  -- Match start and end of non-blank character groups:
   local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
   local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
   local spotter = MiniJump2d.gen_union_spotter(nonblank_start, nonblank_end)
-
+<
 ------------------------------------------------------------------------------
                                                     *MiniJump2d.default_spotter*
                           `MiniJump2d.default_spotter`
@@ -414,15 +436,18 @@ Each element of table is itself a table defining one or several options for
 (like in |MiniJump2d.builtin_opts.line_start|).
 
 Usage ~
-Using |MiniJump2d.builtin_opts.line_start| as example:
-- Command:
-  `:lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)`
-- Custom mapping: >
+>lua
+  -- Using `MiniJump2d.builtin_opts.line_start` as example:
+  -- Command
+  :lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)
+
+  -- Custom mapping
   vim.keymap.set(
     'n', '<CR>',
     '<Cmd>lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)<CR>'
   )
-- Inside |MiniJump2d.setup| (make sure to use all defined options): >
+
+  -- Inside `MiniJump2d.setup()` (make sure to use all defined options)
   local jump2d = require('mini.jump2d')
   local jump_line_start = jump2d.builtin_opts.line_start
   jump2d.setup({

@@ -48,7 +48,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniMisc.config|.
 ---
----@usage `require('mini.misc').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.misc').setup() -- use default config
+---   -- OR
+---   require('mini.misc').setup({}) -- replace {} with your config table
+--- <
 MiniMisc.setup = function(config)
   -- Export module
   _G.MiniMisc = MiniMisc
@@ -180,9 +184,10 @@ end
 ---@param names table|function|nil Forwarded to |MiniMisc.find_root()|.
 ---@param fallback function|nil Forwarded to |MiniMisc.find_root()|.
 ---
----@usage >
+---@usage >lua
 ---   require('mini.misc').setup()
 ---   MiniMisc.setup_auto_root()
+--- <
 MiniMisc.setup_auto_root = function(names, fallback)
   names = names or { '.git', 'Makefile' }
   if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
@@ -291,8 +296,9 @@ H.root_cache = {}
 ---   - <ignore_filetype> - Array with file types to be ignored (see 'filetype').
 ---     Default: `{ "gitcommit", "gitrebase" }`.
 ---
----@usage >
+---@usage >lua
 ---   require('mini.misc').setup_restore_cursor()
+--- <
 MiniMisc.setup_restore_cursor = function(opts)
   opts = opts or {}
 
@@ -453,9 +459,11 @@ end
 --- and "second-level" comments with '----'. With nested comment leader second
 --- type can be formatted with `gq` in the same way as first one.
 ---
---- Recommended usage is with |autocmd|:
---- `autocmd BufEnter * lua pcall(require('mini.misc').use_nested_comments)`
+--- Recommended usage is with |autocmd|: >lua
 ---
+---   local use_nested_comments = function() MiniMisc.use_nested_comments() end
+---   vim.api.nvim_create_autocmd('BufEnter', { callback = use_nested_comments })
+--- <
 --- Note: for most filetypes 'commentstring' option is added only when buffer
 --- with this filetype is entered, so using non-current `buf_id` can not lead
 --- to desired effect.

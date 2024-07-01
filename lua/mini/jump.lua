@@ -68,7 +68,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniJump.config|.
 ---
----@usage `require('mini.jump').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.jump').setup() -- use default config
+---   -- OR
+---   require('mini.jump').setup({}) -- replace {} with your config table
+--- <
 MiniJump.setup = function(config)
   -- Export module
   _G.MiniJump = MiniJump

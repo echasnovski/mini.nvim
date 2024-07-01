@@ -115,8 +115,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniBracketed.config|.
 
 Usage ~
-`require('mini.bracketed').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.bracketed').setup() -- use default config
+  -- OR
+  require('mini.bracketed').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                           *MiniBracketed.config*
                              `MiniBracketed.config`
@@ -156,7 +159,7 @@ Options ~
 Each entry configures target with the same name and can have data configuring
 mapping suffix and target options.
 
-Example of configuration: >
+Example of configuration: >lua
 
   require('mini.bracketed').setup({
     -- Map [N, [n, ]n, ]N for conflict marker like in 'tpope/vim-unimpaired'
@@ -179,7 +182,7 @@ Example of configuration: >
   map('n', '<Leader>wh', "<Cmd>lua MiniBracketed.window('backward')<CR>")
   map('n', '<Leader>wl', "<Cmd>lua MiniBracketed.window('forward')<CR>")
   map('n', '<Leader>wL', "<Cmd>lua MiniBracketed.window('last')<CR>")
-
+<
 ## Suffix ~
 
 The `suffix` key is used to create target mappings.
@@ -276,13 +279,13 @@ Direction "forward" increases line number, "backward" - decreases.
 
 Notes:
 - Using `severity` option, this target can be used in mappings like "go to
-  next/previous error" (), etc. Using code similar to this: >
+  next/previous error" (), etc. Using code similar to this: >lua
 
   local severity_error = vim.diagnostic.severity.ERROR
   -- Use these inside custom mappings
   MiniBracketed.diagnostic('forward', { severity = severity_error })
   MiniBracketed.diagnostic('backward', { severity = severity_error })
-
+<
 Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:
@@ -564,14 +567,14 @@ For users there are these approaches to manage which region will be used:
 
 - Remap common put operations to use |MiniBracketed.register_put_region()|.
   After that, only regions from mapped put operations will be used for first
-  advance. Example of custom mappings (note use of |:map-expression|): >
+  advance. Example of custom mappings (note use of |:map-expression|): >lua
 
     local put_keys = { 'p', 'P' }
     for _, lhs in ipairs(put_keys) do
       local rhs = 'v:lua.MiniBracketed.register_put_region("' .. lhs .. '")'
       vim.keymap.set({ 'n', 'x' }, lhs, rhs, { expr = true })
     end
-
+<
 Parameters ~
 {direction} `(string)` One of "first", "backward", "forward", "last".
 {opts} `(table|nil)` Options. A table with fields:

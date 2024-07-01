@@ -48,8 +48,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniBufremove.config|.
 
 Usage ~
-`require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.bufremove').setup() -- use default config
+  -- OR
+  require('mini.bufremove').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                           *MiniBufremove.config*
                              `MiniBufremove.config`

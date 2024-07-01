@@ -41,7 +41,8 @@
 ---
 --- You can override runtime config settings locally to buffer inside
 --- `vim.b.miniindentscope_config` which should have same structure as
---- `MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more details.
+--- `MiniIndentscope.config`. See |mini.nvim-buffer-local-config| for more
+--- details.
 ---
 --- # Comparisons ~
 ---
@@ -106,7 +107,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniIndentscope.config|.
 ---
----@usage `require('mini.indentscope').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.indentscope').setup() -- use default config
+---   -- OR
+---   require('mini.indentscope').setup({}) -- replace {} with your config table
+--- <
 MiniIndentscope.setup = function(config)
   -- Export module
   _G.MiniIndentscope = MiniIndentscope
@@ -365,9 +370,10 @@ MiniIndentscope.undraw = function() H.undraw_scope() end
 ---
 --- Examples ~
 --- - Don't use animation: `MiniIndentscope.gen_animation.none()`
---- - Use quadratic "out" easing with total duration of 1000 ms:
----   `gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })`
+--- - Use quadratic "out" easing with total duration of 1000 ms: >lua
 ---
+---   gen_animation.quadratic({ easing = 'out', duration = 1000, unit = 'total' })
+--- <
 ---@seealso |MiniIndentscope-drawing| for more information about how drawing is done.
 MiniIndentscope.gen_animation = {}
 

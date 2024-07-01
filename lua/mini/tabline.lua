@@ -74,7 +74,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniTabline.config|.
 ---
----@usage `require('mini.tabline').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.tabline').setup() -- use default config
+---   -- OR
+---   require('mini.tabline').setup({}) -- replace {} with your config table
+--- <
 MiniTabline.setup = function(config)
   -- Export module
   _G.MiniTabline = MiniTabline
@@ -108,12 +112,13 @@ end
 --- This function will be called for all displayable in tabline buffers.
 --- Default: |MiniTabline.default_format()|.
 ---
---- Example of adding "+" suffix for modified buffers: >
+--- Example of adding "+" suffix for modified buffers: >lua
 ---
 ---   function(buf_id, label)
 ---     local suffix = vim.bo[buf_id].modified and '+ ' or ''
 ---     return MiniTabline.default_format(buf_id, label) .. suffix
 ---   end
+--- <
 MiniTabline.config = {
   -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
   show_icons = true,

@@ -109,8 +109,11 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniAnimate.config|.
 
 Usage ~
-`require('mini.animate').setup({})` (replace `{}` with your `config` table)
-
+>lua
+  require('mini.animate').setup() -- use default config
+  -- OR
+  require('mini.animate').setup({}) -- replace {} with your config table
+<
 ------------------------------------------------------------------------------
                                                             *MiniAnimate.config*
                               `MiniAnimate.config`
@@ -186,7 +189,6 @@ Default values:
     },
   }
 <
-
 # General ~
                                                             *MiniAnimate-timing*
 - Every animation is a non-blockingly scheduled series of specific actions.
@@ -236,7 +238,7 @@ Notes:
   placed are silently omitted during animation: this step won't show any
   visualization.
 
-Configuration example: >
+Configuration example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -250,7 +252,7 @@ Configuration example: >
       }),
     }
   })
-
+<
 After animation is done, `MiniAnimateDoneCursor` event is triggered.
 
                                                      *MiniAnimate.config.scroll*
@@ -286,14 +288,15 @@ Notes:
       command. Use |MiniAnimate.execute_after()| to schedule action after
       reaching target window view.
       Example: a useful `nnoremap n nzvzz` mapping (consecutive application
-      of |n|, |zv|, and |zz|) should have this right hand side: >
+      of |n|, |zv|, and |zz|) should be expressed in the following way: >lua
 
-  <Cmd>lua vim.cmd('normal! n'); MiniAnimate.execute_after('scroll', 'normal! zvzz')<CR>
-
+  '<Cmd>lua vim.cmd("normal! n"); ' ..
+    'MiniAnimate.execute_after("scroll", "normal! zvzz")<CR>'
+<
 - This animation works best with Neovim>=0.9 (after certain updates to
   |WinScrolled| event).
 
-Configuration example: >
+Configuration example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -305,7 +308,7 @@ Configuration example: >
       subscroll = animate.gen_subscroll.equal({ max_output_steps = 120 }),
     }
   })
-
+<
 After animation is done, `MiniAnimateDoneScroll` event is triggered.
 
                                                      *MiniAnimate.config.resize*
@@ -321,18 +324,21 @@ It is a callable which takes `sizes_from` and `sizes_to` arguments (both
 tables with window id as keys and dimension table as values) and returns
 array of same shaped data.
 Example:
-- Inputs
-  `{ [1000] = {width = 7, height = 5}, [1001] = {width = 7, height = 10} }`
-  and
-  `{ [1000] = {width = 9, height = 5}, [1001] = {width = 5, height = 10} }`
-  mean that window 1000 increased its width by 2 in expense of window 1001.
-- The following output demonstrates equal resizing: >
+- Input: >lua
+
+  -- First
+  { [1000] = {width = 7, height = 5}, [1001] = {width = 7, height = 10} }
+  -- Second
+  { [1000] = {width = 9, height = 5}, [1001] = {width = 5, height = 10} }
+  -- Means window 1000 increased its width by 2 in expense of window 1001
+<
+- The following output demonstrates equal resizing: >lua
 
   {
     { [1000] = {width = 8, height = 5}, [1001] = {width = 6, height = 10} },
     { [1000] = {width = 9, height = 5}, [1001] = {width = 5, height = 10} },
   }
-
+<
 See |MiniAnimate.gen_subresize| for builtin subresize generators.
 
 Notes:
@@ -349,7 +355,7 @@ Notes:
   |WinScrolled| event). For example, resize resulting from effect of
   'winheight' / 'winwidth' will work properly.
 
-Configuration example: >
+Configuration example: >lua
 
   local is_many_wins = function(sizes_from, sizes_to)
     return vim.tbl_count(sizes_from) >= 3
@@ -364,7 +370,7 @@ Configuration example: >
       subresize = animate.gen_subscroll.equal({ predicate = is_many_wins }),
     }
   })
-
+<
 After animation is done, `MiniAnimateDoneResize` event is triggered.
 
                               *MiniAnimate.config.open* *MiniAnimate.config.close*
@@ -382,7 +388,7 @@ input and returns an array of floating window configs (as in `config`
 argument of |nvim_open_win()|). Its length determines number of animation steps.
 Example:
 - The following output results into two animation steps with second being
-  upper left quarter of a first: >
+  upper left quarter of a first: >lua
 
   {
     {
@@ -398,7 +404,7 @@ Example:
       zindex   = 1,        style  = 'minimal',
     },
   }
-
+<
 The `winblend` option is similar to `timing` option: it is a callable
 which, given current and total step numbers, returns value of floating
 window's 'winblend' option. Note, that it is called for current step (so
@@ -410,7 +416,7 @@ Example:
 See |MiniAnimate.gen_winconfig| for builtin window config generators.
 See |MiniAnimate.gen_winblend| for builtin window transparency generators.
 
-Configuration example: >
+Configuration example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -436,7 +442,7 @@ Configuration example: >
       winblend = animate.gen_winblend.linear({ from = 100, to = 80 }),
     },
   })
-
+<
 After animation is done, `MiniAnimateDoneOpen` or `MiniAnimateDoneClose`
 event is triggered for `open` and `close` animation respectively.
 
@@ -467,10 +473,11 @@ Mostly meant to be used inside mappings.
 Example ~
 
 A useful `nnoremap n nzvzz` mapping (consecutive application of |n|, |zv|, and |zz|)
-should have this right hand side: >
+should be expressed in the following way: >lua
 
-  <Cmd>lua vim.cmd('normal! n'); MiniAnimate.execute_after('scroll', 'normal! zvzz')<CR>
-
+  '<Cmd>lua vim.cmd("normal! n"); ' ..
+    'MiniAnimate.execute_after("scroll", "normal! zvzz")<CR>'
+<
 Parameters ~
 {animation_type} `(string)` One of supported animation types
   (as in |MiniAnimate.is_active()|).
@@ -522,7 +529,7 @@ further by supplying appropriate arguments.
 
 This is a table with function elements. Call to actually get timing function.
 
-Example: >
+Example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -530,7 +537,7 @@ Example: >
       timing = animate.gen_timing.linear({ duration = 100, unit = 'total' })
     },
   })
-
+<
 See also ~
 |MiniIndentscope.gen_animation| for similar concept in 'mini.indentscope'.
 
@@ -641,7 +648,7 @@ For more information see |MiniAnimate.config.cursor|.
 
 This is a table with function elements. Call to actually get generator.
 
-Example: >
+Example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -650,7 +657,7 @@ Example: >
       path = animate.gen_path.angle(),
     }
   })
-
+<
 ------------------------------------------------------------------------------
                                                    *MiniAnimate.gen_path.line()*
                       `MiniAnimate.gen_path.line`({opts})
@@ -725,7 +732,7 @@ For more information see |MiniAnimate.config.scroll|.
 
 This is a table with function elements. Call to actually get generator.
 
-Example: >
+Example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -734,7 +741,7 @@ Example: >
       subscroll = animate.gen_subscroll.equal({ max_output_steps = 120 }),
     }
   })
-
+<
 ------------------------------------------------------------------------------
                                              *MiniAnimate.gen_subscroll.equal()*
                    `MiniAnimate.gen_subscroll.equal`({opts})
@@ -762,7 +769,7 @@ For more information see |MiniAnimate.config.resize|.
 
 This is a table with function elements. Call to actually get generator.
 
-Example: >
+Example: >lua
 
   local is_many_wins = function(sizes_from, sizes_to)
     return vim.tbl_count(sizes_from) >= 3
@@ -774,7 +781,7 @@ Example: >
       subresize = animate.gen_subresize.equal({ predicate = is_many_wins }),
     }
   })
-
+<
 ------------------------------------------------------------------------------
                                              *MiniAnimate.gen_subresize.equal()*
                    `MiniAnimate.gen_subresize.equal`({opts})
@@ -798,7 +805,7 @@ For more information see |MiniAnimate.config.open| or |MiniAnimate.config.close|
 
 This is a table with function elements. Call to actually get generator.
 
-Example: >
+Example: >lua
 
   local is_not_single_window = function(win_id)
     local tabpage_id = vim.api.nvim_win_get_tabpage(win_id)
@@ -823,7 +830,7 @@ Example: >
       }),
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                             *MiniAnimate.gen_winconfig.static()*
                    `MiniAnimate.gen_winconfig.static`({opts})
@@ -899,7 +906,7 @@ For more information see |MiniAnimate.config.open| or |MiniAnimate.config.close|
 This is a table with function elements. Call to actually get transparency
 function.
 
-Example: >
+Example: >lua
 
   local animate = require('mini.animate')
   animate.setup({
@@ -912,7 +919,7 @@ Example: >
       winblend = animate.gen_winblend.linear({ from = 60, to = 80 }),
     },
   })
-
+<
 ------------------------------------------------------------------------------
                                              *MiniAnimate.gen_winblend.linear()*
                    `MiniAnimate.gen_winblend.linear`({opts})

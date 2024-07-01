@@ -119,7 +119,7 @@
 --- before processing anything else.
 ---
 --- The recommended way of adding a plugin is by calling |MiniDeps.add()| in the
---- |init.lua| file (make sure |MiniDeps.setup()| is called prior): >
+--- |init.lua| file (make sure |MiniDeps.setup()| is called prior): >lua
 ---
 ---   local add = MiniDeps.add
 ---
@@ -159,9 +159,9 @@
 --- - |MiniDeps.now()| safely executes code immediately. Use it to load plugins
 ---   with UI necessary to make initial screen draw.
 --- - |MiniDeps.later()| schedules code to be safely executed later, preserving
----   order. Use it (with caution) for everything else which doesn't need precisely
----   timed effect, as it will be executed some time soon on one of the next
----   event loops. >
+---   order. Use it (with caution) for everything else which doesn't need
+---   precisely timed effect, as it will be executed some time soon on one of
+---   the next event loops. >lua
 ---
 ---   local now, later = MiniDeps.now, MiniDeps.later
 ---
@@ -353,7 +353,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniDeps.config|.
 ---
----@usage `require('mini.deps').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.deps').setup() -- use default config
+---   -- OR
+---   require('mini.deps').setup({}) -- replace {} with your config table
+--- <
 MiniDeps.setup = function(config)
   -- Export module
   _G.MiniDeps = MiniDeps

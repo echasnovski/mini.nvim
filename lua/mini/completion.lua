@@ -96,19 +96,27 @@
 ---     - Doesn't allow fallback action.
 ---     - Doesn't provide signature help.
 ---
---- # Helpful key mappings ~
+--- # Helpful mappings ~
 ---
 --- To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
---- these key mappings:
---- `vim.keymap.set('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { expr = true })`
---- `vim.keymap.set('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { expr = true })`
+--- these mappings: >lua
 ---
+---   local imap_expr = function(lhs, rhs)
+---     vim.keymap.set('i', lhs, rhs, { expr = true })
+---   end
+---   imap_expr('<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]])
+---   imap_expr('<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]])
+--- <
 --- To get more consistent behavior of `<CR>`, you can use this template in
---- your 'init.lua' to make customized mapping: >
+--- your 'init.lua' to make customized mapping: >lua
+---
+---   local keycode = vim.keycode or function(x)
+---     return vim.api.nvim_replace_termcodes(x, true, true, true)
+---   end
 ---   local keys = {
----     ['cr']        = vim.api.nvim_replace_termcodes('<CR>', true, true, true),
----     ['ctrl-y']    = vim.api.nvim_replace_termcodes('<C-y>', true, true, true),
----     ['ctrl-y_cr'] = vim.api.nvim_replace_termcodes('<C-y><CR>', true, true, true),
+---     ['cr']        = keycode('<CR>'),
+---     ['ctrl-y']    = keycode('<C-y>'),
+---     ['ctrl-y_cr'] = keycode('<C-y><CR>'),
 ---   }
 ---
 ---   _G.cr_action = function()
@@ -128,7 +136,7 @@
 --- <
 --- # Highlight groups ~
 ---
---- * `MiniCompletionActiveParameter` - highlighting of signature active parameter.
+--- * `MiniCompletionActiveParameter` - signature active parameter.
 ---   By default displayed as plain underline.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
@@ -189,7 +197,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniCompletion.config|.
 ---
----@usage `require('mini.completion').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.completion').setup() -- use default config
+---   -- OR
+---   require('mini.completion').setup({}) -- replace {} with your config table
+--- <
 MiniCompletion.setup = function(config)
   -- Export module
   _G.MiniCompletion = MiniCompletion

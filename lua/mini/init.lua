@@ -301,43 +301,59 @@
 --- Common recipes for disabling functionality
 ---
 --- Each module's core functionality can be disabled globally or buffer-locally
---- by creating appropriate global or buffer-scoped variables equal to
---- |v:true|. Functionality is disabled if at least one of `g:` or `b:`
---- variables is equal to `v:true`.
+--- by creating appropriate global or buffer-scoped variables equal to |v:true|.
+--- Functionality is disabled if at least one of |g:| or |b:| variables is `v:true`.
 ---
 --- Variable names have the same structure: `{g,b}:mini*_disable` where `*` is
---- module's lowercase name. For example, `g:minicursorword_disable` disables
---- |mini.cursorword| globally and `b:minicursorword_disable` - for
---- corresponding buffer. Note: in this section disabling 'mini.cursorword' is
---- used as example; everything holds for other module variables.
+--- module's lowercase name. For example, `g:minianimate_disable` disables
+--- |mini.animate| globally and `b:minianimate_disable` - for current buffer.
+--- Note: in this section disabling 'mini.animate' is used as example;
+--- everything holds for other module variables.
 ---
 --- Considering high number of different scenarios and customization intentions,
 --- writing exact rules for disabling module's functionality is left to user.
 ---
 --- # Manual disabling ~
+--- >lua
+---   -- Disable globally
+---   vim.g.minianimate_disable = true
 ---
---- - Disable globally:
----   Lua       - `:lua vim.g.minicursorword_disable=true`
----   Vimscript - `:let g:minicursorword_disable=v:true`
---- - Disable for current buffer:
----   Lua       - `:lua vim.b.minicursorword_disable=true`
----   Vimscript - `:let b:minicursorword_disable=v:true`
---- - Toggle (disable if enabled, enable if disabled):
----   Globally   - `:lua vim.g.minicursorword_disable = not vim.g.minicursorword_disable`
----   For buffer - `:lua vim.b.minicursorword_disable = not vim.b.minicursorword_disable`
+---   -- Disable for current buffer
+---   vim.b.minianimate_disable = true
 ---
+---   -- Toggle (disable if enabled, enable if disabled)
+---   vim.g.minianimate_disable = not vim.g.minianimate_disable -- globally
+---   vim.b.minianimate_disable = not vim.b.minianimate_disable -- for buffer
+--- <
 --- # Automated disabling ~
 ---
---- - Disable for a certain |filetype| (for example, "markdown"):
----   `autocmd Filetype markdown lua vim.b.minicursorword_disable = true`
---- - Enable only for certain filetypes (for example, "lua" and "python"):
----   `au FileType * if index(['lua', 'python'], &ft) < 0 | let b:minicursorword_disable=v:true | endif`
---- - Disable in Insert mode (use similar pattern for Terminal mode or indeed
----   any other mode change with |ModeChanged| starting from Neovim 0.7.0):
----   `au InsertEnter * lua vim.b.minicursorword_disable = true`
----   `au InsertLeave * lua vim.b.minicursorword_disable = false`
---- - Disable in Terminal buffer:
----   `au TermOpen * lua vim.b.minicursorword_disable = true`
+--- Automated disabling is suggested to be done inside autocommands: >lua
+---
+---   -- Disable for a certain filetype (for example, "lua")
+---   local f = function(args) vim.b[args.buf].minianimate_disable = true end
+---   vim.api.nvim_create_autocmd('Filetype', { pattern = 'lua', callback = f })
+---
+---   -- Enable only for certain filetypes (for example, "lua" and "help")
+---   local f = function(args)
+---     local ft = vim.bo[args.buf].filetype
+---     if ft == 'lua' or ft == 'help' then return end
+---     vim.b[args.buf].minianimate_disable = true
+---   end
+---   vim.api.nvim_create_autocmd('Filetype', { callback = f })
+---
+---   -- Disable in Visual mode
+---   local f_en = function(args) vim.b[args.buf].minianimate_disable = false end
+---   local enable_opts = { pattern = '[vV\x16]*:*', callback = f_en }
+---   vim.api.nvim_create_autocmd('ModeChanged', enable_opts)
+---
+---   local f_dis = function(args) vim.b[args.buf].minianimate_disable = true end
+---   local disable_opts = { pattern = '*:[vV\x16]*', callback = f_dis }
+---   vim.api.nvim_create_autocmd('ModeChanged', disable_opts)
+---
+---   -- Disable in Terminal buffer
+---   local f = function(args) vim.b[args.buf].minianimate_disable = true end
+---   vim.api.nvim_create_autocmd('TermOpen', { callback = f })
+--- <
 ---@tag mini.nvim-disabling-recipes
 
 --- Buffer local config
@@ -348,12 +364,13 @@
 --- `mappings` or `set_vim_settings`).
 ---
 --- Variable names have the same structure: `b:mini*_config` where `*` is
---- module's lowercase name. For example, `b:minicursorword_config` can store
---- information about how |mini.cursorword| will act inside current buffer. Its
---- value should be a table with same structure as module's `config`.
---- Continuing example, `vim.b.minicursorword_config = { delay = 500 }` will
---- use delay 500 inside current buffer.
+--- module's lowercase name. For example, `b:minianimate_config` can store
+--- information about how |mini.animate| will act inside current buffer. Its
+--- value should be a table with same structure as module's `config`. Example: >lua
 ---
+---   -- Disable scroll animation in current buffer
+---   vim.b.minianimate_config = { scroll = { enable = false } }
+--- <
 --- Considering high number of different scenarios and customization intentions,
 --- writing exact rules for module's buffer local configuration is left to
 --- user. It is done in similar fashion to |mini.nvim-disabling-recipes|.

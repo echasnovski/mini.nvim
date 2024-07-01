@@ -127,9 +127,14 @@ local H = {}
 
 --- Module setup
 ---
----@usage
---- `require('mini.hues').setup({ background = '#11262d', foreground = '#c0c8cc' })`
---- (add/change input table as you like)
+---@usage >lua
+---   require('mini.hues').setup({
+---     -- Use config table as you like
+---     -- Needs both `background` and `foreground` fields present
+---     background = '#11262d',
+---     foreground = '#c0c8cc',
+---   })
+--- <
 MiniHues.setup = function(config)
   -- Export module
   _G.MiniHues = MiniHues

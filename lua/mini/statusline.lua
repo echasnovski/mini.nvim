@@ -79,8 +79,8 @@
 ---
 --- # Default content ~
 ---
---- This function is used as default value for active content:
---- >
+--- This function is used as default value for active content: >lua
+---
 ---   function()
 ---     local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
 ---     local git           = MiniStatusline.section_git({ trunc_width = 40 })
@@ -107,8 +107,8 @@
 ---
 --- To compute section string for boolean option use variation of this code
 --- snippet inside content function (you can modify option itself, truncation
---- width, short and long displayed names):
---- >
+--- width, short and long displayed names): >lua
+---
 ---   local spell = vim.wo.spell and (MiniStatusline.is_truncated(120) and 'S' or 'SPELL') or ''
 --- <
 --- Here `x and y or z` is a common Lua way of doing ternary operator: if `x`
@@ -126,7 +126,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniStatusline.config|.
 ---
----@usage `require('mini.statusline').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.statusline').setup() -- use default config
+---   -- OR
+---   require('mini.statusline').setup({}) -- replace {} with your config table
+--- <
 MiniStatusline.setup = function(config)
   -- Export module
   _G.MiniStatusline = MiniStatusline
@@ -316,9 +320,10 @@ end
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---
 ---@param args __statusline_args Use `args.icon` to supply your own icon.
----   Use `args.signs` to use custom signs per severity level name. For example:
----   `{ ERROR = '!', WARN = '?', INFO = '@', HINT = '*' }`
+---   Use `args.signs` to use custom signs per severity level name. For example: >lua
 ---
+---     { ERROR = '!', WARN = '?', INFO = '@', HINT = '*' }
+--- <
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
   if MiniStatusline.is_truncated(args.trunc_width) or H.diagnostic_is_disabled() then return '' end
@@ -413,8 +418,8 @@ end
 --- Section for location inside buffer
 ---
 --- Show location inside buffer in the form:
---- - Normal: '<cursor line>|<total lines>│<cursor column>|<total columns>'.
---- - Short: '<cursor line>│<cursor column>'.
+--- - Normal: `'<cursor line>|<total lines>│<cursor column>|<total columns>'`
+--- - Short: `'<cursor line>│<cursor column>'`
 ---
 --- Short output is returned if window width is lower than `args.trunc_width`.
 ---

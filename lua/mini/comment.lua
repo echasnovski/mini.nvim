@@ -58,7 +58,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniComment.config|.
 ---
----@usage `require('mini.comment').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.comment').setup() -- use default config
+---   -- OR
+---   require('mini.comment').setup({}) -- replace {} with your config table
+--- <
 MiniComment.setup = function(config)
   -- Export module
   _G.MiniComment = MiniComment
@@ -90,14 +94,14 @@ end
 --- If not set or the output is `nil`, |MiniComment.get_commentstring()| is used.
 ---
 --- For example, this option can be used to always use buffer 'commentstring'
---- even in case of present active tree-sitter parser: >
+--- even in case of present active tree-sitter parser: >lua
 ---
 ---   require('mini.comment').setup({
 ---     options = {
 ---       custom_commentstring = function() return vim.bo.commentstring end,
 ---     }
 ---   })
----
+--- <
 --- # Hooks ~
 ---
 --- `hooks.pre` and `hooks.post` functions are executed before and after successful

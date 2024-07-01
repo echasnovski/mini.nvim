@@ -144,7 +144,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniDoc.config|.
 ---
----@usage `require('mini.doc').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.doc').setup() -- use default config
+---   -- OR
+---   require('mini.doc').setup({}) -- replace {} with your config table
+--- <
 MiniDoc.setup = function(config)
   -- Export module
   _G.MiniDoc = MiniDoc
@@ -611,9 +615,10 @@ end
 --- table). It processes afterlines based on certain directives and makes
 --- output look like a Lua code block.
 ---
---- Most common usage is by adding the following section in your annotation:
---- `@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)`
+--- Most common usage is by adding the following section in your annotation: >
 ---
+---   ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+--- <
 --- # Directives ~
 ---
 --- Directives are special comments that are processed using Lua string pattern
@@ -627,8 +632,8 @@ end
 ---   Useful for manually changing what should be placed in output like in case
 ---   of replacing function body with something else.
 ---
---- Here is an example. Suppose having these afterlines:
---- >
+--- Here is an example. Suppose having these afterlines: >lua
+---
 ---   --minidoc_replace_start {
 ---   M.config = {
 ---     --minidoc_replace_end
@@ -643,9 +648,8 @@ end
 ---
 ---   return M
 --- <
+--- After adding `@eval` section those will be formatted as: >
 ---
---- After adding `@eval` section those will be formatted as:
---- >
 ---   {
 ---     param_one = 1,
 ---     param_fun = --<function>

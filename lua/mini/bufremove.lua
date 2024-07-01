@@ -54,7 +54,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniBufremove.config|.
 ---
----@usage `require('mini.bufremove').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.bufremove').setup() -- use default config
+---   -- OR
+---   require('mini.bufremove').setup({}) -- replace {} with your config table
+--- <
 MiniBufremove.setup = function(config)
   -- Export module
   _G.MiniBufremove = MiniBufremove

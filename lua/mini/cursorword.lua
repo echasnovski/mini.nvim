@@ -38,10 +38,10 @@
 --- * `MiniCursorwordCurrent` - highlight group of a current word under cursor.
 ---   Default: links to `MiniCursorword` (so `:hi clear MiniCursorwordCurrent`
 ---   will lead to showing `MiniCursorword` highlight group).
----   Note: To not highlight it, use
+---   Note: To not highlight it, use the following Lua code: >lua
 ---
----   `:hi! MiniCursorwordCurrent guifg=NONE guibg=NONE gui=NONE cterm=NONE`
----
+---   vim.api.nvim_set_hl(0, 'MiniCursorwordCurrent', {})
+--- <
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
 --- # Disabling ~
@@ -57,7 +57,7 @@
 --- Module-specific disabling:
 --- - Don't show highlighting if cursor is on the word that is in a blocklist
 ---   of current filetype. In this example, blocklist for "lua" is "local" and
----   "require" words, for "javascript" - "import": >
+---   "require" words, for "javascript" - "import": >lua
 ---
 ---   _G.cursorword_blocklist = function()
 ---     local curword = vim.fn.expand('<cword>')
@@ -76,6 +76,7 @@
 ---
 ---   -- Make sure to add this autocommand *before* calling module's `setup()`.
 ---   vim.cmd('au CursorMoved * lua _G.cursorword_blocklist()')
+--- <
 
 -- Module definition ==========================================================
 local MiniCursorword = {}
@@ -85,7 +86,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniCursorword.config|.
 ---
----@usage `require('mini.cursorword').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.cursorword').setup() -- use default config
+---   -- OR
+---   require('mini.cursorword').setup({}) -- replace {} with your config table
+--- <
 MiniCursorword.setup = function(config)
   -- Export module
   _G.MiniCursorword = MiniCursorword

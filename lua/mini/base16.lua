@@ -62,8 +62,8 @@
 --- This module doesn't have runtime options, so using `vim.b.minibase16_config`
 --- will have no effect here.
 ---
---- Example:
---- >
+--- Example: >lua
+---
 ---   require('mini.base16').setup({
 ---     palette = {
 ---       base00 = '#112641',
@@ -104,8 +104,8 @@
 --- Base16 colorschemes ~
 ---
 --- This module comes with several pre-built color schemes. All of them are a
---- |MiniBase16| theme created with faster version of the following Lua code:
---- >
+--- |MiniBase16| theme created with faster version of the following Lua code: >lua
+---
 ---   require('mini.base16').setup({ palette = palette, use_cterm = true })
 --- <
 --- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
@@ -113,20 +113,25 @@
 --- ## minischeme ~
 ---
 --- Blue and yellow main colors with high contrast and saturation palette.
---- Palettes are:
---- - For dark 'background':
----   `MiniBase16.mini_palette('#112641', '#e2e98f', 75)`
---- - For light 'background':
----   `MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)`
+--- Palettes are: >lua
 ---
+---   -- For dark 'background':
+---   MiniBase16.mini_palette('#112641', '#e2e98f', 75)
+---
+---   -- For light 'background':
+---   MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)
+--- <
 --- ## minicyan ~
 ---
 --- Cyan and grey main colors with moderate contrast and saturation palette.
---- Palettes are:
---- - For dark 'background':
----   `MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)`
---- - For light 'background':
----   `MiniBase16.mini_palette('#C0D2D2', '#262626', 80)`
+--- Palettes are: >lua
+---
+---   -- For dark 'background':
+---   MiniBase16.mini_palette('#0A2A2A', '#D0D0D0', 50)
+---
+---   -- For light 'background':
+---   MiniBase16.mini_palette('#C0D2D2', '#262626', 80)
+--- <
 ---@tag mini-base16-color-schemes
 ---@tag minischeme
 ---@tag minicyan
@@ -152,8 +157,10 @@ local H = {}
 ---
 ---@param config table Module config table. See |MiniBase16.config|.
 ---
----@usage `require('mini.base16').setup({})` (replace `{}` with your `config`
----   table; `config.palette` should be a table with colors)
+---@usage >lua
+---   require('mini.base16').setup({}) -- replace {} with your config table
+---                                    -- needs `palette` field present
+--- <
 MiniBase16.setup = function(config)
   -- Export module
   _G.MiniBase16 = MiniBase16
@@ -179,8 +186,8 @@ end
 --- - If plugin name (as listed in |mini.base16|) has entry, it is used.
 --- - Otherwise `config.plugins.default` is used.
 ---
---- Example which will load only "mini.nvim" integration:
---- >
+--- Example which will load only "mini.nvim" integration: >lua
+---
 ---   require('mini.base16').setup({
 ---     palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75),
 ---     plugins = {
@@ -188,6 +195,7 @@ end
 ---       ['echasnovski/mini.nvim'] = true,
 ---     }
 ---   })
+--- <
 MiniBase16.config = {
   -- Table with names from `base00` to `base0F` and values being strings of
   -- HEX colors with format "#RRGGBB". NOTE: this should be explicitly
@@ -255,8 +263,10 @@ MiniBase16.config = {
 ---
 ---@return table Table with base16 palette.
 ---
----@usage `local palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)`
---- `require('mini.base16').setup({palette = palette})`
+---@usage >lua
+---   local p = require('mini.base16').mini_palette('#112641', '#e2e98f', 75)
+---   require('mini.base16').setup({ palette = p })
+--- <
 MiniBase16.mini_palette = function(background, foreground, accent_chroma)
   H.validate_hex(background, 'background')
   H.validate_hex(foreground, 'foreground')

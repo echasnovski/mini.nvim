@@ -1,6 +1,10 @@
 # Version 0.13.0.9000
 
 - Stop official support of Neovim 0.7.
+- Update help files to use code blocks with language annotation, as it results in a better code highlighting. Implies enabled tree-sitter highlighting in 'help' filetype:
+    - It is default in Neovim>=0.10.
+    - Tree-sitter parser is built-in in Neovim 0.9.x, needs manual enabling via `vim.treesitter.start()`.
+    - Has visual regressions on Neovim 0.8.0 and 0.8.1 without enabled tree-sitter (code blocks are highlighted as normal text). Use 0.8.2 or newer.
 
 ## mini.doc
 
@@ -90,6 +94,7 @@
 ## mini.test
 
 - BREAKING FEATURE: child process is now created with extra `--headless --cmd "set lines=24 columns=80"` arguments making it headless but still reasonably similar to fully functioning Neovim during interactive usage. This change should generally not break a lot of things, while enabling a faster and more robust test execution.
+
 
 # Version 0.12.0
 

@@ -81,8 +81,8 @@
 
 --- Example configurations
 ---
---- Configuration similar to 'mhinz/vim-startify':
---- >
+--- Configuration similar to 'mhinz/vim-startify': >lua
+---
 ---   local starter = require('mini.starter')
 ---   starter.setup({
 ---     evaluate_single = true,
@@ -100,8 +100,8 @@
 ---     },
 ---   })
 --- <
---- Configuration similar to 'glepnir/dashboard-nvim':
---- >
+--- Configuration similar to 'glepnir/dashboard-nvim': >lua
+---
 ---   local starter = require('mini.starter')
 ---   starter.setup({
 ---     items = {
@@ -114,8 +114,8 @@
 ---   })
 --- <
 --- Elaborated configuration showing capabilities of custom items,
---- header/footer, and content hooks:
---- >
+--- header/footer, and content hooks: >lua
+---
 ---   local my_items = {
 ---     { name = 'Echo random number', action = 'lua print(math.random())', section = 'Section 1' },
 ---     function()
@@ -198,7 +198,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniStarter.config|.
 ---
----@usage `require('mini.starter').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.starter').setup() -- use default config
+---   -- OR
+---   require('mini.starter').setup({}) -- replace {} with your config table
+--- <
 MiniStarter.setup = function(config)
   -- Export module
   _G.MiniStarter = MiniStarter
@@ -275,10 +279,12 @@ MiniStarter.config = {
 ---   Starter buffer. Use it with
 ---   `autocmd User MiniStarterOpened <your command>`.
 ---
---- Note: to fully use it in autocommand, it is recommended to utilize
---- |autocmd-nested|. Example:
---- `autocmd TabNewEntered * ++nested lua MiniStarter.open()`
+--- Note: to fully use it in autocommand, use |autocmd-nested|. Example: >lua
 ---
+---   local starter_open = function() MiniStarter.open() end
+---   local au_opts = { nested = true, callback = starter_open }
+---   vim.api.nvim_create_autocmd('TabNewEntered', au_opts)
+--- <
 ---@param buf_id number|nil Identifier of existing valid buffer (see |bufnr()|) to
 ---   open inside. Default: create a new one.
 MiniStarter.open = function(buf_id)

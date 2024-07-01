@@ -107,7 +107,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
                                                        *MiniHipatterns-examples*
 # Common configuration examples ~
 
-- Special words used to convey different level of attention: >
+- Special words used to convey different level of attention: >lua
 
   require('mini.hipatterns').setup({
     highlighters = {
@@ -123,7 +123,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
   `'%f[%w]()TODO()%f[%W]'`. In this case, for example, 'TODOING' or 'MYTODO'
   won't match, but 'TODO' and 'TODO:' will.
 
-- Color hex (like `#rrggbb`) highlighting: >
+- Color hex (like `#rrggbb`) highlighting: >lua
 
   local hipatterns = require('mini.hipatterns')
   hipatterns.setup({
@@ -135,7 +135,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
   You can customize which part of hex color is highlighted by using `style`
   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
 
-- Colored words: >
+- Colored words: >lua
 
   local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
   local word_color_group = function(_, match)
@@ -150,12 +150,12 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
       word_color = { pattern = '%S+', group = word_color_group },
     },
   })
-
-- Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
+<
+- Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >lua
 
   { pattern = '%f[%s]%s*$', group = 'Error' }
-
-- Censor certain sensitive information: >
+<
+- Censor certain sensitive information: >lua
 
   local censor_extmark_opts = function(_, match, _)
     local mask = string.rep('x', vim.fn.strchars(match))
@@ -174,7 +174,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
       },
     },
   })
-
+<
 - Enable only in certain filetypes. There are at least these ways to do it:
     - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
       Basically, create "after/ftplugin/<filetype>.lua" file in your config
@@ -184,7 +184,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
       This assumes `require('mini.hipatterns').setup()` call.
 
       For example, to highlight keywords in EmmyLua comments in Lua files,
-      create "after/ftplugin/lua.lua" with the following content: >
+      create "after/ftplugin/lua.lua" with the following content: >lua
 
         vim.b.minihipatterns_config = {
           highlighters = {
@@ -192,7 +192,7 @@ left to user. See |mini.nvim-disabling-recipes| for common recipes.
           }
         }
 <
-    - Use callable `pattern` with condition. For example: >
+    - Use callable `pattern` with condition. For example: >lua
 
       require('mini.hipatterns').setup({
         highlighters = {
@@ -219,10 +219,10 @@ Parameters ~
 {config} `(table|nil)` Module config table. See |MiniHipatterns.config|.
 
 Usage ~
-`require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
-
-Note: no highlighters is defined by default. Add them for visible effect.
-
+>lua
+  require('mini.hipatterns').setup({}) -- replace {} with your config table
+                                       -- needs `highlighters` field present
+<
 ------------------------------------------------------------------------------
                                                          *MiniHipatterns.config*
                             `MiniHipatterns.config`
@@ -452,14 +452,14 @@ Return ~
   Both `pattern` and `group` are callable.
 
 Usage ~
->
+>lua
   local hipatterns = require('mini.hipatterns')
   hipatterns.setup({
     highlighters = {
       hex_color = hipatterns.gen_highlighter.hex_color(),
     }
   })
-
+<
 ------------------------------------------------------------------------------
                                       *MiniHipatterns.compute_hex_color_group()*
          `MiniHipatterns.compute_hex_color_group`({hex_color}, {style})

@@ -105,7 +105,7 @@
 
 --- # Common configuration examples ~
 ---
---- - Special words used to convey different level of attention: >
+--- - Special words used to convey different level of attention: >lua
 ---
 ---   require('mini.hipatterns').setup({
 ---     highlighters = {
@@ -121,7 +121,7 @@
 ---   `'%f[%w]()TODO()%f[%W]'`. In this case, for example, 'TODOING' or 'MYTODO'
 ---   won't match, but 'TODO' and 'TODO:' will.
 ---
---- - Color hex (like `#rrggbb`) highlighting: >
+--- - Color hex (like `#rrggbb`) highlighting: >lua
 ---
 ---   local hipatterns = require('mini.hipatterns')
 ---   hipatterns.setup({
@@ -133,7 +133,7 @@
 ---   You can customize which part of hex color is highlighted by using `style`
 ---   field of input options. See |MiniHipatterns.gen_highlighter.hex_color()|.
 ---
---- - Colored words: >
+--- - Colored words: >lua
 ---
 ---   local words = { red = '#ff0000', green = '#00ff00', blue = '#0000ff' }
 ---   local word_color_group = function(_, match)
@@ -148,12 +148,12 @@
 ---       word_color = { pattern = '%S+', group = word_color_group },
 ---     },
 ---   })
----
---- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >
+--- <
+--- - Trailing whitespace (if don't want to use more specific 'mini.trailspace'): >lua
 ---
 ---   { pattern = '%f[%s]%s*$', group = 'Error' }
----
---- - Censor certain sensitive information: >
+--- <
+--- - Censor certain sensitive information: >lua
 ---
 ---   local censor_extmark_opts = function(_, match, _)
 ---     local mask = string.rep('x', vim.fn.strchars(match))
@@ -172,7 +172,7 @@
 ---       },
 ---     },
 ---   })
----
+--- <
 --- - Enable only in certain filetypes. There are at least these ways to do it:
 ---     - (Suggested) With `vim.b.minihipatterns_config` in |filetype-plugin|.
 ---       Basically, create "after/ftplugin/<filetype>.lua" file in your config
@@ -182,7 +182,7 @@
 ---       This assumes `require('mini.hipatterns').setup()` call.
 ---
 ---       For example, to highlight keywords in EmmyLua comments in Lua files,
----       create "after/ftplugin/lua.lua" with the following content: >
+---       create "after/ftplugin/lua.lua" with the following content: >lua
 ---
 ---         vim.b.minihipatterns_config = {
 ---           highlighters = {
@@ -190,7 +190,7 @@
 ---           }
 ---         }
 --- <
----     - Use callable `pattern` with condition. For example: >
+---     - Use callable `pattern` with condition. For example: >lua
 ---
 ---       require('mini.hipatterns').setup({
 ---         highlighters = {
@@ -224,9 +224,10 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniHipatterns.config|.
 ---
----@usage `require('mini.hipatterns').setup({})` (replace `{}` with your `config` table)
----@text
---- Note: no highlighters is defined by default. Add them for visible effect.
+---@usage >lua
+---   require('mini.hipatterns').setup({}) -- replace {} with your config table
+---                                        -- needs `highlighters` field present
+--- <
 MiniHipatterns.setup = function(config)
   -- Export module
   _G.MiniHipatterns = MiniHipatterns
@@ -574,13 +575,14 @@ MiniHipatterns.gen_highlighter = {}
 ---@return table Highlighter table ready to be used as part of `config.highlighters`.
 ---   Both `pattern` and `group` are callable.
 ---
----@usage >
+---@usage >lua
 ---   local hipatterns = require('mini.hipatterns')
 ---   hipatterns.setup({
 ---     highlighters = {
 ---       hex_color = hipatterns.gen_highlighter.hex_color(),
 ---     }
 ---   })
+--- <
 MiniHipatterns.gen_highlighter.hex_color = function(opts)
   local default_opts = { style = 'full', priority = 200, filter = H.always_true, inline_text = '█' }
   opts = vim.tbl_deep_extend('force', default_opts, opts or {})

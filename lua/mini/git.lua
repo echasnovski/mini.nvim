@@ -73,7 +73,7 @@
 ---
 --- Tracked buffer data can be used in statusline via `vim.b.minigit_summary_string`
 --- buffer-local variable. It is expected to be used as is. To show another info,
---- tweak buffer-local variable directly inside `MiniGitUpdated` `User` event: >
+--- tweak buffer-local variable directly inside `MiniGitUpdated` `User` event: >lua
 ---
 ---   -- Use only HEAD name as summary string
 ---   local format_summary = function(data)
@@ -90,7 +90,7 @@
 --- Buffer output of |:Git| command can be tweaked inside autocommand for
 --- `MiniGitCommandSplit` `User` event (see |MiniGit-command-events|).
 --- For example, to make `:vertical Git blame -- %` align blame output with the
---- current window state, use the following code: >
+--- current window state, use the following code: >lua
 ---
 ---   local align_blame = function(au_data)
 ---     if au_data.data.git_subcommand ~= 'blame' then return end
@@ -126,10 +126,11 @@
 ---   is on the "deleted" line (i.e. line starting with "-") in which case
 ---   state before commit is shown.
 ---
---- This workflow can be made more interactive when used with mapping, like this: >
+--- This workflow can be made more interactive when used with mapping, like this: >lua
 ---
 ---   local rhs = '<Cmd>lua MiniGit.show_at_cursor()<CR>'
 ---   vim.keymap.set({ 'n', 'x' }, '<Leader>gs', rhs, { desc = 'Show at cursor' })
+--- <
 ---@tag MiniGit-examples
 
 --- The `:Git` user command runs `git` CLI call with extra integration for currently
@@ -227,7 +228,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniGit.config|.
 ---
----@usage `require('mini.git').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.git').setup() -- use default config
+---   -- OR
+---   require('mini.git').setup({}) -- replace {} with your config table
+--- <
 MiniGit.setup = function(config)
   -- Export module
   _G.MiniGit = MiniGit
@@ -462,7 +467,8 @@ end
 --- - At level 3 there is no folds.
 ---
 --- For automated setup, set the following for "git" and "diff" filetypes (either
---- inside |FileType| autocommand or |ftplugin|): >
+--- inside |FileType| autocommand or |ftplugin|): >vim
+---
 ---   setlocal foldmethod=expr foldexpr=v:lua.MiniGit.diff_foldexpr()
 --- <
 ---@param lnum number|nil Line number for which fold level is computed.

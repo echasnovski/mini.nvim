@@ -180,7 +180,7 @@
 --- - Visit path should not necessarily be a part of corresponding cwd.
 --- - Both `count` and `latest` can be any number: whole, fractional, negative, etc.
 ---
---- Example of an index data: >
+--- Example of an index data: >lua
 ---
 ---   {
 ---     ['/home/user/project_1'] = {
@@ -230,7 +230,7 @@
 --- Default sorting in |MiniVisits.gen_sort.default()| allows flexible adjustment
 --- of which feature to prefer more: recency or frequency. Here is an example of
 --- how to make set of keymaps for three types of sorting combined with two types
---- of scopes (all visits and only for current cwd): >
+--- of scopes (all visits and only for current cwd): >lua
 ---
 ---   local make_select_path = function(select_global, recency_weight)
 ---     local visits = require('mini.visits')
@@ -254,7 +254,6 @@
 ---   map('<Leader>vf', 'Select frequent (all)', true,  0)
 ---   map('<Leader>vF', 'Select frequent (cwd)', false, 0)
 --- <
----
 --- Note: If you have |MiniPick|, consider using |MiniExtra.pickers.visit_paths()|.
 ---
 --- ## Use manual labels ~
@@ -268,7 +267,7 @@
 ---   having selected label.
 ---   Note: If you have |MiniPick|, consider using |MiniExtra.pickers.visit_labels()|.
 ---
---- To make this workflow smoother, here is an example of keymaps: >
+--- To make this workflow smoother, here is an example of keymaps: >lua
 ---
 ---   local map_vis = function(keys, call, desc)
 ---     local rhs = '<Cmd>lua MiniVisits.' .. call .. '<CR>'
@@ -285,7 +284,7 @@
 --- During work on every project there is usually a handful of files where core
 --- activity is concentrated. This can be made easier by creating mappings
 --- which add/remove special fixed label (for example, "core") and select paths
---- with that label for both all and current cwd. Example: >
+--- with that label for both all and current cwd. Example: >lua
 ---
 ---   -- Create and select
 ---   local map_vis = function(keys, call, desc)
@@ -316,7 +315,7 @@
 ---
 --- When using version control system (such as Git), usually there is already
 --- an identifier that groups files you are working with - branch name.
---- Here is an example of keymaps to add/remove label equal to branch name: >
+--- Here is an example of keymaps to add/remove label equal to branch name: >lua
 ---
 ---   local map_branch = function(keys, action, desc)
 ---     local rhs = function()
@@ -330,6 +329,7 @@
 ---
 ---   map_branch('vb', 'add_label',    'Add branch label')
 ---   map_branch('vB', 'remove_label', 'Remove branch label')
+--- <
 ---@tag MiniVisits-examples
 
 ---@alias __visits_path string|nil Visit path. Can be empty string to mean "all visited
@@ -360,7 +360,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniVisits.config|.
 ---
----@usage `require('mini.visits').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.visits').setup() -- use default config
+---   -- OR
+---   require('mini.visits').setup({}) -- replace {} with your config table
+--- <
 MiniVisits.setup = function(config)
   -- Export module
   _G.MiniVisits = MiniVisits
@@ -622,19 +626,17 @@ end
 --- Convert visit index for certain cwd into an ordered list of visited paths.
 --- Supports custom filtering and sorting.
 ---
---- Examples:
---- - Get paths sorted from most to least recent: >
+--- Examples: >lua
 ---
+---   -- Get paths sorted from most to least recent
 ---   local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
 ---   MiniVisits.list_paths(nil, { sort = sort_recent })
---- <
---- - Get paths from all cwd sorted from most to least frequent: >
 ---
+---   -- Get paths from all cwd sorted from most to least frequent
 ---   local sort_frequent = MiniVisits.gen_sort.default({ recency_weight = 0 })
 ---   MiniVisits.list_paths('', { sort = sort_frequent })
---- <
---- - Get paths not including hidden: >
 ---
+---   -- Get paths not including hidden
 ---   local is_not_hidden = function(path_data)
 ---     return not vim.startswith(vim.fn.fnamemodify(path_data.path, ':t'), '.')
 ---   end
@@ -664,17 +666,15 @@ end
 --- Supports custom filtering for paths. Result is ordered from most to least
 --- frequent label.
 ---
---- Examples:
---- - Get labels for current path-cwd pair: >
+--- Examples: >lua
 ---
+---   -- Get labels for current path-cwd pair
 ---   MiniVisits.list_labels()
---- <
---- - Get labels for current path across all cwd: >
 ---
+---   -- Get labels for current path across all cwd
 ---   MiniVisits.list_labels(nil, '')
---- <
---- - Get all available labels excluding ones from hidden files: >
 ---
+---   -- Get all available labels excluding ones from hidden files
 ---   local is_not_hidden = function(path_data)
 ---     return not vim.startswith(vim.fn.fnamemodify(path_data.path, ':t'), '.')
 ---   end
@@ -725,10 +725,10 @@ end
 ---
 --- - Select from all visited paths: `MiniVisits.select_path('')`
 ---
---- - Select from paths under current directory sorted from most to least recent: >
+--- - Select from paths under current directory sorted from most to least recent: >lua
 ---
----   local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
----   MiniVisits.select_path(nil, { sort = sort_recent })
+---     local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
+---     MiniVisits.select_path(nil, { sort = sort_recent })
 --- <
 ---@param cwd string|nil Forwarded to |MiniVisits.list_paths()|.
 ---@param opts table|nil Forwarded to |MiniVisits.list_paths()|.
@@ -756,10 +756,10 @@ end
 --- - Select from all visited labels: `MiniVisits.select_label('', '')`
 ---
 --- - Select from current project labels and sort paths (after choosing) from most
----   to least recent: >
+---   to least recent: >lua
 ---
----   local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
----   MiniVisits.select_label('', nil, { sort = sort_recent })
+---     local sort_recent = MiniVisits.gen_sort.default({ recency_weight = 1 })
+---     MiniVisits.select_label('', nil, { sort = sort_recent })
 --- <
 ---@param path string|nil Forwarded to |MiniVisits.list_labels()|.
 ---@param cwd string|nil Forwarded to |MiniVisits.list_labels()|.
@@ -975,7 +975,7 @@ end
 --- - Do not append `/` to directory paths. Use same format as for files.
 ---
 --- Assuming `path_from` and `path_to` are variables containing full paths
---- before and after rename/move, here is an example to update current index: >
+--- before and after rename/move, here is an example to update current index: >lua
 ---
 ---   local new_index = MiniVisits.rename_in_index(path_from, path_to)
 ---   MiniVisits.set_index(new_index)

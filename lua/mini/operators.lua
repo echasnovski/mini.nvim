@@ -128,24 +128,25 @@
 ---
 --- There are two suggested ways to customize mappings:
 ---
---- - Change `prefix` in |MiniOperators.setup()| call. For example, doing >
+--- - Change `prefix` in |MiniOperators.setup()| call. For example, doing >lua
 ---
----   require('mini.operators').setup({ replace = { prefix = 'cr' } })
+---     require('mini.operators').setup({ replace = { prefix = 'cr' } })
 --- <
----   will make mappings for `cr`/`crr`/`cr` instead of `gr`/`grr`/`gr`.
+---   will make mappings for `cr` / `crr` / `cr` instead of `gr` / `grr` / `gr`.
 ---
 --- - Disable automated mapping creation by supplying empty string as prefix and
----   use |MiniOperators.make_mappings()| directly. For example: >
+---   use |MiniOperators.make_mappings()| directly. For example: >lua
 ---
----   -- Disable automated creation of "replace"
----   local operators = require('mini.operators')
----   operators.setup({ replace = { prefix = '' } })
+---     -- Disable automated creation of "replace"
+---     local operators = require('mini.operators')
+---     operators.setup({ replace = { prefix = '' } })
 ---
----   -- Make custom mappings
----   operators.make_mappings(
----     'replace',
----     { textobject = 'cr', line = 'crr', selection = 'cr' }
----   )
+---     -- Make custom mappings
+---     operators.make_mappings(
+---       'replace',
+---       { textobject = 'cr', line = 'crr', selection = 'cr' }
+---     )
+--- <
 ---@tag MiniOperators-overview
 
 ---@alias __operators_mode string|nil One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
@@ -166,7 +167,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniOperators.config|.
 ---
----@usage `require('mini.operators').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.operators').setup() -- use default config
+---   -- OR
+---   require('mini.operators').setup({}) -- replace {} with your config table
+--- <
 MiniOperators.setup = function(config)
   -- Export module
   _G.MiniOperators = MiniOperators
@@ -244,7 +249,7 @@ end
 --- Takes content table as input (see "Evaluate" section) and should return
 --- array of lines as output.
 ---
---- Example of `sort.func` which asks user for custom delimiter for charwise region: >
+--- Example of `sort.func` which asks user for custom delimiter for charwise region: >lua
 ---
 ---   local sort_func = function(content)
 ---     local opts = {}
@@ -516,11 +521,12 @@ end
 ---   Supply empty string to not create particular mapping. Note: creating `line`
 ---   mapping needs `textobject` mapping to be set.
 ---
----@usage >
+---@usage >lua
 ---   require('mini.operators').make_mappings(
 ---     'replace',
 ---     { textobject = 'cr', line = 'crr', selection = 'cr' }
 ---   )
+--- <
 MiniOperators.make_mappings = function(operator_name, lhs_tbl)
   -- Validate arguments
   if not (type(operator_name) == 'string' and MiniOperators[operator_name] ~= nil) then

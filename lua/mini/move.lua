@@ -85,7 +85,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniMove.config|.
 ---
----@usage `require('mini.move').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.move').setup() -- use default config
+---   -- OR
+---   require('mini.move').setup({}) -- replace {} with your config table
+--- <
 MiniMove.setup = function(config)
   -- Export module
   _G.MiniMove = MiniMove
@@ -103,9 +107,9 @@ end
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 ---@text # Mappings ~
 ---
---- Other possible choices of mappings:
+--- Other possible choices of mappings: >lua
 ---
---- - `HJKL` for moving visual selection (overrides |H|, |L|, |v_J| in Visual mode): >
+---   -- `HJKL` for moving visual selection (overrides H, L, J in Visual mode)
 ---   require('mini.move').setup({
 ---     mappings = {
 ---       left  = 'H',
@@ -115,7 +119,7 @@ end
 ---     }
 ---   })
 ---
---- - Shift + arrows: >
+---   -- Shift + arrows
 ---   require('mini.move').setup({
 ---     mappings = {
 ---       left  = '<S-left>',
@@ -129,6 +133,7 @@ end
 ---       line_up    = '<S-up>',
 ---     }
 ---   })
+--- <
 MiniMove.config = {
   -- Module mappings. Use `''` (empty string) to disable one.
   mappings = {

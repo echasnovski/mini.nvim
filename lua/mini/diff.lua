@@ -131,6 +131,7 @@
 ---     - Update overlay view (if it is enabled).
 ---     - Update `vim.b.minidiff_summary` and `vim.b.minidiff_summary_string`
 ---       buffer-local variables. These can be used, for example, in statusline.
+---                                                          *MiniDiff-update-event*
 ---     - Trigger `MiniDiffUpdated` `User` event. See |MiniDiff-diff-summary| for
 ---       example of how to use it.
 ---
@@ -204,7 +205,7 @@
 ---   with a fixed format. It is expected to be used as is. To achieve
 ---   different formatting, use `vim.b.minidiff_summary` to construct one.
 ---   The best way to do this is by overriding `vim.b.minidiff_summary_string`
----   in the callback for `MiniDiffUpdated` event: >
+---   in the callback for |MiniDiff-update-event| event: >lua
 ---
 ---   local format_summary = function(data)
 ---     local summary = vim.b[data.buf].minidiff_summary
@@ -216,6 +217,7 @@
 ---   end
 ---   local au_opts = { pattern = 'MiniDiffUpdated', callback = format_summary }
 ---   vim.api.nvim_create_autocmd('User', au_opts)
+--- <
 ---@tag MiniDiff-overview
 
 ---@alias __diff_buf_id number Target buffer identifier. Default: 0 for current buffer.
@@ -235,7 +237,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniDiff.config|.
 ---
----@usage `require('mini.diff').setup({})` (replace `{}` with your `config` table).
+---@usage >lua
+---   require('mini.diff').setup() -- use default config
+---   -- OR
+---   require('mini.diff').setup({}) -- replace {} with your config table
+--- <
 MiniDiff.setup = function(config)
   -- Export module
   _G.MiniDiff = MiniDiff
@@ -264,7 +270,7 @@ end
 ---@text # View ~
 ---
 --- `config.view` contains settings for how diff hunks are visualized.
---- Example of using custom signs: >
+--- Example of using custom signs: >lua
 ---
 ---   require('mini.diff').setup({
 ---     view = {
@@ -523,7 +529,7 @@ end
 
 --- Export hunks
 ---
---- Get and convert hunks from current/all buffers. Example of using it: >
+--- Get and convert hunks from current/all buffers. Example of using it: >lua
 ---
 ---   -- Set quickfix list from all available hunks
 ---   vim.fn.setqflist(MiniDiff.export('qf'))
@@ -602,10 +608,11 @@ end
 --- Generate builtin sources
 ---
 --- This is a table with function elements. Call to actually get source.
---- Example of using |MiniDiff.gen_source.save()|: >
+--- Example of using |MiniDiff.gen_source.save()|: >lua
 ---
 ---   local diff = require('mini.diff')
 ---   diff.setup({ source = diff.gen_source.save() })
+--- <
 MiniDiff.gen_source = {}
 
 --- Git source
@@ -786,7 +793,7 @@ end
 --- Perform action over region defined by marks. Used in mappings.
 ---
 --- Example of a mapping to yank reference lines of hunk range under cursor
---- (assuming default 'config.mappings.textobject'): >
+--- (assuming default 'config.mappings.textobject'): >lua
 ---
 ---   local rhs = function() return MiniDiff.operator('yank') .. 'gh' end
 ---   vim.keymap.set('n', 'ghy', rhs, { expr = true, remap = true })

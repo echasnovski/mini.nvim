@@ -233,7 +233,7 @@
 --- # Full starter example ~
 ---
 --- If not sure where to start, try this example with all provided clues from
---- this module plus all |<Leader>| mappings in Normal and Visual modes: >
+--- this module plus all |<Leader>| mappings in Normal and Visual modes: >lua
 ---
 ---   local miniclue = require('mini.clue')
 ---   miniclue.setup({
@@ -279,10 +279,10 @@
 ---       miniclue.gen_clues.z(),
 ---     },
 ---   })
----
+--- <
 --- # Leader clues ~
 ---
---- Assume there are these |<Leader>| mappings set up: >
+--- Assume there are these |<Leader>| mappings set up: >lua
 ---
 ---   -- Set `<Leader>` before making any mappings and configuring 'mini.clue'
 ---   vim.g.mapleader = ' '
@@ -301,10 +301,9 @@
 ---   xmap_leader('lf', '<Cmd>lua vim.lsp.buf.format()<CR>',     'Format')
 ---   nmap_leader('lr', '<Cmd>lua vim.lsp.buf.rename()<CR>',     'Rename')
 ---   nmap_leader('lR', '<Cmd>lua vim.lsp.buf.references()<CR>', 'References')
----
----
+--- <
 --- The following setup will enable |<Leader>| as trigger in Normal and Visual
---- modes and add descriptions to mapping groups: >
+--- modes and add descriptions to mapping groups: >lua
 ---
 ---   require('mini.clue').setup({
 ---     -- Register `<Leader>` as trigger
@@ -319,13 +318,13 @@
 ---       { mode = 'n', keys = '<Leader>l', desc = '+LSP' },
 ---     },
 ---   })
----
+--- <
 --- # Clues without mappings ~
 ---
 --- Clues can be shown not only for actually present mappings. This is helpful for
 --- showing clues for built-in key combinations. Here is an example of clues for
 --- a subset of built-in completion (see |MiniClue.gen_clues.builtin_completion()|
---- to generate clues for all available completion sources): >
+--- to generate clues for all available completion sources): >lua
 ---
 ---   require('mini.clue').setup({
 ---     -- Make `<C-x>` a trigger. Otherwise, key query process won't start.
@@ -368,7 +367,7 @@
 ---     - Press any of `h`/`j`/`k`/`l` to move selection/line.
 ---     - Press `<Esc>` to stop submode.
 ---
----   The code: >
+---   The code: >lua
 ---
 ---   require('mini.move').setup({
 ---     mappings = {
@@ -399,13 +398,13 @@
 ---       { mode = 'x', keys = '<Leader>ml', postkeys = '<Leader>m' },
 ---     },
 ---   })
----
+--- <
 --- - Submode for iterating buffers and windows with |mini.bracketed|:
 ---     - Press `[` or `]` to start key query process for certain direction.
 ---     - Press `b` / `w` to iterate buffers/windows until reach target one.
 ---     - Press `<Esc>` to stop submode.
 ---
----   The code: >
+---   The code: >lua
 ---
 ---   require('mini.bracketed').setup()
 ---
@@ -422,13 +421,13 @@
 ---       { mode = 'n', keys = '[w', postkeys = '[' },
 ---     },
 ---   })
----
+--- <
 --- - Submode for window commands using |MiniClue.gen_clues.windows()|:
 ---     - Press `<C-w>` to start key query process.
 ---     - Press keys which move / change focus / resize windows.
 ---     - Press `<Esc>` to stop submode.
 ---
----   The code: >
+---   The code: >lua
 ---
 ---   local miniclue = require('mini.clue')
 ---   miniclue.setup({
@@ -443,9 +442,9 @@
 ---       })
 ---     },
 ---   })
----
+--- <
 --- # Window config ~
---- >
+--- >lua
 ---   require('mini.clue').setup({
 ---     triggers = { { mode = 'n', keys = '<Leader>' } },
 ---
@@ -462,6 +461,7 @@
 ---       },
 ---     },
 ---   })
+--- <
 ---@tag MiniClue-examples
 
 ---@diagnostic disable:undefined-field
@@ -477,8 +477,10 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniClue.config|.
 ---
----@usage `require('mini.clue').setup({})` (replace `{}` with your `config` table).
---- **Needs to have triggers configured**.
+---@usage >lua
+---   require('mini.clue').setup({}) -- replace {} with your config table
+---                                  -- needs `triggers` field present
+--- <
 MiniClue.setup = function(config)
   -- Export module
   _G.MiniClue = MiniClue
@@ -556,7 +558,7 @@ end
 ---   computed automatically based on its content. Default is fixed width of 30.
 --- - <row> and <col> can be equal to `"auto"` in which case they will be
 ---   computed to "stick" to set anchor ("SE" by default; see |nvim_open_win()|).
----   This allows changing corner in which window is shown: >
+---   This allows changing corner in which window is shown: >lua
 ---
 ---   -- Pick one anchor
 ---   local anchor = 'NW' -- top-left
@@ -569,7 +571,7 @@ end
 ---       config = { anchor = anchor, row = 'auto', col = 'auto' },
 ---     },
 ---   })
----
+--- <
 --- `config.window.scroll_down` / `config.window.scroll_up` are strings defining
 --- keys which will scroll clue window down / up which is useful in case not
 --- all clues fit in current window height. Set to empty string `''` to disable
@@ -676,10 +678,10 @@ MiniClue.gen_clues = {}
 
 --- Generate clues for built-in completion
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'i', keys = '<C-x>' }
----
+--- <
 ---@return table Array of clues.
 MiniClue.gen_clues.builtin_completion = function()
   --stylua: ignore
@@ -706,11 +708,11 @@ end
 
 --- Generate clues for `g` key
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'n', keys = 'g' }
 ---   { mode = 'x', keys = 'g' }
----
+--- <
 ---@return table Array of clues.
 MiniClue.gen_clues.g = function()
   --stylua: ignore
@@ -792,7 +794,7 @@ end
 
 --- Generate clues for marks
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'n', keys = "'" }
 ---   { mode = 'n', keys = "g'" }
@@ -802,7 +804,7 @@ end
 ---   { mode = 'x', keys = "g'" }
 ---   { mode = 'x', keys = '`' }
 ---   { mode = 'x', keys = 'g`' }
----
+--- <
 --- Note: if you use "g" as trigger (like to enable |MiniClue.gen_clues.g()|),
 --- don't add "g'" and "g`" as triggers: they already will be taken into account.
 ---
@@ -848,13 +850,13 @@ end
 
 --- Generate clues for registers
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'n', keys = '"' }
 ---   { mode = 'x', keys = '"' }
 ---   { mode = 'i', keys = '<C-r>' }
 ---   { mode = 'c', keys = '<C-r>' }
----
+--- <
 ---@param opts table|nil Options. Possible keys:
 ---   - <show_contents> `(boolean)` - whether to show contents of all possible
 ---     registers. If `false`, only description of special registers is shown.
@@ -923,10 +925,10 @@ end
 
 --- Generate clues for window commands
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'n', keys = '<C-w>' }
----
+--- <
 --- Note: only non-duplicated commands are included. For full list see |CTRL-W|.
 ---
 ---@param opts table|nil Options. Possible keys:
@@ -1002,11 +1004,11 @@ end
 
 --- Generate clues for `z` key
 ---
---- Contains clues for the following triggers: >
+--- Contains clues for the following triggers: >lua
 ---
 ---   { mode = 'n', keys = 'z' }
 ---   { mode = 'x', keys = 'z' }
----
+--- <
 ---@return table Array of clues.
 MiniClue.gen_clues.z = function()
   --stylua: ignore

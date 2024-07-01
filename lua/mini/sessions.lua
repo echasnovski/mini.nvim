@@ -63,7 +63,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniSessions.config|.
 ---
----@usage `require('mini.sessions').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.sessions').setup() -- use default config
+---   -- OR
+---   require('mini.sessions').setup({}) -- replace {} with your config table
+--- <
 MiniSessions.setup = function(config)
   -- Export module
   _G.MiniSessions = MiniSessions

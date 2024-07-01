@@ -70,7 +70,11 @@ local H = {}
 ---
 ---@param config table|nil Module config table. See |MiniBasics.config|.
 ---
----@usage `require('mini.basics').setup({})` (replace `{}` with your `config` table)
+---@usage >lua
+---   require('mini.basics').setup() -- use default config
+---   -- OR
+---   require('mini.basics').setup({}) -- replace {} with your config table
+--- <
 MiniBasics.setup = function(config)
   -- Export module
   _G.MiniBasics = MiniBasics
@@ -89,7 +93,8 @@ end
 ---@text                                                      *MiniBasics.config.options*
 --- # Options ~
 ---
---- Usage example: >
+--- Usage example: >lua
+---
 ---   require('mini.basics').setup({
 ---     options = {
 ---       basic = true,
@@ -97,7 +102,7 @@ end
 ---       win_borders = 'double',
 ---     }
 ---   })
----
+--- <
 --- ## options.basic ~
 ---
 --- The `config.options.basic` sets certain options to values which are quite
@@ -170,7 +175,8 @@ end
 ---                                                     *MiniBasics.config.mappings*
 --- # Mappings ~
 ---
---- Usage example: >
+--- Usage example: >lua
+---
 ---   require('mini.basics').setup({
 ---     mappings = {
 ---       basic = true,
@@ -179,13 +185,9 @@ end
 ---       move_with_alt = true,
 ---     }
 ---   })
----
+--- <
 --- If you don't want only some mappings to be made at all, use |vim.keymap.del()|
---- after calling |MiniMisc.setup()|. For example, to delete `<C-w>` mapping in
---- |Terminal-mode| (as it conflicts with `<C-w>` usage in terminal emulators)
---- use this code: >
----
----   vim.keymap.del('t', '<C-w>').
+--- after calling |MiniBasics.setup()|.
 ---
 --- ## mappings.basic ~
 ---
@@ -289,14 +291,15 @@ end
 ---                                                 *MiniBasics.config.autocommands*
 --- # Autocommands ~
 ---
---- Usage example: >
+--- Usage example: >lua
+---
 ---   require('mini.basics').setup({
 ---     autocommands = {
 ---       basic = true,
 ---       relnum_in_visual_mode = true,
 ---     }
 ---   })
----
+--- <
 --- ## autocommands.basic ~
 ---
 --- The `config.autocommands.basic` creates some common autocommands:
