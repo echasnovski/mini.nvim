@@ -138,7 +138,7 @@
 ---     local timer = vim.loop.new_timer()
 ---     local n_seconds = 0
 ---     timer:start(0, 1000, vim.schedule_wrap(function()
----       if vim.bo.filetype ~= 'starter' then
+---       if vim.bo.filetype ~= 'ministarter' then
 ---         timer:stop()
 ---         return
 ---       end
@@ -225,7 +225,7 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniStarter.config = {
-  -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
+  -- Whether to open Starter buffer on VimEnter. Not opened if Neovim was
   -- started with intent to show something else.
   autoopen = true,
 
@@ -250,7 +250,7 @@ MiniStarter.config = {
   footer = nil,
 
   -- Array  of functions to be applied consecutively to initial content.
-  -- Each function should take and return content for 'Starter' buffer (see
+  -- Each function should take and return content for Starter buffer (see
   -- |mini.starter| and |MiniStarter.get_content()| for more details).
   content_hooks = nil,
 
@@ -710,7 +710,7 @@ end
 ---
 --- Output is a content hook which independently aligns content horizontally
 --- and vertically. Window width and height are taken from first window in current
---- tabpage displaying the starter buffer.
+--- tabpage displaying the Starter buffer.
 ---
 --- Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
 --- such that output lines would appear aligned in certain way.
@@ -1316,7 +1316,7 @@ H.make_query = function(buf_id, query, echo_msg)
   end
 end
 
--- Work with starter buffer ---------------------------------------------------
+-- Work with Starter buffer ---------------------------------------------------
 H.make_buffer_autocmd = function(buf_id)
   local augroup = vim.api.nvim_create_augroup('MiniStarterBuffer', {})
 
@@ -1348,14 +1348,14 @@ H.apply_buffer_options = function(buf_id)
   local name = H.buffer_number <= 1 and 'Starter' or ('Starter_' .. H.buffer_number)
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ':t') == name then
-      name = 'starter://' .. H.buffer_number
+      name = 'ministarter://' .. H.buffer_number
       break
     end
   end
   vim.api.nvim_buf_set_name(buf_id, name)
 
   -- Having `noautocmd` is crucial for performance: ~9ms without it, ~1.6ms with it
-  vim.cmd('noautocmd silent! set filetype=starter')
+  vim.cmd('noautocmd silent! set filetype=ministarter')
 
   local options = {
     -- Taken from 'vim-startify'

@@ -19,7 +19,7 @@ local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
 -- Make helpers
-local is_starter_shown = function() return child.api.nvim_buf_get_option(0, 'filetype') == 'starter' end
+local is_starter_shown = function() return child.api.nvim_buf_get_option(0, 'filetype') == 'ministarter' end
 
 local validate_starter_shown = function() eq(is_starter_shown(), true) end
 
@@ -292,7 +292,7 @@ T['open()']['creates unique buffer names'] = function()
   local buf_id = child.api.nvim_create_buf(true, false)
   child.api.nvim_buf_set_name(buf_id, child.fn.getcwd() .. '/Starter_3')
   child.lua('MiniStarter.open()')
-  eq(child.api.nvim_buf_get_name(0), 'starter://3')
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://3')
 end
 
 T['open()']['respects `vim.{g,b}.ministarter_disable`'] = new_set({
@@ -1432,7 +1432,7 @@ T['Multiple buffers']['are allowed'] = function()
   eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
 
   eq(child.api.nvim_buf_is_valid(buf_id_1), true)
-  eq(child.api.nvim_buf_get_option(buf_id_1, 'filetype'), 'starter')
+  eq(child.api.nvim_buf_get_option(buf_id_1, 'filetype'), 'ministarter')
   eq(get_active_items_names(), { 'aaab', 'aaba', 'abaa', 'baaa' })
 
   -- State of first Starter buffer should not be affected by second one

@@ -140,7 +140,7 @@ header/footer, and content hooks: >lua
     local timer = vim.loop.new_timer()
     local n_seconds = 0
     timer:start(0, 1000, vim.schedule_wrap(function()
-      if vim.bo.filetype ~= 'starter' then
+      if vim.bo.filetype ~= 'ministarter' then
         timer:stop()
         return
       end
@@ -209,7 +209,7 @@ Module config
 Default values:
 >lua
   MiniStarter.config = {
-    -- Whether to open starter buffer on VimEnter. Not opened if Neovim was
+    -- Whether to open Starter buffer on VimEnter. Not opened if Neovim was
     -- started with intent to show something else.
     autoopen = true,
 
@@ -234,7 +234,7 @@ Default values:
     footer = nil,
 
     -- Array  of functions to be applied consecutively to initial content.
-    -- Each function should take and return content for 'Starter' buffer (see
+    -- Each function should take and return content for Starter buffer (see
     -- |mini.starter| and |MiniStarter.get_content()| for more details).
     content_hooks = nil,
 
@@ -469,7 +469,7 @@ Hook generator for aligning content
 
 Output is a content hook which independently aligns content horizontally
 and vertically. Window width and height are taken from first window in current
-tabpage displaying the starter buffer.
+tabpage displaying the Starter buffer.
 
 Basically, this computes left and top pads for |MiniStarter.gen_hook.padding|
 such that output lines would appear aligned in certain way.
