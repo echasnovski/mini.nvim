@@ -14,6 +14,10 @@
 
 - FEATURE: update `pickers.oldfiles()` to have `current_dir` option which if `true` shows files only from picker's working directory. By @abeldekat, PR #997.
 
+## mini.hipatterns
+
+- BREAKING FEATURE: update `compute_hex_color_group()` to compute based on combination of `hex_color` and `style`, opposed to just `hex_color`. This allows simultaneous usage of several styles in user's custom highlighters.
+
 ## mini.starter
 
 - BREAKING: change filetype of Starter buffer from 'starter' to 'ministarter'. This is a more robust value and more aligned with other modules.

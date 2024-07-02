@@ -1000,12 +1000,12 @@ T['gen_highlighter']['hex_color()']['works'] = function()
   -- Should use correct highlight groups
   --stylua: ignore
   eq(get_hipatterns_extmarks(0), {
-    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns000000' },
-    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatternsffffff' },
-    { line = 2, from_col = 1, to_col = 7,  hl_group = 'MiniHipatternsffffff' },
+    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_000000_bg' },
+    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns_ffffff_bg' },
+    { line = 2, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_ffffff_bg' },
   })
-  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'guifg=#ffffff guibg=#000000')
-  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'guifg=#000000 guibg=#ffffff')
+  expect.match(child.cmd_capture('hi MiniHipatterns_000000_bg'), 'guifg=#ffffff guibg=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatterns_ffffff_bg'), 'guifg=#000000 guibg=#ffffff')
 end
 
 T['gen_highlighter']['hex_color()']["works with style '#'"] = function()
@@ -1017,11 +1017,11 @@ T['gen_highlighter']['hex_color()']["works with style '#'"] = function()
 
   -- Should use correct highlight groups
   eq(get_hipatterns_extmarks(0), {
-    { line = 1, from_col = 1, to_col = 1, hl_group = 'MiniHipatterns000000' },
-    { line = 1, from_col = 9, to_col = 9, hl_group = 'MiniHipatternsffffff' },
+    { line = 1, from_col = 1, to_col = 1, hl_group = 'MiniHipatterns_000000_bg' },
+    { line = 1, from_col = 9, to_col = 9, hl_group = 'MiniHipatterns_ffffff_bg' },
   })
-  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'guifg=#ffffff guibg=#000000')
-  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'guifg=#000000 guibg=#ffffff')
+  expect.match(child.cmd_capture('hi MiniHipatterns_000000_bg'), 'guifg=#ffffff guibg=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatterns_ffffff_bg'), 'guifg=#000000 guibg=#ffffff')
 end
 
 T['gen_highlighter']['hex_color()']["works with style 'line'"] = function()
@@ -1034,11 +1034,11 @@ T['gen_highlighter']['hex_color()']["works with style 'line'"] = function()
   -- Should use correct highlight groups
   --stylua: ignore
   eq(get_hipatterns_extmarks(0), {
-    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns000000' },
-    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatternsffffff' },
+    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_000000_line' },
+    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns_ffffff_line' },
   })
-  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'gui=underline guisp=#000000')
-  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'gui=underline guisp=#ffffff')
+  expect.match(child.cmd_capture('hi MiniHipatterns_000000_line'), 'gui=underline guisp=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatterns_ffffff_line'), 'gui=underline guisp=#ffffff')
 end
 
 T['gen_highlighter']['hex_color()']["works with style 'inline'"] = function()
@@ -1054,8 +1054,8 @@ T['gen_highlighter']['hex_color()']["works with style 'inline'"] = function()
   child.expect_screenshot()
 
   -- Should use correct highlight groups
-  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'guifg=#000000')
-  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'guifg=#ffffff')
+  expect.match(child.cmd_capture('hi MiniHipatterns_000000_fg'), 'guifg=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatterns_ffffff_fg'), 'guifg=#ffffff')
 end
 
 T['gen_highlighter']['hex_color()']['correctly computes highlight group'] = function()
@@ -1066,16 +1066,16 @@ T['gen_highlighter']['hex_color()']['correctly computes highlight group'] = func
 
   --stylua: ignore
   eq(get_hipatterns_extmarks(0), {
-    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns767676' },
-    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns777777' },
-    { line = 2, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns098777' },
-    { line = 2, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns178d7c' },
+    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_767676_bg' },
+    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns_777777_bg' },
+    { line = 2, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_098777_bg' },
+    { line = 2, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns_178d7c_bg' },
   })
 
-  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
-  validate_hl_group('MiniHipatterns777777', 'guifg=#000000 guibg=#777777')
-  validate_hl_group('MiniHipatterns098777', 'guifg=#ffffff guibg=#098777')
-  validate_hl_group('MiniHipatterns178d7c', 'guifg=#000000 guibg=#178d7c')
+  validate_hl_group('MiniHipatterns_767676_bg', 'guifg=#ffffff guibg=#767676')
+  validate_hl_group('MiniHipatterns_777777_bg', 'guifg=#000000 guibg=#777777')
+  validate_hl_group('MiniHipatterns_098777_bg', 'guifg=#ffffff guibg=#098777')
+  validate_hl_group('MiniHipatterns_178d7c_bg', 'guifg=#000000 guibg=#178d7c')
 end
 
 T['gen_highlighter']['hex_color()']['is present after color scheme change'] = function()
@@ -1089,11 +1089,11 @@ T['gen_highlighter']['hex_color()']['is present after color scheme change'] = fu
   sleep(2 * small_time)
   --stylua: ignore
   eq(get_hipatterns_extmarks(0), {
-    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns000000' },
-    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatternsffffff' },
+    { line = 1, from_col = 1, to_col = 7,  hl_group = 'MiniHipatterns_000000_bg' },
+    { line = 1, from_col = 9, to_col = 15, hl_group = 'MiniHipatterns_ffffff_bg' },
   })
-  expect.match(child.cmd_capture('hi MiniHipatterns000000'), 'guifg=#ffffff guibg=#000000')
-  expect.match(child.cmd_capture('hi MiniHipatternsffffff'), 'guifg=#000000 guibg=#ffffff')
+  expect.match(child.cmd_capture('hi MiniHipatterns_000000_bg'), 'guifg=#ffffff guibg=#000000')
+  expect.match(child.cmd_capture('hi MiniHipatterns_ffffff_bg'), 'guifg=#000000 guibg=#ffffff')
 end
 
 T['gen_highlighter']['hex_color()']['respects `opts.priority`'] = function()
@@ -1149,42 +1149,42 @@ T['compute_hex_color_group()'] = new_set()
 local compute_hex_color_group = forward_lua([[require('mini.hipatterns').compute_hex_color_group]])
 
 T['compute_hex_color_group()']['works'] = function()
-  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns000000')
-  eq(compute_hex_color_group('#ffffff', 'bg'), 'MiniHipatternsffffff')
-  eq(compute_hex_color_group('#767676', 'bg'), 'MiniHipatterns767676')
-  eq(compute_hex_color_group('#777777', 'bg'), 'MiniHipatterns777777')
-  eq(compute_hex_color_group('#098777', 'bg'), 'MiniHipatterns098777')
-  eq(compute_hex_color_group('#178d7c', 'bg'), 'MiniHipatterns178d7c')
+  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns_000000_bg')
+  eq(compute_hex_color_group('#ffffff', 'bg'), 'MiniHipatterns_ffffff_bg')
+  eq(compute_hex_color_group('#767676', 'bg'), 'MiniHipatterns_767676_bg')
+  eq(compute_hex_color_group('#777777', 'bg'), 'MiniHipatterns_777777_bg')
+  eq(compute_hex_color_group('#098777', 'bg'), 'MiniHipatterns_098777_bg')
+  eq(compute_hex_color_group('#178d7c', 'bg'), 'MiniHipatterns_178d7c_bg')
 
-  validate_hl_group('MiniHipatterns000000', 'guifg=#ffffff guibg=#000000')
-  validate_hl_group('MiniHipatternsffffff', 'guifg=#000000 guibg=#ffffff')
-  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
-  validate_hl_group('MiniHipatterns777777', 'guifg=#000000 guibg=#777777')
-  validate_hl_group('MiniHipatterns098777', 'guifg=#ffffff guibg=#098777')
-  validate_hl_group('MiniHipatterns178d7c', 'guifg=#000000 guibg=#178d7c')
+  validate_hl_group('MiniHipatterns_000000_bg', 'guifg=#ffffff guibg=#000000')
+  validate_hl_group('MiniHipatterns_ffffff_bg', 'guifg=#000000 guibg=#ffffff')
+  validate_hl_group('MiniHipatterns_767676_bg', 'guifg=#ffffff guibg=#767676')
+  validate_hl_group('MiniHipatterns_777777_bg', 'guifg=#000000 guibg=#777777')
+  validate_hl_group('MiniHipatterns_098777_bg', 'guifg=#ffffff guibg=#098777')
+  validate_hl_group('MiniHipatterns_178d7c_bg', 'guifg=#000000 guibg=#178d7c')
 
-  -- Should use cache per `hex_color`
-  eq(compute_hex_color_group('#767676', 'line'), 'MiniHipatterns767676')
-  validate_hl_group('MiniHipatterns767676', 'guifg=#ffffff guibg=#767676')
+  -- Should use cache per `hex_color` and `style` combination
+  eq(compute_hex_color_group('#767676', 'line'), 'MiniHipatterns_767676_line')
+  validate_hl_group('MiniHipatterns_767676_line', 'gui=underline guisp=#767676')
 end
 
 T['compute_hex_color_group()']['respects `style` argument'] = function()
-  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns000000')
-  validate_hl_group('MiniHipatterns000000', 'gui=underline guisp=#000000')
-  eq(compute_hex_color_group('#aaaaaa', 'fg'), 'MiniHipatternsaaaaaa')
-  validate_hl_group('MiniHipatternsaaaaaa', 'guifg=#aaaaaa')
+  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns_000000_line')
+  validate_hl_group('MiniHipatterns_000000_line', 'gui=underline guisp=#000000')
+  eq(compute_hex_color_group('#aaaaaa', 'fg'), 'MiniHipatterns_aaaaaa_fg')
+  validate_hl_group('MiniHipatterns_aaaaaa_fg', 'guifg=#aaaaaa')
 end
 
-T['compute_hex_color_group()']['clears cache after `:colorscheme`'] = function()
+T['compute_hex_color_group()']['persists after `:colorscheme`'] = function()
   -- Needs `setup()` call to create `ColorScheme` autocommand
   load_module()
 
-  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns000000')
-  validate_hl_group('MiniHipatterns000000', 'guifg=#ffffff guibg=#000000')
+  eq(compute_hex_color_group('#000000', 'bg'), 'MiniHipatterns_000000_bg')
+  validate_hl_group('MiniHipatterns_000000_bg', 'guifg=#ffffff guibg=#000000')
 
   child.cmd('colorscheme blue')
-  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns000000')
-  validate_hl_group('MiniHipatterns000000', 'gui=underline guisp=#000000')
+  eq(compute_hex_color_group('#000000', 'line'), 'MiniHipatterns_000000_line')
+  validate_hl_group('MiniHipatterns_000000_line', 'gui=underline guisp=#000000')
 end
 
 return T

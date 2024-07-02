@@ -468,13 +468,13 @@ Compute and create group to highlight hex color string
 Notes:
 - This works properly only with enabled |termguicolors|.
 
-- To increase performance, it caches highlight groups per `hex_color`. If
-  you want to try different style in current Neovim session, execute
-  |:colorscheme| command to clear cache. Needs a call to |MiniHipatterns.setup()|.
+- To increase performance, it caches highlight groups per `hex_color` and
+  `style` combination. Needs a call to |MiniHipatterns.setup()| to have
+  these groups be persistent across color scheme changes.
 
 Parameters ~
 {hex_color} `(string)` Hex color string in format `#rrggbb`.
-{style} `(string)` One of:
+{style|nil} `(string)` One of:
   - `'bg'` - highlight background with `hex_color` and foreground with black or
     white (whichever is more visible). Default.
   - `'fg'` - highlight foreground with `hex_color`.

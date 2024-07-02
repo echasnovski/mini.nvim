@@ -617,12 +617,12 @@ end
 --- Notes:
 --- - This works properly only with enabled |termguicolors|.
 ---
---- - To increase performance, it caches highlight groups per `hex_color`. If
----   you want to try different style in current Neovim session, execute
----   |:colorscheme| command to clear cache. Needs a call to |MiniHipatterns.setup()|.
+--- - To increase performance, it caches highlight groups per `hex_color` and
+---   `style` combination. Needs a call to |MiniHipatterns.setup()| to have
+---   these groups be persistent across color scheme changes.
 ---
 ---@param hex_color string Hex color string in format `#rrggbb`.
----@param style string One of:
+---@param style|nil string One of:
 ---   - `'bg'` - highlight background with `hex_color` and foreground with black or
 ---     white (whichever is more visible). Default.
 ---   - `'fg'` - highlight foreground with `hex_color`.
@@ -630,8 +630,9 @@ end
 ---
 ---@return string Name of created highlight group appropriate to show `hex_color`.
 MiniHipatterns.compute_hex_color_group = function(hex_color, style)
+  style = style or 'bg'
   local hex = hex_color:lower():sub(2)
-  local group_name = 'MiniHipatterns' .. hex
+  local group_name = string.format('MiniHipatterns_%s_%s', hex, style)
 
   -- Use manually tracked table instead of `vim.fn.hlexists()` because the
   -- latter still returns true for cleared highlights
