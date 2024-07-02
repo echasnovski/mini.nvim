@@ -19,18 +19,18 @@
 ---
 --- # Dependencies ~
 ---
---- Suggested dependencies (provide extra functionality, statusline will work
---- without them):
+--- Suggested dependencies (provide extra functionality, will work without them):
+---
 --- - Nerd font (to support extra icons).
+---
+--- - Enabled |MiniIcons| module for |MiniStatusline.section_fileinfo()|.
+---   Falls back to using 'nvim-tree/nvim-web-devicons' plugin or shows nothing.
 ---
 --- - Enabled |MiniGit| module for |MiniStatusline.section_git()|.
 ---   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
 ---
 --- - Enabled |MiniDiff| module for |MiniStatusline.section_diff()|.
 ---   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
----
---- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons
----   in |MiniStatusline.section_fileinfo()|. If missing, no icons will be shown.
 ---
 --- # Setup ~
 ---
@@ -393,6 +393,9 @@ end
 ---
 --- Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
 ---
+--- If `config.use_icons` is true and icon provider is present (see
+--- "Dependencies" section in |mini.statusline|), shows icon near the filetype.
+---
 ---@param args __statusline_args
 ---
 ---@return __statusline_section
@@ -404,7 +407,7 @@ MiniStatusline.section_fileinfo = function(args)
 
   -- Add filetype icon
   H.ensure_get_icon()
-  if H.get_icon ~= nil then filetype = H.get_icon() .. ' ' .. filetype end
+  if H.get_icon ~= nil then filetype = H.get_icon(filetype) .. ' ' .. filetype end
 
   -- Construct output string if truncated or buffer is not normal
   if MiniStatusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return filetype end
@@ -672,14 +675,20 @@ H.get_filesize = function()
 end
 
 H.ensure_get_icon = function()
-  local use_icons = H.use_icons or H.get_config().use_icons
-  if not use_icons then H.get_icon = nil end
-  if use_icons and H.get_icon == nil then
-    -- Have this `require()` here to not depend on plugin initialization order
+  if not (H.use_icons or H.get_config().use_icons) then
+    -- Show no icon
+    H.get_icon = nil
+  elseif H.get_icon ~= nil then
+    -- Cache only once
+    return
+  elseif _G.MiniIcons ~= nil then
+    -- Prefer 'mini.icons'
+    H.get_icon = function(filetype) return (_G.MiniIcons.get('filetype', filetype)) end
+  else
+    -- Try falling back to 'nvim-web-devicons'
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-    if has_devicons then
-      H.get_icon = function() return devicons.get_icon(vim.fn.expand('%:t'), nil, { default = true }) end
-    end
+    if not has_devicons then return end
+    H.get_icon = function() return (devicons.get_icon(vim.fn.expand('%:t'), nil, { default = true })) end
   end
 end
 

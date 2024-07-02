@@ -19,18 +19,18 @@ Features:
 
 # Dependencies ~
 
-Suggested dependencies (provide extra functionality, statusline will work
-without them):
+Suggested dependencies (provide extra functionality, will work without them):
+
 - Nerd font (to support extra icons).
+
+- Enabled |MiniIcons| module for |MiniStatusline.section_fileinfo()|.
+  Falls back to using 'nvim-tree/nvim-web-devicons' plugin or shows nothing.
 
 - Enabled |MiniGit| module for |MiniStatusline.section_git()|.
   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
 
 - Enabled |MiniDiff| module for |MiniStatusline.section_diff()|.
   Falls back to using 'lewis6991/gitsigns.nvim' plugin or shows nothing.
-
-- Plugin 'nvim-tree/nvim-web-devicons' for filetype icons
-  in |MiniStatusline.section_fileinfo()|. If missing, no icons will be shown.
 
 # Setup ~
 
@@ -316,6 +316,9 @@ Short output contains only buffer's 'filetype' and is returned if window
 width is lower than `args.trunc_width` or buffer is not normal.
 
 Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
+
+If `config.use_icons` is true and icon provider is present (see
+"Dependencies" section in |mini.statusline|), shows icon near the filetype.
 
 Parameters ~
 {args} `(table)` Section arguments.

@@ -271,11 +271,9 @@
 ---
 --- - |MiniStatusline| - minimal and fast statusline. Has ability to use custom
 ---   content supplied with concise function (using module's provided section
----   functions) along with builtin default. For full experience needs [Nerd
----   font](https://www.nerdfonts.com/),
----   [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin, and
----   [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
----   plugin (but works without any them).
+---   functions) along with builtin default. For full experience needs
+---   enabled |MiniDiff|, |MiniGit|, and |MiniIcons| modules (but works without
+---   any of them).
 ---
 --- - |MiniSurround| - fast and feature-rich surround plugin. Add, delete,
 ---   replace, find, highlight surrounding (like pair of parenthesis, quotes,

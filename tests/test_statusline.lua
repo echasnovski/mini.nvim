@@ -35,7 +35,7 @@ local get_two_windows = function()
 end
 
 -- Mocks
-local mock_devicons = function() child.cmd('set rtp+=tests/dir-statusline') end
+local mock_miniicons = function() child.lua('require("mini.icons").setup()') end
 
 local mock_gitsigns = function()
   child.b.gitsigns_head, child.b.gitsigns_status = 'main', '+1 ~2 -3'
@@ -420,7 +420,7 @@ T['section_lsp()']['respects `config.use_icons`'] = function()
   eq(child.lua_get([[MiniStatusline.section_lsp({})]]), '󰰎 +')
 end
 
-T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_devicons, post_case = unmock_file } })
+T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_miniicons, post_case = unmock_file } })
 
 local validate_fileinfo = function(args, pattern)
   local command = ('MiniStatusline.section_fileinfo({ %s })'):format(args)
@@ -432,7 +432,7 @@ T['section_fileinfo()']['works'] = function()
   child.cmd('edit ' .. mocked_filepath)
   local encoding = child.bo.fileencoding or child.bo.encoding
   local format = child.bo.fileformat
-  local pattern = '^ lua ' .. vim.pesc(encoding) .. '%[' .. vim.pesc(format) .. '%] 10B$'
+  local pattern = '^󰢱 lua ' .. vim.pesc(encoding) .. '%[' .. vim.pesc(format) .. '%] 10B$'
   validate_fileinfo('', pattern)
 end
 
@@ -441,9 +441,9 @@ T['section_fileinfo()']['respects `args.trunc_width`'] = function()
   child.cmd('edit ' .. mocked_filepath)
 
   set_width(100)
-  validate_fileinfo('trunc_width = 100', '^ lua...')
+  validate_fileinfo('trunc_width = 100', '^󰢱 lua...')
   set_width(99)
-  validate_fileinfo('trunc_width = 100', '^ lua$')
+  validate_fileinfo('trunc_width = 100', '^󰢱 lua$')
 end
 
 T['section_fileinfo()']['respects `config.use_icons`'] = function()
@@ -455,12 +455,16 @@ T['section_fileinfo()']['respects `config.use_icons`'] = function()
 
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
-  validate_fileinfo('', ' lua...')
+  validate_fileinfo('', '󰢱 lua...')
 end
 
-T['section_fileinfo()']["correctly asks 'nvim-web-devicons' for icon"] = function()
+T['section_fileinfo()']["can fall back to 'nvim-web-devicons'"] = function()
+  child.lua('_G.MiniIcons = nil')
+  -- Mock 'nvim-web-devicons'
+  child.cmd('set rtp+=tests/dir-statusline')
+
   child.cmd('e tmp.txt')
-  eq(child.lua_get('_G.devicons_args'), { filename = 'tmp.txt', options = { default = true } })
+  validate_fileinfo('', ' text...')
 end
 
 T['section_fileinfo()']['uses correct filetype'] = function()
@@ -486,7 +490,7 @@ T['section_fileinfo()']['is shown only in buffers with filetypes'] = function()
 
   -- Should still show even if buffer is not normal
   child.cmd('help')
-  validate_fileinfo('', '^ help$')
+  validate_fileinfo('', '^󰋖 help$')
 end
 
 T['section_filename()'] = new_set()
@@ -751,7 +755,7 @@ T['Default content']['active'] = new_set({
     pre_case = function()
       child.set_size(5, 160)
 
-      mock_devicons()
+      child.lua('require("mini.icons").setup()')
       mock_file(10)
 
       -- Mock filename section to use relative path for consistent screenshots
