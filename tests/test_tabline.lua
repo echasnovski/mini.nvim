@@ -14,7 +14,7 @@ local poke_eventloop = function() child.api.nvim_eval('1') end
 --stylua: ignore end
 
 -- Make helpers
-local mock_devicons = function() child.cmd('set rtp+=tests/dir-tabline') end
+local mock_miniicons = function() child.lua('require("mini.icons").setup()') end
 
 local edit = function(name) child.cmd('edit ' .. name) end
 
@@ -243,21 +243,31 @@ T['make_tabline_string()']['attaches correct highlight group to unnamed buffers'
 end
 
 T['make_tabline_string()']['respects `config.show_icons`'] = function()
-  mock_devicons()
+  child.cmd('edit LICENSE | edit init.lua')
+  eq(eval_tabline(true), '%#MiniTablineHidden# LICENSE %#MiniTablineCurrent# init.lua %#MiniTablineFill#')
 
-  -- If `true`, should add icons if `nvim-web-devicons` is found
-  child.cmd('edit LICENSE | edit aaa.lua')
-  eq(eval_tabline(true), '%#MiniTablineHidden#  LICENSE %#MiniTablineCurrent#  aaa.lua %#MiniTablineFill#')
+  -- If `true`, should add icons via 'mini.icons' first
+  mock_miniicons()
+  eq(eval_tabline(true), '%#MiniTablineHidden#  LICENSE %#MiniTablineCurrent#  init.lua %#MiniTablineFill#')
 
   -- If `false`, should not add icons
   child.lua('MiniTabline.config.show_icons = false')
   child.cmd('bnext')
-  eq(eval_tabline(true), '%#MiniTablineCurrent# LICENSE %#MiniTablineHidden# aaa.lua %#MiniTablineFill#')
+  eq(eval_tabline(true), '%#MiniTablineCurrent# LICENSE %#MiniTablineHidden# init.lua %#MiniTablineFill#')
 
   -- Should also use buffer local config
   child.b.minitabline_config = { show_icons = true }
   poke_eventloop()
-  eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  aaa.lua %#MiniTablineFill#')
+  eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  init.lua %#MiniTablineFill#')
+
+  -- Should prefer 'mini.icons' even if 'nvim-web-devicons' is present
+  child.cmd('set rtp+=tests/dir-tabline')
+  eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  init.lua %#MiniTablineFill#')
+
+  -- If no 'mini.icons' is set up, should fall back to 'nvim-web-devicons'
+  child.lua('_G.MiniIcons = nil')
+  reload_module()
+  eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  init.lua %#MiniTablineFill#')
 end
 
 T['make_tabline_string()']['respects `config.format`'] = function()
@@ -533,24 +543,24 @@ T['make_tabline_string()']['handles multibyte characters in labels'] = function(
 end
 
 T['make_tabline_string()']['handles multibyte icons'] = function()
-  mock_devicons()
+  mock_miniicons()
 
   edit('LICENSE')
   edit('aaaa.lua')
   edit('bbbb.txt')
 
   child.o.columns = 15
-  eq(eval_tabline(), 'ua   bbbb.txt ')
+  eq(eval_tabline(), 'ua  󰦪 bbbb.txt ')
 
   edit('aaaa.lua')
-  eq(eval_tabline(), 'aaa.lua   bbbb')
+  eq(eval_tabline(), 'aaa.lua  󰦪 bbbb')
 
-  validate_columns(16, 'aaa.lua   bbbb.')
-  validate_columns(17, 'aaaa.lua   bbbb.')
-  validate_columns(18, 'aaaa.lua   bbbb.t')
-  validate_columns(19, ' aaaa.lua   bbbb.t')
-  validate_columns(20, ' aaaa.lua   bbbb.tx')
-  validate_columns(21, ' aaaa.lua   bbbb.tx')
+  validate_columns(16, 'aaa.lua  󰦪 bbbb.')
+  validate_columns(17, 'aaaa.lua  󰦪 bbbb.')
+  validate_columns(18, 'aaaa.lua  󰦪 bbbb.t')
+  validate_columns(19, ' aaaa.lua  󰦪 bbbb.t')
+  validate_columns(20, ' aaaa.lua  󰦪 bbbb.tx')
+  validate_columns(21, '󰢱 aaaa.lua  󰦪 bbbb.tx')
 end
 
 T['make_tabline_string()']['respects `vim.{g,b}.minitabline_disable`'] = new_set({
@@ -569,16 +579,16 @@ T['default_format()']['works'] = function()
     return '_' .. MiniTabline.default_format(buf_id, label) .. '_'
   end]])
   edit('LICENSE')
-  edit('aaaa.lua')
+  edit('init.lua')
 
-  eq(eval_tabline(true), '%#MiniTablineHidden#_ LICENSE _%#MiniTablineCurrent#_ aaaa.lua _%#MiniTablineFill#')
+  eq(eval_tabline(true), '%#MiniTablineHidden#_ LICENSE _%#MiniTablineCurrent#_ init.lua _%#MiniTablineFill#')
 
-  mock_devicons()
-  eq(eval_tabline(true), '%#MiniTablineHidden#_  LICENSE _%#MiniTablineCurrent#_  aaaa.lua _%#MiniTablineFill#')
+  mock_miniicons()
+  eq(eval_tabline(true), '%#MiniTablineHidden#_  LICENSE _%#MiniTablineCurrent#_  init.lua _%#MiniTablineFill#')
 
   -- Should respect `config.use_icons`
   child.lua('MiniTabline.config.show_icons = false')
-  eq(eval_tabline(true), '%#MiniTablineHidden#_ LICENSE _%#MiniTablineCurrent#_ aaaa.lua _%#MiniTablineFill#')
+  eq(eval_tabline(true), '%#MiniTablineHidden#_ LICENSE _%#MiniTablineCurrent#_ init.lua _%#MiniTablineFill#')
 end
 
 -- Integration tests ==========================================================
