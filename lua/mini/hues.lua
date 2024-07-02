@@ -1100,6 +1100,16 @@ H.apply_colorscheme = function(config)
     hi('MiniHipatternsNote',  { fg=p.bg, bg=p.cyan,   bold=true})
     hi('MiniHipatternsTodo',  { fg=p.bg, bg=p.blue,   bold=true})
 
+    hi('MiniIconsAzure',  { fg=p.azure,   bg=nil })
+    hi('MiniIconsBlue',   { fg=p.blue,    bg=nil })
+    hi('MiniIconsCyan',   { fg=p.cyan,    bg=nil })
+    hi('MiniIconsGreen',  { fg=p.green,   bg=nil })
+    hi('MiniIconsGrey',   { fg=p.fg_edge, bg=nil })
+    hi('MiniIconsOrange', { fg=p.orange,  bg=nil })
+    hi('MiniIconsPurple', { fg=p.purple,  bg=nil })
+    hi('MiniIconsRed',    { fg=p.red,     bg=nil })
+    hi('MiniIconsYellow', { fg=p.yellow,  bg=nil })
+
     hi('MiniIndentscopeSymbol',    { fg=p.accent, bg=nil })
     hi('MiniIndentscopeSymbolOff', { fg=p.red,    bg=nil })
 
