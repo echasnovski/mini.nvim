@@ -6,7 +6,11 @@
 
 ### Pick anything
 
-For full experience needs [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin and [BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep) (but works without it).
+For full experience needs (still works without any of suggestions):
+
+- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module for icons near the items representing actual paths. Can fall back to using [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin.
+
+- Executable [BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep) CLI tool for faster file and pattern search on disk.
 
 See more details in [Features](#features) and [help file](../doc/mini-pick.txt).
 

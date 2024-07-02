@@ -66,8 +66,8 @@
 ---
 --- Suggested dependencies (provide extra functionality, will work without them):
 ---
---- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the items
----   representing actual paths. If missing, default or no icons will be used.
+--- - Enabled |MiniIcons| module for icons near the items representing actual paths.
+---   Falls back to 'nvim-tree/nvim-web-devicons' plugin or no icons will be used.
 ---
 ---                                                             *MiniPick-cli-tools*
 --- - CLI tool(s) to power |MiniPick.builtin.files()|, |MiniPick.builtin.grep()|, and
@@ -1021,7 +1021,8 @@ end
 ---     empty space otherwise.
 ---     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
 ---     paths use `true` by default.
----   - <icons> `(table)` - table with fallback icons. Can have fields:
+---   - <icons> `(table)` - table with fallback icons used if icon provider
+---     does not itself supply default icons for category. Can have fields:
 ---       - <directory> `(string)` - icon for directory. Default: " ".
 ---       - <file> `(string)` - icon for file. Default: " ".
 ---       - <none> `(string)` - icon for non-valid path. Default: "  ".
@@ -2935,8 +2936,17 @@ end
 H.get_icon = function(x, icons)
   local path_type, path = H.parse_path(x)
   if path_type == nil then return { text = '' } end
-  if path_type == 'directory' then return { text = icons.directory, hl = 'MiniPickIconDirectory' } end
   if path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
+
+  -- Prefer 'mini.icons'
+  if _G.MiniIcons ~= nil then
+    local category = path_type == 'directory' and 'directory' or 'file'
+    local icon, hl = _G.MiniIcons.get(category, path)
+    return { text = icon .. ' ', hl = hl }
+  end
+
+  -- Try falling back to 'nvim-web-devicons'
+  if path_type == 'directory' then return { text = icons.directory, hl = 'MiniPickIconDirectory' } end
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if not has_devicons then return { text = icons.file, hl = 'MiniPickIconFile' } end
 

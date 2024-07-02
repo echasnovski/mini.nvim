@@ -66,8 +66,8 @@ Sources with more details:
 
 Suggested dependencies (provide extra functionality, will work without them):
 
-- Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the items
-  representing actual paths. If missing, default or no icons will be used.
+- Enabled |MiniIcons| module for icons near the items representing actual paths.
+  Falls back to 'nvim-tree/nvim-web-devicons' plugin or no icons will be used.
 
                                                             *MiniPick-cli-tools*
 - CLI tool(s) to power |MiniPick.builtin.files()|, |MiniPick.builtin.grep()|, and
@@ -961,7 +961,8 @@ Parameters ~
     empty space otherwise.
     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
     paths use `true` by default.
-  - <icons> `(table)` - table with fallback icons. Can have fields:
+  - <icons> `(table)` - table with fallback icons used if icon provider
+    does not itself supply default icons for category. Can have fields:
       - <directory> `(string)` - icon for directory. Default: " ".
       - <file> `(string)` - icon for file. Default: " ".
       - <none> `(string)` - icon for non-valid path. Default: "  ".
