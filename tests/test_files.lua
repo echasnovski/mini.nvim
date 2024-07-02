@@ -360,23 +360,46 @@ T['open()']['handles undo just after open'] = function()
   eq(child.cmd_capture('1messages'), 'Already at oldest change')
 end
 
-T['open()']["uses 'nvim-web-devicons' if present"] = function()
-  -- Mock 'nvim-web-devicons'
+T['open()']['uses icon provider'] = function()
+  -- 'mini.icons'
+  child.lua('require("mini.icons").setup()')
+  open(make_test_path('real'))
+  --stylua: ignore
+  eq(get_extmarks_hl(), {
+    'MiniIconsAzure',  'MiniFilesFile',
+    'MiniIconsYellow', 'MiniFilesFile',
+    'MiniIconsAzure',  'MiniFilesFile',
+    'MiniIconsCyan',   'MiniFilesFile',
+    'MiniIconsGrey',   'MiniFilesFile',
+  })
+
+  go_out()
+  --stylua: ignore
+  eq(get_extmarks_hl(), {
+    'MiniIconsAzure', 'MiniFilesDirectory',
+    'MiniIconsAzure', 'MiniFilesDirectory',
+    'MiniIconsAzure', 'MiniFilesDirectory',
+    'MiniIconsAzure', 'MiniFilesDirectory',
+    'MiniIconsAzure', 'MiniFilesFile',
+    'MiniIconsAzure', 'MiniFilesFile',
+  })
+
+  child.expect_screenshot()
+  close()
+
+  -- Should still prefer 'mini.icons' if 'nvim-web-devicons' is available
+  -- - Mock 'nvim-web-devicons'
   child.cmd('set rtp+=tests/dir-files')
 
   open(make_test_path('real'))
   child.expect_screenshot()
-  --stylua: ignore
-  eq(
-    get_extmarks_hl(),
-    {
-      'DevIconLua',      'MiniFilesFile',
-      'DevIconTxt',      'MiniFilesFile',
-      'DevIconGif',      'MiniFilesFile',
-      'DevIconLicense',  'MiniFilesFile',
-      'DevIconMakefile', 'MiniFilesFile',
-    }
-  )
+  close()
+
+  -- Should fall back to 'nvim-web-devicons'
+  child.lua('_G.MiniIcons = nil')
+
+  open(make_test_path('real'))
+  child.expect_screenshot()
 end
 
 T['open()']['history'] = new_set()

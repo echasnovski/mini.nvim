@@ -15,6 +15,10 @@
 
 - FEATURE: update `pickers.oldfiles()` to have `current_dir` option which if `true` shows files only from picker's working directory. By @abeldekat, PR #997.
 
+## mini.files
+
+- FEATURE: prefer using 'mini.icons' as icon provider.
+
 ## mini.icons
 
 - Introduction of a new module.

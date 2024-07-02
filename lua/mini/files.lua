@@ -48,8 +48,9 @@
 --- # Dependencies ~
 ---
 --- Suggested dependencies (provide extra functionality, will work without them):
---- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the entry
----   name. If missing, default icons will be used.
+---
+--- - Enabled |MiniIcons| module to show icons near file/directory names.
+---   Falls back to 'nvim-tree/nvim-web-devicons' plugin or uses default icons.
 ---
 --- # Setup ~
 ---
@@ -1010,9 +1011,11 @@ MiniFiles.default_filter = function(fs_entry) return true end
 
 --- Default prefix of file system entries
 ---
---- - For directory return fixed icon and 'MiniFilesDirectory' highlight group.
---- - For file try to use `get_icon()` from 'nvim-tree/nvim-web-devicons'.
----   If missing, return fixed icon and 'MiniFilesFile' highlight group.
+--- - If |MiniIcons| is set up, use |MiniIcons.get()| for "directory"/"file" category.
+--- - Otherwise:
+---     - For directory return fixed icon and "MiniFilesDirectory" group name.
+---     - For file try to use `get_icon()` from 'nvim-tree/nvim-web-devicons'.
+---       If missing, return fixed icon and 'MiniFilesFile' group name.
 ---
 ---@param fs_entry table Table with the following fields:
 --- __minifiles_fs_entry_data_fields
@@ -1020,6 +1023,14 @@ MiniFiles.default_filter = function(fs_entry) return true end
 ---@return ... Icon and highlight group name. For more details, see |MiniFiles.config|
 ---   and |MiniFiles-examples|.
 MiniFiles.default_prefix = function(fs_entry)
+  -- Prefer 'mini.icons'
+  if _G.MiniIcons ~= nil then
+    local category = fs_entry.fs_type == 'directory' and 'directory' or 'file'
+    local icon, hl = _G.MiniIcons.get(category, fs_entry.name)
+    return icon .. ' ', hl
+  end
+
+  -- Try falling back to 'nvim-web-devicons'
   if fs_entry.fs_type == 'directory' then return ' ', 'MiniFilesDirectory' end
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if not has_devicons then return ' ', 'MiniFilesFile' end
