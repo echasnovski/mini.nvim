@@ -14,6 +14,10 @@
 
 - FEATURE: update `pickers.oldfiles()` to have `current_dir` option which if `true` shows files only from picker's working directory. By @abeldekat, PR #997.
 
+## mini.icons
+
+- Introduction of a new module.
+
 ## mini.starter
 
 - BREAKING: change filetype of Starter buffer from 'starter' to 'ministarter'. This is a more robust value and more aligned with other modules.

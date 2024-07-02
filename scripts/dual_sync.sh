@@ -85,6 +85,7 @@ sync_module "fuzzy"
 sync_module "git"
 sync_module "hipatterns"
 sync_module "hues" colors/randomhue.lua
+sync_module "icons"
 sync_module "indentscope"
 sync_module "jump"
 sync_module "jump2d"

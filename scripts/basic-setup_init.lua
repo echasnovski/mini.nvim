@@ -34,6 +34,7 @@ local test_actions = {
   ['git']         = function() require('mini.git').setup() end,
   ['hipatterns']  = function() require('mini.hipatterns').setup() end,
   ['hues']        = function() require('mini.hues').setup({ background = '#000000', foreground = '#ffffff' }) end,
+  ['icons']       = function() require('mini.icons').setup() end,
   ['indentscope'] = function() require('mini.indentscope').setup() end,
   ['jump']        = function() require('mini.jump').setup() end,
   ['jump2d']      = function() require('mini.jump2d').setup() end,

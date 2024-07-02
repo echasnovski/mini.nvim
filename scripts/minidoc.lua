@@ -24,6 +24,7 @@ local modules = {
   'git',
   'hipatterns',
   'hues',
+  'icons',
   'indentscope',
   'jump',
   'jump2d',
