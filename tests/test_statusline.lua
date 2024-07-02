@@ -480,12 +480,13 @@ T['section_fileinfo()']['uses human friendly size'] = function()
   unmock_file()
 end
 
-T['section_fileinfo()']['is shown only in normal buffers with filetypes'] = function()
+T['section_fileinfo()']['is shown only in buffers with filetypes'] = function()
   child.bo.filetype = ''
   validate_fileinfo('', '^$')
 
+  -- Should still show even if buffer is not normal
   child.cmd('help')
-  validate_fileinfo('', '^$')
+  validate_fileinfo('', '^ help$')
 end
 
 T['section_filename()'] = new_set()

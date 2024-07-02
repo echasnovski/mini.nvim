@@ -18,6 +18,10 @@
 
 - BREAKING: change filetype of Starter buffer from 'starter' to 'ministarter'. This is a more robust value and more aligned with other modules.
 
+## mini.statusline
+
+- BREAKING FEATURE: update `section_fileinfo()` to show non-empty filetype even in not normal buffers (like plugin's scratch buffers, help, quickfix, etc.). Previously it showed nothing, which was a mistake as filetype can be a valuable information.
+
 
 # Version 0.13.0
 

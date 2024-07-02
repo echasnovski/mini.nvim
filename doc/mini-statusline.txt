@@ -312,8 +312,10 @@ Return ~
                    `MiniStatusline.section_fileinfo`({args})
 Section for file information
 
-Short output contains only extension and is returned if window width is
-lower than `args.trunc_width`.
+Short output contains only buffer's 'filetype' and is returned if window
+width is lower than `args.trunc_width` or buffer is not normal.
+
+Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
 
 Parameters ~
 {args} `(table)` Section arguments.

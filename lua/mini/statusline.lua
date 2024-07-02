@@ -388,8 +388,10 @@ end
 
 --- Section for file information
 ---
---- Short output contains only extension and is returned if window width is
---- lower than `args.trunc_width`.
+--- Short output contains only buffer's 'filetype' and is returned if window
+--- width is lower than `args.trunc_width` or buffer is not normal.
+---
+--- Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
 ---
 ---@param args __statusline_args
 ---
@@ -397,15 +399,15 @@ end
 MiniStatusline.section_fileinfo = function(args)
   local filetype = vim.bo.filetype
 
-  -- Don't show anything if no filetype or not inside a "normal buffer"
-  if filetype == '' or vim.bo.buftype ~= '' then return '' end
+  -- Don't show anything if there is no filetype
+  if filetype == '' then return '' end
 
   -- Add filetype icon
   H.ensure_get_icon()
   if H.get_icon ~= nil then filetype = H.get_icon() .. ' ' .. filetype end
 
-  -- Construct output string if truncated
-  if MiniStatusline.is_truncated(args.trunc_width) then return filetype end
+  -- Construct output string if truncated or buffer is not normal
+  if MiniStatusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return filetype end
 
   -- Construct output string with extra file info
   local encoding = vim.bo.fileencoding or vim.bo.encoding
