@@ -19,6 +19,10 @@
 
 - BREAKING FEATURE: update `compute_hex_color_group()` to compute based on combination of `hex_color` and `style`, opposed to just `hex_color`. This allows simultaneous usage of several styles in user's custom highlighters.
 
+## mini.files
+
+- FEATURE: prefer using 'mini.icons' as icon provider.
+
 ## mini.icons
 
 - Introduction of a new module.

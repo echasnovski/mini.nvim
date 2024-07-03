@@ -6,8 +6,6 @@
 
 ### Navigate and manipulate file system
 
-For full experience needs [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin (but works without it).
-
 See more details in [Features](#features) and [help file](../doc/mini-files.txt).
 
 ---
@@ -52,6 +50,12 @@ Notes:
 - This module silently reacts to not enough permissions:
     - In case of missing file, check its or its parent read permissions.
     - In case of no manipulation result, check write permissions.
+
+## Dependencies
+
+For full experience needs (still works without any of suggestions):
+
+- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to show icons near file/directory names. Can fall back to using [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin.
 
 ## Quick start
 
