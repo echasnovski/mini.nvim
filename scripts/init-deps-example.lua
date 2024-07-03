@@ -34,16 +34,14 @@ later(function() require('mini.comment').setup() end)
 later(function() require('mini.pick').setup() end)
 later(function() require('mini.surround').setup() end)
 
--- Use external plugins with `add()`
 now(function()
-  -- Add to current session (install if absent)
-  add('nvim-tree/nvim-web-devicons')
-  require('nvim-web-devicons').setup()
-end)
-
-now(function()
-  -- Supply dependencies near target plugin
-  add({ source = 'neovim/nvim-lspconfig', depends = { 'williamboman/mason.nvim' } })
+  -- Use other plugins with `add()`. It ensures plugin is available in current
+  -- session (installs if absent)
+  add({
+    source = 'neovim/nvim-lspconfig',
+    -- Supply dependencies near target plugin
+    depends = { 'williamboman/mason.nvim' },
+  })
 end)
 
 later(function()
@@ -55,6 +53,7 @@ later(function()
     -- Perform action after every checkout
     hooks = { post_checkout = function() vim.cmd('TSUpdate') end },
   })
+  -- Possible to immediately execute code which depends on the added plugin
   require('nvim-treesitter.configs').setup({
     ensure_installed = { 'lua', 'vimdoc' },
     highlight = { enable = true },

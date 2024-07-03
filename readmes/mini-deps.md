@@ -105,9 +105,6 @@ The recommended way of adding a plugin is by calling `MiniDeps.add()` in the 'in
 local add = MiniDeps.add
 
 -- Add to current session (install if absent)
-add('nvim-tree/nvim-web-devicons')
-require('nvim-web-devicons').setup()
-
 add({
   source = 'neovim/nvim-lspconfig',
   -- Supply dependencies near target plugin
@@ -122,6 +119,7 @@ add({
   -- Perform action after every checkout
   hooks = { post_checkout = function() vim.cmd('TSUpdate') end },
 })
+-- Possible to immediately execute code which depends on the added plugin
 require('nvim-treesitter.configs').setup({
   ensure_installed = { 'lua', 'vimdoc' },
   highlight = { enable = true },
