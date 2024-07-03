@@ -1,0 +1,376 @@
+*mini.icons* Icon provider
+*MiniIcons*
+
+MIT License Copyright (c) 2024 Evgeni Chasnovski
+
+==============================================================================
+
+Features:
+
+- Provide icons with their highlighting via a single |MiniIcons.get()| for
+  various categories: filetype, file/directory path, extension, operating
+  system, LSP kind values. Icons and category defaults can be overridden.
+
+- Configurable styles: "glyph" (icon glyphs) or "ascii" (non-glyph fallback).
+
+- Fixed set of highlight groups (linked to built-in groups by default) for
+  better blend with color scheme.
+
+- Caching for maximum performance.
+
+- Integration with |vim.filetype.add()| and |vim.filetype.match()|.
+
+- Mocking methods of 'nvim-tree/nvim-web-devicons' for better integrations
+  with plugins outside 'mini.nvim'. See |MiniIcons.mock_nvim_web_devicons()|.
+
+# Dependencies ~
+
+Suggested dependencies:
+
+- Terminal emulator that supports showing special utf8 glyphs, possibly with
+  "overflow" view (displaying is done not in one but two visual cells).
+  Most modern feature-rich terminal emulators support this out of the box:
+  WezTerm, Kitty, Alacritty, iTerm2, Ghostty.
+  Not having "overflow" feature only results into smaller icons.
+  Not having support for special utf8 glyphs will result into seemingly
+  random symbols (or question mark squares) instead of icon glyphs.
+
+- Font that supports Nerd Fonts (https://www.nerdfonts.com) icons from
+  version 3.0.0+ (in particular `nf-md-*` class).
+  This should be configured on terminal emulator level either by using font
+  patched with Nerd Fonts icons or using `NerdFontsSymbolsOnly` font as
+  a fallback for glyphs that are not supported in main font.
+
+If using terminal emulator and/or font with icon support is impossible, use
+`config.style = 'ascii'`. It will use a (less visually appealing) set of
+non-glyph icons.
+
+# Setup ~
+
+This module needs a setup with `require('mini.icons').setup({})` (replace `{}`
+with your `config` table). It will create global Lua table `MiniIcons` which you
+can use for scripting or manually (with `:lua MiniIcons.*`).
+
+See |MiniIcons.config| for `config` structure and default values.
+
+# Comparisons ~
+
+- 'nvim-tree/nvim-web-devicons' (for users):
+    - Sets individual colors to each icon with separate specific highlight
+      groups, while this modules uses fixed set of highlight groups.
+      This makes it easier to customize in bulk and actually blend with any
+      color scheme.
+
+    - This module prefers richer set of `nf-md-*` (from "Material design" set)
+      Nerd Fonts icons while 'nvim-web-devicons' mostly prefers `nf-dev-*`
+      (from "devicons" set).
+
+    - Supported categories are slightly different (with much overlap).
+
+    - Both support customization of any icon. Only this module supports
+      customization of default ones per supported category.
+
+    - Using this module can occasionally result in small delays when used
+      synchronously for many times to get icons for not typical files (like
+      in |mini.files|). This is due to using |vim.filetype.match()| fallback and
+      is present only during first call, as value is cached for later uses.
+
+    - This module supports different icon styles (like "ascii" for when using
+      glyphs is not possible), while 'nvim-web-devicons' does not.
+
+    - This module provides |MiniIcons.mock_nvim_web_devicons()| function which
+      when called imitates installed 'nvim-web-devicons' plugin to support
+      other plugins which do not provide 'mini.icons' yet.
+
+- 'nvim-tree/nvim-web-devicons' (for plugin developers):
+    - Both have main "get icon" type of function:
+        - Both return tuple of icon and highlight group strings.
+
+        - This module always returns icon data possibly falling back to
+          user's configured default, while 'nvim-web-devicons' is able to
+          return `nil`. This module's approach is more aligned with the most
+          common use case of always showing an icon instead or near some data.
+
+        - This module uses |vim.filetype.match()| as a fallback for "file"
+          and "extension" categories, while 'nvim-web-devicons' completely
+          relies on the manually maintained tables of supported filenames
+          and extensions.
+          Using fallback results in a wider support and deeper integration
+          with Neovim's filetype detection at the cost of occasional slower
+          first call. The difference is reduced as much as is reasonable by
+          also having some manually tracked data tables for common cases.
+
+        - This module caches all its return values resulting in really fast
+          next same argument calls, while 'nvim-web-devicons' doesn't do that.
+
+        - This module works with full file/directory paths as input.
+
+    - Different sets of supported categories (see |MiniIcons.config|):
+        - Both support "file", "extension", "filetype", "operating system".
+          Albeit in different volumes: 'nvim-web-devicons' covers more
+          cases for "operating system", while this module has better eventual
+          coverage for other cases.
+
+
+        - This module supports "directory" and "lsp" categories.
+
+        - 'nvim-web-devicons' covers "desktop environment" and "window
+          management" categories. This modules does not include them due to
+          relatively low demand.
+
+# Highlight groups ~
+
+Only the following set of highlight groups is used as icon highlight.
+It is recommended that they all only define colored foreground:
+
+* `MiniIconsAzure`  - azure.
+* `MiniIconsBlue`   - blue.
+* `MiniIconsCyan`   - cyan.
+* `MiniIconsGreen`  - green.
+* `MiniIconsGrey`   - grey.
+* `MiniIconsOrange` - orange.
+* `MiniIconsPurple` - purple.
+* `MiniIconsRed`    - red.
+* `MiniIconsYellow` - yellow.
+
+To change any highlight group, modify it directly with |:highlight|.
+
+------------------------------------------------------------------------------
+                                                             *MiniIcons.setup()*
+                          `MiniIcons.setup`({config})
+Module setup
+
+Parameters ~
+{config} `(table|nil)` Module config table. See |MiniIcons.config|.
+
+Usage ~
+>lua
+  require('mini.icons').setup() -- use default config
+  -- OR
+  require('mini.icons').setup({}) -- replace {} with your config table
+<
+------------------------------------------------------------------------------
+                                                              *MiniIcons.config*
+                               `MiniIcons.config`
+Module config
+
+Default values:
+>lua
+  MiniIcons.config = {
+    -- Icon style: 'glyph' or 'ascii'
+    style = 'glyph',
+
+    -- Customize per category. See `:h MiniIcons.config` for details.
+    default   = {},
+    directory = {},
+    extension = {},
+    file      = {},
+    filetype  = {},
+    lsp       = {},
+    os        = {},
+  }
+<
+# Style ~
+
+`config.style` is a string defining which icon style to use. It can be:
+- `'glyph'` (default) - use glyph icons (like 󰈔 and 󰉋 ).
+- `'ascii'` - use fallback ASCII-compatible icons. Those are computed as
+  an upper first character of the icon's resolved name inside its category.
+  Examples: >lua
+
+    MiniIcons.get('file', 'Makefile') -- Has `'M'` as icon
+    MiniIcons.get('extension', 'lua') -- Has `'L'` as icon
+    MiniIcons.get('file', 'file.lua') -- Has `'L'` as icon; it is resolved to
+                                      -- come from 'lua' 'extension' category
+    MiniIcons.get('file', 'myfile')   -- Has `'F'` as icon; it is resolved to
+                                      -- come from 'file' 'default' category
+<
+# Customization per category ~
+
+The following entries can be used to customize icons for supported categories:
+- `config.default`
+- `config.directory`
+- `config.extension`
+- `config.file`
+- `config.filetype`
+- `config.lsp`
+- `config.os`
+
+Customization should be done by supplying a table with <glyph> (icon glyph)
+and/or <hl> (name of highlight group) string fields as a value for an icon
+name entry. Example: >lua
+
+  require('mini.icons').setup({
+    default = {
+      -- Override default glyph for "file" category (reuse highlight group)
+      file = { glyph = '󰈤' },
+    },
+    extension = {
+      -- Override highlight group (not necessary from 'mini.icons')
+      lua = { hl = 'Special' },
+
+      -- Add icons for custom extension. This will also be used in
+      -- 'file' category for input like 'file.my.ext'.
+      ['my.ext'] = { glyph = '󰻲', hl = 'MiniIconsRed' },
+    },
+  })
+<
+Notes:
+- These customizations only take effect inside |MiniIcons.setup()| call.
+  Changing interactively via `:lua MiniIcons.config.xxx = { ... }` does not work
+  for performance reasons.
+- Use lower case names for categories which are matched ignoring case.
+  See |MiniIcons.get()| for more details.
+
+------------------------------------------------------------------------------
+                                                               *MiniIcons.get()*
+                      `MiniIcons.get`({category}, {name})
+Get icon data
+
+Usage example: >lua
+
+  -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
+  local icon, hl = MiniIcons.get('file', 'file.lua')
+<
+Notes:
+- Always returns some data, even if icon name is not explicitly supported
+  within target category. Category "default" is used as a fallback.
+
+- Glyphs are explicitly preferred (when reasonable) from a richer set of
+  `nf-md-*` class  ("Material design" set) of Nerd Fonts icons.
+
+- Output is cached after the first call to increase performance of next calls
+  with same arguments. To reset cache, call |MiniIcons.setup()|.
+
+- Matching icon name for "file" and "directory" categories is done exactly
+  and respecting case. Others are done ignoring case.
+
+- The recommended way to use this function in plugin is first checking if
+  `_G.MiniIcons` table is present (which means that user explicitly enabled
+  'mini.icons') and provide icons only if it is.
+
+Parameters ~
+{category} `(string)` Category name. Supported categories:
+  - `'default'` - icon data used as fallback for any category.
+    Supported icon names: any supported category name.
+
+    Examples: >lua
+
+      MiniIcons.get('default', 'file')
+<
+  - `'directory'` - icon data for directory path.
+    Supported icon names: any string, but only basename will be used.
+    Can be used for not existing paths (no check is done).
+
+    Examples: >lua
+
+      -- All of these will result in the same output
+      MiniIcons.get('directory', '.config')
+      MiniIcons.get('directory', '~/.config')
+      MiniIcons.get('directory', '/home/user/.config')
+
+      -- Results in different output
+      MiniIcons.get('directory', '.Config')
+<
+  - `'extension'` - icon data for extension.
+    Supported icon names: any string (without extra dot prefix).
+    Icon data is attempted to be resolved in the following order:
+      - List of manually tracked extensions (for better performance).
+      - Filetype as a result of |vim.filetype.match()| with placeholder
+        file basename. Uses output of corresponding "filetype" category.
+
+    Examples: >lua
+
+      -- All of these will result in the same output
+      MiniIcons.get('extension', 'lua')
+      MiniIcons.get('extension', 'LUA')
+<
+  - `'file'` - icon data for file path.
+    Supported icon names: any string, but only basename will be used.
+    Can be used for not existing paths (no check is done).
+    Icon data is attempted to be resolved in the following order:
+      - List of manually tracked file basenames (should match exactly).
+      - List of manually tracked extensions.
+        Uses output of corresponding "extension" category.
+      - Filetype as a result of |vim.filetype.match()|.
+         Uses output of corresponding "filetype" category.
+
+    Examples: >lua
+
+      -- All of these will result in the same output
+      MiniIcons.get('file', 'init.lua')
+      MiniIcons.get('file', '~/.config/nvim/init.lua')
+      MiniIcons.get('file', '/home/user/.config/nvim/init.lua')
+
+      -- Results in different output
+      MiniIcons.get('file', 'Init.lua')
+      MiniIcons.get('file', 'init.LUA')
+<
+  - `'filetype'` - icon data for 'filetype' values.
+    Supported icon names: any string.
+    Examples: >lua
+
+      MiniIcons.get('filetype', 'lua')
+      MiniIcons.get('filetype', 'help')
+      MiniIcons.get('filetype', 'minifiles')
+<
+  - `'lsp'` - icon data for various "LSP kind" values.
+    Supported icon names: any string.
+    Examples: >lua
+
+      MiniIcons.get('lsp', 'array')
+      MiniIcons.get('lsp', 'keyword')
+<
+  - `'os'` - icon data for popular operating systems.
+    Supported icon names: any string.
+    Examples: >lua
+
+      MiniIcons.get('os', 'linux')
+      MiniIcons.get('os', 'arch')
+      MiniIcons.get('os', 'macos')
+<
+{name} `(string)` Icon name within category. Use |MiniIcons.list()| to get icon
+  names which are explicitly supported for specific category.
+
+Return ~
+`([string,string])` Tuple of icon string and a highlight group name it is
+  suggested to be highlighted with. Example: >lua
+
+  -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
+  local icon, hl = MiniIcons.get('file', 'file.lua')
+<
+------------------------------------------------------------------------------
+                                                              *MiniIcons.list()*
+                          `MiniIcons.list`({category})
+List explicitly supported icon names
+
+Parameters ~
+{category} `(string)` Category name supported by |MiniIcons.get()|.
+
+Return ~
+`(table)` Array of icon names which are explicitly supported for category.
+  Note, that `'file'` and `'extension'` categories support much more icon names
+  via their fallback to using |vim.filetype.match()| with `'filetype'` category.
+
+------------------------------------------------------------------------------
+                                            *MiniIcons.mock_nvim_web_devicons()*
+                      `MiniIcons.mock_nvim_web_devicons`()
+Mock 'nvim-web-devicons' module
+
+Call this function to mock exported functions of 'nvim-tree/nvim-web-devicons'
+plugin. It will mock all its functions which return icon data by
+using |MiniIcons.get()| equivalent.
+
+This function is useful until all relevant to you plugins depend solely on
+'nvim-web-devicons' and have not yet added an integration with 'mini.icons'.
+
+Full example of usage: >lua
+
+  require('mini.icons').setup()
+  MiniIcons.mock_nvim_web_devicons()
+<
+Works without installed 'nvim-web-devicons' and even with it installed (needs
+to be called after 'nvim-web-devicons' is set up).
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

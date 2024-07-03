@@ -183,6 +183,17 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniHipatternsNote`
     - `MiniHipatternsTodo`
 
+- 'mini.icons':
+    - `MiniIconsAzure`
+    - `MiniIconsBlue`
+    - `MiniIconsCyan`
+    - `MiniIconsGreen`
+    - `MiniIconsGrey`
+    - `MiniIconsOrange`
+    - `MiniIconsPurple`
+    - `MiniIconsRed`
+    - `MiniIconsYellow`
+
 - 'mini.indentscope':
     - `MiniIndentscopeSymbol`
     - `MiniIndentscopeSymbolOff`
