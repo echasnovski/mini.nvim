@@ -725,6 +725,16 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniHipatternsNote',  {fg=p.base00, bg=p.base0D, attr='bold', sp=nil})
     hi('MiniHipatternsTodo',  {fg=p.base00, bg=p.base0C, attr='bold', sp=nil})
 
+    hi('MiniIconsAzure',  {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsBlue',   {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsCyan',   {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsGreen',  {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsGrey',   {fg=p.base07, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsOrange', {fg=p.base09, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsPurple', {fg=p.base0E, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsRed',    {fg=p.base08, bg=nil, attr=nil, sp=nil})
+    hi('MiniIconsYellow', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
+
     hi('MiniIndentscopeSymbol',    {fg=p.base0F, bg=nil, attr=nil, sp=nil})
     hi('MiniIndentscopeSymbolOff', {fg=p.base08, bg=nil, attr=nil, sp=nil})
 
