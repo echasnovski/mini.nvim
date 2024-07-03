@@ -25,6 +25,7 @@ now(function()
   require('mini.notify').setup()
   vim.notify = require('mini.notify').make_notify()
 end)
+now(function() require('mini.icons').setup() end)
 now(function() require('mini.tabline').setup() end)
 now(function() require('mini.statusline').setup() end)
 

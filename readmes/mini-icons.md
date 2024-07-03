@@ -147,7 +147,7 @@ Here are code snippets for some common installation methods (use only one):
 
 <br>
 
-**Important**: don't forget to call `require('mini.notify').setup()` to enable its functionality.
+**Important**: don't forget to call `require('mini.icons').setup()` to enable its functionality.
 
 **Note**: if you are on Windows, there might be problems with too long file paths (like `error: unable to create file <some file name>: Filename too long`). Try doing one of the following:
 - Enable corresponding git global config value: `git config --system core.longpaths true`. Then try to reinstall.
