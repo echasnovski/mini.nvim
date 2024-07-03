@@ -27,6 +27,10 @@
 
 - Introduction of a new module.
 
+## mini.pick
+
+- FEATURE: prefer using 'mini.icons' as icon provider.
+
 ## mini.starter
 
 - BREAKING: change filetype of Starter buffer from 'starter' to 'ministarter'. This is a more robust value and more aligned with other modules.

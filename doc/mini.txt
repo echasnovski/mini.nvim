@@ -255,7 +255,8 @@ Table of contents:
 - |MiniPick| - general purpose interactive non-blocking picker with
   toggleable preview. Has fast default matching with fuzzy/exact/grouped
   modes. Provides most used built-in pickers for files, pattern matches,
-  buffers, etc.
+  buffers, etc. For full experience needs enabled |MiniIcons| module (but
+  works without it).
 
 - |MiniSessions| - session management (read, write, delete) which works
   using |mksession|. Implements both global (from configured directory) and

@@ -1321,12 +1321,22 @@ T['default_show()']['respects `opts.show_icons`'] = function()
   table.insert(items, { text = 'non-string' })
   local query = { 'i', 'i' }
 
-  -- Without 'nvim-web-devicons'
+  -- Without 'mini.icons'
   default_show(0, items, query, { show_icons = true })
   child.expect_screenshot()
 
-  -- With 'nvim-web-devicons'
+  -- With 'mini.icons'
+  child.lua('require("mini.icons").setup()')
+  default_show(0, items, query, { show_icons = true })
+  child.expect_screenshot()
+
+  -- Should still prefer 'mini.icons' even if 'nvim-web-devicons' is present
   child.cmd('set rtp+=tests/dir-pick')
+  default_show(0, items, query, { show_icons = true })
+  child.expect_screenshot()
+
+  -- With fallback 'nvim-web-devicons'
+  child.lua('_G.MiniIcons = nil')
   default_show(0, items, query, { show_icons = true })
   child.expect_screenshot()
 end
@@ -1342,11 +1352,18 @@ T['default_show()']['respects `opts.icons`'] = function()
 
   local icon_opts = { show_icons = true, icons = { directory = 'DD', file = 'FF', none = 'NN' } }
 
-  -- Without 'nvim-web-devicons'
+  -- Without 'mini.icons'
   default_show(0, items, query, icon_opts)
   child.expect_screenshot()
 
+  -- With 'mini.icons'
+  child.lua('require("mini.icons").setup()')
+  default_show(0, items, query, icon_opts)
+  -- - Should use "file" and "directory" defaults from 'mini.icons'
+  child.expect_screenshot()
+
   -- With 'nvim-web-devicons'
+  child.lua('_G.MiniIcons = nil')
   child.cmd('set rtp+=tests/dir-pick')
   default_show(0, items, query, icon_opts)
   child.expect_screenshot()
