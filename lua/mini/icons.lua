@@ -560,6 +560,7 @@ H.extension_icons = {
   -- Value is string with filetype's name to inherit from its icon data
   asm   = 'asm',
   bib   = 'bib',
+  bicepparam = 'bicepparam',
   bzl   = 'bzl',
   c     = 'c',
   cbl   = 'cobol',
@@ -812,6 +813,8 @@ H.filetype_icons = {
   bc                 = { glyph = '󰫯', hl = 'MiniIconsCyan'   },
   bdf                = { glyph = '󰛖', hl = 'MiniIconsRed'    },
   bib                = { glyph = '󱉟', hl = 'MiniIconsYellow' },
+  bicep              = { glyph = '', hl = 'MiniIconsCyan'   },
+  bicepparam         = { glyph = '', hl = 'MiniIconsPurple' },
   bindzone           = { glyph = '󰫯', hl = 'MiniIconsCyan'   },
   bitbake            = { glyph = '󰃫', hl = 'MiniIconsOrange' },
   blank              = { glyph = '󰫯', hl = 'MiniIconsPurple' },
