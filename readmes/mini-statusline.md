@@ -6,11 +6,6 @@
 
 ### Minimal and fast statusline module with opinionated default look
 
-For full experience needs (still works without any of suggestions):
-
-- [Nerd font](https://www.nerdfonts.com/) and [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin to show icons.
-- Enabled ['mini.git'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-git.md) and ['mini.diff'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-diff.md) modules to show Git and diff related information. Can fall back to using [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin.
-
 See more details in [Features](#features) and [help file](../doc/mini-statusline.txt).
 
 ---
@@ -36,6 +31,14 @@ https://user-images.githubusercontent.com/24854248/173045208-42463c8f-a2ac-488d-
     - Combine them in groups with `MiniStatusline.combine_groups()`.
 - Built-in active mode indicator with colors.
 - Sections can hide information when window is too narrow (specific window width is configurable per section).
+
+## Dependencies
+
+For full experience needs (still works without any of suggestions):
+
+- [Nerd font](https://www.nerdfonts.com/) and enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to show filetype icons. Can fall back to using [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin.
+
+- Enabled ['mini.git'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-git.md) and ['mini.diff'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-diff.md) modules to show Git and diff related information. Can fall back to using [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) plugin.
 
 ## Installation
 

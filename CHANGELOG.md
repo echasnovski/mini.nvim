@@ -5,6 +5,7 @@
     - It is default in Neovim>=0.10.
     - Tree-sitter parser is built-in in Neovim 0.9.x, needs manual enabling via `vim.treesitter.start()`.
     - Has visual regressions on Neovim 0.8.0 and 0.8.1 without enabled tree-sitter (code blocks are highlighted as normal text). Use 0.8.2 or newer.
+- Universally prefer 'mini.icons' module over 'nvim-tree/nvim-web-devicons'.
 
 ## mini.doc
 
@@ -29,6 +30,7 @@
 ## mini.statusline
 
 - BREAKING FEATURE: update `section_fileinfo()` to show non-empty filetype even in not normal buffers (like plugin's scratch buffers, help, quickfix, etc.). Previously it showed nothing, which was a mistake as filetype can be a valuable information.
+- FEATURE: prefer using 'mini.icons' as icon provider for `section_fileinfo()`.
 
 
 # Version 0.13.0
