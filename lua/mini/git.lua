@@ -682,7 +682,7 @@ H.command_impl = function(input)
   -- (deletes the buffer or closes the window).
   H.ensure_git_editor(input.mods)
   -- NOTE: use `vim.v.progpath` to have same runtime
-  local editor = vim.v.progpath .. ' --clean --headless -u ' .. H.git_editor_config
+  local editor = H.cli_escape(vim.v.progpath) .. ' --clean --headless -u ' .. H.cli_escape(H.git_editor_config)
 
   -- Setup custom environment variables for better reproducibility
   local env_vars = {}
@@ -1639,6 +1639,8 @@ H.cli_err_notify = function(code, out, err)
   if not should_stop and err ~= '' then H.notify(err, 'WARN') end
   return should_stop
 end
+
+H.cli_escape = function(x) return (string.gsub(x, '([ \\])', '\\%1')) end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.git) %s', msg), 0) end
