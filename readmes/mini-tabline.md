@@ -6,8 +6,6 @@
 
 ### Minimal and fast tabline showing listed buffers
 
-For full experience needs [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin (but works without it).
-
 See more details in [Features](#features) and [help file](../doc/mini-tabline.txt).
 
 ---
@@ -34,6 +32,12 @@ https://user-images.githubusercontent.com/24854248/173045373-f5bdea82-fe3e-4488-
 - Current buffer is displayed "optimally centered" (in center of screen while maximizing the total number of buffers shown) when there are many buffers open.
 - 'Buffer tabs' are clickable if Neovim allows it.
 - Allow showing extra information section in case of multiple Neovim tabpages.
+
+## Dependencies
+
+For full experience needs (still works without any of suggestions):
+
+- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to show icons near file names. Can fall back to using [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) plugin.
 
 ## Installation
 
@@ -140,7 +144,7 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
-  -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
+  -- Whether to show file icons (requires 'mini.icons')
   show_icons = true,
 
   -- Function which formats the tab label

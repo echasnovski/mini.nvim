@@ -27,10 +27,10 @@ What it doesn't do:
 
 # Dependencies ~
 
-Suggested dependencies (provide extra functionality, tabline will work
-without them):
-- Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the buffer
-  name. If missing, no icons will be shown.
+Suggested dependencies (provide extra functionality, will work without them):
+
+- Enabled |MiniIcons| module to show icons near file names.
+  Falls back to using 'nvim-tree/nvim-web-devicons' plugin or shows nothing.
 
 # Setup ~
 
@@ -88,7 +88,7 @@ Module config
 Default values:
 >lua
   MiniTabline.config = {
-    -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
+    -- Whether to show file icons (requires 'mini.icons')
     show_icons = true,
 
     -- Function which formats the tab label

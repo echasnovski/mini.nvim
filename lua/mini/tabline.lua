@@ -27,10 +27,10 @@
 ---
 --- # Dependencies ~
 ---
---- Suggested dependencies (provide extra functionality, tabline will work
---- without them):
---- - Plugin 'nvim-tree/nvim-web-devicons' for filetype icons near the buffer
----   name. If missing, no icons will be shown.
+--- Suggested dependencies (provide extra functionality, will work without them):
+---
+--- - Enabled |MiniIcons| module to show icons near file names.
+---   Falls back to using 'nvim-tree/nvim-web-devicons' plugin or shows nothing.
 ---
 --- # Setup ~
 ---
@@ -120,7 +120,7 @@ end
 ---   end
 --- <
 MiniTabline.config = {
-  -- Whether to show file icons (requires 'nvim-tree/nvim-web-devicons')
+  -- Whether to show file icons (requires 'mini.icons')
   show_icons = true,
 
   -- Function which formats the tab label
@@ -395,12 +395,7 @@ H.finalize_labels = function()
   local config = H.get_config()
 
   -- - Ensure cached `get_icon` for `default_format` (for better performance)
-  if not config.show_icons then H.get_icon = nil end
-  if config.show_icons and H.get_icon == nil then
-    -- Have this `require()` here to not depend on plugin initialization order
-    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-    if has_devicons then H.get_icon = function(name) return devicons.get_icon(name, nil, { default = true }) end end
-  end
+  H.ensure_get_icon(config)
 
   -- - Apply formatting
   local format = config.format or MiniTabline.default_format
@@ -408,9 +403,6 @@ H.finalize_labels = function()
     tab.label = format(tab.buf_id, tab.label)
   end
 end
-
--- Helper for `default_format`, cached for performance
-H.get_icon = nil
 
 ---@return table Array of `H.tabs` ids which have non-unique labels.
 ---@private
@@ -529,6 +521,25 @@ H.concat_tabs = function()
   end
 
   return res
+end
+
+-- Utilities ------------------------------------------------------------------
+H.ensure_get_icon = function(config)
+  if not config.show_icons then
+    -- Show no icon
+    H.get_icon = nil
+  elseif H.get_icon ~= nil then
+    -- Cache only once
+    return
+  elseif _G.MiniIcons ~= nil then
+    -- Prefer 'mini.icons'
+    H.get_icon = function(name) return (_G.MiniIcons.get('file', name)) end
+  else
+    -- Try falling back to 'nvim-web-devicons'
+    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+    if not has_devicons then return end
+    H.get_icon = function(name) return (devicons.get_icon(name, nil, { default = true })) end
+  end
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped

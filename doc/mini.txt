@@ -290,8 +290,8 @@ Table of contents:
 
 - |MiniTabline| - minimal tabline which always shows listed (see 'buflisted')
   buffers. Allows showing extra information section in case of multiple vim
-  tabpages. For full experience needs
-  [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons).
+  tabpages. For full experience needs enabled |MiniIcons| module (but works
+  without it).
 
 - |MiniTrailspace| - automatic highlighting of trailing whitespace with
   functionality to remove it.
