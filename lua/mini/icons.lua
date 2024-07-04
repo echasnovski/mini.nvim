@@ -424,7 +424,7 @@ end
 --- Works without installed 'nvim-web-devicons' and even with it installed (needs
 --- to be called after 'nvim-web-devicons' is set up).
 MiniIcons.mock_nvim_web_devicons = function()
-  local M = package.loaded['nvim-web-devicons'] or {}
+  local M = {}
 
   -- Main functions which get icon and highlight group
   M.get_icon = function(name, ext, opts)
@@ -493,7 +493,13 @@ MiniIcons.mock_nvim_web_devicons = function()
   M.set_up_highlights = function() end
   M.setup = function() end
 
-  package.loaded['nvim-web-devicons'] = M
+  -- Mock. Prefer `package.preload` as it seems to be a better practice.
+  local modname = 'nvim-web-devicons'
+  if package.loaded[modname] == nil then
+    package.preload[modname] = function() return M end
+  else
+    package.loaded[modname] = M
+  end
 end
 
 -- Helper data ================================================================
