@@ -555,9 +555,9 @@ H.directory_icons = {
 H.extension_icons = {
   -- Popular extensions associated with supported filetype. Present to not have
   -- to rely on `vim.filetype.match()` in some cases (for performance or if it
-  -- fails to compute filetype by filename and content only, like '.ts', '.h').
-  -- Present only those which can be unambiguously detected from the extension.
-  -- Value is string with filetype's name to inherit from its icon data
+  -- deliberately fails to compute filetype by filename and buffer).
+  -- Add only (essentially) unambiguously detectable from the extension.
+  -- Value is string with filetype's name to inherit from its icon data.
   asm   = 'asm',
   bib   = 'bib',
   bzl   = 'bzl',
@@ -621,9 +621,6 @@ H.extension_icons = {
   toml  = 'toml',
   ts    = 'typescript',
   tsv   = 'tsv',
-  -- Although there are some exact basename matches in `vim.filetype.match()`,
-  -- it does not detect 'txt' extension as "text" in most cases.
-  txt   = 'text',
   vim   = 'vim',
   vue   = 'vue',
   yaml  = 'yaml',
@@ -1710,7 +1707,7 @@ H.get_impl = {
     if icon ~= nil then return icon, hl end
 
     -- Fall back to built-in filetype matching using generic filename
-    local ft = vim.filetype.match({ filename = 'aaa.' .. name, contents = { '' } })
+    local ft = H.filetype_match('aaa.' .. name)
     if ft ~= nil then return MiniIcons.get('filetype', ft) end
   end,
   file = function(name)
@@ -1736,7 +1733,7 @@ H.get_impl = {
     end
 
     -- Fall back to built-in filetype matching using generic filename
-    local ft = vim.filetype.match({ filename = name, contents = { '' } })
+    local ft = H.filetype_match(name)
     if ft ~= nil then return MiniIcons.get('filetype', ft) end
   end,
   filetype = function(name) return H.filetype_icons[name] end,
@@ -1751,6 +1748,16 @@ H.get_from_extension = function(ext)
 end
 
 H.style_icon = function(glyph, name) return MiniIcons.config.style == 'ascii' and name:sub(1, 1):upper() or glyph end
+
+H.filetype_match = function(filename)
+  -- Ensure always present scratch buffer to be used in `vim.filetype.match()`
+  -- (needed because the function in many ambiguous cases prefers to return
+  -- nothing if there is no buffer supplied)
+  local buf_id = H.scratch_buf_id
+  H.scratch_buf_id = (buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id)) and vim.api.nvim_create_buf(false, true)
+    or buf_id
+  return vim.filetype.match({ filename = filename, buf = H.scratch_buf_id })
+end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.icons) %s', msg), 0) end

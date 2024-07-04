@@ -187,6 +187,7 @@ T['get()']['works with "extension" category'] = function()
   validate('lua', '󰢱', 'MiniIconsAzure')
   validate('myext', '󱁂', 'AA')
   validate('my.ext', '󰻲', 'MiniIconsRed')
+  validate('xpm', '󰍹', 'MiniIconsYellow')
   validate('should-be-default', 'E', 'Comment')
 end
 
@@ -211,6 +212,8 @@ T['get()']['works with "file" category'] = function()
   validate('hello.lua', '󰢱', 'MiniIconsAzure')
   -- - `vim.filetype.match()`
   validate('Cargo.lock', '', 'MiniIconsOrange')
+  -- - `vim.filetype.match()` which relies on supplied `buf`
+  validate('hello.xpm', '󰍹', 'MiniIconsYellow')
   -- - Default
   validate('should-be-default', 'F', 'Comment')
 
@@ -411,6 +414,14 @@ end
 T['get()']['can be used without `setup()`'] = function()
   unload_module()
   eq(child.lua_get('{ require("mini.icons").get("default", "file") }'), { '󰈔', 'MiniIconsGrey' })
+end
+
+T['get()']['can be used after deleting all buffers'] = function()
+  -- As `vim.filetype.match()` requries a buffer to be more useful, make sure
+  -- that this cached buffer is persistent
+  eq(get('file', 'hello.xpm'), { '󰍹', 'MiniIconsYellow' })
+  child.cmd('%bwipeout')
+  eq(get('file', 'hello.tcsh'), { '', 'MiniIconsAzure' })
 end
 
 T['get()']['validates arguments'] = function()
