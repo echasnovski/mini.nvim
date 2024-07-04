@@ -443,11 +443,6 @@ MiniIcons.mock_nvim_web_devicons = function()
   local with_cterm = function(icon, hl) return icon, get_cterm(hl) end
   local with_hex_cterm = function(icon, hl) return icon, get_hex(hl), get_cterm(hl) end
 
-  M.get_default_icon = function()
-    local icon, hl = MiniIcons.get('default', 'file')
-    return { icon = icon, color = get_hex(hl), cterm_color = tostring(get_cterm(hl)), name = 'Default' }
-  end
-
   M.get_icon_color = function(...) return with_hex(M.get_icon(...)) end
   M.get_icon_cterm_color = function(...) return with_cterm(M.get_icon(...)) end
   M.get_icon_colors = function(...) return with_hex_cterm(M.get_icon(...)) end
@@ -458,12 +453,35 @@ MiniIcons.mock_nvim_web_devicons = function()
 
   M.get_icon_name_by_filetype = function(ft) return ft end
 
-  -- Have only partial support for these. Consider adding more if needed.
-  M.get_icons = function() return {} end
+  -- Mock `get_icons_*()` to the extent they are compatible with this module
+  local make_icon_tbl = function(category, name, output_name)
+    local icon, hl = MiniIcons.get(category, name)
+    return { icon = icon, color = get_hex(hl), cterm_color = tostring(get_cterm(hl)), name = output_name }
+  end
+  local make_category_tbl = function(category)
+    local res = {}
+    -- This won't list all supported names (due to fallback), but at least some
+    for _, name in ipairs(MiniIcons.list(category)) do
+      res[name] = make_icon_tbl(category, name, name)
+    end
+    return res
+  end
+
+  M.get_default_icon = function() return make_icon_tbl('default', 'file', 'Default') end
+
+  M.get_icons = function()
+    return vim.tbl_deep_extend(
+      'force',
+      { [1] = M.get_default_icon() },
+      make_category_tbl('os'),
+      make_category_tbl('file'),
+      make_category_tbl('extension')
+    )
+  end
   M.get_icons_by_desktop_environment = function() return {} end
-  M.get_icons_by_extension = function() return {} end
-  M.get_icons_by_filename = function() return {} end
-  M.get_icons_by_operating_system = function() return {} end
+  M.get_icons_by_extension = function() return make_category_tbl('extension') end
+  M.get_icons_by_filename = function() return make_category_tbl('file') end
+  M.get_icons_by_operating_system = function() return make_category_tbl('os') end
   M.get_icons_by_window_manager = function() return {} end
 
   -- Should be no need in the these. Suggest using `MiniIcons.setup()`.

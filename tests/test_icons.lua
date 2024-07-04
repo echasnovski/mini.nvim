@@ -475,12 +475,16 @@ T['mock_nvim_web_devicons()'] = new_set()
 T['mock_nvim_web_devicons()']['works'] = function()
   load_module({
     default = { file = { glyph = 'F', hl = 'Comment' } },
+    extension = { myext = { glyph = 'E', hl = 'Constant' } },
     file = { myfile = { glyph = 'M', hl = 'String' } },
     filetype = { myfiletype = { glyph = 'T', hl = 'Special' } },
+    os = { myos = { glyph = 'O', hl = 'Delimiter' } },
   })
   child.api.nvim_set_hl(0, 'Comment', { fg = '#aaaaaa', ctermfg = 248 })
+  child.api.nvim_set_hl(0, 'Constant', { fg = '#e0e060', ctermfg = 185 })
   child.api.nvim_set_hl(0, 'String', { fg = '#60e060', ctermfg = 77 })
   child.api.nvim_set_hl(0, 'Special', { fg = '#e060e0', ctermfg = 170 })
+  child.api.nvim_set_hl(0, 'Delimiter', { fg = '#60e0e0', ctermfg = 80 })
 
   expect.error(function() child.lua('require("nvim-web-devicons")') end, 'nvim%-web%-devicons.*not found')
   child.lua('MiniIcons.mock_nvim_web_devicons()')
@@ -499,9 +503,6 @@ T['mock_nvim_web_devicons()']['works'] = function()
   local get_icon_by_filetype = function(...) return child.lua_get('{ devicons.get_icon_by_filetype(...) }', { ... }) end
   eq(get_icon_by_filetype('help', {}), { '󰋖', 'MiniIconsPurple' })
 
-  local ref_default_icon = { color = '#aaaaaa', cterm_color = '248', icon = 'F', name = 'Default' }
-  eq(child.lua_get('devicons.get_default_icon()'), ref_default_icon)
-
   eq(child.lua_get('{ devicons.get_icon_color("myfile", nil, {}) }'), { 'M', '#60e060' })
   eq(child.lua_get('{ devicons.get_icon_cterm_color("myfile", nil, {}) }'), { 'M', 77 })
   eq(child.lua_get('{ devicons.get_icon_colors("myfile", nil, {}) }'), { 'M', '#60e060', 77 })
@@ -512,22 +513,37 @@ T['mock_nvim_web_devicons()']['works'] = function()
 
   eq(child.lua_get('devicons.get_icon_name_by_filetype("myfiletype")'), 'myfiletype')
 
-  -- Should have others at least present
-  local present = {
-    'get_icons',
-    'get_icons_by_desktop_environment',
-    'get_icons_by_extension',
-    'get_icons_by_filename',
-    'get_icons_by_operating_system',
-    'get_icons_by_window_manager',
-    'has_loaded',
-    'refresh',
-    'set_default_icon',
-    'set_icon',
-    'set_icon_by_filetype',
-    'set_up_highlights',
-    'setup',
+  local ref_default_icon = { color = '#aaaaaa', cterm_color = '248', icon = 'F', name = 'Default' }
+  eq(child.lua_get('devicons.get_default_icon()'), ref_default_icon)
+
+  local ref_all = {
+    default = ref_default_icon,
+    myext = { color = '#e0e060', cterm_color = '185', icon = 'E', name = 'myext' },
+    myfile = { color = '#60e060', cterm_color = '77', icon = 'M', name = 'myfile' },
+    myos = { color = '#60e0e0', cterm_color = '80', icon = 'O', name = 'myos' },
   }
+  local out_all = child.lua([[
+    local t = devicons.get_icons()
+    return {
+      default = t[1],
+      myext = t.myext,
+      myfile = t.myfile,
+      myos = t.myos,
+      -- Should not be present, i.e. should be `nil`
+      myfiletype = t.myfiletype,
+    }
+  ]])
+  eq(out_all, ref_all)
+
+  eq(child.lua_get('devicons.get_icons_by_desktop_environment()'), {})
+  eq(child.lua_get('{ myext = devicons.get_icons_by_extension().myext }'), { myext = ref_all.myext })
+  eq(child.lua_get('{ myfile = devicons.get_icons_by_filename().myfile }'), { myfile = ref_all.myfile })
+  eq(child.lua_get('{ myos = devicons.get_icons_by_operating_system().myos }'), { myos = ref_all.myos })
+  eq(child.lua_get('devicons.get_icons_by_window_manager()'), {})
+
+  -- Should have others at least present
+  local present =
+    { 'has_loaded', 'refresh', 'set_default_icon', 'set_icon', 'set_icon_by_filetype', 'set_up_highlights', 'setup' }
   for _, method in ipairs(present) do
     eq(child.lua_get('type(devicons.' .. method .. ')'), 'function')
   end
