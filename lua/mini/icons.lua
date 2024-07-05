@@ -1618,6 +1618,7 @@ H.lsp_icons = {
 -- this feels representative of "popular" operating systems.
 --stylua: ignore
 H.os_icons = {
+  alpine       = { glyph = '', hl = 'MiniIconsBlue'   },
   android      = { glyph = '󰀲', hl = 'MiniIconsGreen'  },
   arch         = { glyph = '󰣇', hl = 'MiniIconsAzure'  },
   centos       = { glyph = '󱄚', hl = 'MiniIconsRed'    },
@@ -1631,9 +1632,11 @@ H.os_icons = {
   manjaro      = { glyph = '󱘊', hl = 'MiniIconsGreen'  },
   mint         = { glyph = '󰣭', hl = 'MiniIconsGreen'  },
   nixos        = { glyph = '󱄅', hl = 'MiniIconsAzure'  },
+  pop_os       = { glyph = '', hl = 'MiniIconsBlue'   },
   raspberry_pi = { glyph = '󰐿', hl = 'MiniIconsRed'    },
   redhat       = { glyph = '󱄛', hl = 'MiniIconsRed'    },
   ubuntu       = { glyph = '󰕈', hl = 'MiniIconsOrange' },
+  void         = { glyph = '', hl = 'MiniIconsGreen'  },
   windows      = { glyph = '󰖳', hl = 'MiniIconsBlue'   },
 }
 
