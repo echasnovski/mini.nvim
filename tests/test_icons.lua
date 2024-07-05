@@ -465,6 +465,19 @@ T['list()']['works'] = function()
   validate_no('os', 'myos')
 end
 
+T['list()']['uses lowercase icon names for categories which ignore case'] = function()
+  -- Otherwise `get()` will not match names with uppercase letter
+  local validate = function(category)
+    local not_lowercase = vim.tbl_filter(function(name) return name ~= name:lower() end, list(category))
+    eq(not_lowercase, {})
+  end
+  validate('default')
+  validate('extension')
+  validate('filetype')
+  validate('lsp')
+  validate('os')
+end
+
 T['list()']['validates arguments'] = function()
   expect.error(function() list(1) end, '1.*not.*category')
   expect.error(function() list('aaa') end, 'aaa.*not.*category')
