@@ -496,7 +496,8 @@ T['mock_nvim_web_devicons()']['works'] = function()
   local get_icon = function(...) return child.lua_get('{ devicons.get_icon(...) }', { ... }) end
   eq(child.lua_get('{ devicons.get_icon("init.lua", nil, {}) }'), { '', 'MiniIconsGreen' })
   eq(child.lua_get('{ devicons.get_icon(nil, "lua", {}) }'), { '󰢱', 'MiniIconsAzure' })
-  eq(child.lua_get('{ devicons.get_icon("hello.py", "lua", {}) }'), { '󰢱', 'MiniIconsAzure' })
+  eq(child.lua_get('{ devicons.get_icon("hello.py", "lua", {}) }'), { '󰌠', 'MiniIconsYellow' })
+  eq(child.lua_get('{ devicons.get_icon("init.lua", "lua", {}) }'), { '', 'MiniIconsGreen' })
   expect.error(function() child.lua('devicons.get_icon(1, nil, {})') end)
   expect.error(function() child.lua('devicons.get_icon(nil, 1, {})') end)
 

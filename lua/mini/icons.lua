@@ -428,8 +428,16 @@ MiniIcons.mock_nvim_web_devicons = function()
 
   -- Main functions which get icon and highlight group
   M.get_icon = function(name, ext, opts)
-    if type(ext) == 'string' then return MiniIcons.get('extension', ext) end
+    -- Trying 'name' first leads to a slightly different behavior compared to
+    -- the original in case both `name` and `ext` is supplied:
+    -- - Original: try exact `name`, then `ext`, then extensions in `name`.
+    -- - This: use 'file' category and ignore `ext` completely.
+    -- In practice this seems like a better choice because it accounts for
+    -- special file names at the cost of ignoring `ext` if it conflicts with
+    -- `name` (which rarely happens) and very small overhead of recomputing
+    -- extension (which assumed to already be computed by the caller).
     if type(name) == 'string' then return MiniIcons.get('file', name) end
+    if type(ext) == 'string' then return MiniIcons.get('extension', ext) end
     H.error('In `require("nvim-web-devicons").get_icon()` either `name` or `ext` should be string.')
   end
 
