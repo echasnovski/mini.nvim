@@ -354,6 +354,36 @@ T['get()']['respects `config.style`'] = function()
   eq(get('file', 'hello.myext')[1], 'M')
 end
 
+T['get()']['respects multibyte characters with "ascii" style'] = function()
+  load_module({
+    style = 'ascii',
+    directory = { й_dir = { glyph = 'M' } },
+    extension = { й_ext = { glyph = 'M' } },
+    file = { й_file = { glyph = 'M' } },
+    filetype = { й_filetype = { glyph = 'M' } },
+    lsp = { й_lsp = { glyph = 'M' } },
+    os = { й_os = { glyph = 'M' } },
+  })
+
+  -- Currently matched without making  it upper case to save speed for
+  -- overwhelmingly common single byte case (because `vim.fn.toupper()` is
+  -- *much* slower than `string.upper()`)
+  eq(get('directory', 'й_dir')[1], 'Й')
+  eq(get('extension', 'й_ext')[1], 'Й')
+  eq(get('file', 'й_file')[1], 'Й')
+  eq(get('filetype', 'й_filetype')[1], 'Й')
+  eq(get('lsp', 'й_lsp')[1], 'Й')
+  eq(get('os', 'й_os')[1], 'Й')
+
+  -- Default stil should match with category's first letter
+  eq(get('directory', 'й_default_dir')[1], 'D')
+  eq(get('extension', 'й_default_ext')[1], 'E')
+  eq(get('file', 'й_default_file')[1], 'F')
+  eq(get('filetype', 'й_default_filetype')[1], 'F')
+  eq(get('lsp', 'й_default_lsp')[1], 'L')
+  eq(get('os', 'й_default_os')[1], 'O')
+end
+
 T['get()']['respects customizations in config'] = function()
   load_module({
     default = { directory = { glyph = '󱁂', hl = 'Directory' } },

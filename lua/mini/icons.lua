@@ -1784,7 +1784,11 @@ H.get_from_extension = function(ext)
   if icon_data ~= nil then return H.style_icon(icon_data.glyph, ext), icon_data.hl end
 end
 
-H.style_icon = function(glyph, name) return MiniIcons.config.style == 'ascii' and name:sub(1, 1):upper() or glyph end
+H.style_icon = function(glyph, name)
+  if MiniIcons.config.style ~= 'ascii' then return glyph end
+  -- Use `vim.str_byteindex()` and `vim.fn.toupper()` for multibyte characters
+  return vim.fn.toupper(name:sub(1, vim.str_byteindex(name, 1)))
+end
 
 H.filetype_match = function(filename)
   -- Ensure always present scratch buffer to be used in `vim.filetype.match()`
