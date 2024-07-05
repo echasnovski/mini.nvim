@@ -1674,6 +1674,14 @@ H.apply_config = function(config)
   H.init_cache(config)
 end
 
+H.create_autocommands = function()
+  local augroup = vim.api.nvim_create_augroup('MiniIcons', {})
+  vim.api.nvim_create_autocmd(
+    'ColorScheme',
+    { group = augroup, callback = H.create_default_hl, desc = 'Ensure proper colors' }
+  )
+end
+
 --stylua: ignore
 H.create_default_hl = function()
   local hi = function(name, opts)
