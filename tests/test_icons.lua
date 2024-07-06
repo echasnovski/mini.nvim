@@ -108,7 +108,7 @@ T['setup()']['can customize icons'] = function()
 
   eq(get('default', 'extension')[1], 'E')
   eq(get('default', 'file')[2], 'AAA')
-  eq(get('directory', 'my_dir'), { 'D', 'Directory' })
+  eq(get('directory', 'my_dir'), { 'D', 'Directory', false })
 end
 
 T['setup()']['customization respects `vim.filetype.match()` fallback'] = function()
@@ -119,9 +119,9 @@ T['setup()']['customization respects `vim.filetype.match()` fallback'] = functio
     extension = { myext = { hl = 'Special' } },
     file = { ['hello.myext'] = { hl = 'String' } },
   })
-  eq(get('file', 'hello.myext'), { '󰻲', 'String' })
-  eq(get('extension', 'myext'), { '󰻲', 'Special' })
-  eq(get('filetype', 'extinguisher'), { '󰻲', 'MiniIconsRed' })
+  eq(get('file', 'hello.myext'), { '󰻲', 'String', false })
+  eq(get('extension', 'myext'), { '󰻲', 'Special', false })
+  eq(get('filetype', 'extinguisher'), { '󰻲', 'MiniIconsRed', false })
 end
 
 T['setup()']['respects `config.style` when customizing icons'] = function()
@@ -131,22 +131,22 @@ T['setup()']['respects `config.style` when customizing icons'] = function()
     extension = { ext = { glyph = '󰻲', hl = 'MiniIconsRed' } },
   })
 
-  eq(get('default', 'default'), { 'D', 'Comment' })
-  eq(get('extension', 'ext'), { 'E', 'MiniIconsRed' })
+  eq(get('default', 'default'), { 'D', 'Comment', false })
+  eq(get('extension', 'ext'), { 'E', 'MiniIconsRed', false })
 end
 
 T['get()'] = new_set()
 
 T['get()']['works with "default" category'] = function()
-  local validate = function(name, icon, hl) eq(get('default', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('default', name), { icon, hl, is_default }) end
 
-  validate('default', '󰟢', 'MiniIconsGrey')
-  validate('directory', '󰉋', 'MiniIconsAzure')
-  validate('extension', '󰈔', 'MiniIconsGrey')
-  validate('file', '󰈔', 'MiniIconsGrey')
-  validate('filetype', '󰈔', 'MiniIconsGrey')
-  validate('lsp', '󰞋', 'MiniIconsRed')
-  validate('os', '󰟀', 'MiniIconsPurple')
+  validate('default', '󰟢', 'MiniIconsGrey', false)
+  validate('directory', '󰉋', 'MiniIconsAzure', false)
+  validate('extension', '󰈔', 'MiniIconsGrey', false)
+  validate('file', '󰈔', 'MiniIconsGrey', false)
+  validate('filetype', '󰈔', 'MiniIconsGrey', false)
+  validate('lsp', '󰞋', 'MiniIconsRed', false)
+  validate('os', '󰟀', 'MiniIconsPurple', false)
 
   -- Can be customized
   load_module({
@@ -154,7 +154,7 @@ T['get()']['works with "default" category'] = function()
       file = { glyph = '󱁂', hl = 'Comment' },
     },
   })
-  validate('file', '󱁂', 'Comment')
+  validate('file', '󱁂', 'Comment', false)
 
   -- Validates not supported category
   expect.error(function() get('default', 'aaa') end, 'aaa.*not.*category')
@@ -166,11 +166,11 @@ T['get()']['works with "directory" category'] = function()
     directory = { mydir = { glyph = '󱁂', hl = 'AA' } },
   })
 
-  local validate = function(name, icon, hl) eq(get('directory', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('directory', name), { icon, hl, is_default }) end
 
-  validate('.git', '', 'MiniIconsOrange')
-  validate('mydir', '󱁂', 'AA')
-  validate('should-be-default', 'D', 'Comment')
+  validate('.git', '', 'MiniIconsOrange', false)
+  validate('mydir', '󱁂', 'AA', false)
+  validate('should-be-default', 'D', 'Comment', true)
 end
 
 T['get()']['works with "extension" category'] = function()
@@ -182,13 +182,13 @@ T['get()']['works with "extension" category'] = function()
     },
     filetype = { squirrel = { glyph = 'S', hl = 'Special' } },
   })
-  local validate = function(name, icon, hl) eq(get('extension', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('extension', name), { icon, hl, is_default }) end
 
-  validate('lua', '󰢱', 'MiniIconsAzure')
-  validate('myext', '󱁂', 'AA')
-  validate('my.ext', '󰻲', 'MiniIconsRed')
-  validate('xpm', '󰍹', 'MiniIconsYellow')
-  validate('should-be-default', 'E', 'Comment')
+  validate('lua', '󰢱', 'MiniIconsAzure', false)
+  validate('myext', '󱁂', 'AA', false)
+  validate('my.ext', '󰻲', 'MiniIconsRed', false)
+  validate('xpm', '󰍹', 'MiniIconsYellow', false)
+  validate('should-be-default', 'E', 'Comment', true)
 end
 
 T['get()']['works with "file" category'] = function()
@@ -203,31 +203,31 @@ T['get()']['works with "file" category'] = function()
     },
   })
 
-  local validate = function(name, icon, hl) eq(get('file', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('file', name), { icon, hl, is_default }) end
 
   -- Works with different sources of resolution
   -- - Exact basename
-  validate('init.lua', '', 'MiniIconsGreen')
+  validate('init.lua', '', 'MiniIconsGreen', false)
   -- - Extension
-  validate('hello.lua', '󰢱', 'MiniIconsAzure')
+  validate('hello.lua', '󰢱', 'MiniIconsAzure', false)
   -- - `vim.filetype.match()`
-  validate('Cargo.lock', '', 'MiniIconsOrange')
+  validate('Cargo.lock', '', 'MiniIconsOrange', false)
   -- - `vim.filetype.match()` which relies on supplied `buf`
-  validate('hello.xpm', '󰍹', 'MiniIconsYellow')
+  validate('hello.xpm', '󰍹', 'MiniIconsYellow', false)
   -- - Default
-  validate('should-be-default', 'F', 'Comment')
+  validate('should-be-default', 'F', 'Comment', true)
 
   -- Can accept full paths
   eq(get('file', '/home/user/hello.lua'), get('file', 'hello.lua'))
 
   -- Can use customizations
-  validate('myfile', '󱁂', 'AA')
-  validate('hello.py', 'PY', 'String')
-  validate('.gitignore', 'G', 'Ignore')
+  validate('myfile', '󱁂', 'AA', false)
+  validate('hello.py', 'PY', 'String', false)
+  validate('.gitignore', 'G', 'Ignore', false)
 
   -- Can use complex "extension"
-  validate('hello.ext', 'E', 'Comment')
-  validate('hello.my.ext', '󰻲', 'MiniIconsRed')
+  validate('hello.ext', 'E', 'Comment', false)
+  validate('hello.my.ext', '󰻲', 'MiniIconsRed', false)
 end
 
 T['get()']['works with "filetype" category'] = function()
@@ -236,11 +236,11 @@ T['get()']['works with "filetype" category'] = function()
     filetype = { myfiletype = { glyph = '󱁂', hl = 'AA' } },
   })
 
-  local validate = function(name, icon, hl) eq(get('filetype', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('filetype', name), { icon, hl, is_default }) end
 
-  validate('help', '󰋖', 'MiniIconsPurple')
-  validate('myfiletype', '󱁂', 'AA')
-  validate('should-be-default', 'F', 'Comment')
+  validate('help', '󰋖', 'MiniIconsPurple', false)
+  validate('myfiletype', '󱁂', 'AA', false)
+  validate('should-be-default', 'F', 'Comment', true)
 end
 
 T['get()']['works with "lsp" category'] = function()
@@ -249,11 +249,11 @@ T['get()']['works with "lsp" category'] = function()
     lsp = { mylsp = { glyph = '󱁂', hl = 'AA' } },
   })
 
-  local validate = function(name, icon, hl) eq(get('lsp', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('lsp', name), { icon, hl, is_default }) end
 
-  validate('array', '', 'MiniIconsOrange')
-  validate('mylsp', '󱁂', 'AA')
-  validate('should-be-default', 'L', 'Comment')
+  validate('array', '', 'MiniIconsOrange', false)
+  validate('mylsp', '󱁂', 'AA', false)
+  validate('should-be-default', 'L', 'Comment', true)
 end
 
 T['get()']['works with "os" category'] = function()
@@ -262,11 +262,11 @@ T['get()']['works with "os" category'] = function()
     os = { myos = { glyph = '󱁂', hl = 'AA' } },
   })
 
-  local validate = function(name, icon, hl) eq(get('os', name), { icon, hl }) end
+  local validate = function(name, icon, hl, is_default) eq(get('os', name), { icon, hl, is_default }) end
 
-  validate('arch', '󰣇', 'MiniIconsAzure')
-  validate('myos', '󱁂', 'AA')
-  validate('should-be-default', 'O', 'Comment')
+  validate('arch', '󰣇', 'MiniIconsAzure', false)
+  validate('myos', '󱁂', 'AA', false)
+  validate('should-be-default', 'O', 'Comment', true)
 end
 
 T['get()']['caches output'] = function()
@@ -329,16 +329,16 @@ T['get()']['respects `config.style`'] = function()
   })
 
   -- ASCII style is upper variant of the first byte of the resolved name
-  eq(get('default', 'directory'), { 'D', 'MiniIconsAzure' })
+  eq(get('default', 'directory'), { 'D', 'MiniIconsAzure', false })
 
   -- - 'init.lua' is explicitly tracked
-  eq(get('file', 'init.lua')[1], 'I')
+  eq(get('file', 'init.lua'), { 'I', 'MiniIconsGreen', false })
   -- - 'hello.lua' is resolved to use "lua" extension
-  eq(get('file', 'hello.lua')[1], 'L')
+  eq(get('file', 'hello.lua'), { 'L', 'MiniIconsAzure', false })
   -- - 'Cargo.lock' is resolved to use "toml" filetype
-  eq(get('file', 'Cargo.lock')[1], 'T')
-  -- - 'myfile' is resolved to use "file" default
-  eq(get('file', 'myfile')[1], 'F')
+  eq(get('file', 'Cargo.lock'), { 'T', 'MiniIconsOrange', false })
+  -- - 'not-supported' is resolved to use "file" default
+  eq(get('file', 'not-supported'), { 'F', 'MiniIconsGrey', true })
 
   -- Should work with all categories
   eq(get('default', 'lsp')[1], 'L')
@@ -352,6 +352,14 @@ T['get()']['respects `config.style`'] = function()
   eq(get('default', 'directory')[1], 'D')
   eq(get('extension', 'myext')[1], 'M')
   eq(get('file', 'hello.myext')[1], 'M')
+
+  -- Should properly return if output is fallback (even if icons are the same)
+  eq(get('directory', 'dir-not-supported'), { 'D', 'MiniIconsAzure', true })
+  eq(get('extension', 'ext-not-supported'), { 'E', 'MiniIconsGrey', true })
+  eq(get('file', 'file-not-supported'), { 'F', 'MiniIconsGrey', true })
+  eq(get('filetype', 'filetype-not-supported'), { 'F', 'MiniIconsGrey', true })
+  eq(get('lsp', 'lsp-not-supported'), { 'L', 'MiniIconsRed', true })
+  eq(get('os', 'os-not-supported'), { 'O', 'MiniIconsPurple', true })
 end
 
 T['get()']['respects multibyte characters with "ascii" style'] = function()
@@ -395,13 +403,13 @@ T['get()']['respects customizations in config'] = function()
     os = { myos = { glyph = 'F' } },
   })
 
-  eq(get('default', 'directory'), { '󱁂', 'Directory' })
-  eq(get('directory', 'mydir'), { 'A', 'Comment' })
-  eq(get('extension', 'myext'), { 'B', 'MiniIconsGrey' })
-  eq(get('file', 'myfile'), { '󰈔', 'String' })
-  eq(get('filetype', 'myfiletype'), { 'D', 'MiniIconsGrey' })
-  eq(get('lsp', 'mylsp'), { 'E', 'MiniIconsRed' })
-  eq(get('os', 'myos'), { 'F', 'MiniIconsPurple' })
+  eq(get('default', 'directory'), { '󱁂', 'Directory', false })
+  eq(get('directory', 'mydir'), { 'A', 'Comment', false })
+  eq(get('extension', 'myext'), { 'B', 'MiniIconsGrey', false })
+  eq(get('file', 'myfile'), { '󰈔', 'String', false })
+  eq(get('filetype', 'myfiletype'), { 'D', 'MiniIconsGrey', false })
+  eq(get('lsp', 'mylsp'), { 'E', 'MiniIconsRed', false })
+  eq(get('os', 'myos'), { 'F', 'MiniIconsPurple', false })
 end
 
 T['get()']['handles different casing'] = function()
@@ -443,15 +451,15 @@ end
 
 T['get()']['can be used without `setup()`'] = function()
   unload_module()
-  eq(child.lua_get('{ require("mini.icons").get("default", "file") }'), { '󰈔', 'MiniIconsGrey' })
+  eq(child.lua_get('{ require("mini.icons").get("default", "file") }'), { '󰈔', 'MiniIconsGrey', false })
 end
 
 T['get()']['can be used after deleting all buffers'] = function()
   -- As `vim.filetype.match()` requries a buffer to be more useful, make sure
   -- that this cached buffer is persistent
-  eq(get('file', 'hello.xpm'), { '󰍹', 'MiniIconsYellow' })
+  eq(get('file', 'hello.xpm'), { '󰍹', 'MiniIconsYellow', false })
   child.cmd('%bwipeout')
-  eq(get('file', 'hello.tcsh'), { '', 'MiniIconsAzure' })
+  eq(get('file', 'hello.tcsh'), { '', 'MiniIconsAzure', false })
 end
 
 T['get()']['validates arguments'] = function()

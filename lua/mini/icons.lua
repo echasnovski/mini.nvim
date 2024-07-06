@@ -90,6 +90,8 @@
 ---           user's configured default, while 'nvim-web-devicons' is able to
 ---           return `nil`. This module's approach is more aligned with the most
 ---           common use case of always showing an icon instead or near some data.
+---           There is a third returned value indicating if output is a result of
+---           a fallback (see |MiniIcons.get()|).
 ---
 ---         - This module uses |vim.filetype.match()| as a fallback for "file"
 ---           and "extension" categories, while 'nvim-web-devicons' completely
@@ -244,12 +246,13 @@ MiniIcons.config = {
 ---
 --- Usage example: >lua
 ---
----   -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
----   local icon, hl = MiniIcons.get('file', 'file.lua')
+---   -- Results into `icon='󰢱'`, `hl='MiniIconsAzure'`, `is_default=false`
+---   local icon, hl, is_default = MiniIcons.get('file', 'file.lua')
 --- <
 --- Notes:
 --- - Always returns some data, even if icon name is not explicitly supported
----   within target category. Category "default" is used as a fallback.
+---   within target category. Category "default" is used as a fallback. Use third
+---   output value to check if this particular case is a result of a fallback.
 ---
 --- - Glyphs are explicitly preferred (when reasonable) from a richer set of
 ---   `nf-md-*` class  ("Material design" set) of Nerd Fonts icons.
@@ -346,11 +349,15 @@ MiniIcons.config = {
 ---@param name string Icon name within category. Use |MiniIcons.list()| to get icon
 ---   names which are explicitly supported for specific category.
 ---
----@return [string,string] Tuple of icon string and a highlight group name it is
----   suggested to be highlighted with. Example: >lua
+---@return [string,string,boolean] Tuple of icon string, highlight group name it is
+---   suggested to be highlighted with, and boolean indicating whether this icon
+---   was returned as a result of fallback to default. Example: >lua
 ---
----   -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
----   local icon, hl = MiniIcons.get('file', 'file.lua')
+---   -- Results into `icon='󰢱'`, `hl='MiniIconsAzure'`, `is_default=false`
+---   local icon, hl, is_default = MiniIcons.get('file', 'file.lua')
+---
+---   -- Results into `icon='󰈔'`, `hl='MiniIconsGrey'`, `is_default=true`
+---   local icon, hl, is_default = MiniIcons.get('file', 'not-supported')
 --- <
 MiniIcons.get = function(category, name)
   if not (type(category) == 'string' and type(name) == 'string') then
@@ -364,13 +371,15 @@ MiniIcons.get = function(category, name)
   -- Try cache first
   name = (category == 'file' or category == 'directory') and H.fs_basename(name) or name:lower()
   local cached = H.cache[category][name]
-  if cached ~= nil then return cached[1], cached[2] end
+  if cached ~= nil then return cached[1], cached[2], cached[3] end
 
   -- Get icon
   local icon, hl = getter(name)
+  local is_default = false
   if icon == nil then
     -- Fall back to category default
     icon, hl = unpack(H.cache.default[category])
+    is_default = true
   end
   if hl == nil then
     -- Normalize if icon is returned first time
@@ -378,8 +387,8 @@ MiniIcons.get = function(category, name)
   end
 
   -- Save to cache and return
-  H.cache[category][name] = { icon, hl }
-  return icon, hl
+  H.cache[category][name] = { icon, hl, is_default }
+  return icon, hl, is_default
 end
 
 --- List explicitly supported icon names
@@ -428,7 +437,7 @@ MiniIcons.mock_nvim_web_devicons = function()
 
   -- Main functions which get icon and highlight group
   M.get_icon = function(name, ext, opts)
-    -- Trying 'name' first leads to a slightly different behavior compared to
+    -- Preferring 'name' first leads to a slightly different behavior compared to
     -- the original in case both `name` and `ext` is supplied:
     -- - Original: try exact `name`, then `ext`, then extensions in `name`.
     -- - This: use 'file' category and ignore `ext` completely.
@@ -436,12 +445,16 @@ MiniIcons.mock_nvim_web_devicons = function()
     -- special file names at the cost of ignoring `ext` if it conflicts with
     -- `name` (which rarely happens) and very small overhead of recomputing
     -- extension (which assumed to already be computed by the caller).
-    if type(name) == 'string' then return MiniIcons.get('file', name) end
-    if type(ext) == 'string' then return MiniIcons.get('extension', ext) end
-    H.error('In `require("nvim-web-devicons").get_icon()` either `name` or `ext` should be string.')
+    local is_file = type(name) == 'string'
+    local category = is_file and 'file' or 'extension'
+    local icon, hl = MiniIcons.get(category, is_file and name or ext)
+    return icon, hl
   end
 
-  M.get_icon_by_filetype = function(ft, opts) return MiniIcons.get('filetype', ft) end
+  M.get_icon_by_filetype = function(ft, opts)
+    local icon, hl = MiniIcons.get('filetype', ft)
+    return icon, hl
+  end
 
   -- Use default colors of default icon (#6d8086 and 66) by default
   local get_hl_data = function(...) return vim.api.nvim_get_hl_by_name(...) end
@@ -1732,6 +1745,7 @@ H.compute_cache_entry = function(category, name, icon_data)
   return {
     H.style_icon(has_glyph and glyph or builtin_glyph, name),
     has_hl and hl or builtin_hl,
+    false,
   }
 end
 
@@ -1762,7 +1776,7 @@ H.get_impl = {
 
       local icon, hl = H.get_from_extension(ext)
       if icon ~= nil then
-        H.cache.extension[ext] = { icon, hl }
+        H.cache.extension[ext] = { icon, hl, false }
         return icon, hl
       end
 

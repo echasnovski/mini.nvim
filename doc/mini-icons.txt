@@ -90,6 +90,8 @@ See |MiniIcons.config| for `config` structure and default values.
           user's configured default, while 'nvim-web-devicons' is able to
           return `nil`. This module's approach is more aligned with the most
           common use case of always showing an icon instead or near some data.
+          There is a third returned value indicating if output is a result of
+          a fallback (see |MiniIcons.get()|).
 
         - This module uses |vim.filetype.match()| as a fallback for "file"
           and "extension" categories, while 'nvim-web-devicons' completely
@@ -229,12 +231,13 @@ Get icon data
 
 Usage example: >lua
 
-  -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
-  local icon, hl = MiniIcons.get('file', 'file.lua')
+  -- Results into `icon='󰢱'`, `hl='MiniIconsAzure'`, `is_default=false`
+  local icon, hl, is_default = MiniIcons.get('file', 'file.lua')
 <
 Notes:
 - Always returns some data, even if icon name is not explicitly supported
-  within target category. Category "default" is used as a fallback.
+  within target category. Category "default" is used as a fallback. Use third
+  output value to check if this particular case is a result of a fallback.
 
 - Glyphs are explicitly preferred (when reasonable) from a richer set of
   `nf-md-*` class  ("Material design" set) of Nerd Fonts icons.
@@ -333,11 +336,15 @@ Parameters ~
   names which are explicitly supported for specific category.
 
 Return ~
-`([string,string])` Tuple of icon string and a highlight group name it is
-  suggested to be highlighted with. Example: >lua
+`([string,string,boolean])` Tuple of icon string, highlight group name it is
+  suggested to be highlighted with, and boolean indicating whether this icon
+  was returned as a result of fallback to default. Example: >lua
 
-  -- Results into `icon` be '󰢱' and `hl` be 'MiniIconsAzure'
-  local icon, hl = MiniIcons.get('file', 'file.lua')
+  -- Results into `icon='󰢱'`, `hl='MiniIconsAzure'`, `is_default=false`
+  local icon, hl, is_default = MiniIcons.get('file', 'file.lua')
+
+  -- Results into `icon='󰈔'`, `hl='MiniIconsGrey'`, `is_default=true`
+  local icon, hl, is_default = MiniIcons.get('file', 'not-supported')
 <
 ------------------------------------------------------------------------------
                                                               *MiniIcons.list()*
