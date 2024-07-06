@@ -321,6 +321,44 @@ T['get()']['adds to cache resolved output source'] = function()
   eq(durations.ext_cache_after_file < 0.7 * durations.ext_no_cache, true)
 end
 
+T['get()']['prefers user configured data over `vim.filetype.match()`'] = function()
+  load_module({
+    extension = {
+      ['complex.extension.which.user.configured.to.not.fall.back.to.vim.filetype.match'] = { glyph = 'E' },
+      ['complex.extension.two.which.user.configured.to.not.fall.back.to.vim.filetype.match'] = { glyph = 'e' },
+    },
+    file = { ['complex.file.name.which.user.configured.to.not.fall.back.to.vim.filetype.match'] = { glyph = 'C' } },
+  })
+
+  local durations = child.lua([[
+    local bench = function(category, name)
+      local start_time = vim.loop.hrtime()
+      MiniIcons.get(category, name)
+      return vim.loop.hrtime() - start_time
+    end
+
+    local ext_fallback = bench('extension', 'not-supported-extension')
+    local ext_ext = bench('extension', 'complex.extension.which.user.configured.to.not.fall.back.to.vim.filetype.match')
+
+    local file_fallback = bench('file', 'not-supported-file')
+    local file_file = bench('file', 'complex.file.name.which.user.configured.to.not.fall.back.to.vim.filetype.match')
+    local file_ext = bench('file', 'FILENAME.complex.extension.two.which.user.configured.to.not.fall.back.to.vim.filetype.match')
+
+    return {
+      ext_fallback = ext_fallback,
+      ext_ext = ext_ext,
+
+      file_fallback = file_fallback,
+      file_file = file_file,
+      file_ext = file_ext,
+    }
+  ]])
+
+  eq(durations.ext_ext < 0.1 * durations.ext_fallback, true)
+  eq(durations.file_file < 0.1 * durations.file_fallback, true)
+  eq(durations.file_ext < 0.1 * durations.file_fallback, true)
+end
+
 T['get()']['respects `config.style`'] = function()
   load_module({
     style = 'ascii',

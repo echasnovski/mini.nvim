@@ -245,6 +245,10 @@ Notes:
 - Output is cached after the first call to increase performance of next calls
   with same arguments. To reset cache, call |MiniIcons.setup()|.
 
+- To increase first call performance for "extension" and "file" categories,
+  add frequently used values in |MiniIcons.config|. They will be preferred
+  over executing |vim.filetype.match()|.
+
 - Matching icon name for "file" and "directory" categories is done exactly
   and respecting case. Others are done ignoring case.
 
@@ -278,7 +282,8 @@ Parameters ~
   - `'extension'` - icon data for extension.
     Supported icon names: any string (without extra dot prefix).
     Icon data is attempted to be resolved in the following order:
-      - List of manually tracked extensions (for better performance).
+      - List of manually tracked or user configured extensions (for better
+        performance). Run `:=MiniIcons.list('extension')` to see the list.
       - Filetype as a result of |vim.filetype.match()| with placeholder
         file basename. Uses output of corresponding "filetype" category.
 
@@ -292,11 +297,14 @@ Parameters ~
     Supported icon names: any string, but only basename will be used.
     Can be used for not existing paths (no check is done).
     Icon data is attempted to be resolved in the following order:
-      - List of manually tracked file basenames (should match exactly).
-      - List of manually tracked extensions.
+      - List of manually tracked or user configured file basenames (should
+        match exactly). Run `:=MiniIcons.list('flle')` to see the llst.
+      - List of manually tracked or user configured extensions.
+        Run `:=MiniIcons.list('extension')` to see the llst.
+        This step also includes alredy cached extensions.
         Uses output of corresponding "extension" category.
       - Filetype as a result of |vim.filetype.match()|.
-         Uses output of corresponding "filetype" category.
+        Uses output of corresponding "filetype" category.
 
     Examples: >lua
 

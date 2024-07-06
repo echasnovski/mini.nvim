@@ -260,6 +260,10 @@ MiniIcons.config = {
 --- - Output is cached after the first call to increase performance of next calls
 ---   with same arguments. To reset cache, call |MiniIcons.setup()|.
 ---
+--- - To increase first call performance for "extension" and "file" categories,
+---   add frequently used values in |MiniIcons.config|. They will be preferred
+---   over executing |vim.filetype.match()|.
+---
 --- - Matching icon name for "file" and "directory" categories is done exactly
 ---   and respecting case. Others are done ignoring case.
 ---
@@ -292,7 +296,8 @@ MiniIcons.config = {
 ---   - `'extension'` - icon data for extension.
 ---     Supported icon names: any string (without extra dot prefix).
 ---     Icon data is attempted to be resolved in the following order:
----       - List of manually tracked extensions (for better performance).
+---       - List of manually tracked or user configured extensions (for better
+---         performance). Run `:=MiniIcons.list('extension')` to see the list.
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
 ---         file basename. Uses output of corresponding "filetype" category.
 ---
@@ -306,11 +311,14 @@ MiniIcons.config = {
 ---     Supported icon names: any string, but only basename will be used.
 ---     Can be used for not existing paths (no check is done).
 ---     Icon data is attempted to be resolved in the following order:
----       - List of manually tracked file basenames (should match exactly).
----       - List of manually tracked extensions.
+---       - List of manually tracked or user configured file basenames (should
+---         match exactly). Run `:=MiniIcons.list('flle')` to see the llst.
+---       - List of manually tracked or user configured extensions.
+---         Run `:=MiniIcons.list('extension')` to see the llst.
+---         This step also includes alredy cached extensions.
 ---         Uses output of corresponding "extension" category.
 ---       - Filetype as a result of |vim.filetype.match()|.
----          Uses output of corresponding "filetype" category.
+---         Uses output of corresponding "filetype" category.
 ---
 ---     Examples: >lua
 ---
@@ -607,11 +615,13 @@ H.directory_icons = {
 --stylua: ignore
 H.extension_icons = {
   -- Popular extensions associated with supported filetype. Present to not have
-  -- to rely on `vim.filetype.match()` in some cases (for performance or if it
-  -- deliberately fails to compute filetype by filename and buffer).
-  -- Add only (essentially) unambiguously detectable from the extension.
+  -- to rely on `vim.filetype.match()` in some cases (mostly for performance,
+  -- but also if it sometimes deliberately fails to compute filetype by
+  -- filename and buffer).
+  -- Add only unambiguously detectable (allow some obvious exception on case by
+  -- case basis) from the extension to allow users to customize through
+  -- `vim.filetype.add()`.
   -- Value is string with filetype's name to inherit from its icon data.
-  asm   = 'asm',
   bib   = 'bib',
   bzl   = 'bzl',
   c     = 'c',
@@ -640,7 +650,6 @@ H.extension_icons = {
   java  = 'java',
   jl    = 'julia',
   js    = 'javascript',
-  json  = 'json',
   json5 = 'json5',
   kt    = 'kotlin',
   latex = 'tex',
@@ -664,22 +673,17 @@ H.extension_icons = {
   rs    = 'rust',
   rst   = 'rst',
   scala = 'scala',
-  sh    = 'bash',
   sol   = 'solidity',
   srt   = 'srt',
   ss    = 'scheme',
   ssa   = 'ssa',
   svg   = 'svg',
   swift = 'swift',
-  toml  = 'toml',
   ts    = 'typescript',
   tsv   = 'tsv',
   vim   = 'vim',
   vue   = 'vue',
-  yaml  = 'yaml',
-  yml   = 'yaml',
   zig   = 'zig',
-  zsh   = 'zsh',
 
   -- Video
   ['3gp'] = { glyph = '󰈫', hl = 'MiniIconsYellow' },
