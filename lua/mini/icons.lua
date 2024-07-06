@@ -23,6 +23,13 @@
 --- - Mocking methods of 'nvim-tree/nvim-web-devicons' for better integrations
 ---   with plugins outside 'mini.nvim'. See |MiniIcons.mock_nvim_web_devicons()|.
 ---
+--- Notes:
+---
+--- - It is not a goal to become a collection of icons for as much use cases as
+---   possible. There are specific criteria for icon data to be included as
+---   built-in in each category (see |MiniIcons.get()|).
+---   The main supported category is "filetype".
+---
 --- # Dependencies ~
 ---
 --- Suggested dependencies:
@@ -273,15 +280,20 @@ MiniIcons.config = {
 ---
 ---@param category string Category name. Supported categories:
 ---   - `'default'` - icon data used as fallback for any category.
----     Supported icon names: any supported category name.
+---     Icon names:
+---       - <Input>: any supported category name.
+---       - <Built-in>: only supported category names.
 ---
 ---     Examples: >lua
 ---
 ---       MiniIcons.get('default', 'file')
 --- <
 ---   - `'directory'` - icon data for directory path.
----     Supported icon names: any string, but only basename will be used.
----     Can be used for not existing paths (no check is done).
+---     Icon names:
+---       - <Input>: any string, but only basename is used. Works with not present
+---         paths (no check is done).
+---       - <Built-in>: popular directory basenames not tied to language/software
+---         (with few notable exceptions like Neovim, Git, etc.).
 ---
 ---     Examples: >lua
 ---
@@ -294,10 +306,14 @@ MiniIcons.config = {
 ---       MiniIcons.get('directory', '.Config')
 --- <
 ---   - `'extension'` - icon data for extension.
----     Supported icon names: any string (without extra dot prefix).
+---     Icon names:
+---       - <Input>: any string (without extra dot prefix).
+---       - <Built-in>: popular extensions without associated filetype and small
+---         set with one (for performance).
+---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of manually tracked or user configured extensions (for better
----         performance). Run `:=MiniIcons.list('extension')` to see the list.
+---       - List of built-in and user configured extensions (for better
+---         performance). Run `:=MiniIcons.list('extension')` to see them.
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
 ---         file basename. Uses output of corresponding "filetype" category.
 ---
@@ -308,14 +324,18 @@ MiniIcons.config = {
 ---       MiniIcons.get('extension', 'LUA')
 --- <
 ---   - `'file'` - icon data for file path.
----     Supported icon names: any string, but only basename will be used.
----     Can be used for not existing paths (no check is done).
+---     Icon names:
+---       - <Input>: any string, but only basename is used. Works with not present
+---         paths (no check is done).
+---       - <Built-in>: popular file basenames not tied to language/software
+---         (with few notable exceptions like Neovim, Git, etc.).
+---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of manually tracked or user configured file basenames (should
----         match exactly). Run `:=MiniIcons.list('flle')` to see the llst.
----       - List of manually tracked or user configured extensions.
----         Run `:=MiniIcons.list('extension')` to see the llst.
----         This step also includes alredy cached extensions.
+---       - List of built-in and user configured file basenames (should match
+---         exactly). Run `:=MiniIcons.list('flle')` to see them.
+---       - List of built-in and user configured extensions.
+---         Run `:=MiniIcons.list('extension')` to see them.
+---         This step also includes already cached extensions.
 ---         Uses output of corresponding "extension" category.
 ---       - Filetype as a result of |vim.filetype.match()|.
 ---         Uses output of corresponding "filetype" category.
@@ -332,7 +352,12 @@ MiniIcons.config = {
 ---       MiniIcons.get('file', 'init.LUA')
 --- <
 ---   - `'filetype'` - icon data for 'filetype' values.
----     Supported icon names: any string.
+---     Icon names:
+---       - <Input>: any string.
+---       - <Built-in>: any filetype that is reasonably used in Neovim ecosystem.
+---         This category is intended as a widest net for supporting use cases.
+---         Users are encouraged to have a specific filetype detection set up.
+---
 ---     Examples: >lua
 ---
 ---       MiniIcons.get('filetype', 'lua')
@@ -340,14 +365,21 @@ MiniIcons.config = {
 ---       MiniIcons.get('filetype', 'minifiles')
 --- <
 ---   - `'lsp'` - icon data for various "LSP kind" values.
----     Supported icon names: any string.
+---     Icon names:
+---       - <Input>: any string.
+---       - <Built-in>: only namesspace entries from LSP specification that are
+---         can be displayed to user. Like `CompletionItemKind`, `SymbolKind`, etc.
+---
 ---     Examples: >lua
 ---
 ---       MiniIcons.get('lsp', 'array')
 ---       MiniIcons.get('lsp', 'keyword')
 --- <
 ---   - `'os'` - icon data for popular operating systems.
----     Supported icon names: any string.
+---     Icon names:
+---       - <Input>: any string.
+---       - <Built-in>: only operating systems which have `nf-md-*` class icon.
+---
 ---     Examples: >lua
 ---
 ---       MiniIcons.get('os', 'linux')
