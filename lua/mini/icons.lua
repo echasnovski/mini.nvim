@@ -447,19 +447,27 @@ MiniIcons.mock_nvim_web_devicons = function()
     -- extension (which assumed to already be computed by the caller).
     local is_file = type(name) == 'string'
     local category = is_file and 'file' or 'extension'
-    local icon, hl = MiniIcons.get(category, is_file and name or ext)
+    local icon, hl, is_default = MiniIcons.get(category, is_file and name or ext)
+    if is_default and not (opts or {}).default then return nil, nil end
     return icon, hl
   end
 
   M.get_icon_by_filetype = function(ft, opts)
-    local icon, hl = MiniIcons.get('filetype', ft)
+    local icon, hl, is_default = MiniIcons.get('filetype', ft)
+    if is_default and not (opts or {}).default then return nil, nil end
     return icon, hl
   end
 
   -- Use default colors of default icon (#6d8086 and 66) by default
   local get_hl_data = function(...) return vim.api.nvim_get_hl_by_name(...) end
-  local get_hex = function(hl) return string.format('#%06x', get_hl_data(hl, true).foreground or 7176326) end
-  local get_cterm = function(hl) return get_hl_data(hl, false).foreground or 66 end
+  local get_hex = function(hl)
+    if hl == nil then return nil end
+    return string.format('#%06x', get_hl_data(hl, true).foreground or 7176326)
+  end
+  local get_cterm = function(hl)
+    if hl == nil then return nil end
+    return get_hl_data(hl, false).foreground or 66
+  end
   local with_hex = function(icon, hl) return icon, get_hex(hl) end
   local with_cterm = function(icon, hl) return icon, get_cterm(hl) end
   local with_hex_cterm = function(icon, hl) return icon, get_hex(hl), get_cterm(hl) end

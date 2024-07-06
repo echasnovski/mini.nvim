@@ -525,9 +525,13 @@ T['mock_nvim_web_devicons()'] = new_set()
 
 T['mock_nvim_web_devicons()']['works'] = function()
   load_module({
-    default = { file = { glyph = 'F', hl = 'Comment' } },
+    default = {
+      file = { glyph = 'f', hl = 'Comment' },
+      filetype = { glyph = 't', hl = 'Comment' },
+      extension = { glyph = 'e', hl = 'Comment' },
+    },
     extension = { myext = { glyph = 'E', hl = 'Constant' } },
-    file = { myfile = { glyph = 'M', hl = 'String' } },
+    file = { myfile = { glyph = 'F', hl = 'String' } },
     filetype = { myfiletype = { glyph = 'T', hl = 'Special' } },
     os = { myos = { glyph = 'O', hl = 'Delimiter' } },
   })
@@ -545,33 +549,55 @@ T['mock_nvim_web_devicons()']['works'] = function()
 
   -- Should reasonable mock at least common functions which return something
   local get_icon = function(...) return child.lua_get('{ devicons.get_icon(...) }', { ... }) end
-  eq(child.lua_get('{ devicons.get_icon("init.lua", nil, {}) }'), { '', 'MiniIconsGreen' })
-  eq(child.lua_get('{ devicons.get_icon(nil, "lua", {}) }'), { '󰢱', 'MiniIconsAzure' })
+  eq(child.lua_get('{ devicons.get_icon("init.lua", nil) }'), { '', 'MiniIconsGreen' })
+  eq(child.lua_get('{ devicons.get_icon(nil, "lua") }'), { '󰢱', 'MiniIconsAzure' })
   eq(child.lua_get('{ devicons.get_icon("hello.py", "lua", {}) }'), { '󰌠', 'MiniIconsYellow' })
   eq(child.lua_get('{ devicons.get_icon("init.lua", "lua", {}) }'), { '', 'MiniIconsGreen' })
+  eq(child.lua_get('{ devicons.get_icon("xxx", nil, {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon(nil, "xxx", {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon("xxx", nil, { default = true }) }'), { 'f', 'Comment' })
+  eq(child.lua_get('{ devicons.get_icon(nil, "xxx", { default = true }) }'), { 'e', 'Comment' })
   expect.error(function() child.lua('devicons.get_icon(1, nil, {})') end)
   expect.error(function() child.lua('devicons.get_icon(nil, 1, {})') end)
 
   local get_icon_by_filetype = function(...) return child.lua_get('{ devicons.get_icon_by_filetype(...) }', { ... }) end
   eq(get_icon_by_filetype('help', {}), { '󰋖', 'MiniIconsPurple' })
+  eq(get_icon_by_filetype('xxx', {}), {})
+  eq(get_icon_by_filetype('xxx', { default = true }), { 't', 'Comment' })
 
-  eq(child.lua_get('{ devicons.get_icon_color("myfile", nil, {}) }'), { 'M', '#60e060' })
-  eq(child.lua_get('{ devicons.get_icon_cterm_color("myfile", nil, {}) }'), { 'M', 77 })
-  eq(child.lua_get('{ devicons.get_icon_colors("myfile", nil, {}) }'), { 'M', '#60e060', 77 })
+  eq(child.lua_get('{ devicons.get_icon_color("myfile", nil, {}) }'), { 'F', '#60e060' })
+  eq(child.lua_get('{ devicons.get_icon_color("xxx", nil, {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_color("xxx", nil, { default = true }) }'), { 'f', '#aaaaaa' })
+
+  eq(child.lua_get('{ devicons.get_icon_cterm_color("myfile", nil, {}) }'), { 'F', 77 })
+  eq(child.lua_get('{ devicons.get_icon_cterm_color("xxx", nil, {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_cterm_color("xxx", nil, { default = true }) }'), { 'f', 248 })
+
+  eq(child.lua_get('{ devicons.get_icon_colors("myfile", nil, {}) }'), { 'F', '#60e060', 77 })
+  eq(child.lua_get('{ devicons.get_icon_colors("xxx", nil, {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_colors("xxx", nil, { default = true }) }'), { 'f', '#aaaaaa', 248 })
 
   eq(child.lua_get('{ devicons.get_icon_color_by_filetype("myfiletype", {}) }'), { 'T', '#e060e0' })
+  eq(child.lua_get('{ devicons.get_icon_color_by_filetype("xxx", {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_color_by_filetype("xxx", { default = true }) }'), { 't', '#aaaaaa' })
+
   eq(child.lua_get('{ devicons.get_icon_cterm_color_by_filetype("myfiletype", {}) }'), { 'T', 170 })
+  eq(child.lua_get('{ devicons.get_icon_cterm_color_by_filetype("xxx", {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_cterm_color_by_filetype("xxx", { default = true }) }'), { 't', 248 })
+
   eq(child.lua_get('{ devicons.get_icon_colors_by_filetype("myfiletype", {}) }'), { 'T', '#e060e0', 170 })
+  eq(child.lua_get('{ devicons.get_icon_colors_by_filetype("xxx", {}) }'), {})
+  eq(child.lua_get('{ devicons.get_icon_colors_by_filetype("xxx", { default = true }) }'), { 't', '#aaaaaa', 248 })
 
   eq(child.lua_get('devicons.get_icon_name_by_filetype("myfiletype")'), 'myfiletype')
 
-  local ref_default_icon = { color = '#aaaaaa', cterm_color = '248', icon = 'F', name = 'Default' }
+  local ref_default_icon = { color = '#aaaaaa', cterm_color = '248', icon = 'f', name = 'Default' }
   eq(child.lua_get('devicons.get_default_icon()'), ref_default_icon)
 
   local ref_all = {
     default = ref_default_icon,
     myext = { color = '#e0e060', cterm_color = '185', icon = 'E', name = 'myext' },
-    myfile = { color = '#60e060', cterm_color = '77', icon = 'M', name = 'myfile' },
+    myfile = { color = '#60e060', cterm_color = '77', icon = 'F', name = 'myfile' },
     myos = { color = '#60e0e0', cterm_color = '80', icon = 'O', name = 'myos' },
   }
   local out_all = child.lua([[
