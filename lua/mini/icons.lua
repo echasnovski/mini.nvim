@@ -751,6 +751,8 @@ H.extension_icons = {
   tif  = { glyph = '󰈟', hl = 'MiniIconsYellow' },
   tiff = { glyph = '󰈟', hl = 'MiniIconsYellow' },
   webp = { glyph = '󰈟', hl = 'MiniIconsBlue'   },
+  heic = { glyph = '󰺰', hl = 'MiniIconsYellowc' },
+  dng  = { glyph = '󰺰', hl = 'MiniIconsPurple' },
 
   -- Archives
   ["7z"] = { glyph = '󰗄', hl = 'MiniIconsBlue'   },
