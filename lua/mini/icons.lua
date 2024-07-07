@@ -390,9 +390,10 @@ MiniIcons.config = {
 ---@param name string Icon name within category. Use |MiniIcons.list()| to get icon
 ---   names which are explicitly supported for specific category.
 ---
----@return [string,string,boolean] Tuple of icon string, highlight group name it is
----   suggested to be highlighted with, and boolean indicating whether this icon
----   was returned as a result of fallback to default. Example: >lua
+---@return string icon string
+---@return string highlight group name it is
+---@return boolean a boolean indicating whether this icon was returned as a
+---   result of fallback to default. Example: >lua
 ---
 ---   -- Results into `icon='󰢱'`, `hl='MiniIconsAzure'`, `is_default=false`
 ---   local icon, hl, is_default = MiniIcons.get('file', 'file.lua')
