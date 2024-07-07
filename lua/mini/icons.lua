@@ -292,7 +292,7 @@ MiniIcons.config = {
 ---     Icon names:
 ---       - <Input>: any string, but only basename is used. Works with not present
 ---         paths (no check is done).
----       - <Built-in>: popular directory basenames not tied to language/software
+---       - <Built-in>: popular directory names not tied to language/software
 ---         (with few notable exceptions like Neovim, Git, etc.).
 ---
 ---     Examples: >lua
@@ -308,14 +308,15 @@ MiniIcons.config = {
 ---   - `'extension'` - icon data for extension.
 ---     Icon names:
 ---       - <Input>: any string (without extra dot prefix).
----       - <Built-in>: popular extensions without associated filetype and small
----         set with one (for performance).
+---       - <Built-in>: popular extensions not tied to language/software (with
+---         few notable exceptions) and without associated filetype; plus a set
+---         of extensions with associated filetype (for performance).
 ---
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of built-in and user configured extensions (for better
 ---         performance). Run `:=MiniIcons.list('extension')` to see them.
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
----         file basename. Uses output of corresponding "filetype" category.
+---         file name. Uses output of corresponding "filetype" category.
 ---
 ---     Examples: >lua
 ---
@@ -327,12 +328,12 @@ MiniIcons.config = {
 ---     Icon names:
 ---       - <Input>: any string, but only basename is used. Works with not present
 ---         paths (no check is done).
----       - <Built-in>: popular file basenames not tied to language/software
+---       - <Built-in>: popular file names not tied to language/software
 ---         (with few notable exceptions like Neovim, Git, etc.).
 ---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of built-in and user configured file basenames (should match
----         exactly). Run `:=MiniIcons.list('flle')` to see them.
+---       - List of built-in and user configured file names (to match exactly).
+---         Run `:=MiniIcons.list('flle')` to see them.
 ---       - List of built-in and user configured extensions.
 ---         Run `:=MiniIcons.list('extension')` to see them.
 ---         This step also includes already cached extensions.
@@ -462,7 +463,7 @@ end
 --- plugin. It will mock all its functions which return icon data by
 --- using |MiniIcons.get()| equivalent.
 ---
---- This function is useful until all relevant to you plugins depend solely on
+--- This function is useful if any plugins relevant to you depend solely on
 --- 'nvim-web-devicons' and have not yet added an integration with 'mini.icons'.
 ---
 --- Full example of usage: >lua
@@ -1754,8 +1755,8 @@ H.init_cache = function(config)
   -- might be used to infer missing data in the next
   local categories = { 'directory', 'filetype', 'extension', 'file', 'lsp', 'os' }
 
-  -- Cache is structured same customization tables in `config`, but for smaller
-  -- size (by about 10%) uses 1 and 2 as indexes instead of `glyph` and `hl`.
+  -- Cache is structured the same way as customization tables in `config`, but
+  -- for smaller size (by about 10%) uses number indexes instead of named ones.
   H.cache = { default = {} }
   for _, cat in ipairs(categories) do
     -- Set default
