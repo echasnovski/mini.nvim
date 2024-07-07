@@ -595,7 +595,7 @@ MiniIcons.mock_lspkind = function()
 
   M.symbolic = function(kind, opts)
     local mode = opts and opts.mode or 'symbol'
-    local symbol, _ = MiniIcons.get('lsp', kind)
+    local symbol = MiniIcons.get('lsp', kind)
     if mode == 'text' then
       symbol = kind
     elseif mode == 'text_symbol' then
@@ -613,16 +613,14 @@ MiniIcons.mock_lspkind = function()
 
       vim_item.kind = M.symbolic(vim_item.kind, opts)
 
-      if opts.menu ~= nil then
-        vim_item.menu = (opts.menu[entry.source.name] ~= nil and opts.menu[entry.source.name] or '')
-          .. ((opts.show_labelDetails and vim_item.menu ~= nil) and vim_item.menu or '')
+      if opts.menu then
+        vim_item.menu = (opts.menu[entry.source.name] or '') .. (opts.show_labelDetails and vim_item.menu or '')
       end
 
-      if opts.maxwidth ~= nil then
+      if opts.maxwidth then
         local maxwidth = type(opts.maxwidth) == 'function' and opts.maxwidth() or opts.maxwidth
         if vim.fn.strchars(vim_item.abbr) > maxwidth then
-          vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, maxwidth)
-            .. (opts.ellipsis_char ~= nil and opts.ellipsis_char or '')
+          vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, maxwidth) .. (opts.ellipsis_char or '')
         end
       end
       return vim_item
