@@ -296,7 +296,7 @@ Parameters ~
       - <Input>: any string (without extra dot prefix).
       - <Built-in>: popular extensions not tied to language/software (with
         few notable exceptions) and without associated filetype; plus a set
-        of extensions with associated filetype (for performance).
+        of filetype associated extensions (for performance or better support).
 
     Icon data is attempted to be resolved in the following order:
       - List of built-in and user configured extensions (for better

@@ -310,7 +310,7 @@ MiniIcons.config = {
 ---       - <Input>: any string (without extra dot prefix).
 ---       - <Built-in>: popular extensions not tied to language/software (with
 ---         few notable exceptions) and without associated filetype; plus a set
----         of extensions with associated filetype (for performance).
+---         of filetype associated extensions (for performance or better support).
 ---
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of built-in and user configured extensions (for better
@@ -645,16 +645,13 @@ H.directory_icons = {
 }
 
 -- Extension icons
+-- Value is string with filetype's name to inherit from its icon data
 --stylua: ignore
 H.extension_icons = {
   -- Popular extensions associated with supported filetype. Present to not have
-  -- to rely on `vim.filetype.match()` in some cases (mostly for performance,
-  -- but also if it sometimes deliberately fails to compute filetype by
-  -- filename and buffer).
-  -- Add only unambiguously detectable (allow some obvious exception on case by
-  -- case basis) from the extension to allow users to customize through
-  -- `vim.filetype.add()`.
-  -- Value is string with filetype's name to inherit from its icon data.
+  -- to rely on `vim.filetype.match()` thus having better performance. Add only
+  -- unambiguously detectable from the extension (allow obvious exceptions on
+  -- case by case basis) to allow users to customize with `vim.filetype.add()`.
   bib   = 'bib',
   bzl   = 'bzl',
   c     = 'c',
@@ -695,7 +692,6 @@ H.extension_icons = {
   pdb   = 'prolog',
   pdf   = 'pdf',
   php   = 'php',
-  purs  = 'purescript',
   py    = 'python',
   qmd   = 'quarto',
   r     = 'r',
@@ -717,6 +713,12 @@ H.extension_icons = {
   vim   = 'vim',
   vue   = 'vue',
   zig   = 'zig',
+
+  -- Extensions for which `vim.filetype.match()` mismatches or doesn't work.
+  -- Usually because matching depends on an actual buffer content.
+  h    = { glyph = '󰫵', hl = 'MiniIconsPurple' },
+  purs = 'purescript',
+  tf   = 'terraform',
 
   -- Video
   ['3gp'] = { glyph = '󰈫', hl = 'MiniIconsYellow' },
@@ -754,7 +756,7 @@ H.extension_icons = {
   webp = { glyph = '󰈟', hl = 'MiniIconsBlue'   },
 
   -- Archives
-  ["7z"] = { glyph = '󰗄', hl = 'MiniIconsBlue'   },
+  ['7z'] = { glyph = '󰗄', hl = 'MiniIconsBlue'   },
   bz     = { glyph = '󰗄', hl = 'MiniIconsOrange' },
   bz2    = { glyph = '󰗄', hl = 'MiniIconsOrange' },
   bz3    = { glyph = '󰗄', hl = 'MiniIconsOrange' },
@@ -777,7 +779,6 @@ H.extension_icons = {
   dot  = { glyph = '󱎒', hl = 'MiniIconsAzure'  },
   dotx = { glyph = '󱎒', hl = 'MiniIconsAzure'  },
   exe  = { glyph = '󰖳', hl = 'MiniIconsRed'    },
-  h    = { glyph = '󰫵', hl = 'MiniIconsPurple' },
   pps  = { glyph = '󱎐', hl = 'MiniIconsRed'    },
   ppsm = { glyph = '󱎐', hl = 'MiniIconsRed'    },
   ppsx = { glyph = '󱎐', hl = 'MiniIconsRed'    },
@@ -800,6 +801,7 @@ H.file_icons = {
   ['.bash_profile']      = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.bashrc']            = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.git']               = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  ['.gitkeep']           = { glyph = '󰊢', hl = 'MiniIconsRed'    },
   ['.mailmap']           = { glyph = '󰊢', hl = 'MiniIconsCyan'   },
   ['.npmignore']         = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
   ['.nvmrc']             = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
@@ -809,12 +811,15 @@ H.file_icons = {
   ['CHANGELOG.md']       = { glyph = '󰉻', hl = 'MiniIconsBlue'   },
   CODE_OF_CONDUCT        = { glyph = '󱃱', hl = 'MiniIconsRed'    },
   ['CODE_OF_CONDUCT.md'] = { glyph = '󱃱', hl = 'MiniIconsRed'    },
+  CODEOWNERS             = { glyph = '󰜻', hl = 'MiniIconsPurple' },
   CONTRIBUTING           = { glyph = '󰺾', hl = 'MiniIconsAzure'  },
   ['CONTRIBUTING.md']    = { glyph = '󰺾', hl = 'MiniIconsAzure'  },
   ['FUNDING.yml']        = { glyph = '󰇁', hl = 'MiniIconsGreen'  },
   LICENSE                = { glyph = '', hl = 'MiniIconsCyan'   },
   ['LICENSE.md']         = { glyph = '', hl = 'MiniIconsCyan'   },
   ['LICENSE.txt']        = { glyph = '', hl = 'MiniIconsCyan'   },
+  NEWS                   = { glyph = '󰉻', hl = 'MiniIconsBlue'   },
+  ['NEWS.md']            = { glyph = '󰉻', hl = 'MiniIconsBlue'   },
   PKGBUILD               = { glyph = '󱁤', hl = 'MiniIconsPurple' },
   README                 = { glyph = '', hl = 'MiniIconsYellow' },
   ['README.md']          = { glyph = '', hl = 'MiniIconsYellow' },
@@ -850,7 +855,7 @@ H.file_icons = {
 --   glyph-hl duplicates).
 --stylua: ignore
 H.filetype_icons = {
-  -- Neovim filetype plugins
+  -- Neovim filetype plugins (i.e. recognized with vanilla Neovim)
   ['8th']            = { glyph = '󰭁', hl = 'MiniIconsYellow' },
   a2ps               = { glyph = '󰒓', hl = 'MiniIconsCyan'   },
   a65                = { glyph = '', hl = 'MiniIconsRed'    },
@@ -941,7 +946,7 @@ H.filetype_icons = {
   clean              = { glyph = '󰫰', hl = 'MiniIconsBlue'   },
   clipper            = { glyph = '󰫰', hl = 'MiniIconsPurple' },
   clojure            = { glyph = '', hl = 'MiniIconsGreen'  },
-  cmake              = { glyph = '󱁤', hl = 'MiniIconsYellow' },
+  cmake              = { glyph = '󱁤', hl = 'MiniIconsOrange' },
   cmakecache         = { glyph = '󱁤', hl = 'MiniIconsRed'    },
   cmod               = { glyph = '󰫰', hl = 'MiniIconsCyan'   },
   cmusrc             = { glyph = '󰒓', hl = 'MiniIconsRed'    },
@@ -1082,6 +1087,8 @@ H.filetype_icons = {
   gnuplot            = { glyph = '󰺒', hl = 'MiniIconsPurple' },
   go                 = { glyph = '󰟓', hl = 'MiniIconsAzure'  },
   godoc              = { glyph = '󰟓', hl = 'MiniIconsOrange' },
+  gomod              = { glyph = '󰟓', hl = 'MiniIconsAzure'  },
+  gosum              = { glyph = '󰟓', hl = 'MiniIconsCyan'   },
   gp                 = { glyph = '󰫴', hl = 'MiniIconsCyan'   },
   gpg                = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
   gprof              = { glyph = '󰫴', hl = 'MiniIconsAzure'  },
@@ -1492,11 +1499,12 @@ H.filetype_icons = {
   template           = { glyph = '󰬁', hl = 'MiniIconsGreen'  },
   teraterm           = { glyph = '󰅭', hl = 'MiniIconsGreen'  },
   terminfo           = { glyph = '', hl = 'MiniIconsGrey'   },
+  terraform          = { glyph = '󱁢', hl = 'MiniIconsBlue'   },
   tex                = { glyph = '', hl = 'MiniIconsGreen'  },
   texinfo            = { glyph = '', hl = 'MiniIconsAzure'  },
   texmf              = { glyph = '󰒓', hl = 'MiniIconsPurple' },
   text               = { glyph = '󰦪', hl = 'MiniIconsYellow' },
-  tf                 = { glyph = '󰒓', hl = 'MiniIconsBlue'   },
+  tf                 = { glyph = '󰬁', hl = 'MiniIconsRed'    },
   tidy               = { glyph = '󰌝', hl = 'MiniIconsBlue'   },
   tilde              = { glyph = '󰜥', hl = 'MiniIconsRed'    },
   tli                = { glyph = '󰬁', hl = 'MiniIconsCyan'   },
@@ -1593,6 +1601,12 @@ H.filetype_icons = {
   zserio             = { glyph = '󰬇', hl = 'MiniIconsGrey'   },
   zsh                = { glyph = '', hl = 'MiniIconsGreen'  },
 
+  -- Popular filetype which require user configuration
+  helm                    = { glyph = '󰠳', hl = 'MiniIconsBlue'   },
+  http                    = { glyph = '󰌷', hl = 'MiniIconsOrange' },
+  ['yaml.ansible']        = { glyph = '󱂚', hl = 'MiniIconsGrey'   },
+  ['yaml.docker-compose'] = { glyph = '󰡨', hl = 'MiniIconsYellow' },
+
   -- 'mini.nvim'
   ['minideps-confirm']   = { glyph = '', hl = 'MiniIconsOrange' },
   minifiles              = { glyph = '', hl = 'MiniIconsGreen'  },
@@ -1604,21 +1618,6 @@ H.filetype_icons = {
 
   -- Popular Lua plugins which have a dedicated "current window" workflow (i.e.
   -- when displaying filetype might make sense, especially with 'laststatus=3')
-  neogitcommitselectview   = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitcommitview         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitconsole            = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitdiffview           = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitgitcommandhistory  = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitlogview            = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitpopup              = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitrebasetodo         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitreflogview         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitrefsview           = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  neogitstatus             = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  nvimtree                 = { glyph = '󰙅', hl = 'MiniIconsGreen'  },
-  overseerform             = { glyph = '󰜎', hl = 'MiniIconsBlue'   },
-  overseerlist             = { glyph = '󰜎', hl = 'MiniIconsBlue'   },
-  trouble                  = { glyph = '󰙅', hl = 'MiniIconsRed'    },
   aerial                   = { glyph = '󱘎', hl = 'MiniIconsPurple' },
   alpha                    = { glyph = '󰀫', hl = 'MiniIconsOrange' },
   dapui_breakpoints        = { glyph = '󰃤', hl = 'MiniIconsRed'    },
@@ -1635,9 +1634,25 @@ H.filetype_icons = {
   mason                    = { glyph = '󱌢', hl = 'MiniIconsGrey'   },
   ['neo-tree']             = { glyph = '󰙅', hl = 'MiniIconsYellow' },
   ['neo-tree-popup']       = { glyph = '󰙅', hl = 'MiniIconsYellow' },
+  neogitcommitselectview   = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitcommitview         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitconsole            = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitdiffview           = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitgitcommandhistory  = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitlogview            = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitpopup              = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitrebasetodo         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitreflogview         = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitrefsview           = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  neogitstatus             = { glyph = '󰊢', hl = 'MiniIconsOrange' },
   ['neotest-output-panel'] = { glyph = '󰱑', hl = 'MiniIconsRed'    },
   ['neotest-summary']      = { glyph = '󰱑', hl = 'MiniIconsRed'    },
+  nvimtree                 = { glyph = '󰙅', hl = 'MiniIconsGreen'  },
   oil                      = { glyph = '󰙅', hl = 'MiniIconsPurple' },
+  overseerform             = { glyph = '󰜎', hl = 'MiniIconsBlue'   },
+  overseerlist             = { glyph = '󰜎', hl = 'MiniIconsBlue'   },
+  telescopeprompt          = { glyph = '󰭎', hl = 'MiniIconsAzure'  },
+  trouble                  = { glyph = '󰙅', hl = 'MiniIconsRed'    },
 }
 
 -- LSP kind values (completion item, symbol, etc.) icons.
