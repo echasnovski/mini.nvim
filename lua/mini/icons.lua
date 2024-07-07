@@ -800,6 +800,7 @@ H.file_icons = {
   ['.DS_Store']          = { glyph = '󰒓', hl = 'MiniIconsRed'    },
   ['.bash_profile']      = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.bashrc']            = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
+  ['.gitlab-ci.yml']     = { glyph = "󰮠", hl = "MiniIconsOrange" },
   ['.git']               = { glyph = '󰊢', hl = 'MiniIconsOrange' },
   ['.gitkeep']           = { glyph = '󰊢', hl = 'MiniIconsRed'    },
   ['.mailmap']           = { glyph = '󰊢', hl = 'MiniIconsCyan'   },
