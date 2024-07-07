@@ -23,6 +23,9 @@ Features:
 - Mocking methods of 'nvim-tree/nvim-web-devicons' for better integrations
   with plugins outside 'mini.nvim'. See |MiniIcons.mock_nvim_web_devicons()|.
 
+- Mocking methods of 'onsails/lspkind.nvim' for better integrations
+  with plugins outside 'mini.nvim'. See |MiniIcons.mock_lspkind()|.
+
 Notes:
 
 - It is not a goal to become a collection of icons for as much use cases as
@@ -418,6 +421,26 @@ Full example of usage: >lua
 <
 Works without installed 'nvim-web-devicons' and even with it installed (needs
 to be called after 'nvim-web-devicons' is set up).
+
+------------------------------------------------------------------------------
+                                                      *MiniIcons.mock_lspkind()*
+                           `MiniIcons.mock_lspkind`()
+Mock 'lspkind' module
+
+Call this function to mock exported functions of 'onsails/lspkind.nvim'
+plugin. It will mock all its functions which return icon data by
+using |MiniIcons.get()| equivalent.
+
+This function is useful until all relevant to you plugins depend solely on
+'lspkind' and have not yet added an integration with 'mini.icons'.
+
+Full example of usage: >lua
+
+  require('mini.icons').setup()
+  MiniIcons.mock_lspkind()
+<
+Works without installed 'lspkind' and even with it installed (needs
+to be called after 'lspkind' is set up).
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

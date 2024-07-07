@@ -23,6 +23,9 @@
 --- - Mocking methods of 'nvim-tree/nvim-web-devicons' for better integrations
 ---   with plugins outside 'mini.nvim'. See |MiniIcons.mock_nvim_web_devicons()|.
 ---
+--- - Mocking methods of 'onsails/lspkind.nvim' for better integrations
+---   with plugins outside 'mini.nvim'. See |MiniIcons.mock_lspkind()|.
+---
 --- Notes:
 ---
 --- - It is not a goal to become a collection of icons for as much use cases as
@@ -564,6 +567,73 @@ MiniIcons.mock_nvim_web_devicons = function()
 
   -- Mock. Prefer `package.preload` as it seems to be a better practice.
   local modname = 'nvim-web-devicons'
+  if package.loaded[modname] == nil then
+    package.preload[modname] = function() return M end
+  else
+    package.loaded[modname] = M
+  end
+end
+
+--- Mock 'lspkind' module
+---
+--- Call this function to mock exported functions of 'onsails/lspkind.nvim'
+--- plugin. It will mock all its functions which return icon data by
+--- using |MiniIcons.get()| equivalent.
+---
+--- This function is useful until all relevant to you plugins depend solely on
+--- 'lspkind' and have not yet added an integration with 'mini.icons'.
+---
+--- Full example of usage: >lua
+---
+---   require('mini.icons').setup()
+---   MiniIcons.mock_lspkind()
+--- <
+--- Works without installed 'lspkind' and even with it installed (needs
+--- to be called after 'lspkind' is set up).
+MiniIcons.mock_lspkind = function()
+  local M = {}
+
+  M.symbolic = function(kind, opts)
+    local mode = opts and opts.mode or 'symbol'
+    local symbol, _ = MiniIcons.get('lsp', kind)
+    if mode == 'text' then
+      symbol = kind
+    elseif mode == 'text_symbol' then
+      symbol = kind .. ' ' .. symbol
+    elseif mode == 'symbol_text' then
+      symbol = symbol .. ' ' .. kind
+    end
+    return symbol
+  end
+
+  M.cmp_format = function(opts)
+    opts = opts or {}
+    return function(entry, vim_item)
+      if opts.before then vim_item = opts.before(entry, vim_item) end
+
+      vim_item.kind = M.symbolic(vim_item.kind, opts)
+
+      if opts.menu ~= nil then
+        vim_item.menu = (opts.menu[entry.source.name] ~= nil and opts.menu[entry.source.name] or '')
+          .. ((opts.show_labelDetails and vim_item.menu ~= nil) and vim_item.menu or '')
+      end
+
+      if opts.maxwidth ~= nil then
+        local maxwidth = type(opts.maxwidth) == 'function' and opts.maxwidth() or opts.maxwidth
+        if vim.fn.strchars(vim_item.abbr) > maxwidth then
+          vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, maxwidth)
+            .. (opts.ellipsis_char ~= nil and opts.ellipsis_char or '')
+        end
+      end
+      return vim_item
+    end
+  end
+
+  -- Should be no need in the these. Suggest using `MiniIcons.setup()`.
+  M.init = function() end
+
+  -- Mock. Prefer `package.preload` as it seems to be a better practice.
+  local modname = 'lspkind'
   if package.loaded[modname] == nil then
     package.preload[modname] = function() return M end
   else

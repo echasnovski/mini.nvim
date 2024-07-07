@@ -665,4 +665,36 @@ T['mock_nvim_web_devicons()']['works'] = function()
   end
 end
 
+T['mock_lspkind()'] = new_set()
+
+T['mock_lspkind()']['works'] = function()
+  load_module({
+    default = { lsp = { glyph = '?', hl = 'Comment' } },
+    lsp = { mylsp = { glyph = 'L', hl = 'Constant' } },
+  })
+  child.api.nvim_set_hl(0, 'Comment', { fg = '#aaaaaa', ctermfg = 248 })
+  child.api.nvim_set_hl(0, 'Constant', { fg = '#e0e060', ctermfg = 185 })
+
+  expect.error(function() child.lua('require("lspkind")') end, 'lspkind.*not found')
+  child.lua('MiniIcons.mock_lspkind()')
+  expect.no_error(function() child.lua('require("lspkind")') end)
+
+  child.lua('_G.lspkind = require("lspkind")')
+
+  -- Should reasonable mock at least common functions which return something
+  eq(child.lua_get('lspkind.symbolic("mylsp")'), 'L')
+  eq(child.lua_get('lspkind.symbolic("mylsp", { mode = "symbol" })'), 'L')
+  eq(child.lua_get('lspkind.symbolic("mylsp", { mode = "text" })'), 'mylsp')
+  eq(child.lua_get('lspkind.symbolic("mylsp", { mode = "symbol_text" })'), 'L mylsp')
+  eq(child.lua_get('lspkind.symbolic("mylsp", { mode = "text_symbol" })'), 'mylsp L')
+  eq(child.lua_get('lspkind.symbolic("testing_default")'), '?')
+  expect.error(function() child.lua_get('lspkind.symbolic()') end)
+
+  eq(child.lua_get('type(lspkind.cmp_format())'), 'function')
+  eq(child.lua_get('lspkind.cmp_format()(nil, { kind = "mylsp" })'), { kind = 'L' })
+
+  -- Should have others at least present
+  eq(child.lua_get('type(lspkind.init)'), 'function')
+end
+
 return T
