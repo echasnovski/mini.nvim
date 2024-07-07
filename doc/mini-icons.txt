@@ -408,7 +408,7 @@ Call this function to mock exported functions of 'nvim-tree/nvim-web-devicons'
 plugin. It will mock all its functions which return icon data by
 using |MiniIcons.get()| equivalent.
 
-This function is useful until all relevant to you plugins depend solely on
+This function is useful if any plugins relevant to you depend solely on
 'nvim-web-devicons' and have not yet added an integration with 'mini.icons'.
 
 Full example of usage: >lua

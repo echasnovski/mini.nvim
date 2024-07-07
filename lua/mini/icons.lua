@@ -462,7 +462,7 @@ end
 --- plugin. It will mock all its functions which return icon data by
 --- using |MiniIcons.get()| equivalent.
 ---
---- This function is useful until all relevant to you plugins depend solely on
+--- This function is useful if any plugins relevant to you depend solely on
 --- 'nvim-web-devicons' and have not yet added an integration with 'mini.icons'.
 ---
 --- Full example of usage: >lua
@@ -1754,7 +1754,7 @@ H.init_cache = function(config)
   -- might be used to infer missing data in the next
   local categories = { 'directory', 'filetype', 'extension', 'file', 'lsp', 'os' }
 
-  -- Cache is structured same customization tables in `config`, but for smaller
+  -- Cache is structured the same way as customization tables in `config`, but for smaller
   -- size (by about 10%) uses 1 and 2 as indexes instead of `glyph` and `hl`.
   H.cache = { default = {} }
   for _, cat in ipairs(categories) do
