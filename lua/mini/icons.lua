@@ -667,7 +667,6 @@ H.extension_icons = {
   el    = 'lisp',
   elm   = 'elm',
   erl   = 'erlang',
-  exs   = 'elixir',
   f90   = 'fortran',
   fish  = 'fish',
   fnl   = 'fennel',
@@ -717,6 +716,7 @@ H.extension_icons = {
   -- Extensions for which `vim.filetype.match()` mismatches or doesn't work.
   -- Usually because matching depends on an actual buffer content.
   h    = { glyph = '󰫵', hl = 'MiniIconsPurple' },
+  exs  = { glyph = '', hl = 'MiniIconsPurple' },
   purs = 'purescript',
   tf   = 'terraform',
 
@@ -801,6 +801,7 @@ H.file_icons = {
   ['.bash_profile']      = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.bashrc']            = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.git']               = { glyph = '󰊢', hl = 'MiniIconsOrange' },
+  ['.gitlap-ci.yml']     = { glyph = '󰮠', hl = 'MiniIconsOrange' },
   ['.gitkeep']           = { glyph = '󰊢', hl = 'MiniIconsRed'    },
   ['.mailmap']           = { glyph = '󰊢', hl = 'MiniIconsCyan'   },
   ['.npmignore']         = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
@@ -818,12 +819,14 @@ H.file_icons = {
   LICENSE                = { glyph = '', hl = 'MiniIconsCyan'   },
   ['LICENSE.md']         = { glyph = '', hl = 'MiniIconsCyan'   },
   ['LICENSE.txt']        = { glyph = '', hl = 'MiniIconsCyan'   },
-  NEWS                   = { glyph = '󰉻', hl = 'MiniIconsBlue'   },
-  ['NEWS.md']            = { glyph = '󰉻', hl = 'MiniIconsBlue'   },
+  NEWS                   = { glyph = '󰎕', hl = 'MiniIconsBlue'   },
+  ['NEWS.md']            = { glyph = '󰎕', hl = 'MiniIconsBlue'   },
   PKGBUILD               = { glyph = '󱁤', hl = 'MiniIconsPurple' },
   README                 = { glyph = '', hl = 'MiniIconsYellow' },
   ['README.md']          = { glyph = '', hl = 'MiniIconsYellow' },
   ['README.txt']         = { glyph = '', hl = 'MiniIconsYellow' },
+  TODO                   = { glyph = '󰝖', hl = 'MiniIconsPurple' },
+  ['TODO.md']            = { glyph = '󰝖', hl = 'MiniIconsPurple' },
   ['init.lua']           = { glyph = '', hl = 'MiniIconsGreen'  },
 }
 
@@ -1288,6 +1291,7 @@ H.filetype_icons = {
   openvpn            = { glyph = '󰖂', hl = 'MiniIconsPurple' },
   opl                = { glyph = '󰫼', hl = 'MiniIconsPurple' },
   ora                = { glyph = '󰒓', hl = 'MiniIconsYellow' },
+  org                = { glyph = '', hl = 'MiniIconsCyan'   },
   pacmanlog          = { glyph = '󰷐', hl = 'MiniIconsBlue'   },
   pamconf            = { glyph = '󰒓', hl = 'MiniIconsCyan'   },
   pamenv             = { glyph = '󰒓', hl = 'MiniIconsYellow' },
