@@ -615,9 +615,9 @@ end
 --- - Nearest match. Whichever is closest among previous and next matches.
 ---
 --- Possible values are:
---- - `'cover'` - use only covering match. Don't use either previous or
+--- - `'cover'` (default) - use only covering match. Don't use either previous or
 ---   next; report that there is no surrounding found.
---- - `'cover_or_next'` (default) - use covering match. If not found, use next.
+--- - `'cover_or_next'` - use covering match. If not found, use next.
 --- - `'cover_or_prev'` - use covering match. If not found, use previous.
 --- - `'cover_or_nearest'` - use covering match. If not found, use nearest.
 --- - `'next'` - use next match.
