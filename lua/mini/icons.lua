@@ -801,7 +801,7 @@ H.file_icons = {
   ['.bash_profile']      = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.bashrc']            = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.git']               = { glyph = '󰊢', hl = 'MiniIconsOrange' },
-  ['.gitlap-ci.yml']     = { glyph = '󰮠', hl = 'MiniIconsOrange' },
+  ['.gitlab-ci.yml']     = { glyph = '󰮠', hl = 'MiniIconsOrange' },
   ['.gitkeep']           = { glyph = '󰊢', hl = 'MiniIconsRed'    },
   ['.mailmap']           = { glyph = '󰊢', hl = 'MiniIconsCyan'   },
   ['.npmignore']         = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
