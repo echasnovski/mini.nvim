@@ -1115,6 +1115,7 @@ H.filetype_icons = {
   haste              = { glyph = '󰫵', hl = 'MiniIconsYellow' },
   hastepreproc       = { glyph = '󰫵', hl = 'MiniIconsCyan'   },
   hb                 = { glyph = '󰫵', hl = 'MiniIconsGreen'  },
+  hcl                = { glyph = '󰫵', hl = 'MiniIconsAzure'  },
   heex               = { glyph = '', hl = 'MiniIconsPurple' },
   help               = { glyph = '󰋖', hl = 'MiniIconsPurple' },
   hercules           = { glyph = '󰫵', hl = 'MiniIconsRed'    },
