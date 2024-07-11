@@ -715,10 +715,11 @@ H.extension_icons = {
 
   -- Extensions for which `vim.filetype.match()` mismatches or doesn't work.
   -- Usually because matching depends on an actual buffer content.
-  h    = { glyph = '󰫵', hl = 'MiniIconsPurple' },
-  exs  = { glyph = '', hl = 'MiniIconsPurple' },
-  purs = 'purescript',
-  tf   = 'terraform',
+  h     = { glyph = '󰫵', hl = 'MiniIconsPurple' },
+  ipynb = { glyph = '󰠮', hl = 'MiniIconsOrange' },
+  exs   = { glyph = '', hl = 'MiniIconsPurple' },
+  purs  = 'purescript',
+  tf    = 'terraform',
 
   -- Video
   ['3gp'] = { glyph = '󰈫', hl = 'MiniIconsYellow' },
@@ -893,7 +894,7 @@ H.filetype_icons = {
   aspvbs             = { glyph = '󰫮', hl = 'MiniIconsGreen'  },
   asterisk           = { glyph = '󰒓', hl = 'MiniIconsBlue'   },
   asteriskvm         = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
-  astro              = { glyph = '󰓎', hl = 'MiniIconsBlue'   },
+  astro              = { glyph = '', hl = 'MiniIconsOrange' },
   atlas              = { glyph = '󰫮', hl = 'MiniIconsAzure'  },
   autodoc            = { glyph = '󰪶', hl = 'MiniIconsGreen'  },
   autohotkey         = { glyph = '󰫮', hl = 'MiniIconsYellow' },
