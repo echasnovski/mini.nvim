@@ -632,8 +632,9 @@ MiniDiff.gen_source.git = function()
   local attach = function(buf_id)
     -- Try attaching to a buffer only once
     if H.git_cache[buf_id] ~= nil then return false end
-    local path = vim.api.nvim_buf_get_name(buf_id)
-    if path == '' or vim.fn.filereadable(path) ~= 1 then return false end
+    -- - Possibly resolve symlinks to get data from the original repo
+    local path = H.get_buf_realpath(buf_id)
+    if path == '' then return false end
 
     H.git_cache[buf_id] = {}
     H.git_start_watching_index(buf_id, path)
@@ -646,7 +647,7 @@ MiniDiff.gen_source.git = function()
   end
 
   local apply_hunks = function(buf_id, hunks)
-    local path_data = H.git_get_path_data(vim.api.nvim_buf_get_name(buf_id))
+    local path_data = H.git_get_path_data(H.get_buf_realpath(buf_id))
     if path_data == nil or path_data.rel_path == nil then return end
     local patch = H.git_format_patch(buf_id, hunks, path_data)
     H.git_apply_patch(path_data, patch)
@@ -1638,7 +1639,7 @@ H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
   local buf_set_ref_text = vim.schedule_wrap(function(text) pcall(MiniDiff.set_ref_text, buf_id, text) end)
 
   -- NOTE: Do not cache buffer's name to react to its possible rename
-  local path = vim.api.nvim_buf_get_name(buf_id)
+  local path = H.get_buf_realpath(buf_id)
   if path == '' then return buf_set_ref_text({}) end
   local cwd, basename = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
 
@@ -1787,6 +1788,9 @@ H.is_buf_text = function(buf_id)
   local lines = vim.api.nvim_buf_get_lines(buf_id, 0, n, false)
   return table.concat(lines, ''):find('\0') == nil
 end
+
+-- Try getting buffer's full real path (after resolving symlinks)
+H.get_buf_realpath = function(buf_id) return vim.loop.fs_realpath(vim.api.nvim_buf_get_name(buf_id)) or '' end
 
 -- nvim__redraw replaced nvim__buf_redraw_range during the 0.10 release cycle
 H.redraw_buffer = function(buf_id)

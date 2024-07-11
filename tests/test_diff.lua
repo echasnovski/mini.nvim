@@ -1024,7 +1024,7 @@ T['gen_source']['git()']['attaches only in readable file buffers'] = function()
   set_buf(new_scratch_buf())
   eq(is_buf_enabled(0), false)
 
-  child.lua('vim.fn.filereadable = function() return 0 end')
+  child.lua('vim.loop.fs_realpath = function() return nil end')
   edit(test_file_path)
   eq(is_buf_enabled(0), false)
 
