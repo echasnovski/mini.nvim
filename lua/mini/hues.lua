@@ -1254,8 +1254,7 @@ H.apply_colorscheme = function(config)
 
   if has_integration('ggandor/leap.nvim') then
     hi('LeapMatch',          { fg=p.green,  bg=nil, bold=true, nocombine=true, underline=true })
-    hi('LeapLabelPrimary',   { fg=p.yellow, bg=nil, bold=true, nocombine=true })
-    hi('LeapLabelSecondary', { fg=p.fg,     bg=nil, bold=true, nocombine=true })
+    hi('LeapLabel',          { fg=p.yellow, bg=nil, bold=true, nocombine=true })
     hi('LeapLabelSelected',  { fg=p.cyan,   bg=nil, bold=true, nocombine=true })
     hi('LeapBackdrop',       { link='Comment' })
   end
