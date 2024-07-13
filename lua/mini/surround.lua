@@ -1837,9 +1837,8 @@ H.get_marks_pos = function(mode)
     local _, line1_indent = vim.fn.getline(pos1[1]):find('^%s*')
     pos1[2] = line1_indent
 
-    -- Move end mark to the last character (` - 2` here because `col()` returns
-    -- column right after the last 1-based column)
-    pos2[2] = vim.fn.col({ pos2[1], '$' }) - 2
+    -- Move end mark to the last non-whitespace character
+    pos2[2] = vim.fn.getline(pos2[1]):find('%s*$') - 2
   end
 
   -- Make columns 1-based instead of 0-based. This is needed because

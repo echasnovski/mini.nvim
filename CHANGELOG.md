@@ -40,6 +40,10 @@
 - BREAKING FEATURE: update `section_fileinfo()` to show non-empty filetype even in not normal buffers (like plugin's scratch buffers, help, quickfix, etc.). Previously it showed nothing, which was a mistake as filetype can be a valuable information.
 - FEATURE: prefer using 'mini.icons' as icon provider for `section_fileinfo()`.
 
+## mini.surround
+
+- BREAKING FEATURE: adding surrounding in linewise mode now also ignores trailing whitespace on the last line (same as it ignores indent on the first line).
+
 ## mini.tabline
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
