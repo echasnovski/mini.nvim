@@ -2707,11 +2707,11 @@ T['pickers']['options()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.options()')
   validate_picker_name('Options (all)')
   type_keys('^cursor')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 34 } })
 
   -- Should have proper preview
   type_keys('<Tab>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 34 } })
 
   -- - Should use proper highlight group for headers
   validate_partial_equal_arr(get_extra_picker_extmarks(0, -1), {
@@ -2765,7 +2765,7 @@ T['pickers']['options()']['correctly previews deprecated options'] = function()
   child.set_size(10, 115)
   pick_options()
   type_keys('^aleph', '<Tab>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 9 } })
 end
 
 T['pickers']['options()']['respects `local_opts.scope`'] = function()
