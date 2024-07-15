@@ -4,13 +4,13 @@
 03|max                                                                                                                     
 04|local                                                                                                                   
 05|┌> ▏───────────────────────────────────────────────────────────────────────┐                                            
-06|│local  │ tests/dir-extra/real-files/a.lua:1:1:local a = 1                 │                                            
-07|│local  │ tests/dir-extra/real-files/a.lua:2:1:local t = {                 │                                            
-08|│minmax │ tests/dir-extra/real-files/a.lua:3:12:  x = math.max(a, 2),      │                                            
-09|│minmax │ tests/dir-extra/real-files/a.lua:4:12:  y = math.min(a, 2),      │                                            
-10|│local  │ Buffer_3:4:1:local                                               │                                            
-11|│minmax │ Buffer_3:2:1:min                                                 │                                            
-12|│minmax │ Buffer_3:3:1:max                                                 │                                            
+06|│local  │ tests/dir-extra/real-files/a.lua│1│1│local a = 1                 │                                            
+07|│local  │ tests/dir-extra/real-files/a.lua│2│1│local t = {                 │                                            
+08|│minmax │ tests/dir-extra/real-files/a.lua│3│12│  x = math.max(a, 2),      │                                            
+09|│minmax │ tests/dir-extra/real-files/a.lua│4│12│  y = math.min(a, 2),      │                                            
+10|│local  │ Buffer_3│4│1│local                                               │                                            
+11|│minmax │ Buffer_3│2│1│min                                                 │                                            
+12|│minmax │ Buffer_3│3│1│max                                                 │                                            
 13|│                                                                          │                                            
 14|└ Mini.hipatterns matches (all) ──────────────────────────────────── 1|7|7 ┘                                            
 15|                                                                                                                        

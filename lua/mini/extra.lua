@@ -807,7 +807,7 @@ MiniExtra.pickers.hipatterns = function(local_opts, opts)
   for _, item in ipairs(items) do
     --stylua: ignore
     item.text = string.format(
-      '%s │ %s:%d:%d:%s',
+      '%s │ %s│%d│%d│%s',
       H.ensure_text_width(item.highlighter, highlighter_width),
       item.buf_name, item.lnum, item.col, item.line
     )
@@ -1140,7 +1140,7 @@ MiniExtra.pickers.marks = function(local_opts, opts)
       if path == nil then buf_id = info.pos[1] end
 
       local line, col = info.pos[2], math.abs(info.pos[3])
-      local text = string.format('%s │ %s%s:%s', info.mark:sub(2), path == nil and '' or (path .. ':'), line, col)
+      local text = string.format('%s │ %s%s│%s', info.mark:sub(2), path == nil and '' or (path .. '│'), line, col)
       table.insert(items, { text = text, bufnr = buf_id, path = path, lnum = line, col = col })
     end
   end
@@ -1361,7 +1361,7 @@ MiniExtra.pickers.treesitter = function(local_opts, opts)
         local lnum, col, end_lnum, end_col = child:range()
         lnum, col, end_lnum, end_col = lnum + 1, col + 1, end_lnum + 1, end_col + 1
         local indent = string.rep(' ', depth)
-        local text = string.format('%s%s (%s:%s - %s:%s)', indent, child:type() or '', lnum, col, end_lnum, end_col)
+        local text = string.format('%s%s (%s│%s - %s│%s)', indent, child:type() or '', lnum, col, end_lnum, end_col)
         local item = { text = text, bufnr = buf_id, lnum = lnum, col = col, end_lnum = end_lnum, end_col = end_col }
         table.insert(items, item)
 
@@ -1646,8 +1646,8 @@ H.pick_prepend_position = function(item)
 
   path = vim.fn.fnamemodify(path, ':p:.')
   local text = item.text or ''
-  local suffix = text == '' and '' or (': ' .. text)
-  item.text = string.format('%s:%s:%s%s', path, item.lnum or 1, item.col or 1, suffix)
+  local suffix = text == '' and '' or ('│ ' .. text)
+  item.text = string.format('%s│%s│%s%s', path, item.lnum or 1, item.col or 1, suffix)
   return item
 end
 

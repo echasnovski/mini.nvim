@@ -18,36 +18,36 @@
 17|~                                                                     
 18|~                                                                     
 19|┌> ▏────────────────────────────────────────┐                         
-20|│variable_declaration (1:1 - 1:12)          │                         
-21|│ assignment_statement (1:7 - 1:12)         │                         
-22|│  variable_list (1:7 - 1:8)                │                         
-23|│   identifier (1:7 - 1:8)                  │                         
-24|│  expression_list (1:11 - 1:12)            │                         
-25|│   number (1:11 - 1:12)                    │                         
-26|│variable_declaration (2:1 - 5:2)           │                         
-27|│ assignment_statement (2:7 - 5:2)          │                         
-28|│  variable_list (2:7 - 2:8)                │                         
-29|│   identifier (2:7 - 2:8)                  │                         
-30|│  expression_list (2:11 - 5:2)             │                         
-31|│   table_constructor (2:11 - 5:2)          │                         
-32|│    field (3:3 - 3:21)                     │                         
-33|│     identifier (3:3 - 3:4)                │                         
-34|│     function_call (3:7 - 3:21)            │                         
-35|│      dot_index_expression (3:7 - 3:15)    │                         
-36|│       identifier (3:7 - 3:11)             │                         
-37|│       identifier (3:12 - 3:15)            │                         
-38|│      arguments (3:15 - 3:21)              │                         
-39|│       identifier (3:16 - 3:17)            │                         
-40|│       number (3:19 - 3:20)                │                         
-41|│    field (4:3 - 4:21)                     │                         
-42|│     identifier (4:3 - 4:4)                │                         
-43|│     function_call (4:7 - 4:21)            │                         
-44|│      dot_index_expression (4:7 - 4:15)    │                         
-45|│       identifier (4:7 - 4:11)             │                         
-46|│       identifier (4:12 - 4:15)            │                         
-47|│      arguments (4:15 - 4:21)              │                         
-48|│       identifier (4:16 - 4:17)            │                         
-49|│       number (4:19 - 4:20)                │                         
+20|│variable_declaration (1│1 - 1│12)          │                         
+21|│ assignment_statement (1│7 - 1│12)         │                         
+22|│  variable_list (1│7 - 1│8)                │                         
+23|│   identifier (1│7 - 1│8)                  │                         
+24|│  expression_list (1│11 - 1│12)            │                         
+25|│   number (1│11 - 1│12)                    │                         
+26|│variable_declaration (2│1 - 5│2)           │                         
+27|│ assignment_statement (2│7 - 5│2)          │                         
+28|│  variable_list (2│7 - 2│8)                │                         
+29|│   identifier (2│7 - 2│8)                  │                         
+30|│  expression_list (2│11 - 5│2)             │                         
+31|│   table_constructor (2│11 - 5│2)          │                         
+32|│    field (3│3 - 3│21)                     │                         
+33|│     identifier (3│3 - 3│4)                │                         
+34|│     function_call (3│7 - 3│21)            │                         
+35|│      dot_index_expression (3│7 - 3│15)    │                         
+36|│       identifier (3│7 - 3│11)             │                         
+37|│       identifier (3│12 - 3│15)            │                         
+38|│      arguments (3│15 - 3│21)              │                         
+39|│       identifier (3│16 - 3│17)            │                         
+40|│       number (3│19 - 3│20)                │                         
+41|│    field (4│3 - 4│21)                     │                         
+42|│     identifier (4│3 - 4│4)                │                         
+43|│     function_call (4│7 - 4│21)            │                         
+44|│      dot_index_expression (4│7 - 4│15)    │                         
+45|│       identifier (4│7 - 4│11)             │                         
+46|│       identifier (4│12 - 4│15)            │                         
+47|│      arguments (4│15 - 4│21)              │                         
+48|│       identifier (4│16 - 4│17)            │                         
+49|│       number (4│19 - 4│20)                │                         
 50|│                                           │                         
 51|└ Tree-sitter nodes ─────────────── 1|30|30 ┘                         
 52|                                                                      

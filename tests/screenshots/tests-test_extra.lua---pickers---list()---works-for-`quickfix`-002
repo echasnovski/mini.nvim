@@ -5,7 +5,7 @@
 04|ddddd                                                                 
 05|eeeee                                                                 
 06|~                                                                     
-07|┌tests/dir-extra/real-files/a.lua:1:7: File─┐                         
+07|┌tests/dir-extra/real-files/a.lua│1│7│ File─┐                         
 08|│local a = 1                                │                         
 09|│local t = {                                │                         
 10|│  x = math.max(a, 2),                      │                         

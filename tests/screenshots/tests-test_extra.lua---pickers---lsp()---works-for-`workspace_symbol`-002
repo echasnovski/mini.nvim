@@ -3,7 +3,7 @@
 02|local t = {                                                                               
 03|  x = math.max(a, 2),                                                                     
 04|  y = math.min(a, 2),                                                                     
-05|┌tests/dir-extra/real-files/a.lua:1:7: [Number] a───────┐                                 
+05|┌tests/dir-extra/real-files/a.lua│1│7│ [Number] a───────┐                                 
 06|│local a = 1                                            │                                 
 07|│local t = {                                            │                                 
 08|│  x = math.max(a, 2),                                  │                                 

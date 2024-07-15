@@ -17,7 +17,7 @@
 16|~                                                                     
 17|~                                                                     
 18|~                                                                     
-19|┌ assignment_statement (1:7 - 1:12)─────────┐                         
+19|┌ assignment_statement (1│7 - 1│12)─────────┐                         
 20|│local a = 1                                │                         
 21|│local t = {                                │                         
 22|│  x = math.max(a, 2),                      │                         

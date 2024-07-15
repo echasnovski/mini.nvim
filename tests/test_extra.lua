@@ -1847,7 +1847,7 @@ T['pickers']['hipatterns()']['works'] = function()
     end_lnum = 3,
     col = 1,
     end_col = 4,
-    text = 'minmax │ Buffer_3:3:1:max',
+    text = 'minmax │ Buffer_3│3│1│max',
   })
 end
 
@@ -2285,7 +2285,7 @@ local validate_qf_loc = function(scope)
   -- Should return chosen value
   validate_partial_equal_arr(
     { child.lua_get('_G.return_item') },
-    { { bufnr = 2, lnum = 3, end_lnum = 4, col = 3, end_col = 4, text = 'Buffer_2:3:3' } }
+    { { bufnr = 2, lnum = 3, end_lnum = 4, col = 3, end_col = 4, text = 'Buffer_2│3│3' } }
   )
 end
 
@@ -2323,7 +2323,7 @@ T['pickers']['list()']['works for `jump`'] = function()
   -- Should return chosen value
   validate_partial_equal_arr(
     { child.lua_get('_G.return_item') },
-    { { bufnr = buf_cur, lnum = 2, col = 1, text = 'Buffer_2:2:1' } }
+    { { bufnr = buf_cur, lnum = 2, col = 1, text = 'Buffer_2│2│1' } }
   )
 end
 
@@ -2355,7 +2355,7 @@ T['pickers']['list()']['works for `change`'] = function()
   -- Should return chosen value
   validate_partial_equal_arr(
     { child.lua_get('_G.return_item') },
-    { { bufnr = 1, col = 10, coladd = 0, lnum = 1, text = path .. ':1:10' } }
+    { { bufnr = 1, col = 10, coladd = 0, lnum = 1, text = path .. '│1│10' } }
   )
 end
 
@@ -2423,7 +2423,7 @@ local validate_location_scope = function(scope)
     path = file_path_full,
     lnum = 3,
     col = 16,
-    text = file_path .. ':3:16:   x = math.max(a, 2),',
+    text = file_path .. '│3│16│   x = math.max(a, 2),',
   }
   eq(get_picker_items()[1], ref_item)
 
@@ -2455,7 +2455,7 @@ local validate_symbol_scope = function(scope)
   child.expect_screenshot()
 
   -- Should have proper items
-  local text_prefix = scope == 'workspace_symbol' and (file_path .. ':1:7: ') or ''
+  local text_prefix = scope == 'workspace_symbol' and (file_path .. '│1│7│ ') or ''
   local ref_item = {
     filename = file_path_full,
     path = file_path_full,
@@ -2498,7 +2498,7 @@ T['pickers']['lsp()']['works for `references`'] = function()
     path = file_path_full,
     lnum = 3,
     col = 16,
-    text = file_path .. ':3:16:   x = math.max(a, 2),',
+    text = file_path .. '│3│16│   x = math.max(a, 2),',
   }
   eq(get_picker_items()[2], ref_item)
 
@@ -2567,7 +2567,7 @@ local setup_marks = function()
 end
 
 T['pickers']['marks()']['works'] = function()
-  child.set_size(20, 40)
+  child.set_size(20, 70)
   setup_marks()
 
   child.lua_notify('_G.return_item = MiniExtra.pickers.marks()')
@@ -2589,7 +2589,7 @@ T['pickers']['marks()']['works'] = function()
   eq(get_cursor(), { 1, 5 })
 
   -- Should return chosen value
-  eq(child.lua_get('_G.return_item'), { col = 6, lnum = 1, path = path, text = 'A │ ' .. path .. ':1:6' })
+  eq(child.lua_get('_G.return_item'), { col = 6, lnum = 1, path = path, text = 'A │ ' .. path .. '│1│6' })
 end
 
 T['pickers']['marks()']['respects `local_opts.scope`'] = function()
@@ -3010,7 +3010,7 @@ T['pickers']['treesitter()']['works'] = function()
     end_col = 12,
     end_lnum = 1,
     lnum = 1,
-    text = ' assignment_statement (1:7 - 1:12)',
+    text = ' assignment_statement (1│7 - 1│12)',
   })
 end
 

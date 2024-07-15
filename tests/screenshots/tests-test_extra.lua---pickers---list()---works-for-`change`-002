@@ -5,7 +5,7 @@
 04|  y = math.min(a, 2),                                                 
 05|}                                                                     
 06|~                                                                     
-07|┌tests/dir-extra/real-files/a.lua:1:10──────┐                         
+07|┌tests/dir-extra/real-files/a.lua│1│10──────┐                         
 08|│l Change 1 ocal a = 1                      │                         
 09|│local t = {                                │                         
 10|│  x Change 2  = math.max(a, 2),            │                         

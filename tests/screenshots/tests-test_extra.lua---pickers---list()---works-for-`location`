@@ -6,9 +6,9 @@
 05|eeeee                                                                 
 06|~                                                                     
 07|┌> ▏────────────────────────────────────────┐                         
-08|│tests/dir-extra/real-files/a.lua:1:7: File │                         
-09|│Buffer_2:2:2: Buffer                       │                         
-10|│Buffer_2:3:3                               │                         
+08|│tests/dir-extra/real-files/a.lua│1│7│ File │                         
+09|│Buffer_2│2│2│ Buffer                       │                         
+10|│Buffer_2│3│3                               │                         
 11|│                                           │                         
 12|│                                           │                         
 13|│                                           │                         

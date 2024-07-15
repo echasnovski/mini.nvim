@@ -4,10 +4,10 @@
 03|  x = math.max(a, 2),                                                                     
 04|  y = math.min(a, 2),                                                                     
 05|┌> ▏────────────────────────────────────────────────────┐                                 
-06|│tests/dir-extra/real-files/a.lua:1:7: [Number] a       │                                 
-07|│tests/dir-extra/real-files/a.lua:2:7: [Object] t       │                                 
-08|│tests/dir-extra/real-files/a.lua:3:3: [Variable] x     │                                 
-09|│tests/dir-extra/real-files/a.lua:4:3: [Variable] y     │                                 
+06|│tests/dir-extra/real-files/a.lua│1│7│ [Number] a       │                                 
+07|│tests/dir-extra/real-files/a.lua│2│7│ [Object] t       │                                 
+08|│tests/dir-extra/real-files/a.lua│3│3│ [Variable] x     │                                 
+09|│tests/dir-extra/real-files/a.lua│4│3│ [Variable] y     │                                 
 10|│                                                       │                                 
 11|│                                                       │                                 
 12|│                                                       │                                 
