@@ -1313,12 +1313,13 @@ T['default_show()']['shows best match'] = function()
 end
 
 T['default_show()']['respects `opts.show_icons`'] = function()
-  child.set_size(10, 45)
+  child.set_size(12, 45)
   local items = vim.tbl_map(real_file, vim.fn.readdir(real_files_dir))
   table.insert(items, test_dir)
   table.insert(items, join_path(test_dir, 'file'))
   table.insert(items, 'non-existing')
   table.insert(items, { text = 'non-string' })
+  table.insert(items, { path = join_path(test_dir, 'builtin-tests', 'file'), text = 'prefer-path-field' })
   local query = { 'i', 'i' }
 
   -- Without 'mini.icons'

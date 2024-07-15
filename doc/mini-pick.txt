@@ -958,7 +958,7 @@ Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
   - <show_icons> `(boolean)` - whether to show icons for entries recognized as
     valid actually present paths on disk (see |MiniPick-source.items-common|),
-    empty space otherwise.
+    empty space otherwise. Tries to use `text` field as fallback for path.
     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
     paths use `true` by default.
   - <icons> `(table)` - table with fallback icons used if icon provider

@@ -1018,7 +1018,7 @@ end
 ---@param opts table|nil Options. Possible fields:
 ---   - <show_icons> `(boolean)` - whether to show icons for entries recognized as
 ---     valid actually present paths on disk (see |MiniPick-source.items-common|),
----     empty space otherwise.
+---     empty space otherwise. Tries to use `text` field as fallback for path.
 ---     Default: `false`. Note: |MiniPick.builtin| pickers showing file/directory
 ---     paths use `true` by default.
 ---   - <icons> `(table)` - table with fallback icons used if icon provider
@@ -1030,14 +1030,15 @@ MiniPick.default_show = function(buf_id, items, query, opts)
   local default_icons = { directory = ' ', file = ' ', none = '  ' }
   opts = vim.tbl_deep_extend('force', { show_icons = false, icons = default_icons }, opts or {})
 
-  -- Compute and set lines
+  -- Compute and set lines. Compute prefix based on the whole items to allow
+  -- separate `text` and `path` table fields (preferring second one).
+  local get_prefix_data = opts.show_icons and function(item) return H.get_icon(item, opts.icons) end
+    or function() return { text = '' } end
+  local prefix_data = vim.tbl_map(get_prefix_data, items)
+
   local lines = vim.tbl_map(H.item_to_string, items)
   local tab_spaces = string.rep(' ', vim.o.tabstop)
   lines = vim.tbl_map(function(l) return l:gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
-
-  local get_prefix_data = opts.show_icons and function(line) return H.get_icon(line, opts.icons) end
-    or function() return { text = '' } end
-  local prefix_data = vim.tbl_map(get_prefix_data, lines)
 
   local lines_to_show = {}
   for i, l in ipairs(lines) do
@@ -2934,9 +2935,13 @@ end
 
 -- Default show ---------------------------------------------------------------
 H.get_icon = function(x, icons)
-  local path_type, path = H.parse_path(x)
-  if path_type == nil then return { text = '' } end
-  if path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
+  local item_data = H.parse_item(x)
+  -- Prefer explicit `path` field with fallback on `text`
+  local path, path_type = item_data.path, item_data.type
+  if path == nil then
+    path_type, path = H.parse_path(item_data.text)
+  end
+  if path == nil or path_type == nil or path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
 
   -- Prefer 'mini.icons'
   if _G.MiniIcons ~= nil then
