@@ -2,8 +2,8 @@
 01|                                                                      
 02|~                                                                     
 03|┌> ▏────────────────────────────────────────┐                         
-04|│ tests/dir-pick/real-files/a.lua:3:3:a    │                         
-05|│ tests/dir-pick/real-files/b.txt:1:1:b    │                         
+04|│ tests/dir-pick/real-files/a.lua│3│3│a    │                         
+05|│ tests/dir-pick/real-files/b.txt│1│1│b    │                         
 06|│                                           │                         
 07|│                                           │                         
 08|│                                           │                         

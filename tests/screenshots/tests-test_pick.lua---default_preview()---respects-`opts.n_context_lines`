@@ -3,7 +3,7 @@
 02|~                                       
 03|~                                       
 04|~                                       
-05|┌-pick/real-files/b.txt:4┐              
+05|┌-pick/real-files/b.txt│4┐              
 06|│Line 4                  │              
 07|│Line 5                  │              
 08|│Line 6                  │              

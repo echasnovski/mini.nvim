@@ -2,7 +2,7 @@
 01|                                                                      
 02|~                                                                     
 03|┌> bt▏──────────────────────────────────────┐                         
-04|│ tests/dir-pick/real-files/b.txt:1:1:b    │                         
+04|│ tests/dir-pick/real-files/b.txt│1│1│b    │                         
 05|│                                           │                         
 06|│                                           │                         
 07|│                                           │                         

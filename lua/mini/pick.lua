@@ -1040,7 +1040,7 @@ MiniPick.default_show = function(buf_id, items, query, opts)
 
   local lines = vim.tbl_map(H.item_to_string, items)
   local tab_spaces = string.rep(' ', vim.o.tabstop)
-  lines = vim.tbl_map(function(l) return l:gsub('%z', ':'):gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
+  lines = vim.tbl_map(function(l) return l:gsub('%z', '│'):gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
 
   local lines_to_show = {}
   for i, l in ipairs(lines) do
@@ -2391,7 +2391,7 @@ H.picker_set_bordertext = function(picker)
   if view_state == 'preview' and has_items then
     local stritem_cur = picker.stritems[picker.match_inds[picker.current_ind]] or ''
     -- Sanitize title
-    stritem_cur = stritem_cur:gsub('%z', ':'):gsub('%s', ' ')
+    stritem_cur = stritem_cur:gsub('%z', '│'):gsub('%s', ' ')
     config = { title = { { H.win_trim_to_width(win_id, stritem_cur), 'MiniPickBorderText' } } }
   end
 
