@@ -353,8 +353,8 @@ MiniExtra.pickers.buf_lines = function(local_opts, opts)
       H.buf_ensure_loaded(buf_id)
       local buf_name = H.buf_get_name(buf_id) or ''
       for lnum, l in ipairs(vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)) do
-        local prefix = is_scope_all and string.format('%s:', buf_name) or ''
-        table.insert(items, { text = string.format('%s%s:%s', prefix, lnum, l), bufnr = buf_id, lnum = lnum })
+        local prefix = is_scope_all and string.format('%s\0', buf_name) or ''
+        table.insert(items, { text = string.format('%s%s\0%s', prefix, lnum, l), bufnr = buf_id, lnum = lnum })
       end
     end
     pick.set_picker_items(items)

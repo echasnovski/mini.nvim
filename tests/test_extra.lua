@@ -772,7 +772,7 @@ T['pickers']['buf_lines()']['works'] = function()
   eq(get_cursor(), { 2, 0 })
 
   -- Should return chosen value with proper structure
-  eq(child.lua_get('_G.return_item'), { bufnr = 2, lnum = 2, text = 'buffer-1:2:  buffer 1' })
+  eq(child.lua_get('_G.return_item'), { bufnr = buffers[1], lnum = 2, text = 'buffer-1\0002\000  buffer 1' })
 end
 
 T['pickers']['buf_lines()']['respects `local_opts.scope`'] = function()

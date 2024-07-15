@@ -30,6 +30,8 @@
 ## mini.pick
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
+- BREAKING: encoding line or position in string items has changed:
+    - Use "\0" (null character; use "\000" form if it is in a string before digit) instead of ":" as delimiter. This makes it work with files similar to ":" position encoding (like "time_12:34:56"). This only matters for custom sources which provide line or position in string items.
 
 ## mini.starter
 

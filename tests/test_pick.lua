@@ -1444,7 +1444,7 @@ T['default_show()']['handles edge cases'] = function()
   child.set_size(5, 15)
 
   -- Should not treat empty string as directory
-  default_show(0, { ':1', ':1:1' }, {}, { show_icons = true })
+  default_show(0, { '\0001', '\0001\0001' }, {}, { show_icons = true })
   child.expect_screenshot()
 end
 
@@ -1516,8 +1516,8 @@ end
 T['default_preview()']['shows line in file path'] = function()
   local path = real_file('b.txt')
   local items = {
-    path .. ':3',
-    { text = path .. ':as-table', path = path, lnum = 6 },
+    path .. '\0003',
+    { text = path .. '\0as-table', path = path, lnum = 6 },
   }
   validate_preview(items)
 end
@@ -1525,8 +1525,8 @@ end
 T['default_preview()']['shows position in file path'] = function()
   local path = real_file('b.txt')
   local items = {
-    path .. ':3:4',
-    { text = path .. ':as-table', path = path, lnum = 6, col = 2 },
+    path .. '\0003\0004',
+    { text = path .. '\0as-table', path = path, lnum = 6, col = 2 },
   }
   validate_preview(items)
 end
@@ -1534,8 +1534,8 @@ end
 T['default_preview()']['shows region in file path'] = function()
   local path = real_file('b.txt')
   local items = {
-    { text = path .. ':region-oneline', path = path, lnum = 8, col = 3, end_lnum = 8, end_col = 5 },
-    { text = path .. ':region-manylines', path = path, lnum = 9, col = 3, end_lnum = 11, end_col = 4 },
+    { text = path .. '\000region-oneline', path = path, lnum = 8, col = 3, end_lnum = 8, end_col = 5 },
+    { text = path .. '\000region-manylines', path = path, lnum = 9, col = 3, end_lnum = 11, end_col = 4 },
   }
   validate_preview(items)
 end
@@ -1683,7 +1683,7 @@ T['default_preview()']['respects `opts.n_context_lines`'] = function()
 
   local items = {
     -- File line
-    path .. ':4',
+    path .. '\0004',
 
     -- Buffer line
     { text = 'Buffer', bufnr = buf_id, lnum = 7 },
@@ -1706,7 +1706,7 @@ T['default_preview()']['respects `opts.line_position`'] = new_set({
 
     local items = {
       -- File line
-      path .. ':10',
+      path .. '\00010',
 
       -- Buffer line
       { text = 'Buffer', bufnr = buf_id, lnum = 12 },
@@ -1786,11 +1786,11 @@ T['default_choose()']['works for file path'] = function()
   validate({ text = path, path = path }, path, { 1, 0 })
 
   -- Path with line
-  validate(path .. ':4', path, { 4, 0 })
+  validate(path .. '\0004', path, { 4, 0 })
   validate({ text = path, path = path, lnum = 6 }, path, { 6, 0 })
 
   -- Path with position
-  validate(path .. ':8:2', path, { 8, 1 })
+  validate(path .. '\0008\0002', path, { 8, 1 })
   validate({ text = path, path = path, lnum = 10, col = 4 }, path, { 10, 3 })
 
   -- Path with region
@@ -1851,7 +1851,7 @@ T['default_choose()']['reuses opened listed buffer for file path'] = function()
 
   -- Reuses with setting cursor
   child.api.nvim_set_current_buf(buf_id_alt)
-  default_choose(path .. ':7:2')
+  default_choose(path .. '\0007\0002')
   validate({ 7, 1 })
 
   -- Doesn't reuse if unlisted
@@ -2112,11 +2112,11 @@ T['default_choose_marked()']['creates quickfix list from file/buffer positions']
 
     { text = 'filepath', path = path },
 
-    path .. ':3',
+    path .. '\0003',
     { text = path, path = path, lnum = 4 },
 
-    path .. ':5:5',
-    path .. ':6:6:' .. 'extra text',
+    path .. '\0005\0005',
+    path .. '\0006\0006\000extra text',
     { text = path, path = path, lnum = 7, col = 7 },
 
     { text = path, path = path, lnum = 8, col = 8, end_lnum = 9, end_col = 9 },
@@ -2361,7 +2361,7 @@ T['builtin.files()']['works with bad file names'] = function()
 
   child.lua_notify('_G.file_item = MiniPick.builtin.files()')
   type_keys('<CR>')
-  eq(child.lua_get('_G.file_item'), { path = path, text = path })
+  eq(child.lua_get('_G.file_item'), path)
 
   eq(child.api.nvim_buf_get_name(0), full_path(path))
 end
@@ -2457,7 +2457,7 @@ local builtin_grep = forward_lua_notify('MiniPick.builtin.grep')
 T['builtin.grep()']['works'] = function()
   child.set_size(10, 70)
   mock_fn_executable({ 'rg' })
-  local items = { real_file('a.lua') .. ':3:3:a', real_file('b.txt') .. ':1:1:b' }
+  local items = { real_file('a.lua') .. '\0003\0003\000a', real_file('b.txt') .. '\0001\0001\000b' }
   mock_cli_return(items)
 
   child.lua_notify([[_G.grep_item = MiniPick.builtin.grep()]])
@@ -2478,7 +2478,7 @@ end
 T['builtin.grep()']['correctly chooses default tool'] = function()
   local validate = function(executables, ref_tool)
     mock_fn_executable(executables)
-    mock_cli_return({ real_file('b.txt') .. ':3:3:b' })
+    mock_cli_return({ real_file('b.txt') .. '\0003\0003\000b' })
     builtin_grep({ pattern = 'b' })
     if ref_tool ~= 'fallback' then eq(child.lua_get('_G.spawn_log[1].executable'), ref_tool) end
     validate_picker_option('source.name', string.format('Grep (%s)', ref_tool))
@@ -2546,7 +2546,13 @@ T['builtin.grep()']['has fallback tool'] = new_set({ parametrize = { { 'default'
 
     -- Sleep because fallback is async
     sleep(5)
-    eq(get_picker_items(), { 'file:3:1:aaa', 'dir1/file1-1:3:1:aaa', 'dir1/file1-2:3:1:aaa', 'dir2/file2-1:3:1:aaa' })
+    local ref_items = {
+      'file\0003\0001\000aaa',
+      'dir1/file1-1\0003\0001\000aaa',
+      'dir1/file1-2\0003\0001\000aaa',
+      'dir2/file2-1\0003\0001\000aaa',
+    }
+    eq(get_picker_items(), ref_items)
   end,
 })
 
@@ -2556,14 +2562,14 @@ T['builtin.grep()']['respects `source.show` from config'] = function()
   -- A recommended way to disable icons
   child.lua('MiniPick.config.source.show = MiniPick.default_show')
   mock_fn_executable({ 'rg' })
-  mock_cli_return({ real_file('b.txt') .. ':1:1' })
+  mock_cli_return({ real_file('b.txt') .. '\0001\0001' })
   builtin_grep({ pattern = 'b' })
   child.expect_screenshot()
 end
 
 T['builtin.grep()']['respects `opts`'] = function()
   mock_fn_executable({ 'rg' })
-  mock_cli_return({ real_file('b.txt') .. ':1:1' })
+  mock_cli_return({ real_file('b.txt') .. '\0001\0001' })
   builtin_grep({ pattern = 'b' }, { source = { name = 'My name' } })
   validate_picker_option('source.name', 'My name')
 end
@@ -2601,7 +2607,7 @@ end
 T['builtin.grep_live()']['works'] = function()
   child.set_size(10, 70)
   mock_fn_executable({ 'rg' })
-  local items = { real_file('a.lua') .. ':3:3:a', real_file('b.txt') .. ':1:1:b' }
+  local items = { real_file('a.lua') .. '\0003\0003\000a', real_file('b.txt') .. '\0001\0001\000b' }
 
   -- Should show no items for empty query
   child.lua_notify([[_G.grep_live_item = MiniPick.builtin.grep_live()]])
@@ -2631,7 +2637,7 @@ end
 
 T['builtin.grep_live()']['always shows no items for empty query'] = function()
   mock_fn_executable({ 'rg' })
-  local items = { real_file('a.lua') .. ':3:3:a', real_file('b.txt') .. ':1:1:b' }
+  local items = { real_file('a.lua') .. '\0003\0003\000a', real_file('b.txt') .. '\0001\0001\000b' }
 
   -- Showing empty query should be done without extra spawn
   mock_cli_return(items)
@@ -2652,7 +2658,7 @@ end
 
 T['builtin.grep_live()']['kills grep process on every non-empty query update'] = function()
   mock_fn_executable({ 'rg' })
-  local items = { real_file('a.lua') .. ':3:3:a', real_file('b.txt') .. ':1:1:b' }
+  local items = { real_file('a.lua') .. '\0003\0003\000a', real_file('b.txt') .. '\0001\0001\000b' }
 
   builtin_grep_live()
   eq(get_process_log(), {})
@@ -2677,7 +2683,7 @@ T['builtin.grep_live()']['works with programmatic query update'] = function()
   mock_fn_executable({ 'rg' })
   builtin_grep_live()
 
-  mock_cli_return({ real_file('b.txt') .. ':1:1:b' })
+  mock_cli_return({ real_file('b.txt') .. '\0001\0001\000b' })
   set_picker_query({ 'b', 't' })
   validate_last_grep_pattern('bt')
 
@@ -2688,7 +2694,7 @@ end
 T['builtin.grep_live()']['correctly chooses default tool'] = function()
   local validate = function(executables, ref_tool)
     mock_fn_executable(executables)
-    mock_cli_return({ real_file('b.txt') .. ':3:3:b' })
+    mock_cli_return({ real_file('b.txt') .. '\0003\0003\000b' })
     builtin_grep_live()
     type_keys('b')
     eq(child.lua_get('_G.spawn_log[1].executable'), ref_tool)
@@ -2725,8 +2731,8 @@ T['builtin.grep_live()']['respects `local_opts.tool`'] = function()
     clear_spawn_log()
   end
 
-  validate('rg', { '--column', '--line-number', '--no-heading', '--', 'b' })
-  validate('git', { 'grep', '--column', '--line-number', '--', 'b' })
+  validate('rg', { '--column', '--line-number', '--no-heading', '--field-match-separator=\\0', '--', 'b' })
+  validate('git', { 'grep', '--column', '--line-number', '--null', '--', 'b' })
 
   -- Should not accept "fallback" tool
   mock_fn_executable({})
@@ -2743,7 +2749,7 @@ T['builtin.grep_live()']['respects `source.show` from config'] = function()
   child.lua('MiniPick.config.source.show = MiniPick.default_show')
   mock_fn_executable({ 'rg' })
   builtin_grep_live()
-  mock_cli_return({ real_file('b.txt') .. ':1:1' })
+  mock_cli_return({ real_file('b.txt') .. '\0001\0001' })
   type_keys('b')
   child.expect_screenshot()
 end
@@ -2757,7 +2763,7 @@ end
 T['builtin.grep_live()']['respects `opts.source.cwd` for cli spawn'] = function()
   mock_fn_executable({ 'rg' })
   builtin_grep_live({}, { source = { cwd = test_dir } })
-  mock_cli_return({ real_file('b.txt') .. ':1:1' })
+  mock_cli_return({ real_file('b.txt') .. '\0001\0001' })
   type_keys('b')
 
   local test_dir_absolute = full_path(test_dir)

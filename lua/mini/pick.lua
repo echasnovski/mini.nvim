@@ -255,17 +255,19 @@
 ---   Examples: `1`, `'1'`, `{ bufnr = 1 }`, `{ buf_id = 1 }`, `{ buf = 1 }`
 ---
 --- - Line in file or buffer. Use table representation with `lnum` field with line
----   number (starting from 1) or string in "<path>:<line>" format.
+---   number (starting from 1) or string in "<path>\0<line>" format (`\0` is
+---   an actual null character; don't escape the slash; may need to be `\000`).
 ---   Examples: >lua
 ---
----     { path = 'aaa.txt', lnum = 2 }, 'aaa.txt:2', { bufnr = 1, lnum = 3 }
+---     { path = 'aaa.txt', lnum = 2 }, 'aaa.txt\0002', { bufnr = 1, lnum = 3 }
 --- <
 --- - Position in file or buffer. Use table representation with `lnum` and `col`
 ---   fields with line and column numbers (starting from 1) or string in
----   "<path>:<line>:<col>" format.
+---   "<path>\0<line>\0<col>" format (`\0` is an actual null character, don't
+---   escape the slash; may need to be `\000`).
 ---   Examples: >lua
 ---
----     { path = 'aaa.txt', lnum = 2, col = 3 }, 'aaa.txt:2:3',
+---     { path = 'aaa.txt', lnum = 2, col = 3 }, 'aaa.txt\0' .. '2\0003',
 ---     { bufnr = 1, lnum = 3, col = 4 }
 --- <
 --- - Region in file or buffer. Use table representation with `lnum`, `col`,
@@ -1038,7 +1040,7 @@ MiniPick.default_show = function(buf_id, items, query, opts)
 
   local lines = vim.tbl_map(H.item_to_string, items)
   local tab_spaces = string.rep(' ', vim.o.tabstop)
-  lines = vim.tbl_map(function(l) return l:gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
+  lines = vim.tbl_map(function(l) return l:gsub('%z', ':'):gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
 
   local lines_to_show = {}
   for i, l in ipairs(lines) do
@@ -1264,15 +1266,7 @@ MiniPick.builtin.files = function(local_opts, opts)
     return MiniPick.start(opts)
   end
 
-  local postprocess = function(lines)
-    local res = H.cli_postprocess(lines)
-    -- Correctly process files with `:` without sacrificing much performance
-    for i = 1, #res do
-      if res[i]:find(':') ~= nil then res[i] = { path = res[i], text = res[i] } end
-    end
-    return res
-  end
-  return MiniPick.builtin.cli({ command = H.files_get_command(tool), postprocess = postprocess }, opts)
+  return MiniPick.builtin.cli({ command = H.files_get_command(tool) }, opts)
 end
 
 --- Pick from pattern matches
@@ -2397,7 +2391,7 @@ H.picker_set_bordertext = function(picker)
   if view_state == 'preview' and has_items then
     local stritem_cur = picker.stritems[picker.match_inds[picker.current_ind]] or ''
     -- Sanitize title
-    stritem_cur = stritem_cur:gsub('[%s%z]', ' ')
+    stritem_cur = stritem_cur:gsub('%z', ':'):gsub('%s', ' ')
     config = { title = { { H.win_trim_to_width(win_id, stritem_cur), 'MiniPickBorderText' } } }
   end
 
@@ -3015,12 +3009,15 @@ end
 
 H.parse_path = function(x)
   if type(x) ~= 'string' or x == '' then return nil end
-  -- Allow inputs like 'aa/bb', 'aa/bb:10', 'aa/bb:10:5', 'aa/bb:10:5:xxx'
-  -- Should also work for paths like 'aa-5'
-  local location_pattern = ':(%d+):?(%d*):?(.*)$'
-  local lnum, col, rest = x:match(location_pattern)
-  local path = x:gsub(location_pattern, '', 1)
-  path = path:sub(1, 1) == '~' and (vim.loop.os_homedir() or '~') .. path:sub(2) or path
+  -- Allow inputs like 'aa/bb', 'aa-5'. Also allow inputs for line/position
+  -- separated by null character:
+  -- - 'aa/bb\00010' (line 10).
+  -- - 'aa/bb\00010\0005' (line 10, col 5).
+  -- - 'aa/bb\00010\0005\000xx' (line 10, col 5, with "xx" description).
+  local location_pattern = '()%z(%d+)%z?(%d*)%z?(.*)$'
+  local from, lnum, col, rest = x:match(location_pattern)
+  local path = x:sub(1, (from or 0) - 1)
+  path = path:sub(1, 1) == '~' and ((vim.loop.os_homedir() or '~') .. path:sub(2)) or path
 
   -- Verify that path is real
   local path_type = H.get_fs_type(path)
@@ -3223,10 +3220,13 @@ end
 --stylua: ignore
 H.grep_get_command = function(tool, pattern)
   if tool == 'rg' then
-    return { 'rg', '--column', '--line-number', '--no-heading', '--no-follow', '--color=never', '--', pattern }
+    return {
+      'rg', '--column', '--line-number', '--no-heading', '--field-match-separator=\\0',
+      '--no-follow', '--color=never', '--', pattern
+    }
   end
   if tool == 'git' then
-    local res = { 'git', 'grep', '--column', '--line-number', '--color=never', '--', pattern }
+    local res = { 'git', 'grep', '--column', '--line-number', '--null', '--color=never', '--', pattern }
     if vim.o.ignorecase then table.insert(res, 6, '--ignore-case') end
     return res
   end
@@ -3254,7 +3254,7 @@ H.grep_fallback_items = function(pattern, cwd)
       if not poke_picker() then return end
       for lnum, l in ipairs(vim.fn.readfile(path)) do
         local col = string.find(l, pattern)
-        if col ~= nil then table.insert(items, string.format('%s:%d:%d:%s', file, lnum, col, l)) end
+        if col ~= nil then table.insert(items, string.format('%s\0%d\0%d\0%s', file, lnum, col, l)) end
       end
     end
 
