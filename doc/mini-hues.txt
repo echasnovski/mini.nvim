@@ -143,7 +143,8 @@ settings affect output color scheme.
 Default values:
 >lua
   MiniHues.config = {
-    -- **Required** base colors as '#rrggbb' hex strings
+    -- Base colors as '#rrggbb' hex strings. **Required** unless palette is
+    -- provided.
     background = nil,
     foreground = nil,
 
@@ -156,6 +157,10 @@ Default values:
     -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',
     -- 'cyan', 'azure', 'blue', 'purple'
     accent = 'bg',
+
+    -- Color palette table. Should match |MiniHues.make_palette()| return format.
+    -- If defined, takes precedence over background/foreground.
+    palette = nil,
 
     -- Plugin integrations. Use `default = false` to disable all integrations.
     -- Also can be set per plugin (see |MiniHues.config|).

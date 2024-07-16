@@ -209,7 +209,8 @@ end
 ---   setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'cyan' })
 ---   setup({ background = '#11262d', foreground = '#c0c8cc', accent = 'blue' })
 MiniHues.config = {
-  -- **Required** base colors as '#rrggbb' hex strings
+  -- Base colors as '#rrggbb' hex strings. **Required** unless palette is
+  -- provided.
   background = nil,
   foreground = nil,
 
@@ -222,6 +223,10 @@ MiniHues.config = {
   -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',
   -- 'cyan', 'azure', 'blue', 'purple'
   accent = 'bg',
+
+  -- Color palette table. Should match |MiniHues.make_palette()| return format.
+  -- If defined, takes precedence over background/foreground.
+  palette = nil,
 
   -- Plugin integrations. Use `default = false` to disable all integrations.
   -- Also can be set per plugin (see |MiniHues.config|).
@@ -451,6 +456,17 @@ H.saturation_values = { 'low', 'medium', 'high' }
 
 H.accent_values = { 'bg', 'fg', 'red', 'orange', 'yellow', 'green', 'cyan', 'azure', 'blue', 'purple' }
 
+H.palette_keys = { unpack(H.accent_values) }
+for _, base in ipairs({ unpack(H.accent_values, 1, 2) }) do
+  table.insert(H.palette_keys, base .. '_edge')
+  table.insert(H.palette_keys, base .. '_edge2')
+  table.insert(H.palette_keys, base .. '_mid')
+  table.insert(H.palette_keys, base .. '_mid2')
+end
+for _, color in ipairs({ unpack(H.accent_values, 3, #H.accent_values) }) do
+  table.insert(H.palette_keys, color .. '_bg')
+end
+
 -- Cusps for Oklch color space. See 'mini.colors' for more details.
 --stylua: ignore start
 ---@diagnostic disable
@@ -513,13 +529,21 @@ H.setup_config = function(config)
   vim.validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  if config.background == nil or config.foreground == nil then
-    H.error('`setup()` needs both `background` and `foreground`.')
+  if config.palette == nil then
+    if config.background == nil or config.foreground == nil then
+      H.error('`setup()` needs both `background` and `foreground`.')
+    end
+    vim.validate({
+      background = { config.background, H.is_hex },
+      foreground = { config.foreground, H.is_hex },
+    })
+  else
+    vim.validate({
+      palette = { config.palette, H.is_palette },
+    })
   end
 
   vim.validate({
-    background = { config.background, H.is_hex },
-    foreground = { config.foreground, H.is_hex },
     n_hues = { config.n_hues, H.is_n_hues },
     saturation = { config.saturation, H.is_saturation },
     accent = { config.accent, H.is_accent },
@@ -557,6 +581,21 @@ H.is_accent = function(x)
   local res = vim.tbl_contains(H.accent_values, x)
   if res then return true, nil end
   return false, 'One of ' .. table.concat(vim.tbl_map(vim.inspect, H.accent_values), ', ')
+end
+
+H.is_palette = function(x)
+  local res = type(x) == 'table'
+  local msg = (not res) and 'Table' or nil
+  if msg == nil then
+    for _, key in ipairs(H.palette_keys) do
+      res, msg = H.is_hex(x[key])
+      if not res then
+        msg = key .. ': ' .. msg
+        break
+      end
+    end
+  end
+  return res, msg
 end
 
 -- Palette --------------------------------------------------------------------
@@ -639,7 +678,7 @@ H.apply_colorscheme = function(config)
   -- might cause some issues with `syntax on`.
   vim.g.colors_name = nil
 
-  local p = MiniHues.make_palette(config)
+  local p = config.palette or MiniHues.make_palette(config)
   local hi = function(name, data) vim.api.nvim_set_hl(0, name, data) end
   local has_integration = function(name)
     local entry = config.plugins[name]
