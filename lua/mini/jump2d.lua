@@ -211,7 +211,7 @@ end
 --- Default is 0 to not show anything ahead as it reduces visual noise.
 ---
 --- Option `view.dim` controls whether to dim lines with at least one jump spot.
---- Dimming is done by applying "MiniJump2dDim" highlight group to the whol line.
+--- Dimming is done by applying "MiniJump2dDim" highlight group to the whole line.
 ---
 --- ## Allowed lines ~
 ---
