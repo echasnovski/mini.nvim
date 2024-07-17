@@ -1087,6 +1087,7 @@ H.filetype_icons = {
   gitrebase          = { glyph = '󰊢', hl = 'MiniIconsAzure'  },
   gitsendemail       = { glyph = '󰊢', hl = 'MiniIconsBlue'   },
   gkrellmrc          = { glyph = '󰒓', hl = 'MiniIconsRed'    },
+  gleam              = { glyph = '󰦥', hl = 'MiniIconsPurple' },
   gnash              = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   gnuplot            = { glyph = '󰺒', hl = 'MiniIconsPurple' },
   go                 = { glyph = '󰟓', hl = 'MiniIconsAzure'  },
