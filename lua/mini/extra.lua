@@ -742,6 +742,7 @@ MiniExtra.pickers.git_hunks = function(local_opts, opts)
   if local_opts.path == nil then path = repo_dir end
 
   -- Define source
+  local show = H.pick_get_config().source.show or H.show_with_icons
   local preview = function(buf_id, item)
     vim.bo[buf_id].syntax = 'diff'
     local lines = vim.deepcopy(item.header)
@@ -755,7 +756,7 @@ MiniExtra.pickers.git_hunks = function(local_opts, opts)
   local postprocess = function(lines) return H.git_difflines_to_hunkitems(lines, n_context) end
 
   local name = string.format('Git hunks (%s %s)', scope, local_opts.path == nil and 'all' or 'for path')
-  local default_source = { name = name, cwd = repo_dir, preview = preview }
+  local default_source = { name = name, cwd = repo_dir, show = show, preview = preview }
   opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {})
   return pick.builtin.cli({ command = command, postprocess = postprocess }, opts)
 end
@@ -1059,7 +1060,8 @@ MiniExtra.pickers.list = function(local_opts, opts)
   items = vim.tbl_map(H.list_enhance_item, items)
 
   local name = string.format('List (%s)', scope)
-  return H.pick_start(items, { source = { name = name, choose = H.choose_with_buflisted } }, opts)
+  local show = H.pick_get_config().source.show or H.show_with_icons
+  return H.pick_start(items, { source = { name = name, show = show, choose = H.choose_with_buflisted } }, opts)
 end
 
 --- LSP picker
@@ -1078,6 +1080,8 @@ end
 ---   In particular, it means that picker is started only if LSP server returns
 ---   list of locations and not a single location.
 --- - Doesn't return anything due to async nature of `vim.lsp.buf` methods.
+--- - Requires set up |mini.icons| to show extra icons and highlighting in
+---   "document_symbol" and "workspace_symbol" scopes.
 ---
 --- Examples ~
 ---
@@ -1820,27 +1824,44 @@ end
 
 -- LSP picker -----------------------------------------------------------------
 H.lsp_make_on_list = function(source, opts)
-  -- Prepend file position info to item and sort
+  local is_symbol = source == 'document_symbol' or source == 'workspace_symbol'
+
+  -- Prepend file position info to item, add decortion, and sort
+  local add_decor_data = function() end
+  if is_symbol and _G.MiniIcons == nil then
+    -- Try using '@...' style highlight group with same name as "kind"
+    add_decor_data = function(item) item.hl = string.format('@%s', string.lower(item.kind or 'unknown')) end
+  end
+  if is_symbol and _G.MiniIcons ~= nil then
+    add_decor_data = function(item)
+      if type(item.kind) ~= 'string' then return end
+      local icon, hl = MiniIcons.get('lsp', item.kind)
+      item.text, item.hl = icon .. ' ' .. item.text, hl
+    end
+  end
+
   local process = function(items)
     if source ~= 'document_symbol' then items = vim.tbl_map(H.pick_prepend_position, items) end
+    vim.tbl_map(add_decor_data, items)
     table.sort(items, H.lsp_items_compare)
     return items
   end
 
-  -- Highlight items with highlight group corresponding to the symbol kind.
-  local show
-  if source == 'document_symbol' or source == 'workspace_symbol' then
-    local pick = H.validate_pick()
-    show = function(buf_id, items_to_show, query)
-      pick.default_show(buf_id, items_to_show, query)
+  local show_explicit = H.pick_get_config().source.show
+  local show = function(buf_id, items_to_show, query)
+    if show_explicit ~= nil then return show_explicit(buf_id, items_to_show, query) end
+    if is_symbol then
+      H.validate_pick().default_show(buf_id, items_to_show, query)
 
+      -- Highlight whole lines with pre-computed symbol kind highlight groups
       H.pick_clear_namespace(buf_id, H.ns_id.pickers)
       for i, item in ipairs(items_to_show) do
-        -- Highlight using '@...' style highlight group with similar name
-        local hl_group = string.format('@%s', string.lower(item.kind or 'unknown'))
-        H.pick_highlight_line(buf_id, i, hl_group, 199)
+        H.pick_highlight_line(buf_id, i, item.hl, 199)
       end
+      return
     end
+    -- Show with icons as the non-symbol scopes should have paths
+    return H.show_with_icons(buf_id, items_to_show, query)
   end
 
   return function(data)

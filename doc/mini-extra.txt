@@ -598,6 +598,8 @@ Notes:
   In particular, it means that picker is started only if LSP server returns
   list of locations and not a single location.
 - Doesn't return anything due to async nature of `vim.lsp.buf` methods.
+- Requires set up |mini.icons| to show extra icons and highlighting in
+  "document_symbol" and "workspace_symbol" scopes.
 
 Examples ~
 

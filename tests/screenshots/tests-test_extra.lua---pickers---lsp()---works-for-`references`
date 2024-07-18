@@ -4,9 +4,9 @@
 03|  x = math.max(a, 2),                                                                     
 04|  y = math.min(a, 2),                                                                     
 05|┌> ▏────────────────────────────────────────────────────┐                                 
-06|│tests/dir-extra/real-files/a.lua│1│7│ local a = 1      │                                 
-07|│tests/dir-extra/real-files/a.lua│3│16│   x = math.max(…│                                 
-08|│tests/dir-extra/real-files/a.lua│4│16│   y = math.min(…│                                 
+06|│ tests/dir-extra/real-files/a.lua│1│7│ local a = 1    │                                 
+07|│ tests/dir-extra/real-files/a.lua│3│16│   x = math.ma…│                                 
+08|│ tests/dir-extra/real-files/a.lua│4│16│   y = math.mi…│                                 
 09|│                                                       │                                 
 10|│                                                       │                                 
 11|│                                                       │                                 

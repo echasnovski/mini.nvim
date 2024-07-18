@@ -6,8 +6,8 @@
 05|}                                                                     
 06|~                                                                     
 07|┌> ▏────────────────────────────────────────┐                         
-08|│tests/dir-extra/real-files/a.lua│1│10      │                         
-09|│tests/dir-extra/real-files/a.lua│3│12      │                         
+08|│ tests/dir-extra/real-files/a.lua│1│10    │                         
+09|│ tests/dir-extra/real-files/a.lua│3│12    │                         
 10|│                                           │                         
 11|│                                           │                         
 12|│                                           │                         

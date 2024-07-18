@@ -2443,12 +2443,20 @@ local validate_symbol_scope = function(scope)
   child.expect_screenshot()
 
   -- Should highlight some symbols
-  eq(get_extra_picker_extmarks(0, -1), {
+  local has_mini_icons = child.lua_get('_G.MiniIcons ~= nil')
+  local ref_extmark_data = {
     { hl_group = '@number', row = 0, col = 0 },
     { hl_group = '@object', row = 1, col = 0 },
     { hl_group = '@variable', row = 2, col = 0 },
     { hl_group = '@variable', row = 3, col = 0 },
-  })
+  }
+  if has_mini_icons then
+    ref_extmark_data[1].hl_group = 'MiniIconsOrange'
+    ref_extmark_data[2].hl_group = 'MiniIconsGrey'
+    ref_extmark_data[3].hl_group = 'MiniIconsCyan'
+    ref_extmark_data[4].hl_group = 'MiniIconsCyan'
+  end
+  eq(get_extra_picker_extmarks(0, -1), ref_extmark_data)
 
   -- Should preview position
   type_keys('<Tab>')
@@ -2456,6 +2464,7 @@ local validate_symbol_scope = function(scope)
 
   -- Should have proper items
   local text_prefix = scope == 'workspace_symbol' and (file_path .. '│1│7│ ') or ''
+  if has_mini_icons then text_prefix = ' ' .. text_prefix end
   local ref_item = {
     filename = file_path_full,
     path = file_path_full,
@@ -2463,6 +2472,7 @@ local validate_symbol_scope = function(scope)
     col = 7,
     kind = 'Number',
     text = text_prefix .. '[Number] a',
+    hl = ref_extmark_data[1].hl_group,
   }
   eq(get_picker_items()[1], ref_item)
 
@@ -2477,6 +2487,11 @@ T['pickers']['lsp()']['works for `declaration`'] = function() validate_location_
 T['pickers']['lsp()']['works for `definition`'] = function() validate_location_scope('definition') end
 
 T['pickers']['lsp()']['works for `document_symbol`'] = function() validate_symbol_scope('document_symbol') end
+
+T['pickers']['lsp()']["works for `document_symbol` with 'mini.icons' set up"] = function()
+  child.lua("require('mini.icons').setup()")
+  validate_symbol_scope('document_symbol')
+end
 
 T['pickers']['lsp()']['works for `implementation`'] = function() validate_location_scope('implementation') end
 
@@ -2511,6 +2526,11 @@ end
 T['pickers']['lsp()']['works for `type_definition`'] = function() validate_location_scope('type_definition') end
 
 T['pickers']['lsp()']['works for `workspace_symbol`'] = function() validate_symbol_scope('workspace_symbol') end
+
+T['pickers']['lsp()']["works for `workspace_symbol` with 'mini.icons' set up"] = function()
+  child.lua("require('mini.icons').setup()")
+  validate_symbol_scope('workspace_symbol')
+end
 
 T['pickers']['lsp()']['respects `local_opts.symbol_query`'] = function()
   setup_lsp()

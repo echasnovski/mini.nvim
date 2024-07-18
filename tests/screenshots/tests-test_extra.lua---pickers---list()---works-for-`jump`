@@ -6,10 +6,10 @@
 05|~                                                                     
 06|~                                                                     
 07|┌> ▏────────────────────────────────────────┐                         
-08|│Buffer_2│2│1                               │                         
-09|│Buffer_2│1│1                               │                         
-10|│tests/dir-extra/real-files/a.lua│5│1       │                         
-11|│tests/dir-extra/real-files/a.lua│1│1       │                         
+08|│  Buffer_2│2│1                             │                         
+09|│  Buffer_2│1│1                             │                         
+10|│ tests/dir-extra/real-files/a.lua│5│1     │                         
+11|│ tests/dir-extra/real-files/a.lua│1│1     │                         
 12|│                                           │                         
 13|│                                           │                         
 14|│                                           │                         
