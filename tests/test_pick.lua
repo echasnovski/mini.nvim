@@ -1313,13 +1313,20 @@ T['default_show()']['shows best match'] = function()
 end
 
 T['default_show()']['respects `opts.show_icons`'] = function()
-  child.set_size(12, 45)
+  child.set_size(13, 45)
+
+  child.cmd('edit ' .. vim.fn.fnameescape(join_path(test_dir, 'file')))
+  local buf_id = child.api.nvim_get_current_buf()
+  child.cmd('enew')
+
   local items = vim.tbl_map(real_file, vim.fn.readdir(real_files_dir))
   table.insert(items, test_dir)
   table.insert(items, join_path(test_dir, 'file'))
   table.insert(items, 'non-existing')
   table.insert(items, { text = 'non-string' })
   table.insert(items, { path = join_path(test_dir, 'builtin-tests', 'file'), text = 'prefer-path-field' })
+  table.insert(items, { buf_id = buf_id, text = 'buffer-prefer-path-field', path = test_dir })
+  table.insert(items, { buf_id = buf_id, text = 'buffer-use-buf-name' })
   local query = { 'i', 'i' }
 
   -- Without 'mini.icons'

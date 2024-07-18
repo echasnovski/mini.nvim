@@ -2930,12 +2930,9 @@ end
 -- Default show ---------------------------------------------------------------
 H.get_icon = function(x, icons)
   local item_data = H.parse_item(x)
-  -- Prefer explicit `path` field with fallback on `text`
-  local path, path_type = item_data.path, item_data.type
-  if path == nil then
-    path_type, path = H.parse_path(item_data.text)
-  end
-  if path == nil or path_type == nil or path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
+  local path = item_data.path or item_data.text or ''
+  local path_type = H.get_fs_type(path)
+  if path_type == 'none' then return { text = icons.none, hl = 'MiniPickNormal' } end
 
   -- Prefer 'mini.icons'
   if _G.MiniIcons ~= nil then
@@ -2981,7 +2978,7 @@ H.parse_item_table = function(item)
   if H.is_valid_buf(buf_id) then
     --stylua: ignore
     return {
-      type = 'buffer',  buf_id   = buf_id,
+      type = 'buffer',  buf_id   = buf_id, path = item.path or vim.api.nvim_buf_get_name(buf_id),
       lnum = item.lnum, end_lnum = item.end_lnum,
       col  = item.col,  end_col  = item.end_col,
       text = item.text,
