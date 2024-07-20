@@ -2738,7 +2738,7 @@ T['builtin.grep_live()']['respects `local_opts.tool`'] = function()
     clear_spawn_log()
   end
 
-  validate('rg', { '--column', '--line-number', '--no-heading', '--field-match-separator=\\0', '--', 'b' })
+  validate('rg', { '--column', '--line-number', '--no-heading', '--field-match-separator', '\\x00', '--', 'b' })
   validate('git', { 'grep', '--column', '--line-number', '--null', '--', 'b' })
 
   -- Should not accept "fallback" tool

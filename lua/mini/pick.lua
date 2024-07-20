@@ -3218,7 +3218,7 @@ end
 H.grep_get_command = function(tool, pattern)
   if tool == 'rg' then
     return {
-      'rg', '--column', '--line-number', '--no-heading', '--field-match-separator=\\0',
+      'rg', '--column', '--line-number', '--no-heading', '--field-match-separator', '\\x00',
       '--no-follow', '--color=never', '--', pattern
     }
   end
