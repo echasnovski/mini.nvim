@@ -17,6 +17,7 @@ local forward_lua = function(fun_str)
 end
 
 local get = function(...) return child.lua_get('{ MiniIcons.get(...) }', { ... }) end
+local list = forward_lua('MiniIcons.list')
 
 -- Output test set ============================================================
 local T = new_set({
@@ -500,6 +501,17 @@ T['get()']['can be used after deleting all buffers'] = function()
   eq(get('file', 'hello.tcsh'), { '', 'MiniIconsAzure', false })
 end
 
+T['get()']['uses width one glyphs'] = function()
+  local bad_glyphs = {}
+  for _, cat in ipairs(list('default')) do
+    for _, name in ipairs(list(cat)) do
+      local icon = get(cat, name)[1]
+      if vim.fn.strdisplaywidth(icon) > 1 then table.insert(bad_glyphs, { cat, name, icon }) end
+    end
+  end
+  eq(bad_glyphs, {})
+end
+
 T['get()']['validates arguments'] = function()
   expect.error(function() get(1, 'lua') end, 'category.*string')
   expect.error(function() get('file', 1) end, 'name.*string')
@@ -508,8 +520,6 @@ T['get()']['validates arguments'] = function()
 end
 
 T['list()'] = new_set()
-
-local list = forward_lua('MiniIcons.list')
 
 T['list()']['works'] = function()
   local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
