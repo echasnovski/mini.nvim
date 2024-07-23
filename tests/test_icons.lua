@@ -172,6 +172,11 @@ T['get()']['works with "directory" category'] = function()
   validate('.git', '', 'MiniIconsOrange', false)
   validate('mydir', '󱁂', 'AA', false)
   validate('should-be-default', 'D', 'Comment', true)
+
+  -- Works with full paths
+  validate('/home/user/.git', '', 'MiniIconsOrange', false)
+  validate('/home/user/mydir', '󱁂', 'AA', false)
+  validate('/home/user/should-be-default', 'D', 'Comment', true)
 end
 
 T['get()']['works with "extension" category'] = function()
@@ -218,9 +223,6 @@ T['get()']['works with "file" category'] = function()
   -- - Default
   validate('should-be-default', 'F', 'Comment', true)
 
-  -- Can accept full paths
-  eq(get('file', '/home/user/hello.lua'), get('file', 'hello.lua'))
-
   -- Can use customizations
   validate('myfile', '󱁂', 'AA', false)
   validate('hello.py', 'PY', 'String', false)
@@ -229,6 +231,23 @@ T['get()']['works with "file" category'] = function()
   -- Can use complex "extension"
   validate('hello.ext', 'E', 'Comment', false)
   validate('hello.my.ext', '󰻲', 'MiniIconsRed', false)
+
+  -- Works with full paths
+  eq(get('file', '/home/user/world.lua'), get('file', 'world.lua'))
+  eq(get('file', '/home/user/myfile'), get('file', 'myfile'))
+  eq(get('file', '/home/user/world.py'), get('file', 'world.py'))
+  eq(get('file', '/home/user/world.ext'), get('file', 'world.ext'))
+  eq(get('file', '/home/user/world.my.ext'), get('file', 'world.my.ext'))
+  eq(get('file', '/home/user/should-be-default'), get('file', 'should-be-default'))
+
+  -- Should use full name in `vim.filetype.match()`
+  validate('/etc/group', '󰫴', 'MiniIconsCyan', false)
+  child.lua([[vim.filetype.add({ pattern = { ['.*/dir/conf'] = 'conf' } })]])
+  validate('/home/user/dir/conf', '󰒓', 'MiniIconsGrey', false)
+
+  -- Cached data for basename should not affect full path resolution
+  eq(get('file', 'gshadow'), { 'F', 'Comment', true })
+  validate('/etc/gshadow', '󰫴', 'MiniIconsCyan', false)
 end
 
 T['get()']['works with "filetype" category'] = function()

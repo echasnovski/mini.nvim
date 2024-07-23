@@ -302,7 +302,7 @@ Parameters ~
       - List of built-in and user configured extensions (for better
         performance). Run `:=MiniIcons.list('extension')` to see them.
       - Filetype as a result of |vim.filetype.match()| with placeholder
-        file name. Uses output of corresponding "filetype" category.
+        file name. Uses icon data from "filetype" category.
 
     Examples: >lua
 
@@ -312,20 +312,19 @@ Parameters ~
 <
   - `'file'` - icon data for file path.
     Icon names:
-      - <Input>: any string, but only basename is used. Works with not present
-        paths (no check is done).
+      - <Input>: any string. Works with not present paths (no check is done).
       - <Built-in>: popular file names not tied to language/software
         (with few notable exceptions like Neovim, Git, etc.).
 
     Icon data is attempted to be resolved in the following order:
-      - List of built-in and user configured file names (to match exactly).
-        Run `:=MiniIcons.list('flle')` to see them.
-      - List of built-in and user configured extensions.
-        Run `:=MiniIcons.list('extension')` to see them.
-        This step also includes already cached extensions.
-        Uses output of corresponding "extension" category.
-      - Filetype as a result of |vim.filetype.match()|.
-        Uses output of corresponding "filetype" category.
+      - List of built-in and user configured file names (matched to basename
+        of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
+      - List of built-in and user configured extensions (matched to extension
+        in basename ignoring case). Run `:=MiniIcons.list('extension')` to
+        see them. This step also includes already cached extensions.
+        Uses icon data from "extension" category.
+      - Filetype as a result of |vim.filetype.match()| with full input (not
+        basename) as `filename`. Uses icon data from "filetype" category.
 
     Examples: >lua
 
@@ -337,6 +336,9 @@ Parameters ~
       -- Results in different output
       MiniIcons.get('file', 'Init.lua')
       MiniIcons.get('file', 'init.LUA')
+
+      -- Respects full path input in `vim.filetype.match()`
+      MiniIcons.get('file', '.git/info/attributes')
 <
   - `'filetype'` - icon data for 'filetype' values.
     Icon names:

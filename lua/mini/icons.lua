@@ -316,7 +316,7 @@ MiniIcons.config = {
 ---       - List of built-in and user configured extensions (for better
 ---         performance). Run `:=MiniIcons.list('extension')` to see them.
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
----         file name. Uses output of corresponding "filetype" category.
+---         file name. Uses icon data from "filetype" category.
 ---
 ---     Examples: >lua
 ---
@@ -326,20 +326,19 @@ MiniIcons.config = {
 --- <
 ---   - `'file'` - icon data for file path.
 ---     Icon names:
----       - <Input>: any string, but only basename is used. Works with not present
----         paths (no check is done).
+---       - <Input>: any string. Works with not present paths (no check is done).
 ---       - <Built-in>: popular file names not tied to language/software
 ---         (with few notable exceptions like Neovim, Git, etc.).
 ---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of built-in and user configured file names (to match exactly).
----         Run `:=MiniIcons.list('flle')` to see them.
----       - List of built-in and user configured extensions.
----         Run `:=MiniIcons.list('extension')` to see them.
----         This step also includes already cached extensions.
----         Uses output of corresponding "extension" category.
----       - Filetype as a result of |vim.filetype.match()|.
----         Uses output of corresponding "filetype" category.
+---       - List of built-in and user configured file names (matched to basename
+---         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
+---       - List of built-in and user configured extensions (matched to extension
+---         in basename ignoring case). Run `:=MiniIcons.list('extension')` to
+---         see them. This step also includes already cached extensions.
+---         Uses icon data from "extension" category.
+---       - Filetype as a result of |vim.filetype.match()| with full input (not
+---         basename) as `filename`. Uses icon data from "filetype" category.
 ---
 ---     Examples: >lua
 ---
@@ -351,6 +350,9 @@ MiniIcons.config = {
 ---       -- Results in different output
 ---       MiniIcons.get('file', 'Init.lua')
 ---       MiniIcons.get('file', 'init.LUA')
+---
+---       -- Respects full path input in `vim.filetype.match()`
+---       MiniIcons.get('file', '.git/info/attributes')
 --- <
 ---   - `'filetype'` - icon data for 'filetype' values.
 ---     Icon names:
@@ -410,7 +412,7 @@ MiniIcons.get = function(category, name)
   if getter == nil then H.error(vim.inspect(category) .. ' is not a supported category.') end
 
   -- Try cache first
-  name = (category == 'file' or category == 'directory') and H.fs_basename(name) or name:lower()
+  name = category == 'file' and name or (category == 'directory' and H.fs_basename(name) or name:lower())
   local cached = H.cache_get(category, name)
   if cached ~= nil then return cached[1], cached[2], cached[3] == true end
 
@@ -1976,14 +1978,20 @@ H.get_impl = {
     if ft ~= nil then return MiniIcons.get('filetype', ft) end
   end,
   file = function(name)
-    local icon_data = H.file_icons[name]
+    local basename = H.fs_basename(name)
+
+    -- Built-in file names
+    local icon_data = H.file_icons[basename]
     if icon_data ~= nil then return icon_data end
 
-    -- Try using custom extensions first before for better speed (as
-    -- `vim.filetype.match()` is slow-ish to be called many times; like 0.1 ms)
-    local dot = string.find(name, '%..', 2)
+    -- User configured file names
+    if MiniIcons.config.file[basename] ~= nil and name ~= basename then return MiniIcons.get('file', basename) end
+
+    -- Basename extensions. Prefer this before `vim.filetype.match()` for speed
+    -- (as the latter is slow-ish; like 0.1 ms in Neovim<0.11)
+    local dot = string.find(basename, '%..', 2)
     while dot ~= nil do
-      local ext = name:sub(dot + 1):lower()
+      local ext = basename:sub(dot + 1):lower()
 
       local cached = H.cache_get('extension', ext)
       if cached ~= nil then return cached[1], cached[2] end
@@ -1991,10 +1999,11 @@ H.get_impl = {
       local icon, hl = H.get_from_extension(ext)
       if icon ~= nil then return H.cache_set('extension', ext, icon, hl) end
 
-      dot = string.find(name, '%..', dot + 1)
+      dot = string.find(basename, '%..', dot + 1)
     end
 
-    -- Fall back to built-in filetype matching using generic filename
+    -- Fall back to built-in filetype matching with full supplied name (matters
+    -- when full path is supplied to match complex filetype patterns)
     local ft = H.filetype_match(name)
     if ft ~= nil then return MiniIcons.get('filetype', ft) end
   end,
