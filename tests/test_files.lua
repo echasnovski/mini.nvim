@@ -402,6 +402,14 @@ T['open()']['uses icon provider'] = function()
   child.expect_screenshot()
 end
 
+T['open()']['uses `MiniIcons.get()` with full path'] = function()
+  child.set_size(15, 60)
+  child.lua([[vim.filetype.add({ pattern = { ['.*/common/.*%-file'] = 'make' } })]])
+  child.lua('require("mini.icons").setup()')
+  open(test_dir_path)
+  child.expect_screenshot()
+end
+
 T['open()']['history'] = new_set()
 
 T['open()']['history']['opens from history by default'] = function()
