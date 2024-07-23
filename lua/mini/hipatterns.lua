@@ -927,6 +927,9 @@ H.process_buffer_changes = vim.schedule_wrap(function(buf_id, lines_to_process)
 end)
 
 H.apply_highlighter_pattern = vim.schedule_wrap(function(pattern, hi, buf_id, ns, lines_to_process)
+  -- Check again because buffer might have become invalid since latest check
+  if not vim.api.nvim_buf_is_valid(buf_id) then return end
+
   if type(pattern) ~= 'string' then return end
   local group, extmark_opts = hi.group, hi.extmark_opts
   local pattern_has_line_start = pattern:sub(1, 1) == '^'
