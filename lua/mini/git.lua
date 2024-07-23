@@ -1254,7 +1254,7 @@ H.start_tracking = function(buf_id, path)
   -- If path is not in Git, disable buffer but make sure that it will not try
   -- to re-attach until buffer is properly disabled
   local on_not_in_git = function()
-    MiniGit.disable(buf_id)
+    if H.is_buf_enabled(buf_id) then MiniGit.disable(buf_id) end
     H.cache[buf_id] = {}
   end
 
