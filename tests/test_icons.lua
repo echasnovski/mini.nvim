@@ -404,12 +404,12 @@ end
 T['get()']['respects multibyte characters with "ascii" style'] = function()
   load_module({
     style = 'ascii',
-    directory = { й_dir = { glyph = 'M' } },
-    extension = { й_ext = { glyph = 'M' } },
-    file = { й_file = { glyph = 'M' } },
-    filetype = { й_filetype = { glyph = 'M' } },
-    lsp = { й_lsp = { glyph = 'M' } },
-    os = { й_os = { glyph = 'M' } },
+    directory = { ['й_dir'] = { glyph = 'M' } },
+    extension = { ['й_ext'] = { glyph = 'M' } },
+    file = { ['й_file'] = { glyph = 'M' } },
+    filetype = { ['й_filetype'] = { glyph = 'M' } },
+    lsp = { ['й_lsp'] = { glyph = 'M' } },
+    os = { ['й_os'] = { glyph = 'M' } },
   })
 
   -- Currently matched without making  it upper case to save speed for
@@ -596,7 +596,6 @@ T['mock_nvim_web_devicons()']['works'] = function()
   child.lua('_G.devicons = require("nvim-web-devicons")')
 
   -- Should reasonable mock at least common functions which return something
-  local get_icon = function(...) return child.lua_get('{ devicons.get_icon(...) }', { ... }) end
   eq(child.lua_get('{ devicons.get_icon("init.lua", nil) }'), { '', 'MiniIconsGreen' })
   eq(child.lua_get('{ devicons.get_icon(nil, "lua") }'), { '󰢱', 'MiniIconsAzure' })
   eq(child.lua_get('{ devicons.get_icon("hello.py", "lua", {}) }'), { '󰌠', 'MiniIconsYellow' })
