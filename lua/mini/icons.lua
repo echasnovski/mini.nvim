@@ -107,7 +107,7 @@
 ---           Using fallback results in a wider support and deeper integration
 ---           with Neovim's filetype detection at the cost of occasional slower
 ---           first call. The difference is reduced as much as is reasonable by
----           also having some manually tracked data tables for common cases.
+---           preferring faster file extension resolution over filetype matching.
 ---
 ---         - This module caches all its return values resulting in really fast
 ---           next same argument calls, while 'nvim-web-devicons' doesn't do that.
@@ -308,9 +308,8 @@ MiniIcons.config = {
 ---   - `'extension'` - icon data for extension.
 ---     Icon names:
 ---       - <Input>: any string (without extra dot prefix).
----       - <Built-in>: popular extensions not tied to language/software (with
----         few notable exceptions) and without associated filetype; plus a set
----         of filetype associated extensions (for performance or better support).
+---       - <Built-in>: popular extensions without associated filetype plus a set
+---         for which filetype detection gives not good enough result.
 ---
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of built-in and user configured extensions (for better
@@ -328,7 +327,8 @@ MiniIcons.config = {
 ---     Icon names:
 ---       - <Input>: any string. Works with not present paths (no check is done).
 ---       - <Built-in>: popular file names not tied to language/software
----         (with few notable exceptions like Neovim, Git, etc.).
+---         (with few notable exceptions like Neovim, Git, etc.) plus a set which
+---         has recognizable extension but has special detectable filetype.
 ---
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of built-in and user configured file names (matched to basename
@@ -651,74 +651,9 @@ H.directory_icons = {
 }
 
 -- Extension icons
--- Value is string with filetype's name to inherit from its icon data
+-- Value may be string with filetype's name to inherit from its icon data
 --stylua: ignore
 H.extension_icons = {
-  -- Popular extensions associated with supported filetype. Present to not have
-  -- to rely on `vim.filetype.match()` thus having better performance. Add only
-  -- unambiguously detectable from the extension (allow obvious exceptions on
-  -- case by case basis) to allow users to customize with `vim.filetype.add()`.
-  bib   = 'bib',
-  bzl   = 'bzl',
-  c     = 'c',
-  cbl   = 'cobol',
-  clj   = 'clojure',
-  cpp   = 'cpp',
-  cs    = 'cs',
-  css   = 'css',
-  csv   = 'csv',
-  cu    = 'cuda',
-  dart  = 'dart',
-  diff  = 'diff',
-  el    = 'lisp',
-  elm   = 'elm',
-  erl   = 'erlang',
-  f90   = 'fortran',
-  fish  = 'fish',
-  fnl   = 'fennel',
-  fs    = 'fsharp',
-  go    = 'go',
-  hs    = 'haskell',
-  htm   = 'html',
-  html  = 'html',
-  jav   = 'java',
-  java  = 'java',
-  jl    = 'julia',
-  js    = 'javascript',
-  json5 = 'json5',
-  kt    = 'kotlin',
-  latex = 'tex',
-  lua   = 'lua',
-  md    = 'markdown',
-  ml    = 'ocaml',
-  mojo  = 'mojo',
-  nim   = 'nim',
-  nix   = 'nix',
-  pdb   = 'prolog',
-  pdf   = 'pdf',
-  php   = 'php',
-  py    = 'python',
-  qmd   = 'quarto',
-  r     = 'r',
-  raku  = 'raku',
-  rb    = 'ruby',
-  rmd   = 'rmd',
-  roc   = 'roc',
-  rs    = 'rust',
-  rst   = 'rst',
-  scala = 'scala',
-  sol   = 'solidity',
-  srt   = 'srt',
-  ss    = 'scheme',
-  ssa   = 'ssa',
-  svg   = 'svg',
-  swift = 'swift',
-  ts    = 'typescript',
-  tsv   = 'tsv',
-  vim   = 'vim',
-  vue   = 'vue',
-  zig   = 'zig',
-
   -- Extensions for which `vim.filetype.match()` mismatches or doesn't work.
   -- Usually because matching depends on an actual buffer content.
   h     = { glyph = '󰫵', hl = 'MiniIconsPurple' },
@@ -800,10 +735,11 @@ H.extension_icons = {
   xltx = { glyph = '󱎏', hl = 'MiniIconsGreen'  },
 }
 
--- File icons. Keys are mostly some popular *language-agnostic* file basenames
--- and the ones which can conflict with icon detection based on extension.
+-- File icons
+-- Value may be string with filetype's name to inherit from its icon data
 --stylua: ignore
 H.file_icons = {
+  -- Popular special (mostly) language-agnostic file basenames
   ['.DS_Store']          = { glyph = '󰒓', hl = 'MiniIconsRed'    },
   ['.bash_profile']      = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.bashrc']            = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
@@ -835,6 +771,38 @@ H.file_icons = {
   TODO                   = { glyph = '󰝖', hl = 'MiniIconsPurple' },
   ['TODO.md']            = { glyph = '󰝖', hl = 'MiniIconsPurple' },
   ['init.lua']           = { glyph = '', hl = 'MiniIconsGreen'  },
+
+  -- Supported by `vim.filetype.match` but conflict with using extension first
+  ['build.xml']           = 'ant',
+  ['GNUmakefile.am']      = 'automake',
+  ['Makefile.am']         = 'automake',
+  ['makefile.am']         = 'automake',
+  ['CMakeLists.txt']      = 'cmake',
+  ['CMakeCache.txt']      = 'cmakecache',
+  ['auto.master']         = 'conf',
+  ['.oelint.cfg']         = 'dosini',
+  ['.wakatime.cfg']       = 'dosini',
+  ['pudb.cfg']            = 'dosini',
+  ['setup.cfg']           = 'dosini',
+  ['lltxxxxx.txt']        = 'gedcom',
+  ['go.sum']              = 'gosum',
+  ['go.work.sum']         = 'gosum',
+  ['.indent.pro']         = 'indent',
+  ['indent.pro']          = 'indent',
+  ['ipf.rules']           = 'ipfilter',
+  ['config.ld']           = 'lua',
+  ['lynx.cfg']            = 'lynx',
+  ['cm3.cfg']             = 'm3quake',
+  ['maxima-init.mac']     = 'maxima',
+  ['meson_options.txt']   = 'meson',
+  ['.gitolite.rc']        = 'perl',
+  ['example.gitolite.rc'] = 'perl',
+  ['gitolite.rc']         = 'perl',
+  ['main.cf.proto']       = 'pfmain',
+  ['constraints.txt']     = 'requirements',
+  ['requirements.txt']    = 'requirements',
+  ['robots.txt']          = 'robots',
+  ['tclsh.rc']            = 'tcl'
 }
 
 -- Filetype icons. Keys are filetypes explicitly supported by Neovim core

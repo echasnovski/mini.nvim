@@ -220,6 +220,8 @@ T['get()']['works with "file" category'] = function()
   validate('Cargo.lock', '', 'MiniIconsOrange', false)
   -- - `vim.filetype.match()` which relies on supplied `buf`
   validate('hello.xpm', '󰍹', 'MiniIconsYellow', false)
+  -- - `vim.filetype.match()` with recognizable extension
+  validate('build.xml', '󰫮', 'MiniIconsRed', false)
   -- - Default
   validate('should-be-default', 'F', 'Comment', true)
 
@@ -602,7 +604,7 @@ T['list()']['works'] = function()
 
   eq(list('default'), { 'default', 'directory', 'extension', 'file', 'filetype', 'lsp', 'os' })
   validate('directory', 'nvim')
-  validate('extension', 'lua')
+  validate('extension', 'h')
   validate('file', 'init.lua')
   validate('filetype', 'lua')
   validate('lsp', 'array')

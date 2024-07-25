@@ -107,7 +107,7 @@ See |MiniIcons.config| for `config` structure and default values.
           Using fallback results in a wider support and deeper integration
           with Neovim's filetype detection at the cost of occasional slower
           first call. The difference is reduced as much as is reasonable by
-          also having some manually tracked data tables for common cases.
+          preferring faster file extension resolution over filetype matching.
 
         - This module caches all its return values resulting in really fast
           next same argument calls, while 'nvim-web-devicons' doesn't do that.
@@ -294,9 +294,8 @@ Parameters ~
   - `'extension'` - icon data for extension.
     Icon names:
       - <Input>: any string (without extra dot prefix).
-      - <Built-in>: popular extensions not tied to language/software (with
-        few notable exceptions) and without associated filetype; plus a set
-        of filetype associated extensions (for performance or better support).
+      - <Built-in>: popular extensions without associated filetype plus a set
+        for which filetype detection gives not good enough result.
 
     Icon data is attempted to be resolved in the following order:
       - List of built-in and user configured extensions (for better
@@ -314,7 +313,8 @@ Parameters ~
     Icon names:
       - <Input>: any string. Works with not present paths (no check is done).
       - <Built-in>: popular file names not tied to language/software
-        (with few notable exceptions like Neovim, Git, etc.).
+        (with few notable exceptions like Neovim, Git, etc.) plus a set which
+        has recognizable extension but has special detectable filetype.
 
     Icon data is attempted to be resolved in the following order:
       - List of built-in and user configured file names (matched to basename
