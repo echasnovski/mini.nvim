@@ -319,10 +319,8 @@ Parameters ~
     Icon data is attempted to be resolved in the following order:
       - List of built-in and user configured file names (matched to basename
         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
-      - List of built-in and user configured extensions (matched to extension
-        in basename ignoring case). Run `:=MiniIcons.list('extension')` to
-        see them. This step also includes already cached extensions.
-        Uses icon data from "extension" category.
+      - Basename extension(s) matched directly as `get('extension', ext)`.
+        Only recognizable extensions (i.e. not default fallback) are used.
       - Filetype as a result of |vim.filetype.match()| with full input (not
         basename) as `filename`. Uses icon data from "filetype" category.
 

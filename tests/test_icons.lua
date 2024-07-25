@@ -312,9 +312,8 @@ T['get()']['caches output'] = function()
   eq(durations.cache <= 0.02 * durations.no_cache_2, true)
 end
 
-T['get()']['adds to cache resolved output source'] = function()
+T['get()']['adds to cache resolved output in its original category'] = function()
   -- NOTES:
-  -- - Only manually tracked extensions can be target of resolve.
   -- - There should also be caching of both "file" and "extension" category
   --   resolving to "filetype", but as "filetype" is already very fast without
   --   caching, the benchmarking is not stable.
@@ -325,20 +324,73 @@ T['get()']['adds to cache resolved output source'] = function()
       return vim.loop.hrtime() - start_time
     end
 
-    local ext_no_cache = bench('extension', 'lua')
-
-    -- "file" category resolving to "extension"
+    -- "file" category resolving to manually tracked "extension"
+    local ext_manual_no_cache = bench('extension', 'lua')
     MiniIcons.get('file', 'hello.py')
-    local ext_cache_after_file = bench('extension', 'py')
+    local ext_manual_cache = bench('extension', 'py')
+
+    -- "file" category resolving to known (i.e. not fallback) "extension"
+    local ext_known_no_cache = bench('extension', 'txt')
+    MiniIcons.get('file', 'hello.yml')
+    local ext_known_cache = bench('extension', 'yml')
+
+    -- "file" category resolving to unknown "extension"
+    local ext_unknown_no_cache = bench('extension', 'myext')
+    MiniIcons.get('file', 'hello.myotherext')
+    local ext_unknown_cache = bench('extension', 'myotherext')
 
     return {
-      ext_no_cache = ext_no_cache,
-      ext_cache_after_file = ext_cache_after_file,
+      ext_manual_no_cache = ext_manual_no_cache,
+      ext_manual_cache = ext_manual_cache,
+      ext_known_no_cache = ext_known_no_cache,
+      ext_known_cache = ext_known_cache,
+      ext_unknown_no_cache = ext_unknown_no_cache,
+      ext_unknown_cache = ext_unknown_cache,
     }
   ]])
 
-  -- Resolution with manually tracked data is usually fast, hence high coeff
-  eq(durations.ext_cache_after_file < 0.7 * durations.ext_no_cache, true)
+  -- Resolution with manually tracked data is usually fast, hence higher coeff
+  eq(durations.ext_manual_cache < 0.7 * durations.ext_manual_no_cache, true)
+
+  -- There is a full effect of caching for not manually tracked
+  eq(durations.ext_known_cache < 0.1 * durations.ext_known_no_cache, true)
+  eq(durations.ext_unknown_cache < 0.1 * durations.ext_unknown_no_cache, true)
+end
+
+T['get()']['uses cached extension during "file" resolution'] = function()
+  local durations = child.lua([[
+    local bench = function(category, name)
+      local start_time = vim.loop.hrtime()
+      MiniIcons.get(category, name)
+      return vim.loop.hrtime() - start_time
+    end
+
+    -- Known extension (i.e. not falling back to default)
+    local file_known_ext_no_cache = bench('file', 'hello.txt')
+    MiniIcons.get('extension', 'yml')
+    local file_known_ext_cache = bench('file', 'world.yml')
+
+    -- Unknown extension (i.e. falling back to default)
+    local file_unknown_ext_no_cache = bench('file', 'hello.myext')
+    MiniIcons.get('file', 'hello.myotherext')
+    local file_unknown_ext_cache = bench('file', 'world.myotherext')
+
+    return {
+      file_known_ext_no_cache = file_known_ext_no_cache,
+      file_known_ext_cache = file_known_ext_cache,
+      file_unknown_ext_no_cache = file_unknown_ext_no_cache,
+      file_unknown_ext_cache = file_unknown_ext_cache,
+    }
+  ]])
+
+  -- Known extensions are used as output resulting in no `vim.filetype.match()`
+  -- call for file name itself
+  eq(durations.file_known_ext_cache < 0.1 * durations.file_known_ext_no_cache, true)
+
+  -- Unknown extensions are NOT used as output, but they are still cached which
+  -- results in no extra `vim.filetype.match()` call to resolve itself inside
+  -- "extension" category
+  eq(durations.file_unknown_ext_cache < 0.7 * durations.file_unknown_ext_no_cache, true)
 end
 
 T['get()']['prefers user configured data over `vim.filetype.match()`'] = function()

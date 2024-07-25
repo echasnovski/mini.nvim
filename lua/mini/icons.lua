@@ -333,10 +333,8 @@ MiniIcons.config = {
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of built-in and user configured file names (matched to basename
 ---         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
----       - List of built-in and user configured extensions (matched to extension
----         in basename ignoring case). Run `:=MiniIcons.list('extension')` to
----         see them. This step also includes already cached extensions.
----         Uses icon data from "extension" category.
+---       - Basename extension(s) matched directly as `get('extension', ext)`.
+---         Only recognizable extensions (i.e. not default fallback) are used.
 ---       - Filetype as a result of |vim.filetype.match()| with full input (not
 ---         basename) as `filename`. Uses icon data from "filetype" category.
 ---
@@ -1970,8 +1968,10 @@ H.get_impl = {
   default = function(name) H.error(vim.inspect(name) .. ' is not a supported category.') end,
   directory = function(name) return H.directory_icons[name] end,
   extension = function(name)
-    local icon, hl = H.get_from_extension(name)
-    if icon ~= nil then return icon, hl end
+    -- Built-in extensions
+    local icon_data = H.extension_icons[name]
+    if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
+    if icon_data ~= nil then return icon_data, icon_data.hl end
 
     -- Fall back to built-in filetype matching using generic filename
     local ft = H.filetype_match('aaa.' .. name)
@@ -1982,6 +1982,7 @@ H.get_impl = {
 
     -- Built-in file names
     local icon_data = H.file_icons[basename]
+    if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
     if icon_data ~= nil then return icon_data end
 
     -- User configured file names
@@ -1991,14 +1992,9 @@ H.get_impl = {
     -- (as the latter is slow-ish; like 0.1 ms in Neovim<0.11)
     local dot = string.find(basename, '%..', 2)
     while dot ~= nil do
-      local ext = basename:sub(dot + 1):lower()
-
-      local cached = H.cache_get('extension', ext)
-      if cached ~= nil then return cached[1], cached[2] end
-
-      local icon, hl = H.get_from_extension(ext)
-      if icon ~= nil then return H.cache_set('extension', ext, icon, hl) end
-
+      local ext = basename:sub(dot + 1)
+      local icon, hl, is_default = MiniIcons.get('extension', ext)
+      if not is_default then return icon, hl end
       dot = string.find(basename, '%..', dot + 1)
     end
 
@@ -2011,12 +2007,6 @@ H.get_impl = {
   lsp = function(name) return H.lsp_icons[name] end,
   os = function(name) return H.os_icons[name] end,
 }
-
-H.get_from_extension = function(ext)
-  local icon_data = H.extension_icons[ext]
-  if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
-  if icon_data ~= nil then return H.style_icon(icon_data.glyph, ext), icon_data.hl end
-end
 
 H.style_icon = function(glyph, name)
   if MiniIcons.config.style ~= 'ascii' then return glyph end
