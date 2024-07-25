@@ -68,6 +68,8 @@ T['setup()']['creates `config` field'] = function()
   expect_config('filetype', {})
   expect_config('lsp', {})
   expect_config('os', {})
+  eq(child.lua_get('type(MiniIcons.config.use_file_extension)'), 'function')
+  eq(child.lua_get('MiniIcons.config.use_file_extension()'), true)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -92,6 +94,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ filetype = 1 }, 'filetype', 'table')
   expect_config_error({ lsp = 1 }, 'lsp', 'table')
   expect_config_error({ os = 1 }, 'os', 'table')
+  expect_config_error({ use_file_extension = 1 }, 'use_file_extension', 'function')
 end
 
 T['setup()']['can customize icons'] = function()
@@ -250,6 +253,47 @@ T['get()']['works with "file" category'] = function()
   -- Cached data for basename should not affect full path resolution
   eq(get('file', 'gshadow'), { 'F', 'Comment', true })
   validate('/etc/gshadow', '󰫴', 'MiniIconsCyan', false)
+end
+
+T['get()']['respects `config.use_file_extension`'] = function()
+  child.lua([[
+    _G.log = {}
+    MiniIcons.setup({
+      extension = {
+        ['my.ext'] = { glyph = 'M', hl = 'Comment' },
+        ['my.ext2'] = { glyph = 'm', hl = 'Comment' },
+        ext2 = { glyph = '2', hl = 'Comment' },
+      },
+      use_file_extension = function(ext, file, ...)
+        table.insert(_G.log, { ext, file, ... })
+        if ext == 'scm' then return false end
+        if ext == 'yml' then return nil end
+        if ext == 'my.ext2' then return 1 end
+        return true
+      end
+    })
+  ]])
+
+  -- Should allow skipping extensions if returns not `true`
+  child.lua([[vim.filetype.add({ pattern = { ['.*/roles/.*/tasks/.*%.ya?ml'] = 'yaml.ansible' } })]])
+  eq(get('file', '/home/user/roles/a/tasks/hello.yml'), { '󱂚', 'MiniIconsGrey', false })
+  eq(get('file', '/home/user/roles/a/tasks/hello.yaml'), { '', 'MiniIconsPurple', false })
+  eq(get('file', '/hello.yml'), { '', 'MiniIconsPurple', false })
+
+  -- - '/queries/.*%.scm' pattern should be built-in
+  eq(get('file', 'queries/lua.scm'), { '󰐅', 'MiniIconsGreen', false })
+  eq(get('file', 'lua.scm'), { '󰘧', 'MiniIconsGrey', false })
+
+  -- Should not interfer (if returns `true`) with using recognizable extensions
+  eq(get('file', 'hello.My.Ext'), { 'M', 'Comment', false })
+
+  -- Should not block considering other parts of complex extension
+  eq(get('file', 'hello.my.ext2'), { '2', 'Comment', false })
+
+  -- Should be called with proper arguments for all detected extensions
+  child.lua('_G.log = {}')
+  eq(get('file', 'hello.otheR.Ext'), { '󰈔', 'MiniIconsGrey', true })
+  eq(child.lua_get('_G.log'), { { 'otheR.Ext', 'hello.otheR.Ext' }, { 'Ext', 'hello.otheR.Ext' } })
 end
 
 T['get()']['works with "filetype" category'] = function()

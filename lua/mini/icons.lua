@@ -234,6 +234,40 @@ end
 ---   for performance reasons.
 --- - Use lower case names for categories which are matched ignoring case.
 ---   See |MiniIcons.get()| for more details.
+---
+--- # Using extension during file resolution ~
+---
+--- `config.use_file_extension` is a function which can be used to control which
+--- extensions will be considered as a source of icon data during "file" category
+--- resolution (see |MiniIcons.get()| for more details).
+--- Default: function which always returns `true` (i.e. consider all extensions).
+---
+--- Will be called for every extension found in input string (so be sure to make
+--- it fast) with the arguments `ext` (found extension; as is) and `file` (input
+--- for which icon is computed). Should explicitly return `true` if `ext` should
+--- be considered (i.e. call `MiniIcons.get('extension', ext)` and use its output
+--- if it is not default). Otherwise extension won't be even considered.
+---
+--- The primary use case for this setting is to ensure that some extensions are
+--- ignored in order for resolution to reach |vim.filetype.match()| stage. This
+--- is needed if there is a set up filetype detection for files with recognizable
+--- extension and conflicting icons (which you want to use). Note: if problematic
+--- filetype detection involves only known in advance file names, prefer using
+--- `config.file` customization.
+---
+--- Example: >lua
+---
+---   -- Built-in filetype detection recognizes files like "queries/.*%.scm"
+---   -- as "query" filetype. However, without special setup, 'mini.icons' will
+---   -- use "scm" extension to resolve as Scheme file. Here is a setup to ignore
+---   -- "scm" extension and completely rely on `vim.filetype.match()` fallback.
+---   local ext_skip = { scm = true }
+---   require('mini.icons').setup({
+---     use_file_extension = function(ext, _) return not ext_skip[ext:lower()] end
+---   })
+---
+---   -- Another common choices for extensions to ignore: "yml", "json", "txt".
+--- <
 MiniIcons.config = {
   -- Icon style: 'glyph' or 'ascii'
   style = 'glyph',
@@ -246,6 +280,9 @@ MiniIcons.config = {
   filetype  = {},
   lsp       = {},
   os        = {},
+
+  -- Control which extensions will be considered during "file" resolution
+  use_file_extension = function(ext, file) return true end,
 }
 --minidoc_afterlines_end
 
@@ -1829,6 +1866,7 @@ H.setup_config = function(config)
     filetype = { config.filetype, 'table' },
     lsp = { config.lsp, 'table' },
     os = { config.os, 'table' },
+    use_file_extension = { config.use_file_extension, 'function' },
   })
 
   return config
@@ -1961,8 +1999,10 @@ H.get_impl = {
     local dot = string.find(basename, '%..', 2)
     while dot ~= nil do
       local ext = basename:sub(dot + 1)
-      local icon, hl, is_default = MiniIcons.get('extension', ext)
-      if not is_default then return icon, hl end
+      if MiniIcons.config.use_file_extension(ext, name) == true then
+        local icon, hl, is_default = MiniIcons.get('extension', ext)
+        if not is_default then return icon, hl end
+      end
       dot = string.find(basename, '%..', dot + 1)
     end
 

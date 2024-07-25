@@ -172,6 +172,9 @@ Here are code snippets for some common installation methods (use only one):
   filetype  = {},
   lsp       = {},
   os        = {},
+
+  -- Control which extensions will be considered during "file" resolution
+  use_file_extension = function(ext, file) return true end,
 }
 ```
 
