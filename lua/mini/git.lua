@@ -1129,7 +1129,14 @@ H.show_in_split = function(mods, lines, subcmd, name)
   local filetype
   if subcmd == 'diff' then filetype = 'diff' end
   if subcmd == 'log' or subcmd == 'blame' then filetype = 'git' end
-  if subcmd == 'show' then filetype = vim.filetype.match({ buf = buf_id }) end
+  if subcmd == 'show' then
+    -- Try detecting 'git' filetype by content first, as filetype detection can
+    -- rely on the buffer name (i.e. command) having proper extension. It isn't
+    -- good for cases like `:Git show HEAD file.lua` (which should be 'git').
+    local l = lines[1]
+    local is_diff = l:find(string.rep('%x', 40)) or l:find('ref:')
+    filetype = is_diff and 'git' or vim.filetype.match({ buf = buf_id })
+  end
 
   local has_filetype = not (filetype == nil or filetype == '')
   if has_filetype then vim.bo[buf_id].filetype = filetype end

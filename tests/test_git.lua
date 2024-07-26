@@ -2216,7 +2216,10 @@ T[':Git']['output']['sets filetype for common subcommands'] = function()
     table.insert(_G.stdio_queue, { { 'out', 'commit abcd1234' } })       -- diff
     table.insert(_G.stdio_queue, { { 'out', 'commit abc1234\nHello' } }) -- log
     table.insert(_G.stdio_queue, { { 'out', 'Help output' } })           -- help
-    table.insert(_G.stdio_queue, { { 'out', 'Hello' } })                 -- show
+
+    table.insert(_G.stdio_queue, { { 'out', 'local a = 1' } })           -- show file content
+    local file_diff = 'commit: ' .. string.rep('abc12345', 40) .. '\nHello'
+    table.insert(_G.stdio_queue, { { 'out', file_diff } })               -- show file diff
   ]])
 
   local validate = function(command, filetype)
@@ -2234,8 +2237,9 @@ T[':Git']['output']['sets filetype for common subcommands'] = function()
   validate('Git log', 'git')
   validate('Git help commit', '')
 
-  child.cmd('au FileType lua setlocal foldlevel=0')
+  child.cmd('au FileType lua,git setlocal foldlevel=0')
   validate('Git show HEAD:file.lua', 'lua')
+  validate('Git show HEAD file.lua', 'git')
 end
 
 T[':Git']['output']['respects `:silent` modifier'] = function()
