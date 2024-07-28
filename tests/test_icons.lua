@@ -188,16 +188,32 @@ T['get()']['works with "extension" category'] = function()
     extension = {
       myext = { glyph = '󱁂', hl = 'AA' },
       ['my.ext'] = { glyph = '󰻲', hl = 'MiniIconsRed' },
+      ['my.other.ext'] = { glyph = 'O', hl = 'Error' },
+      ['my.lua'] = { glyph = 'L', hl = 'String' },
     },
     filetype = { squirrel = { glyph = 'S', hl = 'Special' } },
   })
   local validate = function(name, icon, hl, is_default) eq(get('extension', name), { icon, hl, is_default }) end
 
   validate('lua', '󰢱', 'MiniIconsAzure', false)
+  validate('my.lua', 'L', 'String', false)
+
   validate('myext', '󱁂', 'AA', false)
   validate('my.ext', '󰻲', 'MiniIconsRed', false)
+  validate('my.other.ext', 'O', 'Error', false)
+
   validate('xpm', '󰍹', 'MiniIconsYellow', false)
+  validate('nut', 'S', 'Special', false)
+
   validate('should-be-default', 'E', 'Comment', true)
+
+  -- Properly resolves complex extensions
+  validate('hello.lua', '󰢱', 'MiniIconsAzure', false)
+  validate('hello.my.lua', 'L', 'String', false)
+  validate('hello.world.mp4', '󰈫', 'MiniIconsAzure', false)
+  validate('hello.myext', '󱁂', 'AA', false)
+  validate('hello.my.ext', '󰻲', 'MiniIconsRed', false)
+  validate('hello.my.other.ext', 'O', 'Error', false)
 end
 
 T['get()']['works with "file" category'] = function()
@@ -210,8 +226,9 @@ T['get()']['works with "file" category'] = function()
     filetype = { gitignore = { glyph = 'G', hl = 'Ignore' } },
     extension = {
       py = { glyph = 'PY', hl = 'String' },
-      ['my.ext'] = { glyph = '󰻲', hl = 'MiniIconsRed' },
+      ['my.py'] = { glyph = 'MY', hl = 'Comment' },
       ext = { glyph = 'E', hl = 'Comment' },
+      ['my.ext'] = { glyph = '󰻲', hl = 'MiniIconsRed' },
     },
   })
 
@@ -240,6 +257,9 @@ T['get()']['works with "file" category'] = function()
   -- Can use complex "extension"
   validate('hello.ext', 'E', 'Comment', false)
   validate('hello.my.ext', '󰻲', 'MiniIconsRed', false)
+  validate('hello.extra.dot.my.ext', '󰻲', 'MiniIconsRed', false)
+  validate('hello.my.py', 'MY', 'Comment', false)
+  validate('hello.extra.dot.my.py', 'MY', 'Comment', false)
 
   -- Works with full paths
   local validate_full = function(name) eq(get('file', name), get('file', name:match('/([^/]+)$'))) end

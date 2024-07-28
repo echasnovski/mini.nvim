@@ -349,8 +349,9 @@ MiniIcons.config = {
 ---         for which filetype detection gives not good enough result.
 ---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of user configured and built-in extensions (for better
----         performance). Run `:=MiniIcons.list('extension')` to see them.
+---       - List of user configured and built-in extensions (for better results).
+---         Run `:=MiniIcons.list('extension')` to see them.
+---         Used also if present as suffix after the dot (widest one preferred).
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
 ---         file name. Uses icon data from "filetype" category.
 ---
@@ -359,6 +360,7 @@ MiniIcons.config = {
 ---       -- All of these will result in the same output
 ---       MiniIcons.get('extension', 'lua')
 ---       MiniIcons.get('extension', 'LUA')
+---       MiniIcons.get('extension', 'my.lua')
 --- <
 ---   - `'file'` - icon data for file path.
 ---     Icon names:
@@ -370,8 +372,11 @@ MiniIcons.config = {
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of user configured and built-in file names (matched to basename
 ---         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
----       - Basename extension(s) matched directly as `get('extension', ext)`.
----         Only recognizable extensions (i.e. not default fallback) are used.
+---       - Basename extension:
+---           - Matched directly as `get('extension', ext)`, where `ext` is the
+---             widest suffix after the dot.
+---           - Considered only if `config.use_file_extension` returned `true`.
+---           - Only recognizable extensions (i.e. not default fallback) are used.
 ---       - Filetype as a result of |vim.filetype.match()| with full input (not
 ---         basename) as `filename`. Uses icon data from "filetype" category.
 ---
@@ -1978,6 +1983,14 @@ H.get_impl = {
     local icon_data = H.extension_icons[name]
     if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
     if icon_data ~= nil then return icon_data, icon_data.hl end
+
+    -- Parts of complex extension (if can be recognized)
+    local dot = string.find(name, '%..')
+    while dot ~= nil do
+      local ext = name:sub(dot + 1)
+      if H.extension_icons[ext] or MiniIcons.config.extension[ext] then return MiniIcons.get('extension', ext) end
+      dot = string.find(name, '%..', dot + 1)
+    end
 
     -- Fall back to built-in filetype matching using generic filename
     local ft = H.filetype_match('aaa.' .. name)
