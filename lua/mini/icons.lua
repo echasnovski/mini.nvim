@@ -242,11 +242,11 @@ end
 --- resolution (see |MiniIcons.get()| for more details).
 --- Default: function which always returns `true` (i.e. consider all extensions).
 ---
---- Will be called for every extension found in input string (so be sure to make
---- it fast) with the arguments `ext` (found extension; as is) and `file` (input
---- for which icon is computed). Should explicitly return `true` if `ext` should
---- be considered (i.e. call `MiniIcons.get('extension', ext)` and use its output
---- if it is not default). Otherwise extension won't be even considered.
+--- Will be called once for the biggest suffix after dot found in the file name.
+--- The arguments will be `ext` (found extension; lowercase) and `file` (input for
+--- which icon is computed; as is). Should explicitly return `true` if `ext` is to
+--- be considered (i.e. call `MiniIcons.get('extension', ext)` and use its
+--- output if it is not default). Otherwise extension won't be even considered.
 ---
 --- The primary use case for this setting is to ensure that some extensions are
 --- ignored in order for resolution to reach |vim.filetype.match()| stage. This
@@ -261,9 +261,9 @@ end
 ---   -- as "query" filetype. However, without special setup, 'mini.icons' will
 ---   -- use "scm" extension to resolve as Scheme file. Here is a setup to ignore
 ---   -- "scm" extension and completely rely on `vim.filetype.match()` fallback.
----   local ext_skip = { scm = true }
 ---   require('mini.icons').setup({
----     use_file_extension = function(ext, _) return not ext_skip[ext:lower()] end
+---     -- Check last letters explicitly to account for dots in file name
+---     use_file_extension = function(ext) return ext:sub(-3) ~= 'scm' end
 ---   })
 ---
 ---   -- Another common choices for extensions to ignore: "yml", "json", "txt".
@@ -2010,13 +2010,12 @@ H.get_impl = {
     -- Basename extensions. Prefer this before `vim.filetype.match()` for speed
     -- (as the latter is slow-ish; like 0.1 ms in Neovim<0.11)
     local dot = string.find(basename, '%..', 2)
-    while dot ~= nil do
-      local ext = basename:sub(dot + 1)
+    if dot ~= nil then
+      local ext = basename:sub(dot + 1):lower()
       if MiniIcons.config.use_file_extension(ext, name) == true then
         local icon, hl, is_default = MiniIcons.get('extension', ext)
         if not is_default then return icon, hl end
       end
-      dot = string.find(basename, '%..', dot + 1)
     end
 
     -- Fall back to built-in filetype matching with full supplied name (matters
