@@ -349,7 +349,7 @@ MiniIcons.config = {
 ---         for which filetype detection gives not good enough result.
 ---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of built-in and user configured extensions (for better
+---       - List of user configured and built-in extensions (for better
 ---         performance). Run `:=MiniIcons.list('extension')` to see them.
 ---       - Filetype as a result of |vim.filetype.match()| with placeholder
 ---         file name. Uses icon data from "filetype" category.
@@ -368,7 +368,7 @@ MiniIcons.config = {
 ---         has recognizable extension but has special detectable filetype.
 ---
 ---     Icon data is attempted to be resolved in the following order:
----       - List of built-in and user configured file names (matched to basename
+---       - List of user configured and built-in file names (matched to basename
 ---         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
 ---       - Basename extension(s) matched directly as `get('extension', ext)`.
 ---         Only recognizable extensions (i.e. not default fallback) are used.
@@ -1986,13 +1986,13 @@ H.get_impl = {
   file = function(name)
     local basename = H.fs_basename(name)
 
+    -- User configured file names
+    if MiniIcons.config.file[basename] ~= nil and name ~= basename then return MiniIcons.get('file', basename) end
+
     -- Built-in file names
     local icon_data = H.file_icons[basename]
     if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
     if icon_data ~= nil then return icon_data end
-
-    -- User configured file names
-    if MiniIcons.config.file[basename] ~= nil and name ~= basename then return MiniIcons.get('file', basename) end
 
     -- Basename extensions. Prefer this before `vim.filetype.match()` for speed
     -- (as the latter is slow-ish; like 0.1 ms in Neovim<0.11)

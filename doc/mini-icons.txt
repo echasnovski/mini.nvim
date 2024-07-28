@@ -334,7 +334,7 @@ Parameters ~
         for which filetype detection gives not good enough result.
 
     Icon data is attempted to be resolved in the following order:
-      - List of built-in and user configured extensions (for better
+      - List of user configured and built-in extensions (for better
         performance). Run `:=MiniIcons.list('extension')` to see them.
       - Filetype as a result of |vim.filetype.match()| with placeholder
         file name. Uses icon data from "filetype" category.
@@ -353,7 +353,7 @@ Parameters ~
         has recognizable extension but has special detectable filetype.
 
     Icon data is attempted to be resolved in the following order:
-      - List of built-in and user configured file names (matched to basename
+      - List of user configured and built-in file names (matched to basename
         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
       - Basename extension(s) matched directly as `get('extension', ext)`.
         Only recognizable extensions (i.e. not default fallback) are used.

@@ -203,7 +203,10 @@ end
 T['get()']['works with "file" category'] = function()
   load_module({
     default = { file = { glyph = 'F', hl = 'Comment' } },
-    file = { myfile = { glyph = '󱁂', hl = 'AA' } },
+    file = {
+      myfile = { glyph = '󱁂', hl = 'AA' },
+      ['init.lua'] = { glyph = 'V' },
+    },
     filetype = { gitignore = { glyph = 'G', hl = 'Ignore' } },
     extension = {
       py = { glyph = 'PY', hl = 'String' },
@@ -216,7 +219,7 @@ T['get()']['works with "file" category'] = function()
 
   -- Works with different sources of resolution
   -- - Exact basename
-  validate('init.lua', '', 'MiniIconsGreen', false)
+  validate('LICENSE', '', 'MiniIconsCyan', false)
   -- - Extension
   validate('hello.lua', '󰢱', 'MiniIconsAzure', false)
   -- - `vim.filetype.match()`
@@ -230,6 +233,7 @@ T['get()']['works with "file" category'] = function()
 
   -- Can use customizations
   validate('myfile', '󱁂', 'AA', false)
+  validate('init.lua', 'V', 'MiniIconsGreen', false)
   validate('hello.py', 'PY', 'String', false)
   validate('.gitignore', 'G', 'Ignore', false)
 
@@ -238,12 +242,15 @@ T['get()']['works with "file" category'] = function()
   validate('hello.my.ext', '󰻲', 'MiniIconsRed', false)
 
   -- Works with full paths
-  eq(get('file', '/home/user/world.lua'), get('file', 'world.lua'))
-  eq(get('file', '/home/user/myfile'), get('file', 'myfile'))
-  eq(get('file', '/home/user/world.py'), get('file', 'world.py'))
-  eq(get('file', '/home/user/world.ext'), get('file', 'world.ext'))
-  eq(get('file', '/home/user/world.my.ext'), get('file', 'world.my.ext'))
-  eq(get('file', '/home/user/should-be-default'), get('file', 'should-be-default'))
+  local validate_full = function(name) eq(get('file', name), get('file', name:match('/([^/]+)$'))) end
+  validate_full('/home/user/LICENSE')
+  validate_full('/home/user/init.lua')
+  validate_full('/home/user/world.lua')
+  validate_full('/home/user/myfile')
+  validate_full('/home/user/world.py')
+  validate_full('/home/user/world.ext')
+  validate_full('/home/user/world.my.ext')
+  validate_full('/home/user/should-be-default')
 
   -- Should use full name in `vim.filetype.match()`
   validate('/etc/group', '󰫴', 'MiniIconsCyan', false)
