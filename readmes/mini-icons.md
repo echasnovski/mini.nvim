@@ -44,6 +44,14 @@ Notes:
 
 - It is not a goal to become a collection of icons for as much use cases as possible. There are specific criteria for icon data to be included as built-in in each category (see `:h MiniIcons.get()`). The main supported category is "filetype".
 
+Recommendations for plugin authors using 'mini.icons' as a dependency:
+
+- Check if `_G.MiniIcons` table is present (which means that user explicitly enabled 'mini.icons') and provide icons only if it is.
+
+- Use `MiniIcons.get()` function to get icon string and more data about it.
+
+- For file icons prefer using full path instead of relative or only basename. It makes a difference if path matches pattern that uses parent directories. The `:h MiniIcons.config` has an example of that.
+
 ## Dependencies
 
 Suggested dependencies:
