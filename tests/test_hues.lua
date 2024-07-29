@@ -415,6 +415,72 @@ T['make_palette()']['validates arguments'] = function()
   expect.error(function() make_palette({ background = bg, foreground = fg, accent = 'aaa' }) end, 'one of')
 end
 
+T['apply_palette()'] = new_set()
+
+local apply_palette = function(...) return child.lua_get([[require('mini.hues').apply_palette(...)]], { ... }) end
+
+T['apply_palette()']['works'] = function()
+  child.cmd('hi Normal guifg=#eeeeee')
+  child.cmd('hi String guifg=#00ff00')
+
+  local palette = make_palette({ background = '#222222', foreground = '#dddddd' })
+  palette.fg = '#aaaaaa'
+  apply_palette(palette)
+
+  validate_hl_group('Normal', 'guifg=#aaaaaa guibg=#222222')
+  validate_hl_group('String', 'guifg=#c7eab5')
+  validate_hl_group('@variable', 'guifg=#aaaaaa')
+  validate_hl_group('MiniCursorword', 'cterm=underline gui=underline')
+  validate_hl_group('WhichKey', 'guifg=#a1efdf')
+  if child.fn.has('nvim-0.9') == 1 then validate_hl_group('@lsp.type.variable', 'links to @variable') end
+  eq(child.g.terminal_color_7, '#aaaaaa')
+end
+
+T['apply_palette()']['respects `plugins`'] = function()
+  local palette = make_palette({ background = '#222222', foreground = '#dddddd' })
+  apply_palette(palette, { default = false, ['echasnovski/mini.nvim'] = true })
+  validate_hl_group('MiniCursorword', 'cterm=underline gui=underline')
+  validate_hl_group('WhichKey', 'cleared')
+
+  -- Uses the one from `config` by default
+  child.cmd('hi clear')
+  child.lua([[require('mini.hues').setup({
+    background = '#222222',
+    foreground = '#dddddd',
+    plugins = { default = true, ["echasnovski/mini.nvim"] = false },
+  })]])
+  apply_palette(palette)
+  validate_hl_group('MiniCursorword', 'cleared')
+  validate_hl_group('WhichKey', 'guifg=#a1efdf')
+end
+
+T['apply_palette()']['clears highlight groups'] = function()
+  child.cmd('hi AAA guifg=#cccccc')
+  local palette = make_palette({ background = '#222222', foreground = '#dddddd' })
+
+  -- Should execute `:hi clear` only if there was previous color scheme applied
+  apply_palette(palette)
+  validate_hl_group('AAA', 'guifg=#cccccc')
+
+  child.g.colors_name = 'some_colorscheme'
+  apply_palette(palette)
+  validate_hl_group('AAA', 'cleared')
+end
+
+T['apply_palette()']['clears `g:colors_name`'] = function()
+  child.g.colors_name = 'hello'
+  local palette = make_palette({ background = '#222222', foreground = '#dddddd' })
+  apply_palette(palette)
+  eq(child.g.colors_name, vim.NIL)
+end
+
+T['apply_palette()']['validates input'] = function()
+  expect.error(function() apply_palette('a') end, '`palette`.*table')
+
+  local palette = make_palette({ background = '#222222', foreground = '#dddddd' })
+  expect.error(function() apply_palette(palette, 'a') end, '`plugins`.*table')
+end
+
 T['gen_random_base_colors()'] = new_set()
 
 T['gen_random_base_colors()']['works'] = function()

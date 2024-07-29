@@ -21,6 +21,10 @@
 
 - BREAKING FEATURE: update `compute_hex_color_group()` to compute based on combination of `hex_color` and `style`, opposed to just `hex_color`. This allows simultaneous usage of several styles in user's custom highlighters.
 
+## mini.hues
+
+- FEATURE: implement `apply_palette()` (to compliment `make_palette()`) providing a way to tweak applied palette before applying it.
+
 ## mini.files
 
 - FEATURE: prefer using 'mini.icons' as icon provider.

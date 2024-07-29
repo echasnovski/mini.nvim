@@ -123,6 +123,9 @@ Activate it as regular |colorscheme|. Get currently active config with
                            `MiniHues.setup`({config})
 Module setup
 
+Main side effect is to create palette and apply it. Essentially, a combination
+of |MiniHues.make_palette()| and |MiniHues.apply_palette()|.
+
 Usage ~
 >lua
   require('mini.hues').setup({
@@ -300,12 +303,37 @@ Return ~
     background lightness values.
 
 ------------------------------------------------------------------------------
+                                                      *MiniHues.apply_palette()*
+                 `MiniHues.apply_palette`({palette}, {plugins})
+Apply palette
+
+Create color scheme highlight groups and terminal colors based on supplied
+palette. This is useful if you want to tweak palette colors.
+For regular usage prefer |MiniHues.setup()|.
+
+Parameters ~
+{palette} `(table)` Table with structure as |MiniHues.make_palette()| output.
+{plugins} `(table|nil)` Table with boolean values indicating whether to create
+  highlight groups for specific plugins. See |MiniHues.config| for more details.
+  Default: the value from |MiniHues.config|.
+
+Usage ~
+>lua
+  local palette = require('mini.hues').make_palette({
+    background = '#11262d',
+    foreground = '#c0c8cc',
+  })
+  palette.cyan = '#76e0a6'
+  palette.cyan_bg = '#004629'
+  require('mini.hues').apply_palette(palette)
+<
+------------------------------------------------------------------------------
                                              *MiniHues.gen_random_base_colors()*
                    `MiniHues.gen_random_base_colors`({opts})
 Generate random base colors
 
 Compute background and foreground colors based on randomly generated hue
-and heuristally picked lightness-chroma values.
+and heuristically picked lightness-chroma values.
 
 You can recreate a similar functionality but tweaked to your taste
 using |mini.colors|: >
