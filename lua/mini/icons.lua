@@ -23,6 +23,9 @@
 --- - Mocking methods of 'nvim-tree/nvim-web-devicons' for better integrations
 ---   with plugins outside 'mini.nvim'. See |MiniIcons.mock_nvim_web_devicons()|.
 ---
+--- - Tweaking built-in maps for "LSP kind" to include icons. In particular, this
+---   makes |mini.completion| use icons in LSP step. See |MiniIcons.tweak_lsp_kind()|.
+---
 --- Notes:
 ---
 --- - It is not a goal to become a collection of icons for as much use cases as
@@ -131,12 +134,18 @@
 ---           cases for "operating system", while this module has better eventual
 ---           coverage for other cases.
 ---
----
 ---         - This module supports "directory" and "lsp" categories.
 ---
 ---         - 'nvim-web-devicons' covers "desktop environment" and "window
 ---           management" categories. This modules does not include them due to
 ---           relatively low demand.
+---
+--- - 'onsails/lspkind.nvim':
+---     - Provides icons only for `CompletionItemKind`, while this module also has
+---       icons for `SymbolKind` and other non-LSP categories.
+---     - Provides dedicated formatting function for 'hrsh7th/nvim-cmp' while this
+---       module intentionally does not (adding icons should be straightforward
+---       to manually implement while anything else is out of scope).
 ---
 --- # Highlight groups ~
 ---
@@ -610,6 +619,43 @@ MiniIcons.mock_nvim_web_devicons = function()
     package.preload[modname] = function() return M end
   else
     package.loaded[modname] = M
+  end
+end
+
+--- Tweak built-in LSP kind names
+---
+--- Update in place appropriate maps in |vim.lsp.protocol| (`CompletionItemKind`
+--- and `SymbolKind`) by using icon strings from "lsp" category. Only "numeric
+--- id to kind name" part is updated (to preserve data from original map).
+---
+--- Updating is done in one of these modes:
+--- - Append:  add icon after text.
+--- - Prepend: add icon before text (default).
+--- - Replace: use icon instead of text.
+---
+--- Notes:
+--- - Makes |mini.completion| show icons, as it uses built-in protocol map.
+--- - Results in loading whole `vim.lsp` module, so might add significant amount
+---   of time on startup. Call it lazily. For example, with |MiniDeps.later()|: >
+---
+---     require('mini.icons').setup()
+---     MiniDeps.later(MiniIcons.tweak_lsp_kind)
+--- <
+---@param mode string|nil One of "prepend" (default), "append", "replace".
+MiniIcons.tweak_lsp_kind = function(mode)
+  mode = mode or 'prepend'
+  local format
+  if mode == 'append' then format = function(kind) return kind .. ' ' .. MiniIcons.get('lsp', kind) end end
+  if mode == 'prepend' then format = function(kind) return MiniIcons.get('lsp', kind) .. ' ' .. kind end end
+  if mode == 'replace' then format = function(kind) return MiniIcons.get('lsp', kind) end end
+  if format == nil then H.error('`mode` should be one of "append", "prepend", "replace".') end
+
+  local protocol = vim.lsp.protocol
+  for i, kind in ipairs(protocol.CompletionItemKind) do
+    protocol.CompletionItemKind[i] = format(kind)
+  end
+  for i, kind in ipairs(protocol.SymbolKind) do
+    protocol.SymbolKind[i] = format(kind)
   end
 end
 

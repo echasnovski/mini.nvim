@@ -816,4 +816,81 @@ T['mock_nvim_web_devicons()']['works'] = function()
   end
 end
 
+T['tweak_lsp_kind()'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.lua([[MiniIcons.setup({
+        default = { lsp = { glyph = 'L' } },
+        lsp = {
+          text = { glyph = 'T' },
+          file = { glyph = 'F' },
+          somethingnew = { glyph = 'S' },
+        }
+      })]])
+    end,
+  },
+})
+
+local setup_lsp_protocol = function()
+  child.lua([[
+    vim.lsp.protocol = {
+      CompletionItemKind = {
+        [1] = 'Text',         Text = 1,
+        [2] = 'Method',       Method = 2,
+        [3] = 'SomethingNew', SomethingNew = 3,
+        [4] = 'Fallback',     Fallback = 4,
+      },
+      SymbolKind = {
+        [1] = 'File',         File = 1,
+        [2] = 'Module',       Module = 2,
+        [3] = 'SomethingNew', SomethingNew = 3,
+        [4] = 'Fallback',     Fallback = 4,
+      },
+    }
+  ]])
+  return {
+    CompletionItemKind = { Text = 1, Method = 2, SomethingNew = 3, Fallback = 4 },
+    SymbolKind = { File = 1, Module = 2, SomethingNew = 3, Fallback = 4 },
+  }
+end
+
+local validate_lsp_protocol = function(mode, field, ref_arr)
+  local init_map = setup_lsp_protocol()
+  child.lua('MiniIcons.tweak_lsp_kind(...)', { mode })
+
+  child.lua('_G.tbl = vim.lsp.protocol.' .. field)
+  child.lua([=[
+    _G.arr, _G.map = {}, {}
+    for k, v in pairs(_G.tbl) do
+      if type(k) == 'number' then _G.arr[k] = v else _G.map[k] = v end
+    end
+    ]=])
+
+  -- Should modify only "array" part (i.e. only "number -> kind" map) in order
+  -- to preserve original info
+  eq(child.lua_get('_G.arr'), ref_arr)
+  eq(child.lua_get('_G.map'), init_map[field])
+end
+
+T['tweak_lsp_kind()']['works'] = function()
+  -- By default should prepend icon
+  validate_lsp_protocol(nil, 'CompletionItemKind', { 'T Text', ' Method', 'S SomethingNew', 'L Fallback' })
+  validate_lsp_protocol(nil, 'SymbolKind', { 'F File', ' Module', 'S SomethingNew', 'L Fallback' })
+end
+
+T['tweak_lsp_kind()']['respects `mode` argument'] = function()
+  validate_lsp_protocol('append', 'CompletionItemKind', { 'Text T', 'Method ', 'SomethingNew S', 'Fallback L' })
+  validate_lsp_protocol('append', 'SymbolKind', { 'File F', 'Module ', 'SomethingNew S', 'Fallback L' })
+
+  validate_lsp_protocol('prepend', 'CompletionItemKind', { 'T Text', ' Method', 'S SomethingNew', 'L Fallback' })
+  validate_lsp_protocol('prepend', 'SymbolKind', { 'F File', ' Module', 'S SomethingNew', 'L Fallback' })
+
+  validate_lsp_protocol('replace', 'CompletionItemKind', { 'T', '', 'S', 'L' })
+  validate_lsp_protocol('replace', 'SymbolKind', { 'F', '', 'S', 'L' })
+end
+
+T['tweak_lsp_kind()']['validates arguments'] = function()
+  expect.error(function() child.lua('MiniIcons.tweak_lsp_kind("aa")') end, '`mode`.*one of')
+end
+
 return T
