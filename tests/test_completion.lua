@@ -439,6 +439,20 @@ T['Manual completion']['works with two-step completion'] = function()
   eq(get_completion(), { 'Jackpot' })
 end
 
+T['Manual completion']['uses `vim.lsp.protocol.CompletionItemKind` in LSP step'] = function()
+  child.set_size(17, 30)
+  child.lua([[vim.lsp.protocol = {
+    CompletionItemKind = {
+      [1] = 'Text',         Text = 1,
+      [2] = 'Method',       Method = 2,
+      [3] = 'S Something',  ['S Something'] = 3,
+      [4] = 'Fallback',     Fallback = 4,
+    },
+  }]])
+  type_keys('i', '<C-Space>')
+  child.expect_screenshot()
+end
+
 T['Manual completion']['works with fallback action'] = function()
   type_keys('i', 'J', '<M-Space>')
   eq(get_completion(), { 'Jackpot' })

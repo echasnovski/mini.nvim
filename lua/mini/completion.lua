@@ -73,10 +73,16 @@
 ---     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
 ---     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
 ---       `v:lua.MiniCompletion.completefunc_lsp`.
+---
+--- - Uses `vim.lsp.protocol.CompletionItemKind` map in LSP step to show a readable
+---   version of item's kind. Modify it directly to change what is displayed.
+---   If you have |mini.icons| enabled, take a look at |MiniIcons.tweak_lsp_kind()|.
+---
 --- - If you have trouble using custom (overridden) |vim.ui.input| (like from
 ---   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
 ---   for input buffer. For example, currently for 'dressing.nvim' it can be
 ---   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
+---
 --- - Support of `additionalTextEdits` tries to handle both types of servers:
 ---     - When `additionalTextEdits` are supplied in response to
 ---       'textDocument/completion' request (like currently in 'pyright').
