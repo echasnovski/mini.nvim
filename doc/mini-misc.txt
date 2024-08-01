@@ -14,6 +14,9 @@ Features the following functions:
 
 - |MiniMisc.setup_auto_root()| to set up automated change of current directory.
 
+- |MiniMisc.setup_termbg_sync()| to set up terminal background synchronization
+  (removes possible "frame" around current Neovim instance).
+
 - |MiniMisc.setup_restore_cursor()| to set up automated restoration of
   cursor position on file reopen.
 
@@ -163,6 +166,23 @@ Parameters ~
 {fallback} `(function|nil)` Callable fallback to use if no root is found
   with |vim.fs.find()|. Will be called with a buffer path and should return
   a valid directory path.
+
+------------------------------------------------------------------------------
+                                                  *MiniMisc.setup_termbg_sync()*
+                         `MiniMisc.setup_termbg_sync`()
+Set up terminal background synchronization
+
+What it does:
+- Checks if terminal emulator supports OSC 11 control sequence. Stops if not.
+- Creates |UIEnter| and |ColorScheme| autocommands which change terminal
+  background to have same color as |guibg| of |hl-Normal|.
+- Creates |UILeave| autocommand which sets terminal background back to the
+  color at the time this function was called first time in current session.
+- Synchronizes background immediately to allow not depend on loading order.
+
+Primary use case is to remove possible "frame" around current Neovim instance
+which appears if Neovim's |hl-Normal| background color differs from what is
+used by terminal emulator itself.
 
 ------------------------------------------------------------------------------
                                                *MiniMisc.setup_restore_cursor()*

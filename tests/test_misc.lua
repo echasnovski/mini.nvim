@@ -460,6 +460,130 @@ T['find_root()']['uses cache'] = function()
   eq(find_root(), dir_misc_path)
 end
 
+T['setup_termbg_sync()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Mock `io.write` used to send control sequences to terminal emulator
+      child.lua([[
+        _G.log = {}
+        io.write = function(...) table.insert(_G.log, { ... }) end
+      ]])
+    end,
+  },
+})
+
+T['setup_termbg_sync()']['works'] = function()
+  local eq_log = function(ref_log)
+    eq(child.lua_get('_G.log'), ref_log)
+    child.lua('_G.log = {}')
+  end
+
+  child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
+  child.lua('MiniMisc.setup_termbg_sync()')
+
+  -- Should first ask if terminal emulator supports the feature
+  eq_log({ { '\027]11;?\007' } })
+
+  -- Mock typical response assuming '#11262d' as background color
+  child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:1111/2626/2d2d' })
+
+  -- Should sync immediately
+  eq_log({ { '\027]11;#dddddd\007' } })
+
+  -- Should sync on appropriate events
+  local validate_event = function(event, log_entry)
+    child.api.nvim_exec_autocmds(event, {})
+    eq_log({ { log_entry } })
+  end
+  validate_event('UIEnter', '\027]11;#dddddd\007')
+  validate_event('ColorScheme', '\027]11;#dddddd\007')
+  validate_event('UILeave', '\027]11;#11262d\007')
+end
+
+T['setup_termbg_sync()']['can be called multiple times'] = function()
+  child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
+  child.lua('MiniMisc.setup_termbg_sync()')
+  child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:1111/2626/2d2d' })
+  eq(child.lua_get('_G.log'), { { '\27]11;?\a' }, { '\27]11;#dddddd\a' } })
+  child.lua('_G.log = {}')
+
+  -- If called second time, the terminal background color is already synced
+  child.lua('MiniMisc.setup_termbg_sync()')
+  child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:dddd/dddd/dddd' })
+  eq(child.lua_get('_G.log'), { { '\27]11;?\a' }, { '\27]11;#dddddd\a' } })
+  child.lua('_G.log = {}')
+
+  -- Should reset to the color from the very first call
+  child.api.nvim_exec_autocmds('UILeave', {})
+  eq(child.lua_get('_G.log'), { { '\27]11;#11262d\a' } })
+end
+
+T['setup_termbg_sync()']['handles no response from terminal emulator'] = function()
+  child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
+  child.lua('MiniMisc.setup_termbg_sync()')
+  local validate_n_autocmds = function(ref_n)
+    eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync', event = 'TermResponse' }), ref_n)
+  end
+  validate_n_autocmds(1)
+
+  -- If there is no response from terminal emulator for 1s, delete autocmd
+  vim.loop.sleep(1000 + 10)
+  validate_n_autocmds(0)
+
+  -- Should show informative notification
+  local ref_notify = {
+    '(mini.misc) `setup_termbg_sync()` did not get response from terminal emulator',
+    child.lua_get('vim.log.levels.WARN'),
+  }
+  eq(child.lua_get('_G.notify_log'), { ref_notify })
+end
+
+T['setup_termbg_sync()']['handles bad response from terminal emulator'] = function()
+  child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
+  child.lua('MiniMisc.setup_termbg_sync()')
+  child.api.nvim_exec_autocmds('TermResponse', { data = 'something-bad' })
+  -- Should not create any delete 'TermResponse' autocommand and not create any
+  -- new ones
+  eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync' }), 0)
+
+  -- Should show informative notification
+  local ref_notify = {
+    '(mini.misc) `setup_termbg_sync()` could not parse terminal emulator response "something-bad"',
+    child.lua_get('vim.log.levels.WARN'),
+  }
+  eq(child.lua_get('_G.notify_log'), { ref_notify })
+end
+
+T['setup_termbg_sync()']['handles different color formats'] = function()
+  local validate = function(term_response_color, ref_color)
+    -- Mock clean start to overcome that color is parsed only once per session
+    child.lua('package.loaded["mini.misc"] = nil')
+    child.lua('require("mini.misc").setup_termbg_sync()')
+    child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;' .. term_response_color })
+
+    -- Should properly parse initial background and use it to reset on exit
+    child.lua('_G.log = {}')
+    child.api.nvim_exec_autocmds('UILeave', {})
+    eq(child.lua_get('_G.log'), { { '\027]11;' .. ref_color .. '\007' } })
+
+    -- Clean up
+    child.lua('_G.log = {}')
+    child.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = true })
+  end
+
+  validate('rgb:1234/5678/9abc', '#12569a')
+  validate('rgb:213/546/879', '#215487')
+  validate('rgb:31/75/b9', '#3175b9')
+  validate('rgb:4/8/c', '#4488cc')
+  validate('rgb:1/23/456', '#112345')
+
+  validate('rgba:1234/5678/9abc/1234', '#12569a')
+  validate('rgba:213/546/879/1234', '#215487')
+  validate('rgba:31/75/b9/1234', '#3175b9')
+  validate('rgba:4/8/c/1234', '#4488cc')
+  validate('rgba:1/23/456/1234', '#112345')
+end
+
 local restore_cursor_test_file = make_path(dir_misc_path, 'restore-cursor.lua')
 local restore_cursor_init_file = make_path(dir_misc_path, 'init-restore-cursor.lua')
 local restore_cursor_shada_path = make_path(dir_misc_path, 'restore-cursor.shada')

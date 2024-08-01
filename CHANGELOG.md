@@ -33,6 +33,10 @@
 
 - Introduction of a new module.
 
+## mini.misc
+
+- FEATURE: implement `setup_termbg_sync()` to set up terminal background synchronization (removes possible "frame" around current Neovim instance).
+
 ## mini.pick
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
