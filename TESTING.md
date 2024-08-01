@@ -18,9 +18,9 @@ General approach of writing test files:
 
 ## Example plugin
 
-In this file we will be testing 'hello_lines' plugin (once some basic concepts are introduced). It will have functionality to add prefix 'Hello ' to lines. It will have single file 'lua/hello_lines/init.lua' with the following content:
+In this file we will be testing 'hello_lines' plugin (once some basic concepts are introduced). It will have functionality to add prefix 'Hello ' to lines implemented in a single file 'lua/hello_lines/init.lua':
 
-<details><summary>'hello_lines/init.lua'</summary>
+<details><summary>'lua/hello_lines/init.lua'</summary>
 
 ```lua
 local M = {}
@@ -131,14 +131,14 @@ Overview of full file structure used in for testing 'hello_lines' plugin:
 ```
 .
 ├── deps
-│   └── mini.nvim # Mandatory
+│   └── mini.nvim # Mandatory
 ├── lua
-│   └── hello_lines
-│       └── init.lua # Mandatory
+│   └── hello_lines
+│       └── init.lua # Mandatory
 ├── Makefile # Recommended
 ├── scripts
-│   ├── minimal_init.lua # Mandatory
-│   └── minitest.lua # Recommended
+│   ├── minimal_init.lua # Mandatory
+│   └── minitest.lua # Recommended
 └── tests
     └── test_hello_lines.lua # Mandatory
 ```
@@ -150,71 +150,71 @@ Mandatory:
 - **Your Lua plugin in 'lua' directory**. Here we will be testing 'hello_lines' plugin.
 - **Test files**. By default they should be Lua files located in 'tests/' directory and named with 'test_' prefix. For example, we will write everything in 'test_hello_lines.lua'. It is usually a good idea to follow this template (will be assumed for the rest of this file):
 
-<details><summary>Template for test files</summary>
+    <details><summary>Template for test files</summary>
 
-```lua
-local new_set = MiniTest.new_set
-local expect, eq = MiniTest.expect, MiniTest.expect.equality
+    ```lua
+    local new_set = MiniTest.new_set
+    local expect, eq = MiniTest.expect, MiniTest.expect.equality
 
-local T = new_set()
+    local T = new_set()
 
--- Actual tests definitions will go here
+    -- Actual tests definitions will go here
 
-return T
-```
+    return T
+    ```
 
-</details><br>
+    </details><br>
 
 - **'mini.nvim' dependency**. It is needed to use its 'mini.test' module. Proposed way to store it is in 'deps/mini.nvim' directory. Create it with `git`:
 
-```bash
-mkdir -p deps
-git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim
-```
+    ```bash
+    mkdir -p deps
+    git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim
+    ```
 
 - **Manual Neovim startup file** (a.k.a 'init.lua') with proposed path 'scripts/minimal_init.lua'. It will be used to ensure that Neovim processes can recognize your tested plugin and 'mini.nvim' dependency. Proposed minimal content:
 
-<details><summary>'scripts/minimal_init.lua'</summary>
+    <details><summary>'scripts/minimal_init.lua'</summary>
 
-```lua
--- Add current directory to 'runtimepath' to be able to use 'lua' files
-vim.cmd([[let &rtp.=','.getcwd()]])
+    ```lua
+    -- Add current directory to 'runtimepath' to be able to use 'lua' files
+    vim.cmd([[let &rtp.=','.getcwd()]])
 
--- Set up 'mini.test' only when calling headless Neovim (like with `make test`)
-if #vim.api.nvim_list_uis() == 0 then
-  -- Add 'mini.nvim' to 'runtimepath' to be able to use 'mini.test'
-  -- Assumed that 'mini.nvim' is stored in 'deps/mini.nvim'
-  vim.cmd('set rtp+=deps/mini.nvim')
+    -- Set up 'mini.test' only when calling headless Neovim (like with `make test`)
+    if #vim.api.nvim_list_uis() == 0 then
+      -- Add 'mini.nvim' to 'runtimepath' to be able to use 'mini.test'
+      -- Assumed that 'mini.nvim' is stored in 'deps/mini.nvim'
+      vim.cmd('set rtp+=deps/mini.nvim')
 
-  -- Set up 'mini.test'
-  require('mini.test').setup()
-end
-```
+      -- Set up 'mini.test'
+      require('mini.test').setup()
+    end
+    ```
 
-</details><br>
+    </details><br>
 
 Recommended:
 
 - **Makefile**. In order to simplify running tests from shell and inside Continuous Integration services (like Github Actions), it is recommended to define Makefile. It will define steps for running tests. Proposed template:
 
-<details><summary>Template for Makefile</summary>
+    <details><summary>Template for Makefile</summary>
 
-```
-# Run all test files
-test: deps/mini.nvim
-	nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run()"
+    ```
+    # Run all test files
+    test: deps/mini.nvim
+    	nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run()"
 
-# Run test from file at `$FILE` environment variable
-test_file: deps/mini.nvim
-	nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('$(FILE)')"
+    # Run test from file at `$FILE` environment variable
+    test_file: deps/mini.nvim
+    	nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('$(FILE)')"
 
-# Download 'mini.nvim' to use its 'mini.test' testing module
-deps/mini.nvim:
-	@mkdir -p deps
-	git clone --filter=blob:none https://github.com/echasnovski/mini.nvim $@
-```
+    # Download 'mini.nvim' to use its 'mini.test' testing module
+    deps/mini.nvim:
+    	@mkdir -p deps
+    	git clone --filter=blob:none https://github.com/echasnovski/mini.nvim $@
+    ```
 
-</details><br>
+    </details><br>
 
 - **'mini.test' script** at 'scripts/minitest.lua'. Use it to customize what is tested (which files, etc.) and how. Usually not needed, but otherwise should have some variant of a call to `MiniTest.run()`.
 
@@ -222,7 +222,7 @@ deps/mini.nvim:
 
 The 'mini.test' module out of the box supports two major ways of running tests:
 
-- **Interactive**. All test files will be run directly inside current Neovim session. This proved to be very useful for debugging while writing tests. To run tests, simply execute `:lua MiniTest.run()` or `:lua MiniTest.run_file()` (assuming, you already have 'mini.test' set up with `require('mini.test').setup()`). With default configuration this will result into floating window with information about results of test execution. Press `q` to close it. **Note**: Be careful though, as it might affect your current setup. To avoid this, [use child processes](#using-child-process) inside tests.
+- **Interactive**. All test files will be run directly inside current Neovim session. This proved to be very useful for debugging while writing tests. To run tests, simply execute `:lua MiniTest.run()` / `:lua MiniTest.run_file()` / `:lua MiniTest.run_at_location()` (assuming, you already have 'mini.test' set up with `require('mini.test').setup()`). With default configuration this will result into floating window with information about results of test execution. Press `q` to close it. **Note**: Be careful though, as it might affect your current setup. To avoid this, [use child processes](#using-child-process) inside tests.
 - **Headless** (from shell). Start headless Neovim process with proper startup file and execute `lua MiniTest.run()`. Assuming full file organization from previous section, this can be achieved with `make test`. This will show information about results of test execution directly in shell.
 
 
@@ -254,7 +254,7 @@ local T = MiniTest.new_set()
 
 T['works'] = function()
   local x = 1 + 1
-  MiniTest.expect(x, 2)
+  MiniTest.expect.equality(x, 2)
 end
 
 return T
@@ -312,7 +312,7 @@ Although this is possible, the rest of this file will use a recommended test set
 
 ### Builtin expectations
 
-There are four builtin expectations:
+These four builtin expectations are the ones used most commonly:
 
 ```lua
 local T = MiniTest.new_set()
@@ -556,7 +556,7 @@ FAIL in "tests/test_basics.lua | MiniTest.current.case":
 
 ### Case helpers
 
-There are some functions intended to help writing more robust cases: `skip()`, `finally()`, and `add_note()`. The `MiniTest.current` table with all 
+There are some functions intended to help writing more robust cases: `skip()`, `finally()`, and `add_note()`. The `MiniTest.current` table contains useful information about the current state of tests execution.
 
 Example:
 
@@ -611,7 +611,7 @@ NOTE in "tests/test_basics.lua | finally()": This test is flaky.
 Test run consists from two stages:
 
 - **Collection**. It will source each appropriate file (customizable), combine all test sets into single test set, convert it from hierarchical to sequential form (array of test cases), and filter cases based on customizable predicate.
-- **Execution**. It will safely execute array of test cases (with each pre-hooks, test action, post-hooks) one after another in scheduled asynchronous fashion while collecting information about it went and calling customizable reporter methods.
+- **Execution**. It will safely execute array of test cases (with each pre-hooks, test action, post-hooks) one after another in scheduled asynchronous fashion while collecting information about how it went and calling customizable reporter methods.
 
 All configuration goes into `opts` argument of `MiniTest.run()`.
 
@@ -636,7 +636,8 @@ T['slow']['second test'] = function() vim.loop.sleep(1000) end
 return T
 ```
 
-You can run only this file ('tests/test_basics.lua') and only "fast" cases with
+You can run only this file ('tests/test_basics.lua') and only "fast" cases with this call:
+
 ```lua
 MiniTest.run({
   collect = {
@@ -648,7 +649,7 @@ MiniTest.run({
 
 ### Execution: custom reporter and stop on first error
 
-You can customize execution of test cases with custom reporter (how test results are displayed in real time) and whether to stop on first error. Execution doesn't result into any output, instead it updates `MiniTest.current.all_cases` in place: each case gets an `exec` field with information about how its execution went.
+You can customize execution of test cases with custom reporter (how test results are displayed in real time) and whether to stop execution after the first test case fail/error. Execution doesn't result into any output, instead it updates `MiniTest.current.all_cases` in place: each case gets an `exec` field with information about how its execution went.
 
 Example of showing status summary table in the command line after everything is finished:
 
@@ -659,7 +660,7 @@ local reporter = {
     local summary = {}
     for _, c in ipairs(MiniTest.current.all_cases) do
       local state = c.exec.state
-      summary[state] = summary[state] == nil and 1 or (summary[state] + 1)
+      summary[state] = (summary[state] or 0) + 1
     end
 
     print(vim.inspect(summary, { newline = ' ', indent = '' }))
@@ -671,15 +672,15 @@ MiniTest.run({ execute = { reporter = reporter } })
 
 ## Using child process
 
-Main feature of 'mini.test' which differs it from other Lua testing frameworks is its design towards **custom usage of child Neovim process inside tests**. Ultimately, each test should be done with fresh Neovim process initialized with bare minimum setup (like allowing to load your plugin). To make this easier, there is a dedicated function `MiniTest.new_child_neovim()`. It returns an object with many useful helper methods, like for start/stop/restart, redirected execution (write code in current process, it gets executed in child one), emulating typing keys, **testing screen state**, etc.
+Main feature of 'mini.test' which makes it different from other Lua testing frameworks is its design towards **custom usage of child Neovim process inside tests**. Ultimately, each test should be done with fresh Neovim process initialized with bare minimum setup (like allowing to load your plugin). To make this easier, there is a dedicated function `MiniTest.new_child_neovim()`. It returns an object with many useful helper methods, like for start/stop/restart, redirected execution (write code in current process, it gets executed in child one), emulating typing keys, **testing screen state**, etc.
 
 ### Start/stop/restart
 
-You can start/stop/restart child process associated with this child Neovim object. Current (from which testing is initiated) and child Neovim processes can "talk" to each through RPC messages (see `:h RPC`). It means you can programmatically execute code inside child process, get some output, and test if it meets your expectation. Also by default child process is "full" (i.e. not headless) which allows you to test things such as extmarks, floating windows, etc.
+You can start/stop/restart child process associated with this child Neovim object. Current (from which testing is initiated) and child Neovim processes can "talk" to each through RPC messages (see `:h RPC`). It means you can programmatically execute code inside child process, get its output inside current process, and test if it meets your expectation. Child process is headless but fully functioning process which allows you to test things such as extmarks, floating windows, etc.
 
 Although this approach proved to be useful and efficient, it is not ideal. Here are some limitations:
-  - Due to current RPC protocol implementation functions and userdata can't be used in both input and output with child process. Indicator of this issue is a `Cannot convert given lua type` error. Usual solution is to move some logic on the side of child process, like create and use global functions (those will be "forgotten" after next restart).
-  - Sometimes hanging process will occur: it stops executing without any output. Most of the time it is because Neovim process is "blocked", i.e. it waits for user input and won't return from other call. Common causes are active hit-enter-prompt (increase prompt height to a bigger value) or Operator-pending mode (exit it). To mitigate this experience, most helper methods will throw an error if they can deduct that immediate execution will lead to hanging state.
+  - Due to current RPC protocol implementation functions and userdata can't be used in both input and output with child process. Indicator of this issue is a `Cannot convert given lua type` error. Usual solution is to move some logic on the side of child process, like create and use global functions (note that they will be "forgotten" after next restart).
+  - Sometimes hanging process will occur: it stops executing without any output. Most of the time it is because Neovim process is "blocked", i.e. it waits for user input and won't return from other call. Common causes are active hit-enter-prompt (solution: increase prompt height to a bigger value) or Operator-pending mode (solution: exit it). To mitigate this experience, most helper methods will throw an error if they can deduce that immediate execution will lead to hanging state.
 
 Here is recommended setup for managing child processes. It will make fresh Neovim process before every test case:
 
@@ -731,7 +732,7 @@ T['lua()']['works'] = function()
 end
 
 T['lua()']['can use tested plugin'] = function()
-  eq(child.lua([[return M.compute()]]), { 'Hello world' })
+  eq(child.lua('return M.compute()'), { 'Hello world' })
   eq(child.lua([[return M.compute({'a', 'b'})]]), { 'Hello a', 'Hello b' })
 end
 
@@ -745,7 +746,7 @@ return T
 
 ### Managing Neovim options and state
 
-Although ability to execute arbitrary Lua code is technically enough to write any tests, it gets cumbersome very quickly due to ability to only take string. That is why there are many convenience helpers with the same idea: write code inside current Neovim process that will be automatically executed same way in child process. Here is the showcase:
+Although ability to execute arbitrary Lua code is technically enough to write any tests, it gets cumbersome very quickly due it using only string input. That is why there are many convenience helpers with the same idea: write code inside current Neovim process that will be automatically executed same way in child process. Here is the showcase:
 
 ```lua
 local new_set = MiniTest.new_set
@@ -769,9 +770,9 @@ local T = MiniTest.new_set({
 T['api()/api_notify()'] = function()
   -- Set option. For some reason, first buffer is 'readonly' which leads to
   -- high delay in test execution
-  child.api.nvim_buf_set_option(0, 'readonly', false)
+  child.api.nvim_set_option_value('readonly', false, { buf = 0 })
 
-  -- Set lal lines
+  -- Set all lines
   child.api.nvim_buf_set_lines(0, 0, -1, true, { 'aaa' })
 
   -- Get all lines and test with expected ones
@@ -780,15 +781,15 @@ end
 
 -- Execute Vimscript with or without capturing its output
 T['cmd()/cmd()'] = function()
-  child.cmd('hi Comment guifg=#AAAAAA')
-  eq(child.cmd_capture('hi Comment'), 'Comment        xxx ctermfg=14 guifg=#aaaaaa')
+  child.cmd('hi Comment guifg=#aaaaaa')
+  eq(child.cmd_capture('hi Comment'), 'Comment        xxx guifg=#aaaaaa')
 end
 
 -- There are redirection tables for most of the main Neovim functionality
 T['various redirection tables with methods'] = function()
   eq(child.fn.fnamemodify('hello_lines.lua', ':t:r'), 'hello_lines')
   eq(child.loop.hrtime() > 0, true)
-  eq(child.lsp.get_active_clients(), {})
+  eq(child.lsp.get_clients(), {})
 
   -- And more
 end
@@ -862,7 +863,7 @@ return T
 
 ### Test screen state with screenshots
 
-One of the main difficulties in testing Neovim plugins is verifying that something is actually displayed in the way you intend. Like general highlighting, statusline, tabline, sign column, extmarks, etc. Testing screen state with screenshots makes this a lot easier. There is a `child.get_screenshot()` method which basically calls `screenstring()` (`:h screenstring()`) and `screenattr()` (`:h screenattr()`) for every visible cell (row from 1 to 'lines' option, column from 1 to 'columns' option). It then returns two layers of screenshot:
+One of the main difficulties in testing Neovim plugins is verifying that something is actually displayed in the way you intend. Like general highlighting, statusline, tabline, sign column, extmarks, etc. Testing screen state with screenshots makes this a lot easier. There is a `child.get_screenshot()` method which basically calls `screenstring()` (`:h screenstring()`) and `screenattr()` (`:h screenattr()`) for every visible cell (row from 1 to 'lines' option, column from 1 to 'columns' option). It then returns screenshot with two layers:
 
 - <text> - "2d array" (row-column) of single characters displayed at particular cells.
 - <attr> - "2d array" (row-column) of symbols representing how text is displayed (basically, "coded" appearance/highlighting). They should be used only in relation to each other: same/different symbols for two cells mean same/different visual appearance. Note: there will be false positives if there are more than 94 different attribute values. To make output more portable and visually useful, outputs of `screenattr()` are coded with single character symbols.
@@ -929,6 +930,8 @@ This will result into three files in 'tests/screenshots' with names containing t
 09|333333333333333
 10|444444444444444
 ```
+
+To update already existing screenshot either delete the corresponding screenshot file and rerun test case or temporarily add `{ force = true }` option to `reference_screenshot()` to force updating the screenshot file.
 
 ## General tips
 
