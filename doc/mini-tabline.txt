@@ -129,8 +129,8 @@ Make string for |tabline|
 Default tab format
 
 Used by default as `config.format`.
-Prepends label with padded icon (if `show_icon` from |MiniTabline.config|
-is `true`) and surrounds label with single space.
+Prepends label with padded icon based on buffer's name (if `show_icon`
+in |MiniTabline.config| is `true`) and surrounds label with single space.
 Note: it is meant to be used only as part of `format` in |MiniTabline.config|.
 
 Parameters ~

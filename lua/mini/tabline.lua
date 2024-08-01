@@ -153,8 +153,8 @@ end
 --- Default tab format
 ---
 --- Used by default as `config.format`.
---- Prepends label with padded icon (if `show_icon` from |MiniTabline.config|
---- is `true`) and surrounds label with single space.
+--- Prepends label with padded icon based on buffer's name (if `show_icon`
+--- in |MiniTabline.config| is `true`) and surrounds label with single space.
 --- Note: it is meant to be used only as part of `format` in |MiniTabline.config|.
 ---
 ---@param buf_id number Buffer identifier.
@@ -163,7 +163,7 @@ end
 ---@return string Formatted label.
 MiniTabline.default_format = function(buf_id, label)
   if H.get_icon == nil then return string.format(' %s ', label) end
-  return string.format(' %s %s ', H.get_icon(label), label)
+  return string.format(' %s %s ', H.get_icon(vim.api.nvim_buf_get_name(buf_id)), label)
 end
 
 -- Helper data ================================================================
@@ -538,7 +538,8 @@ H.ensure_get_icon = function(config)
     -- Try falling back to 'nvim-web-devicons'
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
     if not has_devicons then return end
-    H.get_icon = function(name) return (devicons.get_icon(name, nil, { default = true })) end
+    -- Use basename because it makes exact file name matching work
+    H.get_icon = function(name) return (devicons.get_icon(vim.fn.fnamemodify(name, ':t'), nil, { default = true })) end
   end
 end
 

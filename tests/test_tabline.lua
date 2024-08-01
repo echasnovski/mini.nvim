@@ -591,6 +591,27 @@ T['default_format()']['works'] = function()
   eq(eval_tabline(true), '%#MiniTablineHidden#_ LICENSE _%#MiniTablineCurrent#_ init.lua _%#MiniTablineFill#')
 end
 
+T['default_format()']['uses full buffer name to compute icon with "mini.icons"'] = function()
+  child.lua([[
+    require("mini.icons").setup()
+    _G.icons_log = {}
+    local orig_get = MiniIcons.get
+    MiniIcons.get = function(...)
+      table.insert(_G.icons_log, { ... })
+      return orig_get(...)
+    end
+  ]])
+
+  edit('LICENSE')
+  eq(child.lua_get('_G.icons_log'), { { 'file', child.api.nvim_buf_get_name(0) } })
+end
+
+T['default_format()']['uses buffer basename to compute icon with "nvim-web-devicons"'] = function()
+  child.cmd('set rtp+=tests/dir-tabline')
+  edit('LICENSE')
+  eq(child.lua_get('_G.devicons_args'), { filename = 'LICENSE', options = { default = true } })
+end
+
 -- Integration tests ==========================================================
 T['Screen'] = new_set()
 
