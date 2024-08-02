@@ -1036,7 +1036,7 @@ end
 ---
 --- For more information see |MiniTest-child-neovim|.
 ---
----@return `child` Object of |MiniTest-child-neovim|.
+---@return MiniTest.child `child` Object of |MiniTest-child-neovim|.
 ---
 ---@usage >lua
 ---   -- Initiate
@@ -1061,6 +1061,7 @@ end
 ---   child.stop()
 --- <
 MiniTest.new_child_neovim = function()
+  ---@class MiniTest.child
   local child = {}
   local start_args, start_opts
 
@@ -1076,7 +1077,14 @@ MiniTest.new_child_neovim = function()
     H.error_with_emphasis(msg)
   end
 
-  -- Start headless Neovim instance
+  --- `child.start()` options.
+  ---@class MiniTest.child.start.opts
+  ---@field nvim_executable? string Name of Neovim executable. Default: `v:progpath`.
+  ---@field connection_timeout? integer Stop trying to connect after this amount of milliseconds. Default: 5000.
+
+  --- Start child process and connect to it. Won't work if child is already running.
+  ---@param args string[]? Array with arguments for executable. Will be prepended with the following default arguments: `{ '--clean', '-n', '--listen', <some address>, '--headless', '--cmd', 'set lines=24 columns=80' }`.
+  ---@param opts MiniTest.child.start.opts? Options.
   child.start = function(args, opts)
     if child.is_running() then
       H.message('Child process is already running. Use `child.restart()`.')
@@ -1121,10 +1129,18 @@ MiniTest.new_child_neovim = function()
       child.stop()
     end
 
+    ---@class MiniTest.child.job
+    ---@field address string Listen address.
+    ---@field id integer Job ID.
+    ---@field channel integer Channel ID.
+
+    --- Information about current job. If `nil`, child is not running.
+    ---@type MiniTest.child.job?
     child.job = job
     start_args, start_opts = args, opts
   end
 
+  --- Stop current child process.
   child.stop = function()
     if not child.is_running() then return end
 
@@ -1145,6 +1161,11 @@ MiniTest.new_child_neovim = function()
     child.job = nil
   end
 
+  --- Restart child process: stop if running and then
+  --- start a new one. Takes same arguments as `child.start()` but uses values
+  --- from most recent `start()` call as defaults.
+  ---@param args string[]? Array with arguments for executable. Will be prepended with the following default arguments: `{ '--clean', '-n', '--listen', <some address>, '--headless', '--cmd', 'set lines=24 columns=80' }`.
+  ---@param opts MiniTest.child.start.opts? Options.
   child.restart = function(args, opts)
     args = args or start_args
     opts = vim.tbl_deep_extend('force', start_opts or {}, opts or {})
@@ -1233,6 +1254,14 @@ MiniTest.new_child_neovim = function()
   end
 
   -- Convenience wrappers
+
+  --- Basically a wrapper for `nvim_input()` applied inside child process.
+  --- Differences:
+  --- - Can wait after each group of characters.
+  --- - Raises error if typing keys resulted into error in child process (i.e. its `v:errmsg` was updated).
+  --- - Key `<` as separate entry may not be escaped as `<LT>`.
+  ---@param wait integer|string|string[] Number of milliseconds to wait after each entry. May be omitted, in which case no waiting is done.
+  ---@param ... string|string[] Separate entries for `nvim_input()`, after which `wait` will be applied.
   child.type_keys = function(wait, ...)
     ensure_running()
 
@@ -1270,39 +1299,73 @@ MiniTest.new_child_neovim = function()
       end
 
       -- Possibly wait
-      if has_wait and wait > 0 then vim.loop.sleep(wait) end
+      if has_wait and wait > 0 then
+        ---@cast wait number
+        vim.loop.sleep(wait)
+      end
     end
   end
 
+  --- Execute Vimscript code from a string.
+  --- A wrapper for `nvim_exec()` without capturing output.
+  ---@param str string Vimscript code to execute
+  ---@return ""
   child.cmd = function(str)
     ensure_running()
     prevent_hanging('cmd')
     return child.api.nvim_exec(str, false)
   end
 
+  --- Execute Vimscript code from a string and capture output.
+  --- A wrapper for `nvim_exec()` with capturing output.
+  ---@param str string Vimscript code to execute
+  ---@return string
   child.cmd_capture = function(str)
     ensure_running()
     prevent_hanging('cmd_capture')
     return child.api.nvim_exec(str, true)
   end
 
+  --- Types allowed for RPC
+  ---@alias MiniTest.child.RPC_types vim.NIL|boolean|string|number|integer|table
+
+  --- Execute Lua code. A wrapper for `nvim_exec_lua()`.
+  ---@param str string Lua code to execute
+  ---@param args MiniTest.child.RPC_types[]? Arguments to the code
+  ---@return any #Return value of the Lua code if present or NIL
   child.lua = function(str, args)
     ensure_running()
     prevent_hanging('lua')
     return child.api.nvim_exec_lua(str, args or {})
   end
 
+  --- Execute Lua code without waiting for output.
+  ---@param str string Lua code to execute
+  ---@param args MiniTest.child.RPC_types[]? Arguments to the code
+  ---@return any #Return value of the Lua code if present or NIL
   child.lua_notify = function(str, args)
     ensure_running()
     return child.api_notify.nvim_exec_lua(str, args or {})
   end
 
+  --- Execute Lua code and return result. A wrapper
+  --- for `nvim_exec_lua()` but prepends string code with `return`.
+  ---@param str string Lua code to execute
+  ---@param args MiniTest.child.RPC_types[]? Arguments to the code
+  ---@return any #Return value of the Lua code if present or NIL
   child.lua_get = function(str, args)
     ensure_running()
     prevent_hanging('lua_get')
     return child.api.nvim_exec_lua('return ' .. str, args or {})
   end
 
+  --- Execute lua function and return its result.
+  --- Function will be called with all extra arguments.
+  --- Note: usage of upvalues is not allowed.
+  ---@generic T: MiniTest.child.RPC_types, U: MiniTest.child.RPC_types
+  ---@param f fun(...: U): T?
+  ---@param ... U
+  ---@return T
   child.lua_func = function(f, ...)
     ensure_running()
     prevent_hanging('lua_func')
@@ -1312,19 +1375,60 @@ MiniTest.new_child_neovim = function()
     )
   end
 
+  --- Check whether child process is blocked.
+  ---@return boolean
   child.is_blocked = function()
     ensure_running()
     return child.api.nvim_get_mode()['blocking']
   end
 
+  --- Check whether child process is currently running.
+  ---@return boolean
   child.is_running = function() return child.job ~= nil end
 
   -- Various wrappers
+
+  --- Ensure normal mode.
   child.ensure_normal_mode = function()
     ensure_running()
     child.type_keys([[<C-\>]], '<C-n>')
   end
 
+  --- `child.get_screenshot()` options
+  ---@class MiniTest.child.get_screenshot.opts
+  ---@field redraw? boolean Whether to call `:redraw` prior to computing screenshot. Default: `true`.
+
+  --- Child neovim screenshot. A table with the following fields:
+  ---
+  --- - `text` - "2d array" (row-column) of single characters displayed at
+  ---   particular cells.
+  --- - `attr` - "2d array" (row-column) of symbols representing how text is
+  ---   displayed (basically, "coded" appearance/highlighting).
+  ---
+  --- They should be used only in relation to each other: same/different symbols for
+  --- two cells mean same/different visual appearance. Note: there will be false
+  --- positives if there are more than 94 different attribute values.
+  ---
+  --- It also can be used with `tostring()` to convert to single string (used
+  --- for writing to reference file). It results into two visual parts
+  --- (separated by empty line), for `text` and `attr`. Each part has "ruler"
+  --- above content and line numbers for each line.
+  ---@class MiniTest.child.screenshot
+  ---@field text string[][] "2d array" (row-column) of single characters displayed at particular cells.
+  ---@field attr string[][] "2d array" (row-column) of symbols representing how text is displayed (basically, "coded" appearance/highlighting).
+
+  --- Compute what is displayed on (default TUI) screen and how it is displayed.
+  --- This basically calls `screenstring()` and `screenattr()` for every visible
+  --- cell (row from 1 to `lines`, column from 1 to `columns`).
+  ---
+  --- Notes:
+  --- - To make output more portable and visually useful, outputs of
+  ---   `screenattr()` are coded with single character symbols. Those are taken from
+  ---   94 characters (ASCII codes between 33 and 126), so there will be duplicates
+  ---   in case of more than 94 different ways text is displayed on screen.
+  --- Compute what is displayed on screen and how it is displayed
+  ---@param opts MiniTest.child.get_screenshot.opts? Options.
+  ---@return MiniTest.child.screenshot?
   child.get_screenshot = function(opts)
     ensure_running()
     prevent_hanging('get_screenshot')
@@ -1353,6 +1457,35 @@ MiniTest.new_child_neovim = function()
 
   -- Register `child` for automatic stop in case of emergency
   table.insert(H.child_neovim_registry, child)
+
+  -- A trick to fool lua-language-server into assigning vim types to the child methods
+  if false then
+    child.api = vim.api
+    child.api_notify = vim.api
+    child.fn = vim.fn
+    -- Variables
+    child.g = vim.g
+    child.b = vim.b
+    child.w = vim.w
+    child.t = vim.t
+    child.v = vim.v
+    child.env = vim.env
+    -- Options
+    child.o = vim.o
+    child.go = vim.go
+    child.bo = vim.bo
+    child.wo = vim.wo
+    -- Collections
+    child.loop = vim.uv
+    child.diagnostic = vim.diagnostic
+    child.highlight = vim.highlight
+    child.json = vim.json
+    child.lsp = vim.lsp
+    child.mpack = vim.mpack
+    child.spell = vim.spell
+    child.treesitter = vim.treesitter
+    child.ui = vim.ui
+  end
 
   return child
 end
