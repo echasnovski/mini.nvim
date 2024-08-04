@@ -354,6 +354,16 @@ end
 T['show_at_cursor()']['works on nothing'] = function()
   expect.no_error(show_at_cursor)
   validate_notifications({ { '(mini.git) Nothing Git-related to show at cursor', 'WARN' } })
+  clear_notify_log()
+
+  -- Should work in non-path buffers
+  set_buf(new_scratch_buf())
+  child.api.nvim_buf_set_name(0, 'minigit://2/git show')
+  clear_spawn_log()
+  expect.no_error(show_at_cursor)
+  validate_notifications({ { '(mini.git) Nothing Git-related to show at cursor', 'WARN' } })
+  -- - Should not try to find git directory in "show range history" stage
+  validate_git_spawn_log({})
 end
 
 T['show_diff_source()'] = new_set({

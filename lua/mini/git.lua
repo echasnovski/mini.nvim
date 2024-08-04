@@ -1170,6 +1170,7 @@ H.define_minigit_window = function(cleanup)
 end
 
 H.git_cli_output = function(args, cwd, env)
+  if cwd ~= nil and vim.fn.isdirectory(cwd) ~= 1 then return {} end
   local command = { MiniGit.config.job.git_executable, '--no-pager', unpack(args) }
   local res = H.cli_run(command, cwd, nil, { env = env }).out
   if res == '' then return {} end
