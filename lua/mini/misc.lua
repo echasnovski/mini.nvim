@@ -296,6 +296,8 @@ H.root_cache = {}
 --- Primary use case is to remove possible "frame" around current Neovim instance
 --- which appears if Neovim's |hl-Normal| background color differs from what is
 --- used by terminal emulator itself.
+---
+--- Make sure to call it only during interactive session in terminal emulator.
 MiniMisc.setup_termbg_sync = function()
   local augroup = vim.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = true })
   local f = function(args)
