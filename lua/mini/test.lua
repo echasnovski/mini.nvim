@@ -1089,6 +1089,13 @@ MiniTest.new_child_neovim = function()
     -- Make unique name for `--listen` pipe
     local job = { address = vim.fn.tempname() }
 
+    if vim.fn.has('win32') == 1 then
+      -- For windows, need to add the local pipe prefix. We add the end of the value
+      -- returned from tempname to hopefully get something unique
+      -- https://learn.microsoft.com/en-us/windows/win32/ipc/pipe-names
+      job.address = '\\\\.\\pipe\\mininvim' .. vim.fn.fnamemodify(job.address, ':t')
+    end
+
     --stylua: ignore
     local full_args = {
       opts.nvim_executable, '--clean', '-n', '--listen', job.address,
