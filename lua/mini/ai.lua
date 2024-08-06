@@ -1425,7 +1425,7 @@ H.find_textobject_region = function(tobj_spec, ai_type, opts)
   end
 
   -- Convert to region
-  return neigh.span_to_region(final_span)
+  return neigh.span_to_region(final_span, find_res.vis_mode)
 end
 
 H.get_default_opts = function()
@@ -1540,11 +1540,10 @@ end
 ---@param opts table Fields: <search_method>.
 ---@private
 H.find_best_match = function(neighborhood, tobj_spec, reference_span, opts)
-  local best_span, best_nested_pattern, current_nested_pattern
-  local f = function(span)
+  local best_span, best_nested_pattern, best_vis_mode, current_nested_pattern
+  local f = function(span, vis_mode)
     if H.is_better_span(span, best_span, reference_span, opts) then
-      best_span = span
-      best_nested_pattern = current_nested_pattern
+      best_span, best_nested_pattern, best_vis_mode = span, current_nested_pattern, vis_mode
     end
   end
 
@@ -1552,7 +1551,7 @@ H.find_best_match = function(neighborhood, tobj_spec, reference_span, opts)
     -- Iterate over all spans representing regions in array
     for _, region in ipairs(tobj_spec) do
       -- Consider region only if it is completely within neighborhood
-      if neighborhood.is_region_inside(region) then f(neighborhood.region_to_span(region)) end
+      if neighborhood.is_region_inside(region) then f(neighborhood.region_to_span(region), region.vis_mode) end
     end
   else
     -- Iterate over all matched spans
@@ -1564,7 +1563,7 @@ H.find_best_match = function(neighborhood, tobj_spec, reference_span, opts)
 
   local extract_pattern
   if best_nested_pattern ~= nil then extract_pattern = best_nested_pattern[#best_nested_pattern] end
-  return { span = best_span, extract_pattern = extract_pattern }
+  return { span = best_span, vis_mode = best_vis_mode, extract_pattern = extract_pattern }
 end
 
 H.iterate_matched_spans = function(line, nested_pattern, f)
@@ -1842,12 +1841,12 @@ H.get_neighborhood = function(reference_region, n_neighbors)
   end
 
   -- Convert 1d span to 2d region
-  local span_to_region = function(span)
+  local span_to_region = function(span, vis_mode)
     if span == nil then return nil end
     -- NOTE: this might lead to outside of line positions due to added `\n` at
     -- the end of lines in 1d-neighborhood. However, this is crucial for
     -- allowing `i` textobjects to collapse multiline selections.
-    local res = { from = offset_to_pos(span.from) }
+    local res = { from = offset_to_pos(span.from), vis_mode = vis_mode }
 
     -- Convert empty span to empty region
     if span.from < span.to then res.to = offset_to_pos(span.to - 1) end
