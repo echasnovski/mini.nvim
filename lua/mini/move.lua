@@ -224,6 +224,10 @@ MiniMove.move_selection = function(direction, opts)
   -- Save original state of z register
   local cache_z_reg = vim.fn.getreginfo('z')
 
+  -- If buffer has no lines, deletion is a no-op and won't set the register, so
+  -- set it to a safe default.
+  vim.fn.setreg('z', '')
+
   -- Cut into z register
   cmd('"zx')
 
@@ -344,6 +348,10 @@ MiniMove.move_line = function(direction, opts)
 
   -- Save original state of z register
   local cache_z_reg = vim.fn.getreginfo('z')
+
+  -- If buffer has no lines, deletion is a no-op and won't set the register, so
+  -- set it to a safe default.
+  vim.fn.setreg('z', '')
 
   -- Cut current line into z register
   cmd('"zdd')
