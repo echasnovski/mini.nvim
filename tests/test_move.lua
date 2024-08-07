@@ -109,6 +109,26 @@ T['move_selection()'] = new_set()
 
 local move = function(direction, opts) child.lua('MiniMove.move_selection(...)', { direction, opts }) end
 
+T['move_selection()']['is no-op on empty buffer'] = function()
+  for _ = 1, 2 do
+    -- First, try with registers unset
+    for _, visual_mode in ipairs({ 'v', 'V' }) do
+      type_keys(visual_mode)
+      for _, direction in ipairs({ 'down', 'up', 'left', 'right' }) do
+        move(direction)
+        validate_state({ '' }, { { 1, 1 }, { 1, 1 } })
+      end
+    end
+
+    -- Try again with " and z registers set
+    child.fn.setreg('"', 'a')
+    child.fn.setreg('z', 'b')
+  end
+
+  eq(child.fn.getreg('"'), 'a')
+  eq(child.fn.getreg('z'), 'b')
+end
+
 T['move_selection()']['works charwise horizontally'] = function()
   -- Test for this many moves because there can be special cases when movement
   -- involves second or second to last character
@@ -909,6 +929,23 @@ T['move_selection()']['respects `vim.{g,b}.minimove_disable`'] = new_set({
 T['move_line()'] = new_set()
 
 local move_line = function(direction, opts) child.lua('MiniMove.move_line(...)', { direction, opts }) end
+
+T['move_line()']['is no-op on empty buffer'] = function()
+  for _ = 1, 2 do
+    -- First, try with registers unset
+    for _, direction in ipairs({ 'down', 'up', 'left', 'right' }) do
+      move_line(direction)
+      validate_state({ '' }, { { 1, 1 }, { 1, 1 } })
+    end
+
+    -- Try again with " and z registers set
+    child.fn.setreg('"', 'a')
+    child.fn.setreg('z', 'b')
+  end
+
+  eq(child.fn.getreg('"'), 'a')
+  eq(child.fn.getreg('z'), 'b')
+end
 
 T['move_line()']['works vertically'] = function()
   set_lines({ 'XX', 'aa', 'bb', 'cc' })
