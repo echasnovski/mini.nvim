@@ -1163,8 +1163,7 @@ MiniPick.default_choose_marked = function(items, opts)
   for _, item in ipairs(items) do
     local item_data = H.parse_item(item)
     if item_data.type == 'file' or item_data.type == 'buffer' or item_data.type == 'uri' then
-      local is_uri, uri_path = pcall(vim.uri_to_fname, item_data.path)
-      local entry = { bufnr = item_data.buf_id, filename = is_uri and uri_path or item_data.path }
+      local entry = { bufnr = item_data.buf_id, filename = H.parse_uri(item_data.path) or item_data.path }
       entry.lnum, entry.col, entry.text = item_data.lnum or 1, item_data.col or 1, item_data.text or ''
       entry.end_lnum, entry.end_col = item_data.end_lnum, item_data.end_col
       table.insert(list, entry)
@@ -1808,6 +1807,9 @@ H.querytick = 0
 
 -- General purpose cache
 H.cache = {}
+
+-- File system information
+H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -3031,7 +3033,7 @@ H.get_fs_type = function(path)
   if path == '' then return 'none' end
   if vim.fn.filereadable(path) == 1 then return 'file' end
   if vim.fn.isdirectory(path) == 1 then return 'directory' end
-  if pcall(vim.uri_to_fname, path) then return 'uri' end
+  if H.parse_uri(path) ~= nil then return 'uri' end
   return 'none'
 end
 
@@ -3131,9 +3133,7 @@ end
 H.choose_path = function(win_target, item_data)
   -- Try to use already created buffer, if present. This avoids not needed
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
-  local path, path_buf_id = item_data.path, nil
-  local is_uri, uri_path = pcall(vim.uri_to_fname, path)
-  path = is_uri and uri_path or path
+  local path, path_buf_id = H.parse_uri(item_data.path) or item_data.path, nil
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
     local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
     if is_target then path_buf_id = buf_id end
@@ -3420,6 +3420,17 @@ H.is_file_text = function(path)
 end
 
 H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$', '%1')) end
+if H.is_windows then
+  H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)[\\/]$', '%1')) end
+end
+
+H.parse_uri = function(x)
+  local ok, path = pcall(vim.uri_to_fname, x)
+  if not ok then return nil end
+  -- Don't accept Windows paths with volume letter as URI
+  if H.is_windows and x:find('^%a:') ~= nil and path:find('^%a:') ~= nil then return nil end
+  return path
+end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
