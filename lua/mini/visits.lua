@@ -1191,6 +1191,9 @@ H.cache = {
   session_start_time = os.time(),
 }
 
+-- File system information
+H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
@@ -1500,9 +1503,9 @@ H.error = function(msg) error(string.format('(mini.visits) %s', msg), 0) end
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
 H.buf_get_path = function(buf_id)
-  -- Get Path only for valid normal buffers
+  -- Get path only for valid normal buffers
   if not H.is_valid_buf(buf_id) or vim.bo[buf_id].buftype ~= '' then return nil end
-  local res = vim.api.nvim_buf_get_name(buf_id)
+  local res = H.full_path(vim.api.nvim_buf_get_name(buf_id))
   if res == '' then return end
   return res
 end
@@ -1549,12 +1552,20 @@ H.edit_path = function(path)
   end
 end
 
-H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
+H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
+if H.is_windows then
+  H.full_path = function(path)
+    return (vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1'))
+  end
+end
 
 H.short_path = function(path, cwd)
   cwd = cwd or vim.fn.getcwd()
-  if not vim.startswith(path, cwd) then return vim.fn.fnamemodify(path, ':~') end
-  local res = path:sub(cwd:len() + 1):gsub('^/+', ''):gsub('/+$', '')
+  -- Ensure `cwd` is treated as directory path (to not match similar prefix)
+  cwd = cwd:sub(-1) == '/' and cwd or (cwd .. '/')
+  if vim.startswith(path, cwd) then return path:sub(cwd:len() + 1) end
+  local res = vim.fn.fnamemodify(path, ':~')
+  if H.is_windows then res = res:gsub('\\', '/') end
   return res
 end
 
