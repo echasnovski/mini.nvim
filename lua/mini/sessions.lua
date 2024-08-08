@@ -185,7 +185,7 @@ MiniSessions.read = function(session_name, opts)
   end
 
   -- Write current session to allow proper switching between sessions
-  if vim.v.this_session ~= '' then MiniSessions.write(nil, { force = true, verbose = false }) end
+  if H.get_this_session() ~= '' then MiniSessions.write(nil, { force = true, verbose = false }) end
 
   -- Execute 'pre' hook
   H.possibly_execute(opts.hooks.pre, data)
@@ -248,12 +248,15 @@ MiniSessions.write = function(session_name, opts)
   H.possibly_execute(opts.hooks.pre, data)
 
   -- Make session file
-  local cmd = ('mksession%s'):format(opts.force and '!' or '')
-  vim.cmd(('%s %s'):format(cmd, vim.fn.fnameescape(session_path)))
+  local command = string.format('mksession%s %s', opts.force and '!' or '', vim.fn.fnameescape(session_path))
+  vim.cmd(command)
   data.modify_time = vim.fn.getftime(session_path)
 
   -- Update detected sessions
   MiniSessions.detected[data.name] = data
+
+  -- Update current session
+  vim.v.this_session = session_path
 
   -- Possibly notify
   if opts.verbose then H.message(('Written session %s'):format(session_path)) end
@@ -299,7 +302,7 @@ MiniSessions.delete = function(session_name, opts)
   if not H.validate_detected(session_name) then return end
   session_path = MiniSessions.detected[session_name].path
 
-  local is_current_session = session_path == vim.v.this_session
+  local is_current_session = session_path == H.get_this_session()
   if not opts.force and is_current_session then
     H.error([[Can't delete current session when `opts.force` is not `true`.]])
   end
@@ -453,7 +456,7 @@ H.create_autocommands = function(config)
 
   if config.autowrite then
     local autowrite = function()
-      if vim.v.this_session ~= '' then MiniSessions.write(nil, { force = true }) end
+      if H.get_this_session() ~= '' then MiniSessions.write(nil, { force = true }) end
     end
     vim.api.nvim_create_autocmd(
       'VimLeavePre',
@@ -506,14 +509,11 @@ H.detect_sessions_global = function(global_dir)
 end
 
 H.detect_sessions_local = function(local_file)
-  local f = H.join_path(vim.fn.getcwd(), local_file)
-
+  local f = vim.fn.getcwd() .. '/' .. local_file
   if not H.is_readable_file(f) then return {} end
 
-  local res = {}
   local s = H.new_session(f, 'local')
-  res[s.name] = s
-  return res
+  return { [s.name] = s }
 end
 
 H.new_session = function(session_path, session_type)
@@ -547,20 +547,20 @@ H.get_unsaved_listed_buffers = function()
   )
 end
 
-H.get_current_session_name = function() return vim.fn.fnamemodify(vim.v.this_session, ':t') end
+H.get_this_session = function() return H.fs_normalize(vim.v.this_session) end
 
 H.name_to_path = function(session_name)
   if session_name == nil then
-    if vim.v.this_session == '' then H.error('There is no active session. Supply non-nil session name.') end
-    return vim.v.this_session
+    local this_session = H.get_this_session()
+    if this_session == '' then H.error('There is no active session. Supply non-nil session name.') end
+    return this_session
   end
 
   session_name = tostring(session_name)
   if session_name == '' then H.error('Supply non-empty session name.') end
 
   local session_dir = (session_name == MiniSessions.config.file) and vim.fn.getcwd() or MiniSessions.config.directory
-  local path = H.join_path(session_dir, session_name)
-  return H.full_path(path)
+  return H.full_path(session_dir .. '/' .. session_name)
 end
 
 -- Utilities ------------------------------------------------------------------
@@ -599,11 +599,12 @@ end
 
 H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 
-H.join_path = function(directory, filename)
-  return (string.format('%s/%s', directory, filename):gsub('\\', '/'):gsub('/+', '/'))
+H.fs_normalize = vim.fs.normalize
+if vim.fn.has('nvim-0.9') == 0 then
+  H.fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
 end
 
-H.full_path = function(path) return vim.fn.resolve(vim.fn.fnamemodify(path, ':p')) end
+H.full_path = function(path) return H.fs_normalize(vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))) end
 
 H.is_something_shown = function()
   -- Don't autoread session if Neovim is opened to show something. That is
