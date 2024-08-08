@@ -808,11 +808,11 @@ end
 
 -- Default documentation targets ----------------------------------------------
 H.default_input = function()
-  -- Search in current and recursively in other directories for files with
-  -- 'lua' extension
+  -- Search in current and recursively in other directories for Lua files
   local res = {}
-  for _, dir_glob in ipairs({ '.', 'lua/**', 'after/**', 'colors/**' }) do
-    local files = vim.fn.globpath(dir_glob, '*.lua', false, true)
+  for _, dir in ipairs({ '.', 'lua', 'after', 'colors' }) do
+    local glob = (dir == '.' and '' or '**/') .. '*.lua'
+    local files = vim.fn.globpath(dir, glob, false, true)
 
     -- Use full paths
     files = vim.tbl_map(function(x) return vim.fn.fnamemodify(x, ':p') end, files)
