@@ -710,9 +710,11 @@ MiniDeps.get_session = function()
   -- Add 'start/' plugins that are in 'rtp'. NOTE: not whole session concept is
   -- built around presence in 'rtp' to 100% ensure to preserve the order in
   -- which user called `add()`.
-  local start_path = H.get_package_path() .. '/pack/deps/start'
+  local start_path = H.full_path(H.get_package_path() .. '/pack/deps/start')
   local pattern = string.format('^%s/([^/]+)$', vim.pesc(start_path))
-  for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
+  for _, runtime_path in ipairs(vim.api.nvim_list_runtime_paths()) do
+    -- Make sure plugin path is normalized (matters on Windows)
+    local path = H.full_path(runtime_path)
     local name = string.match(path, pattern)
     if name ~= nil then add_spec({ path = path, name = name, hooks = {}, depends = {} }) end
   end
