@@ -1175,9 +1175,10 @@ MiniExtra.pickers.oldfiles = function(local_opts, opts)
 
   local show_all = not local_opts.current_dir
   local items = vim.schedule_wrap(function()
-    local cwd = pick.get_picker_opts().source.cwd .. '/'
+    local cwd = H.normalize_path(pick.get_picker_opts().source.cwd) .. '/'
     local res = {}
     for _, path in ipairs(oldfiles) do
+      path = H.normalize_path(path)
       if vim.fn.filereadable(path) == 1 and (show_all or vim.startswith(path, cwd)) then
         table.insert(res, H.short_path(path, cwd))
       end
@@ -1419,14 +1420,14 @@ MiniExtra.pickers.visit_paths = function(local_opts, opts)
   local cwd = local_opts.cwd or vim.fn.getcwd()
   -- NOTE: Use separate cwd to allow `cwd = ''` to not mean "current directory"
   local is_for_cwd = cwd ~= ''
-  local picker_cwd = cwd == '' and vim.fn.getcwd() or H.full_path(cwd)
+  local picker_cwd = H.normalize_path(cwd == '' and vim.fn.getcwd() or H.full_path(cwd))
 
   -- Define source
   local filter = local_opts.filter or visits.gen_filter.default()
   local sort = local_opts.sort or visits.gen_sort.default({ recency_weight = local_opts.recency_weight })
   local items = vim.schedule_wrap(function()
     local paths = visits.list_paths(cwd, { filter = filter, sort = sort })
-    paths = vim.tbl_map(function(x) return H.short_path(x, picker_cwd) end, paths)
+    paths = vim.tbl_map(function(x) return H.normalize_path(H.short_path(x, picker_cwd)) end, paths)
     pick.set_picker_items(paths)
   end)
 
@@ -1488,7 +1489,7 @@ MiniExtra.pickers.visit_labels = function(local_opts, opts)
   local cwd = local_opts.cwd or vim.fn.getcwd()
   -- NOTE: Use separate cwd to allow `cwd = ''` to not mean "current directory"
   local is_for_cwd = cwd ~= ''
-  local picker_cwd = cwd == '' and vim.fn.getcwd() or H.full_path(cwd)
+  local picker_cwd = H.normalize_path(cwd == '' and vim.fn.getcwd() or H.full_path(cwd))
 
   local filter = local_opts.filter or visits.gen_filter.default()
   local items = visits.list_labels(local_opts.path, local_opts.cwd, { filter = filter })
@@ -1499,7 +1500,7 @@ MiniExtra.pickers.visit_labels = function(local_opts, opts)
       return filter(path_data) and type(path_data.labels) == 'table' and path_data.labels[label]
     end
     local all_paths = visits.list_paths(local_opts.cwd, { filter = new_filter, sort = local_opts.sort })
-    return vim.tbl_map(function(path) return H.short_path(path, picker_cwd) end, all_paths)
+    return vim.tbl_map(function(x) return H.normalize_path(H.short_path(x, picker_cwd)) end, all_paths)
   end
 
   local preview = function(buf_id, label) vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, list_label_paths(label)) end
@@ -1538,6 +1539,9 @@ H.ns_id = {
 
 -- Various cache
 H.cache = {}
+
+-- File system information
+H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -2040,13 +2044,17 @@ H.ensure_text_width = function(text, width)
 end
 
 H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)/$', '%1')) end
+H.normalize_path = function(path) return path end
+if H.is_windows then
+  H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('(.)[\\/]$', '%1')) end
+  H.normalize_path = function(path) return path:gsub('\\', '/') end
+end
 
 H.short_path = function(path, cwd)
   cwd = cwd or vim.fn.getcwd()
+  -- Ensure `cwd` is treated as directory path (to not match similar prefix)
   cwd = cwd:sub(-1) == '/' and cwd or (cwd .. '/')
-  if not vim.startswith(path, cwd) then return vim.fn.fnamemodify(path, ':~') end
-  local res = path:sub(cwd:len() + 1):gsub('^/+', ''):gsub('/+$', '')
-  return res
+  return vim.startswith(path, cwd) and path:sub(cwd:len() + 1) or vim.fn.fnamemodify(path, ':~')
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
