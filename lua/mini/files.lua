@@ -1602,9 +1602,11 @@ H.explorer_open_file = function(explorer, path)
 
   -- Try to use already created buffer, if present. This avoids not needed
   -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
+  path = H.fs_normalize_path(path)
   local path_buf_id
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
+    local is_same_name = H.fs_normalize_path(vim.api.nvim_buf_get_name(buf_id)) == path
+    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and is_same_name
     if is_target then path_buf_id = buf_id end
   end
 
@@ -2350,7 +2352,7 @@ end
 
 H.fs_normalize_path = function(path) return (path:gsub('/+', '/'):gsub('(.)/$', '%1')) end
 if H.is_windows then
-  H.fs_normalize_path = function(path) return (path:gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
+  H.fs_normalize_path = function(path) return (path:gsub('\\', '/'):gsub('/+', '/'):gsub('(.)[\\/]$', '%1')) end
 end
 
 H.fs_is_present_path = function(path) return vim.loop.fs_stat(path) ~= nil end
@@ -2363,8 +2365,7 @@ H.fs_shorten_path = function(path)
   -- Replace home directory with '~'
   path = H.fs_normalize_path(path)
   local home_dir = H.fs_normalize_path(vim.loop.os_homedir() or '~')
-  local res = path:gsub('^' .. vim.pesc(home_dir), '~')
-  return res
+  return (path:gsub('^' .. vim.pesc(home_dir), '~'))
 end
 
 H.fs_get_basename = function(path) return H.fs_normalize_path(path):match('[^/]+$') end
