@@ -432,11 +432,12 @@ MiniGit.show_range_history = function(opts)
 
   -- Construct `:Git log` command that works both with regular files and
   -- buffers from `show_diff_source()`
-  local buf_name = vim.api.nvim_buf_get_name(0)
-  local cwd = H.get_git_cwd()
+  local buf_name, cwd = vim.api.nvim_buf_get_name(0), H.get_git_cwd()
   local commit, rel_path = H.parse_diff_source_buf_name(buf_name)
   if commit == nil then
-    commit, rel_path = 'HEAD', buf_name:gsub(vim.pesc(cwd) .. '/', '')
+    commit = 'HEAD'
+    local cwd_pattern = '^' .. vim.pesc(cwd:gsub('\\', '/')) .. '/'
+    rel_path = buf_name:gsub('\\', '/'):gsub(cwd_pattern, '')
   end
 
   -- Ensure no uncommitted changes as they might result into improper `-L` arg
