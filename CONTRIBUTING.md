@@ -95,7 +95,7 @@ If your contribution updates annotations used to generate help file, please rege
 
 ## Testing
 
-If your contribution updates code and you use Linux (not Windows or MacOS), please make sure that it doesn't break existing tests. If it adds new functionality or fixes a recognized bug, add new test case(s). There are two ways of running tests:
+If your contribution updates code, please make sure that it doesn't break existing tests. If it adds new functionality or fixes a recognized bug, add new test case(s). There are two ways of running tests:
 
 - From command line:
     - Execute `make test` to run all tests (with `nvim` as executable).

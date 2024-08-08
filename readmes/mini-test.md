@@ -40,6 +40,7 @@ https://user-images.githubusercontent.com/24854248/175773105-f33cd3bb-6f62-4a61-
     - `MiniTest.gen_reporter.buffer()` for interactive usage.
     - `MiniTest.gen_reporter.stdout()` for headless Neovim.
 - Customizable project specific testing script.
+- Works on Unix (Linux, MacOS, etc.) and Windows.
 
 ## Installation
 

@@ -61,6 +61,10 @@
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
 
+## mini.test
+
+- FEATURE: make it work on Windows. By @cameronr, PR #1101.
+
 
 # Version 0.13.0
 

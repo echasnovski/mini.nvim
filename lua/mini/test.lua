@@ -32,6 +32,8 @@
 ---
 --- - Customizable project specific testing script.
 ---
+--- - Works on Unix (Linux, MacOS, etc.) and Windows.
+---
 --- What it doesn't support:
 --- - Parallel execution. Due to idea of limiting implementation complexity.
 ---
@@ -1088,6 +1090,12 @@ MiniTest.new_child_neovim = function()
 
     -- Make unique name for `--listen` pipe
     local job = { address = vim.fn.tempname() }
+
+    if vim.fn.has('win32') == 1 then
+      -- Use special local pipe prefix on Windows with (hopefully) unique name
+      -- Source: https://learn.microsoft.com/en-us/windows/win32/ipc/pipe-names
+      job.address = [[\\.\pipe\mininvim]] .. vim.fn.fnamemodify(job.address, ':t')
+    end
 
     --stylua: ignore
     local full_args = {

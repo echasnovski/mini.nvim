@@ -32,6 +32,8 @@ Features:
 
 - Customizable project specific testing script.
 
+- Works on Unix (Linux, MacOS, etc.) and Windows.
+
 What it doesn't support:
 - Parallel execution. Due to idea of limiting implementation complexity.
 
