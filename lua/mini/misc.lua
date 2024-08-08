@@ -272,7 +272,7 @@ MiniMisc.find_root = function(buf_id, names, fallback)
 
   -- Use absolute path to an existing directory
   if type(res) ~= 'string' then return end
-  res = vim.fn.fnamemodify(res, ':p')
+  res = H.fs_normalize(vim.fn.fnamemodify(res, ':p'))
   if vim.fn.isdirectory(res) == 0 then return end
 
   -- Cache result per directory path
@@ -638,6 +638,11 @@ end
 H.is_number = function(x) return type(x) == 'number' end
 
 H.is_string = function(x) return type(x) == 'string' end
+
+H.fs_normalize = vim.fs.normalize
+if vim.fn.has('nvim-0.9') == 0 then
+  H.fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
+end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
