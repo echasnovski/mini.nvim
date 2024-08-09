@@ -91,13 +91,15 @@ local bench_time = function(...) return unpack(child.lua_get('{ MiniMisc.bench_t
 
 -- Validate that benchmark is within tolerable error from target. This is
 -- needed due to random nature of benchmarks.
-local validate_benchmark = function(time_tbl, target, error)
-  error = error or (helpers.is_windows() and 0.4 or 0.2)
+local validate_benchmark = function(time_tbl, target)
+  helpers.skip_if_slow()
+
   local s, n = 0, 0
   for _, x in ipairs(time_tbl) do
     s, n = s + x, n + 1
   end
 
+  local error = 0.2
   eq(n * target * (1 - error) < s, true)
   eq(s < target * (1 + error) * n, true)
 end
