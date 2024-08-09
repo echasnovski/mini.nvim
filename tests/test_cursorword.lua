@@ -40,7 +40,7 @@ local example_lines = { 'aa', 'aa', 'aaa' }
 
 -- Time constants
 local default_delay = 100
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({

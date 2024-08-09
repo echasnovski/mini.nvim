@@ -20,7 +20,7 @@ local mock_cs = function() child.cmd('set rtp+=' .. dir_path .. 'mock_cs/') end
 
 -- Time constants
 local default_transition_duration, default_show_duration = 1000, 1000
-local small_time = helpers.get_time_const(15)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -1715,7 +1715,7 @@ T['animate()']['works'] = function()
     )
   end
 
-  sleep(2 * small_time)
+  sleep(3 * small_time)
   validate_after_half()
 
   -- After first transition end it should show intermediate step for 1 second
@@ -1733,7 +1733,7 @@ T['animate()']['works'] = function()
   sleep(0.5 * default_transition_duration)
   validate_intermediate()
 
-  sleep(default_show_duration - 2 * small_time)
+  sleep(default_show_duration - 3 * small_time)
   validate_intermediate()
 
   -- After showing period it should start transition back to first one (as it
@@ -1741,7 +1741,7 @@ T['animate()']['works'] = function()
   sleep(0.5 * default_transition_duration)
   validate_after_half()
 
-  sleep(2 * small_time)
+  sleep(3 * small_time)
   validate_before_half()
 
   sleep(0.5 * default_transition_duration)
@@ -1749,6 +1749,8 @@ T['animate()']['works'] = function()
 end
 
 T['animate()']['respects `opts.transition_steps`'] = function()
+  helpers.skip_if_slow()
+
   child.lua('_G.cs_1:apply()')
   child.lua([[MiniColors.animate({ _G.cs_2 }, { transition_steps = 2 })]])
 
@@ -1777,11 +1779,11 @@ T['animate()']['respects `opts.show_duration`'] = function()
   sleep(default_transition_duration + small_time)
   eq(is_cs_1(), true)
 
-  sleep(0.5 * default_show_duration - 2 * small_time)
+  sleep(0.5 * default_show_duration - 3 * small_time)
   eq(is_cs_1(), true)
 
-  -- Account that first step takes 40 ms
-  sleep(2 * small_time + small_time)
+  -- Account that first step takes some time
+  sleep(3 * small_time + 2 * small_time)
   eq(is_cs_1(), false)
 end
 

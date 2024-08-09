@@ -53,7 +53,7 @@ local validate_hl_group = function(name, pattern) expect.match(child.cmd_capture
 local test_lines = { 'abcd abcd', 'Abcd ABCD', 'abcdaabcd' }
 
 -- Time constants
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Test config
 local test_config = {

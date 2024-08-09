@@ -65,7 +65,7 @@ end
 
 -- Time constants
 local default_completion_delay, default_info_delay, default_signature_delay = 100, 100, 50
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({

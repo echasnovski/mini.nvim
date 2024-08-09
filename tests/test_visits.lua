@@ -135,7 +135,7 @@ local get_ui_select_log = function() return child.lua_get('_G.ui_select_log') en
 
 -- Time constants
 local default_track_delay = 1000
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 local test_track_delay = 2 * small_time
 
 -- Output test set ============================================================

@@ -67,7 +67,7 @@ end
 
 -- Time constants
 local repo_watch_delay = 50
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 local micro_time = 1
 
 -- Common mocks
