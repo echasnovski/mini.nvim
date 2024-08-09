@@ -29,7 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      FILE: tests/test_misc.lua
+      FILE: tests/test_notify.lua
 
     steps:
       - uses: actions/checkout@v4
