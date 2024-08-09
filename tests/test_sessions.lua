@@ -28,8 +28,7 @@ local reload_from_strconfig = function(strconfig) unload_module(); child.mini_lo
 local set_lines = function(...) return child.set_lines(...) end
 local make_path = function(...) return fs_normalize(table.concat({...}, '/')) end
 local cd = function(...) child.cmd('cd ' .. make_path(...)) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 -- Make helpers

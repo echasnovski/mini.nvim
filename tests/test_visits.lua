@@ -9,8 +9,7 @@ local new_set = MiniTest.new_set
 local load_module = function(config) child.mini_load('visits', config) end
 local unload_module = function() child.mini_unload('visits') end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 local edit = function(path) child.cmd('edit ' .. child.fn.fnameescape(path)) end
 local child_time = function() return child.lua_get('os.time()') end
 --stylua: ignore end

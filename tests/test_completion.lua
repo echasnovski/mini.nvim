@@ -16,8 +16,7 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-lsp.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
@@ -472,7 +471,7 @@ T['Manual completion']['applies `additionalTextEdits` from "textDocument/complet
     child.ensure_normal_mode()
     set_lines({})
     type_keys('i', 'Se', '<C-space>')
-    poke_eventloop()
+    child.poke_eventloop()
     type_keys('<C-n>', confirm_key)
 
     eq(child.fn.mode(), 'i')
@@ -496,7 +495,7 @@ T['Manual completion']['applies `additionalTextEdits` from "completionItem/resol
     child.ensure_normal_mode()
     set_lines({})
     type_keys('i', word_start, '<C-space>')
-    poke_eventloop()
+    child.poke_eventloop()
     type_keys('<C-n>')
     -- Wait until `completionItem/resolve` request is sent
     sleep(default_info_delay + small_time)
@@ -518,7 +517,7 @@ T['Manual completion']['applies `additionalTextEdits` from "completionItem/resol
   child.ensure_normal_mode()
   set_lines({})
   type_keys('i', 'Ja', '<C-space>')
-  poke_eventloop()
+  child.poke_eventloop()
   type_keys('<C-n>', '<C-y>')
   eq(get_lines(), { 'January' })
 end
@@ -567,11 +566,11 @@ T['Manual completion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set(
   test = function(var_type)
     child[var_type].minicompletion_disable = true
     type_keys('i', '<C-Space>')
-    poke_eventloop()
+    child.poke_eventloop()
     eq(get_completion(), {})
 
     type_keys('i', '<M-Space>')
-    poke_eventloop()
+    child.poke_eventloop()
     eq(get_completion(), {})
   end,
 })

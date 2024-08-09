@@ -12,8 +12,7 @@ local colors_path = dir_path .. '/colors/'
 local load_module = function(config) child.mini_load('colors', config) end
 local unload_module = function(config) child.mini_unload('colors', config) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 -- Mock test color scheme
