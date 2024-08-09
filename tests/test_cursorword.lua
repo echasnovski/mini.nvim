@@ -11,8 +11,7 @@ local unload_module = function() child.mini_unload('cursorword') end
 local set_cursor = function(...) return child.set_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 -- Make helpers
@@ -198,7 +197,7 @@ local validate_immediate = function(move_command)
 
   local match_gen = get_match('MiniCursorword')
   child.cmd(move_command)
-  poke_eventloop()
+  child.poke_eventloop()
   eq(word_is_highlighted('aa'), true)
 
   -- Check that general match group didn't change (as word is same)

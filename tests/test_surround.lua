@@ -14,8 +14,7 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 -- Make helpers
@@ -253,7 +252,7 @@ T['gen_spec']['input']['treesitter()']['works with empty region'] = function()
   set_lines(lines)
   set_cursor(1, 0)
   type_keys('sh', 'o')
-  poke_eventloop()
+  child.poke_eventloop()
   -- It highlights `local` differently from other places
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
@@ -1468,7 +1467,7 @@ T['Highlight surrounding'] = new_set({
 
 local activate_highlighting = function()
   type_keys('sh)')
-  poke_eventloop()
+  child.poke_eventloop()
 end
 
 T['Highlight surrounding']['works with dot-repeat'] = function()
@@ -1509,13 +1508,13 @@ T['Highlight surrounding']['works in extended mappings'] = function()
 
   set_cursor(1, 1)
   type_keys('shn', ')')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
   sleep(test_duration + small_time)
 
   set_cursor(1, 12)
   type_keys('shl', ')')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
   sleep(test_duration + small_time)
 
@@ -1524,7 +1523,7 @@ T['Highlight surrounding']['works in extended mappings'] = function()
   type_keys('shn', ')')
   sleep(test_duration + small_time)
   type_keys('.')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
 end
 
@@ -1645,7 +1644,7 @@ T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_se
     set_lines({ '(aaa)', 'bbb' })
     set_cursor(1, 2)
     type_keys('sh', ')')
-    poke_eventloop()
+    child.poke_eventloop()
 
     -- Shouldn't highlight anything (instead moves cursor with `)` motion)
     child.expect_screenshot()
@@ -1662,7 +1661,7 @@ T['Highlight surrounding']['respects `vim.b.minisurround_config`'] = function()
   set_lines({ '>aaa<', 'bbb' })
   set_cursor(1, 2)
   type_keys('sh', '<')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
 
   -- Should stop highlighting after duration from local config

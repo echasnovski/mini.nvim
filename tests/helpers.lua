@@ -156,6 +156,9 @@ Helpers.new_child_neovim = function()
     MiniTest.expect.reference_screenshot(child.get_screenshot(screenshot_opts), path, opts)
   end
 
+  -- Poke child's event loop to make it up to date
+  child.poke_eventloop = function() child.api.nvim_eval('1') end
+
   return child
 end
 
@@ -178,12 +181,17 @@ Helpers.skip_on_windows = function(msg)
   if Helpers.is_windows() then MiniTest.skip(msg or 'Does not test properly on Windows') end
 end
 
--- Standardized way of computing time delay values
+-- Standardized way of dealing with time
 Helpers.is_slow = function() return Helpers.is_ci() and Helpers.is_windows() end
 Helpers.skip_if_slow = function(msg)
   if Helpers.is_slow() then MiniTest.skip(msg or 'Does not test properly in slow context') end
 end
 
 Helpers.get_time_const = function(delay) return (Helpers.is_slow() and 5 or 1) * delay end
+
+Helpers.sleep = function(ms, child)
+  vim.loop.sleep(math.max(ms, 1))
+  if child ~= nil then child.poke_eventloop() end
+end
 
 return Helpers

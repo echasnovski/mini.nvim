@@ -9,8 +9,7 @@ local new_set = MiniTest.new_set
 local load_module = function(config) child.mini_load('hipatterns', config) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 local forward_lua = function(fun_str)

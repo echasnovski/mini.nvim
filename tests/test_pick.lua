@@ -11,8 +11,7 @@ local unload_module = function() child.mini_unload('pick') end
 local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
-local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
+local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
 -- Tweak `expect_screenshot()` to test only on Neovim>=0.10 (as it has floating
@@ -532,7 +531,7 @@ T['start()']['respects `source.items`'] = function()
   -- Callable setting items manually
   child.lua([[_G.items_callable_later = function() MiniPick.set_picker_items({ 'e', 'f' }) end]])
   child.lua_notify('MiniPick.start({ source = { items = _G.items_callable_later } })')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
   stop()
 
@@ -541,7 +540,7 @@ T['start()']['respects `source.items`'] = function()
     vim.schedule(function() MiniPick.set_picker_items({ 'g', 'h' }) end)
   end]])
   child.lua_notify('MiniPick.start({ source = { items = _G.items_callable_later } })')
-  poke_eventloop()
+  child.poke_eventloop()
   child.expect_screenshot()
   stop()
 end

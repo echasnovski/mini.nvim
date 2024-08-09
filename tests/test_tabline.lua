@@ -10,7 +10,6 @@ local load_module = function(config) child.mini_load('tabline', config) end
 local unload_module = function() child.mini_unload('tabline') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_lines = function(...) return child.set_lines(...) end
-local poke_eventloop = function() child.api.nvim_eval('1') end
 --stylua: ignore end
 
 -- Make helpers
@@ -194,7 +193,7 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
 
   -- Should also use buffer local config
   child.b.minitabline_config = { tabpage_section = 'right' }
-  poke_eventloop()
+  child.poke_eventloop()
   eq(
     eval_tabline(true),
     '%#MiniTablineHidden# aaa %#MiniTablineCurrent# bbb %#MiniTablineFill#%=%#MiniTablineTabpagesection# Tab 2/2 '
@@ -262,7 +261,7 @@ T['make_tabline_string()']['respects `config.show_icons`'] = function()
 
   -- Should also use buffer local config
   child.b.minitabline_config = { show_icons = true }
-  poke_eventloop()
+  child.poke_eventloop()
   eq(eval_tabline(true), '%#MiniTablineCurrent#  LICENSE %#MiniTablineHidden#  init.lua %#MiniTablineFill#')
 
   -- Should prefer 'mini.icons' even if 'nvim-web-devicons' is present
