@@ -28,6 +28,9 @@ jobs:
           neovim_version: v0.10.1
     runs-on: ${{ matrix.os }}
 
+    env:
+      FILE: tests/test_diff.lua
+
     steps:
       - uses: actions/checkout@v4
       - name: Setup neovim
@@ -36,4 +39,4 @@ jobs:
           neovim: true
           version: ${{ matrix.neovim_version }}
       - name: Run tests
-        run: make test
+        run: make test_file

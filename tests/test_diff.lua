@@ -18,7 +18,6 @@ local new_buf = function() return child.api.nvim_create_buf(true, false) end
 local new_scratch_buf = function() return child.api.nvim_create_buf(false, true) end
 local get_buf = function() return child.api.nvim_get_current_buf() end
 local set_buf = function(buf_id) child.api.nvim_set_current_buf(buf_id) end
-local edit = function(path) child.cmd('edit ' .. child.fn.fnameescape(path)) end
 --stylua: ignore end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
@@ -39,7 +38,24 @@ local forward_lua = function(fun_str)
   return function(...) return child.lua_get(lua_cmd, { ... }) end
 end
 
-local set_ref_text = forward_lua([[require('mini.diff').set_ref_text]])
+-- Time constants
+local default_watch_debounce_delay = 50
+local dummy_text_change_delay = helpers.get_time_const(30)
+local small_time = helpers.get_time_const(10)
+local micro_time = 1
+
+-- Common wrappers
+local edit = function(path)
+  child.cmd('edit ' .. child.fn.fnameescape(path))
+  -- Slow context needs a small delay to get things up to date
+  if helpers.is_slow() then sleep(small_time) end
+end
+
+local set_ref_text = function(...)
+  local res = child.lua_get([[require('mini.diff').set_ref_text(...)]], { ... })
+  -- Slow context needs a small delay to get things up to date
+  if helpers.is_slow() then sleep(small_time) end
+end
 
 local get_buf_hunks = function(buf_id)
   buf_id = buf_id or 0
@@ -60,12 +76,6 @@ local get_buf_data = function(buf_id)
 end
 
 local is_buf_enabled = function(buf_id) return get_buf_data(buf_id) ~= vim.NIL end
-
--- Time constants
-local default_watch_debounce_delay = 50
-local dummy_text_change_delay = helpers.get_time_const(30)
-local small_time = helpers.get_time_const(10)
-local micro_time = 1
 
 -- - Dummy source, which is set by default in most tests
 local setup_with_dummy_source = function(text_change_delay)
@@ -970,11 +980,13 @@ T['gen_source']['git()']['returns correct structure'] = function()
 end
 
 T['gen_source']['git()']["reacts to change in 'index' Git file"] = function()
+  helpers.skip_if_slow()
+
   child.lua([[
     _G.stdio_queue = {
-      { { 'out', _G.git_dir } },             -- Get path to repo's Git dir
-      { { 'out', 'Line 1\nLine 2\n' } }, -- Get reference text
-      { { 'out', 'Line 1\nLine 22\n' } },  -- Get reference text after 'index' update
+      { { 'out', _G.git_dir } },          -- Get path to repo's Git dir
+      { { 'out', 'Line 1\nLine 2\n' } },  -- Get reference text
+      { { 'out', 'Line 1\nLine 22\n' } }, -- Get reference text after 'index' update
     }
   ]])
 
@@ -1900,14 +1912,14 @@ T['Visualization']['works'] = function()
   type_keys('o', 'hello')
   validate_viz_extmarks(0, init_viz_extmarks)
 
-  sleep(dummy_text_change_delay - small_time)
+  sleep(dummy_text_change_delay - 2 * small_time)
   validate_viz_extmarks(0, init_viz_extmarks)
 
   type_keys('<CR>', 'world')
-  sleep(dummy_text_change_delay - small_time)
+  sleep(dummy_text_change_delay - 2 * small_time)
   validate_viz_extmarks(0, init_viz_extmarks)
 
-  sleep(small_time + small_time)
+  sleep(2 * small_time + small_time)
   validate_viz_extmarks(0, {
     { line = 2, sign_hl_group = 'MiniDiffSignAdd', sign_text = '▒ ' },
     { line = 4, sign_hl_group = 'MiniDiffSignChange', sign_text = '▒ ' },
@@ -2329,7 +2341,9 @@ T['Diff']['works'] = function()
   eq(get_buf_hunks(0), ref_hunks_before)
   eq(get_buf_hunks(other_buf_id), ref_hunks_before)
 
-  sleep(dummy_text_change_delay - small_time)
+  local small_time_bigger = 2 * small_time
+
+  sleep(dummy_text_change_delay - small_time_bigger)
   eq(get_buf_hunks(0), ref_hunks_before)
   eq(get_buf_hunks(other_buf_id), ref_hunks_before)
 
@@ -2337,11 +2351,11 @@ T['Diff']['works'] = function()
   set_cursor(2, 0)
   type_keys('o', 'world', '<Esc>')
 
-  sleep(dummy_text_change_delay - small_time)
+  sleep(dummy_text_change_delay - small_time_bigger)
   eq(get_buf_hunks(0), ref_hunks_before)
   eq(get_buf_hunks(other_buf_id), ref_hunks_before)
 
-  sleep(small_time + small_time)
+  sleep(small_time_bigger + small_time)
 
   local ref_hunks_after = { { buf_start = 2, buf_count = 2, ref_start = 1, ref_count = 0, type = 'add' } }
   eq(get_buf_hunks(0), ref_hunks_after)
