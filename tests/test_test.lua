@@ -71,6 +71,9 @@ local expect_all_state = function(cases, state)
   eq(res, true)
 end
 
+-- Time constants
+local terminal_wait = helpers.get_time_const(500)
+
 -- Output test set
 local T = new_set({
   hooks = {
@@ -330,7 +333,7 @@ end
 
 T['run_file()']['normalizes input path'] = function()
   child.lua('MiniTest.run_file(...)', { './' .. get_ref_path('testref_run.lua') })
-  eq(child.lua_get('MiniTest.current.all_cases[1].desc[1]'), 'tests/dir-test/testref_run.lua')
+  eq(child.lua_get('MiniTest.current.all_cases[1].desc[1]'):gsub('\\', '/'), 'tests/dir-test/testref_run.lua')
 end
 
 T['run_at_location()'] = new_set()
@@ -355,7 +358,9 @@ T['run_at_location()']['uses cursor position by default'] = function()
 
   local all_cases = get_current_all_cases()
   eq(#all_cases, 1)
-  eq(all_cases[1].desc, { path, 'run_at_location()' })
+  local desc = all_cases[1].desc
+  eq(desc[1]:gsub('\\', '/'), path)
+  eq(desc[2], 'run_at_location()')
 end
 
 local collect_general = function()
@@ -1083,11 +1088,12 @@ T['child']['type_keys()']['throws error explicitly'] = function()
 end
 
 T['child']['type_keys()']['respects `wait` argument'] = function()
+  local delay = helpers.get_time_const(100)
   local start_time = vim.loop.hrtime()
-  child.type_keys(100, 'i', 'Hello', { 'w', 'o' }, 'rld')
+  child.type_keys(delay, 'i', 'Hello', { 'w', 'o' }, 'rld')
   local end_time = vim.loop.hrtime()
   local duration = (end_time - start_time) * 0.000001
-  eq(0.9 * 500 <= duration and duration <= 1.1 * 500, true)
+  eq(0.9 * 5 * delay <= duration and duration <= 1.1 * 5 * delay, true)
 end
 
 T['child']['cmd()'] = function()
@@ -1347,6 +1353,16 @@ T['gen_reporter']['buffer'] = new_set({
 
     local execute_command = string.format([[MiniTest.run_file('%s', { execute = { reporter = _G.reporter } })]], path)
     child.lua(execute_command)
+
+    -- Unify path separator for more robust testing. Rely on search and replace
+    -- to preserve extmark highlighting.
+    if package.config:sub(1, 1) == '\\' then
+      local cur_pos = child.api.nvim_win_get_cursor(0)
+      child.cmd([[silent! %s^\S\zs\\^/^g]])
+      child.cmd('silent! nohlsearch')
+      set_cursor(unpack(cur_pos))
+    end
+
     child.expect_screenshot()
 
     -- Should be able to run several times
@@ -1366,6 +1382,7 @@ T['gen_reporter']['stdout'] = new_set({
   parametrize = { { '' }, { 'TEST_GROUP_DEPTH=2' }, { 'TEST_QUIT_ON_FINISH=false' } },
 }, {
   test = function(env_var)
+    helpers.skip_on_windows('Terminal tests are designed for Unix')
     mark_flaky()
 
     -- Testing "in dynamic" is left for manual approach
@@ -1373,7 +1390,7 @@ T['gen_reporter']['stdout'] = new_set({
     local command = string.format([[%s %s --headless --clean -n -u %s]], env_var, vim.v.progpath, vim.inspect(path))
     child.fn.termopen(command)
     -- Wait until check is done and possible process is ended
-    vim.loop.sleep(500)
+    vim.loop.sleep(terminal_wait)
     child.expect_screenshot()
   end,
 })

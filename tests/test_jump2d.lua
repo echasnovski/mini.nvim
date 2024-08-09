@@ -81,6 +81,10 @@ local setup_two_windows = function()
   return wins
 end
 
+-- Time constants
+local helper_message_delay = 1000
+local small_time = helpers.get_time_const(10)
+
 -- Output test set ============================================================
 local T = new_set({
   hooks = {
@@ -355,7 +359,7 @@ T['start()']['prompts helper message after one idle second'] = function()
   child.lua([[MiniJump2d.config.labels = 'jk']])
 
   start()
-  sleep(1000 + 10)
+  sleep(helper_message_delay + small_time)
 
   -- Should show helper message without adding it to `:messages` and causing
   -- hit-enter-prompt
@@ -364,11 +368,11 @@ T['start()']['prompts helper message after one idle second'] = function()
 
   -- Should clean afterwards
   type_keys('j')
-  sleep(10)
+  sleep(small_time)
   child.expect_screenshot()
 
   -- Should show message for every key in sequence
-  sleep(1000 + 10)
+  sleep(helper_message_delay + small_time)
   child.expect_screenshot()
 end
 
@@ -856,7 +860,7 @@ T['start()']['respects `config.silent`'] = function()
   child.set_size(10, 20)
 
   start()
-  sleep(1000 + 15)
+  sleep(helper_message_delay + small_time)
 
   -- Should not show helper message
   child.expect_screenshot()
@@ -1142,9 +1146,9 @@ T['builtin_opts.single_character']['prompts helper message after one idle second
 
   start_single_char()
   eq(get_latest_message(), '')
-  sleep(1000 - 10)
+  sleep(helper_message_delay - small_time)
   eq(get_latest_message(), '')
-  sleep(10 + 1)
+  sleep(small_time + small_time)
 
   -- Should show helper message without adding it to `:messages` and causing
   -- hit-enter-prompt

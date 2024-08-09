@@ -4,9 +4,13 @@ local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
 
-local path_sep = package.config:sub(1, 1)
-local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ':p')
-local dir_misc_path = project_root .. 'tests/dir-misc/'
+local fs_normalize = vim.fs.normalize
+if vim.fn.has('nvim-0.9') == 0 then
+  fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
+end
+
+local project_root = fs_normalize(vim.fn.fnamemodify(vim.fn.getcwd(), ':p'))
+local dir_misc_path = project_root .. '/tests/dir-misc'
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -15,13 +19,17 @@ local unload_module = function() child.mini_unload('misc') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
-local make_path = function(...) return table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep) end
+local make_path = function(...) return fs_normalize(table.concat({...}, '/')) end
 local make_abspath = function(...) return make_path(project_root, ...) end
-local getcwd = function() return child.fn.fnamemodify(child.fn.getcwd(), ':p') end
+local getcwd = function() return fs_normalize(child.fn.getcwd()) end
 local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local edit = function(x) child.cmd('edit ' .. x) end
 --stylua: ignore end
+
+-- Time constants
+local small_time = helpers.get_time_const(10)
+local no_term_response_delay = 1000
 
 -- Output test set ============================================================
 local T = new_set({
@@ -72,7 +80,10 @@ end
 
 T['bench_time()'] = new_set({
   hooks = {
-    pre_case = function() child.lua('_G.f = function(ms) ms = ms or 10; vim.loop.sleep(ms); return ms end') end,
+    pre_case = function()
+      child.lua('_G.small_time = ' .. small_time)
+      child.lua('_G.f = function(ms) ms = ms or _G.small_time; vim.loop.sleep(ms); return ms end')
+    end,
   },
 })
 
@@ -81,7 +92,7 @@ local bench_time = function(...) return unpack(child.lua_get('{ MiniMisc.bench_t
 -- Validate that benchmark is within tolerable error from target. This is
 -- needed due to random nature of benchmarks.
 local validate_benchmark = function(time_tbl, target, error)
-  error = error or 0.2
+  error = error or (helpers.is_windows() and 0.4 or 0.2)
   local s, n = 0, 0
   for _, x in ipairs(time_tbl) do
     s, n = s + x, n + 1
@@ -95,23 +106,23 @@ T['bench_time()']['works'] = function()
   local b, res = bench_time()
   -- By default should run function once
   eq(#b, 1)
-  validate_benchmark(b, 0.01)
+  validate_benchmark(b, 0.001 * small_time)
   -- Second value is function output
-  eq(res, 10)
+  eq(res, small_time)
 end
 
 T['bench_time()']['respects `n` argument'] = function()
   local b, _ = bench_time(5)
   -- By default should run function once
   eq(#b, 5)
-  validate_benchmark(b, 0.01)
+  validate_benchmark(b, 0.001 * small_time)
 end
 
 T['bench_time()']['respects `...` as benched time arguments'] = function()
-  local b, res = bench_time(1, 50)
-  validate_benchmark(b, 0.05)
+  local b, res = bench_time(1, 5 * small_time)
+  validate_benchmark(b, 0.001 * 5 * small_time)
   -- Second value is function output
-  eq(res, 50)
+  eq(res, 5 * small_time)
 end
 
 T['get_gutter_width()'] = new_set()
@@ -234,14 +245,10 @@ T['resize_window()']['correctly computes default `text_width` argument'] = funct
   eq(child.api.nvim_win_get_width(0), 40 + 4)
 end
 
-local git_repo_path = make_abspath('tests/dir-misc/mocked-git-repo/')
+local git_repo_path = make_abspath('tests/dir-misc/mocked-git-repo')
 local git_path = make_abspath('tests/dir-misc/mocked-git-repo/.git')
 local test_file_makefile = make_abspath('tests/dir-misc/aaa.lua')
 local test_file_git = make_abspath('tests/dir-misc/mocked-git-repo/bbb.lua')
-
-local skip_if_no_fs = function()
-  if child.lua_get('type(vim.fs)') == 'nil' then MiniTest.skip('No `vim.fs`.') end
-end
 
 local init_mock_git = function(git_type)
   if git_type == 'file' then
@@ -259,7 +266,6 @@ T['setup_auto_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
 local setup_auto_root = function(...) child.lua('MiniMisc.setup_auto_root(...)', { ... }) end
 
 T['setup_auto_root()']['works'] = function()
-  skip_if_no_fs()
   eq(getcwd(), project_root)
   child.o.autochdir = true
 
@@ -285,15 +291,12 @@ T['setup_auto_root()']['works'] = function()
 end
 
 T['setup_auto_root()']['validates input'] = function()
-  skip_if_no_fs()
-
   expect.error(function() setup_auto_root('a') end, '`names`.*array')
   expect.error(function() setup_auto_root({ 1 }) end, '`names`.*string')
   expect.error(function() setup_auto_root({ '.git' }, 1) end, '`fallback`.*callable')
 end
 
 T['setup_auto_root()']['respects `names` argument'] = function()
-  skip_if_no_fs()
   init_mock_git('directory')
   setup_auto_root({ 'Makefile' })
 
@@ -303,7 +306,6 @@ T['setup_auto_root()']['respects `names` argument'] = function()
 end
 
 T['setup_auto_root()']['allows callable `names`'] = function()
-  skip_if_no_fs()
   init_mock_git('directory')
   child.lua([[_G.find_aaa = function(x) return x == 'aaa.lua' end]])
   child.lua('MiniMisc.setup_auto_root(_G.find_aaa)')
@@ -315,8 +317,6 @@ T['setup_auto_root()']['allows callable `names`'] = function()
 end
 
 T['setup_auto_root()']['respects `fallback` argument'] = function()
-  skip_if_no_fs()
-
   -- Should return and cache fallback result if not found root by going up
   -- NOTE: More tests are done in `find_root()`
   local lua_cmd = string.format(
@@ -326,13 +326,11 @@ T['setup_auto_root()']['respects `fallback` argument'] = function()
   child.lua(lua_cmd)
 
   child.cmd('edit ' .. test_file_git)
-  eq(child.lua_get('_G.path_arg'), child.api.nvim_buf_get_name(0))
+  eq(child.lua_get('_G.path_arg'), fs_normalize(child.api.nvim_buf_get_name(0)))
   eq(getcwd(), dir_misc_path)
 end
 
 T['setup_auto_root()']['works in buffers without path'] = function()
-  skip_if_no_fs()
-
   setup_auto_root()
 
   local scratch_buf_id = child.api.nvim_create_buf(false, true)
@@ -347,8 +345,6 @@ T['find_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
 local find_root = function(...) return child.lua_get('MiniMisc.find_root(...)', { ... }) end
 
 T['find_root()']['works'] = function()
-  skip_if_no_fs()
-
   -- Respects 'Makefile'
   child.cmd('edit ' .. test_file_makefile)
   eq(find_root(), dir_misc_path)
@@ -365,8 +361,6 @@ T['find_root()']['works'] = function()
 end
 
 T['find_root()']['validates arguments'] = function()
-  skip_if_no_fs()
-
   expect.error(function() find_root('a') end, '`buf_id`.*number')
   expect.error(function() find_root(0, 1) end, '`names`.*string')
   expect.error(function() find_root(0, '.git') end, '`names`.*array')
@@ -374,7 +368,6 @@ T['find_root()']['validates arguments'] = function()
 end
 
 T['find_root()']['respects `buf_id` argument'] = function()
-  skip_if_no_fs()
   init_mock_git('directory')
 
   child.cmd('edit ' .. test_file_makefile)
@@ -386,7 +379,6 @@ T['find_root()']['respects `buf_id` argument'] = function()
 end
 
 T['find_root()']['respects `names` argument'] = function()
-  skip_if_no_fs()
   init_mock_git('directory')
 
   -- Should not stop on git repo directory, but continue going up
@@ -395,7 +387,6 @@ T['find_root()']['respects `names` argument'] = function()
 end
 
 T['find_root()']['allows callable `names`'] = function()
-  skip_if_no_fs()
   init_mock_git('directory')
   child.cmd('edit ' .. test_file_git)
 
@@ -404,8 +395,6 @@ T['find_root()']['allows callable `names`'] = function()
 end
 
 T['find_root()']['respects `fallback` argument'] = function()
-  skip_if_no_fs()
-
   local validate = function(fallback_output, ref)
     local lua_cmd = string.format(
       [[MiniMisc.find_root(
@@ -418,7 +407,7 @@ T['find_root()']['respects `fallback` argument'] = function()
     eq(child.lua_get(lua_cmd), ref)
 
     -- Fallback should be called with buffer path
-    eq(child.lua_get('_G.path_arg'), child.api.nvim_buf_get_name(0))
+    eq(child.lua_get('_G.path_arg'), fs_normalize(child.api.nvim_buf_get_name(0)))
 
     -- Cleanup
     child.lua('_G.path_arg = nil')
@@ -440,16 +429,12 @@ T['find_root()']['respects `fallback` argument'] = function()
 end
 
 T['find_root()']['works in buffers without path'] = function()
-  skip_if_no_fs()
-
   local scratch_buf_id = child.api.nvim_create_buf(false, true)
   child.api.nvim_set_current_buf(scratch_buf_id)
   eq(find_root(), vim.NIL)
 end
 
 T['find_root()']['uses cache'] = function()
-  skip_if_no_fs()
-
   child.cmd('edit ' .. test_file_git)
   -- Returns root based on 'Makefile' as there is no git root
   eq(find_root(), dir_misc_path)
@@ -527,7 +512,7 @@ T['setup_termbg_sync()']['handles no response from terminal emulator'] = functio
   validate_n_autocmds(1)
 
   -- If there is no response from terminal emulator for 1s, delete autocmd
-  vim.loop.sleep(1000 + 10)
+  vim.loop.sleep(no_term_response_delay + small_time)
   validate_n_autocmds(0)
 
   -- Should show informative notification

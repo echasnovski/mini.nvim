@@ -10,10 +10,14 @@ local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
 
-local path_sep = package.config:sub(1, 1)
-local project_root = vim.fn.getcwd()
+local fs_normalize = vim.fs.normalize
+if vim.fn.has('nvim-0.9') == 0 then
+  fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
+end
+
+local project_root = fs_normalize(vim.fn.getcwd())
 local empty_dir_relpath = 'tests/dir-sessions/empty'
-local empty_dir_path = vim.fn.fnamemodify(empty_dir_relpath, ':p')
+local empty_dir_path = project_root .. '/' .. empty_dir_relpath
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -22,7 +26,7 @@ local unload_module = function() child.mini_unload('sessions') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local reload_from_strconfig = function(strconfig) unload_module(); child.mini_load_strconfig('sessions', strconfig) end
 local set_lines = function(...) return child.set_lines(...) end
-local make_path = function(...) local res = table.concat({...}, path_sep):gsub(path_sep .. path_sep, path_sep); return res end
+local make_path = function(...) return fs_normalize(table.concat({...}, '/')) end
 local cd = function(...) child.cmd('cd ' .. make_path(...)) end
 local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
@@ -129,6 +133,10 @@ local validate_executed_hook = function(pre_post, action, value)
   eq(vim.tbl_map(function(x) return type(data[x]) end, keys), { 'number', 'string', 'string', 'string' })
 end
 
+-- Time constants
+local one_second_delay = 1000
+local small_time = helpers.get_time_const(10)
+
 -- Output test set ============================================================
 local T = new_set({
   hooks = {
@@ -180,7 +188,7 @@ T['setup()']['creates `config` field'] = function()
 
   expect_config('autoread', false)
   expect_config('autowrite', true)
-  expect_config('directory', ('%s%ssession'):format(child.fn.stdpath('data'), path_sep))
+  expect_config('directory', child.fn.stdpath('data') .. '/session')
   expect_config('file', 'Session.vim')
   expect_config('force', { read = false, write = true, delete = false })
   expect_config('hooks.pre', { read = nil, write = nil, delete = nil })
@@ -262,7 +270,7 @@ T['setup()']['prefers local session file over global'] = function()
 
   reload_module({ directory = 'global' })
   local detected = child.lua_get('MiniSessions.detected')
-  local expected_path = vim.fn.fnamemodify('.', ':p') .. 'tests/dir-sessions/Session.vim'
+  local expected_path = project_root .. '/tests/dir-sessions/Session.vim'
 
   eq(detected['Session.vim'].path, expected_path)
 end
@@ -402,7 +410,7 @@ T['read()']['uses by default local session'] = function()
 end
 
 T['read()']['uses by default latest global session'] = function()
-  local session_dir = populate_sessions(1000)
+  local session_dir = populate_sessions(one_second_delay + small_time)
 
   reload_module({ autowrite = false, directory = session_dir })
   child.lua('MiniSessions.read()')
@@ -473,11 +481,13 @@ T['read()']['does not stop on source error'] = function()
   eq(#buffers, 2)
 
   child.api.nvim_set_current_buf(buffers[1])
-  expect.match(child.api.nvim_buf_get_name(0), vim.pesc(folded_file))
+  local buf_name_1 = fs_normalize(child.api.nvim_buf_get_name(0))
+  eq(vim.endswith(buf_name_1, '/' .. folded_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'No folds in this file' })
 
   child.api.nvim_set_current_buf(buffers[2])
-  expect.match(child.api.nvim_buf_get_name(0), vim.pesc(extra_file))
+  local buf_name_2 = fs_normalize(child.api.nvim_buf_get_name(0))
+  eq(vim.endswith(buf_name_2, '/' .. extra_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'This should be preserved in session' })
 end
 
@@ -589,11 +599,11 @@ T['write()']['updates `MiniSessions.detected` with new session'] = function()
 end
 
 T['write()']['updates `MiniSessions.detected` for present session'] = function()
-  local session_dir = populate_sessions(1000)
+  local session_dir = populate_sessions(one_second_delay + small_time)
   reload_module({ directory = session_dir })
 
   child.lua([[MiniSessions.read('session_a')]])
-  sleep(1000)
+  sleep(one_second_delay + small_time)
   child.lua([[MiniSessions.write('session_a')]])
 
   local detected = child.lua_get('MiniSessions.detected')
@@ -940,7 +950,7 @@ T['select()']['makes detected sessions up to date'] = function()
 
   -- Remove 'session_a' manually which should be shown in `select()` output
   local directory = child.lua_get('MiniSessions.config.directory')
-  child.fn.delete(make_path(directory, 'session_a'))
+  child.fn.delete(make_path(directory, 'session_a'), 'rf')
 
   child.lua('MiniSessions.select()')
   eq(child.lua_get('_G.ui_select_args[1]'), { 'Session.vim', 'session_b' })
@@ -984,7 +994,7 @@ end
 T['get_latest()'] = new_set()
 
 T['get_latest()']['works'] = function()
-  local dir = populate_sessions(1000)
+  local dir = populate_sessions(one_second_delay + small_time)
   reload_module({ directory = dir })
   eq(child.lua_get('MiniSessions.get_latest()'), 'session_b')
 end

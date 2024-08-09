@@ -6,7 +6,7 @@ local new_set = MiniTest.new_set
 
 local path_sep = package.config:sub(1, 1)
 local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ':p')
-local dir_bracketed_path = project_root .. 'tests/dir-bracketed/'
+local dir_bracketed_path = project_root .. 'tests' .. path_sep .. 'dir-bracketed'
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -1219,7 +1219,7 @@ local validate_file = function(id_start, direction, id_ref, opts)
 end
 
 T['file()']['works'] = function()
-  eq(child.fn.getcwd() .. '/', project_root)
+  eq(child.fn.getcwd() .. path_sep, project_root)
 
   -- Should traverse files alphabetically in directory of currently opened file
   validate_works(validate_file, #test_files)

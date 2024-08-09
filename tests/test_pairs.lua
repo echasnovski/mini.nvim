@@ -24,6 +24,9 @@ local get_term_channel = function()
   return term_chans[1]['id']
 end
 
+-- Time constants
+local term_mode_wait = helpers.get_time_const(50)
+
 --- Make simple test on empty entity
 ---@private
 local validate_action = function(mode, test)
@@ -53,10 +56,12 @@ local validate_action = function(mode, test)
     -- Cleanup
     type_keys('<Esc>')
   elseif mode == 't' then
+    helpers.skip_on_windows('Terminal emulator testing is not robust/easy on Windows')
+
     -- Setup
     child.cmd('terminal! bash --noprofile --norc')
     -- Wait for terminal to get active
-    sleep(50)
+    sleep(term_mode_wait)
     child.cmd('startinsert')
 
     -- Test
@@ -114,15 +119,14 @@ local validate_close = function(mode, key, pair)
       eq(child.fn.getcmdpos(), 3)
     end,
     t = function()
-      -- Need to wait after each keystroke to allow shell to process it
-      local wait = 50
       local term_channel = get_term_channel()
 
       -- Jumps over right hand side of `pair` if it is next
       child.fn.chansend(term_channel, pair)
-      sleep(wait)
-      type_keys(wait, '<Left>')
-      type_keys(wait, key)
+      -- Need to wait after each keystroke to allow shell to process it
+      sleep(term_mode_wait)
+      type_keys(term_mode_wait, '<Left>')
+      type_keys(term_mode_wait, key)
 
       local pair_pattern = vim.pesc(pair) .. '$'
       expect.match(get_lines()[1], pair_pattern)
@@ -149,14 +153,13 @@ local validate_bs = function(mode, pair)
       eq(child.fn.getcmdpos(), 1)
     end,
     t = function()
-      -- Need to wait after each keystroke to allow shell to process it
-      local wait = 50
       local term_channel = get_term_channel()
 
       child.fn.chansend(term_channel, pair)
-      sleep(wait)
-      type_keys(wait, '<Left>')
-      type_keys(wait, '<BS>')
+      -- Need to wait after each keystroke to allow shell to process it
+      sleep(term_mode_wait)
+      type_keys(term_mode_wait, '<Left>')
+      type_keys(term_mode_wait, '<BS>')
 
       local pair_pattern = vim.pesc(pair) .. '$'
       expect.no_match(get_lines()[1], pair_pattern)

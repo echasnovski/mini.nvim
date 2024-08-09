@@ -40,7 +40,6 @@ Helpers.new_child_neovim = function()
   local child = MiniTest.new_child_neovim()
 
   local prevent_hanging = function(method)
-    -- stylua: ignore
     if not child.is_blocked() then return end
 
     local msg = string.format('Can not use `child.%s` because child process is blocked.', method)
@@ -170,7 +169,21 @@ end
 -- Detect CI
 Helpers.is_ci = function() return os.getenv('CI') ~= nil end
 Helpers.skip_in_ci = function(msg)
-  if Helpers.is_ci() then MiniTest.skip(msg) end
+  if Helpers.is_ci() then MiniTest.skip(msg or 'Does not test properly in CI') end
 end
+
+-- Detect OS
+Helpers.is_windows = function() return vim.fn.has('win32') == 1 end
+Helpers.skip_on_windows = function(msg)
+  if Helpers.is_windows() then MiniTest.skip(msg or 'Does not test properly on Windows') end
+end
+
+-- Standardized way of computing time delay values
+Helpers.is_slow = function() return Helpers.is_ci() and Helpers.is_windows() end
+Helpers.skip_if_slow = function(msg)
+  if Helpers.is_slow() then MiniTest.skip(msg or 'Does not test properly in slow context') end
+end
+
+Helpers.get_time_const = function(delay) return (Helpers.is_slow() and 5 or 1) * delay end
 
 return Helpers

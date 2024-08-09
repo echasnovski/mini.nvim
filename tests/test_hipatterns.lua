@@ -51,13 +51,16 @@ end
 local validate_hl_group = function(name, pattern) expect.match(child.cmd_capture('hi ' .. name), pattern) end
 
 -- Data =======================================================================
+local test_lines = { 'abcd abcd', 'Abcd ABCD', 'abcdaabcd' }
+
+-- Time constants
+local small_time = helpers.get_time_const(5)
+
+-- Test config
 local test_config = {
   highlighters = { abcd = { pattern = 'abcd', group = 'Error' } },
-  delay = { text_change = 30, scroll = 10 },
+  delay = { text_change = 5 * small_time, scroll = 2 * small_time },
 }
-local small_time = 5
-
-local test_lines = { 'abcd abcd', 'Abcd ABCD', 'abcdaabcd' }
 
 -- Output test set ============================================================
 local T = new_set({
@@ -65,6 +68,8 @@ local T = new_set({
     pre_case = function()
       child.setup()
       child.set_size(10, 15)
+
+      child.lua('_G.test_config = ' .. vim.inspect(test_config))
     end,
     post_once = child.stop,
   },
@@ -191,14 +196,14 @@ T['Autocommands']['resets on color scheme change'] = function()
   }]])
   child.lua([[require('mini.hipatterns').setup({
     highlighters = { aaa = _G.new_hl_group_highlighter },
-    delay = { text_change = 20 },
+    delay = _G.test_config.delay,
   })]])
 
   set_lines({ 'aaa' })
   child.cmd('wincmd v | enew')
   set_lines({ 'xxaaaxx' })
 
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 
   -- After `:hi clear` highlighting disappears as highlight group is cleared
@@ -308,14 +313,15 @@ T['enable()']['reacts to buffer enter'] = function()
   child.api.nvim_set_current_buf(other_buf_id)
 
   -- On buffer enter it should update config and highlighting (after delay)
-  local lua_cmd = string.format('vim.b[%d].minihipatterns_config = { delay = { text_change = 10 } }', init_buf_id)
+  local lua_cmd =
+    string.format('vim.b[%d].minihipatterns_config = { delay = { text_change = %d } }', init_buf_id, 2 * small_time)
   child.lua(lua_cmd)
   child.api.nvim_buf_set_lines(init_buf_id, 0, -1, false, { 'abcd' })
 
   child.api.nvim_set_current_buf(init_buf_id)
 
   child.expect_screenshot()
-  sleep(10 + small_time)
+  sleep(2 * small_time + small_time)
   child.expect_screenshot()
 end
 
@@ -330,7 +336,7 @@ T['enable()']['reacts to filetype change'] = function()
         group = 'Error'
       },
     },
-    delay = { text_change = 20 },
+    delay = _G.test_config.delay,
   }]])
 
   set_lines({ 'xxabcdxx' })
@@ -340,13 +346,12 @@ T['enable()']['reacts to filetype change'] = function()
   -- Should update highlighting after delay
   child.cmd('set filetype=aaa')
   child.expect_screenshot()
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
 T['enable()']['reacts to window scroll'] = function()
-  local config = { highlighters = test_config.highlighters, delay = { text_change = 30, scroll = 10 } }
-  enable(0, config)
+  enable(0, test_config)
 
   -- Change same line each before `delay.text_change`. This creates a situation
   -- when only one line will be highlighted while others - don't (but should).
@@ -356,14 +361,14 @@ T['enable()']['reacts to window scroll'] = function()
     type_keys('P')
   end
 
-  sleep(30 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 
   -- Scroll should update highlighting inside view with `delay.scroll` debounce
   type_keys('<C-e>')
-  sleep(5)
+  sleep(0.5 * test_config.delay.scroll)
   type_keys('<C-e>')
-  sleep(10 + 1)
+  sleep(test_config.delay.scroll + small_time)
   child.expect_screenshot()
 
   -- Update should be done only on the final view
@@ -381,16 +386,16 @@ T['enable()']['reacts to delete of line with match'] = function()
     group = '',
     extmark_opts = { virt_text = { { 'Hello', 'Error' } }, virt_text_pos = 'right_align' },
   }
-  local config = { highlighters = { abcd = hi_abcd }, delay = { text_change = 30, scroll = 10 } }
+  local config = { highlighters = { abcd = hi_abcd }, delay = test_config.delay }
   enable(0, config)
 
-  sleep(30 + small_time)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 
   local validate = function(line_to_delete)
     child.api.nvim_win_set_cursor(0, { line_to_delete, 0 })
     type_keys('dd')
-    sleep(30 + small_time)
+    sleep(test_config.delay.text_change + small_time)
     child.expect_screenshot()
   end
 
@@ -410,10 +415,10 @@ T['Highlighters']['silently skips wrong entries'] = function()
     group_wrong_type = { pattern = 'aaa', group = 1 },
     priority_wrong_type = { pattern = 'aaa', group = 'Error', extmark_opts = 'a' },
   }
-  enable(0, { highlighters = highlighters, delay = { text_change = 20 } })
+  enable(0, { highlighters = highlighters, delay = test_config.delay })
 
   set_lines({ 'xxabcd', 'aaa' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
@@ -424,11 +429,11 @@ T['Highlighters']['allows submatch in `pattern`'] = function()
     child.lua([[require('mini.hipatterns').disable()]])
     local config = {
       highlighters = { abcd = { pattern = pattern, group = 'Error' } },
-      delay = { text_change = 20 },
+      delay = test_config.delay,
     }
     enable(0, config)
 
-    sleep(20 + 2)
+    sleep(test_config.delay.text_change + small_time)
     child.expect_screenshot()
   end
 
@@ -447,12 +452,12 @@ end
 T['Highlighters']['allows frontier pattern in `pattern`'] = function()
   local config = {
     highlighters = { abcd = { pattern = '%f[%w]abcd%f[%W]', group = 'Error' } },
-    delay = { text_change = 20 },
+    delay = test_config.delay,
   }
   enable(0, config)
 
   set_lines({ 'abcd', 'xabcd', 'abcdx', 'xabcdx', ' abcd ' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
@@ -466,14 +471,11 @@ T['Highlighters']['allows callable `pattern`'] = function()
   }]])
   child.lua([[require('mini.hipatterns').enable(
     0,
-    {
-      highlighters = { test = _G.hi_callable_pattern },
-      delay = { text_change = 20 },
-    }
+    { highlighters = { test = _G.hi_callable_pattern }, delay = _G.test_config.delay }
   )]])
 
   set_lines({ 'xxabcd' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
   -- Should be called with correct signature
   eq(child.lua_get('_G.args'), { child.api.nvim_get_current_buf() })
@@ -489,16 +491,16 @@ T['Highlighters']['allows return `nil` `pattern` to not highlight'] = function()
   }]])
   child.lua([[require('mini.hipatterns').enable(
     0,
-    { highlighters = { test = _G.hi_conditional_pattern }, delay = { text_change = 20 } }
+    { highlighters = { test = _G.hi_conditional_pattern }, delay = _G.test_config.delay }
   )]])
 
   set_lines({ 'xxabcd' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 
   child.b.not_highlight = true
   set_lines({ 'xxabcd' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
@@ -516,16 +518,16 @@ T['Highlighters']['allows array `pattern`'] = function()
   }]])
   child.lua([[require('mini.hipatterns').enable(
     0,
-    { highlighters = { array = _G.hi_array }, delay = { text_change = 20 } }
+    { highlighters = { array = _G.hi_array }, delay = _G.test_config.delay }
   )]])
 
   set_lines({ 'xxabcd', 'xxefgh' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 
   child.b.not_highlight = true
   set_lines({ 'xxabcd', 'xxefgh' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
@@ -539,14 +541,11 @@ T['Highlighters']['allows callable `group`'] = function()
   }]])
   child.lua([[require('mini.hipatterns').enable(
     0,
-    {
-      highlighters = { test = _G.hi_callable_group },
-      delay = { text_change = 20 },
-    }
+    { highlighters = { test = _G.hi_callable_group }, delay = _G.test_config.delay }
   )]])
 
   set_lines({ 'xxabcd' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
   -- Should be called with correct signature
   eq(child.lua_get('_G.args'), { 1, 'abcd', { full_match = 'abcd', line = 1, from_col = 3, to_col = 6 } })
@@ -556,7 +555,7 @@ T['Highlighters']['allows callable `group`'] = function()
     child.lua('_G.args = nil')
     child.lua('_G.hi_callable_group.pattern = ' .. vim.inspect(pattern))
     set_lines({ 'abcd' })
-    sleep(20 + 2)
+    sleep(test_config.delay.text_change + small_time)
     eq(child.lua_get('_G.args'), ref_args)
   end
 
@@ -578,11 +577,11 @@ T['Highlighters']['allows return `nil` `group` to not highlight'] = function()
   }]])
   child.lua([[require('mini.hipatterns').enable(
     0,
-    { highlighters = { test = _G.hi_conditional_group }, delay = { text_change = 20 } }
+    { highlighters = { test = _G.hi_conditional_group }, delay = _G.test_config.delay }
   )]])
 
   set_lines({ 'xxabcd', 'xxabcd', 'xxabcd', 'xxabcd', 'xxabcd' })
-  sleep(20 + 2)
+  sleep(test_config.delay.text_change + small_time)
   child.expect_screenshot()
 end
 
@@ -898,11 +897,11 @@ T['get_matches()']['works'] = function()
         end,
       },
     },
-    delay = { text_change = 20 },
+    delay = _G.test_config.delay,
   })]])
 
   enable(buf_id_1)
-  sleep(20 + small_time)
+  sleep(test_config.delay.text_change + small_time)
   local matches = get_matches(buf_id_1)
 
   -- Order should be guaranteed (as tostring(10) is less than 'aaa')
@@ -919,7 +918,7 @@ T['get_matches()']['works'] = function()
 
   -- Should return empty table if no matches
   enable(buf_id_2)
-  sleep(20 + small_time)
+  sleep(test_config.delay.text_change + small_time)
   eq(get_matches(buf_id_2), {})
 end
 
@@ -928,10 +927,10 @@ T['get_matches()']['respects `buf_id` argument'] = function()
   child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { 'bbb aaa' })
   child.lua([[require('mini.hipatterns').setup({
     highlighters = {  aaa = { pattern = 'aaa', group = 'Error' }  },
-    delay = { text_change = 20 },
+    delay = _G.test_config.delay,
   })]])
   enable(buf_id)
-  sleep(20 + small_time)
+  sleep(test_config.delay.text_change + small_time)
 
   -- Should allow both `nil` and `0` to mean current buffer
   local ref_output =
@@ -949,10 +948,10 @@ T['get_matches()']['respects `highlighters` argument'] = function()
       aaa = { pattern = { 'aaa', 'AAA' }, group = 'Error' },
       bbb = { pattern = 'bbb', group = 'Comment' },
     },
-    delay = { text_change = 20 },
+    delay = _G.test_config.delay,
   })]])
   enable(buf_id)
-  sleep(20 + small_time)
+  sleep(test_config.delay.text_change + small_time)
 
   -- Should respect order of `highlighters` in output and discard any not
   -- present highlighter identifiers

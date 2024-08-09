@@ -64,8 +64,9 @@ local validate_single_floating_win = function(opts)
   end
 end
 
--- Data =======================================================================
-local test_times = { completion = 100, info = 100, signature = 50 }
+-- Time constants
+local default_completion_delay, default_info_delay, default_signature_delay = 100, 100, 50
+local small_time = helpers.get_time_const(5)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -225,9 +226,9 @@ T['Autocompletion']['works with LSP client'] = function()
   eq(get_completion(), {})
 
   -- Shows completion only after delay
-  sleep(test_times.completion - 10)
+  sleep(default_completion_delay - small_time)
   eq(get_completion(), {})
-  sleep(10)
+  sleep(small_time + small_time)
   -- Both completion word and kind are shown
   eq(get_completion(), { 'January', 'June', 'July' })
   eq(get_completion('kind'), { 'Text', 'Function', 'Function' })
@@ -245,9 +246,9 @@ T['Autocompletion']['works without LSP clients'] = function()
 
   type_keys('i', 'aab aac aba a')
   eq(get_completion(), {})
-  sleep(test_times.completion - 10)
+  sleep(default_completion_delay - small_time)
   eq(get_completion(), {})
-  sleep(10)
+  sleep(small_time + small_time)
   eq(get_completion(), { 'aab', 'aac', 'aba' })
 
   -- Completion menu is filtered after entering characters
@@ -259,12 +260,12 @@ end
 T['Autocompletion']['implements debounce-style delay'] = function()
   type_keys('i', 'J')
 
-  sleep(test_times.completion - 10)
+  sleep(default_completion_delay - small_time)
   eq(get_completion(), {})
   type_keys('u')
-  sleep(test_times.completion - 10)
+  sleep(default_completion_delay - small_time)
   eq(get_completion(), {})
-  sleep(10)
+  sleep(small_time + small_time)
   eq(get_completion(), { 'June', 'July' })
 end
 
@@ -273,7 +274,7 @@ T['Autocompletion']['uses fallback'] = function()
   set_cursor(2, 0)
 
   type_keys('i', 'Ja')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   eq(get_completion(), { 'January' })
 
   -- Due to how 'completefunc' and 'omnifunc' currently work, fallback won't
@@ -312,9 +313,9 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
 
       type_keys('May.')
       eq(child.fn.pumvisible(), 0)
-      sleep(test_times.completion - 10)
+      sleep(default_completion_delay - small_time)
       eq(child.fn.pumvisible(), 0)
-      sleep(10 + 10)
+      sleep(small_time + small_time)
       eq(get_completion(), all_months)
       child.expect_screenshot()
 
@@ -322,30 +323,30 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
       -- show no completion if there is no LSP completion (as is imitated
       -- inside commented lines).
       type_keys('<Esc>o', '# .')
-      sleep(test_times.completion + 10)
+      sleep(default_completion_delay + small_time)
       child.expect_screenshot()
     end,
   }
 )
 
 T['Autocompletion']['respects `config.delay.completion`'] = function()
-  child.lua('MiniCompletion.config.delay.completion = 300')
+  child.lua('MiniCompletion.config.delay.completion = ' .. (2 * default_completion_delay))
 
   type_keys('i', 'J')
-  sleep(300 - 10)
+  sleep(2 * default_completion_delay - small_time)
   eq(get_completion(), {})
-  sleep(10)
+  sleep(small_time + small_time)
   eq(get_completion(), { 'January', 'June', 'July' })
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
   set_cursor(1, 0)
-  child.b.minicompletion_config = { delay = { completion = 50 } }
+  child.b.minicompletion_config = { delay = { completion = default_completion_delay } }
   type_keys('i', 'J')
-  sleep(50 - 10)
+  sleep(default_completion_delay - small_time)
   eq(get_completion(), {})
-  sleep(10)
+  sleep(small_time + small_time)
   eq(get_completion(), { 'January', 'June', 'July' })
 end
 
@@ -354,7 +355,7 @@ T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function
   child.lua('MiniCompletion.config.lsp_completion.process_items = _G.process_items')
 
   type_keys('i', 'J')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   eq(get_completion(), { 'February', 'March' })
 
   child.ensure_normal_mode()
@@ -364,7 +365,7 @@ T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function
   child.lua('vim.b.minicompletion_config = { lsp_completion = { process_items = _G.process_items_2 } }')
 
   type_keys('i', 'J')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   eq(get_completion(), { 'April', 'May' })
 end
 
@@ -375,7 +376,7 @@ T['Autocompletion']['respects string `config.fallback_action`'] = function()
   set_lines({ 'Line number 1', '' })
   set_cursor(2, 0)
   type_keys('i', 'L')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   child.expect_screenshot()
 
   -- Should also use buffer local config
@@ -384,20 +385,20 @@ T['Autocompletion']['respects string `config.fallback_action`'] = function()
   set_lines({ 'Line number 1', '' })
   set_cursor(2, 0)
   type_keys('i', 'L')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   child.expect_screenshot()
 end
 
 T['Autocompletion']['respects function `config.fallback_action`'] = function()
   child.lua([[MiniCompletion.config.fallback_action = function() _G.inside_fallback = true end]])
   type_keys('i', 'a')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   eq(child.lua_get('_G.inside_fallback'), true)
 
   child.ensure_normal_mode()
   child.lua('vim.b.minicompletion_config = { fallback_action = function() _G.inside_local_fallback = true end }')
   type_keys('i', 'a')
-  sleep(test_times.completion + 1)
+  sleep(default_completion_delay + small_time)
   eq(child.lua_get('_G.inside_local_fallback'), true)
 end
 
@@ -407,7 +408,7 @@ T['Autocompletion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   test = function(var_type)
     child[var_type].minicompletion_disable = true
     type_keys('i', 'J')
-    sleep(test_times.completion + 1)
+    sleep(default_completion_delay + small_time)
     eq(get_completion(), {})
   end,
 })
@@ -498,7 +499,7 @@ T['Manual completion']['applies `additionalTextEdits` from "completionItem/resol
     poke_eventloop()
     type_keys('<C-n>')
     -- Wait until `completionItem/resolve` request is sent
-    sleep(test_times.info + 1)
+    sleep(default_info_delay + small_time)
     type_keys('<C-y>')
 
     eq(child.fn.mode(), 'i')
@@ -592,27 +593,27 @@ local validate_info_win = function(delay)
 
   type_keys('<C-n>')
   eq(get_floating_windows(), {})
-  sleep(delay - 10)
+  sleep(delay - small_time)
   eq(get_floating_windows(), {})
-  sleep(10 + 1)
+  sleep(small_time + small_time)
   validate_single_floating_win({ lines = { 'Month #01' } })
 end
 
 T['Information window']['works'] = function()
   child.set_size(10, 40)
-  validate_info_win(test_times.info)
+  validate_info_win(default_info_delay)
   child.expect_screenshot()
 end
 
 T['Information window']['respects `config.delay.info`'] = function()
-  child.lua('MiniCompletion.config.delay.info = 300')
-  validate_info_win(300)
+  child.lua('MiniCompletion.config.delay.info = ' .. (2 * default_info_delay))
+  validate_info_win(2 * default_info_delay)
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { delay = { info = 50 } }
-  validate_info_win(50)
+  child.b.minicompletion_config = { delay = { info = default_info_delay } }
+  validate_info_win(default_info_delay)
 end
 
 local validate_info_window_config = function(keys, completion_items, win_config)
@@ -622,7 +623,7 @@ local validate_info_window_config = function(keys, completion_items, win_config)
   type_keys('<C-n>')
   -- Some windows can take a while to process on slow machines. So add `10`
   -- to ensure that processing is finished.
-  sleep(test_times.info + 10)
+  sleep(default_info_delay + small_time)
   validate_single_floating_win({ config = win_config })
 end
 
@@ -652,7 +653,7 @@ T['Information window']['accounts for border when picking side'] = function()
 
   set_lines({ 'aaaaaaaaaaaa ' })
   type_keys('A', 'J', '<C-Space>', '<C-n>')
-  sleep(test_times.info + 10)
+  sleep(default_info_delay + small_time)
   child.expect_screenshot()
 end
 
@@ -669,7 +670,7 @@ T['Information window']['adjusts window width'] = function()
   child.lua([[MiniCompletion.config.window.info= { height = 15, width = 10, border = 'single' }]])
 
   type_keys('i', 'J', '<C-Space>', '<C-n>')
-  sleep(test_times.info + 10)
+  sleep(default_info_delay + small_time)
   child.expect_screenshot()
 end
 
@@ -678,12 +679,12 @@ T['Information window']['implements debounce-style delay'] = function()
   eq(get_completion(), { 'January', 'June', 'July' })
 
   type_keys('<C-n>')
-  sleep(test_times.info - 10)
+  sleep(default_info_delay - small_time)
   eq(#get_floating_windows(), 0)
   type_keys('<C-n>')
-  sleep(test_times.info - 10)
+  sleep(default_info_delay - small_time)
   eq(#get_floating_windows(), 0)
-  sleep(10 + 1)
+  sleep(small_time + small_time)
   validate_single_floating_win({ lines = { 'Month #06' } })
 end
 
@@ -695,7 +696,7 @@ T['Information window']['is closed when forced outside of Insert mode'] = new_se
       eq(get_completion(), { 'January', 'June', 'July' })
 
       type_keys('<C-n>')
-      sleep(test_times.info + 5)
+      sleep(default_info_delay + small_time)
       validate_single_floating_win({ lines = { 'Month #01' } })
 
       type_keys(key)
@@ -705,14 +706,14 @@ T['Information window']['is closed when forced outside of Insert mode'] = new_se
 )
 
 T['Information window']['handles all buffer wipeout'] = function()
-  validate_info_win(test_times.info)
+  validate_info_win(default_info_delay)
   child.ensure_normal_mode()
 
   child.cmd('%bw!')
   new_buffer()
   mock_lsp()
 
-  validate_info_win(test_times.info)
+  validate_info_win(default_info_delay)
 end
 
 T['Information window']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
@@ -724,7 +725,7 @@ T['Information window']['respects `vim.{g,b}.minicompletion_disable`'] = new_set
     set_lines({ 'aa ab ', '' })
     set_cursor(2, 0)
     type_keys('i', '<C-n>', '<C-n>')
-    sleep(test_times.info + 1)
+    sleep(default_info_delay + small_time)
     eq(#get_floating_windows(), 0)
   end,
 })
@@ -744,27 +745,27 @@ local validate_signature_win = function(delay)
   type_keys('i', 'abc(')
 
   eq(get_floating_windows(), {})
-  sleep(delay - 10)
+  sleep(delay - small_time)
   eq(get_floating_windows(), {})
-  sleep(10 + 1)
+  sleep(small_time + small_time)
   validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
 end
 
 T['Signature help']['works'] = function()
   child.set_size(5, 30)
-  validate_signature_win(test_times.signature)
+  validate_signature_win(default_signature_delay)
   child.expect_screenshot()
 end
 
 T['Signature help']['respects `config.delay.signature`'] = function()
-  child.lua('MiniCompletion.config.delay.signature = 300')
-  validate_signature_win(300)
+  child.lua('MiniCompletion.config.delay.signature = ' .. (2 * default_signature_delay))
+  validate_signature_win(2 * default_signature_delay)
 
   -- Should also use buffer local config
   child.ensure_normal_mode()
   set_lines({ '' })
-  child.b.minicompletion_config = { delay = { signature = 50 } }
-  validate_signature_win(50)
+  child.b.minicompletion_config = { delay = { signature = default_signature_delay } }
+  validate_signature_win(default_signature_delay)
 end
 
 T['Signature help']['updates highlighting of active parameter'] = function()
@@ -772,23 +773,23 @@ T['Signature help']['updates highlighting of active parameter'] = function()
   child.cmd('startinsert')
 
   type_keys('abc(')
-  sleep(test_times.signature + 1)
+  sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 
   type_keys('1,')
-  sleep(test_times.signature + 1)
+  sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 
   -- As there are only two parameters, nothing should be highlighted
   type_keys('2,')
-  sleep(test_times.signature + 1)
+  sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 end
 
 local validate_signature_window_config = function(keys, win_config)
   child.cmd('startinsert')
   type_keys(keys)
-  sleep(test_times.signature + 2)
+  sleep(default_signature_delay + small_time)
   validate_single_floating_win({ config = win_config })
 end
 
@@ -817,7 +818,7 @@ T['Signature help']['accounts for border when picking side'] = function()
   child.lua([[MiniCompletion.config.window.signature.border = 'single']])
 
   type_keys('o<CR>', 'abc(')
-  sleep(test_times.signature + 10)
+  sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 end
 
@@ -835,20 +836,20 @@ T['Signature help']['adjusts window height'] = function()
   child.lua([[MiniCompletion.config.window.signature = { height = 15, width = 10, border = 'single' }]])
 
   type_keys('i', 'long(')
-  sleep(test_times.signature + 10)
+  sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 end
 
 T['Signature help']['implements debounce-style delay'] = function()
   child.cmd('startinsert')
   type_keys('abc(')
-  sleep(test_times.signature - 10)
+  sleep(default_signature_delay - small_time)
   type_keys('d')
-  sleep(test_times.signature + 1)
+  sleep(default_signature_delay + small_time)
   eq(#get_floating_windows(), 0)
 
   type_keys(',')
-  sleep(test_times.signature + 1)
+  sleep(default_signature_delay + small_time)
   validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
 end
 
@@ -857,7 +858,7 @@ T['Signature help']['is closed when forced outside of Insert mode'] = new_set(
   {
     test = function(key)
       type_keys('i', 'abc(')
-      sleep(test_times.signature + 5)
+      sleep(default_signature_delay + small_time)
       validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
 
       type_keys(key)
@@ -867,14 +868,14 @@ T['Signature help']['is closed when forced outside of Insert mode'] = new_set(
 )
 
 T['Signature help']['handles all buffer wipeout'] = function()
-  validate_signature_win(test_times.signature)
+  validate_signature_win(default_signature_delay)
   child.ensure_normal_mode()
 
   child.cmd('%bw!')
   new_buffer()
   mock_lsp()
 
-  validate_signature_win(test_times.signature)
+  validate_signature_win(default_signature_delay)
 end
 
 T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
@@ -884,7 +885,7 @@ T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
     child[var_type].minicompletion_disable = true
 
     type_keys('i', 'abc(')
-    sleep(test_times.signature + 1)
+    sleep(default_signature_delay + small_time)
     eq(#get_floating_windows(), 0)
   end,
 })

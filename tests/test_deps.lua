@@ -16,7 +16,7 @@ local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 local test_dir = 'tests/dir-deps'
-local test_dir_absolute = vim.fn.fnamemodify(test_dir, ':p'):gsub('(.)/$', '%1')
+local test_dir_absolute = vim.fs.normalize(vim.fn.fnamemodify(test_dir, ':p')):gsub('(.)/$', '%1')
 local test_opt_dir = test_dir_absolute .. '/pack/deps/opt'
 local test_snap_path = test_dir_absolute .. '/snapshots/snap'
 local test_log_path = test_dir_absolute .. '/mini-deps.log'
@@ -88,7 +88,8 @@ end
 
 local mock_hide_path = function(path)
   path = path or test_dir_absolute
-  child.cmd(':%s/' .. child.fn.escape(path, ' /') .. '/MOCKDIR/')
+  -- NOTE: use "^" as pattern separator because "/" can cause troubles
+  child.cmd(':%s^' .. child.fn.escape(path, ' /') .. '^MOCKDIR^')
   child.bo.modified = false
 end
 
@@ -160,6 +161,19 @@ end
 
 local clear_notify_log = function() return child.lua('_G.notify_log = {}') end
 
+-- Common validators
+local is_in_rtp = function(path)
+  path = vim.fs.normalize(path)
+  for _, p in ipairs(child.api.nvim_list_runtime_paths()) do
+    if path == vim.fs.normalize(p) then return true end
+  end
+  return false
+end
+
+-- Time constants
+local small_time = helpers.get_time_const(5)
+local micro_time = 1
+
 -- Output test set ============================================================
 local T = new_set({
   hooks = {
@@ -172,6 +186,7 @@ local T = new_set({
       -- Make more comfortable screenshots
       child.o.laststatus = 0
       child.o.ruler = false
+      child.o.showtabline = 0
 
       -- Mock `vim.notify()`
       mock_notify()
@@ -281,21 +296,17 @@ T['add()'] = new_set({ hooks = { pre_case = mock_test_package } })
 T['add()']['works for present plugins'] = new_set({ parametrize = { { 'plugin_1' }, { { name = 'plugin_1' } } } }, {
   test = function(spec)
     local ref_path = test_opt_dir .. '/plugin_1'
-    expect.no_match(child.o.runtimepath, vim.pesc(ref_path))
+    eq(is_in_rtp(ref_path), false)
     eq(get_session(), {})
 
     add(spec)
 
-    expect.match(child.o.runtimepath, vim.pesc(ref_path))
+    eq(is_in_rtp(ref_path), true)
+    eq(is_in_rtp(ref_path .. '/after'), true)
     eq(get_session(), { { name = 'plugin_1', path = ref_path, hooks = {}, depends = {} } })
 
     -- No CLI process should be run as plugin is already present
     eq(get_spawn_log(), {})
-
-    -- Should add plugin to 'runtimepath'
-    local rtp = vim.split(child.o.runtimepath, ',')
-    eq(vim.tbl_contains(rtp, ref_path), true)
-    eq(vim.tbl_contains(rtp, ref_path .. '/after'), true)
 
     -- Should load 'plugin/', 'after/plugin/', etc.
     eq(child.lua_get('type(_G.plugin_log)'), 'table')
@@ -313,7 +324,7 @@ T['add()']['infers name from source'] = new_set({
   test = function(spec)
     local ref_path = test_opt_dir .. '/plugin_1'
     add(spec)
-    expect.match(child.o.runtimepath, vim.pesc(ref_path))
+    eq(is_in_rtp(ref_path), true)
     eq(
       get_session(),
       { { source = 'https://github.com/user/plugin_1', name = 'plugin_1', path = ref_path, hooks = {}, depends = {} } }
@@ -1123,6 +1134,7 @@ T['add()']['Install']['works when no information about number of cores is availa
 end
 
 T['add()']['Install']['respects `config.job.timeout`'] = function()
+  child.lua('_G.duration = ' .. (10 * small_time))
   child.lua([[
     _G.stdio_queue = {
       { out = 'git version 2.43.0'}, -- Check Git executable
@@ -1132,10 +1144,10 @@ T['add()']['Install']['respects `config.job.timeout`'] = function()
     }
 
     -- Mock long execution of some jobs
-    _G.process_mock_data = { [2] = { duration = 50 }, [3] = { duration = 0 }, [4] = { duration = 50 } }
+    _G.process_mock_data = { [2] = { duration = _G.duration }, [3] = { duration = 0 }, [4] = { duration = _G.duration } }
   ]])
 
-  child.lua('MiniDeps.config.job.timeout = 25')
+  child.lua('MiniDeps.config.job.timeout = ' .. (5 * small_time))
   add({ source = 'user/new_plugin', depends = { 'user/dep_plugin' } })
 
   local ref_notify_log = {
@@ -1879,6 +1891,9 @@ T['update()']['works when no information about number of cores is available'] = 
 end
 
 T['update()']['respects `config.job.timeout`'] = function()
+  helpers.skip_if_slow()
+
+  child.lua('_G.duration = ' .. (10 * small_time))
   child.lua([[
     _G.stdio_queue = {
       { out = 'git version 2.43.0'}, -- Check Git executable
@@ -1890,12 +1905,12 @@ T['update()']['respects `config.job.timeout`'] = function()
     }
 
     -- Mock non-trivial durations
-    _G.process_mock_data = { [3] = { duration = 50 }, [6] = { duration = 50 } }
+    _G.process_mock_data = { [3] = { duration = _G.duration }, [6] = { duration = _G.duration } }
   ]])
   add('user/plugin_1')
   add('user/plugin_2')
 
-  child.lua('MiniDeps.config.job.timeout = 25')
+  child.lua('MiniDeps.config.job.timeout = ' .. (5 * small_time))
   update()
 
   local ref_notify_log = {
@@ -2448,7 +2463,7 @@ T['now()']['can be called inside other `now()`/`later()` call'] = function()
   ]])
   eq(child.lua_get('_G.immediate_log'), { 'now', 'now_now' })
 
-  sleep(20)
+  sleep(small_time)
   eq(child.lua_get('_G.log'), { 'now', 'now_now', 'later', 'later_now' })
 end
 
@@ -2461,7 +2476,7 @@ T['now()']['clears queue between different event loops'] = function()
   ]])
   eq(child.lua_get('_G.immediate_log'), { 'now' })
 
-  sleep(2)
+  sleep(small_time)
   child.lua('MiniDeps.now(_G.f)')
   -- If it did not clear the queue, it would have been 3 elements
   eq(child.lua_get('_G.log'), { 'now', 'now' })
@@ -2469,22 +2484,14 @@ end
 
 T['now()']['notifies about errors after everything is executed'] = function()
   child.lua([[
-    _G.log = {}
     MiniDeps.now(function() error('Inside now()') end)
-    _G.f = function() log[#log + 1] = 'later' end
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
+    local f = function() vim.notify('Info', vim.log.levels.INFO) end
+    MiniDeps.later(f)
+    MiniDeps.later(f)
   ]])
 
-  sleep(1)
-  validate_notifications({}, true)
-
-  sleep(10)
-  eq(child.lua_get('_G.log'), { 'later', 'later', 'later', 'later', 'later' })
-  validate_notifications({ { 'errors.*Inside now()', 'ERROR' } }, true)
+  sleep(2 * small_time)
+  validate_notifications({ { 'Info', 'INFO' }, { 'Info', 'INFO' }, { 'errors.*Inside now()', 'ERROR' } }, true)
 end
 
 T['now()']['shows all errors at once'] = function()
@@ -2492,7 +2499,7 @@ T['now()']['shows all errors at once'] = function()
     MiniDeps.now(function() error('Inside now() #1') end)
     MiniDeps.now(function() error('Inside now() #2') end)
   ]])
-  sleep(2)
+  sleep(micro_time)
   validate_notifications({ { 'errors.*Inside now%(%) #1.*Inside now%(%) #2', 'ERROR' } }, true)
 end
 
@@ -2500,7 +2507,7 @@ T['now()']['does not respect `config.silent`'] = function()
   -- Should still show errors even if `config.silent = true`
   child.lua('MiniDeps.config.silent = true')
   child.lua('MiniDeps.now(function() error("Inside now()") end)')
-  sleep(2)
+  sleep(micro_time)
   validate_notifications({ { 'Inside now%(%)', 'ERROR' } }, true)
 end
 
@@ -2516,7 +2523,7 @@ T['later()']['works'] = function()
   ]])
   eq(child.lua_get('_G.log_in_this_loop'), { 'after later' })
 
-  sleep(2)
+  sleep(small_time)
   eq(child.lua_get('_G.log'), { 'after later', 'later' })
 end
 
@@ -2535,7 +2542,7 @@ T['later()']['can be called inside other `now()`/`later()` call'] = function()
   ]])
   eq(child.lua_get('_G.immediate_log'), { 'now' })
 
-  sleep(10)
+  sleep(2 * small_time)
   eq(child.lua_get('_G.log'), { 'now', 'later', 'now_later', 'later_later' })
 end
 
@@ -2547,34 +2554,25 @@ T['later()']['clears queue between different event loops'] = function()
     _G.immediate_log = vim.deepcopy(_G.log)
   ]])
   eq(child.lua_get('_G.immediate_log'), {})
-  sleep(2)
+  sleep(micro_time)
   eq(child.lua_get('_G.log'), { 'later' })
 
   child.lua('MiniDeps.later(_G.f)')
   -- If it did not clear the queue, it would have been 3 elements
-  sleep(4)
+  sleep(2 * micro_time)
   eq(child.lua_get('_G.log'), { 'later', 'later' })
 end
 
 T['later()']['notifies about errors after everything is executed'] = function()
   child.lua([[
-    _G.log = {}
     MiniDeps.later(function() error('Inside later()') end)
-    _G.f = function() log[#log + 1] = 'later' end
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
-    MiniDeps.later(_G.f)
+    local f = function() vim.notify('Info', vim.log.levels.INFO) end
+    MiniDeps.later(f)
+    MiniDeps.later(f)
   ]])
-  eq(child.lua_get('_G.log'), {})
 
-  sleep(1)
-  validate_notifications({}, true)
-
-  sleep(10)
-  eq(child.lua_get('_G.log'), { 'later', 'later', 'later', 'later', 'later' })
-  validate_notifications({ { 'errors.*Inside later()', 'ERROR' } }, true)
+  sleep(2 * small_time)
+  validate_notifications({ { 'Info', 'INFO' }, { 'Info', 'INFO' }, { 'errors.*Inside later()', 'ERROR' } }, true)
 end
 
 T['later()']['shows all errors at once'] = function()
@@ -2582,7 +2580,7 @@ T['later()']['shows all errors at once'] = function()
     MiniDeps.later(function() error('Inside later() #1') end)
     MiniDeps.later(function() error('Inside later() #2') end)
   ]])
-  sleep(5)
+  sleep(2 * small_time)
   validate_notifications({ { 'errors.*Inside later%(%) #1.*Inside later%(%) #2', 'ERROR' } }, true)
 end
 
@@ -2590,7 +2588,7 @@ T['later()']['does not respect `config.silent`'] = function()
   -- Should still show errors even if `config.silent = true`
   child.lua('MiniDeps.config.silent = true')
   child.lua('MiniDeps.later(function() error("Inside later()") end)')
-  sleep(2)
+  sleep(small_time)
   validate_notifications({ { 'Inside later%(%)', 'ERROR' } }, true)
 end
 

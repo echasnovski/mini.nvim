@@ -59,6 +59,9 @@ end
 
 local unmock_file = function() pcall(vim.fn.delete, mocked_filepath) end
 
+-- Time constants
+local term_mode_wait = helpers.get_time_const(50)
+
 -- Output test set ============================================================
 local T = new_set({
   hooks = {
@@ -161,16 +164,18 @@ T['setup()']['disables built-in statusline in quickfix window'] = function()
 end
 
 T['setup()']['ensures content when working with built-in terminal'] = function()
+  helpers.skip_on_windows('Terminal emulator testing is not robust/easy on Windows')
+
   local init_buf_id = child.api.nvim_get_current_buf()
 
   child.cmd('terminal! bash --noprofile --norc')
   -- Wait for terminal to get active
-  child.loop.sleep(50)
+  vim.loop.sleep(term_mode_wait)
   expect.match(child.wo.statusline, 'MiniStatusline%.active')
   eq(child.api.nvim_get_current_buf() == init_buf_id, false)
 
   type_keys('i', 'exit', '<CR>')
-  child.loop.sleep(50)
+  vim.loop.sleep(term_mode_wait)
   type_keys('<CR>')
   expect.match(child.wo.statusline, 'MiniStatusline%.active')
   eq(child.api.nvim_get_current_buf() == init_buf_id, true)
@@ -774,6 +779,8 @@ T['Default content']['active'] = new_set({
   parametrize = { { 120 }, { 75 }, { 40 }, { 39 } },
 }, {
   test = function(window_width)
+    helpers.skip_on_windows('Windows has different default path separator')
+
     eq(child.api.nvim_win_get_option(0, 'statusline'), '%{%v:lua.MiniStatusline.active()%}')
     set_width(window_width)
     child.expect_screenshot()

@@ -35,11 +35,12 @@ local get = forward_lua('MiniNotify.get')
 local get_all = forward_lua('MiniNotify.get_all')
 
 -- Common mocks
-local ref_seconds, ref_microseconds = 1703673296, 0.123456
+local ref_seconds, ref_microseconds = 1703680496, 0.123456
 local mock_gettimeofday = function()
   -- Ensure reproducibility of `vim.fn.strftime`
   child.lua([[
-    vim.loop.os_setenv('TZ', 'Europe/Kiev')
+    vim.loop.os_setenv('TZ', 'Etc/UTC')
+    vim.loop.os_setenv('_TZ', 'Etc/UTC')
     vim.cmd('language time en_US.utf8')
   ]])
   local lua_cmd = string.format(
@@ -53,6 +54,10 @@ local mock_gettimeofday = function()
   )
   child.lua(lua_cmd)
 end
+
+-- Time constants
+local default_duration_last = 1000
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -145,14 +150,16 @@ T['make_notify()']['works'] = function()
   child.set_size(10, 45)
   mock_gettimeofday()
 
+  local test_duration = 5 * small_time
+  child.lua('_G.dur = ' .. test_duration)
   child.lua([[
     local level_opts = {
-      ERROR = { duration = 300 },
-      WARN  = { duration = 250 },
-      INFO  = { duration = 200 },
-      DEBUG = { duration = 150 },
-      TRACE = { duration = 100 },
-      OFF   = { duration = 50  },
+      ERROR = { duration = 6 * _G.dur },
+      WARN  = { duration = 5 * _G.dur },
+      INFO  = { duration = 4 * _G.dur },
+      DEBUG = { duration = 3 * _G.dur },
+      TRACE = { duration = 2 * _G.dur },
+      OFF   = { duration = 1 * _G.dur },
     }
     vim.notify = MiniNotify.make_notify(level_opts)
   ]])
@@ -190,17 +197,17 @@ T['make_notify()']['works'] = function()
 
   -- Should make notifications disappear after configured duration
   validate_active({ 'error', 'warn', 'info', 'debug', 'trace', 'off' })
-  sleep(50 + 10)
+  sleep(test_duration + small_time)
   validate_active({ 'error', 'warn', 'info', 'debug', 'trace' })
-  sleep(50)
+  sleep(test_duration)
   validate_active({ 'error', 'warn', 'info', 'debug' })
-  sleep(50)
+  sleep(test_duration)
   validate_active({ 'error', 'warn', 'info' })
-  sleep(50)
+  sleep(test_duration)
   validate_active({ 'error', 'warn' })
-  sleep(50)
+  sleep(test_duration)
   validate_active({ 'error' })
-  sleep(50)
+  sleep(test_duration)
   validate_active({})
 end
 
@@ -248,12 +255,13 @@ T['make_notify()']['validates arguments'] = function()
 end
 
 T['make_notify()']['has output working in `libuv` callbacks'] = function()
+  child.lua('_G.dur = ' .. small_time)
   child.lua([[
     vim.notify = MiniNotify.make_notify()
     local timer = vim.loop.new_timer()
-    timer:start(1, 0, function() vim.notify('Hello', vim.log.levels.INFO) end)
+    timer:start(_G.dur, 0, function() vim.notify('Hello', vim.log.levels.INFO) end)
   ]])
-  sleep(1 + 1)
+  sleep(small_time + small_time)
   eq(child.cmd_capture('messages'), '')
   eq(get_all()[1].msg, 'Hello')
 end
@@ -474,6 +482,7 @@ T['clear()']['affects only active notifications'] = function()
   eq(type(ts_remove_1), 'number')
   eq(get(id_2).ts_remove, nil)
 
+  sleep(small_time)
   clear()
   eq(get(id_1).ts_remove, ts_remove_1)
   local ts_remove_2 = get(id_2).ts_remove
@@ -971,9 +980,9 @@ T['LSP progress']['works'] = function()
   child.expect_screenshot()
 
   -- Should wait some time and then hide notifications
-  sleep(child.lua_get('MiniNotify.config.lsp_progress.duration_last') - 10)
+  sleep(default_duration_last - small_time)
   child.expect_screenshot()
-  sleep(10 + 10)
+  sleep(small_time + small_time)
   child.expect_screenshot()
 
   -- Should update single notification (and not remove/add new ones)
@@ -1033,12 +1042,13 @@ T['LSP progress']['respects `lsp_progress.duration_last`'] = function()
   result.value.kind, result.value.message, result.value.percentage = 'report', '1/1', 100
   call_handler(result, ctx)
 
-  child.lua('MiniNotify.config.lsp_progress.duration_last = 50')
+  local new_duration_last = 5 * small_time
+  child.lua('MiniNotify.config.lsp_progress.duration_last = ' .. new_duration_last)
   result.value.kind, result.value.message, result.value.percentage = 'end', 'done', nil
   call_handler(result, ctx)
-  sleep(50 - 10)
+  sleep(new_duration_last - small_time)
   child.expect_screenshot()
-  sleep(10 + 10)
+  sleep(small_time + small_time)
   child.expect_screenshot()
 end
 

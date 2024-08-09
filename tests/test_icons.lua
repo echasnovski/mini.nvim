@@ -311,8 +311,8 @@ T['get()']['respects `config.use_file_extension`'] = function()
   eq(get('file', '/extra.dots.yml'), { '', 'MiniIconsPurple', false })
 
   -- - '/queries/.*%.scm' pattern should be built-in
-  eq(get('file', 'queries/lua.scm'), { '󰐅', 'MiniIconsGreen', false })
-  eq(get('file', 'queries/extra.dots.scm'), { '󰐅', 'MiniIconsGreen', false })
+  eq(get('file', './queries/lua.scm'), { '󰐅', 'MiniIconsGreen', false })
+  eq(get('file', './queries/extra.dots.scm'), { '󰐅', 'MiniIconsGreen', false })
   eq(get('file', 'lua.scm'), { '󰘧', 'MiniIconsGrey', false })
 
   -- Should not be called if there is no extension

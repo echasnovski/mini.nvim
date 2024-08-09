@@ -29,21 +29,10 @@ end
 local test_dir = 'tests/dir-files'
 
 local join_path = function(...) return table.concat({ ... }, '/') end
+local full_path = function(...) return (vim.fn.fnamemodify(join_path(...), ':p'):gsub('\\', '/'):gsub('(.)/$', '%1')) end
+local short_path = function(...) return (vim.fn.fnamemodify(join_path(...), ':~'):gsub('\\', '/'):gsub('(.)/$', '%1')) end
 
-local full_path = function(...)
-  local res = vim.fn.fnamemodify(join_path(...), ':p'):gsub('(.)/$', '%1')
-  return res
-end
-
-local short_path = function(...)
-  local res = vim.fn.fnamemodify(join_path(...), ':~'):gsub('(.)/$', '%1')
-  return res
-end
-
-local make_test_path = function(...)
-  local path = join_path(test_dir, join_path(...))
-  return child.fn.fnamemodify(path, ':p')
-end
+local make_test_path = function(...) return full_path(join_path(test_dir, ...)) end
 
 local make_temp_dir = function(name, children)
   -- Make temporary directory and make sure it is removed after test is done
@@ -98,7 +87,7 @@ end
 local make_plain_pattern = function(...) return table.concat(vim.tbl_map(vim.pesc, { ... }), '.*') end
 
 local is_file_in_buffer = function(buf_id, path)
-  return string.find(child.api.nvim_buf_get_name(buf_id), vim.pesc(path) .. '$') ~= nil
+  return string.find(child.api.nvim_buf_get_name(buf_id):gsub('\\', '/'), vim.pesc(path:gsub('\\', '/')) .. '$') ~= nil
 end
 
 local is_file_in_window = function(win_id, path) return is_file_in_buffer(child.api.nvim_win_get_buf(win_id), path) end
@@ -143,10 +132,10 @@ local mock_stdpath_data = function()
     [[
     _G.stdpath_orig = vim.fn.stpath
     vim.fn.stdpath = function(what)
-      if what == 'data' then return '%s' end
+      if what == 'data' then return %s end
       return _G.stdpath_orig(what)
     end]],
-    data_dir
+    vim.inspect(data_dir)
   )
   child.lua(lua_cmd)
   return data_dir
@@ -166,6 +155,10 @@ local test_fs_entries = {
   { fs_type = 'file', name = 'A-file-2', path = full_path('A-file-2') },
   { fs_type = 'file', name = 'b-file', path = full_path('b-file') },
 }
+
+-- Time constants
+local track_lost_focus_delay = 1000
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -856,7 +849,7 @@ T['open()']['tracks lost focus'] = function()
     open(test_dir_path)
     loose_focus()
     -- Tracking is done by checking every second
-    sleep(1000 + 20)
+    sleep(track_lost_focus_delay + small_time)
     validate_n_wins(1)
     eq(#child.api.nvim_list_bufs(), 1)
   end
@@ -1211,7 +1204,7 @@ T['go_in()']['works on file'] = function()
   eq(get_lines(), { '.a-file' })
 
   -- Should open with relative path to have better view in `:buffers`
-  expect.match(child.cmd_capture('buffers'), '"' .. vim.pesc(test_dir_path))
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '"' .. vim.pesc(test_dir_path))
 end
 
 T['go_in()']['respects `opts.close_on_file`'] = function()
@@ -2092,7 +2085,7 @@ T['Preview']['does not result in flicker'] = function()
   ]])
 
   -- State shown initially should be the same as after some time has passed
-  sleep(10)
+  sleep(small_time)
   eq(child.lua_get('_G.visible_bufs'), child.lua_get('_G.get_visible_bufs()'))
 end
 
@@ -3077,6 +3070,8 @@ T['File manipulation']['move works again after undo'] = function()
   type_keys('u', 'u')
   go_out()
   type_keys('u', 'u')
+  -- - Clear command line
+  type_keys(':', '<Esc>')
   -- - Highlighting is different on Neovim>=0.10
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
@@ -3413,7 +3408,7 @@ T['File manipulation']['works with problematic names'] = function()
 end
 
 T['File manipulation']['handles backslash on Unix'] = function()
-  if child.lua_get('vim.loop.os_uname().sysname') == 'Windows_NT' then MiniTest.skip('Test is not for Windows.') end
+  if child.loop.os_uname().sysname == 'Windows_NT' then MiniTest.skip('Test is not for Windows.') end
 
   local temp_dir = make_temp_dir('temp', { '\\', 'hello\\', 'wo\\rld' })
   open(temp_dir)
@@ -3865,6 +3860,7 @@ end
 T['Events']['`MiniFilesActionDelete` triggers for `options.permanent_delete = false`'] = function()
   track_event('MiniFilesActionDelete')
 
+  mock_stdpath_data()
   child.lua('MiniFiles.config.options.permanent_delete = false')
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
   open(temp_dir)

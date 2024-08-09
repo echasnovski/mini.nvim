@@ -12,24 +12,26 @@ local type_keys = function(...) return child.type_keys(...) end
 local poke_eventloop = function() child.api.nvim_eval('1') end
 local sleep = function(ms) vim.loop.sleep(ms); poke_eventloop() end
 local edit = function(path) child.cmd('edit ' .. child.fn.fnameescape(path)) end
+local child_time = function() return child.lua_get('os.time()') end
 --stylua: ignore end
 
 -- Test paths helpers
 local join_path = function(...) return table.concat({ ... }, '/') end
 
-local full_path = function(x)
-  local res = child.fn.fnamemodify(x, ':p'):gsub('(.)/$', '%1')
-  return res
-end
+local full_path = function(x) return (child.fn.fnamemodify(x, ':p'):gsub('\\', '/'):gsub('/+', '/'):gsub('(.)/$', '%1')) end
 
 local test_dir = 'tests/dir-visits'
-local test_dir_absolute = vim.fn.fnamemodify(test_dir, ':p'):gsub('(.)/$', '%1')
+local test_dir_absolute = vim.fn.fnamemodify(test_dir, ':p'):gsub('\\', '/'):gsub('(.)/$', '%1')
+local xdg_data_home = test_dir_absolute
+local data_std_path = xdg_data_home .. (helpers.is_windows() and '/nvim-data' or '/nvim')
 
 local make_testpath = function(...) return join_path(test_dir_absolute, ...) end
 
-local cleanup_dirs = function()
-  -- Clean up any possible side effects in `XDG_DATA_HOME` directory
-  vim.fn.delete(join_path(test_dir_absolute, 'nvim'), 'rf')
+local cleanup_index_file = function()
+  -- Clean up possibly written index file as it affects multiple test cases
+  local default_index_path = data_std_path .. '/mini-visits-index'
+  if vim.fn.filereadable(default_index_path) == 0 then return end
+  vim.fn.delete(default_index_path)
 end
 
 -- Common test wrappers
@@ -41,12 +43,14 @@ end
 local get_index = forward_lua('MiniVisits.get_index')
 local set_index = forward_lua('MiniVisits.set_index')
 
+local getcwd = function() return (child.fn.getcwd():gsub('\\', '/')) end
+
 -- Common test helpers
 local validate_buf_name = function(buf_id, name)
   buf_id = buf_id or child.api.nvim_get_current_buf()
   name = name ~= '' and full_path(name) or ''
   name = name:gsub('/+$', '')
-  eq(child.api.nvim_buf_get_name(buf_id), name)
+  eq(child.api.nvim_buf_get_name(buf_id):gsub('\\', '/'), name)
 end
 
 local validate_partial_equal_arr = function(test_arr, ref_arr)
@@ -130,15 +134,20 @@ end
 
 local get_ui_select_log = function() return child.lua_get('_G.ui_select_log') end
 
+-- Time constants
+local default_track_delay = 1000
+local small_time = helpers.get_time_const(5)
+local test_track_delay = 2 * small_time
+
 -- Output test set ============================================================
 local T = new_set({
   hooks = {
     pre_case = function()
       child.setup()
-      cleanup_dirs()
+      cleanup_index_file()
 
       -- Make `stdpath('data')` point to test directory
-      local lua_cmd = string.format([[vim.loop.os_setenv('XDG_DATA_HOME', %s)]], vim.inspect(test_dir_absolute))
+      local lua_cmd = string.format([[vim.loop.os_setenv('XDG_DATA_HOME', %s)]], vim.inspect(xdg_data_home))
       child.lua(lua_cmd)
 
       -- Load module
@@ -151,7 +160,8 @@ local T = new_set({
     end,
     post_once = function()
       child.stop()
-      cleanup_dirs()
+      cleanup_index_file()
+      vim.fn.delete(data_std_path, 'rf')
     end,
   },
 })
@@ -229,14 +239,14 @@ T['register_visit()']['works'] = function()
   -- entries (relative to current directory in this case)
   eq(get_index(), {})
   register_visit('file', 'dir')
-  eq(get_index(), { [dir_full] = { [file_full] = { count = 1, latest = os.time() } } })
+  eq(get_index(), { [dir_full] = { [file_full] = { count = 1, latest = child_time() } } })
 
   register_visit('file', 'dir')
-  local latest_1 = os.time()
+  local latest_1 = child_time()
   eq(get_index(), { [dir_full] = { [file_full] = { count = 2, latest = latest_1 } } })
 
   register_visit('dir/file-2', 'dir')
-  local latest_2 = os.time()
+  local latest_2 = child_time()
   eq(get_index(), {
     [dir_full] = {
       [file_full] = { count = 2, latest = latest_1 },
@@ -251,7 +261,7 @@ T['register_visit()']['works'] = function()
       [file_2_full] = { count = 1, latest = latest_2 },
     },
     [dir_2_full] = {
-      [file_full] = { count = 1, latest = os.time() },
+      [file_full] = { count = 1, latest = child_time() },
     },
   })
 end
@@ -260,15 +270,15 @@ T['register_visit()']['uses current data as defaults'] = function()
   local path = make_testpath('file')
   edit(path)
   register_visit()
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 1, latest = os.time() } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 1, latest = child_time() } } })
 end
 
 T['register_visit()']['handles paths with "~" for home directory'] = function()
   register_visit('~/file', '~/dir')
-  local home_dir = child.loop.os_homedir()
+  local home_dir = child.loop.os_homedir():gsub('\\', '/')
   eq(
     get_index(),
-    { [join_path(home_dir, 'dir')] = { [join_path(home_dir, 'file')] = { count = 1, latest = os.time() } } }
+    { [join_path(home_dir, 'dir')] = { [join_path(home_dir, 'file')] = { count = 1, latest = child_time() } } }
   )
 end
 
@@ -276,7 +286,7 @@ T['register_visit()']['does not affect other stored data'] = function()
   local path, cwd = make_testpath('file'), test_dir_absolute
   set_index({ [cwd] = { [path] = { count = 0, latest = 0, aaa = { bbb = true } } } })
   register_visit(path, cwd)
-  eq(get_index(), { [cwd] = { [path] = { count = 1, latest = os.time(), aaa = { bbb = true } } } })
+  eq(get_index(), { [cwd] = { [path] = { count = 1, latest = child_time(), aaa = { bbb = true } } } })
 end
 
 T['register_visit()']['validates arguments'] = function()
@@ -346,7 +356,7 @@ T['add_path()']['uses current data as defaults'] = function()
   local path = make_testpath('file')
   edit(path)
   add_path()
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 0, latest = 0 } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 0, latest = 0 } } })
 end
 
 T['add_path()']['does not affect other stored data'] = function()
@@ -384,7 +394,7 @@ T['add_label()']['works'] = function()
   register_visit('file', 'dir')
   add_label('ccc', 'file', 'dir')
   eq(get_index(), {
-    [dir_full] = { [file_full] = { count = 1, labels = { aaa = true, bbb = true, ccc = true }, latest = os.time() } },
+    [dir_full] = { [file_full] = { count = 1, labels = { aaa = true, bbb = true, ccc = true }, latest = child_time() } },
   })
 end
 
@@ -441,7 +451,7 @@ T['add_label()']['uses current data as defaults for path and cwd'] = function()
   local path = make_testpath('file')
   edit(path)
   add_label('aaa')
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } })
 end
 
 T['add_label()']['asks user for label if it is not supplied'] = function()
@@ -550,7 +560,7 @@ T['remove_path()']['uses current data as defaults'] = function()
   local path = make_testpath('file')
   edit(path)
   add_path()
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 0, latest = 0 } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 0, latest = 0 } } })
 
   remove_path()
   eq(get_index(), {})
@@ -584,7 +594,7 @@ T['remove_label()']['works'] = function()
   add_label('ccc', 'file', 'dir')
   remove_label('bbb', 'file', 'dir')
   eq(get_index(), {
-    [dir_full] = { [file_full] = { count = 1, labels = { ccc = true }, latest = os.time() } },
+    [dir_full] = { [file_full] = { count = 1, labels = { ccc = true }, latest = child_time() } },
   })
 end
 
@@ -648,10 +658,10 @@ T['remove_label()']['uses current data as defaults for path and cwd'] = function
   local path = make_testpath('file')
   edit(path)
   add_label('aaa')
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } })
 
   remove_label('aaa')
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 0, latest = 0 } } })
+  eq(get_index(), { [getcwd()] = { [path] = { count = 0, latest = 0 } } })
 end
 
 T['remove_label()']['asks user for label if it is not supplied'] = function()
@@ -713,14 +723,15 @@ T['list_paths()'] = new_set()
 local list_paths = forward_lua('MiniVisits.list_paths')
 
 T['list_paths()']['works'] = function()
+  local cur_time = child_time()
   local ref_index = {
     dir_1 = {
-      ['dir_1/file_1-1'] = { count = 2, latest = os.time() - 3 },
-      ['dir_1/file_1-2'] = { count = 1, latest = os.time() - 4 },
+      ['dir_1/file_1-1'] = { count = 2, latest = cur_time - 3 },
+      ['dir_1/file_1-2'] = { count = 1, latest = cur_time - 4 },
     },
     dir_2 = {
-      ['dir_2/file_2-1'] = { count = 3, latest = os.time() - 2 },
-      ['dir_1/file_1-2'] = { count = 4, latest = os.time() - 1 },
+      ['dir_2/file_2-1'] = { count = 3, latest = cur_time - 2 },
+      ['dir_1/file_1-2'] = { count = 4, latest = cur_time - 1 },
     },
   }
   set_index_from_ref(ref_index)
@@ -1070,7 +1081,17 @@ T['list_labels()']['validates arguments'] = function()
   expect.error(function() list_labels('file', 1) end, '`cwd`.*string')
 end
 
-T['select_path()'] = new_set()
+T['select_path()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Ensure consistent path separator
+      child.lua([[
+        local getcwd_orig = vim.fn.getcwd
+        vim.fn.getcwd = function() return (getcwd_orig():gsub('\\', '/')) end
+      ]])
+    end,
+  },
+})
 
 local select_path = forward_lua('MiniVisits.select_path')
 
@@ -1100,7 +1121,7 @@ T['select_path()']['works'] = function()
 end
 
 T['select_path()']['properly shortens paths'] = function()
-  local home_dir = child.lua_get('vim.loop.os_homedir()')
+  local home_dir = child.loop.os_homedir()
 
   local dir_path = make_testpath('dir_1')
   child.fn.chdir(dir_path)
@@ -1190,7 +1211,7 @@ T['select_label()']['works'] = function()
   edit('file')
 
   mock_ui_select(1)
-  select_label('', child.fn.getcwd())
+  select_label('', getcwd())
   eq(get_ui_select_log(), {
     { items = { 'bbb', 'xxx', 'aaa' }, prompt = 'Visited labels' },
     {
@@ -1263,7 +1284,7 @@ end
 
 local validate_iterate = function(init_path, direction, opts, ref_path)
   if init_path ~= nil then edit(init_path) end
-  iterate_paths(direction, child.fn.getcwd(), opts)
+  iterate_paths(direction, getcwd(), opts)
   validate_buf_name(0, ref_path)
 end
 
@@ -1326,10 +1347,10 @@ end
 
 T['iterate_paths()']['reuses current buffer when opening path'] = function()
   setup_index_for_iterate()
-  edit(join_path(child.fn.getcwd(), 'file_1-1'))
+  edit(join_path(getcwd(), 'file_1-1'))
   local file_buf_id = child.api.nvim_get_current_buf()
 
-  edit(join_path(child.fn.getcwd(), 'file_1-2'))
+  edit(join_path(getcwd(), 'file_1-2'))
   child.api.nvim_buf_set_option(file_buf_id, 'buflisted', false)
 
   iterate_paths('first')
@@ -1340,18 +1361,18 @@ T['iterate_paths()']['reuses current buffer when opening path'] = function()
 end
 
 T['iterate_paths()']['does not track visit'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
   setup_index_for_iterate()
   local init_index = get_index()
 
   iterate_paths('first')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   iterate_paths('forward')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   iterate_paths('backward')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   iterate_paths('last')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
 
   eq(get_index(), init_index)
 
@@ -1423,15 +1444,13 @@ end
 T['get_index()'] = new_set()
 
 T['get_index()']['works'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
   eq(get_index(), {})
 
   local path = make_testpath('file')
   edit(path)
-  sleep(10)
-  local latest = os.time()
-  sleep(5)
-  eq(get_index(), { [child.fn.getcwd()] = { [path] = { count = 1, latest = latest } } })
+  sleep(test_track_delay)
+  eq(get_index(), { [getcwd()] = { [path] = { count = 1, latest = child_time() } } })
 
   -- Should return table copy
   local is_ok = child.lua([[
@@ -1446,12 +1465,12 @@ end
 T['set_index()'] = new_set()
 
 T['set_index()']['works'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
 
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
+  local path, cwd = make_testpath('file'), getcwd()
   child.lua(string.format('_G.path, _G.cwd = %s, %s', vim.inspect(path), vim.inspect(cwd)))
   child.lua([[
-    _G.index_ref = { [vim.fn.getcwd()] = { [_G.path] = { count = 1, latest = 10 } } }
+    _G.index_ref = { [vim.fn.getcwd():gsub('\\', '/')] = { [_G.path] = { count = 1, latest = 10 } } }
     MiniVisits.set_index(_G.index_ref)
   ]])
 
@@ -1459,10 +1478,8 @@ T['set_index()']['works'] = function()
 
   -- Should set table copy
   edit(path)
-  sleep(10)
-  local latest = os.time()
-  sleep(5)
-  eq(get_index(), { [cwd] = { [path] = { count = 2, latest = latest } } })
+  sleep(test_track_delay)
+  eq(get_index(), { [cwd] = { [path] = { count = 2, latest = child_time() } } })
   eq(child.lua_get('_G.index_ref'), { [cwd] = { [path] = { count = 1, latest = 10 } } })
 end
 
@@ -1474,8 +1491,8 @@ T['set_index()']['treats set index as whole history and not only current session
   child.lua('MiniVisits.config.track.delay = 10')
   child.lua('MiniVisits.config.store.path = ' .. vim.inspect(store_path))
 
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  set_index({ [cwd] = { [path] = { count = 1, latest = os.time() } } })
+  local path, cwd = make_testpath('file'), getcwd()
+  set_index({ [cwd] = { [path] = { count = 1, latest = child_time() } } })
   eq(list_paths(''), { path })
 
   child.lua([[MiniVisits.config.store.path = vim.fn.stdpath('data') .. '/mini-visits-index']])
@@ -1507,16 +1524,16 @@ T['reset_index()']['works'] = function()
   child.fn.mkdir(vim.fn.fnamemodify(store_path, ':h'), 'p')
   child.fn.writefile({ 'return { aaa = { bbb = { count = 10, latest = 10 } } }' }, store_path)
 
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  set_index({ [cwd] = { [path] = { count = 1, latest = os.time() } } })
+  local path, cwd = make_testpath('file'), getcwd()
+  set_index({ [cwd] = { [path] = { count = 1, latest = child_time() } } })
 
   child.lua('MiniVisits.reset_index()')
   eq(get_index(), { aaa = { bbb = { count = 10, latest = 10 } } })
 end
 
-T['reset_index()']['does nothing if feading index failed'] = function()
+T['reset_index()']['does nothing if reading index failed'] = function()
   -- No index file
-  local index = { [child.fn.getcwd()] = { [make_testpath('file')] = { count = 1, latest = 10 } } }
+  local index = { [getcwd()] = { [make_testpath('file')] = { count = 1, latest = 10 } } }
   set_index(index)
 
   reset_index()
@@ -1536,8 +1553,8 @@ T['normalize_index()'] = new_set()
 local normalize_index = forward_lua('MiniVisits.normalize_index')
 
 T['normalize_index()']['works'] = function()
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  local index = { [cwd] = { [path] = { count = 1, labels = { aaa = true }, latest = os.time() } } }
+  local path, cwd = make_testpath('file'), getcwd()
+  local index = { [cwd] = { [path] = { count = 1, labels = { aaa = true }, latest = child_time() } } }
   set_index(index)
 
   -- Should return the output of `MiniVisits.gen_normalize.default` by default
@@ -1557,8 +1574,8 @@ T['normalize_index()']['works'] = function()
 end
 
 T['normalize_index()']['respects `config.store.normalize`'] = function()
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  local index = { [cwd] = { [path] = { count = 1, labels = { aaa = true }, latest = os.time() } } }
+  local path, cwd = make_testpath('file'), getcwd()
+  local index = { [cwd] = { [path] = { count = 1, labels = { aaa = true }, latest = child_time() } } }
   set_index(index)
 
   -- Should return the output of `MiniVisits.gen_normalize.default` by default
@@ -1621,8 +1638,8 @@ T['write_index()'] = new_set()
 local write_index = forward_lua('MiniVisits.write_index')
 
 T['write_index()']['works'] = function()
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  local index = { [cwd] = { [path] = { count = 1, latest = os.time() } } }
+  local path, cwd = make_testpath('file'), getcwd()
+  local index = { [cwd] = { [path] = { count = 1, latest = child_time() } } }
   set_index(index)
 
   -- Should call `normalize_index` and write its output
@@ -1645,8 +1662,8 @@ T['write_index()']['respects arguments'] = function()
   -- Should create non-existing parent directories
   local store_path = make_testpath('nondir/subdir/test-index')
   MiniTest.finally(function() vim.fn.delete(store_path) end)
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
-  local index = { [cwd] = { [path] = { count = 1, latest = os.time() } } }
+  local path, cwd = make_testpath('file'), getcwd()
+  local index = { [cwd] = { [path] = { count = 1, latest = child_time() } } }
   write_index(store_path, index)
 
   eq(table.concat(vim.fn.readfile(store_path), '\n'), 'return ' .. vim.inspect(index))
@@ -1810,7 +1827,7 @@ end
 T['gen_sort']['z()'] = new_set()
 
 T['gen_sort']['z()']['works'] = function()
-  local cur_time = os.time()
+  local cur_time = child_time()
   local path_data_arr = {
     { path = 'aaa', count = 2, latest = cur_time - 1 },
     { path = 'bbb', count = 3, latest = cur_time - 10000 },
@@ -1833,7 +1850,7 @@ end
 T['gen_normalize']['default()']['works'] = function()
   local path, path_2, path_3 =
     make_testpath('file'), make_testpath('dir_1', 'file_1-1'), make_testpath('dir_1', 'file_1-2')
-  local cwd, cwd_2 = child.fn.getcwd(), test_dir_absolute
+  local cwd, cwd_2 = getcwd(), test_dir_absolute
 
   validate_default_normalize({}, {
     [cwd] = {
@@ -1877,7 +1894,7 @@ end
 
 T['gen_normalize']['default()']['prunes before and after decay'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
-  local cwd = child.fn.getcwd()
+  local cwd = getcwd()
 
   -- Before decay
   validate_default_normalize({}, {
@@ -1909,14 +1926,14 @@ T['gen_normalize']['default()']['prunes before and after decay'] = function()
 end
 
 T['gen_normalize']['default()']['does not prune if visit has label'] = function()
-  local path, cwd = make_testpath('file'), child.fn.getcwd()
+  local path, cwd = make_testpath('file'), getcwd()
   local index = { [cwd] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } }
   validate_default_normalize({}, index, index)
 end
 
 T['gen_normalize']['default()']['respects `opts.decay_threshold`'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
-  local cwd = child.fn.getcwd()
+  local cwd = getcwd()
 
   local index = {
     [cwd] = {
@@ -1937,7 +1954,7 @@ end
 
 T['gen_normalize']['default()']['respects `opts.decay_target`'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
-  local cwd = child.fn.getcwd()
+  local cwd = getcwd()
 
   local index = {
     [cwd] = {
@@ -1963,7 +1980,7 @@ end
 
 T['gen_normalize']['default()']['respects `opts.prune_threshold`'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
-  local cwd = child.fn.getcwd()
+  local cwd = getcwd()
 
   local index = {
     [cwd] = {
@@ -1980,7 +1997,7 @@ end
 
 T['gen_normalize']['default()']['respects `opts.prune_paths`'] = function()
   local path, path_2 = make_testpath('file'), make_testpath('dir_1', 'file_1-1')
-  local cwd, cwd_2 = child.fn.getcwd(), test_dir_absolute
+  local cwd, cwd_2 = getcwd(), test_dir_absolute
 
   local index = {
     [cwd] = {
@@ -2014,78 +2031,74 @@ T['Tracking']['works'] = function()
   edit(path)
   eq(get_index(), {})
 
-  sleep(980)
+  sleep(default_track_delay - 2 * small_time)
   eq(get_index(), {})
 
   -- Should implement debounce style delay
   edit(path_2)
-  sleep(980)
+  sleep(default_track_delay - 2 * small_time)
   eq(get_index(), {})
-  sleep(20)
   -- - "Latest" time should use time of actual registration
-  local latest = os.time()
-
-  -- Sleep small time to reduce flakiness
-  sleep(5)
-  eq(get_index(), { [child.fn.getcwd()] = { [path_2] = { count = 1, latest = latest } } })
+  sleep(2 * small_time)
+  eq(get_index(), { [getcwd()] = { [path_2] = { count = 1, latest = child_time() } } })
 end
 
 T['Tracking']['registers only normal buffers'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
 
   -- Scratch buffer
   local buf_id = child.api.nvim_create_buf(false, true)
   child.api.nvim_set_current_buf(buf_id)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   eq(get_index(), {})
 
   -- Help buffer
   child.cmd('help')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   eq(get_index(), {})
 end
 
 T['Tracking']['can register directories'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
 
   local path = make_testpath('dir1')
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   validate_index_entry('', path, { count = 1 })
 end
 
 T['Tracking']['does not register same path twice in a row'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
 
   local path = make_testpath('file')
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   validate_index_entry('', path, { count = 1 })
 
   child.cmd('help')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   validate_index_entry('', path, { count = 1 })
 
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   validate_index_entry('', path, { count = 1 })
 end
 
 T['Tracking']['is done on `BufEnter` by default'] = function()
-  child.lua('MiniVisits.config.track.delay = 10')
+  child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
 
   local path, path_2 = make_testpath('file'), make_testpath('dir1', 'file1-1')
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
 
   child.cmd('vertical split | edit ' .. child.fn.fnameescape(path_2))
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
 
   -- Going back and forth should count as visits
   child.cmd('wincmd w')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   child.cmd('wincmd w')
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
 
   validate_index_entry('', path, { count = 2 })
   validate_index_entry('', path_2, { count = 2 })
@@ -2093,26 +2106,26 @@ end
 
 T['Tracking']['respects `config.track.event`'] = function()
   child.cmd('autocmd! MiniVisits')
-  load_module({ track = { event = 'BufHidden', delay = 10 } })
+  load_module({ track = { event = 'BufHidden', delay = test_track_delay } })
 
   local path = make_testpath('file')
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   eq(get_index(), {})
 
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(false, true))
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   validate_index_entry('', path, { count = 1 })
 end
 
 T['Tracking']['can have `config.track.event = ""` to disable tracking'] = function()
   child.cmd('autocmd! MiniVisits')
-  load_module({ track = { event = '', delay = 10 } })
+  load_module({ track = { event = '', delay = test_track_delay } })
   eq(child.cmd_capture('au MiniVisits'):find('BufEnter'), nil)
 
   local path = make_testpath('file')
   edit(path)
-  sleep(10 + 5)
+  sleep(test_track_delay + small_time)
   eq(get_index(), {})
 end
 
@@ -2127,19 +2140,19 @@ T['Tracking']['respects `vim.{g,b}.minivisits_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
-    child.lua('MiniVisits.config.track.delay = 10')
+    child.lua('MiniVisits.config.track.delay = ' .. test_track_delay)
     local path, path_2 = make_testpath('file'), make_testpath('dir1', 'file1-1')
 
     -- Setting variable after event but before delay expired should work
     edit(path)
-    sleep(1)
+    sleep(0.1 * test_track_delay)
     child[var_type].minivisits_disable = true
-    sleep(9 + 5)
+    sleep(0.9 * test_track_delay + small_time)
     eq(get_index(), {})
 
     -- Global variable should disable globally, buffer - per buffer
     edit(path_2)
-    sleep(10 + 5)
+    sleep(test_track_delay + small_time)
     if var_type == 'g' then
       eq(get_index(), {})
     else
@@ -2148,7 +2161,7 @@ T['Tracking']['respects `vim.{g,b}.minivisits_disable`'] = new_set({
 
     -- Buffer-local variable should still work
     edit(path)
-    sleep(10 + 5)
+    sleep(test_track_delay + small_time)
     validate_index_entry('', path, nil)
   end,
 })
@@ -2162,10 +2175,12 @@ T['Storing']['works'] = function()
 end
 
 T['Storing']['respects `config.store.autowrite`'] = function()
+  local store_path = child.lua_get('MiniVisits.config.store.path')
+  eq(child.fn.filereadable(store_path), 0)
+
   -- Should be respected even if set after `setup()`
   child.lua('MiniVisits.config.store.autowrite = false')
   child.cmd('doautocmd VimLeavePre')
-  local store_path = child.lua_get('MiniVisits.config.store.path')
   eq(child.fn.filereadable(store_path), 0)
 end
 

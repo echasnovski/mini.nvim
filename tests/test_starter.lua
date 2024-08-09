@@ -160,7 +160,7 @@ T['open()']['works'] = function()
   child.lua('MiniStarter.open()')
 
   expect.no_equality(child.api.nvim_get_current_buf(), init_buf_id)
-  eq(child.api.nvim_buf_get_name(0), child.fn.getcwd() .. '/Starter')
+  eq(child.api.nvim_buf_get_name(0), child.fn.getcwd() .. package.config:sub(1, 1) .. 'Starter')
   validate_starter_shown()
 
   expect.match(table.concat(get_lines(), '\n'), 'Builtin actions')
@@ -910,16 +910,17 @@ T['sections']['recent_files()'] = new_set()
 
 T['sections']['recent_files()']['correctly identifies files from current directory'] = function()
   local dir, dir_similar = 'tests/dir-starter/aaa', 'tests/dir-starter/aaabbb'
+  local file = dir_similar .. '/file'
   child.fn.mkdir(dir)
   child.fn.mkdir(dir_similar)
   MiniTest.finally(function()
-    vim.fn.delete(dir, 'rf')
-    vim.fn.delete(dir_similar, 'rf')
+    vim.loop.fs_rmdir(dir)
+    vim.loop.fs_unlink(file)
+    vim.loop.fs_rmdir(dir_similar)
   end)
 
   -- Make recent file with absolute path having current directory as substring
   -- but not inside current directory
-  local file = dir_similar .. '/file'
   child.fn.writefile({ '' }, file)
   child.v.oldfiles = { child.fn.fnamemodify(file, ':p') }
   child.cmd('cd ' .. dir)
@@ -933,21 +934,27 @@ end
 
 T['sections']['recent_files()']['respects files in subdirectories'] = function()
   local dir = 'tests/dir-starter/aaa'
-  local dir_nested = 'tests/dir-starter/aaa/bbb'
-  child.fn.mkdir(dir)
-  child.fn.mkdir(dir_nested)
+  local dir_nested = dir .. '/bbb'
+  local file, file_nested = dir .. '/file1', dir_nested .. '/file2'
+
+  child.fn.mkdir(dir_nested, 'p')
+  child.fn.writefile({ '' }, file)
+  child.fn.writefile({ '' }, file_nested)
   MiniTest.finally(function()
-    vim.fn.delete(dir, 'rf')
-    vim.fn.delete(dir_nested, 'rf')
+    vim.loop.fs_unlink(file_nested)
+    vim.loop.fs_rmdir(dir_nested)
+    vim.loop.fs_unlink(file)
+    vim.loop.fs_rmdir(dir)
   end)
 
-  local file1 = dir .. '/file1'
-  child.fn.writefile({ '' }, file1)
-  local file2 = dir_nested .. '/file2'
-  child.fn.writefile({ '' }, file2)
-
-  child.v.oldfiles = { child.fn.fnamemodify(file1, ':p'), child.fn.fnamemodify(file2, ':p') }
+  child.v.oldfiles = { child.fn.fnamemodify(file, ':p'), child.fn.fnamemodify(file_nested, ':p') }
   child.cmd('cd ' .. dir)
+
+  -- Mock forward slash for more robust screenshot testing
+  child.lua([[
+    local fnamemodify_orig = vim.fn.fnamemodify
+    vim.fn.fnamemodify = function(...) return fnamemodify_orig(...):gsub('\\', '/') end
+  ]])
 
   -- Set up to show files only in current directory
   child.lua('MiniStarter.config.items = { MiniStarter.sections.recent_files(5, true, true) }')
@@ -959,7 +966,7 @@ end
 T['sections']['recent_files()']['respects `show_path`'] = function()
   local test_file = 'tests/dir-starter/aaa.txt'
   child.fn.writefile({ '' }, test_file)
-  MiniTest.finally(function() vim.fn.delete(test_file, 'rf') end)
+  MiniTest.finally(function() vim.loop.fs_unlink(test_file) end)
 
   child.v.oldfiles = { child.fn.fnamemodify(test_file, ':p') }
 

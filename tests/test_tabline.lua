@@ -20,8 +20,13 @@ local edit = function(name) child.cmd('edit ' .. name) end
 
 local edit_path = function(rel_path) child.cmd('edit tests/dir-tabline/' .. rel_path) end
 
+local path_sep = package.config:sub(1, 1)
+
 local eval_tabline = function(show_hl, show_action)
   local res = child.lua_get('MiniTabline.make_tabline_string()')
+
+  -- Unify path separator for more robust testing
+  res = res:gsub(path_sep, '/')
 
   if not show_hl then res = res:gsub('%%#%w+#', '') end
 
@@ -287,7 +292,7 @@ T['make_tabline_string()']['respects `config.format`'] = function()
     '%#MiniTablineHidden#[1] |dir1/aaa| %#MiniTablineCurrent#[2] |dir2/aaa| %#MiniTablineHidden#[3] |!(2)| %#MiniTablineFill#'
   )
   local log = child.lua_get('_G.log')
-  eq({ log[1], log[2], log[3] }, { 'dir1/aaa', 'dir2/aaa', '!(2)' })
+  eq({ log[1], log[2], log[3] }, { 'dir1' .. path_sep .. 'aaa', 'dir2' .. path_sep .. 'aaa', '!(2)' })
 
   -- Should also use buffer local config
   child.lua([[vim.b.minitabline_config = {

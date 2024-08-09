@@ -107,11 +107,13 @@ If your contribution updates code, please make sure that it doesn't break existi
 This plugin uses 'mini.test' to manage its tests. For a more hands-on introduction, see [TESTING.md](TESTING.md).
 
 **Notes**:
-- If you have Windows or MacOS and want to contribute code related change, make your best effort to not break existing behavior. It will later be tested automatically after making Pull Request. The reason for this distinction is that tests are not well designed to be run on those operating systems.
 - If new functionality relies on an external dependency (`git` CLI tool, LSP server, etc.), use mocking (writing Lua code which emulates dependency usage as close as reasonably possible). For examples, take a look at tests for 'mini.pick', 'mini.completion', and 'mini.statusline'.
 - There is a certain number of tests that are flaky (i.e. will sometimes report an error due to other reasons than actual functionality being broke). It is usually the ones which test time related functionality (i.e. that certain action was done after specific amount of delay).
     A commonly used way to know if the test is flaky is that it fails on non-nightly Neovim version yet there were no changes to its tested module after it had passed in the past. For example, some 'mini.animate' test is shown to break but there were no changes to it since test passed in CI couple of days before.
     In case there is some test breaking which reasonably should not, rerun that test (or the whole file) at least several times.
+- Advice for writing more robust tests:
+    - To test asynchronous or slow execution, use common `sleep()` test helper. For a more robust testing code, **never** directly use numbers to compute sleep time. Use precomputed time delay constants, which should always take into account different testing OSs (like be bigger on Windows, etc.).
+    - Take into account that Windows uses "\" as default path separator instead of Unix "/". This should be accounted either in module's code (preferably) or in test files (for example, by computing path separator and relying on it).
 
 ## Formatting
 

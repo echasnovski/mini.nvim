@@ -51,6 +51,10 @@ local eq_tostring = function(var_name1, var_name2)
   eq(child.lua_get(cmd), true)
 end
 
+-- Time constants
+local helper_message_delay, error_message_force_delay = 1000, 500
+local small_time = helpers.get_time_const(15)
+
 -- Output test set
 local T = new_set({
   hooks = {
@@ -1318,7 +1322,7 @@ T['Align']['does not stop on error during modifier execution'] = function()
   local before_time = vim.loop.hrtime()
   type_keys('Vj', 'ga', 'e')
   local duration = 0.000001 * (vim.loop.hrtime() - before_time)
-  eq(500 <= duration and duration <= 510, true)
+  eq(error_message_force_delay <= duration and duration <= error_message_force_delay + 2 * small_time, true)
   expect.match(get_latest_message(), '^%(mini.align%) Modifier "e" should be properly callable%. Reason:')
 end
 
@@ -1348,7 +1352,7 @@ T['Align']['prompts helper message after one idle second'] = new_set({
     local keys = test_mode == 'Normal' and { 'ga', 'Vip' } or { 'Vip', 'ga' }
     type_keys(unpack(keys))
 
-    sleep(1000 - 15)
+    sleep(helper_message_delay - small_time)
     -- Should show no message
     expect_screenshot()
     type_keys('j')
@@ -1357,10 +1361,10 @@ T['Align']['prompts helper message after one idle second'] = new_set({
     type_keys('r')
     -- Should show effect of hitting `r` and redraw if `showmode` is set (which
     -- it is by default)
-    sleep(1000 - 15)
+    sleep(helper_message_delay - small_time)
     -- Should still not show helper message
     expect_screenshot()
-    sleep(15 + 15)
+    sleep(small_time + small_time)
     -- Should now show helper message
     expect_screenshot()
 
@@ -1381,7 +1385,7 @@ T['Align']['helper message does not cause hit-enter-prompt'] = function()
   set_cursor(1, 0)
 
   type_keys('ga', 'Vj')
-  sleep(1000)
+  sleep(helper_message_delay + small_time)
   child.expect_screenshot()
 end
 
@@ -1456,7 +1460,7 @@ T['Align']['respects `config.silent`'] = function()
   set_cursor(1, 0)
   type_keys('Vip', 'ga')
 
-  sleep(1000 + 15)
+  sleep(helper_message_delay + small_time)
   child.expect_screenshot()
 end
 
