@@ -18,7 +18,6 @@ local new_scratch_buf = function() return child.api.nvim_create_buf(false, true)
 local get_buf = function() return child.api.nvim_get_current_buf() end
 local set_buf = function(buf_id) child.api.nvim_set_current_buf(buf_id) end
 local get_win = function() return child.api.nvim_get_current_win() end
-local edit = function(path) child.cmd('edit ' .. child.fn.fnameescape(path)) end
 --stylua: ignore end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
@@ -37,6 +36,18 @@ local git_file_path = git_root_dir .. path_sep .. 'file-in-git'
 local forward_lua = function(fun_str)
   local lua_cmd = fun_str .. '(...)'
   return function(...) return child.lua_get(lua_cmd, { ... }) end
+end
+
+-- Time constants
+local repo_watch_delay = 50
+local small_time = helpers.get_time_const(10)
+local micro_time = 1
+
+-- Common wrappers
+local edit = function(path)
+  child.cmd('edit ' .. child.fn.fnameescape(path))
+  -- Slow context needs a small delay to get things up to date
+  if helpers.is_slow() then sleep(small_time) end
 end
 
 local log_calls = function(fun_name)
@@ -64,11 +75,6 @@ end
 local validate_minigit_name = function(buf_id, ref_name)
   eq(child.api.nvim_buf_get_name(buf_id), make_minigit_name(buf_id, ref_name))
 end
-
--- Time constants
-local repo_watch_delay = 50
-local small_time = helpers.get_time_const(5)
-local micro_time = 1
 
 -- Common mocks
 -- - Git mocks
@@ -1160,6 +1166,7 @@ local enable = forward_lua('MiniGit.enable')
 
 T['enable()']['works'] = function()
   enable()
+  if helpers.is_slow() then sleep(small_time) end
   --stylua: ignore
   local ref_git_spawn_log = {
     {
@@ -1264,13 +1271,16 @@ T['enable()']['properly formats buffer-local summary string'] = function()
   edit(git_file_path)
   validate('main (??)')
 
-  child.cmd('edit')
+  edit('')
+  child.poke_eventloop()
   validate('main-1')
 
-  child.cmd('edit')
+  edit('')
+  child.poke_eventloop()
   validate('main-2 (A )')
 
-  child.cmd('edit')
+  edit('')
+  child.poke_eventloop()
   validate('main-3 ( M)')
 end
 
@@ -1433,8 +1443,7 @@ T['get_buf_data()']['works with several actions in progress'] = function()
 
   mock_spawn()
   child.lua('_G.stdio_queue = _G.init_track_stdio_queue')
-  child.cmd('edit')
-  sleep(small_time)
+  edit('')
   eq(get_buf_data().in_progress, 'merge,revert')
 end
 
@@ -1520,7 +1529,7 @@ T['Auto enable']['works after `:edit`'] = function()
   log_calls('MiniGit.enable')
   log_calls('MiniGit.disable')
 
-  child.cmd('edit')
+  edit('')
   validate_calls({ { 'MiniGit.disable', buf_id }, { 'MiniGit.enable', buf_id } })
   eq(get_buf_data(buf_id).root, git_root_dir)
 end
@@ -1904,6 +1913,7 @@ T['Tracking']['does not react to ".lock" files in repo directory'] = function()
   mock_init_track_stdio_queue()
   child.lua('_G.stdio_queue = _G.init_track_stdio_queue')
   edit(git_file_path)
+  sleep(small_time)
   eq(#get_spawn_log(), 3)
 
   child.fn.writefile({ '' }, git_repo_dir .. '/tmp.lock')

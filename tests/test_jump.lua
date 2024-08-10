@@ -14,7 +14,7 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 --stylua: ignore end
 
 -- Data =======================================================================

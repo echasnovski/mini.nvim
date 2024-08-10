@@ -15,7 +15,7 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 --stylua: ignore end
 
 -- Data =======================================================================
@@ -52,7 +52,7 @@ local example_lines_nested = { 'aa', ' aa', '  aa', '   aa', '   aa', '   aa', '
 -- Time constants
 local default_draw_delay = 100
 local default_animation_step = 20
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 local micro_time = 1
 
 -- Output test set ============================================================

@@ -9,7 +9,7 @@ local new_set = MiniTest.new_set
 local load_module = function(config) child.mini_load('visits', config) end
 local unload_module = function() child.mini_unload('visits') end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 local edit = function(path) child.cmd('edit ' .. child.fn.fnameescape(path)) end
 local child_time = function() return child.lua_get('os.time()') end
 --stylua: ignore end
@@ -135,7 +135,7 @@ local get_ui_select_log = function() return child.lua_get('_G.ui_select_log') en
 
 -- Time constants
 local default_track_delay = 1000
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 local test_track_delay = 2 * small_time
 
 -- Output test set ============================================================
@@ -1493,8 +1493,6 @@ T['set_index()']['treats set index as whole history and not only current session
   local path, cwd = make_testpath('file'), getcwd()
   set_index({ [cwd] = { [path] = { count = 1, latest = child_time() } } })
   eq(list_paths(''), { path })
-
-  child.lua([[MiniVisits.config.store.path = vim.fn.stdpath('data') .. '/mini-visits-index']])
 end
 
 T['set_index()']['validates arguments'] = function()

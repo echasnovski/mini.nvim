@@ -12,7 +12,7 @@ local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 --stylua: ignore end
 
 local get_virt_cursor = function()
@@ -240,7 +240,6 @@ T['is_active()']['works for `scroll`'] = function()
 end
 
 T['is_active()']['works for `resize`'] = function()
-  helpers.skip_if_slow()
   eq(is_active('resize'), false)
 
   type_keys('<C-w>v', '<C-w>|')

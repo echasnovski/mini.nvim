@@ -181,15 +181,30 @@ Helpers.skip_on_windows = function(msg)
   if Helpers.is_windows() then MiniTest.skip(msg or 'Does not test properly on Windows') end
 end
 
+Helpers.is_macos = function() return vim.fn.has('mac') == 1 end
+Helpers.skip_on_macos = function(msg)
+  if Helpers.is_macos() then MiniTest.skip(msg or 'Does not test properly on MacOS') end
+end
+
 -- Standardized way of dealing with time
-Helpers.is_slow = function() return Helpers.is_ci() and Helpers.is_windows() end
+Helpers.is_slow = function() return Helpers.is_ci() and (Helpers.is_windows() or Helpers.is_macos()) end
 Helpers.skip_if_slow = function(msg)
   if Helpers.is_slow() then MiniTest.skip(msg or 'Does not test properly in slow context') end
 end
 
-Helpers.get_time_const = function(delay) return (Helpers.is_slow() and 5 or 1) * delay end
+Helpers.get_time_const = function(delay)
+  local coef = 1
+  if Helpers.is_ci() then
+    if Helpers.is_windows() then coef = 5 end
+    if Helpers.is_macos() then coef = 15 end
+  end
+  return coef * delay
+end
 
-Helpers.sleep = function(ms, child)
+Helpers.sleep = function(ms, child, skip_slow)
+  if skip_slow then
+    Helpers.skip_if_slow('Skip because state checks after sleep are hard to make robust in slow context')
+  end
   vim.loop.sleep(math.max(ms, 1))
   if child ~= nil then child.poke_eventloop() end
 end

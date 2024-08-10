@@ -37,11 +37,10 @@ local get_all = forward_lua('MiniNotify.get_all')
 local ref_seconds, ref_microseconds = 1703680496, 0.123456
 local mock_gettimeofday = function()
   -- Ensure reproducibility of `vim.fn.strftime`
-  child.lua([[
-    vim.loop.os_setenv('TZ', 'Etc/UTC')
-    vim.loop.os_setenv('_TZ', 'Etc/UTC')
-    vim.cmd('language time en_US.utf8')
-  ]])
+  child.loop.os_setenv('TZ', 'Etc/UTC')
+  child.loop.os_setenv('_TZ', 'Etc/UTC')
+  child.cmd('language time en_US.UTF-8')
+
   local lua_cmd = string.format(
     [[local start, n = %d, -1
       vim.loop.gettimeofday = function()
@@ -1041,13 +1040,13 @@ T['LSP progress']['respects `lsp_progress.duration_last`'] = function()
   result.value.kind, result.value.message, result.value.percentage = 'report', '1/1', 100
   call_handler(result, ctx)
 
-  local new_duration_last = 5 * small_time
+  local new_duration_last = 6 * small_time
   child.lua('MiniNotify.config.lsp_progress.duration_last = ' .. new_duration_last)
   result.value.kind, result.value.message, result.value.percentage = 'end', 'done', nil
   call_handler(result, ctx)
-  sleep(new_duration_last - small_time)
+  sleep(new_duration_last - 2 * small_time)
   child.expect_screenshot()
-  sleep(small_time + small_time)
+  sleep(2 * small_time + small_time)
   child.expect_screenshot()
 end
 

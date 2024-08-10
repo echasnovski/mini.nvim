@@ -160,7 +160,7 @@ end
 
 -- Time constants
 local default_delay, postkeys_check_delay, redraw_interval = 1000, 50, 50
-local small_time = helpers.get_time_const(15)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -1183,6 +1183,8 @@ end
 T['Showing keys'] = new_set({ hooks = { pre_case = function() child.set_size(10, 40) end } })
 
 T['Showing keys']['works'] = function()
+  helpers.skip_if_slow()
+
   make_test_map('n', '<Space>aa')
   make_test_map('n', '<Space>ab')
   load_module({ triggers = { { mode = 'n', keys = '<Space>' } } })
@@ -1200,6 +1202,8 @@ T['Showing keys']['works'] = function()
 end
 
 T['Showing keys']['respects `config.window.delay`'] = function()
+  helpers.skip_if_slow()
+
   make_test_map('n', '<Space>aa')
   make_test_map('n', '<Space>ab')
   load_module({

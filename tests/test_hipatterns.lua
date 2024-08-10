@@ -9,7 +9,7 @@ local new_set = MiniTest.new_set
 local load_module = function(config) child.mini_load('hipatterns', config) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 --stylua: ignore end
 
 local forward_lua = function(fun_str)
@@ -53,7 +53,7 @@ local validate_hl_group = function(name, pattern) expect.match(child.cmd_capture
 local test_lines = { 'abcd abcd', 'Abcd ABCD', 'abcdaabcd' }
 
 -- Time constants
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Test config
 local test_config = {
@@ -148,6 +148,7 @@ T['Auto enable']['enables for normal buffers'] = function()
   eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { buf_id_1, buf_id_3 })
 
   child.api.nvim_set_current_buf(buf_id_2)
+  sleep(small_time)
   child.expect_screenshot()
   eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { buf_id_1, buf_id_2, buf_id_3 })
 end

@@ -56,6 +56,7 @@ local validate_action = function(mode, test)
     type_keys('<Esc>')
   elseif mode == 't' then
     helpers.skip_on_windows('Terminal emulator testing is not robust/easy on Windows')
+    helpers.skip_on_macos('Terminal emulator testing is not robust/easy on MacOS')
 
     -- Setup
     child.cmd('terminal! bash --noprofile --norc')

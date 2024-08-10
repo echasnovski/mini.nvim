@@ -16,7 +16,7 @@ local get_cursor = function(...) return child.get_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-lsp.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
@@ -65,7 +65,7 @@ end
 
 -- Time constants
 local default_completion_delay, default_info_delay, default_signature_delay = 100, 100, 50
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({

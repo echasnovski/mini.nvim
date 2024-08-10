@@ -112,7 +112,7 @@ This plugin uses 'mini.test' to manage its tests. For a more hands-on introducti
     A commonly used way to know if the test is flaky is that it fails on non-nightly Neovim version yet there were no changes to its tested module after it had passed in the past. For example, some 'mini.animate' test is shown to break but there were no changes to it since test passed in CI couple of days before.
     In case there is some test breaking which reasonably should not, rerun that test (or the whole file) at least several times.
 - Advice for writing more robust tests:
-    - To test asynchronous or slow execution, use common `sleep()` test helper. For a more robust testing code, **never** directly use numbers to compute sleep time. Use precomputed time delay constants, which should always take into account different testing OSs (like be bigger on Windows, etc.).
+    - To test asynchronous or slow execution, use common `sleep()` test helper. For a more robust testing code, **never** directly use numbers to compute sleep time. Use precomputed time delay constants, which should always take into account different testing OSs (like be bigger on Windows, etc.). If module testing requires its extensive use and tests can not be made robust enough (examples are 'mini.animate', 'mini.jump', etc.), consider using it with argument that skips entire test case if `sleep()` is called in slow context.
     - Take into account that Windows uses "\" as default path separator instead of Unix "/". This should be accounted either in module's code (preferably) or in test files (for example, by computing path separator and relying on it).
 
 ## Formatting

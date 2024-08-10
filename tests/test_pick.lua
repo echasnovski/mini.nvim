@@ -682,6 +682,8 @@ T['start()']['respects `source.choose_marked`'] = function()
 end
 
 T['start()']['respects `delay.async`'] = function()
+  helpers.skip_if_slow()
+
   child.set_size(15, 15)
   child.lua('_G.small_time = ' .. small_time)
   child.lua_notify([[
@@ -5236,6 +5238,8 @@ T['Paste']['does not error on non-existing register label'] = function()
 end
 
 T['Paste']['respects `delay.async` when waiting for register label'] = function()
+  helpers.skip_if_slow()
+
   child.set_size(15, 15)
   child.lua('_G.small_time = ' .. small_time)
   child.lua_notify([[

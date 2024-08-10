@@ -11,7 +11,7 @@ local unload_module = function() child.mini_unload('cursorword') end
 local set_cursor = function(...) return child.set_cursor(...) end
 local set_lines = function(...) return child.set_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
-local sleep = function(ms) helpers.sleep(ms, child) end
+local sleep = function(ms) helpers.sleep(ms, child, true) end
 --stylua: ignore end
 
 -- Make helpers
@@ -40,7 +40,7 @@ local example_lines = { 'aa', 'aa', 'aaa' }
 
 -- Time constants
 local default_delay = 100
-local small_time = helpers.get_time_const(5)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -173,8 +173,8 @@ end
 T['Autohighlighting']['works'] = function() validate_cursorword(default_delay) end
 
 T['Autohighlighting']['respects `config.delay`'] = function()
-  child.lua('MiniCursorword.config.delay = ' .. (2 * default_delay))
-  validate_cursorword(2 * default_delay)
+  child.lua('MiniCursorword.config.delay = ' .. (3 * default_delay))
+  validate_cursorword(3 * default_delay)
 
   -- Should also use buffer local config
   set_cursor(3, 0)

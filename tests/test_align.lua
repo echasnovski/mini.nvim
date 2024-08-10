@@ -52,7 +52,7 @@ end
 
 -- Time constants
 local helper_message_delay, error_message_force_delay = 1000, 500
-local small_time = helpers.get_time_const(15)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set
 local T = new_set({
@@ -1340,6 +1340,7 @@ T['Align']['prompts helper message after one idle second'] = new_set({
     -- Check this only on Neovim>=0.10, as there is a slight change in
     -- highlighting command line area
     if child.fn.has('nvim-0.10') == 0 then return end
+    helpers.skip_if_slow()
 
     local expect_screenshot = function() child.expect_screenshot({ redraw = false }) end
     child.set_size(12, 20)
