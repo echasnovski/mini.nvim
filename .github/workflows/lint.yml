@@ -63,23 +63,3 @@ jobs:
           fetch-depth: 0
       - name: Check Case Sensitivity
         uses: credfeto/action-case-checker@v1.2.1
-
-  checkout:
-    # Test possibility of checking out and setting up 'mini.nvim' on non-Linux
-    # This can guard from possible problems:
-    # - Long file names (particularly from reference screenshots).
-    name: Test checkout
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup neovim
-        uses: rhysd/action-setup-vim@v1
-        with:
-          # Uses latest stable by default
-          neovim: true
-      - name: Test setup
-        run: make basic_setup

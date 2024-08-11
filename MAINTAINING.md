@@ -145,7 +145,6 @@ Begin the process of stopping official support for outdated Neovim version short
 - Add Lua source code in 'lua' directory.
 - Add tests in 'tests' directory. Use 'tests/dir-xxx' name for module-specific non-test helpers.
 - Update 'lua/init.lua' to mention new module: both in initial table of contents and list of modules.
-- Update 'scripts/basic-setup_init.lua' to include new module.
 - Update 'scripts/dual_sync.sh' to include new module.
 - Update 'scripts/minidoc.lua' to generate separate help file.
 - Generate help files.
