@@ -947,7 +947,9 @@ H.make_draw_function = function(indicator, opts)
     virt_text_pos = 'overlay',
   }
 
-  if H.has_wrapped_virt_text and vim.wo.breakindent then extmark_opts.virt_text_repeat_linebreak = true end
+  if H.has_wrapped_virt_text and vim.wo.breakindent and vim.wo.showbreak == '' then
+    extmark_opts.virt_text_repeat_linebreak = true
+  end
 
   local current_event_id = opts.event_id
 

@@ -540,6 +540,12 @@ T['draw()']['shows symbols on wrapped lines without overlapping'] = function()
   child.wo.breakindent = true
   child.wo.breakindentopt = 'min:0'
   validate()
+
+  -- Should try to not overlap 'showbreak'
+  child.wo.breakindent = true
+  child.wo.breakindentopt = 'sbr'
+  child.wo.showbreak = 'x'
+  validate()
 end
 
 T['undraw()'] = new_set({
