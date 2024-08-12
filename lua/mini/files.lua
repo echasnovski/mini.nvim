@@ -323,8 +323,8 @@
 --- - `MiniFilesWindowOpen` - when new window is opened. Can be used to set
 ---   window-local settings (like border, 'winblend', etc.)
 ---
---- - `MiniFilesWindowUpdate` - when a window is updated. Triggers frequently,
----   for example, for every "go in" or "go out" action.
+--- - `MiniFilesWindowUpdate` - when a window is updated. Triggers VERY frequently.
+---   At least after every cursor movement and "go in" / "go out" action.
 ---
 --- Callback for each UI event will receive `data` field (see |nvim_create_autocmd()|)
 --- with the following information:
@@ -1108,9 +1108,6 @@ H.opened_buffers = {}
 -- File system information
 H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
--- Register table to decide whether certain autocmd events should be triggered
-H.block_event_trigger = {}
-
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
@@ -1852,10 +1849,7 @@ H.view_track_cursor = vim.schedule_wrap(function(data)
 
   explorer = H.explorer_sync_cursor_and_branch(explorer, buf_depth)
 
-  -- Don't trigger redundant window update events
-  H.block_event_trigger['MiniFilesWindowUpdate'] = true
   H.explorer_refresh(explorer)
-  H.block_event_trigger['MiniFilesWindowUpdate'] = false
 end)
 
 H.view_track_text_change = function(data)
@@ -1869,13 +1863,20 @@ H.view_track_text_change = function(data)
   -- Track window height
   if not H.is_valid_win(win_id) then return end
 
+  local cur_height = vim.api.nvim_win_get_height(win_id)
   local n_lines = vim.api.nvim_buf_line_count(buf_id)
-  local height = math.min(n_lines, H.window_get_max_height())
-  vim.api.nvim_win_set_height(win_id, height)
+  local new_height = math.min(n_lines, H.window_get_max_height())
+  vim.api.nvim_win_set_height(win_id, new_height)
+
+  -- Trigger appropriate event if window height has changed
+  if cur_height ~= new_height then
+    H.trigger_event('MiniFilesWindowUpdate', { buf_id = buf_id, win_id = win_id })
+    new_height = vim.api.nvim_win_get_height(win_id)
+  end
 
   -- Ensure that only buffer lines are shown. This can be not the case if after
   -- text edit cursor moved past previous last line.
-  local last_visible_line = vim.fn.line('w0', win_id) + height - 1
+  local last_visible_line = vim.fn.line('w0', win_id) + new_height - 1
   local out_of_buf_lines = last_visible_line - n_lines
   -- - Possibly scroll window upward (`\25` is an escaped `<C-y>`)
   if out_of_buf_lines > 0 then vim.cmd('normal! ' .. out_of_buf_lines .. '\25') end
@@ -2624,10 +2625,7 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-H.trigger_event = function(event_name, data)
-  if H.block_event_trigger[event_name] then return end
-  vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data })
-end
+H.trigger_event = function(event_name, data) vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data }) end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 

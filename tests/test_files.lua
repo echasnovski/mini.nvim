@@ -3793,28 +3793,48 @@ T['Events']['`MiniFilesWindowUpdate` triggers'] = function()
 
   open(test_dir_path)
   local buf_id_1, win_id_1 = child.api.nvim_get_current_buf(), child.api.nvim_get_current_win()
-  -- Should provide both `buf_id` and `win_id`
-  validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 } })
+  -- Triggered several times because `CursorMoved` also triggeres it.
+  -- Should provide both `buf_id` and `win_id`.
+  validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_1, win_id = win_id_1 } })
   clear_event_track()
 
   go_in()
   local buf_id_2, win_id_2 = child.api.nvim_get_current_buf(), child.api.nvim_get_current_win()
 
-  -- - Force order, as there is no order guarantee of event trigger
   -- - Both windows should be updated
-  validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } }, true)
+  validate_event_track(
+    {
+      { buf_id = buf_id_1, win_id = win_id_1 },
+      { buf_id = buf_id_1, win_id = win_id_1 },
+      { buf_id = buf_id_2, win_id = win_id_2 },
+      { buf_id = buf_id_2, win_id = win_id_2 },
+    },
+    -- - Force order, as there is no order guarantee of event trigger
+    true
+  )
 end
 
-T['Events']['`MiniFilesWindowUpdate` is not triggered for cursor move'] = function()
+T['Events']['`MiniFilesWindowUpdate` is triggered after every possible window config update'] = function()
   track_event('MiniFilesWindowUpdate')
 
   open(test_dir_path)
   clear_event_track()
 
-  type_keys('j')
-  type_keys('<Right>')
-  type_keys('i', '<Left>')
-  validate_event_track({})
+  -- Windows have to adjust configs on every cursor move if preview is set
+  child.lua('MiniFiles.config.windows.preview = true')
+
+  local validate = function(keys)
+    clear_event_track()
+    type_keys(keys)
+    eq(#get_event_track() > 0, true)
+  end
+
+  validate('j')
+  validate('<Right>')
+  validate({ 'i', '<Left>' })
+
+  -- NOTE: Currently this event also is triggered on every cursor move even if
+  -- preview is not enabled. This is to simplify code.
 end
 
 T['Events']['`MiniFilesWindowUpdate` is triggered after current buffer is set'] = function()
@@ -3822,7 +3842,55 @@ T['Events']['`MiniFilesWindowUpdate` is triggered after current buffer is set'] 
   open(test_dir_path)
   clear_event_track()
   go_out()
-  validate_event_track({ { buf_id = 2, win_id = 1004 }, { buf_id = 3, win_id = 1003 } }, true)
+  validate_event_track({
+    { buf_id = 2, win_id = 1004 },
+    { buf_id = 2, win_id = 1004 },
+    { buf_id = 3, win_id = 1003 },
+    { buf_id = 3, win_id = 1003 },
+  }, true)
+end
+
+T['Events']['`MiniFilesWindowUpdate` can customize internally set window config parts'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9') end
+  child.set_size(15, 80)
+
+  load_module({
+    windows = {
+      preview = true,
+      width_focus = 40,
+      width_nofocus = 10,
+      width_preview = 20,
+    },
+  })
+
+  child.lua([[
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'MiniFilesWindowUpdate',
+      callback = function(args)
+        local config = vim.api.nvim_win_get_config(args.data.win_id)
+        -- Ensure fixed height
+        config.height = 5
+        -- Ensure title padding
+        local n = #config.title
+        if config.title[n][1] ~= ' ' then table.insert(config.title, { ' ', 'NormalFloat' }) end
+        if config.title[1][1] ~= ' ' then table.insert(config.title, 1, { ' ', 'NormalFloat' }) end
+        vim.api.nvim_win_set_config(args.data.win_id, config)
+      end
+    })
+  ]])
+
+  open(test_dir_path)
+  go_in()
+  child.expect_screenshot()
+
+  go_out()
+  type_keys('4j', 'o', 'a')
+  child.expect_screenshot()
+
+  -- Works even if completion menu (like from 'mini.completion') is triggered
+  child.cmd('set iskeyword+=-')
+  type_keys('<C-n>')
+  child.expect_screenshot()
 end
 
 T['Events']['`MiniFilesActionCreate` triggers'] = function()
