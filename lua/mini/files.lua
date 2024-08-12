@@ -366,7 +366,8 @@
 --- <
 --- # Customize windows ~
 ---
---- Create an autocommand for `MiniFilesWindowOpen` event: >lua
+--- For most of the common customizations using `MiniFilesWindowOpen` event
+--- autocommand is the suggested approach: >lua
 ---
 ---   vim.api.nvim_create_autocmd('User', {
 ---     pattern = 'MiniFilesWindowOpen',
@@ -381,9 +382,32 @@
 ---     end,
 ---   })
 --- <
+--- However, some parts (like window title and height) of window config are later
+--- updated internally. Use `MiniFilesWindowUpdate` event for them: >lua
+---
+---   vim.api.nvim_create_autocmd('User', {
+---     pattern = 'MiniFilesWindowUpdate',
+---     callback = function(args)
+---       local config = vim.api.nvim_win_get_config(args.data.win_id)
+---
+---       -- Ensure fixed height
+---       config.height = 10
+---
+---       -- Ensure title padding
+---       if config.title[#config.title][1] ~= ' ' then
+---         table.insert(config.title, { ' ', 'NormalFloat' })
+---       end
+---       if config.title[1][1] ~= ' ' then
+---         table.insert(config.title, 1, { ' ', 'NormalFloat' })
+---       end
+---
+---       vim.api.nvim_win_set_config(args.data.win_id, config)
+---     end,
+---   })
+--- <
 --- # Customize icons ~
 ---
---- Use different directory icon: >lua
+--- Use different directory icon (if you don't use |mini.icons|): >lua
 ---
 ---   local my_prefix = function(fs_entry)
 ---     if fs_entry.fs_type == 'directory' then
