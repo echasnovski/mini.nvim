@@ -52,6 +52,7 @@
 ## mini.statusline
 
 - BREAKING FEATURE: update `section_fileinfo()` to show non-empty filetype even in not normal buffers (like plugin's scratch buffers, help, quickfix, etc.). Previously it showed nothing, which was a mistake as filetype can be a valuable information.
+- BREAKING FEATURE: the default `set_vim_settings` config value now does not affect `laststatus = 3` (aka global statusline).
 - FEATURE: prefer using 'mini.icons' as icon provider for `section_fileinfo()`.
 
 ## mini.surround

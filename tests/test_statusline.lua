@@ -154,8 +154,16 @@ T['setup()']['sets proper autocommands'] = function()
 end
 
 T['setup()']['respects `config.set_vim_settings`'] = function()
-  reload_module({ set_vim_settings = true })
-  eq(child.o.laststatus, 2)
+  local validate = function(init_laststatus, ref_laststatus)
+    child.o.laststatus = init_laststatus
+    reload_module({ set_vim_settings = true })
+    eq(child.o.laststatus, ref_laststatus)
+  end
+
+  validate(0, 2)
+  validate(1, 2)
+  validate(2, 2)
+  validate(3, 3)
 end
 
 T['setup()']['disables built-in statusline in quickfix window'] = function()
