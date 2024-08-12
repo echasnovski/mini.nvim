@@ -1437,6 +1437,16 @@ H.explorer_go_in_range = function(explorer, buf_id, from_line, to_line)
     if fs_entry.fs_type == 'directory' then
       path, line = fs_entry.path, i
     end
+    if fs_entry.fs_type == nil and fs_entry.path == nil then
+      local entry = vim.inspect(H.get_bufline(buf_id, i))
+      H.notify('Line ' .. entry .. ' does not have proper format. Did you modify without synchronization?', 'WARN')
+    end
+    if fs_entry.fs_type == nil and fs_entry.path ~= nil then
+      local path_resolved = vim.fn.resolve(fs_entry.path)
+      local symlink_info = path_resolved == fs_entry.path and ''
+        or (' Looks like miscreated symlink (resolved to ' .. path_resolved .. ').')
+      H.notify('Path ' .. fs_entry.path .. ' is not present on disk.' .. symlink_info, 'WARN')
+    end
   end
 
   for _, file_path in ipairs(files) do

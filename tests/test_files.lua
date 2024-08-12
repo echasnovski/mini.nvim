@@ -1291,6 +1291,41 @@ end
 
 T['go_in()']['works when no explorer is opened'] = function() expect.no_error(go_in) end
 
+T['go_in()']['warns about paths not present on disk'] = function()
+  local validate_log = function(msg_pattern)
+    local notify_log = child.lua_get('_G.notify_log')
+    eq(#notify_log, 1)
+    expect.match(notify_log[1][1], msg_pattern)
+    eq(notify_log[1][2], child.lua_get('vim.log.levels.WARN'))
+    child.lua('_G.notify_log = {}')
+  end
+
+  open(test_dir_path)
+
+  -- Modified line without synchronization
+  type_keys('O', 'new-file', '<Esc>')
+  go_in()
+  validate_log('Line "new%-file".*Did you modify without synchronization%?')
+
+  -- Entry which doesn't exist on disk
+  child.lua([[
+    local get_fs_entry_orig = MiniFiles.get_fs_entry
+    MiniFiles.get_fs_entry = function(...)
+      local res = get_fs_entry_orig(...)
+      res.fs_type = nil
+      return res
+    end
+  ]])
+  type_keys('j')
+  go_in()
+  validate_log('Path .* is not present on disk%.$')
+
+  -- Entry with possibly miscreated symlink
+  child.lua('vim.fn.resolve = function() return "miscreated-symlink" end')
+  go_in()
+  validate_log('Path.*is not present on disk.*miscreated symlink %(resolved to miscreated%-symlink%)')
+end
+
 T['go_out()'] = new_set()
 
 T['go_out()']['works on not branch root'] = function()
