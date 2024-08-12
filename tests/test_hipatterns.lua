@@ -143,6 +143,7 @@ T['Auto enable']['enables for normal buffers'] = function()
   set_lines({ '33abcd33' })
 
   load_module(test_config)
+  sleep(small_time)
   -- Should enable in all proper buffers currently shown in some window
   child.expect_screenshot()
   eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { buf_id_1, buf_id_3 })
@@ -979,6 +980,7 @@ local enable_hex_color = function(...)
       })]],
     { ... }
   )
+  sleep(small_time)
 end
 
 T['gen_highlighter']['hex_color()']['works'] = function()
