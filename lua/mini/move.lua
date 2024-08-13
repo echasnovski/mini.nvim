@@ -189,6 +189,12 @@ MiniMove.move_selection = function(direction, opts)
   local dir_type = (direction == 'up' or direction == 'down') and 'vert' or 'hori'
   local is_linewise = cur_mode == 'V'
 
+  -- Make early return in small buffer
+  if vim.api.nvim_buf_line_count(0) == 1 then
+    if is_linewise and dir_type == 'vert' then return end
+    if not is_linewise and vim.fn.getline(1):len() == 0 then return end
+  end
+
   -- Cache useful data because it will be reset when executing commands
   local n_times = opts.n_times or vim.v.count1
   local ref_curpos, ref_last_col = vim.fn.getcurpos(), vim.fn.col('$')
@@ -310,6 +316,7 @@ end
 ---@param opts __move_opts
 MiniMove.move_line = function(direction, opts)
   if H.is_disabled() or not vim.o.modifiable then return end
+  if vim.api.nvim_buf_line_count(0) == 1 and (direction == 'down' or direction == 'up') then return end
 
   opts = vim.tbl_deep_extend('force', H.get_config().options, opts or {})
 

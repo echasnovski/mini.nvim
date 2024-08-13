@@ -736,6 +736,39 @@ T['move_selection()']['works with multibyte characters'] = function()
   validate_state({ 'ыыы', '', 'ыыXXыыы' }, { { 3, 5 }, { 3, 6 } })
 end
 
+T['move_selection()']['works in small buffers'] = function()
+  local validate = function(line_before, vis_mode, direction, line_after)
+    child.ensure_normal_mode()
+    set_lines({ line_before })
+    set_cursor(1, 1)
+    type_keys(vis_mode)
+    move(direction)
+    eq(get_lines(), { line_after or line_before })
+  end
+
+  -- Should do nothing in empty buffer
+  for _, vis_mode in ipairs({ 'v', 'V', '<C-v>' }) do
+    for _, direction in ipairs({ 'up', 'down', 'left', 'right' }) do
+      validate('', vis_mode, direction)
+    end
+  end
+
+  -- Should work only horizontally in single line buffer
+  validate('abc', 'v', 'up', 'abc')
+  validate('abc', 'v', 'down', 'abc')
+  validate('abc', 'V', 'up', 'abc')
+  validate('abc', 'V', 'down', 'abc')
+  validate('abc', '<C-v>', 'up', 'abc')
+  validate('abc', '<C-v>', 'down', 'abc')
+
+  validate('abc', 'v', 'left', 'bac')
+  validate('abc', 'v', 'right', 'acb')
+  validate('\tabc', 'V', 'left', 'abc')
+  validate('abc', 'V', 'right', '\tabc')
+  validate('abc', '<C-v>', 'left', 'bac')
+  validate('abc', '<C-v>', 'right', 'acb')
+end
+
 T['move_selection()']['has no side effects'] = function()
   set_lines({ 'abXcd' })
 
@@ -1059,6 +1092,27 @@ T['move_line()']['respects `opts.n_times` horizontally'] = function()
   validate_line_state({ '\t\t\taa' }, { 1, 3 })
   move_line('left', { n_times = 2 })
   validate_line_state({ '\taa' }, { 1, 1 })
+end
+
+T['move_line()']['works in small buffers'] = function()
+  local validate = function(line_before, direction, line_after)
+    set_lines({ line_before })
+    set_cursor(1, 0)
+    move_line(direction)
+    eq(get_lines(), { line_after or line_before })
+  end
+
+  -- Should do nothing in empty buffer
+  validate('', 'up', '')
+  validate('', 'down', '')
+  validate('', 'left', '')
+  validate('', 'right', '')
+
+  -- Should work only horizontally in single line buffer
+  validate('abc', 'up', 'abc')
+  validate('abc', 'down', 'abc')
+  validate('\tabc', 'left', 'abc')
+  validate('abc', 'right', '\tabc')
 end
 
 T['move_line()']['has no side effects'] = function()
