@@ -2466,7 +2466,7 @@ local validate_location_scope = function(scope)
   eq(get_cursor(), { 3, 15 })
 end
 
-local validate_symbol_scope = function(scope)
+local validate_symbol_scope = function(scope, skip_preview)
   local file_path, file_path_full = setup_lsp()
 
   mock_slash_path_sep()
@@ -2493,20 +2493,25 @@ local validate_symbol_scope = function(scope)
   eq(get_extra_picker_extmarks(0, -1), ref_extmark_data)
 
   -- Should preview position
-  type_keys('<Tab>')
-  child.expect_screenshot()
+  if not skip_preview then
+    type_keys('<Tab>')
+    child.expect_screenshot()
+  end
   unmock_slash_path_sep()
 
   -- Should have proper items
   local text_prefix = scope == 'workspace_symbol' and (file_path:gsub('\\', '/') .. '│1│7│ ') or ''
-  if has_mini_icons then text_prefix = ' ' .. text_prefix end
+  local kind_name = child.lua_get('vim.lsp.protocol.SymbolKind[16]')
+  -- - Icon should be added only if it is not already assumed to be inside
+  --   `SymbolKind` map (as after `MiniIcons.tweak_lsp_kind()`).
+  if has_mini_icons and kind_name == 'Number' then text_prefix = ' ' .. text_prefix end
   local ref_item = {
     filename = file_path_full,
     path = file_path_full,
     lnum = 1,
     col = 7,
     kind = 'Number',
-    text = text_prefix .. '[Number] a',
+    text = text_prefix .. '[' .. kind_name .. '] a',
     hl = ref_extmark_data[1].hl_group,
   }
   eq(get_picker_items()[1], ref_item)
@@ -2515,6 +2520,16 @@ local validate_symbol_scope = function(scope)
   type_keys('<CR>')
   validate_buf_name(0, file_path)
   eq(get_cursor(), { 1, 6 })
+end
+
+local validate_symbol_scope_with_tweaked_kind = function(scope, tweak_lsp_kind_mode)
+  child.lua('_G.symbol_kind_orig = vim.deepcopy(vim.lsp.protocol.SymbolKind)')
+  child.lua("require('mini.icons').setup()")
+  child.lua('MiniIcons.tweak_lsp_kind(...)', { tweak_lsp_kind_mode })
+
+  validate_symbol_scope(scope, true)
+
+  child.lua('vim.lsp.protocol.SymbolKind = _G.symbol_kind_orig')
 end
 
 T['pickers']['lsp()']['works for `declaration`'] = function() validate_location_scope('declaration') end
@@ -2526,6 +2541,12 @@ T['pickers']['lsp()']['works for `document_symbol`'] = function() validate_symbo
 T['pickers']['lsp()']["works for `document_symbol` with 'mini.icons' set up"] = function()
   child.lua("require('mini.icons').setup()")
   validate_symbol_scope('document_symbol')
+end
+
+T['pickers']['lsp()']['works for `document_symbol` after `MiniIcons.tweak_lsp_kind()`'] = function()
+  validate_symbol_scope_with_tweaked_kind('document_symbol', 'prepend')
+  validate_symbol_scope_with_tweaked_kind('document_symbol', 'append')
+  validate_symbol_scope_with_tweaked_kind('document_symbol', 'replace')
 end
 
 T['pickers']['lsp()']['works for `implementation`'] = function() validate_location_scope('implementation') end
@@ -2567,6 +2588,12 @@ T['pickers']['lsp()']['works for `workspace_symbol`'] = function() validate_symb
 T['pickers']['lsp()']["works for `workspace_symbol` with 'mini.icons' set up"] = function()
   child.lua("require('mini.icons').setup()")
   validate_symbol_scope('workspace_symbol')
+end
+
+T['pickers']['lsp()']['works for `workspace_symbol` after `MiniIcons.tweak_lsp_kind()`'] = function()
+  validate_symbol_scope_with_tweaked_kind('workspace_symbol', 'prepend')
+  validate_symbol_scope_with_tweaked_kind('workspace_symbol', 'append')
+  validate_symbol_scope_with_tweaked_kind('workspace_symbol', 'replace')
 end
 
 T['pickers']['lsp()']['respects `local_opts.symbol_query`'] = function()

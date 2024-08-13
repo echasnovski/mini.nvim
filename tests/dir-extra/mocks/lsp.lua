@@ -32,13 +32,14 @@ end
 
 vim.lsp.buf.document_symbol = function(opts)
   table.insert(_G.lsp_buf_calls, 'document_symbol')
+  local symbol_kind = vim.lsp.protocol.SymbolKind
   local data = {
     context = make_context('textDocument/documentSymbol'),
     items = {
-      { col = 7, filename = filename, kind = 'Number', lnum = 1, text = '[Number] a' },
-      { col = 7, filename = filename, kind = 'Object', lnum = 2, text = '[Object] t' },
-      { col = 3, filename = filename, kind = 'Variable', lnum = 3, text = '[Variable] x' },
-      { col = 3, filename = filename, kind = 'Variable', lnum = 4, text = '[Variable] y' },
+      { col = 7, filename = filename, kind = symbol_kind[16], lnum = 1, text = '[' .. symbol_kind[16] .. '] a' },
+      { col = 7, filename = filename, kind = symbol_kind[19], lnum = 2, text = '[' .. symbol_kind[19] .. '] t' },
+      { col = 3, filename = filename, kind = symbol_kind[13], lnum = 3, text = '[' .. symbol_kind[13] .. '] x' },
+      { col = 3, filename = filename, kind = symbol_kind[13], lnum = 4, text = '[' .. symbol_kind[13] .. '] y' },
     },
     title = 'Symbols in a.lua',
   }
@@ -82,13 +83,14 @@ end
 vim.lsp.buf.workspace_symbol = function(query, opts)
   table.insert(_G.lsp_buf_calls, 'workspace_symbol')
   _G.workspace_symbol_query = query
+  local symbol_kind = vim.lsp.protocol.SymbolKind
   local data = {
     context = make_context('textDocument/workspaceSymbol'),
     items = {
-      { col = 7, filename = filename, kind = 'Number', lnum = 1, text = '[Number] a' },
-      { col = 7, filename = filename, kind = 'Object', lnum = 2, text = '[Object] t' },
-      { col = 3, filename = filename, kind = 'Variable', lnum = 3, text = '[Variable] x' },
-      { col = 3, filename = filename, kind = 'Variable', lnum = 4, text = '[Variable] y' },
+      { col = 7, filename = filename, kind = symbol_kind[16], lnum = 1, text = '[' .. symbol_kind[16] .. '] a' },
+      { col = 7, filename = filename, kind = symbol_kind[19], lnum = 2, text = '[' .. symbol_kind[19] .. '] t' },
+      { col = 3, filename = filename, kind = symbol_kind[13], lnum = 3, text = '[' .. symbol_kind[13] .. '] x' },
+      { col = 3, filename = filename, kind = symbol_kind[13], lnum = 4, text = '[' .. symbol_kind[13] .. '] y' },
     },
     title = "Symbols matching ''",
   }
