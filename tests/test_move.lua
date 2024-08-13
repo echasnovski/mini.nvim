@@ -772,14 +772,13 @@ end
 T['move_selection()']['has no side effects'] = function()
   set_lines({ 'abXcd' })
 
-  -- Shouldn't modify used `z` or unnamed registers
-  set_cursor(1, 0)
-  type_keys('"zyl')
-  eq(child.fn.getreg('z'), 'a')
-
-  set_cursor(1, 1)
-  type_keys('yl')
-  eq(child.fn.getreg('"'), 'b')
+  -- Shouldn't modify used `z`, unnamed, or yank registers
+  child.fn.setreg('z', { regcontents = { 'hello' }, regtype = 'v' })
+  local reg_z = child.fn.getreginfo('z')
+  child.fn.setreg('"', { regcontents = { 'wor' }, regtype = 'V', points_to = '1' })
+  local reg_unnamed = child.fn.getreginfo('"')
+  child.fn.setreg('0', { regcontents = { 'l', 'd' }, regtype = '\0221' })
+  local reg_yank = child.fn.getreginfo('0')
 
   -- Shouldn't modify 'virtualedit'
   child.o.virtualedit = 'block,insert'
@@ -794,8 +793,9 @@ T['move_selection()']['has no side effects'] = function()
   validate_state1d('abcXd', { 4, 4 })
 
   -- Check
-  eq(child.fn.getreg('z'), 'a')
-  eq(child.fn.getreg('"'), 'b')
+  eq(child.fn.getreginfo('z'), reg_z)
+  eq(child.fn.getreginfo('"'), reg_unnamed)
+  eq(child.fn.getreginfo('0'), reg_yank)
   eq(child.o.virtualedit, 'block,insert')
   eq(child.lua_get('_G.been_here'), vim.NIL)
   eq(child.lua_get('vim.b.minibracketed_disable'), vim.NIL)
@@ -1118,14 +1118,13 @@ end
 T['move_line()']['has no side effects'] = function()
   set_lines({ 'aaa', 'bbb' })
 
-  -- Shouldn't modify used `z` and unnamed registers
-  set_cursor(1, 0)
-  type_keys('"zyl')
-  eq(child.fn.getreg('z'), 'a')
-
-  set_cursor(2, 0)
-  type_keys('yl')
-  eq(child.fn.getreg('"'), 'b')
+  -- Shouldn't modify used `z`, unnamed, or yank registers
+  child.fn.setreg('z', { regcontents = { 'he\\0llo' }, regtype = 'v' })
+  local reg_z = child.fn.getreginfo('z')
+  child.fn.setreg('"', { regcontents = { 'wor' }, regtype = 'V', points_to = '1' })
+  local reg_unnamed = child.fn.getreginfo('"')
+  child.fn.setreg('0', { regcontents = { 'l', 'd' }, regtype = '\0221' })
+  local reg_yank = child.fn.getreginfo('0')
 
   -- Shouldn't affect yank history from 'mini.bracketed'
   child.cmd('au TextYankPost * lua if not vim.b.minibracketed_disable then _G.been_here = true end')
@@ -1136,8 +1135,9 @@ T['move_line()']['has no side effects'] = function()
   validate_line_state({ 'bbb', 'aaa' }, { 2, 0 })
 
   -- Check
-  eq(child.fn.getreg('z'), 'a')
-  eq(child.fn.getreg('"'), 'b')
+  eq(child.fn.getreginfo('z'), reg_z)
+  eq(child.fn.getreginfo('"'), reg_unnamed)
+  eq(child.fn.getreginfo('0'), reg_yank)
   eq(child.lua_get('_G.been_here'), vim.NIL)
   eq(child.lua_get('vim.b.minibracketed_disable'), vim.NIL)
 end

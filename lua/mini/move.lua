@@ -228,7 +228,7 @@ MiniMove.move_selection = function(direction, opts)
   if not cache_virtualedit:find('all') then vim.o.virtualedit = 'onemore' end
 
   -- Cut selection while saving caching register
-  local cache_z_reg = vim.fn.getreg('z')
+  local cache_z_reg = vim.fn.getreginfo('z')
   cmd('"zx')
 
   -- Detect edge selection: last line(s) for vertical and last character(s)
@@ -347,8 +347,8 @@ MiniMove.move_line = function(direction, opts)
     return
   end
 
-  -- Cut curre lint while saving caching register
-  local cache_z_reg = vim.fn.getreg('z')
+  -- Cut current line while saving caching register
+  local cache_z_reg = vim.fn.getreginfo('z')
   cmd('"zdd')
 
   -- Move cursor
@@ -464,7 +464,7 @@ H.make_cmd_normal = function(include_undojoin)
 
     -- Disable 'mini.bracketed' to avoid unwanted entries to its yank history
     local cache_minibracketed_disable = vim.b.minibracketed_disable
-    local cache_unnamed_register = vim.fn.getreg('"')
+    local cache_unnamed_register = vim.fn.getreginfo('"')
 
     -- Don't track possible put commands into yank history
     vim.b.minibracketed_disable = true
