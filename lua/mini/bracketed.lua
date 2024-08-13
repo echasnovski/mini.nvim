@@ -342,7 +342,7 @@ MiniBracketed.comment = function(direction, opts)
   if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply. Open just enough folds and put cursor on first non-blank.
-  vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
+  H.set_cursor(res_line_num, 0)
   vim.cmd('normal! zv^')
 end
 
@@ -404,7 +404,7 @@ MiniBracketed.conflict = function(direction, opts)
   if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply. Open just enough folds and put cursor on first non-blank.
-  vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
+  H.set_cursor(res_line_num, 0)
   vim.cmd('normal! zv^')
 end
 
@@ -643,7 +643,7 @@ MiniBracketed.indent = function(direction, opts)
   if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply. Open just enough folds and put cursor on first non-blank.
-  vim.api.nvim_win_set_cursor(0, { res_line_num, 0 })
+  H.set_cursor(res_line_num, 0)
   vim.cmd('normal! zv^')
 end
 
@@ -919,8 +919,7 @@ MiniBracketed.treesitter = function(direction, opts)
   if opts.add_to_jumplist then H.add_to_jumplist() end
 
   -- Apply
-  local row, col = res_node_pos.pos[1], res_node_pos.pos[2]
-  vim.api.nvim_win_set_cursor(0, { row + 1, col })
+  H.set_cursor(res_node_pos.pos[1] + 1, res_node_pos.pos[2])
 end
 
 --- Undo along a tracked linear history
@@ -1975,7 +1974,7 @@ end
 
 H.region_delete = function(region, normal_fun)
   -- Start with `to` to have cursor positioned on region start after deletion
-  vim.api.nvim_win_set_cursor(0, { region.to.line, region.to.col - 1 })
+  H.set_cursor(region.to.line, region.to.col - 1)
 
   -- Do nothing more if region is empty (or leads to unnecessary line deletion)
   local is_empty = region.from.line == region.to.line
@@ -1986,7 +1985,7 @@ H.region_delete = function(region, normal_fun)
 
   -- Select region in correct Visual mode
   normal_fun(region.mode)
-  vim.api.nvim_win_set_cursor(0, { region.from.line, region.from.col - 1 })
+  H.set_cursor(region.from.line, region.from.col - 1)
 
   -- Delete region in "black hole" register
   -- - NOTE: it doesn't affect history as `"_` doesn't trigger `TextYankPost`
@@ -2016,5 +2015,13 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.add_to_jumplist = function() vim.cmd([[normal! m']]) end
+
+H.set_cursor = function(row, col)
+  if row <= 0 then return vim.api.nvim_win_set_cursor(0, { 1, 0 }) end
+  local n_lines = vim.api.nvim_buf_line_count(0)
+  if n_lines < row then return vim.api.nvim_win_set_cursor(0, { n_lines, vim.fn.getline(n_lines):len() - 1 }) end
+  col = math.min(math.max(col, 0), vim.fn.getline(row):len())
+  return vim.api.nvim_win_set_cursor(0, { row, col })
+end
 
 return MiniBracketed

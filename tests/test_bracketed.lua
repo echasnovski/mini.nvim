@@ -2306,6 +2306,33 @@ T['treesitter()']['works'] = function()
   end
 end
 
+T['treesitter()']['sets cursor safely'] = function()
+  child.lua([[
+    if vim.fn.has('nvim-0.9') == 1 then
+      vim.treesitter.get_node = function() return _G.node end
+    else
+      vim.treesitter.get_node_at_pos = function() return _G.node end
+    end
+  ]])
+  set_lines({ 'aaa' })
+
+  -- Before start
+  child.lua([[_G.node = {
+    start = function() return -1, 0 end,
+    end_ = function() return 1, 0 end,
+    range = function() return -1, 0, 1, 0 end,
+    parent = function() return _G.node end,
+  }]])
+
+  set_cursor(1, 1)
+  backward('treesitter')
+  eq(get_cursor(), { 1, 0 })
+
+  set_cursor(1, 1)
+  forward('treesitter')
+  eq(get_cursor(), { 1, 2 })
+end
+
 T['treesitter()']['moves to other edge of current node'] = function()
   local nodes, validate, _ = setup_treesitter()
   local n = #nodes
