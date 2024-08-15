@@ -977,6 +977,7 @@ end
 ---@param query table Array of strings.
 ---@param opts table|nil Options. Possible fields:
 ---   - <sync> `(boolean)` - Whether to match synchronously. Default: `false`.
+---   - <preserve_order> `(boolean)` - Whether to skip sort step. Default: `false`.
 ---
 ---@return table|nil Depending on whether computation is synchronous (either `opts.sync`
 ---   is `true` or there is an active picker):
@@ -1001,7 +1002,8 @@ MiniPick.default_match = function(stritems, inds, query, opts)
     if #query == 0 then return set_match_inds(H.seq_along(stritems)) end
     local match_data, match_type = H.match_filter(inds, stritems, query)
     if match_data == nil then return end
-    if match_type == 'nosort' then return set_match_inds(H.seq_along(stritems)) end
+    if match_type == 'useall' then return set_match_inds(H.seq_along(stritems)) end
+    if opts.preserve_order then return set_match_inds(H.match_no_sort(match_data)) end
     local match_inds = H.match_sort(match_data)
     if match_inds == nil then return end
     return set_match_inds(match_inds)
@@ -2774,7 +2776,7 @@ H.match_filter = function(inds, stritems, query)
     query = grouped_parts
   end
 
-  if #query == 0 then return {}, 'nosort', query end
+  if #query == 0 then return {}, 'useall', query end
 
   local is_fuzzy_plain = not (is_exact_plain or is_exact_start or is_exact_end) and #query > 1
   if is_fuzzy_forced or is_fuzzy_plain then return H.match_filter_fuzzy(inds, stritems, query), 'fuzzy', query end
@@ -2940,6 +2942,10 @@ H.match_sort = function(match_data)
   end
 
   return res
+end
+
+H.match_no_sort = function(match_data)
+  return vim.tbl_map(function(x) return x[3] end, match_data)
 end
 
 -- Default show ---------------------------------------------------------------

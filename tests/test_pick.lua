@@ -1287,6 +1287,20 @@ T['default_match()']['respects `opts.sync`'] = function()
   eq(get_picker_matches().all, { 'aa', 'ab', 'bb' })
 end
 
+T['default_match()']['respects `opts.preserve_order`'] = function()
+  child.lua_notify([[
+    local opts = { preserve_order = true }
+    local match_nosort = function(stritems, inds, query)
+      MiniPick.default_match(stritems, inds, query, opts)
+    end
+    MiniPick.start({ source = { items = { 'axay', 'b', 'aaxy', 'ccc', 'xaa' }, match = match_nosort } })
+  ]])
+  type_keys('x')
+  eq(get_picker_matches().all_inds, { 1, 3, 5 })
+  type_keys('y')
+  eq(get_picker_matches().all_inds, { 1, 3 })
+end
+
 T['default_show()'] = new_set({ hooks = { pre_case = function() child.set_size(10, 20) end } })
 
 local default_show = forward_lua('MiniPick.default_show')

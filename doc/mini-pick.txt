@@ -928,6 +928,7 @@ Parameters ~
 {query} `(table)` Array of strings.
 {opts} `(table|nil)` Options. Possible fields:
   - <sync> `(boolean)` - Whether to match synchronously. Default: `false`.
+  - <preserve_order> `(boolean)` - Whether to skip sort step. Default: `false`.
 
 Return ~
 `(table|nil)` Depending on whether computation is synchronous (either `opts.sync`
