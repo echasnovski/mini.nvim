@@ -2061,9 +2061,13 @@ H.buffer_update_directory = function(buf_id, path, opts)
 end
 
 H.buffer_update_file = function(buf_id, path, opts)
-  -- Determine if file is text. This is not 100% proof, but good enough.
+  -- Work only with readable text file. This is not 100% proof, but good enough.
   -- Source: https://github.com/sharkdp/content_inspector
   local fd = vim.loop.fs_open(path, 'r', 1)
+  if fd == nil then
+    H.set_buflines(buf_id, { '-No-access' .. string.rep('-', opts.windows.width_preview) })
+    return {}
+  end
   local is_text = vim.loop.fs_read(fd, 1024):find('\0') == nil
   vim.loop.fs_close(fd)
   if not is_text then

@@ -363,6 +363,7 @@ T['open()']['uses icon provider'] = function()
     'MiniIconsAzure',  'MiniFilesFile',
     'MiniIconsCyan',   'MiniFilesFile',
     'MiniIconsGrey',   'MiniFilesFile',
+    'MiniIconsGrey',   'MiniFilesFile',
   })
 
   go_out()
@@ -2006,6 +2007,12 @@ T['Preview']['works for files'] = function()
   expect_screenshot()
 
   -- Should fall back to built-in syntax highlighting in case of no tree-sitter
+  type_keys('j')
+  expect_screenshot()
+
+  -- Should not error on files which failed to read (looks like on Windows it
+  -- can be different from "non-readable" files)
+  child.lua('vim.loop.fs_open = function() return nil end')
   type_keys('j')
   expect_screenshot()
 end
