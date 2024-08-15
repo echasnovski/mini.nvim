@@ -802,6 +802,16 @@ T['pickers']['buf_lines()']['respects `local_opts.scope`'] = function()
   child.expect_screenshot()
 end
 
+T['pickers']['buf_lines()']['respects `local_opts.preserve_order`'] = function()
+  set_lines({ 'axay', 'b', 'aaxy', 'ccc', 'xaa' })
+  pick_buf_lines({ scope = 'current', preserve_order = true })
+
+  type_keys('x')
+  eq(get_picker_matches().all_inds, { 1, 3, 5 })
+  type_keys('y')
+  eq(get_picker_matches().all_inds, { 1, 3 })
+end
+
 T['pickers']['buf_lines()']['can not show icons'] = function()
   setup_buffers()
   child.lua('MiniPick.config.source.show = MiniPick.default_show')
@@ -2775,6 +2785,17 @@ T['pickers']['oldfiles()']['respects `local_opts.current_dir'] = function()
   -- - Only paths inside current directory are shown
   eq(#items, 1)
   eq(items[1], 'LICENSE')
+end
+
+T['pickers']['oldfiles()']['respects `local_opts.preserve_order`'] = function()
+  child.lua('vim.fn.filereadable = function() return 1 end')
+  child.v.oldfiles = { 'axay', 'b', 'aaxy', 'ccc', 'xaa' }
+  pick_oldfiles({ preserve_order = true })
+
+  type_keys('x')
+  eq(get_picker_matches().all_inds, { 1, 3, 5 })
+  type_keys('y')
+  eq(get_picker_matches().all_inds, { 1, 3 })
 end
 
 T['pickers']['oldfiles()']['respects `opts`'] = function()

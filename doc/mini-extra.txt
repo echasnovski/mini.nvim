@@ -240,6 +240,8 @@ Parameters ~
   Possible fields:
   - <scope> `(string)` - one of "all" (normal listed buffers) or "current".
     Default: "all".
+  - <preserve_order> `(boolean)` - whether to preserve original order
+    during query. Default: `false`.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 Return ~
@@ -648,6 +650,8 @@ Parameters ~
   Possible fields:
   - <current_dir> `(boolean)` - whether to return files only from current
     working directory and its subdirectories. Default: `false`.
+  - <preserve_order> `(boolean)` - whether to preserve original order
+    during query. Default: `false`.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 Return ~

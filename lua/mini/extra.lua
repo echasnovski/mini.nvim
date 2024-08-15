@@ -64,6 +64,8 @@
 --- - Requires target path to be part of git repository.
 --- - Present for exploration and navigation purposes. Doing any Git operations
 ---   is suggested to be done in a dedicated Git client and is not planned.
+---@alias __extra_pickers_preserve_order - <preserve_order> `(boolean)` - whether to preserve original order
+---     during query. Default: `false`.
 ---@alias __extra_pickers_git_path - <path> `(string|nil)` - target path for Git operation (if required). Also
 ---     used to find Git repository inside which to construct items.
 ---     Default: `nil` for root of Git repository containing |current-directory|.
@@ -324,12 +326,13 @@ MiniExtra.pickers = {}
 ---   Possible fields:
 ---   - <scope> `(string)` - one of "all" (normal listed buffers) or "current".
 ---     Default: "all".
+---   __extra_pickers_preserve_order
 ---@param opts __extra_pickers_opts
 ---
 ---@return __extra_pickers_return
 MiniExtra.pickers.buf_lines = function(local_opts, opts)
   local pick = H.validate_pick('buf_lines')
-  local_opts = vim.tbl_deep_extend('force', { scope = 'all' }, local_opts or {})
+  local_opts = vim.tbl_deep_extend('force', { scope = 'all', preserve_order = false }, local_opts or {})
 
   local scope = H.pick_validate_scope(local_opts, { 'all', 'current' }, 'buf_lines')
   local is_scope_all = scope == 'all'
@@ -363,7 +366,10 @@ MiniExtra.pickers.buf_lines = function(local_opts, opts)
 
   local show = H.pick_get_config().source.show
   if is_scope_all and show == nil then show = H.show_with_icons end
-  return H.pick_start(items, { source = { name = string.format('Buffer lines (%s)', scope), show = show } }, opts)
+  local match_opts = { preserve_order = local_opts.preserve_order }
+  local match = function(stritems, inds, query) pick.default_match(stritems, inds, query, match_opts) end
+  local default_source = { name = string.format('Buffer lines (%s)', scope), show = show, match = match }
+  return H.pick_start(items, { source = default_source }, opts)
 end
 
 --- Neovim commands picker
@@ -1164,12 +1170,13 @@ end
 ---   Possible fields:
 ---   - <current_dir> `(boolean)` - whether to return files only from current
 ---     working directory and its subdirectories. Default: `false`.
+---   __extra_pickers_preserve_order
 ---@param opts __extra_pickers_opts
 ---
 ---@return __extra_pickers_return
 MiniExtra.pickers.oldfiles = function(local_opts, opts)
   local pick = H.validate_pick('oldfiles')
-  local_opts = vim.tbl_deep_extend('force', { current_dir = false }, local_opts or {})
+  local_opts = vim.tbl_deep_extend('force', { current_dir = false, preserve_order = false }, local_opts or {})
   local oldfiles = vim.v.oldfiles
   if not H.islist(oldfiles) then H.error('`pickers.oldfiles` picker needs valid `v:oldfiles`.') end
 
@@ -1187,7 +1194,9 @@ MiniExtra.pickers.oldfiles = function(local_opts, opts)
   end)
 
   local show = H.pick_get_config().source.show or H.show_with_icons
-  return H.pick_start(items, { source = { name = 'Old files', show = show } }, opts)
+  local match_opts = { preserve_order = local_opts.preserve_order }
+  local match = function(stritems, inds, query) pick.default_match(stritems, inds, query, match_opts) end
+  return H.pick_start(items, { source = { name = 'Old files', show = show, match = match } }, opts)
 end
 
 --- Neovim options picker
@@ -1399,8 +1408,7 @@ end
 ---     Default: `nil` to get paths registered for |current-directory|.
 ---   - <filter> `(function|string)` - forwarded to |MiniVisits.list_paths()|.
 ---     Default: `nil` to use all paths.
----   - <preserve_order> `(boolean)` - whether to preserve original order
----     during query. Default: `false`.
+---   __extra_pickers_preserve_order
 ---   - <recency_weight> `(number)` - forwarded to |MiniVisits.gen_sort.default()|.
 ---     Default: 0.5 to use "robust frecency" sorting.
 ---   - <sort> `(function)` - forwarded to |MiniVisits.list_paths()|.
