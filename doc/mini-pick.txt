@@ -854,7 +854,7 @@ Refresh active picker
 
 ------------------------------------------------------------------------------
                                                       *MiniPick.default_match()*
-        `MiniPick.default_match`({stritems}, {inds}, {query}, {do_sync})
+         `MiniPick.default_match`({stritems}, {inds}, {query}, {opts})
 Default match
 
 Filter target stritems to contain query and sort from best to worst matches.
@@ -926,11 +926,12 @@ Parameters ~
 {inds} `(table)` Array of `stritems` indexes to match. All of them should point
   at string elements of `stritems`. No check is done for performance reasons.
 {query} `(table)` Array of strings.
-{do_sync} `(boolean|nil)` Whether to match synchronously. Default: `nil`.
+{opts} `(table|nil)` Options. Possible fields:
+  - <sync> `(boolean)` - Whether to match synchronously. Default: `false`.
 
 Return ~
-`(table|nil)` Depending on whether computation is synchronous (either `do_sync`
-  is truthy or there is an active picker):
+`(table|nil)` Depending on whether computation is synchronous (either `opts.sync`
+  is `true` or there is an active picker):
   - If yes, array of `stritems` indexes matching the `query` (from best to worst).
   - If no, `nil` is returned with |MiniPick.set_picker_match_inds()| used later.
 

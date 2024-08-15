@@ -704,7 +704,7 @@ MiniPick.setup = function(config)
   local paste_orig = vim.paste
   vim.paste = function(...)
     if not MiniPick.is_picker_active() then return paste_orig(...) end
-    vim.notify('(mini.pick) Use `mappings.paste` (`<C-r>` by default) with "*" or "+" register.', vim.log.levels.HINT)
+    H.notify('Use `mappings.paste` (`<C-r>` by default) with "*" or "+" register.', 'HINT')
   end
 end
 
@@ -975,14 +975,27 @@ end
 ---@param inds table Array of `stritems` indexes to match. All of them should point
 ---   at string elements of `stritems`. No check is done for performance reasons.
 ---@param query table Array of strings.
----@param do_sync boolean|nil Whether to match synchronously. Default: `nil`.
+---@param opts table|nil Options. Possible fields:
+---   - <sync> `(boolean)` - Whether to match synchronously. Default: `false`.
 ---
----@return table|nil Depending on whether computation is synchronous (either `do_sync`
----   is truthy or there is an active picker):
+---@return table|nil Depending on whether computation is synchronous (either `opts.sync`
+---   is `true` or there is an active picker):
 ---   - If yes, array of `stritems` indexes matching the `query` (from best to worst).
 ---   - If no, `nil` is returned with |MiniPick.set_picker_match_inds()| used later.
-MiniPick.default_match = function(stritems, inds, query, do_sync)
-  local is_sync = do_sync or not MiniPick.is_picker_active()
+MiniPick.default_match = function(stritems, inds, query, opts)
+  -- TODO: Remove after mini.nvim 0.14 release
+  if opts and type(opts) ~= 'table' then
+    if not H.notified_match_opts then
+      local msg = 'Use `{ sync = true }` as fourth argument to `default_match`.'
+        .. " Current code will not work after the next 'mini.nvim' release."
+      H.notify(msg, 'WARN')
+      H.notified_match_opts = true
+    end
+    opts = { sync = true }
+  end
+
+  opts = opts or {}
+  local is_sync = opts.sync or not MiniPick.is_picker_active()
   local set_match_inds = is_sync and function(x) return x end or MiniPick.set_picker_match_inds
   local f = function()
     if #query == 0 then return set_match_inds(H.seq_along(stritems)) end
@@ -3283,6 +3296,8 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.pick) %s', msg), 0) end
+
+H.notify = function(msg, level_name) vim.notify('(mini.pick) ' .. msg, vim.log.levels[level_name]) end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
