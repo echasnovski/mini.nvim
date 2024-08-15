@@ -18,6 +18,27 @@ local type_keys = function(...) return child.type_keys(...) end
 
 local get_fold_range = function(line_num) return { child.fn.foldclosed(line_num), child.fn.foldclosedend(line_num) } end
 
+local setup_registers = function()
+  local reginfo_arr = {
+    { reg = '0', info = { regcontents = { '0', '0', '0' }, regtype = '\0221' } },
+    { reg = '1', info = { regcontents = { '111', '111' }, regtype = 'V' } },
+    { reg = '2', info = { regcontents = { '222', '222' }, regtype = 'V' } },
+    { reg = '9', info = { regcontents = { '999', '999' }, regtype = 'V' } },
+    { reg = '-', info = { regcontents = { '---' }, regtype = 'v' } },
+    { reg = 'z', info = { regcontents = { 'zzz' }, regtype = 'v' } },
+    { reg = '"', info = { points_to = 'z' } },
+  }
+  local ref = {}
+  for _, data in ipairs(reginfo_arr) do
+    child.fn.setreg(data.reg, data.info)
+    ref[data.reg] = child.fn.getreginfo(data.reg)
+  end
+  -- Make sure that 'z' register has proper `isunnamed` field
+  ref['z'] = child.fn.getreginfo('z')
+
+  return ref
+end
+
 local validate_state = function(lines, selection)
   eq(get_lines(), lines)
   eq({ { child.fn.line('v'), child.fn.col('v') }, { child.fn.line('.'), child.fn.col('.') } }, selection)
@@ -770,15 +791,10 @@ T['move_selection()']['works in small buffers'] = function()
 end
 
 T['move_selection()']['has no side effects'] = function()
-  set_lines({ 'abXcd' })
+  set_lines({ 'aaa', 'bbb' })
 
-  -- Shouldn't modify used `z`, unnamed, or yank registers
-  child.fn.setreg('z', { regcontents = { 'hello' }, regtype = 'v' })
-  local reg_z = child.fn.getreginfo('z')
-  child.fn.setreg('"', { regcontents = { 'wor' }, regtype = 'V', points_to = '1' })
-  local reg_unnamed = child.fn.getreginfo('"')
-  child.fn.setreg('0', { regcontents = { 'l', 'd' }, regtype = '\0221' })
-  local reg_yank = child.fn.getreginfo('0')
+  -- Shouldn't modify any possibly affected registers
+  local reginfo_ref = setup_registers()
 
   -- Shouldn't modify 'virtualedit'
   child.o.virtualedit = 'block,insert'
@@ -786,19 +802,29 @@ T['move_selection()']['has no side effects'] = function()
   -- Shouldn't affect yank history from 'mini.bracketed'
   child.cmd('au TextYankPost * lua if not vim.b.minibracketed_disable then _G.been_here = true end')
 
-  -- Perform move
-  set_cursor(1, 2)
-  type_keys('v')
-  move('right')
-  validate_state1d('abcXd', { 4, 4 })
+  local validate = function()
+    for reg, info in pairs(reginfo_ref) do
+      eq(child.fn.getreginfo(reg), info)
+    end
+    eq(child.o.virtualedit, 'block,insert')
+    eq(child.lua_get('_G.been_here'), vim.NIL)
+    eq(child.lua_get('vim.b.minibracketed_disable'), vim.NIL)
+  end
 
-  -- Check
-  eq(child.fn.getreginfo('z'), reg_z)
-  eq(child.fn.getreginfo('"'), reg_unnamed)
-  eq(child.fn.getreginfo('0'), reg_yank)
-  eq(child.o.virtualedit, 'block,insert')
-  eq(child.lua_get('_G.been_here'), vim.NIL)
-  eq(child.lua_get('vim.b.minibracketed_disable'), vim.NIL)
+  -- Perform linewise move
+  set_cursor(1, 0)
+  type_keys('V')
+  move('down')
+  validate_state({ 'bbb', 'aaa' }, { { 2, 1 }, { 2, 1 } })
+  validate()
+  child.ensure_normal_mode()
+
+  -- Perform charwise move
+  set_cursor(1, 1)
+  type_keys('v')
+  move('down')
+  validate_state({ 'bb', 'abaa' }, { { 2, 2 }, { 2, 2 } })
+  validate()
 end
 
 T['move_selection()']['works with `virtualedit=all`'] = function()
@@ -1118,13 +1144,8 @@ end
 T['move_line()']['has no side effects'] = function()
   set_lines({ 'aaa', 'bbb' })
 
-  -- Shouldn't modify used `z`, unnamed, or yank registers
-  child.fn.setreg('z', { regcontents = { 'he\\0llo' }, regtype = 'v' })
-  local reg_z = child.fn.getreginfo('z')
-  child.fn.setreg('"', { regcontents = { 'wor' }, regtype = 'V', points_to = '1' })
-  local reg_unnamed = child.fn.getreginfo('"')
-  child.fn.setreg('0', { regcontents = { 'l', 'd' }, regtype = '\0221' })
-  local reg_yank = child.fn.getreginfo('0')
+  -- Shouldn't modify any possibly affected registers
+  local reginfo_ref = setup_registers()
 
   -- Shouldn't affect yank history from 'mini.bracketed'
   child.cmd('au TextYankPost * lua if not vim.b.minibracketed_disable then _G.been_here = true end')
@@ -1135,9 +1156,9 @@ T['move_line()']['has no side effects'] = function()
   validate_line_state({ 'bbb', 'aaa' }, { 2, 0 })
 
   -- Check
-  eq(child.fn.getreginfo('z'), reg_z)
-  eq(child.fn.getreginfo('"'), reg_unnamed)
-  eq(child.fn.getreginfo('0'), reg_yank)
+  for reg, info in pairs(reginfo_ref) do
+    eq(child.fn.getreginfo(reg), info)
+  end
   eq(child.lua_get('_G.been_here'), vim.NIL)
   eq(child.lua_get('vim.b.minibracketed_disable'), vim.NIL)
 end

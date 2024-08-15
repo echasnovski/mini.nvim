@@ -229,7 +229,8 @@ MiniMove.move_selection = function(direction, opts)
 
   -- Cut selection while saving caching register
   local cache_z_reg = vim.fn.getreginfo('z')
-  cmd('"zx')
+  -- - Don't use `"zx` directly to not affect registers 1-9
+  cmd('"zygv"_x')
 
   -- Detect edge selection: last line(s) for vertical and last character(s)
   -- for horizontal. At this point (after cutting selection) cursor is on the
@@ -349,7 +350,8 @@ MiniMove.move_line = function(direction, opts)
 
   -- Cut current line while saving caching register
   local cache_z_reg = vim.fn.getreginfo('z')
-  cmd('"zdd')
+  -- - Don't use `"zdd` directly to not affect registers 1-9
+  cmd('"zyy"_dd')
 
   -- Move cursor
   local paste_key = direction == 'up' and 'P' or 'p'
@@ -464,7 +466,7 @@ H.make_cmd_normal = function(include_undojoin)
 
     -- Disable 'mini.bracketed' to avoid unwanted entries to its yank history
     local cache_minibracketed_disable = vim.b.minibracketed_disable
-    local cache_unnamed_register = vim.fn.getreginfo('"')
+    local cache_unnamed_register = { points_to = vim.fn.getreginfo('"').points_to }
 
     -- Don't track possible put commands into yank history
     vim.b.minibracketed_disable = true
