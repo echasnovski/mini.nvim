@@ -1432,16 +1432,8 @@ MiniExtra.pickers.visit_paths = function(local_opts, opts)
   end)
 
   local show = H.pick_get_config().source.show or H.show_with_icons
-
-  local match
-  if local_opts.preserve_order then
-    match = function(stritems, inds, query)
-      -- Return makes call synchronous, but it shouldn't be too big problem
-      local res = pick.default_match(stritems, inds, query, true) or {}
-      table.sort(res)
-      return res
-    end
-  end
+  local match_opts = { preserve_order = local_opts.preserve_order }
+  local match = function(stritems, inds, query) pick.default_match(stritems, inds, query, match_opts) end
 
   local name = string.format('Visit paths (%s)', is_for_cwd and 'cwd' or 'all')
   local default_source = { name = name, cwd = picker_cwd, match = match, show = show }
