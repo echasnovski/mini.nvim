@@ -3058,8 +3058,9 @@ end
 
 -- Default preview ------------------------------------------------------------
 H.preview_file = function(buf_id, item_data, opts)
-  -- Fully preview only text files
-  if not H.is_file_text(item_data.path) then return H.set_buflines(buf_id, { '-Non-text-file-' }) end
+  -- Fully preview only accessible text files
+  local is_text = H.is_file_text(item_data.path)
+  if not is_text then return H.set_buflines(buf_id, { is_text == nil and '-No-access-' or '-Non-text-file-' }) end
 
   -- Compute lines. Limit number of read lines to work better on large files.
   local has_lines, lines = pcall(vim.fn.readfile, item_data.path, '', (item_data.lnum or 1) + opts.n_context_lines)
@@ -3435,6 +3436,7 @@ end
 
 H.is_file_text = function(path)
   local fd = vim.loop.fs_open(path, 'r', 1)
+  if fd == nil then return nil end
   local is_text = vim.loop.fs_read(fd, 1024):find('\0') == nil
   vim.loop.fs_close(fd)
   return is_text

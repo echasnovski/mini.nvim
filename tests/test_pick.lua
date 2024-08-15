@@ -1516,6 +1516,11 @@ T['default_preview()']['works for file path'] = function()
     real_file('c.gif'),
   }
   validate_preview(items)
+  stop()
+
+  -- Should work for failed to read files
+  child.lua('vim.loop.fs_open = function() return nil end')
+  validate_preview({ real_file('Makefile') })
 end
 
 T['default_preview()']['works for relative file path'] = function()
