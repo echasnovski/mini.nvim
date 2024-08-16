@@ -3677,7 +3677,7 @@ local set_picker_items_from_cli = function(...)
   -- Work around tuples and callables being not transferrable through RPC
   local tuple = child.lua(
     [[local process, pid = MiniPick.set_picker_items_from_cli(...)
-      local process_keys = vim.tbl_keys(process)
+      local process_keys = vim.tbl_filter(function(x) return x:sub(1, 1) ~= '_' end, vim.tbl_keys(process))
       table.sort(process_keys)
       return { process_keys, pid }]],
     { ... }
@@ -3702,7 +3702,7 @@ T['set_picker_items_from_cli()']['works'] = function()
   eq(get_process_log(), { 'Stdout Stdout_1 was closed.', 'Process Pid_1 was closed.' })
 
   -- Should return proper data
-  eq(process_keys, { 'close', 'pid' })
+  eq(process_keys, { 'close', 'is_active', 'pid' })
   eq(pid, 'Pid_1')
 end
 
@@ -3732,6 +3732,40 @@ T['set_picker_items_from_cli()']['correctly detects error in stdout feed'] = fun
   start_with_items()
   mock_stdout_feed({ 'aa\n', 'bb', { err = 'Test stdout error' } })
   expect.error(function() set_picker_items_from_cli(test_command) end, 'Test stdout error')
+end
+
+T['set_picker_items_from_cli()']['stops process if picker is stopped'] = function()
+  local delay = 3 * small_time
+  child.lua('_G.delay = ' .. delay)
+  child.lua([[
+    local is_active_indicator = true
+    vim.loop.spawn = function(path, options, on_exit)
+      vim.defer_fn(on_exit, _G.delay)
+
+      local process = {
+        pid = 'Pid_1',
+        is_active = function() return is_active_indicator end,
+        close = function(_) table.insert(_G.process_log, 'Process Pid_1 was closed.') end,
+      }
+      return process, pid
+    end
+    vim.loop.process_kill = function(process)
+      -- Killing process also means it stops being active
+      is_active_indicator = false
+      table.insert(_G.process_log, 'Process Pid_1 was killed.')
+    end
+  ]])
+
+  start_with_items()
+  set_picker_items_from_cli({ 'sleep', '10' })
+  sleep(small_time)
+  type_keys('<Esc>')
+  sleep(delay)
+  -- Should kill the process without later calling `process:close()`
+  eq(get_process_log(), { 'Stdout Stdout_1 was closed.', 'Process Pid_1 was killed.' })
+
+  -- Should clean possible helper autocommands
+  eq(child.cmd_capture('au User'), '--- Autocommands ---')
 end
 
 T['set_picker_items_from_cli()']['has default postprocess'] = function()

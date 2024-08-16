@@ -1670,7 +1670,13 @@ MiniPick.set_picker_items_from_cli = function(command, opts)
   local process, pid, stdout = nil, nil, vim.loop.new_pipe()
   local spawn_opts = vim.tbl_deep_extend('force', opts.spawn_opts, { args = args, stdio = { nil, stdout, nil } })
   if type(spawn_opts.cwd) == 'string' then spawn_opts.cwd = H.full_path(spawn_opts.cwd) end
-  process, pid = vim.loop.spawn(executable, spawn_opts, function() process:close() end)
+  process, pid = vim.loop.spawn(executable, spawn_opts, function()
+    if process:is_active() then process:close() end
+  end)
+
+  -- Make sure to stop the process if picker is stopped
+  local kill_process = function() pcall(vim.loop.process_kill, process) end
+  vim.api.nvim_create_autocmd('User', { pattern = 'MiniPickStop', once = true, callback = kill_process })
 
   local data_feed = {}
   stdout:read_start(function(err, data)
