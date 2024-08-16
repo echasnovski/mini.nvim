@@ -214,9 +214,9 @@ local T = new_set({
       child.setup()
 
       -- Make more comfortable screenshots
-      child.set_size(15, 40)
       child.o.laststatus = 0
       child.o.ruler = false
+      child.set_size(15, 40)
 
       load_module()
 
@@ -249,6 +249,7 @@ T['setup()']['creates side effects'] = function()
   validate_hl_group('MiniPickBorder', 'links to FloatBorder')
   validate_hl_group('MiniPickBorderBusy', 'links to DiagnosticFloatingWarn')
   validate_hl_group('MiniPickBorderText', 'links to FloatTitle')
+  validate_hl_group('MiniPickCursor', 'nocombine.*blend=100')
   validate_hl_group('MiniPickIconDirectory', 'links to Directory')
   validate_hl_group('MiniPickIconFile', 'links to MiniPickNormal')
   validate_hl_group('MiniPickHeader', 'links to DiagnosticFloatingHint')
@@ -2054,7 +2055,7 @@ end
 
 T['default_choose()']['has print fallback'] = function()
   choose_item({ text = 'regular-table' })
-  eq(child.cmd_capture('messages'), '\n{\n  text = "regular-table"\n}')
+  eq(child.cmd_capture('messages'), '{\n  text = "regular-table"\n}')
 end
 
 T['default_choose()']['does nothing for `nil` input'] = function()
@@ -2832,7 +2833,7 @@ T['builtin.help()']['has proper preview'] = function()
 
   -- Shouldn't have side effects for search pattern and `v:hlsearch`
   child.api.nvim_buf_set_lines(0, 0, -1, false, { 'aa', 'bb', 'aa' })
-  type_keys('/', 'aa', '<CR>')
+  type_keys('/', 'aa', '<CR>', ':<Esc>')
   child.cmd('let v:hlsearch=0')
 
   builtin_help()
@@ -3054,6 +3055,10 @@ T['builtin.resume()']['works'] = function()
   eq(get_picker_matches().all, { 'b', 'bb' })
   type_keys('<CR>')
 
+  -- Default choose prints item
+  eq(child.cmd_capture('messages'), '"b"')
+  type_keys(':<Esc>')
+
   make_event_log()
   child.cmd('au User MiniPickStart lua _G.track_event()')
 
@@ -3186,22 +3191,16 @@ T['builtin.resume()']['can be called consecutively'] = function()
   type_keys('<C-c>')
 end
 
-T['builtin.resume()']["restores 'cmdheight'"] = function()
+T['builtin.resume()']["restores 'guicursor'"] = function()
   start_with_items({ 'a' }, 'My name')
   type_keys('<C-c>')
 
-  local validate = function(cmdheight)
-    child.o.cmdheight = cmdheight
-    builtin_resume()
-    -- Should *temporarily* force 'cmdheight=1' to both have place where to hide
-    -- cursor (in case of `cmdheight=0`) and increase available space for picker
-    eq(child.o.cmdheight, 1)
-    type_keys('<C-c>')
-    eq(child.o.cmdheight, cmdheight)
-  end
-
-  validate(3)
-  validate(0)
+  child.o.guicursor = 'n-v-c:block'
+  builtin_resume()
+  -- Should *temporarily* force custom 'guicursor' to hide cursor
+  eq(child.o.guicursor, 'a:MiniPickCursor')
+  type_keys('<C-c>')
+  eq(child.o.guicursor, 'n-v-c:block')
 end
 
 T['builtin.resume()']['validates if no picker was previously called'] = function()
@@ -4252,19 +4251,23 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
   validate()
 end
 
-T['Overall view']["respects 'cmdheight'"] = function()
-  local validate = function(cmdheight)
-    child.o.cmdheight = cmdheight
+T['Overall view']["respects 'guicursor'"] = function()
+  local validate = function(keys)
+    child.o.guicursor = 'n-v-c:block'
+    type_keys(keys)
     start_with_items({ 'a' }, 'My name')
-    -- Should *temporarily* force 'cmdheight=1' to both have place where to hide
-    -- cursor (in case of `cmdheight=0`) and increase available space for picker
-    eq(child.o.cmdheight, 1)
+    -- Should *temporarily* force custom 'guicursor' to hide cursor
+    eq(child.o.guicursor, 'a:MiniPickCursor')
     type_keys('<C-c>')
-    eq(child.o.cmdheight, cmdheight)
+    eq(child.o.guicursor, 'n-v-c:block')
+    child.ensure_normal_mode()
   end
 
-  validate(3)
-  validate(0)
+  -- Should work in all modes
+  validate('')
+  validate('i')
+  validate('v')
+  validate(':')
 end
 
 T['Overall view']['allows very large dimensions'] = function()

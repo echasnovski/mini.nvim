@@ -117,6 +117,7 @@
 --- * `MiniPickBorder` - window border.
 --- * `MiniPickBorderBusy` - window border while picker is busy processing.
 --- * `MiniPickBorderText` - non-prompt on border.
+--- * `MiniPickCursor` - cursor during active picker (hidden by default).
 --- * `MiniPickIconDirectory` - default icon for directory.
 --- * `MiniPickIconFile` - default icon for file.
 --- * `MiniPickHeader` - headers in info buffer and previews.
@@ -1908,6 +1909,7 @@ H.create_autocommands = function(config)
   end
 
   au('VimResized', '*', MiniPick.refresh, 'Refresh on resize')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
 end
 
 --stylua: ignore
@@ -1920,6 +1922,7 @@ H.create_default_hl = function()
   hi('MiniPickBorder',        { link = 'FloatBorder' })
   hi('MiniPickBorderBusy',    { link = 'DiagnosticFloatingWarn' })
   hi('MiniPickBorderText',    { link = 'FloatTitle' })
+  hi('MiniPickCursor',        { blend = 100, nocombine = true })
   hi('MiniPickIconDirectory', { link = 'Directory' })
   hi('MiniPickIconFile',      { link = 'MiniPickNormal' })
   hi('MiniPickHeader',        { link = 'DiagnosticFloatingHint' })
@@ -2143,12 +2146,11 @@ H.picker_new_buf = function()
 end
 
 H.picker_new_win = function(buf_id, win_config)
-  -- Focus cursor on Command line to not see it
-  if vim.fn.mode() == 'n' then
-    H.cache.cmdheight = vim.o.cmdheight
-    vim.o.cmdheight = 1
-    vim.cmd('noautocmd normal! :')
-  end
+  -- Hide cursor while picker is active (to not be visible in the window)
+  -- This mostly follows a hack from 'folke/noice.nvim'
+  H.cache.guicursor = vim.o.guicursor
+  vim.o.guicursor = 'a:MiniPickCursor'
+
   -- Create window and focus on it
   local win_id = vim.api.nvim_open_win(buf_id, true, H.picker_compute_win_config(win_config, true))
 
@@ -2455,7 +2457,7 @@ end
 
 H.picker_stop = function(picker, abort)
   vim.tbl_map(function(timer) pcall(vim.loop.timer_stop, timer) end, H.timers)
-  pcall(function() vim.o.cmdheight = H.cache.cmdheight end)
+  pcall(function() vim.o.guicursor = H.cache.guicursor end)
 
   if picker == nil then return end
 

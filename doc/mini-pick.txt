@@ -117,6 +117,7 @@ See |mini.nvim-buffer-local-config| for more details.
 * `MiniPickBorder` - window border.
 * `MiniPickBorderBusy` - window border while picker is busy processing.
 * `MiniPickBorderText` - non-prompt on border.
+* `MiniPickCursor` - cursor during active picker (hidden by default).
 * `MiniPickIconDirectory` - default icon for directory.
 * `MiniPickIconFile` - default icon for file.
 * `MiniPickHeader` - headers in info buffer and previews.

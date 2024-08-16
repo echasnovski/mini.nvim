@@ -47,6 +47,7 @@
 - BREAKING: encoding line or position in string items has changed:
     - Use "\0" (null character; use "\000" form if it is in a string before digit) instead of ":" as delimiter. This makes it work with files similar to ":" position encoding (like "time_12:34:56"). This only matters for custom sources which provide line or position in string items.
     - Update `default_show()` to display "│" character instead of "\0" in item's string representation (previously was ":"). In particular, this changes how line/position is displayed in `grep` and `grep_live` built-in pickers. This change was done because "│" is more visible as separator.
+- FEATURE: explicitly hide cursor when picker is active (instead of putting it in command line).
 
 ## mini.starter
 
