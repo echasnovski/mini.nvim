@@ -757,18 +757,19 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniOperatorsExchangeFrom', {link='IncSearch'})
 
     hi('MiniPickBorder',        {link='NormalFloat'})
-    hi('MiniPickBorderBusy',    {fg=p.base0E, bg=p.base01, attr=nil,    sp=nil})
-    hi('MiniPickBorderText',    {fg=p.base0D, bg=p.base01, attr='bold', sp=nil})
+    hi('MiniPickBorderBusy',    {fg=p.base0E, bg=p.base01, attr=nil,         sp=nil})
+    hi('MiniPickBorderText',    {fg=p.base0D, bg=p.base01, attr='bold',      sp=nil})
+    hi('MiniPickCursor',        {fg=nil,      bg=nil,      attr='nocombine', sp=nil, blend=100})
     hi('MiniPickIconDirectory', {link='Directory'})
-    hi('MiniPickIconFile',      {fg=p.base05, bg=nil,      attr=nil,    sp=nil})
+    hi('MiniPickIconFile',      {fg=p.base05, bg=nil,      attr=nil,         sp=nil})
     hi('MiniPickHeader',        {link='DiagnosticFloatingHint'})
-    hi('MiniPickMatchCurrent',  {fg=nil,      bg=p.base02, attr=nil,    sp=nil})
-    hi('MiniPickMatchMarked',   {fg=nil,      bg=p.base03, attr=nil,    sp=nil})
+    hi('MiniPickMatchCurrent',  {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
+    hi('MiniPickMatchMarked',   {fg=nil,      bg=p.base03, attr=nil,         sp=nil})
     hi('MiniPickMatchRanges',   {link='DiagnosticFloatingHint'})
     hi('MiniPickNormal',        {link='NormalFloat'})
-    hi('MiniPickPreviewLine',   {fg=nil,      bg=p.base02, attr=nil,    sp=nil})
+    hi('MiniPickPreviewLine',   {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
     hi('MiniPickPreviewRegion', {link='IncSearch'})
-    hi('MiniPickPrompt',        {fg=p.base0B, bg=p.base01, attr=nil,    sp=nil})
+    hi('MiniPickPrompt',        {fg=p.base0B, bg=p.base01, attr=nil,         sp=nil})
 
     hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil,    sp=nil})
     hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
@@ -1238,12 +1239,13 @@ H.highlight_gui = function(group, args)
     command = string.format('highlight! link %s %s', group, args.link)
   else
     command = string.format(
-      'highlight %s guifg=%s guibg=%s gui=%s guisp=%s',
+      'highlight %s guifg=%s guibg=%s gui=%s guisp=%s blend=%s',
       group,
       args.fg or 'NONE',
       args.bg or 'NONE',
       args.attr or 'NONE',
-      args.sp or 'NONE'
+      args.sp or 'NONE',
+      args.blend or 'NONE'
     )
   end
   vim.cmd(command)
@@ -1255,7 +1257,7 @@ H.highlight_both = function(group, args)
     command = string.format('highlight! link %s %s', group, args.link)
   else
     command = string.format(
-      'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s',
+      'highlight %s guifg=%s ctermfg=%s guibg=%s ctermbg=%s gui=%s cterm=%s guisp=%s blend=%s',
       group,
       args.fg and args.fg.gui or 'NONE',
       args.fg and args.fg.cterm or 'NONE',
@@ -1263,7 +1265,8 @@ H.highlight_both = function(group, args)
       args.bg and args.bg.cterm or 'NONE',
       args.attr or 'NONE',
       args.attr or 'NONE',
-      args.sp and args.sp.gui or 'NONE'
+      args.sp and args.sp.gui or 'NONE',
+      args.blend or 'NONE'
     )
   end
   vim.cmd(command)
