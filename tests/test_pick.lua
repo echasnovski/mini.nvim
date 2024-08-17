@@ -4286,14 +4286,15 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
 end
 
 T['Overall view']["respects 'guicursor'"] = function()
-  local validate = function(keys)
-    child.o.guicursor = 'n-v-c:block'
+  local validate = function(keys, init_guicursor)
+    init_guicursor = init_guicursor or 'n-v-c:block'
+    child.o.guicursor = init_guicursor
     type_keys(keys)
     start_with_items({ 'a' }, 'My name')
     -- Should *temporarily* force custom 'guicursor' to hide cursor
     eq(child.o.guicursor, 'a:MiniPickCursor')
     type_keys('<C-c>')
-    eq(child.o.guicursor, 'n-v-c:block')
+    eq(child.o.guicursor, init_guicursor)
     child.ensure_normal_mode()
   end
 
@@ -4302,6 +4303,12 @@ T['Overall view']["respects 'guicursor'"] = function()
   validate('i')
   validate('v')
   validate(':')
+
+  -- Should work with empty guicursor. Should also work around empty string
+  -- 'guicursor' by first setting to some other "neutral" value and redrawing.
+  child.cmd('au OptionSet guicursor lua _G.n = (_G.n or 0) + 1')
+  validate('', '')
+  eq(child.lua_get('_G.n'), 4)
 end
 
 T['Overall view']['allows very large dimensions'] = function()

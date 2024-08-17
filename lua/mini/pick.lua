@@ -2463,6 +2463,9 @@ end
 
 H.picker_stop = function(picker, abort)
   vim.tbl_map(function(timer) pcall(vim.loop.timer_stop, timer) end, H.timers)
+
+  -- Show cursor (work around `guicursor=''` actually leaving cursor hidden)
+  if H.cache.guicursor == '' then vim.cmd('set guicursor=a: | redraw') end
   pcall(function() vim.o.guicursor = H.cache.guicursor end)
 
   if picker == nil then return end
