@@ -610,7 +610,7 @@ Examples ~
 - `:Pick lsp scope='document_symbol'` - symbols in current file.
 
 Parameters ~
-{local_opts} `(table)` Options defining behavior of this particular picker.
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
   Possible fields:
   - <scope> `(string)` - LSP method to use. One of the supported ones (see
     list above). Default: `nil` which means explicit scope is needed.

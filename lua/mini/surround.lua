@@ -1373,7 +1373,7 @@ end
 
 -- Work with finding surrounding ----------------------------------------------
 ---@param surr_spec table Composed pattern. Last item(s) - extraction template.
----@param opts table Options.
+---@param opts table|nil Options.
 ---@private
 H.find_surrounding = function(surr_spec, opts)
   if surr_spec == nil then return end

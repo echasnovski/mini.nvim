@@ -867,7 +867,7 @@ end
 --- - If file, open it in the window which was current during |MiniFiles.open()|.
 ---   Explorer is not closed after that.
 ---
----@param opts Options. Possible fields:
+---@param opts table|nil Options. Possible fields:
 ---   - <close_on_file> `(boolean)` - whether to close explorer after going
 ---     inside a file. Powers the `go_in_plus` mapping.
 ---     Default: `false`.

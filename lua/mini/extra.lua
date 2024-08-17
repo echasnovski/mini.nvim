@@ -1095,7 +1095,7 @@ end
 ---   under cursor.
 --- - `:Pick lsp scope='document_symbol'` - symbols in current file.
 ---
----@param local_opts table Options defining behavior of this particular picker.
+---@param local_opts __extra_pickers_local_opts
 ---   Possible fields:
 ---   - <scope> `(string)` - LSP method to use. One of the supported ones (see
 ---     list above). Default: `nil` which means explicit scope is needed.
