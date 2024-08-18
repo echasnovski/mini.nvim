@@ -173,7 +173,8 @@ Parameters ~
 Set up terminal background synchronization
 
 What it does:
-- Checks if terminal emulator supports OSC 11 control sequence. Stops if not.
+- Checks if terminal emulator supports OSC 11 control sequence through
+  appropriate `stdout`. Stops if not.
 - Creates autocommands for |ColorScheme| and |VimResume| events, which
   change terminal background to have same color as |guibg| of |hl-Normal|.
 - Creates autocommands for |VimLeavePre| and |VimSuspend| events which set
@@ -184,8 +185,6 @@ What it does:
 Primary use case is to remove possible "frame" around current Neovim instance
 which appears if Neovim's |hl-Normal| background color differs from what is
 used by terminal emulator itself.
-
-Make sure to call it only during interactive session in terminal emulator.
 
 ------------------------------------------------------------------------------
                                                *MiniMisc.setup_restore_cursor()*

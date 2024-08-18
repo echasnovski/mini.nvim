@@ -286,7 +286,8 @@ H.root_cache = {}
 --- Set up terminal background synchronization
 ---
 --- What it does:
---- - Checks if terminal emulator supports OSC 11 control sequence. Stops if not.
+--- - Checks if terminal emulator supports OSC 11 control sequence through
+---   appropriate `stdout`. Stops if not.
 --- - Creates autocommands for |ColorScheme| and |VimResume| events, which
 ---   change terminal background to have same color as |guibg| of |hl-Normal|.
 --- - Creates autocommands for |VimLeavePre| and |VimSuspend| events which set
@@ -297,9 +298,14 @@ H.root_cache = {}
 --- Primary use case is to remove possible "frame" around current Neovim instance
 --- which appears if Neovim's |hl-Normal| background color differs from what is
 --- used by terminal emulator itself.
----
---- Make sure to call it only during interactive session in terminal emulator.
 MiniMisc.setup_termbg_sync = function()
+  -- Proceed only if there is a valid stdout to use
+  local has_stdout_tty = false
+  for _, ui in ipairs(vim.api.nvim_list_uis()) do
+    has_stdout_tty = has_stdout_tty or ui.stdout_tty
+  end
+  if not has_stdout_tty then return end
+
   local augroup = vim.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = true })
   local f = function(args)
     local ok, bg_init = pcall(H.parse_osc11, args.data)

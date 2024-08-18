@@ -450,10 +450,13 @@ end
 T['setup_termbg_sync()'] = new_set({
   hooks = {
     pre_case = function()
-      -- Mock `io.write` used to send control sequences to terminal emulator
       child.lua([[
+        -- Mock `io.write` used to send control sequences to terminal emulator
         _G.log = {}
         io.write = function(...) table.insert(_G.log, { ... }) end
+
+        -- Mock attached UI
+        vim.api.nvim_list_uis = function() return { { stdout_tty = true } } end
       ]])
     end,
   },
@@ -504,6 +507,22 @@ T['setup_termbg_sync()']['can be called multiple times'] = function()
   -- Should reset to the color from the very first call
   child.api.nvim_exec_autocmds('VimLeavePre', {})
   eq(child.lua_get('_G.log'), { { '\27]11;#11262d\a' } })
+end
+
+T['setup_termbg_sync()']['does nothing if there is no proper stdout'] = function()
+  local validate = function()
+    child.lua('MiniMisc.setup_termbg_sync()')
+    child.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = false })
+    eq(child.lua_get('#vim.api.nvim_get_autocmds({ group = "MiniMiscTermbgSync" })'), 0)
+  end
+
+  -- No UI
+  child.lua('vim.api.nvim_list_uis = function() return {} end')
+  validate()
+
+  -- UI without stdout (like GUI)
+  child.lua('vim.api.nvim_list_uis = function() return { { stdout_tty = false } } end')
+  validate()
 end
 
 T['setup_termbg_sync()']['handles no response from terminal emulator'] = function()
