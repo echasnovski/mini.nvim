@@ -482,9 +482,10 @@ T['setup_termbg_sync()']['works'] = function()
     child.api.nvim_exec_autocmds(event, {})
     eq_log({ { log_entry } })
   end
-  validate_event('UIEnter', '\027]11;#dddddd\007')
+  validate_event('VimResume', '\027]11;#dddddd\007')
   validate_event('ColorScheme', '\027]11;#dddddd\007')
-  validate_event('UILeave', '\027]11;#11262d\007')
+  validate_event('VimLeavePre', '\027]11;#11262d\007')
+  validate_event('VimSuspend', '\027]11;#11262d\007')
 end
 
 T['setup_termbg_sync()']['can be called multiple times'] = function()
@@ -501,7 +502,7 @@ T['setup_termbg_sync()']['can be called multiple times'] = function()
   child.lua('_G.log = {}')
 
   -- Should reset to the color from the very first call
-  child.api.nvim_exec_autocmds('UILeave', {})
+  child.api.nvim_exec_autocmds('VimLeavePre', {})
   eq(child.lua_get('_G.log'), { { '\27]11;#11262d\a' } })
 end
 
@@ -550,7 +551,7 @@ T['setup_termbg_sync()']['handles different color formats'] = function()
 
     -- Should properly parse initial background and use it to reset on exit
     child.lua('_G.log = {}')
-    child.api.nvim_exec_autocmds('UILeave', {})
+    child.api.nvim_exec_autocmds('VimLeavePre', {})
     eq(child.lua_get('_G.log'), { { '\027]11;' .. ref_color .. '\007' } })
 
     -- Clean up

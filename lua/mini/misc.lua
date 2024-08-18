@@ -287,10 +287,11 @@ H.root_cache = {}
 ---
 --- What it does:
 --- - Checks if terminal emulator supports OSC 11 control sequence. Stops if not.
---- - Creates |UIEnter| and |ColorScheme| autocommands which change terminal
----   background to have same color as |guibg| of |hl-Normal|.
---- - Creates |UILeave| autocommand which sets terminal background back to the
----   color at the time this function was called first time in current session.
+--- - Creates autocommands for |ColorScheme| and |VimResume| events, which
+---   change terminal background to have same color as |guibg| of |hl-Normal|.
+--- - Creates autocommands for |VimLeavePre| and |VimSuspend| events which set
+---   terminal background back to the color at the time this function was
+---   called first time in current session.
 --- - Synchronizes background immediately to allow not depend on loading order.
 ---
 --- Primary use case is to remove possible "frame" around current Neovim instance
@@ -313,12 +314,12 @@ MiniMisc.setup_termbg_sync = function()
       if normal.background == nil then return end
       io.write(string.format('\027]11;#%06x\007', normal.background))
     end
-    vim.api.nvim_create_autocmd({ 'UIEnter', 'ColorScheme' }, { group = augroup, callback = sync })
+    vim.api.nvim_create_autocmd({ 'VimResume', 'ColorScheme' }, { group = augroup, callback = sync })
 
     -- Set up reset to the color returned from the very first call
     H.termbg_init = H.termbg_init or bg_init
     local reset = function() io.write('\027]11;' .. H.termbg_init .. '\007') end
-    vim.api.nvim_create_autocmd({ 'UILeave' }, { group = augroup, callback = reset })
+    vim.api.nvim_create_autocmd({ 'VimLeavePre', 'VimSuspend' }, { group = augroup, callback = reset })
 
     -- Sync immediately
     sync()

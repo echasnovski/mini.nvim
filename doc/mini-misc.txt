@@ -174,10 +174,11 @@ Set up terminal background synchronization
 
 What it does:
 - Checks if terminal emulator supports OSC 11 control sequence. Stops if not.
-- Creates |UIEnter| and |ColorScheme| autocommands which change terminal
-  background to have same color as |guibg| of |hl-Normal|.
-- Creates |UILeave| autocommand which sets terminal background back to the
-  color at the time this function was called first time in current session.
+- Creates autocommands for |ColorScheme| and |VimResume| events, which
+  change terminal background to have same color as |guibg| of |hl-Normal|.
+- Creates autocommands for |VimLeavePre| and |VimSuspend| events which set
+  terminal background back to the color at the time this function was
+  called first time in current session.
 - Synchronizes background immediately to allow not depend on loading order.
 
 Primary use case is to remove possible "frame" around current Neovim instance
