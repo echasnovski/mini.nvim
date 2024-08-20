@@ -355,9 +355,11 @@ MiniExtra.pickers.buf_lines = function(local_opts, opts)
       if not poke_picker() then return end
       H.buf_ensure_loaded(buf_id)
       local buf_name = H.buf_get_name(buf_id) or ''
+      local n_digits = math.floor(math.log10(vim.api.nvim_buf_line_count(buf_id))) + 1
+      local format_pattern = '%s%' .. n_digits .. 'd\0%s'
       for lnum, l in ipairs(vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)) do
-        local prefix = is_scope_all and string.format('%s\0', buf_name) or ''
-        table.insert(items, { text = string.format('%s%s\0%s', prefix, lnum, l), bufnr = buf_id, lnum = lnum })
+        local prefix = is_scope_all and (buf_name .. '\0') or ''
+        table.insert(items, { text = format_pattern:format(prefix, lnum, l), bufnr = buf_id, lnum = lnum })
       end
     end
     pick.set_picker_items(items)

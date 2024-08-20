@@ -812,6 +812,68 @@ T['pickers']['buf_lines()']['respects `local_opts.preserve_order`'] = function()
   eq(get_picker_matches().all_inds, { 1, 3 })
 end
 
+T['pickers']['buf_lines()']['pads line numbers'] = function()
+  local set_n_lines = function(buf_id, prefix, n)
+    local lines = {}
+    for i = 1, n do
+      lines[i] = prefix .. '-' .. i
+    end
+    child.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
+  end
+
+  local buf_id_1 = child.api.nvim_create_buf(true, false)
+  set_n_lines(buf_id_1, 'buf-1', 9)
+
+  local buf_id_2 = child.api.nvim_create_buf(true, false)
+  set_n_lines(buf_id_2, 'buf-2', 10)
+
+  local buf_id_3 = child.api.nvim_create_buf(true, false)
+  set_n_lines(buf_id_3, 'buf-3', 99)
+
+  local buf_id_4 = child.api.nvim_create_buf(true, false)
+  set_n_lines(buf_id_4, 'buf-4', 100)
+
+  -- Should pad line numbers to achieve more aligned look
+  child.lua_notify('MiniExtra.pickers.buf_lines()')
+  sleep(small_time)
+  local items = get_picker_items()
+
+  local validate_has_item_with_text = function(text)
+    local res = false
+    for _, item in ipairs(items) do
+      if item.text == text then res = true end
+    end
+    eq(res, true)
+  end
+
+  validate_has_item_with_text('\0001\000buf-1-1')
+  validate_has_item_with_text('\0009\000buf-1-9')
+
+  validate_has_item_with_text('\000 1\000buf-2-1')
+  validate_has_item_with_text('\000 9\000buf-2-9')
+  validate_has_item_with_text('\00010\000buf-2-10')
+
+  validate_has_item_with_text('\000 1\000buf-3-1')
+  validate_has_item_with_text('\00099\000buf-3-99')
+
+  validate_has_item_with_text('\000  1\000buf-4-1')
+  validate_has_item_with_text('\000 99\000buf-4-99')
+  validate_has_item_with_text('\000100\000buf-4-100')
+
+  type_keys('<C-c>')
+
+  -- Should work with `scope='current'`
+  child.api.nvim_set_current_buf(buf_id_4)
+  child.lua_notify('MiniExtra.pickers.buf_lines({ scope = "current" })')
+  sleep(small_time)
+  items = get_picker_items()
+
+  validate_has_item_with_text('  1\000buf-4-1')
+  validate_has_item_with_text(' 99\000buf-4-99')
+  validate_has_item_with_text('100\000buf-4-100')
+  type_keys('<C-c>')
+end
+
 T['pickers']['buf_lines()']['can not show icons'] = function()
   setup_buffers()
   child.lua('MiniPick.config.source.show = MiniPick.default_show')
