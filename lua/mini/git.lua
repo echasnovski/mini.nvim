@@ -300,7 +300,7 @@ MiniGit.config = {
 
 --- Show Git related data at cursor
 ---
---- - If there is a commit-like |<cword>|, show it in split with `git show`.
+--- - If there is a commit-like |<cword>|, show it in split.
 --- - If possible, show diff source via |MiniGit.show_diff_source()|.
 --- - If possible, show range history via |MiniGit.show_range_history()|.
 --- - Otherwise throw an error.
@@ -317,7 +317,7 @@ MiniGit.show_at_cursor = function(opts)
   local is_commit = string.find(cword, '^%x%x%x%x%x%x%x+$') ~= nil and string.lower(cword) == cword
   if is_commit then
     local split = H.normalize_split_opt((opts or {}).split or 'auto', 'opts.split')
-    local args = { 'show', cword }
+    local args = { 'show', '--stat', '--patch', cword }
     local lines = H.git_cli_output(args, cwd)
     if #lines == 0 then return H.notify('Can not show commit ' .. cword, 'WARN') end
     H.show_in_split(split, lines, 'show', table.concat(args, ' '))

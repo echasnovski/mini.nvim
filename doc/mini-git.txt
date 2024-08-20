@@ -270,7 +270,7 @@ Default: "auto".
                         `MiniGit.show_at_cursor`({opts})
 Show Git related data at cursor
 
-- If there is a commit-like |<cword>|, show it in split with `git show`.
+- If there is a commit-like |<cword>|, show it in split.
 - If possible, show diff source via |MiniGit.show_diff_source()|.
 - If possible, show range history via |MiniGit.show_range_history()|.
 - Otherwise throw an error.

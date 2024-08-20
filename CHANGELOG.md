@@ -20,6 +20,10 @@
 - FEATURE: update `buf_lines` picker to pad line numbers to achieve more aligned look.
 - BREAKING FEATURE: use "│" as line/position separator instead of ":". This aligns with changes in 'mini.pick' and makes line/position more easily visible.
 
+## mini.git
+
+- FEATURE: update `show_at_cursor()` to include commit's statistics when showing commit.
+
 ## mini.hipatterns
 
 - BREAKING FEATURE: update `compute_hex_color_group()` to compute based on combination of `hex_color` and `style`, opposed to just `hex_color`. This allows simultaneous usage of several styles in user's custom highlighters.

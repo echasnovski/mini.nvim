@@ -252,7 +252,8 @@ T['show_at_cursor()']['works on commit'] = function()
 
   show_at_cursor()
 
-  local ref_git_spawn_log = { { args = { '--no-pager', 'show', 'abc1234' }, cwd = child.fn.getcwd() } }
+  local ref_args = { '--no-pager', 'show', '--stat', '--patch', 'abc1234' }
+  local ref_git_spawn_log = { { args = ref_args, cwd = child.fn.getcwd() } }
   validate_git_spawn_log(ref_git_spawn_log)
   clear_spawn_log()
 
@@ -280,7 +281,8 @@ T['show_at_cursor()']['uses correct pattern to match commit'] = function()
     clear_spawn_log()
 
     show_at_cursor()
-    local is_commit = vim.deep_equal(get_spawn_log()[1].options.args, { '--no-pager', 'show', cword })
+    local ref_args = { '--no-pager', 'show', '--stat', '--patch', cword }
+    local is_commit = vim.deep_equal(get_spawn_log()[1].options.args, ref_args)
     eq(is_commit, ref_is_commit)
   end
 
