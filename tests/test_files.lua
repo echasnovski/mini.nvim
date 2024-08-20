@@ -2766,6 +2766,9 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
 
   validate_move_delete()
 
+  validate_confirm_args([[  MOVE TO TRASH: 'file']])
+  validate_confirm_args([[  MOVE TO TRASH: 'dir']])
+
   -- Deleting entries again with same name should replace previous ones
   -- - Recreate previously deleted entries with different content
   child.fn.writefile({ 'New file' }, join_path(temp_dir, 'file'))

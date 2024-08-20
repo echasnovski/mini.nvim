@@ -35,6 +35,7 @@
 ## mini.files
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
+- FEATURE: show "MOVE TO TRASH" action during confirmation in case of not persistent delete.
 
 ## mini.icons
 
