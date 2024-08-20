@@ -2035,7 +2035,7 @@ H.get_impl = {
     -- Built-in extensions
     local icon_data = H.extension_icons[name]
     if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
-    if icon_data ~= nil then return icon_data, icon_data.hl end
+    if icon_data ~= nil then return icon_data end
 
     -- Parts of complex extension (if can be recognized)
     local dot = string.find(name, '%..')
