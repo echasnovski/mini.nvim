@@ -2580,7 +2580,7 @@ H.fs_delete = function(path, permanent_delete)
   -- Ensure that same basenames are replaced
   pcall(vim.fn.delete, trash_path, 'rf')
 
-  return vim.loop.fs_rename(path, trash_path)
+  return H.fs_move(path, trash_path)
 end
 
 H.fs_move = function(from, to)
@@ -2589,7 +2589,14 @@ H.fs_move = function(from, to)
 
   -- Move while allowing to create directory
   vim.fn.mkdir(H.fs_get_parent(to), 'p')
-  local success = vim.loop.fs_rename(from, to)
+  local success, _, err_code = vim.loop.fs_rename(from, to)
+
+  if err_code == 'EXDEV' then
+    -- Handle cross-device move separately as `loop.fs_rename` does not work
+    success = H.fs_copy(from, to)
+    if success then success = pcall(vim.fn.delete, from, 'rf') end
+    if not success then pcall(vim.fn.delete, to, 'rf') end
+  end
 
   if not success then return success end
 

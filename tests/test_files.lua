@@ -2787,6 +2787,37 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
   validate_file_content(join_path(trash_dir, 'dir', 'subfile'), { 'New subfile' })
 end
 
+T['File manipulation']['can move to trash across devices'] = function()
+  child.set_size(10, 60)
+
+  local data_dir = mock_stdpath_data()
+  local trash_dir = join_path(data_dir, 'mini.files', 'trash')
+  child.lua('MiniFiles.config.options.permanent_delete = false')
+
+  -- Mock `vim.loop.fs_rename()` not working across devices/volumes/partitions
+  child.lua('vim.loop.fs_rename = function() return nil, "EXDEV: cross-device link not permitted:", "EXDEV" end')
+
+  local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/nested/', 'dir/nested/file' })
+  open(temp_dir)
+
+  -- Write lines in moved files to check "copy-delete" and not "create-delete"
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+  child.fn.writefile({ 'File nested' }, join_path(temp_dir, 'dir', 'nested', 'file'))
+
+  type_keys('dG')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_no_directory(temp_dir, 'dir')
+  validate_file(trash_dir, 'file')
+  validate_file_content(join_path(trash_dir, 'file'), { 'File' })
+  validate_directory(trash_dir, 'dir')
+  validate_directory(trash_dir, 'dir', 'nested')
+  validate_file(trash_dir, 'dir', 'nested', 'file')
+  validate_file_content(join_path(trash_dir, 'dir', 'nested', 'file'), { 'File nested' })
+end
+
 T['File manipulation']['can rename'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
@@ -3080,6 +3111,39 @@ T['File manipulation']['can move inside new directory'] = function()
   validate_no_file(temp_dir, 'file')
   validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
+end
+
+T['File manipulation']['can move across devices'] = function()
+  child.set_size(10, 60)
+
+  -- Mock `vim.loop.fs_rename()` not working across devices/volumes/partitions
+  child.lua('vim.loop.fs_rename = function() return nil, "EXDEV: cross-device link not permitted:", "EXDEV" end')
+
+  local tmp_children = { 'dir/', 'dir/file', 'dir/nested/', 'dir/nested/sub/', 'dir/nested/sub/file' }
+  local temp_dir = make_temp_dir('temp', tmp_children)
+  open(temp_dir)
+
+  -- Write lines in moved files to check "copy-delete" and not "create-delete"
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
+  child.fn.writefile({ 'File nested' }, join_path(temp_dir, 'dir', 'nested', 'sub', 'file'))
+
+  go_in()
+  type_keys('dG')
+  go_out()
+  type_keys('P')
+
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'dir', 'file')
+  validate_file(temp_dir, 'file')
+  validate_file_content(join_path(temp_dir, 'file'), { 'File' })
+
+  validate_no_directory(temp_dir, 'dir', 'nested')
+  validate_directory(temp_dir, 'nested')
+  validate_directory(temp_dir, 'nested', 'sub')
+  validate_file(temp_dir, 'nested', 'sub', 'file')
+  validate_file_content(join_path(temp_dir, 'nested', 'sub', 'file'), { 'File nested' })
 end
 
 T['File manipulation']['move works again after undo'] = function()
