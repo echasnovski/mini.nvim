@@ -2058,7 +2058,8 @@ H.get_impl = {
     -- Built-in file names
     local icon_data = H.file_icons[basename]
     if type(icon_data) == 'string' then return MiniIcons.get('filetype', icon_data) end
-    if icon_data ~= nil then return icon_data end
+    -- - Style icon based on the basename and not full name
+    if icon_data ~= nil then return H.style_icon(icon_data.glyph, basename), icon_data.hl end
 
     -- Basename extensions. Prefer this before `vim.filetype.match()` for speed
     -- (as the latter is slow-ish; like 0.1 ms in Neovim<0.11)

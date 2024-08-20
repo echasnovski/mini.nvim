@@ -521,6 +521,12 @@ T['get()']['respects `config.style`'] = function()
   -- - 'not-supported' is resolved to use "file" default
   eq(get('file', 'not-supported'), { 'F', 'MiniIconsGrey', true })
 
+  -- Should work with full paths
+  eq(get('file', '/home/user/LICENSE'), { 'L', 'MiniIconsCyan', false })
+  eq(get('file', '/home/user/world.lua'), { 'L', 'MiniIconsAzure', false })
+  eq(get('file', '/home/user/Cargo.lock'), { 'T', 'MiniIconsOrange', false })
+  eq(get('file', '/home/user/not-supported-2'), { 'F', 'MiniIconsGrey', true })
+
   -- Should work with all categories
   eq(get('default', 'lsp')[1], 'L')
   eq(get('directory', 'nvim')[1], 'N')
