@@ -989,10 +989,7 @@ MiniFiles.get_fs_entry = function(buf_id, line)
   line = H.validate_line(buf_id, line)
 
   local path_id = H.match_line_path_id(H.get_bufline(buf_id, line))
-  if path_id == nil then return nil end
-
-  local path = H.path_index[path_id]
-  return { fs_type = H.fs_get_type(path), name = H.fs_get_basename(path), path = path }
+  return H.get_fs_entry_from_path_index(path_id)
 end
 
 --- Get target window
@@ -1262,6 +1259,7 @@ end
 ---@field depth_focus number Depth to focus.
 ---@field views table Views for paths. Each view is a table with:
 ---   - <buf_id> where to show directory content.
+---   - <was_focused> - whether buffer was focused during current session.
 ---   - <cursor> to position cursor; can be:
 ---       - `{ line, col }` table to set cursor when buffer changes window.
 ---       - `entry_name` string entry name to find inside directory buffer.
@@ -1327,12 +1325,14 @@ H.explorer_refresh = function(explorer, opts)
   end
 
   -- Possibly force content updates on all explorer buffers. Doing it for *all*
-  -- of them and not only on modified once to allow synch outside changes.
+  -- of them and not only on modified ones to allow sync changes from outside.
   if opts.force_update then
     for path, view in pairs(explorer.views) do
       -- Encode cursors to allow them to "stick" to current entry
       view = H.view_encode_cursor(view)
-      H.buffer_update(view.buf_id, path, explorer.opts)
+      -- Force update of shown path ids
+      if H.opened_buffers[view.buf_id] then H.opened_buffers[view.buf_id].children_path_ids = nil end
+      H.buffer_update(view.buf_id, path, explorer.opts, not view.was_focused)
       explorer.views[path] = view
     end
   end
@@ -1573,16 +1573,16 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
   local path = explorer.branch[depth]
   local views, windows, opts = explorer.views, explorer.windows, explorer.opts
 
-  -- Prepare target view
-  local view = views[path] or {}
-  view = H.view_ensure_proper(view, path, opts)
-  views[path] = view
-
   -- Compute width based on window role
   local win_is_focused = depth == explorer.depth_focus
   local win_is_preview = opts.windows.preview and (depth == (explorer.depth_focus + 1))
   local cur_width = win_is_focused and opts.windows.width_focus
     or (win_is_preview and opts.windows.width_preview or opts.windows.width_nofocus)
+
+  -- Prepare target view
+  local view = views[path] or {}
+  view = H.view_ensure_proper(view, path, opts, win_is_focused, win_is_preview)
+  views[path] = view
 
   -- Create relevant window config
   local config = {
@@ -1800,17 +1800,21 @@ H.compute_visible_depth_range = function(explorer, opts)
 end
 
 -- Views ----------------------------------------------------------------------
-H.view_ensure_proper = function(view, path, opts)
+H.view_ensure_proper = function(view, path, opts, is_focused, is_preview)
   -- Ensure proper buffer
-  if not H.is_valid_buf(view.buf_id) then
+  local needs_recreate, needs_reprocess = not H.is_valid_buf(view.buf_id), not view.was_focused and is_focused
+  if needs_recreate then
     H.buffer_delete(view.buf_id)
     view.buf_id = H.buffer_create(path, opts.mappings)
+  end
+  if needs_recreate or needs_reprocess then
     -- Make sure that pressing `u` in new buffer does nothing
     local cache_undolevels = vim.bo[view.buf_id].undolevels
     vim.bo[view.buf_id].undolevels = -1
-    H.buffer_update(view.buf_id, path, opts)
+    H.buffer_update(view.buf_id, path, opts, is_preview)
     vim.bo[view.buf_id].undolevels = cache_undolevels
   end
+  view.was_focused = view.was_focused or is_focused
 
   -- Ensure proper cursor. If string, find it as line in current buffer.
   view.cursor = view.cursor or { 1, 0 }
@@ -2009,12 +2013,12 @@ H.buffer_make_mappings = function(buf_id, mappings)
   --stylua: ignore end
 end
 
-H.buffer_update = function(buf_id, path, opts)
+H.buffer_update = function(buf_id, path, opts, is_preview)
   if not (H.is_valid_buf(buf_id) and H.fs_is_present_path(path)) then return end
 
   -- Perform entry type specific updates
   local update_fun = H.fs_get_type(path) == 'directory' and H.buffer_update_directory or H.buffer_update_file
-  update_fun(buf_id, path, opts)
+  update_fun(buf_id, path, opts, is_preview)
 
   -- Trigger dedicated event
   H.trigger_event('MiniFilesBufferUpdate', { buf_id = buf_id, win_id = H.opened_buffers[buf_id].win_id })
@@ -2023,21 +2027,29 @@ H.buffer_update = function(buf_id, path, opts)
   H.opened_buffers[buf_id].n_modified = -1
 end
 
-H.buffer_update_directory = function(buf_id, path, opts)
-  -- Compute and cache (to use during synchronization) shown file system entries
-  local fs_entries = H.fs_read_dir(path, opts.content)
-  H.opened_buffers[buf_id].children_path_ids = vim.tbl_map(function(x) return x.path_id end, fs_entries)
+H.buffer_update_directory = function(buf_id, path, opts, is_preview)
+  -- Compute and cache (to use during sync) shown file system entries
+  local children_path_ids = H.opened_buffers[buf_id].children_path_ids
+  local fs_entries = children_path_ids == nil and H.fs_read_dir(path, opts.content)
+    or vim.tbl_map(H.get_fs_entry_from_path_index, children_path_ids)
+  H.opened_buffers[buf_id].children_path_ids = children_path_ids
+    or vim.tbl_map(function(x) return x.path_id end, fs_entries)
 
-  -- Compute lines
-  local lines, icon_hl, name_hl = {}, {}, {}
-
-  -- - Compute format expression resulting into same width path ids
+  -- Compute format expression resulting into same width path ids
   local path_width = math.floor(math.log10(#H.path_index)) + 1
   local line_format = '/%0' .. path_width .. 'd/%s/%s'
 
-  local prefix_fun = opts.content.prefix
-  for _, entry in ipairs(fs_entries) do
-    local prefix, hl = prefix_fun(entry)
+  -- Compute lines
+  local lines, icon_hl, name_hl = {}, {}, {}
+  local prefix_fun, n_computed_prefixes = opts.content.prefix, is_preview and vim.o.lines or math.huge
+  for i, entry in ipairs(fs_entries) do
+    local prefix, hl
+    -- Compute prefix only in visible preview (for performance).
+    -- NOTE: limiting entries in `fs_read_dir()` is not possible because all
+    -- entries are needed for a proper filter and sort.
+    if i <= n_computed_prefixes then
+      prefix, hl = prefix_fun(entry)
+    end
     prefix, hl = prefix or '', hl or ''
     table.insert(lines, string.format(line_format, H.path_index[entry.path], prefix, entry.name))
     table.insert(icon_hl, hl)
@@ -2065,7 +2077,7 @@ H.buffer_update_directory = function(buf_id, path, opts)
   end
 end
 
-H.buffer_update_file = function(buf_id, path, opts)
+H.buffer_update_file = function(buf_id, path, opts, _)
   -- Work only with readable text file. This is not 100% proof, but good enough.
   -- Source: https://github.com/sharkdp/content_inspector
   local fd, width_preview = vim.loop.fs_open(path, 'r', 1), opts.windows.width_preview
@@ -2368,6 +2380,12 @@ H.add_path_to_index = function(path)
   H.path_index[path] = new_id
 
   return new_id
+end
+
+H.get_fs_entry_from_path_index = function(path_id)
+  local path = H.path_index[path_id]
+  if path == nil then return nil end
+  return { fs_type = H.fs_get_type(path), name = H.fs_get_basename(path), path = path }
 end
 
 H.replace_path_in_index = function(from, to)

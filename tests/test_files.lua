@@ -671,6 +671,64 @@ T['open()']['`content.prefix` can return `nil`'] = function()
   validate([[nil, '']])
 end
 
+T['open()']['`content.prefix` is called only on visible part of preview'] = function()
+  child.set_size(5, 100)
+  child.lua([[
+    MiniFiles.config.windows.preview = true
+
+    _G.log = {}
+    MiniFiles.config.content.prefix = function(fs_entry)
+      table.insert(_G.log, fs_entry.name)
+      return '-', 'Comment'
+    end
+
+    _G.scandir_log = {}
+    fs_scandir_orig = vim.loop.fs_scandir
+    vim.loop.fs_scandir = function(path)
+      table.insert(_G.scandir_log, path)
+      return fs_scandir_orig(path)
+    end
+  ]])
+
+  local validate_log = function(ref)
+    local computed_prefix = child.lua_get('_G.log')
+    table.sort(computed_prefix)
+    eq(computed_prefix, ref)
+    child.lua('_G.log = {}')
+  end
+
+  local children = { 'dir/', 'dir/subdir/' }
+  for i = 1, 6 do
+    table.insert(children, 'dir/subdir/file-' .. i)
+  end
+  local temp_dir = make_temp_dir('temp', children)
+
+  open(temp_dir .. '/dir')
+  -- Prefix should be computed only for entries that might be visible (first
+  -- vim.o.cmdheight)
+  validate_log({ 'file-1', 'file-2', 'file-3', 'file-4', 'file-5', 'subdir' })
+
+  -- Prefix should be recomputed for all entries *only* if the path is focused
+  go_out()
+  validate_log({ 'dir' })
+
+  go_in()
+  validate_log({})
+
+  -- - Synchronization should also not force recomputation on **all** entries
+  type_keys('o', 'new-file', '<Esc>', 'k')
+  mock_confirm(1)
+  child.lua('MiniFiles.synchronize()')
+  validate_log({ 'dir', 'file-1', 'file-2', 'file-3', 'file-4', 'file-5', 'new-file', 'subdir' })
+
+  child.lua('_G.scandir_log = {}')
+  go_in()
+  -- - Only focus should result into prefix recomputation on all entries
+  validate_log({ 'file-1', 'file-2', 'file-3', 'file-4', 'file-5', 'file-6' })
+  -- - Should also not result in additional disk read
+  eq(child.lua_get('_G.scandir_log'), {})
+end
+
 T['open()']['respects `content.sort`'] = function()
   child.lua([[
     _G.sort_arg = {}
