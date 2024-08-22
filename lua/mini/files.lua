@@ -1319,6 +1319,14 @@ H.explorer_refresh = function(explorer, opts)
   -- cursors to "stick" to current items.
   if not opts.skip_update_cursor then explorer = H.explorer_update_cursors(explorer) end
 
+  -- Ensure no outdated views
+  for path, view in pairs(explorer.views) do
+    if not H.fs_is_present_path(path) then
+      H.buffer_delete(view.buf_id)
+      explorer.views[path] = nil
+    end
+  end
+
   -- Possibly force content updates on all explorer buffers. Doing it for *all*
   -- of them and not only on modified once to allow synch outside changes.
   if opts.force_update then
