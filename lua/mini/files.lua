@@ -1124,6 +1124,7 @@ H.latest_paths = {}
 
 -- Register of opened buffer data for quick access. Tables per buffer id:
 -- - <path> - path which contents this buffer displays.
+-- - <children_path_ids> - array of shown children path ids.
 -- - <win_id> - id of window this buffer is shown. Can be `nil`.
 -- - <n_modified> - number of modifications since last update from this module.
 --   Values bigger than 0 can be treated as if buffer was modified by user.
@@ -1264,8 +1265,6 @@ end
 ---   - <cursor> to position cursor; can be:
 ---       - `{ line, col }` table to set cursor when buffer changes window.
 ---       - `entry_name` string entry name to find inside directory buffer.
----   - <children_path_ids> - array with children path ids present during
----     latest directory update.
 ---@field windows table Array of currently opened window ids (left to right).
 ---@field anchor string Anchor directory of the explorer. Used as index in
 ---   history and for `reset()` operation.
@@ -1333,7 +1332,7 @@ H.explorer_refresh = function(explorer, opts)
     for path, view in pairs(explorer.views) do
       -- Encode cursors to allow them to "stick" to current entry
       view = H.view_encode_cursor(view)
-      view.children_path_ids = H.buffer_update(view.buf_id, path, explorer.opts)
+      H.buffer_update(view.buf_id, path, explorer.opts)
       explorer.views[path] = view
     end
   end
@@ -1517,7 +1516,7 @@ H.explorer_compute_fs_actions = function(explorer)
   -- Compute differences
   local fs_diffs = {}
   for _, view in pairs(explorer.views) do
-    local dir_fs_diff = H.buffer_compute_fs_diff(view.buf_id, view.children_path_ids)
+    local dir_fs_diff = H.buffer_compute_fs_diff(view.buf_id)
     if #dir_fs_diff > 0 then vim.list_extend(fs_diffs, dir_fs_diff) end
   end
   if #fs_diffs == 0 then return nil end
@@ -1809,7 +1808,7 @@ H.view_ensure_proper = function(view, path, opts)
     -- Make sure that pressing `u` in new buffer does nothing
     local cache_undolevels = vim.bo[view.buf_id].undolevels
     vim.bo[view.buf_id].undolevels = -1
-    view.children_path_ids = H.buffer_update(view.buf_id, path, opts)
+    H.buffer_update(view.buf_id, path, opts)
     vim.bo[view.buf_id].undolevels = cache_undolevels
   end
 
@@ -1850,7 +1849,6 @@ end
 H.view_invalidate_buffer = function(view)
   H.buffer_delete(view.buf_id)
   view.buf_id = nil
-  view.children_path_ids = nil
   return view
 end
 
@@ -2016,23 +2014,22 @@ H.buffer_update = function(buf_id, path, opts)
 
   -- Perform entry type specific updates
   local update_fun = H.fs_get_type(path) == 'directory' and H.buffer_update_directory or H.buffer_update_file
-  local fs_entries = update_fun(buf_id, path, opts)
+  update_fun(buf_id, path, opts)
 
   -- Trigger dedicated event
   H.trigger_event('MiniFilesBufferUpdate', { buf_id = buf_id, win_id = H.opened_buffers[buf_id].win_id })
 
   -- Reset buffer as not modified
   H.opened_buffers[buf_id].n_modified = -1
-
-  -- Return array with children entries path ids for future synchronization
-  return vim.tbl_map(function(x) return x.path_id end, fs_entries)
 end
 
 H.buffer_update_directory = function(buf_id, path, opts)
-  local lines, icon_hl, name_hl = {}, {}, {}
+  -- Compute and cache (to use during synchronization) shown file system entries
+  local fs_entries = H.fs_read_dir(path, opts.content)
+  H.opened_buffers[buf_id].children_path_ids = vim.tbl_map(function(x) return x.path_id end, fs_entries)
 
   -- Compute lines
-  local fs_entries = H.fs_read_dir(path, opts.content)
+  local lines, icon_hl, name_hl = {}, {}, {}
 
   -- - Compute format expression resulting into same width path ids
   local path_width = math.floor(math.log10(#H.path_index)) + 1
@@ -2066,24 +2063,16 @@ H.buffer_update_directory = function(buf_id, path, opts)
     local name_opts = { hl_group = name_hl[i], end_row = i, end_col = 0, right_gravity = false }
     set_hl(i - 1, name_start - 1, name_opts)
   end
-
-  return fs_entries
 end
 
 H.buffer_update_file = function(buf_id, path, opts)
   -- Work only with readable text file. This is not 100% proof, but good enough.
   -- Source: https://github.com/sharkdp/content_inspector
-  local fd = vim.loop.fs_open(path, 'r', 1)
-  if fd == nil then
-    H.set_buflines(buf_id, { '-No-access' .. string.rep('-', opts.windows.width_preview) })
-    return {}
-  end
+  local fd, width_preview = vim.loop.fs_open(path, 'r', 1), opts.windows.width_preview
+  if fd == nil then return H.set_buflines(buf_id, { '-No-access' .. string.rep('-', width_preview) }) end
   local is_text = vim.loop.fs_read(fd, 1024):find('\0') == nil
   vim.loop.fs_close(fd)
-  if not is_text then
-    H.set_buflines(buf_id, { '-Non-text-file' .. string.rep('-', opts.windows.width_preview) })
-    return {}
-  end
+  if not is_text then return H.set_buflines(buf_id, { '-Non-text-file' .. string.rep('-', width_preview) }) end
 
   -- Compute lines. Limit number of read lines to work better on large files.
   local has_lines, read_res = pcall(vim.fn.readfile, path, '', vim.o.lines)
@@ -2100,8 +2089,6 @@ H.buffer_update_file = function(buf_id, path, opts)
     local has_ts, _ = pcall(vim.treesitter.start, buf_id, has_lang and lang or ft)
     if not has_ts then vim.bo[buf_id].syntax = ft end
   end
-
-  return {}
 end
 
 H.buffer_delete = function(buf_id)
@@ -2110,7 +2097,7 @@ H.buffer_delete = function(buf_id)
   H.opened_buffers[buf_id] = nil
 end
 
-H.buffer_compute_fs_diff = function(buf_id, ref_path_ids)
+H.buffer_compute_fs_diff = function(buf_id)
   if not H.is_modified_buffer(buf_id) then return {} end
 
   local path = H.opened_buffers[buf_id].path
@@ -2137,6 +2124,7 @@ H.buffer_compute_fs_diff = function(buf_id, ref_path_ids)
   end
 
   -- Detect missing file system entries
+  local ref_path_ids = H.opened_buffers[buf_id].children_path_ids
   for _, ref_id in ipairs(ref_path_ids) do
     if not present_path_ids[ref_id] then table.insert(res, { from = H.path_index[ref_id], to = nil }) end
   end
