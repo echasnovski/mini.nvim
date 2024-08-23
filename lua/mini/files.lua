@@ -1522,12 +1522,12 @@ H.explorer_compute_fs_actions = function(explorer)
   if #fs_diffs == 0 then return nil end
 
   -- Convert differences into actions
-  local create, delete_map, rename, move, raw_copy = {}, {}, {}, {}, {}
+  local create, delete_map, raw_copy = {}, {}, {}
 
   -- - Differentiate between create, delete, and copy
   for _, diff in ipairs(fs_diffs) do
     if diff.from == nil then
-      table.insert(create, diff.to)
+      table.insert(create, { action = 'create', to = diff.to })
     elseif diff.to == nil then
       delete_map[diff.from] = true
     else
@@ -1535,26 +1535,28 @@ H.explorer_compute_fs_actions = function(explorer)
     end
   end
 
-  -- - Possibly narrow down copy action into move or rename:
-  --   `delete + copy` is `rename` if in same directory and `move` otherwise
-  local copy = {}
+  -- - Narrow down copy action into rename or move: `delete + copy` is `rename`
+  --   if in same directory and `move` otherwise
+  local rename, move, copy = {}, {}, {}
   for _, diff in pairs(raw_copy) do
+    local action, target = 'copy', copy
     if delete_map[diff.from] then
-      if H.fs_get_parent(diff.from) == H.fs_get_parent(diff.to) then
-        table.insert(rename, diff)
-      else
-        table.insert(move, diff)
-      end
-
-      -- NOTE: Can't use `delete` as array here in order for path to be moved
-      -- or renamed only single time
+      action = H.fs_get_parent(diff.from) == H.fs_get_parent(diff.to) and 'rename' or 'move'
+      target = action == 'rename' and rename or move
+      -- NOTE: Use map instead of array to ensure single move/rename per path
       delete_map[diff.from] = nil
-    else
-      table.insert(copy, diff)
     end
+    table.insert(target, { action = action, dir = diff.dir, from = diff.from, to = diff.to })
   end
 
-  return { create = create, delete = vim.tbl_keys(delete_map), copy = copy, rename = rename, move = move }
+  -- Construct final array
+  local res = {}
+  vim.list_extend(res, copy)
+  vim.list_extend(res, create)
+  vim.list_extend(res, move)
+  vim.list_extend(res, rename)
+  vim.list_extend(res, vim.tbl_map(function(p) return { action = 'delete', from = p } end, vim.tbl_keys(delete_map)))
+  return res
 end
 
 H.explorer_update_cursors = function(explorer)
@@ -2455,50 +2457,29 @@ end
 
 H.fs_actions_to_lines = function(fs_actions, opts)
   -- Gather actions per source directory
+  local base, short = H.fs_get_basename, H.fs_shorten_path
+  local del_name = opts.options.permanent_delete and 'DELETE' or 'MOVE TO TRASH'
+
   local actions_per_dir = {}
+  --stylua: ignore
+  for _, diff in ipairs(fs_actions) do
+    -- Compute line depending on action
+    local to_type = (diff.to or ''):sub(-1) == '/' and 'directory' or 'file'
+    local action, l = diff.action, nil
+    if action == 'create' then l = string.format("  CREATE: '%s' (%s)",    base(diff.to),   to_type) end
+    if action == 'delete' then l = string.format("  %s: '%s'",             del_name,        base(diff.from)) end
+    if action == 'copy'   then l = string.format("    COPY: '%s' to '%s'", base(diff.from), short(diff.to)) end
+    if action == 'move'   then l = string.format("    MOVE: '%s' to '%s'", base(diff.from), short(diff.to)) end
+    if action == 'rename' then l = string.format("  RENAME: '%s' to '%s'", base(diff.from), base(diff.to)) end
 
-  local get_dir_actions = function(path)
-    local dir_path = H.fs_shorten_path(H.fs_get_parent(path))
+    -- Add to per directory lines
+    local dir_path = short(H.fs_get_parent(action == 'create' and diff.to or diff.from))
     local dir_actions = actions_per_dir[dir_path] or {}
+    table.insert(dir_actions, l)
     actions_per_dir[dir_path] = dir_actions
-    return dir_actions
   end
 
-  local get_quoted_basename = function(path) return string.format("'%s'", H.fs_get_basename(path)) end
-
-  for _, diff in ipairs(fs_actions.copy) do
-    local dir_actions = get_dir_actions(diff.from)
-    local l = string.format("    COPY: %s to '%s'", get_quoted_basename(diff.from), H.fs_shorten_path(diff.to))
-    table.insert(dir_actions, l)
-  end
-
-  for _, path in ipairs(fs_actions.create) do
-    local dir_actions = get_dir_actions(path)
-    local fs_type = path:find('/$') == nil and 'file' or 'directory'
-    local l = string.format('  CREATE: %s (%s)', get_quoted_basename(path), fs_type)
-    table.insert(dir_actions, l)
-  end
-
-  local delete_action = opts.options.permanent_delete and 'DELETE' or 'MOVE TO TRASH'
-  for _, path in ipairs(fs_actions.delete) do
-    local dir_actions = get_dir_actions(path)
-    local l = string.format('  %s: %s', delete_action, get_quoted_basename(path))
-    table.insert(dir_actions, l)
-  end
-
-  for _, diff in ipairs(fs_actions.move) do
-    local dir_actions = get_dir_actions(diff.from)
-    local l = string.format("    MOVE: %s to '%s'", get_quoted_basename(diff.from), H.fs_shorten_path(diff.to))
-    table.insert(dir_actions, l)
-  end
-
-  for _, diff in ipairs(fs_actions.rename) do
-    local dir_actions = get_dir_actions(diff.from)
-    local l = string.format('  RENAME: %s to %s', get_quoted_basename(diff.from), get_quoted_basename(diff.to))
-    table.insert(dir_actions, l)
-  end
-
-  -- Convert to lines
+  -- Convert to final lines
   local res = { 'CONFIRM FILE SYSTEM ACTIONS', '' }
   for path, dir_actions in pairs(actions_per_dir) do
     table.insert(res, path .. ':')
@@ -2510,40 +2491,21 @@ H.fs_actions_to_lines = function(fs_actions, opts)
 end
 
 H.fs_actions_apply = function(fs_actions, opts)
-  -- Copy first to allow later proper deleting
-  for _, diff in ipairs(fs_actions.copy) do
-    local ok, success = pcall(H.fs_copy, diff.from, diff.to)
-    local data = { action = 'copy', from = diff.from, to = diff.to }
-    if ok and success then H.trigger_event('MiniFilesActionCopy', data) end
-  end
-
-  for _, path in ipairs(fs_actions.create) do
-    local ok, success = pcall(H.fs_create, path)
-    local data = { action = 'create', to = H.fs_normalize_path(path) }
-    if ok and success then H.trigger_event('MiniFilesActionCreate', data) end
-  end
-
-  for _, diff in ipairs(fs_actions.move) do
-    local ok, success = pcall(H.fs_move, diff.from, diff.to)
-    local data = { action = 'move', from = diff.from, to = diff.to }
-    if ok and success then H.trigger_event('MiniFilesActionMove', data) end
-  end
-
-  for _, diff in ipairs(fs_actions.rename) do
-    local ok, success = pcall(H.fs_rename, diff.from, diff.to)
-    local data = { action = 'rename', from = diff.from, to = diff.to }
-    if ok and success then H.trigger_event('MiniFilesActionRename', data) end
-  end
-
-  -- Delete last to not lose anything too early (just in case)
-  for _, path in ipairs(fs_actions.delete) do
-    local ok, success = pcall(H.fs_delete, path, opts.options.permanent_delete)
-    local data = { action = 'delete', from = path }
-    if ok and success then H.trigger_event('MiniFilesActionDelete', data) end
+  for _, diff in ipairs(fs_actions) do
+    local third_arg = diff.action == 'delete' and opts.options.permanent_delete or nil
+    local ok, success = pcall(H.fs_do[diff.action], diff.from, diff.to, third_arg)
+    if ok and success then
+      local to = diff.action == 'create' and diff.to:gsub('/$', '') or diff.to
+      local data = { action = diff.action, from = diff.from, to = to }
+      local action_titlecase = diff.action:sub(1, 1):upper() .. diff.action:sub(2)
+      H.trigger_event('MiniFilesAction' .. action_titlecase, data)
+    end
   end
 end
 
-H.fs_create = function(path)
+H.fs_do = {}
+
+H.fs_do.create = function(_, path)
   -- Don't override existing path
   if H.fs_is_present_path(path) then return H.warn_existing_path(path, 'create') end
 
@@ -2551,15 +2513,12 @@ H.fs_create = function(path)
   vim.fn.mkdir(H.fs_get_parent(path), 'p')
 
   -- Create
-  local fs_type = path:find('/$') == nil and 'file' or 'directory'
-  if fs_type == 'directory' then
-    return vim.fn.mkdir(path) == 1
-  else
-    return vim.fn.writefile({}, path) == 0
-  end
+  local fs_type = path:sub(-1) == '/' and 'directory' or 'file'
+  if fs_type == 'directory' then return vim.fn.mkdir(path) == 1 end
+  return vim.fn.writefile({}, path) == 0
 end
 
-H.fs_copy = function(from, to)
+H.fs_do.copy = function(from, to)
   -- Don't override existing path
   if H.fs_is_present_path(to) then return H.warn_existing_path(from, 'copy') end
 
@@ -2579,13 +2538,13 @@ H.fs_copy = function(from, to)
 
   local success = true
   for _, entry in ipairs(fs_entries) do
-    success = success and H.fs_copy(entry.path, H.fs_child_path(to, entry.name))
+    success = success and H.fs_do.copy(entry.path, H.fs_child_path(to, entry.name))
   end
 
   return success
 end
 
-H.fs_delete = function(path, permanent_delete)
+H.fs_do.delete = function(path, _, permanent_delete)
   if permanent_delete then return vim.fn.delete(path, 'rf') == 0 end
 
   -- Move to trash instead of permanent delete
@@ -2597,10 +2556,10 @@ H.fs_delete = function(path, permanent_delete)
   -- Ensure that same basenames are replaced
   pcall(vim.fn.delete, trash_path, 'rf')
 
-  return H.fs_move(path, trash_path)
+  return H.fs_do.move(path, trash_path)
 end
 
-H.fs_move = function(from, to)
+H.fs_do.move = function(from, to)
   -- Don't override existing path
   if H.fs_is_present_path(to) then return H.warn_existing_path(from, 'move or rename') end
 
@@ -2610,7 +2569,7 @@ H.fs_move = function(from, to)
 
   if err_code == 'EXDEV' then
     -- Handle cross-device move separately as `loop.fs_rename` does not work
-    success = H.fs_copy(from, to)
+    success = H.fs_do.copy(from, to)
     if success then success = pcall(vim.fn.delete, from, 'rf') end
     if not success then pcall(vim.fn.delete, to, 'rf') end
   end
@@ -2629,7 +2588,7 @@ H.fs_move = function(from, to)
   return success
 end
 
-H.fs_rename = H.fs_move
+H.fs_do.rename = H.fs_do.move
 
 H.rename_loaded_buffer = function(buf_id, from, to)
   if not (vim.api.nvim_buf_is_loaded(buf_id) and vim.bo[buf_id].buftype == '') then return end
