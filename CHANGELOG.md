@@ -35,7 +35,12 @@
 ## mini.files
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
-- FEATURE: show "MOVE TO TRASH" action during confirmation in case of not persistent delete.
+- BREAKING: update how confirmation lines are computed:
+    - Show create actions in the group directory where text manipulation took place. This matters during creating nested entries and is usually a more intuitive representation.
+    - For delete show its type after the file name ("permanently" or "to trash") as an additional visual indication of delete type.
+    - For create, copy and move prefer showing its "to" path relative to group directory.
+    - Separate action name and paths with "│" (instead of ":") for better visual separation.
+    - Don't enclose paths in quotes. Initially it was done to reliably show possible whitespace in paths, but inferring it from overall line structure should be good enough.
 
 ## mini.icons
 

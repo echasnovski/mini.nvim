@@ -2662,13 +2662,10 @@ T['File manipulation']['can create'] = function()
   validate_file(temp_dir, 'new-file')
   validate_directory(temp_dir, 'new-dir')
 
-  local ref_pattern = make_plain_pattern(
-    'CONFIRM FILE SYSTEM ACTIONS',
-    short_path(temp_dir) .. ':',
-    [[  CREATE: 'new-file' (file)]],
-    [[  CREATE: 'new-dir' (directory)]]
-  )
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
+  validate_confirm_args('  CREATE │ new%-file %(file%)')
+  validate_confirm_args('  CREATE │ new%-dir %(directory%)')
 end
 
 T['File manipulation']['create does not override existing entry'] = function()
@@ -2720,19 +2717,13 @@ T['File manipulation']['creates files in nested directories'] = function()
   validate_file(temp_dir, 'dir-1', 'nested-file-2')
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern_1 = make_plain_pattern(
-    'CONFIRM FILE SYSTEM ACTIONS',
-    short_path(temp_dir) .. '/dir' .. ':',
-    [[  CREATE: 'nested-file' (file)]]
-  )
-  validate_confirm_args(ref_pattern_1)
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
+  validate_confirm_args(ref_pattern)
 
-  local ref_pattern_2 = make_plain_pattern(
-    short_path(temp_dir) .. '/dir-1' .. ':',
-    [[  CREATE: 'nested-file-1' (file)]],
-    [[  CREATE: 'nested-file-2' (file)]]
-  )
-  validate_confirm_args(ref_pattern_2)
+  -- - Should show paths relative to directory where manipulation was registered
+  validate_confirm_args('  CREATE │ dir/nested%-file %(file%)')
+  validate_confirm_args('  CREATE │ dir%-1/nested%-file%-1 %(file%)')
+  validate_confirm_args('  CREATE │ dir%-1/nested%-file%-2 %(file%)')
 end
 
 T['File manipulation']['creates nested directories'] = function()
@@ -2756,19 +2747,13 @@ T['File manipulation']['creates nested directories'] = function()
   validate_directory(temp_dir, 'dir-1', 'nested-dir-2')
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern_1 = make_plain_pattern(
-    'CONFIRM FILE SYSTEM ACTIONS',
-    short_path(temp_dir) .. '/dir' .. ':',
-    [[  CREATE: 'nested-dir' (directory)]]
-  )
-  validate_confirm_args(ref_pattern_1)
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
+  validate_confirm_args(ref_pattern)
 
-  local ref_pattern_2 = make_plain_pattern(
-    short_path(temp_dir) .. '/dir-1' .. ':',
-    [[  CREATE: 'nested-dir-1' (directory)]],
-    [[  CREATE: 'nested-dir-2' (directory)]]
-  )
-  validate_confirm_args(ref_pattern_2)
+  -- - Should show paths relative to directory where manipulation was registered
+  validate_confirm_args('  CREATE │ dir/nested%-dir %(directory%)')
+  validate_confirm_args('  CREATE │ dir%-1/nested%-dir%-1 %(directory%)')
+  validate_confirm_args('  CREATE │ dir%-1/nested%-dir%-2 %(directory%)')
 end
 
 T['File manipulation']['can delete'] = function()
@@ -2788,12 +2773,12 @@ T['File manipulation']['can delete'] = function()
   validate_no_directory(temp_dir, 'dir')
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
 
-  validate_confirm_args([[  DELETE: 'dir']])
-  validate_confirm_args([[  DELETE: 'empty%-dir']])
-  validate_confirm_args([[  DELETE: 'file']])
+  validate_confirm_args('  DELETE │ dir %(permanently%)')
+  validate_confirm_args('  DELETE │ empty%-dir %(permanently%)')
+  validate_confirm_args('  DELETE │ file %(permanently%)')
 end
 
 T['File manipulation']['delete respects `options.permanent_delete`'] = function()
@@ -2824,8 +2809,8 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
 
   validate_move_delete()
 
-  validate_confirm_args([[  MOVE TO TRASH: 'file']])
-  validate_confirm_args([[  MOVE TO TRASH: 'dir']])
+  validate_confirm_args('  DELETE │ file %(to trash%)')
+  validate_confirm_args('  DELETE │ dir %(to trash%)')
 
   -- Deleting entries again with same name should replace previous ones
   -- - Recreate previously deleted entries with different content
@@ -2897,11 +2882,11 @@ T['File manipulation']['can rename'] = function()
   validate_directory(temp_dir, 'new-dir')
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
 
-  validate_confirm_args([[  RENAME: 'dir' to 'new%-dir']])
-  validate_confirm_args([[  RENAME: 'file' to 'file%-new']])
+  validate_confirm_args('  RENAME │ dir => new%-dir')
+  validate_confirm_args('  RENAME │ file => file%-new')
 end
 
 T['File manipulation']['rename does not override existing entry'] = function()
@@ -2981,8 +2966,8 @@ T['File manipulation']['renames even if lines are rearranged'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_confirm_args([[RENAME: 'file%-2' to 'new%-file%-2']])
-  validate_confirm_args([[RENAME: 'file%-1' to 'new%-file%-1']])
+  validate_confirm_args('RENAME │ file%-2 => new%-file%-2')
+  validate_confirm_args('RENAME │ file%-1 => new%-file%-1')
 end
 
 T['File manipulation']['rename works again after undo'] = function()
@@ -2999,9 +2984,9 @@ T['File manipulation']['rename works again after undo'] = function()
   validate_file(temp_dir, 'file-new')
 
   -- Validate confirmation messages
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
-  validate_confirm_args([[  RENAME: 'file' to 'file%-new']])
+  validate_confirm_args('  RENAME │ file => file%-new')
 
   -- Undo and synchronize should cleanly rename back
   type_keys('u', 'u')
@@ -3010,7 +2995,7 @@ T['File manipulation']['rename works again after undo'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_confirm_args([[  RENAME: 'file%-new' to 'file']])
+  validate_confirm_args('  RENAME │ file%-new => file')
   validate_file(temp_dir, 'file')
   validate_no_file(temp_dir, 'file-new')
 end
@@ -3037,13 +3022,10 @@ T['File manipulation']['can move file'] = function()
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
-
-  -- - Target path should be absolute but can with `~` for home directory
-  local target_path = short_path(temp_dir, 'dir', 'file')
-  local ref_pattern_2 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path))
-  validate_confirm_args(ref_pattern_2)
+  -- - Target path should be relative to group directory
+  validate_confirm_args('  MOVE   │ file => dir/file')
 end
 
 T['File manipulation']['can move directory'] = function()
@@ -3066,13 +3048,23 @@ T['File manipulation']['can move directory'] = function()
   validate_directory(temp_dir, 'dir-target', 'dir')
   validate_file_content(join_path(temp_dir, 'dir-target', 'dir', 'file'), { 'File' })
 
-  local target_path = short_path(temp_dir, 'dir-target', 'dir')
-  local ref_pattern = make_plain_pattern(
-    'CONFIRM FILE SYSTEM ACTIONS',
-    short_path(temp_dir) .. ':',
-    string.format([[    MOVE: 'dir' to '%s']], target_path)
-  )
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
+  validate_confirm_args('  MOVE   │ dir => dir%-target/dir')
+end
+
+T['File manipulation']['move can show not relative "to" path'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+
+  -- Perform manipulation
+  type_keys('dd')
+  go_out()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_confirm_args('  MOVE   │ file => ' .. vim.pesc(short_path(temp_dir, 'file')))
 end
 
 T['File manipulation']['move does not override existing entry'] = function()
@@ -3120,7 +3112,7 @@ T['File manipulation']['handles move directory inside itself'] = function()
   validate_directory(temp_dir, 'dir')
   validate_no_directory(temp_dir, 'dir', 'nested', 'dir')
 
-  validate_confirm_args([[    MOVE: 'dir' to '.*dir/nested/dir']])
+  validate_confirm_args('  MOVE   │ dir => dir/nested/dir')
 end
 
 T['File manipulation']['can move while changing basename'] = function()
@@ -3146,10 +3138,7 @@ T['File manipulation']['can move while changing basename'] = function()
   validate_file(temp_dir, 'dir', 'new-file')
   validate_file_content(join_path(temp_dir, 'dir', 'new-file'), { 'File' })
 
-  -- - Target path should be absolute but can with `~` for home directory
-  local target_path = short_path(temp_dir, 'dir', 'new-file')
-  local ref_pattern_2 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path))
-  validate_confirm_args(ref_pattern_2)
+  validate_confirm_args('  MOVE   │ file => dir/new%-file')
 end
 
 T['File manipulation']['can move inside new directory'] = function()
@@ -3172,6 +3161,10 @@ T['File manipulation']['can move inside new directory'] = function()
   validate_no_file(temp_dir, 'file')
   validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
+
+  local ref_pattern = make_plain_pattern(short_path(temp_dir) .. '\n')
+  validate_confirm_args(ref_pattern)
+  validate_confirm_args('  MOVE   │ file => new%-dir/new%-subdir/file')
 end
 
 T['File manipulation']['can move across devices'] = function()
@@ -3224,13 +3217,9 @@ T['File manipulation']['move works again after undo'] = function()
   validate_file(temp_dir, 'dir', 'file')
 
   -- Validate confirmation messages
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
-
-  -- - Target path should be absolute but can with `~` for home directory
-  local target_path = short_path(temp_dir, 'dir', 'file')
-  local ref_pattern_2 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path))
-  validate_confirm_args(ref_pattern_2)
+  validate_confirm_args('  MOVE   │ file => dir/file')
 
   -- Undos and synchronize should cleanly move back
   type_keys('u', 'u')
@@ -3247,9 +3236,7 @@ T['File manipulation']['move works again after undo'] = function()
   validate_file(temp_dir, 'file')
   validate_no_file(temp_dir, 'dir', 'file')
 
-  local target_path_2 = short_path(temp_dir, 'file')
-  local ref_pattern_3 = string.format([[    MOVE: 'file' to '%s']], vim.pesc(target_path_2))
-  validate_confirm_args(ref_pattern_3)
+  validate_confirm_args('  MOVE   │ file => ' .. vim.pesc(short_path(temp_dir, 'file')))
 end
 
 T['File manipulation']['can copy file'] = function()
@@ -3280,17 +3267,12 @@ T['File manipulation']['can copy file'] = function()
   validate_file_content(join_path(temp_dir, 'file-copy'), { 'File' })
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
 
-  -- - Target path should be absolute but can with `~` for home directory
-  local target_path_1 = short_path(temp_dir, 'dir', 'file')
-  local ref_pattern_1 = string.format([[    COPY: 'file' to '%s']], vim.pesc(target_path_1))
-  validate_confirm_args(ref_pattern_1)
-
-  local target_path_2 = short_path(temp_dir, 'file-copy')
-  local ref_pattern_2 = string.format([[    COPY: 'file' to '%s']], vim.pesc(target_path_2))
-  validate_confirm_args(ref_pattern_2)
+  -- - Target path should be relative to group directory
+  validate_confirm_args('  COPY   │ file => dir/file')
+  validate_confirm_args('  COPY   │ file => file%-copy')
 end
 
 T['File manipulation']['can copy file inside new directory'] = function()
@@ -3350,17 +3332,12 @@ T['File manipulation']['can copy directory'] = function()
   validate_directory(temp_dir, 'dir-copy', 'nested')
 
   -- Validate separately because order is not guaranteed
-  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. ':')
+  local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
 
-  -- - Target path should be absolute but can with `~` for home directory
-  local target_path_1 = short_path(temp_dir, 'dir-target', 'dir')
-  local ref_pattern_1 = string.format([[    COPY: 'dir' to '%s']], vim.pesc(target_path_1))
-  validate_confirm_args(ref_pattern_1)
-
-  local target_path_2 = short_path(temp_dir, 'dir-copy')
-  local ref_pattern_2 = string.format([[    COPY: 'dir' to '%s']], vim.pesc(target_path_2))
-  validate_confirm_args(ref_pattern_2)
+  -- - Target path should be relative to group directory
+  validate_confirm_args('  COPY   │ dir => dir%-target/dir')
+  validate_confirm_args('  COPY   │ dir => dir%-copy')
 end
 
 T['File manipulation']['can copy directory inside new directory'] = function()
@@ -3390,6 +3367,20 @@ T['File manipulation']['can copy directory inside new directory'] = function()
   validate_directory(temp_dir, 'new-dir', 'new-subdir', 'dir', 'nested')
   validate_file(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file')
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file'), { 'File' })
+end
+
+T['File manipulation']['copy can show not relative "to" path'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+
+  -- Perform manipulation
+  type_keys('yy')
+  go_out()
+  type_keys('p')
+  mock_confirm(1)
+  synchronize()
+
+  validate_confirm_args('  COPY   │ file => ' .. vim.pesc(short_path(temp_dir, 'file')))
 end
 
 T['File manipulation']['copy does not override existing entry'] = function()
@@ -3441,10 +3432,7 @@ T['File manipulation']['can copy directory inside itself'] = function()
   validate_file_content(join_path(temp_dir, 'dir', 'dir', 'file'), { 'File' })
   validate_directory(temp_dir, 'dir', 'dir', 'nested')
 
-  -- Target path should be absolute but can with `~` for home directory
-  local target_path = short_path(temp_dir, 'dir', 'dir')
-  local ref_pattern = string.format([[    COPY: 'dir' to '%s']], vim.pesc(target_path))
-  validate_confirm_args(ref_pattern)
+  validate_confirm_args('  COPY   │ dir => dir/dir')
 end
 
 T['File manipulation']['handles simultaneous copy and move'] = function()
@@ -3474,10 +3462,8 @@ T['File manipulation']['handles simultaneous copy and move'] = function()
   validate_file(temp_dir, 'dir', 'file-1')
   validate_file_content(join_path(temp_dir, 'dir', 'file-1'), { 'File' })
 
-  -- Validate separately as there is no guarantee which file is copied and
-  -- which is moved
-  validate_confirm_args('    COPY:')
-  validate_confirm_args('    MOVE:')
+  validate_confirm_args('  COPY   │')
+  validate_confirm_args('  MOVE   │')
 end
 
 T['File manipulation']['handles simultaneous copy and rename'] = function()
@@ -3505,10 +3491,8 @@ T['File manipulation']['handles simultaneous copy and rename'] = function()
   validate_file(temp_dir, 'file-2')
   validate_file_content(join_path(temp_dir, 'file-2'), { 'File' })
 
-  -- Validate separately as there is no guarantee which file is copied and
-  -- which is moved
-  validate_confirm_args('    COPY:')
-  validate_confirm_args('  RENAME:')
+  validate_confirm_args('  COPY   │')
+  validate_confirm_args('  RENAME │')
 end
 
 T['File manipulation']['respects modified hidden buffers'] = function()

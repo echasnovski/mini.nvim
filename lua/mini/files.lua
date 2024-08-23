@@ -223,8 +223,8 @@
 ---   so you can navigate in and out of directory with modified buffer.
 ---
 --- - Execute |MiniFiles.synchronize()| (default key is `=`). This will prompt
----   confirmation dialog listing all file system actions it is about to perform.
----   READ IT CAREFULLY.
+---   confirmation dialog listing all file system actions (per directory) it is
+---   about to perform. READ IT CAREFULLY.
 ---
 --- - Confirm by pressing `y`/`<CR>` (applies edits and updates buffers) or
 ---   don't confirm by pressing `n`/`<Esc>` (updates buffers without applying edits).
@@ -1527,7 +1527,7 @@ H.explorer_compute_fs_actions = function(explorer)
   -- - Differentiate between create, delete, and copy
   for _, diff in ipairs(fs_diffs) do
     if diff.from == nil then
-      table.insert(create, { action = 'create', to = diff.to })
+      table.insert(create, { action = 'create', dir = diff.dir, to = diff.to })
     elseif diff.to == nil then
       delete_map[diff.from] = true
     else
@@ -2131,7 +2131,7 @@ H.buffer_compute_fs_diff = function(buf_id)
 
     -- Ignore blank lines and already synced entries (even several user-copied)
     if l:find('^%s*$') == nil and path_from ~= path_to then
-      table.insert(res, { from = path_from, to = path_to })
+      table.insert(res, { from = path_from, to = path_to, dir = path })
     elseif path_id ~= nil then
       present_path_ids[path_id] = true
     end
@@ -2140,7 +2140,7 @@ H.buffer_compute_fs_diff = function(buf_id)
   -- Detect missing file system entries
   local ref_path_ids = H.opened_buffers[buf_id].children_path_ids
   for _, ref_id in ipairs(ref_path_ids) do
-    if not present_path_ids[ref_id] then table.insert(res, { from = H.path_index[ref_id], to = nil }) end
+    if not present_path_ids[ref_id] then table.insert(res, { from = H.path_index[ref_id], to = nil, dir = path }) end
   end
 
   return res
@@ -2457,32 +2457,36 @@ end
 
 H.fs_actions_to_lines = function(fs_actions, opts)
   -- Gather actions per source directory
-  local base, short = H.fs_get_basename, H.fs_shorten_path
-  local del_name = opts.options.permanent_delete and 'DELETE' or 'MOVE TO TRASH'
+  local short = H.fs_shorten_path
+  local dir
+  local rel = function(p) return vim.startswith(p, dir .. '/') and p:sub(#dir + 2):gsub('/$', '') or short(p) end
+  local del_type = opts.options.permanent_delete and 'permanently' or 'to trash'
 
   local actions_per_dir = {}
   --stylua: ignore
   for _, diff in ipairs(fs_actions) do
+    -- Set grouping directory to also be used to compute relative paths
+    dir = diff.action == 'create' and diff.dir or H.fs_get_parent(diff.from)
+
     -- Compute line depending on action
-    local to_type = (diff.to or ''):sub(-1) == '/' and 'directory' or 'file'
     local action, l = diff.action, nil
-    if action == 'create' then l = string.format("  CREATE: '%s' (%s)",    base(diff.to),   to_type) end
-    if action == 'delete' then l = string.format("  %s: '%s'",             del_name,        base(diff.from)) end
-    if action == 'copy'   then l = string.format("    COPY: '%s' to '%s'", base(diff.from), short(diff.to)) end
-    if action == 'move'   then l = string.format("    MOVE: '%s' to '%s'", base(diff.from), short(diff.to)) end
-    if action == 'rename' then l = string.format("  RENAME: '%s' to '%s'", base(diff.from), base(diff.to)) end
+    local to_type = (diff.to or ''):sub(-1) == '/' and 'directory' or 'file'
+    if action == 'create' then l = string.format("CREATE │ %s (%s)",  rel(diff.to), to_type) end
+    if action == 'delete' then l = string.format("DELETE │ %s (%s)",  rel(diff.from), del_type) end
+    if action == 'copy'   then l = string.format("COPY   │ %s => %s", rel(diff.from), rel(diff.to)) end
+    if action == 'move'   then l = string.format("MOVE   │ %s => %s", rel(diff.from), rel(diff.to)) end
+    if action == 'rename' then l = string.format("RENAME │ %s => %s", rel(diff.from), rel(diff.to)) end
 
     -- Add to per directory lines
-    local dir_path = short(H.fs_get_parent(action == 'create' and diff.to or diff.from))
-    local dir_actions = actions_per_dir[dir_path] or {}
-    table.insert(dir_actions, l)
-    actions_per_dir[dir_path] = dir_actions
+    local dir_actions = actions_per_dir[dir] or {}
+    table.insert(dir_actions, '  ' .. l)
+    actions_per_dir[dir] = dir_actions
   end
 
   -- Convert to final lines
   local res = { 'CONFIRM FILE SYSTEM ACTIONS', '' }
   for path, dir_actions in pairs(actions_per_dir) do
-    table.insert(res, path .. ':')
+    table.insert(res, short(path))
     vim.list_extend(res, dir_actions)
     table.insert(res, '')
   end
