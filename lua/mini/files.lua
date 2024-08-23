@@ -350,8 +350,8 @@
 --- (see |nvim_create_autocmd()|) with the following information:
 ---
 --- - <action> - string with action name.
---- - <from> - absolute path of entry before action (`nil` for "create" action).
---- - <to> - absolute path of entry after action (`nil` for "delete" action).
+--- - <from> - full path of entry before action (`nil` for "create" action).
+--- - <to> - full path of entry after action (`nil` for permanent "delete" action).
 ---@tag MiniFiles-events
 
 --- Common configuration examples ~
@@ -783,9 +783,7 @@ MiniFiles.synchronize = function()
 
   -- Parse and apply file system operations
   local fs_actions = H.explorer_compute_fs_actions(explorer)
-  if fs_actions ~= nil and H.fs_actions_confirm(fs_actions, explorer.opts) then
-    H.fs_actions_apply(fs_actions, explorer.opts)
-  end
+  if fs_actions ~= nil and H.fs_actions_confirm(fs_actions) then H.fs_actions_apply(fs_actions) end
 
   H.explorer_refresh(explorer, { force_update = true })
 end
@@ -1549,13 +1547,21 @@ H.explorer_compute_fs_actions = function(explorer)
     table.insert(target, { action = action, dir = diff.dir, from = diff.from, to = diff.to })
   end
 
+  -- Compute delete actions accounting for (non) permanent delete
+  local delete, is_trash = {}, not explorer.opts.options.permanent_delete
+  local trash_dir = H.fs_child_path(vim.fn.stdpath('data'), 'mini.files/trash')
+  for p, _ in pairs(delete_map) do
+    local to = is_trash and H.fs_child_path(trash_dir, H.fs_get_basename(p)) or nil
+    table.insert(delete, { action = 'delete', from = p, to = to })
+  end
+
   -- Construct final array
   local res = {}
   vim.list_extend(res, copy)
   vim.list_extend(res, create)
   vim.list_extend(res, move)
   vim.list_extend(res, rename)
-  vim.list_extend(res, vim.tbl_map(function(p) return { action = 'delete', from = p } end, vim.tbl_keys(delete_map)))
+  vim.list_extend(res, delete)
   return res
 end
 
@@ -2449,18 +2455,17 @@ H.fs_get_type = function(path)
 end
 
 -- File system actions --------------------------------------------------------
-H.fs_actions_confirm = function(fs_actions, opts)
-  local msg = table.concat(H.fs_actions_to_lines(fs_actions, opts), '\n')
+H.fs_actions_confirm = function(fs_actions)
+  local msg = table.concat(H.fs_actions_to_lines(fs_actions), '\n')
   local confirm_res = vim.fn.confirm(msg, '&Yes\n&No', 1, 'Question')
   return confirm_res == 1
 end
 
-H.fs_actions_to_lines = function(fs_actions, opts)
+H.fs_actions_to_lines = function(fs_actions)
   -- Gather actions per source directory
   local short = H.fs_shorten_path
   local dir
   local rel = function(p) return vim.startswith(p, dir .. '/') and p:sub(#dir + 2):gsub('/$', '') or short(p) end
-  local del_type = opts.options.permanent_delete and 'permanently' or 'to trash'
 
   local actions_per_dir = {}
   --stylua: ignore
@@ -2471,6 +2476,7 @@ H.fs_actions_to_lines = function(fs_actions, opts)
     -- Compute line depending on action
     local action, l = diff.action, nil
     local to_type = (diff.to or ''):sub(-1) == '/' and 'directory' or 'file'
+    local del_type = diff.to == nil and 'permanently' or 'to trash'
     if action == 'create' then l = string.format("CREATE │ %s (%s)",  rel(diff.to), to_type) end
     if action == 'delete' then l = string.format("DELETE │ %s (%s)",  rel(diff.from), del_type) end
     if action == 'copy'   then l = string.format("COPY   │ %s => %s", rel(diff.from), rel(diff.to)) end
@@ -2494,10 +2500,9 @@ H.fs_actions_to_lines = function(fs_actions, opts)
   return res
 end
 
-H.fs_actions_apply = function(fs_actions, opts)
+H.fs_actions_apply = function(fs_actions)
   for _, diff in ipairs(fs_actions) do
-    local third_arg = diff.action == 'delete' and opts.options.permanent_delete or nil
-    local ok, success = pcall(H.fs_do[diff.action], diff.from, diff.to, third_arg)
+    local ok, success = pcall(H.fs_do[diff.action], diff.from, diff.to)
     if ok and success then
       local to = diff.action == 'create' and diff.to:gsub('/$', '') or diff.to
       local data = { action = diff.action, from = diff.from, to = to }
@@ -2548,19 +2553,11 @@ H.fs_do.copy = function(from, to)
   return success
 end
 
-H.fs_do.delete = function(path, _, permanent_delete)
-  if permanent_delete then return vim.fn.delete(path, 'rf') == 0 end
-
-  -- Move to trash instead of permanent delete
-  local trash_dir = H.fs_child_path(vim.fn.stdpath('data'), 'mini.files/trash')
-  vim.fn.mkdir(trash_dir, 'p')
-
-  local trash_path = H.fs_child_path(trash_dir, H.fs_get_basename(path))
-
-  -- Ensure that same basenames are replaced
-  pcall(vim.fn.delete, trash_path, 'rf')
-
-  return H.fs_do.move(path, trash_path)
+H.fs_do.delete = function(from, to)
+  -- Act based on whether delete is permanent or not
+  if to == nil then return vim.fn.delete(from, 'rf') == 0 end
+  pcall(vim.fn.delete, to, 'rf')
+  return H.fs_do.move(from, to)
 end
 
 H.fs_do.move = function(from, to)

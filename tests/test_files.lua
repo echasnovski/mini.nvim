@@ -4078,7 +4078,8 @@ end
 T['Events']['`MiniFilesActionDelete` triggers for `options.permanent_delete = false`'] = function()
   track_event('MiniFilesActionDelete')
 
-  mock_stdpath_data()
+  local data_dir = mock_stdpath_data()
+  local trash_dir = join_path(data_dir, 'mini.files', 'trash')
   child.lua('MiniFiles.config.options.permanent_delete = false')
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
   open(temp_dir)
@@ -4089,9 +4090,10 @@ T['Events']['`MiniFilesActionDelete` triggers for `options.permanent_delete = fa
 
   local event_track = get_event_track()
   table.sort(event_track, function(a, b) return a.from < b.from end)
+  -- Should also supply `to` field with path to trash
   eq(event_track, {
-    { action = 'delete', from = join_path(temp_dir, 'dir') },
-    { action = 'delete', from = join_path(temp_dir, 'file') },
+    { action = 'delete', from = join_path(temp_dir, 'dir'), to = join_path(trash_dir, 'dir') },
+    { action = 'delete', from = join_path(temp_dir, 'file'), to = join_path(trash_dir, 'file') },
   })
 end
 

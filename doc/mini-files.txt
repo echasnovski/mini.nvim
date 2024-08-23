@@ -354,8 +354,8 @@ Callback for each file action event will receive `data` field
 (see |nvim_create_autocmd()|) with the following information:
 
 - <action> - string with action name.
-- <from> - absolute path of entry before action (`nil` for "create" action).
-- <to> - absolute path of entry after action (`nil` for "delete" action).
+- <from> - full path of entry before action (`nil` for "create" action).
+- <to> - full path of entry after action (`nil` for permanent "delete" action).
 
 ------------------------------------------------------------------------------
                                                             *MiniFiles-examples*
