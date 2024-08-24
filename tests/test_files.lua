@@ -54,15 +54,32 @@ local make_temp_dir = function(name, children)
 end
 
 -- Common validators and helpers
-local validate_directory = function(...) eq(child.fn.isdirectory(join_path(...)), 1) end
-
-local validate_no_directory = function(...) eq(child.fn.isdirectory(join_path(...)), 0) end
-
-local validate_file = function(...) eq(child.fn.filereadable(join_path(...)), 1) end
-
-local validate_no_file = function(...) eq(child.fn.filereadable(join_path(...)), 0) end
-
 local validate_file_content = function(path, lines) eq(child.fn.readfile(path), lines) end
+
+local validate_tree = function(dir, ref_tree)
+  child.lua('_G.dir = ' .. vim.inspect(dir))
+  local tree = child.lua([[
+    local read_dir
+    read_dir = function(path, res)
+      res = res or {}
+      local fs = vim.loop.fs_scandir(path)
+      local name, fs_type = vim.loop.fs_scandir_next(fs)
+      while name do
+        local cur_path = path .. '/' .. name
+        table.insert(res, cur_path .. (fs_type == 'directory' and '/' or ''))
+        if fs_type == 'directory' then read_dir(cur_path, res) end
+        name, fs_type = vim.loop.fs_scandir_next(fs)
+      end
+      return res
+    end
+    local dir_len = _G.dir:len()
+    return vim.tbl_map(function(p) return p:sub(dir_len + 2) end, read_dir(_G.dir))
+  ]])
+  table.sort(tree)
+  local ref = vim.deepcopy(ref_tree)
+  table.sort(ref)
+  eq(tree, ref)
+end
 
 local validate_cur_line = function(x) eq(get_cursor()[1], x) end
 
@@ -1037,7 +1054,7 @@ end
 
 T['refresh()']['works when no explorer is opened'] = function() expect.no_error(refresh) end
 
--- More extensive testing is done in 'File Manipulation'
+-- More extensive testing is done in 'File manipulation'
 T['synchronize()'] = new_set()
 
 local synchronize = forward_lua('MiniFiles.synchronize')
@@ -1064,10 +1081,10 @@ T['synchronize()']['can apply file system actions'] = function()
 
   local new_file_path = join_path(temp_dir, 'new-file')
   mock_confirm(1)
-  validate_no_file(new_file_path)
 
+  validate_tree(temp_dir, {})
   synchronize()
-  validate_file(new_file_path)
+  validate_tree(temp_dir, { 'new-file' })
 end
 
 T['synchronize()']['should follow cursor on current entry path'] = function()
@@ -1278,7 +1295,7 @@ end
 T['go_in()']['works on files with problematic names'] = function()
   local bad_name = '%a bad-file-name'
   local temp_dir = make_temp_dir('temp', { bad_name })
-  vim.fn.writefile({ 'aaa' }, join_path(temp_dir, bad_name))
+  child.fn.writefile({ 'aaa' }, join_path(temp_dir, bad_name))
 
   open(temp_dir)
   go_in()
@@ -2659,8 +2676,7 @@ T['File manipulation']['can create'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_file(temp_dir, 'new-file')
-  validate_directory(temp_dir, 'new-dir')
+  validate_tree(temp_dir, { 'new-file', 'new-dir/' })
 
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
   validate_confirm_args(ref_pattern)
@@ -2683,9 +2699,8 @@ T['File manipulation']['create does not override existing entry'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_file(file_path)
+  validate_tree(temp_dir, { 'dir/', 'dir/subfile', 'file' })
   validate_file_content(file_path, { 'File' })
-  validate_file(temp_dir, 'dir', 'subfile')
 
   -- Should show warning
   local warn_level = child.lua_get('vim.log.levels.WARN')
@@ -2711,10 +2726,7 @@ T['File manipulation']['creates files in nested directories'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_file(temp_dir, 'dir', 'nested-file')
-  validate_directory(temp_dir, 'dir-1')
-  validate_file(temp_dir, 'dir-1', 'nested-file-1')
-  validate_file(temp_dir, 'dir-1', 'nested-file-2')
+  validate_tree(temp_dir, { 'dir/', 'dir/nested-file', 'dir-1/', 'dir-1/nested-file-1', 'dir-1/nested-file-2' })
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -2741,10 +2753,7 @@ T['File manipulation']['creates nested directories'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_directory(temp_dir, 'dir', 'nested-dir')
-  validate_directory(temp_dir, 'dir-1')
-  validate_directory(temp_dir, 'dir-1', 'nested-dir-1')
-  validate_directory(temp_dir, 'dir-1', 'nested-dir-2')
+  validate_tree(temp_dir, { 'dir/', 'dir/nested-dir/', 'dir-1/', 'dir-1/nested-dir-1/', 'dir-1/nested-dir-2/' })
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -2768,9 +2777,7 @@ T['File manipulation']['can delete'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_file(temp_dir, 'file')
-  validate_no_directory(temp_dir, 'empty-dir')
-  validate_no_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, {})
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -2792,22 +2799,15 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
   child.lua('MiniFiles.config.options.permanent_delete = false')
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
 
-  local validate_move_delete = function()
-    -- Should move into special trash directory
-    validate_no_file(temp_dir, 'file')
-    validate_no_directory(temp_dir, 'dir')
-    validate_file(trash_dir, 'file')
-    validate_directory(trash_dir, 'dir')
-    validate_file(trash_dir, 'dir', 'subfile')
-  end
-
   open(temp_dir)
 
   type_keys('VGd')
   mock_confirm(1)
   synchronize()
 
-  validate_move_delete()
+  -- Should move into special trash directory
+  validate_tree(temp_dir, {})
+  validate_tree(trash_dir, { 'dir/', 'dir/subfile', 'file' })
 
   validate_confirm_args('  DELETE │ file %(to trash%)')
   validate_confirm_args('  DELETE │ dir %(to trash%)')
@@ -2826,7 +2826,8 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
   mock_confirm(1)
   synchronize()
 
-  validate_move_delete()
+  validate_tree(temp_dir, {})
+  validate_tree(trash_dir, { 'dir/', 'dir/subfile', 'file' })
 
   -- - Check that files actually were replaced
   validate_file_content(join_path(trash_dir, 'file'), { 'New file' })
@@ -2854,13 +2855,10 @@ T['File manipulation']['can move to trash across devices'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_no_directory(temp_dir, 'dir')
-  validate_file(trash_dir, 'file')
+  validate_tree(temp_dir, {})
+  validate_tree(trash_dir, { 'dir/', 'dir/nested/', 'dir/nested/file', 'file' })
+
   validate_file_content(join_path(trash_dir, 'file'), { 'File' })
-  validate_directory(trash_dir, 'dir')
-  validate_directory(trash_dir, 'dir', 'nested')
-  validate_file(trash_dir, 'dir', 'nested', 'file')
   validate_file_content(join_path(trash_dir, 'dir', 'nested', 'file'), { 'File nested' })
 end
 
@@ -2876,10 +2874,7 @@ T['File manipulation']['can rename'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'file-new')
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
+  validate_tree(temp_dir, { 'file-new', 'new-dir/' })
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -2980,8 +2975,7 @@ T['File manipulation']['rename works again after undo'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'file-new')
+  validate_tree(temp_dir, { 'file-new' })
 
   -- Validate confirmation messages
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -2995,9 +2989,8 @@ T['File manipulation']['rename works again after undo'] = function()
   mock_confirm(1)
   synchronize()
 
+  validate_tree(temp_dir, { 'file' })
   validate_confirm_args('  RENAME │ file%-new => file')
-  validate_file(temp_dir, 'file')
-  validate_no_file(temp_dir, 'file-new')
 end
 
 T['File manipulation']['can move file'] = function()
@@ -3017,8 +3010,7 @@ T['File manipulation']['can move file'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'dir', 'file')
+  validate_tree(temp_dir, { 'dir/', 'dir/file' })
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
 
   -- Validate separately because order is not guaranteed
@@ -3044,8 +3036,13 @@ T['File manipulation']['can move directory'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'dir-target', 'dir')
+  --stylua: ignore
+  local ref_tree = {
+    'dir-target/',
+    'dir-target/dir/', 'dir-target/dir/file',
+    'dir-target/dir/nested/', 'dir-target/dir/nested/file',
+  }
+  validate_tree(temp_dir, ref_tree)
   validate_file_content(join_path(temp_dir, 'dir-target', 'dir', 'file'), { 'File' })
 
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -3109,8 +3106,7 @@ T['File manipulation']['handles move directory inside itself'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_directory(temp_dir, 'dir')
-  validate_no_directory(temp_dir, 'dir', 'nested', 'dir')
+  validate_tree(temp_dir, { 'dir/', 'dir/file', 'dir/nested/' })
 
   validate_confirm_args('  MOVE   │ dir => dir/nested/dir')
 end
@@ -3134,8 +3130,7 @@ T['File manipulation']['can move while changing basename'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'dir', 'new-file')
+  validate_tree(temp_dir, { 'dir/', 'dir/new-file' })
   validate_file_content(join_path(temp_dir, 'dir', 'new-file'), { 'File' })
 
   validate_confirm_args('  MOVE   │ file => dir/new%-file')
@@ -3158,8 +3153,7 @@ T['File manipulation']['can move inside new directory'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
+  validate_tree(temp_dir, { 'new-dir/', 'new-dir/new-subdir/', 'new-dir/new-subdir/file' })
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
 
   local ref_pattern = make_plain_pattern(short_path(temp_dir) .. '\n')
@@ -3189,14 +3183,8 @@ T['File manipulation']['can move across devices'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'dir', 'file')
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'dir/', 'file', 'nested/', 'nested/sub/', 'nested/sub/file' })
   validate_file_content(join_path(temp_dir, 'file'), { 'File' })
-
-  validate_no_directory(temp_dir, 'dir', 'nested')
-  validate_directory(temp_dir, 'nested')
-  validate_directory(temp_dir, 'nested', 'sub')
-  validate_file(temp_dir, 'nested', 'sub', 'file')
   validate_file_content(join_path(temp_dir, 'nested', 'sub', 'file'), { 'File nested' })
 end
 
@@ -3213,8 +3201,7 @@ T['File manipulation']['move works again after undo'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'dir', 'file')
+  validate_tree(temp_dir, { 'dir/', 'dir/file' })
 
   -- Validate confirmation messages
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -3233,9 +3220,7 @@ T['File manipulation']['move works again after undo'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file')
-  validate_no_file(temp_dir, 'dir', 'file')
-
+  validate_tree(temp_dir, { 'dir/', 'file' })
   validate_confirm_args('  MOVE   │ file => ' .. vim.pesc(short_path(temp_dir, 'file')))
 end
 
@@ -3259,11 +3244,9 @@ T['File manipulation']['can copy file'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'dir/', 'dir/file', 'file', 'file-copy' })
   validate_file_content(join_path(temp_dir, 'file'), { 'File' })
-  validate_file(temp_dir, 'dir', 'file')
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
-  validate_file(temp_dir, 'file-copy')
   validate_file_content(join_path(temp_dir, 'file-copy'), { 'File' })
 
   -- Validate separately because order is not guaranteed
@@ -3293,8 +3276,7 @@ T['File manipulation']['can copy file inside new directory'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_file(temp_dir, 'file')
-  validate_file(temp_dir, 'new-dir', 'new-subdir', 'file')
+  validate_tree(temp_dir, { 'file', 'new-dir/', 'new-dir/new-subdir/', 'new-dir/new-subdir/file' })
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'file'), { 'File' })
 end
 
@@ -3318,18 +3300,17 @@ T['File manipulation']['can copy directory'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_directory(temp_dir, 'dir')
+  --stylua: ignore
+  local ref_tree = {
+    'dir/',                           'dir/file',            'dir/nested/',
+    'dir-target/', 'dir-target/dir/', 'dir-target/dir/file', 'dir-target/dir/nested/',
+    'dir-copy/',                      'dir-copy/file',       'dir-copy/nested/',
+  }
+  validate_tree(temp_dir, ref_tree)
+
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
-
-  validate_directory(temp_dir, 'dir-target', 'dir')
-  validate_file(temp_dir, 'dir-target', 'dir', 'file')
   validate_file_content(join_path(temp_dir, 'dir-target', 'dir', 'file'), { 'File' })
-  validate_directory(temp_dir, 'dir-target', 'dir', 'nested')
-
-  validate_directory(temp_dir, 'dir-copy')
-  validate_file(temp_dir, 'dir-copy', 'file')
   validate_file_content(join_path(temp_dir, 'dir-copy', 'file'), { 'File' })
-  validate_directory(temp_dir, 'dir-copy', 'nested')
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -3358,14 +3339,15 @@ T['File manipulation']['can copy directory inside new directory'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'dir', 'nested')
-  validate_file(temp_dir, 'dir', 'file')
-  validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
+  --stylua: ignore
+  local ref_tree = {
+    'dir/', 'dir/file', 'dir/nested/',
+    'new-dir/', 'new-dir/new-subdir/',
+    'new-dir/new-subdir/dir/', 'new-dir/new-subdir/dir/file', 'new-dir/new-subdir/dir/nested/',
+  }
+  validate_tree(temp_dir, ref_tree)
 
-  validate_directory(temp_dir, 'new-dir', 'new-subdir', 'dir')
-  validate_directory(temp_dir, 'new-dir', 'new-subdir', 'dir', 'nested')
-  validate_file(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file')
+  validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
   validate_file_content(join_path(temp_dir, 'new-dir', 'new-subdir', 'dir', 'file'), { 'File' })
 end
 
@@ -3424,13 +3406,9 @@ T['File manipulation']['can copy directory inside itself'] = function()
   synchronize()
   child.expect_screenshot()
 
-  validate_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, { 'dir/', 'dir/dir/', 'dir/dir/file', 'dir/dir/nested/', 'dir/file', 'dir/nested/' })
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
-
-  validate_directory(temp_dir, 'dir', 'dir')
-  validate_file(temp_dir, 'dir', 'dir', 'file')
   validate_file_content(join_path(temp_dir, 'dir', 'dir', 'file'), { 'File' })
-  validate_directory(temp_dir, 'dir', 'dir', 'nested')
 
   validate_confirm_args('  COPY   │ dir => dir/dir')
 end
@@ -3448,7 +3426,7 @@ T['File manipulation']['respects modified hidden buffers'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'dir', 'new-file')
+  validate_tree(temp_dir, { 'dir/', 'dir/new-file', 'file' })
 end
 
 T['File manipulation']['can be not confirmed'] = function()
@@ -3459,7 +3437,7 @@ T['File manipulation']['can be not confirmed'] = function()
   mock_confirm(2)
   synchronize()
   child.expect_screenshot()
-  validate_no_file(test_dir_path, 'new-file')
+  eq(child.fn.filereadable(join_path(test_dir_path, 'new-file')), 0)
 end
 
 T['File manipulation']['can be not confirmed with preview'] = function()
@@ -3471,7 +3449,7 @@ T['File manipulation']['can be not confirmed with preview'] = function()
   mock_confirm(2)
   synchronize()
   child.expect_screenshot()
-  validate_no_file(test_dir_path, 'new-file')
+  eq(child.fn.filereadable(join_path(test_dir_path, 'new-file')), 0)
 end
 
 T['File manipulation']['works with problematic names'] = function()
@@ -3491,10 +3469,7 @@ T['File manipulation']['works with problematic names'] = function()
   synchronize()
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
-  validate_no_file(temp_dir, [[a %file-]])
-  validate_no_file(temp_dir, 'b file')
-  validate_file(temp_dir, 'c file')
-  validate_file(temp_dir, 'd file')
+  validate_tree(temp_dir, { 'c file', 'd file' })
 end
 
 T['File manipulation']['handles backslash on Unix'] = function()
@@ -3516,10 +3491,7 @@ T['File manipulation']['handles backslash on Unix'] = function()
   synchronize()
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
-  validate_no_file(temp_dir, [[\]])
-  validate_no_file(temp_dir, [[hello\]])
-  validate_file(temp_dir, 'new-hello')
-  validate_file(temp_dir, [[bad\file]])
+  validate_tree(temp_dir, { 'bad\\file', 'new-hello', 'wo\\rld' })
 end
 
 T['File manipulation']['ignores blank lines'] = function()
@@ -3549,7 +3521,6 @@ T['File manipulation']['special cases']['freed path'] = new_set()
 T['File manipulation']['special cases']['freed path']['delete and move other'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file-a', 'file-b' })
   child.fn.writefile({ 'File A' }, join_path(temp_dir, 'dir', 'file-a'))
-  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
   open(temp_dir)
   type_keys('j', 'dd')
   go_in()
@@ -3559,24 +3530,20 @@ T['File manipulation']['special cases']['freed path']['delete and move other'] =
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'dir', 'file-a')
-  validate_no_file(temp_dir, 'file-a')
-  validate_file(temp_dir, 'file-b')
+  validate_tree(temp_dir, { 'dir/', 'file-b' })
   validate_file_content(join_path(temp_dir, 'file-b'), { 'File A' })
 end
 
 T['File manipulation']['special cases']['freed path']['delete and rename other'] = function()
   local temp_dir = make_temp_dir('temp', { 'file-a', 'file-b' })
-  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
   child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
   open(temp_dir)
   type_keys('dd', 'C', 'file-a', '<Esc>')
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'file-a' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
-  validate_no_file(temp_dir, 'file-b')
 end
 
 T['File manipulation']['special cases']['freed path']['delete and copy other'] = function()
@@ -3588,9 +3555,8 @@ T['File manipulation']['special cases']['freed path']['delete and copy other'] =
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'file-a', 'file-b' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
-  validate_file(temp_dir, 'file-b')
   validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
 end
 
@@ -3602,7 +3568,7 @@ T['File manipulation']['special cases']['freed path']['delete and create'] = fun
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'file' })
   validate_file_content(join_path(temp_dir, 'file'), {})
 end
 
@@ -3619,10 +3585,8 @@ T['File manipulation']['special cases']['freed path']['move and rename other'] =
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'dir/', 'dir/file-a', 'file-a' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
-  validate_no_file(temp_dir, 'file-b')
-  validate_file(temp_dir, 'dir', 'file-a')
   validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
 end
 
@@ -3639,11 +3603,9 @@ T['File manipulation']['special cases']['freed path']['move and copy other'] = f
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'dir/', 'dir/file-a', 'file-a', 'file-b' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
-  validate_file(temp_dir, 'file-b')
   validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
-  validate_file(temp_dir, 'dir', 'file-a')
   validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
 end
 
@@ -3659,9 +3621,8 @@ T['File manipulation']['special cases']['freed path']['move and create'] = funct
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'dir/', 'dir/file-a', 'file-a' })
   validate_file_content(join_path(temp_dir, 'file-a'), {})
-  validate_file(temp_dir, 'dir', 'file-a')
   validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
 end
 
@@ -3685,10 +3646,8 @@ T['File manipulation']['special cases']['freed path']['rename and move other'] =
   -- mock_confirm(1)
   -- synchronize()
   --
-  -- validate_no_file(temp_dir, 'dir', 'file-a')
-  -- validate_file(temp_dir, 'file-b')
+  -- validate_tree(temp_dir, { 'dir/', 'file-b', 'file-c' })
   -- validate_file_content(join_path(temp_dir, 'file-b'), { 'File A' })
-  -- validate_file(temp_dir, 'file-c')
   -- validate_file_content(join_path(temp_dir, 'file-c'), { 'File B' })
 end
 
@@ -3702,11 +3661,9 @@ T['File manipulation']['special cases']['freed path']['rename and copy other'] =
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'file-a', 'file-b', 'file-c' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
-  validate_file(temp_dir, 'file-b')
   validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
-  validate_file(temp_dir, 'file-c')
   validate_file_content(join_path(temp_dir, 'file-c'), { 'File A' })
 end
 
@@ -3719,9 +3676,8 @@ T['File manipulation']['special cases']['freed path']['rename and create'] = fun
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'file', 'new-file' })
   validate_file_content(join_path(temp_dir, 'file'), {})
-  validate_file(temp_dir, 'new-file')
   validate_file_content(join_path(temp_dir, 'new-file'), { 'File' })
 end
 
@@ -3736,10 +3692,8 @@ T['File manipulation']['special cases']['act on same path']['copy and rename'] =
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'file-a', 'file-b' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File' })
-  validate_file(temp_dir, 'file-b')
   validate_file_content(join_path(temp_dir, 'file-b'), { 'File' })
 end
 
@@ -3754,10 +3708,8 @@ T['File manipulation']['special cases']['act on same path']['copy and move'] = f
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'file-a')
+  validate_tree(temp_dir, { 'dir/', 'dir/file', 'file-a' })
   validate_file_content(join_path(temp_dir, 'file-a'), { 'File' })
-  validate_file(temp_dir, 'dir', 'file')
   validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
 end
 
@@ -3772,10 +3724,9 @@ T['File manipulation']['special cases']['inside affected directory']['delete in 
   mock_confirm(1)
   synchronize()
 
-  validate_directory(temp_dir, 'dir')
-  validate_no_file(temp_dir, 'dir', 'file')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
+  -- "Delete" is done before "copy", so as to "free" space. So both directories
+  -- don't have deleted file.
+  validate_tree(temp_dir, { 'dir/', 'new-dir/' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['delete in renamed'] = function()
@@ -3787,9 +3738,7 @@ T['File manipulation']['special cases']['inside affected directory']['delete in 
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'new-dir/' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['delete in moved'] = function()
@@ -3803,14 +3752,11 @@ T['File manipulation']['special cases']['inside affected directory']['delete in 
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_no_file(temp_dir, 'other-dir', 'dir', 'file')
+  validate_tree(temp_dir, { 'other-dir/', 'other-dir/dir/' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['move in deleted'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
-  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('j', 'dd')
   go_in()
@@ -3822,12 +3768,11 @@ T['File manipulation']['special cases']['inside affected directory']['move in de
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, {})
 end
 
 T['File manipulation']['special cases']['inside affected directory']['move in renamed'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
-  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('j', 'dd')
   go_in()
@@ -3838,16 +3783,11 @@ T['File manipulation']['special cases']['inside affected directory']['move in re
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
-  validate_directory(temp_dir, 'new-dir', 'subdir')
-  validate_file(temp_dir, 'new-dir', 'subdir', 'file')
+  validate_tree(temp_dir, { 'new-dir/', 'new-dir/subdir/', 'new-dir/subdir/file' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['move in copied'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
-  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('j', 'dd')
   go_in()
@@ -3858,14 +3798,8 @@ T['File manipulation']['special cases']['inside affected directory']['move in co
   mock_confirm(1)
   synchronize()
 
-  validate_directory(temp_dir, 'dir')
-  validate_no_file(temp_dir, 'dir', 'file')
-  validate_directory(temp_dir, 'dir', 'subdir')
-  validate_file(temp_dir, 'dir', 'subdir', 'file')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
-  validate_directory(temp_dir, 'new-dir', 'subdir')
-  validate_file(temp_dir, 'new-dir', 'subdir', 'file')
+  local ref_tree = { 'dir/', 'dir/subdir/', 'dir/subdir/file', 'new-dir/', 'new-dir/subdir/', 'new-dir/subdir/file' }
+  validate_tree(temp_dir, ref_tree)
 end
 
 T['File manipulation']['special cases']['inside affected directory']['rename in deleted'] = function()
@@ -3878,7 +3812,7 @@ T['File manipulation']['special cases']['inside affected directory']['rename in 
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, {})
 end
 
 T['File manipulation']['special cases']['inside affected directory']['rename in moved'] = function()
@@ -3892,9 +3826,7 @@ T['File manipulation']['special cases']['inside affected directory']['rename in 
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_file(temp_dir, 'other-dir', 'dir', 'new-file')
+  validate_tree(temp_dir, { 'other-dir/', 'other-dir/dir/', 'other-dir/dir/new-file' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['rename in copied'] = function()
@@ -3906,12 +3838,9 @@ T['File manipulation']['special cases']['inside affected directory']['rename in 
   mock_confirm(1)
   synchronize()
 
-  validate_directory(temp_dir, 'dir')
-  validate_no_file(temp_dir, 'dir', 'file')
-  validate_file(temp_dir, 'dir', 'new-file')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
-  validate_file(temp_dir, 'new-dir', 'new-file')
+  -- "Rename" is done before "copy", so as to "free" space. So both directories
+  -- have renamed file.
+  validate_tree(temp_dir, { 'dir/', 'dir/new-file', 'new-dir/', 'new-dir/new-file' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['copy in deleted'] = function()
@@ -3924,7 +3853,7 @@ T['File manipulation']['special cases']['inside affected directory']['copy in de
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, {})
 end
 
 T['File manipulation']['special cases']['inside affected directory']['copy in moved'] = function()
@@ -3938,10 +3867,7 @@ T['File manipulation']['special cases']['inside affected directory']['copy in mo
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_file(temp_dir, 'other-dir', 'dir', 'file')
-  validate_file(temp_dir, 'other-dir', 'dir', 'file-a')
+  validate_tree(temp_dir, { 'other-dir/', 'other-dir/dir/', 'other-dir/dir/file', 'other-dir/dir/file-a' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['copy in renamed'] = function()
@@ -3953,10 +3879,7 @@ T['File manipulation']['special cases']['inside affected directory']['copy in re
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'new-dir', 'file')
-  validate_file(temp_dir, 'new-dir', 'file-a')
+  validate_tree(temp_dir, { 'new-dir/', 'new-dir/file', 'new-dir/file-a' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['create in deleted'] = function()
@@ -3969,7 +3892,7 @@ T['File manipulation']['special cases']['inside affected directory']['create in 
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
+  validate_tree(temp_dir, {})
 end
 
 T['File manipulation']['special cases']['inside affected directory']['create in moved'] = function()
@@ -3983,9 +3906,7 @@ T['File manipulation']['special cases']['inside affected directory']['create in 
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+  validate_tree(temp_dir, { 'other-dir/', 'other-dir/dir/', 'other-dir/dir/file' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['create in renamed'] = function()
@@ -3997,9 +3918,7 @@ T['File manipulation']['special cases']['inside affected directory']['create in 
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'new-dir/', 'new-dir/file' })
 end
 
 T['File manipulation']['special cases']['inside affected directory']['create in copied'] = function()
@@ -4011,13 +3930,10 @@ T['File manipulation']['special cases']['inside affected directory']['create in 
   mock_confirm(1)
   synchronize()
 
-  validate_directory(temp_dir, 'dir')
-  validate_file(temp_dir, 'dir', 'file')
-  validate_directory(temp_dir, 'new-dir')
   -- "Create" is done last so only in original directory. There is no special
   -- reason for this choice other than grouping "move"/"rename"/"copy" seems
   -- like a more organized choice.
-  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'dir/', 'dir/file', 'new-dir/' })
 end
 
 T['File manipulation']['special cases']['from affected directory'] = new_set()
@@ -4032,8 +3948,7 @@ T['File manipulation']['special cases']['from affected directory']['move from de
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'file' })
 end
 
 T['File manipulation']['special cases']['from affected directory']['move from renamed'] = function()
@@ -4046,10 +3961,7 @@ T['File manipulation']['special cases']['from affected directory']['move from re
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file')
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'file', 'new-dir/' })
 end
 
 T['File manipulation']['special cases']['from affected directory']['move from copied'] = function()
@@ -4062,15 +3974,14 @@ T['File manipulation']['special cases']['from affected directory']['move from co
   mock_confirm(1)
   synchronize()
 
-  validate_file(temp_dir, 'file')
-  validate_directory(temp_dir, 'dir')
-  validate_no_file(temp_dir, 'dir', 'file')
-  validate_directory(temp_dir, 'new-dir')
-  validate_no_file(temp_dir, 'new-dir', 'file')
+  -- "Move" is done before "copy", so as to "free" space. So no directories
+  -- have moved file.
+  validate_tree(temp_dir, { 'dir/', 'file', 'new-dir/' })
 end
 
 T['File manipulation']['special cases']['from affected directory']['copy from deleted'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('yy')
   go_out()
@@ -4079,12 +3990,13 @@ T['File manipulation']['special cases']['from affected directory']['copy from de
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'file' })
+  validate_file_content(join_path(temp_dir, 'file'), { 'File' })
 end
 
 T['File manipulation']['special cases']['from affected directory']['copy from moved'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'other-dir/' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('yy')
   go_out()
@@ -4095,14 +4007,14 @@ T['File manipulation']['special cases']['from affected directory']['copy from mo
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_file(temp_dir, 'file')
-  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+  validate_tree(temp_dir, { 'file', 'other-dir/', 'other-dir/dir/', 'other-dir/dir/file' })
+  validate_file_content(join_path(temp_dir, 'file'), { 'File' })
+  validate_file_content(join_path(temp_dir, 'other-dir', 'dir', 'file'), { 'File' })
 end
 
 T['File manipulation']['special cases']['from affected directory']['copy from renamed'] = function()
   local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
   open(temp_dir .. '/dir')
   type_keys('yy')
   go_out()
@@ -4111,10 +4023,9 @@ T['File manipulation']['special cases']['from affected directory']['copy from re
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'file')
-  validate_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'file', 'new-dir/', 'new-dir/file' })
+  validate_file_content(join_path(temp_dir, 'file'), { 'File' })
+  validate_file_content(join_path(temp_dir, 'new-dir', 'file'), { 'File' })
 end
 
 T['File manipulation']['special cases']['into affected directory'] = new_set()
@@ -4131,8 +4042,7 @@ T['File manipulation']['special cases']['into affected directory']['move into de
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
-  validate_no_file(temp_dir, 'file')
+  validate_tree(temp_dir, {})
 end
 
 T['File manipulation']['special cases']['into affected directory']['move into renamed'] = function()
@@ -4146,10 +4056,7 @@ T['File manipulation']['special cases']['into affected directory']['move into re
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'new-dir/', 'new-dir/file' })
 end
 
 T['File manipulation']['special cases']['into affected directory']['move into copied'] = function()
@@ -4163,11 +4070,7 @@ T['File manipulation']['special cases']['into affected directory']['move into co
   mock_confirm(1)
   synchronize()
 
-  validate_no_file(temp_dir, 'file')
-  validate_directory(temp_dir, 'dir')
-  validate_file(temp_dir, 'dir', 'file')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'dir/', 'dir/file', 'new-dir/', 'new-dir/file' })
 end
 
 T['File manipulation']['special cases']['into affected directory']['copy into deleted'] = function()
@@ -4182,8 +4085,7 @@ T['File manipulation']['special cases']['into affected directory']['copy into de
   synchronize()
 
   -- Should prefer "delete"
-  validate_no_directory(temp_dir, 'dir')
-  validate_file(temp_dir, 'file')
+  validate_tree(temp_dir, { 'file' })
 end
 
 T['File manipulation']['special cases']['into affected directory']['copy into moved'] = function()
@@ -4199,10 +4101,7 @@ T['File manipulation']['special cases']['into affected directory']['copy into mo
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'other-dir', 'dir')
-  validate_file(temp_dir, 'file')
-  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+  validate_tree(temp_dir, { 'file', 'other-dir/', 'other-dir/dir/', 'other-dir/dir/file' })
 end
 
 T['File manipulation']['special cases']['into affected directory']['copy into renamed'] = function()
@@ -4216,10 +4115,7 @@ T['File manipulation']['special cases']['into affected directory']['copy into re
   mock_confirm(1)
   synchronize()
 
-  validate_no_directory(temp_dir, 'dir')
-  validate_directory(temp_dir, 'new-dir')
-  validate_file(temp_dir, 'file')
-  validate_file(temp_dir, 'new-dir', 'file')
+  validate_tree(temp_dir, { 'file', 'new-dir/', 'new-dir/file' })
 end
 
 T['File manipulation']['special cases']['nested move'] = new_set()
@@ -4239,12 +4135,7 @@ T['File manipulation']['special cases']['nested move']['works'] = function()
   mock_confirm(1)
   synchronize()
 
-  validate_directory(temp_dir, 'dir-a')
-  validate_no_directory(temp_dir, 'dir-a', 'dir-b')
-  validate_directory(temp_dir, 'dir-b')
-  validate_no_directory(temp_dir, 'dir-b', 'dir-c')
-  validate_directory(temp_dir, 'dir-c')
-  validate_file(temp_dir, 'dir-c', 'file')
+  validate_tree(temp_dir, { 'dir-a/', 'dir-b/', 'dir-c/', 'dir-c/file' })
 end
 
 T['Cursors'] = new_set()
