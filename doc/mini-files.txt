@@ -229,8 +229,11 @@ General workflow:
   confirmation dialog listing all file system actions (per directory) it is
   about to perform. READ IT CAREFULLY.
 
-- Confirm by pressing `y`/`<CR>` (applies edits and updates buffers) or
-  don't confirm by pressing `n`/`<Esc>` (updates buffers without applying edits).
+- Confirm by pressing `y` / `<CR>` (apply edits and update buffers) or
+  don't confirm by pressing `n` / `<Esc>` (update buffers without applying edits).
+
+Note: prefer small and not related steps with more frequent synchronization
+over single complex manipulation. There are (known) cases which won't work.
 
 # How does it work ~
 
@@ -244,6 +247,7 @@ DO NOT modify text to the left of entry name.
 
 During synchronization, actual text for entry name is compared to path index
 at that line (if present) to deduce which file system action to perform.
+Note that order of text manipulation steps does not affect performed actions.
 
 # Supported file system actions ~
 

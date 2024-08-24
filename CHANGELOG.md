@@ -36,6 +36,7 @@
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
 - FEATURE: make data for `MiniFilesActionDelete` contain `to` field in case of not permanent delete.
+- FEATURE: make file manipulation work better for special complex/overlapping cases (like delete 'file-a' and copy 'file-b' as 'file-a'). It is **still** a better idea to split overlapping manipulations into smaller and not related steps, as there *are* cases which won't work.
 - BREAKING: update how confirmation lines are computed:
     - Show create actions in the group directory where text manipulation took place. This matters during creating nested entries and is usually a more intuitive representation.
     - For delete show its type after the file name ("permanently" or "to trash") as an additional visual indication of delete type.

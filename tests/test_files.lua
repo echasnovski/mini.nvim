@@ -3435,66 +3435,6 @@ T['File manipulation']['can copy directory inside itself'] = function()
   validate_confirm_args('  COPY   │ dir => dir/dir')
 end
 
-T['File manipulation']['handles simultaneous copy and move'] = function()
-  local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
-  open(temp_dir)
-
-  -- Write lines in copied file to check actual move/copy
-  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
-
-  -- Perform manipulation
-  type_keys('j', 'dd')
-  go_in()
-  -- - Move
-  type_keys('V', 'P')
-  -- - Copy
-  type_keys('P', 'C', 'file-1', '<Esc>')
-
-  child.expect_screenshot()
-
-  mock_confirm(1)
-  synchronize()
-  child.expect_screenshot()
-
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'dir', 'file')
-  validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
-  validate_file(temp_dir, 'dir', 'file-1')
-  validate_file_content(join_path(temp_dir, 'dir', 'file-1'), { 'File' })
-
-  validate_confirm_args('  COPY   │')
-  validate_confirm_args('  MOVE   │')
-end
-
-T['File manipulation']['handles simultaneous copy and rename'] = function()
-  local temp_dir = make_temp_dir('temp', { 'file' })
-  open(temp_dir)
-
-  -- Write lines in copied file to check actual move/copy
-  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
-
-  -- Perform manipulation
-  type_keys('yy')
-  -- - Rename
-  type_keys('C', 'file-1', '<Esc>')
-  -- - Copy
-  type_keys('"0p', 'C', 'file-2', '<Esc>')
-  child.expect_screenshot()
-
-  mock_confirm(1)
-  synchronize()
-  child.expect_screenshot()
-
-  validate_no_file(temp_dir, 'file')
-  validate_file(temp_dir, 'file-1')
-  validate_file_content(join_path(temp_dir, 'file-1'), { 'File' })
-  validate_file(temp_dir, 'file-2')
-  validate_file_content(join_path(temp_dir, 'file-2'), { 'File' })
-
-  validate_confirm_args('  COPY   │')
-  validate_confirm_args('  RENAME │')
-end
-
 T['File manipulation']['respects modified hidden buffers'] = function()
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/' })
   open(temp_dir)
@@ -3600,6 +3540,711 @@ T['File manipulation']['ignores identical user-copied entries'] = function()
   -- Should synchronize without confirmation
   synchronize()
   child.expect_screenshot()
+end
+
+T['File manipulation']['special cases'] = new_set()
+
+T['File manipulation']['special cases']['freed path'] = new_set()
+
+T['File manipulation']['special cases']['freed path']['delete and move other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'dir', 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('j', 'dd')
+  go_in()
+  type_keys('dd')
+  go_out()
+  type_keys('p', 'C', 'file-b')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'dir', 'file-a')
+  validate_no_file(temp_dir, 'file-a')
+  validate_file(temp_dir, 'file-b')
+  validate_file_content(join_path(temp_dir, 'file-b'), { 'File A' })
+end
+
+T['File manipulation']['special cases']['freed path']['delete and rename other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('dd', 'C', 'file-a', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
+  validate_no_file(temp_dir, 'file-b')
+end
+
+T['File manipulation']['special cases']['freed path']['delete and copy other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('dd', 'yy', 'p', 'C', 'file-a', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
+  validate_file(temp_dir, 'file-b')
+  validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
+end
+
+T['File manipulation']['special cases']['freed path']['delete and create'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+  open(temp_dir)
+  type_keys('dd', 'o', 'file', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file')
+  validate_file_content(join_path(temp_dir, 'file'), {})
+end
+
+T['File manipulation']['special cases']['freed path']['move and rename other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('j', 'dd', 'k')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('j', 'C', 'file-a')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
+  validate_no_file(temp_dir, 'file-b')
+  validate_file(temp_dir, 'dir', 'file-a')
+  validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
+end
+
+T['File manipulation']['special cases']['freed path']['move and copy other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('j', 'dd', 'gg')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('j', 'yy', 'p', 'C', 'file-a')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
+  validate_file(temp_dir, 'file-b')
+  validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
+  validate_file(temp_dir, 'dir', 'file-a')
+  validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
+end
+
+T['File manipulation']['special cases']['freed path']['move and create'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file-a' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  open(temp_dir)
+  type_keys('j', 'dd', 'k')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('o', 'file-a')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), {})
+  validate_file(temp_dir, 'dir', 'file-a')
+  validate_file_content(join_path(temp_dir, 'dir', 'file-a'), { 'File A' })
+end
+
+T['File manipulation']['special cases']['freed path']['rename and move other'] = function()
+  -- NOTE: Unfortunately, this doesn't work as "move" is done before "rename".
+  -- Accounting for this seems involve even more tweaks than is currently done,
+  -- like fully computing the proper order of overlapping actions (which might
+  -- not be fully possibly due to "cyclic renames/moves"). So this deliberately
+  -- is left unresolved with the suggestion to split steps and sync more often.
+
+  -- local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file-a', 'file-b' })
+  -- child.fn.writefile({ 'File A' }, join_path(temp_dir, 'dir', 'file-a'))
+  -- child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  -- open(temp_dir)
+  -- type_keys('G', 'C', 'file-c', '<Esc>')
+  -- type_keys('gg')
+  -- go_in()
+  -- type_keys('dd')
+  -- go_out()
+  -- type_keys('p', 'C', 'file-b', '<Esc>')
+  -- mock_confirm(1)
+  -- synchronize()
+  --
+  -- validate_no_file(temp_dir, 'dir', 'file-a')
+  -- validate_file(temp_dir, 'file-b')
+  -- validate_file_content(join_path(temp_dir, 'file-b'), { 'File A' })
+  -- validate_file(temp_dir, 'file-c')
+  -- validate_file_content(join_path(temp_dir, 'file-c'), { 'File B' })
+end
+
+T['File manipulation']['special cases']['freed path']['rename and copy other'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file-a', 'file-b' })
+  child.fn.writefile({ 'File A' }, join_path(temp_dir, 'file-a'))
+  child.fn.writefile({ 'File B' }, join_path(temp_dir, 'file-b'))
+  open(temp_dir)
+  type_keys('C', 'file-c', '<Esc>')
+  type_keys('j', 'yy', 'p', 'C', 'file-a')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File B' })
+  validate_file(temp_dir, 'file-b')
+  validate_file_content(join_path(temp_dir, 'file-b'), { 'File B' })
+  validate_file(temp_dir, 'file-c')
+  validate_file_content(join_path(temp_dir, 'file-c'), { 'File A' })
+end
+
+T['File manipulation']['special cases']['freed path']['rename and create'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+  open(temp_dir)
+  type_keys('C', 'new-file', '<Esc>')
+  type_keys('o', 'file')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file')
+  validate_file_content(join_path(temp_dir, 'file'), {})
+  validate_file(temp_dir, 'new-file')
+  validate_file_content(join_path(temp_dir, 'new-file'), { 'File' })
+end
+
+T['File manipulation']['special cases']['act on same path'] = new_set()
+
+T['File manipulation']['special cases']['act on same path']['copy and rename'] = function()
+  local temp_dir = make_temp_dir('temp', { 'file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+  open(temp_dir)
+  type_keys('yy', 'p', 'C', 'file-a', '<Esc>')
+  type_keys('k^', 'C', 'file-b', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File' })
+  validate_file(temp_dir, 'file-b')
+  validate_file_content(join_path(temp_dir, 'file-b'), { 'File' })
+end
+
+T['File manipulation']['special cases']['act on same path']['copy and move'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'file'))
+  open(temp_dir)
+  type_keys('j', 'yy', 'p', 'C', 'file-a', '<Esc>')
+  type_keys('k', 'dd', 'k')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_file(temp_dir, 'file-a')
+  validate_file_content(join_path(temp_dir, 'file-a'), { 'File' })
+  validate_file(temp_dir, 'dir', 'file')
+  validate_file_content(join_path(temp_dir, 'dir', 'file'), { 'File' })
+end
+
+T['File manipulation']['special cases']['inside affected directory'] = new_set()
+
+T['File manipulation']['special cases']['inside affected directory']['delete in copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('yy', 'p', 'C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_directory(temp_dir, 'dir')
+  validate_no_file(temp_dir, 'dir', 'file')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['delete in renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['delete in moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'other-dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('dd')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_no_file(temp_dir, 'other-dir', 'dir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['move in deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
+  open(temp_dir .. '/dir')
+  type_keys('j', 'dd')
+  go_in()
+  type_keys('p')
+  go_out()
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['move in renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
+  open(temp_dir .. '/dir')
+  type_keys('j', 'dd')
+  go_in()
+  type_keys('p')
+  go_out()
+  go_out()
+  type_keys('C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_directory(temp_dir, 'new-dir', 'subdir')
+  validate_file(temp_dir, 'new-dir', 'subdir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['move in copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'dir/subdir/' })
+  child.fn.writefile({ 'File' }, join_path(temp_dir, 'dir', 'file'))
+  open(temp_dir .. '/dir')
+  type_keys('j', 'dd')
+  go_in()
+  type_keys('p')
+  go_out()
+  go_out()
+  type_keys('yy', 'p', 'C', 'new-dir')
+  mock_confirm(1)
+  synchronize()
+
+  validate_directory(temp_dir, 'dir')
+  validate_no_file(temp_dir, 'dir', 'file')
+  validate_directory(temp_dir, 'dir', 'subdir')
+  validate_file(temp_dir, 'dir', 'subdir', 'file')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_directory(temp_dir, 'new-dir', 'subdir')
+  validate_file(temp_dir, 'new-dir', 'subdir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['rename in deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('C', 'new-file', '<Esc>')
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['rename in moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'other-dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('C', 'new-file', '<Esc>')
+  go_out()
+  type_keys('dd', 'G')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_file(temp_dir, 'other-dir', 'dir', 'new-file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['rename in copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('C', 'new-file', '<Esc>')
+  go_out()
+  type_keys('yy', 'p', 'C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_directory(temp_dir, 'dir')
+  validate_no_file(temp_dir, 'dir', 'file')
+  validate_file(temp_dir, 'dir', 'new-file')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+  validate_file(temp_dir, 'new-dir', 'new-file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['copy in deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('yy', 'p', 'C', 'file-a', '<Esc>')
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['copy in moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'other-dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('yy', 'p', 'C', 'file-a', '<Esc>')
+  go_out()
+  type_keys('dd')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+  validate_file(temp_dir, 'other-dir', 'dir', 'file-a')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['copy in renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('yy', 'p', 'C', 'file-a', '<Esc>')
+  go_out()
+  type_keys('C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'new-dir', 'file')
+  validate_file(temp_dir, 'new-dir', 'file-a')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['create in deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('i', 'file', '<Esc>')
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['create in moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'other-dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('i', 'file', '<Esc>')
+  go_out()
+  type_keys('dd')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['create in renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('i', 'file', '<Esc>')
+  go_out()
+  type_keys('C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['inside affected directory']['create in copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('i', 'file', '<Esc>')
+  go_out()
+  type_keys('yy', 'p', 'C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_directory(temp_dir, 'dir')
+  validate_file(temp_dir, 'dir', 'file')
+  validate_directory(temp_dir, 'new-dir')
+  -- "Create" is done last so only in original directory. There is no special
+  -- reason for this choice other than grouping "move"/"rename"/"copy" seems
+  -- like a more organized choice.
+  validate_no_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory'] = new_set()
+
+T['File manipulation']['special cases']['from affected directory']['move from deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'dd')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_file(temp_dir, 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory']['move from renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'C', 'new-dir')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file')
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory']['move from copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('dd')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'yy', 'p', 'C', 'new-dir')
+  mock_confirm(1)
+  synchronize()
+
+  validate_file(temp_dir, 'file')
+  validate_directory(temp_dir, 'dir')
+  validate_no_file(temp_dir, 'dir', 'file')
+  validate_directory(temp_dir, 'new-dir')
+  validate_no_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory']['copy from deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('yy')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'dd')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_file(temp_dir, 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory']['copy from moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file', 'other-dir/' })
+  open(temp_dir .. '/dir')
+  type_keys('yy')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'dd', 'G')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_file(temp_dir, 'file')
+  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+end
+
+T['File manipulation']['special cases']['from affected directory']['copy from renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/file' })
+  open(temp_dir .. '/dir')
+  type_keys('yy')
+  go_out()
+  type_keys('p')
+  type_keys('gg', 'C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'file')
+  validate_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory'] = new_set()
+
+T['File manipulation']['special cases']['into affected directory']['move into deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'dd')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+  validate_no_file(temp_dir, 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory']['move into renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'dd')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('C', 'new-dir')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory']['move into copied'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'dd')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('yy', 'p', 'C', 'new-dir')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_file(temp_dir, 'file')
+  validate_directory(temp_dir, 'dir')
+  validate_file(temp_dir, 'dir', 'file')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory']['copy into deleted'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'yy', 'gg')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('dd')
+  mock_confirm(1)
+  synchronize()
+
+  -- Should prefer "delete"
+  validate_no_directory(temp_dir, 'dir')
+  validate_file(temp_dir, 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory']['copy into moved'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'other-dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'yy', 'gg')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('dd')
+  go_in()
+  type_keys('P')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'other-dir', 'dir')
+  validate_file(temp_dir, 'file')
+  validate_file(temp_dir, 'other-dir', 'dir', 'file')
+end
+
+T['File manipulation']['special cases']['into affected directory']['copy into renamed'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'file' })
+  open(temp_dir)
+  type_keys('G', 'yy', 'gg')
+  go_in()
+  type_keys('P')
+  go_out()
+  type_keys('C', 'new-dir', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+
+  validate_no_directory(temp_dir, 'dir')
+  validate_directory(temp_dir, 'new-dir')
+  validate_file(temp_dir, 'file')
+  validate_file(temp_dir, 'new-dir', 'file')
+end
+
+T['File manipulation']['special cases']['nested move'] = new_set()
+
+T['File manipulation']['special cases']['nested move']['works'] = function()
+  local temp_dir = make_temp_dir('temp', { 'dir-a/', 'dir-a/dir-b/', 'dir-a/dir-b/dir-c/', 'dir-a/dir-b/dir-c/file' })
+  open(temp_dir .. '/dir-a/dir-b')
+  type_keys('dd')
+  go_out()
+  go_out()
+  type_keys('p')
+  type_keys('gg')
+  go_in()
+  type_keys('dd')
+  go_out()
+  type_keys('p')
+  mock_confirm(1)
+  synchronize()
+
+  validate_directory(temp_dir, 'dir-a')
+  validate_no_directory(temp_dir, 'dir-a', 'dir-b')
+  validate_directory(temp_dir, 'dir-b')
+  validate_no_directory(temp_dir, 'dir-b', 'dir-c')
+  validate_directory(temp_dir, 'dir-c')
+  validate_file(temp_dir, 'dir-c', 'file')
 end
 
 T['Cursors'] = new_set()
