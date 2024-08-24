@@ -1278,6 +1278,107 @@ T['Align']['works with multibyte characters'] = function()
   )
 end
 
+local keys_for_mode
+do
+  local t = {
+    ['Normal-char'] = { 'ga', '<C-End>' }, -- Charwise
+    ['Normal-line'] = { 'ga', 'G' }, -- Linewise
+    ['Normal-block'] = { 'ga', '<C-v><C-End>' }, -- Blockwise
+    ['Visual-char'] = { 'vG$', 'ga' }, -- Visual charwise
+    ['Visual-line'] = { 'VG', 'ga' }, -- Visual linewise
+    ['Visual-block'] = { '<C-v>G$', 'ga' }, -- Visual blockwise
+  }
+  keys_for_mode = function(mode, keys) return vim.list_extend(vim.deepcopy(t[mode]), keys) end
+end
+
+T['Align']['all modes'] = new_set({
+  parametrize = {
+    { 'Normal-char' },
+    { 'Normal-line' },
+    { 'Normal-block' },
+    { 'Visual-char' },
+    { 'Visual-line' },
+    { 'Visual-block' },
+  },
+})
+
+T['Align']['all modes']['works with wide characters'] = function(mode)
+  -- While most Unicode characters are unambiguously single- or double-width,
+  -- the Unicode property East_Asian_Width is defined as Ambiguous for some
+  -- characters, including Cyrillic characters. One of Vim's most esoteric
+  -- options is 'ambiwidth', which sets the width of Ambiguous width characters
+  -- to be either 1 (the default) or 2 cells wide.
+  local keys = keys_for_mode(mode, { 'ф' })
+
+  child.o.ambiwidth = 'single'
+  validate_keys({ 'ыыффццф', 'ыфのфцф' }, keys, { 'ыыф  фццф', 'ы фのфц ф' })
+
+  child.o.ambiwidth = 'double'
+  validate_keys({ 'ыыффццф', 'ыфのфцф' }, keys, { 'ыыф  фццф', 'ы  фのфц  ф' })
+
+  child.o.tabstop = 4
+  child.o.ambiwidth = 'single'
+  validate_keys({ '\tффццф', 'ыфのфцф' }, keys, { '\tф  фццф', 'ы   фのфц ф' })
+end
+
+T['Align']['all modes']['works with combining characters'] = function(mode)
+  local keys = keys_for_mode(mode, { '_' })
+
+  -- 0xCC 0x81 is the UTF-8 representation of U+0301 COMBINING ACUTE ACCENT. It
+  -- is zero-width when combined with the preceding character.
+
+  validate_keys({ 'aá_e\xcc\x81e_', 'aa_e_' }, keys, { 'aá_e\xcc\x81e_', 'aa_e _' })
+end
+
+T['Align']['blockwise mode'] = new_set({
+  parametrize = {
+    { 'Normal-block' },
+    { 'Visual-block' },
+  },
+})
+
+T['Align']['blockwise mode']['works with to-eol selection'] = function(mode)
+  validate_keys({ '___', '' }, keys_for_mode(mode, { 'm-<cr>', '_' }), { '_-_-_', '' })
+end
+
+T['Align']['blockwise mode']['correctly handles virtual column bounds'] = function(mode)
+  validate_keys({ 'の', '_', 'a_' }, keys_for_mode(mode, { '_' }), { 'の', ' _', 'a_' })
+end
+
+T['Align']['blockwise mode']['correctly handles different corner orders'] = function(mode)
+  local init = { 'a__a', 'a__a' }
+  local expected = { 'a_-_a', 'a_-_a' }
+
+  local keys
+  if mode == 'Normal-block' then
+    keys = { 'ga', '<C-v>', '`a', 'm-<cr>', '_' }
+  else
+    keys = { '<C-v>', '`a', 'ga', 'm-<cr>', '_' }
+  end
+
+  local function test(start_line, start_col, end_line, end_col)
+    set_lines(init)
+    set_cursor(start_line, start_col)
+    child.api.nvim_buf_set_mark(0, 'a', end_line, end_col, {})
+    type_keys(keys)
+    eq(get_lines(), expected)
+  end
+
+  test(1, 1, 2, 2)
+  test(2, 2, 1, 1)
+  test(1, 2, 2, 1)
+  test(2, 1, 1, 2)
+
+  child.o.selection = 'exclusive'
+
+  -- The selection corner with the highest byte offset is exclusive
+  test(1, 1, 2, 3)
+  test(2, 3, 1, 1)
+  -- But not if the corner on the earlier line is farther to the right
+  test(1, 2, 2, 1)
+  test(2, 1, 1, 2)
+end
+
 T['Align']['does not ask for modifier if `split_pattern` is not default'] = function()
   set_config_opts({ split_pattern = '_' })
   set_lines({ 'a_b', 'aa_b' })
