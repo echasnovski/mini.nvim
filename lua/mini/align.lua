@@ -1715,14 +1715,20 @@ H.region_get_text = function(region, mode)
   if mode == 'block' then
     -- Use virtual columns to respect multibyte characters
     local left_virtcol, right_virtcol = H.region_virtcols(region)
-    local n_cols = right_virtcol - left_virtcol + 1
 
-    return vim.tbl_map(
-      -- `strcharpart()` returns empty string for out of bounds span, so no
-      -- need for extra columns check
-      function(l) return vim.fn.strcharpart(l, left_virtcol - 1, n_cols) end,
-      H.get_lines(from.line - 1, to.line)
-    )
+    local ret = {}
+    for line = from.line, to.line do
+      local left_col = vim.fn.virtcol2col(0, line, left_virtcol)
+      local right_col = vim.fn.virtcol2col(0, line, right_virtcol)
+
+      -- We don't know the byte index one-past-the-end of the last
+      -- character within the region yet, so get the entire line
+      local text = H.get_lines(line - 1, line)[1]
+      local last_byte_idx = H.next_char_boundary(text, right_col - 1)
+
+      ret[#ret + 1] = text:sub(left_col, last_byte_idx)
+    end
+    return ret
   end
 end
 
@@ -1746,24 +1752,17 @@ H.region_set_text = function(region, mode, text)
 
     -- Use virtual columns to respect multibyte characters
     local left_virtcol, right_virtcol = H.region_virtcols(region)
-    local lines = H.get_lines(from.line - 1, to.line)
-    for i, l in ipairs(lines) do
+    for i = 1, to.line - from.line + 1 do
       -- Use zero-based indexes
       local line_num = from.line + i - 2
 
-      local n_virtcols = vim.fn.virtcol({ line_num + 1, '$' }) - 1
-      -- Don't set text if all region is past end of line
-      if left_virtcol <= n_virtcols then
-        -- Make sure to not go past the line end
-        local line_left_col, line_right_col = left_virtcol, math.min(right_virtcol, n_virtcols)
+      local start_col = vim.fn.virtcol2col(0, line_num + 1, left_virtcol) - 1
+      local end_col = vim.fn.virtcol2col(0, line_num + 1, right_virtcol) - 1
 
-        -- Convert back to byte columns (columns are end-exclusive)
-        local start_col, end_col = vim.fn.byteidx(l, line_left_col - 1), vim.fn.byteidx(l, line_right_col)
-        start_col, end_col = math.max(start_col, 0), math.max(end_col, 0)
+      local line = H.get_lines(line_num, line_num + 1)[1]
+      end_col = H.next_char_boundary(line, end_col)
 
-        -- vim.api.nvim_buf_set_text(0, line_num, start_col, line_num, end_col, { text[i] })
-        H.set_text(line_num, start_col, line_num, end_col, { text[i] })
-      end
+      H.set_text(line_num, start_col, line_num, end_col, { text[i] })
     end
   end
 end
@@ -1785,6 +1784,16 @@ H.pos_to_virtcol = function(pos)
   if eol_col < pos.col then return vim.fn.virtcol({ pos.line, '$' }) + pos.col - eol_col end
 
   return vim.fn.virtcol({ pos.line, pos.col })
+end
+
+-- Returns the 0-based byte index after the last byte
+-- of the character starting at index n in str
+H.next_char_boundary = function(str, n)
+  -- Pass true to include composing characters. This probably doesn't matter in
+  -- practice, but not doing this would cause problems if mini.align ever
+  -- wanted to add spaces after the right edge of the block, for instance.
+  local bytes_in_last_char = #vim.fn.strcharpart(str:sub(n + 1), 0, 1, true)
+  return n + bytes_in_last_char
 end
 
 -- Work with user interaction -------------------------------------------------
