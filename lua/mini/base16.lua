@@ -504,10 +504,10 @@ H.apply_palette = function(palette, use_cterm)
   hi('Normal',         {fg=p.base05, bg=p.base00, attr=nil,         sp=nil})
   hi('NormalFloat',    {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
   hi('NormalNC',       {fg=p.base05, bg=p.base00, attr=nil,         sp=nil})
-  hi('PMenu',          {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
-  hi('PMenuSbar',      {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
-  hi('PMenuSel',       {fg=p.base01, bg=p.base05, attr=nil,         sp=nil})
-  hi('PMenuThumb',     {fg=nil,      bg=p.base07, attr=nil,         sp=nil})
+  hi('Pmenu',          {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
+  hi('PmenuSbar',      {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
+  hi('PmenuSel',       {fg=p.base01, bg=p.base05, attr=nil,         sp=nil})
+  hi('PmenuThumb',     {fg=nil,      bg=p.base07, attr=nil,         sp=nil})
   hi('Question',       {fg=p.base0D, bg=nil,      attr=nil,         sp=nil})
   hi('QuickFixLine',   {fg=nil,      bg=p.base01, attr=nil,         sp=nil})
   hi('Search',         {fg=p.base01, bg=p.base0A, attr=nil,         sp=nil})
@@ -649,9 +649,10 @@ H.apply_palette = function(palette, use_cterm)
   hi('@symbol',         {fg=p.base0E, bg=nil, attr=nil, sp=nil})
   hi('@variable',       {fg=p.base05, bg=nil, attr=nil, sp=nil})
 
-  hi('@text.strong',   {fg=nil, bg=nil, attr='bold',          sp=nil})
-  hi('@text.emphasis', {fg=nil, bg=nil, attr='italic',        sp=nil})
-  hi('@text.strike',   {fg=nil, bg=nil, attr='strikethrough', sp=nil})
+  hi('@text.strong',    {fg=nil, bg=nil, attr='bold',          sp=nil})
+  hi('@text.emphasis',  {fg=nil, bg=nil, attr='italic',        sp=nil})
+  hi('@text.strike',    {fg=nil, bg=nil, attr='strikethrough', sp=nil})
+  hi('@text.underline', {link='Underlined'})
 
   -- Semantic tokens
   if vim.fn.has('nvim-0.9') == 1 then
@@ -669,7 +670,7 @@ H.apply_palette = function(palette, use_cterm)
     -- Included only those differing from default links
     hi('@markup.strong',        {link='@text.strong'})
     hi('@markup.italic',        {link='@text.emphasis'})
-    hi('@markup.strikethrough', {link='@text.strikethrough'})
+    hi('@markup.strikethrough', {link='@text.strike'})
     hi('@markup.underline',     {link='@text.underline'})
   end
 
