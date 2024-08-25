@@ -922,6 +922,7 @@ T['open()']['tracks lost focus'] = function()
 
   local validate = function(loose_focus)
     open(test_dir_path)
+    child.cmd('redraw')
     loose_focus()
     -- Tracking is done by checking every second
     sleep(track_lost_focus_delay + small_time)
