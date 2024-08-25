@@ -505,6 +505,12 @@ H.apply_palette = function(palette, use_cterm)
   hi('NormalFloat',    {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
   hi('NormalNC',       {fg=p.base05, bg=p.base00, attr=nil,         sp=nil})
   hi('Pmenu',          {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
+  hi('PmenuExtra',     {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
+  hi('PmenuExtraSel',  {fg=p.base01, bg=p.base05, attr=nil,         sp=nil})
+  hi('PmenuKind',      {fg=p.base05, bg=p.base01, attr=nil,         sp=nil})
+  hi('PmenuKindSel',   {fg=p.base01, bg=p.base05, attr=nil,         sp=nil})
+  hi('PmenuMatch',     {fg=p.base05, bg=p.base01, attr='bold',      sp=nil})
+  hi('PmenuMatchSel',  {fg=p.base01, bg=p.base05, attr='bold',      sp=nil})
   hi('PmenuSbar',      {fg=nil,      bg=p.base02, attr=nil,         sp=nil})
   hi('PmenuSel',       {fg=p.base01, bg=p.base05, attr=nil,         sp=nil})
   hi('PmenuThumb',     {fg=nil,      bg=p.base07, attr=nil,         sp=nil})
@@ -672,6 +678,9 @@ H.apply_palette = function(palette, use_cterm)
     hi('@markup.italic',        {link='@text.emphasis'})
     hi('@markup.strikethrough', {link='@text.strike'})
     hi('@markup.underline',     {link='@text.underline'})
+
+    hi('@string.special.vimdoc',     {link='SpecialChar'})
+    hi('@variable.parameter.vimdoc', {fg=p.base09, bg=nil, attr=nil, sp=nil})
   end
 
   -- Plugins
