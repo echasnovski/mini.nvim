@@ -9,6 +9,10 @@ if vim.fn.has('nvim-0.9') == 0 then
   fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
 end
 
+local skip_if_no_010 = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('`setup_termbg_sync()` works only on Neovim>=0.10') end
+end
+
 local project_root = fs_normalize(vim.fn.fnamemodify(vim.fn.getcwd(), ':p'))
 local dir_misc_path = project_root .. '/tests/dir-misc'
 
@@ -463,6 +467,8 @@ T['setup_termbg_sync()'] = new_set({
 })
 
 T['setup_termbg_sync()']['works'] = function()
+  skip_if_no_010()
+
   local eq_log = function(ref_log)
     eq(child.lua_get('_G.log'), ref_log)
     child.lua('_G.log = {}')
@@ -492,6 +498,8 @@ T['setup_termbg_sync()']['works'] = function()
 end
 
 T['setup_termbg_sync()']['can be called multiple times'] = function()
+  skip_if_no_010()
+
   child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
   child.lua('MiniMisc.setup_termbg_sync()')
   child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:1111/2626/2d2d' })
@@ -510,6 +518,8 @@ T['setup_termbg_sync()']['can be called multiple times'] = function()
 end
 
 T['setup_termbg_sync()']['does nothing if there is no proper stdout'] = function()
+  skip_if_no_010()
+
   local validate = function()
     child.lua('MiniMisc.setup_termbg_sync()')
     child.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = false })
@@ -526,6 +536,8 @@ T['setup_termbg_sync()']['does nothing if there is no proper stdout'] = function
 end
 
 T['setup_termbg_sync()']['handles no response from terminal emulator'] = function()
+  skip_if_no_010()
+
   child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
   child.lua('MiniMisc.setup_termbg_sync()')
   local validate_n_autocmds = function(ref_n)
@@ -546,6 +558,8 @@ T['setup_termbg_sync()']['handles no response from terminal emulator'] = functio
 end
 
 T['setup_termbg_sync()']['handles bad response from terminal emulator'] = function()
+  skip_if_no_010()
+
   child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
   child.lua('MiniMisc.setup_termbg_sync()')
   child.api.nvim_exec_autocmds('TermResponse', { data = 'something-bad' })
@@ -562,6 +576,8 @@ T['setup_termbg_sync()']['handles bad response from terminal emulator'] = functi
 end
 
 T['setup_termbg_sync()']['handles different color formats'] = function()
+  skip_if_no_010()
+
   local validate = function(term_response_color, ref_color)
     -- Mock clean start to overcome that color is parsed only once per session
     child.lua('package.loaded["mini.misc"] = nil')

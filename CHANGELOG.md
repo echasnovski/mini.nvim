@@ -50,7 +50,7 @@
 
 ## mini.misc
 
-- FEATURE: implement `setup_termbg_sync()` to set up terminal background synchronization (removes possible "frame" around current Neovim instance).
+- FEATURE: implement `setup_termbg_sync()` to set up terminal background synchronization (removes possible "frame" around current Neovim instance). Works only on Neovim>=0.10.
 
 ## mini.pick
 

@@ -186,6 +186,8 @@ Primary use case is to remove possible "frame" around current Neovim instance
 which appears if Neovim's |hl-Normal| background color differs from what is
 used by terminal emulator itself.
 
+Works only on Neovim>=0.10.
+
 ------------------------------------------------------------------------------
                                                *MiniMisc.setup_restore_cursor()*
                     `MiniMisc.setup_restore_cursor`({opts})

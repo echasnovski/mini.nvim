@@ -298,7 +298,15 @@ H.root_cache = {}
 --- Primary use case is to remove possible "frame" around current Neovim instance
 --- which appears if Neovim's |hl-Normal| background color differs from what is
 --- used by terminal emulator itself.
+---
+--- Works only on Neovim>=0.10.
 MiniMisc.setup_termbg_sync = function()
+  if vim.fn.has('nvim-0.10') == 0 then
+    -- Handling `io.write('\027]11;?\007')` response was added in Neovim 0.10
+    H.notify('`setup_termbg_sync()` requires Neovim>=0.10', 'WARN')
+    return
+  end
+
   -- Proceed only if there is a valid stdout to use
   local has_stdout_tty = false
   for _, ui in ipairs(vim.api.nvim_list_uis()) do
