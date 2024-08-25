@@ -482,6 +482,8 @@ MiniHues.apply_palette = function(palette, plugins)
   hi('PmenuExtraSel',  { link='PmenuSel' })
   hi('PmenuKind',      { link='Pmenu' })
   hi('PmenuKindSel',   { link='PmenuSel' })
+  hi('PmenuMatch',     { fg=p.fg,      bg=p.bg_mid,  bold=true })
+  hi('PmenuMatchSel',  { fg=p.bg,      bg=p.fg,      bold=true,   blend=0 })
   hi('PmenuSbar',      { link='Pmenu' })
   hi('PmenuSel',       { fg=p.bg,      bg=p.fg,      blend=0 })
   hi('PmenuThumb',     { fg=nil,       bg=p.bg_mid2 })
@@ -749,6 +751,7 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('@string.special.symbol', { link='@constant' })
     hi('@string.special.path',   { link='Directory' })
     hi('@string.special.url',    { link='@markup.link.url' })
+    hi('@string.special.vimdoc', { link='@constant' })
 
     -- @character
     -- @character.special
