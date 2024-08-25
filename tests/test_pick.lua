@@ -1024,7 +1024,8 @@ T['default_match()']['does not block query update'] = function()
   sleep(micro_time)
   type_keys('c')
   sleep(micro_time)
-  child.expect_screenshot()
+  eq(child.lua_get('#MiniPick.get_picker_matches()'), 0)
+  eq(get_picker_state().is_busy, true)
   eq(child.lua_get('_G.log'), {
     { n_match_inds = #many_items, query = {} },
     { n_match_inds = #many_items, query = { 'a' } },
