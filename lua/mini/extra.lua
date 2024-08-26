@@ -1843,19 +1843,20 @@ H.lsp_make_on_list = function(source, opts)
       if type(item.kind) ~= 'string' then return end
       local icon, hl = MiniIcons.get('lsp', item.kind)
       -- If kind is not original, assume it already contains an icon
-      local icon_prefix = item.is_original_kind and (icon .. ' ') or ''
+      local icon_prefix = item.kind_orig == item.kind and (icon .. ' ') or ''
       item.text, item.hl = icon_prefix .. item.text, hl
     end
   end
 
   local process = function(items)
     if source ~= 'document_symbol' then items = vim.tbl_map(H.pick_prepend_position, items) end
-    -- Ensure proper `item.kind` (needed after `MiniIcons.tweak_lsp_kind()`)
-    local kind_cache = {}
+    -- Input `item.kind` is a string (resolved before `on_list`). Account for
+    -- possibly tweaked symbol map (like after `MiniIcons.tweak_lsp_kind`).
+    local kind_map = H.get_symbol_kind_map()
     for _, item in ipairs(items) do
-      item.kind, item.is_original_kind = H.lsp_get_kind(kind_cache, item.kind)
+      item.kind_orig, item.kind = item.kind, kind_map[item.kind]
       add_decor_data(item)
-      item.is_original_kind = nil
+      item.kind_orig = nil
     end
     table.sort(items, H.lsp_items_compare)
     return items
@@ -1889,27 +1890,15 @@ H.lsp_make_on_list = function(source, opts)
   end
 end
 
-H.lsp_get_kind = function(kind_cache, kind)
-  if type(kind) ~= 'string' then return nil, nil end
-  if kind_cache[kind] ~= nil then return unpack(kind_cache[kind]) end
-
-  -- Try to ensure `kind` is an "original" value from LSP spec. This can be not
-  -- the case after `MiniIcons.tweak_lsp_kind()`.
-  local is_original_kind = true
-  if kind ~= kind:match('%w+') then
-    is_original_kind = false
-    -- Assume that "array" portion is tweaked, but "map" is still proper
-    local kind_id, all_kinds_map = nil, vim.lsp.protocol.SymbolKind
-    for id, val in ipairs(all_kinds_map) do
-      if val == kind then kind_id = id end
-    end
-    for val, id in pairs(all_kinds_map) do
-      if id == kind_id then kind = val end
-    end
+H.get_symbol_kind_map = function()
+  -- Compute symbol kind map from "resolved" string kind to its "original" (as in
+  -- LSP protocol). Those can be different after `MiniIcons.tweak_lsp_kind()`.
+  local res = {}
+  local double_map = vim.lsp.protocol.SymbolKind
+  for k, v in pairs(double_map) do
+    if type(k) == 'string' and type(v) == 'number' then res[double_map[v]] = k end
   end
-
-  kind_cache[kind] = { kind, is_original_kind }
-  return kind, is_original_kind
+  return res
 end
 
 H.lsp_items_compare = function(a, b)
