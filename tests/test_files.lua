@@ -2027,6 +2027,16 @@ T['Windows']['never shows past end of buffer'] = function()
   child.expect_screenshot()
 end
 
+T['Windows']['restricts manual buffer navigation'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Window and buffer pairing is available on Neovim>=0.10') end
+  child.api.nvim_create_buf(true, false)
+  open(test_dir_path)
+  validate_n_wins(2)
+  expect.error(function() child.cmd('bnext') end)
+  -- Attempting to switch buffer should keep explorer usable
+  expect.no_error(get_fs_entry)
+end
+
 T['Preview'] = new_set({
   hooks = {
     pre_case = function()

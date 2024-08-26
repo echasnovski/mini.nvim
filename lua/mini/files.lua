@@ -2313,7 +2313,7 @@ end
 H.window_set_view = function(win_id, view)
   -- Set buffer
   local buf_id = view.buf_id
-  vim.api.nvim_win_set_buf(win_id, buf_id)
+  H.win_set_buf(win_id, buf_id)
   -- - Update buffer register. No need to update previous buffer data, as it
   --   should already be invalidated.
   H.opened_buffers[buf_id].win_id = win_id
@@ -2688,6 +2688,13 @@ H.set_buflines = function(buf_id, lines)
 end
 
 H.set_extmark = function(...) pcall(vim.api.nvim_buf_set_extmark, ...) end
+
+H.win_set_buf = function(win_id, buf_id)
+  vim.wo[win_id].winfixbuf = false
+  vim.api.nvim_win_set_buf(win_id, buf_id)
+  vim.wo[win_id].winfixbuf = true
+end
+if vim.fn.has('nvim-0.10') == 0 then H.win_set_buf = vim.api.nvim_win_set_buf end
 
 H.get_first_valid_normal_window = function()
   for _, win_id in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
