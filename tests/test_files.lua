@@ -4568,8 +4568,19 @@ T['Events']['`MiniFilesWindowUpdate` can customize internally set window config 
   go_in()
   child.expect_screenshot()
 
+  -- Works in Insert mode when number of entries is less than height
+  type_keys('o', 'a', 'b', 'c')
+  child.expect_screenshot()
+  child.ensure_normal_mode()
+
+  -- Works in Insert mode when number of entries is more than height
   go_out()
-  type_keys('4j', 'o', 'a')
+  type_keys('o', 'd', 'e', 'f')
+  child.expect_screenshot()
+  child.ensure_normal_mode()
+
+  -- Works when modifying below last visible line
+  type_keys('3j', 'o', 'a')
   child.expect_screenshot()
 
   -- Works even if completion menu (like from 'mini.completion') is triggered

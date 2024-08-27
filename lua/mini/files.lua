@@ -1942,7 +1942,12 @@ H.view_track_text_change = function(data)
   local last_visible_line = vim.fn.line('w0', win_id) + new_height - 1
   local out_of_buf_lines = last_visible_line - n_lines
   -- - Possibly scroll window upward (`\25` is an escaped `<C-y>`)
-  if out_of_buf_lines > 0 then vim.cmd('normal! ' .. out_of_buf_lines .. '\25') end
+  if out_of_buf_lines > 0 then
+    -- Preserve cursor as scrolling might affect it (like in Insert mode)
+    local cursor = vim.api.nvim_win_get_cursor(win_id)
+    vim.cmd('normal! ' .. out_of_buf_lines .. '\25')
+    vim.api.nvim_win_set_cursor(win_id, cursor)
+  end
 end
 
 -- Buffers --------------------------------------------------------------------
