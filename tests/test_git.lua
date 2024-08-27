@@ -2926,8 +2926,8 @@ T[':Git']['event `MiniGitCommandSplit` can be used to tweak window-local options
   local init_win_id = get_win()
   child.cmd(':Git log')
   eq(child.api.nvim_win_get_option(init_win_id, 'scrollbind'), true)
-  eq(child.api.nvim_win_get_option(0, 'scrollbind'), true)
-  eq(child.api.nvim_win_get_option(0, 'foldlevel'), 0)
+  eq(child.wo.scrollbind, true)
+  eq(child.wo.foldlevel, 0)
 end
 
 return T

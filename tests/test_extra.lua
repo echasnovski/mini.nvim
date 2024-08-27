@@ -1095,7 +1095,7 @@ end
 
 T['pickers']['diagnostic()']["forces 'buflisted' on opened buffer"] = function()
   -- This matters for project wide diagnostic done inside unlisted buffers
-  child.api.nvim_buf_set_option(child.lua_get('_G.buf_id_2'), 'buflisted', false)
+  child.lua('vim.bo[_G.buf_id_2].buflisted = false')
 
   pick_diagnostic()
   type_keys('<C-p>', '<CR>')

@@ -789,7 +789,7 @@ T['Default content']['active'] = new_set({
   test = function(window_width)
     helpers.skip_on_windows('Windows has different default path separator')
 
-    eq(child.api.nvim_win_get_option(0, 'statusline'), '%{%v:lua.MiniStatusline.active()%}')
+    eq(child.wo.statusline, '%{%v:lua.MiniStatusline.active()%}')
     set_width(window_width)
     child.expect_screenshot()
   end,

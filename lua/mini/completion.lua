@@ -1280,12 +1280,13 @@ H.floating_dimensions = function(lines, max_height, max_width)
 end
 
 H.open_action_window = function(cache, opts)
-  cache.win_id = vim.api.nvim_open_win(cache.bufnr, false, opts)
-  vim.api.nvim_win_set_option(cache.win_id, 'wrap', true)
-  vim.api.nvim_win_set_option(cache.win_id, 'linebreak', true)
-  vim.api.nvim_win_set_option(cache.win_id, 'breakindent', false)
-  vim.api.nvim_win_set_option(cache.win_id, 'foldenable', false)
-  vim.api.nvim_win_set_option(cache.win_id, 'foldmethod', 'manual')
+  local win_id = vim.api.nvim_open_win(cache.bufnr, false, opts)
+  vim.wo[win_id].breakindent = false
+  vim.wo[win_id].foldenable = false
+  vim.wo[win_id].foldmethod = 'manual'
+  vim.wo[win_id].linebreak = true
+  vim.wo[win_id].wrap = true
+  cache.win_id = win_id
 end
 
 H.close_action_window = function(cache, keep_timer)

@@ -19,7 +19,7 @@ local type_keys = function(...) return child.type_keys(...) end
 --stylua: ignore end
 
 -- Make helpers
-local is_starter_shown = function() return child.api.nvim_buf_get_option(0, 'filetype') == 'ministarter' end
+local is_starter_shown = function() return child.bo.filetype == 'ministarter' end
 
 local validate_starter_shown = function() eq(is_starter_shown(), true) end
 

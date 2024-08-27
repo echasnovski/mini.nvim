@@ -187,8 +187,8 @@ T['setup()']['uses `config.lsp_completion`'] = function()
       completefunc = source_func == 'completefunc' and val or ''
     end
 
-    eq(child.api.nvim_buf_get_option(0, 'omnifunc'), omnifunc)
-    eq(child.api.nvim_buf_get_option(0, 'completefunc'), completefunc)
+    eq(child.bo.omnifunc, omnifunc)
+    eq(child.bo.completefunc, completefunc)
   end
 
   validate(false)

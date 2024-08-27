@@ -1395,7 +1395,7 @@ H.create_map_buffer = function()
   local buf_id = vim.api.nvim_create_buf(false, true)
 
   -- Set buffer local options (which don't involve `noautocmd`)
-  vim.api.nvim_buf_set_option(buf_id, 'filetype', 'minimap')
+  vim.bo[buf_id].filetype = 'minimap'
 
   -- Make buffer local mappings
   vim.keymap.set('n', '<CR>', '<Cmd>lua MiniMap.toggle_focus(false)<CR>', { buffer = buf_id })

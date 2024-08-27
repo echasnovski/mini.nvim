@@ -568,8 +568,7 @@ MiniMisc.use_nested_comments = function(buf_id)
   local leader = vim.trim(comment_parts[1])
 
   local comments = vim.bo[buf_id].comments
-  local new_comments = string.format('n:%s,%s', leader, comments)
-  vim.api.nvim_buf_set_option(buf_id, 'comments', new_comments)
+  vim.bo[buf_id].comments = string.format('n:%s,%s', leader, comments)
 end
 
 --- Zoom in and out of a buffer, making it full screen in a floating window

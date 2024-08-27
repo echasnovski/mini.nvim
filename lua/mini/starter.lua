@@ -385,9 +385,9 @@ MiniStarter.refresh = function(buf_id)
   if not vim.deep_equal(data.items, old_items) then data.current_item_id = 1 end
 
   -- Add content
-  vim.api.nvim_buf_set_option(buf_id, 'modifiable', true)
+  vim.bo[buf_id].modifiable = true
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, MiniStarter.content_to_lines(content))
-  vim.api.nvim_buf_set_option(buf_id, 'modifiable', false)
+  vim.bo[buf_id].modifiable = false
 
   -- Add highlighting
   H.content_highlight(buf_id)

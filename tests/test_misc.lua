@@ -221,7 +221,7 @@ T['resize_window()']['works'] = function()
 end
 
 T['resize_window()']['correctly computes default `text_width` argument'] = function()
-  child.api.nvim_win_set_option(0, 'signcolumn', 'yes:2')
+  child.wo.signcolumn = 'yes:2'
 
   -- min(vim.o.columns, 79) < textwidth < colorcolumn
   child.o.columns = 160
@@ -793,15 +793,15 @@ T['use_nested_comments()'] = new_set({
 })
 
 T['use_nested_comments()']['works'] = function()
-  child.api.nvim_buf_set_option(0, 'commentstring', '# %s')
+  child.bo.commentstring = '# %s'
   child.lua('MiniMisc.use_nested_comments()')
-  eq(child.api.nvim_buf_get_option(0, 'comments'), 'n:#,' .. comments_option)
+  eq(child.bo.comments, 'n:#,' .. comments_option)
 end
 
 T['use_nested_comments()']["ignores 'commentstring' with two parts"] = function()
-  child.api.nvim_buf_set_option(0, 'commentstring', '/*%s*/')
+  child.bo.commentstring = '/*%s*/'
   child.lua('MiniMisc.use_nested_comments()')
-  eq(child.api.nvim_buf_get_option(0, 'comments'), comments_option)
+  eq(child.bo.comments, comments_option)
 end
 
 T['use_nested_comments()']['respects `buf_id` argument'] = function()
@@ -810,7 +810,7 @@ T['use_nested_comments()']['respects `buf_id` argument'] = function()
 
   child.lua('MiniMisc.use_nested_comments(...)', { new_buf_id })
 
-  eq(child.api.nvim_buf_get_option(0, 'comments'), comments_option)
+  eq(child.bo.comments, comments_option)
   eq(child.api.nvim_buf_get_option(new_buf_id, 'comments'), 'n:#,' .. comments_option)
 end
 

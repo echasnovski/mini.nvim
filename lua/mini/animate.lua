@@ -1783,8 +1783,7 @@ H.make_openclose_step = function(action_type, win_id, config)
         vim.api.nvim_win_set_config(float_win_id, float_config)
       end
 
-      local new_winblend = H.round(winblend(step, n_steps))
-      vim.api.nvim_win_set_option(float_win_id, 'winblend', new_winblend)
+      vim.wo[float_win_id].winblend = H.round(winblend(step, n_steps))
 
       return true
     end,
