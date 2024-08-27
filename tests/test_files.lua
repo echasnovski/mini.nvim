@@ -2037,6 +2037,28 @@ T['Windows']['restricts manual buffer navigation'] = function()
   expect.no_error(get_fs_entry)
 end
 
+T['Windows']["do not evaluate 'foldexpr' too much"] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Correct behavior is only on Neovim>=0.10') end
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua([[
+    _G.n = 0
+    _G.foldexpr_count = function() _G.n = _G.n + 1; return 0 end
+    vim.o.foldmethod = 'expr'
+    vim.o.foldexpr = 'v:lua.foldexpr_count()'
+  ]])
+  open(test_dir_path)
+
+  -- There still might be evaluations after `open()` because 'foldexpr' seems
+  -- to be executed even if buffer is not shown in any window
+  child.lua('_G.n = 0')
+  type_keys('j')
+  type_keys('k')
+  go_in()
+  go_out()
+  eq(child.lua_get('_G.n'), 0)
+end
+
 T['Preview'] = new_set({
   hooks = {
     pre_case = function()

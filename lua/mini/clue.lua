@@ -1557,6 +1557,7 @@ H.window_open = function(config)
   local win_id = vim.api.nvim_open_win(H.state.buf_id, false, config)
 
   vim.wo[win_id].foldenable = false
+  vim.wo[win_id].foldmethod = 'manual'
   vim.wo[win_id].wrap = false
   vim.wo[win_id].list = true
   vim.wo[win_id].listchars = 'extends:…'

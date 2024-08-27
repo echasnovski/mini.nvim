@@ -741,9 +741,10 @@ H.window_open = function(buf_id)
   local win_id = vim.api.nvim_open_win(buf_id, false, config)
 
   vim.wo[win_id].foldenable = false
-  vim.wo[win_id].wrap = true
+  vim.wo[win_id].foldmethod = 'manual'
   vim.wo[win_id].winblend = H.get_config().window.winblend
   vim.wo[win_id].winhighlight = 'NormalFloat:MiniNotifyNormal,FloatBorder:MiniNotifyBorder,FloatTitle:MiniNotifyTitle'
+  vim.wo[win_id].wrap = true
 
   return win_id
 end

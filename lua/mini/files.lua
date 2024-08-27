@@ -2230,6 +2230,7 @@ H.window_open = function(buf_id, config)
   -- Set permanent window options
   vim.wo[win_id].concealcursor = 'nvic'
   vim.wo[win_id].foldenable = false
+  vim.wo[win_id].foldmethod = 'manual'
   vim.wo[win_id].wrap = false
 
   -- Conceal path id and prefix separators

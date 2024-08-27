@@ -1284,6 +1284,8 @@ H.open_action_window = function(cache, opts)
   vim.api.nvim_win_set_option(cache.win_id, 'wrap', true)
   vim.api.nvim_win_set_option(cache.win_id, 'linebreak', true)
   vim.api.nvim_win_set_option(cache.win_id, 'breakindent', false)
+  vim.api.nvim_win_set_option(cache.win_id, 'foldenable', false)
+  vim.api.nvim_win_set_option(cache.win_id, 'foldmethod', 'manual')
 end
 
 H.close_action_window = function(cache, keep_timer)

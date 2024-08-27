@@ -2162,6 +2162,7 @@ H.picker_new_win = function(buf_id, win_config)
 
   -- Set window-local data
   vim.wo[win_id].foldenable = false
+  vim.wo[win_id].foldmethod = 'manual'
   vim.wo[win_id].list = true
   vim.wo[win_id].listchars = 'extends:…'
   vim.wo[win_id].scrolloff = 0
