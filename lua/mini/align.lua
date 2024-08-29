@@ -1726,7 +1726,7 @@ H.region_get_text = function(region, mode)
 
   if mode == 'block' then
     -- Use virtual columns to respect multibyte characters
-    local left_virtcol, right_virtcol = H.region_virtcols(region)
+    local left_virtcol, right_virtcol = H.block_region_virtcols(region)
 
     local ret = {}
     for line = from.line, to.line do
@@ -1763,7 +1763,7 @@ H.region_set_text = function(region, mode, text)
     end
 
     -- Use virtual columns to respect multibyte characters
-    local left_virtcol, right_virtcol = H.region_virtcols(region)
+    local left_virtcol, right_virtcol = H.block_region_virtcols(region)
     for i = 1, to.line - from.line + 1 do
       -- Use zero-based indexes
       local line_num = from.line + i - 2
@@ -1779,23 +1779,33 @@ H.region_set_text = function(region, mode, text)
   end
 end
 
-H.region_virtcols = function(region)
+H.block_region_virtcols = function(region)
+  local to_col = region.to.col
+
+  -- A blockwise exclusive selection includes the start corner (lower byte offset)
+  -- and extends to the left edge of the character at the end corner, so only
+  -- exclude the rightmost column if the end corner is on the right edge and
+  -- the start corner isn't. Regions are already sorted so only to_col matters.
+  if vim.o.selection == 'exclusive' and to_col > region.from.col then to_col = to_col - 1 end
+
   -- Account for multibyte characters and position past the line end
-  local from_virtcol = H.pos_to_virtcol(region.from)
-  local to_virtcol = H.pos_to_virtcol(region.to)
+  local from_l, from_r = H.pos_to_virtcol(region.from)
+  local to_l, to_r = H.pos_to_virtcol({ line = region.to.line, col = to_col })
 
-  local left_virtcol, right_virtcol = math.min(from_virtcol, to_virtcol), math.max(from_virtcol, to_virtcol)
-  right_virtcol = right_virtcol - (vim.o.selection == 'exclusive' and 1 or 0)
-
-  return left_virtcol, right_virtcol
+  local virtcols = { from_l, from_r, to_l, to_r }
+  return math.min(unpack(virtcols)), math.max(unpack(virtcols))
 end
 
+-- Returns the inclusive virtual column bounds of the character at pos
 H.pos_to_virtcol = function(pos)
   -- Account for position past line end
   local eol_col = vim.fn.col({ pos.line, '$' })
-  if eol_col < pos.col then return vim.fn.virtcol({ pos.line, '$' }) + pos.col - eol_col end
+  if eol_col < pos.col then
+    local col = vim.fn.virtcol({ pos.line, '$' }) + pos.col - eol_col
+    return col, col
+  end
 
-  return vim.fn.virtcol({ pos.line, pos.col })
+  return unpack(vim.fn.virtcol({ pos.line, pos.col }, true))
 end
 
 -- Returns the 0-based byte index after the last byte
