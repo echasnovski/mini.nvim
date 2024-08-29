@@ -45,11 +45,22 @@
 ---   `<C-Space>`) or fallback completion via
 ---   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 ---
+--- - Highlighting of LSP kind (like "Function", "Keyword", etc.).
+---   Requires enabled |MiniIcons| (uses its "lsp" category) and Neovim>=0.11.
+---
 --- What it doesn't do:
 --- - Snippet expansion.
 --- - Many configurable sources.
 --- - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
 ---   variable user expectations. See 'Helpful key mappings' for suggestions.
+---
+--- # Dependencies ~
+---
+--- Suggested dependencies (provide extra functionality, will work without them):
+---
+--- - Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
+---   Otherwise there is no special highlighting.
+---   Also take a look at |MiniIcons.tweak_lsp_kind()|.
 ---
 --- # Setup ~
 ---
@@ -850,6 +861,9 @@ H.is_lsp_current = function(cache, id) return cache.lsp.id == id and cache.lsp.s
 H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   if vim.tbl_count(items) == 0 then return {} end
 
+  local item_kinds = vim.lsp.protocol.CompletionItemKind
+  local get_kind_hl = H.make_get_lsp_hl()
+
   local res = {}
   local docs, info
   for _, item in pairs(items) do
@@ -862,7 +876,8 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     table.insert(res, {
       word = H.get_completion_word(item),
       abbr = item.label,
-      kind = vim.lsp.protocol.CompletionItemKind[item.kind] or 'Unknown',
+      kind = item_kinds[item.kind] or 'Unknown',
+      kind_hlgroup = get_kind_hl(item.kind),
       menu = item.detail or '',
       info = info,
       icase = 1,
@@ -872,6 +887,27 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     })
   end
   return res
+end
+
+H.make_get_lsp_hl = function()
+  if _G.MiniIcons == nil then return function() return nil end end
+
+  -- Account for possible effect of `MiniIcons.tweak_lsp_kind()` which modifies
+  -- only array part of `CompletionItemKind` but not "map" part
+  if H.kind_map == nil then
+    -- Cache kind map so as to not recompute it each time (as it will be called
+    -- in performance sensitive context). Assumes `tweak_lsp_kind()` is called
+    -- right after `require('mini.icons').setup()`.
+    H.kind_map = {}
+    for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
+      if type(k) == 'string' and type(v) == 'number' then H.kind_map[v] = k end
+    end
+  end
+
+  return function(num_kind)
+    local _, hl, is_default = _G.MiniIcons.get('lsp', H.kind_map[num_kind] or 'Unknown')
+    return not is_default and hl or nil
+  end
 end
 
 H.get_completion_word = function(item)

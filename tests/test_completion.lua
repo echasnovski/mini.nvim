@@ -889,4 +889,55 @@ T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   end,
 })
 
+T['Integrations'] = new_set()
+
+T['Integrations']['mini.icons'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.set_size(10, 40)
+      child.lua('MiniCompletion.config.delay.completion = 100000')
+
+      child.lua([[
+        require('mini.icons').setup()
+
+        -- Wrap to be able to track calls (as there is no API to test actually
+        -- set highlight group)
+        _G.icons_get_log = {}
+        local get_orig = MiniIcons.get
+        MiniIcons.get = function(...)
+          table.insert(_G.icons_get_log, { ... })
+          return get_orig(...)
+        end
+      ]])
+
+      -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
+      new_buffer()
+      -- Mock LSP with one unknown kind
+      mock_lsp()
+      child.lua('_G.Months.items[7].kind = 100')
+    end,
+  },
+})
+
+T['Integrations']['mini.icons']['highlights LSP kind'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
+
+  type_keys('i', 'J', '<C-Space>')
+  -- Should not add highlightingn to the unknown kinds
+  child.expect_screenshot()
+  eq(child.lua_get('_G.icons_get_log'), { { 'lsp', 'Text' }, { 'lsp', 'Function' }, { 'lsp', 'Unknown' } })
+end
+
+T['Integrations']['mini.icons']['works after `MiniIcons.tweak_lsp_kind()`'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
+
+  child.lua('MiniIcons.tweak_lsp_kind()')
+  child.lua('_G.icons_get_log = {}')
+
+  type_keys('i', 'J', '<C-Space>')
+  -- Should not add highlightingn to the unknown kinds
+  child.expect_screenshot()
+  eq(child.lua_get('_G.icons_get_log'), { { 'lsp', 'Text' }, { 'lsp', 'Function' }, { 'lsp', 'Unknown' } })
+end
+
 return T

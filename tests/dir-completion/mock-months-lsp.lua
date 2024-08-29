@@ -2,7 +2,7 @@ _G.Months = {}
 
 --stylua: ignore start
 Months.items = {
-  { name = 'January',   kind = 1},
+  { name = 'January',   kind = 1 },
   { name = 'February',  kind = 1 },
   { name = 'March',     kind = 2 },
   { name = 'April',     kind = 2 },

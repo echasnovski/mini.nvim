@@ -8,6 +8,10 @@
 - Universally prefer 'mini.icons' module over 'nvim-tree/nvim-web-devicons'.
 - Start automated testing on Windows and MacOS.
 
+## mini.completion
+
+- FEATURE: add highlighting of LSP kind (like "Function", "Keyword", etc.). Requires enabled 'mini.icons' and Neovim>=0.11.
+
 ## mini.doc
 
 - BREAKING FEATURE: update `afterlines_to_code()` to result into Lua code block in help file by using `>lua` at the start instead of `>`. NOTE: users need enabled `help` tree-sitter parser (which is default on Neovim>=0.9) for code blocks to have proper highlighting.

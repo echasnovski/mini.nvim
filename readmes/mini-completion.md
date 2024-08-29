@@ -35,6 +35,13 @@ https://user-images.githubusercontent.com/24854248/173044355-90bfc230-70c4-4932-
 - Automatic display in floating window of completion item info (via 'completionItem/resolve' request) and signature help (with highlighting of active parameter if LSP server provides such information).
 - Automatic actions are done after some configurable amount of delay. This reduces computational load and allows fast typing (completion and signature help) and item selection (item info)
 - User can force two-stage completion via or fallback completion.
+- Highlighting of LSP kind (like "Function", "Keyword", etc.). Requires enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) (uses its "lsp" category) and Neovim>=0.11.
+
+## Dependencies
+
+For full experience needs (still works without any of suggestions):
+
+- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to highlight LSP kind (requires Neovim>=0.11). Otherwise there is no special highlighting. Also take a look at `MiniIcons.tweak_lsp_kind()`.
 
 ## Installation
 

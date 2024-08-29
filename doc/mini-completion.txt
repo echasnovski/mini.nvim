@@ -45,11 +45,22 @@ Features:
   `<C-Space>`) or fallback completion via
   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 
+- Highlighting of LSP kind (like "Function", "Keyword", etc.).
+  Requires enabled |MiniIcons| (uses its "lsp" category) and Neovim>=0.11.
+
 What it doesn't do:
 - Snippet expansion.
 - Many configurable sources.
 - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
   variable user expectations. See 'Helpful key mappings' for suggestions.
+
+# Dependencies ~
+
+Suggested dependencies (provide extra functionality, will work without them):
+
+- Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
+  Otherwise there is no special highlighting.
+  Also take a look at |MiniIcons.tweak_lsp_kind()|.
 
 # Setup ~
 
