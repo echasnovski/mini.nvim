@@ -1657,7 +1657,7 @@ H.process_current_region = function(lines_were_set, mode, opts, steps)
   -- is processed during preview. Otherwise there might be problems with
   -- getting "current" regions in Normal mode as necessary marks (`[` and `]`)
   -- can be not valid.
-  local region = H.cache.region or H.get_current_region()
+  local region = H.cache.region or H.get_current_region(mode)
   H.cache.region = region
 
   -- Enrich options
@@ -1682,17 +1682,29 @@ H.process_current_region = function(lines_were_set, mode, opts, steps)
   return true
 end
 
-H.get_current_region = function()
-  local from_expr, to_expr = "'[", "']"
+H.get_current_region = function(mode)
+  local from_pos, to_pos
   if H.is_visual_mode() then
-    from_expr, to_expr = '.', 'v'
+    from_pos = vim.fn.getpos('v')
+    to_pos = vim.fn.getcurpos()
+  elseif mode == 'block' then
+    local old_curpos = vim.fn.getcurpos()
+    vim.cmd('silent! normal! gv')
+    from_pos = vim.fn.getpos('v')
+    to_pos = vim.fn.getcurpos()
+    vim.cmd('silent! normal! \27')
+    vim.fn.setpos('.', old_curpos)
+  else
+    from_pos = vim.fn.getpos("'[")
+    to_pos = vim.fn.getpos("']")
   end
 
   -- Add offset (*_pos[4]) to allow position go past end of line
-  local from_pos = vim.fn.getpos(from_expr)
   local from = { line = from_pos[2], col = from_pos[3] + from_pos[4] }
-  local to_pos = vim.fn.getpos(to_expr)
   local to = { line = to_pos[2], col = to_pos[3] + to_pos[4] }
+
+  -- True if selection extends to EOL, such as after <C-v>$
+  if mode == 'block' and to_pos[5] == vim.v.maxcol then to.col = to_pos[5] end
 
   -- Ensure correct order
   if to.line < from.line or (to.line == from.line and to.col < from.col) then
