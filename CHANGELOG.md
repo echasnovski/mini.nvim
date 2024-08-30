@@ -10,7 +10,7 @@
 
 ## mini.completion
 
-- FEATURE: add highlighting of LSP kind (like "Function", "Keyword", etc.). Requires enabled 'mini.icons' and Neovim>=0.11.
+- FEATURE: add highlighting of LSP kind (like "Function", "Keyword", etc.). Works only on Neovim>=0.11. Requires enabled 'mini.icons' to work out of the box.
 
 ## mini.doc
 

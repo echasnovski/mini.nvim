@@ -45,8 +45,10 @@ Features:
   `<C-Space>`) or fallback completion via
   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 
-- Highlighting of LSP kind (like "Function", "Keyword", etc.).
-  Requires enabled |MiniIcons| (uses its "lsp" category) and Neovim>=0.11.
+- LSP kind highlighting ("Function", "Keyword", etc.). Requires Neovim>=0.11.
+  By default uses "lsp" category of |MiniIcons| (if enabled). Can be customized
+  via `config.lsp_completion.process_items` by adding field <kind_hlgroup>
+  (same meaning as in |complete-items|) to items.
 
 What it doesn't do:
 - Snippet expansion.
@@ -59,7 +61,7 @@ What it doesn't do:
 Suggested dependencies (provide extra functionality, will work without them):
 
 - Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
-  Otherwise there is no special highlighting.
+  Otherwise |MiniCompletion.default_process_items()| does not add highlighting.
   Also take a look at |MiniIcons.tweak_lsp_kind()|.
 
 # Setup ~
@@ -210,12 +212,10 @@ Default values:
       -- on every `BufEnter` event.
       auto_setup = true,
 
-      -- `process_items` should be a function which takes LSP
-      -- 'textDocument/completion' response items and word to complete. Its
-      -- output should be a table of the same nature as input items. The most
-      -- common use-cases are custom filtering and sorting. You can use
-      -- default `process_items` as `MiniCompletion.default_process_items()`.
-      process_items = --<function: filters out snippets; sorts by LSP specs>,
+      -- A function which takes LSP 'textDocument/completion' response items
+      -- and word to complete. Output should be a table of the same nature as
+      -- input items. Common use case is custom filter/sort.
+      process_items = --<function: MiniCompletion.default_process_items>,
     },
 
     -- Fallback action. It will always be run in Insert mode. To use Neovim's
@@ -279,6 +279,11 @@ No need to use it directly, everything is setup in |MiniCompletion.setup|.
                                         *MiniCompletion.default_process_items()*
             `MiniCompletion.default_process_items`({items}, {base})
 Default `MiniCompletion.config.lsp_completion.process_items`
+
+Steps:
+- Filter out items not matching `base` and snippet items.
+- Sort by LSP specification.
+- If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

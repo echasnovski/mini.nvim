@@ -21,6 +21,15 @@ local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
+local mock_miniicons = function()
+  child.lua([[
+    require('mini.icons').setup()
+    local _, hl_text = MiniIcons.get('lsp', 'Text')
+    local _, hl_function = MiniIcons.get('lsp', 'Function')
+    _G.ref_hlgroup = { text = hl_text, func = hl_function}
+  ]])
+end
+
 -- NOTE: this can't show "what filtered text is actually shown in window".
 -- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
@@ -206,6 +215,63 @@ end
 T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
   child.cmd('colorscheme blue')
   expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
+end
+
+T['default_process_items()'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Mock LSP items
+      child.lua([[
+        _G.items = {
+          { kind = 1,   label = "January",  sortText = "001" },
+          { kind = 2,   label = "May",      sortText = "005" },
+          { kind = 2,   label = "March",    sortText = "003" },
+          { kind = 2,   label = "April",    sortText = "004" },
+          { kind = 1,   label = "February", sortText = "002" },
+          -- Unknown kind
+          { kind = 100, label = "July",     sortText = "007" },
+          { kind = 3,   label = "June",     sortText = "006" },
+        }
+      ]])
+    end,
+  },
+})
+
+T['default_process_items()']['works'] = function()
+  local ref_processed_items = {
+    { kind = 2, label = 'March', sortText = '003' },
+    { kind = 2, label = 'May', sortText = '005' },
+  }
+  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "M")'), ref_processed_items)
+end
+
+T['default_process_items()']["highlights LSP kind if 'mini.icons' is enabled"] = function()
+  mock_miniicons()
+  local ref_hlgroup = child.lua_get('_G.ref_hlgroup')
+  local ref_processed_items = {
+    { kind = 1, kind_hlgroup = ref_hlgroup.text, label = 'January', sortText = '001' },
+    { kind = 3, kind_hlgroup = ref_hlgroup.func, label = 'June', sortText = '006' },
+    -- Unknown kind should not get highlighted
+    { kind = 100, kind_hlgroup = nil, label = 'July', sortText = '007' },
+  }
+  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "J")'), ref_processed_items)
+
+  -- Should not modify original items
+  eq(child.lua_get('_G.items[1].kind_hlgroup'), vim.NIL)
+end
+
+T['default_process_items()']['works after `MiniIcons.tweak_lsp_kind()`'] = function()
+  mock_miniicons()
+  child.lua('MiniIcons.tweak_lsp_kind()')
+
+  local ref_hlgroup = child.lua_get('_G.ref_hlgroup')
+  local ref_processed_items = {
+    { kind = 1, kind_hlgroup = ref_hlgroup.text, label = 'January', sortText = '001' },
+    { kind = 3, kind_hlgroup = ref_hlgroup.func, label = 'June', sortText = '006' },
+    -- Unknown kind should not get highlighted
+    { kind = 100, kind_hlgroup = nil, label = 'July', sortText = '007' },
+  }
+  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "J")'), ref_processed_items)
 end
 
 -- Integration tests ==========================================================
@@ -560,6 +626,26 @@ T['Manual completion']['respects `filterText` from LSP response'] = function()
   eq(get_cursor(), { 1, 13 })
 end
 
+T['Manual completion']['respects `kind_hlgroup` as item field'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
+  child.set_size(10, 40)
+  set_lines({})
+
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      local res = vim.tbl_filter(function(x) return vim.startswith(x.label, base) end, items)
+      table.sort(res, function(a, b) return a.sortText < b.sortText end)
+      for _, item in ipairs(res) do
+        if item.label == 'January' then item.kind_hlgroup = 'String' end
+        if item.label == 'June' then item.kind_hlgroup = 'Comment' end
+      end
+      return res
+    end
+  ]])
+  type_keys('i', 'J', '<C-Space>')
+  child.expect_screenshot()
+end
+
 T['Manual completion']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
@@ -888,56 +974,5 @@ T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
     eq(#get_floating_windows(), 0)
   end,
 })
-
-T['Integrations'] = new_set()
-
-T['Integrations']['mini.icons'] = new_set({
-  hooks = {
-    pre_case = function()
-      child.set_size(10, 40)
-      child.lua('MiniCompletion.config.delay.completion = 100000')
-
-      child.lua([[
-        require('mini.icons').setup()
-
-        -- Wrap to be able to track calls (as there is no API to test actually
-        -- set highlight group)
-        _G.icons_get_log = {}
-        local get_orig = MiniIcons.get
-        MiniIcons.get = function(...)
-          table.insert(_G.icons_get_log, { ... })
-          return get_orig(...)
-        end
-      ]])
-
-      -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
-      new_buffer()
-      -- Mock LSP with one unknown kind
-      mock_lsp()
-      child.lua('_G.Months.items[7].kind = 100')
-    end,
-  },
-})
-
-T['Integrations']['mini.icons']['highlights LSP kind'] = function()
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
-
-  type_keys('i', 'J', '<C-Space>')
-  -- Should not add highlightingn to the unknown kinds
-  child.expect_screenshot()
-  eq(child.lua_get('_G.icons_get_log'), { { 'lsp', 'Text' }, { 'lsp', 'Function' }, { 'lsp', 'Unknown' } })
-end
-
-T['Integrations']['mini.icons']['works after `MiniIcons.tweak_lsp_kind()`'] = function()
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
-
-  child.lua('MiniIcons.tweak_lsp_kind()')
-  child.lua('_G.icons_get_log = {}')
-
-  type_keys('i', 'J', '<C-Space>')
-  -- Should not add highlightingn to the unknown kinds
-  child.expect_screenshot()
-  eq(child.lua_get('_G.icons_get_log'), { { 'lsp', 'Text' }, { 'lsp', 'Function' }, { 'lsp', 'Unknown' } })
-end
 
 return T

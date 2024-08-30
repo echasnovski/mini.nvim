@@ -45,8 +45,10 @@
 ---   `<C-Space>`) or fallback completion via
 ---   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
 ---
---- - Highlighting of LSP kind (like "Function", "Keyword", etc.).
----   Requires enabled |MiniIcons| (uses its "lsp" category) and Neovim>=0.11.
+--- - LSP kind highlighting ("Function", "Keyword", etc.). Requires Neovim>=0.11.
+---   By default uses "lsp" category of |MiniIcons| (if enabled). Can be customized
+---   via `config.lsp_completion.process_items` by adding field <kind_hlgroup>
+---   (same meaning as in |complete-items|) to items.
 ---
 --- What it doesn't do:
 --- - Snippet expansion.
@@ -59,7 +61,7 @@
 --- Suggested dependencies (provide extra functionality, will work without them):
 ---
 --- - Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
----   Otherwise there is no special highlighting.
+---   Otherwise |MiniCompletion.default_process_items()| does not add highlighting.
 ---   Also take a look at |MiniIcons.tweak_lsp_kind()|.
 ---
 --- # Setup ~
@@ -263,12 +265,10 @@ MiniCompletion.config = {
     -- on every `BufEnter` event.
     auto_setup = true,
 
-    -- `process_items` should be a function which takes LSP
-    -- 'textDocument/completion' response items and word to complete. Its
-    -- output should be a table of the same nature as input items. The most
-    -- common use-cases are custom filtering and sorting. You can use
-    -- default `process_items` as `MiniCompletion.default_process_items()`.
-    --minidoc_replace_start process_items = --<function: filters out snippets; sorts by LSP specs>,
+    -- A function which takes LSP 'textDocument/completion' response items
+    -- and word to complete. Output should be a table of the same nature as
+    -- input items. Common use case is custom filter/sort.
+    --minidoc_replace_start process_items = --<function: MiniCompletion.default_process_items>,
     process_items = function(items, base)
       local res = vim.tbl_filter(function(item)
         -- Keep items which match the base and are not snippets
@@ -276,7 +276,16 @@ MiniCompletion.config = {
         return vim.startswith(text, base) and item.kind ~= 15
       end, items)
 
+      res = vim.deepcopy(res)
       table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
+
+      -- Possibly add "kind" highlighting
+      if _G.MiniIcons ~= nil then
+        local add_kind_hlgroup = H.make_add_kind_hlgroup()
+        for _, item in ipairs(res) do
+          add_kind_hlgroup(item)
+        end
+      end
 
       return res
     end,
@@ -421,6 +430,11 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
 end
 
 --- Default `MiniCompletion.config.lsp_completion.process_items`
+---
+--- Steps:
+--- - Filter out items not matching `base` and snippet items.
+--- - Sort by LSP specification.
+--- - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 MiniCompletion.default_process_items = function(items, base)
   return H.default_config.lsp_completion.process_items(items, base)
 end
@@ -861,15 +875,11 @@ H.is_lsp_current = function(cache, id) return cache.lsp.id == id and cache.lsp.s
 H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   if vim.tbl_count(items) == 0 then return {} end
 
-  local item_kinds = vim.lsp.protocol.CompletionItemKind
-  local get_kind_hl = H.make_get_lsp_hl()
-
-  local res = {}
-  local docs, info
+  local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   for _, item in pairs(items) do
     -- Documentation info
-    docs = item.documentation
-    info = H.table_get(docs, { 'value' })
+    local docs = item.documentation
+    local info = H.table_get(docs, { 'value' })
     if not info and type(docs) == 'string' then info = docs end
     info = info or ''
 
@@ -877,7 +887,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
       word = H.get_completion_word(item),
       abbr = item.label,
       kind = item_kinds[item.kind] or 'Unknown',
-      kind_hlgroup = get_kind_hl(item.kind),
+      kind_hlgroup = item.kind_hlgroup,
       menu = item.detail or '',
       info = info,
       icase = 1,
@@ -889,9 +899,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   return res
 end
 
-H.make_get_lsp_hl = function()
-  if _G.MiniIcons == nil then return function() return nil end end
-
+H.make_add_kind_hlgroup = function()
   -- Account for possible effect of `MiniIcons.tweak_lsp_kind()` which modifies
   -- only array part of `CompletionItemKind` but not "map" part
   if H.kind_map == nil then
@@ -904,9 +912,9 @@ H.make_get_lsp_hl = function()
     end
   end
 
-  return function(num_kind)
-    local _, hl, is_default = _G.MiniIcons.get('lsp', H.kind_map[num_kind] or 'Unknown')
-    return not is_default and hl or nil
+  return function(item)
+    local _, hl, is_default = _G.MiniIcons.get('lsp', H.kind_map[item.kind] or 'Unknown')
+    item.kind_hlgroup = not is_default and hl or nil
   end
 end
 
