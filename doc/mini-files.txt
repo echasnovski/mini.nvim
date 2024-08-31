@@ -820,7 +820,8 @@ Return ~
     shown in the window) fields.
 
 See also ~
-|MiniFiles.set_target_window()|
+- |MiniFiles.set_target_window()|
+- |MiniFiles.set_branch()|
 
 ------------------------------------------------------------------------------
                                                  *MiniFiles.get_target_window()*
@@ -836,6 +837,26 @@ Set target window
 
 Parameters ~
 {win_id} `(number)` Window identifier inside which file will be opened.
+
+------------------------------------------------------------------------------
+                                                        *MiniFiles.set_branch()*
+                    `MiniFiles.set_branch`({branch}, {opts})
+Set branch
+
+Set which paths to display. Preview (if enabled) is applied afterwards.
+
+Parameters ~
+{branch} `(table)` Array of strings representing actually present on disk paths.
+  Each consecutive pair should represent direct parent-child paths.
+  Should contain at least one directory path.
+  May end with file path (will be previwed).
+  Relative paths are resolved using |current-directory|.
+{opts} `(table|nil)` Options. Possible fields:
+  - <depth_focus> `(number)` - an index in `branch` for path to focus. Will
+    be normalized to fit inside `branch`. Default: index of deepest directory.
+
+See also ~
+|MiniFiles.get_explorer_state()|
 
 ------------------------------------------------------------------------------
                                                    *MiniFiles.get_latest_path()*

@@ -1006,7 +1006,8 @@ end
 ---     Each element is a table with <win_id> (window identifier) and <path> (path
 ---     shown in the window) fields.
 ---
----@seealso |MiniFiles.set_target_window()|
+---@seealso - |MiniFiles.set_target_window()|
+--- - |MiniFiles.set_branch()|
 MiniFiles.get_explorer_state = function()
   local explorer = H.explorer_get()
   if explorer == nil then return end
@@ -1051,6 +1052,49 @@ MiniFiles.set_target_window = function(win_id)
   if explorer == nil then return end
 
   explorer.target_window = win_id
+end
+
+--- Set branch
+---
+--- Set which paths to display. Preview (if enabled) is applied afterwards.
+---
+---@param branch table Array of strings representing actually present on disk paths.
+---   Each consecutive pair should represent direct parent-child paths.
+---   Should contain at least one directory path.
+---   May end with file path (will be previwed).
+---   Relative paths are resolved using |current-directory|.
+---@param opts table|nil Options. Possible fields:
+---   - <depth_focus> `(number)` - an index in `branch` for path to focus. Will
+---     be normalized to fit inside `branch`. Default: index of deepest directory.
+---
+---@seealso |MiniFiles.get_explorer_state()|
+MiniFiles.set_branch = function(branch, opts)
+  local explorer = H.explorer_get()
+  if explorer == nil then return end
+
+  -- Validate and normalize input
+  branch = H.validate_branch(branch)
+  opts = opts or {}
+  local depth_focus = opts.depth_focus or math.huge
+  if type(depth_focus) ~= 'number' then H.error('`depth_focus` should be a number') end
+  local max_depth = #branch - (H.fs_get_type(branch[#branch]) == 'file' and 1 or 0)
+  depth_focus = math.min(math.max(math.floor(depth_focus), 1), max_depth)
+
+  -- Set data and ensure cursors are on child entries
+  explorer.branch, explorer.depth_focus = branch, depth_focus
+  for i = 1, #branch - 1 do
+    local parent, child = branch[i], H.fs_get_basename(branch[i + 1])
+    local parent_view = explorer.views[parent] or {}
+    parent_view.cursor = child
+    explorer.views[parent] = parent_view
+  end
+
+  -- Skip update cursors, as they are already set
+  H.explorer_refresh(explorer, { skip_update_cursor = true })
+  -- Refresh second time to ensure that preview is shown. Doing that in other
+  -- way is not really feasible, as it requires knowing cursor at deepest path,
+  -- which might not yet be set before first refresh.
+  H.explorer_refresh(explorer)
 end
 
 --- Get latest used anchor path
@@ -2703,6 +2747,25 @@ H.validate_line = function(buf_id, x)
   return x
 end
 
+H.validate_branch = function(x)
+  if not (H.islist(x) and x[1] ~= nil) then H.error('`branch` should be array with at least one element') end
+  local res = {}
+  for i, p in ipairs(x) do
+    if type(p) ~= 'string' then H.error('`branch` contains not string: ' .. vim.inspect(p)) end
+    p = H.fs_full_path(p)
+    if not H.fs_is_present_path(p) then H.error('`branch` contains not present path: ' .. vim.inspect(p)) end
+    res[i] = p
+  end
+  for i = 2, #res do
+    local parent, child = res[i - 1], res[i]
+    if (parent .. '/' .. child:match('[^/]+$')) ~= res[i] then
+      H.error('`branch` contains not a parent-child pair: ' .. vim.inspect(parent) .. ' and ' .. vim.inspect(child))
+    end
+  end
+  if #res == 1 and H.fs_get_type(res[1]) == 'file' then H.error('`branch` should contain at least one directory') end
+  return res
+end
+
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error(string.format('(mini.files) %s', msg), 0) end
 
@@ -2742,5 +2805,8 @@ H.get_first_valid_normal_window = function()
     if vim.api.nvim_win_get_config(win_id).relative == '' then return win_id end
   end
 end
+
+-- TODO: Remove after compatibility with Neovim=0.9 is dropped
+H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 return MiniFiles

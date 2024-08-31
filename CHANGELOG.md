@@ -42,6 +42,7 @@
 - FEATURE: make data for `MiniFilesActionDelete` contain `to` field in case of not permanent delete.
 - FEATURE: make file manipulation work better for special complex/overlapping cases (like delete 'file-a' and copy 'file-b' as 'file-a'). It is **still** a better idea to split overlapping manipulations into smaller and not related steps, as there *are* cases which won't work.
 - FEATURE: add `get_explorer_state()` to allow more reliable user customizations.
+- FEATURE: add `set_branch()` to allow to set what paths should be displayed and focused.
 - BREAKING: soft deprecate `get_target_window()` in favor of `get_explorer_state().target_window`. Will be completely removed after the next release.
 - BREAKING: update how confirmation lines are computed:
     - Show create actions in the group directory where text manipulation took place. This matters during creating nested entries and is usually a more intuitive representation.

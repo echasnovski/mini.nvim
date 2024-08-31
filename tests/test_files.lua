@@ -124,6 +124,10 @@ local trim_left = forward_lua('MiniFiles.trim_left')
 local trim_right = forward_lua('MiniFiles.trim_right')
 local get_explorer_state = forward_lua('MiniFiles.get_explorer_state')
 
+local get_visible_paths = function()
+  return vim.tbl_map(function(x) return x.path end, get_explorer_state().windows)
+end
+
 -- Extmark helper
 local get_extmarks_hl = function()
   local ns_id = child.api.nvim_get_namespaces()['MiniFilesHighlight']
@@ -1848,6 +1852,192 @@ end
 
 T['set_target_window()']['works when no explorer is opened'] = function()
   expect.no_error(function() set_target_window(child.api.nvim_get_current_win()) end)
+end
+
+T['set_branch()'] = new_set()
+
+local set_branch = forward_lua('MiniFiles.set_branch')
+local get_branch = function() return (get_explorer_state() or {}).branch end
+local get_depth_focus = function() return (get_explorer_state() or {}).depth_focus end
+
+T['set_branch()']['works'] = function()
+  child.set_size(12, 30)
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
+  open()
+
+  local path = full_path(test_dir_path)
+  set_branch({ path })
+  eq(get_branch(), { path })
+  eq(get_depth_focus(), 1)
+  child.expect_screenshot()
+
+  -- More than one path
+  set_branch({ path, path .. '/a-dir' })
+  eq(get_branch(), { path, path .. '/a-dir' })
+  -- - Should set default focus on deepest directory
+  eq(get_depth_focus(), 2)
+  -- - Should set full branch although it might not be visible fully
+  child.expect_screenshot()
+
+  -- - Changing instance width should show more of branch
+  child.set_size(12, 40)
+  child.expect_screenshot()
+end
+
+T['set_branch()']['works with file path in branch'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
+  child.set_size(12, 40)
+  local anchor = child.fn.getcwd()
+  open(anchor)
+
+  local real_dir = make_test_path('real')
+  set_branch({ real_dir, real_dir .. '/LICENSE' })
+  -- Width of 'LICENSE' window is `width_nofocus` because preview is disabled
+  child.expect_screenshot()
+  -- - Should show file preview even though preview is not enabled
+  eq(get_branch(), { real_dir, real_dir .. '/LICENSE' })
+  -- - Should set default focus on deepest directory
+  eq(get_depth_focus(), 1)
+  -- - Should position cursor on child entry
+  eq(get_fs_entry().name, 'LICENSE')
+
+  close()
+
+  -- Should use `width_preview` when preview is enabled
+  child.lua('MiniFiles.config.windows.preview = true')
+  open(anchor, false)
+  set_branch({ real_dir, real_dir .. '/LICENSE' })
+  child.expect_screenshot()
+end
+
+T['set_branch()']['works with preview'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
+  child.set_size(12, 40)
+  child.lua('MiniFiles.config.windows.preview = true')
+  open()
+
+  -- Preview should be applied after setting branch
+  local path = full_path(test_dir_path)
+  set_branch({ path })
+  eq(get_branch(), { path, get_fs_entry().path })
+  eq(get_depth_focus(), 1)
+  child.expect_screenshot()
+end
+
+T['set_branch()']['works with not absolute paths'] = function()
+  open()
+
+  -- Using `~` for home directory should be allowed
+  set_branch({ '~' })
+  eq(get_explorer_state().branch, { full_path(child.loop.os_homedir()) })
+
+  -- Relative paths should be resolved against current working directory
+  local nested = make_test_path('nested')
+  child.fn.chdir(nested)
+  set_branch({ '.', './dir-1' })
+  eq(get_explorer_state().branch, { nested, nested .. '/dir-1' })
+
+  -- The ".." should also be resolved (but supported only on Neovim>=0.10)
+  if child.fn.has('nvim-0.10') == 1 then
+    set_branch({ '..' })
+    eq(get_explorer_state().branch, { full_path(test_dir) })
+  end
+end
+
+T['set_branch()']['sets cursors on child entries'] = function()
+  child.set_size(12, 180)
+  local root = full_path(test_dir)
+  local root_parent = child.fn.fnamemodify(root, ':h')
+
+  open(root_parent)
+  local branch = { root, root .. '/nested', root .. '/nested/dir-1', root .. '/nested/dir-1/dir-12' }
+  set_branch(branch)
+  eq(get_branch(), branch)
+  eq(get_visible_paths(), branch)
+
+  local cursor_lines = vim.tbl_map(function(x)
+    local lnum = child.api.nvim_win_get_cursor(x.win_id)[1]
+    return child.fn.getbufline(child.api.nvim_win_get_buf(x.win_id), lnum)[1]:match('[\\/]([^\\/]+)$')
+  end, get_explorer_state().windows)
+  eq(cursor_lines, { 'nested', 'dir-1', 'dir-12', 'file-121' })
+end
+
+T['set_branch()']['respects previously set cursors'] = function()
+  local nested = make_test_path('nested')
+  local path = join_path(nested, 'dir-1')
+  open(path)
+  type_keys('G')
+  eq(child.fn.line('.'), 2)
+
+  -- Inside visible window
+  go_out()
+  eq(get_visible_paths(), { nested, path })
+  set_branch({ path })
+  eq(get_branch(), { path })
+  eq(child.fn.line('.'), 2)
+
+  -- Not inside visible window
+  go_out()
+  go_out()
+  type_keys('j')
+  eq(get_visible_paths(), { full_path(test_dir) })
+  set_branch({ path })
+  eq(get_branch(), { path })
+  eq(child.fn.line('.'), 2)
+end
+
+T['set_branch()']['respects `opts.depth_focus`'] = function()
+  open()
+  local path = full_path(test_dir_path)
+  local branch = { path, path .. '/a-dir', path .. '/a-dir/aa-file' }
+
+  local validate = function(depth_focus, ref_depth_focus)
+    set_branch(branch, { depth_focus = depth_focus })
+    eq(get_branch(), branch)
+    eq(get_depth_focus(), ref_depth_focus)
+  end
+
+  validate(1, 1)
+  eq(get_fs_entry().path, path .. '/a-dir')
+
+  -- Should normalize to fit in branch
+  validate(0, 1)
+  validate(-math.huge, 1)
+
+  -- - Maximum allowed depth is the depth of deepest directory
+  validate(10, 2)
+  validate(math.huge, 2)
+
+  -- - Fractional depth are allowed
+  validate(1.99, 1)
+end
+
+T['set_branch()']['works when no explorer is opened'] = function() eq(set_branch(full_path(test_dir_path)), vim.NIL) end
+
+T['set_branch()']['validates input'] = function()
+  open()
+  local validate = function(branch, opts, err_pattern)
+    expect.error(function() set_branch(branch, opts or {}) end, err_pattern)
+  end
+
+  validate(test_dir, nil, 'array')
+  validate({}, nil, 'at least one element')
+  validate({ -1 }, nil, 'not string.*%-1')
+  validate({ test_dir, -1 }, nil, 'not string.*%-1')
+
+  validate({ test_dir .. '/absent' }, nil, 'not present path.*/absent')
+  validate({ test_dir, test_dir .. '/absent' }, nil, 'not present path.*/absent')
+
+  validate({ test_dir .. '/common', test_dir }, nil, 'parent%-child')
+  validate({ test_dir, test_dir .. '/common/a-dir', test_dir .. '/common' }, nil, 'parent%-child')
+
+  validate({ full_path(test_file_path) }, nil, 'one directory')
 end
 
 T['get_latest_path()'] = new_set()
