@@ -1785,9 +1785,9 @@ T['set_target_window()']['works'] = function()
 
   open(test_file_path)
 
-  eq(get_target_window(), ref_win_id)
+  eq(get_explorer_state().target_window, ref_win_id)
   set_target_window(init_win_id)
-  eq(get_target_window(), init_win_id)
+  eq(get_explorer_state().target_window, init_win_id)
 
   go_in()
   eq(is_file_in_buffer(child.api.nvim_win_get_buf(init_win_id), test_file_path), true)

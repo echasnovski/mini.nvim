@@ -457,18 +457,18 @@
 --- <
 --- # Create mappings to modify target window via split ~
 ---
---- Combine |MiniFiles.get_target_window()| and |MiniFiles.set_target_window()|: >lua
+--- Combine |MiniFiles.get_explorer_state()| and |MiniFiles.set_target_window()|: >lua
 ---
 ---   local map_split = function(buf_id, lhs, direction)
 ---     local rhs = function()
 ---       -- Make new window and set it as target
----       local new_target_window
----       vim.api.nvim_win_call(MiniFiles.get_target_window(), function()
+---       local cur_target = MiniFiles.get_explorer_state().target_window
+---       local new_target = vim.api.nvim_win_call(cur_target, function()
 ---         vim.cmd(direction .. ' split')
----         new_target_window = vim.api.nvim_get_current_win()
+---         return vim.api.nvim_get_current_win()
 ---       end)
 ---
----       MiniFiles.set_target_window(new_target_window)
+---       MiniFiles.set_target_window(new_target)
 ---     end
 ---
 ---     -- Adding `desc` will result into `show_help` entries
@@ -481,8 +481,8 @@
 ---     callback = function(args)
 ---       local buf_id = args.data.buf_id
 ---       -- Tweak keys to your liking
----       map_split(buf_id, 'gs', 'belowright horizontal')
----       map_split(buf_id, 'gv', 'belowright vertical')
+---       map_split(buf_id, '<C-s>', 'belowright horizontal')
+---       map_split(buf_id, '<C-v>', 'belowright vertical')
 ---     end,
 ---   })
 --- <
@@ -1022,14 +1022,15 @@ end
 
 --- Get target window
 ---
----@return number|nil Window identifier inside which file will be opened or
----   `nil` if no explorer is opened.
+--- Deprecated. Use |MiniFiles.get_explorer_state()|.
 MiniFiles.get_target_window = function()
-  local explorer = H.explorer_get()
-  if explorer == nil then return end
-
-  explorer = H.explorer_ensure_target_window(explorer)
-  return explorer.target_window
+  -- TODO: remove after 'mini.nvim' 0.14 release
+  H.notify(
+    "`get_target_window()` is soft deprecated (currently works but will be removed after next 'mini.nvim' release)."
+      .. ' Use `get_explorer_state().target_window` instead. Sorry for the inconvenience.',
+    'WARN'
+  )
+  return (MiniFiles.get_explorer_state() or {}).target_window
 end
 
 --- Set target window
