@@ -1694,8 +1694,11 @@ T['get_explorer_state()']['works'] = function()
   go_in()
   local win_2 = child.api.nvim_get_current_win()
 
+  local ref_branch = { anchor, path_2 }
   local ref_windows = { { win_id = win_1, path = anchor }, { win_id = win_2, path = path_2 } }
-  eq(get_explorer_state(), { anchor = anchor, target_window = ref_target_win, windows = ref_windows })
+  local ref_state =
+    { anchor = anchor, branch = ref_branch, depth_focus = 2, target_window = ref_target_win, windows = ref_windows }
+  eq(get_explorer_state(), ref_state)
 end
 
 T['get_explorer_state()']['works with preview'] = function()
@@ -1712,8 +1715,11 @@ T['get_explorer_state()']['works with preview'] = function()
   end
 
   -- Should show preview as window entry
+  local ref_branch = { anchor, path_preview }
   local ref_windows = { { win_id = win_cur, path = anchor }, { win_id = win_preview, path = path_preview } }
-  eq(get_explorer_state(), { anchor = anchor, target_window = ref_target_win, windows = ref_windows })
+  local ref_state =
+    { anchor = anchor, branch = ref_branch, depth_focus = 1, target_window = ref_target_win, windows = ref_windows }
+  eq(get_explorer_state(), ref_state)
 end
 
 T['get_explorer_state()']['works when explorer is opened with file path'] = function()
@@ -1727,8 +1733,48 @@ T['get_explorer_state()']['works when explorer is opened with file path'] = func
   -- Anchor is always a directory path, parent directory of a file in this case
   eq(state.anchor, file_parent_dir)
 
+  -- Should include file path in branch
+  eq(state.branch, { file_parent_dir, file_full })
+  eq(state.depth_focus, 1)
+
   -- Should show file preview as window entry
   eq(vim.tbl_map(function(x) return x.path end, state.windows), { file_parent_dir, file_full })
+end
+
+T['get_explorer_state()']['works when branch is not fully visible'] = function()
+  child.set_size(10, 40)
+  child.lua('MiniFiles.config.windows.width_focus = 35')
+
+  local test_path = make_test_path('nested')
+  open(test_path)
+  go_in()
+  go_in()
+
+  local ref_branch = { test_path, test_path .. '/dir-1', test_path .. '/dir-1/dir-11' }
+  local validate = function(depth_focus)
+    local state = get_explorer_state()
+    eq(state.branch, ref_branch)
+    eq(state.depth_focus, depth_focus)
+    eq(state.windows, { { win_id = child.api.nvim_get_current_win(), path = ref_branch[depth_focus] } })
+  end
+
+  validate(3)
+  go_out()
+  validate(2)
+  go_out()
+  validate(1)
+end
+
+T['get_explorer_state()']['returns copy of data'] = function()
+  open(test_dir_path)
+  local res = child.lua([[
+    local state = MiniFiles.get_explorer_state()
+    local ref = vim.deepcopy(state)
+    state.branch[1], state.windows[1].win_id = -1, -1
+    local new_state = MiniFiles.get_explorer_state()
+    return vim.deep_equal(new_state, ref)
+  ]])
+  eq(res, true)
 end
 
 T['get_explorer_state()']['works when no explorer is opened'] = function() eq(get_explorer_state(), vim.NIL) end

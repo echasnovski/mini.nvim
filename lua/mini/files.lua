@@ -999,6 +999,8 @@ end
 ---@return table|nil Table with explorer state data or `nil` if no active explorer.
 ---   State data is a table with the following fields:
 ---   - <anchor> `(string)` - anchor directory path (see |MiniFiles.open()|).
+---   - <branch> `(table)` - array of nested paths for currently opened branch.
+---   - <depth_focus> `(number)` - an index in <branch> for currently focused path.
 ---   - <target_window> `(number)` - identifier of target window.
 ---   - <windows> `(table)` - array with data about currently opened windows.
 ---     Each element is a table with <win_id> (window identifier) and <path> (path
@@ -1017,7 +1019,13 @@ MiniFiles.get_explorer_state = function()
     table.insert(windows, { win_id = win_id, path = path })
   end
 
-  return { anchor = explorer.anchor, target_window = explorer.target_window, windows = windows }
+  return {
+    anchor = explorer.anchor,
+    branch = vim.deepcopy(explorer.branch),
+    depth_focus = explorer.depth_focus,
+    target_window = explorer.target_window,
+    windows = windows,
+  }
 end
 
 --- Get target window
