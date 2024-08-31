@@ -804,6 +804,23 @@ Return ~
 Returns `nil` if there is no proper file system entry path at the line.
 
 ------------------------------------------------------------------------------
+                                                *MiniFiles.get_explorer_state()*
+                        `MiniFiles.get_explorer_state`()
+Get state of active explorer
+
+Return ~
+`(table|nil)` Table with explorer state data or `nil` if no active explorer.
+  State data is a table with the following fields:
+  - <anchor> `(string)` - anchor directory path (see |MiniFiles.open()|).
+  - <target_window> `(number)` - identifier of target window.
+  - <windows> `(table)` - array with data about currently opened windows.
+    Each element is a table with <win_id> (window identifier) and <path> (path
+    shown in the window) fields.
+
+See also ~
+|MiniFiles.set_target_window()|
+
+------------------------------------------------------------------------------
                                                  *MiniFiles.get_target_window()*
                         `MiniFiles.get_target_window`()
 Get target window

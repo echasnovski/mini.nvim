@@ -120,6 +120,7 @@ local go_in = forward_lua('MiniFiles.go_in')
 local go_out = forward_lua('MiniFiles.go_out')
 local trim_left = forward_lua('MiniFiles.trim_left')
 local trim_right = forward_lua('MiniFiles.trim_right')
+local get_explorer_state = forward_lua('MiniFiles.get_explorer_state')
 
 -- Extmark helper
 local get_extmarks_hl = function()
@@ -1676,6 +1677,71 @@ T['get_fs_entry()']['validates input'] = function()
 
   open(test_dir_path)
   expect.error(function() get_fs_entry(0, 1000) end, 'line.*valid line number in buffer %d')
+end
+
+T['get_explorer_state()'] = new_set()
+
+T['get_explorer_state()']['works'] = function()
+  child.cmd('belowright vertical split')
+  local ref_target_win = child.api.nvim_get_current_win()
+  local anchor = full_path(test_dir_path)
+
+  open(anchor)
+  local win_1 = child.api.nvim_get_current_win()
+  local path_2 = get_fs_entry().path
+  go_in()
+  local win_2 = child.api.nvim_get_current_win()
+
+  local ref_windows = { { win_id = win_1, path = anchor }, { win_id = win_2, path = path_2 } }
+  eq(get_explorer_state(), { anchor = anchor, target_window = ref_target_win, windows = ref_windows })
+end
+
+T['get_explorer_state()']['works with preview'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  local ref_target_win = child.api.nvim_get_current_win()
+  local anchor = full_path(test_dir_path)
+
+  open(anchor)
+  local win_cur = child.api.nvim_get_current_win()
+  local path_preview = get_fs_entry().path
+  local win_preview
+  for _, win_id in ipairs(child.api.nvim_list_wins()) do
+    if win_id ~= ref_target_win and win_id ~= win_cur then win_preview = win_id end
+  end
+
+  -- Should show preview as window entry
+  local ref_windows = { { win_id = win_cur, path = anchor }, { win_id = win_preview, path = path_preview } }
+  eq(get_explorer_state(), { anchor = anchor, target_window = ref_target_win, windows = ref_windows })
+end
+
+T['get_explorer_state()']['works when explorer is opened with file path'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  local file_full = full_path(test_file_path)
+  local file_parent_dir = file_full:gsub('[\\/][^\\/]-$', '')
+
+  open(file_full)
+  local state = get_explorer_state()
+
+  -- Anchor is always a directory path, parent directory of a file in this case
+  eq(state.anchor, file_parent_dir)
+
+  -- Should show file preview as window entry
+  eq(vim.tbl_map(function(x) return x.path end, state.windows), { file_parent_dir, file_full })
+end
+
+T['get_explorer_state()']['works when no explorer is opened'] = function() eq(get_explorer_state(), vim.NIL) end
+
+T['get_explorer_state()']['ensures valid target window'] = function()
+  local init_win_id = child.api.nvim_get_current_win()
+  child.cmd('belowright vertical split')
+  local ref_win_id = child.api.nvim_get_current_win()
+
+  open(test_dir_path)
+
+  eq(get_explorer_state().target_window, ref_win_id)
+
+  child.api.nvim_win_close(ref_win_id, true)
+  eq(get_explorer_state().target_window, init_win_id)
 end
 
 T['get_target_window()'] = new_set()

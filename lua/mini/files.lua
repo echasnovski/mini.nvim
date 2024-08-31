@@ -994,6 +994,32 @@ MiniFiles.get_fs_entry = function(buf_id, line)
   return H.get_fs_entry_from_path_index(path_id)
 end
 
+--- Get state of active explorer
+---
+---@return table|nil Table with explorer state data or `nil` if no active explorer.
+---   State data is a table with the following fields:
+---   - <anchor> `(string)` - anchor directory path (see |MiniFiles.open()|).
+---   - <target_window> `(number)` - identifier of target window.
+---   - <windows> `(table)` - array with data about currently opened windows.
+---     Each element is a table with <win_id> (window identifier) and <path> (path
+---     shown in the window) fields.
+---
+---@seealso |MiniFiles.set_target_window()|
+MiniFiles.get_explorer_state = function()
+  local explorer = H.explorer_get()
+  if explorer == nil then return end
+
+  H.explorer_ensure_target_window(explorer)
+  local windows = {}
+  for _, win_id in ipairs(explorer.windows) do
+    local buf_id = vim.api.nvim_win_get_buf(win_id)
+    local path = (H.opened_buffers[buf_id] or {}).path
+    table.insert(windows, { win_id = win_id, path = path })
+  end
+
+  return { anchor = explorer.anchor, target_window = explorer.target_window, windows = windows }
+end
+
 --- Get target window
 ---
 ---@return number|nil Window identifier inside which file will be opened or
