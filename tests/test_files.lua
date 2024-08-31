@@ -83,6 +83,8 @@ end
 
 local validate_cur_line = function(x) eq(get_cursor()[1], x) end
 
+local is_explorer_active = function() return child.lua_get('MiniFiles.get_explorer_state() ~= nil') end
+
 local validate_n_wins = function(n) eq(#child.api.nvim_tabpage_list_wins(0), n) end
 
 local validate_fs_entry = function(x)
@@ -311,13 +313,13 @@ T['open()']['works with directory path'] = function()
   open(test_dir_path)
   child.expect_screenshot()
   close()
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
 
   -- Works with absolute path
   open(vim.fn.fnamemodify(test_dir_path, ':p'))
   child.expect_screenshot()
   close()
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
 
   -- Works with trailing slash
   open(test_dir_path .. '/')
@@ -431,7 +433,7 @@ T['open()']['history']['opens from history by default'] = function()
   child.expect_screenshot()
 
   close()
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
   open(test_dir_path)
   -- Should be exactly the same, including cursors
   child.expect_screenshot()
@@ -458,7 +460,7 @@ T['open()']['history']['respects `use_latest`'] = function()
   child.expect_screenshot()
 
   close()
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
   open(test_dir_path, false)
   -- Should be as if opened first time
   child.expect_screenshot()
@@ -567,7 +569,7 @@ T['open()']['normalizes before first refresh when focused on file'] = function()
   -- Prepare explorer state to be opened from history
   open(make_test_path('common'))
   go_in()
-  validate_n_wins(3)
+  eq(is_explorer_active(), true)
   close()
 
   -- Mock `nvim_open_win()`
@@ -592,7 +594,7 @@ end
 T['open()']['normalizes before first refresh when focused on directory with `windows.preview`'] = function()
   -- Prepare explorer state to be opened from history
   open(test_dir_path)
-  validate_n_wins(2)
+  eq(is_explorer_active(), true)
   close()
 
   -- Mock `nvim_open_win()`
@@ -891,7 +893,7 @@ T['open()']['properly closes currently opened explorer'] = function()
   local path_1, path_2 = make_test_path('common'), make_test_path('common/a-dir')
   open(path_1)
   go_in()
-  validate_n_wins(3)
+  eq(is_explorer_active(), true)
 
   -- Should properly close current opened explorer (at least save to history)
   open(path_2)
@@ -927,7 +929,7 @@ T['open()']['tracks lost focus'] = function()
     loose_focus()
     -- Tracking is done by checking every second
     sleep(track_lost_focus_delay + small_time)
-    validate_n_wins(1)
+    eq(is_explorer_active(), false)
     eq(#child.api.nvim_list_bufs(), 1)
   end
 
@@ -943,7 +945,7 @@ T['open()']['tracks lost focus'] = function()
 
   -- Should still be possible to open same explorer afterwards
   open(test_dir_path)
-  validate_n_wins(3)
+  eq(is_explorer_active(), true)
 end
 
 T['open()']['validates input'] = function()
@@ -1186,7 +1188,7 @@ T['close()']['works'] = function()
   child.expect_screenshot()
 
   -- Should close all windows and delete all buffers
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
   eq(#child.api.nvim_list_bufs(), 1)
 end
 
@@ -1291,7 +1293,7 @@ T['go_in()']['respects `opts.close_on_file`'] = function()
   expect.match(child.api.nvim_buf_get_name(0), '%.a%-file$')
   eq(get_lines(), { '.a-file' })
 
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
 end
 
 T['go_in()']['works on files with problematic names'] = function()
@@ -2321,24 +2323,24 @@ T['Mappings'] = new_set()
 T['Mappings']['`close` works'] = function()
   -- Default
   open(test_dir_path)
-  validate_n_wins(2)
+  eq(is_explorer_active(), true)
   type_keys('q')
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
   close()
 
   -- User-supplied
   open(test_dir_path, false, { mappings = { close = 'Q' } })
-  validate_n_wins(2)
+  eq(is_explorer_active(), true)
   type_keys('Q')
-  validate_n_wins(1)
+  eq(is_explorer_active(), false)
   close()
 
   -- Empty
   open(test_dir_path, false, { mappings = { close = '' } })
-  validate_n_wins(2)
+  eq(is_explorer_active(), true)
   -- - Needs second `q` to unblock child process after built-in `q`
   type_keys('q', 'q')
-  validate_n_wins(2)
+  eq(is_explorer_active(), true)
 end
 
 T['Mappings']['`go_in` works'] = function()
@@ -2603,23 +2605,21 @@ T['Mappings']['`reset` works'] = function()
     open(...)
     type_keys('j')
     go_in()
+    validate_n_wins(3)
   end
 
   -- Default
   prepare(test_dir_path)
-  validate_n_wins(3)
   type_keys('<BS>')
   child.expect_screenshot()
 
   -- User-supplied
   prepare(test_dir_path, false, { mappings = { reset = 'Q' } })
-  validate_n_wins(3)
   type_keys('Q')
   child.expect_screenshot()
 
   -- Empty
   prepare(test_dir_path, false, { mappings = { reset = '' } })
-  validate_n_wins(3)
   type_keys('<BS>')
   child.expect_screenshot()
 end
@@ -2661,7 +2661,6 @@ T['Mappings']['`show_help` works'] = function()
 
   -- Default
   open(test_dir_path)
-  validate_n_wins(2)
   type_keys('g?')
   child.expect_screenshot()
   type_keys('q')
@@ -2669,7 +2668,6 @@ T['Mappings']['`show_help` works'] = function()
 
   -- User-supplied
   open(test_dir_path, false, { mappings = { show_help = 'Q' } })
-  validate_n_wins(2)
   type_keys('Q')
   child.expect_screenshot()
   type_keys('q')
@@ -2677,7 +2675,6 @@ T['Mappings']['`show_help` works'] = function()
 
   -- Empty
   open(test_dir_path, false, { mappings = { show_help = '' } })
-  validate_n_wins(2)
   type_keys('g?')
   child.expect_screenshot()
 end
