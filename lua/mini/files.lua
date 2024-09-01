@@ -940,25 +940,18 @@ end
 --- - Prepend branch with parent paths until current working directory is reached.
 ---   Do nothing if not inside it.
 MiniFiles.reveal_cwd = function()
-  local explorer = H.explorer_get()
-  if explorer == nil then return end
+  local state = MiniFiles.get_explorer_state()
+  if state == nil then return end
+  local branch, depth_focus = state.branch, state.depth_focus
 
   local cwd = H.fs_full_path(vim.fn.getcwd())
   local cwd_ancestor_pattern = string.format('^%s/.', vim.pesc(cwd))
-  while explorer.branch[1]:find(cwd_ancestor_pattern) ~= nil do
-    -- Add parent to branch
-    local parent, name = H.fs_get_parent(explorer.branch[1]), H.fs_get_basename(explorer.branch[1])
-    table.insert(explorer.branch, 1, parent)
-
-    explorer.depth_focus = explorer.depth_focus + 1
-
-    -- Set cursor on child entry
-    local parent_view = explorer.views[parent] or {}
-    parent_view.cursor = name
-    explorer.views[parent] = parent_view
+  while branch[1]:find(cwd_ancestor_pattern) ~= nil do
+    table.insert(branch, 1, H.fs_get_parent(branch[1]))
+    depth_focus = depth_focus + 1
   end
 
-  H.explorer_refresh(explorer)
+  MiniFiles.set_branch(branch, { depth_focus = depth_focus })
 end
 
 --- Show help window
