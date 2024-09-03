@@ -20,6 +20,7 @@ Features:
     - Filter/prefix/sort of file system entries.
     - Mappings used for common explorer actions.
     - UI options: whether to show preview of file/directory under cursor, etc.
+    - Bookmarks for quicker navigation.
 
 What it doesn't do:
 - Try to be replacement of system file explorer. It is mostly designed to
@@ -159,6 +160,10 @@ Available built-in actions (see "Details" for more information): >
  |-------------|------|------------------------------------------------|
  | Go out plus |  H   | Focus on parent directory plus extra action    |
  |-------------|------|------------------------------------------------|
+ | Go to mark  |  '   | Jump to bookmark (waits for single key id)     |
+ |-------------|------|------------------------------------------------|
+ | Set mark    |  m   | Set bookmark (waits for single key id)         |
+ |-------------|------|------------------------------------------------|
  | Reset       | <BS> | Reset current explorer                         |
  |-------------|------|------------------------------------------------|
  | Reveal cwd  |  @   | Reset current current working directory        |
@@ -183,6 +188,10 @@ Details:
 
 - "Go out plus" is regular "Go out" but trims right part of branch.
 
+- "Set mark" and "Go to mark" both wait for user to press a single character
+  of a bookmark id. Example: `ma` sets directory path of focused window as
+  bookmark "a"; `'a` jumps (sets as whole branch) to bookmark "a".
+
 - "Reset" focuses only on "anchor" directory (the one used to open current
   explorer) and resets all stored directory cursor positions.
 
@@ -190,7 +199,7 @@ Details:
   If it is not an ancestor of the current branch, nothing is done.
 
 - "Show help" results into new window with helpful information about current
-  explorer. Press `q` to close it.
+  explorer (like buffer mappings and bookmarks). Press `q` to close it.
 
 - "Synchronize" parses user edits in directory buffers, applies them (after
   confirmation), and updates all directory buffers with the most relevant
@@ -509,6 +518,22 @@ Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >lua
     end,
   })
 <
+# Set custom bookmarks ~
+
+Use |MiniFiles.set_bookmark()| inside `MiniFilesExplorerOpen` event: >lua
+
+  local set_mark = function(id, path, desc)
+    MiniFiles.set_bookmark(id, path, { desc = desc })
+  end
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'MiniFilesExplorerOpen',
+    callback = function()
+      set_mark('c', vim.fn.stdpath('config'), 'Config') -- path
+      set_mark('w', vim.fn.getcwd, 'Working directory') -- callable
+      set_mark('~', '~', 'Home directory')
+    end,
+  })
+<
 ------------------------------------------------------------------------------
                                                              *MiniFiles.setup()*
                           `MiniFiles.setup`({config})
@@ -549,6 +574,8 @@ Default values:
       go_in_plus  = 'L',
       go_out      = 'h',
       go_out_plus = 'H',
+      mark_goto   = "'",
+      mark_set    = 'm',
       reset       = '<BS>',
       reveal_cwd  = '@',
       show_help   = 'g?',
@@ -812,6 +839,8 @@ Return ~
 `(table|nil)` Table with explorer state data or `nil` if no active explorer.
   State data is a table with the following fields:
   - <anchor> `(string)` - anchor directory path (see |MiniFiles.open()|).
+  - <bookmarks> `(table)` - map from bookmark id (single character) to its data:
+    table with <path> and <desc> fields (see |MiniFiles.set_bookmark()|).
   - <branch> `(table)` - array of nested paths for currently opened branch.
   - <depth_focus> `(number)` - an index in <branch> for currently focused path.
   - <target_window> `(number)` - identifier of target window.
@@ -820,8 +849,9 @@ Return ~
     shown in the window) fields.
 
 See also ~
-- |MiniFiles.set_target_window()|
+- |MiniFiles.set_bookmark()|
 - |MiniFiles.set_branch()|
+- |MiniFiles.set_target_window()|
 
 ------------------------------------------------------------------------------
                                                  *MiniFiles.get_target_window()*
@@ -857,6 +887,18 @@ Parameters ~
 
 See also ~
 |MiniFiles.get_explorer_state()|
+
+------------------------------------------------------------------------------
+                                                      *MiniFiles.set_bookmark()*
+                 `MiniFiles.set_bookmark`({id}, {path}, {opts})
+Set bookmark
+
+Parameters ~
+{id} `(string)` Single character bookmark id.
+{path} `(string|function)` Path of a present on disk directory to set as
+  a bookmark's path. If callable, should return such path.
+{opts} `(table|nil)` Options. Possible fields:
+  - <desc> `(string)` - bookmark description (used in help window).
 
 ------------------------------------------------------------------------------
                                                    *MiniFiles.get_latest_path()*

@@ -123,6 +123,7 @@ local go_out = forward_lua('MiniFiles.go_out')
 local trim_left = forward_lua('MiniFiles.trim_left')
 local trim_right = forward_lua('MiniFiles.trim_right')
 local get_explorer_state = forward_lua('MiniFiles.get_explorer_state')
+local set_bookmark = forward_lua('MiniFiles.set_bookmark')
 
 local get_visible_paths = function()
   return vim.tbl_map(function(x) return x.path end, get_explorer_state().windows)
@@ -1587,7 +1588,7 @@ T['show_help()'] = new_set()
 local show_help = forward_lua('MiniFiles.show_help')
 
 T['show_help()']['works'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
   open(test_dir_path)
   local win_id_explorer = child.api.nvim_get_current_win()
 
@@ -1605,7 +1606,7 @@ T['show_help()']['works'] = function()
 end
 
 T['show_help()']['opens relatively current window'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
   child.lua('MiniFiles.config.windows.width_focus = 30')
 
   open(test_dir_path)
@@ -1616,7 +1617,7 @@ T['show_help()']['opens relatively current window'] = function()
 end
 
 T['show_help()']['handles non-default mappings'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
   child.lua('MiniFiles.config.mappings.go_in = ""')
   child.lua('MiniFiles.config.mappings.go_in_plus = "l"')
 
@@ -1626,7 +1627,7 @@ T['show_help()']['handles non-default mappings'] = function()
 end
 
 T['show_help()']['handles mappings without description'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
 
   open(test_dir_path)
   child.lua([[vim.keymap.set('n', 'g.', '<Cmd>echo 1<CR>', { buffer = vim.api.nvim_get_current_buf() })]])
@@ -1634,8 +1635,31 @@ T['show_help()']['handles mappings without description'] = function()
   child.expect_screenshot()
 end
 
+T['show_help()']['handles bookmarks'] = function()
+  child.set_size(30, 60)
+  open(test_dir_path)
+  local root = full_path(test_dir)
+  -- Relative (should use path as is)
+  set_bookmark('a', test_dir)
+  -- With description
+  set_bookmark('b', root .. '/common', { desc = 'Desc' })
+  -- Not normalized
+  set_bookmark('~', '~')
+  child.lua([[
+    -- Function without description (should be called and use output)
+    MiniFiles.set_bookmark('c', function() return '~/' end)
+    -- Function with description
+    MiniFiles.set_bookmark('d', vim.fn.getcwd, { desc = 'Cwd' })
+  ]])
+  -- Long description
+  set_bookmark('e', root .. '/nested', { desc = 'Should use these to adjust width' })
+
+  show_help()
+  child.expect_screenshot()
+end
+
 T['show_help()']['adjusts window width'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
   child.lua('MiniFiles.config.mappings.go_in = "<C-l>"')
 
   open(test_dir_path)
@@ -1698,10 +1722,18 @@ T['get_explorer_state()']['works'] = function()
   go_in()
   local win_2 = child.api.nvim_get_current_win()
 
+  set_bookmark('a', anchor, { desc = 'Anchor' })
+
   local ref_branch = { anchor, path_2 }
   local ref_windows = { { win_id = win_1, path = anchor }, { win_id = win_2, path = path_2 } }
-  local ref_state =
-    { anchor = anchor, branch = ref_branch, depth_focus = 2, target_window = ref_target_win, windows = ref_windows }
+  local ref_state = {
+    anchor = anchor,
+    bookmarks = { a = { path = anchor, desc = 'Anchor' } },
+    branch = ref_branch,
+    depth_focus = 2,
+    target_window = ref_target_win,
+    windows = ref_windows,
+  }
   eq(get_explorer_state(), ref_state)
 end
 
@@ -1721,8 +1753,14 @@ T['get_explorer_state()']['works with preview'] = function()
   -- Should show preview as window entry
   local ref_branch = { anchor, path_preview }
   local ref_windows = { { win_id = win_cur, path = anchor }, { win_id = win_preview, path = path_preview } }
-  local ref_state =
-    { anchor = anchor, branch = ref_branch, depth_focus = 1, target_window = ref_target_win, windows = ref_windows }
+  local ref_state = {
+    anchor = anchor,
+    bookmarks = {},
+    branch = ref_branch,
+    depth_focus = 1,
+    target_window = ref_target_win,
+    windows = ref_windows,
+  }
   eq(get_explorer_state(), ref_state)
 end
 
@@ -1774,7 +1812,7 @@ T['get_explorer_state()']['returns copy of data'] = function()
   local res = child.lua([[
     local state = MiniFiles.get_explorer_state()
     local ref = vim.deepcopy(state)
-    state.branch[1], state.windows[1].win_id = -1, -1
+    state.bookmarks.a, state.branch[1], state.windows[1].win_id = -1, -1, -1
     local new_state = MiniFiles.get_explorer_state()
     return vim.deep_equal(new_state, ref)
   ]])
@@ -1857,7 +1895,7 @@ end
 T['set_branch()'] = new_set()
 
 local set_branch = forward_lua('MiniFiles.set_branch')
-local get_branch = function() return (get_explorer_state() or {}).branch end
+local get_branch = function() return child.lua_get('(MiniFiles.get_explorer_state() or {}).branch') end
 local get_depth_focus = function() return (get_explorer_state() or {}).depth_focus end
 
 T['set_branch()']['works'] = function()
@@ -2038,6 +2076,114 @@ T['set_branch()']['validates input'] = function()
   validate({ test_dir, test_dir .. '/common/a-dir', test_dir .. '/common' }, nil, 'parent%-child')
 
   validate({ full_path(test_file_path) }, nil, 'one directory')
+end
+
+T['set_bookmark()'] = new_set()
+
+T['set_bookmark()']['works'] = function()
+  open()
+  local root = full_path(test_dir)
+  local path_a, path_A, path_b = root, root .. '/common', root .. '/lua'
+  local path_c, path_d = root .. '/nested', root .. '/real'
+
+  set_bookmark('a', path_a)
+  -- Allows different cases
+  set_bookmark('A', path_A)
+  -- Same path under different id
+  set_bookmark('x', path_a)
+  -- Allows any single character
+  set_bookmark('~', '~')
+  -- Allows description
+  set_bookmark('b', path_b, { desc = 'Path b' })
+
+  -- Allows callable path
+  child.lua([[
+    local root = vim.fn.getcwd() .. '/tests/dir-files'
+    MiniFiles.set_bookmark('c', function() return root .. '/nested' end)
+    MiniFiles.set_bookmark('d', function() return root .. '/real' end, { desc = 'Path d' })
+  ]])
+
+  local res = child.lua([[
+    local bookmarks = MiniFiles.get_explorer_state().bookmarks
+    for k, v in pairs(bookmarks) do
+      if vim.is_callable(v.path) then v.path = { 'Callable', (v.path():gsub('\\', '/')) } end
+    end
+    return bookmarks
+  ]])
+
+  local ref = {
+    a = { path = path_a },
+    A = { path = path_A },
+    ['~'] = { path = '~' },
+    b = { path = path_b, desc = 'Path b' },
+    c = { path = { 'Callable', path_c } },
+    d = { path = { 'Callable', path_d }, desc = 'Path d' },
+    x = { path = path_a },
+  }
+  eq(res, ref)
+
+  -- Can override bookmarks
+  set_bookmark('a', path_b, { desc = 'Another path b' })
+  eq(child.lua_get('MiniFiles.get_explorer_state().bookmarks.a'), { path = path_b, desc = 'Another path b' })
+end
+
+T['set_bookmark()']['preserves path as is'] = function()
+  open()
+
+  -- Relative path
+  set_bookmark('a', test_dir)
+  eq(get_explorer_state().bookmarks.a, { path = test_dir })
+
+  -- Not normalized path
+  set_bookmark('b', test_dir .. '/common/')
+  eq(get_explorer_state().bookmarks.b, { path = test_dir .. '/common/' })
+
+  -- Path with `~` for home directory
+  set_bookmark('~', '~')
+  eq(get_explorer_state().bookmarks['~'], { path = '~' })
+
+  -- Callable
+  child.lua('MiniFiles.set_bookmark("c", vim.fn.getcwd)')
+  eq(child.lua_get('MiniFiles.get_explorer_state().bookmarks.c.path()'), child.fn.getcwd())
+end
+
+T['set_bookmark()']['persists across restart/reset'] = function()
+  local path = full_path(test_dir_path)
+  open(path)
+  go_in()
+  set_bookmark('a', path .. '/a-dir')
+  local ref_bookmarks = get_explorer_state().bookmarks
+  eq(ref_bookmarks.a, { path = path .. '/a-dir' })
+
+  reset()
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+
+  -- Should preserve if opening explorer from history
+  close()
+  open(path, true)
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+  close()
+
+  -- Should NOT preserve if opening fresh explorer
+  open(path, false)
+  eq(get_explorer_state().bookmarks, {})
+end
+
+T['set_bookmark()']['works when no explorer is opened'] = function() eq(set_bookmark('a', test_dir), vim.NIL) end
+
+T['set_bookmark()']['validates input'] = function()
+  open()
+  local validate = function(id, path, opts, err_pattern)
+    expect.error(function() set_bookmark(id, path, opts) end, err_pattern)
+  end
+  local path = full_path(test_dir_path)
+  local path_file = full_path(test_file_path)
+
+  validate(1, path, nil, 'id.*character')
+  validate('aa', path, nil, 'id.*single')
+  validate('a', 1, nil, 'path.*valid')
+  validate('a', path_file, nil, 'path.*directory')
+  validate('a', path, { desc = 1 }, 'description.*string')
 end
 
 T['get_latest_path()'] = new_set()
@@ -2835,6 +2981,133 @@ T['Mappings']['`go_out_plus` supports <count>'] = function()
   child.expect_screenshot()
 end
 
+T['Mappings']['`mark_goto` works'] = function()
+  local validate_log = function(ref_log)
+    eq(child.lua_get('_G.notify_log'), ref_log)
+    child.lua('_G.notify_log = {}')
+  end
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+
+  local path = full_path(test_dir_path)
+  local mark_path = path .. '/a-dir'
+  open(path)
+  set_bookmark('a', mark_path)
+  go_out()
+  expect.no_equality(get_branch(), { mark_path })
+  type_keys("'", 'a')
+  eq(get_branch(), { mark_path })
+  -- - Should show no notifications
+  validate_log({})
+
+  -- Warns about not existing bookmark id
+  go_out()
+  local ref_branch = get_branch()
+  type_keys("'", 'x')
+  eq(get_branch(), ref_branch)
+  validate_log({ { '(mini.files) No bookmark with id "x"', warn_level } })
+
+  -- Does nothing (silently) after `<Esc>` or `<C-c>`
+  type_keys("'", '<Esc>')
+  eq(get_branch(), ref_branch)
+  validate_log({})
+  type_keys("'", '<C-c>')
+  eq(get_branch(), ref_branch)
+  validate_log({})
+
+  close()
+
+  -- User-supplied
+  open(path, false, { mappings = { mark_goto = '`' } })
+  set_bookmark('a', mark_path)
+  go_out()
+  type_keys('`', 'a')
+  eq(get_branch(), { mark_path })
+  close()
+
+  -- Empty
+  open(path, false, { mappings = { mark_goto = '' } })
+  set_bookmark('a', mark_path)
+  go_out()
+  expect.error(function() type_keys("'", 'a') end, 'E20')
+end
+
+T['Mappings']['`mark_goto` works with special paths'] = function()
+  local validate_log = function(ref_log)
+    eq(child.lua_get('_G.notify_log'), ref_log)
+    child.lua('_G.notify_log = {}')
+  end
+  local warn_level = child.lua_get('vim.log.levels.WARN')
+  local cwd = child.fn.getcwd():gsub('\\', '/')
+
+  local path = full_path(test_dir_path)
+  open(path)
+
+  -- Relative paths (should be resolved against cwd, not currently focused)
+  local path_rel = test_dir_path .. '/a-dir'
+  set_bookmark('a', path_rel)
+  type_keys("'", 'a')
+  eq(get_branch(), { full_path(path_rel) })
+
+  -- Involving '~'
+  set_bookmark('~', '~')
+  type_keys("'", '~')
+  expect.no_equality(get_branch(), { full_path(path_rel) })
+  validate_log({})
+
+  -- Function paths
+  child.lua([[MiniFiles.set_bookmark('b', vim.fn.getcwd)]])
+  type_keys("'", 'b')
+  eq(get_branch(), { cwd })
+
+  -- Not existing on disk
+  child.lua([[MiniFiles.set_bookmark('c', function() return vim.fn.getcwd() .. '/not-present' end)]])
+  type_keys("'", 'c')
+  eq(get_branch(), { cwd })
+  validate_log({ { '(mini.files) Bookmark path should be a valid path to directory', warn_level } })
+
+  -- Not directory path
+  child.lua('_G.file_path = ' .. vim.inspect(full_path(test_file_path)))
+  child.lua([[MiniFiles.set_bookmark('d', function() return _G.file_path end)]])
+  type_keys("'", 'd')
+  eq(get_branch(), { cwd })
+  validate_log({ { '(mini.files) Bookmark path should be a valid path to directory', warn_level } })
+end
+
+T['Mappings']['`mark_set` works'] = function()
+  local path = full_path(test_dir_path)
+  open(path)
+  local mark_path = get_fs_entry().path
+  go_in()
+  type_keys('m', 'a')
+  local ref_bookmarks = { a = { path = mark_path } }
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+
+  -- - Should show notification
+  local info_level = child.lua_get('vim.log.levels.INFO')
+  eq(child.lua_get('_G.notify_log'), { { '(mini.files) Bookmark "a" is set', info_level } })
+
+  -- Does nothing after `<Esc>` or `<C-c>`
+  type_keys('m', '<Esc>')
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+  type_keys('m', '<C-c>')
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+
+  close()
+
+  -- User-supplied
+  open(path, false, { mappings = { mark_set = 'M' } })
+  go_in()
+  type_keys('M', 'a')
+  eq(get_explorer_state().bookmarks, ref_bookmarks)
+  close()
+
+  -- Empty
+  open(path, false, { mappings = { mark_set = '' } })
+  go_in()
+  type_keys('m', 'a')
+  eq(get_explorer_state().bookmarks, {})
+end
+
 T['Mappings']['`reset` works'] = function()
   local prepare = function(...)
     close()
@@ -2893,7 +3166,7 @@ T['Mappings']['`reveal_cwd` works'] = function()
 end
 
 T['Mappings']['`show_help` works'] = function()
-  child.set_size(20, 60)
+  child.set_size(22, 60)
 
   -- Default
   open(test_dir_path)

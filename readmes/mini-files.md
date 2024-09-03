@@ -38,6 +38,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/530483a5-fe9a-4e18-9813
     - Filter/prefix/sort of file system entries.
     - Mappings used for common explorer actions.
     - UI options: whether to show preview of file/directory under cursor, etc.
+    - Bookmarks for quicker navigation.
 
 See `*MiniFiles-examples*` tag in help file for some common configuration examples.
 
@@ -67,7 +68,8 @@ For full experience needs (still works without any of suggestions):
     - Press `j`/`k` to navigate down/up.
     - Press `l` to expand entry under cursor: show directory or open file in the most recent window.
     - Press `h` to go to parent directory.
-    - Type `g?` for more information about other available mappings.
+    - Type `m<char>` to set directory path of focused window as bookmark `<char>`. Jump back to it with `'<char>`.
+    - Type `g?` for more information about other available mappings and bookmarks.
     - Move as in any other buffer (`$`, `G`, `f`/`t`, etc.).
 
 For bigger overview, see `*MiniFiles-navigation*` tag in help file.
@@ -210,6 +212,8 @@ Here are code snippets for some common installation methods (use only one):
     go_in_plus  = 'L',
     go_out      = 'h',
     go_out_plus = 'H',
+    mark_goto   = "'",
+    mark_set    = 'm',
     reset       = '<BS>',
     reveal_cwd  = '@',
     show_help   = 'g?',

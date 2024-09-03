@@ -39,6 +39,10 @@
 ## mini.files
 
 - FEATURE: prefer using 'mini.icons' as icon provider.
+- FEATURE: implement bookmarks. With default config:
+    - Type `m` followed by a single character `<char>` to set directory path of focused window as a bookmark with id `<char>`.
+    - Type `'` followed by a bookmark id to make bookmark's path focused in explorer.
+    - Use `MiniFiles.set_bookmark()` inside `MiniFilesExplorerOpen` event to set custom bookmarks.
 - FEATURE: make data for `MiniFilesActionDelete` contain `to` field in case of not permanent delete.
 - FEATURE: make file manipulation work better for special complex/overlapping cases (like delete 'file-a' and copy 'file-b' as 'file-a'). It is **still** a better idea to split overlapping manipulations into smaller and not related steps, as there *are* cases which won't work.
 - FEATURE: add `get_explorer_state()` to allow more reliable user customizations.
