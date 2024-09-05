@@ -704,7 +704,7 @@ MiniAi.gen_spec = {}
 ---     Default: `{ '%b""', "%b''", '%b()', '%b[]', '%b{}' }` (separators
 ---     inside balanced quotes or brackets are ignored).
 MiniAi.gen_spec.argument = function(opts)
-  opts = vim.tbl_deep_extend('force', {
+  opts = vim.tbl_extend('force', {
     brackets = { '%b()', '%b[]', '%b{}' },
     separator = ',',
     exclude_regions = { '%b""', "%b''", '%b()', '%b[]', '%b{}' },

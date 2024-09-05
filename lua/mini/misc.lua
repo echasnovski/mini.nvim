@@ -608,7 +608,9 @@ H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
   vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
+  -- NOTE: Don't use `tbl_deep_extend` to prefer full input `make_global` array
+  -- Needs adjusting if there is a new setting with nested tables
+  config = vim.tbl_extend('force', vim.deepcopy(H.default_config), config or {})
 
   vim.validate({
     make_global = {

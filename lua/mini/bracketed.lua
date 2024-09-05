@@ -1135,12 +1135,9 @@ MiniBracketed.yank = function(direction, opts)
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'yank')
-  opts = vim.tbl_deep_extend(
-    'force',
-    { n_times = vim.v.count1, operators = { 'c', 'd', 'y' }, wrap = true },
-    H.get_config().yank.options,
-    opts or {}
-  )
+  -- NOTE: Don't use `tbl_deep_extend` to prefer full input `operators` array
+  local default_opts = { n_times = vim.v.count1, operators = { 'c', 'd', 'y' }, wrap = true }
+  opts = vim.tbl_extend('force', default_opts, H.get_config().yank.options, opts or {})
 
   -- Update yank history data
   local cache_yank, history = H.cache.yank, H.cache.yank.history

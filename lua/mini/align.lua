@@ -1330,8 +1330,10 @@ end
 
 H.is_disabled = function() return vim.g.minialign_disable == true or vim.b.minialign_disable == true end
 
-H.get_config = function(config)
-  return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {}, config or {})
+H.get_config = function()
+  -- Using `tbl_deep_extend()` works even in presense of `steps.pre_*` arrays
+  -- because default ones are empty.
+  return vim.tbl_deep_extend('force', MiniAlign.config, vim.b.minialign_config or {})
 end
 
 -- Mappings -------------------------------------------------------------------
@@ -1396,7 +1398,8 @@ end
 
 H.normalize_steps = function(steps, steps_name)
   -- Infer all defaults from module config
-  local res = vim.tbl_deep_extend('force', H.get_config().steps, steps or {})
+  -- NOTE: Don't use `tbl_deep_extend` to prefer full input arrays (if present)
+  local res = vim.tbl_extend('force', H.get_config().steps, steps or {})
 
   H.validate_steps(res, steps_name)
 
