@@ -1480,11 +1480,11 @@ T['Highlight surrounding']['works with dot-repeat'] = function()
   child.expect_screenshot()
 
   -- Should still highlight
-  sleep(test_duration - small_time)
+  sleep(test_duration - 2 * small_time)
   child.expect_screenshot()
 
   -- Should stop highlighting
-  sleep(small_time + small_time)
+  sleep(2 * small_time + small_time)
   child.expect_screenshot()
 
   -- Should highlight with dot-repeat
