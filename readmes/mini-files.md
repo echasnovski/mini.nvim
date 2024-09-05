@@ -68,7 +68,7 @@ For full experience needs (still works without any of suggestions):
     - Press `j`/`k` to navigate down/up.
     - Press `l` to expand entry under cursor: show directory or open file in the most recent window.
     - Press `h` to go to parent directory.
-    - Type `m<char>` to set directory path of focused window as bookmark `<char>`. Jump back to it with `'<char>`.
+    - Type `m<char>` to set directory path of focused window as bookmark `<char>`. Jump to it with `'<char>`. Go back to before the latest jump with `''`.
     - Type `g?` for more information about other available mappings and bookmarks.
     - Move as in any other buffer (`$`, `G`, `f`/`t`, etc.).
 

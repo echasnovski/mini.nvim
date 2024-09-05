@@ -3031,6 +3031,29 @@ T['Mappings']['`mark_goto` works'] = function()
   expect.error(function() type_keys("'", 'a') end, 'E20')
 end
 
+T['Mappings']["`mark_goto` automatically sets `'` bookmark"] = function()
+  local get_cur_path = function()
+    local state = get_explorer_state()
+    return state.branch[state.depth_focus]
+  end
+
+  local path = full_path(test_dir_path)
+  local mark_path = path .. '/a-dir'
+  open(path)
+  set_bookmark('a', mark_path)
+
+  go_out()
+  local path_before_jump = get_cur_path()
+  eq(get_explorer_state().bookmarks["'"], nil)
+  type_keys("'", 'a')
+  eq(get_branch(), { mark_path })
+  eq(get_explorer_state().bookmarks["'"], { desc = 'Before latest jump', path = path_before_jump })
+
+  type_keys("'", "'")
+  eq(get_branch(), { path_before_jump })
+  eq(get_explorer_state().bookmarks["'"], { desc = 'Before latest jump', path = mark_path })
+end
+
 T['Mappings']['`mark_goto` works with special paths'] = function()
   local validate_log = function(ref_log)
     eq(child.lua_get('_G.notify_log'), ref_log)

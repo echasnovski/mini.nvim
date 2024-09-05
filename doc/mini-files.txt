@@ -191,6 +191,7 @@ Details:
 - "Set mark" and "Go to mark" both wait for user to press a single character
   of a bookmark id. Example: `ma` sets directory path of focused window as
   bookmark "a"; `'a` jumps (sets as whole branch) to bookmark "a".
+  Special bookmark "'" always points to path before the latest bookmark jump.
 
 - "Reset" focuses only on "anchor" directory (the one used to open current
   explorer) and resets all stored directory cursor positions.

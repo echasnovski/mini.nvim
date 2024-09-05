@@ -189,6 +189,7 @@
 --- - "Set mark" and "Go to mark" both wait for user to press a single character
 ---   of a bookmark id. Example: `ma` sets directory path of focused window as
 ---   bookmark "a"; `'a` jumps (sets as whole branch) to bookmark "a".
+---   Special bookmark "'" always points to path before the latest bookmark jump.
 ---
 --- - "Reset" focuses only on "anchor" directory (the one used to open current
 ---   explorer) and resets all stored directory cursor positions.
@@ -2176,6 +2177,9 @@ H.buffer_make_mappings = function(buf_id, mappings)
     if vim.is_callable(path) then path = path() end
     local is_valid_path = type(path) == 'string' and H.fs_get_type(vim.fn.expand(path)) == 'directory'
     if not is_valid_path then return H.notify('Bookmark path should be a valid path to directory', 'WARN') end
+
+    local state = MiniFiles.get_explorer_state()
+    MiniFiles.set_bookmark("'", state.branch[state.depth_focus], { desc = 'Before latest jump' })
     MiniFiles.set_branch({ path })
   end
 
