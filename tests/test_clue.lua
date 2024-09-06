@@ -235,6 +235,12 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { scroll_up = 1 } }, 'window.scroll_up', 'string')
 end
 
+T['setup()']['ensures colors'] = function()
+  load_module()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniClueBorder'), 'links to FloatBorder')
+end
+
 T['setup()']['creates mappings for `@` and `Q`'] = function()
   load_module()
   expect.match(child.lua_get("vim.fn.maparg('@', 'n', false, true).desc"), 'macro.*mini%.clue')

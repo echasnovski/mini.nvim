@@ -708,10 +708,10 @@ end
 
 -- Autocommands ---------------------------------------------------------------
 H.apply_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniBasicsAutocommands', {})
+  local gr = vim.api.nvim_create_augroup('MiniBasicsAutocommands', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   if config.autocommands.basic then

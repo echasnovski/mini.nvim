@@ -182,6 +182,9 @@ MiniOperators.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
+  -- Define behavior
+  H.create_autocommands()
+
   -- Create default highlighting
   H.create_default_hl()
 end
@@ -740,6 +743,11 @@ H.is_disabled = function() return vim.g.minioperators_disable == true or vim.b.m
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniOperators.config, vim.b.minioperators_config or {}, config or {})
+end
+
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniOperators', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 H.create_default_hl = function()

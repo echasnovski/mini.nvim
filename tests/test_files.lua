@@ -311,6 +311,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ windows = { width_preview = 'a' } }, 'windows.width_preview', 'number')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniFilesBorder'), 'links to FloatBorder')
+end
+
 T['open()'] = new_set()
 
 T['open()']['works with directory path'] = function()

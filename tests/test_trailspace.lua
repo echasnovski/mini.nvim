@@ -76,6 +76,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ only_in_normal_buffers = 'a' }, 'only_in_normal_buffers', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniTrailspace'), 'links to Error')
+end
+
 T['highlight()'] = new_set({ hooks = { pre_case = ensure_no_highlighting } })
 
 T['highlight()']['works'] = function()

@@ -1633,11 +1633,8 @@ end
 H.apply_config = function(config) MiniTest.config = config end
 
 H.create_autocommands = function()
-  local augroup = vim.api.nvim_create_augroup('MiniTest', {})
-  vim.api.nvim_create_autocmd(
-    'ColorScheme',
-    { group = augroup, callback = H.create_default_hl, desc = 'Ensure proper colors' }
-  )
+  local gr = vim.api.nvim_create_augroup('MiniTest', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 H.create_default_hl = function()

@@ -660,24 +660,18 @@ H.apply_config = function(config)
 end
 
 H.create_autocommands = function()
-  local augroup = vim.api.nvim_create_augroup('MiniIndentscope', {})
+  local gr = vim.api.nvim_create_augroup('MiniIndentscope', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
-  au(
-    { 'CursorMoved', 'CursorMovedI', 'ModeChanged' },
-    '*',
-    function() H.auto_draw({ lazy = true }) end,
-    'Auto draw indentscope lazily'
-  )
-  au(
-    { 'TextChanged', 'TextChangedI', 'TextChangedP', 'WinScrolled' },
-    '*',
-    function() H.auto_draw() end,
-    'Auto draw indentscope'
-  )
+  local lazy_events = { 'CursorMoved', 'CursorMovedI', 'ModeChanged' }
+  au(lazy_events, '*', function() H.auto_draw({ lazy = true }) end, 'Auto draw indentscope lazily')
+  local now_events = { 'TextChanged', 'TextChangedI', 'TextChangedP', 'WinScrolled' }
+  au(now_events, '*', function() H.auto_draw() end, 'Auto draw indentscope')
+
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 --stylua: ignore

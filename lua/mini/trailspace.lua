@@ -147,10 +147,10 @@ end
 H.apply_config = function(config) MiniTrailspace.config = config end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniTrailspace', {})
+  local gr = vim.api.nvim_create_augroup('MiniTrailspace', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   -- NOTE: Respecting both `WinEnter` and `BufEnter` seems to be useful to
@@ -165,6 +165,8 @@ H.create_autocommands = function(config)
     -- disappears if buffer is reentered.
     au('OptionSet', 'buftype', H.track_normal_buffer, 'Track normal buffer')
   end
+
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniTrailspace', { default = true, link = 'Error' }) end

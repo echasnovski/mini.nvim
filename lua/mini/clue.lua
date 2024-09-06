@@ -492,7 +492,7 @@ MiniClue.setup = function(config)
   H.apply_config(config)
 
   -- Define behavior
-  H.create_autocommands(config)
+  H.create_autocommands()
 
   -- Create default highlighting
   H.create_default_hl()
@@ -1171,11 +1171,11 @@ H.is_disabled = function(buf_id)
   return vim.g.miniclue_disable == true or buf_disable == true
 end
 
-H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniClue', {})
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniClue', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   -- Ensure buffer-local mappings for triggers are the latest ones to fully
@@ -1195,6 +1195,7 @@ H.create_autocommands = function(config)
   au('RecordingLeave', '*', MiniClue.enable_all_triggers, 'Enable all triggers')
 
   au('VimResized', '*', H.window_update, 'Update window on resize')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 --stylua: ignore

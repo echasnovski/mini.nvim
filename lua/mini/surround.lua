@@ -487,6 +487,9 @@ MiniSurround.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
+  -- Define behavior
+  H.create_autocommands()
+
   -- Create default highlighting
   H.create_default_hl()
 end
@@ -1219,6 +1222,11 @@ H.apply_config = function(config)
     suffix_map(m.highlight, suff, operator_next('highlight'),     'Highlight next surrounding')
   end
   --stylua: ignore end
+end
+
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniSurround', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniSurround', { default = true, link = 'IncSearch' }) end

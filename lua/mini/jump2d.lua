@@ -721,10 +721,10 @@ H.apply_config = function(config)
 end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniJump2d', {})
+  local gr = vim.api.nvim_create_augroup('MiniJump2d', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { pattern = pattern, group = augroup, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { pattern = pattern, group = gr, callback = callback, desc = desc })
   end
 
   -- Corrections for default `<CR>` mapping to not interfere with popular usages
@@ -734,8 +734,7 @@ H.create_autocommands = function(config)
     au('CmdwinEnter', '*', revert_cr, 'Revert <CR>')
   end
 
-  -- Ensure proper colors
-  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 --stylua: ignore

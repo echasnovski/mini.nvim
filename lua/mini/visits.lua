@@ -1227,10 +1227,10 @@ end
 H.apply_config = function(config) MiniVisits.config = config end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniVisits', {})
+  local gr = vim.api.nvim_create_augroup('MiniVisits', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   if config.track.event ~= '' then au(config.track.event, '*', H.autoregister_visit, 'Auto register visit') end

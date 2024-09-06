@@ -101,6 +101,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniSurround)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniSurround'), 1)
+
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
@@ -161,6 +164,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ respect_selection_type = 1 }, 'respect_selection_type', 'boolean')
   expect_config_error({ search_method = 1 }, 'search_method', 'one of')
   expect_config_error({ silent = 1 }, 'silent', 'boolean')
+end
+
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniSurround'), 'links to IncSearch')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()

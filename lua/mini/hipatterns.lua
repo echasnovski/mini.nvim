@@ -699,13 +699,14 @@ end
 H.apply_config = function(config) MiniHipatterns.config = config end
 
 H.create_autocommands = function()
-  local augroup = vim.api.nvim_create_augroup('MiniHipatterns', {})
+  local gr = vim.api.nvim_create_augroup('MiniHipatterns', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   au('BufEnter', '*', H.auto_enable, 'Enable highlighting')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
   au('ColorScheme', '*', H.on_colorscheme, 'Reload all enabled pattern highlighters')
 end
 

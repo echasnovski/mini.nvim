@@ -94,8 +94,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ delay = 'a' }, 'delay', 'number')
 end
 
-T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
-  child.cmd('colorscheme blue')
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
   expect.match(child.cmd_capture('hi MiniCursorword'), 'gui=underline')
   expect.match(child.cmd_capture('hi MiniCursorwordCurrent'), 'links to MiniCursorword')
 end

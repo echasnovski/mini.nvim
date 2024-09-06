@@ -169,6 +169,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ set_vim_settings = 1 }, 'set_vim_settings', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
+end
+
 T['setup()']['properly handles `config.mappings`'] = function()
   local has_map = function(lhs, pattern) return child.cmd_capture('imap ' .. lhs):find(pattern) ~= nil end
   eq(has_map('<C-Space>', 'Complete'), true)
@@ -210,11 +215,6 @@ T['setup()']['respects `config.set_vim_settings`'] = function()
   expect.match(child.api.nvim_get_option('shortmess'), 'c')
   if child.fn.has('nvim-0.9') == 1 then expect.match(child.api.nvim_get_option('shortmess'), 'C') end
   eq(child.api.nvim_get_option('completeopt'), 'menuone,noinsert,noselect')
-end
-
-T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
-  child.cmd('colorscheme blue')
-  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
 end
 
 T['default_process_items()'] = new_set({

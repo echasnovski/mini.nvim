@@ -444,13 +444,13 @@ H.apply_config = function(config)
 end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniSessions', {})
+  local gr = vim.api.nvim_create_augroup('MiniSessions', {})
 
   if config.autoread then
     local autoread = function()
       if not H.is_something_shown() then MiniSessions.read() end
     end
-    local opts = { group = augroup, nested = true, once = true, callback = autoread, desc = 'Autoread latest session' }
+    local opts = { group = gr, nested = true, once = true, callback = autoread, desc = 'Autoread latest session' }
     vim.api.nvim_create_autocmd('VimEnter', opts)
   end
 
@@ -458,10 +458,8 @@ H.create_autocommands = function(config)
     local autowrite = function()
       if H.get_this_session() ~= '' then MiniSessions.write(nil, { force = true }) end
     end
-    vim.api.nvim_create_autocmd(
-      'VimLeavePre',
-      { group = augroup, callback = autowrite, desc = 'Autowrite current session' }
-    )
+    local opts = { group = gr, callback = autowrite, desc = 'Autowrite current session' }
+    vim.api.nvim_create_autocmd('VimLeavePre', opts)
   end
 end
 

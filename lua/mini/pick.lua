@@ -693,7 +693,7 @@ MiniPick.setup = function(config)
   H.apply_config(config)
 
   -- Define behavior
-  H.create_autocommands(config)
+  H.create_autocommands()
 
   -- Create default highlighting
   H.create_default_hl()
@@ -1907,15 +1907,15 @@ H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniPick.config, vim.b.minipick_config or {}, config or {})
 end
 
-H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniPick', {})
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniPick', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   au('VimResized', '*', MiniPick.refresh, 'Refresh on resize')
-  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 --stylua: ignore

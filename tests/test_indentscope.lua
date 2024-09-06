@@ -143,6 +143,11 @@ T['setup()']['properly handles `config.mappings`'] = function()
   eq(has_map('[i', 'indent scope'), false)
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniIndentscopeSymbol'), 'links to Delimiter')
+end
+
 T['get_scope()'] = new_set({
   hooks = {
     pre_case = function() set_lines(example_lines) end,

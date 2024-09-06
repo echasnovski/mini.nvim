@@ -37,6 +37,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniIcons)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniIcons'), 1)
+
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
@@ -95,6 +98,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ lsp = 1 }, 'lsp', 'table')
   expect_config_error({ os = 1 }, 'os', 'table')
   expect_config_error({ use_file_extension = 1 }, 'use_file_extension', 'function')
+end
+
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniIconsAzure'), 'links to Function')
 end
 
 T['setup()']['can customize icons'] = function()

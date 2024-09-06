@@ -381,6 +381,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { prompt_prefix = 1 } }, 'window.prompt_prefix', 'string')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniPickBorder'), 'links to FloatBorder')
+end
+
 -- This set mostly contains general function testing which doesn't fit into
 -- more specialized integration tests later
 T['start()'] = new_set()

@@ -140,6 +140,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { winblend = 'a' } }, 'window.winblend', 'number')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniNotifyBorder'), 'links to FloatBorder')
+end
+
 T['make_notify()'] = new_set()
 
 local notify = forward_lua('vim.notify')

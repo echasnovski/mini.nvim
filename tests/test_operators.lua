@@ -57,6 +57,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniOperators)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniOperators'), 1)
+
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
@@ -119,6 +122,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ sort = 'a' }, 'sort', 'table')
   expect_config_error({ sort = { prefix = 1 } }, 'sort.prefix', 'string')
   expect_config_error({ sort = { func = 'a' } }, 'sort.func', 'function')
+end
+
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniOperatorsExchangeFrom'), 'links to IncSearch')
 end
 
 T['setup()']['removes built-in LSP mappings'] = function()

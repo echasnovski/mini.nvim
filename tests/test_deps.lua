@@ -207,6 +207,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniDeps)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniDeps'), 1)
+
   -- User commands
   local has_user_command = function(cmd) eq(child.fn.exists(':' .. cmd), 2) end
   has_user_command('DepsAdd')
@@ -274,6 +277,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ path = { log = 1 } }, 'path.log', 'string')
 
   expect_config_error({ silent = 'a' }, 'silent', 'boolean')
+end
+
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniDepsHint'), 'links to DiagnosticHint')
 end
 
 T['setup()']["prepends 'packpath' with package path"] = function()

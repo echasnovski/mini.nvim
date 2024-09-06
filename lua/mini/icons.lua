@@ -194,6 +194,9 @@ MiniIcons.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
+  -- Define behavior
+  H.create_autocommands()
+
   -- Create default highlighting
   H.create_default_hl()
 end
@@ -1935,6 +1938,11 @@ H.apply_config = function(config)
 
   -- Initialize cache for quicker `get()`
   H.init_cache(config)
+end
+
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniIcons', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 --stylua: ignore

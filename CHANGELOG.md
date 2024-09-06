@@ -7,6 +7,7 @@
     - Has visual regressions on Neovim 0.8.0 and 0.8.1 without enabled tree-sitter (code blocks are highlighted as normal text). Use 0.8.2 or newer.
 - Universally prefer 'mini.icons' module over 'nvim-tree/nvim-web-devicons'.
 - Start automated testing on Windows and MacOS.
+- Universally ensure that all plugin's highlight groups are defined after any color scheme takes effect.
 
 ## mini.completion
 

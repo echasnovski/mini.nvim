@@ -1596,10 +1596,10 @@ end
 H.get_suffix_variants = function(char) return char:lower(), char:upper() end
 
 H.create_autocommands = function()
-  local augroup = vim.api.nvim_create_augroup('MiniBracketed', {})
+  local gr = vim.api.nvim_create_augroup('MiniBracketed', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   au('BufEnter', '*', H.track_oldfile, 'Track oldfile')

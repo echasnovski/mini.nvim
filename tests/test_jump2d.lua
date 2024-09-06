@@ -177,6 +177,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ silent = 'a' }, 'silent', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniJump2dSpot'), 'gui=bold,nocombine guifg=[Ww]hite guibg=[Bb]lack')
+end
+
 T['setup()']['applies `config.mappings`'] = function()
   child.set_size(5, 12)
   set_lines({ 'xxxx', 'xxxx' })
@@ -211,11 +216,6 @@ T['setup()']['resets <CR> mapping in command-line window'] = function()
   set_cursor(1, 0)
   type_keys('<CR>')
   eq(child.get_lines(), { 'Hello', '' })
-end
-
-T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
-  child.cmd('colorscheme blue')
-  expect.match(child.cmd_capture('hi MiniJump2dSpot'), 'gui=bold,nocombine guifg=[Ww]hite guibg=[Bb]lack')
 end
 
 T['start()'] = new_set({

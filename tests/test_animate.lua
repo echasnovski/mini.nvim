@@ -204,8 +204,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ close = { winblend = 'a' } }, 'close.winblend', 'callable')
 end
 
-T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
-  child.cmd('colorscheme blue')
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
   expect.match(child.cmd_capture('hi MiniAnimateCursor'), 'gui=reverse,nocombine')
 end
 

@@ -55,6 +55,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniTabline)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniTabline'), 1)
+
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
@@ -99,6 +102,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ format = 'a' }, 'format', 'function')
   expect_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
   expect_config_error({ tabpage_section = 1 }, 'tabpage_section', 'string')
+end
+
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniTablineCurrent'), 'links to TabLineSel')
 end
 
 T['setup()']["sets proper 'tabline' option"] = function()

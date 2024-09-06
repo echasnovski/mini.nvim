@@ -94,6 +94,9 @@ T['setup()']['creates side effects'] = function()
   -- Global variable
   eq(child.lua_get('type(_G.MiniTest)'), 'table')
 
+  -- Autocommand group
+  eq(child.fn.exists('#MiniTest'), 1)
+
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
@@ -143,8 +146,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
-T['setup()']['defines non-linked default highlighting on `ColorScheme`'] = function()
-  child.cmd('colorscheme blue')
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
   expect.match(child.cmd_capture('hi MiniTestFail'), 'gui=bold')
   expect.match(child.cmd_capture('hi MiniTestPass'), 'gui=bold')
   expect.match(child.cmd_capture('hi MiniTestEmphasis'), 'gui=bold')

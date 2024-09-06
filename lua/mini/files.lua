@@ -1309,13 +1309,11 @@ end
 H.apply_config = function(config) MiniFiles.config = config end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniFiles', {})
+  local gr = vim.api.nvim_create_augroup('MiniFiles', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
-
-  au('VimResized', '*', MiniFiles.refresh, 'Refresh on resize')
 
   if config.options.use_as_default_explorer then
     -- Stop 'netrw' from showing. Needs `VimEnter` event autocommand if
@@ -1325,6 +1323,9 @@ H.create_autocommands = function(config)
 
     au('BufEnter', '*', H.track_dir_edit, 'Track directory edit')
   end
+
+  au('VimResized', '*', MiniFiles.refresh, 'Refresh on resize')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 --stylua: ignore

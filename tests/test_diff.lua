@@ -331,6 +331,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ options = { wrap_goto = 'a' } }, 'options.wrap_goto', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniDiffOverAdd'), 'links to DiffAdd')
+end
+
 T['setup()']['auto enables in all existing buffers'] = function()
   local buf_id_normal = new_buf()
   set_buf(buf_id_normal)

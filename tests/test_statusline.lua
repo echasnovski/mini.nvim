@@ -138,6 +138,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ use_icons = 'a' }, 'use_icons', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniStatuslineModeNormal'), 'links to Cursor')
+end
+
 T['setup()']['sets proper autocommands'] = function()
   local validate = function(win_id, field)
     eq(child.api.nvim_win_get_option(win_id, 'statusline'), '%{%v:lua.MiniStatusline.' .. field .. '()%}')

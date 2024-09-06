@@ -575,10 +575,10 @@ H.apply_config = function(config)
 end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniCompletion', {})
+  local gr = vim.api.nvim_create_augroup('MiniCompletion', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   au('InsertCharPre', '*', H.auto_completion, 'Auto show completion')
@@ -595,7 +595,7 @@ H.create_autocommands = function(config)
     au('BufEnter', '*', callback, 'Set completion function')
   end
 
-  au('ColorScheme', '*', H.create_default_hl, 'Ensure proper colors')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
   au('FileType', 'TelescopePrompt', function() vim.b.minicompletion_disable = true end, 'Disable locally')
 end
 

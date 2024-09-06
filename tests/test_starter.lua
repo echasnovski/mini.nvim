@@ -151,6 +151,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ silent = 1 }, 'silent', 'boolean')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniStarterCurrent'), 'links to MiniStarterItem')
+end
+
 -- Work with Starter buffer ---------------------------------------------------
 T['open()'] = new_set()
 

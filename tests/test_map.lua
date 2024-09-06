@@ -241,6 +241,11 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ window = { zindex = 'a' } }, 'window.zindex', 'number')
 end
 
+T['setup()']['ensures colors'] = function()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniMapNormal'), 'links to NormalFloat')
+end
+
 local encode_strings = function(strings, opts)
   local cmd = string.format('MiniMap.encode_strings(%s, %s)', vim.inspect(strings), vim.inspect(opts))
   return child.lua_get(cmd)

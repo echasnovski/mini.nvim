@@ -366,6 +366,9 @@ MiniDeps.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
+  -- Define behavior
+  H.create_autocommands()
+
   -- Create default highlighting
   H.create_default_hl()
 
@@ -818,6 +821,11 @@ end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniDeps.config, vim.b.minideps_config or {}, config or {})
+end
+
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniDeps', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 --stylua: ignore

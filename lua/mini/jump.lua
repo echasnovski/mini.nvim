@@ -337,14 +337,15 @@ H.apply_config = function(config)
 end
 
 H.create_autocommands = function()
-  local augroup = vim.api.nvim_create_augroup('MiniJump', {})
+  local gr = vim.api.nvim_create_augroup('MiniJump', {})
 
   local au = function(event, pattern, callback, desc)
-    vim.api.nvim_create_autocmd(event, { group = augroup, pattern = pattern, callback = callback, desc = desc })
+    vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
 
   au('CursorMoved', '*', H.on_cursormoved, 'On CursorMoved')
   au({ 'BufLeave', 'InsertEnter' }, '*', MiniJump.stop_jumping, 'Stop jumping')
+  au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
 
 H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniJump', { default = true, link = 'SpellRare' }) end

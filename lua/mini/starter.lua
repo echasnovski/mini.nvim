@@ -1053,7 +1053,7 @@ end
 H.apply_config = function(config) MiniStarter.config = config end
 
 H.create_autocommands = function(config)
-  local augroup = vim.api.nvim_create_augroup('MiniStarter', {})
+  local gr = vim.api.nvim_create_augroup('MiniStarter', {})
 
   if config.autoopen then
     local on_vimenter = function()
@@ -1065,11 +1065,11 @@ H.create_autocommands = function(config)
       vim.cmd('noautocmd lua MiniStarter.open()')
     end
 
-    vim.api.nvim_create_autocmd(
-      'VimEnter',
-      { group = augroup, nested = true, once = true, callback = on_vimenter, desc = 'Open on VimEnter' }
-    )
+    local au_opts = { group = gr, nested = true, once = true, callback = on_vimenter, desc = 'Open on VimEnter' }
+    vim.api.nvim_create_autocmd('VimEnter', au_opts)
   end
+
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 --stylua: ignore

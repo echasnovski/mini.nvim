@@ -125,6 +125,12 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ delay = { scroll = 'a' } }, 'delay.scroll', 'number')
 end
 
+T['setup()']['ensures colors'] = function()
+  load_module()
+  child.cmd('colorscheme default')
+  expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'links to DiagnosticError')
+end
+
 T['Auto enable'] = new_set()
 
 T['Auto enable']['enables for normal buffers'] = function()

@@ -89,6 +89,12 @@ MiniTabline.setup = function(config)
   -- Apply config
   H.apply_config(config)
 
+  -- Define behavior
+  H.create_autocommands()
+
+  -- Create default highlighting
+  H.create_default_hl()
+
   -- Function to make tabs clickable
   vim.api.nvim_exec(
     [[function! MiniTablineSwitchBuffer(buf_id, clicks, button, mod)
@@ -96,9 +102,6 @@ MiniTabline.setup = function(config)
       endfunction]],
     false
   )
-
-  -- Create default highlighting
-  H.create_default_hl()
 end
 
 --- Module config
@@ -217,6 +220,11 @@ H.apply_config = function(config)
 
   -- Set tabline string
   vim.o.tabline = '%!v:lua.MiniTabline.make_tabline_string()'
+end
+
+H.create_autocommands = function()
+  local gr = vim.api.nvim_create_augroup('MiniTabline', {})
+  vim.api.nvim_create_autocmd('ColorScheme', { group = gr, callback = H.create_default_hl, desc = 'Ensure colors' })
 end
 
 --stylua: ignore
