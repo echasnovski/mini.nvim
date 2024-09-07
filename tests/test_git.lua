@@ -306,6 +306,140 @@ T['show_at_cursor()']['uses `opts` on commit'] = function()
   eq(child.o.filetype, 'git')
 end
 
+T['show_at_cursor()']["works in 'mini.deps' confirmation buffer"] = function()
+  local deps_buf_id = new_scratch_buf()
+  set_buf(deps_buf_id)
+  local lines = child.fn.readfile(test_dir_absolute .. '/deps-confirm')
+  set_lines(lines)
+  child.bo.filetype = 'minideps-confirm'
+  child.api.nvim_buf_set_name(0, 'mini-deps://confirm-update')
+
+  local validate_no_show = function(l_num)
+    -- Assume not existing `cwd` (because it should be called during checking
+    -- if the buffer's directory is inside git repo, which is not)
+    child.lua([[vim.fn.isdirectory = function() return 0 end]])
+
+    -- Should not depend on column
+    set_cursor(l_num, l_num % 13)
+    show_at_cursor()
+
+    eq(get_buf(), deps_buf_id)
+    eq(#child.api.nvim_list_tabpages(), 1)
+
+    -- A spawn log as if nothing is detected at "show commit" step (entries
+    -- come from the next steps)
+    validate_git_spawn_log({})
+    clear_spawn_log()
+    validate_notifications({ { '(mini.git) Nothing Git-related to show at cursor', 'WARN' } })
+    clear_notify_log()
+  end
+
+  local validate_show = function(l_num, commit, plugin_name)
+    -- Prepare spawn mocks data
+    mock_spawn()
+    child.lua([[_G.stdio_queue = { { { 'out', 'commit abc123456\nHello' } } }]])
+    -- Assume `cwd` always exists (for easier `deps-confirm` mock text)
+    child.lua([[vim.fn.isdirectory = function() return 1 end]])
+
+    set_cursor(l_num, l_num % 13)
+    show_at_cursor()
+
+    -- Should show in commit info in separate tabpage
+    expect.no_equality(get_buf(), deps_buf_id)
+    eq(child.bo.filetype, 'git')
+    eq(get_lines(), { 'commit abc123456', 'Hello' })
+    eq(#child.api.nvim_list_tabpages(), 2)
+    eq(child.api.nvim_tabpage_get_number(0), 2)
+    eq(#child.api.nvim_tabpage_list_wins(0), 1)
+
+    local ref_git_spawn_log = {
+      {
+        args = { '--no-pager', 'show', '--stat', '--patch', commit },
+        cwd = '/home/user/.local/share/nvim/site/pack/deps/opt/' .. plugin_name,
+      },
+    }
+    validate_git_spawn_log(ref_git_spawn_log)
+    clear_spawn_log()
+    validate_notifications({})
+    clear_notify_log()
+
+    -- Clean up
+    child.cmd('quit')
+  end
+
+  for i = 1, 11 do
+    validate_no_show(i)
+  end
+  validate_show(12, 'aa339f6ab611da07183a7fe44daa482605392502', 'plugin_b')
+  validate_show(13, '093b29f2b409278e2ed69a90462fee54714b5a84', 'plugin_b')
+  validate_show(14, '093b29f2b409278e2ed69a90462fee54714b5a84', 'plugin_b')
+  validate_show(15, '093b29f2b409278e2ed69a90462fee54714b5a84', 'plugin_b')
+  validate_show(16, '093b29f2', 'plugin_b')
+  validate_show(17, '093b29f2', 'plugin_b')
+  validate_show(18, '093b29f2', 'plugin_b')
+  validate_show(19, 'bfe74a48', 'plugin_b')
+  validate_show(20, 'bfe74a48', 'plugin_b')
+  validate_show(21, 'bfe74a48', 'plugin_b')
+  validate_show(22, '3826d0c4', 'plugin_b')
+  validate_show(23, '3826d0c4', 'plugin_b')
+  validate_show(24, '3826d0c4', 'plugin_b')
+  validate_no_show(25)
+  validate_no_show(26)
+  validate_no_show(27)
+  validate_show(28, '3a3c6244553f13fdd92d312c82722b57ce6c4bec', 'plugin_c')
+  validate_show(29, 'fe3deb7f67ce0cc4ebfe2ea6c1c7ae1c7a939d73', 'plugin_c')
+  validate_show(30, 'fe3deb7f67ce0cc4ebfe2ea6c1c7ae1c7a939d73', 'plugin_c')
+  validate_show(31, 'fe3deb7f67ce0cc4ebfe2ea6c1c7ae1c7a939d73', 'plugin_c')
+  validate_show(32, 'fe3deb7', 'plugin_c')
+  validate_show(33, 'fe3deb7', 'plugin_c')
+  validate_show(34, 'fe3deb7', 'plugin_c')
+  validate_no_show(35)
+  validate_no_show(36)
+  validate_no_show(37)
+  validate_show(38, 'd231729b13da28fd1625c3d85f2315886ddeb05d', 'plugin_d')
+end
+
+T['show_at_cursor()']["uses `opts` in 'mini.deps' confirmation buffer"] = function()
+  local deps_buf_id = new_scratch_buf()
+  set_buf(deps_buf_id)
+  local lines = child.fn.readfile(test_dir_absolute .. '/deps-confirm')
+  set_lines(lines)
+  child.bo.filetype = 'minideps-confirm'
+  child.api.nvim_buf_set_name(0, 'mini-deps://confirm-update')
+
+  child.lua([[vim.fn.isdirectory = function() return 1 end]])
+  child.lua([[_G.stdio_queue = { { { 'out', 'commit abc123456\nHello' } } }]])
+
+  local init_win_id = get_win()
+  set_cursor(16, 0)
+  show_at_cursor({ split = 'vertical' })
+
+  expect.no_equality(get_buf(), deps_buf_id)
+  eq(child.api.nvim_tabpage_get_number(0), 1)
+  eq(child.fn.winlayout(), { 'row', { { 'leaf', get_win() }, { 'leaf', init_win_id } } })
+  eq(get_lines(), { 'commit abc123456', 'Hello' })
+  eq(child.o.filetype, 'git')
+end
+
+T['show_at_cursor()']['shows message if can not find commit'] = function()
+  local lines = child.fn.readfile(test_dir_absolute .. '/deps-confirm')
+  set_lines(lines)
+  set_cursor(16, 2)
+
+  -- Commit at cursor
+  show_at_cursor()
+  validate_notifications({ { '(mini.git) Can not show commit 093b29f2 in repo ' .. child.fn.getcwd(), 'WARN' } })
+  clear_notify_log()
+
+  -- 'mini.deps' confirmation buffer
+  child.bo.filetype = 'minideps-confirm'
+  child.api.nvim_buf_set_name(0, 'mini-deps://confirm-update')
+
+  show_at_cursor()
+  local path = '/home/user/.local/share/nvim/site/pack/deps/opt/plugin_b'
+  validate_notifications({ { '(mini.git) Can not show commit 093b29f2 in repo ' .. path, 'WARN' } })
+end
+
 T['show_at_cursor()']['works for diff source'] = function()
   child.lua('MiniGit.show_diff_source = function() end')
   log_calls('MiniGit.show_diff_source')

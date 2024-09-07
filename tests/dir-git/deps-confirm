@@ -1,0 +1,38 @@
+This is a confirmation report before an update.
+
+Other very useful info
+
+!!! plugin_a !!!
+
+Some error
+
++++ plugin_b +++
+Path:         /home/user/.local/share/nvim/site/pack/deps/opt/plugin_b
+Source:       https://github.com/cool-plugins/plugin_b
+State before: aa339f6ab611da07183a7fe44daa482605392502
+State after:  093b29f2b409278e2ed69a90462fee54714b5a84 (master)
+
+Pending updates from `master`:
+> 093b29f2 | 2024-09-06 06:42:29 +0000 | Neo McVim
+  feat: very important feature
+
+> bfe74a48 | 2024-09-05 13:25:50 +0000 | Neo McVim
+  fix: very important fix
+
+< 3826d0c4 | 2024-09-04 09:08:06 +0200 | Neo McVim
+  chore: not very important chore
+
++++ plugin_c +++
+Path:         /home/user/.local/share/nvim/site/pack/deps/opt/plugin_c
+Source:       https://github.com/cool-plugins/plugin_c
+State before: 3a3c6244553f13fdd92d312c82722b57ce6c4bec
+State after:  fe3deb7f67ce0cc4ebfe2ea6c1c7ae1c7a939d73 (main)
+
+Pending updates from `main`:
+> fe3deb7 | 2024-09-04 03:40:17 -0500 | Caleb White
+  fix: even more important fix
+
+--- plugin_d ---
+Path:   /home/user/.local/share/nvim/site/pack/deps/opt/plugin_d
+Source: https://github.com/cool-plugins/plugin_d
+State:  d231729b13da28fd1625c3d85f2315886ddeb05d (HEAD)

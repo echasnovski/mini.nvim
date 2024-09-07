@@ -28,6 +28,7 @@
 ## mini.git
 
 - FEATURE: update `show_at_cursor()` to include commit's statistics when showing commit.
+- FEATURE: update `show_at_cursor()` to show relevant at cursor commit data inside 'mini.deps' confirmation buffer.
 
 ## mini.hipatterns
 

@@ -300,6 +300,7 @@ MiniGit.config = {
 
 --- Show Git related data at cursor
 ---
+--- - If inside |mini.deps| confirmation buffer, show in split relevant commit data.
 --- - If there is a commit-like |<cword>|, show it in split.
 --- - If possible, show diff source via |MiniGit.show_diff_source()|.
 --- - If possible, show range history via |MiniGit.show_range_history()|.
@@ -309,17 +310,22 @@ MiniGit.config = {
 ---   - __git_split_field
 ---   - Fields appropriate for forwarding to other functions.
 MiniGit.show_at_cursor = function(opts)
-  local exec = MiniGit.config.job.git_executable
-  local cwd = H.get_git_cwd()
+  -- Try showing commit data at cursor
+  local commit, cwd
+  if vim.bo.filetype == 'minideps-confirm' then
+    commit, cwd = H.deps_pos_to_source()
+  else
+    local cword = vim.fn.expand('<cword>')
+    local is_commit = string.find(cword, '^%x%x%x%x%x%x%x+$') ~= nil and string.lower(cword) == cword
+    commit = is_commit and cword or nil
+    cwd = is_commit and H.get_git_cwd() or nil
+  end
 
-  -- Try showing commit at cursor
-  local cword = vim.fn.expand('<cword>')
-  local is_commit = string.find(cword, '^%x%x%x%x%x%x%x+$') ~= nil and string.lower(cword) == cword
-  if is_commit then
+  if commit ~= nil and cwd ~= nil then
     local split = H.normalize_split_opt((opts or {}).split or 'auto', 'opts.split')
-    local args = { 'show', '--stat', '--patch', cword }
+    local args = { 'show', '--stat', '--patch', commit }
     local lines = H.git_cli_output(args, cwd)
-    if #lines == 0 then return H.notify('Can not show commit ' .. cword, 'WARN') end
+    if #lines == 0 then return H.notify('Can not show commit ' .. commit .. ' in repo ' .. cwd, 'WARN') end
     H.show_in_split(split, lines, 'show', table.concat(args, ' '))
     vim.bo.filetype = 'git'
     return
@@ -1566,6 +1572,29 @@ H.diff_parse_bufname = function(out)
 end
 
 H.parse_diff_source_buf_name = function(buf_name) return string.match(buf_name, '^minigit://%d+/.*show (%x+~?):(.*)$') end
+
+H.deps_pos_to_source = function()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, vim.fn.line('.'), false)
+  -- Do nothing if on the title (otherwise it operates on previous plugin info)
+  if lines[#lines]:find('^[%+%-!]') ~= nil then return end
+
+  -- Locate lines with commit and repo path data
+  local commit, commit_lnum = nil, #lines
+  while commit == nil and commit_lnum >= 1 do
+    local l = lines[commit_lnum]
+    commit = l:match('^[><] (%x%x%x%x%x%x%x%x*) |') or l:match('^State[^:]*: %s*(%x+)')
+    commit_lnum = commit_lnum - 1
+  end
+
+  local cwd, cwd_lnum = nil, #lines
+  while cwd == nil and cwd_lnum >= 1 do
+    cwd, cwd_lnum = lines[cwd_lnum]:match('^Path: %s*(%S+)$'), cwd_lnum - 1
+  end
+
+  -- Do nothing if something is not found or path corresponds to next repo
+  if commit == nil or cwd == nil or commit_lnum <= cwd_lnum then return end
+  return commit, cwd
+end
 
 -- Folding --------------------------------------------------------------------
 H.is_hunk_header = function(lnum) return vim.fn.getline(lnum):find('^@@.*@@') ~= nil end
