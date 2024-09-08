@@ -535,6 +535,31 @@ Use |MiniFiles.set_bookmark()| inside `MiniFilesExplorerOpen` event: >lua
     end,
   })
 <
+# Search inside a directory ~
+
+Search inside selected directory using Telescope: >lua
+
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'MiniFilesWindowUpdate',
+    callback = function(args)
+      local buf_id = args.data.buf_id
+
+      local search_in_directory = function()
+        local fs_entry = MiniFiles.get_fs_entry()
+        if fs_entry.fs_type == 'directory' then
+          MiniFiles.close()
+          local command = 'Telescope live_grep search_dirs=' .. fs_entry.path
+          vim.cmd(command)
+        end
+      end
+
+      vim.keymap.set('n', '<C-f>', search_in_directory, {
+        buffer = buf_id,
+        desc = 'Search in selected directory'
+      })
+    end,
+  })
+<
 ------------------------------------------------------------------------------
                                                              *MiniFiles.setup()*
                           `MiniFiles.setup`({config})
