@@ -1153,6 +1153,19 @@ MiniHues.apply_palette = function(palette, plugins)
   -- 'kevinhwang91/nvim-ufo'
   -- Everything works correctly out of the box
 
+  if has_integration('kevinhwang91/nvim-bqf') then
+    hi('BqfPreviewFloat',      { link = 'NormalFloat' })
+    hi('BqfPreviewBorder',     { link = 'FloatBorder' })
+    hi('BqfPreviewTitle',      { link = 'Title' })
+    hi('BqfPreviewThumb',      { link = 'PmenuThumb' })
+    hi('BqfPreviewSbar',       { link = 'PmenuSbar' })
+    hi('BqfPreviewCursor',     { blend=100, nocombine=true })
+    hi('BqfPreviewCursorLine', { link = 'CursorLine' })
+    hi('BqfPreviewRange',      { link = 'IncSearch' })
+    hi('BqfPreviewBufLabel',   { link = 'BqfPreviewRange' })
+    hi('BqfSign',              { fg=p.cyan })
+  end
+
   if has_integration('lewis6991/gitsigns.nvim') then
     hi('GitSignsAdd',             { fg=p.green,  bg=nil })
     hi('GitSignsAddLn',           { link='GitSignsAdd' })
