@@ -1005,7 +1005,7 @@ H.replace_do = function(data)
   local edge_to_col = vim.fn.col({ to_line, '$' }) - 1 - (vim.o.selection == 'exclusive' and 0 or 1)
 
   local is_edge_line = submode == 'V' and to_line == vim.fn.line('$')
-  local is_edge_col = submode ~= 'V' and to_col == edge_to_col
+  local is_edge_col = submode ~= 'V' and to_col == edge_to_col and vim.o.virtualedit ~= 'all'
   local is_edge = is_edge_line or is_edge_col
 
   local covers_linewise_all_buffer = is_edge_line and from_line == 1

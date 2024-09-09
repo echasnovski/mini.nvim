@@ -449,9 +449,43 @@ T['Evaluate']['works in Visual mode'] = function()
   validate_edit({ '1 + 1', '1 + 2' }, { 1, 0 }, { '<C-v>j$', 'g=' }, { '2', '3' }, { 1, 0 })
 end
 
-T['Evaluate']['works blockwise in Visual mode with `virtualedit=block`'] = function()
+T['Evaluate']['works with different `virtualedit`'] = function()
+  local validate = function()
+    -- Charwise
+    validate_edit1d('1+1=x', 0, { 'g=', '3l' }, '2=x', 0)
+    validate_edit1d('x=1+1=x', 2, { 'g=', '3l' }, 'x=2=x', 2)
+    validate_edit1d('x=1+1', 2, { 'g=', '3l' }, 'x=2', 2)
+
+    validate_edit1d('1+1=x', 0, { 'v2l', 'g=' }, '2=x', 0)
+    validate_edit1d('x=1+1=x', 2, { 'v2l', 'g=' }, 'x=2=x', 2)
+    validate_edit1d('x=1+1', 2, { 'v2l', 'g=' }, 'x=2', 2)
+
+    -- Linewise
+    validate_edit({ '0+1', '0+2', '0+3' }, { 1, 0 }, { 'g==' }, { '1', '0+2', '0+3' }, { 1, 0 })
+    validate_edit({ '0+1', '0+2', '0+3' }, { 2, 0 }, { 'g==' }, { '0+1', '2', '0+3' }, { 2, 0 })
+    validate_edit({ '0+1', '0+2', '0+3' }, { 3, 0 }, { 'g==' }, { '0+1', '0+2', '3' }, { 3, 0 })
+
+    validate_edit({ '0+1', '0+2', '0+3' }, { 1, 0 }, { 'V', 'g=' }, { '1', '0+2', '0+3' }, { 1, 0 })
+    validate_edit({ '0+1', '0+2', '0+3' }, { 2, 0 }, { 'V', 'g=' }, { '0+1', '2', '0+3' }, { 2, 0 })
+    validate_edit({ '0+1', '0+2', '0+3' }, { 3, 0 }, { 'V', 'g=' }, { '0+1', '0+2', '3' }, { 3, 0 })
+
+    -- Blockwise
+    child.lua([[vim.keymap.set('o', 'iL', function() vim.cmd('normal! \22jll') end)]])
+    validate_edit({ '1+1=x', '1+2=y' }, { 1, 0 }, { 'g=', 'iL' }, { '2  =x', '3  =y' }, { 1, 0 })
+    validate_edit({ 'x=1+1=x', 'y=1+2=y' }, { 1, 2 }, { 'g=', 'iL' }, { 'x=2  =x', 'y=3  =y' }, { 1, 2 })
+    validate_edit({ 'x=1+1', 'y=1+2' }, { 1, 2 }, { 'g=', 'iL' }, { 'x=2', 'y=3' }, { 1, 2 })
+
+    validate_edit({ '1+1=x', '1+2=y' }, { 1, 0 }, { '<C-v>jll', 'g=' }, { '2  =x', '3  =y' }, { 1, 0 })
+    validate_edit({ 'x=1+1=x', 'y=1+2=y' }, { 1, 2 }, { '<C-v>jll', 'g=' }, { 'x=2  =x', 'y=3  =y' }, { 1, 2 })
+    validate_edit({ 'x=1+1', 'y=1+2' }, { 1, 2 }, { '<C-v>jll', 'g=' }, { 'x=2', 'y=3' }, { 1, 2 })
+  end
+
+  child.o.virtualedit = 'all'
+  validate()
+  child.o.virtualedit = 'onemore'
+  validate()
   child.o.virtualedit = 'block'
-  validate_edit({ 'x=1+1=x', 'y=1+2=y' }, { 1, 2 }, { '<C-v>j2l', 'g=' }, { 'x=2  =x', 'y=3  =y' }, { 1, 2 })
+  validate()
 end
 
 T['Evaluate']['respects `config.evaluate.func`'] = function()
@@ -773,9 +807,44 @@ T['Exchange']['works in Visual mode'] = function()
   validate_edit({ 'ab', 'cd' }, { 1, 1 }, { '<C-v>jgx', 'h', '<C-v>jgx' }, { 'ba', 'dc' }, { 1, 0 })
 end
 
-T['Exchange']['works blockwise in Visual mode with `virtualedit=block`'] = function()
+T['Exchange']['works with different `virtualedit`'] = function()
+  local validate = function()
+    -- Charwise
+    validate_edit1d('aa bb cc', 3, { 'gx', 'iw', 'b', 'gx', 'iw' }, 'bb aa cc', 0)
+    validate_edit1d('aa bb cc', 0, { 'gx', 'iw', 'w', 'gx', 'iw' }, 'bb aa cc', 3)
+    validate_edit1d('aa bb cc', 0, { 'gx', 'iw', '2w', 'gx', 'iw' }, 'cc bb aa', 6)
+
+    validate_edit1d('aa bb cc', 3, { 'viw', 'gx', '2b', 'viw', 'gx' }, 'bb aa cc', 0)
+    validate_edit1d('aa bb cc', 0, { 'viw', 'gx', 'w', 'viw', 'gx' }, 'bb aa cc', 3)
+    validate_edit1d('aa bb cc', 0, { 'viw', 'gx', '2w', 'viw', 'gx' }, 'cc bb aa', 6)
+
+    -- Linewise
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'gxx', 'j', 'gxx' }, { 'bb', 'aa', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'gxx', 'j', 'gxx' }, { 'aa', 'cc', 'bb' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'gxx', 'k', 'gxx' }, { 'aa', 'cc', 'bb' }, { 2, 0 })
+
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'V', 'gx', 'j', 'V', 'gx' }, { 'bb', 'aa', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'V', 'gx', 'j', 'V', 'gx' }, { 'aa', 'cc', 'bb' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'V', 'gx', 'k', 'V', 'gx' }, { 'aa', 'cc', 'bb' }, { 2, 0 })
+
+    -- Blockwise
+    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
+    child.lua([[vim.keymap.set('o', 'ie', function() vim.cmd('normal! \22j') end)]])
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'gx', 'ie', 'l', 'gx', 'ie' }, { 'bac', 'edf' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'gx', 'ie', 'l', 'gx', 'ie' }, { 'acb', 'dfe' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { 'gx', 'ie', 'h', 'gx', 'ie' }, { 'acb', 'dfe' }, { 1, 1 })
+
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { '<C-v>jgx', 'l', '<C-v>jgx' }, { 'bac', 'edf' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { '<C-v>jgx', 'l', '<C-v>jgx' }, { 'acb', 'dfe' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { '<C-v>jgx', 'h', '<C-v>jgx' }, { 'acb', 'dfe' }, { 1, 1 })
+  end
+
+  child.o.virtualedit = 'all'
+  validate()
+  child.o.virtualedit = 'onemore'
+  validate()
   child.o.virtualedit = 'block'
-  validate_edit({ 'ab', 'cd' }, { 1, 0 }, { '<C-v>jgx', 'l', '<C-v>jgx' }, { 'ba', 'dc' }, { 1, 1 })
+  validate()
 end
 
 T['Exchange']['works when regions are made in different modes'] = function()
@@ -1278,10 +1347,44 @@ T['Multiply']['works with `[count]` in Visual mode'] = function()
   validate_edit(lines, { 2, 1 }, { '<C-v>kh', '2gm' }, ref_lines, ref_cursor)
 end
 
-T['Multiply']['works blockwise in Visual mode with `virtualedit=block`'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
+T['Multiply']['works with different `virtualedit`'] = function()
+  local validate = function()
+    -- Charwise
+    validate_edit1d('aa bb cc', 0, { 'gm', 'iw' }, 'aaaa bb cc', 2)
+    validate_edit1d('aa bb cc', 3, { 'gm', 'iw' }, 'aa bbbb cc', 5)
+    validate_edit1d('aa bb cc', 6, { 'gm', 'iw' }, 'aa bb cccc', 8)
+
+    validate_edit1d('aa bb cc', 0, { 'viw', 'gm' }, 'aaaa bb cc', 2)
+    validate_edit1d('aa bb cc', 3, { 'viw', 'gm' }, 'aa bbbb cc', 5)
+    validate_edit1d('aa bb cc', 6, { 'viw', 'gm' }, 'aa bb cccc', 8)
+
+    -- Linewise
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'gmm' }, { 'aa', 'aa', 'bb', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'gmm' }, { 'aa', 'bb', 'bb', 'cc' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'gmm' }, { 'aa', 'bb', 'cc', 'cc' }, { 4, 0 })
+
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'V', 'gm' }, { 'aa', 'aa', 'bb', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'V', 'gm' }, { 'aa', 'bb', 'bb', 'cc' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'V', 'gm' }, { 'aa', 'bb', 'cc', 'cc' }, { 4, 0 })
+
+    -- Blockwise
+    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
+    child.lua([[vim.keymap.set('o', 'ie', function() vim.cmd('normal! \22j') end)]])
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'gm', 'ie' }, { 'aabc', 'ddef' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'gm', 'ie' }, { 'abbc', 'deef' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { 'gm', 'ie' }, { 'abcc', 'deff' }, { 1, 3 })
+
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { '<C-v>j', 'gm' }, { 'aabc', 'ddef' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { '<C-v>j', 'gm' }, { 'abbc', 'deef' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { '<C-v>j', 'gm' }, { 'abcc', 'deff' }, { 1, 3 })
+  end
+
+  child.o.virtualedit = 'all'
+  validate()
+  child.o.virtualedit = 'onemore'
+  validate()
   child.o.virtualedit = 'block'
-  validate_edit({ 'xab rs', 'xcd uv' }, { 1, 1 }, { '<C-v>jl', 'gm' }, { 'xabab rs', 'xcdcd uv' }, { 1, 3 })
+  validate()
 end
 
 T['Multiply']['works with multibyte characters'] = function()
@@ -1637,9 +1740,43 @@ T['Replace']['works in Visual mode'] = function()
   validate_edit({ 'a b', 'a b' }, { 1, 0 }, { 'y<C-v>j', 'w', '<C-v>j', 'gr' }, { 'a a', 'a a' }, { 1, 2 })
 end
 
-T['Replace']['works blockwise in Visual mode with `virtualedit=block`'] = function()
+T['Replace']['works with different `virtualedit`'] = function()
+  local validate = function()
+    -- Charwise
+    validate_edit1d('aa bb cc', 3, { 'yiw', 'b', 'gr', 'iw' }, 'bb bb cc', 0)
+    validate_edit1d('aa bb cc', 0, { 'yiw', 'w', 'gr', 'iw' }, 'aa aa cc', 3)
+    validate_edit1d('aa bb cc', 0, { 'yiw', '2w', 'gr', 'iw' }, 'aa bb aa', 6)
+
+    validate_edit1d('aa bb cc', 3, { 'yiw', 'b', 'viw', 'gr' }, 'bb bb cc', 0)
+    validate_edit1d('aa bb cc', 0, { 'yiw', 'w', 'viw', 'gr' }, 'aa aa cc', 3)
+    validate_edit1d('aa bb cc', 0, { 'yiw', '2w', 'viw', 'gr' }, 'aa bb aa', 6)
+
+    -- Linewise
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'yy', 'j', 'grr' }, { 'aa', 'aa', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'yy', 'j', 'grr' }, { 'aa', 'bb', 'bb' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'yy', 'k', 'grr' }, { 'aa', 'cc', 'cc' }, { 2, 0 })
+
+    validate_edit({ 'aa', 'bb', 'cc' }, { 1, 0 }, { 'yy', 'j', 'V', 'gr' }, { 'aa', 'aa', 'cc' }, { 2, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 2, 0 }, { 'yy', 'j', 'V', 'gr' }, { 'aa', 'bb', 'bb' }, { 3, 0 })
+    validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'yy', 'k', 'V', 'gr' }, { 'aa', 'cc', 'cc' }, { 2, 0 })
+
+    -- Blockwise
+    child.lua([[vim.keymap.set('o', 'ie', function() vim.cmd('normal! \22j') end)]])
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'y', 'ie', 'l', 'gr', 'ie' }, { 'aac', 'ddf' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'y', 'ie', 'l', 'gr', 'ie' }, { 'abb', 'dee' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { 'y', 'ie', 'h', 'gr', 'ie' }, { 'acc', 'dff' }, { 1, 1 })
+
+    validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'y', 'ie', 'l', '<C-v>j', 'gr' }, { 'aac', 'ddf' }, { 1, 1 })
+    validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'y', 'ie', 'l', '<C-v>j', 'gr' }, { 'abb', 'dee' }, { 1, 2 })
+    validate_edit({ 'abc', 'def' }, { 1, 2 }, { 'y', 'ie', 'h', '<C-v>j', 'gr' }, { 'acc', 'dff' }, { 1, 1 })
+  end
+
+  child.o.virtualedit = 'all'
+  validate()
+  child.o.virtualedit = 'onemore'
+  validate()
   child.o.virtualedit = 'block'
-  validate_edit({ 'xab', 'xcd' }, { 1, 0 }, { 'y<C-v>j', 'l', '<C-v>j', 'gr' }, { 'xxb', 'xxd' }, { 1, 1 })
+  validate()
 end
 
 T['Replace']['correctly reindents linewise in Visual mode'] = function()
@@ -1932,9 +2069,44 @@ T['Sort']['works in Visual mode'] = function()
   validate_edit({ 'cxb', 'bxa', 'axc' }, { 1, 1 }, { '<C-v>jl', 'gs' }, { 'cxa', 'bxb', 'axc' }, { 1, 1 })
 end
 
-T['Sort']['works blockwise in Visual mode with `virtualedit=block`'] = function()
+T['Sort']['works with different `virtualedit`'] = function()
+  local validate = function()
+    -- Charwise
+    validate_edit1d('cc bb aa', 0, { 'gs', '2e' }, 'bb cc aa', 0)
+    validate_edit1d('cc bb aa', 3, { 'gs', '2e' }, 'cc aa bb', 3)
+    validate_edit1d('cc bb aa', 0, { 'gs', '3e' }, 'aa bb cc', 0)
+
+    validate_edit1d('cc bb aa', 0, { 'v2e', 'gs' }, 'bb cc aa', 0)
+    validate_edit1d('cc bb aa', 3, { 'v2e', 'gs' }, 'cc aa bb', 3)
+    validate_edit1d('cc bb aa', 0, { 'v3e', 'gs' }, 'aa bb cc', 0)
+
+    -- Linewise
+    validate_edit({ 'cc', 'bb', 'aa' }, { 1, 0 }, { 'gs', 'j' }, { 'bb', 'cc', 'aa' }, { 1, 0 })
+    validate_edit({ 'cc', 'bb', 'aa' }, { 2, 0 }, { 'gs', 'j' }, { 'cc', 'aa', 'bb' }, { 2, 0 })
+    validate_edit({ 'cc', 'bb', 'aa' }, { 1, 0 }, { 'gs', '2j' }, { 'aa', 'bb', 'cc' }, { 1, 0 })
+
+    validate_edit({ 'cc', 'bb', 'aa' }, { 1, 0 }, { 'Vj', 'gs' }, { 'bb', 'cc', 'aa' }, { 1, 0 })
+    validate_edit({ 'cc', 'bb', 'aa' }, { 2, 0 }, { 'Vj', 'gs' }, { 'cc', 'aa', 'bb' }, { 2, 0 })
+    validate_edit({ 'cc', 'bb', 'aa' }, { 1, 0 }, { 'V2j', 'gs' }, { 'aa', 'bb', 'cc' }, { 1, 0 })
+
+    -- Blockwise
+    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
+    child.lua([[vim.keymap.set('o', 'iE', function() vim.cmd('normal! \22jj') end)]])
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 0 }, { 'gs', 'iE' }, { 'aba', 'bac', 'ccb' }, { 1, 0 })
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 1 }, { 'gs', 'iE' }, { 'caa', 'bbc', 'acb' }, { 1, 1 })
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 2 }, { 'gs', 'iE' }, { 'cba', 'bab', 'acc' }, { 1, 2 })
+
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 0 }, { '<C-v>jj', 'gs' }, { 'aba', 'bac', 'ccb' }, { 1, 0 })
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 1 }, { '<C-v>jj', 'gs' }, { 'caa', 'bbc', 'acb' }, { 1, 1 })
+    validate_edit({ 'cba', 'bac', 'acb' }, { 1, 2 }, { '<C-v>jj', 'gs' }, { 'cba', 'bab', 'acc' }, { 1, 2 })
+  end
+
+  child.o.virtualedit = 'all'
+  validate()
+  child.o.virtualedit = 'onemore'
+  validate()
   child.o.virtualedit = 'block'
-  validate_edit({ 'cbx', 'bax', 'acx' }, { 1, 1 }, { '<C-v>2j', 'gs' }, { 'cax', 'bbx', 'acx' }, { 1, 1 })
+  validate()
 end
 
 T['Sort']['respects `config.sort.func`'] = function()
