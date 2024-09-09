@@ -302,7 +302,7 @@ H.root_cache = {}
 --- Works only on Neovim>=0.10.
 MiniMisc.setup_termbg_sync = function()
   if vim.fn.has('nvim-0.10') == 0 then
-    -- Handling `io.write('\027]11;?\007')` response was added in Neovim 0.10
+    -- Handling `'\027]11;?\007'` response was added in Neovim 0.10
     H.notify('`setup_termbg_sync()` requires Neovim>=0.10', 'WARN')
     return
   end
@@ -326,13 +326,15 @@ MiniMisc.setup_termbg_sync = function()
     local sync = function()
       local normal = vim.api.nvim_get_hl_by_name('Normal', true)
       if normal.background == nil then return end
-      io.write(string.format('\027]11;#%06x\007', normal.background))
+      -- NOTE: use `io.stdout` instead of `io.write` to ensure correct target
+      -- Otherwise after `io.output(file); file:close()` there is an error
+      io.stdout:write(string.format('\027]11;#%06x\007', normal.background))
     end
     vim.api.nvim_create_autocmd({ 'VimResume', 'ColorScheme' }, { group = augroup, callback = sync })
 
     -- Set up reset to the color returned from the very first call
     H.termbg_init = H.termbg_init or bg_init
-    local reset = function() io.write('\027]11;' .. H.termbg_init .. '\007') end
+    local reset = function() io.stdout:write('\027]11;' .. H.termbg_init .. '\007') end
     vim.api.nvim_create_autocmd({ 'VimLeavePre', 'VimSuspend' }, { group = augroup, callback = reset })
 
     -- Sync immediately
@@ -341,7 +343,7 @@ MiniMisc.setup_termbg_sync = function()
 
   -- Ask about current background color and process the response
   local id = vim.api.nvim_create_autocmd('TermResponse', { group = augroup, callback = f, once = true, nested = true })
-  io.write('\027]11;?\007')
+  io.stdout:write('\027]11;?\007')
   vim.defer_fn(function()
     local ok = pcall(vim.api.nvim_del_autocmd, id)
     if ok then H.notify('`setup_termbg_sync()` did not get response from terminal emulator', 'WARN') end

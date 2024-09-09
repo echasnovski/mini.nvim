@@ -455,9 +455,9 @@ T['setup_termbg_sync()'] = new_set({
   hooks = {
     pre_case = function()
       child.lua([[
-        -- Mock `io.write` used to send control sequences to terminal emulator
+        -- Mock `io.stdout:write` used to send control sequences to terminal emulator
         _G.log = {}
-        io.write = function(...) table.insert(_G.log, { ... }) end
+        io.stdout = { write = function(self, ...) table.insert(_G.log, { ... }) end }
 
         -- Mock attached UI
         vim.api.nvim_list_uis = function() return { { stdout_tty = true } } end
