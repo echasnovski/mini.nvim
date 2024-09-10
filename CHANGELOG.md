@@ -37,6 +37,7 @@
 ## mini.hues
 
 - FEATURE: implement `apply_palette()` (to compliment `make_palette()`) providing a way to tweak applied palette before applying it.
+- FEATURE: add 'kevinhwang91/nvim-bqf' plugin integration.
 
 ## mini.files
 

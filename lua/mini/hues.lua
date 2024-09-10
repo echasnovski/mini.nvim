@@ -49,6 +49,7 @@
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
+---     - 'kevinhwang91/nvim-bqf'
 ---     - 'kevinhwang91/nvim-ufo'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
@@ -1148,6 +1149,13 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('Sneak',      { fg=p.bg, bg=p.orange })
     hi('SneakScope', { fg=p.bg, bg=p.fg_edge2 })
     hi('SneakLabel', { fg=p.bg, bg=p.orange, bold=true })
+  end
+
+  -- 'kevinhwang91/nvim-bqf'
+  if has_integration('kevinhwang91/nvim-bqf') then
+    hi('BqfPreviewFloat', { link='NormalFloat' })
+    hi('BqfPreviewTitle', { link='FloatTitle' })
+    hi('BqfSign',         { fg=p.cyan })
   end
 
   -- 'kevinhwang91/nvim-ufo'
