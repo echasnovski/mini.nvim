@@ -9,6 +9,10 @@
 - Start automated testing on Windows and MacOS.
 - Universally ensure that all plugin's highlight groups are defined after any color scheme takes effect.
 
+## mini.base16
+
+- FEATURE: add 'kevinhwang91/nvim-bqf' plugin integration.
+
 ## mini.completion
 
 - FEATURE: add highlighting of LSP kind (like "Function", "Keyword", etc.). Works only on Neovim>=0.11. Requires enabled 'mini.icons' to work out of the box.

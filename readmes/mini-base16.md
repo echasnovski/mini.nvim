@@ -56,6 +56,7 @@ Supported highlight groups:
     - [HiPhish/rainbow-delimiters.nvim](https://github.com/HiPhish/rainbow-delimiters.nvim)
     - [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
     - [justinmk/vim-sneak](https://github.com/justinmk/vim-sneak)
+    - [kevinhwang91/nvim-bqf](https://github.com/kevinhwang91/nvim-bqf)
     - [kevinhwang91/nvim-ufo](https://github.com/kevinhwang91/nvim-ufo)
     - [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
     - [lukas-reineke/indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)

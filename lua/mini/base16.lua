@@ -33,6 +33,7 @@
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
+---     - 'kevinhwang91/nvim-bqf'
 ---     - 'kevinhwang91/nvim-ufo'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
@@ -1004,6 +1005,13 @@ H.apply_palette = function(palette, use_cterm)
     hi('Sneak',      {fg=p.base00, bg=p.base0E, attr=nil,    sp=nil})
     hi('SneakScope', {fg=p.base00, bg=p.base07, attr=nil,    sp=nil})
     hi('SneakLabel', {fg=p.base00, bg=p.base0E, attr='bold', sp=nil})
+  end
+
+  -- 'kevinhwang91/nvim-bqf'
+  if H.has_integration('kevinhwang91/nvim-bqf') then
+    hi('BqfPreviewFloat', {link='NormalFloat'})
+    hi('BqfPreviewTitle', {fg=p.base0D, bg=p.base01, attr=nil, sp=nil})
+    hi('BqfSign',         {fg=p.base0C, bg=p.base01, attr=nil, sp=nil})
   end
 
   -- 'kevinhwang91/nvim-ufo'
