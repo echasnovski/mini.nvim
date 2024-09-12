@@ -327,8 +327,7 @@ end
 --- Select session interactively and perform action
 ---
 --- Note: this uses |vim.ui.select()| function. For more user-friendly
---- experience, override it (for example, with external plugins like
---- "stevearc/dressing.nvim").
+--- experience, override it (for example, see |MiniPick.ui_select()|).
 ---
 ---@param action string|nil Action to perform. Should be one of "read" (default),
 ---   "write", or "delete".
