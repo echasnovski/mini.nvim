@@ -1,4 +1,3 @@
-GROUP_DEPTH ?= 1
 NVIM_EXEC ?= nvim
 
 all: test documentation
@@ -10,7 +9,7 @@ test:
 		$$nvim_exec --version | head -n 1 && echo '' ; \
 		$$nvim_exec --headless --noplugin -u ./scripts/minimal_init.lua \
 			-c "lua require('mini.test').setup()" \
-			-c "lua MiniTest.run({ execute = { reporter = MiniTest.gen_reporter.stdout({ group_depth = $(GROUP_DEPTH) }) } })" ; \
+			-c "lua MiniTest.run()" ; \
 	done
 
 # Use `make test_xxx` to run tests for module 'mini.xxx'
@@ -22,7 +21,7 @@ $(TEST_MODULES):
 		$$nvim_exec --version | head -n 1 && echo '' ; \
 		$$nvim_exec --headless --noplugin -u ./scripts/minimal_init.lua \
 			-c "lua require('mini.test').setup()" \
-			-c "lua MiniTest.run_file('tests/$@.lua', { execute = { reporter = MiniTest.gen_reporter.stdout({ group_depth = $(GROUP_DEPTH) }) } })" ; \
+			-c "lua MiniTest.run_file('tests/$@.lua')" ; \
 	done
 
 documentation:
