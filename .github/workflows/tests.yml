@@ -13,8 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Run tests
+  test:
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -27,13 +26,206 @@ jobs:
         - os: windows-latest
           neovim_version: v0.10.1
     runs-on: ${{ matrix.os }}
+    name: Test (${{ matrix.os }}, ${{ matrix.neovim_version }})
 
     steps:
+      - name: Get Previous Run Status
+        id: prev_attempt_is_fail
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var attempt_number = ${{ github.run_attempt }} - 1;
+            if (attempt_number < 1) return;
+
+            const { data: prev_jobs } = await github.rest.actions.listJobsForWorkflowRunAttempt({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              attempt_number: attempt_number,
+            });
+
+            var cur_job_name = 'Test (${{ matrix.os }}, ${{ matrix.neovim_version }})'
+            for (var j of prev_jobs.jobs) {
+              if (j.name === cur_job_name) {
+                for (var s of j.steps) {
+                  var is_fail = !(s.conclusion === 'success' || s.conclusion === 'skipped');
+                  core.setOutput(s.name, is_fail);
+                }
+              }
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v4
+
       - name: Setup neovim
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
           version: ${{ matrix.neovim_version }}
-      - name: Run tests
-        run: make test
+
+      - name: ai
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.ai == 'true') }}
+        run: make test_ai
+
+      - name: align
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.align == 'true') }}
+        run: make test_align
+
+      - name: animate
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.animate == 'true') }}
+        run: make test_animate
+
+      - name: base16
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.base16 == 'true') }}
+        run: make test_base16
+
+      - name: basics
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.basics == 'true') }}
+        run: make test_basics
+
+      - name: bracketed
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.bracketed == 'true') }}
+        run: make test_bracketed
+
+      - name: bufremove
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.bufremove == 'true') }}
+        run: make test_bufremove
+
+      - name: clue
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.clue == 'true') }}
+        run: make test_clue
+
+      - name: colors
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.colors == 'true') }}
+        run: make test_colors
+
+      - name: comment
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.comment == 'true') }}
+        run: make test_comment
+
+      - name: completion
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.completion == 'true') }}
+        run: make test_completion
+
+      - name: cursorword
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.cursorword == 'true') }}
+        run: make test_cursorword
+
+      - name: deps
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.deps == 'true') }}
+        run: make test_deps
+
+      - name: diff
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.diff == 'true') }}
+        run: make test_diff
+
+      - name: doc
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.doc == 'true') }}
+        run: make test_doc
+
+      - name: extra
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.extra == 'true') }}
+        run: make test_extra
+
+      - name: files
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.files == 'true') }}
+        run: make test_files
+
+      - name: fuzzy
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.fuzzy == 'true') }}
+        run: make test_fuzzy
+
+      - name: git
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.git == 'true') }}
+        run: make test_git
+
+      - name: hipatterns
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.hipatterns == 'true') }}
+        run: make test_hipatterns
+
+      - name: hues
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.hues == 'true') }}
+        run: make test_hues
+
+      - name: icons
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.icons == 'true') }}
+        run: make test_icons
+
+      - name: indentscope
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.indentscope == 'true') }}
+        run: make test_indentscope
+
+      - name: jump
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.jump == 'true') }}
+        run: make test_jump
+
+      - name: jump2d
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.jump2d == 'true') }}
+        run: make test_jump2d
+
+      - name: map
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.map == 'true') }}
+        run: make test_map
+
+      - name: misc
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.misc == 'true') }}
+        run: make test_misc
+
+      - name: move
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.move == 'true') }}
+        run: make test_move
+
+      - name: notify
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.notify == 'true') }}
+        run: make test_notify
+
+      - name: operators
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.operators == 'true') }}
+        run: make test_operators
+
+      - name: pairs
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.pairs == 'true') }}
+        run: make test_pairs
+
+      - name: pick
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.pick == 'true') }}
+        run: make test_pick
+
+      - name: sessions
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.sessions == 'true') }}
+        run: make test_sessions
+
+      - name: splitjoin
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.splitjoin == 'true') }}
+        run: make test_splitjoin
+
+      - name: starter
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.starter == 'true') }}
+        run: make test_starter
+
+      - name: statusline
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.statusline == 'true') }}
+        run: make test_statusline
+
+      - name: surround
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.surround == 'true') }}
+        run: make test_surround
+
+      - name: tabline
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.tabline == 'true') }}
+        run: make test_tabline
+
+      - name: test
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.test == 'true') }}
+        run: make test_test
+
+      - name: trailspace
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.trailspace == 'true') }}
+        run: make test_trailspace
+
+      - name: visits
+        if: ${{ !cancelled() && (github.run_attempt == '1' || steps.prev_attempt_is_fail.outputs.visits == 'true') }}
+        run: make test_visits
