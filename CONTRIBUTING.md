@@ -99,9 +99,9 @@ If your contribution updates code, please make sure that it doesn't break existi
 
 - From command line:
     - Execute `make test` to run all tests (with `nvim` as executable).
-    - Execute `FILE=tests/test_xxx.lua make test_file` to run tests only from file `tests/test_xxx.lua` (with `nvim` as executable).
+    - Execute `make test_xxx` to run tests only from file `tests/test_xxx.lua` (with `nvim` as executable). For example, `make test_ai`.
     - If you have multiple Neovim executables (say, `nvim_07`, `nvim_08`, `nvim_09`, `nvim_010`), you can use `NVIM_EXEC` variable to tests against multiple versions like this:
-      `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" make test` or `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" FILE=tests/test_xxx.lua make test_file`.
+      `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" make test` or `NVIM_EXEC="nvim_07 nvim_08 nvim_09 nvim_010" make test_xxx`.
 - Inside Neovim instance execute `:lua require('mini.test').setup(); MiniTest.run()` to run all tests or `:lua require('mini.test').setup(); MiniTest.run_file()` to run tests only from current buffer.
 
 This plugin uses 'mini.test' to manage its tests. For a more hands-on introduction, see [TESTING.md](TESTING.md).
