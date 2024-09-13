@@ -1704,7 +1704,10 @@ H.get_current_region = function(mode)
   local to = { line = to_pos[2], col = to_pos[3] + to_pos[4] }
 
   -- True if selection extends to EOL, such as after <C-v>$
-  if mode == 'block' and to_pos[5] == vim.v.maxcol then to.col = to_pos[5] end
+  --
+  -- vim.v.maxcol is available since Neovim v0.9.0, fallback can
+  -- be removed once older versions are unsupported
+  if mode == 'block' and to_pos[5] == (vim.v.maxcol or 2 ^ 31 - 1) then to.col = to_pos[5] end
 
   -- Ensure correct order
   if to.line < from.line or (to.line == from.line and to.col < from.col) then
@@ -1730,15 +1733,7 @@ H.region_get_text = function(region, mode)
 
     local ret = {}
     for line = from.line, to.line do
-      local left_col = vim.fn.virtcol2col(0, line, left_virtcol)
-      local right_col = vim.fn.virtcol2col(0, line, right_virtcol)
-
-      -- We don't know the byte index one-past-the-end of the last
-      -- character within the region yet, so get the entire line
-      local text = H.get_lines(line - 1, line)[1]
-      local last_byte_idx = H.next_char_boundary(text, right_col - 1)
-
-      ret[#ret + 1] = text:sub(left_col, last_byte_idx)
+      ret[#ret + 1] = H.byte_range_from_virtcols(line - 1, left_virtcol, right_virtcol, true)
     end
     return ret
   end
@@ -1768,11 +1763,7 @@ H.region_set_text = function(region, mode, text)
       -- Use zero-based indexes
       local line_num = from.line + i - 2
 
-      local start_col = vim.fn.virtcol2col(0, line_num + 1, left_virtcol) - 1
-      local end_col = vim.fn.virtcol2col(0, line_num + 1, right_virtcol) - 1
-
-      local line = H.get_lines(line_num, line_num + 1)[1]
-      end_col = H.next_char_boundary(line, end_col)
+      local start_col, end_col = H.byte_range_from_virtcols(line_num, left_virtcol, right_virtcol)
 
       H.set_text(line_num, start_col, line_num, end_col, { text[i] })
     end
@@ -1805,17 +1796,42 @@ H.pos_to_virtcol = function(pos)
     return col, col
   end
 
-  return unpack(vim.fn.virtcol({ pos.line, pos.col }, true))
+  if vim.fn.has('nvim-0.10') == 1 then
+    return unpack(vim.fn.virtcol({ pos.line, pos.col }, true))
+  else -- virtcol() only takes one argument in older versions
+    local text_to_end = H.get_text(pos.line - 1, pos.col - 1, pos.line - 1, -1)[1]
+    local char = vim.fn.strcharpart(text_to_end, 0, 1)
+    local offset = math.max(0, vim.fn.strdisplaywidth(char) - 1)
+
+    local end_col = vim.fn.virtcol({ pos.line, pos.col })
+    return end_col - offset, end_col
+  end
 end
 
--- Returns the 0-based byte index after the last byte
--- of the character starting at index n in str
-H.next_char_boundary = function(str, n)
-  -- Pass true to include composing characters. This probably doesn't matter in
-  -- practice, but not doing this would cause problems if mini.align ever
-  -- wanted to add spaces after the right edge of the block, for instance.
-  local bytes_in_last_char = #vim.fn.strcharpart(str:sub(n + 1), 0, 1, true)
-  return n + bytes_in_last_char
+-- Converts an inclusive virtual column range within a line to a 0-indexed
+-- end-exclusive byte range. Returns a pair of indices, or the line text within
+-- the range if return_text is true.
+H.byte_range_from_virtcols = function(row, start_virtcol, end_virtcol, return_text)
+  local text = H.get_lines(row, row + 1)[1]
+
+  if start_virtcol >= vim.fn.virtcol({ row + 1, '$' }) then
+    if return_text then return '' end
+    return #text, #text -- Zero width range at EOL
+  end
+
+  local start_col = vim.fn.virtcol2col(0, row + 1, start_virtcol) - 1
+  local end_col = vim.fn.virtcol2col(0, row + 1, end_virtcol) - 1
+
+  -- First byte of the leftmost char
+  local start_idx = vim.fn.byteidx(text, vim.fn.charidx(text, start_col))
+  -- One past the last byte of the rightmost char
+  local end_idx = vim.fn.byteidx(text, vim.fn.charidx(text, end_col) + 1)
+
+  if return_text then
+    return text:sub(start_idx + 1, end_idx)
+  else
+    return start_idx, end_idx
+  end
 end
 
 -- Work with user interaction -------------------------------------------------
