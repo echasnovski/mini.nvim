@@ -1224,6 +1224,10 @@ end
 ---
 --- Notes:
 --- - `on_choice` is called when target window is current.
+---
+---@usage >lua
+---   vim.ui.select = MiniPick.ui_select
+--- <
 MiniPick.ui_select = function(items, opts, on_choice)
   local format_item = opts.format_item or H.item_to_string
   local items_ext = {}

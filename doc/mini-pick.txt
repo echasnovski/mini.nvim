@@ -1047,6 +1047,10 @@ Implements the required by `vim.ui.select()` signature. Plus allows extra
 Notes:
 - `on_choice` is called when target window is current.
 
+Usage ~
+>lua
+  vim.ui.select = MiniPick.ui_select
+<
 ------------------------------------------------------------------------------
                                                               *MiniPick.builtin*
                                `MiniPick.builtin`
