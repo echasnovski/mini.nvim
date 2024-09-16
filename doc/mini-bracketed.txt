@@ -62,7 +62,7 @@ Features:
   Window in current tab........... `[W` `[w` `]w` `]W` .... |MiniBracketed.window()|
 
   Yank selection replacing
-  latest put region................`[Y` `[y` `]y` `]Y` .... |MiniBracketed.yank()|
+  latest put region............... `[Y` `[y` `]y` `]Y` .... |MiniBracketed.yank()|
 
 Notes:
 - The `undo` target remaps |u| and |<C-R>| keys to register undo state
