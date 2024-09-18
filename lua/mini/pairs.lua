@@ -281,6 +281,7 @@ end
 MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
+  H.with_lazyredraw()
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
 end
 
@@ -303,6 +304,7 @@ MiniPairs.close = function(pair, neigh_pattern)
 
   local close = pair:sub(2, 2)
   if H.get_cursor_neigh(1, 1) == close then
+    H.with_lazyredraw()
     return H.get_arrow_key('right')
   else
     return close
@@ -326,6 +328,7 @@ MiniPairs.closeopen = function(pair, neigh_pattern)
   if H.is_disabled() or H.get_cursor_neigh(1, 1) ~= pair:sub(2, 2) then
     return MiniPairs.open(pair, neigh_pattern)
   else
+    H.with_lazyredraw()
     return H.get_arrow_key('right')
   end
 end
@@ -362,6 +365,7 @@ MiniPairs.bs = function(key)
     res = ('%s%s'):format(res, H.keys.del)
   end
 
+  H.with_lazyredraw()
   return res
 end
 
@@ -391,6 +395,8 @@ MiniPairs.cr = function(key)
     local cache_eventignore = vim.o.eventignore
     vim.o.eventignore = 'InsertLeave,InsertLeavePre,InsertEnter,ModeChanged'
     H.restore_eventignore(cache_eventignore)
+
+    H.with_lazyredraw()
 
     res = ('%s%s'):format(res, H.keys.above)
   end
@@ -641,5 +647,12 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.restore_eventignore = vim.schedule_wrap(function(val) vim.o.eventignore = val end)
+
+-- Redraw the screen only after the action is complete to prevent cursor flickering
+H.with_lazyredraw = function()
+  local cache_lazyredraw = vim.o.lazyredraw
+  vim.o.lazyredraw = true
+  vim.schedule_wrap(function() vim.o.lazyredraw = cache_lazyredraw end)
+end
 
 return MiniPairs
