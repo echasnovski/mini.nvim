@@ -1679,7 +1679,7 @@ H.process_current_region = function(lines_were_set, mode, opts, steps)
   vim.cmd('redraw')
 
   -- Confirm that lines were actually set
-  return true
+  return table.concat(strings) ~= table.concat(strings_aligned)
 end
 
 H.get_current_region = function()
