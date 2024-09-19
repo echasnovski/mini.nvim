@@ -281,6 +281,10 @@ end
 MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
+  local cache_lazyredraw = vim.go.lazyredraw
+  vim.go.lazyredraw = true
+  H.restore_lazyredraw(cache_lazyredraw)
+
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
 end
 
@@ -641,5 +645,6 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.restore_eventignore = vim.schedule_wrap(function(val) vim.o.eventignore = val end)
+H.restore_lazyredraw = vim.schedule_wrap(function(val) vim.go.lazyredraw = val end)
 
 return MiniPairs
