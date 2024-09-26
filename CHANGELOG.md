@@ -1,4 +1,4 @@
-# Version 0.13.0.9000
+# Version 0.14.0
 
 - Stop official support of Neovim 0.7.
 - Update help files to use code blocks with language annotation, as it results in a better code highlighting. Implies enabled tree-sitter highlighting in 'help' filetype:
