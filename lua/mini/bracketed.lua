@@ -825,12 +825,6 @@ end
 ---   - <n_times> `(number)` - Number of times to advance. Default: |v:count1|.
 ---   __bracketed_add_to_jumplist
 MiniBracketed.treesitter = function(direction, opts)
-  if H.get_treesitter_node == nil then
-    H.error(
-      '`treesitter()` target requires either `vim.treesitter.get_node()` or `vim.treesitter.get_node_at_pos()`.'
-        .. ' Use newer Neovim version.'
-    )
-  end
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'treesitter')
