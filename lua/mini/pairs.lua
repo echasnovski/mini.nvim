@@ -281,6 +281,12 @@ end
 MiniPairs.open = function(pair, neigh_pattern)
   if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
 
+  -- Temporarily redraw lazily for no cursor flicker due to `<Left>`.
+  -- This can happen in a big file with tree-sitter highlighting enabled.
+  local cache_lazyredraw = vim.o.lazyredraw
+  vim.o.lazyredraw = true
+  H.restore_lazyredraw(cache_lazyredraw)
+
   return ('%s%s'):format(pair, H.get_arrow_key('left'))
 end
 
@@ -391,6 +397,12 @@ MiniPairs.cr = function(key)
     local cache_eventignore = vim.o.eventignore
     vim.o.eventignore = 'InsertLeave,InsertLeavePre,InsertEnter,ModeChanged'
     H.restore_eventignore(cache_eventignore)
+
+    -- Temporarily redraw lazily for no cursor flicker due to `<C-o>O`.
+    -- This can happen in a big file with tree-sitter highlighting enabled.
+    local cache_lazyredraw = vim.o.lazyredraw
+    vim.o.lazyredraw = true
+    H.restore_lazyredraw(cache_lazyredraw)
 
     res = ('%s%s'):format(res, H.keys.above)
   end
@@ -641,5 +653,6 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.restore_eventignore = vim.schedule_wrap(function(val) vim.o.eventignore = val end)
+H.restore_lazyredraw = vim.schedule_wrap(function(val) vim.o.lazyredraw = val end)
 
 return MiniPairs

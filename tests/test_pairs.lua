@@ -620,6 +620,9 @@ T['Open action']['works'] = function()
   validate_open('i', '(', '()')
   validate_open('i', '[', '[]')
   validate_open('i', '{', '{}')
+
+  -- There should be no side effects
+  eq(child.o.lazyredraw, false)
 end
 
 T['Open action']['does not break undo sequence in Insert mode'] = function()
@@ -886,6 +889,10 @@ T['<CR> action']['works'] = function()
   validate_no('cr', '""')
   validate_no('cr', "''")
   validate_no('cr', '``')
+
+  -- There should be no side effects
+  eq(child.o.eventignore, '')
+  eq(child.o.lazyredraw, false)
 end
 
 T['<CR> action']['respects `key` argument'] = function()
