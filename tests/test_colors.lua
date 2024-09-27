@@ -1783,7 +1783,7 @@ T['animate()']['respects `opts.show_duration`'] = function()
   eq(is_cs_1(), true)
 
   -- Account that first step takes some time
-  sleep(3 * small_time + 2 * small_time)
+  sleep(3 * small_time + 3 * small_time)
   eq(is_cs_1(), false)
 end
 
