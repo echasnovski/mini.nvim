@@ -1509,8 +1509,9 @@ end
 H.get_matched_nodes_builtin = function(captures)
   -- Fetch treesitter data for buffer
   local lang = vim.bo.filetype
-  local ok, parser = pcall(vim.treesitter.get_parser, 0, lang)
-  if not ok then H.error_treesitter('parser', lang) end
+  -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
+  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, lang, { error = false })
+  if not has_parser or parser == nil then H.error_treesitter('parser', lang) end
 
   local get_query = vim.fn.has('nvim-0.9') == 1 and vim.treesitter.query.get or vim.treesitter.get_query
   local query = get_query(lang, 'textobjects')

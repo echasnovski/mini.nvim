@@ -1,6 +1,10 @@
 -- Mock treesitter for 'lua'
 vim.treesitter.get_parser = function(_, lang, _)
-  if lang ~= 'lua' then error([[There is parser only for 'lua' language.]]) end
+  if lang ~= 'lua' then
+    -- On Neovim>=0.12 `nil` is silently returned if there is no parser
+    if vim.fn.has('nvim-0.12') == 1 then return nil end
+    error([[There is parser only for 'lua' language.]])
+  end
 
   return {
     trees = function(_)

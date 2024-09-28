@@ -1365,7 +1365,8 @@ MiniExtra.pickers.treesitter = function(local_opts, opts)
   local pick = H.validate_pick('treesitter')
 
   local buf_id = vim.api.nvim_get_current_buf()
-  local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id)
+  -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
+  local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, nil, { error = false })
   if not has_parser or parser == nil then H.error('`pickers.treesitter` requires active tree-sitter parser.') end
 
   -- Make items by traversing roots of all trees (including injections)

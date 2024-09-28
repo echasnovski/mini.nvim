@@ -2381,6 +2381,7 @@ end
 
 T['treesitter()']['handles error when finding node at cursor'] = function()
   child.lua('vim.treesitter.get_node_at_pos = function() error("No tree-sitter") end')
+  child.lua('vim.treesitter.get_node = function() error("No tree-sitter") end')
   expect.error(function() forward('treesitter') end, 'can not find tree%-sitter node')
 end
 

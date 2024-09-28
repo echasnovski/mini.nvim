@@ -350,8 +350,9 @@ MiniComment.get_commentstring = function(ref_position)
   -- Neovim<0.9 can only have buffer 'commentstring'
   if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
 
-  local has_ts_parser, ts_parser = pcall(vim.treesitter.get_parser)
-  if not has_ts_parser then return buf_cs end
+  -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
+  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })
+  if not has_parser or parser == nil then return buf_cs end
 
   -- Try to get 'commentstring' associated with local tree-sitter language.
   -- This is useful for injected languages (like markdown with code blocks).
@@ -384,7 +385,7 @@ MiniComment.get_commentstring = function(ref_position)
       traverse(child_lang_tree, level + 1)
     end
   end
-  traverse(ts_parser, 1)
+  traverse(parser, 1)
 
   return ts_cs or buf_cs
 end

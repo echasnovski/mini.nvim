@@ -2301,8 +2301,12 @@ H.buffer_update_file = function(buf_id, path, opts, _)
   if H.buffer_should_highlight(buf_id) then
     local ft = vim.filetype.match({ buf = buf_id, filename = path })
     local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
-    local has_ts, _ = pcall(vim.treesitter.start, buf_id, has_lang and lang or ft)
-    if not has_ts then vim.bo[buf_id].syntax = ft end
+    lang = has_lang and lang or ft
+    -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
+    local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, lang, { error = false })
+    has_parser = has_parser and parser ~= nil
+    if has_parser then has_parser = pcall(vim.treesitter.start, buf_id, lang) end
+    if not has_parser then vim.bo[buf_id].syntax = ft end
   end
 end
 
