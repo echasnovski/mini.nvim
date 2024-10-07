@@ -601,24 +601,7 @@ MiniTest.execute = function(cases, opts)
   vim.schedule(function() H.exec_callable(reporter.start, cases) end)
 
   for case_num, cur_case in ipairs(cases) do
-    -- Schedule execution in async fashion. This allows doing other things
-    -- while tests are executed.
-    local schedule_step = H.make_step_scheduler(cur_case, case_num, opts)
-
-    vim.schedule(function() MiniTest.current.case = cur_case end)
-
-    for i, hook_pre in ipairs(cur_case.hooks.pre) do
-      schedule_step(hook_pre, 'hook_pre', [[Executing 'pre' hook #]] .. i)
-    end
-
-    schedule_step(function() cur_case.test(unpack(cur_case.args)) end, 'case', 'Executing test')
-
-    for i, hook_post in ipairs(cur_case.hooks.post) do
-      schedule_step(hook_post, 'hook_post', [[Executing 'post' hook #]] .. i)
-    end
-
-    -- Finalize state
-    schedule_step(nil, 'finalize', function() return H.case_final_state(cur_case) end)
+    H.schedule_case(cur_case, case_num, opts)
   end
 
   vim.schedule(function() H.exec_callable(reporter.finish) end)
@@ -1715,8 +1698,11 @@ H.execute_project_script = function(...)
   return success
 end
 
-H.make_step_scheduler = function(case, case_num, opts)
-  local report_update_case = function() H.exec_callable(opts.reporter.update, case_num) end
+H.schedule_case = function(case, case_num, opts)
+  local update_state = function(state)
+    case.exec.state = state
+    H.exec_callable(opts.reporter.update, case_num)
+  end
 
   local on_err = function(e)
     if H.cache.error_is_from_skip then
@@ -1733,32 +1719,39 @@ H.make_step_scheduler = function(case, case_num, opts)
 
     if opts.stop_on_error then
       MiniTest.stop()
-      case.exec.state = H.case_final_state(case)
-      report_update_case()
+      update_state(H.case_final_state(case))
     end
   end
 
-  return function(f, f_type, state)
-    f = f or function() end
+  local exec_step = function(f, state)
+    update_state(state)
 
-    vim.schedule(function()
-      if H.cache.should_stop_execution then return end
+    H.cache.n_screenshots = 0
+    xpcall(f, on_err)
 
-      local n_fails = case.exec == nil and 0 or #case.exec.fails
-      if f_type == 'case' and n_fails > 0 then
-        f = function() table.insert(case.exec.notes, 'Skip case due to error(s) in hooks.') end
-      end
-
-      H.cache.n_screenshots = 0
-      case.exec = case.exec or { fails = {}, notes = {} }
-      case.exec.state = vim.is_callable(state) and state() or state
-      report_update_case()
-      xpcall(f, on_err)
-
-      H.exec_callable(H.cache.finally)
-      H.cache.finally = nil
-    end)
+    H.exec_callable(H.cache.finally)
+    H.cache.finally = nil
   end
+
+  vim.schedule(function()
+    if H.cache.should_stop_execution then return end
+    case.exec = case.exec or { fails = {}, notes = {} }
+    MiniTest.current.case = case
+
+    for i, hook_pre in ipairs(case.hooks.pre) do
+      exec_step(hook_pre, "Executing 'pre' hook #" .. i)
+    end
+
+    local case_f = #case.exec.fails == 0 and function() case.test(unpack(case.args)) end
+      or function() table.insert(case.exec.notes, 'Skip case due to error(s) in hooks.') end
+    exec_step(case_f, 'Executing test')
+
+    for i, hook_post in ipairs(case.hooks.post) do
+      exec_step(hook_post, "Executing 'post' hook #" .. i)
+    end
+
+    update_state(H.case_final_state(case))
+  end)
 end
 
 -- Work with test cases -------------------------------------------------------
