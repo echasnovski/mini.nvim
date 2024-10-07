@@ -339,9 +339,13 @@ end
 ---         - 'Pass with notes' (no fails, some notes).
 ---         - 'Fail' (some fails, no notes).
 ---         - 'Fail with notes' (some fails, some notes).
----@field hooks table Hooks to be executed as part of test case. Has fields
----   <pre> and <post> with arrays to be consecutively executed before and
----   after execution of `test`.
+---@field hooks table Hooks to be executed as part of test case. Has fields:
+---   - <pre> and <post> - arrays of functions to be consecutively executed
+---     before and after every execution of `test`.
+---   - <pre_source> and <post_source> - arrays of strings with sources of
+---     corresponding elements in <pre> and <post> arrays. Source is one of
+---     `"once"` (for `pre_once` and `post_once` hooks) and
+---     `"case"` (for `pre_case` and `post_case` hooks).
 ---@field test function|table Main callable object representing test action.
 ---@tag MiniTest-test-case
 
@@ -1834,17 +1838,18 @@ end
 H.inject_hooks_once = function(cases, hooks_once)
   -- NOTE: this heavily relies on the equivalence of "have same object id" and
   -- "are same hooks"
-  local already_injected = {}
-  local n = #cases
+  local already_injected, n = {}, #cases
 
   -- Inject 'pre' hooks moving forwards
   for i = 1, n do
     local case, hooks = cases[i], hooks_once[i].pre
+    case.hooks.pre_source = vim.tbl_map(function() return 'case' end, case.hooks.pre)
     local target_tbl_id = 1
     for j = 1, #hooks do
       local h = hooks[j]
       if not already_injected[h] then
         table.insert(case.hooks.pre, target_tbl_id, h)
+        table.insert(case.hooks.pre_source, target_tbl_id, 'once')
         target_tbl_id, already_injected[h] = target_tbl_id + 1, true
       end
     end
@@ -1853,11 +1858,13 @@ H.inject_hooks_once = function(cases, hooks_once)
   -- Inject 'post' hooks moving backwards
   for i = n, 1, -1 do
     local case, hooks = cases[i], hooks_once[i].post
-    local target_table_id = #case.hooks.post + 1
+    case.hooks.post_source = vim.tbl_map(function() return 'case' end, case.hooks.post)
+    local target_tbl_id = #case.hooks.post + 1
     for j = #hooks, 1, -1 do
       local h = hooks[j]
       if not already_injected[h] then
-        table.insert(case.hooks.post, target_table_id, h)
+        table.insert(case.hooks.post, target_tbl_id, h)
+        table.insert(case.hooks.post_source, target_tbl_id, 'once')
         already_injected[h] = true
       end
     end

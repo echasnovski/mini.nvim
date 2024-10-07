@@ -318,9 +318,13 @@ Fields ~
         - 'Pass with notes' (no fails, some notes).
         - 'Fail' (some fails, no notes).
         - 'Fail with notes' (some fails, some notes).
-{hooks} `(table)` Hooks to be executed as part of test case. Has fields
-  <pre> and <post> with arrays to be consecutively executed before and
-  after execution of `test`.
+{hooks} `(table)` Hooks to be executed as part of test case. Has fields:
+  - <pre> and <post> - arrays of functions to be consecutively executed
+    before and after every execution of `test`.
+  - <pre_source> and <post_source> - arrays of strings with sources of
+    corresponding elements in <pre> and <post> arrays. Source is one of
+    `"once"` (for `pre_once` and `post_once` hooks) and
+    `"case"` (for `pre_case` and `post_case` hooks).
 {test} `(function|table)` Main callable object representing test action.
 
 ------------------------------------------------------------------------------

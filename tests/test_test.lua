@@ -26,7 +26,8 @@ local get_ref_path = function(name) return string.format('tests/dir-test/%s', na
 local get_current_all_cases = function()
   -- Encode functions inside child. Works only for "simple" functions.
   local command = [[vim.tbl_map(function(case)
-    case.hooks = { pre = vim.tbl_map(string.dump, case.hooks.pre), post = vim.tbl_map(string.dump, case.hooks.post) }
+    case.hooks.pre = vim.tbl_map(string.dump, case.hooks.pre)
+    case.hooks.post = vim.tbl_map(string.dump, case.hooks.post)
     case.test = string.dump(case.test)
     return case
   end, MiniTest.current.all_cases)]]
@@ -34,8 +35,8 @@ local get_current_all_cases = function()
 
   -- Decode functions in current process
   res = vim.tbl_map(function(case)
-    case.hooks = { pre = vim.tbl_map(loadstring, case.hooks.pre), post = vim.tbl_map(loadstring, case.hooks.post) }
-    ---@diagnostic disable-next-line:param-type-mismatch
+    case.hooks.pre = vim.tbl_map(loadstring, case.hooks.pre)
+    case.hooks.post = vim.tbl_map(loadstring, case.hooks.post)
     case.test = loadstring(case.test)
     return case
   end, res)
@@ -386,6 +387,10 @@ T['collect()']['works'] = function()
   local keys = child.lua_get('vim.tbl_keys(_G.cases[1])')
   table.sort(keys)
   eq(keys, { 'args', 'data', 'desc', 'hooks', 'test' })
+
+  local hook_keys = child.lua_get('vim.tbl_keys(_G.cases[1].hooks)')
+  table.sort(hook_keys)
+  eq(hook_keys, { 'post', 'post_source', 'pre', 'pre_source' })
 end
 
 T['collect()']['respects `emulate_busted` option'] = function()

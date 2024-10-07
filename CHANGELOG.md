@@ -1,5 +1,9 @@
 # Version 0.14.0.9000
 
+## mini.test
+
+- FEATURE: add `hooks.pre_source` and `hooks.post_source` fields to collected cases. They can be either `'once'` or `'case'` and allow a more granular control over case execution.
+
 
 # Version 0.14.0
 
