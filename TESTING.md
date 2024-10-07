@@ -471,6 +471,32 @@ end
 return T
 ```
 
+### Retry
+
+Some tests can be inherently flaky (can randomly fail even if its tested feature is correct). For example, testing that sequence of events is executed with correct delay between each other. Such tests can work reliably on fast machines, but can spuriously fail on slow ones (like during Continuous Integrations checks) while underlying feature is correct.
+
+To reduce flakiness, there is a feature of test set called `n_retry`: a maximum number of times to retry each its test case until success.
+
+Example of how it can be used:
+
+```lua
+local new_set = MiniTest.new_set
+
+local T = new_set()
+
+-- Each case will be attempted until first success at most 5 times
+T['n_retry'] = new_set({ n_retry = 5 })
+
+-- With default `n_retry = 1` this case will fail 1 out of 2 runs.
+-- With `n_retry = 5` this case will fail 1 out of 32 runs.
+T['n_retry']['case'] = function()
+  math.randomseed(vim.loop.hrtime())
+  assert(math.random() < 0.5)
+end
+
+return T
+```
+
 ### Runtime access to current cases
 
 There is `MiniTest.current` table containing information about "current" test cases. It has `all_cases` and `case` fields with all currently executed tests and *the* current case.

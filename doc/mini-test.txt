@@ -260,6 +260,8 @@ Parameters ~
     `parametrize` option at all.
   - <data> - user data to be forwarded to cases. Can be used for a more
     granular filtering.
+  - <n_retry> - number of times to retry each case until success.
+    Default: 1.
 {tbl} `(table|nil)` Initial test items (possibly nested). Will be executed
   without any guarantees on order.
 
@@ -273,15 +275,14 @@ Usage ~
   T['works'] = function() MiniTest.expect.equality(1, 1) end
 
   -- Use with custom options. This will result into two actual cases: first
-  -- will pass, second - fail.
+  -- will pass, second - fail after two attempts.
   T['nested'] = MiniTest.new_set({
     hooks = { pre_case = function() _G.x = 1 end },
-    parametrize = { { 1 }, { 2 } }
+    parametrize = { { 1 }, { 2 } },
+    n_retry = 2,
   })
 
-  T['nested']['works'] = function(x)
-    MiniTest.expect.equality(_G.x, x)
-  end
+  T['nested']['works'] = function(x) MiniTest.expect.equality(_G.x, x) end
 <
 ------------------------------------------------------------------------------
                                                             *MiniTest-test-case*
@@ -295,7 +296,9 @@ of test execution.
 Execution of test case goes by the following rules:
 - Call functions in order:
     - All elements of `hooks.pre` from first to last without arguments.
-    - Field `test` with arguments unpacked from `args`.
+    - Field `test` with arguments unpacked from `args`. If execution fails,
+      retry it (along with hooks that come from `pre_case` and `post_case`)
+      at most `n_retry` times until first success (if any).
     - All elements of `hooks.post` from first to last without arguments.
 - Error in any call gets appended to `exec.fails`, meaning error in any
   hook will lead to test fail.
@@ -462,8 +465,8 @@ Overview of execution process:
 - Execute each case in natural array order (aligned with their integer
   keys). Set `MiniTest.current.case` to currently executed case. Detailed
   test case execution is described in |MiniTest-test-case|. After any state
-  change, call `reporter.update(case_num)` (if present), where `case_num` is an
-  integer key of current test case.
+  change (including case retry attempts), call `reporter.update(case_num)`
+  (if present), where `case_num` is an integer key of current test case.
 - Call `reporter.finish()` (if present).
 
 Notes:

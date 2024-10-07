@@ -55,7 +55,17 @@ end
 local testrun_ref_file = function(name)
   local find_files_command = string.format([[_G.find_files = function() return { '%s' } end]], get_ref_path(name))
   child.lua(find_files_command)
-  child.lua('MiniTest.run({ collect = { find_files = _G.find_files }, execute = { reporter = {} } })')
+  child.lua([[
+    _G.reporter_log = {}
+    _G.report_in_log = {
+      start = function(...) table.insert(_G.reporter_log, { 'start', ... }) end,
+      update = function(...)
+        table.insert(_G.reporter_log, { 'update', vim.deepcopy(MiniTest.current.case.exec.state), ... })
+      end,
+      finish = function(...) table.insert(_G.reporter_log, { 'finish', ... }) end,
+    }
+  ]])
+  child.lua([[MiniTest.run({ collect = { find_files = _G.find_files }, execute = { reporter = _G.report_in_log } })]])
   return get_current_all_cases()
 end
 
@@ -168,7 +178,7 @@ T['new_set()']['tracks field order'] = function()
 end
 
 T['new_set()']['stores `opts`'] = function()
-  local opts = { parametrize = { { 'a' } } }
+  local opts = { parametrize = { { 'a' } }, n_retry = 10 }
   child.lua([[_G.set = MiniTest.new_set(...)]], { opts })
   eq(child.lua_get([[getmetatable(_G.set).opts]]), opts)
 end
@@ -312,6 +322,85 @@ T['run()']['handles `hooks`'] = function()
   expect.match(filter_by_desc(res, 2, 'skip_case_on_hook_error #1')[1].exec.notes[1], '^Skip.*error.*hooks')
 end
 
+T['run()']['handles `n_retry`'] = function()
+  local res = testrun_ref_file('testref_run-n_retry.lua')
+  --stylua: ignore
+  local ref_log = {
+    'default',
+    'should override', 'should override',
+    'more override', 'more override', 'more override',
+    'first success #1', 'first success #2', 'first success #3',
+    'latest error #1', 'latest error #2', 'latest error #3',
+
+    -- Retries should NOT be applied separately to hooks
+    'no retry pre_once', 'no retry pre_case', 'no retry post_case', 'no retry post_once',
+
+    -- Should retry failed case with all its `pre_case` and `post_case`.
+    -- The `pre_once` and `post_once` should still be executed only once.
+    'outer pre_once', 'inner pre_once',
+    'outer pre_case', 'inner pre_case', 'hook exec case', 'inner post_case', 'outer post_case',
+    'outer pre_case', 'inner pre_case', 'hook exec case', 'inner post_case', 'outer post_case',
+    'inner post_once', 'outer post_once',
+
+    'screenshot', 'screenshot',
+    'skip',
+    'parameter 1', 'parameter 1', 'parameter 2', 'parameter 2'
+  }
+  eq(child.lua_get('_G.log'), ref_log)
+
+  -- Should track relevant `n_retry` value
+  eq(vim.tbl_map(function(x) return x.n_retry end, res), { 1, 2, 3, 10, 3, 2, 2, 2, 2, 2, 2, 2 })
+
+  -- Should report latest (and only latest) error among all retries
+  local latest_error_case_fails = filter_by_desc(res, 2, 'reports latest error')[1].exec.fails
+  eq(#latest_error_case_fails, 1)
+  expect.match(latest_error_case_fails[1], 'Error #3')
+
+  -- Should report hook fails even if `n_retry > 1`
+  eq(#filter_by_desc(res, 2, 'does not retry hooks')[1].exec.fails, 4)
+
+  -- Should not generate new screenshots after first try
+  eq(filter_by_desc(res, 2, 'screenshot number')[1].exec.notes, {})
+
+  -- Should update state on every retry
+  local update_case_num
+  for i, case in ipairs(res) do
+    if case.desc[2] == 'updates state on every retry' then update_case_num = i end
+  end
+  child.lua('_G.target_case_num = ' .. (update_case_num or #res))
+  local updates_of_target_case = child.lua([[
+    local res = {}
+    for _, t in ipairs(_G.reporter_log) do
+      if t[1] == 'update' and t[3] == target_case_num then table.insert(res, t) end
+    end
+    return res
+  ]])
+  local ref_updates = {
+    { 'update', "Executing 'pre' hook #1", 12 },
+    { 'update', "Executing 'pre' hook #2", 12 },
+    { 'update', 'Executing test', 12 },
+    { 'update', "Executing 'post' hook #1", 12 },
+    -- Method `update()` of reporter should be called on every retry
+    { 'update', "Executing 'pre' hook #2", 12 },
+    { 'update', 'Executing test', 12 },
+    { 'update', "Executing 'post' hook #1", 12 },
+    { 'update', "Executing 'post' hook #2", 12 },
+    { 'update', 'Fail', 12 },
+  }
+  eq(updates_of_target_case, ref_updates)
+end
+
+T['run()']['respects `stop_on_error` after all retries'] = function()
+  local path = get_ref_path('testref_run-n_retry-stop_on_error.lua')
+  local command = string.format([[_G.cases = MiniTest.collect({ find_files = function() return { '%s' } end })]], path)
+  child.lua(command)
+
+  -- Should indeed stop on first "final" error (i.e. ignore errors from tries)
+  child.lua('MiniTest.execute(_G.cases, { stop_on_error = true })')
+  eq(child.lua_get('_G.log'), { 'try #1', 'try #2', 'try #3', 'continue' })
+  eq(child.lua_get('_G.cases[3].exec'), vim.NIL)
+end
+
 T['run()']['appends traceback to fails'] = function()
   local res = testrun_ref_file('testref_general.lua')
   local ref_path = get_ref_path('testref_general.lua')
@@ -386,7 +475,8 @@ T['collect()']['works'] = function()
 
   local keys = child.lua_get('vim.tbl_keys(_G.cases[1])')
   table.sort(keys)
-  eq(keys, { 'args', 'data', 'desc', 'hooks', 'test' })
+  eq(keys, { 'args', 'data', 'desc', 'hooks', 'n_retry', 'test' })
+  eq(child.lua_get('_G.cases[1].n_retry'), 1)
 
   local hook_keys = child.lua_get('vim.tbl_keys(_G.cases[1].hooks)')
   table.sort(hook_keys)

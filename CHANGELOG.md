@@ -2,6 +2,7 @@
 
 ## mini.test
 
+- FEATURE: add `n_retry` test set property. When set, each case will be tried that at most that many times until first success (if any).
 - FEATURE: add `hooks.pre_source` and `hooks.post_source` fields to collected cases. They can be either `'once'` or `'case'` and allow a more granular control over case execution.
 
 
