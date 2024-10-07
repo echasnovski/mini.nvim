@@ -333,10 +333,13 @@ Fields ~
 ------------------------------------------------------------------------------
                                                                *MiniTest.skip()*
                              `MiniTest.skip`({msg})
-Skip rest of current callable execution
+Skip the rest of current case
 
-Can be used inside hooks and main test callable of test case. Note: at the
-moment implemented as a specially handled type of error.
+Notes:
+- When called inside test case, stops execution while adding message to notes.
+- When called inside `pre_case` hook, registers skip at the start of its
+  test case. Calling in other hooks has no effect.
+- Currently implemented as a specially handled type of error.
 
 Parameters ~
 {msg} `(string|nil)` Message to be added to current case notes.

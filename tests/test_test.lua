@@ -200,9 +200,19 @@ T['case helpers']['work'] = function()
   eq(res['skip(); with message'].exec.state, 'Pass with notes')
   eq(res['skip(); with message'].exec.notes, { 'This is a custom skip message' })
 
+  eq(res['skip() can be called from helper'].exec.notes, { 'Skip from helper' })
+
+  eq(res['skip one'].exec.state, 'Pass with notes')
+  eq(res['skip one'].exec.notes, { 'Should skip case' })
+  eq(res['skip two'].exec.state, 'Pass with notes')
+  eq(res['skip two'].exec.notes, { 'Should skip case' })
+
+  eq(res['skip() in other hooks'].exec.state, 'Fail')
+  eq(res['skip() in other hooks'].exec.notes, {})
+
   -- `add_note()`
-  eq(res['add_note()'].exec.state, 'Pass with notes')
-  eq(res['add_note()'].exec.notes, { 'This note should be appended' })
+  eq(res['add_note() case'].exec.state, 'Pass with notes')
+  eq(res['add_note() case'].exec.notes, { 'pre_once', 'pre_case', 'test case', 'post_case', 'post_once' })
 end
 
 T['run()'] = new_set()

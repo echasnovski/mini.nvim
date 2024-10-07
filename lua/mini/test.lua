@@ -352,15 +352,18 @@ end
 ---@field test function|table Main callable object representing test action.
 ---@tag MiniTest-test-case
 
---- Skip rest of current callable execution
+--- Skip the rest of current case
 ---
---- Can be used inside hooks and main test callable of test case. Note: at the
---- moment implemented as a specially handled type of error.
+--- Notes:
+--- - When called inside test case, stops execution while adding message to notes.
+--- - When called inside `pre_case` hook, registers skip at the start of its
+---   test case. Calling in other hooks has no effect.
+--- - Currently implemented as a specially handled type of error.
 ---
 ---@param msg string|nil Message to be added to current case notes.
 MiniTest.skip = function(msg)
-  H.cache.error_is_from_skip = true
-  error(msg or 'Skip test', 0)
+  H.cache.skip_message = msg or 'Skip test'
+  error(H.cache.skip_message, 0)
 end
 
 --- Add note to currently executed test case
@@ -1554,8 +1557,8 @@ H.is_headless = #vim.api.nvim_list_uis() == 0
 
 -- Cache for various data
 H.cache = {
-  -- Whether error is initiated from `MiniTest.skip()`
-  error_is_from_skip = false,
+  -- Message with which case is meant to be skipped
+  skip_message = nil,
   -- Queue of callables to be executed after step (hook or test function)
   finally = {},
   -- Whether to stop async execution
@@ -1711,11 +1714,14 @@ H.schedule_case = function(case, case_num, opts)
     H.exec_callable(opts.reporter.update, case_num)
   end
 
+  local is_case_executed = false
   local on_err = function(e)
-    if H.cache.error_is_from_skip then
-      -- Add error message to 'notes' rather than 'fails'
-      table.insert(case.exec.notes, tostring(e))
-      H.cache.error_is_from_skip = false
+    if H.cache.skip_message ~= nil then
+      -- Add skip message to notes (not fails) only during main case execution
+      if is_case_executed then
+        table.insert(case.exec.notes, H.cache.skip_message)
+        H.cache.skip_message = nil
+      end
       return true
     end
 
@@ -1762,13 +1768,22 @@ H.schedule_case = function(case, case_num, opts)
       -- Ensure that fails and notes are not accumulated during retries
       case.exec = vim.deepcopy(exec_data)
 
+      -- Ensure that `skip()` affects only `pre_case` hooks and case
+      H.cache.skip_message = nil
+
       -- Executing `*_case` hooks on every retry should ensure same case setup
       -- (like cleanly restarted child process)
       exec_hooks('pre', 'case')
 
-      local case_f = #case.exec.fails == 0 and function() case.test(unpack(case.args)) end
-        or function() table.insert(case.exec.notes, 'Skip case due to error(s) in hooks.') end
+      local case_f = function() case.test(unpack(case.args)) end
+      if #case.exec.fails > 0 then
+        case_f = function() table.insert(case.exec.notes, 'Skip case due to error(s) in hooks.') end
+      end
+      if H.cache.skip_message ~= nil then case_f = function() MiniTest.skip(H.cache.skip_message) end end
+
+      is_case_executed = true
       ok_case = exec_step(case_f, 'Executing test')
+      is_case_executed = false
 
       exec_hooks('post', 'case')
 
