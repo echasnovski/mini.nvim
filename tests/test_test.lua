@@ -5,7 +5,6 @@ local helpers = dofile('tests/helpers.lua')
 local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set, finally = MiniTest.new_set, MiniTest.finally
-local mark_flaky = helpers.mark_flaky
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -1453,8 +1452,6 @@ T['gen_reporter']['buffer'] = new_set({
   test = function(opts_element)
     if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
 
-    mark_flaky()
-
     -- Testing "in dynamic" is left for manual approach
     local path = get_ref_path('testref_reporters.lua')
     local reporter_command = string.format('_G.reporter = MiniTest.gen_reporter.buffer({ %s })', opts_element)
@@ -1492,7 +1489,6 @@ T['gen_reporter']['stdout'] = new_set({
 }, {
   test = function(env_var)
     helpers.skip_on_windows('Terminal tests are designed for Unix')
-    mark_flaky()
 
     -- Testing "in dynamic" is left for manual approach
     local path = 'tests/dir-test/init_stdout-reporter_works.lua'

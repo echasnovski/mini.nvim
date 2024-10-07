@@ -3,7 +3,6 @@ local helpers = dofile('tests/helpers.lua')
 local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
-local mark_flaky = helpers.mark_flaky
 
 -- Helpers with child processes
 --stylua: ignore start
@@ -389,8 +388,6 @@ T['draw()'] = new_set({
 })
 
 T['draw()']['works'] = function()
-  mark_flaky()
-
   set_cursor(6, 1)
   child.lua('MiniIndentscope.draw()')
 
@@ -434,8 +431,6 @@ T['draw()']['uses correct highlight groups'] = new_set(
 )
 
 T['draw()']['respects `config.draw.animation`'] = function()
-  mark_flaky()
-
   local validate = function(duration)
     set_cursor(5, 4)
     child.lua('MiniIndentscope.draw()')
@@ -463,8 +458,6 @@ T['draw()']['respects `config.draw.animation`'] = function()
 end
 
 T['draw()']['respects `config.draw.priority`'] = function()
-  mark_flaky()
-
   local ns_id = child.api.nvim_create_namespace('indentscope-test')
   child.api.nvim_buf_set_extmark(0, ns_id, 4, 0, { virt_text_pos = 'overlay', virt_text = { { '+' } }, priority = 5 })
 
@@ -482,8 +475,6 @@ T['draw()']['respects `config.draw.priority`'] = function()
 end
 
 T['draw()']['respects `config.symbol`'] = function()
-  mark_flaky()
-
   child.lua([[MiniIndentscope.config.symbol = '-']])
   set_cursor(5, 4)
   child.lua('MiniIndentscope.draw()')
@@ -498,8 +489,6 @@ T['draw()']['respects `config.symbol`'] = function()
 end
 
 T['draw()']["does not overshadow 'listchars'"] = function()
-  mark_flaky()
-
   child.o.list = true
   child.o.listchars = 'space:.'
 
@@ -565,8 +554,6 @@ T['undraw()'] = new_set({
 })
 
 T['undraw()']['works'] = function()
-  mark_flaky()
-
   set_cursor(5, 4)
   child.lua('MiniIndentscope.draw()')
   child.expect_screenshot()
@@ -585,8 +572,6 @@ T['Auto drawing'] = new_set({
 })
 
 T['Auto drawing']['works in Normal mode'] = function()
-  mark_flaky()
-
   set_cursor(5, 4)
   sleep(default_draw_delay - small_time)
   -- Nothing should yet be shown
@@ -604,8 +589,6 @@ T['Auto drawing']['respects common events'] = new_set({
   parametrize = { { 'CursorMoved' }, { 'CursorMovedI' }, { 'TextChanged' }, { 'TextChangedI' }, { 'TextChangedP' } },
 }, {
   test = function(event_name)
-    mark_flaky()
-
     set_cursor(5, 4)
     child.lua('MiniIndentscope.undraw()')
     sleep(small_time)

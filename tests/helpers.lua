@@ -162,13 +162,6 @@ Helpers.new_child_neovim = function()
   return child
 end
 
--- Mark test failure as "flaky"
-Helpers.mark_flaky = function()
-  MiniTest.finally(function()
-    if #MiniTest.current.case.exec.fails > 0 then MiniTest.add_note('This test is flaky.') end
-  end)
-end
-
 -- Detect CI
 Helpers.is_ci = function() return os.getenv('CI') ~= nil end
 Helpers.skip_in_ci = function(msg)
