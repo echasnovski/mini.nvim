@@ -191,6 +191,7 @@ T['case helpers']['work'] = function()
   -- `finally()`
   eq(res['finally() with error; check'].exec.state, 'Pass')
   eq(res['finally() no error; check'].exec.state, 'Pass')
+  eq(child.lua_get('_G.finally_log'), { 'one', 'two' })
 
   -- `skip()`
   eq(res['skip(); no message'].exec.state, 'Pass with notes')

@@ -356,7 +356,7 @@ Parameters ~
                             `MiniTest.finally`({f})
 Register callable execution after current callable
 
-Can be used inside hooks and main test callable of test case.
+Can be used several times inside hooks and main test callable of test case.
 
 Parameters ~
 {f} `(function|table)` Callable to be executed after current callable is

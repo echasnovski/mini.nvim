@@ -377,11 +377,11 @@ end
 
 --- Register callable execution after current callable
 ---
---- Can be used inside hooks and main test callable of test case.
+--- Can be used several times inside hooks and main test callable of test case.
 ---
 ---@param f function|table Callable to be executed after current callable is
 ---   finished executing (regardless of whether it ended with error or not).
-MiniTest.finally = function(f) H.cache.finally = f end
+MiniTest.finally = function(f) table.insert(H.cache.finally, f) end
 
 --- Run tests
 ---
@@ -1556,8 +1556,8 @@ H.is_headless = #vim.api.nvim_list_uis() == 0
 H.cache = {
   -- Whether error is initiated from `MiniTest.skip()`
   error_is_from_skip = false,
-  -- Callable to be executed after step (hook or test function)
-  finally = nil,
+  -- Queue of callables to be executed after step (hook or test function)
+  finally = {},
   -- Whether to stop async execution
   should_stop_execution = false,
   -- Number of screenshots made in current case
@@ -1730,11 +1730,12 @@ H.schedule_case = function(case, case_num, opts)
   local exec_step = function(f, state)
     update_state(state)
 
-    H.cache.n_screenshots = 0
+    H.cache.finally, H.cache.n_screenshots = {}, 0
     local ok_f, ok_err = xpcall(f, on_err)
 
-    H.exec_callable(H.cache.finally)
-    H.cache.finally = nil
+    for _, fin in ipairs(H.cache.finally) do
+      H.exec_callable(fin)
+    end
 
     return ok_f or ok_err
   end

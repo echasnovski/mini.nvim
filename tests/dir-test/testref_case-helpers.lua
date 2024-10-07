@@ -17,6 +17,12 @@ end
 
 T['finally() no error; check'] = function() MiniTest.expect.equality(finally_no_error, true) end
 
+_G.finally_log = {}
+T['finally() can be called several times in same function'] = function()
+  MiniTest.finally(function() table.insert(_G.finally_log, 'one') end)
+  MiniTest.finally(function() table.insert(_G.finally_log, 'two') end)
+end
+
 T['skip(); no message'] = function()
   MiniTest.skip()
   error('This error should not take effect')
