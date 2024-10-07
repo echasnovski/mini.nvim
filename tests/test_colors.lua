@@ -31,6 +31,7 @@ local T = new_set({
     end,
     post_once = child.stop,
   },
+  n_retry = helpers.get_n_retry(2),
 })
 
 -- Unit tests =================================================================
@@ -1616,6 +1617,7 @@ T['animate()'] = new_set({
       child.lua('_G.default_show_duration = ' .. default_show_duration)
     end,
   },
+  n_retry = helpers.get_n_retry(4),
 })
 
 local is_cs_1 = function()
@@ -2209,7 +2211,7 @@ T['simulate_cvd()']['validates arguments'] = function()
 end
 
 -- Integration tests ==========================================================
-T[':Colorscheme'] = new_set()
+T[':Colorscheme'] = new_set({ n_retry = helpers.get_n_retry(4) })
 
 T[':Colorscheme']['works'] = function()
   mock_cs()

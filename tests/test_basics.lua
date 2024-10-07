@@ -20,6 +20,7 @@ local T = new_set({
     pre_case = child.setup,
     post_once = child.stop,
   },
+  n_retry = helpers.get_n_retry(1),
 })
 
 -- Unit tests =================================================================

@@ -95,6 +95,7 @@ local T = new_set({
     end,
     post_once = child.stop,
   },
+  n_retry = helpers.get_n_retry(1),
 })
 
 -- Unit tests =================================================================
@@ -486,7 +487,6 @@ T['collect()']['works'] = function()
   local keys = child.lua_get('vim.tbl_keys(_G.cases[1])')
   table.sort(keys)
   eq(keys, { 'args', 'data', 'desc', 'hooks', 'n_retry', 'test' })
-  eq(child.lua_get('_G.cases[1].n_retry'), 1)
 
   local hook_keys = child.lua_get('vim.tbl_keys(_G.cases[1].hooks)')
   table.sort(hook_keys)

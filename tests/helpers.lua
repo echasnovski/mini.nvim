@@ -202,4 +202,14 @@ Helpers.sleep = function(ms, child, skip_slow)
   if child ~= nil then child.poke_eventloop() end
 end
 
+-- Standardized way of setting number of retries
+Helpers.get_n_retry = function(n)
+  local coef = 1
+  if Helpers.is_ci() then
+    if Helpers.is_windows() then coef = 2 end
+    if Helpers.is_macos() then coef = 4 end
+  end
+  return coef * n
+end
+
 return Helpers

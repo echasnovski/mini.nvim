@@ -225,6 +225,7 @@ local T = new_set({
     end,
     post_once = child.stop,
   },
+  n_retry = helpers.get_n_retry(2),
 })
 
 -- Unit tests =================================================================
@@ -982,7 +983,7 @@ T['refresh()']['recomputes window config'] = function()
   child.expect_screenshot()
 end
 
-T['default_match()'] = new_set()
+T['default_match()'] = new_set({ n_retry = helpers.get_n_retry(4) })
 
 local default_match = forward_lua('MiniPick.default_match')
 

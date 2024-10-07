@@ -163,6 +163,7 @@ local T = new_set({
       vim.fn.delete(data_std_path, 'rf')
     end,
   },
+  n_retry = helpers.get_n_retry(2),
 })
 
 -- Unit tests =================================================================

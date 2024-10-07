@@ -208,6 +208,7 @@ local T = new_set({
     post_case = function() vim.fn.delete(make_test_path('data'), 'rf') end,
     post_once = child.stop,
   },
+  n_retry = helpers.get_n_retry(2),
 })
 
 -- Unit tests =================================================================

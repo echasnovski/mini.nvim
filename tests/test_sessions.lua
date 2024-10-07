@@ -166,6 +166,7 @@ local T = new_set({
       child.stop()
     end,
   },
+  n_retry = helpers.get_n_retry(1),
 })
 
 -- Unit tests =================================================================
