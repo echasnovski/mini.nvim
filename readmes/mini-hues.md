@@ -55,7 +55,9 @@ require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', n_h
 
 -- Different text saturation
 require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', saturation = 'low' })
+require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', saturation = 'lowmedium' })
 require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', saturation = 'medium' })
+require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', saturation = 'mediumhigh' })
 require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', saturation = 'high' })
 
 -- Choose accent color
@@ -69,7 +71,7 @@ require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', acc
 
 - Configurable:
     - Number of hues used for non-base colors (from 0 to 8).
-    - Saturation level ('low', 'medium', 'high').
+    - Saturation level ('low', 'lowmedium', 'medium', 'mediumhigh', 'high').
     - Accent color used for some selected UI elements.
     - Plugin integration (can be selectively enabled for faster startup).
 
@@ -233,7 +235,7 @@ Here are code snippets for some common installation methods (use only one):
   -- Number of hues used for non-base colors
   n_hues = 8,
 
-  -- Saturation level. One of 'low', 'medium', 'high'.
+  -- Saturation. One of 'low', 'lowmedium', 'medium', 'mediumhigh', 'high'.
   saturation = 'medium',
 
   -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',

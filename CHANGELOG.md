@@ -1,5 +1,9 @@
 # Version 0.14.0.9000
 
+## mini.hues
+
+FEATURE: add `'lowmedium'` and `'mediumhigh'` saturation levels.
+
 ## mini.test
 
 - FEATURE: add `n_retry` test set property. When set, each case will be tried that at most that many times until first success (if any).

@@ -13,7 +13,7 @@
 ---
 --- - Configurable:
 ---     - Number of hues used for non-base colors (from 0 to 8).
----     - Saturation level ('low', 'medium', 'high').
+---     - Saturation level ("low", "lowmedium", "medium", "mediumhigh", "high").
 ---     - Accent color used for some selected UI elements.
 ---     - Plugin integration (can be selectively enabled for faster startup).
 ---
@@ -203,7 +203,9 @@ end
 ---
 ---   -- Choose saturation of colored text
 ---   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'low' })
+---   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'lowmedium' })
 ---   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'medium' })
+---   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'mediumhigh' })
 ---   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'high' })
 ---
 ---   -- Choose accent color
@@ -220,7 +222,7 @@ MiniHues.config = {
   -- Number of hues used for non-base colors
   n_hues = 8,
 
-  -- Saturation level. One of 'low', 'medium', 'high'.
+  -- Saturation. One of 'low', 'lowmedium', 'medium', 'mediumhigh', 'high'.
   saturation = 'medium',
 
   -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',
@@ -329,7 +331,7 @@ MiniHues.make_palette = function(config)
   local l_mid = 0.5 * (bg_l + fg_l)
 
   -- Configurable chroma level
-  local chroma = ({ low = 4, medium = 8, high = 16 })[saturation]
+  local chroma = ({ low = 4, lowmedium = 6, medium = 8, mediumhigh = 12, high = 16 })[saturation]
 
   -- Hues
   local hues = H.make_hues(bg_lch.h, fg_lch.h, n_hues)
@@ -1443,7 +1445,7 @@ H.default_config = vim.deepcopy(MiniHues.config)
 -- Color conversion constants
 H.tau = 2 * math.pi
 
-H.saturation_values = { 'low', 'medium', 'high' }
+H.saturation_values = { 'low', 'lowmedium', 'medium', 'mediumhigh', 'high' }
 
 H.accent_values = { 'bg', 'fg', 'red', 'orange', 'yellow', 'green', 'cyan', 'azure', 'blue', 'purple' }
 

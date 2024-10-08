@@ -150,9 +150,16 @@ T['setup()']['respects `config.n_hues`'] = function()
 end
 
 T['setup()']['respects `config.saturation`'] = function()
-  load_module({ background = '#222222', foreground = '#dddddd', saturation = 'high' })
+  local validate = function(saturation, ref_error_fg)
+    load_module({ background = '#222222', foreground = '#dddddd', saturation = saturation })
+    validate_hl_group('DiagnosticError', 'guifg=' .. ref_error_fg)
+  end
 
-  validate_hl_group('DiagnosticError', 'guifg=#ffa8c6')
+  validate('low', '#f5d3dc')
+  validate('lowmedium', '#ffcddb')
+  validate('medium', '#ffc7da')
+  validate('mediumhigh', '#ffb5cf')
+  validate('high', '#ffa8c6')
 end
 
 T['setup()']['respects `config.accent`'] = function()

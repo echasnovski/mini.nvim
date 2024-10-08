@@ -13,7 +13,7 @@ Features:
 
 - Configurable:
     - Number of hues used for non-base colors (from 0 to 8).
-    - Saturation level ('low', 'medium', 'high').
+    - Saturation level ("low", "lowmedium", "medium", "mediumhigh", "high").
     - Accent color used for some selected UI elements.
     - Plugin integration (can be selectively enabled for faster startup).
 
@@ -154,7 +154,7 @@ Default values:
     -- Number of hues used for non-base colors
     n_hues = 8,
 
-    -- Saturation level. One of 'low', 'medium', 'high'.
+    -- Saturation. One of 'low', 'lowmedium', 'medium', 'mediumhigh', 'high'.
     saturation = 'medium',
 
     -- Accent color. One of: 'bg', 'fg', 'red', 'orange', 'yellow', 'green',
@@ -212,7 +212,9 @@ only one `setup` call): >
 
   -- Choose saturation of colored text
   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'low' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'lowmedium' })
   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'medium' })
+  setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'mediumhigh' })
   setup({ background = '#11262d', foreground = '#c0c8cc', saturation = 'high' })
 
   -- Choose accent color
