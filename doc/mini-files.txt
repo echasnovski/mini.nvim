@@ -661,8 +661,8 @@ Here are some alternatives: >lua
 # Options ~
 
 `options.use_as_default_explorer` is a boolean indicating whether this module
-should be used as a default file explorer for editing directories (instead of
-|netrw| by default).
+will be used as a default file explorer to edit directory (instead of |netrw|).
+Note: to work with directory in |arglist|, do not lazy load this module.
 
 `options.permanent_delete` is a boolean indicating whether to perform
 permanent delete or move into special trash directory.
