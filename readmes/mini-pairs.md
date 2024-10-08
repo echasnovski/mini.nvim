@@ -26,7 +26,7 @@ https://user-images.githubusercontent.com/24854248/173044991-18653715-9b4e-444e-
 
 ## Features
 
-- Functionality to work with 'paired' characters conditional on cursor's neighborhood (two characters to its left and right).
+- Functionality to work with two "paired" characters conditional on cursor's neighborhood (character to its left and character to its right).
 - Usage should be through making appropriate mappings using `MiniPairs.map()` or in `MiniPairs.setup()` (for global mapping), `MiniPairs.map_buf()` (for buffer mapping).
 - Pairs get automatically registered to be recognized by `<BS>` and `<CR>`.
 
