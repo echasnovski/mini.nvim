@@ -193,6 +193,15 @@ end
 --- Should be a number between 0 (not included) and 1.
 --- Default: 0.382.
 ---
+--- Example for showing notifications in bottom right corner: >lua
+---
+---   local win_config = function()
+---     local has_statusline = vim.o.laststatus > 0
+---     local pad = vim.o.cmdheight + (has_statusline and 1 or 0)
+---     return { anchor = 'SE', col = vim.o.columns, row = vim.o.lines - pad }
+---   end
+---   require('mini.notify').setup({ window = { config = win_config } })
+--- <
 --- `window.winblend` defines 'winblend' value for notification window.
 --- Default: 25.
 MiniNotify.config = {
