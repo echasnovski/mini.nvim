@@ -598,6 +598,7 @@ MiniIcons.mock_nvim_web_devicons = function()
       { [1] = M.get_default_icon() },
       make_category_tbl('os'),
       make_category_tbl('file'),
+      make_category_tbl('filetype'),
       make_category_tbl('extension')
     )
   end
