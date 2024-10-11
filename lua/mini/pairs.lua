@@ -395,7 +395,7 @@ MiniPairs.cr = function(key)
     -- Temporarily ignore mode change to not trigger some common expensive
     -- autocommands (like diagnostic check, etc.)
     local cache_eventignore = vim.o.eventignore
-    vim.o.eventignore = 'InsertLeave,InsertLeavePre,InsertEnter,ModeChanged'
+    vim.o.eventignore = 'InsertLeave,InsertLeavePre,InsertEnter,TextChanged,ModeChanged'
     H.restore_eventignore(cache_eventignore)
 
     -- Temporarily redraw lazily for no cursor flicker due to `<C-o>O`.
