@@ -21,6 +21,16 @@ local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
+-- Tweak `expect_screenshot()` to test only on Neovim<=0.10 (as current Nightly
+-- 0.11 has different way of computing attributes in popup-menu; see
+-- https://github.com/neovim/neovim/pull/29980)
+-- TODO: Update to use Neovim>=0.11 when Neovim 0.11 is released
+child.expect_screenshot_orig = child.expect_screenshot
+child.expect_screenshot = function(opts)
+  if child.fn.has('nvim-0.11') == 1 then return end
+  child.expect_screenshot_orig(opts)
+end
+
 local mock_miniicons = function()
   child.lua([[
     require('mini.icons').setup()
