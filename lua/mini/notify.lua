@@ -221,6 +221,9 @@ MiniNotify.config = {
     -- Whether to enable showing
     enable = true,
 
+    -- Function to format the progress message
+    format = nil,
+
     -- Duration (in ms) of how long last message should be shown
     duration_last = 1000,
   },
@@ -518,6 +521,20 @@ MiniNotify.default_format = function(notif)
   return string.format('%s │ %s', time, notif.msg)
 end
 
+--- Default LSP progress formatter
+---
+--- Used by default as `config.lsp_progress.format`.
+---
+--- @param client_name string
+--- @param title       string
+--- @param message     string
+--- @param percentage  string|integer
+---
+--- @return string Formatted LSP progress message.
+MiniNotify.default_format_lsp_progress = function(client_name, title, message, percentage)
+    return string.format('%s: %s %s (%s%%)', client_name, title, message, percentage)
+end
+
 --- Default content sort
 ---
 --- Used by default as `config.content.sort`. First sorts by notification's `level`
@@ -674,11 +691,8 @@ H.lsp_progress_handler = function(err, result, ctx, config)
   if value.kind == 'begin' then progress_data.title = value.title end
 
   -- Make notification
-  --stylua: ignore
-  local msg = string.format(
-    '%s: %s %s (%s%%)',
-    client_name, progress_data.title or '', value.message or '', progress_data.percentage
-  )
+  local format = vim.is_callable(lsp_progress_config.format) and lsp_progress_config.format or MiniNotify.default_format_lsp_progress
+  local msg = format(client_name, progress_data.title or '', value.message or '', progress_data.percentage)
 
   if progress_data.notif_id == nil then
     progress_data.notif_id = MiniNotify.add(msg)
