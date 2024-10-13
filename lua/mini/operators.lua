@@ -720,6 +720,7 @@ H.apply_config = function(config)
     if prefix == 'gr' and vim.fn.has('nvim-0.11') == 1 then
       remove_lsp_mapping('n', 'gra')
       remove_lsp_mapping('x', 'gra')
+      remove_lsp_mapping('n', 'gri')
       remove_lsp_mapping('n', 'grr')
       remove_lsp_mapping('n', 'grn')
     end

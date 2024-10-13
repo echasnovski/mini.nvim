@@ -2105,6 +2105,8 @@ T['Builtin']['Bracket']['works with empty region'] = function(key)
     end
 
     vim.keymap.set('n', 'gr', _G.MiniOperators.replace, { expr = true })
+    -- Delete conflicting default `gri` mapping
+    pcall(vim.keymap.del, 'n', 'gri')
   ]])
 
   -- Validate
