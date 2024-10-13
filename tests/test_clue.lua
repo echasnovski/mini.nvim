@@ -748,8 +748,8 @@ T['gen_clues'] = new_set()
 T['gen_clues']['g()'] = new_set()
 
 T['gen_clues']['g()']['works'] = function()
-  -- Check this only on Neovim>=0.10, as there are many new built-in mappings
-  if child.fn.has('nvim-0.10') == 0 then return end
+  -- Check this only on Neovim>=0.11, as there are many new built-in mappings
+  if child.fn.has('nvim-0.11') == 0 then return end
 
   child.lua([[
     local miniclue = require('mini.clue')
@@ -759,20 +759,14 @@ T['gen_clues']['g()']['works'] = function()
       window = { delay = 0, config = { width = 50 } },
     })
   ]])
-  child.cmd('unmap gx')
   child.cmd('unmap g%')
-  if child.fn.has('nvim-0.11') == 1 then
-    child.cmd('unmap grr')
-    child.cmd('unmap gra')
-    child.cmd('unmap grn')
-  end
 
   child.set_size(66, 55)
   type_keys('g')
   child.expect_screenshot()
 
   type_keys('<Esc>')
-  child.set_size(17, 55)
+  child.set_size(19, 55)
   type_keys('v', 'g')
   child.expect_screenshot()
 end

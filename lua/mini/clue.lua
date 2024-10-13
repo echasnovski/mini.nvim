@@ -715,6 +715,10 @@ end
 --- <
 ---@return table Array of clues.
 MiniClue.gen_clues.g = function()
+  local gr_clue = vim.fn.has('nvim-0.11') == 1 and { mode = 'n', keys = 'gr', desc = '+LSP' }
+    or { mode = 'n', keys = 'gr', desc = 'Virtual replace with character' }
+  local gr_clue_viz = vim.fn.has('nvim-0.11') == 1 and { mode = 'x', keys = 'gr', desc = '+LSP' } or {}
+
   --stylua: ignore
   return {
     { mode = 'n', keys = 'g0',     desc = 'Go to leftmost visible column' },
@@ -744,7 +748,7 @@ MiniClue.gen_clues.g = function()
     { mode = 'n', keys = 'gQ',     desc = 'Switch to "Ex" mode' },
     { mode = 'n', keys = 'gq',     desc = 'Format text (operator)' },
     { mode = 'n', keys = 'gR',     desc = 'Enter Virtual Replace mode' },
-    { mode = 'n', keys = 'gr',     desc = 'Virtual replace with character' },
+    gr_clue,
     { mode = 'n', keys = 'gs',     desc = 'Sleep' },
     { mode = 'n', keys = 'gT',     desc = 'Go to previous tabpage' },
     { mode = 'n', keys = 'gt',     desc = 'Go to next tabpage' },
@@ -781,6 +785,7 @@ MiniClue.gen_clues.g = function()
     { mode = 'x', keys = 'gf',     desc = 'Edit selected file' },
     { mode = 'x', keys = 'gJ',     desc = 'Join selected lines without extra spaces' },
     { mode = 'x', keys = 'gq',     desc = 'Format selection' },
+    gr_clue_viz,
     { mode = 'x', keys = 'gV',     desc = 'Avoid reselect' },
     { mode = 'x', keys = 'gw',     desc = 'Format selection + keep cursor' },
     { mode = 'x', keys = 'g<C-]>', desc = '`:tjump` to selected tag' },
