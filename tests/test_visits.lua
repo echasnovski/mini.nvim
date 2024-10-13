@@ -1485,7 +1485,7 @@ end
 
 T['set_index()']['treats set index as whole history and not only current session'] = function()
   local store_path = make_testpath('tmp-index')
-  MiniTest.finally(function() child.fn.delete(store_path, 'rf') end)
+  MiniTest.finally(vim.schedule_wrap(function() vim.fn.delete(store_path, 'rf') end))
   child.fn.writefile({ 'return { aaa = { bbb = { count = 10, latest = 10 } } }' }, store_path)
 
   child.lua('MiniVisits.config.track.delay = 10')
