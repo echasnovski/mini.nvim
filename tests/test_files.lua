@@ -2706,6 +2706,27 @@ T['Preview']['always updates with cursor'] = function()
   child.expect_screenshot()
 end
 
+T['Preview']['can work after renaming with small overall width'] = function()
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.set_size(10, 54)
+
+  local temp_dir = make_temp_dir('temp', { 'dir/', 'dir/nested/', 'dir/nested/nested-2/', 'dir/nested/nested-2/file' })
+  open(temp_dir)
+  go_in()
+  go_in()
+  go_in()
+  type_keys('C', 'new-file', '<Esc>')
+  -- - At this point there is a preview active but for a path with soon to be
+  --   outdated basename
+  child.expect_screenshot()
+
+  mock_confirm(1)
+  synchronize()
+  child.expect_screenshot()
+end
+
 T['Mappings'] = new_set()
 
 T['Mappings']['`close` works'] = function()

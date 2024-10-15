@@ -1479,8 +1479,11 @@ H.explorer_refresh = function(explorer, opts)
 
   -- Unregister windows from showed buffers, as they might get outdated
   for _, win_id in ipairs(explorer.windows) do
-    local buf_id = vim.api.nvim_win_get_buf(win_id)
-    H.opened_buffers[buf_id].win_id = nil
+    -- NOTE: window can be invalid if it was showing buffer that was deleted
+    if H.is_valid_win(win_id) then
+      local buf_id = vim.api.nvim_win_get_buf(win_id)
+      H.opened_buffers[buf_id].win_id = nil
+    end
   end
 
   -- Compute depth range which is possible to show in current window
@@ -1538,7 +1541,8 @@ H.explorer_normalize = function(explorer)
   explorer.branch = norm_branch
   explorer.depth_focus = math.min(math.max(explorer.depth_focus, 1), cur_max_depth)
 
-  -- Close all unnecessary windows
+  -- Close all guaranteed to be unnecessary windows. NOTE: some windows might
+  -- still get outdated later if branch is too deep to fit into Neovim's width.
   for i = cur_max_depth + 1, #explorer.windows do
     H.window_close(explorer.windows[i])
     explorer.windows[i] = nil
