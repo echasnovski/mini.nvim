@@ -4,6 +4,10 @@
 
 FEATURE: add `'lowmedium'` and `'mediumhigh'` saturation levels.
 
+## mini.surround
+
+- BREAKING: created mappings for `find`, `find_left`, and `highlight` are now *not* dot-repeatable. Dot-repeat should repeat last text change but neither of those actions change text. Having them dot-repeatable breaks the common "move cursor -> press dot" workflow. Initially making them dot-repeatable was a "you can but you should not" type of mistake.
+
 ## mini.test
 
 - FEATURE: add `n_retry` test set property. When set, each case will be tried that at most that many times until first success (if any).

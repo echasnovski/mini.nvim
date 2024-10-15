@@ -9,7 +9,7 @@ Fast and feature-rich surrounding. Can be configured to have experience
 similar to 'tpope/vim-surround' (see |MiniSurround-vim-surround-config|).
 
 Features:
-- Actions (all of them are dot-repeatable out of the box and respect
+- Actions (text editing actions are dot-repeatable out of the box and respect
   |[count]|) with configurable keymappings:
     - Add surrounding with `sa` (in visual mode or on motion).
     - Delete surrounding with `sd`.
@@ -690,7 +690,7 @@ Notes:
 - It creates new mappings only for actions involving surrounding search:
   delete, replace, find (right and left), highlight.
 - All new mappings behave the same way as if `config.search_method` is set
-  to certain search method. They are dot-repeatable, respect |[count]|, etc.
+  to certain search method. They preserve dot-repeat support, respect |[count]|.
 - Supply empty string to disable creation of corresponding set of mappings.
 
 Example with default values (`n` for `suffix_next`, `l` for `suffix_last`)

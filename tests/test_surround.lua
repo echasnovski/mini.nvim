@@ -1208,44 +1208,36 @@ T['Find surrounding'] = new_set()
 
 -- NOTE: most tests are done for `sf` ('find right') in hope that `sF` ('find
 -- left') is implemented similarly
-T['Find surrounding']['works with dot-repeat'] = function()
+T['Find surrounding']['works without dot-repeat'] = function()
   validate_find({ '(aaa)' }, { 1, 0 }, { { 1, 4 }, { 1, 0 }, { 1, 4 } }, type_keys, 'sf', ')')
   validate_find({ '(aaa)' }, { 1, 2 }, { { 1, 4 }, { 1, 0 }, { 1, 4 } }, type_keys, 'sf', ')')
   validate_find({ '(aaa)' }, { 1, 4 }, { { 1, 0 }, { 1, 4 }, { 1, 0 } }, type_keys, 'sf', ')')
 
-  -- Allows immediate dot-repeat
+  -- Does not override dot-repeat
   set_lines({ '(aaa)' })
+  set_cursor(1, 0)
+  type_keys('r]', 'u') -- dot-repeatable action
   set_cursor(1, 2)
   type_keys('sf', ')')
   type_keys('.')
-  eq(get_lines(), { '(aaa)' })
-  eq(get_cursor(), { 1, 0 })
-
-  -- Allows not immediate dot-repeat
-  set_lines({ 'aaa (bbb)' })
-  set_cursor(1, 5)
-  type_keys('.')
-  eq(get_cursor(), { 1, 8 })
+  eq(get_lines(), { '(aaa]' })
+  eq(get_cursor(), { 1, 4 })
 end
 
-T['Find surrounding']['works in left direction with dot-repeat'] = function()
+T['Find surrounding']['works in left direction without dot-repeat'] = function()
   validate_find({ '(aaa)' }, { 1, 0 }, { { 1, 4 }, { 1, 0 }, { 1, 4 } }, type_keys, 'sF', ')')
   validate_find({ '(aaa)' }, { 1, 4 }, { { 1, 0 }, { 1, 4 }, { 1, 0 } }, type_keys, 'sF', ')')
   validate_find({ '(aaa)' }, { 1, 2 }, { { 1, 0 }, { 1, 4 }, { 1, 0 } }, type_keys, 'sF', ')')
 
-  -- Allows immediate dot-repeat
+  -- Does not override dot-repeat
   set_lines({ '(aaa)' })
+  set_cursor(1, 0)
+  type_keys('r[', 'u') -- dot-repeatable action
   set_cursor(1, 2)
   type_keys('sF', ')')
   type_keys('.')
-  eq(get_lines(), { '(aaa)' })
-  eq(get_cursor(), { 1, 4 })
-
-  -- Allows not immediate dot-repeat
-  set_lines({ 'aaa (bbb)' })
-  set_cursor(1, 5)
-  type_keys('.')
-  eq(get_cursor(), { 1, 4 })
+  eq(get_lines(), { '[aaa)' })
+  eq(get_cursor(), { 1, 0 })
 end
 
 T['Find surrounding']['works with "non single character" surroundings'] = function()
@@ -1282,13 +1274,14 @@ T['Find surrounding']['works in extended mappings'] = function()
   validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 8, type_keys, 'sFl', ')')
   validate_edit1d('(aa) (bb) (cc)', 11, '(aa) (bb) (cc)', 3, type_keys, '2sFl', ')')
 
-  -- Dot-repeat
+  -- Does not override dot-repeat
   set_lines({ '(aa) (bb) (cc)' })
   set_cursor(1, 0)
+  type_keys('r[', 'u') -- dot-repeatable action
   type_keys('sfn', ')')
   type_keys('.')
-  eq(get_lines(), { '(aa) (bb) (cc)' })
-  eq(get_cursor(), { 1, 10 })
+  eq(get_lines(), { '(aa) [bb) (cc)' })
+  eq(get_cursor(), { 1, 5 })
 end
 
 T['Find surrounding']['respects `config.n_lines`'] = function()
@@ -1479,8 +1472,12 @@ local activate_highlighting = function()
   child.poke_eventloop()
 end
 
-T['Highlight surrounding']['works with dot-repeat'] = function()
+T['Highlight surrounding']['works without dot-repeat'] = function()
   local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+  set_lines({ ' ' })
+  set_cursor(1, 0)
+  type_keys('rx') -- dot-repeatable action
+
   set_lines({ '(aaa) (bbb)' })
   set_cursor(1, 2)
 
@@ -1496,24 +1493,21 @@ T['Highlight surrounding']['works with dot-repeat'] = function()
   sleep(2 * small_time + small_time)
   child.expect_screenshot()
 
-  -- Should highlight with dot-repeat
+  -- Does not override dot-repeat
   type_keys('.')
-  child.expect_screenshot()
 
-  -- Should stop highlighting
-  sleep(test_duration + small_time)
-  child.expect_screenshot()
-
-  -- Should allow not immediate dot-repeat
-  set_cursor(1, 8)
-  type_keys('.')
+  -- - No highlighting should be present
   child.expect_screenshot()
 end
 
 T['Highlight surrounding']['works in extended mappings'] = function()
   child.set_size(5, 15)
   local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
+  set_lines({ ' ' })
+  set_cursor(1, 0)
+  type_keys('rx') -- dot-repeatable action
   set_lines({ '(aa) (bb) (cc)' })
+  set_cursor(1, 0)
 
   set_cursor(1, 1)
   type_keys('shn', ')')
@@ -1527,12 +1521,10 @@ T['Highlight surrounding']['works in extended mappings'] = function()
   child.expect_screenshot()
   sleep(test_duration + small_time)
 
-  -- Dot-repeat
-  set_cursor(1, 1)
-  type_keys('shn', ')')
-  sleep(test_duration + small_time)
+  -- Does not override dot-repeat
   type_keys('.')
-  child.poke_eventloop()
+
+  -- - No highlighting should be present
   child.expect_screenshot()
 end
 
