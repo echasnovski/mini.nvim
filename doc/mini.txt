@@ -10,7 +10,7 @@ module can be considered as a separate sub-plugin.
 
 Table of contents:
   General overview ............................................... |mini.nvim|
-  Disabling recepies ........................... |mini.nvim-disabling-recipes|
+  Disabling recipes ............................ |mini.nvim-disabling-recipes|
   Buffer-local config ........................ |mini.nvim-buffer-local-config|
   Plugin colorschemes ................................... |mini-color-schemes|
   Extend and create a/i textobjects ................................ |mini.ai|
