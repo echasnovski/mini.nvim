@@ -324,6 +324,12 @@ T['make_tabline_string()']['respects `config.format`'] = function()
     eval_tabline(true),
     '%#MiniTablineModifiedCurrent# dir1/aaa +%#MiniTablineHidden# dir2/aaa%#MiniTablineHidden# !(2)%#MiniTablineFill#'
   )
+
+  -- Should treat strictly as text (no 'statusline' like constructs)
+  child.lua([[MiniTabline.config.format = function(buf_id, label) return '%#HLname#' .. label end]])
+  child.cmd('%bwipeout!')
+  edit_path('file')
+  eq(eval_tabline(true), '%#MiniTablineCurrent#%%#HLname#file%#MiniTablineFill#')
 end
 
 T['make_tabline_string()']['deduplicates named labels'] = function()

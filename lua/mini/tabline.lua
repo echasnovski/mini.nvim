@@ -111,7 +111,8 @@ end
 ---@text # Format ~
 ---
 --- `config.format` is a callable that takes buffer identifier and pre-computed
---- label as arguments and returns a string with formatted label.
+--- label as arguments and returns a string with formatted label. Output will be
+--- treated strictly as text (i.e. no 'statusline' like constructs is allowed).
 --- This function will be called for all displayable in tabline buffers.
 --- Default: |MiniTabline.default_format()|.
 ---
