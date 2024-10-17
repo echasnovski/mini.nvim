@@ -20,6 +20,8 @@ local mock_cs = function() child.cmd('set rtp+=' .. dir_path .. 'mock_cs/') end
 
 -- Time constants
 local default_transition_duration, default_show_duration = 1000, 1000
+local default_transition_steps = 25
+local small_transition_time = 0.5 * (default_transition_duration / default_transition_steps)
 local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
@@ -1685,7 +1687,7 @@ T['animate()']['works'] = function()
     )
   end
 
-  sleep(0.5 * default_transition_duration - small_time)
+  sleep(0.5 * default_transition_duration - small_transition_time)
   validate_before_half()
 
   -- Check slightly after half-way
@@ -1717,7 +1719,7 @@ T['animate()']['works'] = function()
     )
   end
 
-  sleep(3 * small_time)
+  sleep(2 * small_transition_time)
   validate_after_half()
 
   -- After first transition end it should show intermediate step for 1 second
@@ -1735,7 +1737,7 @@ T['animate()']['works'] = function()
   sleep(0.5 * default_transition_duration)
   validate_intermediate()
 
-  sleep(default_show_duration - 3 * small_time)
+  sleep(default_show_duration - 2 * small_transition_time)
   validate_intermediate()
 
   -- After showing period it should start transition back to first one (as it
@@ -1743,7 +1745,7 @@ T['animate()']['works'] = function()
   sleep(0.5 * default_transition_duration)
   validate_after_half()
 
-  sleep(3 * small_time)
+  sleep(2 * small_transition_time)
   validate_before_half()
 
   sleep(0.5 * default_transition_duration)
@@ -1756,13 +1758,13 @@ T['animate()']['respects `opts.transition_steps`'] = function()
   child.lua('_G.cs_1:apply()')
   child.lua([[MiniColors.animate({ _G.cs_2 }, { transition_steps = 2 })]])
 
-  sleep(0.5 * default_transition_duration - 2 * small_time)
+  sleep(0.5 * default_transition_duration - 2 * small_transition_time)
   eq(is_cs_1(), true)
 
-  sleep(2 * small_time + small_time)
+  sleep(2 * small_transition_time + small_time)
   eq(child.lua_get('_G.get_relevant_cs_data().groups.Normal.fg'), '#050000')
 
-  sleep(0.5 * default_transition_duration - small_time)
+  sleep(0.5 * default_transition_duration - small_transition_time)
   eq(is_cs_2(), true)
 end
 
@@ -1770,7 +1772,7 @@ T['animate()']['respects `opts.transition_duration`'] = function()
   helpers.skip_if_slow()
 
   child.lua([[MiniColors.animate({ _G.cs_2 }, { transition_duration = 0.5 * default_transition_duration })]])
-  sleep(0.5 * default_transition_duration + 2 * small_time)
+  sleep(0.5 * default_transition_duration + 2 * small_transition_time)
   eq(is_cs_2(), true)
 end
 
@@ -1778,14 +1780,14 @@ T['animate()']['respects `opts.show_duration`'] = function()
   helpers.skip_if_slow()
 
   child.lua([[MiniColors.animate({ _G.cs_1, _G.cs_2 }, { show_duration = 0.5 * default_show_duration })]])
-  sleep(default_transition_duration + small_time)
+  sleep(default_transition_duration + small_transition_time)
   eq(is_cs_1(), true)
 
-  sleep(0.5 * default_show_duration - 3 * small_time)
+  sleep(0.5 * default_show_duration - 3 * small_transition_time)
   eq(is_cs_1(), true)
 
   -- Account that first step takes some time
-  sleep(3 * small_time + 3 * small_time)
+  sleep(3 * small_transition_time + 3 * small_time)
   eq(is_cs_1(), false)
 end
 
@@ -2232,7 +2234,7 @@ T[':Colorscheme']['accepts several arguments'] = function()
   sleep(default_transition_duration + small_time)
   expect.match(child.cmd_capture('hi Normal'), 'guifg=#5f87af')
 
-  sleep(default_show_duration - 2 * small_time)
+  sleep(default_show_duration - 2 * small_transition_time)
   expect.match(child.cmd_capture('hi Normal'), 'guifg=#5f87af')
 
   sleep(default_transition_duration + 2 * small_time)
