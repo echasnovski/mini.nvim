@@ -984,7 +984,7 @@ H.expand_spec = function(target, spec)
   spec = vim.deepcopy(spec)
 
   if spec.source and type(spec.source) ~= 'string' then H.error('`source` in plugin spec should be string.') end
-  local is_user_repo = type(spec.source) == 'string' and spec.source:find('^[^/]+/[^/]+$') ~= nil
+  local is_user_repo = type(spec.source) == 'string' and spec.source:find('^[^/@]+/[^/]+$') ~= nil
   if is_user_repo then spec.source = 'https://github.com/' .. spec.source end
 
   spec.name = spec.name or vim.fn.fnamemodify(spec.source, ':t')
