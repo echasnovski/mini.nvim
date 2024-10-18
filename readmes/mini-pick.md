@@ -34,7 +34,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/65849d1e-3f96-4085-a4cf
 
 - Built-in pickers:
     - Files.
-    - Pattern match (for fixed pattern and with live feedback).
+    - Pattern match (for fixed pattern or with live feedback; both allow file filtering via glob patterns).
     - Buffers.
     - Help tags.
     - CLI output.
