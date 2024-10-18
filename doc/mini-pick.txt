@@ -16,7 +16,8 @@ Features:
 
 - Built-in pickers (see |MiniPick.builtin|):
     - Files.
-    - Pattern match (for fixed pattern and with live feedback).
+    - Pattern match (for fixed pattern or with live feedback; both allow
+      file filtering via glob patterns).
     - Buffers.
     - Help tags.
     - CLI output.
@@ -1095,6 +1096,10 @@ Parameters ~
     Default: whichever tool is present, trying in that same order.
   - <pattern> `(string)` - string pattern to search. If not given, asks user
     interactively with |input()|.
+  - <globs> `(table)` - array of string glob patterns to restrict search to
+    matching files. Supported only by "rg" and "git" tools, respects their
+    specific glob syntax and effects. Default: `{}` (no restriction).
+    Example: `{ '*.lua', 'lua/**' }` for Lua files and files in "lua" directory.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 ------------------------------------------------------------------------------
@@ -1104,7 +1109,7 @@ Pick from pattern matches with live feedback
 
 Perform pattern matching treating prompt as pattern. Gives live feedback on
 which matches are found. Use |MiniPick-actions-refine| to revert to regular
-matching.
+matching. Use `<C-o>` to restrict search to files matching glob patterns.
 Tries to use one of the CLI tools to create items (see |MiniPick-cli-tools|):
 `rg`, `git`. If none is present, error is thrown (for performance reasons).
 
@@ -1115,6 +1120,11 @@ Parameters ~
   Possible fields:
   - <tool> `(string)` - which tool to use. One of "rg", "git".
     Default: whichever tool is present, trying in that same order.
+  - <globs> `(table)` - array of string glob patterns to restrict search to
+    matching files. Supported only by "rg" and "git" tools, respects their
+    specific glob syntax and effects. Default: `{}` (no restriction).
+    Example: `{ '*.lua', 'lua/**' }` for Lua files and files in "lua" directory.
+    Use `<C-o>` custom mapping to add glob to the array.
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 ------------------------------------------------------------------------------
