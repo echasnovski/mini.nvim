@@ -255,8 +255,8 @@ Primarily, specification is a table with the following fields:
   Default: `nil` to rely on source set up during install.
   Notes:
     - It is required for creating plugin, but can be omitted afterwards.
-    - As the most common case, URI of the format "user/repo" is transformed
-      into "https://github.com/user/repo".
+    - As the most common case, URI of the format "user/repo" (if it contains
+      valid characters) is transformed into "https://github.com/user/repo".
 
 - <name> `(string|nil)` - directory basename of where to put plugin source.
   It is put in "pack/deps/opt" subdirectory of `config.path.package`.

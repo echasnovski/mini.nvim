@@ -252,8 +252,8 @@
 ---   Default: `nil` to rely on source set up during install.
 ---   Notes:
 ---     - It is required for creating plugin, but can be omitted afterwards.
----     - As the most common case, URI of the format "user/repo" is transformed
----       into "https://github.com/user/repo".
+---     - As the most common case, URI of the format "user/repo" (if it contains
+---       valid characters) is transformed into "https://github.com/user/repo".
 ---
 --- - <name> `(string|nil)` - directory basename of where to put plugin source.
 ---   It is put in "pack/deps/opt" subdirectory of `config.path.package`.
@@ -984,7 +984,7 @@ H.expand_spec = function(target, spec)
   spec = vim.deepcopy(spec)
 
   if spec.source and type(spec.source) ~= 'string' then H.error('`source` in plugin spec should be string.') end
-  local is_user_repo = type(spec.source) == 'string' and spec.source:find('^[^/]+/[^/]+$') ~= nil
+  local is_user_repo = type(spec.source) == 'string' and spec.source:find('^[%w-]+/[%w-_.]+$') ~= nil
   if is_user_repo then spec.source = 'https://github.com/' .. spec.source end
 
   spec.name = spec.name or vim.fn.fnamemodify(spec.source, ':t')

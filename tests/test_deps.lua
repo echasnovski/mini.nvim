@@ -323,22 +323,29 @@ T['add()']['works for present plugins'] = new_set({ parametrize = { { 'plugin_1'
 
 T['add()']['infers name from source'] = new_set({
   parametrize = {
-    { 'user/plugin_1' },
-    { 'https://github.com/user/plugin_1' },
-    { { source = 'user/plugin_1' } },
-    { { source = 'https://github.com/user/plugin_1' } },
+    { 'us-er1/plu-gin_0.nvim' },
+    { 'https://github.com/us-er1/plu-gin_0.nvim' },
+    { { source = 'us-er1/plu-gin_0.nvim' } },
+    { { source = 'https://github.com/us-er1/plu-gin_0.nvim' } },
   },
 }, {
   test = function(spec)
-    local ref_path = test_opt_dir .. '/plugin_1'
+    local ref_path = test_opt_dir .. '/plu-gin_0.nvim'
+    local ref_source = 'https://github.com/us-er1/plu-gin_0.nvim'
     add(spec)
     eq(is_in_rtp(ref_path), true)
-    eq(
-      get_session(),
-      { { source = 'https://github.com/user/plugin_1', name = 'plugin_1', path = ref_path, hooks = {}, depends = {} } }
-    )
+    eq(get_session(), { { source = ref_source, name = 'plu-gin_0.nvim', path = ref_path, hooks = {}, depends = {} } })
   end,
 })
+
+T['add()']['uses only valid characters when infers source'] = function()
+  add('git@github.com:user/plugin_1')
+  local ref_path = test_opt_dir .. '/plugin_1'
+  eq(
+    get_session(),
+    { { source = 'git@github.com:user/plugin_1', name = 'plugin_1', path = ref_path, hooks = {}, depends = {} } }
+  )
+end
 
 T['add()']["properly sources 'plugin/' and 'after/plugin/'"] = function()
   if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Neovim<0.9 has different sourcing behavior.') end
@@ -2013,7 +2020,8 @@ T['clean()'] = new_set({
       add('plugin_1')
       add('plugin_2')
       add('plugin_3')
-      eq(#get_session(), 4)
+      add('plu-gin_0.nvim')
+      eq(#get_session(), 5)
     end,
     post_case = function()
       child.lua([[
