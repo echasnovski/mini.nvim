@@ -26,10 +26,10 @@ https://user-images.githubusercontent.com/24854248/173045087-3d18affc-c76f-4d22-
 
 ## Features
 
-- Works using `:mksession` (meaning `sessionoptions` is fully respected).
+- Works using `:mksession` (`'sessionoptions'` is fully respected).
 - Implements both global (from configured directory) and local (from current directory) sessions.
-- Autoread default session (local if detected, latest otherwise) if Neovim was called without intention to show something else.
-- Autowrite current session before quitting Neovim.
+- Autoread default session (local if detected, latest written otherwise) if Neovim was called without intention to show something else.
+- Autowrite currently read session before quitting Neovim.
 - Configurable severity level of all actions.
 
 ## Installation
@@ -137,10 +137,10 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
-  -- Whether to read latest session if Neovim opened without file arguments
+  -- Whether to read default session if Neovim opened without file arguments
   autoread = false,
 
-  -- Whether to write current session before quitting Neovim
+  -- Whether to write currently read session before quitting Neovim
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)

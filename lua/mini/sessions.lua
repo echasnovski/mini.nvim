@@ -5,33 +5,32 @@
 ---
 --- ==============================================================================
 ---
---- Read, write, and delete sessions. Works using |mksession| (meaning
---- 'sessionoptions' is fully respected). This is intended as a drop-in Lua
---- replacement for session management part of 'mhinz/vim-startify' (works out
---- of the box with sessions created by it). Implements both global (from
---- configured directory) and local (from current directory) sessions.
+--- Read, write, and delete sessions. Uses |mksession| (meaning 'sessionoptions'
+--- is fully respected). This is intended as a drop-in Lua replacement for
+--- session management part of 'mhinz/vim-startify' (works out of the box with
+--- sessions created by it). Implements both global (from configured directory)
+--- and local (from current directory) sessions.
 ---
 --- Key design ideas:
---- - Sessions are represented by readable files (results of applying
----   |mksession|). There are two kinds of sessions:
+--- - Sessions are represented by readable files (results of applying |mksession|).
+---   There are two kinds of sessions:
 ---     - Global: any file inside a configurable directory.
 ---     - Local: configurable file inside current working directory (|getcwd|).
 ---
---- - All session files are detected during `MiniSessions.setup()` and on any
----   relevant action with session names being file names (including their
----   possible extension).
+--- - All session files are detected during `MiniSessions.setup()` and during
+---   relevant actions (`read`, `delete`, `select`) with file names as session
+---   names (including possible extension).
 ---
 --- - Store information about detected sessions in separate table
----   (|MiniSessions.detected|) and operate only on it. Meaning if this
----   information changes, there will be no effect until next detection. So to
----   avoid confusion, don't directly use |mksession| and |source| for writing
----   and reading sessions files.
+---   (|MiniSessions.detected|) and operate only on it. Meaning if this information
+---   changes, there will be no effect until next detection. To avoid confusion,
+---   don't directly use |mksession| / |source| for writing / reading session files.
 ---
 --- Features:
---- - Autoread default session (local if detected, latest otherwise) if Neovim
----   was called without intention to show something else.
+--- - Autoread default session (local if detected, latest written otherwise) if
+---   Neovim was called without intention to show something else.
 ---
---- - Autowrite current session before quitting Neovim.
+--- - Autowrite currently read session before quitting Neovim.
 ---
 --- - Configurable severity level of all actions.
 ---
@@ -87,10 +86,10 @@ end
 --- Default values:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 MiniSessions.config = {
-  -- Whether to read latest session if Neovim opened without file arguments
+  -- Whether to read default session if Neovim opened without file arguments
   autoread = false,
 
-  -- Whether to write current session before quitting Neovim
+  -- Whether to write currently read session before quitting Neovim
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)
@@ -213,7 +212,7 @@ end
 --- - Write session with |mksession| to a file named `session_name`. Its
 ---   directory is determined based on type of session:
 ---     - It is at location |v:this_session| if `session_name` is `nil` and
----       there is current session.
+---       there is currently read session.
 ---     - It is current working directory (|getcwd|) if `session_name` is equal
 ---       to `MiniSessions.config.file` (represents local session).
 ---     - It is `MiniSessions.config.directory` otherwise (represents global
@@ -221,7 +220,7 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string|nil Name of session file to write. Default: `nil` for
----   current session (|v:this_session|).
+---   currently read session (|v:this_session|).
 ---@param opts table|nil Table with options. Current allowed keys:
 ---   - <force> (whether to ignore existence of session file; default:
 ---     `MiniSessions.config.force.write`).
@@ -274,7 +273,7 @@ end
 --- - Update |MiniSessions.detected|.
 ---
 ---@param session_name string|nil Name of detected session file to delete. Default:
----   `nil` for name of current session (taken from |v:this_session|).
+---   `nil` for name of currently read session (taken from |v:this_session|).
 ---@param opts table|nil Table with options. Current allowed keys:
 ---   - <force> (whether to allow deletion of current session; default:
 ---     `MiniSessions.config.force.delete`).
