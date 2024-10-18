@@ -2,7 +2,11 @@
 
 ## mini.hues
 
-FEATURE: add `'lowmedium'` and `'mediumhigh'` saturation levels.
+- FEATURE: add `'lowmedium'` and `'mediumhigh'` saturation levels.
+
+## mini.pick
+
+- FEATURE: update `grep` and `grep_live` pickers to allow `glob` local option which restricts search to files that match it (for example, "*.lua" will search only in Lua files). The `grep_live` picker also has custom `<C-o>` mapping to set this interactively after picker is opened.
 
 ## mini.surround
 
