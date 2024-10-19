@@ -558,6 +558,20 @@ behavior closest to 'tpope/vim-surround' (but not identical), use this setup: >l
 
   -- Make special mapping for "add surrounding for line"
   vim.keymap.set('n', 'yss', 'ys_', { remap = true })
+
+  -- If preserving tag attributes while replacing was important to you in vim-surround,
+  -- you may add custom `T` surroundings to your setup opts to restore that behavior.
+  -- Avoid remapping over `t` though; Doing so would break surround add / delete.
+  custom_surroundings = {
+    T = {
+      input = { '<(%w-)%f[^<%w][^<>]->.-</%1>', '^<()%w+().*</()%w+()>$' },
+      output = function()
+	local tag_name = MiniSurround.user_input('Tag name')
+	if tag_name == nil then return nil end
+	return { left = tag_name, right = tag_name }
+      end,
+    },
+  }
 <
 # Options ~
 
