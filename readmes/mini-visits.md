@@ -41,7 +41,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/ad8ff054-9b95-4e9c-84b1
 
     - Select visited paths/labels using `vim.ui.select()`.
 
-      See `*MiniVisits.select_path()*` and `*MiniVisits.select_labels()*`.
+      See `*MiniVisits.select_path()*` and `*MiniVisits.select_label()*`.
 
     - Iterate through visit paths in target direction ("forward", "backward", "first", "last"). See `*MiniVisits.iterate_paths()*`.
 

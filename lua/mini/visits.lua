@@ -23,7 +23,7 @@
 ---       See |MiniVisits.gen_filter| and |MiniVisits.gen_sort|.
 ---
 ---     - Select visited paths/labels using |vim.ui.select()|.
----       See |MiniVisits.select_path()| and |MiniVisits.select_labels()|.
+---       See |MiniVisits.select_path()| and |MiniVisits.select_label()|.
 ---
 ---     - Iterate through visit paths in target direction ("forward", "backward",
 ---       "first", "last"). See |MiniVisits.iterate_paths()|.
@@ -764,7 +764,7 @@ end
 ---@param path string|nil Forwarded to |MiniVisits.list_labels()|.
 ---@param cwd string|nil Forwarded to |MiniVisits.list_labels()|.
 ---@param opts table|nil Forwarded to both |MiniVisits.list_labels()|
----  and |MiniVisits.select_paths()| (after choosing a label).
+---  and |MiniVisits.select_path()| (after choosing a label).
 MiniVisits.select_label = function(path, cwd, opts)
   local items = MiniVisits.list_labels(path, cwd, opts)
   opts = opts or {}
