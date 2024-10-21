@@ -14,6 +14,7 @@ FEATURE: add `'lowmedium'` and `'mediumhigh'` saturation levels.
 - FEATURE: add `hooks.pre_source` and `hooks.post_source` fields to collected cases. They can be either `'once'` or `'case'` and allow a more granular control over case execution.
 - FEATURE: `finally()` now can be called several times inside a single function with callbacks executed in order of how they were registered.
 - BREAKING FEATURE: now calling `skip()` in set's `pre_case` hook results in skipping all test cases in a set. Calling in other hooks has no effect. This enables a more structured skipping of all test cases inside a set. To skip inside hooks, use `add_note()` followed by `return`.
+- FEATURE: update `expect.reference_screenshot()` to allow `directory` option pointing to a directory where automatically constructed reference path is located.
 
 
 # Version 0.14.0

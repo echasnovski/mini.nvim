@@ -989,6 +989,13 @@ T['expect']['reference_screenshot()']['respects `opts.ignore_lines`'] = function
   )
 end
 
+T['expect']['reference_screenshot()']['respects `opts.directory`'] = function()
+  child.set_size(5, 12)
+  set_lines({ 'opts.directory' })
+  eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), nil, { directory = 'tests/dir-test' }), true)
+  eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), nil, { directory = 'tests/dir-test/' }), true)
+end
+
 T['expect']['reference_screenshot()']['works with multibyte characters'] = function()
   child.set_size(5, 12)
   set_lines({ '  1  2' })

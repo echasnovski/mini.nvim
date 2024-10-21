@@ -725,7 +725,7 @@ end
 ---   of `child.get_screenshot()` (see |MiniTest-child-neovim.get_screenshot()|).
 ---   If `nil`, expectation passed.
 ---@param path string|nil Path to reference screenshot. If `nil`, constructed
----   automatically in directory 'tests/screenshots' from current case info and
+---   automatically in directory `opts.directory` from current case info and
 ---   total number of times it was called inside current case. If there is no
 ---   file at `path`, it is created with content of `screenshot`.
 ---@param opts table|nil Options:
@@ -733,10 +733,12 @@ end
 ---     Temporary useful during test writing. Default: `false`.
 ---   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
 ---     Default: `nil` to check all lines.
+---   - <directory> `(string)` - directory where automatically constructed `path`
+---     is located. Default: "tests/screenshots".
 MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if screenshot == nil then return true end
 
-  opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
+  opts = vim.tbl_extend('force', { force = false, ignore_lines = {}, directory = 'tests/screenshots' }, opts or {})
 
   H.cache.n_screenshots = H.cache.n_screenshots + 1
 
@@ -752,7 +754,8 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
     -- Don't end with whitespace or dot (forbidden on Windows)
     name = name:gsub('[%s%.]$', '-')
 
-    path = 'tests/screenshots/' .. name
+    -- TODO: remove `:gsub()` after compatibility with Neovim=0.8 is dropped
+    path = vim.fs.normalize(opts.directory):gsub('/$', '') .. '/' .. name
 
     -- Deal with multiple screenshots
     if H.cache.n_screenshots > 1 then path = path .. string.format('-%03d', H.cache.n_screenshots) end
@@ -2264,7 +2267,7 @@ H.screenshot_compare = function(screen_ref, screen_obs, opts)
   ok, cause = compare(#screen_ref.attr, #screen_obs.attr, 'number of `attr` lines')
   if not ok then return ok, cause end
 
-  local lines_to_check, ignore_lines = {}, opts.ignore_lines or {}
+  local lines_to_check, ignore_lines = {}, opts.ignore_lines
   for i = 1, #screen_ref.text do
     if not vim.tbl_contains(ignore_lines, i) then table.insert(lines_to_check, i) end
   end

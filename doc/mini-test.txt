@@ -575,7 +575,7 @@ Parameters ~
   of `child.get_screenshot()` (see |MiniTest-child-neovim.get_screenshot()|).
   If `nil`, expectation passed.
 {path} `(string|nil)` Path to reference screenshot. If `nil`, constructed
-  automatically in directory 'tests/screenshots' from current case info and
+  automatically in directory `opts.directory` from current case info and
   total number of times it was called inside current case. If there is no
   file at `path`, it is created with content of `screenshot`.
 {opts} `(table|nil)` Options:
@@ -583,6 +583,8 @@ Parameters ~
     Temporary useful during test writing. Default: `false`.
   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
     Default: `nil` to check all lines.
+  - <directory> `(string)` - directory where automatically constructed `path`
+    is located. Default: "tests/screenshots".
 
 ------------------------------------------------------------------------------
                                                     *MiniTest.new_expectation()*
