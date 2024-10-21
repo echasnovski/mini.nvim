@@ -383,8 +383,9 @@ T['open()']['correctly computes window config'] = function()
   map_open()
   local win_id = get_map_win_id()
 
-  local hide
+  local hide, mouse
   if child.fn.has('nvim-0.10') == 1 then hide = false end
+  if child.fn.has('nvim-0.11') == 1 then mouse = false end
   eq(child.api.nvim_win_get_config(win_id), {
     anchor = 'NE',
     col = 20,
@@ -392,6 +393,7 @@ T['open()']['correctly computes window config'] = function()
     focusable = false,
     height = 28,
     hide = hide,
+    mouse = mouse,
     relative = 'editor',
     row = 0,
     width = 10,
