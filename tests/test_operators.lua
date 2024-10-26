@@ -1829,6 +1829,43 @@ T['Replace']['works with `[register]`'] = function()
 
   -- Visual mode
   validate_edit1d('aa bb cc', 0, { '"xyiw', 'w', 'yiw', 'w', 'viw', '"xgr' }, 'aa bb aa', 6)
+
+  -- Readonly registers
+  child.o.cmdheight = 10
+  set_lines({ 'aaa' })
+
+  -- - Empty yet valid registers (as they were not written yet)
+  expect.error(function() type_keys('"%griw') end, 'empty')
+  expect.error(function() type_keys('".griw') end, 'empty')
+  expect.error(function() type_keys('":griw') end, 'empty')
+
+  child.api.nvim_buf_set_name(0, 'xxx')
+  type_keys('"%griw')
+  eq(get_lines(), { 'xxx' })
+
+  type_keys('o', 'bbb', '<Esc>', 'k')
+  type_keys('".griw')
+  eq(get_lines(), { 'bbb', 'bbb' })
+
+  type_keys(':lua print(1)', '<CR>')
+  type_keys('":griw')
+  eq(get_lines(), { 'lua print(1)', 'bbb' })
+
+  -- Special registers
+  -- - Alternate file
+  expect.error(function() type_keys('"#griw') end, 'No alternate file')
+  child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+  set_lines({ 'yyy' })
+  type_keys('"#griw')
+  eq(get_lines(), { 'xxx' })
+
+  -- - Expression register
+  type_keys('"=', '1+1<CR>', 'griw')
+  eq(get_lines(), { '2' })
+
+  -- - Black hole
+  type_keys('"_griw')
+  eq(get_lines(), { '' })
 end
 
 T['Replace']['validatees `[register]` content'] = function()

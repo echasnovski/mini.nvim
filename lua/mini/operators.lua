@@ -999,6 +999,7 @@ H.replace_do = function(data)
   -- Do nothing with empty/unknown register
   local reg_info = vim.fn.getreginfo(register)
   if reg_info.regtype == nil then H.error('Register ' .. vim.inspect(register) .. ' is empty or unknown.') end
+  local reg_is_readonly = string.find(register, '^[%%:.]$') ~= nil
 
   -- Determine if region is at edge which is needed for the correct paste key
   local from_line, from_col = unpack(H.get_mark(mark_from))
@@ -1030,14 +1031,16 @@ H.replace_do = function(data)
   local new_reg_info = vim.deepcopy(reg_info)
   if new_reg_info.regtype:sub(1, 1) ~= submode then new_reg_info.regtype = submode end
   if should_reindent then new_reg_info.regcontents = H.update_indent(new_reg_info.regcontents, init_indent) end
-  vim.fn.setreg(register, new_reg_info)
+  -- - Setting readonly register has no effect. Errors with non-empty contents.
+  if not reg_is_readonly then vim.fn.setreg(register, new_reg_info) end
 
   -- Paste
-  local paste_keys = string.format('%d"%s%s', data.count or 1, register, (is_edge and 'p' or 'P'))
+  local expr_reg_keys = register == '=' and (reg_info.regcontents[1] .. '\r') or ''
+  local paste_keys = (data.count or 1) .. '"' .. register .. expr_reg_keys .. (is_edge and 'p' or 'P')
   H.cmd_normal(paste_keys)
 
   -- Restore register data
-  vim.fn.setreg(register, reg_info)
+  if not reg_is_readonly then vim.fn.setreg(register, reg_info) end
 
   -- Adjust cursor to be at start mark
   vim.api.nvim_win_set_cursor(0, { from_line, from_col })
