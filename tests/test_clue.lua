@@ -2284,6 +2284,13 @@ T['Reproducing keys']['respects `[register]` in Normal mode'] = function()
 
   validate_edit1d('AaA', 0, { '"y', 'g', 'E' }, 'aAa', 0)
   eq(child.lua_get('_G.register_expr'), 'y')
+
+  -- Works with special expression register "="
+  child.lua([[
+    vim.keymap.set('n', 'gd', function() return 'P' end, { expr = true })
+  ]])
+  validate_edit1d('xxx', 0, { '"=', '1+1<CR>', 'g', 'd' }, '2xxx', 0)
+  eq(child.fn.mode(1), 'n')
 end
 
 T['Reproducing keys']['works in temporary Normal mode'] = function()

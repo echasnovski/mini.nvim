@@ -1451,7 +1451,8 @@ H.compute_exec_keys = function()
     res = operator_tweak(vim.v.operator .. H.get_forced_submode() .. res)
   elseif not vim.startswith(cur_mode, 'i') and H.get_default_register() ~= vim.v.register then
     -- Force non-default register but not in Insert mode
-    res = '"' .. vim.v.register .. res
+    local expr_reg_keys = vim.v.register == '=' and (vim.fn.getreginfo('=').regcontents[1] .. '\r') or ''
+    res = '"' .. vim.v.register .. expr_reg_keys .. res
   end
 
   -- `feedkeys()` inside "temporary" Normal mode is executed **after** it is
