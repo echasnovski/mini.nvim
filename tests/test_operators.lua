@@ -1831,13 +1831,13 @@ T['Replace']['works with `[register]`'] = function()
   validate_edit1d('aa bb cc', 0, { '"xyiw', 'w', 'yiw', 'w', 'viw', '"xgr' }, 'aa bb aa', 6)
 
   -- Readonly registers
-  child.o.cmdheight = 10
+  child.o.cmdheight = 15
   set_lines({ 'aaa' })
 
   -- - Empty yet valid registers (as they were not written yet)
-  expect.error(function() type_keys('"%griw') end, 'empty')
-  expect.error(function() type_keys('".griw') end, 'empty')
-  expect.error(function() type_keys('":griw') end, 'empty')
+  expect.error(function() type_keys('"%griw') end, 'No file name')
+  expect.error(function() type_keys('".griw') end, 'No inserted text yet')
+  expect.error(function() type_keys('":griw') end, 'No previous command line')
 
   child.api.nvim_buf_set_name(0, 'xxx')
   type_keys('"%griw')
@@ -1868,13 +1868,13 @@ T['Replace']['works with `[register]`'] = function()
   eq(get_lines(), { '' })
 end
 
-T['Replace']['validatees `[register]` content'] = function()
-  child.o.cmdheight = 10
+T['Replace']['propagates informative error about `[register]` content'] = function()
+  child.o.cmdheight = 15
   set_lines({ 'aa bb' })
   type_keys('yiw', 'w')
 
-  expect.error(function() type_keys('"agriw') end, 'Register "a".*empty')
-  expect.error(function() type_keys('"Agriw') end, 'Register "A".*unknown')
+  expect.error(function() type_keys('"agriw') end, 'Nothing in register a')
+  expect.error(function() type_keys('"Agriw') end, 'Register "A" is invalid')
 end
 
 T['Replace']['works in edge cases'] = function()

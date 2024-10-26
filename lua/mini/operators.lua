@@ -996,10 +996,15 @@ H.replace_do = function(data)
   local register, submode = data.register, data.submode
   local mark_from, mark_to = data.mark_from, data.mark_to
 
-  -- Do nothing with empty/unknown register
-  local reg_info = vim.fn.getreginfo(register)
-  if reg_info.regtype == nil then H.error('Register ' .. vim.inspect(register) .. ' is empty or unknown.') end
+  -- Do nothing with invalid register (don't allow A-Z because they are used to
+  -- append to lowercase register and have no use here)
+  local reg_is_invalid = string.find(register, '^[0-9a-z"%-:.%%#=*+_/]$') == nil
+  if reg_is_invalid then H.error('Register ' .. vim.inspect(register) .. ' is invalid.') end
   local reg_is_readonly = string.find(register, '^[%%:.]$') ~= nil
+
+  -- Get reginfo and infer missing data (can be empty for special registers)
+  local reg_info = vim.fn.getreginfo(register)
+  reg_info.regtype = reg_info.regtype or 'v'
 
   -- Determine if region is at edge which is needed for the correct paste key
   local from_line, from_col = unpack(H.get_mark(mark_from))
