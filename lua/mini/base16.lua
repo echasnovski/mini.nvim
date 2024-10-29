@@ -667,7 +667,6 @@ H.apply_palette = function(palette, use_cterm)
     -- Included only those differing from default links
     hi('@lsp.type.variable',      {fg=p.base05, bg=nil, attr=nil, sp=nil})
 
-    hi('@lsp.mod.defaultLibrary', {link='Special'})
     hi('@lsp.mod.deprecated',     {fg=p.base08, bg=nil, attr=nil, sp=nil})
   end
 
