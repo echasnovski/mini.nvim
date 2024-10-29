@@ -761,7 +761,7 @@ T['gen_clues']['g()']['works'] = function()
   ]])
   child.cmd('unmap g%')
 
-  child.set_size(66, 55)
+  child.set_size(67, 55)
   type_keys('g')
   child.expect_screenshot()
 
