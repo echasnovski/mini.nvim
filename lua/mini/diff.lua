@@ -680,7 +680,8 @@ MiniDiff.gen_source.save = function()
 
     local set_ref = function()
       if vim.bo[buf_id].modified then return end
-      MiniDiff.set_ref_text(buf_id, vim.api.nvim_buf_get_lines(buf_id, 0, -1, false))
+      local lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
+      MiniDiff.set_ref_text(buf_id, table.concat(lines, '\n') .. '\n')
     end
 
     -- Autocommand are more efficient than file watcher as it doesn't read disk

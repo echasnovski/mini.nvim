@@ -1191,9 +1191,18 @@ T['gen_source']['save()']['works'] = function()
   child.cmd('write')
   validate_ref_text('aaa\nuuu\nvvv\n')
 
+  -- Should work with trailing empty/blank lines
+  type_keys('G', 'o', '<Esc>')
+  child.cmd('write')
+  validate_ref_text('aaa\nuuu\nvvv\n\n')
+
+  type_keys('G', 'o', ' ', '<Esc>')
+  child.cmd('write')
+  validate_ref_text('aaa\nuuu\nvvv\n\n \n')
+
   -- Should still work after `:edit`
   child.cmd('edit')
-  validate_ref_text('aaa\nuuu\nvvv\n')
+  validate_ref_text('aaa\nuuu\nvvv\n\n \n')
 
   -- Should update reference text when file change outside buffer
   child.fn.writefile({ 'bbb', 'xxx' }, test_file_path)
