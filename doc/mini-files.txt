@@ -572,6 +572,7 @@ Default values:
     mappings = {
       close       = 'q',
       go_in       = 'l',
+      go_in_only  = '',
       go_in_plus  = 'L',
       go_out      = 'h',
       go_out_plus = 'H',
@@ -643,6 +644,13 @@ string to not create a particular mapping.
 
 Default mappings are mostly designed for consistent navigation experience.
 Here are some alternatives: >lua
+
+  -- Go in without opening file buffer
+  mappings = {
+    go_in = '',
+    go_in_only = 'l',
+    go_in_plus = 'L',
+  }
 
   -- Close explorer after opening file with `l`
   mappings = {
@@ -772,6 +780,9 @@ Parameters ~
   - <close_on_file> `(boolean)` - whether to close explorer after going
     inside a file. Powers the `go_in_plus` mapping.
     Default: `false`.
+  - <open_file> `(boolean)` - whether to open file buffer.
+    Powers the `go_in_only` mapping.
+    Default: `true`.
 
 ------------------------------------------------------------------------------
                                                             *MiniFiles.go_out()*

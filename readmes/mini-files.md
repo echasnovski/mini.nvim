@@ -209,6 +209,7 @@ Here are code snippets for some common installation methods (use only one):
   mappings = {
     close       = 'q',
     go_in       = 'l',
+    go_in_only  = '',
     go_in_plus  = 'L',
     go_out      = 'h',
     go_out_plus = 'H',

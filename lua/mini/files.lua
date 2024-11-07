@@ -611,6 +611,13 @@ end
 --- Default mappings are mostly designed for consistent navigation experience.
 --- Here are some alternatives: >lua
 ---
+---   -- Go in without opening file buffer
+---   mappings = {
+---     go_in = '',
+---     go_in_only = 'l',
+---     go_in_plus = 'L',
+---   }
+---
 ---   -- Close explorer after opening file with `l`
 ---   mappings = {
 ---     go_in = 'L',
@@ -666,6 +673,7 @@ MiniFiles.config = {
   mappings = {
     close       = 'q',
     go_in       = 'l',
+    go_in_only  = '',
     go_in_plus  = 'L',
     go_out      = 'h',
     go_out_plus = 'H',
@@ -903,11 +911,16 @@ end
 ---   - <close_on_file> `(boolean)` - whether to close explorer after going
 ---     inside a file. Powers the `go_in_plus` mapping.
 ---     Default: `false`.
+---   - <open_file> `(boolean)` - whether to open file buffer.
+---     Powers the `go_in_only` mapping.
+---     Default: `true`.
 MiniFiles.go_in = function(opts)
   local explorer = H.explorer_get()
   if explorer == nil then return end
 
-  opts = vim.tbl_deep_extend('force', { close_on_file = false }, opts or {})
+  opts = vim.tbl_deep_extend('force', { close_on_file = false, open_file = true }, opts or {})
+
+  if not opts.open_file and MiniFiles.get_fs_entry().fs_type == 'file' then return end
 
   local should_close = opts.close_on_file
   if should_close then
@@ -1281,6 +1294,7 @@ H.setup_config = function(config)
 
     ['mappings.close'] = { config.mappings.close, 'string' },
     ['mappings.go_in'] = { config.mappings.go_in, 'string' },
+    ['mappings.go_in_only'] = { config.mappings.go_in_only, 'string' },
     ['mappings.go_in_plus'] = { config.mappings.go_in_plus, 'string' },
     ['mappings.go_out'] = { config.mappings.go_out, 'string' },
     ['mappings.go_out_plus'] = { config.mappings.go_out_plus, 'string' },
@@ -2138,6 +2152,12 @@ H.buffer_make_mappings = function(buf_id, mappings)
     end
   end
 
+  local go_in_only = function()
+    for _ = 1, vim.v.count1 do
+      MiniFiles.go_in({ open_file = false })
+    end
+  end
+
   local go_in_plus = function()
     for _ = 1, vim.v.count1 do
       MiniFiles.go_in({ close_on_file = true })
@@ -2204,6 +2224,7 @@ H.buffer_make_mappings = function(buf_id, mappings)
   --stylua: ignore start
   buf_map('n', mappings.close,       MiniFiles.close,       'Close')
   buf_map('n', mappings.go_in,       go_in_with_count,      'Go in entry')
+  buf_map('n', mappings.go_in_only,  go_in_only,            'Go in entry plus')
   buf_map('n', mappings.go_in_plus,  go_in_plus,            'Go in entry plus')
   buf_map('n', mappings.go_out,      go_out_with_count,     'Go out of directory')
   buf_map('n', mappings.go_out_plus, go_out_plus,           'Go out of directory plus')
