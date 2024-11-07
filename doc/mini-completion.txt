@@ -54,7 +54,7 @@ What it doesn't do:
 - Snippet expansion.
 - Many configurable sources.
 - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
-  variable user expectations. See 'Helpful key mappings' for suggestions.
+  variable user expectations. See 'Helpful mappings' for suggestions.
 
 # Dependencies ~
 
