@@ -1253,10 +1253,10 @@ H.expr_textobject = function(mode, ai_type, opts)
   -- Make expression
   return '<Cmd>lua '
     .. string.format(
-      [[MiniAi.select_textobject('%s', '%s', { search_method = '%s', n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
+      [[MiniAi.select_textobject('%s', %s, { search_method = %s, n_times = %d, reference_region = %s, operator_pending = %s, vis_mode = %s })]],
       ai_type,
-      vim.fn.escape(tobj_id, "'\\"),
-      opts.search_method,
+      vim.inspect(tobj_id),
+      vim.inspect(opts.search_method),
       vim.v.count1,
       reference_region_field,
       operator_pending_field,
@@ -1279,12 +1279,7 @@ H.expr_motion = function(side)
 
   -- Make expression for moving cursor
   return '<Cmd>lua '
-    .. string.format(
-      [[MiniAi.move_cursor('%s', 'a', '%s', { n_times = %d })]],
-      side,
-      vim.fn.escape(tobj_id, "'\\"),
-      vim.v.count1
-    )
+    .. string.format([[MiniAi.move_cursor('%s', 'a', %s, { n_times = %d })]], side, vim.inspect(tobj_id), vim.v.count1)
     .. '<CR>'
 end
 
