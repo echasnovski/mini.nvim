@@ -1245,6 +1245,7 @@ MiniExtra.pickers.options = function(local_opts, opts)
     local has_value, value = pcall(function()
       return vim.api.nvim_win_call(target_win_id, function() return vim[value_source][item.info.name] end)
     end)
+    -- TODO: consider removing after Neovim<=0.10 compatibility is dropped
     if not has_value then value = '<Option is deprecated (will be removed in later Neovim versions)>' end
 
     local lines = { 'Value:', unpack(vim.split(vim.inspect(value), '\n')), '', 'Info:' }

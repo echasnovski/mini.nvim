@@ -904,12 +904,12 @@ T['pickers']['commands()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.commands()')
   validate_picker_name('Commands')
   type_keys("'chdir")
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 9 } })
 
   -- Should have proper preview
   type_keys('<Tab>')
   -- - No data for built-in commands is yet available
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 9 } })
 
   -- Should properly choose
   type_keys('<CR>')
@@ -932,9 +932,9 @@ T['pickers']['commands()']['respects user commands'] = function()
 
   -- Should have proper preview with data
   type_keys('<Tab>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 24 } })
   type_keys('<C-n>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 24 } })
 
   -- Should on choose execute command if it is without arguments
   type_keys('<C-p>', '<CR>')
@@ -2943,6 +2943,8 @@ T['pickers']['options()']['correctly chooses non-binary options'] = function()
 end
 
 T['pickers']['options()']['correctly previews deprecated options'] = function()
+  -- There shouldn't be "deprecated" options listed after Neovim 0.11 refactors
+  if child.fn.has('nvim-0.11') == 1 then return end
   child.set_size(10, 115)
   pick_options()
   type_keys('^aleph', '<Tab>')
