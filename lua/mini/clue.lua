@@ -1101,7 +1101,8 @@ H.default_win_config = {
   relative = 'editor',
   style = 'minimal',
   width = 30,
-  zindex = 99,
+  -- Use high enough value to be on top of built-in windows (pmenu, etc.)
+  zindex = 251,
 }
 
 -- Precomputed raw keys
