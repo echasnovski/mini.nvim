@@ -2215,6 +2215,8 @@ H.picker_compute_win_config = function(win_config, is_for_open)
     border = 'single',
     style = 'minimal',
     noautocmd = is_for_open,
+    -- Use high enough value to be on top of built-in windows (pmenu, etc.)
+    zindex = 251,
   }
   local config = vim.tbl_deep_extend('force', default_config, H.expand_callable(win_config) or {})
 

@@ -458,6 +458,7 @@ T['start()']['creates proper window'] = function()
   local win_config = child.api.nvim_win_get_config(win_id)
   eq(win_config.relative, 'editor')
   eq(win_config.focusable, true)
+  eq(win_config.zindex, 251)
 
   validate_win_option(win_id, 'list', true)
   validate_win_option(win_id, 'listchars', 'extends:…')
