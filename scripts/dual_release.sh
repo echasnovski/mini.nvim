@@ -1,5 +1,5 @@
-# Make release from current commits (sync repos before doing this)
-local_repos="$( ls -d dual/repos/*/ )"
+# Make release from current commits
+# **IMPORTANT**: sync repos (`make dual_sync` and `make dual_push`) before this
 
 # Register tag name and message as script arguments
 if [ -z "$1" ] || [ -z "$2" ]
@@ -10,18 +10,33 @@ fi
 tag_name=$1
 tag_message=$2
 
-for repo in $local_repos; do
+repos_dir=dual/repos
+mkdir -p $repos_dir
+
+release_module () {
+  # First argument is a string with module name
+  module=$1
+  shift
+
+  repo="$( realpath $repos_dir/mini.$module )"
   printf "\n\033[1mReleasing $( basename $repo )\033[0m\n"
+
+  # Possibly pull whole repository
+  if [[ ! -d $repo ]]
+  then
+    printf "\033[4mPulling missing repository\033[0m\n"
+    # Handle 'mini.git' differently because GitHub repo is named 'mini-git'
+    # (".git" suffix is not allowed as repo name on GitHub)
+    if [ $module = "git" ]; then github_repo="mini-git"; else github_repo="mini.$module"; fi
+    git clone --filter=blob:none https://github.com/echasnovski/$github_repo.git $repo
+  fi
+
   cd $repo > /dev/null
 
-  # Ensure that all history is downloaded to allow proper pull of `stable`
-  printf "\033[4mPulling all \`main\` history\033[0m\n"
+  # Ensure `stable` branch points to latest `main`
+  printf "\033[4mMaking \`stable\` point to latest \`main\`\033[0m\n"
   git checkout main
   git pull --unshallow
-  echo ''
-
-  # Ensure branch on latest `main`
-  printf "\033[4mMaking \`stable\` point to latest \`main\`\033[0m\n"
   git checkout -B stable
   git checkout main
   echo ''
@@ -38,6 +53,46 @@ for repo in $local_repos; do
   echo ''
 
   cd - > /dev/null
-done
+}
 
-echo ''
+release_module "ai"
+release_module "align"
+release_module "animate"
+release_module "base16"
+release_module "basics"
+release_module "bracketed"
+release_module "bufremove"
+release_module "clue"
+release_module "colors"
+release_module "comment"
+release_module "completion"
+release_module "cursorword"
+release_module "deps"
+release_module "diff"
+release_module "doc"
+release_module "extra"
+release_module "files"
+release_module "fuzzy"
+release_module "git"
+release_module "hipatterns"
+release_module "hues"
+release_module "icons"
+release_module "indentscope"
+release_module "jump"
+release_module "jump2d"
+release_module "map"
+release_module "misc"
+release_module "move"
+release_module "notify"
+release_module "operators"
+release_module "pairs"
+release_module "pick"
+release_module "sessions"
+release_module "splitjoin"
+release_module "starter"
+release_module "statusline"
+release_module "surround"
+release_module "tabline"
+release_module "test"
+release_module "trailspace"
+release_module "visits"

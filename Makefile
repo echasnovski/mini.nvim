@@ -38,8 +38,10 @@ dual_log:
 
 dual_push:
 	chmod u+x scripts/dual_push.sh && scripts/dual_push.sh
+	printf "\n\033[1mAdjusting `sync` branch\033[0m\n"
 	git branch --force sync
 	git push origin sync
+	printf "\n\033[1mRemoving local patches\033[0m\n"
 	rm -r dual/patches
 
 dual_release:
