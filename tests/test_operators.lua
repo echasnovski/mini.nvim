@@ -1833,11 +1833,12 @@ T['Replace']['works with `[register]`'] = function()
   -- Readonly registers
   child.o.cmdheight = 15
   set_lines({ 'aaa' })
+  type_keys('"xyy')
 
   -- - Empty yet valid registers (as they were not written yet)
-  expect.error(function() type_keys('"%griw') end, 'No file name')
-  expect.error(function() type_keys('".griw') end, 'No inserted text yet')
-  expect.error(function() type_keys('":griw') end, 'No previous command line')
+  expect.error(function() type_keys('"%griw') end, 'Register "%%" is empty')
+  expect.error(function() type_keys('".griw') end, 'Register "%." is empty')
+  expect.error(function() type_keys('":griw') end, 'Register "%:" is empty')
 
   child.api.nvim_buf_set_name(0, 'xxx')
   type_keys('"%griw')
@@ -1852,8 +1853,12 @@ T['Replace']['works with `[register]`'] = function()
   eq(get_lines(), { 'lua print(1)', 'bbb' })
 
   -- Special registers
+  -- - Temporary register used in the implementation
+  type_keys('"xgriw')
+  eq(get_lines(), { 'aaa print(1)', 'bbb' })
+
   -- - Alternate file
-  expect.error(function() type_keys('"#griw') end, 'No alternate file')
+  expect.error(function() type_keys('"#griw') end, 'Register "#" is empty')
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
   set_lines({ 'yyy' })
   type_keys('"#griw')
@@ -1866,6 +1871,23 @@ T['Replace']['works with `[register]`'] = function()
   -- - Black hole
   type_keys('"_griw')
   eq(get_lines(), { '' })
+
+  -- Should all work with linewise operator
+  set_lines({ 'uuu', 'vvv' })
+  set_cursor(1, 0)
+  type_keys('"#grr')
+  eq(get_lines(), { 'xxx', 'vvv' })
+  type_keys('"=', '["a"]<CR>', 'grr')
+  eq(get_lines(), { 'a', 'vvv' })
+
+  child.cmd('b#')
+  set_cursor(1, 0)
+  type_keys('"%grr')
+  eq(get_lines(), { 'xxx', 'bbb' })
+  type_keys('".grr')
+  eq(get_lines(), { 'bbb', 'bbb' })
+  type_keys('":grr')
+  eq(get_lines(), { 'lua print(1)', 'bbb' })
 end
 
 T['Replace']['propagates informative error about `[register]` content'] = function()
@@ -1873,7 +1895,7 @@ T['Replace']['propagates informative error about `[register]` content'] = functi
   set_lines({ 'aa bb' })
   type_keys('yiw', 'w')
 
-  expect.error(function() type_keys('"agriw') end, 'Nothing in register a')
+  expect.error(function() type_keys('"agriw') end, 'Register "a" is empty')
   expect.error(function() type_keys('"Agriw') end, 'Register "A" is invalid')
 end
 
@@ -1903,7 +1925,7 @@ end
 T['Replace']['does not have side effects'] = function()
   set_lines({ 'aa', 'bb', 'cc', 'xy' })
 
-  -- All non-operator related marks and target register
+  -- All non-operator related marks, target and temporary register
   set_cursor(4, 0)
   type_keys('ma')
   type_keys('v"xy')
@@ -1916,6 +1938,7 @@ T['Replace']['does not have side effects'] = function()
   set_cursor(1, 0)
   type_keys('yiw')
   local target_register_info = child.fn.getreginfo('"')
+  local temp_register_info = child.fn.getreginfo('x')
   set_cursor(2, 0)
   type_keys('grj')
 
@@ -1924,6 +1947,7 @@ T['Replace']['does not have side effects'] = function()
   eq(child.api.nvim_buf_get_mark(0, 'a'), { 3, 0 })
   eq(child.api.nvim_buf_get_mark(0, 'x'), { 3, 1 })
   eq(child.fn.getreginfo('"'), target_register_info)
+  eq(child.fn.getreginfo('x'), temp_register_info)
 end
 
 T['Replace']['preserves visual marks'] = function()

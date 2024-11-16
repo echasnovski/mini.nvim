@@ -1000,10 +1000,10 @@ H.replace_do = function(data)
   -- append to lowercase register and have no use here)
   local reg_is_invalid = string.find(register, '^[0-9a-z"%-:.%%#=*+_/]$') == nil
   if reg_is_invalid then H.error('Register ' .. vim.inspect(register) .. ' is invalid.') end
-  local reg_is_readonly = string.find(register, '^[%%:.]$') ~= nil
 
   -- Get reginfo and infer missing data (can be empty for special registers)
   local reg_info = vim.fn.getreginfo(register)
+  if reg_info.regcontents == nil then H.error('Register ' .. vim.inspect(register) .. ' is empty.') end
   reg_info.regtype = reg_info.regtype or 'v'
 
   -- Determine if region is at edge which is needed for the correct paste key
@@ -1032,20 +1032,23 @@ H.replace_do = function(data)
     { mark_from = mark_from, mark_to = mark_to, submode = forced_motion, mode = data.mode, register = '_' }
   H.do_between_marks('d', delete_data)
 
-  -- Modify register data to have proper submode and indent
-  local new_reg_info = vim.deepcopy(reg_info)
-  if new_reg_info.regtype:sub(1, 1) ~= submode then new_reg_info.regtype = submode end
-  if should_reindent then new_reg_info.regcontents = H.update_indent(new_reg_info.regcontents, init_indent) end
-  -- - Setting readonly register has no effect. Errors with non-empty contents.
-  if not reg_is_readonly then vim.fn.setreg(register, new_reg_info) end
+  -- Set temporary register data to have proper submode and indent
+  -- NOTE: use dedicated temporary register to workaround not being able to
+  -- write register data into readonly registers ('%', '#', '.').
+  local tmp_register, tmp_reg_info = register == '=' and '=' or 'x', vim.deepcopy(reg_info)
+  if tmp_reg_info.regtype:sub(1, 1) ~= submode then tmp_reg_info.regtype = submode end
+  if should_reindent then tmp_reg_info.regcontents = H.update_indent(tmp_reg_info.regcontents, init_indent) end
+
+  local cache_reg_info = vim.fn.getreginfo(tmp_register)
+  vim.fn.setreg(tmp_register, tmp_reg_info)
 
   -- Paste
-  local expr_reg_keys = register == '=' and (reg_info.regcontents[1] .. '\r') or ''
-  local paste_keys = (data.count or 1) .. '"' .. register .. expr_reg_keys .. (is_edge and 'p' or 'P')
+  local expr_reg_keys = tmp_register == '=' and (reg_info.regcontents[1] .. '\r') or ''
+  local paste_keys = (data.count or 1) .. '"' .. tmp_register .. expr_reg_keys .. (is_edge and 'p' or 'P')
   H.cmd_normal(paste_keys)
 
-  -- Restore register data
-  if not reg_is_readonly then vim.fn.setreg(register, reg_info) end
+  -- Restore temporary register data
+  vim.fn.setreg(tmp_register, cache_reg_info)
 
   -- Adjust cursor to be at start mark
   vim.api.nvim_win_set_cursor(0, { from_line, from_col })
