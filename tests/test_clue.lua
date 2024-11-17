@@ -335,6 +335,21 @@ T['setup()']['ensures valid triggers on `LspAttach` event'] = function()
   child.expect_screenshot()
 end
 
+T['setup()']['ensures valid triggers on selected special buffers'] = function()
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  local validate = function(ft)
+    child.cmd('au FileType ' .. ft .. ' lua vim.keymap.set("n", "<Space>a", ":echo 1<CR>", { buffer = true })')
+    load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+    child.api.nvim_set_current_buf(child.api.nvim_create_buf(false, true))
+    child.bo.filetype = ft
+    validate_trigger_keymap('n', '<Space>', 0)
+  end
+
+  validate('help')
+  validate('git')
+end
+
 T['setup()']['respects `vim.b.miniclue_disable`'] = function()
   local init_buf_id = child.api.nvim_get_current_buf()
   local other_buf_id = child.api.nvim_create_buf(true, false)

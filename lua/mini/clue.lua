@@ -1194,6 +1194,10 @@ H.create_autocommands = function()
   -- - Respect `LspAttach` as it is a common source of buffer-local mappings
   local events = { 'BufAdd', 'LspAttach' }
   au(events, '*', ensure_triggers, 'Ensure buffer-local trigger keymaps')
+  -- - Respect common interactive not listed filetypes. NOTE: no 'minifiles' as
+  --   `'` trigger conflicts with its local `'`. Plus it pollutes `g?` content.
+  local special_ft = { 'help', 'git' }
+  au('Filetype', special_ft, ensure_triggers, 'Ensure buffer-local trigger keymaps')
 
   -- Disable all triggers when recording macro as they interfere with what is
   -- actually recorded
