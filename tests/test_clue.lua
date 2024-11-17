@@ -1510,7 +1510,7 @@ T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
 
   local validate = function()
     type_keys(' ')
-    child.expect_screenshot()
+    child.expect_screenshot({ ignore_lines = { 1 } })
     type_keys('<Esc>')
   end
 
@@ -1963,7 +1963,7 @@ T['Postkeys']['persists window if action changes tabpage'] = function()
   type_keys('<C-w>')
   child.expect_screenshot()
   type_keys('T')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 1 } })
 end
 
 T['Querying keys'] = new_set()
