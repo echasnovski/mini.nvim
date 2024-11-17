@@ -345,6 +345,14 @@ to generate clues for all available completion sources): >lua
     }
   })
 <
+# Triggers in special buffers ~
+
+By default triggers are automatically created in listed ('buflisted') and some
+special non-listed buffers. Use |MiniClue.ensure_buf_triggers()| to manually
+enable in when you need them. For example: >vim
+
+  au FileType special_ft lua MiniClue.ensure_buf_triggers()
+<
                                                     *MiniClue-examples-submodes*
 # Submodes ~
 
