@@ -298,8 +298,7 @@ MiniNotify.make_notify = function(opts)
     if type(val.hl_group) ~= 'string' then H.error('`hl_group` in level data should be string.') end
   end
 
-  -- Use `vim.schedule_wrap` for output to be usable inside `vim.uv` callbacks
-  local notify = function(msg, level)
+  return function(msg, level)
     level = level or vim.log.levels.INFO
     local level_name = level_names[level]
     if level_name == nil then H.error('Only valid values of `vim.log.levels` are supported.') end
@@ -309,10 +308,6 @@ MiniNotify.make_notify = function(opts)
 
     local id = MiniNotify.add(msg, level_name, level_data.hl_group)
     vim.defer_fn(function() MiniNotify.remove(id) end, level_data.duration)
-  end
-  return function(msg, level)
-    if not vim.in_fast_event() then return notify(msg, level) end
-    vim.schedule(function() notify(msg, level) end)
   end
 end
 
@@ -417,7 +412,10 @@ end
 --- - Apply `config.content.format` to each element of notification array and
 ---   update its message.
 --- - Construct content from notifications and show them in a window.
+---
+--- Note: effects are delayed if inside fast event (|vim.in_fast_event()|).
 MiniNotify.refresh = function()
+  if vim.in_fast_event() then return vim.schedule(MiniNotify.refresh) end
   if H.is_disabled() or type(vim.v.exiting) == 'number' then return H.window_close() end
 
   -- Prepare array of active notifications

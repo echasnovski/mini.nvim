@@ -258,7 +258,7 @@ T['make_notify()']['validates arguments'] = function()
   validate_level('OFF')
 end
 
-T['make_notify()']['has output working in `libuv` callbacks'] = function()
+T['make_notify()']['has output working in fast event'] = function()
   child.lua('_G.dur = ' .. small_time)
   child.lua([[
     vim.notify = MiniNotify.make_notify()
@@ -517,6 +517,17 @@ T['refresh()']['handles manual buffer/window delete'] = function()
   refresh()
   eq(#child.api.nvim_list_bufs(), 2)
   eq(is_notif_window_shown(), true)
+end
+
+T['refresh()']['can be used inside fast event'] = function()
+  add('Hello')
+  child.lua('_G.dur = ' .. small_time)
+  child.lua([[
+    local timer = vim.loop.new_timer()
+    timer:start(_G.dur, 0, function() MiniNotify.refresh() end)
+  ]])
+  sleep(small_time + small_time)
+  eq(child.cmd_capture('messages'), '')
 end
 
 T['refresh()']['respects `vim.{g,b}.mininotify_disable`'] = new_set({ parametrize = { { 'g' }, { 'b' } } }, {

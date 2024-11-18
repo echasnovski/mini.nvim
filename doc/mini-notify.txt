@@ -327,6 +327,8 @@ Make notification window show relevant data:
   update its message.
 - Construct content from notifications and show them in a window.
 
+Note: effects are delayed if inside fast event (|vim.in_fast_event()|).
+
 ------------------------------------------------------------------------------
                                                               *MiniNotify.get()*
                              `MiniNotify.get`({id})
