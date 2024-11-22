@@ -375,7 +375,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     H.completion.lsp.status = 'sent'
 
     local bufnr = vim.api.nvim_get_current_buf()
-    local params = vim.lsp.util.make_position_params()
+    local params = H.make_position_params()
 
     -- NOTE: it is CRUCIAL to make LSP request on the first call to
     -- 'complete-function' (as in Vim's help). This is due to the fact that
@@ -1108,7 +1108,7 @@ H.show_signature_window = function()
     H.signature.lsp.status = 'sent'
 
     local bufnr = vim.api.nvim_get_current_buf()
-    local params = vim.lsp.util.make_position_params()
+    local params = H.make_position_params()
 
     local cancel_fun = vim.lsp.buf_request_all(bufnr, 'textDocument/signatureHelp', params, function(result)
       if not H.is_lsp_current(H.signature, current_id) then return end
@@ -1460,5 +1460,15 @@ H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
 H.get_buf_lsp_clients = function() return vim.lsp.get_clients({ bufnr = 0 }) end
 if vim.fn.has('nvim-0.10') == 0 then H.get_buf_lsp_clients = function() return vim.lsp.buf_get_clients() end end
+
+-- TODO: Remove after compatibility with Neovim=0.10 is dropped
+H.make_position_params = function() return vim.lsp.util.make_position_params() end
+if vim.fn.has('nvim-0.11') == 1 then
+  -- Use callable `params` to workaround mandatory non-nil `offset_encoding` in
+  -- `vim.lsp.util.make_position_params()` on Neovim>=0.11
+  H.make_position_params = function()
+    return function(client, _) return vim.lsp.util.make_position_params(0, client.offset_encoding) end
+  end
+end
 
 return MiniCompletion

@@ -32,6 +32,15 @@ Months.data = {
 }
 --stylua: ignore end
 
+Months.client = {
+  name = 'months-lsp',
+  offset_encoding = 'utf-16',
+  server_capabilities = {
+    completionProvider = { resolveProvider = true, triggerCharacters = { '.' } },
+    signatureHelpProvider = { triggerCharacters = { '(', ',' } },
+  },
+}
+
 local construct_additionTextEdits = function(id, name)
   return {
     {
@@ -66,6 +75,8 @@ end
 
 Months.requests = {
   ['textDocument/completion'] = function(params)
+    params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
+
     -- Imitate returning nothing in comments
     local line = vim.fn.getline(params.position.line + 1)
     if line:find('^%s*#') ~= nil then return { { result = { items = {} } } } end
@@ -103,6 +114,8 @@ Months.requests = {
   end,
 
   ['textDocument/signatureHelp'] = function(params)
+    params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
+
     local n_line, n_col = params.position.line, params.position.character
     local line = vim.api.nvim_buf_get_lines(0, n_line, n_line + 1, false)[1]
     line = line:sub(1, n_col)
@@ -144,18 +157,7 @@ vim.lsp.buf_request_all = function(bufnr, method, params, callback)
   callback(requests(params))
 end
 
-local get_lsp_clients = function()
-  return {
-    {
-      name = 'months-lsp',
-      offset_encoding = 'utf-16',
-      server_capabilities = {
-        completionProvider = { resolveProvider = true, triggerCharacters = { '.' } },
-        signatureHelpProvider = { triggerCharacters = { '(', ',' } },
-      },
-    },
-  }
-end
+local get_lsp_clients = function() return { Months.client } end
 
 if vim.fn.has('nvim-0.10') == 0 then vim.lsp.buf_get_clients = get_lsp_clients end
 if vim.fn.has('nvim-0.10') == 1 then vim.lsp.get_clients = get_lsp_clients end
