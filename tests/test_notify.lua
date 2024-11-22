@@ -270,9 +270,23 @@ T['make_notify()']['has output working in fast event'] = function()
   eq(get_all()[1].msg, 'Hello')
 end
 
+T['make_notify()']['has output working when completion is active'] = function()
+  child.lua([[
+    vim.notify = MiniNotify.make_notify()
+    _G.completefunc_notify = function() vim.notify("Hello", vim.log.levels.INFO) end
+  ]])
+  child.o.completefunc = 'v:lua.completefunc_notify'
+  child.type_keys('i', '<C-x><C-u>')
+  sleep(small_time + small_time)
+  eq(child.cmd_capture('messages'), '')
+  eq(get_all()[1].msg, 'Hello')
+end
+
 T['make_notify()']['has output validating arguments'] = function()
   child.lua('vim.notify = MiniNotify.make_notify()')
-  expect.error(function() child.lua([[vim.notify('Hello', 'ERROR')]]) end, 'valid values.*vim%.log%.levels')
+  child.lua([[vim.notify('Hello', 'ERROR')]])
+  sleep(small_time)
+  expect.match(child.cmd_capture('messages'), 'valid values.*vim%.log%.levels')
 end
 
 T['make_notify()']['allows non-positive `duration`'] = function()

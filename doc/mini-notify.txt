@@ -225,10 +225,9 @@ Default: 25.
                         `MiniNotify.make_notify`({opts})
 Make vim.notify wrapper
 
-Calling this function creates an implementation of |vim.notify()| powered
-by this module. General idea is that notification is shown right away (as
-soon as safely possible, see |vim.schedule()|) and removed after a configurable
-amount of time.
+Calling this function creates an implementation of |vim.notify()| powered by
+this module. General idea is to show notification as soon as safely possible
+(see |vim.schedule_wrap()|) and remove it after a configurable amount of time.
 
 Examples: >lua
 
