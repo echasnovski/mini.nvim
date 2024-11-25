@@ -252,3 +252,4 @@ Alternatively, manually delete plugin's directory from "pack/deps" package.
 - [folke/lazy.nvim](https://github.com/folke/lazy.nvim)
 - [savq/paq-nvim](https://github.com/savq/paq-nvim)
 - [junegunn/vim-plug](https://github.com/junegunn/vim-plug)
+- [k-takata/minpac](https://github.com/k-takata/minpac)

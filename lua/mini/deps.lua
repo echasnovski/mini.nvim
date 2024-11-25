@@ -83,6 +83,10 @@
 ---     - Similar approach to defining and installing plugins as 'savq/paq-nvim'.
 ---     - Has basic lazy-loading built-in, while this module does not (by design).
 ---
+--- - 'k-takata/minpac':
+---     - Written in Vimscript, while this module is in Lua.
+---     - Overall less feature-rich than this module (by design).
+---
 --- # Highlight groups ~
 ---
 --- Highlight groups are used inside confirmation buffers after
