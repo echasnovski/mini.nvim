@@ -858,7 +858,7 @@ T['start()']['stops currently active picker'] = function()
   child.expect_screenshot()
 end
 
-T['start()']['stops impoperly aborted previous picker'] = function()
+T['start()']['stops improperly aborted previous picker'] = function()
   child.lua_notify([[MiniPick.start({
     source = { items = { 'a', 'b', 'c' } },
     mappings = { error = { char = 'e', func = function() error() end } },
