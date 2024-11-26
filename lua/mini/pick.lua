@@ -2536,7 +2536,11 @@ H.actions = {
   choose_in_split   = function(picker, _) return H.picker_choose(picker, 'split')  end,
   choose_in_tabpage = function(picker, _) return H.picker_choose(picker, 'tabnew') end,
   choose_in_vsplit  = function(picker, _) return H.picker_choose(picker, 'vsplit') end,
-  choose_marked     = function(picker, _) return not picker.opts.source.choose_marked(MiniPick.get_picker_matches().marked) end,
+  choose_marked     = function(picker, _)
+    local ok, res = pcall(picker.opts.source.choose_marked, MiniPick.get_picker_matches().marked)
+    if not ok then vim.schedule(function() H.error('Error during choose marked:\n' .. res) end) end
+    return not (ok and res)
+  end,
 
   delete_char       = function(picker, _) H.picker_query_delete(picker, 1)                end,
   delete_char_right = function(picker, _) H.picker_query_delete(picker, 0)                end,
@@ -2631,8 +2635,11 @@ H.picker_choose = function(picker, pre_command)
     end)
   end
 
-  -- Returning nothing, `nil`, or `false` should lead to picker stop
-  return not picker.opts.source.choose(cur_item)
+  local ok, res = pcall(picker.opts.source.choose, cur_item)
+  -- Delay error to have time to hide picker window
+  if not ok then vim.schedule(function() H.error('Error during choose:\n' .. res) end) end
+  -- Error or returning nothing, `nil`, or `false` should lead to picker stop
+  return not (ok and res)
 end
 
 H.picker_mark_indexes = function(picker, range_type)

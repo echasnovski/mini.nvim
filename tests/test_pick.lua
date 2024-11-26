@@ -5250,6 +5250,19 @@ T['Choose']['uses output as "should continue"'] = function()
   validate({ '<C-x>', '<M-CR>' })
 end
 
+T['Choose']['handles error in choose function'] = function()
+  child.lua_notify([[MiniPick.start({ source = { items = { 'a' }, choose = function() error('Oops!') end } })]])
+  expect.error(function() type_keys('<CR>') end, 'Error during choose:.*Oops!')
+  eq(is_picker_active(), false)
+  eq(#child.api.nvim_list_wins(), 1)
+
+  child.lua_notify([[MiniPick.start({ source = { items = { 'a' }, choose_marked = function() error('Oops!') end } })]])
+  type_keys('<C-x>')
+  expect.error(function() type_keys('<M-CR>') end, 'Error during choose marked:.*Oops!')
+  eq(is_picker_active(), false)
+  eq(#child.api.nvim_list_wins(), 1)
+end
+
 T['Mark'] = new_set()
 
 T['Mark']['works'] = function()
