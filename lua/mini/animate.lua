@@ -405,8 +405,10 @@ MiniAnimate.config = {
     --minidoc_replace_end
 
     -- Path generator for visualized cursor movement
-    --minidoc_replace_start path = --<function: implements shortest line path>,
-    path = function(destination) return H.path_line(destination, { predicate = H.default_path_predicate }) end,
+    --minidoc_replace_start path = --<function: implements shortest line path no longer than 1000>,
+    path = function(destination)
+      return H.path_line(destination, { predicate = H.default_path_predicate, max_output_steps = 1000 })
+    end,
     --minidoc_replace_end
   },
 
@@ -720,10 +722,12 @@ MiniAnimate.gen_path = {}
 --- Generate path as shortest line
 ---
 ---@param opts __animate_path_opts_common
+---   - <max_output_steps> `(number)` - maximum number of steps in output.
+---     Default: 1000.
 ---
 ---@return __animate_path_return
 MiniAnimate.gen_path.line = function(opts)
-  opts = vim.tbl_deep_extend('force', { predicate = H.default_path_predicate }, opts or {})
+  opts = vim.tbl_deep_extend('force', { predicate = H.default_path_predicate, max_output_steps = 1000 }, opts or {})
 
   return function(destination) return H.path_line(destination, opts) end
 end
@@ -731,39 +735,42 @@ end
 --- Generate path as line/column angle
 ---
 ---@param opts __animate_path_opts_common
+---   - <max_output_steps> `(number)` - maximum number of steps per side in output.
+---     Default: 1000.
 ---   - <first_direction> `(string)` - one of `"horizontal"` (default; animates
 ---     across initial line first) or `"vertical"` (animates across initial
 ---     column first).
 ---
 ---@return __animate_path_return
 MiniAnimate.gen_path.angle = function(opts)
-  opts = opts or {}
-  local predicate = opts.predicate or H.default_path_predicate
-  local first_direction = opts.first_direction or 'horizontal'
+  local default_opts = { predicate = H.default_path_predicate, max_output_steps = 1000, first_direction = 'horizontal' }
+  opts = vim.tbl_deep_extend('force', default_opts, opts or {})
 
   local append_horizontal = function(res, dest_col, const_line)
     if dest_col == 0 then return end
-    local step = dest_col < 0 and -1 or 1
-    for i = 0, dest_col - step, step do
-      table.insert(res, { const_line, i })
+    local n_steps = math.min(math.abs(dest_col), opts.max_output_steps)
+    local coef = dest_col / n_steps
+    for i = 0, n_steps - 1 do
+      table.insert(res, { const_line, H.round(coef * i) })
     end
   end
 
   local append_vertical = function(res, dest_line, const_col)
     if dest_line == 0 then return end
-    local step = dest_line < 0 and -1 or 1
-    for i = 0, dest_line - step, step do
-      table.insert(res, { i, const_col })
+    local n_steps = math.min(math.abs(dest_line), opts.max_output_steps)
+    local coef = dest_line / n_steps
+    for i = 0, n_steps - 1 do
+      table.insert(res, { H.round(coef * i), const_col })
     end
   end
 
   return function(destination)
     -- Don't animate in case of false predicate
-    if not predicate(destination) then return {} end
+    if not opts.predicate(destination) then return {} end
 
     -- Travel along horizontal/vertical lines
     local res = {}
-    if first_direction == 'horizontal' then
+    if opts.first_direction == 'horizontal' then
       append_horizontal(res, destination[2], 0)
       append_vertical(res, destination[1], destination[2])
     else
@@ -1944,7 +1951,7 @@ H.path_line = function(destination, opts)
   -- step before destination
   local l, c = destination[1], destination[2]
   local l_abs, c_abs = math.abs(l), math.abs(c)
-  local max_diff = math.max(l_abs, c_abs)
+  local max_diff = math.min(math.max(l_abs, c_abs), opts.max_output_steps)
 
   local res = {}
   for i = 0, max_diff - 1 do

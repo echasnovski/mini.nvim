@@ -131,7 +131,7 @@ Default values:
       timing = --<function: implements linear total 250ms animation duration>,
 
       -- Path generator for visualized cursor movement
-      path = --<function: implements shortest line path>,
+      path = --<function: implements shortest line path no longer than 1000>,
     },
 
     -- Vertical scroll
@@ -669,6 +669,8 @@ Parameters ~
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
     flickering), `true` otherwise.
+  - <max_output_steps> `(number)` - maximum number of steps in output.
+    Default: 1000.
 
 Return ~
 `(function)` Path function (see |MiniAnimate.config.cursor|).
@@ -684,6 +686,8 @@ Parameters ~
     returns boolean value indicating whether animation should be done.
     Default: `false` if `destination` is within one line of origin (reduces
     flickering), `true` otherwise.
+  - <max_output_steps> `(number)` - maximum number of steps per side in output.
+    Default: 1000.
   - <first_direction> `(string)` - one of `"horizontal"` (default; animates
     across initial line first) or `"vertical"` (animates across initial
     column first).

@@ -509,6 +509,18 @@ T['gen_path']['line()']['respects `opts.predicate`'] = function()
   validate_path({ 3, 3 }, { { 0, 0 }, { 1, 1 }, { 2, 2 } })
 end
 
+--stylua: ignore
+T['gen_path']['line()']['respects `opts.max_output_steps`'] = function()
+  child.lua('_G.test_path = MiniAnimate.gen_path.line({ max_output_steps = 4 })')
+  validate_path({ 0, 0 }, {})
+  validate_path({ 2, 3 }, { { 0, 0 }, { 1, 1 }, {  1, 2 } })
+
+  validate_path({  2,  5 }, { { 0, 0 }, { 1,  1 }, {  1,  3 }, {  2,  4 } })
+  validate_path({ -2,  5 }, { { 0, 0 }, { 0,  1 }, { -1,  3 }, { -1,  4 } })
+  validate_path({  2, -5 }, { { 0, 0 }, { 1, -1 }, {  1, -2 }, {  2, -4 } })
+  validate_path({ -2, -5 }, { { 0, 0 }, { 0, -1 }, { -1, -2 }, { -1, -4 } })
+end
+
 T['gen_path']['angle()'] = new_set()
 
 --stylua: ignore
@@ -539,6 +551,18 @@ T['gen_path']['angle()']['respects `opts.predicate`'] = function()
   validate_path({ -1, 3 }, { { 0, 0 }, { 0, 1 }, {  0, 2 }, { 0, 3 } })
 
   validate_path({  3,  3 }, { { 0, 0 }, { 0,  1 }, { 0,  2 }, { 0,  3 }, {  1,  3 }, {  2,  3 }})
+end
+
+--stylua: ignore
+T['gen_path']['angle()']['respects `opts.max_output_steps`'] = function()
+  child.lua('_G.test_path = MiniAnimate.gen_path.angle({ max_output_steps = 3 })')
+  validate_path({ 0, 0 }, {})
+  validate_path({ 2, 3 }, { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 3 } })
+
+  validate_path({  2,  4 }, { { 0, 0 }, { 0,  1 }, { 0,  3 }, { 0,  4 }, {  1,  4 } })
+  validate_path({ -2,  4 }, { { 0, 0 }, { 0,  1 }, { 0,  3 }, { 0,  4 }, { -1,  4 } })
+  validate_path({  2, -4 }, { { 0, 0 }, { 0, -1 }, { 0, -3 }, { 0, -4 }, {  1, -4 } })
+  validate_path({ -2, -4 }, { { 0, 0 }, { 0, -1 }, { 0, -3 }, { 0, -4 }, { -1, -4 } })
 end
 
 --stylua: ignore

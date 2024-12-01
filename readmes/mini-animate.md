@@ -156,7 +156,7 @@ Here are code snippets for some common installation methods (use only one):
     timing = --<function: implements linear total 250ms animation duration>,
 
     -- Path generator for visualized cursor movement
-    path = --<function: implements shortest line path>,
+    path = --<function: implements shortest line path no longer than 1000>,
   },
 
   -- Vertical scroll
