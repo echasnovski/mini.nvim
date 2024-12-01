@@ -742,16 +742,16 @@ MiniAnimate.gen_path.angle = function(opts)
   local first_direction = opts.first_direction or 'horizontal'
 
   local append_horizontal = function(res, dest_col, const_line)
-    local step = H.make_step(dest_col)
-    if step == 0 then return end
+    if dest_col == 0 then return end
+    local step = dest_col < 0 and -1 or 1
     for i = 0, dest_col - step, step do
       table.insert(res, { const_line, i })
     end
   end
 
   local append_vertical = function(res, dest_line, const_col)
-    local step = H.make_step(dest_line)
-    if step == 0 then return end
+    if dest_line == 0 then return end
+    local step = dest_line < 0 and -1 or 1
     for i = 0, dest_line - step, step do
       table.insert(res, { i, const_col })
     end
@@ -1491,7 +1491,8 @@ end
 -- Scroll ---------------------------------------------------------------------
 H.make_scroll_step = function(state_from, state_to, opts)
   -- Do not animate in Select mode because it resets it
-  if H.is_select_mode() then return end
+  local is_select_mode = ({ s = true, S = true, ['\19'] = true })[vim.fn.mode()]
+  if is_select_mode then return end
 
   -- Compute how subscrolling is done
   local from_line, to_line = state_from.view.topline, state_to.view.topline
@@ -1566,8 +1567,13 @@ H.scroll_action = function(key, n, cursor_data)
   local line = math.min(math.max(cursor_data.line, top), bottom)
 
   -- Cursor can only be set using byte column. To place it in the most correct
-  -- virtual column, use tweaked version of `virtcol2col()`
-  local col = H.virtcol2col(line, cursor_data.virtcol)
+  -- virtual column, tweak output of `virtcol2col()`
+  local virtcol = cursor_data.virtcol
+  local col = vim.fn.virtcol2col(0, line, virtcol)
+  -- - Correct for virtual column being outside of line's last virtual column
+  local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
+  if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
+
   pcall(vim.api.nvim_win_set_cursor, 0, { line, col - 1 })
 end
 
@@ -1955,9 +1961,13 @@ H.subscroll_equal = function(total_scroll, opts)
   -- Don't animate in case of false predicate
   if not opts.predicate(total_scroll) then return {} end
 
-  -- Don't make more than `max_output_steps` steps
+  -- Make equal steps, but no more than `max_output_steps`
   local n_steps = math.min(total_scroll, opts.max_output_steps)
-  return H.divide_equal(total_scroll, n_steps)
+  local res, coef = {}, total_scroll / n_steps
+  for i = 1, n_steps do
+    res[i] = math.floor(i * coef) - math.floor((i - 1) * coef)
+  end
+  return res
 end
 
 H.default_subscroll_predicate = function(total_scroll) return total_scroll > 1 end
@@ -2122,30 +2132,8 @@ H.get_n_visible_lines = function(from_line, to_line)
   return res
 end
 
-H.make_step = function(x) return x == 0 and 0 or (x < 0 and -1 or 1) end
-
 H.round = function(x) return math.floor(x + 0.5) end
 
-H.divide_equal = function(x, n)
-  local res, coef = {}, x / n
-  for i = 1, n do
-    res[i] = math.floor(i * coef) - math.floor((i - 1) * coef)
-  end
-  return res
-end
-
 H.convex_point = function(x, y, coef) return H.round((1 - coef) * x + coef * y) end
-
-H.virtcol2col = function(line, virtcol)
-  local col = vim.fn.virtcol2col(0, line, virtcol)
-
-  -- Current for virtual column being outside of line's last virtual column
-  local virtcol_past_lineend = vim.fn.virtcol({ line, '$' })
-  if virtcol_past_lineend <= virtcol then col = col + virtcol - virtcol_past_lineend + 1 end
-
-  return col
-end
-
-H.is_select_mode = function() return ({ s = true, S = true, ['\19'] = true })[vim.fn.mode()] end
 
 return MiniAnimate
