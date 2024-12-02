@@ -496,21 +496,30 @@
 ---     end,
 ---   })
 --- <
---- # Create mapping to set current working directory ~
+--- # Create mappings which use data from entry under cursor ~
 ---
---- Use |MiniFiles.get_fs_entry()| together with |vim.fs.dirname()|: >lua
+--- Use |MiniFiles.get_fs_entry()|: >lua
 ---
----   local files_set_cwd = function(path)
----     -- Works only if cursor is on the valid file system entry
----     local cur_entry_path = MiniFiles.get_fs_entry().path
----     local cur_directory = vim.fs.dirname(cur_entry_path)
----     vim.fn.chdir(cur_directory)
+---   -- Set focused directory as current working directory
+---   local set_cwd = function()
+---     local path = (MiniFiles.get_fs_entry() or {}).path
+---     if path == nil then return vim.notify('Cursor is not on valid entry') end
+---     vim.fn.chdir(vim.fs.dirname(path))
+---   end
+---
+---   -- Yank in register full path of entry under cursor
+---   local yank_path = function()
+---     local path = (MiniFiles.get_fs_entry() or {}).path
+---     if path == nil then return vim.notify('Cursor is not on valid entry') end
+---     vim.fn.setreg(vim.v.register, path)
 ---   end
 ---
 ---   vim.api.nvim_create_autocmd('User', {
 ---     pattern = 'MiniFilesBufferCreate',
 ---     callback = function(args)
----       vim.keymap.set('n', 'g~', files_set_cwd, { buffer = args.data.buf_id })
+---       local b = args.data.buf_id
+---       vim.keymap.set('n', 'g~', set_cwd,   { buffer = b, desc = 'Set cwd' })
+---       vim.keymap.set('n', 'gy', yank_path, { buffer = b, desc = 'Yank path' })
 ---     end,
 ---   })
 --- <
