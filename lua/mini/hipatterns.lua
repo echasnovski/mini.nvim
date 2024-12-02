@@ -704,12 +704,18 @@ H.create_autocommands = function()
   au('ColorScheme', '*', H.on_colorscheme, 'Reload all enabled pattern highlighters')
 end
 
---stylua: ignore
 H.create_default_hl = function()
-  vim.api.nvim_set_hl(0, 'MiniHipatternsFixme', { default = true, link = 'DiagnosticError' })
-  vim.api.nvim_set_hl(0, 'MiniHipatternsHack',  { default = true, link = 'DiagnosticWarn' })
-  vim.api.nvim_set_hl(0, 'MiniHipatternsTodo',  { default = true, link = 'DiagnosticInfo' })
-  vim.api.nvim_set_hl(0, 'MiniHipatternsNote',  { default = true, link = 'DiagnosticHint' })
+  local hi_link_bold_reverse = function(to, from)
+    local data = vim.fn.has('nvim-0.9') == 1 and vim.api.nvim_get_hl(0, { name = from, link = false })
+      or vim.api.nvim_get_hl_by_name(from, true)
+    data.default, data.bold, data.reverse = true, true, true
+    data.cterm = { bold = true, reverse = true }
+    vim.api.nvim_set_hl(0, to, data)
+  end
+  hi_link_bold_reverse('MiniHipatternsFixme', 'DiagnosticError')
+  hi_link_bold_reverse('MiniHipatternsHack', 'DiagnosticWarn')
+  hi_link_bold_reverse('MiniHipatternsTodo', 'DiagnosticInfo')
+  hi_link_bold_reverse('MiniHipatternsNote', 'DiagnosticHint')
 end
 
 H.is_disabled = function(buf_id)

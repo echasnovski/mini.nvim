@@ -89,11 +89,18 @@ T['setup()']['creates side effects'] = function()
 
   -- Highlight groups
   child.cmd('hi clear')
+  child.cmd('hi DiagnosticError guifg=#ff0000 ctermfg=9')
+  child.cmd('hi DiagnosticWarn  guifg=#ffff00 ctermfg=11')
+  child.cmd('hi DiagnosticInfo  guifg=#0000ff ctermfg=14')
+  child.cmd('hi DiagnosticHint  guifg=#00ffff ctermfg=12')
   load_module()
-  expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'links to DiagnosticError')
-  expect.match(child.cmd_capture('hi MiniHipatternsHack'), 'links to DiagnosticWarn')
-  expect.match(child.cmd_capture('hi MiniHipatternsTodo'), 'links to DiagnosticInfo')
-  expect.match(child.cmd_capture('hi MiniHipatternsNote'), 'links to DiagnosticHint')
+  local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
+  local ctermfg = child.fn.has('nvim-0.9') == 1 and function(x) return ' ctermfg=' .. x end or function(_) return '' end
+
+  has_highlight('MiniHipatternsFixme', 'cterm=bold,reverse' .. ctermfg(9) .. ' gui=bold,reverse guifg=#ff0000')
+  has_highlight('MiniHipatternsHack', 'cterm=bold,reverse' .. ctermfg(11) .. ' gui=bold,reverse guifg=#ffff00')
+  has_highlight('MiniHipatternsTodo', 'cterm=bold,reverse' .. ctermfg(14) .. ' gui=bold,reverse guifg=#0000ff')
+  has_highlight('MiniHipatternsNote', 'cterm=bold,reverse' .. ctermfg(12) .. ' gui=bold,reverse guifg=#00ffff')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -129,7 +136,7 @@ end
 T['setup()']['ensures colors'] = function()
   load_module()
   child.cmd('colorscheme default')
-  expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'links to DiagnosticError')
+  expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'gui=bold,reverse')
 end
 
 T['Auto enable'] = new_set()
