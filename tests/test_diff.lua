@@ -196,12 +196,22 @@ local get_viz_extmarks = function(buf_id)
   local full_extmarks = child.api.nvim_buf_get_extmarks(buf_id, ns_id, 0, -1, { details = true })
   local res = {}
   for _, e in ipairs(full_extmarks) do
-    table.insert(res, {
-      line = e[2] + 1,
-      sign_hl_group = e[4].sign_hl_group,
-      sign_text = e[4].sign_text,
-      number_hl_group = e[4].number_hl_group,
-    })
+    -- Do not test with dummy extmark (placed to ensure visible signcolumn)
+    local is_dummy_extmark = e[2] == 0
+      and e[3] == 0
+      -- Have fallback for `sign_` details as Neovim<0.9 doesn't provide those
+      and (e[4].sign_text or '  ') == '  '
+      and (e[4].sign_hl_group or 'SignColumn') == 'SignColumn'
+      and (e[4].cursorline_hl_group or 'CursorLineSign') == 'CursorLineSign'
+      and (e[4].right_gravity == false)
+    if not is_dummy_extmark then
+      table.insert(res, {
+        line = e[2] + 1,
+        sign_hl_group = e[4].sign_hl_group,
+        sign_text = e[4].sign_text,
+        number_hl_group = e[4].number_hl_group,
+      })
+    end
   end
   return res
 end
@@ -2099,6 +2109,25 @@ T['Visualization']['respects `view.style`'] = function()
   expect_screenshot()
 end
 
+T['Visualization']['shows signcolumn even if hunks are outside of view'] = function()
+  -- Make sure that extmark has no visible side effects
+  child.o.cursorline = true
+  child.cmd('hi CursrLineSign guibg=Red ctermbg=Red')
+  child.cmd('hi SignColumn guibg=Blue ctermbg=Blue')
+
+  child.lua('MiniDiff.config.delay.text_change = ' .. small_time)
+  disable()
+  enable()
+
+  local lines = { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF', 'GGG', 'HHH', 'III', 'JJJ' }
+  set_lines(lines)
+  table.insert(lines, 'uuu')
+  set_ref_text(0, lines)
+  sleep(small_time + small_time)
+
+  child.expect_screenshot()
+end
+
 T['Visualization']['respects `view.signs`'] = function()
   child.lua([[MiniDiff.config.view.signs = { add = '+', change = '~', delete = '-' }]])
   disable()
@@ -2127,10 +2156,12 @@ T['Visualization']['respects `view.priority`'] = function()
   local ns_id = child.api.nvim_get_namespaces().MiniDiffViz
   local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
 
+  -- NOTE: There is one dummy extmark with priority 0 at first line to ensure
+  -- always visible signcolumn
   if child.fn.has('nvim-0.9') == 1 then
-    eq(vim.tbl_map(function(e) return e[4].priority end, extmarks), { 100, 100, 100 })
+    eq(vim.tbl_map(function(e) return e[4].priority end, extmarks), { 0, 100, 100, 100 })
   else
-    eq(#extmarks, 3)
+    eq(#extmarks, 4)
   end
 end
 

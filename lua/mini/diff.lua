@@ -1159,12 +1159,19 @@ H.set_decoration_provider = function(ns_id_viz, ns_id_overlay)
     local buf_cache = H.cache[buf_id]
     if buf_cache == nil then return false end
 
+    local viz_lines, overlay_lines = buf_cache.viz_lines, buf_cache.overlay_lines
     if buf_cache.needs_clear then
       H.clear_all_diff(buf_id)
       buf_cache.needs_clear = false
+      -- Ensure that sign column is visible even if hunks are outside of window
+      -- view (matters with `signcolumn=auto`)
+      if buf_cache.config.view.style == 'sign' and not vim.tbl_isempty(viz_lines) then
+        local dummy_opts = { sign_text = '  ', priority = 0, right_gravity = false }
+        dummy_opts.sign_hl_group, dummy_opts.cursorline_hl_group = 'SignColumn', 'CursorLineSign'
+        H.set_extmark(buf_id, ns_id_viz, 0, 0, dummy_opts)
+      end
     end
 
-    local viz_lines, overlay_lines = buf_cache.viz_lines, buf_cache.overlay_lines
     for i = top + 1, bottom + 1 do
       if viz_lines[i] ~= nil then
         H.set_extmark(buf_id, ns_id_viz, i - 1, 0, viz_lines[i])
