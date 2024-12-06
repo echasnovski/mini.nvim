@@ -156,6 +156,11 @@ Here are code snippets for some common installation methods (use only one):
     -- Delay between jump and automatic stop if idle (no jump is done)
     idle_stop = 10000000,
   },
+
+  -- Whether to disable showing non-error feedback
+  -- This also affects (purely informational) helper messages shown after
+  -- idle time if user input is required.
+  silent = false,
 }
 ```
 

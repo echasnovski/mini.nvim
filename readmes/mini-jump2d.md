@@ -192,6 +192,8 @@ Here are code snippets for some common installation methods (use only one):
   },
 
   -- Whether to disable showing non-error feedback
+  -- This also affects (purely informational) helper messages shown after
+  -- idle time if user input is required.
   silent = false,
 }
 ```

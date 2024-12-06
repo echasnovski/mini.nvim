@@ -704,6 +704,8 @@ MiniSurround.config = {
   search_method = 'cover',
 
   -- Whether to disable showing non-error feedback
+  -- This also affects (purely informational) helper messages shown after
+  -- idle time if user input is required.
   silent = false,
 }
 --minidoc_afterlines_end

@@ -551,6 +551,8 @@ MiniAi.config = {
   search_method = 'cover_or_next',
 
   -- Whether to disable showing non-error feedback
+  -- This also affects (purely informational) helper messages shown after
+  -- idle time if user input is required.
   silent = false,
 }
 --minidoc_afterlines_end
