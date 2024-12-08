@@ -647,6 +647,9 @@ H.apply_palette = function(palette, use_cterm)
   hi('LspCodeLens',          {link='Comment'})
   hi('LspCodeLensSeparator', {link='Comment'})
 
+  -- Built-in snippets
+  hi('SnippetTabstop', {link='Visual'})
+
   -- Tree-sitter
   -- Sources:
   -- - `:h treesitter-highlight-groups`
