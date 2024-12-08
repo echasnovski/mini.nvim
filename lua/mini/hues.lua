@@ -634,6 +634,9 @@ MiniHues.apply_palette = function(palette, plugins)
   hi('LspCodeLens',          { link='Comment' })
   hi('LspCodeLensSeparator', { link='Comment' })
 
+  -- Built-in snippets
+  hi('SnippetTabstop', { fg=nil, bg=p.yellow_bg })
+
   -- Tree-sitter
   -- Sources:
   -- - `:h treesitter-highlight-groups`
