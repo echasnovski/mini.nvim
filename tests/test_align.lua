@@ -1243,6 +1243,12 @@ T['Align']['works in Visual blockwise mode'] = function()
   validate_keys({ 'ыы_ф', 'ыыы_ф' }, { '1l', '<C-v>', '1j3l', 'ga', '_' }, { 'ыы _ф', 'ыыы_ф' })
 end
 
+T['Align']['works independently with :normal command'] = function()
+  -- Works for each line individually when running under :normal command
+  validate_keys({ 'a   _b', 'aa  _b', 'aaa _b' }, { ':%normal ga_t_<CR>' }, { 'a_b', 'aa_b', 'aaa_b' })
+  validate_keys({ 'a   _  b', 'aa  _  b', 'aaa _  b' }, { ':%normal ga_ A;<CR>' }, { 'a _ b;', 'aa _ b;', 'aaa _ b;' })
+end
+
 T['Align']['registers visual selection'] = function()
   set_lines({ 'a_b', 'aa_b', 'vvv', 'vvv' })
 
