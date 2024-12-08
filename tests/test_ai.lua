@@ -870,9 +870,10 @@ end
 T['select_textobject()']['works with empty region'] = function() validate_select1d('a()', 0, { 'i', ')' }, { 3, 3 }) end
 
 T['select_textobject()']['allows selecting past line end'] = function()
-  child.o.virtualedit = 'block'
+  child.o.virtualedit, child.o.whichwrap = 'block', 'b,s'
   validate_select({ '(', 'a', ')' }, { 2, 0 }, { 'i', ')' }, { { 1, 2 }, { 2, 2 } })
   eq(child.o.virtualedit, 'block')
+  eq(child.o.whichwrap, 'b,s')
 end
 
 T['select_textobject()']["respects 'selection=exclusive'"] = function()
@@ -1483,9 +1484,16 @@ T['Textobject']['collapses multiline textobject'] = function()
   local lines = { '(', 'a', ')' }
   validate_edit(lines, { 2, 0 }, { '' }, { 1, 0 }, 'da)')
 
-  validate_edit(lines, { 1, 0 }, { '()' }, { 1, 1 }, 'di)')
-  validate_edit(lines, { 2, 0 }, { '()' }, { 1, 1 }, 'di)')
-  validate_edit(lines, { 3, 0 }, { '()' }, { 1, 1 }, 'di)')
+  local validate = function()
+    validate_edit(lines, { 1, 0 }, { '()' }, { 1, 1 }, 'di)')
+    validate_edit(lines, { 2, 0 }, { '()' }, { 1, 1 }, 'di)')
+    validate_edit(lines, { 3, 0 }, { '()' }, { 1, 1 }, 'di)')
+  end
+
+  child.o.selection = 'inclusive'
+  validate()
+  child.o.selection = 'exclusive'
+  validate()
 end
 
 T['Textobject']['works with multibyte characters'] = function()
