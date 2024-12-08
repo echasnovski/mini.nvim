@@ -1018,6 +1018,7 @@ MiniAi.select_textobject = function(ai_type, id, opts)
 
   -- Allow going past end of line in order to collapse multiline regions
   local cache_virtualedit = vim.o.virtualedit
+  local cache_whichwrap = vim.o.whichwrap
   local cache_eventignore = vim.o.eventignore
 
   pcall(function()
@@ -1043,7 +1044,10 @@ MiniAi.select_textobject = function(ai_type, id, opts)
     vim.cmd('normal! zv')
 
     -- Respect exclusive selection
-    if vim.o.selection == 'exclusive' then vim.cmd('normal! l') end
+    if vim.o.selection == 'exclusive' then
+      vim.o.whichwrap = 'l'
+      vim.cmd('normal! l')
+    end
 
     -- Start selection
     vim.cmd('normal! ' .. vis_mode)
@@ -1062,6 +1066,7 @@ MiniAi.select_textobject = function(ai_type, id, opts)
 
   -- Restore options
   vim.o.virtualedit = cache_virtualedit
+  vim.o.whichwrap = cache_whichwrap
   vim.o.eventignore = cache_eventignore
 end
 
