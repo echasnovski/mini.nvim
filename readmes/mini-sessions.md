@@ -132,6 +132,8 @@ Here are code snippets for some common installation methods (use only one):
 - Enable corresponding git global config value: `git config --system core.longpaths true`. Then try to reinstall.
 - Install plugin in other place with shorter path.
 
+**Note**: a global session needs to exist before it will be able to read or write, unless a local session is detected. Initialize a global session using `:lua MiniSessions.write('session_name')`.
+
 ## Default config
 
 ```lua
