@@ -829,6 +829,9 @@ T['mock_nvim_web_devicons()']['works'] = function()
   for _, method in ipairs(present) do
     eq(child.lua_get('type(devicons.' .. method .. ')'), 'function')
   end
+
+  -- Should set global variable which is set in 'plugin/nvim-web-devicons.vim'
+  eq(child.g.nvim_web_devicons, 1)
 end
 
 T['tweak_lsp_kind()'] = new_set({

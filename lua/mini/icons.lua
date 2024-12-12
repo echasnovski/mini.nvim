@@ -623,6 +623,7 @@ MiniIcons.mock_nvim_web_devicons = function()
   else
     package.loaded[modname] = M
   end
+  vim.g.nvim_web_devicons = 1
 end
 
 --- Tweak built-in LSP kind names
