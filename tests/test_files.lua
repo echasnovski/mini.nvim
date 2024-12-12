@@ -959,6 +959,15 @@ T['open()']['tracks lost focus'] = function()
   eq(is_explorer_active(), true)
 end
 
+T['open()']['can display entries with newline character'] = function()
+  if helpers.is_windows() then MiniTest.skip('Newline characters in names are not supported on Windows') end
+  local temp_dir = make_temp_dir('temp', { 'di\nr/', 'fi\nl\ne' })
+  open(temp_dir, true, { windows = { preview = true } })
+  child.expect_screenshot()
+  type_keys('j')
+  child.expect_screenshot()
+end
+
 T['open()']['validates input'] = function()
   -- `path` should be a real path
   expect.error(function() open('aaa') end, 'path.*not a valid path.*aaa')
@@ -1378,6 +1387,15 @@ T['go_in()']['works on directory'] = function()
   go_out()
   go_in()
   child.expect_screenshot()
+end
+
+T['go_in()']['works on file with newline character'] = function()
+  if helpers.is_windows() then MiniTest.skip('Newline characters in names are not supported on Windows') end
+  local temp_dir = make_temp_dir('temp', { 'fi\nl\ne' })
+  open(temp_dir)
+  go_in()
+  close()
+  expect.match(child.api.nvim_buf_get_name(0), 'fi\nl\ne$')
 end
 
 T['go_in()']['works when no explorer is opened'] = function() expect.no_error(go_in) end
@@ -4771,6 +4789,19 @@ T['File manipulation']['special cases']['into affected directory']['copy into re
   synchronize()
 
   validate_tree(temp_dir, { 'file', 'new-dir/', 'new-dir/file' })
+end
+
+T['File manipulation']['entry with newline'] = function()
+  if helpers.is_windows() then MiniTest.skip('Newline characters in names are not supported on Windows') end
+  local temp_dir = make_temp_dir('temp', { 'di\nr/', 'fi\nl\ne' })
+  open(temp_dir)
+  -- NOTE: copy/move/rename *will* replace '\n' with escaped version, though
+  type_keys('cc', 'new-dir/', '<Esc>')
+  mock_confirm(1)
+  synchronize()
+  validate_confirm_args('DELETE │ di<NL>r')
+
+  validate_tree(temp_dir, { 'new-dir/', 'fi\nl\ne' })
 end
 
 T['File manipulation']['special cases']['nested move'] = new_set()
