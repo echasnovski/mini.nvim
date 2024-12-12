@@ -2506,17 +2506,18 @@ end
 
 H.window_set_view = function(win_id, view)
   -- Set buffer
-  local buf_id = view.buf_id
+  local buf_id, buf_data = view.buf_id, H.opened_buffers[view.buf_id]
   H.win_set_buf(win_id, buf_id)
   -- - Update buffer register. No need to update previous buffer data, as it
   --   should already be invalidated.
-  H.opened_buffers[buf_id].win_id = win_id
+  buf_data.win_id = win_id
 
-  -- Set cursor
-  pcall(H.window_set_cursor, win_id, view.cursor)
-
-  -- Set 'cursorline' here also because changing buffer might have removed it
-  vim.wo[win_id].cursorline = true
+  -- Set visible cursor for directories
+  if H.fs_get_type(buf_data.path) == 'directory' then
+    pcall(H.window_set_cursor, win_id, view.cursor)
+    -- Set 'cursorline' here also because changing buffer might have removed it
+    vim.wo[win_id].cursorline = true
+  end
 
   -- Update border highlight based on buffer status
   H.window_update_border_hl(win_id)
