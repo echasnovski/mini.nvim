@@ -1659,7 +1659,7 @@ H.process_current_region = function(lines_were_set, mode, opts, steps)
   -- is processed during preview. Otherwise there might be problems with
   -- getting "current" regions in Normal mode as necessary marks (`[` and `]`)
   -- can be not valid.
-  local region = H.cache.region or H.get_current_region()
+  local region = H.cache.region or H.get_current_region(mode)
   H.cache.region = region
 
   -- Enrich options
@@ -1684,17 +1684,32 @@ H.process_current_region = function(lines_were_set, mode, opts, steps)
   return true
 end
 
-H.get_current_region = function()
-  local from_expr, to_expr = "'[", "']"
+H.get_current_region = function(mode)
+  local from_pos, to_pos
   if H.is_visual_mode() then
-    from_expr, to_expr = '.', 'v'
+    from_pos = vim.fn.getpos('v')
+    to_pos = vim.fn.getcurpos()
+  elseif mode == 'block' then
+    local old_curpos = vim.fn.getcurpos()
+    vim.cmd('silent! normal! gv')
+    from_pos = vim.fn.getpos('v')
+    to_pos = vim.fn.getcurpos()
+    vim.cmd('silent! normal! \27')
+    vim.fn.setpos('.', old_curpos)
+  else
+    from_pos = vim.fn.getpos("'[")
+    to_pos = vim.fn.getpos("']")
   end
 
   -- Add offset (*_pos[4]) to allow position go past end of line
-  local from_pos = vim.fn.getpos(from_expr)
   local from = { line = from_pos[2], col = from_pos[3] + from_pos[4] }
-  local to_pos = vim.fn.getpos(to_expr)
   local to = { line = to_pos[2], col = to_pos[3] + to_pos[4] }
+
+  -- True if selection extends to EOL, such as after <C-v>$
+  --
+  -- vim.v.maxcol is available since Neovim v0.9.0, fallback can
+  -- be removed once older versions are unsupported
+  if mode == 'block' and to_pos[5] == (vim.v.maxcol or 2 ^ 31 - 1) then to.col = to_pos[5] end
 
   -- Ensure correct order
   if to.line < from.line or (to.line == from.line and to.col < from.col) then
@@ -1716,15 +1731,13 @@ H.region_get_text = function(region, mode)
 
   if mode == 'block' then
     -- Use virtual columns to respect multibyte characters
-    local left_virtcol, right_virtcol = H.region_virtcols(region)
-    local n_cols = right_virtcol - left_virtcol + 1
+    local left_virtcol, right_virtcol = H.block_region_virtcols(region)
 
-    return vim.tbl_map(
-      -- `strcharpart()` returns empty string for out of bounds span, so no
-      -- need for extra columns check
-      function(l) return vim.fn.strcharpart(l, left_virtcol - 1, n_cols) end,
-      H.get_lines(from.line - 1, to.line)
-    )
+    local ret = {}
+    for line = from.line, to.line do
+      ret[#ret + 1] = H.byte_range_from_virtcols(line - 1, left_virtcol, right_virtcol, true)
+    end
+    return ret
   end
 end
 
@@ -1747,46 +1760,80 @@ H.region_set_text = function(region, mode, text)
     end
 
     -- Use virtual columns to respect multibyte characters
-    local left_virtcol, right_virtcol = H.region_virtcols(region)
-    local lines = H.get_lines(from.line - 1, to.line)
-    for i, l in ipairs(lines) do
+    local left_virtcol, right_virtcol = H.block_region_virtcols(region)
+    for i = 1, to.line - from.line + 1 do
       -- Use zero-based indexes
       local line_num = from.line + i - 2
 
-      local n_virtcols = vim.fn.virtcol({ line_num + 1, '$' }) - 1
-      -- Don't set text if all region is past end of line
-      if left_virtcol <= n_virtcols then
-        -- Make sure to not go past the line end
-        local line_left_col, line_right_col = left_virtcol, math.min(right_virtcol, n_virtcols)
+      local start_col, end_col = H.byte_range_from_virtcols(line_num, left_virtcol, right_virtcol)
 
-        -- Convert back to byte columns (columns are end-exclusive)
-        local start_col, end_col = vim.fn.byteidx(l, line_left_col - 1), vim.fn.byteidx(l, line_right_col)
-        start_col, end_col = math.max(start_col, 0), math.max(end_col, 0)
-
-        -- vim.api.nvim_buf_set_text(0, line_num, start_col, line_num, end_col, { text[i] })
-        H.set_text(line_num, start_col, line_num, end_col, { text[i] })
-      end
+      H.set_text(line_num, start_col, line_num, end_col, { text[i] })
     end
   end
 end
 
-H.region_virtcols = function(region)
+H.block_region_virtcols = function(region)
+  local to_col = region.to.col
+
+  -- A blockwise exclusive selection includes the start corner (lower byte offset)
+  -- and extends to the left edge of the character at the end corner, so only
+  -- exclude the rightmost column if the end corner is on the right edge and
+  -- the start corner isn't. Regions are already sorted so only to_col matters.
+  if vim.o.selection == 'exclusive' and to_col > region.from.col then to_col = to_col - 1 end
+
   -- Account for multibyte characters and position past the line end
-  local from_virtcol = H.pos_to_virtcol(region.from)
-  local to_virtcol = H.pos_to_virtcol(region.to)
+  local from_l, from_r = H.pos_to_virtcol(region.from)
+  local to_l, to_r = H.pos_to_virtcol({ line = region.to.line, col = to_col })
 
-  local left_virtcol, right_virtcol = math.min(from_virtcol, to_virtcol), math.max(from_virtcol, to_virtcol)
-  right_virtcol = right_virtcol - (vim.o.selection == 'exclusive' and 1 or 0)
-
-  return left_virtcol, right_virtcol
+  local virtcols = { from_l, from_r, to_l, to_r }
+  return math.min(unpack(virtcols)), math.max(unpack(virtcols))
 end
 
+-- Returns the inclusive virtual column bounds of the character at pos
 H.pos_to_virtcol = function(pos)
   -- Account for position past line end
   local eol_col = vim.fn.col({ pos.line, '$' })
-  if eol_col < pos.col then return vim.fn.virtcol({ pos.line, '$' }) + pos.col - eol_col end
+  if eol_col < pos.col then
+    local col = vim.fn.virtcol({ pos.line, '$' }) + pos.col - eol_col
+    return col, col
+  end
 
-  return vim.fn.virtcol({ pos.line, pos.col })
+  if vim.fn.has('nvim-0.10') == 1 then
+    return unpack(vim.fn.virtcol({ pos.line, pos.col }, true))
+  else -- virtcol() only takes one argument in older versions
+    local text_to_end = H.get_text(pos.line - 1, pos.col - 1, pos.line - 1, -1)[1]
+    local char = vim.fn.strcharpart(text_to_end, 0, 1)
+    local offset = math.max(0, vim.fn.strdisplaywidth(char) - 1)
+
+    local end_col = vim.fn.virtcol({ pos.line, pos.col })
+    return end_col - offset, end_col
+  end
+end
+
+-- Converts an inclusive virtual column range within a line to a 0-indexed
+-- end-exclusive byte range. Returns a pair of indices, or the line text within
+-- the range if return_text is true.
+H.byte_range_from_virtcols = function(row, start_virtcol, end_virtcol, return_text)
+  local text = H.get_lines(row, row + 1)[1]
+
+  if start_virtcol >= vim.fn.virtcol({ row + 1, '$' }) then
+    if return_text then return '' end
+    return #text, #text -- Zero width range at EOL
+  end
+
+  local start_col = vim.fn.virtcol2col(0, row + 1, start_virtcol) - 1
+  local end_col = vim.fn.virtcol2col(0, row + 1, end_virtcol) - 1
+
+  -- First byte of the leftmost char
+  local start_idx = vim.fn.byteidx(text, vim.fn.charidx(text, start_col))
+  -- One past the last byte of the rightmost char
+  local end_idx = vim.fn.byteidx(text, vim.fn.charidx(text, end_col) + 1)
+
+  if return_text then
+    return text:sub(start_idx + 1, end_idx)
+  else
+    return start_idx, end_idx
+  end
 end
 
 -- Work with user interaction -------------------------------------------------
