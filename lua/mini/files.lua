@@ -2477,9 +2477,6 @@ H.window_update = function(win_id, config)
   -- Reset basic highlighting (removes possible "focused" highlight group)
   H.window_update_highlight(win_id, 'FloatTitle', 'MiniFilesTitle')
 
-  -- Make sure that 'cursorline' is not overridden by `config.style`
-  vim.wo[win_id].cursorline = true
-
   -- Make sure proper `conceallevel` (can be not the case with 'noice.nvim')
   vim.wo[win_id].conceallevel = 3
 end
@@ -2513,12 +2510,10 @@ H.window_set_view = function(win_id, view)
   --   should already be invalidated.
   buf_data.win_id = win_id
 
-  -- Set visible cursor for directories
-  if H.fs_get_type(buf_data.path) == 'directory' then
-    pcall(H.window_set_cursor, win_id, view.cursor)
-    -- Set 'cursorline' here also because changing buffer might have removed it
-    vim.wo[win_id].cursorline = true
-  end
+  -- Set cursor (if defined), visible only in directories
+  pcall(H.window_set_cursor, win_id, view.cursor)
+  -- NOTE: set 'cursorline' here because changing buffer might remove it
+  vim.wo[win_id].cursorline = H.fs_get_type(buf_data.path) == 'directory'
 
   -- Update border highlight based on buffer status
   H.window_update_border_hl(win_id)
