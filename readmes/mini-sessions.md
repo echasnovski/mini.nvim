@@ -28,7 +28,8 @@ https://user-images.githubusercontent.com/24854248/173045087-3d18affc-c76f-4d22-
 
 - Works using `:mksession` (`'sessionoptions'` is fully respected).
 - Implements both global (from configured directory) and local (from current directory) sessions.
-- Autoread default session (local if detected, latest written otherwise) if Neovim was called without intention to show something else.
+- No automated new session creation. Use `MiniSessions.write()` manually.
+- Autoread default session (local if detected, else latest written global) if Neovim was called without intention to show something else.
 - Autowrite currently read session before quitting Neovim.
 - Configurable severity level of all actions.
 

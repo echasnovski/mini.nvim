@@ -21,13 +21,15 @@ Key design ideas:
   relevant actions (`read`, `delete`, `select`) with file names as session
   names (including possible extension).
 
+- No automated new session creation. Use |MiniSessions.write()| manually.
+
 - Store information about detected sessions in separate table
   (|MiniSessions.detected|) and operate only on it. Meaning if this information
   changes, there will be no effect until next detection. To avoid confusion,
   don't directly use |mksession| / |source| for writing / reading session files.
 
 Features:
-- Autoread default session (local if detected, latest written otherwise) if
+- Autoread default session (local if detected, else latest written global) if
   Neovim was called without intention to show something else.
 
 - Autowrite currently read session before quitting Neovim.
