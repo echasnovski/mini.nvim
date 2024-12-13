@@ -583,18 +583,36 @@ end
 ---   Default: 0 for current.
 ---@param config table|nil Optional config for window (as for |nvim_open_win()|).
 MiniMisc.zoom = function(buf_id, config)
+  -- Hide
   if H.zoom_winid and vim.api.nvim_win_is_valid(H.zoom_winid) then
+    pcall(vim.api.nvim_del_augroup_by_name, 'MiniMiscZoom')
     vim.api.nvim_win_close(H.zoom_winid, true)
     H.zoom_winid = nil
-  else
-    buf_id = buf_id or 0
-    -- Currently very big `width` and `height` get truncated to maximum allowed
-    local default_config = { relative = 'editor', row = 0, col = 0, width = 1000, height = 1000 }
-    config = vim.tbl_deep_extend('force', default_config, config or {})
-    H.zoom_winid = vim.api.nvim_open_win(buf_id, true, config)
-    vim.wo.winblend = 0
-    vim.cmd('normal! zz')
+    return
   end
+
+  -- Show
+  local compute_config = function()
+    -- Use precise dimensions for no Command line interactions (better scroll)
+    local width, height = vim.o.columns, vim.o.lines - vim.o.cmdheight
+    local default_config = { relative = 'editor', row = 0, col = 0, width = width, height = height }
+    return vim.tbl_deep_extend('force', default_config, config or {})
+  end
+  H.zoom_winid = vim.api.nvim_open_win(buf_id or 0, true, compute_config())
+  vim.wo[H.zoom_winid].winblend = 0
+  vim.cmd('normal! zz')
+
+  -- - Make sure zoom window is adjusting to changes in its hyperparameters
+  local gr = vim.api.nvim_create_augroup('MiniMiscZoom', { clear = true })
+  local adjust_config = function()
+    if not (type(H.zoom_winid) == 'number' and vim.api.nvim_win_is_valid(H.zoom_winid)) then
+      pcall(vim.api.nvim_del_augroup_by_name, 'MiniMiscZoom')
+      return
+    end
+    vim.api.nvim_win_set_config(H.zoom_winid, compute_config())
+  end
+  vim.api.nvim_create_autocmd('VimResized', { group = gr, callback = adjust_config })
+  vim.api.nvim_create_autocmd('OptionSet', { group = gr, pattern = 'cmdheight', callback = adjust_config })
 end
 
 -- Helper data ================================================================

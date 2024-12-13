@@ -824,6 +824,11 @@ local get_floating_windows = function()
   )
 end
 
+local validate_dims = function(win_id, height, width)
+  local config = child.api.nvim_win_get_config(win_id)
+  eq({ config.height, config.width }, { height, width })
+end
+
 T['zoom()']['works'] = function()
   child.set_size(5, 20)
   set_lines({ 'aaa', 'bbb' })
@@ -837,8 +842,7 @@ T['zoom()']['works'] = function()
   eq(#floating_wins, 1)
   local win_id = floating_wins[1]
   eq(child.api.nvim_win_get_buf(win_id), buf_id)
-  local config = child.api.nvim_win_get_config(win_id)
-  eq({ config.height, config.width }, { 1000, 1000 })
+  validate_dims(win_id, 4, 20)
   eq(child.api.nvim_win_get_option(win_id, 'winblend'), 0)
 
   -- No statusline should be present
@@ -862,10 +866,35 @@ T['zoom()']['respects `config` argument'] = function()
   local floating_wins = get_floating_windows()
 
   eq(#floating_wins, 1)
-  local config = child.api.nvim_win_get_config(floating_wins[1])
-  eq({ config.height, config.width }, { 1000, 20 })
+  validate_dims(floating_wins[1], 4, 20)
 
   child.expect_screenshot()
+end
+
+T['zoom()']['reacts to relevant UI changes'] = function()
+  child.set_size(5, 30)
+  child.lua('MiniMisc.zoom()')
+  local win_id = get_floating_windows()[1]
+
+  validate_dims(win_id, 4, 30)
+  child.o.lines = 10
+  validate_dims(win_id, 9, 30)
+  child.o.columns = 20
+  validate_dims(win_id, 9, 20)
+  child.o.cmdheight = 0
+  validate_dims(win_id, 10, 20)
+  child.o.cmdheight = 3
+  validate_dims(win_id, 7, 20)
+end
+
+T['zoom()']['can be safely closed manually'] = function()
+  child.set_size(5, 30)
+  child.lua('MiniMisc.zoom()')
+  child.cmd('quit')
+
+  expect.no_error(function() child.cmd_capture('au MiniMiscZoom') end)
+  child.o.lines = 10
+  expect.error(function() child.cmd_capture('au MiniMiscZoom') end, 'No such group')
 end
 
 return T
