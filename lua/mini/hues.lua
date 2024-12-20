@@ -446,6 +446,7 @@ MiniHues.apply_palette = function(palette, plugins)
 
   -- Builtin highlighting groups
   hi('ColorColumn',    { fg=nil,       bg=p.bg_mid2 })
+  hi('ComplMatchIns',  { fg=nil,       bg=nil })
   hi('Conceal',        { fg=p.azure,   bg=nil })
   hi('CurSearch',      { fg=p.bg,      bg=p.yellow })
   hi('Cursor',         { fg=p.bg,      bg=p.fg })
