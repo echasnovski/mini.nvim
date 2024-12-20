@@ -1408,7 +1408,7 @@ end
 
 T['default_show()']['handles stritems with non-trivial whitespace'] = function()
   child.o.tabstop = 3
-  default_show(0, { 'With\nnewline', 'With\ttab' }, {})
+  default_show(0, { 'With\nnewline', 'With\rCR', 'EndsWithCR\r', 'EndsWithNL\n', 'EndsWithCRLF\r\n', 'With\ttab' }, {})
   child.expect_screenshot()
 end
 

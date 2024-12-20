@@ -1061,7 +1061,7 @@ MiniPick.default_show = function(buf_id, items, query, opts)
 
   local lines = vim.tbl_map(H.item_to_string, items)
   local tab_spaces = string.rep(' ', vim.o.tabstop)
-  lines = vim.tbl_map(function(l) return l:gsub('%z', '│'):gsub('\n', ' '):gsub('\t', tab_spaces) end, lines)
+  lines = vim.tbl_map(function(l) return l:gsub('%z', '│'):gsub('[\r\n]', ' '):gsub('\t', tab_spaces) end, lines)
 
   local lines_to_show = {}
   for i, l in ipairs(lines) do
