@@ -1496,6 +1496,7 @@ T['gen_reporter']['stdout'] = new_set({
 }, {
   test = function(env_var)
     helpers.skip_on_windows('Terminal tests are designed for Unix')
+    if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.11.') end
 
     -- Testing "in dynamic" is left for manual approach
     local path = 'tests/dir-test/init_stdout-reporter_works.lua'
