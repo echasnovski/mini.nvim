@@ -470,6 +470,7 @@ H.apply_palette = function(palette, use_cterm)
   -- Builtin highlighting groups. Some groups which are missing in 'base16-vim'
   -- are added based on groups to which they are linked.
   hi('ColorColumn',    {fg=nil,      bg=p.base01, attr=nil,            sp=nil})
+  hi('ComplMatchIns',  {fg=nil,      bg=nil,      attr=nil,            sp=nil})
   hi('Conceal',        {fg=p.base0D, bg=nil,      attr=nil,            sp=nil})
   hi('CurSearch',      {fg=p.base01, bg=p.base09, attr=nil,            sp=nil})
   hi('Cursor',         {fg=p.base00, bg=p.base05, attr=nil,            sp=nil})
