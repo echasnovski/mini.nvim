@@ -1708,7 +1708,7 @@ MiniPick.set_picker_items_from_cli = function(command, opts)
     assert(not err, err)
     if data ~= nil then return table.insert(data_feed, data) end
 
-    local items = vim.split(table.concat(data_feed), '\n')
+    local items = vim.split(table.concat(data_feed), '\r?\n')
     data_feed = nil
     stdout:close()
     vim.schedule(function() MiniPick.set_picker_items(opts.postprocess(items), opts.set_items_opts) end)

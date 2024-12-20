@@ -3825,6 +3825,13 @@ T['set_picker_items_from_cli()']['correctly processes stdout feed'] = function()
   mock_stdout_feed({ 'aa\n', 'bb', 'cc\n', 'dd', '\nee' })
   set_picker_items_from_cli(test_command)
   eq(get_picker_items(), { 'aa', 'bbcc', 'dd', 'ee' })
+  stop()
+
+  -- Should respect both '\r\n' and '\n' to split items
+  start_with_items()
+  mock_stdout_feed({ 'aa\nbb\r\ncc\rdd\nee' })
+  set_picker_items_from_cli(test_command)
+  eq(get_picker_items(), { 'aa', 'bb', 'cc\rdd', 'ee' })
 end
 
 T['set_picker_items_from_cli()']['correctly detects error in stdout feed'] = function()
