@@ -2910,6 +2910,16 @@ T['builtin.help()'] = new_set()
 
 local builtin_help = forward_lua_notify('MiniPick.builtin.help')
 
+local validate_help_with_layout = function(win_layout, n_tabpages)
+  eq(child.fn.winlayout()[1], win_layout)
+  eq(#child.api.nvim_list_tabpages(), n_tabpages)
+  local has_help = false
+  for _, win_id in ipairs(child.api.nvim_tabpage_list_wins(0)) do
+    if child.api.nvim_buf_get_option(child.api.nvim_win_get_buf(win_id), 'buftype') == 'help' then has_help = true end
+  end
+  eq(has_help, true)
+end
+
 T['builtin.help()']['works'] = function()
   child.lua_notify('_G.help_item = MiniPick.builtin.help()')
   -- Ignore footer as it contains non-reliable number of help tags
@@ -2946,25 +2956,39 @@ T['builtin.help()']['has proper preview'] = function()
 end
 
 T['builtin.help()']['has customized `choose` modifications'] = function()
-  local has_help = function()
-    for _, win_id in ipairs(child.api.nvim_tabpage_list_wins(0)) do
-      if child.api.nvim_buf_get_option(child.api.nvim_win_get_buf(win_id), 'buftype') == 'help' then return true end
-    end
-    return false
-  end
-
-  local validate = function(key, win_layout, n_tabpages)
+  local validate = function(keys, win_layout, n_tabpages)
     builtin_help()
-    type_keys(key)
-    eq(child.fn.winlayout()[1], win_layout)
-    eq(#child.api.nvim_list_tabpages(), n_tabpages)
-    eq(has_help(), true)
+    type_keys(keys)
+    validate_help_with_layout(win_layout, n_tabpages)
     child.cmd('%bw')
   end
-
   validate('<C-s>', 'col', 1)
   validate('<C-v>', 'row', 1)
   validate('<C-t>', 'leaf', 2)
+end
+
+T['builtin.help()']['respects `local_opts.default_split`'] = function()
+  local validate = function(value, win_layout, n_tabpages)
+    builtin_help({ default_split = value })
+    type_keys('<CR>')
+    validate_help_with_layout(win_layout, n_tabpages)
+    child.cmd('%bw')
+  end
+  validate(nil, 'col', 1)
+  validate('horizontal', 'col', 1)
+  validate('vertical', 'row', 1)
+  validate('tab', 'leaf', 2)
+
+  -- Can work with overridden `choose` key
+  builtin_help({ default_split = 'vertical' }, { mappings = { choose = '<C-z>' } })
+  type_keys('<C-z>')
+  validate_help_with_layout('row', 1)
+  child.cmd('%bw')
+
+  expect.error(
+    function() child.lua('MiniPick.builtin.help({ default_split = "" })') end,
+    '`opts%.default_split`.*one of'
+  )
 end
 
 T['builtin.help()']['works for help tags with special characters'] = function()

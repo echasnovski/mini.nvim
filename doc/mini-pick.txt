@@ -1133,12 +1133,16 @@ Parameters ~
 Pick from help tags
 
 Notes:
-- On choose executes |:help| command with appropriate modifier
-  (|:horizontal|, |:vertical|, |:tab|) due to the effect of custom mappings.
+- On choose directly executes |:help| command with appropriate modifier
+  (none, |:vertical|, |:tab|). This is done through custom mappings named
+  `show_help_in_{split,vsplit,tab}`. Not `choose_in_{split,vsplit,tab}` because
+  there is no split guarantee (like if there is already help window opened).
 
 Parameters ~
 {local_opts} `(table|nil)` Options defining behavior of this particular picker.
-  Not used at the moment.
+  Possible fields:
+  - <default_split> `(string)` - direction of a split for `choose` action.
+    One of "horizontal", "vertical", "tab". Default: "horizontal".
 {opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
 
 ------------------------------------------------------------------------------

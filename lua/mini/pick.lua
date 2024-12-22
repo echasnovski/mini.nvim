@@ -1385,13 +1385,21 @@ end
 --- Pick from help tags
 ---
 --- Notes:
---- - On choose executes |:help| command with appropriate modifier
----   (|:horizontal|, |:vertical|, |:tab|) due to the effect of custom mappings.
+--- - On choose directly executes |:help| command with appropriate modifier
+---   (none, |:vertical|, |:tab|). This is done through custom mappings named
+---   `show_help_in_{split,vsplit,tab}`. Not `choose_in_{split,vsplit,tab}` because
+---   there is no split guarantee (like if there is already help window opened).
 ---
 ---@param local_opts __pick_builtin_local_opts
----   Not used at the moment.
+---   Possible fields:
+---   - <default_split> `(string)` - direction of a split for `choose` action.
+---     One of "horizontal", "vertical", "tab". Default: "horizontal".
 ---@param opts __pick_builtin_opts
 MiniPick.builtin.help = function(local_opts, opts)
+  local_opts = vim.tbl_deep_extend('force', { default_split = 'horizontal' }, local_opts or {})
+  local default_modifier = ({ horizontal = '', vertical = 'vert ', tab = 'tab ' })[local_opts.default_split]
+  if default_modifier == nil then H.error('`opts.default_split` should be one of "horizontal", "vertical", "tab"') end
+
   -- Get all tags
   local help_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[help_buf].buftype = 'help'
@@ -1404,7 +1412,7 @@ MiniPick.builtin.help = function(local_opts, opts)
   -- when choosing tags in same file consecutively.
   local choose = function(item, modifier)
     if item == nil then return end
-    vim.schedule(function() vim.cmd((modifier or '') .. 'help ' .. (item.name or '')) end)
+    vim.schedule(function() vim.cmd((modifier or default_modifier) .. 'help ' .. (item.name or '')) end)
   end
   local preview = function(buf_id, item)
     -- Take advantage of `taglist` output on how to open tag
@@ -1427,7 +1435,7 @@ MiniPick.builtin.help = function(local_opts, opts)
   -- Modify default mappings to work with special `:help` command
   local map_custom = function(char, modifier)
     local f = function()
-      choose(MiniPick.get_picker_matches().current, modifier .. ' ')
+      choose(MiniPick.get_picker_matches().current, modifier)
       return true
     end
     return { char = char, func = f }
@@ -1436,8 +1444,8 @@ MiniPick.builtin.help = function(local_opts, opts)
   --stylua: ignore
   local mappings = {
     choose_in_split   = '', show_help_in_split   = map_custom('<C-s>', ''),
-    choose_in_vsplit  = '', show_help_in_vsplit  = map_custom('<C-v>', 'vertical'),
-    choose_in_tabpage = '', show_help_in_tabpage = map_custom('<C-t>', 'tab'),
+    choose_in_vsplit  = '', show_help_in_vsplit  = map_custom('<C-v>', 'vertical '),
+    choose_in_tabpage = '', show_help_in_tabpage = map_custom('<C-t>', 'tab '),
   }
 
   local source = { items = tags, name = 'Help', choose = choose, preview = preview }
