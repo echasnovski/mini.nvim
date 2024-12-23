@@ -943,6 +943,12 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('MiniPickPreviewRegion', { link='IncSearch' })
     hi('MiniPickPrompt',        { link='DiagnosticFloatingInfo' })
 
+    hi('MiniSnippetsCurrent',        { fg=nil, bg=nil, sp=p.yellow, underdouble=true })
+    hi('MiniSnippetsCurrentReplace', { fg=nil, bg=nil, sp=p.red,    underdouble=true })
+    hi('MiniSnippetsFinal',          { fg=nil, bg=nil, sp=p.green,  underdouble=true })
+    hi('MiniSnippetsUnvisited',      { fg=nil, bg=nil, sp=p.cyan,   underdouble=true })
+    hi('MiniSnippetsVisited',        { fg=nil, bg=nil, sp=p.blue,   underdouble=true })
+
     hi('MiniStarterCurrent',    { link='MiniStarterItem' })
     hi('MiniStarterFooter',     { link='Comment' })
     hi('MiniStarterHeader',     { fg=p.accent,  bg=nil, bold=true })
