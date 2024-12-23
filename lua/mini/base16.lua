@@ -785,6 +785,12 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniPickPreviewRegion', {link='IncSearch'})
     hi('MiniPickPrompt',        {fg=p.base0B, bg=p.base01, attr=nil,         sp=nil})
 
+    hi('MiniSnippetsCurrent',        {fg=nil, bg=nil, attr='underdouble', sp=p.base0E})
+    hi('MiniSnippetsCurrentReplace', {fg=nil, bg=nil, attr='underdouble', sp=p.base08})
+    hi('MiniSnippetsFinal',          {fg=nil, bg=nil, attr='underdouble', sp=p.base0B})
+    hi('MiniSnippetsUnvisited',      {fg=nil, bg=nil, attr='underdouble', sp=p.base0D})
+    hi('MiniSnippetsVisited',        {fg=nil, bg=nil, attr='underdouble', sp=p.base0C})
+
     hi('MiniStarterCurrent',    {fg=nil,      bg=nil, attr=nil,    sp=nil})
     hi('MiniStarterFooter',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
     hi('MiniStarterHeader',     {fg=p.base0D, bg=nil, attr=nil,    sp=nil})
