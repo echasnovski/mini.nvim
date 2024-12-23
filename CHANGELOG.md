@@ -17,6 +17,10 @@
 - FEATURE: update `grep` and `grep_live` pickers to allow `globs` local option which restricts search to files that match any of its glob patterns (for example, `{ '*.lua', 'lua/**' }` will only search in Lua files and files in 'lua' directory). The `grep_live` picker also has custom `<C-o>` mapping to add globs interactively after picker is opened.
 - FEATURE: update `help` picker to have `default_split` local option which customizes split direction of `choose` action (`<CR>` by default).
 
+## mini.snippets
+
+- Introduction of a new module.
+
 ## mini.surround
 
 - BREAKING: created mappings for `find`, `find_left`, and `highlight` are now *not* dot-repeatable. Dot-repeat should repeat last text change but neither of those actions change text. Having them dot-repeatable breaks the common "move cursor -> press dot" workflow. Initially making them dot-repeatable was a "you can but you should not" type of mistake.

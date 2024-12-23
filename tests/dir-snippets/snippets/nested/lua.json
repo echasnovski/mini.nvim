@@ -1,0 +1,1 @@
+{ "snippets/nested/lua.json": { "prefix": "g", "body": "G=$1" } }

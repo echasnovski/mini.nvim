@@ -35,6 +35,28 @@ Helpers.expect.equality_approx = MiniTest.new_expectation(
   function(x, y, tol) return string.format('Left: %s\nRight: %s\nTolerance: %s', vim.inspect(x), vim.inspect(y), tol) end
 )
 
+Helpers.make_partial_tbl = function(tbl, ref)
+  local res = {}
+  for k, v in pairs(ref) do
+    res[k] = (type(tbl[k]) == 'table' and type(v) == 'table') and Helpers.make_partial_tbl(tbl[k], v) or tbl[k]
+  end
+  for i = 1, #tbl do
+    if ref[i] == nil then res[i] = tbl[i] end
+  end
+  return res
+end
+
+Helpers.expect.equality_partial_tbl = MiniTest.new_expectation(
+  'equality of tables only in reference fields',
+  function(x, y)
+    if type(x) == 'table' and type(y) == 'table' then x = Helpers.make_partial_tbl(x, y, {}) end
+    return vim.deep_equal(x, y)
+  end,
+  function(x, y)
+    return string.format('Left: %s\nRight: %s', vim.inspect(Helpers.make_partial_tbl(x, y, {})), vim.inspect(y))
+  end
+)
+
 -- Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 Helpers.new_child_neovim = function()
   local child = MiniTest.new_child_neovim()

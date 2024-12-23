@@ -46,6 +46,7 @@
 ---   Autopairs ..................................................... |mini.pairs|
 ---   Pick anything .................................................. |mini.pick|
 ---   Session management ......................................... |mini.sessions|
+---   Manage and expand snippets ................................. |mini.snippets|
 ---   Split and join arguments .................................. |mini.splitjoin|
 ---   Start screen ................................................ |mini.starter|
 ---   Statusline ............................................... |mini.statusline|
@@ -261,6 +262,11 @@
 --- - |MiniSessions| - session management (read, write, delete) which works
 ---   using |mksession|. Implements both global (from configured directory) and
 ---   local (from current directory) sessions.
+---
+--- - |MiniSnippets| - manage and expand snippets. Supports only syntax from LSP
+---   specification. Provides flexible loaders to manage snippet files, exact and
+---   fuzzy prefix matching, interactive selection, and rich interactive snippet
+---   session experience with dynamic tabstop visualization.
 ---
 --- - |MiniSplitjoin| - split and join arguments (regions inside brackets
 ---   between allowed separators). Has customizable pre and post hooks.

@@ -5,6 +5,7 @@ repos:
         name: StyLua
         language: system
         entry: stylua
+        args: [--respect-ignores]
         types: [lua]
       - id: gendocs
         name: Gendocs

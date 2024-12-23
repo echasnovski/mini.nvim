@@ -1,0 +1,1 @@
+{ "subdir/snippets/lua.json": { "prefix": "c", "body": "C=$1" } }

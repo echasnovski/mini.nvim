@@ -1,0 +1,1 @@
+{ "subdir/snippets/lua.code-snippets": { "prefix": "e", "body": "E=$1" } }

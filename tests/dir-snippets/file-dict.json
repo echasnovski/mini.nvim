@@ -1,0 +1,29 @@
+{
+  "name_a": {
+    "prefix": "lua_a",
+    "body": "LUA_A=$1",
+    "desc": "Desc LUA_A"
+  },
+  "name_b": {
+    "prefix": "lua_b",
+    "body": "LUA_B=$1",
+    "description": "Desc LUA_B"
+  },
+  "name_c": {
+    "body": "LUA_C=$1"
+  },
+  "dupl1": {
+    "prefix": "d",
+    "body": "D1=$1"
+  },
+  "dupl2": {
+    "prefix": "d",
+    "desc": "Dupl2"
+  },
+
+  "problem_1": {
+    "prefix": 1,
+    "desc": "Not snippet data #1"
+  },
+  "problem_2": 2
+}

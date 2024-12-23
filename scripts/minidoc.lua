@@ -36,6 +36,7 @@ local modules = {
   'pairs',
   'pick',
   'sessions',
+  'snippets',
   'splitjoin',
   'starter',
   'statusline',

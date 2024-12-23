@@ -21,7 +21,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v0.19.0
           # CLI arguments
-          args: --color always --check .
+          args: --color always --respect-ignores --check .
 
   gendoc:
     name: Document generation
