@@ -2126,19 +2126,39 @@ end
 
 H.session_ensure_gravity = function(session)
   -- Ensure proper gravity relative to reference node (first node with current
-  -- tabstop): "left" before, "expand" at, "right" after. This should account
-  -- for typing in snippets like `$1$2$1$2$1` (in both 1 and 2).
+  -- tabstop): "left" before, "expand" at and all its parents, "right" after.
+  -- This accounts for typing in snippets like `$1$2$1$2$1` (in both 1 and 2)
+  -- and correct tracking of $2 in `${2:$1}` (should expand if typing in 1).
   local buf_id, cur_tabstop, base_gravity = session.buf_id, session.cur_tabstop, 'left'
+  local parent_extmarks = {}
   local ensure = function(n)
     local is_ref_node = n.tabstop == cur_tabstop and base_gravity == 'left'
+    if is_ref_node then
+      for _, extmark_id in ipairs(parent_extmarks) do
+        H.extmark_set_gravity(buf_id, extmark_id, 'expand')
+      end
+      -- Disable parent stack tracking, as reference node is accounted for
+      parent_extmarks = nil
+    end
     H.extmark_set_gravity(buf_id, n.extmark_id, is_ref_node and 'expand' or base_gravity)
     base_gravity = (is_ref_node or base_gravity == 'right') and 'right' or 'left'
   end
-  -- NOTE: This relies on `H.nodes_traverse` to first apply to the node and
-  -- only later (recursively) to placeholder nodes, which makes them all have
-  -- "right" gravity and thus being removable during replacing placeholder (as
-  -- they will not cover newly inserted text).
-  H.nodes_traverse(session.nodes, ensure)
+
+  local ensure_in_nodes
+  ensure_in_nodes = function(nodes)
+    for _, n in ipairs(nodes) do
+      -- NOTE: apply first to the node and only later to placeholder nodes,
+      -- which makes them have "right" gravity and thus being removable during
+      -- replacing placeholder (as they will not cover newly inserted text).
+      ensure(n)
+      if n.placeholder ~= nil then
+        if parent_extmarks ~= nil then table.insert(parent_extmarks, n.extmark_id) end
+        ensure_in_nodes(n.placeholder)
+        if parent_extmarks ~= nil then parent_extmarks[#parent_extmarks] = nil end
+      end
+    end
+  end
+  ensure_in_nodes(session.nodes)
 end
 
 H.session_get_ref_node = function(session)

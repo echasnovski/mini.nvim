@@ -3210,7 +3210,7 @@ T['Session']['preserves order of "squashed" empty tabstops'] = function()
   child.expect_screenshot()
 end
 
-T['Session']['whole session tracking'] = function()
+T['Session']['tracks whole session'] = function()
   local validate_session_range = function(ref_from, ref_to)
     local session = get()
     local data =
@@ -3248,6 +3248,62 @@ T['Session']['whole session tracking'] = function()
   type_keys('<Right>', 'no')
   validate_state('i', { 'new--wowT1=x', '_T0=huh-no-' }, { 2, 10 })
   validate_session_range({ 0, 5 }, { 1, 7 })
+end
+
+T['Session']['tracks nodes in case of nested placeholders'] = function()
+  start_session('${1:$2} $1')
+  local ref_nodes = {
+    {
+      tabstop = '1',
+      extmark = { row = 0, col = 0, end_row = 0, end_col = 0 },
+      placeholder = {
+        {
+          tabstop = '2',
+          extmark = { row = 0, col = 0, end_row = 0, end_col = 0 },
+          placeholder = { { text = '', extmark = { row = 0, col = 0, end_row = 0, end_col = 0 } } },
+        },
+      },
+    },
+    { text = ' ' },
+    {
+      tabstop = '1',
+      extmark = { row = 0, col = 1, end_row = 0, end_col = 1 },
+      placeholder = {
+        {
+          tabstop = '2',
+          extmark = { row = 0, col = 1, end_row = 0, end_col = 1 },
+          placeholder = { { text = '', extmark = { row = 0, col = 1, end_row = 0, end_col = 1 } } },
+        },
+      },
+    },
+    { tabstop = '0' },
+  }
+  validate_session_nodes_partial(get(), ref_nodes)
+
+  jump('next')
+  type_keys('xxx')
+  local ref_nodes_after = {
+    {
+      tabstop = '1',
+      -- Should expand parent tabstop's region
+      extmark = { row = 0, col = 0, end_row = 0, end_col = 3 },
+      placeholder = {
+        -- Should correctly track region of reference node
+        { tabstop = '2', extmark = { row = 0, col = 0, end_row = 0, end_col = 3 } },
+      },
+    },
+    { text = ' ' },
+    -- Should expand region in linked tabstops also
+    {
+      tabstop = '1',
+      extmark = { row = 0, col = 4, end_row = 0, end_col = 7 },
+      placeholder = {
+        { tabstop = '2', extmark = { row = 0, col = 4, end_row = 0, end_col = 7 } },
+      },
+    },
+    { tabstop = '0' },
+  }
+  validate_session_nodes_partial(get(), ref_nodes_after)
 end
 
 T['Session']['autostop'] = new_set()
@@ -3840,7 +3896,7 @@ T['Session']['linked tabstops']['works for tabstops with different placeholders'
 end
 
 --stylua: ignore
-T['Session']['linked tabstops']['result in proper extmark tracking'] = function()
+T['Session']['linked tabstops']['have proper extmark tracking'] = function()
   local validate = function(ref_nodes) validate_session_nodes_partial(get(), ref_nodes) end
 
   -- As placeholder in another tabstop
