@@ -343,6 +343,18 @@ Special configurations for common splits ~
     aa,  bb
     aaa, bbb
 <
+<|> Split by "|" character, trim whitespace, merge with single space.
+
+    Before: >
+    |a|b|
+    |aa|bb|
+    |aaa    |    bbb   |
+<
+    After typing `,`: >
+    | a   | b   |
+    | aa  | bb  |
+    | aaa | bbb |
+<
 < > (Space bar) Squash consecutive whitespace into single single space (accept
     possible indentation) and split by `%s+` pattern (keeps indentation).
 
@@ -453,6 +465,7 @@ Default values:
       -- Special configurations for common splits
       ['='] = --<function: enhanced setup for '='>,
       [','] = --<function: enhanced setup for ','>,
+      ['|'] = --<function: enhanced setup for '|'>,
       [' '] = --<function: enhanced setup for ' '>,
     },
 

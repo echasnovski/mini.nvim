@@ -339,6 +339,18 @@
 ---     aa,  bb
 ---     aaa, bbb
 --- <
+--- <|> Split by "|" character, trim whitespace, merge with single space.
+---
+---     Before: >
+---     |a|b|
+---     |aa|bb|
+---     |aaa    |    bbb   |
+--- <
+---     After typing `,`: >
+---     | a   | b   |
+---     | aa  | bb  |
+---     | aaa | bbb |
+--- <
 --- < > (Space bar) Squash consecutive whitespace into single single space (accept
 ---     possible indentation) and split by `%s+` pattern (keeps indentation).
 ---
@@ -605,6 +617,13 @@ MiniAlign.config = {
       opts.split_pattern = ','
       table.insert(steps.pre_justify, MiniAlign.gen_step.trim())
       table.insert(steps.pre_justify, MiniAlign.gen_step.pair())
+      opts.merge_delimiter = ' '
+    end,
+    --minidoc_replace_end
+    --minidoc_replace_start ['|'] = --<function: enhanced setup for '|'>,
+    ['|'] = function(steps, opts)
+      opts.split_pattern = '|'
+      table.insert(steps.pre_justify, MiniAlign.gen_step.trim())
       opts.merge_delimiter = ' '
     end,
     --minidoc_replace_end

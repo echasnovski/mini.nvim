@@ -176,6 +176,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Special configurations for common splits
     ['='] = --<function: enhanced setup for '='>,
     [','] = --<function: enhanced setup for ','>,
+    ['|'] = --<function: enhanced setup for '|'>,
     [' '] = --<function: enhanced setup for ' '>,
   },
 

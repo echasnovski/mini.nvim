@@ -1894,6 +1894,8 @@ T['Modifiers']['<equal sign>'] = function() validate_common_split({ 'a=b', 'aaa=
 
 T['Modifiers']['<comma>'] = function() validate_common_split({ 'a,b', 'aaa,bbb' }, ',') end
 
+T['Modifiers']['<bar>'] = function() validate_common_split({ '|a|b|', '|aaa|bbb|' }, '|') end
+
 T['Modifiers']['<space bar>'] = function() validate_common_split({ '  a  b', '    aaa    bbb', 'a b' }, ' ') end
 
 T['Documented examples'] = new_set()

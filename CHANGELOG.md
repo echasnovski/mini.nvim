@@ -1,5 +1,9 @@
 # Version 0.14.0.9000
 
+## mini.align
+
+- FEATURE: add built-in modifier for "|" character with aligning Markdown-like tables in mind.
+
 ## mini.animate
 
 - BREAKING FEATURE: add `max_output_steps` option to `gen_path.line()` and `gen_path.angle()` to limit the number of steps the return. Default is 1000 to improve performance on large cursor jumps which also is set for `config.cursor.path`.
