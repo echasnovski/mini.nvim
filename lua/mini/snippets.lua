@@ -588,6 +588,10 @@ end
 --- Used to jump to next/previous tabstop and stop active session respectively.
 --- Use |MiniSnippets.session.jump()| and |MiniSnippets.session.stop()| for custom
 --- Insert mode mappings.
+--- Note: do not use `"<C-n>"` or `"<C-p>"` for any action as they conflict with
+--- built-in completion: it forces them to mean "change focus to next/previous
+--- completion item". This matters more frequently than when there is a tabstop
+--- with choices due to how this module handles built-in completion during jumps.
 ---
 --- # Expand ~
 ---
@@ -2572,10 +2576,11 @@ end
 
 H.hide_completion = function()
   -- NOTE: `complete()` instead of emulating <C-y> has immediate effect
-  -- (without the need to `vim.schedule()`). The downside is that `fn.mode(1)`
-  -- returns 'ic' (i.e. not "i" for clean Insert mode). Appending
-  -- ` | call feedkeys("\\<C-y>", "n")` removes that, but still would require
-  -- workarounds to work in edge cases.
+  -- (without the need to `vim.schedule()`). The downsides are that `fn.mode(1)`
+  -- returns 'ic' (i.e. not "i" for clean Insert mode) and <C-n>/<C-p> act as if
+  -- there is completion active (thus not allowing them as custom mappings).
+  -- Appending ` | call feedkeys("\\<C-y>", "n")` removes that, but still would
+  -- require workarounds to work in edge cases.
   if vim.fn.mode() == 'i' then vim.cmd('noautocmd call complete(col("."), [])') end
 end
 

@@ -599,6 +599,10 @@ the duration of active snippet session(s) from |MiniSnippets.default_insert()|.
 Used to jump to next/previous tabstop and stop active session respectively.
 Use |MiniSnippets.session.jump()| and |MiniSnippets.session.stop()| for custom
 Insert mode mappings.
+Note: do not use `"<C-n>"` or `"<C-p>"` for any action as they conflict with
+built-in completion: it forces them to mean "change focus to next/previous
+completion item". This matters more frequently than when there is a tabstop
+with choices due to how this module handles built-in completion during jumps.
 
 # Expand ~
 
