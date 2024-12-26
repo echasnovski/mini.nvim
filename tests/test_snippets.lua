@@ -2490,6 +2490,11 @@ T['parse()']['placeholder'] = function()
 
   eq(parse([[${1:${2:aa\$bb\}cc\\dd}}]]), { { tabstop = '1', placeholder = { { tabstop = '2', placeholder = { { text = [[aa$bb}cc\dd]] } } } } } })
 
+  eq(parse([[${1:{$2\}}]]),   { { tabstop = '1', placeholder = { { text = '{' }, { tabstop = '2' }, { text = '}' } } } })
+  eq(parse([[${aa:{$1\}}]]),  { { var = 'aa',    placeholder = { { text = '{' }, { tabstop = '1' }, { text = '}' } } } })
+  eq(parse([[${1:{$aa\}}]]),  { { tabstop = '1', placeholder = { { text = '{' }, { var = 'aa' },    { text = '}' } } } })
+  eq(parse([[${aa:{$bb\}}]]), { { var = 'aa',    placeholder = { { text = '{' }, { var = 'bb' },    { text = '}' } } } })
+
   -- - Choice
   eq(parse('${1:${2|aa|}}'),    { { tabstop = '1', placeholder = { { tabstop = '2', choices = { 'aa' } } } } })
   eq(parse('${1:${3|aa|}}'),    { { tabstop = '1', placeholder = { { tabstop = '3', choices = { 'aa' } } } } })
@@ -3084,6 +3089,9 @@ T['parse()']['throws informative errors'] = function()
   validate('${1:a', 'Placeholder should be closed with "}"')
   validate('${1:a bb', 'Placeholder should be closed with "}"')
   validate('${1:${2:a', 'Placeholder should be closed with "}"')
+
+  validate([[${1:{$2\}]], 'Placeholder should be closed with "}"')
+  validate([[${1:{$aa\}]], 'Placeholder should be closed with "}"')
 
   -- - Nested nodes should error according to their rules
   validate('${1:${2?}}', 'Tabstop id should be followed by "}", ":", "|", or "/" not "?"')

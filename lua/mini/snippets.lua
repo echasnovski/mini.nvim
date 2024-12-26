@@ -1796,8 +1796,9 @@ H.parse_processors.dollar_tabstop = function(c, s, n)
   local new_node = { text = {} }
   s:add_node(new_node)
   if c == '$' then return s:set_name('dollar') end -- Case of `$1$2` and `$1$a`
-  table.insert(new_node.text, c) -- Case of `$1a`
   s:set_name('text')
+  if c == '\\' then return s:set_in(new_node, 'after_slash', true) end -- Case of `${1:{$2\}}`
+  table.insert(new_node.text, c) -- Case of `$1a`
 end
 
 H.parse_processors.dollar_var = function(c, s, n)
@@ -1806,8 +1807,9 @@ H.parse_processors.dollar_var = function(c, s, n)
   local new_node = { text = {} }
   s:add_node(new_node)
   if c == '$' then return s:set_name('dollar') end -- Case of `$a$b` and `$a$1`
-  table.insert(new_node.text, c) -- Case of `$a-`
   s:set_name('text')
+  if c == '\\' then return s:set_in(new_node, 'after_slash', true) end -- Case of `${AAA:{$1\}}`
+  table.insert(new_node.text, c) -- Case of `$a-`
 end
 
 H.parse_processors.dollar_lbrace = function(c, s, n)
