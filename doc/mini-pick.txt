@@ -834,6 +834,7 @@ Notes:
 - If there is currently an active picker, it is properly stopped and new one
   is started "soon" in the main event-loop (see |vim.schedule()|).
 - Current window at the moment of this function call is treated as "target".
+  It will be set back as current after |MiniPick.stop()|.
   See |MiniPick.get_picker_state()| and |MiniPick.set_picker_target_window()|.
 
 Parameters ~
