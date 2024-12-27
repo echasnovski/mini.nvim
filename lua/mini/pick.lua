@@ -2265,6 +2265,8 @@ H.picker_set_items = function(picker, items, opts)
   H.picker_set_busy(picker, false)
 
   H.picker_set_match_inds(picker, H.seq_along(items))
+  -- Force update visible range for correct "show" lines computation
+  H.picker_set_current_ind(picker, picker.current_ind, true)
   H.picker_update(picker, opts.do_match)
 end
 

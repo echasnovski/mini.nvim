@@ -3742,6 +3742,12 @@ T['set_picker_items()']['resets query cache'] = function()
   eq(get_picker_matches().all_inds, { 2, 3 })
 end
 
+T['set_picker_items()']['recomputes visible range'] = function()
+  start_with_items({ 'a', 'b' })
+  set_picker_items({ 'c', 'd', 'e' })
+  child.expect_screenshot()
+end
+
 T['set_picker_items()']['respects `opts.do_match`'] = function()
   local validate_match_calls = make_match_with_count()
   child.lua_notify([[MiniPick.start({ source = { match = _G.match_with_count } })]])
