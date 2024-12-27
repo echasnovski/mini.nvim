@@ -601,23 +601,25 @@ T['export()']['works with "qf" format'] = function()
   child.api.nvim_buf_set_lines(buf_id_2, 0, -1, false, { 'AAA', 'uuu', 'BBB', 'CcC', 'DDD', 'FFF' })
   set_ref_text(buf_id_2, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
 
+  --stylua: ignore
   local ref = {
-    { bufnr = buf_id_1, lnum = 2, end_lnum = 2, type = 'A', filename = test_file_path },
-    { bufnr = buf_id_2, lnum = 2, end_lnum = 2, type = 'A', filename = '' },
-    { bufnr = buf_id_2, lnum = 4, end_lnum = 4, type = 'C', filename = '' },
-    { bufnr = buf_id_2, lnum = 5, end_lnum = 5, type = 'D', filename = '' },
+    { bufnr = buf_id_1, lnum = 2, col = 1, end_lnum = 2, end_col = 4, type = 'A', text = 'Add',    filename = test_file_path },
+    { bufnr = buf_id_2, lnum = 2, col = 1, end_lnum = 2, end_col = 4, type = 'A', text = 'Add',    filename = '' },
+    { bufnr = buf_id_2, lnum = 4, col = 1, end_lnum = 4, end_col = 4, type = 'C', text = 'Change', filename = '' },
+    { bufnr = buf_id_2, lnum = 5, col = 1, end_lnum = 5, end_col = 1, type = 'D', text = 'Delete', filename = '' },
   }
   eq(export('qf'), ref)
 end
 
 T['export()']['works with multiline hunks'] = function()
   local buf_id_1 = new_buf()
-  child.api.nvim_buf_set_lines(buf_id_1, 0, -1, false, { 'AAA', 'uuu', 'vvv', 'BBB', 'CcC', 'DdD', 'EEE', 'HHH' })
+  child.api.nvim_buf_set_lines(buf_id_1, 0, -1, false, { 'AAA', 'uuu', 'vv', 'BBB', 'CcC', 'DdD', 'EEE', 'HHH' })
   set_ref_text(buf_id_1, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF', 'GGG', 'HHH' })
+  --stylua: ignore
   local ref = {
-    { bufnr = buf_id_1, lnum = 2, end_lnum = 3, type = 'A', filename = '' },
-    { bufnr = buf_id_1, lnum = 5, end_lnum = 6, type = 'C', filename = '' },
-    { bufnr = buf_id_1, lnum = 7, end_lnum = 7, type = 'D', filename = '' },
+    { bufnr = buf_id_1, lnum = 2, col = 1, end_lnum = 3, end_col = 3, type = 'A', text = 'Add',    filename = '' },
+    { bufnr = buf_id_1, lnum = 5, col = 1, end_lnum = 6, end_col = 4, type = 'C', text = 'Change', filename = '' },
+    { bufnr = buf_id_1, lnum = 7, col = 1, end_lnum = 7, end_col = 1, type = 'D', text = 'Delete', filename = '' },
   }
   eq(export('qf'), ref)
 end
@@ -633,7 +635,8 @@ T['export()']['respects `opts.scope`'] = function()
   eq(export('qf', { scope = 'current' }), {})
 
   set_buf(buf_id_1)
-  eq(export('qf', { scope = 'current' }), { { bufnr = 2, lnum = 2, end_lnum = 2, type = 'A', filename = '' } })
+  local ref_entry = { bufnr = 2, lnum = 2, col = 1, end_lnum = 2, end_col = 4, type = 'A', text = 'Add', filename = '' }
+  eq(export('qf', { scope = 'current' }), { ref_entry })
 end
 
 T['export()']['validates arguments'] = function()

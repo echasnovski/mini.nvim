@@ -1589,12 +1589,18 @@ H.export_qf = function(opts)
   buffers = vim.tbl_filter(vim.api.nvim_buf_is_valid, buffers)
   table.sort(buffers)
 
+  local type_text = { add = 'Add', change = 'Change', delete = 'Delete' }
+
   local res = {}
   for _, buf_id in ipairs(buffers) do
     local filename = vim.api.nvim_buf_get_name(buf_id)
+    local buf_lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
     for _, h in ipairs(H.cache[buf_id].hunks) do
-      local entry = { bufnr = buf_id, filename = filename, type = h.type:sub(1, 1):upper() }
+      local text = type_text[h.type]
+      local entry = { bufnr = buf_id, filename = filename, type = text:sub(1, 1), text = text }
       entry.lnum, entry.end_lnum = H.get_hunk_buf_range(h)
+      -- Make 'add' and 'change' hunks represent actual buffer regions
+      entry.col, entry.end_col = 1, h.type == 'delete' and 1 or buf_lines[entry.end_lnum]:len() + 1
       table.insert(res, entry)
     end
   end
