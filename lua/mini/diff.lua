@@ -1162,20 +1162,22 @@ H.set_decoration_provider = function(ns_id_viz, ns_id_overlay)
     local viz_lines, overlay_lines = buf_cache.viz_lines, buf_cache.overlay_lines
     if buf_cache.needs_clear then
       H.clear_all_diff(buf_id)
-      buf_cache.needs_clear = false
+      buf_cache.needs_clear, buf_cache.dummy_extmark = false, nil
       -- Ensure that sign column is visible even if hunks are outside of window
       -- view (matters with `signcolumn=auto`)
       if buf_cache.config.view.style == 'sign' and not vim.tbl_isempty(viz_lines) then
         local dummy_opts = { sign_text = '  ', priority = 0, right_gravity = false }
         dummy_opts.sign_hl_group, dummy_opts.cursorline_hl_group = 'SignColumn', 'CursorLineSign'
-        H.set_extmark(buf_id, ns_id_viz, 0, 0, dummy_opts)
+        buf_cache.dummy_extmark = vim.api.nvim_buf_set_extmark(buf_id, ns_id_viz, 0, 0, dummy_opts)
       end
     end
 
+    local has_viz_extmarks = false
     for i = top + 1, bottom + 1 do
       if viz_lines[i] ~= nil then
         H.set_extmark(buf_id, ns_id_viz, i - 1, 0, viz_lines[i])
         viz_lines[i] = nil
+        has_viz_extmarks = true
       end
       if overlay_lines[i] ~= nil then
         -- Allow several overlays at one line (like for "delete" and "change")
@@ -1184,6 +1186,13 @@ H.set_decoration_provider = function(ns_id_viz, ns_id_overlay)
         end
         overlay_lines[i] = nil
       end
+    end
+
+    -- Make sure to clear dummy extmark when it is not needed (otherwise it
+    -- affects signcolumn for cases like `yes:2` and `auto:2`)
+    if buf_cache.dummy_extmark ~= nil and has_viz_extmarks then
+      vim.api.nvim_buf_del_extmark(buf_id, ns_id_viz, buf_cache.dummy_extmark)
+      buf_cache.dummy_extmark = nil
     end
   end
   vim.api.nvim_set_decoration_provider(ns_id_viz, { on_win = on_win })
