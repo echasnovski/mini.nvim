@@ -4028,6 +4028,14 @@ T['set_picker_opts()']['works'] = function()
   child.lua([[MiniPick.set_picker_opts({ source = { name = 'My name' }, window = { config = { col = 5 } } })]])
   expect_screenshot()
 
+  -- Can be used to update mappings
+  child.lua([[MiniPick.set_picker_opts({
+    mappings = { log = { char = '<C-w>', func = function() _G.log = 'hello' end } },
+  })]])
+  type_keys('<C-w>')
+  sleep(small_time)
+  eq(child.lua_get('_G.log'), 'hello')
+
   -- Should rerun match
   child.lua('MiniPick.set_picker_opts({ source = { match = function() return { 2 } end } })')
   eq(get_picker_matches().all_inds, { 2 })

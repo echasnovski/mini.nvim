@@ -1750,6 +1750,7 @@ end
 MiniPick.set_picker_opts = function(opts)
   if not MiniPick.is_picker_active() then return end
   H.pickers.active.opts = vim.tbl_deep_extend('force', H.pickers.active.opts, opts or {})
+  H.pickers.active.action_keys = H.normalize_mappings(H.pickers.active.opts.mappings)
   H.picker_update(H.pickers.active, true, true)
 end
 
@@ -2107,6 +2108,8 @@ H.picker_new = function(opts)
     match_inds = nil,
     -- - Map of of currently marked `stritems` indexes (as keys)
     marked_inds_map = {},
+    -- - Action keys which should be processed as described in mappings
+    action_keys = H.normalize_mappings(opts.mappings),
 
     -- Whether picker is currently busy processing data
     is_busy = false,
@@ -2134,8 +2137,6 @@ end
 H.picker_advance = function(picker)
   vim.schedule(function() vim.api.nvim_exec_autocmds('User', { pattern = 'MiniPickStart' }) end)
 
-  local char_data = H.picker_get_char_data(picker)
-
   local do_match, is_aborted = false, false
   for _ = 1, 1000000 do
     if H.cache.is_force_stop_advance then break end
@@ -2147,15 +2148,15 @@ H.picker_advance = function(picker)
     is_aborted = char == nil
     if is_aborted then break end
 
-    local cur_data = char_data[char] or {}
-    do_match = cur_data.name == nil or vim.startswith(cur_data.name, 'delete') or cur_data.name == 'paste'
-    is_aborted = cur_data.name == 'stop'
+    local cur_action = picker.action_keys[char] or {}
+    do_match = cur_action.name == nil or vim.startswith(cur_action.name, 'delete') or cur_action.name == 'paste'
+    is_aborted = cur_action.name == 'stop'
 
     local should_stop
-    if cur_data.is_custom then
-      should_stop = cur_data.func()
+    if cur_action.is_custom then
+      should_stop = cur_action.func()
     else
-      should_stop = (cur_data.func or H.picker_query_add)(picker, char)
+      should_stop = (cur_action.func or H.picker_query_add)(picker, char)
     end
     if should_stop then break end
   end
@@ -2410,8 +2411,7 @@ H.query_is_ignorecase = function(query)
   return prompt == vim.fn.tolower(prompt)
 end
 
-H.picker_get_char_data = function(picker, skip_alternatives)
-  local term = H.replace_termcodes
+H.normalize_mappings = function(mappings, skip_alternatives)
   local res = {}
 
   -- Use alternative keys for some common actions
@@ -2419,14 +2419,14 @@ H.picker_get_char_data = function(picker, skip_alternatives)
   if not skip_alternatives then alt_chars = { move_down = '<Down>', move_start = '<Home>', move_up = '<Up>' } end
 
   -- Process
-  for name, rhs in pairs(picker.opts.mappings) do
+  for name, rhs in pairs(mappings) do
     local is_custom = type(rhs) == 'table'
     local char = is_custom and rhs.char or rhs
     local data = { char = char, name = name, func = is_custom and rhs.func or H.actions[name], is_custom = is_custom }
-    res[term(char)] = data
+    res[H.replace_termcodes(char)] = data
 
     local alt = alt_chars[name]
-    if alt ~= nil then res[term(alt)] = data end
+    if alt ~= nil then res[H.replace_termcodes(alt)] = data end
   end
 
   return res
@@ -2770,9 +2770,9 @@ H.picker_show_info = function(picker)
     end
   end
 
-  local char_data = H.picker_get_char_data(picker, true)
-  append_char_data(vim.tbl_filter(function(x) return x.is_custom end, char_data), 'Mappings (custom)')
-  append_char_data(vim.tbl_filter(function(x) return not x.is_custom end, char_data), 'Mappings (built-in)')
+  local action_keys = H.normalize_mappings(picker.opts.mappings, true)
+  append_char_data(vim.tbl_filter(function(x) return x.is_custom end, action_keys), 'Mappings (custom)')
+  append_char_data(vim.tbl_filter(function(x) return not x.is_custom end, action_keys), 'Mappings (built-in)')
 
   -- Manage buffer/window/state
   local buf_id_info = picker.buffers.info
