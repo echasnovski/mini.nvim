@@ -1940,6 +1940,7 @@ H.list_get = {
     local cur_buf = vim.api.nvim_get_current_buf()
     local res = vim.fn.getchangelist(cur_buf)[1]
     for _, x in ipairs(res) do
+      x.col = x.col + 1
       x.bufnr = cur_buf
     end
     return res

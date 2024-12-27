@@ -2454,12 +2454,12 @@ T['pickers']['list()']['works for `change`'] = function()
 
   -- Should properly choose by moving to position
   type_keys('<CR>')
-  eq(get_cursor(), { 1, 9 })
+  eq(get_cursor(), { 1, 10 })
 
   -- Should return chosen value
   validate_partial_equal_arr(
     { child.lua_get('_G.return_item') },
-    { { bufnr = 1, col = 10, coladd = 0, lnum = 1, text = path .. '│1│10' } }
+    { { bufnr = 1, col = 11, coladd = 0, lnum = 1, text = path .. '│1│11' } }
   )
 end
 
