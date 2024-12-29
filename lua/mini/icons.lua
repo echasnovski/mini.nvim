@@ -1423,7 +1423,7 @@ H.filetype_icons = {
   nim                    = { glyph = '', hl = 'MiniIconsYellow' },
   ninja                  = { glyph = '󰝴', hl = 'MiniIconsGrey'   },
   nix                    = { glyph = '󱄅', hl = 'MiniIconsAzure'  },
-  norg                   = { glyph = '󰫻', hl = 'MiniIconsBlue'   },
+  norg                   = { glyph = '', hl = 'MiniIconsBlue'   },
   nqc                    = { glyph = '󱊈', hl = 'MiniIconsYellow' },
   nroff                  = { glyph = '󰫻', hl = 'MiniIconsCyan'   },
   nsis                   = { glyph = '󰫻', hl = 'MiniIconsAzure'  },
