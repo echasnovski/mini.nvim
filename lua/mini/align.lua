@@ -1734,16 +1734,19 @@ H.region_get_text = function(region, mode)
   if mode == 'line' then return H.get_lines(from.line - 1, to.line) end
 
   if mode == 'block' then
-    -- Use virtual columns to respect multibyte characters
+    -- Use virtual columns to respect multibyte/wide/composing characters
     local left_virtcol, right_virtcol = H.region_virtcols(region)
-    local n_cols = right_virtcol - left_virtcol + 1
 
-    return vim.tbl_map(
-      -- `strcharpart()` returns empty string for out of bounds span, so no
-      -- need for extra columns check
-      function(l) return vim.fn.strcharpart(l, left_virtcol - 1, n_cols) end,
-      H.get_lines(from.line - 1, to.line)
-    )
+    local res, lines = {}, H.get_lines(from.line - 1, to.line)
+    for i, l in ipairs(lines) do
+      local lnum = from.line + i - 1
+      local left_col = H.virtcol2col(lnum, left_virtcol)
+      local right_col = H.virtcol2col(lnum, right_virtcol)
+      right_col = right_col + H.str_utf_end(l, right_col)
+
+      table.insert(res, l:sub(left_col, right_col))
+    end
+    return res
   end
 end
 
@@ -1767,24 +1770,18 @@ H.region_set_text = function(region, mode, text)
 
     -- Use virtual columns to respect multibyte characters
     local left_virtcol, right_virtcol = H.region_virtcols(region)
+
     local lines = H.get_lines(from.line - 1, to.line)
     for i, l in ipairs(lines) do
-      -- Use zero-based indexes
-      local line_num = from.line + i - 2
+      local lnum = from.line + i - 1
+      local left_col = H.virtcol2col(lnum, left_virtcol)
+      local right_col = H.virtcol2col(lnum, right_virtcol)
+      right_col = right_col + H.str_utf_end(l, right_col)
 
-      local n_virtcols = vim.fn.virtcol({ line_num + 1, '$' }) - 1
-      -- Don't set text if all region is past end of line
-      if left_virtcol <= n_virtcols then
-        -- Make sure to not go past the line end
-        local line_left_col, line_right_col = left_virtcol, math.min(right_virtcol, n_virtcols)
-
-        -- Convert back to byte columns (columns are end-exclusive)
-        local start_col, end_col = vim.fn.byteidx(l, line_left_col - 1), vim.fn.byteidx(l, line_right_col)
-        start_col, end_col = math.max(start_col, 0), math.max(end_col, 0)
-
-        -- vim.api.nvim_buf_set_text(0, line_num, start_col, line_num, end_col, { text[i] })
-        H.set_text(line_num, start_col, line_num, end_col, { text[i] })
-      end
+      -- Adjust columns to not go outside of line
+      -- TODO: Remove after compatibility with Neovim=0.9 is dropped
+      left_col, right_col = math.max(left_col - 1, 0), math.min(right_col, l:len())
+      H.set_text(lnum - 1, left_col, lnum - 1, right_col, { text[i] })
     end
   end
 end
@@ -2025,6 +2022,21 @@ H.string_find = function(s, pattern, init)
   if pattern == '' then return nil end
 
   return string.find(s, pattern, init)
+end
+
+H.virtcol2col = function(lnum, col) return vim.fn.virtcol2col(0, lnum, col) end
+if vim.fn.has('nvim-0.10') == 0 then
+  -- Neovim<0.10 has `virtcol2col` returning cell's last column instead of
+  -- cell's first column in Neovim>=0.10
+  H.virtcol2col = function(lnum, col)
+    if vim.fn.virtcol2col(0, lnum, col) == 0 then return 0 end
+    return vim.fn.virtcol2col(0, lnum, col - 1) + 1
+  end
+end
+
+H.str_utf_end = function(s, n) return n >= s:len() and 0 or vim.str_utf_end(s, n) end
+if vim.fn.has('nvim-0.10') == 0 then
+  H.str_utf_end = function(s, n) return n >= s:len() and 0 or (vim.str_byteindex(s, vim.str_utfindex(s, n)) - n) end
 end
 
 H.is_any_point_inside_any_span = function(points, spans)

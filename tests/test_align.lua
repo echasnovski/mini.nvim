@@ -1241,6 +1241,9 @@ T['Align']['works in Visual blockwise mode'] = function()
 
   -- Correctly works in presence of multibyte characters
   validate_keys({ 'ыы_ф', 'ыыы_ф' }, { '1l', '<C-v>', '1j3l', 'ga', '_' }, { 'ыы _ф', 'ыыы_ф' })
+
+  -- Correctly selects in presence of wide characters
+  validate_keys({ 'の', '_', 'a_' }, { '<C-v>2j', 'ga', '_' }, { 'の', ' _', 'a_' })
 end
 
 T['Align']['works independently with :normal command'] = function()
@@ -1278,11 +1281,26 @@ T['Align']['works with different mapping'] = function()
 end
 
 T['Align']['works with multibyte characters'] = function()
-  validate_keys(
-    { 'ыффцццф', 'ыыыффцф' },
-    { 'Vj', 'ga', 'ф' },
-    { 'ы  ффцццф', 'ыыыффц  ф' }
-  )
+  local before, after = { 'ыффцццф', 'ыыыффцф' }, { 'ы  ффцццф', 'ыыыффц  ф' }
+  validate_keys(before, { 'Vj', 'ga', 'ф' }, after)
+  validate_keys(before, { '<C-v>$j', 'ga', 'ф' }, after)
+end
+
+T['Align']['works with wide characters'] = function()
+  -- Wide characters may or may not be designed to occupy more than a one cell
+  -- NOTE: deliberately do not account for 'ambiwidth=double' option as it does
+  -- not look reasonable (two cells for Cyrillic) and adds extra complexity
+  local before, after = { 'ыыффццф', 'ыфのфцф' }, { 'ыыф  фццф', 'ы фのфц ф' }
+  validate_keys(before, { 'Vj', 'ga', 'ф' }, after)
+  validate_keys(before, { '<C-v>$j', 'ga', 'ф' }, after)
+end
+
+T['Align']['works with combining characters'] = function(mode)
+  -- 0xCC 0x81 is the UTF-8 representation of U+0301 COMBINING ACUTE ACCENT. It
+  -- is zero-width when combined with the preceding character.
+  local before, after = { 'aá_e\xcc\x81e_', 'aa_e_' }, { 'aá_e\xcc\x81e_', 'aa_e _' }
+  validate_keys(before, { 'Vj', 'ga', '_' }, after)
+  validate_keys(before, { '<C-v>$j', 'ga', '_' }, after)
 end
 
 T['Align']['does not ask for modifier if `split_pattern` is not default'] = function()
