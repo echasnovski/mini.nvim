@@ -479,6 +479,10 @@
 ---       end)
 ---
 ---       MiniFiles.set_target_window(new_target)
+---
+---       -- This intentionally doesn't act on file under cursor in favor of
+---       -- explicit "go in" action (`l` / `L`). To immediately open file,
+---       -- add appropriate `MiniFiles.go_in()` call instead of this comment.
 ---     end
 ---
 ---     -- Adding `desc` will result into `show_help` entries
