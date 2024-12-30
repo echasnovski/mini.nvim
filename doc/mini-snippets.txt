@@ -411,9 +411,9 @@ it enables cleaner use of nested sessions. Here is an example of setting up
 custom <Tab> to "expand or jump" and <S-Tab> to "jump to previous": >lua
 
   local snippets = require('mini.snippets')
-  local match_strict = function(snippets)
+  local match_strict = function(snips)
     -- Do not match with whitespace to cursor's left
-    return snippets.default_match(snippets, { pattern_fuzzy = '%S+' })
+    return snippets.default_match(snips, { pattern_fuzzy = '%S+' })
   end
   snippets.setup({
     -- ... Set up snippets ...

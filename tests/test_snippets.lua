@@ -4782,11 +4782,11 @@ T['Examples']['<Tab>/<S-Tab> mappings'] = function()
     mappings = { expand = '', jump_next = '', jump_prev = '' },
   })
   child.lua([[
-    local minisnippets = require('mini.snippets')
-    local match_strict = function(snippets)
-      return minisnippets.default_match(snippets, { pattern_fuzzy='%S+' })
+    local snippets = require('mini.snippets')
+    local match_strict = function(snips)
+      return snippets.default_match(snips, { pattern_fuzzy='%S+' })
     end
-    minisnippets.setup({
+    snippets.setup({
       snippets = { { prefix = 'l', body = 'T1=$1 T0=0' } },
       mappings = { expand = '', jump_next = '' },
       expand = { match = match_strict },
