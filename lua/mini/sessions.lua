@@ -597,7 +597,7 @@ end
 
 H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 
-H.fs_normalize = vim.fs.normalize
+H.fs_normalize = function(...) return vim.fs.normalize(...) end
 if vim.fn.has('nvim-0.9') == 0 then
   H.fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
 end
