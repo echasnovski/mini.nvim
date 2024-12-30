@@ -319,7 +319,7 @@ T['detected']['is present'] = function()
 end
 
 T['detected']['is an empty table if no sessions are detected'] = function()
-  reload_module({ directory = 'global' })
+  reload_module({ directory = vim.fn.fnamemodify(child.fn.tempname(), ':h') })
   eq(child.lua_get('MiniSessions.detected'), {})
 end
 
