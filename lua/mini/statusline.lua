@@ -639,24 +639,28 @@ H.get_attached_lsp = function() return H.attached_lsp[vim.api.nvim_get_current_b
 
 H.compute_attached_lsp = function(buf_id) return string.rep('+', vim.tbl_count(H.get_buf_lsp_clients(buf_id))) end
 
-H.get_buf_lsp_clients = function(buf_id) return vim.lsp.get_clients({ bufnr = buf_id }) end
-if vim.fn.has('nvim-0.10') == 0 then
+if vim.lsp.get_clients then
+  H.get_buf_lsp_clients = function(buf_id) return vim.lsp.get_clients({ bufnr = buf_id }) end
+else
   H.get_buf_lsp_clients = function(buf_id) return vim.lsp.buf_get_clients(buf_id) end
 end
 
 -- Diagnostics ----------------------------------------------------------------
-H.diagnostic_get_count = function()
-  local res = {}
-  for _, d in ipairs(vim.diagnostic.get(0)) do
-    res[d.severity] = (res[d.severity] or 0) + 1
+if vim.diagnostic.count then -- neovim >= 0.10.0
+  H.diagnostic_get_count = function() return vim.diagnostic.count(0) end
+else
+  H.diagnostic_get_count = function()
+    local res = {}
+    for _, d in ipairs(vim.diagnostic.get(0)) do
+      res[d.severity] = (res[d.severity] or 0) + 1
+    end
+    return res
   end
-  return res
 end
-if vim.fn.has('nvim-0.10') == 1 then H.diagnostic_get_count = function() return vim.diagnostic.count(0) end end
 
-if vim.fn.has('nvim-0.10') == 1 then
+if vim.diagnostic.is_enabled then -- neovim >= 0.10.0
   H.diagnostic_is_disabled = function(_) return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
-elseif vim.fn.has('nvim-0.9') == 1 then
+elseif vim.diagnostic.is_disabled then -- neovim >= 0.9.0
   H.diagnostic_is_disabled = function(_) return vim.diagnostic.is_disabled(0) end
 else
   H.diagnostic_is_disabled = function(_) return false end
