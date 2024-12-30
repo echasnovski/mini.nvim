@@ -346,7 +346,7 @@
 ---     |aa|bb|
 ---     |aaa    |    bbb   |
 --- <
----     After typing `,`: >
+---     After typing `|`: >
 ---     | a   | b   |
 ---     | aa  | bb  |
 ---     | aaa | bbb |
