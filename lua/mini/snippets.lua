@@ -84,6 +84,8 @@
 ---       Also both require explicit opt-in for which snippets to load.
 ---     - Both support LSP snippet format. 'LuaSnip' also provides own more
 ---       elaborate snippet format which is out of scope for this module.
+---     - 'LuaSnip' can autoexpand snippets, while this module always requires
+---       an explicit user action to expand (by design).
 ---     - Both contain snippet expand functionality which differs in some aspects:
 ---         - 'LuaSnip' has an elaborate dynamic tabstop visualization config.
 ---           This module provides a handful of dedicated highlight groups.
