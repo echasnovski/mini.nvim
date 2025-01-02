@@ -639,8 +639,8 @@ end
 ---     return MiniSnippets.default_prepare(raw_snippets, { context = cont })
 ---   end
 ---   -- Perform fuzzy match based only on alphanumeric characters
----   local my_m = function(snippets, pos)
----     return MiniSnippets.default_match(snippets, pos, {pattern_fuzzy = '%w*'})
+---   local my_m = function(snippets)
+---     return MiniSnippets.default_match(snippets, { pattern_fuzzy = '%w*' })
 ---   end
 ---   -- Always insert the best matched snippet
 ---   local my_s = function(snippets, insert) return insert(snippets[1]) end
