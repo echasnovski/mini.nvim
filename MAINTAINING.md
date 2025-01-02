@@ -111,7 +111,8 @@ Begin the process of stopping official support for outdated Neovim version short
     end
     ```
 
-    - Modify CI to not test on Neovim 0.x.
+    - Modify CI to not test on old Neovim version.
+    - Update issue template to not include old Neovim version.
     - Update README and repo description to indicate new oldest supported Neovim version.
     - Wait for a considerable amount of time (at least about a month) *and* a new 'mini.nvim' stable release (so that there is no actual deprecation in the stable release).
 
@@ -120,6 +121,11 @@ Begin the process of stopping official support for outdated Neovim version short
     - Adjust code that is conditioned on `vim.fn.has('nvim-0.x')`.
     - Adjust code/comments/documentation that contains any combination of `Neovim{<,<=,=,>=,>}{0.x,0.(x+1)}` (like `Neovim<0.x`, `Neovim>=0.(x+1)`, etc.).
     - Add entry "Stop official support of Neovim 0.x." in 'CHANGELOG.md' at the start of current development version block.
+
+## Reacting to new minor Neovim version
+
+- Modify CI to test on new Neovim version.
+- Update issue template to mention new Neovim version as released one, make it default choice, and bump Nightly version.
 
 ## Adding new config settings
 
@@ -145,9 +151,13 @@ Begin the process of stopping official support for outdated Neovim version short
 - Add Lua source code in 'lua' directory.
 - Add tests in 'tests' directory. Use 'tests/dir-xxx' name for module-specific non-test helpers.
 - Update 'lua/init.lua' to mention new module: both in initial table of contents and list of modules.
-- Update 'scripts/minidoc.lua' to generate separate help file.
-- Update 'scripts/dual_sync.sh' to include new module.
-- Update 'scripts/dual_release.sh' to include new module.
+- Add new module to the following files:
+    - 'scripts/minidoc.lua' to generate separate help file.
+    - 'scripts/dual_sync.sh' to include new module.
+    - 'scripts/dual_release.sh' to include new module.
+    - '.github/ISSUE_TEMPLATE/bug-report.yml' to be included in a dropdown menu.
+    - '.github/ISSUE_TEMPLATE/feature-request.yml' to be included in a dropdown menu.
+    - '.github/DISCUSSION_TEMPLATE/q-a.yml' to be included in a dropdown menu.
 - Generate help files.
 - Add README to 'readmes' directory. NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
 - Update main README to mention new module in table of contents.

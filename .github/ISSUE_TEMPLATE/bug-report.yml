@@ -1,8 +1,9 @@
 name: Bug report
-description: Report a problem
+description: Report a problem with the existing module(s)
 labels: [bug]
 body:
   - type: checkboxes
+    id: guidelines
     attributes:
       label: Contributing guidelines
       options:
@@ -10,42 +11,118 @@ body:
         required: true
       - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
         required: true
-      - label: I have updated 'mini.nvim' to latest version
+      - label: I have updated 'mini.nvim' to latest version of the `main` branch
         required: true
-  - type: input
+  - type: dropdown
+    id: module
     attributes:
       label: "Module(s)"
-      description: "List one or several modules this bug is coming from"
+      description: "Choose one or several modules the problem is related to"
+      multiple: true
+      options:
+        - mini.ai
+        - mini.align
+        - mini.animate
+        - mini.base16
+        - mini.basics
+        - mini.bracketed
+        - mini.bufremove
+        - mini.clue
+        - mini.colors
+        - mini.comment
+        - mini.completion
+        - mini.cursorword
+        - mini.deps
+        - mini.diff
+        - mini.doc
+        - mini.extra
+        - mini.files
+        - mini.fuzzy
+        - mini.git
+        - mini.hipatterns
+        - mini.hues
+        - mini.icons
+        - mini.indentscope
+        - mini.jump
+        - mini.jump2d
+        - mini.map
+        - mini.misc
+        - mini.move
+        - mini.notify
+        - mini.operators
+        - mini.pairs
+        - mini.pick
+        - mini.sessions
+        - mini.snippets
+        - mini.splitjoin
+        - mini.starter
+        - mini.statusline
+        - mini.surround
+        - mini.tabline
+        - mini.test
+        - mini.trailspace
+        - mini.visits
     validations:
       required: true
-  - type: textarea
-    attributes:
-      label: "Description"
-      description: "A short description of a problem"
-    validations:
-      required: true
-  - type: input
+  - type: dropdown
+    id: nvim-version
     attributes:
       label: "Neovim version"
-      description: "Something like `0.5`, `0.5.1`, Neovim nightly (please, include latest commit)"
+      description: "Choose the latest Neovim version on which you can reproduce the problem"
+      multiple: false
+      options:
+        - 0.8.x
+        - 0.9.x
+        - 0.10.x
+        - 0.11 (!at least latest Nightly build!)
+      default: 2
     validations:
       required: true
   - type: textarea
+    id: description
     attributes:
-      label: "Steps to reproduce"
-      description: "Steps to reproduce using as minimal config as possible"
+      label: "Description"
+      description: "A short description of a problem; include expected behavior"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Reproduction"
+      description: "Steps to reproduce the issue. Suggested steps involve creating an independent config from scratch. If can not reproduce like this, please ask a usage question first."
       value: |
-        1. `nvim -nu minimal.lua`
-        2. ...
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: "Expected behavior"
-      description: "A description of behavior you expected"
-  - type: textarea
-    attributes:
-      label: "Actual behavior"
-      description: "A description of behavior you observed (feel free to include images, gifs, etc.)"
+        1. Create separate 'nvim-repro' config directory:
+            - '~/.config/nvim-repro/' on Unix
+            - '~/AppData/Local/nvim-repro/' on Windows
+
+        2. Inside 'nvim-repro' directory create a file named 'init.lua'.
+           Populate it with the following content:
+
+            ```lua
+            -- Clone latest 'mini.nvim' (requires Git CLI installed)
+            vim.cmd('echo "Installing `mini.nvim`" | redraw')
+            local mini_path = vim.fn.stdpath('data') .. '/site/pack/deps/start/mini.nvim'
+            local clone_cmd = { 'git', 'clone', '--depth=1', 'https://github.com/echasnovski/mini.nvim', mini_path }
+            vim.fn.system(clone_cmd)
+            vim.cmd('echo "`mini.nvim` is installed" | redraw')
+
+            -- Make sure 'mini.nvim' is available
+            vim.cmd('packadd mini.nvim')
+            require('mini.deps').setup()
+
+            -- Add extra setup steps needed to reproduce the behavior
+            -- Use `MiniDeps.add('user/repo')` to install another plugin from GitHub
+            ```
+
+        3. Run `NVIM_APPNAME=nvim-repro nvim` (i.e. execute `nvim` with `NVIM_APPNAME` environment variable set to "nvim-repro").
+           Wait for all dependencies to install.
+
+        4. Replace this with description of interactive reproduction steps along with the behavior you observe.
+           Feel free to include images/videos/etc, this helps a lot.
+
+        Note: after reporting the issue, it is safe (and even recommended for cleaner possible future bug reports) to remove 'nvim-repro' config from the system:
+        - Delete config directory ('~/.config/nvim-repro' on Unix).
+        - Delete data directory ('~/.local/share/nvim-repro' on Unix).
+        - Delete state directory ('~/.local/state/nvim-repro' on Unix).
     validations:
       required: true

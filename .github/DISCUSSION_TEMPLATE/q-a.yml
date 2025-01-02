@@ -1,21 +1,17 @@
-name: Feature request
-description: Describe a new feature you would like to see
-labels: [feature-request]
+labels: [question]
 body:
   - type: checkboxes
     id: guidelines
     attributes:
       label: Contributing guidelines
       options:
-      - label: I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
-        required: true
       - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
         required: true
   - type: dropdown
     id: module
     attributes:
       label: "Module(s)"
-      description: "Choose one or several modules this feature is related to. Choose 'new' for a new module suggestion."
+      description: "Choose one or several modules this question is related to"
       multiple: true
       options:
         - mini.ai
@@ -60,13 +56,14 @@ body:
         - mini.test
         - mini.trailspace
         - mini.visits
-        - new
+        - none of the above
+        - all of the above
     validations:
       required: true
   - type: textarea
     id: description
     attributes:
-      label: "Description"
-      description: "A concise and justified description of a feature"
+      label: "Question"
     validations:
       required: true
+
