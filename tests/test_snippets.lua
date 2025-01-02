@@ -3702,54 +3702,29 @@ T['Session']['choices']['are shown only when needed'] = function()
   validate_no_pumvisible()
 end
 
-T['Session']['choices']['are relevant to text'] = function()
+T['Session']['choices']['are always shown all at once'] = function()
   default_insert({ body = 'T1=${1|aa,bb|} T2=${2|dd,cc|}' }, { lookup = { ['2'] = 'd' } })
   validate_state('i', { 'T1=aa T2=d' }, { 1, 3 })
 
-  -- Reference node has placeholder -> all choices
-  -- - Even immediately after start
-  validate_pumitems({ 'aa', 'bb' })
-  jump('next')
-  jump('prev')
+  -- Immediately after start
   validate_pumitems({ 'aa', 'bb' })
 
-  -- Reference node has text -> choices matching text
-  -- - Even if text is "forced" via lookup
+  -- After jump
   jump('next')
-  validate_pumitems({ 'dd' })
+  jump('prev')
+  validate_pumitems({ 'aa', 'bb' })
+
+  -- Can be narrowed down by typing
+  type_keys('bb')
   child.expect_screenshot()
 
-  type_keys('<BS>', 'c')
-  jump('prev')
-  jump('next')
-  validate_pumitems({ 'cc' })
+  -- Reappear after deleting tabstop text
+  type_keys('<C-w>')
   child.expect_screenshot()
-end
 
-T['Session']['choices']["respects 'completeopt' when computing choices"] = function()
-  start_session('T1=${1|ba,aa,xx|}')
-  type_keys('a')
+  -- If text is "forced" via lookup
   jump('next')
-
-  -- With no 'fuzzy' should match by prefix start
-  child.go.completeopt = 'menuone,noselect'
-  jump('prev')
-  validate_pumitems({ 'aa' })
-
-  -- With 'fuzzy' should match fuzzy. Should also prefer buffer-local value.
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Fuzzy matching is available only on Neovim>=0.11') end
-  jump('next')
-  child.bo.completeopt = 'menuone,noselect,fuzzy'
-  jump('prev')
-  validate_pumitems({ 'aa', 'ba' })
-
-  -- - Should match all items with empty text
-  type_keys('<BS>')
-  validate_pumitems({ 'ba', 'aa', 'xx' })
-
-  jump('next')
-  jump('prev')
-  validate_pumitems({ 'ba', 'aa', 'xx' })
+  child.expect_screenshot()
 end
 
 T['Session']['choices']["work with default 'completeopt'"] = function()
@@ -3768,14 +3743,12 @@ T['Session']['choices']["work with default 'completeopt'"] = function()
 end
 
 T['Session']['choices']['selecting completion item properly replaces current text'] = function()
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Fuzzy matching is available only on Neovim>=0.11') end
-  child.o.completeopt = 'menuone,noselect,fuzzy'
   start_session('T1=${1|axax,yy|}')
   type_keys('xx')
   jump('next')
   jump('prev')
 
-  validate_pumitems({ 'axax' })
+  validate_pumitems({ 'axax', 'yy' })
   type_keys('<C-n>')
   validate_state('i', { 'T1=axax' }, { 1, 7 })
 end

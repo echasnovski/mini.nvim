@@ -222,8 +222,7 @@
 ---            typing `x` at first placeholder results in `T1=x T1=x`.
 ---
 --- - Tabstop can also have choices: suggestions about tabstop text. It is denoted
----   as `${1|a,b,c|}`. Choices are shown (with |ins-completion| like interface)
----   after jumping to tabstop. First choice is used as placeholder.
+---   as `${1|a,b,c|}`. First choice is used as placeholder.
 ---
 ---   Example: `T1=${1|left,right|}` is expanded as `T1=left`.
 ---
@@ -284,6 +283,8 @@
 ---   When finished with current tabstop, jump to next with <C-l>. Repeat.
 ---   If changed mind about some previous tabstop, jump back with <C-h>.
 ---   Jumping also wraps around the edge (first tabstop is next after final).
+---
+--- - If tabstop has choices, use <C-n> / <C-p> to select next / previous item.
 ---
 --- - Starting another snippet session while there is an active one is allowed.
 ---   This creates nested sessions: suspend current, start the new one.
@@ -1166,6 +1167,14 @@ end
 --- - Jump with <C-l> / <C-h> to next / previous tabstop. Exact keys can be
 ---   adjusted in |MiniSnippets.config| `mappings`.
 ---   See |MiniSnippets.session.jump()| for jumping details.
+---
+--- - If tabstop has choices, all of them are shown after each jump and deleting
+---   tabstop text. It is done with |complete()|, so use <C-n> / <C-p> to select
+---   next / previous choice. Type text to narrow down the list.
+---   Works best when 'completeopt' option contains `menuone` and `noselect` flags.
+---   Note: deleting character hides the list due to how |complete()| works;
+---   delete whole tabstop text (for example with one or more |i_CTRL-W|) for
+---   full list to reappear.
 ---
 --- - Nest another session by expanding snippet in the same way as without
 ---   active session (can be even done in another buffer). If snippet has no
@@ -2126,8 +2135,7 @@ H.session_tabstop_focus = function(session, tabstop_id)
   H.set_cursor(pos)
 
   -- Show choices: if present and match node text (or all if still placeholder)
-  local matched_choices = H.session_match_choices(ref_node.choices, ref_node.text or '')
-  H.show_completion(matched_choices, col + 1)
+  H.show_completion(ref_node.choices, col + 1)
 end
 
 H.session_ensure_gravity = function(session)
@@ -2172,13 +2180,6 @@ H.session_get_ref_node = function(session)
   local find = function(n) res = res or (n.tabstop == cur_tabstop and n or nil) end
   H.nodes_traverse(session.nodes, find)
   return res
-end
-
-H.session_match_choices = function(choices, prefix)
-  if choices == nil then return {} end
-  if prefix == '' then return choices end
-  if vim.o.completeopt:find('fuzzy') ~= nil then return vim.fn.matchfuzzy(choices, prefix) end
-  return vim.tbl_filter(function(c) return vim.startswith(c, prefix) end, choices)
 end
 
 H.session_is_valid = function(session)

@@ -192,6 +192,8 @@ Snippet session allows interactive editing at tabstop locations:
 
 - Start session at first tabstop. Type text to replace placeholder. When finished with current tabstop, jump to next with `<C-l>`. Repeat. If changed mind about some previous tabstop, jump back with `<C-h>`. Jumping also wraps around the edge (first tabstop is next after final).
 
+- If tabstop has choices, use `<C-n>` / `<C-p>` to select next / previous item.
+
 - Starting another snippet session while there is an active one is allowed. This creates nested sessions: suspend current, start the new one. After newly created is stopped, resume the suspended one.
 
 - Stop session manually by pressing `<C-c>` or make it stop automatically: if final tabstop is current either make a text edit or exit to Normal mode. If snippet doesn't explicitly define final tabstop, it is added at the end of the snippet.
