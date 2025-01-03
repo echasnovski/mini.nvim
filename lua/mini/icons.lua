@@ -926,7 +926,10 @@ H.file_icons = {
   ['constraints.txt']     = 'requirements',
   ['requirements.txt']    = 'requirements',
   ['robots.txt']          = 'robots',
-  ['tclsh.rc']            = 'tcl'
+  ['tclsh.rc']            = 'tcl',
+
+  -- Supported by `vim.filetype.match` but result in confusing glyph
+  ['.prettierignore'] = { glyph = '', hl = 'MiniIconsOrange' },
 }
 
 -- Filetype icons. Keys are filetypes explicitly supported by Neovim core
@@ -935,10 +938,11 @@ H.file_icons = {
 -- Rough process of how glyphs and icons are chosen:
 -- - Try to balance usage of highlight groups.
 -- - Prefer using the following Nerd Fonts classes (from best to worst):
---     - `nf-md-*` (UTF codes seem to be more thought through). It is also
---       correctly has double width in Kitty.
+--     - `nf-md-*` (UTF codes seem to be more thought through). It also has
+--       correct double width in Kitty.
 --     - `nf-dev-*` (more supported devicons).
 --     - `nf-seti-*` (more up to date extensions).
+--     - `nf-custom-*` (niche Nerd Fonts only glyphs).
 -- - If filetype is present in 'nvim-web-devicons', use highlight group with
 --   most similar hue (based on OKLCH color space with equally spaced grid as
 --   in 'mini.hues' and chroma=3 for grey cutoff; adjust manually if needed).
