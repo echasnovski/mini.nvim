@@ -696,6 +696,10 @@ H.default_icons = {
 -- Directory icons. Keys are some popular *language-agnostic* directory
 -- basenames. Use only "folder-shaped" glyphs while prefering `nf-md-folder-*`
 -- classes (unless glyph is designed specifically for the directory name)
+-- Common sets:
+-- - Use `MiniIconsOrange` for typical HOME directories.
+-- - Use green '󱁽' for Neovim runtime directories (if name isn't too general).
+-- - Use `MiniIconsRed` only for 'mini.nvim' directory.
 --stylua: ignore
 H.directory_icons = {
   ['.cache']    = { glyph = '󰪺', hl = 'MiniIconsCyan'   },
@@ -722,29 +726,48 @@ H.directory_icons = {
   Users         = { glyph = '󰉌', hl = 'MiniIconsOrange' },
   Videos        = { glyph = '󱞊', hl = 'MiniIconsOrange' },
   Volumes       = { glyph = '󰉓', hl = 'MiniIconsOrange' },
+  autoload      = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   bin           = { glyph = '󱧺', hl = 'MiniIconsYellow' },
   build         = { glyph = '󱧼', hl = 'MiniIconsGrey'   },
   boot          = { glyph = '󰴋', hl = 'MiniIconsYellow' },
+  colors        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  compiler      = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   dev           = { glyph = '󱧼', hl = 'MiniIconsYellow' },
   doc           = { glyph = '󱂷', hl = 'MiniIconsPurple' },
   docs          = { glyph = '󱂷', hl = 'MiniIconsPurple' },
   etc           = { glyph = '󱁿', hl = 'MiniIconsYellow' },
+  ftdetect      = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  ftplugin      = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   home          = { glyph = '󱂵', hl = 'MiniIconsYellow' },
+  indent        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  keymap        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  lang          = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   lib           = { glyph = '󰲂', hl = 'MiniIconsYellow' },
+  lsp           = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  lua           = { glyph = '󰉋', hl = 'MiniIconsBlue'   },
   media         = { glyph = '󱧺', hl = 'MiniIconsYellow' },
   mnt           = { glyph = '󰉓', hl = 'MiniIconsYellow' },
   ['mini.nvim'] = { glyph = '󰚝', hl = 'MiniIconsRed'    },
   node_modules  = { glyph = '', hl = 'MiniIconsGreen'  },
   nvim          = { glyph = '󰉋', hl = 'MiniIconsGreen'  },
   opt           = { glyph = '󰉗', hl = 'MiniIconsYellow' },
+  pack          = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  parser        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  plugin        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   proc          = { glyph = '󰢬', hl = 'MiniIconsYellow' },
+  queries       = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
+  rplugin       = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   root          = { glyph = '󰷌', hl = 'MiniIconsYellow' },
   sbin          = { glyph = '󱧺', hl = 'MiniIconsYellow' },
+  spell         = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   src           = { glyph = '󰴉', hl = 'MiniIconsPurple' },
   srv           = { glyph = '󱋣', hl = 'MiniIconsYellow' },
+  snippets      = { glyph = '󱁽', hl = 'MiniIconsYellow' },
+  syntax        = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   tmp           = { glyph = '󰪺', hl = 'MiniIconsYellow' },
   test          = { glyph = '󱞊', hl = 'MiniIconsBlue'   },
   tests         = { glyph = '󱞊', hl = 'MiniIconsBlue'   },
+  tutor         = { glyph = '󱁽', hl = 'MiniIconsGreen'  },
   usr           = { glyph = '󰉌', hl = 'MiniIconsYellow' },
   var           = { glyph = '󱋣', hl = 'MiniIconsYellow' },
 }
