@@ -401,7 +401,8 @@ T['open()']['uses icon provider'] = function()
   --stylua: ignore
   eq(get_extmarks_hl(), {
     'MiniIconsAzure', 'MiniFilesDirectory',
-    'MiniIconsAzure', 'MiniFilesDirectory',
+    -- 'lua' directory has special highlighting
+    'MiniIconsBlue', 'MiniFilesDirectory',
     'MiniIconsAzure', 'MiniFilesDirectory',
     'MiniIconsAzure', 'MiniFilesDirectory',
     'MiniIconsAzure', 'MiniFilesFile',
