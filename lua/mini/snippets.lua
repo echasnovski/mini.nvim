@@ -241,6 +241,7 @@
 --- - Variable `TM_SELECTED_TEXT` is resolved as contents of |quote_quote| register.
 ---   It assumes that text is put there prior to expanding. For example, visually
 ---   select, press |c|, type prefix, and expand.
+---   See |MiniSnippets-examples| for how to adjust this.
 --- - Environment variables are recognized and supported: `V1=$VIMRUNTIME` will
 ---   use an actual value of |$VIMRUNTIME|.
 --- - Variable transformations are not supported during snippet session. It would
@@ -440,6 +441,24 @@
 ---   end
 ---   local au_opts = { pattern = 'MiniSnippetsSessionJump', callback = fin_stop }
 ---   vim.api.nvim_create_autocmd('User', au_opts)
+--- <
+--- # Customize variable evaluation ~
+---
+--- Create environment variables and `config.expand.insert` wrapper: >lua
+---
+---   -- Use evnironment variables with value is same for all snippet sessions
+---   vim.loop.os_setenv('USERNAME', 'user')
+---
+---   -- Compute custom lookup for variables with dynamic values
+---   local insert_with_lookup = function(snippet)
+---     local lookup = { TM_SELECTED_TEXT = vim.fn.getreg('*') }
+---     return MiniSnippets.default_insert(snippet, { lookup = lookup })
+---   end
+---
+---   require('mini.snippets').setup({
+---     -- ... Set up snippets ...
+---     expand = { insert = insert_with_lookup },
+---   })
 --- <
 --- # Using Neovim's built-ins to insert snippet ~
 ---
@@ -1245,8 +1264,8 @@ end
 ---     Default: "•".
 ---   - <empty_tabstop_final> `(string)` - used to visualize empty final tabstop(s).
 ---     Default: "∎".
----   - <lookup> `(table)` - passed to |MiniSnippets.parse()|.
----     Default: `{}`.
+---   - <lookup> `(table)` - passed to |MiniSnippets.parse()|. Use it to adjust
+---     how variables are evaluated. Default: `{}`.
 MiniSnippets.default_insert = function(snippet, opts)
   if not H.is_snippet(snippet) then H.error('`snippet` should be a snippet table') end
 

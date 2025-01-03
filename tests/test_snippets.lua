@@ -4731,7 +4731,7 @@ T['Examples']['stop session after jump to final tabstop'] = function()
   validate_no_active_session()
 end
 
-T['Examples']['select from all'] = function()
+T['Examples']['expand all'] = function()
   child.lua([[
     local rhs = function() MiniSnippets.expand({ match = false }) end
     vim.keymap.set('i', '<C-g><C-j>', rhs, { desc = 'Expand all' })
@@ -4746,6 +4746,27 @@ T['Examples']['select from all'] = function()
   mock_select(3)
   type_keys('i', 'a', '<C-g><C-j>')
   validate_state('i', { 'aXX=' }, { 1, 4 })
+end
+
+T['Examples']['customize variable evaluation'] = function()
+  child.lua([[
+    vim.loop.os_setenv('USERNAME', 'user')
+    local insert_with_lookup = function(snippet)
+      local lookup = { TM_SELECTED_TEXT = vim.fn.getreg('a') }
+      return MiniSnippets.default_insert(snippet, { lookup = lookup })
+    end
+
+    require('mini.snippets').setup({
+      snippets = { { prefix = 't', body = '$USERNAME $TM_SELECTED_TEXT' } },
+      expand = { insert = insert_with_lookup },
+    })
+  ]])
+
+  child.fn.setreg('a', 'aaa')
+  child.fn.setreg('"', 'xxx')
+
+  type_keys('i', 't', '<C-j>')
+  validate_state('i', { 'user aaa' }, { 1, 8 })
 end
 
 T['Examples']['<Tab>/<S-Tab> mappings'] = function()
