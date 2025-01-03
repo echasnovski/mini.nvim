@@ -2271,8 +2271,9 @@ H.session_sync_current_tabstop = function(session)
   session._no_sync = nil
   H.session_ensure_gravity(session)
 
-  -- Maybe show choices
-  if cur_text == '' then H.show_completion(ref_node.choices) end
+  -- Maybe show choices for empty tabstop at cursor
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  if cur_text == '' and cur_pos[1] == (row + 1) and cur_pos[2] == col then H.show_completion(ref_node.choices) end
 
   -- Make highlighting up to date
   H.session_update_hl(session)

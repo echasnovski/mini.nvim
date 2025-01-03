@@ -3700,6 +3700,14 @@ T['Session']['choices']['are shown only when needed'] = function()
   validate_no_pumvisible()
   type_keys('<BS>')
   validate_no_pumvisible()
+
+  -- Not when editing text with current tabstop having no text
+  jump('prev')
+  type_keys(' ', '<BS>')
+  validate_pumitems({ 'aa', 'bb' })
+  type_keys('<Left>', '<Left>')
+  type_keys('x')
+  validate_no_pumvisible()
 end
 
 T['Session']['choices']['are always shown all at once'] = function()
