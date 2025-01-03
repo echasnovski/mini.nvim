@@ -1412,6 +1412,38 @@ MiniSnippets.parse = function(snippet_body, opts)
   return opts.normalize and H.parse_normalize(nodes, opts) or nodes
 end
 
+--- Add custom variable evaluators to the global evaluator table.
+---
+--- This function allows you to add or extend the `H.var_evaluators` table with custom evaluators.
+--- The evaluators define dynamic values that can be used within snippets, such as the current line,
+--- selected text, or custom-defined variables.
+---
+--- The provided `opts` will be deeply merged with the existing evaluators, ensuring that the new evaluators
+--- are added without removing any previously defined ones.
+---
+---@param opts table|nil Options for custom variable evaluators. The structure should be a table of key-value pairs
+---   where keys are evaluator names (e.g., `TM_SELECTED_TEXT`) and values are functions that return the
+---   desired evaluation result.
+---
+---   Example:
+---   ```lua
+---   MiniSnippets.add_variable_evaluators({
+---     MY_VARIABLE = function() return "Custom Value" end,
+---   })
+---   ```
+---
+---
+---@usage >lua
+---   -- Add custom evaluators
+---   MiniSnippets.add_variable_evaluators({
+---     MY_CUSTOM_VAR = function() return "Some Value" end,
+---   })
+---
+--- <
+MiniSnippets.add_variable_evaluators = function(opts)
+  H.var_evaluators = vim.tbl_deep_extend('force', H.var_evaluators, opts or {})
+end
+
 -- TODO: Implement this when adding snippet support in 'mini.completion'
 -- MiniSnippets.mock_lsp_server = function() end
 
