@@ -1801,6 +1801,46 @@ T['default_insert()']['indent']['respects manual lookup entries'] = function()
   validate_state('i', { ' \tT1=tab', ' \tstop', ' \tAAA=aaa', ' \tbbb' }, { 2, 6 })
 end
 
+T['default_insert()']['indent']['is the same for all lines in variables'] = function()
+  child.fn.setenv('AA', 'aa\nbb\n\tcc')
+  child.fn.setenv('BB', 'bb\n')
+
+  local validate = function(body, ref_lines)
+    default_insert({ body = body })
+    validate_state('i', ref_lines, nil)
+    ensure_clean_state()
+  end
+
+  validate('  $AA', { '  aa', '  bb', '  \tcc' })
+  validate('\t$AA', { '\taa', '\tbb', '\t\tcc' })
+  validate('  $BB', { '  bb', '  ' })
+
+  validate('text\n  $AA', { 'text', '  aa', '  bb', '  \tcc' })
+
+  validate('  ${XX:$AA}', { '  aa', '  bb', '  \tcc' })
+  validate('${XX:  $AA}', { '  aa', '  bb', '  \tcc' })
+  validate('${XX:  ${UU:\t$AA}}', { '  \taa', '  \tbb', '  \t\tcc' })
+  validate('  ${1:$AA}', { '  aa', '  bb', '  \tcc' })
+
+  -- Should respect values of previously inserted dynamic text
+  child.fn.setenv('XX', 'xx\n  ')
+  validate('$XX$AA', { 'xx', '  aa', '  bb', '  \tcc' })
+  validate('$XX\t$AA', { 'xx', '  \taa', '  \tbb', '  \t\tcc' })
+
+  -- Should also work with comments
+  child.bo.commentstring = '# %s'
+  type_keys('i', '#  ')
+  validate('$BB$AA', { '#  bb', '#  aa', '#  bb', '#  \tcc' })
+
+  -- As there is no indent "inside snippet body", AA is not reindented
+  -- This might be not a good behavior, but fix seems complicated
+  validate('  $BB$AA', { '  bb', '  aa', 'bb', '\tcc' })
+
+  -- Should work with 'expandtab'
+  child.bo.expandtab, child.bo.shiftwidth = true, 2
+  validate('\t$AA', { '  aa', '  bb', '    cc' })
+end
+
 T['default_insert()']['triggers start/stop events'] = function()
   local make_ref_data = function(snippet_body)
     return { session = { insert_args = { snippet = { body = snippet_body } } } }
@@ -4315,7 +4355,7 @@ T['Various snippets']['var'] = function()
   validate('$RANDOM ${RANDOM}', { '491985 873024' }, { 1, 13 })
 
   child.fn.setreg('"', 'abc\n')
-  validate('<tag>\n\t$TM_SELECTED_TEXT\n</tag>', { '<tag>', '\tabc', '', '</tag>' }, { 4, 6 })
+  validate('<tag>\n\t$TM_SELECTED_TEXT\n</tag>', { '<tag>', '\tabc', '\t', '</tag>' }, { 4, 6 })
 
   -- Placeholders
   validate('var=$AAA', { 'var=' }, { 1, 4 })

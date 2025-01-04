@@ -2369,7 +2369,11 @@ H.session_deinit = function(session, full)
   if not H.cache.stop_is_auto then H.hide_completion() end
 end
 
-H.nodes_set_text = function(buf_id, nodes, tracking_extmark_id, indent)
+H.nodes_set_text = function(buf_id, nodes, tracking_extmark_id, indent, cur_body_line)
+  local sw = vim.bo.shiftwidth
+  local tab_text = vim.bo.expandtab and string.rep(' ', sw == 0 and vim.bo.tabstop or sw) or '\t'
+
+  cur_body_line = cur_body_line or ''
   for _, n in ipairs(nodes) do
     -- Add tracking extmark
     local _, _, row, col = H.extmark_get_range(buf_id, tracking_extmark_id)
@@ -2377,16 +2381,18 @@ H.nodes_set_text = function(buf_id, nodes, tracking_extmark_id, indent)
 
     -- Adjust node's text and append it to currently set text
     if n.text ~= nil then
-      local new_text = n.text:gsub('\n', '\n' .. indent)
-      if vim.bo.expandtab then
-        local sw = vim.bo.shiftwidth
-        new_text = new_text:gsub('\t', string.rep(' ', sw == 0 and vim.bo.tabstop or sw))
-      end
+      -- Make all lines (not only first) in variable have same "outer" indent
+      local body_indent = n.var == nil and '' or cur_body_line:match('^%s*')
+      local new_text = n.text:gsub('\n', '\n' .. indent .. body_indent):gsub('\t', tab_text)
       H.extmark_set_text(buf_id, tracking_extmark_id, 'right', new_text)
+
+      -- NOTE: Compute current body line *before* setting node's actual text
+      cur_body_line = (cur_body_line .. n.text):match('[^\n]*$')
+      n.text = new_text
     end
 
     -- Process (possibly nested) placeholder nodes
-    if n.placeholder ~= nil then H.nodes_set_text(buf_id, n.placeholder, tracking_extmark_id, indent) end
+    if n.placeholder ~= nil then H.nodes_set_text(buf_id, n.placeholder, tracking_extmark_id, indent, cur_body_line) end
 
     -- Make sure that node's extmark doesn't move when adding next node text
     H.extmark_set_gravity(buf_id, n.extmark_id, 'left')
