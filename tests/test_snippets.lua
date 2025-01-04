@@ -1918,12 +1918,12 @@ T['default_insert()']['treats any digit sequence as unique tabstop'] = function(
 end
 
 T['default_insert()']['can work with special variables'] = function()
-  -- Prepare linewise selected text which ends with "\n" and adds extra line
-  set_lines({ 'sel' })
-  type_keys('dd')
+  -- Prepare linewise selected text which should not end add extra line
+  set_lines({ 'sel', 'text' })
+  type_keys('dip')
 
   default_insert({ body = 'Selected=$TM_SELECTED_TEXT\n$TM_LINE_NUMBER\n$WORKSPACE_FOLDER\n$1' })
-  validate_state('i', { 'Selected=sel', '', '1', child.fn.getcwd(), '' }, { 5, 0 })
+  validate_state('i', { 'Selected=sel', 'text', '1', child.fn.getcwd(), '' }, { 5, 0 })
 end
 
 T['default_insert()']['respects `opts.empty_tabstop` and `opts.empty_tabstop_final`'] = function()
@@ -4355,7 +4355,7 @@ T['Various snippets']['var'] = function()
   validate('$RANDOM ${RANDOM}', { '491985 873024' }, { 1, 13 })
 
   child.fn.setreg('"', 'abc\n')
-  validate('<tag>\n\t$TM_SELECTED_TEXT\n</tag>', { '<tag>', '\tabc', '\t', '</tag>' }, { 4, 6 })
+  validate('<tag>\n\t$TM_SELECTED_TEXT\n</tag>', { '<tag>', '\tabc', '</tag>' }, { 3, 6 })
 
   -- Placeholders
   validate('var=$AAA', { 'var=' }, { 1, 4 })
@@ -4398,7 +4398,7 @@ T['Various snippets']['transform'] = function()
   -- Should ignore present transform (for now) in both variables and tabstops
   child.fn.setreg('"', 'abc\n')
   start_session('Upcase=${TM_SELECTED_TEXT/.*/upcase/}')
-  validate_state('i', { 'Upcase=abc', '' }, { 2, 0 })
+  validate_state('i', { 'Upcase=abc' }, { 1, 10 })
   ensure_clean_state()
 
   start_session('Upcase=${1/.*/upcase/};')
@@ -4800,7 +4800,9 @@ T['Examples']['customize variable evaluation'] = function()
   child.lua([[
     vim.loop.os_setenv('USERNAME', 'user')
     local insert_with_lookup = function(snippet)
-      local lookup = { TM_SELECTED_TEXT = vim.fn.getreg('a') }
+      local lookup = {
+        TM_SELECTED_TEXT = table.concat(vim.fn.getreg('a', true, true), '\n'),
+      }
       return MiniSnippets.default_insert(snippet, { lookup = lookup })
     end
 
@@ -4810,11 +4812,11 @@ T['Examples']['customize variable evaluation'] = function()
     })
   ]])
 
-  child.fn.setreg('a', 'aaa')
-  child.fn.setreg('"', 'xxx')
+  type_keys('i', 'aa<CR>bb', '<Esc>', '"adip')
+  type_keys('i', 'xx', '<Esc>', 'dip')
 
   type_keys('i', 't', '<C-j>')
-  validate_state('i', { 'user aaa' }, { 1, 8 })
+  validate_state('i', { 'user aa', 'bb' }, { 2, 2 })
 end
 
 T['Examples']['<Tab>/<S-Tab> mappings'] = function()

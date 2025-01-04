@@ -454,7 +454,9 @@ Create environment variables and `config.expand.insert` wrapper: >lua
 
   -- Compute custom lookup for variables with dynamic values
   local insert_with_lookup = function(snippet)
-    local lookup = { TM_SELECTED_TEXT = vim.fn.getreg('*') }
+    local lookup = {
+      TM_SELECTED_TEXT = table.concat(vim.fn.getreg('a', true, true), '\n'),
+    }
     return MiniSnippets.default_insert(snippet, { lookup = lookup })
   end
 

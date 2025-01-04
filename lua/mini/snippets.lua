@@ -451,7 +451,9 @@
 ---
 ---   -- Compute custom lookup for variables with dynamic values
 ---   local insert_with_lookup = function(snippet)
----     local lookup = { TM_SELECTED_TEXT = vim.fn.getreg('*') }
+---     local lookup = {
+---       TM_SELECTED_TEXT = table.concat(vim.fn.getreg('a', true, true), '\n'),
+---     }
 ---     return MiniSnippets.default_insert(snippet, { lookup = lookup })
 ---   end
 ---
@@ -1940,7 +1942,7 @@ end
 --stylua: ignore
 H.var_evaluators = {
   -- LSP
-  TM_SELECTED_TEXT = function() return vim.fn.getreg('"') end,
+  TM_SELECTED_TEXT = function() return table.concat(vim.fn.getreg('"', true, true), '\n') end,
   TM_CURRENT_LINE  = function() return vim.api.nvim_get_current_line() end,
   TM_CURRENT_WORD  = function() return vim.fn.expand('<cword>') end,
   TM_LINE_INDEX    = function() return tostring(vim.fn.line('.') - 1) end,
