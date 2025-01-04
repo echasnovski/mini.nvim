@@ -128,10 +128,7 @@ Typing `tis` and pressing "expand" mapping (`<C-j>` by default) will remove "tis
 
 ### Syntax
 
-Inserting just text after typing smaller prefix is already powerful enough.
-For more flexibility, snippet body can be formatted in a special way to
-provide extra features. This module implements support for syntax defined
-in [LSP specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#snippet_syntax) (with small deviations).
+Inserting just text after typing smaller prefix is already powerful enough. For more flexibility, snippet body can be formatted in a special way to provide extra features. This module implements support for syntax defined in [LSP specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#snippet_syntax) (with small deviations).
 
 A quick overview of basic syntax features:
 
@@ -145,14 +142,11 @@ A quick overview of basic syntax features:
 
 - Tabstop can have placeholder: a text used if tabstop is not yet edited. Text is preserved if no editing is done. It follows this same syntax, which means it can itself contain tabstops with placeholders (i.e. be nested). Tabstop with placeholder is denoted as `${1:placeholder}` (`$1` is `${1:}`).
 
-  Example: `T1=${1:text} T2=${2:<$1>}` is expanded as `T1=text T2=<text>`;
-           typing `x` at first placeholder results in `T1=x T2=<x>`;
-           jumping once and typing `y` results in `T1=x T2=y`.
+  Example: `T1=${1:text} T2=${2:<$1>}` is expanded as `T1=text T2=<text>`; typing `x` at first placeholder results in `T1=x T2=<x>`; jumping once and typing `y` results in `T1=x T2=y`.
 
 - There can be several tabstops with same identifier. They are linked and updated in sync during text editing. Can also have different placeholders; they are forced to be the same as in the first (from left to right) tabstop.
 
-  Example: `T1=${1:text} T1=$1` is expanded as `T1=text T1=text`;
-           typing `x` at first placeholder results in `T1=x T1=x`.
+  Example: `T1=${1:text} T1=$1` is expanded as `T1=text T1=text`; typing `x` at first placeholder results in `T1=x T1=x`.
 
 - Tabstop can also have choices: suggestions about tabstop text. It is denoted as `${1|a,b,c|}`. Choices are shown (with `:h ins-completion` like interface) after jumping to tabstop. First choice is used as placeholder.
 
@@ -160,13 +154,11 @@ A quick overview of basic syntax features:
 
 - Variables can be used to automatically insert text without user interaction. As tabstops, each one can have a placeholder which is used if variable is not defined. There is a special set of variables describing editor state.
 
-  Example: `V1=$TM_FILENAME V2=${NOTDEFINED:placeholder}` is expanded as
-           `V1=current-file-basename V2=placeholder`.
+  Example: `V1=$TM_FILENAME V2=${NOTDEFINED:placeholder}` is expanded as `V1=current-file-basename V2=placeholder`.
 
 There are several differences LSP specification: not supporting variable transformations, wider set of supported special variables, and couple more. For more details see `:h MiniSnippets-syntax-specification`.
 
-There is a `:h MiniSnippets.parse()` function for programmatically parsing
-snippet body into a comprehensible data structure.
+There is a `:h MiniSnippets.parse()` function for programmatically parsing snippet body into a comprehensible data structure.
 
 ### Expand
 
@@ -204,11 +196,9 @@ For more details about snippet session see `:h MiniSnippets-session`.
 
 **Important**: Out of the box 'mini.snippets' doesn't load any snippets, it should be done explicitly inside `:h MiniSnippets.setup()` following `:h MiniSnippets.config`.
 
-The suggested approach to snippet management is to create dedicated files with snippet data and load them through function loaders in `config.snippets`.
-See [Quickstart](#quickstart) for basic (yet capable) snippet management config.
+The suggested approach to snippet management is to create dedicated files with snippet data and load them through function loaders in `config.snippets`. See [Quickstart](#quickstart) for basic (yet capable) snippet management config.
 
-General idea of supported files is to have at least out of the box experience
-with common snippet collections. Namely [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets).
+General idea of supported files is to have at least out of the box experience with common snippet collections. Namely [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets).
 
 The following files are supported:
 
