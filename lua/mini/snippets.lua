@@ -33,7 +33,7 @@
 ---     - Configurable mappings for jumping and stopping.
 ---     - Jumping wraps around the tabstops for easier navigation.
 ---     - Easy to reason rules for when session automatically stops.
----     - Text synchronization of linked tabstops.
+---     - Text synchronization of linked tabstops preserving relative indent.
 ---     - Dynamic tabstop state visualization (current/visited/unvisited, etc.)
 ---     - Inline visualization of empty tabstops (requires Neovim>=0.10).
 ---     - Works inside comments by preserving comment leader on new lines.
@@ -352,7 +352,7 @@
 ---     "Basic":        { "prefix": "ba", "body": "T1=$1 T2=$2 T0=$0"         },
 ---     "Placeholders": { "prefix": "pl", "body": "T1=${1:aa}\nT2=${2:<$1>}"  },
 ---     "Choices":      { "prefix": "ch", "body": "T1=${1|a,b|} T2=${2|c,d|}" },
----     "Linked":       { "prefix": "li", "body": "T1=$1\nT1=$1"              },
+---     "Linked":       { "prefix": "li", "body": "T1=$1\n\tT1=$1"            },
 ---     "Variables":    { "prefix": "va", "body": "Runtime: $VIMRUNTIME\n"    },
 ---     "Complex":      {
 ---       "prefix": "co",
@@ -1183,6 +1183,8 @@ end
 ---     - After first typed character the placeholder is removed and highlighting
 ---       changes from `MiniSnippetsCurrentReplace` to `MiniSnippetsCurrent`.
 ---     - Text in all tabstop nodes is synchronized with the reference one.
+---       Relative indent of reference tabstop's text is preserved: all but first
+---       lines in linked tabstops are reindented based on the first line indent.
 ---       Note: text sync is forced only for current tabstop (for performance).
 ---
 --- - Jump with <C-l> / <C-h> to next / previous tabstop. Exact keys can be
@@ -2019,8 +2021,9 @@ H.session_init = function(session, full)
 
   -- Prepare
   if full then
-    -- Set buffer text
-    H.nodes_set_text(buf_id, session.nodes, session.extmark_id, H.get_indent())
+    -- Set buffer text preserving snippet text relative indent
+    local indent = H.get_indent(vim.fn.getline('.'):sub(1, vim.fn.col('.') - 1))
+    H.nodes_set_text(buf_id, session.nodes, session.extmark_id, indent)
 
     -- No session if no input needed: single final tabstop without placeholder
     if session.cur_tabstop == '0' then
@@ -2227,7 +2230,7 @@ H.session_sync_current_tabstop = function(session)
 
   -- With present placeholder, decide whether there was a valid change (then
   -- remove placeholder) or not (then no sync)
-  -- NOTE: Only current tabstop is synced *and* only if after its first edit is
+  -- NOTE: Only current tabstop is synced *and* only after its first edit is
   -- mostly done to limit code complexity. This is a reasonable compromise
   -- together with `parse()` syncing all tabstops in its normalization. Doing
   -- more is better for cases which are outside of suggested workflow (like
@@ -2242,11 +2245,13 @@ H.session_sync_current_tabstop = function(session)
     ref_node.placeholder = nil
   end
 
-  -- Compute target text
+  -- Compute reference text: dedented version of reference node's text to later
+  -- reindent linked tabstops so that they preserve relative indent
   local row, col, end_row, end_col = H.extmark_get_range(buf_id, ref_extmark_id)
-  local cur_text = vim.api.nvim_buf_get_text(0, row, col, end_row, end_col, {})
-  cur_text = table.concat(cur_text, '\n')
-  ref_node.text = cur_text
+  local ref_text = vim.api.nvim_buf_get_text(0, row, col, end_row, end_col, {})
+  ref_node.text = table.concat(ref_text, '\n')
+
+  ref_text = H.dedent(ref_text, row, col)
 
   -- Sync nodes with current tabstop to have text from reference node
   local cur_tabstop = session.cur_tabstop
@@ -2256,9 +2261,14 @@ H.session_sync_current_tabstop = function(session)
     H.extmark_set_gravity(buf_id, n.extmark_id, 'expand')
     if not (n.tabstop == cur_tabstop and n.extmark_id ~= ref_extmark_id) then return end
 
+    -- Ensure no placeholder because reference doesn't have one
     if n.placeholder ~= nil then H.nodes_del(buf_id, n.placeholder) end
-    H.extmark_set_text(buf_id, n.extmark_id, 'inside', cur_text)
-    n.placeholder, n.text = nil, cur_text
+
+    -- Set reference text reindented based on the start line's indent
+    local cur_row, cur_col, cur_end_row, cur_end_col = H.extmark_get_range(buf_id, n.extmark_id)
+    local cur_text = H.reindent(vim.deepcopy(ref_text), cur_row, cur_col)
+    vim.api.nvim_buf_set_text(buf_id, cur_row, cur_col, cur_end_row, cur_end_col, cur_text)
+    n.placeholder, n.text = nil, table.concat(cur_text, '\n')
   end
   local sync_cleanup = function(n)
     -- Make sure node's extmark doesn't move when setting later text
@@ -2275,7 +2285,7 @@ H.session_sync_current_tabstop = function(session)
 
   -- Maybe show choices for empty tabstop at cursor
   local cur_pos = vim.api.nvim_win_get_cursor(0)
-  if cur_text == '' and cur_pos[1] == (row + 1) and cur_pos[2] == col then H.show_completion(ref_node.choices) end
+  if ref_node.text == '' and cur_pos[1] == (row + 1) and cur_pos[2] == col then H.show_completion(ref_node.choices) end
 
   -- Make highlighting up to date
   H.session_update_hl(session)
@@ -2383,8 +2393,8 @@ H.nodes_set_text = function(buf_id, nodes, tracking_extmark_id, indent, cur_body
 
     -- Adjust node's text and append it to currently set text
     if n.text ~= nil then
-      -- Make all lines (not only first) in variable have same "outer" indent
-      local body_indent = n.var == nil and '' or cur_body_line:match('^%s*')
+      -- Make variable/tabstop lines preserve relative indent
+      local body_indent = (n.var == nil and n.tabstop == nil) and '' or H.get_indent(cur_body_line)
       local new_text = n.text:gsub('\n', '\n' .. indent .. body_indent):gsub('\t', tab_text)
       H.extmark_set_text(buf_id, tracking_extmark_id, 'right', new_text)
 
@@ -2481,11 +2491,9 @@ H.extmark_set_text = function(buf_id, ext_id, side, text)
 end
 
 -- Indent ---------------------------------------------------------------------
-H.get_indent = function(lnum)
-  local line, comment_indent = vim.fn.getline(lnum or '.'), ''
-  -- Compute "indent at cursor"
-  local trunc_col = (lnum == nil or lnum == '.') and (vim.fn.col('.') - 1) or line:len()
-  line = line:sub(1, trunc_col)
+H.get_indent = function(line)
+  line = line or vim.fn.getline('.')
+  local comment_indent = ''
   -- Treat comment leaders as part of indent
   for _, leader in ipairs(H.get_comment_leaders()) do
     local cur_match = line:match('^%s*' .. vim.pesc(leader) .. '%s*')
@@ -2518,6 +2526,37 @@ H.get_comment_leaders = function()
   end
 
   return res
+end
+
+H.dedent = function(lines, row, col)
+  if #lines <= 1 then return lines end
+  -- Compute common (smallest) indent width. Not accounting for actual indent
+  -- characters is easier and works for common cases but breaks for weird ones,
+  -- like `# a\n\t# b`.
+  local init_line_at_pos = vim.fn.getline(row + 1):sub(1, col)
+  local indent_width = H.get_indent(init_line_at_pos):len()
+  for i = 2, #lines do
+    -- Don't count "only indent" lines (i.e. blank with/without comment leader)
+    local cur_indent = H.get_indent(lines[i])
+    if cur_indent:len() < indent_width and cur_indent ~= lines[i] then indent_width = cur_indent:len() end
+  end
+
+  for i = 2, #lines do
+    lines[i] = lines[i]:sub(indent_width + 1)
+  end
+
+  return lines
+end
+
+H.reindent = function(lines, row, col)
+  if #lines <= 1 then return lines end
+  local init_line_at_pos = vim.fn.getline(row + 1):sub(1, col)
+  local indent = H.get_indent(init_line_at_pos)
+  for i = 2, #lines do
+    -- NOTE: reindent even "pure indent" lines, as it seems more natural
+    lines[i] = indent .. lines[i]
+  end
+  return lines
 end
 
 -- Validators -----------------------------------------------------------------

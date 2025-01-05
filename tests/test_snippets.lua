@@ -1801,7 +1801,7 @@ T['default_insert()']['indent']['respects manual lookup entries'] = function()
   validate_state('i', { ' \tT1=tab', ' \tstop', ' \tAAA=aaa', ' \tbbb' }, { 2, 6 })
 end
 
-T['default_insert()']['indent']['is the same for all lines in variables'] = function()
+T['default_insert()']['indent']['preserves relative indent in variables'] = function()
   child.fn.setenv('AA', 'aa\nbb\n\tcc')
   child.fn.setenv('BB', 'bb\n')
 
@@ -1814,8 +1814,10 @@ T['default_insert()']['indent']['is the same for all lines in variables'] = func
   validate('  $AA', { '  aa', '  bb', '  \tcc' })
   validate('\t$AA', { '\taa', '\tbb', '\t\tcc' })
   validate('  $BB', { '  bb', '  ' })
-
   validate('text\n  $AA', { 'text', '  aa', '  bb', '  \tcc' })
+
+  validate('$AA\n\t$AA', { 'aa', 'bb', '\tcc', '\taa', '\tbb', '\t\tcc' })
+  validate('\t$AA\n$AA', { '\taa', '\tbb', '\t\tcc', 'aa', 'bb', '\tcc' })
 
   validate('  ${XX:$AA}', { '  aa', '  bb', '  \tcc' })
   validate('${XX:  $AA}', { '  aa', '  bb', '  \tcc' })
@@ -1832,13 +1834,62 @@ T['default_insert()']['indent']['is the same for all lines in variables'] = func
   type_keys('i', '#  ')
   validate('$BB$AA', { '#  bb', '#  aa', '#  bb', '#  \tcc' })
 
+  validate('$AA\n# $AA', { 'aa', 'bb', '\tcc', '# aa', '# bb', '# \tcc' })
+
   -- As there is no indent "inside snippet body", AA is not reindented
   -- This might be not a good behavior, but fix seems complicated
   validate('  $BB$AA', { '  bb', '  aa', 'bb', '\tcc' })
 
+  -- Should work with decreasing indent in variable lines
+  child.fn.setenv('YY', '  xx\nyy')
+  validate('\t$YY', { '\t  xx', '\tyy' })
+
   -- Should work with 'expandtab'
   child.bo.expandtab, child.bo.shiftwidth = true, 2
   validate('\t$AA', { '  aa', '  bb', '    cc' })
+end
+
+T['default_insert()']['indent']['preserves relative indent in looked up tabstop text'] = function()
+  local validate = function(body, tabstop_text, ref_lines)
+    default_insert({ body = body }, { lookup = { ['1'] = tabstop_text } })
+    validate_state('i', ref_lines, nil)
+    ensure_clean_state()
+  end
+
+  validate('  $1', 'aa\nbb', { '  aa', '  bb' })
+  validate('\t$1', 'aa\nbb', { '\taa', '\tbb' })
+  validate('text\n  $1', 'aa\nbb', { 'text', '  aa', '  bb' })
+
+  validate('  $1', '  aa\nbb', { '    aa', '  bb' })
+  validate('  $1', 'aa\n  bb', { '  aa', '    bb' })
+
+  -- Should work with linked tabstops
+  validate('$1\n\t$1', 'aa\nbb', { 'aa', 'bb', '\taa', '\tbb' })
+  validate('\t$1\n$1', 'aa\nbb', { '\taa', '\tbb', 'aa', 'bb' })
+
+  validate('$1\n${2:\t$1}', 'aa\nbb', { 'aa', 'bb', '\taa', '\tbb' })
+  validate('$1\n\t${2:$1}', 'aa\nbb', { 'aa', 'bb', '\taa', '\tbb' })
+
+  -- Should work with variables
+  child.fn.setenv('XX', 'xx\n  ')
+  validate('$XX$1', 'aa\nbb', { 'xx', '  aa', '  bb' })
+
+  -- Should work in placeholders
+  validate('${2:  $1}', 'aa\nbb', { '  aa', '  bb' })
+  validate('${AA:  $1}', 'aa\nbb', { '  aa', '  bb' })
+
+  -- Should also work with comments
+  child.bo.commentstring = '# %s'
+  type_keys('i', '#  ')
+  validate('$1', 'aa\nbb', { '#  aa', '#  bb' })
+
+  validate('$1\n# $1', 'aa\nbb', { 'aa', 'bb', '# aa', '# bb' })
+
+  -- Should work with 'expandtab'
+  child.bo.expandtab, child.bo.shiftwidth = true, 2
+  validate('\t$1', 'aa\nbb', { '  aa', '  bb' })
+  validate('\t$1', 'aa\n\tbb', { '  aa', '    bb' })
+  child.bo.expandtab = false
 end
 
 T['default_insert()']['triggers start/stop events'] = function()
@@ -1875,6 +1926,27 @@ T['default_insert()']['respects tab-related options'] = function()
 
   default_insert({ body = '\ttext\t\t' })
   validate_state('i', { '\ttext\t\t' }, { 1, 7 })
+end
+
+T['default_insert()']['keeps node text up to date'] = function()
+  child.fn.setenv('AA', 'aa\nbb')
+  child.bo.expandtab, child.bo.shiftwidth = true, 2
+
+  default_insert({ body = '$1\n\t$AA' })
+  local ref_nodes = { { tabstop = '1' }, { text = '\n  ' }, { text = 'aa\n  bb' }, { tabstop = '0' } }
+  eq_partial_tbl(get().nodes, ref_nodes)
+
+  type_keys('x')
+  ref_nodes = { { tabstop = '1', text = 'x' }, { text = '\n  ' }, { text = 'aa\n  bb' }, { tabstop = '0' } }
+  eq_partial_tbl(get().nodes, ref_nodes)
+
+  ensure_clean_state()
+
+  -- Linked tabstops with relative indents
+  default_insert({ body = '$1\n\t$1' })
+  type_keys('xx<CR>yy')
+  ref_nodes = { { tabstop = '1', text = 'xx\nyy' }, { text = '\n  ' }, { text = 'xx\n  yy' }, { tabstop = '0' } }
+  eq_partial_tbl(get().nodes, ref_nodes)
 end
 
 T['default_insert()']['shows tabstop choices after start'] = function()
@@ -4039,6 +4111,77 @@ T['Session']['linked tabstops']['handle text change in not reference node'] = fu
   set_cursor(1, 16)
   type_keys('B')
   validate_state('i', { 'T1=yy T1=yy T1=yy' }, { 1, 17 })
+end
+
+T['Session']['relative indent'] = new_set()
+
+T['Session']['relative indent']['is preserved'] = function()
+  start_session('\tT1=$1\n\t\t$1\n$1')
+  validate_state('i', { '\tT1=', '\t\t', '' }, { 1, 4 })
+
+  type_keys('xx', '<CR>')
+  validate_state('i', { '\tT1=xx', '\t', '\t\txx', '\t\t', 'xx', '' }, { 2, 1 })
+
+  type_keys('yy')
+  validate_state('i', { '\tT1=xx', '\tyy', '\t\txx', '\t\tyy', 'xx', 'yy' }, { 2, 3 })
+
+  -- Should adjust on every sync (even if typing outside of tabstop range)
+  set_cursor(3, 1)
+  type_keys('<BS>')
+  validate_state('i', { '\tT1=xx', '\tyy', '\txx', '\tyy', 'xx', 'yy' }, { 3, 0 })
+end
+
+T['Session']['relative indent']['is preserved inside placeholder'] = function()
+  start_session('$1\n\t${2:$1}')
+  type_keys('aa<CR>bb')
+  validate_state('i', { 'aa', 'bb', '\taa', '\tbb' }, { 2, 2 })
+  ensure_clean_state()
+
+  start_session('$1\n${2:\t$1}')
+  type_keys('aa<CR>bb')
+  validate_state('i', { 'aa', 'bb', '\taa', '\tbb' }, { 2, 2 })
+end
+
+T['Session']['relative indent']['dedents reference text based on smallest indent'] = function()
+  start_session('\t$1\n\t\t$1')
+  type_keys('aa', '<CR><BS>', 'bb')
+  validate_state('i', { '\taa', 'bb', '\t\taa', '\t\tbb' }, { 2, 2 })
+  type_keys('<Left><Left>', '\t')
+  validate_state('i', { '\taa', '\tbb', '\t\taa', '\t\tbb' }, { 2, 1 })
+  type_keys('\t')
+  validate_state('i', { '\taa', '\t\tbb', '\t\taa', '\t\t\tbb' }, { 2, 2 })
+end
+
+T['Session']['relative indent']['dedents reference text ignoring "pure indent" lines during dedent'] = function()
+  type_keys('i', '  ')
+  start_session('$1\n\t$1')
+
+  type_keys('aa<CR><CR>bb')
+  -- "Pure indent" lines should still be reindented
+  validate_state('i', { '  aa', '', '  bb', '  \taa', '  \t', '  \tbb' }, { 3, 4 })
+end
+
+T['Session']['relative indent']['respects comments'] = function()
+  child.bo.commentstring = '# %s'
+
+  type_keys('i', '  #  ')
+  start_session('$1\n\t$1')
+  validate_state('i', { '  #  ', '  #  \t' }, { 1, 5 })
+
+  type_keys('aa<CR>bb')
+  validate_state('i', { '  #  aa', '  bb', '  #  \taa', '  #  \tbb' }, { 2, 4 })
+
+  type_keys('<Left><Left>#  ')
+  validate_state('i', { '  #  aa', '  #  bb', '  #  \taa', '  #  \tbb' }, { 2, 5 })
+
+  type_keys(' ')
+  validate_state('i', { '  #  aa', '  #   bb', '  #  \taa', '  #  \t bb' }, { 2, 6 })
+end
+
+T['Session']['relative indent']['does not use tabstop text during dedent'] = function()
+  start_session('  $1\n\t$1')
+  type_keys('  aa', '<CR>', 'bb')
+  validate_state('i', { '    aa', '    bb', '\t  aa', '\t  bb' }, { 2, 6 })
 end
 
 T['Session']['nesting'] = new_set({ hooks = { pre_case = setup_event_log } })

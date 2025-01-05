@@ -38,7 +38,7 @@ https://github.com/user-attachments/assets/2cb38960-a26c-48ae-83cd-5fbcaa57d1cf
     - Configurable mappings for jumping and stopping.
     - Jumping wraps around the tabstops for easier navigation.
     - Easy to reason rules for when session automatically stops.
-    - Text synchronization of linked tabstops.
+    - Text synchronization of linked tabstops preserving relative indent.
     - Dynamic tabstop state visualization (current/visited/unvisited, etc.)
     - Inline visualization of empty tabstops (requires Neovim>=0.10).
     - Works inside comments by preserving comment leader on new lines.
@@ -100,7 +100,7 @@ try them out yourself. Here are extra steps for a basic demo:
       "Basic":        { "prefix": "ba", "body": "T1=$1 T2=$2 T0=$0"         },
       "Placeholders": { "prefix": "pl", "body": "T1=${1:aa}\nT2=${2:<$1>}"  },
       "Choices":      { "prefix": "ch", "body": "T1=${1|a,b|} T2=${2|c,d|}" },
-      "Linked":       { "prefix": "li", "body": "T1=$1\nT1=$1"              },
+      "Linked":       { "prefix": "li", "body": "T1=$1\n\tT1=$1"            },
       "Variables":    { "prefix": "va", "body": "Runtime: $VIMRUNTIME\n"    },
       "Complex":      {
         "prefix": "co",
