@@ -11,7 +11,7 @@ starter.setup({
   },
   content_hooks = {
     starter.gen_hook.adding_bullet(),
-    starter.gen_hook.indexing('all', { 'Builtin actions' }),
+    starter.gen_hook.indexing('all', { exclude = 'Builtin actions' }),
     starter.gen_hook.padding(3, 2),
   },
 })

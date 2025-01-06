@@ -95,7 +95,7 @@
 ---     },
 ---     content_hooks = {
 ---       starter.gen_hook.adding_bullet(),
----       starter.gen_hook.indexing('all', { 'Builtin actions' }),
+---       starter.gen_hook.indexing('all', { exclude = 'Builtin actions'}),
 ---       starter.gen_hook.padding(3, 2),
 ---     },
 ---   })
@@ -669,16 +669,50 @@ end
 --- name. It results into shortening queries required to choose an item (at
 --- expense of clarity).
 ---
----@param grouping string|nil One of "all" (number indexing across all sections) or
----   "section" (letter-number indexing within each section). Default: "all".
----@param exclude_sections table|nil Array of section names (values of `section`
----   element of item) for which index won't be added. Default: `{}`.
+---@param grouping "all"|"section"|nil One of "all" (number indexing across all sections) or "section" (letter-number indexing within each section).
+---   Default: "all".
+---@param sections "all"|string|string[]|{ exclude: string | string[] }|nil One of "all" (all sections),
+---   array of section names, table having "exclude" keys with array of section as value,
+---   or nil (treated as "all"). Default: "all".
 ---
 ---@return function Content hook.
-MiniStarter.gen_hook.indexing = function(grouping, exclude_sections)
+MiniStarter.gen_hook.indexing = function(grouping, sections)
   grouping = grouping or 'all'
-  exclude_sections = exclude_sections or {}
-  local per_section = grouping == 'section'
+  local per_section = (grouping == 'section')
+
+  if sections == nil then
+    sections = 'all'
+  end
+
+  ---@type string[]
+  local exclude_sections = {}
+  if sections.exclude ~= nil  then
+    if type(sections.exclude) == 'string' then
+      exclude_sections[0] = sections.exclude
+    elseif type(sections.exclude) == 'table' then
+      for index, exclude_section in pairs(sections.exclude) do
+        exclude_sections[index - 1] = exclude_section
+      end
+    end
+  end
+
+  -- Helper to decide if an item should be indexed
+  local function should_index_item(section)
+    if not vim.deep_equal(exclude_sections, {}) then
+      local is_excluded = vim.tbl_contains(exclude_sections, section)
+      return not is_excluded
+    end
+
+    local in_sections = false
+    if sections == 'all' then
+      in_sections = true
+    elseif type(sections) == 'string' then
+      in_sections = (section == sections)
+    elseif type(sections) == 'table' then
+      in_sections = vim.tbl_contains(sections, section)
+    end
+    return in_sections
+  end
 
   return function(content, _)
     local cur_section, n_section, n_item = nil, 0, 0
@@ -688,7 +722,7 @@ MiniStarter.gen_hook.indexing = function(grouping, exclude_sections)
       local unit = content[c.line][c.unit]
       local item = unit.item
 
-      if not vim.tbl_contains(exclude_sections, item.section) then
+      if should_index_item(item.section) then
         n_item = n_item + 1
         if cur_section ~= item.section then
           cur_section = item.section
