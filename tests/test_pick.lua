@@ -387,6 +387,23 @@ T['setup()']['ensures colors'] = function()
   expect.match(child.cmd_capture('hi MiniPickBorder'), 'links to FloatBorder')
 end
 
+T['setup()']['should `MiniExtra.pickers` to registry'] = function()
+  unload_module()
+  child.lua([[package.loaded['mini.pick'] = nil]])
+
+  child.lua('_G.MiniExtra = { pickers = { miniextra = function() end } }')
+  load_module()
+  eq(child.lua_get('type(MiniPick.registry.miniextra)'), 'function')
+
+  -- Should not override user pickers
+  child.lua([[
+    MiniPick.registry.miniextra = function() _G.hello = 'world' end
+    require('mini.pick').setup()
+  ]])
+  child.lua_notify('MiniPick.registry.miniextra()')
+  eq(child.lua_get('_G.hello'), 'world')
+end
+
 -- This set mostly contains general function testing which doesn't fit into
 -- more specialized integration tests later
 T['start()'] = new_set()
@@ -3348,15 +3365,6 @@ T['registry']['works'] = function()
     ref_types[key] = 'function'
   end
   eq(actual_types, ref_types)
-end
-
-T['registry']['should contain values from `MiniExtra.pickers` if present'] = function()
-  unload_module()
-  child.lua([[package.loaded['mini.pick'] = nil]])
-
-  child.lua('_G.MiniExtra = { pickers = { miniextra_method = function() end } }')
-  load_module()
-  eq(child.lua_get('type(MiniPick.registry.miniextra_method)'), 'function')
 end
 
 T['registry']['is not reloaded in `setup()`'] = function()

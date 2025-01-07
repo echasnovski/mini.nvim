@@ -1567,12 +1567,6 @@ for name, f in pairs(MiniPick.builtin) do
   MiniPick.registry[name] = function(local_opts) return f(local_opts) end
 end
 
-if type(MiniExtra) == 'table' then
-  for name, f in pairs(MiniExtra.pickers) do
-    MiniPick.registry[name] = function(local_opts) return f(local_opts) end
-  end
-end
-
 --- Get items of active picker
 ---
 ---@return table|nil Picker items or `nil` if no active picker.
@@ -1936,7 +1930,16 @@ H.setup_config = function(config)
   return config
 end
 
-H.apply_config = function(config) MiniPick.config = config end
+H.apply_config = function(config)
+  MiniPick.config = config
+
+  -- Register 'mini.extra' pickers
+  if type(_G.MiniExtra) == 'table' then
+    for name, f in pairs(_G.MiniExtra.pickers) do
+      MiniPick.registry[name] = MiniPick.registry[name] or function(local_opts) return f(local_opts) end
+    end
+  end
+end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniPick.config, vim.b.minipick_config or {}, config or {})
