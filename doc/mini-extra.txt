@@ -217,7 +217,8 @@ Notes:
 - All have the same signature:
     - <local_opts> - optional table with options local to picker.
     - <opts> - optional table with options forwarded to |MiniPick.start()|.
-- All of them are automatically registered in |MiniPick.registry|.
+- All of them are automatically registered in |MiniPick.registry| inside
+  both |MiniExtra.setup()| or |MiniPick.setup()| (only one is enough).
 - All use default versions of |MiniPick-source.preview|, |MiniPick-source.choose|,
   and |MiniPick-source.choose_marked| if not stated otherwise.
   Shown text and |MiniPick-source.show| are targeted to the picked items.

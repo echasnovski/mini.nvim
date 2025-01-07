@@ -306,7 +306,8 @@ end
 --- - All have the same signature:
 ---     - <local_opts> - optional table with options local to picker.
 ---     - <opts> - optional table with options forwarded to |MiniPick.start()|.
---- - All of them are automatically registered in |MiniPick.registry|.
+--- - All of them are automatically registered in |MiniPick.registry| inside
+---   both |MiniExtra.setup()| or |MiniPick.setup()| (only one is enough).
 --- - All use default versions of |MiniPick-source.preview|, |MiniPick-source.choose|,
 ---   and |MiniPick-source.choose_marked| if not stated otherwise.
 ---   Shown text and |MiniPick-source.show| are targeted to the picked items.
@@ -1525,13 +1526,6 @@ MiniExtra.pickers.visit_labels = function(local_opts, opts)
   return pick.start(opts)
 end
 
--- Register in 'mini.pick'
-if type(_G.MiniPick) == 'table' then
-  for name, f in pairs(MiniExtra.pickers) do
-    _G.MiniPick.registry[name] = function(local_opts) return f(local_opts) end
-  end
-end
-
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniExtra.config
@@ -1551,7 +1545,16 @@ H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config) end
 
-H.apply_config = function(config) MiniExtra.config = config end
+H.apply_config = function(config)
+  MiniExtra.config = config
+
+  -- Register pickers in 'mini.pick'
+  if type(_G.MiniPick) == 'table' then
+    for name, f in pairs(MiniExtra.pickers) do
+      _G.MiniPick.registry[name] = _G.MiniPick.registry[name] or function(local_opts) return f(local_opts) end
+    end
+  end
+end
 
 -- Mini.ai specifications -----------------------------------------------------
 H.ai_indent_spec = function(ai_type)

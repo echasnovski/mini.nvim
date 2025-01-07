@@ -237,9 +237,7 @@ T['setup()']['creates side effects'] = function()
   eq(child.lua_get('type(_G.MiniExtra)'), 'table')
 end
 
-T['General'] = new_set()
-
-T['General']['pickers are added to `MiniPick.registry`'] = new_set(
+T['setup()']['pickers are added to `MiniPick.registry`'] = new_set(
   { parametrize = { { 'pick_first' }, { 'extra_first' } } },
   {
     test = function(init_order)
@@ -260,6 +258,16 @@ T['General']['pickers are added to `MiniPick.registry`'] = new_set(
     end,
   }
 )
+
+T['setup()']['does not override user picker in `MiniPick.registry`'] = function()
+  child.lua([[
+    require('mini.pick').setup()
+    MiniPick.registry.buf_lines = function() _G.hello = 'world' end
+  ]])
+  load_module()
+  child.lua_notify('MiniPick.registry.buf_lines()')
+  eq(child.lua_get('_G.hello'), 'world')
+end
 
 T['gen_ai_spec'] = new_set({ hooks = { pre_case = load_module } })
 
