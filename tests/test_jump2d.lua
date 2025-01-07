@@ -295,6 +295,10 @@ T['start()']['highlights unique labels with different highlight group'] = functi
 end
 
 T['start()']['uses only visible lines'] = function()
+  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.11') == 0 then return end
+
   set_lines({ '1xxx', '2xxx', '3xxx', '4xxx' })
 
   -- Make window show only lines 2 and 3
@@ -672,9 +676,9 @@ T['start()']['respects `allowed_windows`'] = new_set({
   parametrize = { { { current = false } }, { { not_current = false } }, { { current = false, not_current = false } } },
 }, {
   test = function(allowed_windows_opts)
-    -- Check this only on Neovim>=0.10, as there is a slight change in
+    -- Check this only on Neovim>=0.11, as there is a slight change in
     -- highlighting command line area
-    if child.fn.has('nvim-0.10') == 0 then return end
+    if child.fn.has('nvim-0.11') == 0 then return end
 
     child.set_size(6, 40)
     -- Make all showed messages full width

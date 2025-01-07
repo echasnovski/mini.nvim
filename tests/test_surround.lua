@@ -263,7 +263,7 @@ T['gen_spec']['input']['treesitter()']['works with empty region'] = function()
   type_keys('sh', 'o')
   child.poke_eventloop()
   -- It highlights `local` differently from other places
-  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+  if child.fn.has('nvim-0.11') == 1 then child.expect_screenshot() end
 
   -- Edge case for empty region on end of last line
   set_lines(lines)
@@ -1473,6 +1473,10 @@ local activate_highlighting = function()
 end
 
 T['Highlight surrounding']['works without dot-repeat'] = function()
+  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.11') == 0 then return end
+
   local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
   set_lines({ ' ' })
   set_cursor(1, 0)
@@ -1547,6 +1551,10 @@ T['Highlight surrounding']['respects `config.n_lines`'] = function()
 end
 
 T['Highlight surrounding']['works with multiline input surroundings'] = function()
+  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.11') == 0 then return end
+
   child.lua('MiniSurround.config.highlight_duration = ' .. small_time)
   child.lua([[MiniSurround.config.custom_surroundings = {
     a = { input = { '%(\na().-()a\n%)' } },
@@ -1596,6 +1604,10 @@ T['Highlight surrounding']['removes highlighting in correct buffer'] = function(
 end
 
 T['Highlight surrounding']['removes highlighting per line'] = function()
+  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.11') == 0 then return end
+
   local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
   local half_duration = 0.5 * test_duration
   set_lines({ '(aaa)', '(bbb)' })
@@ -1624,7 +1636,9 @@ T['Highlight surrounding']['respects `v:count` for input surrounding'] = functio
   set_lines({ '(a(b(c)b)a)' })
   set_cursor(1, 5)
   type_keys('2sh', ')')
-  child.expect_screenshot()
+  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.11') == 1 then child.expect_screenshot() end
 
   -- Should give informative message on failure
   child.set_size(10, 80)
@@ -1640,6 +1654,10 @@ T['Highlight surrounding']['respects `vim.{g,b}.minisurround_disable`'] = new_se
   parametrize = { { 'g' }, { 'b' } },
 }, {
   test = function(var_type)
+    -- Check this only on Neovim>=0.11, as there is a slight change in
+    -- highlighting command line area
+    if child.fn.has('nvim-0.11') == 0 then return end
+
     child[var_type].minisurround_disable = true
 
     set_lines({ '(aaa)', 'bbb' })

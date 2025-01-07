@@ -1362,9 +1362,9 @@ T['Align']['prompts helper message after one idle second'] = new_set({
   parametrize = { { 'Normal' }, { 'Visual' } },
 }, {
   test = function(test_mode)
-    -- Check this only on Neovim>=0.10, as there is a slight change in
+    -- Check this only on Neovim>=0.11, as there is a slight change in
     -- highlighting command line area
-    if child.fn.has('nvim-0.10') == 0 then return end
+    if child.fn.has('nvim-0.11') == 0 then return end
     helpers.skip_if_slow()
 
     local expect_screenshot = function() child.expect_screenshot({ redraw = false }) end

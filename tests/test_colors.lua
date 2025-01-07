@@ -2171,10 +2171,10 @@ T['interactive()']['works'] = function()
   child.cmd('set rtp+=' .. dir_path)
   MiniTest.finally(function() vim.fn.delete(colors_path, 'rf') end)
 
-  -- Check screenshots only on Neovim>=0.10 as there are slight differences in
+  -- Check screenshots only on Neovim>=0.11 as there are slight differences in
   -- highlighting
   local expect_screenshot = function()
-    if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+    if child.fn.has('nvim-0.11') == 1 then child.expect_screenshot() end
   end
 
   child.set_size(30, 60)

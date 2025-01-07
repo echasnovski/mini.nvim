@@ -843,7 +843,7 @@ T['Window']['respects `window.winblend`'] = function()
 end
 
 T['Window']['respects tabline/statusline/cmdline'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for 0.10.') end
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for 0.11.') end
   child.set_size(7, 20)
   child.lua('MiniNotify.config.content.format = function(notif) return notif.msg end')
   for i = 1, 7 do
