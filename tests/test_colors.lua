@@ -1566,45 +1566,45 @@ T['animate()'] = new_set({
           Normal      = { fg = '#000000', bg = '#000000' },
           TestSpecial = { sp = '#000000', blend = 25 },
           TestLink    = { link = 'Comment' },
-          -- No other highlight groups on purpose
+          TestSingle  = {},
 
-          TestBold          = { fg = '#000000', bold          = false },
-          TestItalic        = { fg = '#000000', italic        = false },
-          TestNocombine     = { fg = '#000000', nocombine     = false },
-          TestReverse       = { fg = '#000000', reverse       = false },
-          TestStandout      = { fg = '#000000', standout      = false },
-          TestStrikethrough = { fg = '#000000', strikethrough = false },
-          TestUndercurl     = { fg = '#000000', undercurl     = false },
-          TestUnderdashed   = { fg = '#000000', underdashed   = false },
-          TestUnderdotted   = { fg = '#000000', underdotted   = false },
-          TestUnderdouble   = { fg = '#000000', underdouble   = false },
-          TestUnderline     = { fg = '#000000', underline     = false },
+          TestBold          = { fg = '#000000', bold          = nil },
+          TestItalic        = { fg = '#000000', italic        = nil },
+          TestNocombine     = { fg = '#000000', nocombine     = nil },
+          TestReverse       = { fg = '#000000', reverse       = nil },
+          TestStandout      = { fg = '#000000', standout      = nil },
+          TestStrikethrough = { fg = '#000000', strikethrough = nil },
+          TestUndercurl     = { fg = '#000000', undercurl     = nil },
+          TestUnderdashed   = { fg = '#000000', underdashed   = nil },
+          TestUnderdotted   = { fg = '#000000', underdotted   = nil },
+          TestUnderdouble   = { fg = '#000000', underdouble   = nil },
+          TestUnderline     = { fg = '#000000', underline     = nil },
         },
         terminal = { [7] = '#000000', [15] = '#000000' }
       })]])
 
       -- Create function to get relevant data
-      child.lua([[_G.get_relevant_cs_data = function()
-        cur_cs = MiniColors.get_colorscheme()
+      child.lua([[_G.get_relevant_cs_data = function(cs)
+        cs = cs or MiniColors.get_colorscheme()
 
         return {
-          name = cur_cs.name,
+          name = cs.name,
           groups = {
-            Normal            = cur_cs.groups.Normal,
-            TestSpecial       = cur_cs.groups.TestSpecial,
-            TestLink          = cur_cs.groups.TestLink,
-            TestSingle        = cur_cs.groups.TestSingle,
-            TestBold          = cur_cs.groups.TestBold,
-            TestItalic        = cur_cs.groups.TestItalic,
-            TestNocombine     = cur_cs.groups.TestNocombine,
-            TestReverse       = cur_cs.groups.TestReverse,
-            TestStandout      = cur_cs.groups.TestStandout,
-            TestStrikethrough = cur_cs.groups.TestStrikethrough,
-            TestUndercurl     = cur_cs.groups.TestUndercurl,
-            TestUnderdashed   = cur_cs.groups.TestUnderdashed,
-            TestUnderdotted   = cur_cs.groups.TestUnderdotted,
-            TestUnderdouble   = cur_cs.groups.TestUnderdouble,
-            TestUnderline     = cur_cs.groups.TestUnderline,
+            Normal            = cs.groups.Normal,
+            TestSpecial       = cs.groups.TestSpecial,
+            TestLink          = cs.groups.TestLink,
+            TestSingle        = cs.groups.TestSingle,
+            TestBold          = cs.groups.TestBold,
+            TestItalic        = cs.groups.TestItalic,
+            TestNocombine     = cs.groups.TestNocombine,
+            TestReverse       = cs.groups.TestReverse,
+            TestStandout      = cs.groups.TestStandout,
+            TestStrikethrough = cs.groups.TestStrikethrough,
+            TestUndercurl     = cs.groups.TestUndercurl,
+            TestUnderdashed   = cs.groups.TestUnderdashed,
+            TestUnderdotted   = cs.groups.TestUnderdotted,
+            TestUnderdouble   = cs.groups.TestUnderdouble,
+            TestUnderline     = cs.groups.TestUnderline,
           },
           terminal = {
             { 0, vim.g.terminal_color_0},
@@ -1613,60 +1613,33 @@ T['animate()'] = new_set({
           }
         }
       end]])
-
-      -- Create reference duration values
-      child.lua('_G.default_transition_duration = ' .. default_transition_duration)
-      child.lua('_G.default_show_duration = ' .. default_show_duration)
     end,
   },
   n_retry = helpers.get_n_retry(4),
 })
 
-local is_cs_1 = function()
-  local is_name_correct = child.g.colors_name == 'cs_1'
-  local is_normal_correct =
-    vim.deep_equal(child.lua_get('_G.get_relevant_cs_data().groups.Normal'), child.lua_get('_G.cs_1.groups.Normal'))
-  return is_name_correct and is_normal_correct
+local validate_cs_1 = function()
+  local cur_cs_data = child.lua_get('_G.get_relevant_cs_data()')
+  local cs_1_data = child.lua_get('_G.get_relevant_cs_data(_G.cs_1)')
+  eq(cur_cs_data, cs_1_data)
 end
 
-local is_cs_2 = function()
-  local is_name_correct = child.g.colors_name == 'cs_2'
-  local is_normal_correct =
-    vim.deep_equal(child.lua_get('_G.get_relevant_cs_data().groups.Normal'), child.lua_get('_G.cs_2.groups.Normal'))
-  return is_name_correct and is_normal_correct
+local validate_cs_2 = function()
+  local cur_cs_data = child.lua_get('_G.get_relevant_cs_data()')
+  local cs_2_data = child.lua_get('_G.get_relevant_cs_data(_G.cs_2)')
+  eq(cur_cs_data, cs_2_data)
 end
 
 --stylua: ignore
 T['animate()']['works'] = function()
-  helpers.skip_if_slow()
-
-  local validate_init = function()
-    local cur_cs = child.lua_get('_G.get_relevant_cs_data()')
-    eq(cur_cs.name, 'cs_1')
-    eq(cur_cs.groups.Normal, child.lua_get('_G.cs_1.groups.Normal'))
-    eq(cur_cs.groups.TestSpecial, child.lua_get('_G.cs_1.groups.TestSpecial'))
-    eq(cur_cs.groups.TestLink, child.lua_get('_G.cs_1.groups.TestLink'))
-    eq(child.g.terminal_color_0, '#190000')
-    eq(child.g.terminal_color_7, '#001900')
-    eq(child.g.terminal_color_15, vim.NIL)
-  end
-
-  child.lua('_G.cs_1:apply()')
-  validate_init()
-
-  -- It should animate transition from current color scheme to first in array,
-  -- then to second, and so on
-  child.lua([[MiniColors.animate({ _G.cs_2, _G.cs_1 })]])
-
-  -- Check slightly before half-way
-  local validate_before_half = function()
+  local validate_intermediate = function()
     eq(
       child.lua_get('_G.get_relevant_cs_data()'),
       {
         name = 'transition_step',
         groups = {
-          Normal      = { fg = '#090201', bg = '#000901' },
-          TestSpecial = { sp = '#000003', blend = 12 },
+          Normal      = { fg = '#0c0100', bg = '#040f00' },
+          TestSpecial = { sp = '#00010b', blend = 8 },
           TestLink    = { link = 'Title' },
           TestSingle  = { bg = '#000000', fg = '#ffffff', sp = '#aaaaaa', underline = true },
 
@@ -1682,113 +1655,53 @@ T['animate()']['works'] = function()
           TestUnderdouble   = { fg = '#000000', underdouble   = true },
           TestUnderline     = { fg = '#000000', underline     = true },
         },
-        terminal = { { 0, '#190000' }, { 7, '#000901' }, { 15 } },
+        terminal = { { 0, '#190000' }, { 7, '#040f00' }, { 15 } }
       }
     )
   end
 
-  sleep(0.5 * default_transition_duration - small_transition_time)
-  validate_before_half()
+  -- Start with first color scheme
+  child.lua('_G.cs_1:apply()')
+  validate_cs_1()
 
-  -- Check slightly after half-way
-  local validate_after_half = function()
-    eq(
-      child.lua_get('_G.get_relevant_cs_data()'),
+  -- It should animate transition from current color scheme to first in array,
+  -- then to second, and so on
+  local test_transition_duration, test_show_duration = 15 * small_time, 10 * small_time
+  child.lua('_G.test_transition_duration = ' .. test_transition_duration)
+  child.lua('_G.test_show_duration = ' .. test_show_duration)
+  child.lua([[
+    MiniColors.animate(
+      { _G.cs_2, _G.cs_1 },
       {
-        name = 'transition_step',
-        groups = {
-          Normal      = { fg = '#050000', bg = '#030801' },
-          TestSpecial = { sp = '#000003', blend = 13 },
-          TestLink    = { link = 'Comment' },
-          TestSingle  = {},
-
-          TestBold          = { fg = '#000000' },
-          TestItalic        = { fg = '#000000' },
-          TestNocombine     = { fg = '#000000' },
-          TestReverse       = { fg = '#000000' },
-          TestStandout      = { fg = '#000000' },
-          TestStrikethrough = { fg = '#000000' },
-          TestUndercurl     = { fg = '#000000' },
-          TestUnderdashed   = { fg = '#000000' },
-          TestUnderdotted   = { fg = '#000000' },
-          TestUnderdouble   = { fg = '#000000' },
-          TestUnderline     = { fg = '#000000' },
-        },
-        terminal = { { 0 }, { 7, '#030801' }, { 15, '#000000' } },
+        -- Test with manual options for more robust testing. Sadly, no default
+        -- option values are tested as times can be too fast for running in CI.
+        -- There are indirect tests in `:Colorscheme`, though.
+        transition_steps = 3,
+        transition_duration = _G.test_transition_duration,
+        show_duration = _G.test_show_duration,
       }
     )
-  end
+  ]])
 
-  sleep(2 * small_transition_time)
-  validate_after_half()
-
-  -- After first transition end it should show intermediate step for 1 second
-  local validate_intermediate = function()
-    local cur_cs = child.lua_get('_G.get_relevant_cs_data()')
-    eq(cur_cs.name, 'cs_2')
-    eq(cur_cs.groups.Normal, child.lua_get('_G.cs_2.groups.Normal'))
-    eq(cur_cs.groups.TestSpecial, child.lua_get('_G.cs_2.groups.TestSpecial'))
-    eq(cur_cs.groups.TestLink, child.lua_get('_G.cs_2.groups.TestLink'))
-    eq(child.g.terminal_color_0, vim.NIL)
-    eq(child.g.terminal_color_7, '#000000')
-    eq(child.g.terminal_color_15, '#000000')
-  end
-
-  sleep(0.5 * default_transition_duration)
+  -- Should actually perform transform
+  sleep(0.5 * test_transition_duration)
   validate_intermediate()
 
-  sleep(default_show_duration - 2 * small_transition_time)
-  validate_intermediate()
+  sleep(0.5 * test_transition_duration + small_time)
+  validate_cs_2()
+
+  -- After first transition end it should show color scheme 2 for specified
+  -- "show" duration
+  sleep(test_show_duration - 2 * small_time)
+  validate_cs_2()
 
   -- After showing period it should start transition back to first one (as it
   -- was specially designed command)
-  sleep(0.5 * default_transition_duration)
-  validate_after_half()
+  sleep(0.5 * test_transition_duration + 3 * small_time)
+  validate_intermediate()
 
-  sleep(2 * small_transition_time)
-  validate_before_half()
-
-  sleep(0.5 * default_transition_duration)
-  validate_init()
-end
-
-T['animate()']['respects `opts.transition_steps`'] = function()
-  helpers.skip_if_slow()
-
-  child.lua('_G.cs_1:apply()')
-  child.lua([[MiniColors.animate({ _G.cs_2 }, { transition_steps = 2 })]])
-
-  sleep(0.5 * default_transition_duration - 2 * small_transition_time)
-  eq(is_cs_1(), true)
-
-  sleep(2 * small_transition_time + small_time)
-  eq(child.lua_get('_G.get_relevant_cs_data().groups.Normal.fg'), '#050000')
-
-  sleep(0.5 * default_transition_duration - small_transition_time)
-  eq(is_cs_2(), true)
-end
-
-T['animate()']['respects `opts.transition_duration`'] = function()
-  helpers.skip_if_slow()
-
-  child.lua([[MiniColors.animate({ _G.cs_2 }, { transition_duration = 0.5 * default_transition_duration })]])
-  sleep(0.5 * default_transition_duration + 2 * small_transition_time)
-  eq(is_cs_2(), true)
-end
-
-T['animate()']['respects `opts.show_duration`'] = function()
-  helpers.skip_if_slow()
-
-  child.lua([[MiniColors.animate({ _G.cs_1, _G.cs_2 }, { show_duration = 0.5 * default_show_duration })]])
-  sleep(default_transition_duration + small_transition_time)
-  eq(is_cs_1(), true)
-
-  sleep(0.5 * default_show_duration - 3 * small_transition_time)
-  eq(is_cs_1(), true)
-
-  -- Account that first step takes some time
-  sleep(3 * small_transition_time + 3 * small_time)
-  eq(is_cs_1(), false)
+  sleep(0.5 * test_transition_duration)
+  validate_cs_1()
 end
 
 T['animate()']['validates arguments'] = function()
