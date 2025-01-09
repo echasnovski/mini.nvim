@@ -2651,7 +2651,9 @@ H.hide_completion = function()
   -- there is completion active (thus not allowing them as custom mappings).
   -- Appending ` | call feedkeys("\\<C-y>", "n")` removes that, but still would
   -- require workarounds to work in edge cases.
-  if vim.fn.mode() == 'i' then vim.cmd('noautocmd call complete(col("."), [])') end
+  -- NOTE: Use `silent` to not show "Pattern not found" messages. It also hides
+  -- '--INSERT--' temporarily when 'showmode' is active, but seems acceptable.
+  if vim.fn.mode() == 'i' then vim.cmd('silent noautocmd call complete(col("."), [])') end
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped

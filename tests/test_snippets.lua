@@ -3418,6 +3418,18 @@ T['Session']['tracks nodes in case of nested placeholders'] = function()
   validate_session_nodes_partial(get(), ref_nodes_after)
 end
 
+T['Session']['does not show "Pattern not found" message'] = function()
+  child.o.cmdheight = 2
+  child.o.showmode = false
+  child.o.shortmess = child.o.shortmess:gsub('c', '')
+
+  type_keys('i')
+  start_session('T1=$1 T2=${2|aa,bb|} T0=$0')
+  jump('next')
+  stop()
+  child.expect_screenshot()
+end
+
 T['Session']['autostop'] = new_set()
 
 T['Session']['autostop']['works when text is typed with final tabstop being current'] = function()
