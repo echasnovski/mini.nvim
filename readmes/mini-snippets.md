@@ -367,3 +367,4 @@ Here are code snippets for some common installation methods (use only one):
 - [L3MON4D3/LuaSnip](https://github.com/L3MON4D3/LuaSnip)
 - Built-in snippet expansion in Neovim>=0.10, see `:h vim.snippet` (doesn't provide snippet management, only snippet expansion).
 - [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) (a curated collection of snippet files)
+- [abeldekat/cmp-mini-snippets](https://github.com/abeldekat/cmp-mini-snippets) (a source for [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp) that integrates 'mini.snippets')

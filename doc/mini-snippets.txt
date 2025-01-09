@@ -112,6 +112,9 @@ You can override runtime config settings locally to buffer inside
     - A snippet collection plugin without features to manage or expand them.
       This module is designed with 'friendly-snippets' compatibility in mind.
 
+- 'abeldekat/cmp-mini-snippets':
+    - A source for 'hrsh7th/nvim-cmp' that integrates 'mini.snippets'.
+
 # Highlight groups ~
 
 * `MiniSnippetsCurrent` - current tabstop.
