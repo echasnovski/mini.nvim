@@ -166,8 +166,12 @@ Activate them as regular `colorscheme` (for example, `:colorscheme randomhue` or
 
 This is the list of modules I currently intend to implement eventually (as my free time and dedication will allow), in alphabetical order:
 
+- 'mini.abbrev' - helper to manage/setup Insert mode abbreviations.
 - 'mini.cycle' - cycle through alternatives with pre-defined rules. Something like [monaqa/dial.nvim](https://github.com/monaqa/dial.nvim) and [AndrewRadev/switch.vim](https://github.com/AndrewRadev/switch.vim)
-- 'mini.keymap' - utilities to make non-trivial mappings (like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim) and dot-repeatable mappings).
+- 'mini.keymap' - utilities to make non-trivial mappings: like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim), dot-repeatable mappings, "super" mappings (super-tab, super-shift-tab, super-enter).
+- 'mini.repl' - extendable wrapper for REPLs with built-in support for R, Python, Julia, and maybe (just maybe) some AI tools.
+- 'mini.sendtext' - send text between buffers. In particular between regular and built-in terminal buffers.
 - 'mini.statuscolumn' - customizable 'statuscolumn'.
-- 'mini.terminals' - coherently manage terminal windows and send text from buffers to terminal windows. Something like [kassio/neoterm](https://github.com/kassio/neoterm).
-- 'mini.quickfix' - fuzzy search and preview of quickfix entries. Possibly with some presets for populating quickfix list (like files, help tags, etc.). Similar to [kevinhwang91/nvim-bqf](https://github.com/kevinhwang91/nvim-bqf).
+- 'mini.terminals' - coherently manage interactive terminal buffers. Something like [kassio/neoterm](https://github.com/kassio/neoterm). Might also incorporate functionality to asynchronously run code in shell with post-processed results.
+- 'mini.quickfix' - more capable and user-friendly quickfix list. Possibly with preview and inline editing for search-and-replace workflow.
+- 'mini.windows' - window manager. Interactive picker, layout organizer, and maybe more.
