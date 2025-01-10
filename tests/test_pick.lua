@@ -194,18 +194,10 @@ local clear_process_log = function() child.lua('_G.process_log = {}') end
 -- Data =======================================================================
 local test_items = { 'a_b_c', 'abc', 'a_b_b', 'c_a_a', 'b_c_c' }
 
-local many_items = {}
-for i = 1, 1000000 do
-  many_items[3 * i - 2] = 'ab'
-  many_items[3 * i - 1] = 'ac'
-  many_items[3 * i] = 'bb'
-end
-
 -- Time constants
 local default_busy_delay = 50
 local track_lost_focus_delay = 1000
 local small_time = helpers.get_time_const(10)
-local micro_time = 1
 
 -- Output test set ============================================================
 local T = new_set({
@@ -1001,7 +993,7 @@ T['refresh()']['recomputes window config'] = function()
   child.expect_screenshot()
 end
 
-T['default_match()'] = new_set({ n_retry = helpers.get_n_retry(4) })
+T['default_match()'] = new_set()
 
 local default_match = forward_lua('MiniPick.default_match')
 
@@ -1018,44 +1010,40 @@ T['default_match()']['works with active picker'] = function()
 end
 
 T['default_match()']['does not block query update'] = function()
-  helpers.skip_if_slow()
-
+  child.lua('_G.small_time = ' .. small_time)
   child.lua([[
+    -- Mock slow matching
+    local find_orig = string.find
+    string.find = function(...)
+      vim.loop.sleep(_G.small_time)
+      return find_orig(...)
+    end
+
+    -- Track usage of `set_picker_match_inds`
     _G.log = {}
-    _G.default_match_wrapper = function(stritems, inds, query)
-      table.insert(_G.log, { n_match_inds = #inds, query = vim.deepcopy(query) })
-      MiniPick.default_match(stritems, inds, query)
+    local set_picker_match_inds_orig = MiniPick.set_picker_match_inds
+    MiniPick.set_picker_match_inds = function(match_inds)
+      table.insert(_G.log, #match_inds)
+      return set_picker_match_inds(match_inds)
     end
   ]])
-  child.lua_notify('MiniPick.start({ source = { match = _G.default_match_wrapper }, delay = { async = 1 } })')
+  child.lua_notify('MiniPick.start({ delay = { async = 1 } })')
 
-  -- Set many items and wait until it completely sets
-  set_picker_items(many_items)
-  for _ = 1, 500 do
-    sleep(small_time)
-    if child.lua_get([[type(MiniPick.get_picker_items()) == 'table']]) then break end
-  end
+  set_picker_items({ 'ab', 'ac', 'bb' })
+  sleep(4 * small_time)
 
   -- Type three characters very quickly. If `default_match()` were blocking,
-  -- each press would lead to calling `source.match` with the result of
-  -- matching on prior query. In this test every key press should interrupt
-  -- currently active matching and start a new one with the latest available
-  -- set of `match_inds` (which should be all inds as match is, hopefully,
-  -- never finishes).
-  type_keys('a')
-  sleep(micro_time)
-  type_keys('b')
-  sleep(micro_time)
-  type_keys('c')
-  sleep(micro_time)
-  eq(child.lua_get('#MiniPick.get_picker_matches()'), 0)
-  eq(get_picker_state().is_busy, true)
-  eq(child.lua_get('_G.log'), {
-    { n_match_inds = #many_items, query = {} },
-    { n_match_inds = #many_items, query = { 'a' } },
-    { n_match_inds = #many_items, query = { 'a', 'b' } },
-    { n_match_inds = #many_items, query = { 'a', 'b', 'c' } },
-  })
+  -- each press would be done after matches from previous ones are set. The
+  -- goal is for each key press to stop active matching and start a new one.
+  -- This test is not ideal, but is the best attempt at testing this.
+  type_keys('abc')
+  eq(child.lua_get('_G.log'), { 3, 0 })
+
+  -- Should work for both fuzzy and exact matching
+  type_keys('<C-u>')
+  child.lua('_G.log = {}')
+  type_keys("'abc")
+  eq(child.lua_get('_G.log'), { 3, 0 })
 end
 
 T['default_match()']['works without active picker'] = function()
@@ -3772,18 +3760,34 @@ T['set_picker_items()']['respects `opts.do_match`'] = function()
 end
 
 T['set_picker_items()']['respects `opts.querytick`'] = function()
+  -- Mock slow `set_picker_items`
+  child.lua('_G.small_time = ' .. small_time)
+  child.lua([[
+    _G.log = {}
+    -- Mock slow item preparation
+    local tolower_orig = vim.fn.tolower
+    vim.fn.tolower = function(...)
+      table.insert(_G.log, { time = vim.loop.hrtime(), args = {...} })
+      vim.loop.sleep(_G.small_time)
+      table.insert(_G.log, { time = vim.loop.hrtime() })
+      return tolower_orig(...)
+    end
+
+    -- Reload module for `vim.fn.tolower` mock to take effect
+    package.loaded['mini.pick'] = nil
+    require('mini.pick').setup()
+  ]])
+
   -- Should check every `delay.async` milliseconds if global querytick is the
   -- same as supplied. If not - abort without setting items.
-  child.lua('MiniPick.config.delay.async = ' .. micro_time)
+  child.lua('MiniPick.config.delay.async = 1')
 
   start_with_items()
-  set_picker_items(many_items, { querytick = -1 })
+  set_picker_items({ 'ab', 'ac', 'bb' }, { querytick = -1 })
   eq(get_picker_items(), vim.NIL)
 end
 
 T['set_picker_items()']['does not block picker'] = function()
-  helpers.skip_if_slow()
-
   child.lua([[
     _G.log = {}
     _G.log_func = function()
@@ -3792,14 +3796,20 @@ T['set_picker_items()']['does not block picker'] = function()
     end
     _G.mappings = { append_log = { char = 'l', func = _G.log_func } }
   ]])
-  child.lua_notify('MiniPick.start({ mappings = _G.mappings, delay = { async = 1 } })')
+  child.lua('MiniPick.config.delay.async = 1')
+  child.lua_notify('MiniPick.start({ mappings = _G.mappings })')
 
-  -- Set many items and start typing right away. Key presses should be
-  -- processed right away even though there is an items preprocessing is going.
-  set_picker_items(many_items)
+  -- Set many items and immediately press a key, which should be processed
+  -- right away even though there is item preprocessing going.
+  -- Mocking "slow set_picker_items" doesn't work for some reason.
+  local items = {}
+  for _ = 1, 100000 do
+    table.insert(items, 'ab')
+    table.insert(items, 'ac')
+    table.insert(items, 'bb')
+  end
+  set_picker_items(items)
   type_keys('l')
-  sleep(small_time)
-  stop()
   eq(child.lua_get('_G.log'), { { is_busy = true, items_type = 'nil' } })
 end
 
@@ -4044,10 +4054,18 @@ T['set_picker_opts()']['works'] = function()
 
   -- Can be used to update mappings
   child.lua([[MiniPick.set_picker_opts({
-    mappings = { log = { char = '<C-w>', func = function() _G.log = 'hello' end } },
+    mappings = { log = { char = '<C-d>', func = function() _G.log = 'hello' end } },
   })]])
-  type_keys('<C-w>')
-  sleep(small_time)
+  type_keys('<C-d>')
+  eq(child.lua_get('_G.log'), 'hello')
+
+  -- Should update present options, not override them
+  child.lua([[MiniPick.set_picker_opts({
+    mappings = { log2 = { char = '<C-z>', func = function() _G.log = 'world' end } },
+  })]])
+  type_keys('<C-z>')
+  eq(child.lua_get('_G.log'), 'world')
+  type_keys('<C-d>')
   eq(child.lua_get('_G.log'), 'hello')
 
   -- Should rerun match
