@@ -1859,36 +1859,6 @@ T['get_explorer_state()']['ensures valid target window'] = function()
   eq(get_explorer_state().target_window, init_win_id)
 end
 
-T['get_target_window()'] = new_set()
-
-local get_target_window = forward_lua('MiniFiles.get_target_window')
-
-T['get_target_window()']['works'] = function()
-  child.o.laststatus = 0
-
-  child.cmd('belowright vertical split')
-  local ref_win_id = child.api.nvim_get_current_win()
-
-  local temp_dir = make_temp_dir('temp', {})
-  open(temp_dir)
-  eq(get_target_window(), ref_win_id)
-end
-
-T['get_target_window()']['ensures valid window'] = function()
-  local init_win_id = child.api.nvim_get_current_win()
-  child.cmd('belowright vertical split')
-  local ref_win_id = child.api.nvim_get_current_win()
-
-  open(test_dir_path)
-
-  eq(get_target_window(), ref_win_id)
-
-  child.api.nvim_win_close(ref_win_id, true)
-  eq(get_target_window(), init_win_id)
-end
-
-T['get_target_window()']['works when no explorer is opened'] = function() expect.no_error(get_target_window) end
-
 T['set_target_window()'] = new_set()
 
 local set_target_window = forward_lua('MiniFiles.set_target_window')

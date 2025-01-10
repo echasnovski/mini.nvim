@@ -1067,19 +1067,6 @@ MiniFiles.get_explorer_state = function()
   }
 end
 
---- Get target window
----
---- Deprecated. Use |MiniFiles.get_explorer_state()|.
-MiniFiles.get_target_window = function()
-  -- TODO: remove after 'mini.nvim' 0.14 release
-  H.notify(
-    "`get_target_window()` is soft deprecated (currently works but will be removed after next 'mini.nvim' release)."
-      .. ' Use `get_explorer_state().target_window` instead. Sorry for the inconvenience.',
-    'WARN'
-  )
-  return (MiniFiles.get_explorer_state() or {}).target_window
-end
-
 --- Set target window
 ---
 ---@param win_id number Window identifier inside which file will be opened.

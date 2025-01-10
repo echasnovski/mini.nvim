@@ -868,13 +868,6 @@ See also ~
 - |MiniFiles.set_target_window()|
 
 ------------------------------------------------------------------------------
-                                                 *MiniFiles.get_target_window()*
-                        `MiniFiles.get_target_window`()
-Get target window
-
-Deprecated. Use |MiniFiles.get_explorer_state()|.
-
-------------------------------------------------------------------------------
                                                  *MiniFiles.set_target_window()*
                     `MiniFiles.set_target_window`({win_id})
 Set target window
