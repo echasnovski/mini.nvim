@@ -991,17 +991,6 @@ end
 ---   - If yes, array of `stritems` indexes matching the `query` (from best to worst).
 ---   - If no, `nil` is returned with |MiniPick.set_picker_match_inds()| used later.
 MiniPick.default_match = function(stritems, inds, query, opts)
-  -- TODO: Remove after mini.nvim 0.14 release
-  if opts and type(opts) ~= 'table' then
-    if not H.notified_match_opts then
-      local msg = 'Use `{ sync = true }` as fourth argument to `default_match`.'
-        .. " Current code will not work after the next 'mini.nvim' release."
-      H.notify(msg, 'WARN')
-      H.notified_match_opts = true
-    end
-    opts = { sync = true }
-  end
-
   opts = opts or {}
   local is_sync = opts.sync or not MiniPick.is_picker_active()
   local set_match_inds = is_sync and function(x) return x end or MiniPick.set_picker_match_inds
