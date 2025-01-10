@@ -268,7 +268,7 @@ T['show_at_cursor()']['works on commit'] = function()
   child.bo.iskeyword = child.bo.iskeyword .. ',.'
   show_at_cursor()
   -- - No `git show` calls because "abc1234.def" does not match commit pattern
-  eq(get_spawn_log()[1].options.args, { '--no-pager', 'rev-parse', '--show-toplevel' })
+  validate_git_spawn_log({})
 end
 
 T['show_at_cursor()']['uses correct pattern to match commit'] = function()
@@ -283,7 +283,8 @@ T['show_at_cursor()']['uses correct pattern to match commit'] = function()
 
     show_at_cursor()
     local ref_args = { '--no-pager', 'show', '--stat', '--patch', cword }
-    local is_commit = vim.deep_equal(get_spawn_log()[1].options.args, ref_args)
+    local spawn_log = get_spawn_log()
+    local is_commit = spawn_log[1] ~= nil and vim.deep_equal(spawn_log[1].options.args, ref_args)
     eq(is_commit, ref_is_commit)
   end
 
@@ -475,10 +476,19 @@ T['show_at_cursor()']['works for range history in not tracked file'] = function(
   child.lua('MiniGit.show_range_history = function() end')
   log_calls('MiniGit.show_range_history')
 
+  -- Mock real path presence
+  child.lua([[
+    vim.loop.fs_realpath = function() return "/home/user/repo-root/source/of/symlink" end
+    vim.fn.isdirectory = function() return 1 end
+  ]])
   child.lua([[_G.stdio_queue = { { { 'out', '/home/user/repo-root' } } }]])
   set_lines({ 'Line 1' })
+
+  -- Should try to find Git root at symlink's source
   show_at_cursor()
-  validate_git_spawn_log({ { '--no-pager', 'rev-parse', '--show-toplevel' } })
+  validate_git_spawn_log({
+    { args = { '--no-pager', 'rev-parse', '--show-toplevel' }, cwd = '/home/user/repo-root/source/of' },
+  })
   validate_calls({ { 'MiniGit.show_range_history' } })
 end
 
@@ -996,6 +1006,7 @@ T['show_range_history()'] = new_set({
       set_lines({ 'aaa', 'bbb', 'ccc' })
       child.fn.chdir(git_root_dir)
       child.api.nvim_buf_set_name(0, git_root_dir .. '/dir/tmp-file')
+      child.lua('vim.loop.fs_realpath = function(path) return path end')
       child.lua([[_G.stdio_queue = {
         { { 'out', '' } },                           -- No uncommitted changes
         { { 'out', 'commit abc1234\nLog output' } }, -- Asked logs
@@ -1214,6 +1225,17 @@ T['show_range_history()']['uses correct working directory'] = function()
   validate_git_spawn_log(ref_git_spawn_log)
 end
 
+T['show_range_history()']['resolves symlinks'] = function()
+  child.lua('vim.loop.fs_realpath = function(path) return path .. "_symlink-source" end')
+  show_range_history()
+
+  local ref_git_spawn_log = {
+    { args = { '--no-pager', 'diff', '-U0', 'HEAD', '--', 'dir/tmp-file_symlink-source' }, cwd = git_root_dir },
+    { args = { '--no-pager', 'log', '-L1,1:dir/tmp-file_symlink-source', 'HEAD' }, cwd = git_root_dir },
+  }
+  validate_git_spawn_log(ref_git_spawn_log)
+end
+
 T['show_range_history()']['validates arguments'] = function()
   local validate = function(opts, error_pattern)
     expect.error(function() show_range_history(opts) end, error_pattern)
@@ -1363,6 +1385,25 @@ T['enable()']['does not work in non-file buffer'] = function()
   enable()
   eq(is_buf_enabled(), false)
   validate_git_spawn_log({})
+end
+
+T['enable()']['resolves symlinks'] = function()
+  child.lua('vim.loop.fs_realpath = function(path) return path .. "_symlink-source" end')
+
+  child.lua([[
+    _G.stdio_queue = {
+      { { 'out', _G.rev_parse_track } },              -- Get path to root and repo
+      { { 'out', 'abc1234\nmain' } },                 -- Get HEAD data
+      { { 'out', '?? file-in-git_symlink-source' } }, -- Get file status data
+    }
+  ]])
+  enable()
+
+  -- Should run Git CLI with data *after* resolving symlink
+  local status_args = get_spawn_log()[3].options.args
+  eq({ status_args[3], status_args[#status_args] }, { 'status', 'file-in-git_symlink-source' })
+  eq(get_buf_data().status, '??')
+  eq(child.b.minigit_summary_string, 'main (??)')
 end
 
 T['enable()']['normalizes input buffer'] = function()
@@ -1671,7 +1712,15 @@ T['Auto enable']['works after `:edit`'] = function()
   eq(get_buf_data(buf_id).root, git_root_dir)
 end
 
-T['Tracking'] = new_set({ hooks = { pre_case = load_module } })
+T['Tracking'] = new_set({
+  hooks = {
+    pre_case = function()
+      load_module()
+      -- Ensure proper separators when dealing with paths
+      if helpers.is_windows() then child.lua('vim.loop.fs_realpath = function(path) return path end') end
+    end,
+  },
+})
 
 T['Tracking']['works outside of Git repo'] = function()
   child.lua('_G.process_mock_data = { { exit_code = 1 } }')

@@ -8,6 +8,10 @@
 
 - BREAKING FEATURE: add `max_output_steps` option to `gen_path.line()` and `gen_path.angle()` to limit the number of steps the return. Default is 1000 to improve performance on large cursor jumps which also is set for `config.cursor.path`.
 
+## mini.git
+
+- FEATURE: Git data is computed after resolving symlinks. This allows working with files symlinked into outside of Git repo. This behavior is the same as in 'mini.diff'.
+
 ## mini.hipatterns
 
 - BREAKING FEATURE: make `MiniHipatterns{Fixme,Hack,Todo,Note}` highlight groups by default be reverse and bold variant of `Diagnostic{Error,Warn,Info,Hint}` group instead of directly link to them. This ensures better visibility for color schemes which don't have explicit 'mini.hipatterns' support.

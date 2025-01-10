@@ -334,12 +334,14 @@ MiniGit.show_at_cursor = function(opts)
   -- Try showing diff source
   if H.diff_pos_to_source() ~= nil then return MiniGit.show_diff_source(opts) end
 
-  -- Try showing range history if possible: either in Git repo (tracked or not)
-  -- or diff source output.
-  local buf_id, path = vim.api.nvim_get_current_buf(), vim.api.nvim_buf_get_name(0)
-  local is_in_git = H.is_buf_enabled(buf_id)
-    or #H.git_cli_output({ 'rev-parse', '--show-toplevel' }, vim.fn.fnamemodify(path, ':h')) > 0
-  local is_diff_source_output = H.parse_diff_source_buf_name(path) ~= nil
+  -- Try showing range history if possible: either in Git repo (tracked or not;
+  -- after resolving symlinks) or diff source output.
+  local buf_id, buf_name = vim.api.nvim_get_current_buf(), vim.api.nvim_buf_get_name(0)
+  local path = vim.loop.fs_realpath(buf_name)
+  local path_dir = path == nil and '' or vim.fn.fnamemodify(path, ':h')
+
+  local is_in_git = H.is_buf_enabled(buf_id) or #H.git_cli_output({ 'rev-parse', '--show-toplevel' }, path_dir) > 0
+  local is_diff_source_output = H.parse_diff_source_buf_name(buf_name) ~= nil
   if is_in_git or is_diff_source_output then return MiniGit.show_range_history(opts) end
 
   H.notify('Nothing Git-related to show at cursor', 'WARN')
@@ -443,7 +445,7 @@ MiniGit.show_range_history = function(opts)
   if commit == nil then
     commit = 'HEAD'
     local cwd_pattern = '^' .. vim.pesc(cwd:gsub('\\', '/')) .. '/'
-    rel_path = buf_name:gsub('\\', '/'):gsub(cwd_pattern, '')
+    rel_path = H.get_buf_realpath(0):gsub('\\', '/'):gsub(cwd_pattern, '')
   end
 
   -- Ensure no uncommitted changes as they might result into improper `-L` arg
@@ -517,7 +519,7 @@ MiniGit.enable = function(buf_id)
   if H.is_buf_enabled(buf_id) or H.is_disabled(buf_id) or not H.has_git then return end
 
   -- Enable only in buffers which *can* be part of Git repo
-  local path = vim.api.nvim_buf_get_name(buf_id)
+  local path = H.get_buf_realpath(buf_id)
   if path == '' or vim.fn.filereadable(path) ~= 1 then return end
 
   -- Start tracking
@@ -1177,7 +1179,7 @@ H.define_minigit_window = function(cleanup)
 end
 
 H.git_cli_output = function(args, cwd, env)
-  if cwd ~= nil and vim.fn.isdirectory(cwd) ~= 1 then return {} end
+  if cwd ~= nil and (vim.fn.isdirectory(cwd) ~= 1 or cwd == '') then return {} end
   local command = { MiniGit.config.job.git_executable, '--no-pager', unpack(args) }
   local res = H.cli_run(command, cwd, nil, { env = env }).out
   if res == '' then return {} end
@@ -1423,7 +1425,7 @@ H.update_git_status = function(root, bufs)
   local root_len, path_data = string.len(root), {}
   for _, buf_id in ipairs(bufs) do
     -- Use paths relative to the root as in `git status --porcelain` output
-    local rel_path = vim.api.nvim_buf_get_name(buf_id):sub(root_len + 2)
+    local rel_path = H.get_buf_realpath(buf_id):sub(root_len + 2)
     table.insert(command, rel_path)
     -- Completely not modified paths should be the only ones missing in the
     -- output. Use this status as default.
@@ -1697,6 +1699,9 @@ end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
+-- Try getting buffer's full real path (after resolving symlinks)
+H.get_buf_realpath = function(buf_id) return vim.loop.fs_realpath(vim.api.nvim_buf_get_name(buf_id)) or '' end
 
 H.redrawstatus = function() vim.cmd('redrawstatus') end
 if vim.api.nvim__redraw ~= nil then H.redrawstatus = function() vim.api.nvim__redraw({ statusline = true }) end end
