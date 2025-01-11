@@ -378,7 +378,9 @@ MiniComment.get_commentstring = function(ref_position)
     for _, ft in ipairs(filetypes) do
       -- Using `vim.filetype.get_option()` for performance as it has caching
       local cur_cs = vim.filetype.get_option(ft, 'commentstring')
-      if type(cur_cs) == 'string' and cur_cs ~= '' and level > res_level then ts_cs = cur_cs end
+      if type(cur_cs) == 'string' and cur_cs ~= '' and level > res_level then
+        ts_cs, res_level = cur_cs, level
+      end
     end
 
     for _, child_lang_tree in pairs(lang_tree:children()) do
