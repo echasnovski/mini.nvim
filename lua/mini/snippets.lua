@@ -1638,7 +1638,9 @@ H.get_default_context = function()
   local ref_range, res_level = { lnum - 1, col - 1, lnum - 1, col }, 0
   local traverse
   traverse = function(lang_tree, level)
-    if lang_tree:contains(ref_range) and level > res_level then lang = lang_tree:lang() or lang end
+    if lang_tree:contains(ref_range) and level > res_level then
+      lang, res_level = lang_tree:lang() or lang, level
+    end
     for _, child_lang_tree in pairs(lang_tree:children()) do
       traverse(child_lang_tree, level + 1)
     end
