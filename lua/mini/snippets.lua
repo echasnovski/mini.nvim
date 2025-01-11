@@ -1296,7 +1296,7 @@ MiniSnippets.session = {}
 
 --- Get data about active session
 ---
----@param all boolean Whether to return array with the whole session stack.
+---@param all boolean|nil Whether to return array with the whole session stack.
 ---   Default: `false`.
 ---
 ---@return table Single table with session data (if `all` is `false`) or array of them.

@@ -1106,7 +1106,7 @@ Work with snippet session from |MiniSnippets.default_insert()|
 Get data about active session
 
 Parameters ~
-{all} `(boolean)` Whether to return array with the whole session stack.
+{all} `(boolean|nil)` Whether to return array with the whole session stack.
   Default: `false`.
 
 Return ~
