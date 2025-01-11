@@ -4934,6 +4934,38 @@ T['Examples']['stop session after jump to final tabstop'] = function()
   validate_no_active_session()
 end
 
+T['Examples']['stop session after Normal mode exit'] = function()
+  child.lua([[
+    local make_stop = function()
+      local au_opts = { pattern = '*:n', once = true }
+      au_opts.callback = function()
+        while MiniSnippets.session.get() do
+          MiniSnippets.session.stop()
+        end
+      end
+      vim.api.nvim_create_autocmd('ModeChanged', au_opts)
+    end
+    local opts = { pattern = 'MiniSnippetsSessionStart', callback = make_stop }
+    vim.api.nvim_create_autocmd('User', opts)
+  ]])
+
+  start_session('T1=$1; T0=$0')
+  validate_active_session()
+  type_keys('<Esc>')
+  validate_no_active_session()
+  eq(child.cmd_capture('au ModeChanged'):find('snippet') == nil, true)
+
+  start_session('T1=$1; T0=$0')
+  -- Should not stop for "temporary" Normal mode
+  type_keys('<C-o>i')
+  validate_active_session()
+  -- Should stop nested sessions
+  start_session('U1=$1; U0=$0')
+  eq(#get(true), 2)
+  type_keys('<Esc>')
+  validate_no_active_session()
+end
+
 T['Examples']['expand all'] = function()
   child.lua([[
     local rhs = function() MiniSnippets.expand({ match = false }) end

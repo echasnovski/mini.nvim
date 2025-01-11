@@ -445,6 +445,22 @@
 ---   local au_opts = { pattern = 'MiniSnippetsSessionJump', callback = fin_stop }
 ---   vim.api.nvim_create_autocmd('User', au_opts)
 --- <
+--- # Stop all sessions on Normal mode exit ~
+---
+--- Use |ModeChanged| and |MiniSnippets-events| events: >lua
+---
+---   local make_stop = function()
+---     local au_opts = { pattern = '*:n', once = true }
+---     au_opts.callback = function()
+---       while MiniSnippets.session.get() do
+---         MiniSnippets.session.stop()
+---       end
+---     end
+---     vim.api.nvim_create_autocmd('ModeChanged', au_opts)
+---   end
+---   local opts = { pattern = 'MiniSnippetsSessionStart', callback = make_stop }
+---   vim.api.nvim_create_autocmd('User', opts)
+--- <
 --- # Customize variable evaluation ~
 ---
 --- Create environment variables and `config.expand.insert` wrapper: >lua
