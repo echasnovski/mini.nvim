@@ -225,7 +225,8 @@
 --- `source.items` defines items to choose from. It should be one of the following:
 --- - Array of objects which can have different types. Any type is allowed.
 --- - `nil`. Picker waits for explicit |MiniPick.set_picker_items()| call.
---- - Callable returning any of the previous types. Will be called once on start.
+--- - Callable returning any of the previous types. Will be called once on start
+---   with source's `cwd` set as |current-directory|.
 ---
 ---                                                 *MiniPick-source.items-stritems*
 --- Matching is done for items array based on the string representation of its
@@ -298,6 +299,9 @@
 --- This is a part of source to allow persistent way to use relative paths,
 --- i.e. not depend on current directory being constant after picker start.
 --- It also makes the |MiniPick.builtin.resume()| picker more robust.
+---
+--- It will be set as local |current-directory| (|:lcd|) of picker's main window
+--- to allow simpler code for "in window" functions (choose/preview/custom/etc.).
 ---
 --- Default value is |current-directory|.
 ---
@@ -1276,7 +1280,8 @@ MiniPick.builtin.files = function(local_opts, opts)
   opts = vim.tbl_deep_extend('force', default_opts, opts or {})
 
   if tool == 'fallback' then
-    opts.source.items = function() H.files_fallback_items(opts.source.cwd) end
+    local cwd = H.full_path(opts.source.cwd or vim.fn.getcwd())
+    opts.source.items = function() H.files_fallback_items(cwd) end
     return MiniPick.start(opts)
   end
 
@@ -1312,7 +1317,8 @@ MiniPick.builtin.grep = function(local_opts, opts)
 
   local pattern = type(local_opts.pattern) == 'string' and local_opts.pattern or vim.fn.input('Grep pattern: ')
   if tool == 'fallback' then
-    opts.source.items = function() H.grep_fallback_items(pattern, opts.source.cwd) end
+    local cwd = H.full_path(opts.source.cwd or vim.fn.getcwd())
+    opts.source.items = function() H.grep_fallback_items(pattern, cwd) end
     return MiniPick.start(opts)
   end
 
@@ -1347,7 +1353,8 @@ MiniPick.builtin.grep_live = function(local_opts, opts)
   local default_source = { name = string.format('Grep live (%s%s)', tool, name_suffix), show = show }
   opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {})
 
-  local set_items_opts, spawn_opts = { do_match = false, querytick = H.querytick }, { cwd = opts.source.cwd }
+  local cwd = H.full_path(opts.source.cwd or vim.fn.getcwd())
+  local set_items_opts, spawn_opts = { do_match = false, querytick = H.querytick }, { cwd = cwd }
   local process
   local match = function(_, _, query)
     pcall(vim.loop.process_kill, process)
@@ -1499,7 +1506,9 @@ MiniPick.builtin.cli = function(local_opts, opts)
   local_opts = vim.tbl_deep_extend('force', { command = {}, postprocess = nil, spawn_opts = {} }, local_opts or {})
   local name = string.format('CLI (%s)', tostring(local_opts.command[1] or ''))
   opts = vim.tbl_deep_extend('force', { source = { name = name } }, opts or {})
-  local_opts.spawn_opts.cwd = local_opts.spawn_opts.cwd or opts.source.cwd
+  -- Explicitly use full path to not conflict with `set_picker_items_from_cli`
+  -- behavior of treating `spawn_opts.cwd` relative to source's cwd
+  local_opts.spawn_opts.cwd = H.full_path(local_opts.spawn_opts.cwd or opts.source.cwd or vim.fn.getcwd())
 
   local command = local_opts.command
   local set_from_cli_opts = { postprocess = local_opts.postprocess, spawn_opts = local_opts.spawn_opts }
@@ -1515,7 +1524,7 @@ MiniPick.builtin.resume = function()
   H.cache = {}
   local buf_id = H.picker_new_buf()
   local win_target = vim.api.nvim_get_current_win()
-  local win_id = H.picker_new_win(buf_id, picker.opts.window.config)
+  local win_id = H.picker_new_win(buf_id, picker.opts.window.config, picker.opts.source.cwd)
   picker.buffers = { main = buf_id }
   picker.windows = { main = win_id, target = win_target }
   picker.view_state = 'main'
@@ -1673,6 +1682,7 @@ end
 ---     Will be called with array of lines as input, should return array of items.
 ---     Default: removes trailing empty lines and uses rest as string items.
 ---   - <spawn_opts> `(table)` - `options` for |uv.spawn|, except `args` and `stdio` fields.
+---     Note: relative `cwd` path is resolved against active picker's `cwd`.
 ---   - <set_items_opts> `(table)` - table forwarded to |MiniPick.set_picker_items()|.
 ---
 ---@seealso |MiniPick.get_picker_items()| and |MiniPick.get_picker_stritems()|
@@ -1732,9 +1742,11 @@ end
 ---@seealso |MiniPick.get_picker_opts()|
 MiniPick.set_picker_opts = function(opts)
   if not MiniPick.is_picker_active() then return end
-  H.pickers.active.opts = vim.tbl_deep_extend('force', H.pickers.active.opts, opts or {})
-  H.pickers.active.action_keys = H.normalize_mappings(H.pickers.active.opts.mappings)
-  H.picker_update(H.pickers.active, true, true)
+  local picker, cur_cwd = H.pickers.active, H.pickers.active.opts.source.cwd
+  picker.opts = vim.tbl_deep_extend('force', picker.opts, opts or {})
+  picker.action_keys = H.normalize_mappings(picker.opts.mappings)
+  if cur_cwd ~= picker.opts.source.cwd then H.win_set_cwd(picker.windows.main, picker.opts.source.cwd) end
+  H.picker_update(picker, true, true)
 end
 
 --- Set target window for active picker
@@ -2076,7 +2088,7 @@ H.picker_new = function(opts)
 
   -- Create window
   local win_target = vim.api.nvim_get_current_win()
-  local win_id = H.picker_new_win(buf_id, opts.window.config)
+  local win_id = H.picker_new_win(buf_id, opts.window.config, opts.source.cwd)
 
   -- Construct and return object
   local picker = {
@@ -2178,7 +2190,7 @@ H.picker_new_buf = function()
   return buf_id
 end
 
-H.picker_new_win = function(buf_id, win_config)
+H.picker_new_win = function(buf_id, win_config, cwd)
   -- Hide cursor while picker is active (to not be visible in the window)
   -- This mostly follows a hack from 'folke/noice.nvim'
   H.cache.guicursor = vim.o.guicursor
@@ -2197,6 +2209,9 @@ H.picker_new_win = function(buf_id, win_config)
   H.win_update_hl(win_id, 'NormalFloat', 'MiniPickNormal')
   H.win_update_hl(win_id, 'FloatBorder', 'MiniPickBorder')
   vim.fn.clearmatches(win_id)
+
+  -- Set window's local "current directory" for easier choose/preview/etc.
+  H.win_set_cwd(nil, cwd)
 
   return win_id
 end
@@ -3267,7 +3282,6 @@ end
 
 H.files_fallback_items = function(cwd)
   if vim.fn.has('nvim-0.9') == 0 then H.error('Tool "fallback" of `files` builtin needs Neovim>=0.9.') end
-  cwd = cwd or '.'
   local poke_picker = H.poke_picker_throttle()
   local f = function()
     local items = {}
@@ -3311,7 +3325,6 @@ end
 
 H.grep_fallback_items = function(pattern, cwd)
   if vim.fn.has('nvim-0.9') == 0 then H.error('Tool "fallback" of `grep` builtin needs Neovim>=0.9.') end
-  cwd = cwd or '.'
   local poke_picker = H.poke_picker_throttle()
   local f = function()
     local files, files_full = {}, {}
@@ -3476,6 +3489,14 @@ H.win_get_bottom_border = function(win_id)
   local res = border[6]
   if type(res) == 'table' then res = res[1] end
   return res or ' '
+end
+
+H.win_set_cwd = function(win_id, cwd)
+  -- Avoid needlessly setting cwd as it has side effects (like for `:buffers`)
+  if cwd == nil or vim.fn.getcwd(win_id or 0) == cwd then return end
+  local f = function() vim.cmd('lcd ' .. vim.fn.fnameescape(cwd)) end
+  if win_id == nil or win_id == vim.api.nvim_get_current_win() then return f() end
+  vim.api.nvim_win_call(f, win_id)
 end
 
 H.seq_along = function(arr)

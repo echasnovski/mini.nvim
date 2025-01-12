@@ -6,7 +6,7 @@
 05|┌Info────────────────────┐              
 06|│l                       │              
 07|│ name   │ <No name>     │              
-08|│ cwd    │ mock/current-d│              
+08|│ cwd    │ tests/dir-pick│              
 09|│items   │ 1             │              
 10|│d items │ 1             │              
 11|│ items  │ 0             │              

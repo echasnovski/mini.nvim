@@ -6,7 +6,7 @@
 05|┌Info────────────────────┐              
 06|│General                 │              
 07|│Source name   │ My name │              
-08|│Source cwd    │ mock/cur│              
+08|│Source cwd    │ tests/di│              
 09|│Total items   │ 3       │              
 10|│Matched items │ 3       │              
 11|│Marked items  │ 0       │              

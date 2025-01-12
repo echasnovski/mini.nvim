@@ -229,7 +229,8 @@ want to just use provided pickers.
 `source.items` defines items to choose from. It should be one of the following:
 - Array of objects which can have different types. Any type is allowed.
 - `nil`. Picker waits for explicit |MiniPick.set_picker_items()| call.
-- Callable returning any of the previous types. Will be called once on start.
+- Callable returning any of the previous types. Will be called once on start
+  with source's `cwd` set as |current-directory|.
 
                                                 *MiniPick-source.items-stritems*
 Matching is done for items array based on the string representation of its
@@ -302,6 +303,9 @@ picker operates. It should point to a valid actually present directory path.
 This is a part of source to allow persistent way to use relative paths,
 i.e. not depend on current directory being constant after picker start.
 It also makes the |MiniPick.builtin.resume()| picker more robust.
+
+It will be set as local |current-directory| (|:lcd|) of picker's main window
+to allow simpler code for "in window" functions (choose/preview/custom/etc.).
 
 Default value is |current-directory|.
 
@@ -1345,6 +1349,7 @@ Parameters ~
     Will be called with array of lines as input, should return array of items.
     Default: removes trailing empty lines and uses rest as string items.
   - <spawn_opts> `(table)` - `options` for |uv.spawn|, except `args` and `stdio` fields.
+    Note: relative `cwd` path is resolved against active picker's `cwd`.
   - <set_items_opts> `(table)` - table forwarded to |MiniPick.set_picker_items()|.
 
 See also ~

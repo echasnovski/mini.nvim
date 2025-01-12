@@ -2,7 +2,7 @@
 01|┌Info─────────────────────────────────┐                     
 02|│General                              │                     
 03|│Source name   │ My name              │                     
-04|│Source cwd    │ mock/current-dir     │                     
+04|│Source cwd    │ tests/dir-pick       │                     
 05|│Total items   │ 3                    │                     
 06|│Matched items │ 3                    │                     
 07|│Marked items  │ 0                    │                     

@@ -28,12 +28,13 @@ child.has_float_footer = function()
 end
 
 -- Test paths helpers
-local test_dir = 'tests/dir-pick'
-local real_files_dir = 'tests/dir-pick/real-files'
-
 local join_path = function(...) return table.concat({ ... }, '/') end
 
 local full_path = function(x) return (vim.fn.fnamemodify(x, ':p'):gsub('[\\/]$', '')) end
+
+local test_dir = 'tests/dir-pick'
+local test_dir_absolute = full_path(test_dir)
+local real_files_dir = 'tests/dir-pick/real-files'
 
 local real_file = function(basename) return join_path(real_files_dir, basename) end
 
@@ -83,11 +84,12 @@ local validate_win_option = function(win_id, option_name, option_value)
   eq(child.api.nvim_win_get_option(win_id, option_name), option_value)
 end
 
-local validate_buf_name = function(buf_id, name)
+local validate_buf_name = function(buf_id, ref_name)
   buf_id = buf_id or child.api.nvim_get_current_buf()
-  name = name ~= '' and full_path(name) or ''
-  name = name:gsub('[\\/]+$', '')
-  eq(child.api.nvim_buf_get_name(buf_id), name)
+  local name = child.api.nvim_buf_get_name(buf_id):gsub('\\', '/')
+  ref_name = ref_name ~= '' and full_path(ref_name) or ''
+  ref_name = ref_name:gsub('\\', '/'):gsub('[\\/]+$', '')
+  eq(name, ref_name)
 end
 
 local validate_contains_all = function(base, to_be_present)
@@ -560,6 +562,17 @@ T['start()']['respects `source.items`'] = function()
   child.poke_eventloop()
   child.expect_screenshot()
   stop()
+
+  -- Should execute callback items with `source.cwd` as current directory
+  eq(child.fn.getcwd() ~= test_dir_absolute, true)
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute))
+  child.lua([[_G.items_callable_cwd = function()
+    _G.cur_cwd = vim.fn.getcwd()
+    return { 'u', 'v' }
+  end]])
+  child.lua_notify('MiniPick.start({ source = { items = _G.items_callable_cwd, cwd = _G.cwd } })')
+  eq(child.lua_get('_G.cur_cwd'), test_dir_absolute)
+  stop()
 end
 
 T['start()']['correctly computes stritems'] = function()
@@ -793,11 +806,13 @@ T['start()']['allows custom mappings'] = function()
   -- Both in global and local config
   child.lua([[MiniPick.config.mappings.custom_global = {
     char = '<C-d>',
-    func = function(...) _G.args_global = { ... } end,
+    -- Should be executed with source's cwd set as current directory
+    func = function(...) _G.cur_cwd, _G.args_global = vim.fn.getcwd(), { ... } end,
   }]])
 
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute))
   child.lua_notify([[MiniPick.start({
-    source = { items = { 'a', 'b' } },
+    source = { items = { 'a', 'b' }, cwd = _G.cwd },
     mappings = {
       -- Return value is treated as "should stop picker after execution"
       custom = { char = 'm', func = function(...) _G.args_local = { ... }; return true end },
@@ -805,6 +820,7 @@ T['start()']['allows custom mappings'] = function()
   })]])
 
   type_keys('<C-d>')
+  eq(child.lua_get('_G.cur_cwd'), test_dir_absolute)
   eq(child.lua_get('_G.args_global'), {})
   eq(is_picker_active(), true)
 
@@ -1545,6 +1561,16 @@ T['default_preview()']['works for relative file path'] = function()
   child.lua_notify(lua_cmd)
   type_keys('<Tab>')
   child.expect_screenshot()
+  type_keys('<C-c>')
+
+  -- Should respect source's cwd (thanks to window-local cwd)
+  local target_win_id = child.api.nvim_get_current_win()
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute .. '/builtin-tests'))
+  child.fn.chdir(test_dir_absolute)
+  child.lua_notify('MiniPick.start({ source = { items = { { path = "file" } }, cwd = _G.cwd } })')
+  type_keys('<Tab>')
+  child.expect_screenshot()
+  eq(child.fn.getcwd(target_win_id), test_dir_absolute)
 end
 
 T['default_preview()']['works for file path with tilde'] = function()
@@ -1855,6 +1881,14 @@ T['default_choose()']['works for relative file path'] = function()
 
   -- Should open with relative path to have better view in `:buffers`
   expect.match(child.cmd_capture('buffers'), '"tests[\\/]dir%-pick')
+
+  -- Should respect source's cwd (thanks to window-local cwd)
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute .. '/builtin-tests'))
+  child.fn.chdir(test_dir_absolute)
+  child.lua_notify('MiniPick.start({ source = { items = { { path = "file" } }, cwd = _G.cwd } })')
+  type_keys('<CR>')
+  validate_buf_name(0, full_path(test_dir_absolute .. '/builtin-tests/file'))
+  eq(child.fn.getcwd(), test_dir_absolute)
 end
 
 T['default_choose()']['works for URI path'] = function()
@@ -2494,7 +2528,6 @@ T['builtin.files()']['respects `opts.source.cwd` for cli spawn'] = function()
   mock_cli_return({})
   builtin_files({}, { source = { cwd = test_dir } })
 
-  local test_dir_absolute = full_path(test_dir)
   validate_picker_option('source.cwd', test_dir_absolute)
   eq(get_spawn_log()[1].options.cwd, test_dir_absolute)
 end
@@ -2668,7 +2701,6 @@ T['builtin.grep()']['respects `opts.source.cwd` for cli spawn'] = function()
   mock_cli_return({})
   builtin_grep({ pattern = 'b' }, { source = { cwd = test_dir } })
 
-  local test_dir_absolute = full_path(test_dir)
   validate_picker_option('source.cwd', test_dir_absolute)
   eq(get_spawn_log()[1].options.cwd, test_dir_absolute)
 end
@@ -2906,7 +2938,6 @@ T['builtin.grep_live()']['respects `opts.source.cwd` for cli spawn'] = function(
   mock_cli_return({ real_file('b.txt') .. '\0001\0001' })
   type_keys('b')
 
-  local test_dir_absolute = full_path(test_dir)
   validate_picker_option('source.cwd', test_dir_absolute)
   eq(get_spawn_log()[1].options.cwd, test_dir_absolute)
 end
@@ -3140,12 +3171,11 @@ end
 
 T['builtin.cli()']['respects `local_opts.spawn_opts`'] = function()
   builtin_cli({ command = { 'echo', 'aa\nbb' }, spawn_opts = { env = { AAA = 'xxx' } } })
-  eq(get_spawn_log()[1].options, { args = { 'aa\nbb' }, env = { AAA = 'xxx' } })
+  eq(get_spawn_log()[1].options, { args = { 'aa\nbb' }, cwd = child.fn.getcwd(), env = { AAA = 'xxx' } })
 end
 
 T['builtin.cli()']['respects `opts.source.cwd` for cli spawn'] = function()
   local command = { 'echo', 'aa\nbb' }
-  local test_dir_absolute = full_path(test_dir)
 
   local validate = function(local_opts, opts, ref_cwd, source_cwd)
     builtin_cli(local_opts, opts)
@@ -3248,6 +3278,7 @@ T['builtin.resume()']['preserves current working directory'] = function()
   child.fn.chdir(dir_2)
   builtin_resume()
   validate_picker_option('source.cwd', full_path(dir_1))
+  eq(child.fn.getcwd(0), dir_1)
 end
 
 T['builtin.resume()']['preserves query cache'] = function()
@@ -4046,6 +4077,8 @@ T['set_picker_opts()']['works'] = function()
     if child.has_float_footer() then child.expect_screenshot_orig() end
   end
 
+  local target_win_id = child.api.nvim_get_current_win()
+  local init_cwd = child.fn.getcwd()
   start_with_items({ 'a', 'b', 'bb' })
   expect_screenshot()
 
@@ -4067,6 +4100,13 @@ T['set_picker_opts()']['works'] = function()
   eq(child.lua_get('_G.log'), 'world')
   type_keys('<C-d>')
   eq(child.lua_get('_G.log'), 'hello')
+
+  -- Can be used to update cwd
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir))
+  child.lua('MiniPick.set_picker_opts({ source = { items = { { path = "file" } }, cwd = _G.cwd } })')
+  eq(child.lua_get('MiniPick.get_picker_opts().source.cwd'), test_dir)
+  eq(child.fn.getcwd(0), full_path(test_dir))
+  eq(child.fn.getcwd(target_win_id), init_cwd)
 
   -- Should rerun match
   child.lua('MiniPick.set_picker_opts({ source = { match = function() return { 2 } end } })')
@@ -4703,6 +4743,17 @@ T['Main view']['does not inherit highlighting from `matchparen`'] = function()
   eq(child.fn.getmatches(get_picker_state().windows.main), {})
 end
 
+T['Main view']['has correct local cwd'] = function()
+  local target_win_id = child.api.nvim_get_current_win()
+  child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute .. '/builtin-tests'))
+  child.fn.chdir(test_dir_absolute)
+  child.lua_notify('MiniPick.start({ source = { cwd = _G.cwd } })')
+
+  -- Should set local cwd per window and not affect other windows
+  eq(child.fn.getcwd(0):gsub('\\', '/'), full_path(test_dir_absolute .. '/builtin-tests'):gsub('\\', '/'))
+  eq(child.fn.getcwd(target_win_id), test_dir_absolute)
+end
+
 T['Info view'] = new_set()
 
 T['Info view']['works'] = function()
@@ -4710,7 +4761,7 @@ T['Info view']['works'] = function()
   child.lua('MiniPick.config.window.config = { height = 40 }')
 
   start_with_items({ 'a', 'b', 'bb' }, 'My name')
-  mock_picker_cwd('mock/current-dir')
+  mock_picker_cwd(test_dir)
   type_keys('<S-Tab>')
   child.expect_screenshot()
 end
@@ -4723,7 +4774,7 @@ T['Info view']['respects custom mappings'] = function()
   child.lua([[MiniPick.config.window.config = { height = 20 }]])
 
   start_with_items({ 'a', 'b', 'bb' }, 'My name')
-  mock_picker_cwd('mock/current-dir')
+  mock_picker_cwd(test_dir)
   type_keys('<S-Tab>')
   child.expect_screenshot()
 end
@@ -4748,7 +4799,7 @@ end
 T['Info view']['is updated after moving/marking current item'] = function()
   child.set_size(15, 40)
   start_with_items({ 'a', 'b', 'bb' }, 'My name')
-  mock_picker_cwd('mock/current-dir')
+  mock_picker_cwd(test_dir)
   type_keys('<S-Tab>')
   child.expect_screenshot()
 
@@ -4783,7 +4834,7 @@ end
 
 T['Info view']['supports vertical and horizontal scroll'] = function()
   start_with_items({ 'a' })
-  mock_picker_cwd('mock/current-dir')
+  mock_picker_cwd(test_dir)
   type_keys('<S-Tab>')
 
   local validate = function(key)
