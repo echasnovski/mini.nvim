@@ -1534,6 +1534,28 @@ T['default_preview()']['works without active picker'] = function()
   child.expect_screenshot()
 end
 
+T['default_preview()']['can be used in outside preview window'] = function()
+  -- This is not a module's capabilitiy per se, but something it should allow
+  local item = { path = real_file('b.txt'), lnum = 5, text = 'b.txt' }
+  start_with_items({ item })
+
+  local buf_id = child.api.nvim_create_buf(false, true)
+  local win_config = {
+    relative = 'editor',
+    anchor = 'NE',
+    row = 0,
+    col = child.o.columns,
+    height = 3,
+    width = 15,
+    border = 'single',
+    style = 'minimal',
+  }
+  child.api.nvim_open_win(buf_id, false, win_config)
+  sleep(small_time)
+  default_preview(buf_id, item, { line_position = 'center' })
+  child.expect_screenshot()
+end
+
 T['default_preview()']['works for file path'] = function()
   local items = {
     -- Item as string

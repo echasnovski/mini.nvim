@@ -3183,9 +3183,10 @@ H.preview_set_lines = function(buf_id, lines, extra)
     if not has_parser then vim.bo[buf_id].syntax = ft end
   end
 
-  -- Cursor position and window view
-  local state = MiniPick.get_picker_state()
-  local win_id = state ~= nil and state.windows.main or vim.fn.bufwinid(buf_id)
+  -- Cursor position and window view. Find window (and not use picker window)
+  -- for "outside window preview" (preview and main are different) to work.
+  local win_id = vim.fn.bufwinid(buf_id)
+  if win_id == -1 then return end
   H.set_cursor(win_id, extra.lnum, extra.col)
   local pos_keys = ({ top = 'zt', center = 'zz', bottom = 'zb' })[extra.line_position] or 'zt'
   pcall(vim.api.nvim_win_call, win_id, function() vim.cmd('normal! ' .. pos_keys) end)
