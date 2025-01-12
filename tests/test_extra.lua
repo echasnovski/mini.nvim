@@ -1196,12 +1196,14 @@ end
 
 T['pickers']['explorer()']['respects `local_opts.cwd`'] = function()
   local validate = function(cwd, ref_picker_cwd)
-    local nvim_cwd = child.fn.getcwd()
+    local init_win_id, init_cwd = child.api.nvim_get_current_win(), child.fn.getcwd()
+    local cwd_absolute = cwd == '..' and vim.fn.fnamemodify(init_cwd, ':h') or full_path(cwd)
     pick_explorer({ cwd = cwd })
     validate_picker_cwd(ref_picker_cwd)
 
-    -- Neovim's directory should not change
-    eq(child.fn.getcwd(), nvim_cwd)
+    -- Picker window's directory should change, but other should stay the same
+    eq(child.fn.getcwd(0), cwd_absolute)
+    eq(child.fn.getcwd(init_win_id), init_cwd)
 
     -- Cleanup
     stop_picker()
