@@ -49,7 +49,7 @@ end
 
 local mock_treesitter_builtin = function() child.cmd('source tests/dir-ai/mock-lua-treesitter.lua') end
 
-local mock_treesitter_plugin = function() child.cmd('set rtp+=tests/dir-ai') end
+local mock_treesitter_plugin = function() child.cmd('noautocmd set rtp+=tests/dir-ai') end
 
 -- Time constants
 local helper_message_delay = 1000

@@ -73,7 +73,7 @@ end
 
 local mock_treesitter_builtin = function() child.cmd('source tests/dir-surround/mock-lua-treesitter.lua') end
 
-local mock_treesitter_plugin = function() child.cmd('set rtp+=tests/dir-surround') end
+local mock_treesitter_plugin = function() child.cmd('noautocmd set rtp+=tests/dir-surround') end
 
 -- Time constants
 local default_highlight_duraion = 500
