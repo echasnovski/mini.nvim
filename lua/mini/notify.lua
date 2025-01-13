@@ -337,10 +337,12 @@ MiniNotify.add = function(msg, level, hl_group)
   local cur_ts = H.get_timestamp()
   local new_notif = { msg = msg, level = level, hl_group = hl_group, ts_add = cur_ts, ts_update = cur_ts }
 
-  local new_id = #H.history + 1
-  -- NOTE: Crucial to use the same table here and later only update values
-  -- inside of it in place. This makes sure that history entries are in sync.
-  H.history[new_id], H.active[new_id] = new_notif, new_notif
+  H.id = H.id + 1
+  local new_id = H.id
+  H.active[new_id] = new_notif
+  table.insert(H.history, new_notif)
+  -- Limit hisotry size
+  if #H.history > H.history_size then table.remove(H.history, 1) end
 
   -- Refresh active notifications
   MiniNotify.refresh()
@@ -456,7 +458,7 @@ end
 ---@param id number Identifier of notification.
 ---
 ---@return table Notification object (see |MiniNotify-specification|).
-MiniNotify.get = function(id) return vim.deepcopy(H.history[id]) end
+MiniNotify.get = function(id) return vim.deepcopy(H.history[(id + 1) % H.history_size]) end
 
 --- Get all previously added notifications
 ---
@@ -534,11 +536,17 @@ end
 -- Module default config
 H.default_config = MiniNotify.config
 
+-- Current message id
+H.id = 0
+
 -- Map of currently active notifications with their id as key
 H.active = {}
 
 -- History of all notifications in order they are created
 H.history = {}
+
+-- Max history size
+H.history_size = 10000
 
 -- Map of LSP progress process id to notification data
 H.lsp_progress = {}
