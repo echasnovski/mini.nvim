@@ -80,6 +80,9 @@ Notes:
                           `MiniNotify.setup`({config})
 Module setup
 
+This will also clean the history. Use `MiniNotify.setup(MiniNotify.config)` to
+force clean history while preserving the config.
+
 Parameters ~
 {config} `(table|nil)` Module config table. See |MiniNotify.config|.
 

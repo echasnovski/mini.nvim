@@ -24,6 +24,10 @@
 
 - FEATURE: add distinctive glyphs and highlighting for special Neovim directories (from `:h 'runtimepath'`).
 
+## mini.notify
+
+- FEATURE: `setup()` now also can be used to clean history (for example, like `MiniNotify.setup(MiniNotify.config)`).
+
 ## mini.pick
 
 - BREAKING FEATURE: picker window now has local current directory set to source's `cwd`. This allows easier code for "in window" functions (callable items, choose, preview, etc.) as relative paths will be properly resolved. It also results in some changes:

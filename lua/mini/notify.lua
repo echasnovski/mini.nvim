@@ -87,6 +87,9 @@ local H = {}
 
 --- Module setup
 ---
+--- This will also clean the history. Use `MiniNotify.setup(MiniNotify.config)` to
+--- force clean history while preserving the config.
+---
 ---@param config table|nil Module config table. See |MiniNotify.config|.
 ---
 ---@usage >lua
@@ -600,6 +603,10 @@ H.apply_config = function(config)
       vim.lsp.handlers['$/progress'] = H.lsp_progress_handler
     end)
   end
+
+  -- Clean history
+  if #H.history > 0 then MiniNotify.clear() end
+  H.history = {}
 end
 
 H.create_autocommands = function()
@@ -677,7 +684,8 @@ H.lsp_progress_handler = function(err, result, ctx, config)
     client_name, progress_data.title or '', value.message or '', progress_data.percentage
   )
 
-  if progress_data.notif_id == nil then
+  -- Check for valid history entry as `setup()` might have removed the id
+  if H.history[progress_data.notif_id] == nil then
     progress_data.notif_id = MiniNotify.add(msg)
   else
     MiniNotify.update(progress_data.notif_id, { msg = msg })

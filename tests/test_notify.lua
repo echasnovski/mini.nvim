@@ -146,6 +146,21 @@ T['setup()']['ensures colors'] = function()
   expect.match(child.cmd_capture('hi MiniNotifyBorder'), 'links to FloatBorder')
 end
 
+T['setup()']['clears the history'] = function()
+  child.lua([[
+    local id_1 = MiniNotify.add("Hello")
+    local id_2 = MiniNotify.add("Hello")
+    MiniNotify.remove(id_1)
+  ]])
+  eq(#child.lua_get('MiniNotify.get_all()'), 2)
+  eq(is_notif_window_shown(), true)
+
+  child.lua('MiniNotify.setup(MiniNotify.config)')
+  -- Should also remove possibly visible notification window
+  eq(#child.lua_get('MiniNotify.get_all()'), 0)
+  eq(is_notif_window_shown(), false)
+end
+
 T['make_notify()'] = new_set()
 
 local notify = forward_lua('vim.notify')
