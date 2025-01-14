@@ -390,7 +390,7 @@ MiniIcons.config = {
 ---
 ---     Icon data is attempted to be resolved in the following order:
 ---       - List of user configured and built-in file names (matched to basename
----         of the input exactly). Run `:=MiniIcons.list('flle')` to see them.
+---         of the input exactly). Run `:=MiniIcons.list('file')` to see them.
 ---       - Basename extension:
 ---           - Matched directly as `get('extension', ext)`, where `ext` is the
 ---             widest suffix after the dot.
