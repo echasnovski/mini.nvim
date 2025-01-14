@@ -172,7 +172,7 @@ T['open()']['works'] = function()
   expect.match(table.concat(get_lines(), '\n'), 'Builtin actions')
 end
 
-T['open()']['sets buffer options'] = function()
+T['open()']['sets local options'] = function()
   -- Cache initial data for future verification
   child.o.showtabline = 2
   local init_laststatus = child.o.laststatus
@@ -180,14 +180,15 @@ T['open()']['sets buffer options'] = function()
   -- Open Starter buffer
   child.lua('MiniStarter.open()')
 
-  -- Should set essential buffer options (not all actually set are tested)
+  -- Should set essential local options (not all actually set are tested)
   eq(child.bo.bufhidden, 'wipe')
   eq(child.bo.buflisted, false)
   eq(child.bo.buftype, 'nofile')
+  eq(child.wo.colorcolumn, '')
   eq(child.wo.foldlevel, 999)
   eq(child.bo.modifiable, false)
-  eq(child.wo.colorcolumn, '')
   eq(child.wo.signcolumn, 'no')
+  if child.fn.has('nvim-0.9') == 1 then eq(child.wo.statuscolumn, '') end
   eq(child.wo.wrap, false)
 
   -- Should hide tabline but not touch statusline

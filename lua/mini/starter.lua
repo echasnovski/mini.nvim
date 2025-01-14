@@ -1373,6 +1373,7 @@ H.apply_buffer_options = function(buf_id)
     'nospell',
     'noswapfile',
     'signcolumn=no',
+    vim.fn.has('nvim-0.9') == 1 and 'statuscolumn=' or '',
     'synmaxcol&',
     -- Differ from 'vim-startify'
     'buftype=nofile',
