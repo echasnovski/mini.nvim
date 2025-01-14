@@ -20,12 +20,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        neovim_version: ['v0.8.3', 'v0.9.5', 'v0.10.2', 'nightly']
+        neovim_version: ['v0.8.3', 'v0.9.5', 'v0.10.3', 'nightly']
         include:
         - os: macos-latest
-          neovim_version: v0.10.1
+          neovim_version: v0.10.3
         - os: windows-latest
-          neovim_version: v0.10.1
+          neovim_version: v0.10.3
     runs-on: ${{ matrix.os }}
 
     steps:
