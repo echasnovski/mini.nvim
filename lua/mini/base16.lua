@@ -1463,7 +1463,6 @@ H.xyz2rgb = function(xyz)
   -- stylua: ignore end
 
   return vim.tbl_map(function(c)
-    c = c / 100
     if c > 0.0031308 then
       c = 1.055 * (c ^ (1 / 2.4)) - 0.055
     else
