@@ -1526,7 +1526,7 @@ H.eval_fun_or_string = function(x, string_as_cmd)
   if type(x) == 'function' then return x() end
   if type(x) == 'string' then
     if string_as_cmd then
-      vim.cmd(x)
+      vim.cmd(("silent! %s"):format(x))
     else
       return x
     end
