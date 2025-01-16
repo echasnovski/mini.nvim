@@ -88,8 +88,9 @@ T['setup()']['creates `config` field'] = function()
   -- Check default values
   local expect_config = function(field, value) eq(child.lua_get('MiniIndentscope.config.' .. field), value) end
 
-  eq(child.lua_get('type(_G.MiniIndentscope.config.draw.animation)'), 'function')
   expect_config('draw.delay', 100)
+  eq(child.lua_get('type(_G.MiniIndentscope.config.draw.animation)'), 'function')
+  eq(child.lua_get('type(_G.MiniIndentscope.config.draw.predicate)'), 'function')
   expect_config('draw.priority', 2)
   expect_config('mappings.goto_bottom', ']i')
   expect_config('mappings.goto_top', '[i')
@@ -119,6 +120,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ draw = 'a' }, 'draw', 'table')
   expect_config_error({ draw = { delay = 'a' } }, 'draw.delay', 'number')
   expect_config_error({ draw = { animation = 'a' } }, 'draw.animation', 'function')
+  expect_config_error({ draw = { predicate = 'a' } }, 'draw.predicate', 'function')
   expect_config_error({ draw = { priority = 'a' } }, 'draw.priority', 'number')
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { object_scope = 1 } }, 'mappings.object_scope', 'string')
@@ -686,6 +688,60 @@ T['Auto drawing']['implements debounce-style delay'] = function()
   child.expect_screenshot()
   sleep(small_time)
   -- Should start drawing
+  child.expect_screenshot()
+end
+
+T['Auto drawing']['by default is not done for incomplete scope'] = function()
+  set_lines({ 'aa', '  bb', '  bb', '  bb', '  bb', '  bb', 'aa' })
+  child.lua('MiniIndentscope.config.options.n_lines = 2')
+  child.lua('MiniIndentscope.config.draw.delay = ' .. small_time)
+  child.lua('MiniIndentscope.config.draw.animation = function() return 0 end')
+
+  -- Should draw if scope computation is complete
+  set_cursor(4, 0)
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+
+  -- Should undraw immediately if scope is incomplete and never draw
+  set_cursor(3, 0)
+  child.expect_screenshot()
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+
+  type_keys('l')
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+
+  -- Should still draw later for complete scope
+  type_keys('j')
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+end
+
+T['Auto drawing']['respects `config.draw.predicate`'] = function()
+  set_lines({ 'aa', '  bb', 'aa' })
+  child.lua('MiniIndentscope.config.draw.delay = ' .. small_time)
+  child.lua('MiniIndentscope.config.draw.animation = function() return 0 end')
+
+  child.lua([[MiniIndentscope.config.draw.predicate = function(scope)
+    return (scope.body.bottom - scope.body.top + 1) >= _G.min_scope_height
+  end]])
+
+  -- Should not draw as actual height is too low
+  child.lua('_G.min_scope_height = 2')
+  set_cursor(2, 0)
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+
+  child.lua('_G.min_scope_height = 1')
+  type_keys('jk')
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+
+  -- Should respect buffer-local config (and not draw in this case)
+  child.lua('vim.b.miniindentscope_config = { draw = { predicate = function() return false end } }')
+  type_keys('jk')
+  sleep(small_time + small_time)
   child.expect_screenshot()
 end
 

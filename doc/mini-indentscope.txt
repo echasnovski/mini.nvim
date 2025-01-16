@@ -133,6 +133,10 @@ Default values:
       -- animation, use `require('mini.indentscope').gen_animation.none()`.
       animation = --<function: implements constant 20ms between steps>,
 
+      -- Whether to auto draw scope: return `true` to draw, `false` otherwise.
+      -- Default draws only fully computed scope (see `options.n_lines`).
+      predicate = function(scope) return not scope.body.is_incomplete end,
+
       -- Symbol priority. Increase to display on top of more symbols.
       priority = 2,
     },
@@ -211,7 +215,8 @@ Default values:
 <
 - Option `n_lines` defines |MiniIndentscope.get_scope()| behavior for how many
   lines above/below to check before iteration is stopped. Scope that reached
-  computation limit has <is_incomplete> field set to `true`.
+  computation limit has <is_incomplete> field set to `true`. It will also not
+  be auto drawn with default `config.draw.predicate`.
   Lower values will result in better overall performance in exchange for more
   frequent incomplete scope computation. Set to `math.huge` for no restriction.
 

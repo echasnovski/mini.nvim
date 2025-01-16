@@ -173,7 +173,8 @@ end
 --- <
 --- - Option `n_lines` defines |MiniIndentscope.get_scope()| behavior for how many
 ---   lines above/below to check before iteration is stopped. Scope that reached
----   computation limit has <is_incomplete> field set to `true`.
+---   computation limit has <is_incomplete> field set to `true`. It will also not
+---   be auto drawn with default `config.draw.predicate`.
 ---   Lower values will result in better overall performance in exchange for more
 ---   frequent incomplete scope computation. Set to `math.huge` for no restriction.
 ---
@@ -196,6 +197,10 @@ MiniIndentscope.config = {
     --minidoc_replace_start animation = --<function: implements constant 20ms between steps>,
     animation = function(s, n) return 20 end,
     --minidoc_replace_end
+
+    -- Whether to auto draw scope: return `true` to draw, `false` otherwise.
+    -- Default draws only fully computed scope (see `options.n_lines`).
+    predicate = function(scope) return not scope.body.is_incomplete end,
 
     -- Symbol priority. Increase to display on top of more symbols.
     priority = 2,
@@ -634,6 +639,7 @@ H.setup_config = function(config)
   vim.validate({
     ['draw.delay'] = { config.draw.delay, 'number' },
     ['draw.animation'] = { config.draw.animation, 'function' },
+    ['draw.predicate'] = { config.draw.predicate, 'function' },
     ['draw.priority'] = { config.draw.priority, 'number' },
 
     ['mappings.object_scope'] = { config.mappings.object_scope, 'string' },
@@ -730,6 +736,9 @@ H.auto_draw = function(opts)
 
     H.undraw_scope(draw_opts)
 
+    -- Don't autodraw if not asked to
+    if not H.get_config().draw.predicate(scope) then return end
+
     H.current.scope = scope
     H.draw_scope(scope, draw_opts)
   end, draw_opts.delay)
@@ -785,6 +794,7 @@ H.scope_is_equal = function(scope_1, scope_2)
     and H.scope_get_draw_indent(scope_1) == H.scope_get_draw_indent(scope_2)
     and scope_1.body.top == scope_2.body.top
     and scope_1.body.bottom == scope_2.body.bottom
+    and scope_1.body.is_incomplete == scope_2.body.is_incomplete
 end
 
 H.scope_has_intersect = function(scope_1, scope_2)

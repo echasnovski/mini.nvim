@@ -151,6 +151,10 @@ Here are code snippets for some common installation methods (use only one):
     -- animation, use `require('mini.indentscope').gen_animation.none()`.
     animation = --<function: implements constant 20ms between steps>,
 
+    -- Whether to auto draw scope: return `true` to draw, `false` otherwise.
+    -- Default draws only fully computed scope (see `options.n_lines`).
+    predicate = function(scope) return not scope.body.is_incomplete end,
+
     -- Symbol priority. Increase to display on top of more symbols.
     priority = 2,
   },

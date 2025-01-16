@@ -27,6 +27,7 @@
 ## mini.indentscope
 
 - BREAKING FEATURE: add `options.n_lines` option to limit the scope computation (for better performance). It is breaking because the default value is 10000 while previous behavior had no restriction (as with `n_lines = math.huge`) which should matter only in very big scopes.
+- BREAKING FEATURE: add `draw.predicate` configuration to customize whether the scope should be autodrawn. It is breaking because the default value does not draw scope with incomplete computation (i.e. interrupted due to `options.n_lines` value), which should matter only in very big scopes.
 
 ## mini.notify
 
