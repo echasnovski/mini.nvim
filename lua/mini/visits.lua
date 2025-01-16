@@ -298,6 +298,7 @@
 ---   map_vis('vC', 'select_path(nil, { filter = "core" })', 'Select core (cwd)')
 ---
 ---   -- Iterate based on recency
+---   local sort_latest = MiniVisits.gen_sort.default({ recency_weight = 1 })
 ---   local map_iterate_core = function(lhs, direction, desc)
 ---     local opts = { filter = 'core', sort = sort_latest, wrap = true }
 ---     local rhs = function()
@@ -405,7 +406,7 @@ end
 ---
 --- `list.sort` is a callable which should take an array of path data and return
 --- a sorted array of path data (or at least tables each containing <path> field).
---- Default: output of |MiniVisits.get_sort.default()|.
+--- Default: output of |MiniVisits.gen_sort.default()|.
 --- Single path data entry is a table with a same structure as for `list.filter`.
 ---
 --- Note, that `list.sort` can be used both to filter, sort, or even return paths
