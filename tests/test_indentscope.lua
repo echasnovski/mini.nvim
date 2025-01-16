@@ -97,6 +97,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.object_scope_with_border', 'ai')
   expect_config('options.border', 'both')
   expect_config('options.indent_at_cursor', true)
+  expect_config('options.n_lines', 10000)
   expect_config('options.try_as_border', false)
   expect_config('symbol', '╎')
 end
@@ -127,6 +128,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ options = 'a' }, 'options', 'table')
   expect_config_error({ options = { border = 1 } }, 'options.border', 'string')
   expect_config_error({ options = { indent_at_cursor = 1 } }, 'options.indent_at_cursor', 'boolean')
+  expect_config_error({ options = { n_lines = 'a' } }, 'options.n_lines', 'number')
   expect_config_error({ options = { try_as_border = 1 } }, 'options.try_as_border', 'boolean')
   expect_config_error({ symbol = 1 }, 'symbol', 'string')
 end
@@ -203,6 +205,38 @@ end
 T['get_scope()']['respects `opts.indent_at_cursor`'] = function()
   set_cursor(3, 1)
   eq(get_cursor_scope({ indent_at_cursor = false }), get_scope(3, math.huge))
+end
+
+T['get_scope()']['respects `opts.n_lines`'] = function()
+  set_lines({ 'aa', '  bb', '  bb', '  bb', '  bb', '  bb', 'aa' })
+  local scope = get_scope(4, 1, { n_lines = 1 })
+  eq(scope.body, { top = 3, bottom = 5, is_incomplete = true, indent = 2 })
+  eq(scope.border, { top = 2, bottom = 6, indent = 2 })
+
+  -- Should still set `is_incomplete` even if only one side is incomplete
+  eq(get_scope(2, 1, { n_lines = 2 }).body, { top = 2, bottom = 4, is_incomplete = true, indent = 2 })
+  eq(get_scope(6, 1, { n_lines = 2 }).body, { top = 4, bottom = 6, is_incomplete = true, indent = 2 })
+
+  -- Setting `math.huge` should be allowed
+  local many_lines = { 'aa' }
+  for _ = 1, 10002 do
+    table.insert(many_lines, '  bb')
+  end
+  table.insert(many_lines, 'aa')
+  set_lines(many_lines)
+
+  eq(get_scope(2, 1).body, { top = 2, bottom = 10002, is_incomplete = true, indent = 2 })
+  eq(get_scope(2, 1, { n_lines = math.huge }).body, { top = 2, bottom = 10003, indent = 2 })
+
+  child.lua('MiniIndentscope.config.options.n_lines = math.huge')
+  eq(get_scope(2, 1).body, { top = 2, bottom = 10003, indent = 2 })
+
+  -- Default value should be taken from `config.options.n_lines`
+  child.lua('MiniIndentscope.config.options.n_lines = 2')
+  eq(get_scope(2, 1).body, { top = 2, bottom = 4, is_incomplete = true, indent = 2 })
+
+  child.b.miniindentscope_config = { options = { n_lines = 3 } }
+  eq(get_scope(2, 1).body, { top = 2, bottom = 5, is_incomplete = true, indent = 2 })
 end
 
 T['get_scope()']['respects `opts.try_as_border`'] = function()

@@ -158,6 +158,9 @@ Default values:
       -- Useful to see incremental scopes with horizontal cursor movements.
       indent_at_cursor = true,
 
+      -- Maximum number of lines above or below within which scope is computed
+      n_lines = 10000,
+
       -- Whether to first check input line to be a border of adjacent scope.
       -- Use it if you want to place cursor on function header to get scope of
       -- its body.
@@ -206,6 +209,12 @@ Default values:
        1 and 2    2-5 | 2-4
      3 and more   2-4 | 2-4
 <
+- Option `n_lines` defines |MiniIndentscope.get_scope()| behavior for how many
+  lines above/below to check before iteration is stopped. Scope that reached
+  computation limit has <is_incomplete> field set to `true`.
+  Lower values will result in better overall performance in exchange for more
+  frequent incomplete scope computation. Set to `math.huge` for no restriction.
+
 - Option `try_as_border` controls how to act when input line can be
   recognized as a border of some neighbor indent scope. In main example,
   when input line is 1 and can be recognized as border for inner scope,
@@ -237,12 +246,13 @@ Algorithm overview ~
 - Compute reference "indent at column". Reference line is an input `line`
   which might be modified to one of its neighbors if `try_as_border` option
   is `true`: if it can be viewed as border of some neighbor scope, it will.
-- Process upwards and downwards from reference line to search for line with
+- Process upwards and downwards from reference line searching for line with
   indent strictly less than reference one. This is like casting rays up and
   down from reference line and reference indent until meeting "a wall"
   (character to the right of indent or buffer edge). Latest line before
-  meeting is a respective end of scope body. It always exists because
+  meeting a wall is a respective end of scope body. It always exists because
   reference line is a such one.
+  Casting ray is forced to stop if it goes over `opts.n_lines` lines.
 - Based on top and bottom lines with strictly lower indent, construct
   scopes's border. The way it is computed is decided based on `border`
   option (see |MiniIndentscope.config| for more information).
@@ -275,7 +285,8 @@ Return ~
 `(table)` Table with scope information:
   - <body> - table with <top> (top line of scope, inclusive), <bottom>
     (bottom line of scope, inclusive), and <indent> (minimum indent within
-    scope) keys. Line numbers start at 1.
+    scope) keys. Line numbers start at 1. Can also have <is_incomplete> key
+    set to `true` if computation was stopped due to `opts.n_lines` restriction.
   - <border> - table with <top> (line of top border, might be `nil`),
     <bottom> (line of bottom border, might be `nil`), and <indent> (indent
     of border) keys. Line numbers start at 1.

@@ -24,6 +24,10 @@
 
 - FEATURE: add distinctive glyphs and highlighting for special Neovim directories (from `:h 'runtimepath'`).
 
+## mini.indentscope
+
+- BREAKING FEATURE: add `options.n_lines` option to limit the scope computation (for better performance). It is breaking because the default value is 10000 while previous behavior had no restriction (as with `n_lines = math.huge`) which should matter only in very big scopes.
+
 ## mini.notify
 
 - FEATURE: `setup()` now also can be used to clean history (for example, like `MiniNotify.setup(MiniNotify.config)`).
