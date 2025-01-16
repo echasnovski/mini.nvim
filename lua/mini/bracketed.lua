@@ -1748,7 +1748,7 @@ H.oldfile_ensure_initialized = function()
   local n = #vim.v.oldfiles
   local recency = {}
   for i, path in ipairs(vim.v.oldfiles) do
-    if vim.fn.filereadable(path) == 1 then recency[path] = n - i + 1 end
+    recency[path] = n - i + 1
   end
 
   H.cache.oldfile = { recency = recency, max_recency = n, is_advancing = false }

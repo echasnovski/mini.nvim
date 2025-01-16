@@ -2017,6 +2017,19 @@ T['oldfile()']['is initialized with `v:oldfiles`'] = function()
   child.o.shadafile = 'NONE'
 end
 
+T['oldfile()']['traverses only readable files'] = function()
+  child.lua([[
+    vim.fn.filereadable = function(path) return vim.endswith(path, 'file-a') and 0 or 1 end
+  ]])
+  setup_oldfile()
+
+  child.cmd('enew')
+
+  child.lua('MiniBracketed.oldfile("forward")')
+  -- Choose next file after the (first) 'file-a' as it is nor readable
+  validate_test_file('file-e')
+end
+
 T['oldfile()']['validates `direction`'] = function()
   expect.error(function() child.lua('MiniBracketed.oldfile(1)') end, 'oldfile%(%).*direction.*one of')
   expect.error(function() child.lua([[MiniBracketed.oldfile('next')]]) end, 'oldfile%(%).*direction.*one of')
