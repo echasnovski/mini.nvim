@@ -91,7 +91,7 @@
 ---     - All triggers are disabled during macro recording due to technical
 ---       reasons.
 ---     - The `@` and `Q` keys are specially mapped inside |MiniClue.setup()|
----       to temporarily disable triggers.
+---       (if the key is not already mapped) to temporarily disable triggers.
 ---
 --- # Setup ~
 ---
@@ -1170,14 +1170,14 @@ H.apply_config = function(config)
     vim.schedule(MiniClue.enable_all_triggers)
     pcall(vim.api.nvim_feedkeys, vim.v.count1 .. '@' .. register, 'nx', false)
   end
-  vim.keymap.set('n', '@', exec_macro, macro_keymap_opts)
+  if vim.fn.maparg('@', 'n') == '' then vim.keymap.set('n', '@', exec_macro, macro_keymap_opts) end
 
   local exec_latest_macro = function(keys)
     MiniClue.disable_all_triggers()
     vim.schedule(MiniClue.enable_all_triggers)
     vim.api.nvim_feedkeys(vim.v.count1 .. 'Q', 'nx', false)
   end
-  vim.keymap.set('n', 'Q', exec_latest_macro, macro_keymap_opts)
+  if vim.fn.maparg('Q', 'n') == '' then vim.keymap.set('n', 'Q', exec_latest_macro, macro_keymap_opts) end
 end
 
 H.is_disabled = function(buf_id)

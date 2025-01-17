@@ -255,6 +255,14 @@ T['setup()']['creates mappings for `@` and `Q`'] = function()
 
   type_keys('2Q')
   eq(get_lines(), { 'aaaaa' })
+
+  -- Should not create mapping if it is already taken
+  child.api.nvim_set_keymap('n', 'Q', '<Cmd>echo 1<CR>', { desc = 'My Q' })
+  child.api.nvim_set_keymap('n', '@', '<Cmd>echo 2<CR>', { desc = 'My @' })
+
+  load_module()
+  eq(child.lua_get("vim.fn.maparg('Q', 'n', false, true).desc"), 'My Q')
+  eq(child.lua_get("vim.fn.maparg('@', 'n', false, true).desc"), 'My @')
 end
 
 T['setup()']['respects "human-readable" key names'] = function()

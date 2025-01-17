@@ -91,7 +91,7 @@ Notes:
     - All triggers are disabled during macro recording due to technical
       reasons.
     - The `@` and `Q` keys are specially mapped inside |MiniClue.setup()|
-      to temporarily disable triggers.
+      (if the key is not already mapped) to temporarily disable triggers.
 
 # Setup ~
 
