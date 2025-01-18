@@ -261,6 +261,27 @@ MiniExtra.gen_ai_spec.number = function()
   end
 end
 
+--- A convenient text object that selects the last pasted text.
+---
+--- Notes:
+--- - Both `a` and `i` text objects will return the same range, defined
+---   by the markers `'[` and `']`.
+---
+---@return __extra_ai_spec_return
+MiniExtra.gen_ai_spec.pastedtext = function()
+  return function()
+    local start_line, start_col = unpack(vim.fn.getpos "'[", 2, 3)
+    local end_line, end_col = unpack(vim.fn.getpos "']", 2, 3)
+    if start_line == end_line and start_col == end_col then
+      return
+    end
+    return {
+      from = { line = start_line, col = start_col },
+      to = { line = end_line, col = end_col },
+    }
+  end
+end
+
 --- 'mini.hipatterns' highlighter generators
 ---
 --- This is a table with function elements. Call to actually get specification.

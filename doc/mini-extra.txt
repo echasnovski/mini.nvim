@@ -174,6 +174,18 @@ Return ~
 `(function)` Function implementing |MiniAi-textobject-specification|.
 
 ------------------------------------------------------------------------------
+                                            *MiniExtra.gen_ai_spec.pastedtext()*
+                        `MiniExtra.gen_ai_spec.pastedtext`()
+A convenient text object that selects the last pasted text.
+
+Notes:
+- Both `a` and `i` text objects will return the same range, defined
+  by the markers `'[` and `']`.
+
+Return ~
+`(function)` Function implementing |MiniAi-textobject-specification|.
+
+------------------------------------------------------------------------------
                                                      *MiniExtra.gen_highlighter*
                           `MiniExtra.gen_highlighter`
 'mini.hipatterns' highlighter generators
