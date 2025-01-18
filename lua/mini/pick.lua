@@ -1218,16 +1218,23 @@ end
 --- Function which can be used to directly override |vim.ui.select()| to use
 --- 'mini.pick' for any "select" type of tasks.
 ---
---- Implements the required by `vim.ui.select()` signature. Plus allows extra
---- `opts.preview_item` to serve as preview.
+--- Implements required by `vim.ui.select()` signature, with some differencies:
+--- - Allows `opts.preview_item` that returns an array of lines for item preview.
+--- - Allows fourth `start_opts` argument to customize |MiniPick.start()| call.
 ---
 --- Notes:
 --- - `on_choice` is called when target window is current.
 ---
 ---@usage >lua
 ---   vim.ui.select = MiniPick.ui_select
+---
+---   -- Customize with fourth argument inside a function wrapper
+---   vim.ui.select = function(items, opts, on_choice)
+---     local start_opts = { window = { config = { width = vim.o.columns } } }
+---     return MiniPick.ui_select(items, opts, on_choice, start_opts)
+---   end
 --- <
-MiniPick.ui_select = function(items, opts, on_choice)
+MiniPick.ui_select = function(items, opts, on_choice, start_opts)
   local format_item = opts.format_item or H.item_to_string
   local items_ext = {}
   for i = 1, #items do
@@ -1251,7 +1258,8 @@ MiniPick.ui_select = function(items, opts, on_choice)
   end
 
   local source = { items = items_ext, name = opts.prompt or opts.kind, preview = preview, choose = choose }
-  local item = MiniPick.start({ source = source })
+  start_opts = vim.tbl_deep_extend('force', start_opts or {}, { source = source })
+  local item = MiniPick.start(start_opts)
   if item == nil and was_aborted then on_choice(nil) end
 end
 

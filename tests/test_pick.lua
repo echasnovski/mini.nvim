@@ -2429,6 +2429,18 @@ T['ui_select()']['respects `opts.preview_item`'] = function()
   child.expect_screenshot()
 end
 
+T['ui_select()']['respects `start_opts`'] = function()
+  child.lua_notify([[
+    local start_opts = {
+      -- Should ignore these and prefer parts of `source` that come from `opts`
+      source = { name = 'Should not be used', items = { 'c', 'd' } },
+      window = { config = { width = vim.o.columns } },
+    }
+    MiniPick.ui_select({ 'a', 'b' }, { prompt = 'Select:' }, function() end, start_opts)
+  ]])
+  child.expect_screenshot()
+end
+
 T['builtin.files()'] = new_set({ hooks = { pre_case = mock_spawn } })
 
 local builtin_files = forward_lua_notify('MiniPick.builtin.files')
