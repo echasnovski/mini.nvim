@@ -139,6 +139,7 @@ Events ~
 To allow user customization and integration of external tools, certain |User|
 autocommand events are triggered under common circumstances:
 
+- `MiniPickMatch` - just after updating query matches or setting items.
 - `MiniPickStart` - just after picker has started.
 - `MiniPickStop` - just before picker is stopped.
 

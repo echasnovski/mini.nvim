@@ -137,6 +137,7 @@
 --- To allow user customization and integration of external tools, certain |User|
 --- autocommand events are triggered under common circumstances:
 ---
+--- - `MiniPickMatch` - just after updating query matches or setting items.
 --- - `MiniPickStart` - just after picker has started.
 --- - `MiniPickStop` - just before picker is stopped.
 ---@tag MiniPick-events
@@ -2319,6 +2320,13 @@ H.picker_set_match_inds = function(picker, inds)
 
   -- Reset current index if match indexes are updated
   H.picker_set_current_ind(picker, 1)
+
+  -- Trigger relevant event if not already inside it
+  if not H.inside_minipickmatch then
+    H.inside_minipickmatch = true
+    vim.api.nvim_exec_autocmds('User', { pattern = 'MiniPickMatch' })
+    H.inside_minipickmatch = nil
+  end
 end
 
 H.picker_set_current_ind = function(picker, ind, force_update)

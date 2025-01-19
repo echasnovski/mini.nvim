@@ -40,6 +40,7 @@
 - FEATURE: update `grep` and `grep_live` pickers to allow `globs` local option which restricts search to files that match any of its glob patterns (for example, `{ '*.lua', 'lua/**' }` will only search in Lua files and files in 'lua' directory). The `grep_live` picker also has custom `<C-o>` mapping to add globs interactively after picker is opened.
 - FEATURE: update `help` picker to have `default_split` local option which customizes split direction of `choose` action (`<CR>` by default).
 - FEATURE: update `ui_select()` to allow fourth argument `start_opts` to customize `MiniPick.start()` call.
+- FEATURE: add `MiniPickMatch` event triggered after updating query matches or setting items. Can be used, for example, to adjust window height based on current matches.
 
 ## mini.snippets
 

@@ -3809,6 +3809,21 @@ T['set_picker_items()']['recomputes visible range'] = function()
   child.expect_screenshot()
 end
 
+T['set_picker_items()']['triggers dedicated event'] = function()
+  child.lua('_G.log = {}')
+  child.cmd('au User MiniPickMatch lua table.insert(_G.log, MiniPick.get_picker_matches().all)')
+
+  start_with_items({})
+  eq(child.lua_get('_G.log'), {})
+
+  type_keys('a')
+  eq(child.lua_get('_G.log'), {})
+
+  set_picker_items({ 'a', 'b' })
+  -- Should trigger first during item setting and then after query matching
+  eq(child.lua_get('_G.log'), { { 'a', 'b' }, { 'a' } })
+end
+
 T['set_picker_items()']['respects `opts.do_match`'] = function()
   local validate_match_calls = make_match_with_count()
   child.lua_notify([[MiniPick.start({ source = { match = _G.match_with_count } })]])
@@ -4096,6 +4111,19 @@ T['set_picker_match_inds()']['sets first index as current'] = function()
 
   set_picker_match_inds({ 2, 3 })
   validate_current_ind(2)
+end
+
+T['set_picker_match_inds()']['triggers relevant event'] = function()
+  child.lua('_G.log = {}')
+  child.cmd('au User MiniPickMatch lua table.insert(_G.log, MiniPick.get_picker_matches().all)')
+
+  start_with_items({ 'a', 'b', 'c' })
+  -- Should trigger first during item setting and then after query matching
+  eq(child.lua_get('_G.log'), { { 'a', 'b', 'c' }, { 'a', 'b', 'c' } })
+  child.lua('_G.log = {}')
+
+  set_picker_match_inds({ 2, 3 })
+  eq(child.lua_get('_G.log'), { { 'b', 'c' } })
 end
 
 T['set_picker_match_inds()']['validates arguments'] = function()
@@ -5094,6 +5122,101 @@ T['Matching']['resets matched indexes when needed'] = function()
   type_keys('b', 'b', '<Left>')
   type_keys('x')
   validate_all_match_inds()
+end
+
+T['Matching']['triggers dedicated event'] = function()
+  child.lua('_G.log = {}')
+  local validate_log = function(ref_log)
+    eq(child.lua_get('_G.log'), ref_log)
+    child.lua('_G.log = {}')
+  end
+  child.cmd('au User MiniPickMatch lua table.insert(_G.log, MiniPick.get_picker_matches().all)')
+
+  start_with_items({ 'ba', 'ab', 'bb' })
+  -- - Triggered twice on start: during setting items and empty query matching
+  validate_log({ { 'ba', 'ab', 'bb' }, { 'ba', 'ab', 'bb' } })
+
+  type_keys('a')
+  validate_log({ { 'ab', 'ba' } })
+
+  type_keys('x')
+  validate_log({ {} })
+
+  type_keys('y')
+  validate_log({ {} })
+
+  type_keys('<BS>')
+  validate_log({ {} })
+
+  type_keys('<C-u>')
+  validate_log({ { 'ba', 'ab', 'bb' } })
+
+  type_keys('<C-c>')
+
+  -- Should trigger when using cache for match inds
+  child.lua_notify([[MiniPick.start({
+    source = { items = { 'ba', 'ab', 'bb' } },
+    options = { use_cache = true },
+  })]])
+  validate_log({ { 'ba', 'ab', 'bb' }, { 'ba', 'ab', 'bb' } })
+
+  type_keys('a')
+  validate_log({ { 'ab', 'ba' } })
+
+  type_keys('x')
+  validate_log({ {} })
+
+  type_keys('<BS>')
+  validate_log({ { 'ab', 'ba' } })
+
+  type_keys('<BS>')
+  validate_log({ { 'ba', 'ab', 'bb' } })
+
+  type_keys('a')
+  validate_log({ { 'ab', 'ba' } })
+
+  type_keys('<C-c>')
+
+  -- Should trigger with custom `source.match`
+  child.lua_notify([[
+    local match = function()
+      table.insert(_G.log, 'match')
+      return { 2 }
+    end
+    MiniPick.start({ source = { items = { 'ba', 'ab', 'bb' }, match = match } })
+  ]])
+
+  validate_log({ { 'ba', 'ab', 'bb' }, 'match', { 'ab' } })
+
+  type_keys('x')
+  validate_log({ 'match', { 'ab' } })
+
+  type_keys('<C-c>')
+end
+
+T['Matching']['dedicated event can update window config'] = function()
+  child.lua([[
+    local adjust_height = function()
+      local n_matches = #(MiniPick.get_picker_matches().all or {})
+      local height = math.min(math.max(n_matches, 1), 5)
+      MiniPick.set_picker_opts({ window = { config = { height = height } } })
+    end
+    vim.api.nvim_create_autocmd('User', { pattern = 'MiniPickMatch', callback = adjust_height })
+  ]])
+
+  child.lua_notify('MiniPick.start({ source = { items = { "ab", "bb" } }, window = { config = { height = 7 } } })')
+
+  -- Should adjust immediately and ignore picker's window config
+  child.expect_screenshot()
+
+  type_keys('a')
+  child.expect_screenshot()
+
+  type_keys('x')
+  child.expect_screenshot()
+
+  type_keys('<C-u>')
+  child.expect_screenshot()
 end
 
 T['Matching']['allows returning wider than input set of match indexes'] = function()
