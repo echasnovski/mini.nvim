@@ -916,19 +916,11 @@ end
 T['sections']['recent_files()'] = new_set()
 
 T['sections']['recent_files()']['correctly identifies files from current directory'] = function()
-  local dir, dir_similar = 'tests/dir-starter/aaa', 'tests/dir-starter/aaabbb'
+  local dir, dir_similar = 'tests/dir-starter/dir', 'tests/dir-starter/directory'
   local file = dir_similar .. '/file'
-  child.fn.mkdir(dir)
-  child.fn.mkdir(dir_similar)
-  MiniTest.finally(function()
-    vim.loop.fs_rmdir(dir)
-    vim.loop.fs_unlink(file)
-    vim.loop.fs_rmdir(dir_similar)
-  end)
 
   -- Make recent file with absolute path having current directory as substring
   -- but not inside current directory
-  child.fn.writefile({ '' }, file)
   child.v.oldfiles = { child.fn.fnamemodify(file, ':p') }
   child.cmd('cd ' .. dir)
 
@@ -940,19 +932,9 @@ T['sections']['recent_files()']['correctly identifies files from current directo
 end
 
 T['sections']['recent_files()']['respects files in subdirectories'] = function()
-  local dir = 'tests/dir-starter/aaa'
-  local dir_nested = dir .. '/bbb'
+  local dir = 'tests/dir-starter/dir'
+  local dir_nested = dir .. '/subdir'
   local file, file_nested = dir .. '/file1', dir_nested .. '/file2'
-
-  child.fn.mkdir(dir_nested, 'p')
-  child.fn.writefile({ '' }, file)
-  child.fn.writefile({ '' }, file_nested)
-  MiniTest.finally(function()
-    vim.loop.fs_unlink(file_nested)
-    vim.loop.fs_rmdir(dir_nested)
-    vim.loop.fs_unlink(file)
-    vim.loop.fs_rmdir(dir)
-  end)
 
   child.v.oldfiles = { child.fn.fnamemodify(file, ':p'), child.fn.fnamemodify(file_nested, ':p') }
   child.cmd('cd ' .. dir)
@@ -960,7 +942,7 @@ T['sections']['recent_files()']['respects files in subdirectories'] = function()
   -- Mock forward slash for more robust screenshot testing
   child.lua([[
     local fnamemodify_orig = vim.fn.fnamemodify
-    vim.fn.fnamemodify = function(...) return fnamemodify_orig(...):gsub('\\', '/') end
+    vim.fn.fnamemodify = function(...) return (fnamemodify_orig(...):gsub('\\', '/')) end
   ]])
 
   -- Set up to show files only in current directory
@@ -971,9 +953,7 @@ T['sections']['recent_files()']['respects files in subdirectories'] = function()
 end
 
 T['sections']['recent_files()']['respects `show_path`'] = function()
-  local test_file = 'tests/dir-starter/aaa.txt'
-  child.fn.writefile({ '' }, test_file)
-  MiniTest.finally(function() vim.loop.fs_unlink(test_file) end)
+  local test_file = 'tests/dir-starter/dir/file1'
 
   child.v.oldfiles = { child.fn.fnamemodify(test_file, ':p') }
 
