@@ -2806,7 +2806,9 @@ H.rename_loaded_buffer = function(buf_id, from, to)
   -- Use `gsub('^' ...)` to also take into account directory renames
   local new_name = cur_name:gsub('^' .. vim.pesc(from), to)
   if cur_name == new_name then return end
-  vim.api.nvim_buf_set_name(buf_id, new_name)
+
+  -- Rename buffer using relative form (for nicer `:buffers` output)
+  vim.api.nvim_buf_set_name(buf_id, vim.fn.fnamemodify(new_name, ':.'))
 
   -- Force write to avoid the 'overwrite existing file' error message on write
   -- for normal files

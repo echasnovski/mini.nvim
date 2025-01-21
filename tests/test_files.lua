@@ -3567,6 +3567,9 @@ T['File manipulation']['rename file renames opened buffers'] = function()
   mock_confirm(1)
   synchronize()
   eq(is_file_in_buffer(buf_id, join_path(temp_dir, 'new-file')), true)
+
+  -- Should result more compact `:buffers` output
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-files/temp/new%-file')
 end
 
 T['File manipulation']['rename directory renames opened buffers'] = function()
