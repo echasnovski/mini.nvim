@@ -2547,6 +2547,10 @@ local validate_location_scope = function(scope)
   type_keys('<CR>')
   validate_buf_name(0, file_path)
   eq(get_cursor(), { 3, 15 })
+
+  -- Should open path in relative form for nicer `:buffers`.
+  -- It isn't testing much as `vim.lsp.buf` is mocked, but just in case.
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]' .. vim.pesc(file_path:gsub('\\', '/')))
 end
 
 local validate_symbol_scope = function(scope, skip_preview)
@@ -2603,6 +2607,10 @@ local validate_symbol_scope = function(scope, skip_preview)
   type_keys('<CR>')
   validate_buf_name(0, file_path)
   eq(get_cursor(), { 1, 6 })
+
+  -- Should open path in relative form for nicer `:buffers`.
+  -- It isn't testing much as `vim.lsp.buf` is mocked, but just in case.
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]' .. vim.pesc(file_path:gsub('\\', '/')))
 end
 
 local validate_symbol_scope_with_tweaked_kind = function(scope, tweak_lsp_kind_mode)

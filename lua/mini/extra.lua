@@ -1867,11 +1867,12 @@ H.lsp_make_on_list = function(source, opts)
     return items
   end
 
+  local pick = H.validate_pick()
   local show_explicit = H.pick_get_config().source.show
   local show = function(buf_id, items_to_show, query)
     if show_explicit ~= nil then return show_explicit(buf_id, items_to_show, query) end
     if is_symbol then
-      H.validate_pick().default_show(buf_id, items_to_show, query)
+      pick.default_show(buf_id, items_to_show, query)
 
       -- Highlight whole lines with pre-computed symbol kind highlight groups
       H.pick_clear_namespace(buf_id, H.ns_id.pickers)
@@ -1884,6 +1885,14 @@ H.lsp_make_on_list = function(source, opts)
     return H.show_with_icons(buf_id, items_to_show, query)
   end
 
+  local choose = function(item)
+    pick.default_choose(item)
+    -- Ensure relative path in `:buffers` output with hacky workaround.
+    -- `default_choose` ensures it with `bufadd(fnamemodify(path, ':.'))`, but
+    -- somehow that doesn't work inside `on_list` of `vim.lsp.buf` methods.
+    vim.fn.chdir(vim.fn.getcwd())
+  end
+
   return function(data)
     local items = data.items
     for _, item in ipairs(data.items) do
@@ -1891,7 +1900,8 @@ H.lsp_make_on_list = function(source, opts)
     end
     items = process(items)
 
-    return H.pick_start(items, { source = { name = string.format('LSP (%s)', source), show = show } }, opts)
+    local source_opts = { name = string.format('LSP (%s)', source), show = show, choose = choose }
+    return H.pick_start(items, { source = source_opts }, opts)
   end
 end
 
