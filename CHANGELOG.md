@@ -8,6 +8,10 @@
 
 - BREAKING FEATURE: add `max_output_steps` option to `gen_path.line()` and `gen_path.angle()` to limit the number of steps the return. Default is 1000 to improve performance on large cursor jumps which also is set for `config.cursor.path`.
 
+## mini.files
+
+- FEATURE: closing and refreshing explorer now requires confirmation only if there are pending file system actions (and not in case of at least one modified buffer present).
+
 ## mini.git
 
 - FEATURE: Git data is computed after resolving symlinks. This allows working with files symlinked into outside of Git repo. This behavior is the same as in 'mini.diff'.

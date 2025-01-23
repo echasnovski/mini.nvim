@@ -915,7 +915,7 @@ T['open()']['properly closes currently opened explorer'] = function()
   child.expect_screenshot()
 end
 
-T['open()']['properly closes currently opened explorer with modified buffers'] = function()
+T['open()']['properly closes currently opened explorer with pending file system actions'] = function()
   child.cmd('au User MiniFilesExplorerClose lua _G.had_close_event = true')
   child.set_size(100, 100)
 
@@ -926,10 +926,19 @@ T['open()']['properly closes currently opened explorer with modified buffers'] =
   -- Should mention modified buffers and ask for confirmation
   mock_confirm(1)
   open(path_2)
-  validate_confirm_args('modified buffer.*close without sync')
+  validate_confirm_args('pending file system actions.*Close without sync')
 
   -- Should trigger proper event for closing explorer
   eq(child.lua_get('_G.had_close_event'), true)
+  close()
+  child.ensure_normal_mode()
+
+  -- Should not confirm if there are no actionable pending file system actions
+  child.lua('_G.confirm_args = nil')
+  open(path_1)
+  type_keys('o')
+  open(path_2)
+  eq(child.lua_get('_G.confirm_args'), vim.NIL)
 end
 
 T['open()']['tracks lost focus'] = function()
@@ -1051,7 +1060,7 @@ T['refresh()']['updates buffers with non-empty `content`'] = function()
   child.expect_screenshot()
 end
 
-T['refresh()']['handles presence of modified buffers'] = function()
+T['refresh()']['handles presence of pending file system actions'] = function()
   child.set_size(10, 60)
   child.lua([[_G.hide_dotfiles = function(fs_entry) return not vim.startswith(fs_entry.name, '.') end ]])
 
@@ -1066,7 +1075,7 @@ T['refresh()']['handles presence of modified buffers'] = function()
   child.lua('MiniFiles.refresh({ content = { filter = _G.hide_dotfiles }, windows = { width_focus = 30 } })')
   child.expect_screenshot()
 
-  validate_confirm_args('modified buffer.*Confirm buffer updates without sync')
+  validate_confirm_args('pending file system actions.*Update buffers without sync')
 
   -- On no confirm should not update buffers, but still apply other changes
   type_keys('o', 'new-file-2', '<Esc>')
@@ -1075,6 +1084,17 @@ T['refresh()']['handles presence of modified buffers'] = function()
   mock_confirm(2)
   child.lua('MiniFiles.refresh({ content = { filter = function() return true end }, windows = { width_focus = 15 } })')
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+
+  mock_confirm(1)
+  close()
+  child.ensure_normal_mode()
+
+  -- Should not confirm if there are no actionable pending file system actions
+  child.lua('_G.confirm_args = nil')
+  open(temp_dir)
+  type_keys('o')
+  refresh()
+  eq(child.lua_get('_G.confirm_args'), vim.NIL)
 end
 
 T['refresh()']['works when no explorer is opened'] = function() expect.no_error(refresh) end
@@ -1226,7 +1246,7 @@ T['close()']['works per tabpage'] = function()
   child.expect_screenshot()
 end
 
-T['close()']['checks for modified buffers'] = function()
+T['close()']['checks for pending file system actions'] = function()
   child.cmd('au User MiniFilesExplorerClose lua _G.had_close_event = true')
   open(test_dir_path)
   type_keys('o', 'new', '<Esc>')
@@ -1236,7 +1256,7 @@ T['close()']['checks for modified buffers'] = function()
   mock_confirm(2)
   eq(close(), false)
   child.expect_screenshot()
-  validate_confirm_args('modified buffer.*Confirm close without sync')
+  validate_confirm_args('pending file system actions.*Close without sync')
 
   -- - Should not trigger close event (as there was no closing)
   eq(child.lua_get('_G.had_close_event'), vim.NIL)
@@ -1245,6 +1265,13 @@ T['close()']['checks for modified buffers'] = function()
   mock_confirm(1)
   eq(close(), true)
   child.expect_screenshot()
+
+  -- Should not confirm if there are no actionable pending file system actions
+  child.lua('_G.confirm_args = nil')
+  open(test_dir_path)
+  type_keys('o')
+  close()
+  eq(child.lua_get('_G.confirm_args'), vim.NIL)
 end
 
 T['close()']['results into focus on target window'] = function()

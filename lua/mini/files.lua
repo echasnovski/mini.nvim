@@ -807,7 +807,7 @@ MiniFiles.refresh = function(opts)
   local force_update = #vim.tbl_keys(content_opts) > 0
 
   -- Confirm refresh if there is modified buffer
-  if force_update then force_update = H.explorer_confirm_modified(explorer, 'buffer updates') end
+  if force_update then force_update = H.explorer_ignore_pending_fs_actions(explorer, 'Update buffers') end
 
   -- Respect explorer local options supplied inside its `open()` call but give
   -- current `opts` higher precedence
@@ -866,7 +866,7 @@ MiniFiles.close = function()
   pcall(vim.loop.timer_stop, H.timers.focus)
 
   -- Confirm close if there is modified buffer
-  if not H.explorer_confirm_modified(explorer, 'close') then return false end
+  if not H.explorer_ignore_pending_fs_actions(explorer, 'Close') then return false end
 
   -- Trigger appropriate event
   H.trigger_event('MiniFilesExplorerClose')
@@ -1786,16 +1786,11 @@ H.explorer_get_path_depth = function(explorer, path)
   end
 end
 
-H.explorer_confirm_modified = function(explorer, action_name)
-  local has_modified = false
-  for _, view in pairs(explorer.views) do
-    if H.is_modified_buffer(view.buf_id) then has_modified = true end
-  end
+H.explorer_ignore_pending_fs_actions = function(explorer, action_name)
+  -- Exit if nothing to ignore
+  if H.explorer_compute_fs_actions(explorer) == nil then return true end
 
-  -- Exit if nothing to confirm
-  if not has_modified then return true end
-
-  local msg = string.format('There is at least one modified buffer\n\nConfirm %s without synchronization?', action_name)
+  local msg = string.format('There are pending file system actions\n\n%s without synchronization?', action_name)
   local confirm_res = vim.fn.confirm(msg, '&Yes\n&No', 1, 'Question')
   return confirm_res == 1
 end
