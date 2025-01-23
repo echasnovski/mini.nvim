@@ -820,17 +820,26 @@ end
 ---
 --- - Parse user edits in directory buffers.
 --- - Convert edits to file system actions and apply them after confirmation.
+---   Choosing "No" skips application while "Cancel" stops synchronization.
 --- - Update all directory buffers with the most relevant file system information.
 ---   Can be used without user edits to account for external file system changes.
+---
+---@return boolean Whether synchronization was done.
 MiniFiles.synchronize = function()
   local explorer = H.explorer_get()
   if explorer == nil then return end
 
   -- Parse and apply file system operations
   local fs_actions = H.explorer_compute_fs_actions(explorer)
-  if fs_actions ~= nil and H.fs_actions_confirm(fs_actions) then H.fs_actions_apply(fs_actions) end
+  if fs_actions ~= nil then
+    local msg = table.concat(H.fs_actions_to_lines(fs_actions), '\n')
+    local confirm_res = vim.fn.confirm(msg, '&Yes\n&No\n&Cancel', 1, 'Question')
+    if confirm_res == 3 then return false end
+    if confirm_res == 1 then H.fs_actions_apply(fs_actions) end
+  end
 
   H.explorer_refresh(explorer, { force_update = true })
+  return true
 end
 
 --- Reset explorer
@@ -2632,12 +2641,6 @@ H.fs_get_type = function(path)
 end
 
 -- File system actions --------------------------------------------------------
-H.fs_actions_confirm = function(fs_actions)
-  local msg = table.concat(H.fs_actions_to_lines(fs_actions), '\n')
-  local confirm_res = vim.fn.confirm(msg, '&Yes\n&No', 1, 'Question')
-  return confirm_res == 1
-end
-
 H.fs_actions_to_lines = function(fs_actions)
   -- Gather actions per source directory
   local short = H.fs_shorten_path

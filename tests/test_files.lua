@@ -94,10 +94,11 @@ local validate_fs_entry = function(x)
   eq(type(x.path), 'string')
 end
 
-local validate_confirm_args = function(ref_msg_pattern)
+local validate_confirm_args = function(ref_msg_pattern, can_cancel)
+  if can_cancel == nil then can_cancel = true end
   local args = child.lua_get('_G.confirm_args')
   expect.match(args[1], ref_msg_pattern)
-  if args[2] ~= nil then eq(args[2], '&Yes\n&No') end
+  if args[2] ~= nil then eq(args[2], '&Yes\n&No' .. (can_cancel and '\n&Cancel' or '')) end
   if args[3] ~= nil then eq(args[3], 1) end
   if args[4] ~= nil then eq(args[4], 'Question') end
 end
@@ -926,7 +927,7 @@ T['open()']['properly closes currently opened explorer with pending file system 
   -- Should mention modified buffers and ask for confirmation
   mock_confirm(1)
   open(path_2)
-  validate_confirm_args('pending file system actions.*Close without sync')
+  validate_confirm_args('pending file system actions.*Close without sync', false)
 
   -- Should trigger proper event for closing explorer
   eq(child.lua_get('_G.had_close_event'), true)
@@ -1075,7 +1076,7 @@ T['refresh()']['handles presence of pending file system actions'] = function()
   child.lua('MiniFiles.refresh({ content = { filter = _G.hide_dotfiles }, windows = { width_focus = 30 } })')
   child.expect_screenshot()
 
-  validate_confirm_args('pending file system actions.*Update buffers without sync')
+  validate_confirm_args('pending file system actions.*Update buffers without sync', false)
 
   -- On no confirm should not update buffers, but still apply other changes
   type_keys('o', 'new-file-2', '<Esc>')
@@ -1111,7 +1112,7 @@ T['synchronize()']['can update external file system changes'] = function()
   validate_cur_line(1)
 
   vim.fn.mkdir(join_path(temp_dir, 'aaa'))
-  synchronize()
+  eq(synchronize(), true)
   child.expect_screenshot()
 
   -- Cursor should be "sticked" to current entry
@@ -1124,12 +1125,29 @@ T['synchronize()']['can apply file system actions'] = function()
   open(temp_dir)
   type_keys('i', 'new-file', '<Esc>')
 
-  local new_file_path = join_path(temp_dir, 'new-file')
   mock_confirm(1)
 
   validate_tree(temp_dir, {})
-  synchronize()
+  eq(synchronize(), true)
   validate_tree(temp_dir, { 'new-file' })
+end
+
+T['synchronize()']['can cancel synchronization'] = function()
+  local temp_dir = make_temp_dir('temp', {})
+
+  open(temp_dir)
+  type_keys('i', 'new-file', '<Esc>')
+
+  child.fn.writefile({ '' }, join_path(temp_dir, 'aaa'))
+
+  mock_confirm(3)
+
+  validate_tree(temp_dir, { 'aaa' })
+  eq(synchronize(), false)
+  -- Should not apply file system changes, not sync external changes, and keep
+  -- buffers as is
+  validate_tree(temp_dir, { 'aaa' })
+  eq(get_lines(), { 'new-file' })
 end
 
 T['synchronize()']['should follow cursor on current entry path'] = function()
@@ -1256,7 +1274,7 @@ T['close()']['checks for pending file system actions'] = function()
   mock_confirm(2)
   eq(close(), false)
   child.expect_screenshot()
-  validate_confirm_args('pending file system actions.*Close without sync')
+  validate_confirm_args('pending file system actions.*Close without sync', false)
 
   -- - Should not trigger close event (as there was no closing)
   eq(child.lua_get('_G.had_close_event'), vim.NIL)

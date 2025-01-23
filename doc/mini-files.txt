@@ -750,8 +750,12 @@ Synchronize explorer
 
 - Parse user edits in directory buffers.
 - Convert edits to file system actions and apply them after confirmation.
+  Choosing "No" skips application while "Cancel" stops synchronization.
 - Update all directory buffers with the most relevant file system information.
   Can be used without user edits to account for external file system changes.
+
+Return ~
+`(boolean)` Whether synchronization was done.
 
 ------------------------------------------------------------------------------
                                                              *MiniFiles.reset()*

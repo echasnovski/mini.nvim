@@ -11,6 +11,7 @@
 ## mini.files
 
 - FEATURE: closing and refreshing explorer now requires confirmation only if there are pending file system actions (and not in case of at least one modified buffer present).
+- FEATURE: confirming file system actions in `synchronize()` now can cancel synchronization (by pressing `c`) while keeping buffer contents the same. `synchronize()` also returns a boolean representing whether synchronization was done.
 
 ## mini.git
 
