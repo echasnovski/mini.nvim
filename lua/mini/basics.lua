@@ -207,7 +207,8 @@ end
 ---  | go    | Normal          | Add [count] empty lines after cursor          |
 ---  | gO    | Normal          | Add [count] empty lines before cursor         |
 ---  | gy    | Normal, Visual  | Copy to system clipboard                      |
----  | gp    | Normal, Visual  | Paste from system clipboard                   |
+---  | gp    | Normal, Visual  | Paste from system clipboard after cursor      |
+---  | gP    | Normal          | Paste from system clipboard before cursor     |
 ---  | gV    | Normal          | Visually select latest changed or yanked text |
 ---  | g/    | Visual          | Search inside current visual selection        |
 ---  | *     | Visual          | Search forward for current visual selection   |
@@ -581,7 +582,8 @@ H.apply_mappings = function(config)
 
     -- Copy/paste with system clipboard
     map({ 'n', 'x' }, 'gy', '"+y', { desc = 'Copy to system clipboard' })
-    map(  'n',        'gp', '"+p', { desc = 'Paste from system clipboard' })
+    map(  'n',        'gp', '"+p', { desc = 'Paste from system clipboard after cursor' })
+    map(  'n',        'gP', '"+P', { desc = 'Paste from system clipboard before cursor' })
     -- - Paste in Visual with `P` to not copy selected text (`:h v_P`)
     map(  'x',        'gp', '"+P', { desc = 'Paste from system clipboard' })
 
