@@ -1959,20 +1959,36 @@ H.os_icons = {
 H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
-  config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
+  -- vim.validate was updated in 0.11 https://github.com/neovim/neovim/commit/48251134ee59a3e2f0aeb89608fa820c21b25d4f
+  -- use vim.fn.has over vim.version since minimum support is 0.8
+  if vim.fn.has "nvim-0.11" ~= 1 then
+    vim.validate({ config = { config, 'table', true } })
+    config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    style = { config.style, 'string' },
-    default = { config.default, 'table' },
-    directory = { config.directory, 'table' },
-    extension = { config.extension, 'table' },
-    file = { config.file, 'table' },
-    filetype = { config.filetype, 'table' },
-    lsp = { config.lsp, 'table' },
-    os = { config.os, 'table' },
-    use_file_extension = { config.use_file_extension, 'function' },
-  })
+    vim.validate({
+      style = { config.style, 'string' },
+      default = { config.default, 'table' },
+      directory = { config.directory, 'table' },
+      extension = { config.extension, 'table' },
+      file = { config.file, 'table' },
+      filetype = { config.filetype, 'table' },
+      lsp = { config.lsp, 'table' },
+      os = { config.os, 'table' },
+      use_file_extension = { config.use_file_extension, 'function' },
+    })
+  else
+    vim.validate('config', config, 'table', true)
+    config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
+
+    vim.validate('style', config.style, 'string')
+    vim.validate('default', config.default, 'table')
+    vim.validate('directory', config.directory, 'table')
+    vim.validate('extension', config.extension, 'table')
+    vim.validate('file', config.file, 'table')
+    vim.validate('filetype', config.filetype, 'table')
+    vim.validate('lsp', config.lsp, 'table')
+    vim.validate('os', config.os, 'table')
+  end
 
   return config
 end
