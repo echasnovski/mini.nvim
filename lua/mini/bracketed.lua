@@ -549,7 +549,7 @@ MiniBracketed.file = function(direction, opts)
   -- Apply. Open target_path.
   local path_sep = package.config:sub(1, 1)
   local target_path = directory .. path_sep .. file_basenames[res_ind]
-  vim.cmd('edit ' .. target_path)
+  H.edit(target_path)
 end
 
 --- Indent change
@@ -781,7 +781,7 @@ MiniBracketed.oldfile = function(direction, opts)
 
   -- Apply. Edit file at path while marking it not for tracking.
   H.cache.oldfile.is_advancing = true
-  vim.cmd('edit ' .. oldfile_arr[res_arr_ind])
+  H.edit(oldfile_arr[res_arr_ind])
 end
 
 --- Quickfix from quickfix list
@@ -2002,6 +2002,15 @@ H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
+end
+
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
 end
 
 H.add_to_jumplist = function() vim.cmd([[normal! m']]) end

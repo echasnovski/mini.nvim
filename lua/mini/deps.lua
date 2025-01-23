@@ -877,7 +877,7 @@ H.create_user_commands = function()
   make_update_cmd('DepsUpdateOffline', true, 'Update plugins without downloading from source')
 
   local show_log = function()
-    vim.cmd('edit ' .. vim.fn.fnameescape(H.get_config().path.log))
+    H.edit(H.get_config().path.log)
     H.update_add_syntax()
     vim.cmd([[syntax match MiniDepsTitle "^\(==========\).*\1$"]])
   end
@@ -1597,6 +1597,15 @@ H.notify = vim.schedule_wrap(function(msg, level)
   vim.notify(string.format('(mini.deps) %s', msg), vim.log.levels[level])
   vim.cmd('redraw')
 end)
+
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
+end
 
 H.get_timestamp = function() return vim.fn.strftime('%Y-%m-%d %H:%M:%S') end
 

@@ -1118,6 +1118,9 @@ T['select_path()']['works'] = function()
     },
   })
   validate_buf_name(0, 'file_1-1')
+
+  -- Should open path in relative form for nicer `:buffers`
+  expect.match(child.cmd_capture('buffers'), '[^/]file_1%-1')
 end
 
 T['select_path()']['properly shortens paths'] = function()
@@ -1223,6 +1226,9 @@ T['select_label()']['works'] = function()
     },
   })
   validate_buf_name(0, 'file_1-2')
+
+  -- Should open path in relative form for nicer `:buffers`
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]file_1%-2')
 end
 
 T['select_label()']['can be properly canceled'] = function()

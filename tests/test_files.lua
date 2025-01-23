@@ -1303,8 +1303,8 @@ T['go_in()']['works on file'] = function()
   expect.match(child.api.nvim_buf_get_name(0), '%.a%-file$')
   eq(get_lines(), { '.a-file' })
 
-  -- Should open with relative path to have better view in `:buffers`
-  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '"' .. vim.pesc(test_dir_path))
+  -- Should open path in relative form for nicer `:buffers`
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]' .. vim.pesc(test_dir_path))
 end
 
 T['go_in()']['respects `opts.close_on_file`'] = function()
@@ -3568,7 +3568,7 @@ T['File manipulation']['rename file renames opened buffers'] = function()
   synchronize()
   eq(is_file_in_buffer(buf_id, join_path(temp_dir, 'new-file')), true)
 
-  -- Should result more compact `:buffers` output
+  -- Should open path in relative form for nicer `:buffers`
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-files/temp/new%-file')
 end
 

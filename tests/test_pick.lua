@@ -1849,8 +1849,7 @@ T['default_choose()']['respects picker target window'] = function()
 
   eq(child.api.nvim_win_get_buf(win_id_1), buf_id_1)
   validate_buf_name(buf_id_1, '')
-  eq(child.api.nvim_win_get_buf(win_id_2), buf_id_2)
-  validate_buf_name(buf_id_2, path)
+  validate_buf_name(child.api.nvim_win_get_buf(win_id_2), path)
 end
 
 T['default_choose()']['works without active picker'] = function()
@@ -1901,8 +1900,8 @@ T['default_choose()']['works for relative file path'] = function()
   type_keys('<CR>')
   validate_buf_name(0, real_file('a.lua'))
 
-  -- Should open with relative path to have better view in `:buffers`
-  expect.match(child.cmd_capture('buffers'), '"tests[\\/]dir%-pick')
+  -- Should open path in relative form for nicer `:buffers`
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-pick')
 
   -- Should respect source's cwd (thanks to window-local cwd)
   child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute .. '/builtin-tests'))

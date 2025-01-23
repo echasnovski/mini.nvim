@@ -2686,6 +2686,9 @@ T['Commands'][':DepsShowLog works'] = function()
   load_module({ path = { package = test_opt_dir, log = test_dir_absolute .. '/test-log' } })
   child.cmd('DepsShowLog')
   child.expect_screenshot()
+
+  -- Should open path in relative form for nicer `:buffers`
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), 'tests/dir%-deps/test%-log')
 end
 
 T['Commands'][':DepsClean works'] = function()

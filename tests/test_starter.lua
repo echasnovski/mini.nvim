@@ -931,6 +931,14 @@ T['sections']['recent_files()']['correctly identifies files from current directo
   child.expect_screenshot()
 end
 
+T['sections']['recent_files()']['opens path in relative form'] = function()
+  local file = 'tests/dir-starter/dir/file1'
+  child.v.oldfiles = { child.fn.fnamemodify(file, ':p') }
+  child.lua('MiniStarter.open()')
+  type_keys('<CR>')
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-starter/dir/file1')
+end
+
 T['sections']['recent_files()']['respects files in subdirectories'] = function()
   local dir = 'tests/dir-starter/dir'
   local dir_nested = dir .. '/subdir'

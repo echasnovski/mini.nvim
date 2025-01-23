@@ -3236,24 +3236,11 @@ end
 
 -- Default choose -------------------------------------------------------------
 H.choose_path = function(win_target, item_data)
-  -- Try to use already created buffer, if present. This avoids not needed
-  -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
-  local path, path_buf_id = H.parse_uri(item_data.path) or item_data.path, nil
-  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and vim.api.nvim_buf_get_name(buf_id) == path
-    if is_target then path_buf_id = buf_id end
+  local path = H.parse_uri(item_data.path) or item_data.path
+  if item_data.type == 'directory' then
+    return vim.api.nvim_win_call(win_target, function() vim.cmd('edit ' .. vim.fn.fnameescape(path)) end)
   end
-
-  -- Set buffer in target window
-  if path_buf_id ~= nil then
-    H.set_winbuf(win_target, path_buf_id)
-  else
-    -- Use relative path for a better initial view in `:buffers`
-    local path_norm = vim.fn.fnameescape(vim.fn.fnamemodify(path, ':.'))
-    -- Use `pcall()` to avoid possible `:edit` errors, like present swap file
-    vim.api.nvim_win_call(win_target, function() pcall(vim.cmd, 'edit ' .. path_norm) end)
-  end
-
+  H.edit(path, win_target)
   H.choose_set_cursor(win_target, item_data.lnum, item_data.col)
 end
 
@@ -3394,6 +3381,15 @@ end
 H.error = function(msg) error(string.format('(mini.pick) %s', msg), 0) end
 
 H.notify = function(msg, level_name) vim.notify('(mini.pick) ' .. msg, vim.log.levels[level_name]) end
+
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
+end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 

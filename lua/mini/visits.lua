@@ -738,7 +738,7 @@ MiniVisits.select_path = function(cwd, opts)
   local cwd_to_short = cwd == '' and vim.fn.getcwd() or cwd
   local items = vim.tbl_map(function(path) return { path = path, text = H.short_path(path, cwd_to_short) } end, paths)
   local select_opts = { prompt = 'Visited paths', format_item = function(item) return item.text end }
-  local on_choice = function(item) H.edit_path((item or {}).path) end
+  local on_choice = function(item) H.edit((item or {}).path) end
 
   vim.ui.select(items, select_opts, on_choice)
 end
@@ -860,7 +860,7 @@ MiniVisits.iterate_paths = function(direction, cwd, opts)
   -- Use `vim.g` instead of `vim.b` to not register in **next** buffer
   local cache_disabled = vim.g.minivisits_disable
   vim.g.minivisits_disable = true
-  H.edit_path(all_paths[res_ind])
+  H.edit(all_paths[res_ind])
   vim.g.minivisits_disable = cache_disabled
 end
 
@@ -1533,24 +1533,13 @@ H.tbl_add_rank = function(arr, key)
   end
 end
 
-H.edit_path = function(path)
-  if path == nil then return end
-
-  -- Try to reuse buffer
-  local path_buf_id
-  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_target = H.is_valid_buf(buf_id) and H.buf_get_path(buf_id) == path
-    if is_target then path_buf_id = buf_id end
-  end
-
-  if path_buf_id ~= nil then
-    vim.api.nvim_win_set_buf(0, path_buf_id)
-    vim.bo[path_buf_id].buflisted = true
-  else
-    -- Use relative path for a better initial view in `:buffers`
-    local path_norm = vim.fn.fnameescape(vim.fn.fnamemodify(path, ':.'))
-    pcall(vim.cmd, 'edit ' .. path_norm)
-  end
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
 end
 
 H.full_path = function(path) return (vim.fn.fnamemodify(path, ':p'):gsub('/+', '/'):gsub('(.)/$', '%1')) end

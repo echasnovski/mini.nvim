@@ -1802,26 +1802,7 @@ end
 
 H.explorer_open_file = function(explorer, path)
   explorer = H.explorer_ensure_target_window(explorer)
-
-  -- Try to use already created buffer, if present. This avoids not needed
-  -- `:edit` call and avoids some problems with auto-root from 'mini.misc'.
-  path = H.fs_normalize_path(path)
-  local path_buf_id
-  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local is_same_name = H.fs_normalize_path(vim.api.nvim_buf_get_name(buf_id)) == path
-    local is_target = H.is_valid_buf(buf_id) and vim.bo[buf_id].buflisted and is_same_name
-    if is_target then path_buf_id = buf_id end
-  end
-
-  if path_buf_id ~= nil then
-    vim.api.nvim_win_set_buf(explorer.target_window, path_buf_id)
-  else
-    -- Use relative path for a better initial view in `:buffers`
-    local path_norm = vim.fn.fnameescape(vim.fn.fnamemodify(path, ':.'))
-    -- Use `pcall()` to avoid possible `:edit` errors, like present swap file
-    pcall(vim.fn.win_execute, explorer.target_window, 'edit ' .. path_norm)
-  end
-
+  H.edit(path, explorer.target_window)
   return explorer
 end
 
@@ -2874,6 +2855,15 @@ H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
   vim.keymap.set(mode, lhs, rhs, opts)
+end
+
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
 end
 
 H.trigger_event = function(event_name, data) vim.api.nvim_exec_autocmds('User', { pattern = event_name, data = data }) end

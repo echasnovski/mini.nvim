@@ -1226,6 +1226,12 @@ T['file()']['works'] = function()
   validate_works(validate_file, #test_files)
 end
 
+T['file()']['opens path in relative form'] = function()
+  edit_test_file('file-a')
+  child.lua('MiniBracketed.file("forward")')
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-bracketed/file%-b')
+end
+
 T['file()']['reuses buffer if file is already opened'] = function()
   edit_test_file('file-a')
   local buf_a = child.api.nvim_get_current_buf()
@@ -1948,6 +1954,13 @@ T['oldfile()']['works'] = function()
 
   -- Last
   validate('last', n)
+end
+
+T['oldfile()']['opens path in relative form'] = function()
+  setup_oldfile()
+  child.cmd('%bwipeout')
+  child.lua('MiniBracketed.oldfile("backward")')
+  expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-bracketed/file%-c')
 end
 
 T['oldfile()']['works in not appropriate buffers'] = function()

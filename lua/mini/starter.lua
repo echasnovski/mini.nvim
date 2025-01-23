@@ -538,7 +538,7 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
     local items = {}
     for _, f in ipairs(vim.list_slice(files, 1, n)) do
       local name = vim.fn.fnamemodify(f, ':t') .. show_path(f)
-      table.insert(items, { action = 'edit ' .. f, name = name, section = section })
+      table.insert(items, { action = function() H.edit(f) end, name = name, section = section })
     end
 
     return items
@@ -1508,6 +1508,15 @@ end
 H.message = function(msg) H.echo(msg, true) end
 
 H.error = function(msg) error(string.format('(mini.starter) %s', msg)) end
+
+H.edit = function(path, win_id)
+  if type(path) ~= 'string' then return end
+  local buf_id = vim.fn.bufadd(vim.fn.fnamemodify(path, ':.'))
+  -- Showing in window also loads. Use `pcall` to not error with swap messages.
+  pcall(vim.api.nvim_win_set_buf, win_id or 0, buf_id)
+  vim.bo[buf_id].buflisted = true
+  return buf_id
+end
 
 H.validate_starter_buf_id = function(buf_id, fun_name, severity)
   local is_starter_buf_id = type(buf_id) == 'number'
