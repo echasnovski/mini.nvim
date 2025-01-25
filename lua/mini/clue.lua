@@ -1696,7 +1696,7 @@ end
 H.clues_get_all = function(mode)
   local res = {}
 
-  -- Order of clue precedence: config clues < buffer mappings < global mappings
+  -- Order of clue precedence: config clues < global mappings < buffer mappings
   local config_clues = H.clues_normalize(H.get_config().clues) or {}
   local mode_clues = vim.tbl_filter(function(x) return x.mode == mode end, config_clues)
   for _, clue in ipairs(mode_clues) do
@@ -1709,6 +1709,7 @@ H.clues_get_all = function(mode)
     -- - Fall back to possibly already present fields to allow partial
     --   overwrite in later clues. Like to add `postkeys` and inherit `desc`.
     res_data.desc = desc or res_data.desc
+    res_data.desc_fallback = res_data.desc
     res_data.postkeys = H.replace_termcodes(clue.postkeys) or res_data.postkeys
 
     res[lhsraw] = res_data
@@ -1717,14 +1718,14 @@ H.clues_get_all = function(mode)
   for _, map_data in ipairs(vim.api.nvim_get_keymap(mode)) do
     local lhsraw = H.replace_termcodes(map_data.lhs)
     local res_data = res[lhsraw] or {}
-    res_data.desc = map_data.desc or ''
+    res_data.desc = map_data.desc or res_data.desc_fallback or ''
     res[lhsraw] = res_data
   end
 
   for _, map_data in ipairs(vim.api.nvim_buf_get_keymap(0, mode)) do
     local lhsraw = H.replace_termcodes(map_data.lhs)
     local res_data = res[lhsraw] or {}
-    res_data.desc = map_data.desc or ''
+    res_data.desc = map_data.desc or res_data.desc_fallback or ''
     res[lhsraw] = res_data
   end
 
