@@ -2663,10 +2663,15 @@ H.picker_choose = function(picker, pre_command)
 
   local win_id_target = picker.windows.target
   if pre_command ~= nil and H.is_valid_win(win_id_target) then
+    -- Work around Neovim not preserving cwd during `nvim_win_call`
+    -- See: https://github.com/neovim/neovim/issues/32203
+    local picker_cwd, global_cwd = vim.fn.getcwd(0), vim.fn.getcwd(-1, -1)
+    vim.fn.chdir(global_cwd)
     vim.api.nvim_win_call(win_id_target, function()
       vim.cmd(pre_command)
       picker.windows.target = vim.api.nvim_get_current_win()
     end)
+    vim.fn.chdir(picker_cwd)
   end
 
   local ok, res = pcall(picker.opts.source.choose, cur_item)
@@ -3509,7 +3514,7 @@ H.win_set_cwd = function(win_id, cwd)
   if cwd == nil or vim.fn.getcwd(win_id or 0) == cwd then return end
   local f = function() vim.cmd('lcd ' .. vim.fn.fnameescape(cwd)) end
   if win_id == nil or win_id == vim.api.nvim_get_current_win() then return f() end
-  vim.api.nvim_win_call(f, win_id)
+  vim.api.nvim_win_call(win_id, f)
 end
 
 H.seq_along = function(arr)

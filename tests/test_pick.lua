@@ -5444,10 +5444,14 @@ T['Choose'] = new_set()
 
 T['Choose']['works for split/tab variations'] = function()
   local validate = function(key)
+    local global_cwd = child.fn.getcwd(-1, -1)
+    child.lua('_G.source_cwd = ' .. vim.inspect(test_dir_absolute))
+
     local win_id_init = child.api.nvim_get_current_win()
     child.lua_notify([[MiniPick.start({
       source = {
         items = { 'a' },
+        cwd = _G.source_cwd,
         choose = function() _G.target_window = MiniPick.get_picker_state().windows.target end,
       },
     })]])
@@ -5457,6 +5461,10 @@ T['Choose']['works for split/tab variations'] = function()
     child.expect_screenshot()
     -- Should modify target window
     eq(child.lua_get('_G.target_window') ~= win_id_init, true)
+
+    -- Should not modify any current directory
+    eq(child.fn.getcwd(-1, -1), global_cwd)
+    eq(child.fn.getcwd(0), global_cwd)
 
     -- Cleanup
     child.lua('_G.target_window = nil')
