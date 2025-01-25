@@ -1957,6 +1957,31 @@ T['Visualization']['works'] = function()
   })
 end
 
+T['Visualization']['does not appear if there is no gutter'] = function()
+  child.o.signcolumn, child.o.number = 'no', false
+  disable()
+  enable()
+
+  set_lines({ 'AAA', 'uuu', 'BBB', 'CcC', 'DDD', 'FFF' })
+  set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
+  -- Shouldn't force neither sign nor number column
+  child.expect_screenshot()
+end
+
+T['Visualization']['can be visually disabled'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Neovim<0.9 still forces sign column to appear') end
+  child.lua('MiniDiff.config.view.style = "sign"')
+  child.lua('MiniDiff.config.view.signs = { add = "", change = "", delete = "" }')
+  disable()
+  enable()
+
+  set_lines({ 'AAA', 'uuu', 'BBB', 'CcC', 'DDD', 'FFF' })
+  set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
+  -- Shouldn't show sign column, although extmarks are still placed
+  child.expect_screenshot()
+  eq(#get_viz_extmarks(0) > 0, true)
+end
+
 T['Visualization']['works with "add" hunks'] = function()
   -- Every added line should be visualized as part of hunk
   set_lines({ 'aaa', 'uuu', 'vvv', 'bbb', 'www', 'ccc' })
