@@ -536,8 +536,8 @@ A clue table is a table with the following fields:
 - <keys> `(string)` - key combination for which clue will be shown.
   "Human-readable" key names as in |key-notation| (like "<Leader>", "<Space>",
   "<Tab>", etc.) are allowed.
-- <desc> `(string|nil)` - optional key combination description which will
-  be shown in clue window.
+- <desc> `(string|function|nil)` - optional key combination description which is
+  shown in clue window. If function, should return string description.
 - <postkeys> `(string|nil)` - optional postkeys which will be executed
   automatically after `keys`. Allows creation of submodes
   (see |MiniClue-examples-submodes|).
