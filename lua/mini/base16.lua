@@ -355,15 +355,13 @@ H.default_config = vim.deepcopy(MiniBase16.config)
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   -- Validate settings
   H.validate_base16_palette(config.palette, 'config.palette')
   H.validate_use_cterm(config.use_cterm, 'config.use_cterm')
-  vim.validate({ plugins = { config.plugins, 'table' } })
+  H.check_type('plugins', config.plugins, 'table')
 
   return config
 end
@@ -1572,6 +1570,14 @@ H.nearest_rgb_id = function(rgb_target, rgb_palette)
   end
 
   return best_id
+end
+
+-- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.base16) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
 
 return MiniBase16

@@ -496,62 +496,47 @@ H.signature = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    delay = { config.delay, 'table' },
-    window = { config.window, 'table' },
-    lsp_completion = { config.lsp_completion, 'table' },
-    fallback_action = {
-      config.fallback_action,
-      function(x) return type(x) == 'function' or type(x) == 'string' end,
-      'function or string',
-    },
-    mappings = { config.mappings, 'table' },
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
-  })
+  H.check_type('delay', config.delay, 'table')
+  H.check_type('window', config.window, 'table')
+  H.check_type('lsp_completion', config.lsp_completion, 'table')
+  if not (type(config.fallback_action) == 'function' or type(config.fallback_action) == 'string') then
+    H.error('`fallback_action` should be function or string, not ' .. type(config.fallback_action))
+  end
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
 
-  vim.validate({
-    ['delay.completion'] = { config.delay.completion, 'number' },
-    ['delay.info'] = { config.delay.info, 'number' },
-    ['delay.signature'] = { config.delay.signature, 'number' },
+  H.check_type('delay.completion', config.delay.completion, 'number')
+  H.check_type('delay.info', config.delay.info, 'number')
+  H.check_type('delay.signature', config.delay.signature, 'number')
 
-    ['window.info'] = { config.window.info, 'table' },
-    ['window.signature'] = { config.window.signature, 'table' },
+  H.check_type('window.info', config.window.info, 'table')
+  H.check_type('window.signature', config.window.signature, 'table')
 
-    ['lsp_completion.source_func'] = {
-      config.lsp_completion.source_func,
-      function(x) return x == 'completefunc' or x == 'omnifunc' end,
-      'one of strings: "completefunc" or "omnifunc"',
-    },
-    ['lsp_completion.auto_setup'] = { config.lsp_completion.auto_setup, 'boolean' },
-    ['lsp_completion.process_items'] = { config.lsp_completion.process_items, 'function' },
+  if not (config.lsp_completion.source_func == 'completefunc' or config.lsp_completion.source_func == 'omnifunc') then
+    H.error('`lsp_completion.source_func` should be one of "completefunc" or "omnifunc"')
+  end
+  H.check_type('lsp_completion.auto_setup', config.lsp_completion.auto_setup, 'boolean')
+  H.check_type('lsp_completion.process_items', config.lsp_completion.process_items, 'function')
 
-    ['mappings.force_twostep'] = { config.mappings.force_twostep, 'string' },
-    ['mappings.force_fallback'] = { config.mappings.force_fallback, 'string' },
-  })
+  H.check_type('mappings.force_twostep', config.mappings.force_twostep, 'string')
+  H.check_type('mappings.force_fallback', config.mappings.force_fallback, 'string')
 
   local is_string_or_array = function(x) return type(x) == 'string' or H.islist(x) end
-  vim.validate({
-    ['window.info.height'] = { config.window.info.height, 'number' },
-    ['window.info.width'] = { config.window.info.width, 'number' },
-    ['window.info.border'] = {
-      config.window.info.border,
-      is_string_or_array,
-      '(mini.completion) `config.window.info.border` can be either string or array.',
-    },
-    ['window.signature.height'] = { config.window.signature.height, 'number' },
-    ['window.signature.width'] = { config.window.signature.width, 'number' },
-    ['window.signature.border'] = {
-      config.window.signature.border,
-      is_string_or_array,
-      '(mini.completion) `config.window.signature.border` can be either string or array.',
-    },
-  })
+  H.check_type('window.info.height', config.window.info.height, 'number')
+  H.check_type('window.info.width', config.window.info.width, 'number')
+  if not is_string_or_array(config.window.info.border) then
+    H.error('`config.window.info.border` should be either string or array, not ' .. type(config.window.info.border))
+  end
+  H.check_type('window.signature.height', config.window.signature.height, 'number')
+  H.check_type('window.signature.width', config.window.signature.width, 'number')
+  if not is_string_or_array(config.window.signature.border) then
+    H.error(
+      '`config.window.signature.border` should be either string or array, not ' .. type(config.window.signature.border)
+    )
+  end
 
   return config
 end
@@ -1346,6 +1331,13 @@ H.close_action_window = function(cache, keep_timer)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.completion) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.is_char_keyword = function(char)
   -- Using Vim's `match()` and `keyword` enables respecting Cyrillic letters
   return vim.fn.match(char, '[[:keyword:]]') >= 0

@@ -1198,29 +1198,23 @@ H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    list = { config.list, 'table' },
-    silent = { config.silent, 'boolean' },
-    store = { config.store, 'table' },
-    track = { config.track, 'table' },
-  })
+  H.check_type('list', config.list, 'table')
+  H.check_type('list.filter', config.list.filter, 'function', true)
+  H.check_type('list.sort', config.list.sort, 'function', true)
 
-  vim.validate({
-    ['list.filter'] = { config.list.filter, 'function', true },
-    ['list.sort'] = { config.list.sort, 'function', true },
+  H.check_type('silent', config.silent, 'boolean')
 
-    ['store.autowrite'] = { config.store.autowrite, 'boolean' },
-    ['store.normalize'] = { config.store.normalize, 'function', true },
-    ['store.path'] = { config.store.path, 'string' },
+  H.check_type('store', config.store, 'table')
+  H.check_type('store.autowrite', config.store.autowrite, 'boolean')
+  H.check_type('store.normalize', config.store.normalize, 'function', true)
+  H.check_type('store.path', config.store.path, 'string')
 
-    ['track.delay'] = { config.track.delay, 'number' },
-    ['track.event'] = { config.track.event, 'string' },
-  })
+  H.check_type('track', config.track, 'table')
+  H.check_type('track.delay', config.track.delay, 'number')
+  H.check_type('track.event', config.track.event, 'string')
 
   return config
 end
@@ -1487,6 +1481,13 @@ H.validate_string = function(x, name)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.visits) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg)
   if H.get_config().silent then return end
 
@@ -1498,8 +1499,6 @@ H.echo = function(msg)
   vim.cmd([[echo '' | redraw]])
   vim.api.nvim_echo(msg, false, {})
 end
-
-H.error = function(msg) error(string.format('(mini.visits) %s', msg), 0) end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 

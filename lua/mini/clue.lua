@@ -1133,24 +1133,19 @@ H.undo_autocommand = 'au ModeChanged * ++once undo!'
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    clues = { config.clues, 'table' },
-    triggers = { config.triggers, 'table' },
-    window = { config.window, 'table' },
-  })
+  H.check_type('clues', config.clues, 'table')
+  H.check_type('triggers', config.triggers, 'table')
 
-  local is_table_or_callable = function(x) return type(x) == 'table' or vim.is_callable(x) end
-  vim.validate({
-    ['window.delay'] = { config.window.delay, 'number' },
-    ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
-    ['window.scroll_down'] = { config.window.scroll_down, 'string' },
-    ['window.scroll_up'] = { config.window.scroll_up, 'string' },
-  })
+  H.check_type('window', config.window, 'table')
+  if not (type(config.window.config) == 'table' or vim.is_callable(config.window.config)) then
+    H.error('`window.config` should be table or callable, not ' .. type(config.window.config))
+  end
+  H.check_type('window.delay', config.window.delay, 'number')
+  H.check_type('window.scroll_down', config.window.scroll_down, 'string')
+  H.check_type('window.scroll_up', config.window.scroll_up, 'string')
 
   return config
 end
@@ -1886,7 +1881,12 @@ H.is_array_of = function(x, predicate)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.clue) %s', msg), 0) end
+H.error = function(msg) error('(mini.clue) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

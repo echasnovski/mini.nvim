@@ -224,7 +224,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ job = { timeout = 'a' } }, 'job.timeout', 'number')
 
   expect_config_error({ command = 'a' }, 'command', 'table')
-  expect_config_error({ command = { split = 1 } }, 'command.split', 'string')
+  expect_config_error({ command = { split = 1 } }, 'command.split', 'one of')
+  expect_config_error({ command = { split = 'xxx' } }, 'command.split', 'one of')
 end
 
 T['setup()']['warns about missing executable'] = function()

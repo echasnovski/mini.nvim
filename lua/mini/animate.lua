@@ -1199,18 +1199,35 @@ H.animation_done_events = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    cursor = { config.cursor, H.is_config_cursor },
-    scroll = { config.scroll, H.is_config_scroll },
-    resize = { config.resize, H.is_config_resize },
-    open = { config.open, H.is_config_open },
-    close = { config.close, H.is_config_close },
-  })
+  H.check_type('cursor', config.cursor, 'table')
+  H.check_type('cursor.enable', config.cursor.enable, 'boolean')
+  H.check_type('cursor.timing', config.cursor.timing, 'callable')
+  H.check_type('cursor.path', config.cursor.path, 'callable')
+
+  H.check_type('scroll', config.scroll, 'table')
+  H.check_type('scroll.enable', config.scroll.enable, 'boolean')
+  H.check_type('scroll.timing', config.scroll.timing, 'callable')
+  H.check_type('scroll.subscroll', config.scroll.subscroll, 'callable')
+
+  H.check_type('resize', config.resize, 'table')
+  H.check_type('resize.enable', config.resize.enable, 'boolean')
+  H.check_type('resize.timing', config.resize.timing, 'callable')
+  H.check_type('resize.subresize', config.resize.subresize, 'callable')
+
+  H.check_type('open', config.open, 'table')
+  H.check_type('open.enable', config.open.enable, 'boolean')
+  H.check_type('open.timing', config.open.timing, 'callable')
+  H.check_type('open.winconfig', config.open.winconfig, 'callable')
+  H.check_type('open.winblend', config.open.winblend, 'callable')
+
+  H.check_type('close', config.close, 'table')
+  H.check_type('close.enable', config.close.enable, 'boolean')
+  H.check_type('close.timing', config.close.timing, 'callable')
+  H.check_type('close.winconfig', config.close.winconfig, 'callable')
+  H.check_type('close.winblend', config.close.winblend, 'callable')
 
   return config
 end
@@ -2065,58 +2082,13 @@ end
 
 H.default_winconfig_predicate = function(win_id) return true end
 
--- Predicators ----------------------------------------------------------------
-H.is_config_cursor = function(x)
-  if type(x) ~= 'table' then return false, H.msg_config('cursor', 'table') end
-  if type(x.enable) ~= 'boolean' then return false, H.msg_config('cursor.enable', 'boolean') end
-  if not vim.is_callable(x.timing) then return false, H.msg_config('cursor.timing', 'callable') end
-  if not vim.is_callable(x.path) then return false, H.msg_config('cursor.path', 'callable') end
-
-  return true
-end
-
-H.is_config_scroll = function(x)
-  if type(x) ~= 'table' then return false, H.msg_config('scroll', 'table') end
-  if type(x.enable) ~= 'boolean' then return false, H.msg_config('scroll.enable', 'boolean') end
-  if not vim.is_callable(x.timing) then return false, H.msg_config('scroll.timing', 'callable') end
-  if not vim.is_callable(x.subscroll) then return false, H.msg_config('scroll.subscroll', 'callable') end
-
-  return true
-end
-
-H.is_config_resize = function(x)
-  if type(x) ~= 'table' then return false, H.msg_config('resize', 'table') end
-  if type(x.enable) ~= 'boolean' then return false, H.msg_config('resize.enable', 'boolean') end
-  if not vim.is_callable(x.timing) then return false, H.msg_config('resize.timing', 'callable') end
-  if not vim.is_callable(x.subresize) then return false, H.msg_config('resize.subresize', 'callable') end
-
-  return true
-end
-
-H.is_config_open = function(x)
-  if type(x) ~= 'table' then return false, H.msg_config('open', 'table') end
-  if type(x.enable) ~= 'boolean' then return false, H.msg_config('open.enable', 'boolean') end
-  if not vim.is_callable(x.timing) then return false, H.msg_config('open.timing', 'callable') end
-  if not vim.is_callable(x.winconfig) then return false, H.msg_config('open.winconfig', 'callable') end
-  if not vim.is_callable(x.winblend) then return false, H.msg_config('open.winblend', 'callable') end
-
-  return true
-end
-
-H.is_config_close = function(x)
-  if type(x) ~= 'table' then return false, H.msg_config('close', 'table') end
-  if type(x.enable) ~= 'boolean' then return false, H.msg_config('close.enable', 'boolean') end
-  if not vim.is_callable(x.timing) then return false, H.msg_config('close.timing', 'callable') end
-  if not vim.is_callable(x.winconfig) then return false, H.msg_config('close.winconfig', 'callable') end
-  if not vim.is_callable(x.winblend) then return false, H.msg_config('close.winblend', 'callable') end
-
-  return true
-end
-
-H.msg_config = function(x_name, msg) return string.format('`%s` should be %s.', x_name, msg) end
-
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.animate) %s', msg), 0) end
+H.error = function(msg) error('(mini.animate) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.validate_if = function(predicate, x, x_name)
   local is_valid, msg = predicate(x, x_name)

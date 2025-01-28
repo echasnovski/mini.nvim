@@ -623,35 +623,29 @@ H.has_wrapped_virt_text = vim.fn.has('nvim-0.10') == 1
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    draw = { config.draw, 'table' },
-    mappings = { config.mappings, 'table' },
-    options = { config.options, 'table' },
-    symbol = { config.symbol, 'string' },
-  })
+  H.check_type('draw', config.draw, 'table')
+  H.check_type('draw.delay', config.draw.delay, 'number')
+  H.check_type('draw.animation', config.draw.animation, 'function')
+  H.check_type('draw.predicate', config.draw.predicate, 'function')
+  H.check_type('draw.priority', config.draw.priority, 'number')
 
-  vim.validate({
-    ['draw.delay'] = { config.draw.delay, 'number' },
-    ['draw.animation'] = { config.draw.animation, 'function' },
-    ['draw.predicate'] = { config.draw.predicate, 'function' },
-    ['draw.priority'] = { config.draw.priority, 'number' },
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.object_scope', config.mappings.object_scope, 'string')
+  H.check_type('mappings.object_scope_with_border', config.mappings.object_scope_with_border, 'string')
+  H.check_type('mappings.goto_top', config.mappings.goto_top, 'string')
+  H.check_type('mappings.goto_bottom', config.mappings.goto_bottom, 'string')
 
-    ['mappings.object_scope'] = { config.mappings.object_scope, 'string' },
-    ['mappings.object_scope_with_border'] = { config.mappings.object_scope_with_border, 'string' },
-    ['mappings.goto_top'] = { config.mappings.goto_top, 'string' },
-    ['mappings.goto_bottom'] = { config.mappings.goto_bottom, 'string' },
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.border', config.options.border, 'string')
+  H.check_type('options.indent_at_cursor', config.options.indent_at_cursor, 'boolean')
+  H.check_type('options.n_lines', config.options.n_lines, 'number')
+  H.check_type('options.try_as_border', config.options.try_as_border, 'boolean')
 
-    ['options.border'] = { config.options.border, 'string' },
-    ['options.indent_at_cursor'] = { config.options.indent_at_cursor, 'boolean' },
-    ['options.n_lines'] = { config.options.n_lines, 'number' },
-    ['options.try_as_border'] = { config.options.try_as_border, 'boolean' },
-  })
+  H.check_type('symbol', config.symbol, 'string')
+
   return config
 end
 
@@ -1130,7 +1124,12 @@ H.normalize_animation_opts = function(x)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(('(mini.indentscope) %s'):format(msg)) end
+H.error = function(msg) error('(mini.indentscope) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

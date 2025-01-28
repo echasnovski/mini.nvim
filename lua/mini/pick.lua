@@ -1875,67 +1875,62 @@ H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    delay = { config.delay, 'table' },
-    mappings = { config.mappings, 'table' },
-    options = { config.options, 'table' },
-    source = { config.source, 'table' },
-    window = { config.window, 'table' },
-  })
+  H.check_type('delay', config.delay, 'table')
+  H.check_type('delay.async', config.delay.async, 'number')
+  H.check_type('delay.busy', config.delay.busy, 'number')
 
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.caret_left', config.mappings.caret_left, 'string')
+  H.check_type('mappings.caret_right', config.mappings.caret_right, 'string')
+  H.check_type('mappings.choose', config.mappings.choose, 'string')
+  H.check_type('mappings.choose_in_split', config.mappings.choose_in_split, 'string')
+  H.check_type('mappings.choose_in_tabpage', config.mappings.choose_in_tabpage, 'string')
+  H.check_type('mappings.choose_in_vsplit', config.mappings.choose_in_vsplit, 'string')
+  H.check_type('mappings.choose_marked', config.mappings.choose_marked, 'string')
+  H.check_type('mappings.delete_char', config.mappings.delete_char, 'string')
+  H.check_type('mappings.delete_char_right', config.mappings.delete_char_right, 'string')
+  H.check_type('mappings.delete_left', config.mappings.delete_left, 'string')
+  H.check_type('mappings.delete_word', config.mappings.delete_word, 'string')
+  H.check_type('mappings.mark', config.mappings.mark, 'string')
+  H.check_type('mappings.mark_all', config.mappings.mark_all, 'string')
+  H.check_type('mappings.move_down', config.mappings.move_down, 'string')
+  H.check_type('mappings.move_start', config.mappings.move_start, 'string')
+  H.check_type('mappings.move_up', config.mappings.move_up, 'string')
+  H.check_type('mappings.paste', config.mappings.paste, 'string')
+  H.check_type('mappings.refine', config.mappings.refine, 'string')
+  H.check_type('mappings.refine_marked', config.mappings.refine_marked, 'string')
+  H.check_type('mappings.scroll_down', config.mappings.scroll_down, 'string')
+  H.check_type('mappings.scroll_up', config.mappings.scroll_up, 'string')
+  H.check_type('mappings.scroll_left', config.mappings.scroll_left, 'string')
+  H.check_type('mappings.scroll_right', config.mappings.scroll_right, 'string')
+  H.check_type('mappings.stop', config.mappings.stop, 'string')
+  H.check_type('mappings.toggle_info', config.mappings.toggle_info, 'string')
+  H.check_type('mappings.toggle_preview', config.mappings.toggle_preview, 'string')
+
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.content_from_bottom', config.options.content_from_bottom, 'boolean')
+  H.check_type('options.use_cache', config.options.use_cache, 'boolean')
+
+  H.check_type('source', config.source, 'table')
+  H.check_type('source.items', config.source.items, 'table', true)
+  H.check_type('source.name', config.source.name, 'string', true)
+  H.check_type('source.cwd', config.source.cwd, 'string', true)
+  H.check_type('source.match', config.source.match, 'function', true)
+  H.check_type('source.show', config.source.show, 'function', true)
+  H.check_type('source.preview', config.source.preview, 'function', true)
+  H.check_type('source.choose', config.source.choose, 'function', true)
+  H.check_type('source.choose_marked', config.source.choose_marked, 'function', true)
+
+  H.check_type('window', config.window, 'table')
   local is_table_or_callable = function(x) return x == nil or type(x) == 'table' or vim.is_callable(x) end
-  vim.validate({
-    ['delay.async'] = { config.delay.async, 'number' },
-    ['delay.busy'] = { config.delay.busy, 'number' },
-
-    ['mappings.caret_left'] = { config.mappings.caret_left, 'string' },
-    ['mappings.caret_right'] = { config.mappings.caret_right, 'string' },
-    ['mappings.choose'] = { config.mappings.choose, 'string' },
-    ['mappings.choose_in_split'] = { config.mappings.choose_in_split, 'string' },
-    ['mappings.choose_in_tabpage'] = { config.mappings.choose_in_tabpage, 'string' },
-    ['mappings.choose_in_vsplit'] = { config.mappings.choose_in_vsplit, 'string' },
-    ['mappings.choose_marked'] = { config.mappings.choose_marked, 'string' },
-    ['mappings.delete_char'] = { config.mappings.delete_char, 'string' },
-    ['mappings.delete_char_right'] = { config.mappings.delete_char_right, 'string' },
-    ['mappings.delete_left'] = { config.mappings.delete_left, 'string' },
-    ['mappings.delete_word'] = { config.mappings.delete_word, 'string' },
-    ['mappings.mark'] = { config.mappings.mark, 'string' },
-    ['mappings.mark_all'] = { config.mappings.mark_all, 'string' },
-    ['mappings.move_down'] = { config.mappings.move_down, 'string' },
-    ['mappings.move_start'] = { config.mappings.move_start, 'string' },
-    ['mappings.move_up'] = { config.mappings.move_up, 'string' },
-    ['mappings.paste'] = { config.mappings.paste, 'string' },
-    ['mappings.refine'] = { config.mappings.refine, 'string' },
-    ['mappings.refine_marked'] = { config.mappings.refine_marked, 'string' },
-    ['mappings.scroll_down'] = { config.mappings.scroll_down, 'string' },
-    ['mappings.scroll_up'] = { config.mappings.scroll_up, 'string' },
-    ['mappings.scroll_left'] = { config.mappings.scroll_left, 'string' },
-    ['mappings.scroll_right'] = { config.mappings.scroll_right, 'string' },
-    ['mappings.stop'] = { config.mappings.stop, 'string' },
-    ['mappings.toggle_info'] = { config.mappings.toggle_info, 'string' },
-    ['mappings.toggle_preview'] = { config.mappings.toggle_preview, 'string' },
-
-    ['options.content_from_bottom'] = { config.options.content_from_bottom, 'boolean' },
-    ['options.use_cache'] = { config.options.use_cache, 'boolean' },
-
-    ['source.items'] = { config.source.items, 'table', true },
-    ['source.name'] = { config.source.name, 'string', true },
-    ['source.cwd'] = { config.source.cwd, 'string', true },
-    ['source.match'] = { config.source.match, 'function', true },
-    ['source.show'] = { config.source.show, 'function', true },
-    ['source.preview'] = { config.source.preview, 'function', true },
-    ['source.choose'] = { config.source.choose, 'function', true },
-    ['source.choose_marked'] = { config.source.choose_marked, 'function', true },
-
-    ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
-    ['window.prompt_cursor'] = { config.window.prompt_cursor, 'string' },
-    ['window.prompt_prefix'] = { config.window.prompt_prefix, 'string' },
-  })
+  if not is_table_or_callable(config.window.config) then
+    H.error('`window.config` should be table or callable, not ' .. type(config.window.config))
+  end
+  H.check_type('window.prompt_cursor', config.window.prompt_cursor, 'string')
+  H.check_type('window.prompt_prefix', config.window.prompt_prefix, 'string')
 
   return config
 end
@@ -3383,7 +3378,12 @@ H.poke_picker_throttle = function(querytick_ref)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.pick) %s', msg), 0) end
+H.error = function(msg) error('(mini.pick) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name) vim.notify('(mini.pick) ' .. msg, vim.log.levels[level_name]) end
 

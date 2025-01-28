@@ -1484,27 +1484,22 @@ H.nvim_supports_inline_extmarks = vim.fn.has('nvim-0.10') == 1
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    snippets = { config.snippets, 'table' },
-    expand = { config.expand, 'table' },
-    mappings = { config.mappings, 'table' },
-  })
+  H.check_type('snippets', config.snippets, 'table')
 
-  vim.validate({
-    ['mappings.expand'] = { config.mappings.expand, 'string' },
-    ['mappings.jump_next'] = { config.mappings.jump_next, 'string' },
-    ['mappings.jump_prev'] = { config.mappings.jump_prev, 'string' },
-    ['mappings.stop'] = { config.mappings.stop, 'string' },
-    ['expand.prepare'] = { config.expand.prepare, 'function', true },
-    ['expand.match'] = { config.expand.match, 'function', true },
-    ['expand.select'] = { config.expand.select, 'function', true },
-    ['expand.insert'] = { config.expand.insert, 'function', true },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.expand', config.mappings.expand, 'string')
+  H.check_type('mappings.jump_next', config.mappings.jump_next, 'string')
+  H.check_type('mappings.jump_prev', config.mappings.jump_prev, 'string')
+  H.check_type('mappings.stop', config.mappings.stop, 'string')
+
+  H.check_type('expand', config.expand, 'table')
+  H.check_type('expand.prepare', config.expand.prepare, 'function', true)
+  H.check_type('expand.match', config.expand.match, 'function', true)
+  H.check_type('expand.select', config.expand.select, 'function', true)
+  H.check_type('expand.insert', config.expand.insert, 'function', true)
 
   return config
 end
@@ -2604,6 +2599,11 @@ H.is_region = function(x) return type(x) == 'table' and H.is_position(x.from) an
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error('(mini.snippets) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name, silent)
   if not silent then vim.notify('(mini.snippets) ' .. msg, vim.log.levels[level_name]) end

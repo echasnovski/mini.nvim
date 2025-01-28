@@ -732,33 +732,26 @@ H.cache = { operator_task = nil }
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    mappings = { config.mappings, 'table' },
-    detect = { config.detect, 'table' },
-    split = { config.split, 'table' },
-    join = { config.join, 'table' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.toggle', config.mappings.toggle, 'string', true)
+  H.check_type('mappings.split', config.mappings.split, 'string')
+  H.check_type('mappings.join', config.mappings.join, 'string', true)
 
-  vim.validate({
-    ['mappings.toggle'] = { config.mappings.toggle, 'string', true },
-    ['mappings.split'] = { config.mappings.split, 'string' },
-    ['mappings.join'] = { config.mappings.join, 'string', true },
+  H.check_type('detect', config.detect, 'table')
+  H.check_type('detect.brackets', config.detect.brackets, 'table', true)
+  H.check_type('detect.separator', config.detect.separator, 'string')
+  H.check_type('detect.exclude_regions', config.detect.exclude_regions, 'table', true)
 
-    ['detect.brackets'] = { config.detect.brackets, 'table', true },
-    ['detect.separator'] = { config.detect.separator, 'string' },
-    ['detect.exclude_regions'] = { config.detect.exclude_regions, 'table', true },
+  H.check_type('split', config.split, 'table')
+  H.check_type('split.hooks_pre', config.split.hooks_pre, 'table')
+  H.check_type('split.hooks_post', config.split.hooks_post, 'table')
 
-    ['split.hooks_pre'] = { config.split.hooks_pre, 'table' },
-    ['split.hooks_post'] = { config.split.hooks_post, 'table' },
-
-    ['join.hooks_pre'] = { config.join.hooks_pre, 'table' },
-    ['join.hooks_post'] = { config.join.hooks_post, 'table' },
-  })
+  H.check_type('join', config.join, 'table')
+  H.check_type('join.hooks_pre', config.join.hooks_pre, 'table')
+  H.check_type('join.hooks_post', config.join.hooks_post, 'table')
 
   return config
 end
@@ -1104,7 +1097,12 @@ H.is_commented = function(line, comment_leaders)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.splitjoin) %s', msg), 0) end
+H.error = function(msg) error('(mini.splitjoin) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

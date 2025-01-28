@@ -628,22 +628,17 @@ H.skip_sync = false
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    job = { config.job, 'table' },
-    command = { config.command, 'table' },
-  })
+  H.check_type('job', config.job, 'table')
+  H.check_type('command', config.command, 'table')
 
-  local is_split = function(x) return pcall(H.normalize_split_opt, x, 'command.split') end
-  vim.validate({
-    ['job.git_executable'] = { config.job.git_executable, 'string' },
-    ['job.timeout'] = { config.job.timeout, 'number' },
-    ['command.split'] = { config.command.split, is_split },
-  })
+  H.check_type('job.git_executable', config.job.git_executable, 'string')
+  H.check_type('job.timeout', config.job.timeout, 'number')
+  if not pcall(H.normalize_split_opt, config.command.split) then
+    H.error('`command.split` should be one of "auto", "horizontal", "vertical", "tab"')
+  end
 
   return config
 end
@@ -1683,7 +1678,12 @@ end
 H.cli_escape = function(x) return (string.gsub(x, '([ \\])', '\\%1')) end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.git) %s', msg), 0) end
+H.error = function(msg) error('(mini.git) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name) vim.notify('(mini.git) ' .. msg, vim.log.levels[level_name]) end
 

@@ -1032,20 +1032,16 @@ H.ns = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    autoopen = { config.autoopen, 'boolean' },
-    evaluate_single = { config.evaluate_single, 'boolean' },
-    items = { config.items, 'table', true },
-    -- `header` and `footer` can have any type
-    content_hooks = { config.content_hooks, 'table', true },
-    query_updaters = { config.query_updaters, 'string' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('autoopen', config.autoopen, 'boolean')
+  H.check_type('evaluate_single', config.evaluate_single, 'boolean')
+  H.check_type('items', config.items, 'table', true)
+  -- `header` and `footer` can have any type
+  H.check_type('content_hooks', config.content_hooks, 'table', true)
+  H.check_type('query_updaters', config.query_updaters, 'string')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -1483,6 +1479,13 @@ H.is_something_shown = function()
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.starter) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end
 
@@ -1506,8 +1509,6 @@ H.echo = function(msg, is_important)
 end
 
 H.message = function(msg) H.echo(msg, true) end
-
-H.error = function(msg) error(string.format('(mini.starter) %s', msg)) end
 
 H.edit = function(path, win_id)
   if type(path) ~= 'string' then return end

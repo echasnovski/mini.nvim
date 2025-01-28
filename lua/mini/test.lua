@@ -587,7 +587,7 @@ end
 ---   - <stop_on_error> - whether to stop execution (see |MiniTest.stop()|)
 ---     after first error. Default: `false`.
 MiniTest.execute = function(cases, opts)
-  vim.validate({ cases = { cases, 'table' } })
+  H.check_type('cases', cases, 'table')
 
   MiniTest.current.all_cases = cases
 
@@ -693,7 +693,7 @@ end
 ---   Use `nil` or empty string to not test for pattern matching.
 ---@param ... any Extra arguments with which `f` will be called.
 MiniTest.expect.error = function(f, pattern, ...)
-  vim.validate({ pattern = { pattern, 'string', true } })
+  H.check_type('pattern', pattern, 'string', true)
 
   local ok, err = pcall(f, ...)
   err = err or ''
@@ -1602,26 +1602,20 @@ H.reporter_symbols = setmetatable({
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    collect = { config.collect, 'table' },
-    execute = { config.execute, 'table' },
-    script_path = { config.script_path, 'string' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('collect', config.collect, 'table')
+  H.check_type('collect.emulate_busted', config.collect.emulate_busted, 'boolean')
+  H.check_type('collect.find_files', config.collect.find_files, 'function')
+  H.check_type('collect.filter_cases', config.collect.filter_cases, 'function')
 
-  vim.validate({
-    ['collect.emulate_busted'] = { config.collect.emulate_busted, 'boolean' },
-    ['collect.find_files'] = { config.collect.find_files, 'function' },
-    ['collect.filter_cases'] = { config.collect.filter_cases, 'function' },
+  H.check_type('execute', config.execute, 'table')
+  H.check_type('execute.reporter', config.execute.reporter, 'table', true)
+  H.check_type('execute.stop_on_error', config.execute.stop_on_error, 'boolean')
 
-    ['execute.reporter'] = { config.execute.reporter, 'table', true },
-    ['execute.stop_on_error'] = { config.execute.stop_on_error, 'boolean' },
-  })
+  H.check_type('script_path', config.script_path, 'string')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -2308,6 +2302,13 @@ H.screenshot_read = function(path)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.test) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end
 
@@ -2321,8 +2322,6 @@ H.echo = function(msg, is_important)
 end
 
 H.message = function(msg) H.echo(msg, true) end
-
-H.error = function(msg) error(string.format('(mini.test) %s', msg)) end
 
 H.wrap_callable = function(f)
   if not vim.is_callable(f) then return end

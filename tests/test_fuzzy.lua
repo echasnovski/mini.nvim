@@ -53,6 +53,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error('a', 'config', 'table')
   expect_config_error({ cutoff = 'a' }, 'cutoff', 'number')
+  expect_config_error({ cutoff = 0 }, 'cutoff', 'not less than 1')
 end
 
 T['match()'] = new_set()

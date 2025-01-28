@@ -399,29 +399,21 @@ H.curswant = nil
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    mappings = { config.mappings, 'table' },
-    options = { config.options, 'table' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.left', config.mappings.left, 'string')
+  H.check_type('mappings.down', config.mappings.down, 'string')
+  H.check_type('mappings.up', config.mappings.up, 'string')
+  H.check_type('mappings.right', config.mappings.right, 'string')
+  H.check_type('mappings.line_left', config.mappings.line_left, 'string')
+  H.check_type('mappings.line_right', config.mappings.line_right, 'string')
+  H.check_type('mappings.line_down', config.mappings.line_down, 'string')
+  H.check_type('mappings.line_up', config.mappings.line_up, 'string')
 
-  vim.validate({
-    ['mappings.left'] = { config.mappings.left, 'string' },
-    ['mappings.down'] = { config.mappings.down, 'string' },
-    ['mappings.up'] = { config.mappings.up, 'string' },
-    ['mappings.right'] = { config.mappings.right, 'string' },
-
-    ['mappings.line_left'] = { config.mappings.line_left, 'string' },
-    ['mappings.line_right'] = { config.mappings.line_right, 'string' },
-    ['mappings.line_down'] = { config.mappings.line_down, 'string' },
-    ['mappings.line_up'] = { config.mappings.line_up, 'string' },
-
-    ['options.reindent_linewise'] = { config.options.reindent_linewise, 'boolean' },
-  })
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.reindent_linewise', config.options.reindent_linewise, 'boolean')
 
   return config
 end
@@ -451,6 +443,13 @@ H.get_config = function(config)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.move) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})

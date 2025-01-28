@@ -672,40 +672,36 @@ H.keys = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    spotter = { config.spotter, 'function', true },
-    labels = { config.labels, 'string' },
-    view = { config.view, 'table' },
-    allowed_lines = { config.allowed_lines, 'table' },
-    allowed_windows = { config.allowed_windows, 'table' },
-    hooks = { config.hooks, 'table' },
-    mappings = { config.mappings, 'table' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('spotter', config.spotter, 'function', true)
+  H.check_type('labels', config.labels, 'string')
 
-  vim.validate({
-    ['view.dim'] = { config.view.dim, 'boolean' },
-    ['view.n_steps_ahead'] = { config.view.n_steps_ahead, 'number' },
+  H.check_type('view', config.view, 'table')
+  H.check_type('view.dim', config.view.dim, 'boolean')
+  H.check_type('view.n_steps_ahead', config.view.n_steps_ahead, 'number')
 
-    ['allowed_lines.blank'] = { config.allowed_lines.blank, 'boolean' },
-    ['allowed_lines.cursor_before'] = { config.allowed_lines.cursor_before, 'boolean' },
-    ['allowed_lines.cursor_at'] = { config.allowed_lines.cursor_at, 'boolean' },
-    ['allowed_lines.cursor_after'] = { config.allowed_lines.cursor_after, 'boolean' },
-    ['allowed_lines.fold'] = { config.allowed_lines.fold, 'boolean' },
+  H.check_type('allowed_lines', config.allowed_lines, 'table')
+  H.check_type('allowed_lines.blank', config.allowed_lines.blank, 'boolean')
+  H.check_type('allowed_lines.cursor_before', config.allowed_lines.cursor_before, 'boolean')
+  H.check_type('allowed_lines.cursor_at', config.allowed_lines.cursor_at, 'boolean')
+  H.check_type('allowed_lines.cursor_after', config.allowed_lines.cursor_after, 'boolean')
+  H.check_type('allowed_lines.fold', config.allowed_lines.fold, 'boolean')
 
-    ['allowed_windows.current'] = { config.allowed_windows.current, 'boolean' },
-    ['allowed_windows.not_current'] = { config.allowed_windows.not_current, 'boolean' },
+  H.check_type('allowed_windows', config.allowed_windows, 'table')
+  H.check_type('allowed_windows.current', config.allowed_windows.current, 'boolean')
+  H.check_type('allowed_windows.not_current', config.allowed_windows.not_current, 'boolean')
 
-    ['hooks.before_start'] = { config.hooks.before_start, 'function', true },
-    ['hooks.after_jump'] = { config.hooks.after_jump, 'function', true },
+  H.check_type('hooks', config.hooks, 'table')
+  H.check_type('hooks.before_start', config.hooks.before_start, 'function', true)
+  H.check_type('hooks.after_jump', config.hooks.after_jump, 'function', true)
 
-    ['mappings.start_jumping'] = { config.mappings.start_jumping, 'string' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.start_jumping', config.mappings.start_jumping, 'string')
+
+  H.check_type('silent', config.silent, 'boolean')
+
   return config
 end
 
@@ -1024,7 +1020,12 @@ H.perform_jump = function(spot, after_hook)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.jump2d) %s', msg), 0) end
+H.error = function(msg) error('(mini.jump2d) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end

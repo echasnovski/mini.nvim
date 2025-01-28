@@ -564,27 +564,23 @@ H.cache = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    content = { config.content, 'table' },
-    lsp_progress = { config.lsp_progress, 'table' },
-    window = { config.window, 'table' },
-  })
+  H.check_type('content', config.content, 'table')
+  H.check_type('content.format', config.content.format, 'function', true)
+  H.check_type('content.sort', config.content.sort, 'function', true)
 
-  local is_table_or_callable = function(x) return type(x) == 'table' or vim.is_callable(x) end
-  vim.validate({
-    ['content.format'] = { config.content.format, 'function', true },
-    ['content.sort'] = { config.content.sort, 'function', true },
-    ['lsp_progress.enable'] = { config.lsp_progress.enable, 'boolean' },
-    ['lsp_progress.duration_last'] = { config.lsp_progress.duration_last, 'number' },
-    ['window.config'] = { config.window.config, is_table_or_callable, 'table or callable' },
-    ['window.max_width_share'] = { config.window.max_width_share, 'number' },
-    ['window.winblend'] = { config.window.winblend, 'number' },
-  })
+  H.check_type('lsp_progress', config.lsp_progress, 'table')
+  H.check_type('lsp_progress.enable', config.lsp_progress.enable, 'boolean')
+  H.check_type('lsp_progress.duration_last', config.lsp_progress.duration_last, 'number')
+
+  H.check_type('window', config.window, 'table')
+  if not (type(config.window.config) == 'table' or vim.is_callable(config.window.config)) then
+    H.error('`window.config` should table or callable, not ' .. type(config.window.config))
+  end
+  H.check_type('window.max_width_share', config.window.max_width_share, 'number')
+  H.check_type('window.winblend', config.window.winblend, 'number')
 
   return config
 end
@@ -841,7 +837,12 @@ H.notif_compare = function(a, b)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.notify) %s', msg), 0) end
+H.error = function(msg) error('(mini.notify) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
