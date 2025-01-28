@@ -1620,6 +1620,10 @@ H.git_start_watching_index = function(buf_id, path)
   -- If path is not in Git, disable buffer but make sure that it will not try
   -- to re-attach until buffer is properly disabled
   local on_not_in_git = vim.schedule_wrap(function()
+    if not vim.api.nvim_buf_is_valid(buf_id) then
+      H.cache[buf_id] = nil
+      return
+    end
     MiniDiff.disable(buf_id)
     H.git_cache[buf_id] = {}
   end)
