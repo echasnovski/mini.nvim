@@ -729,22 +729,32 @@ H.ns_id = vim.api.nvim_create_namespace('MiniSplitjoin')
 
 H.cache = { operator_task = nil }
 
+local function validate(t)
+  if vim.fn.has('nvim-0.11') == 1 then
+    for k, v in pairs(t) do
+      vim.validate(k, v[1], v[2], v[3])
+    end
+  else
+    vim.validate(t)
+  end
+end
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
+  validate({
     mappings = { config.mappings, 'table' },
     detect = { config.detect, 'table' },
     split = { config.split, 'table' },
     join = { config.join, 'table' },
   })
 
-  vim.validate({
+  validate({
     ['mappings.toggle'] = { config.mappings.toggle, 'string', true },
     ['mappings.split'] = { config.mappings.split, 'string' },
     ['mappings.join'] = { config.mappings.join, 'string', true },

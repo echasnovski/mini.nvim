@@ -1268,22 +1268,32 @@ H.opened_buffers = {}
 -- File system information
 H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
+local function validate(t)
+  if vim.fn.has('nvim-0.11') == 1 then
+    for k, v in pairs(t) do
+      vim.validate(k, v[1], v[2], v[3])
+    end
+  else
+    vim.validate(t)
+  end
+end
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
   -- General idea: if some table elements are not present in user-supplied
   -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  validate({ config = { config, 'table', true } })
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
+  validate({
     content = { config.content, 'table' },
     mappings = { config.mappings, 'table' },
     options = { config.options, 'table' },
     windows = { config.windows, 'table' },
   })
 
-  vim.validate({
+  validate({
     ['content.filter'] = { config.content.filter, 'function', true },
     ['content.prefix'] = { config.content.prefix, 'function', true },
     ['content.sort'] = { config.content.sort, 'function', true },
