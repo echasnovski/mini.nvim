@@ -2375,7 +2375,6 @@ T['session.stop()']['works'] = function()
   child.expect_screenshot()
 
   -- Should clean all side effects
-  expect.error(function() child.cmd('au MiniSnippetsTrack') end, 'No such group')
   expect.match(child.cmd_capture('imap <C-h>'), 'No mapping')
   expect.match(child.cmd_capture('imap <C-l>'), 'No mapping')
   expect.match(child.cmd_capture('imap <C-c>'), 'No mapping')
@@ -4953,7 +4952,6 @@ T['Examples']['stop session after Normal mode exit'] = function()
   validate_active_session()
   type_keys('<Esc>')
   validate_no_active_session()
-  eq(child.cmd_capture('au ModeChanged'):find('snippet') == nil, true)
 
   start_session('T1=$1; T0=$0')
   -- Should not stop for "temporary" Normal mode

@@ -1374,7 +1374,7 @@ MiniSnippets.session.stop = function()
   H.session_deinit(cur_session, true)
   H.sessions[#H.sessions] = nil
   if #H.sessions == 0 then
-    vim.api.nvim_del_augroup_by_name('MiniSnippetsTrack')
+    H.is_tracking = false
     H.unmap_in_sessions()
   end
   H.session_init(H.get_active_session(), false)
@@ -1548,6 +1548,62 @@ H.create_autocommands = function()
   end
   -- - Use `vim.schedule_wrap` to make it work with `:edit` command
   au('BufUnload', '*', vim.schedule_wrap(clean_sessions), 'Clean sessions stack')
+
+  -- Create tracking autocommands only once, thus preventing outdated completion items
+  -- when integrating with completion engines
+  local gr_track = vim.api.nvim_create_augroup('MiniSnippetsTrack', { clear = true })
+
+  -- React to text changes. NOTE: Use 'TextChangedP' to update linked tabstops
+  -- with visible popup. It has downsides though:
+  -- - Placeholder is removed after selecting first choice. Together with
+  --   showing choices in empty tabstops, feels like a good compromise.
+  -- - Tabstop sync runs more frequently (especially with 'mini.completion'),
+  --   because of how built-in completion constantly 'delete-add' completion
+  --   leader text (which is treated as text change).
+  local on_textchanged = function(args)
+    if not H.is_tracking then return end
+
+    local session, buf_id = H.get_active_session(), args.buf
+    -- React only to text changes in session's buffer for performance
+    if session.buf_id ~= buf_id then return end
+    -- Ensure that session is valid, like no extmarks got corrupted
+    if not H.session_is_valid(session) then
+      H.notify('Session contains corrupted data (deleted or out of range extmarks). It is stopped.', 'WARN')
+      return MiniSnippets.session.stop()
+    end
+    H.session_sync_current_tabstop(session)
+  end
+  local text_events = { 'TextChanged', 'TextChangedI', 'TextChangedP' }
+  vim.api.nvim_create_autocmd(
+    text_events,
+    { group = gr_track, callback = on_textchanged, desc = 'React to text change' }
+  )
+
+  -- Stop if final tabstop is current: exit to Normal mode or *any* text change
+  local stop_if_final = function(args)
+    if not H.is_tracking then return end
+
+    -- *Actual* text change check is a workaround for `TextChangedI` sometimes
+    -- getting triggered unnecessarily and too late with built-in completion
+    if vim.b.changedtick == H.latest_changedtick and args.event ~= 'ModeChanged' then return end
+    H.latest_changedtick = vim.b.changedtick
+
+    -- React only on text changes in session's buffer
+    local session, buf_id = H.get_active_session(), args.buf
+    if not ((session or {}).buf_id == buf_id and session.cur_tabstop == '0') then return end
+
+    -- Stop without forcing to hide completion
+    H.cache.stop_is_auto = true
+    MiniSnippets.session.stop()
+    H.cache.stop_is_auto = nil
+  end
+  local modechanged_opts =
+    { group = gr_track, pattern = '*:n', callback = stop_if_final, desc = 'Stop on final tabstop' }
+  vim.api.nvim_create_autocmd('ModeChanged', modechanged_opts)
+  vim.api.nvim_create_autocmd(
+    text_events,
+    { group = gr_track, callback = stop_if_final, desc = 'Stop on final tabstop' }
+  )
 end
 
 H.create_default_hl = function()
@@ -2088,51 +2144,9 @@ H.session_init = function(session, full)
 end
 
 H.track_sessions = function()
-  -- Create tracking autocommands only once for all nested sessions
   if #H.sessions > 1 then return end
-  local gr = vim.api.nvim_create_augroup('MiniSnippetsTrack', { clear = true })
-
-  -- React to text changes. NOTE: Use 'TextChangedP' to update linked tabstops
-  -- with visible popup. It has downsides though:
-  -- - Placeholder is removed after selecting first choice. Together with
-  --   showing choices in empty tabstops, feels like a good compromise.
-  -- - Tabstop sync runs more frequently (especially with 'mini.completion'),
-  --   because of how built-in completion constantly 'delete-add' completion
-  --   leader text (which is treated as text change).
-  local on_textchanged = function(args)
-    local session, buf_id = H.get_active_session(), args.buf
-    -- React only to text changes in session's buffer for performance
-    if session.buf_id ~= buf_id then return end
-    -- Ensure that session is valid, like no extmarks got corrupted
-    if not H.session_is_valid(session) then
-      H.notify('Session contains corrupted data (deleted or out of range extmarks). It is stopped.', 'WARN')
-      return MiniSnippets.session.stop()
-    end
-    H.session_sync_current_tabstop(session)
-  end
-  local text_events = { 'TextChanged', 'TextChangedI', 'TextChangedP' }
-  vim.api.nvim_create_autocmd(text_events, { group = gr, callback = on_textchanged, desc = 'React to text change' })
-
-  -- Stop if final tabstop is current: exit to Normal mode or *any* text change
-  local latest_changedtick = vim.b.changedtick
-  local stop_if_final = function(args)
-    -- *Actual* text change check is a workaround for `TextChangedI` sometimes
-    -- getting triggered unnecessarily and too late with built-in completion
-    if vim.b.changedtick == latest_changedtick and args.event ~= 'ModeChanged' then return end
-    latest_changedtick = vim.b.changedtick
-
-    -- React only on text changes in session's buffer
-    local session, buf_id = H.get_active_session(), args.buf
-    if not ((session or {}).buf_id == buf_id and session.cur_tabstop == '0') then return end
-
-    -- Stop without forcing to hide completion
-    H.cache.stop_is_auto = true
-    MiniSnippets.session.stop()
-    H.cache.stop_is_auto = nil
-  end
-  local modechanged_opts = { group = gr, pattern = '*:n', callback = stop_if_final, desc = 'Stop on final tabstop' }
-  vim.api.nvim_create_autocmd('ModeChanged', modechanged_opts)
-  vim.api.nvim_create_autocmd(text_events, { group = gr, callback = stop_if_final, desc = 'Stop on final tabstop' })
+  H.is_tracking = true
+  H.latest_changedtick = vim.b.changedtick
 end
 
 H.map_in_sessions = function()
@@ -2153,8 +2167,11 @@ end
 H.unmap_in_sessions = function()
   for lhs, data in pairs(H.cache.mappings) do
     local needs_restore = vim.tbl_count(data) > 0
-    if needs_restore then vim.fn.mapset('i', false, data) end
-    if not needs_restore then vim.keymap.del('i', lhs) end
+    if needs_restore then
+      vim.fn.mapset('i', false, data)
+    else
+      vim.keymap.del('i', lhs)
+    end
   end
   H.cache.mappings = {}
 end
@@ -2679,5 +2696,8 @@ end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
+H.is_tracking = false -- NOTE: This variable could be replaced with `#H.sessions ~= 0`
+H.latest_changedtick = 0
 
 return MiniSnippets
