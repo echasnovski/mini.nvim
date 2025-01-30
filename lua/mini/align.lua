@@ -1141,7 +1141,7 @@ MiniAlign.gen_step.default_merge = function() return MiniAlign.new_step('merge',
 ---   evaluated in manually created context (some specific variables being set).
 --- - Compute boolean mask for parts by applying predicate to each element of
 ---   2d array with special variables set to specific values (see next section).
---- - Group parts with compted mask. See `group()` method of parts in
+--- - Group parts with computed mask. See `group()` method of parts in
 ---   |MiniAlign.as_parts()|.
 ---
 --- Special variables which can be used in expression:
