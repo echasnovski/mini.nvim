@@ -172,6 +172,7 @@ Begin the process of stopping official support for outdated Neovim version short
     - Make sure that 'README.md' in standalone repository has appropriate relative links (see patch script).
     - **Amend** initial commit and push.
 - Push `main` and sync dual distribution.
+- Create a beta-testing issue and pin it.
 
 ## Making stable release
 
@@ -180,13 +181,12 @@ There is no clear guidelines for when a stable (minor) release should be made. M
 Checklist:
 
 - Check for `TODO`s about actions to be done *before* release.
-- Update READMEs of new modules to mention `stable` branch.
+- Update READMEs of new modules to mention `stable` branch. Commit.
 - Bump version in 'CHANGELOG.md'. Commit.
 - Checkout to `new_release` branch and push to check in CI. **Proceed only if it is successful**.
-- Merge `new_release` to `main` and push it.
+- Merge `new_release` to `main` and push it. Check that CI has passed.
 - Synchronize standalone repositories.
 - Make annotated tag: `git tag -a v0.xx.0 -m 'Version 0.xx.0'`. Push it.
-- Check that all CI has passed.
 - Make GitHub release. Get description from copying entries of version's 'CHANGELOG.md' section.
 - Move `stable` branch to point at new tag (`git branch --force stable` when on latest tag's commit). Push it.
 - Release standalone repositories. It should be enough to use 'scripts/dual_release.sh' like so:
@@ -194,5 +194,7 @@ Checklist:
     # REPLACE `xx` with your version number
     TAG_NAME="v0.xx.0" TAG_MESSAGE="Version 0.xx.0" make dual_release
     ```
+- Check that standalone repositories actually got updates (tag + `stable`): manually visit some of them (at least new modules) on GitHub.
+- Close all beta-testing issues for new plugins.
 - Use development version in 'CHANGELOG.md' ('0.xx.0.9000'). Commit.
 - Check for `TODO`s about actions to be done *after* release.
