@@ -399,30 +399,24 @@ H.default_config = vim.deepcopy(MiniComment.config)
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    options = { config.options, 'table' },
-    mappings = { config.mappings, 'table' },
-    hooks = { config.hooks, 'table' },
-  })
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.custom_commentstring', config.options.custom_commentstring, 'function', true)
+  H.check_type('options.ignore_blank_line', config.options.ignore_blank_line, 'boolean')
+  H.check_type('options.start_of_line', config.options.start_of_line, 'boolean')
+  H.check_type('options.pad_comment_parts', config.options.pad_comment_parts, 'boolean')
 
-  vim.validate({
-    ['options.custom_commentstring'] = { config.options.custom_commentstring, 'function', true },
-    ['options.ignore_blank_line'] = { config.options.ignore_blank_line, 'boolean' },
-    ['options.start_of_line'] = { config.options.start_of_line, 'boolean' },
-    ['options.pad_comment_parts'] = { config.options.pad_comment_parts, 'boolean' },
-    ['mappings.comment'] = { config.mappings.comment, 'string' },
-    ['mappings.comment_line'] = { config.mappings.comment_line, 'string' },
-    ['mappings.comment_visual'] = { config.mappings.comment_visual, 'string' },
-    ['mappings.textobject'] = { config.mappings.textobject, 'string' },
-    ['hooks.pre'] = { config.hooks.pre, 'function' },
-    ['hooks.post'] = { config.hooks.post, 'function' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.comment', config.mappings.comment, 'string')
+  H.check_type('mappings.comment_line', config.mappings.comment_line, 'string')
+  H.check_type('mappings.comment_visual', config.mappings.comment_visual, 'string')
+  H.check_type('mappings.textobject', config.mappings.textobject, 'string')
+
+  H.check_type('hooks', config.hooks, 'table')
+  H.check_type('hooks.pre', config.hooks.pre, 'function')
+  H.check_type('hooks.post', config.hooks.post, 'function')
 
   return config
 end
@@ -557,6 +551,11 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error('(mini.comment) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

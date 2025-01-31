@@ -1271,46 +1271,39 @@ H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    content = { config.content, 'table' },
-    mappings = { config.mappings, 'table' },
-    options = { config.options, 'table' },
-    windows = { config.windows, 'table' },
-  })
+  H.check_type('content', config.content, 'table')
+  H.check_type('content.filter', config.content.filter, 'function', true)
+  H.check_type('content.prefix', config.content.prefix, 'function', true)
+  H.check_type('content.sort', config.content.sort, 'function', true)
 
-  vim.validate({
-    ['content.filter'] = { config.content.filter, 'function', true },
-    ['content.prefix'] = { config.content.prefix, 'function', true },
-    ['content.sort'] = { config.content.sort, 'function', true },
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.close', config.mappings.close, 'string')
+  H.check_type('mappings.go_in', config.mappings.go_in, 'string')
+  H.check_type('mappings.go_in_plus', config.mappings.go_in_plus, 'string')
+  H.check_type('mappings.go_out', config.mappings.go_out, 'string')
+  H.check_type('mappings.go_out_plus', config.mappings.go_out_plus, 'string')
+  H.check_type('mappings.mark_goto', config.mappings.mark_goto, 'string')
+  H.check_type('mappings.mark_set', config.mappings.mark_set, 'string')
+  H.check_type('mappings.reset', config.mappings.reset, 'string')
+  H.check_type('mappings.reveal_cwd', config.mappings.reveal_cwd, 'string')
+  H.check_type('mappings.show_help', config.mappings.show_help, 'string')
+  H.check_type('mappings.synchronize', config.mappings.synchronize, 'string')
+  H.check_type('mappings.trim_left', config.mappings.trim_left, 'string')
+  H.check_type('mappings.trim_right', config.mappings.trim_right, 'string')
 
-    ['mappings.close'] = { config.mappings.close, 'string' },
-    ['mappings.go_in'] = { config.mappings.go_in, 'string' },
-    ['mappings.go_in_plus'] = { config.mappings.go_in_plus, 'string' },
-    ['mappings.go_out'] = { config.mappings.go_out, 'string' },
-    ['mappings.go_out_plus'] = { config.mappings.go_out_plus, 'string' },
-    ['mappings.mark_goto'] = { config.mappings.mark_goto, 'string' },
-    ['mappings.mark_set'] = { config.mappings.mark_set, 'string' },
-    ['mappings.reset'] = { config.mappings.reset, 'string' },
-    ['mappings.reveal_cwd'] = { config.mappings.reveal_cwd, 'string' },
-    ['mappings.show_help'] = { config.mappings.show_help, 'string' },
-    ['mappings.synchronize'] = { config.mappings.synchronize, 'string' },
-    ['mappings.trim_left'] = { config.mappings.trim_left, 'string' },
-    ['mappings.trim_right'] = { config.mappings.trim_right, 'string' },
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.use_as_default_explorer', config.options.use_as_default_explorer, 'boolean')
+  H.check_type('options.permanent_delete', config.options.permanent_delete, 'boolean')
 
-    ['options.use_as_default_explorer'] = { config.options.use_as_default_explorer, 'boolean' },
-    ['options.permanent_delete'] = { config.options.permanent_delete, 'boolean' },
-
-    ['windows.max_number'] = { config.windows.max_number, 'number' },
-    ['windows.preview'] = { config.windows.preview, 'boolean' },
-    ['windows.width_focus'] = { config.windows.width_focus, 'number' },
-    ['windows.width_nofocus'] = { config.windows.width_nofocus, 'number' },
-    ['windows.width_preview'] = { config.windows.width_preview, 'number' },
-  })
+  H.check_type('windows', config.windows, 'table')
+  H.check_type('windows.max_number', config.windows.max_number, 'number')
+  H.check_type('windows.preview', config.windows.preview, 'boolean')
+  H.check_type('windows.width_focus', config.windows.width_focus, 'number')
+  H.check_type('windows.width_nofocus', config.windows.width_nofocus, 'number')
+  H.check_type('windows.width_preview', config.windows.width_preview, 'number')
 
   return config
 end
@@ -2845,7 +2838,12 @@ H.validate_branch = function(x)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.files) %s', msg), 0) end
+H.error = function(msg) error('(mini.files) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name) vim.notify('(mini.files) ' .. msg, vim.log.levels[level_name]) end
 

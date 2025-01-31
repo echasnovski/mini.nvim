@@ -724,51 +724,44 @@ H.pattern_sets = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    annotation_extractor = { config.annotation_extractor, 'function' },
-    default_section_id = { config.default_section_id, 'string' },
-    hooks = { config.hooks, 'table' },
-    script_path = { config.script_path, 'string' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('annotation_extractor', config.annotation_extractor, 'function')
+  H.check_type('default_section_id', config.default_section_id, 'string')
+  H.check_type('hooks', config.hooks, 'table')
 
-  vim.validate({
-    ['hooks.block_pre'] = { config.hooks.block_pre, 'function' },
-    ['hooks.section_pre'] = { config.hooks.section_pre, 'function' },
-    ['hooks.sections'] = { config.hooks.sections, 'table' },
-    ['hooks.section_post'] = { config.hooks.section_post, 'function' },
-    ['hooks.block_post'] = { config.hooks.block_post, 'function' },
-    ['hooks.file'] = { config.hooks.file, 'function' },
-    ['hooks.doc'] = { config.hooks.doc, 'function' },
-    ['hooks.write_pre'] = { config.hooks.write_pre, 'function' },
-    ['hooks.write_post'] = { config.hooks.write_post, 'function' },
-  })
+  H.check_type('hooks.block_pre', config.hooks.block_pre, 'function')
+  H.check_type('hooks.section_pre', config.hooks.section_pre, 'function')
 
-  vim.validate({
-    ['hooks.sections.@alias'] = { config.hooks.sections['@alias'], 'function' },
-    ['hooks.sections.@class'] = { config.hooks.sections['@class'], 'function' },
-    ['hooks.sections.@diagnostic'] = { config.hooks.sections['@diagnostic'], 'function' },
-    ['hooks.sections.@eval'] = { config.hooks.sections['@eval'], 'function' },
-    ['hooks.sections.@field'] = { config.hooks.sections['@field'], 'function' },
-    ['hooks.sections.@overload'] = { config.hooks.sections['@overload'], 'function' },
-    ['hooks.sections.@param'] = { config.hooks.sections['@param'], 'function' },
-    ['hooks.sections.@private'] = { config.hooks.sections['@private'], 'function' },
-    ['hooks.sections.@return'] = { config.hooks.sections['@return'], 'function' },
-    ['hooks.sections.@seealso'] = { config.hooks.sections['@seealso'], 'function' },
-    ['hooks.sections.@signature'] = { config.hooks.sections['@signature'], 'function' },
-    ['hooks.sections.@tag'] = { config.hooks.sections['@tag'], 'function' },
-    ['hooks.sections.@text'] = { config.hooks.sections['@text'], 'function' },
-    ['hooks.sections.@toc'] = { config.hooks.sections['@toc'], 'function' },
-    ['hooks.sections.@toc_entry'] = { config.hooks.sections['@toc_entry'], 'function' },
-    ['hooks.sections.@type'] = { config.hooks.sections['@type'], 'function' },
-    ['hooks.sections.@usage'] = { config.hooks.sections['@usage'], 'function' },
-  })
+  H.check_type('hooks.sections', config.hooks.sections, 'table')
+  H.check_type('hooks.sections.@alias', config.hooks.sections['@alias'], 'function')
+  H.check_type('hooks.sections.@class', config.hooks.sections['@class'], 'function')
+  H.check_type('hooks.sections.@diagnostic', config.hooks.sections['@diagnostic'], 'function')
+  H.check_type('hooks.sections.@eval', config.hooks.sections['@eval'], 'function')
+  H.check_type('hooks.sections.@field', config.hooks.sections['@field'], 'function')
+  H.check_type('hooks.sections.@overload', config.hooks.sections['@overload'], 'function')
+  H.check_type('hooks.sections.@param', config.hooks.sections['@param'], 'function')
+  H.check_type('hooks.sections.@private', config.hooks.sections['@private'], 'function')
+  H.check_type('hooks.sections.@return', config.hooks.sections['@return'], 'function')
+  H.check_type('hooks.sections.@seealso', config.hooks.sections['@seealso'], 'function')
+  H.check_type('hooks.sections.@signature', config.hooks.sections['@signature'], 'function')
+  H.check_type('hooks.sections.@tag', config.hooks.sections['@tag'], 'function')
+  H.check_type('hooks.sections.@text', config.hooks.sections['@text'], 'function')
+  H.check_type('hooks.sections.@toc', config.hooks.sections['@toc'], 'function')
+  H.check_type('hooks.sections.@toc_entry', config.hooks.sections['@toc_entry'], 'function')
+  H.check_type('hooks.sections.@type', config.hooks.sections['@type'], 'function')
+  H.check_type('hooks.sections.@usage', config.hooks.sections['@usage'], 'function')
+
+  H.check_type('hooks.section_post', config.hooks.section_post, 'function')
+  H.check_type('hooks.block_post', config.hooks.block_post, 'function')
+  H.check_type('hooks.file', config.hooks.file, 'function')
+  H.check_type('hooks.doc', config.hooks.doc, 'function')
+  H.check_type('hooks.write_pre', config.hooks.write_pre, 'function')
+  H.check_type('hooks.write_post', config.hooks.write_post, 'function')
+
+  H.check_type('script_path', config.script_path, 'string')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -1267,6 +1260,13 @@ H.match_first_pattern = function(text, pattern_set, init)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.doc) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.apply_recursively = function(f, x)
   f(x)
 

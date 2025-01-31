@@ -1957,22 +1957,18 @@ H.os_icons = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    style = { config.style, 'string' },
-    default = { config.default, 'table' },
-    directory = { config.directory, 'table' },
-    extension = { config.extension, 'table' },
-    file = { config.file, 'table' },
-    filetype = { config.filetype, 'table' },
-    lsp = { config.lsp, 'table' },
-    os = { config.os, 'table' },
-    use_file_extension = { config.use_file_extension, 'function' },
-  })
+  H.check_type('style', config.style, 'string')
+  H.check_type('default', config.default, 'table')
+  H.check_type('directory', config.directory, 'table')
+  H.check_type('extension', config.extension, 'table')
+  H.check_type('file', config.file, 'table')
+  H.check_type('filetype', config.filetype, 'table')
+  H.check_type('lsp', config.lsp, 'table')
+  H.check_type('os', config.os, 'table')
+  H.check_type('use_file_extension', config.use_file_extension, 'function')
 
   return config
 end
@@ -2151,7 +2147,12 @@ H.filetype_match = function(filename)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.icons) %s', msg), 0) end
+H.error = function(msg) error('(mini.icons) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name) vim.notify('(mini.icons) ' .. msg, vim.log.levels[level_name]) end
 

@@ -672,20 +672,14 @@ H.hex_color_groups = {}
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    highlighters = { config.highlighters, 'table' },
-    delay = { config.delay, 'table' },
-  })
+  H.check_type('highlighters', config.highlighters, 'table')
 
-  vim.validate({
-    ['delay.text_change'] = { config.delay.text_change, 'number' },
-    ['delay.scroll'] = { config.delay.scroll, 'number' },
-  })
+  H.check_type('delay', config.delay, 'table')
+  H.check_type('delay.text_change', config.delay.text_change, 'number')
+  H.check_type('delay.scroll', config.delay.scroll, 'number')
 
   return config
 end
@@ -998,7 +992,12 @@ H.correct_lightness = function(x)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.hipatterns) %s', msg), 0) end
+H.error = function(msg) error('(mini.hipatterns) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.get_line = function(buf_id, line_num)
   return vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1] or ''

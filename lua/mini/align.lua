@@ -1316,23 +1316,21 @@ H.indent_functions = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    mappings = { config.mappings, 'table' },
-    modifiers = { config.modifiers, H.is_valid_modifiers },
-    steps = { config.steps, H.is_valid_steps },
-    options = { config.options, 'table' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.start', config.mappings.start, 'string')
+  H.check_type('mappings.start_with_preview', config.mappings.start_with_preview, 'string')
 
-  vim.validate({
-    ['mappings.start'] = { config.mappings.start, 'string' },
-    ['mappings.start_with_preview'] = { config.mappings.start_with_preview, 'string' },
-  })
+  H.check_type('modifiers', config.modifiers, 'table')
+  for k, v in pairs(config.modifiers) do
+    if not vim.is_callable(v) then H.error(string.format('`modifiers[%s]` should be callable.', vim.inspect(k))) end
+  end
+
+  H.validate_steps(config.steps, 'steps')
+  H.check_type('options', config.options, 'table')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -1616,19 +1614,6 @@ H.default_action_merge = function(parts, opts)
 end
 
 -- Work with modifiers --------------------------------------------------------
-H.is_valid_modifiers = function(x, x_name)
-  x_name = x_name or 'config.modifiers'
-
-  if type(x) ~= 'table' then return false, string.format('`%s` should be table.', x_name) end
-  for k, v in pairs(x) do
-    if not vim.is_callable(v) then
-      return false, string.format('`%s[%s]` should be callable.', x_name, vim.inspect(k))
-    end
-  end
-
-  return true
-end
-
 H.make_filter_action = function(expr)
   if expr == nil then return nil end
   if expr == '' then expr = 'true' end
@@ -1932,6 +1917,13 @@ H.set_lines = function(start_row, end_row, replacement)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.align) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, add_to_history)
   if H.get_config().silent then return end
 
@@ -1957,8 +1949,6 @@ end
 H.unecho = function()
   if H.cache.msg_shown then vim.cmd([[echo '' | redraw]]) end
 end
-
-H.error = function(msg) error(string.format('(mini.align) %s', msg), 0) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

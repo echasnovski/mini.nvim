@@ -786,24 +786,19 @@ H.buf_name_counts = {}
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    job = { config.job, 'table' },
-    path = { config.path, 'table' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('job', config.job, 'table')
+  H.check_type('job.n_threads', config.job.n_threads, 'number', true)
+  H.check_type('job.timeout', config.job.timeout, 'number')
 
-  vim.validate({
-    ['job.n_threads'] = { config.job.n_threads, 'number', true },
-    ['job.timeout'] = { config.job.timeout, 'number' },
-    ['path.package'] = { config.path.package, 'string' },
-    ['path.snapshot'] = { config.path.snapshot, 'string' },
-    ['path.log'] = { config.path.log, 'string' },
-  })
+  H.check_type('path', config.path, 'table')
+  H.check_type('path.package', config.path.package, 'string')
+  H.check_type('path.snapshot', config.path.snapshot, 'string')
+  H.check_type('path.log', config.path.log, 'string')
+
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -1588,7 +1583,12 @@ H.report_errors = function()
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.deps) %s', msg), 0) end
+H.error = function(msg) error('(mini.deps) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = vim.schedule_wrap(function(msg, level)
   level = level or 'INFO'

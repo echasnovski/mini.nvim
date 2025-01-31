@@ -75,13 +75,13 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ background = bg, foreground = 1 }, 'foreground', 'string')
   expect_config_error({ background = bg, foreground = 'ffffff' }, 'foreground', '#rrggbb')
 
-  expect_config_error({ background = bg, foreground = fg, n_hues = '1' }, 'n_hues', 'Number')
+  expect_config_error({ background = bg, foreground = fg, n_hues = '1' }, 'n_hues', 'number')
   expect_config_error({ background = bg, foreground = fg, n_hues = -1 }, 'n_hues', '0')
   expect_config_error({ background = bg, foreground = fg, n_hues = 9 }, 'n_hues', '8')
 
-  expect_config_error({ background = bg, foreground = fg, saturation = 'aaa' }, 'saturation', 'One of')
+  expect_config_error({ background = bg, foreground = fg, saturation = 'aaa' }, 'saturation', 'one of')
 
-  expect_config_error({ background = bg, foreground = fg, accent = 'aaa' }, 'accent', 'One of')
+  expect_config_error({ background = bg, foreground = fg, accent = 'aaa' }, 'accent', 'one of')
 end
 
 T['setup()']['defines builtin highlight groups'] = function()

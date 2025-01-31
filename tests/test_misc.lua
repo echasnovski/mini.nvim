@@ -75,7 +75,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error('a', 'config', 'table')
   expect_config_error({ make_global = 'a' }, 'make_global', 'table')
-  expect_config_error({ make_global = { 'a' } }, 'make_global', 'actual fields')
+  expect_config_error({ make_global = { 'a' } }, 'make_global', "exported 'mini.misc' methods")
 end
 
 T['setup()']['creates global functions'] = function()

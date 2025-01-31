@@ -1132,29 +1132,24 @@ H.ns_id = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    custom_textobjects = { config.custom_textobjects, 'table', true },
-    mappings = { config.mappings, 'table' },
-    n_lines = { config.n_lines, 'number' },
-    search_method = { config.search_method, H.is_search_method },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('custom_textobjects', config.custom_textobjects, 'table', true)
 
-  vim.validate({
-    ['mappings.around'] = { config.mappings.around, 'string' },
-    ['mappings.inside'] = { config.mappings.inside, 'string' },
-    ['mappings.around_next'] = { config.mappings.around_next, 'string' },
-    ['mappings.inside_next'] = { config.mappings.inside_next, 'string' },
-    ['mappings.around_last'] = { config.mappings.around_last, 'string' },
-    ['mappings.inside_last'] = { config.mappings.inside_last, 'string' },
-    ['mappings.goto_left'] = { config.mappings.goto_left, 'string' },
-    ['mappings.goto_right'] = { config.mappings.goto_right, 'string' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.around', config.mappings.around, 'string')
+  H.check_type('mappings.inside', config.mappings.inside, 'string')
+  H.check_type('mappings.around_next', config.mappings.around_next, 'string')
+  H.check_type('mappings.inside_next', config.mappings.inside_next, 'string')
+  H.check_type('mappings.around_last', config.mappings.around_last, 'string')
+  H.check_type('mappings.inside_last', config.mappings.inside_last, 'string')
+  H.check_type('mappings.goto_left', config.mappings.goto_left, 'string')
+  H.check_type('mappings.goto_right', config.mappings.goto_right, 'string')
+
+  H.check_type('n_lines', config.n_lines, 'number')
+  H.validate_search_method(config.search_method, 'search_method')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -1956,6 +1951,13 @@ H.get_visual_region = function()
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.ai) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end
 
@@ -1983,8 +1985,6 @@ H.unecho = function()
 end
 
 H.message = function(msg) H.echo(msg, true) end
-
-H.error = function(msg) error(string.format('(mini.ai) %s', msg), 0) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

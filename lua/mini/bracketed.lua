@@ -1331,73 +1331,64 @@ H.cache = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  --stylua: ignore
-  vim.validate({
-    ['buffer']     = { config.buffer,     'table' },
-    ['comment']    = { config.comment,    'table' },
-    ['conflict']   = { config.conflict,   'table' },
-    ['diagnostic'] = { config.diagnostic, 'table' },
-    ['file']       = { config.file,       'table' },
-    ['indent']     = { config.indent,     'table' },
-    ['jump']       = { config.jump,       'table' },
-    ['location']   = { config.location,   'table' },
-    ['oldfile']    = { config.oldfile,    'table' },
-    ['quickfix']   = { config.quickfix,   'table' },
-    ['treesitter'] = { config.treesitter, 'table' },
-    ['undo']       = { config.undo,       'table' },
-    ['window']     = { config.window,     'table' },
-    ['yank']       = { config.yank,       'table' },
-  })
+  H.check_type('buffer', config.buffer, 'table')
+  H.check_type('buffer.suffix', config.buffer.suffix, 'string')
+  H.check_type('buffer.options', config.buffer.options, 'table')
 
-  --stylua: ignore
-  vim.validate({
-    ['buffer.suffix']  = { config.buffer.suffix, 'string' },
-    ['buffer.options'] = { config.buffer.options, 'table' },
+  H.check_type('comment', config.comment, 'table')
+  H.check_type('comment.suffix', config.comment.suffix, 'string')
+  H.check_type('comment.options', config.comment.options, 'table')
 
-    ['comment.suffix']  = { config.comment.suffix, 'string' },
-    ['comment.options'] = { config.comment.options, 'table' },
+  H.check_type('conflict', config.conflict, 'table')
+  H.check_type('conflict.suffix', config.conflict.suffix, 'string')
+  H.check_type('conflict.options', config.conflict.options, 'table')
 
-    ['conflict.suffix']  = { config.conflict.suffix, 'string' },
-    ['conflict.options'] = { config.conflict.options, 'table' },
+  H.check_type('diagnostic', config.diagnostic, 'table')
+  H.check_type('diagnostic.suffix', config.diagnostic.suffix, 'string')
+  H.check_type('diagnostic.options', config.diagnostic.options, 'table')
 
-    ['diagnostic.suffix']  = { config.diagnostic.suffix, 'string' },
-    ['diagnostic.options'] = { config.diagnostic.options, 'table' },
+  H.check_type('file', config.file, 'table')
+  H.check_type('file.suffix', config.file.suffix, 'string')
+  H.check_type('file.options', config.file.options, 'table')
 
-    ['file.suffix']  = { config.file.suffix, 'string' },
-    ['file.options'] = { config.file.options, 'table' },
+  H.check_type('indent', config.indent, 'table')
+  H.check_type('indent.suffix', config.indent.suffix, 'string')
+  H.check_type('indent.options', config.indent.options, 'table')
 
-    ['indent.suffix']  = { config.indent.suffix, 'string' },
-    ['indent.options'] = { config.indent.options, 'table' },
+  H.check_type('jump', config.jump, 'table')
+  H.check_type('jump.suffix', config.jump.suffix, 'string')
+  H.check_type('jump.options', config.jump.options, 'table')
 
-    ['jump.suffix']  = { config.jump.suffix, 'string' },
-    ['jump.options'] = { config.jump.options, 'table' },
+  H.check_type('location', config.location, 'table')
+  H.check_type('location.suffix', config.location.suffix, 'string')
+  H.check_type('location.options', config.location.options, 'table')
 
-    ['location.suffix']  = { config.location.suffix, 'string' },
-    ['location.options'] = { config.location.options, 'table' },
+  H.check_type('oldfile', config.oldfile, 'table')
+  H.check_type('oldfile.suffix', config.oldfile.suffix, 'string')
+  H.check_type('oldfile.options', config.oldfile.options, 'table')
 
-    ['oldfile.suffix']  = { config.oldfile.suffix, 'string' },
-    ['oldfile.options'] = { config.oldfile.options, 'table' },
+  H.check_type('quickfix', config.quickfix, 'table')
+  H.check_type('quickfix.suffix', config.quickfix.suffix, 'string')
+  H.check_type('quickfix.options', config.quickfix.options, 'table')
 
-    ['quickfix.suffix']  = { config.quickfix.suffix, 'string' },
-    ['quickfix.options'] = { config.quickfix.options, 'table' },
+  H.check_type('treesitter', config.treesitter, 'table')
+  H.check_type('treesitter.suffix', config.treesitter.suffix, 'string')
+  H.check_type('treesitter.options', config.treesitter.options, 'table')
 
-    ['treesitter.suffix']  = { config.treesitter.suffix, 'string' },
-    ['treesitter.options'] = { config.treesitter.options, 'table' },
+  H.check_type('undo', config.undo, 'table')
+  H.check_type('undo.suffix', config.undo.suffix, 'string')
+  H.check_type('undo.options', config.undo.options, 'table')
 
-    ['undo.suffix']  = { config.undo.suffix, 'string' },
-    ['undo.options'] = { config.undo.options, 'table' },
+  H.check_type('window', config.window, 'table')
+  H.check_type('window.suffix', config.window.suffix, 'string')
+  H.check_type('window.options', config.window.options, 'table')
 
-    ['window.suffix']  = { config.window.suffix, 'string' },
-    ['window.options'] = { config.window.options, 'table' },
-
-    ['yank.suffix']  = { config.yank.suffix, 'string' },
-    ['yank.options'] = { config.yank.options, 'table' },
-  })
+  H.check_type('yank', config.yank, 'table')
+  H.check_type('yank.suffix', config.yank.suffix, 'string')
+  H.check_type('yank.options', config.yank.options, 'table')
 
   return config
 end
@@ -1988,7 +1979,12 @@ H.get_register_mode = function(register)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.bracketed) %s', msg), 0) end
+H.error = function(msg) error('(mini.bracketed) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.validate_direction = function(direction, choices, fun_name)
   if not vim.tbl_contains(choices, direction) then

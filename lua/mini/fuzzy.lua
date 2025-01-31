@@ -221,18 +221,12 @@ H.default_config = vim.deepcopy(MiniFuzzy.config)
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    cutoff = {
-      config.cutoff,
-      function(x) return type(x) == 'number' and x >= 1 end,
-      'number not less than 1',
-    },
-  })
+  if not (type(config.cutoff) == 'number' and config.cutoff >= 1) then
+    H.error('`cutoff` should be number not less than 1, not ' .. type(config.cutoff))
+  end
 
   return config
 end
@@ -371,6 +365,13 @@ H.filter_by_indexes = function(candidate_array, ids)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.fuzzy) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.string_to_letters = function(s) return vim.tbl_map(vim.pesc, vim.split(s, '')) end
 
 return MiniFuzzy

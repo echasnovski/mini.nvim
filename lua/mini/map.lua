@@ -1017,16 +1017,17 @@ H.default_symbols = H.block_symbols['3x2']
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    integrations = { config.integrations, H.is_valid_config_integrations },
-    symbols = { config.symbols, H.is_valid_config_symbols },
-    window = { config.window, H.is_valid_config_window },
-  })
+  local ok_integrations, msg_integrations = H.is_valid_config_integrations(config.integrations, 'integrations')
+  if not ok_integrations then H.error(msg_integrations) end
+
+  local ok_symbols, msg_symbols = H.is_valid_config_symbols(config.symbols, 'symbols')
+  if not ok_symbols then H.error(msg_symbols) end
+
+  local ok_window, msg_window = H.is_valid_config_window(config.window, 'window')
+  if not ok_window then H.error(msg_window) end
 
   return config
 end
@@ -1654,7 +1655,12 @@ H.is_pure_scrollbar = function()
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.map) %s', msg), 0) end
+H.error = function(msg) error('(mini.map) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.validate_if = function(predicate, x, x_name)
   local is_valid, msg = predicate(x, x_name)

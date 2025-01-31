@@ -484,22 +484,15 @@ H.attached_lsp = {}
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    content = { config.content, 'table' },
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
-    use_icons = { config.use_icons, 'boolean' },
-  })
+  H.check_type('content', config.content, 'table')
+  H.check_type('content.active', config.content.active, 'function', true)
+  H.check_type('content.inactive', config.content.inactive, 'function', true)
 
-  vim.validate({
-    ['content.active'] = { config.content.active, 'function', true },
-    ['content.inactive'] = { config.content.inactive, 'function', true },
-  })
+  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
+  H.check_type('use_icons', config.use_icons, 'boolean')
 
   return config
 end
@@ -669,6 +662,13 @@ if vim.fn.has('nvim-0.10') == 0 then
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.statusline) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.get_filesize = function()
   local size = vim.fn.getfsize(vim.fn.getreg('%'))
   if size < 1024 then

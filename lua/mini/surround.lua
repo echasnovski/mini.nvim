@@ -1141,34 +1141,27 @@ H.cache = {}
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    custom_surroundings = { config.custom_surroundings, 'table', true },
-    highlight_duration = { config.highlight_duration, 'number' },
-    mappings = { config.mappings, 'table' },
-    n_lines = { config.n_lines, 'number' },
-    respect_selection_type = { config.respect_selection_type, 'boolean' },
-    search_method = { config.search_method, H.is_search_method },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('custom_surroundings', config.custom_surroundings, 'table', true)
+  H.check_type('highlight_duration', config.highlight_duration, 'number')
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('n_lines', config.n_lines, 'number')
+  H.check_type('respect_selection_type', config.respect_selection_type, 'boolean')
+  H.validate_search_method(config.search_method)
+  H.check_type('silent', config.silent, 'boolean')
 
-  vim.validate({
-    ['mappings.add'] = { config.mappings.add, 'string' },
-    ['mappings.delete'] = { config.mappings.delete, 'string' },
-    ['mappings.find'] = { config.mappings.find, 'string' },
-    ['mappings.find_left'] = { config.mappings.find_left, 'string' },
-    ['mappings.highlight'] = { config.mappings.highlight, 'string' },
-    ['mappings.replace'] = { config.mappings.replace, 'string' },
-    ['mappings.update_n_lines'] = { config.mappings.update_n_lines, 'string' },
+  H.check_type('mappings.add', config.mappings.add, 'string')
+  H.check_type('mappings.delete', config.mappings.delete, 'string')
+  H.check_type('mappings.find', config.mappings.find, 'string')
+  H.check_type('mappings.find_left', config.mappings.find_left, 'string')
+  H.check_type('mappings.highlight', config.mappings.highlight, 'string')
+  H.check_type('mappings.replace', config.mappings.replace, 'string')
+  H.check_type('mappings.update_n_lines', config.mappings.update_n_lines, 'string')
 
-    ['mappings.suffix_last'] = { config.mappings.suffix_last, 'string' },
-    ['mappings.suffix_next'] = { config.mappings.suffix_next, 'string' },
-  })
+  H.check_type('mappings.suffix_last', config.mappings.suffix_last, 'string')
+  H.check_type('mappings.suffix_next', config.mappings.suffix_next, 'string')
 
   return config
 end
@@ -1240,22 +1233,13 @@ H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniSurround.config, vim.b.minisurround_config or {}, config or {})
 end
 
-H.is_search_method = function(x, x_name)
-  x = x or H.get_config().search_method
-  x_name = x_name or '`config.search_method`'
-
+H.validate_search_method = function(x)
   local allowed_methods = vim.tbl_keys(H.span_compare_methods)
-  if vim.tbl_contains(allowed_methods, x) then return true end
+  if vim.tbl_contains(allowed_methods, x) then return end
 
   table.sort(allowed_methods)
   local allowed_methods_string = table.concat(vim.tbl_map(vim.inspect, allowed_methods), ', ')
-  local msg = ([[%s should be one of %s.]]):format(x_name, allowed_methods_string)
-  return false, msg
-end
-
-H.validate_search_method = function(x, x_name)
-  local is_valid, msg = H.is_search_method(x, x_name)
-  if not is_valid then H.error(msg) end
+  H.error('`search_method` should be one of ' .. allowed_methods_string)
 end
 
 -- Mappings -------------------------------------------------------------------
@@ -1399,7 +1383,7 @@ H.find_surrounding = function(surr_spec, opts)
   if H.is_region_pair(surr_spec) then return surr_spec end
 
   opts = vim.tbl_deep_extend('force', H.get_default_opts(), opts or {})
-  H.validate_search_method(opts.search_method, 'search_method')
+  H.validate_search_method(opts.search_method)
 
   local region_pair = H.find_surrounding_region_pair(surr_spec, opts)
   if region_pair == nil then
@@ -2191,6 +2175,13 @@ H.get_neighborhood = function(reference_region, n_neighbors)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.surround) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end
 
@@ -2218,8 +2209,6 @@ H.unecho = function()
 end
 
 H.message = function(msg) H.echo(msg, true) end
-
-H.error = function(msg) error(string.format('(mini.surround) %s', msg)) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end

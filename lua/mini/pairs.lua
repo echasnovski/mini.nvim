@@ -233,7 +233,7 @@ end
 ---@param pair __pairs_unregistered_pair
 MiniPairs.unmap = function(mode, lhs, pair)
   -- `pair` should be supplied explicitly
-  vim.validate({ pair = { pair, 'string' } })
+  H.check_type('pair', pair, 'string')
 
   -- Use `pcall` to allow 'deleting' already deleted mapping
   pcall(vim.api.nvim_del_keymap, mode, lhs)
@@ -257,7 +257,7 @@ end
 ---@param pair __pairs_unregistered_pair
 MiniPairs.unmap_buf = function(buffer, mode, lhs, pair)
   -- `pair` should be supplied explicitly
-  vim.validate({ pair = { pair, 'string' } })
+  H.check_type('pair', pair, 'string')
 
   -- Use `pcall` to allow 'deleting' already deleted mapping
   pcall(vim.api.nvim_buf_del_keymap, buffer, mode, lhs)
@@ -443,22 +443,15 @@ H.keys = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  -- Validate per nesting level to produce correct error message
-  vim.validate({
-    modes = { config.modes, 'table' },
-    mappings = { config.mappings, 'table' },
-  })
+  H.check_type('modes', config.modes, 'table')
+  H.check_type('modes.insert', config.modes.insert, 'boolean')
+  H.check_type('modes.command', config.modes.command, 'boolean')
+  H.check_type('modes.terminal', config.modes.terminal, 'boolean')
 
-  vim.validate({
-    ['modes.insert'] = { config.modes.insert, 'boolean' },
-    ['modes.command'] = { config.modes.command, 'boolean' },
-    ['modes.terminal'] = { config.modes.terminal, 'boolean' },
-  })
+  H.check_type('mappings', config.mappings, 'table')
 
   local validate_mapping = function(pair_info, prefix)
     -- Allow `false` to not create mapping
@@ -584,20 +577,16 @@ end
 -- Work with pair_info --------------------------------------------------------
 H.validate_pair_info = function(pair_info, prefix)
   prefix = prefix or 'pair_info'
-  vim.validate({ [prefix] = { pair_info, 'table' } })
+  H.check_type(prefix, pair_info, 'table')
   pair_info = vim.tbl_deep_extend('force', H.default_pair_info, pair_info)
 
-  vim.validate({
-    [prefix .. '.action'] = { pair_info.action, 'string' },
-    [prefix .. '.pair'] = { pair_info.pair, 'string' },
-    [prefix .. '.neigh_pattern'] = { pair_info.neigh_pattern, 'string' },
-    [prefix .. '.register'] = { pair_info.register, 'table' },
-  })
+  H.check_type(prefix .. '.action', pair_info.action, 'string')
+  H.check_type(prefix .. '.pair', pair_info.pair, 'string')
+  H.check_type(prefix .. '.neigh_pattern', pair_info.neigh_pattern, 'string')
+  H.check_type(prefix .. '.register', pair_info.register, 'table')
 
-  vim.validate({
-    [prefix .. '.register.bs'] = { pair_info.register.bs, 'boolean' },
-    [prefix .. '.register.cr'] = { pair_info.register.cr, 'boolean' },
-  })
+  H.check_type(prefix .. '.register.bs', pair_info.register.bs, 'boolean')
+  H.check_type(prefix .. '.register.cr', pair_info.register.cr, 'boolean')
 
   return pair_info
 end
@@ -616,6 +605,13 @@ H.infer_mapping_description = function(pair_info)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.pairs) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.get_cursor_neigh = function(start, finish)
   local line, col
   if vim.fn.mode() == 'c' then

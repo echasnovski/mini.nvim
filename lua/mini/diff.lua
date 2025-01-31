@@ -907,45 +907,36 @@ if H.vimdiff_supports_linematch then H.worddiff_opts.linematch = 0 end
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    view = { config.view, 'table' },
-    source = { config.source, 'table', true },
-    delay = { config.delay, 'table' },
-    mappings = { config.mappings, 'table' },
-    options = { config.options, 'table' },
-  })
+  H.check_type('view', config.view, 'table')
+  H.check_type('view.style', config.view.style, 'string')
+  H.check_type('view.signs', config.view.signs, 'table')
+  H.check_type('view.signs.add', config.view.signs.add, 'string')
+  H.check_type('view.signs.change', config.view.signs.change, 'string')
+  H.check_type('view.signs.delete', config.view.signs.delete, 'string')
+  H.check_type('view.priority', config.view.priority, 'number')
 
-  vim.validate({
-    ['view.style'] = { config.view.style, 'string' },
-    ['view.signs'] = { config.view.signs, 'table' },
-    ['view.priority'] = { config.view.priority, 'number' },
+  H.check_type('source', config.source, 'table', true)
 
-    ['delay.text_change'] = { config.delay.text_change, 'number' },
+  H.check_type('delay', config.delay, 'table')
+  H.check_type('delay.text_change', config.delay.text_change, 'number')
 
-    ['mappings.apply'] = { config.mappings.apply, 'string' },
-    ['mappings.reset'] = { config.mappings.reset, 'string' },
-    ['mappings.textobject'] = { config.mappings.textobject, 'string' },
-    ['mappings.goto_first'] = { config.mappings.goto_first, 'string' },
-    ['mappings.goto_prev'] = { config.mappings.goto_prev, 'string' },
-    ['mappings.goto_next'] = { config.mappings.goto_next, 'string' },
-    ['mappings.goto_last'] = { config.mappings.goto_last, 'string' },
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.apply', config.mappings.apply, 'string')
+  H.check_type('mappings.reset', config.mappings.reset, 'string')
+  H.check_type('mappings.textobject', config.mappings.textobject, 'string')
+  H.check_type('mappings.goto_first', config.mappings.goto_first, 'string')
+  H.check_type('mappings.goto_prev', config.mappings.goto_prev, 'string')
+  H.check_type('mappings.goto_next', config.mappings.goto_next, 'string')
+  H.check_type('mappings.goto_last', config.mappings.goto_last, 'string')
 
-    ['options.algorithm'] = { config.options.algorithm, 'string' },
-    ['options.indent_heuristic'] = { config.options.indent_heuristic, 'boolean' },
-    ['options.linematch'] = { config.options.linematch, 'number' },
-    ['options.wrap_goto'] = { config.options.wrap_goto, 'boolean' },
-  })
-
-  vim.validate({
-    ['view.signs.add'] = { config.view.signs.add, 'string' },
-    ['view.signs.change'] = { config.view.signs.change, 'string' },
-    ['view.signs.delete'] = { config.view.signs.delete, 'string' },
-  })
+  H.check_type('options', config.options, 'table')
+  H.check_type('options.algorithm', config.options.algorithm, 'string')
+  H.check_type('options.indent_heuristic', config.options.indent_heuristic, 'boolean')
+  H.check_type('options.linematch', config.options.linematch, 'number')
+  H.check_type('options.wrap_goto', config.options.wrap_goto, 'boolean')
 
   return config
 end
@@ -1783,7 +1774,12 @@ H.git_invalidate_cache = function(cache)
 end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.diff) %s', msg), 0) end
+H.error = function(msg) error('(mini.diff) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level_name) vim.notify('(mini.diff) ' .. msg, vim.log.levels[level_name]) end
 

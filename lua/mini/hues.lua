@@ -1515,23 +1515,23 @@ H.cusps = {
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
   if config.background == nil or config.foreground == nil then
     H.error('`setup()` needs both `background` and `foreground`.')
   end
 
-  vim.validate({
-    background = { config.background, H.is_hex },
-    foreground = { config.foreground, H.is_hex },
-    n_hues = { config.n_hues, H.is_n_hues },
-    saturation = { config.saturation, H.is_saturation },
-    accent = { config.accent, H.is_accent },
-    plugins = { config.plugins, 'table' },
-  })
+  H.validate_hex(config.background, 'background')
+  H.validate_hex(config.foreground, 'foreground')
+  H.validate_n_hues(config.n_hues)
+  if not vim.tbl_contains(H.saturation_values, config.saturation) then
+    H.error('`saturation` should be one of ' .. table.concat(vim.tbl_map(vim.inspect, H.saturation_values), ', '))
+  end
+  if not vim.tbl_contains(H.accent_values, config.accent) then
+    H.error('`accent` should be one of ' .. table.concat(vim.tbl_map(vim.inspect, H.saturation_values), ', '))
+  end
+  H.check_type('plugins', config.plugins, 'table')
 
   return config
 end
@@ -1541,30 +1541,6 @@ H.apply_config = function(config)
 
   -- Apply palette
   MiniHues.apply_palette(MiniHues.make_palette(config), config.plugins)
-end
-
-H.is_hex = function(x)
-  local res = type(x) == 'string' and x:find('^#%x%x%x%x%x%x$') ~= nil
-  if res then return true, nil end
-  return false, 'Color string in the form "#rrggbb"'
-end
-
-H.is_n_hues = function(x)
-  local res = type(x) == 'number' and 0 <= x and x <= 8
-  if res then return true, nil end
-  return false, 'Number between 0 and 8'
-end
-
-H.is_saturation = function(x)
-  local res = vim.tbl_contains(H.saturation_values, x)
-  if res then return true, nil end
-  return false, 'One of ' .. table.concat(vim.tbl_map(vim.inspect, H.saturation_values), ', ')
-end
-
-H.is_accent = function(x)
-  local res = vim.tbl_contains(H.accent_values, x)
-  if res then return true, nil end
-  return false, 'One of ' .. table.concat(vim.tbl_map(vim.inspect, H.accent_values), ', ')
 end
 
 -- Palette --------------------------------------------------------------------
@@ -1615,13 +1591,13 @@ H.make_hues = function(bg_h, fg_h, n_hues)
 end
 
 H.validate_hex = function(x, name)
-  if H.is_hex(x) then return x end
-  local msg = string.format('`%s` should be hex color string in the form "#rrggbb", not %s.', name, vim.inspect(x))
+  if type(x) == 'string' and x:find('^#%x%x%x%x%x%x$') ~= nil then return x end
+  local msg = string.format('`%s` should be hex color string in the form "#rrggbb", not %s', name, vim.inspect(x))
   H.error(msg)
 end
 
 H.validate_n_hues = function(x)
-  if H.is_n_hues(x) then return x end
+  if type(x) == 'number' and 0 <= x and x <= 8 then return x end
   local msg = string.format('`n_hues` should be a number between 0 and 8', name)
   H.error(msg)
 end
@@ -1810,7 +1786,12 @@ end
 
 -- ============================================================================
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.hues) %s', msg), 0) end
+H.error = function(msg) error('(mini.hues) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.round = function(x)
   if x == nil then return nil end

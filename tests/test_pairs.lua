@@ -507,7 +507,10 @@ end
 
 T['map()/map_buf()']['respect `opts` or `pair_info` argument'] = function(fun_name)
   -- Throws error because mapping `(` should already exist
-  expect.error(function() apply_map(fun_name, [['i', '(', { action = 'open', pair = '()' }, { unique = true })]]) end)
+  expect.error(
+    function() apply_map(fun_name, [['i', '(', { action = 'open', pair = '()' }, { unique = true }]]) end,
+    'mapping.*exists'
+  )
 end
 
 T['map()/map_buf()']['create mappings for `<BS>` in new mode'] = function(fun_name)
@@ -597,7 +600,7 @@ T['unmap()/unmap_buf()']['respect `mode` argument'] = function(fun_name)
 end
 
 T['unmap()/unmap_buf()']['require explicit `pair` argument'] = function(fun_name)
-  expect.error(function() apply_unmap(fun_name, [['i', '(']]) end)
+  expect.error(function() apply_unmap(fun_name, [['i', '(']]) end, 'pair.*string')
 end
 
 T['unmap()/unmap_buf()']['allow empty string for `pair` argument to not unregister pair'] = function(fun_name)

@@ -176,15 +176,11 @@ H.default_config = vim.deepcopy(MiniBufremove.config)
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
-    silent = { config.silent, 'boolean' },
-  })
+  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -241,6 +237,13 @@ H.unshow_and_cmd = function(buf_id, force, cmd)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.bufremove) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.echo = function(msg, is_important)
   if MiniBufremove.config.silent then return end
 

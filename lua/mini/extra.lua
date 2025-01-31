@@ -1543,7 +1543,10 @@ H.is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
-H.setup_config = function(config) end
+H.setup_config = function(config)
+  H.check_type('config', config, 'table', true)
+  return config
+end
 
 H.apply_config = function(config)
   MiniExtra.config = config
@@ -2071,7 +2074,12 @@ end
 H.set_buflines = function(buf_id, lines) vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines) end
 
 -- Utilities ------------------------------------------------------------------
-H.error = function(msg) error(string.format('(mini.extra) %s', msg), 0) end
+H.error = function(msg) error('(mini.extra) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
 

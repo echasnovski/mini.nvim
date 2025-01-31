@@ -768,7 +768,7 @@ end
 
 T['expect']['error()']['respects `pattern` argument'] = function()
   ---@diagnostic disable-next-line:param-type-mismatch
-  expect.error(function() MiniTest.expect.error(error, 1) end, 'pattern.*expected string')
+  expect.error(function() MiniTest.expect.error(error, 1) end, 'pattern.*string')
 
   -- `nil` and `''` are placeholders for 'any error'
   expect.no_error(function() MiniTest.expect.error(error, '') end)

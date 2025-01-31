@@ -625,27 +625,15 @@ H.zoom_winid = nil
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   -- NOTE: Don't use `tbl_deep_extend` to prefer full input `make_global` array
   -- Needs adjusting if there is a new setting with nested tables
   config = vim.tbl_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    make_global = {
-      config.make_global,
-      function(x)
-        if type(x) ~= 'table' then return false end
-        local present_fields = vim.tbl_keys(MiniMisc)
-        for _, v in pairs(x) do
-          if not vim.tbl_contains(present_fields, v) then return false end
-        end
-        return true
-      end,
-      '`make_global` should be a table with `MiniMisc` actual fields',
-    },
-  })
+  H.check_type('make_global', config.make_global, 'table')
+  for _, v in pairs(config.make_global) do
+    if MiniMisc[v] == nil then H.error("`make_global` should be a table with exported 'mini.misc' methods") end
+  end
 
   return config
 end
@@ -660,6 +648,11 @@ end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error('(mini.misc) ' .. msg) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
 
 H.notify = function(msg, level) vim.notify('(mini.misc) ' .. msg, vim.log.levels[level]) end
 

@@ -195,17 +195,13 @@ H.center_buf_id = nil
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    show_icons = { config.show_icons, 'boolean' },
-    format = { config.format, 'function', true },
-    set_vim_settings = { config.set_vim_settings, 'boolean' },
-    tabpage_section = { config.tabpage_section, 'string' },
-  })
+  H.check_type('show_icons', config.show_icons, 'boolean')
+  H.check_type('format', config.format, 'function', true)
+  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
+  H.check_type('tabpage_section', config.tabpage_section, 'string')
 
   return config
 end
@@ -533,6 +529,13 @@ H.concat_tabs = function()
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.tabline) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.ensure_get_icon = function(config)
   if not config.show_icons then
     -- Show no icon

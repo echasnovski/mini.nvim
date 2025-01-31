@@ -389,32 +389,26 @@ H.buffer_diagnostic_state = {}
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 H.setup_config = function(config)
-  -- General idea: if some table elements are not present in user-supplied
-  -- `config`, take them from default config
-  vim.validate({ config = { config, 'table', true } })
+  H.check_type('config', config, 'table', true)
   config = vim.tbl_deep_extend('force', vim.deepcopy(H.default_config), config or {})
 
-  vim.validate({
-    options = { config.options, 'table' },
-    mappings = { config.mappings, 'table' },
-    autocommands = { config.autocommands, 'table' },
-  })
+  H.check_type('options', config.options, 'table')
 
-  vim.validate({
-    ['options.basic'] = { config.options.basic, 'boolean' },
-    ['options.extra_ui'] = { config.options.extra_ui, 'boolean' },
-    ['options.win_borders'] = { config.options.win_borders, 'string' },
+  H.check_type('options.basic', config.options.basic, 'boolean')
+  H.check_type('options.extra_ui', config.options.extra_ui, 'boolean')
+  H.check_type('options.win_borders', config.options.win_borders, 'string')
 
-    ['mappings.basic'] = { config.mappings.basic, 'boolean' },
-    ['mappings.option_toggle_prefix'] = { config.mappings.option_toggle_prefix, 'string' },
-    ['mappings.windows'] = { config.mappings.windows, 'boolean' },
-    ['mappings.move_with_alt'] = { config.mappings.move_with_alt, 'boolean' },
+  H.check_type('mappings', config.mappings, 'table')
+  H.check_type('mappings.basic', config.mappings.basic, 'boolean')
+  H.check_type('mappings.option_toggle_prefix', config.mappings.option_toggle_prefix, 'string')
+  H.check_type('mappings.windows', config.mappings.windows, 'boolean')
+  H.check_type('mappings.move_with_alt', config.mappings.move_with_alt, 'boolean')
 
-    ['autocommands.basic'] = { config.autocommands.basic, 'boolean' },
-    ['autocommands.relnum_in_visual_mode'] = { config.autocommands.relnum_in_visual_mode, 'boolean' },
+  H.check_type('autocommands', config.autocommands, 'table')
+  H.check_type('autocommands.basic', config.autocommands.basic, 'boolean')
+  H.check_type('autocommands.relnum_in_visual_mode', config.autocommands.relnum_in_visual_mode, 'boolean')
 
-    ['silent'] = { config.silent, 'boolean' },
-  })
+  H.check_type('silent', config.silent, 'boolean')
 
   return config
 end
@@ -746,6 +740,13 @@ H.apply_autocommands = function(config)
 end
 
 -- Utilities ------------------------------------------------------------------
+H.error = function(msg) error('(mini.basics) ' .. msg, 0) end
+
+H.check_type = function(name, val, ref, allow_nil)
+  if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
+  H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
   opts = vim.tbl_deep_extend('force', { silent = true }, opts or {})
