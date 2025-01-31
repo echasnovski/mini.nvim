@@ -1134,9 +1134,9 @@ end
 --- Default choose
 ---
 --- Choose item. Logic follows the rules in |MiniPick-source.items-common|:
---- - File and directory are called with |:edit| in the target window, possibly
----   followed by setting cursor at the start of line/position/region.
---- - Buffer is set as current in target window.
+--- - File uses |bufadd()| and sets cursor at the start of line/position/region.
+--- - Buffer is set as current in target window and sets cursor similarly.
+--- - Directory is called with |:edit| in the target window.
 --- - Others have the output of |vim.inspect()| printed in Command line.
 ---
 --- Implements default value for |MiniPick-source.choose|.
