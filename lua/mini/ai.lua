@@ -1042,17 +1042,17 @@ MiniAi.select_textobject = function(ai_type, id, opts)
     vim.o.virtualedit = 'onemore'
 
     -- Open enough folds to show left and right edges
-    set_cursor(tobj.from)
-    vim.cmd('normal! zv')
     set_cursor(tobj.to)
     vim.cmd('normal! zv')
-
-    -- Respect exclusive selection (including when selecting end of line)
-    if vim.o.selection == 'exclusive' then vim.cmd('set whichwrap=l | normal! l') end
+    set_cursor(tobj.from)
+    vim.cmd('normal! zv')
 
     -- Start selection
     vim.cmd('normal! ' .. vis_mode)
-    set_cursor(tobj.from)
+    set_cursor(tobj.to)
+
+    -- Respect exclusive selection (including when selecting end of line)
+    if vim.o.selection == 'exclusive' then vim.cmd('set whichwrap=l | normal! l') end
 
     if is_empty_opending then
       -- Add single space (without triggering events) and visually select it.

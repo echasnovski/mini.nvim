@@ -1,5 +1,9 @@
 # Version 0.15.0.9000
 
+## mini.ai
+
+- BREAKING: visual textobject selection now puts the cursor on the right edge instead of left. This better aligns with the (undocumented) behavior of how built-in `a` / `i` textobjects work in Visual mode, as opposed to the (documented in `:h operator-resulting-pos`) behavior of how it is done after applying the operator.
+
 
 # Version 0.15.0
 
