@@ -2121,6 +2121,42 @@ T['default_choose()']['opens just enough folds'] = function()
   eq(child.fn.foldclosed(13), -1)
 end
 
+T['default_choose()']['updates jumplist'] = function()
+  -- Same buffer/path
+  local path = real_file('b.txt')
+  local validate = function(item)
+    child.cmd('edit ' .. vim.fn.fnameescape(path))
+    local init_buf_id = child.api.nvim_get_current_buf()
+    set_cursor(9, 1)
+
+    choose_item(item)
+    if item.bufnr ~= nil then eq(child.api.nvim_get_current_buf(), item.bufnr) end
+    if item.path ~= nil then eq(vim.endswith(child.api.nvim_buf_get_name(0):gsub('\\', '/'), item.path), true) end
+    eq(get_cursor(), { item.lnum, 0 })
+
+    type_keys('<C-o>')
+    eq(child.api.nvim_get_current_buf(), init_buf_id)
+    eq(get_cursor(), { 9, 1 })
+
+    -- Cleanup
+    child.cmd('%bwipeout!')
+  end
+
+  -- Same path/buffer
+  validate({ text = path, path = path, lnum = 2 })
+
+  local buf_id = child.api.nvim_get_current_buf()
+  validate({ text = 'buffer', bufnr = buf_id, lnum = 2 })
+
+  -- Different path/buffer
+  local new_path = real_file('Makefile')
+  validate({ text = new_path, path = new_path, lnum = 2 })
+
+  local new_buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(new_buf_id, 0, -1, false, { 'aaa', 'bbb' })
+  validate({ text = 'buffer', bufnr = new_buf_id, lnum = 2 })
+end
+
 T['default_choose()']['has print fallback'] = function()
   choose_item({ text = 'regular-table' })
   eq(child.cmd_capture('messages'), '{\n  text = "regular-table"\n}')
