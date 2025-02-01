@@ -3240,11 +3240,13 @@ H.choose_path = function(win_target, item_data)
   if item_data.type == 'directory' then
     return vim.api.nvim_win_call(win_target, function() vim.cmd('edit ' .. vim.fn.fnameescape(path)) end)
   end
+  pcall(vim.api.nvim_win_call, win_target, function() vim.cmd("normal! m'") end)
   H.edit(path, win_target)
   H.choose_set_cursor(win_target, item_data.lnum, item_data.col)
 end
 
 H.choose_buffer = function(win_target, item_data)
+  pcall(vim.api.nvim_win_call, win_target, function() vim.cmd("normal! m'") end)
   H.set_winbuf(win_target, item_data.buf_id)
   H.choose_set_cursor(win_target, item_data.lnum, item_data.col)
 end
