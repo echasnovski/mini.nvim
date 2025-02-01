@@ -39,12 +39,14 @@ end
 
 local validate_next_region = function(keys, next_region)
   type_keys(keys)
-  eq({ { child.fn.line('.'), child.fn.col('.') }, { child.fn.line('v'), child.fn.col('v') } }, next_region)
+  -- Should put cursor at the right edge of selection (as it is done for
+  -- built-in textobjects in Visual mode)
+  eq({ { child.fn.line('v'), child.fn.col('v') }, { child.fn.line('.'), child.fn.col('.') } }, next_region)
 end
 
 local validate_next_region1d = function(keys, next_region)
   type_keys(keys)
-  eq({ child.fn.col('.'), child.fn.col('v') }, next_region)
+  eq({ child.fn.col('v'), child.fn.col('.') }, next_region)
 end
 
 local mock_treesitter_builtin = function() child.cmd('source tests/dir-ai/mock-lua-treesitter.lua') end
@@ -1697,7 +1699,7 @@ T['Textobject']['ensures that output is not covered by reference'] = function()
   set_lines({ 'aa(bb)cc(dd)' })
   set_cursor(1, 3)
   type_keys('vl', 'i)')
-  eq({ child.fn.col('.'), child.fn.col('v') }, { 10, 11 })
+  eq({ child.fn.col('v'), child.fn.col('.') }, { 10, 11 })
 
   -- Empty region
   validate_tobj1d('a()b(c)', 2, 'i)', { 6, 6 })
@@ -2752,7 +2754,7 @@ T['Builtin']['User prompt']['can not be covering'] = function()
   -- Can't result into covering, so no more matches
   type_keys(keys)
   eq(get_mode(), 'n')
-  eq(get_cursor(), { 1, 2 })
+  eq(get_cursor(), { 1, 4 })
   expect.match(get_latest_message(), 'a%?')
 end
 
@@ -2898,7 +2900,7 @@ T['Builtin']['Default']['can not be covering'] = function()
   -- Can't result into covering, so no more matches
   type_keys('a_')
   eq(get_mode(), 'n')
-  eq(get_cursor(), { 1, 4 })
+  eq(get_cursor(), { 1, 6 })
   expect.match(get_latest_message(), 'a_')
 end
 
