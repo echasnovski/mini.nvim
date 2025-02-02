@@ -649,6 +649,14 @@ H.apply_palette = function(palette, use_cterm)
   -- Built-in snippets
   hi('SnippetTabstop', {link='Visual'})
 
+  -- Built-in markdown syntax
+  hi('markdownH1', {fg=p.base09, bg=nil, attr=nil, sp=nil})
+  hi('markdownH2', {fg=p.base0A, bg=nil, attr=nil, sp=nil})
+  hi('markdownH3', {fg=p.base0B, bg=nil, attr=nil, sp=nil})
+  hi('markdownH4', {fg=p.base0C, bg=nil, attr=nil, sp=nil})
+  hi('markdownH5', {fg=p.base0D, bg=nil, attr=nil, sp=nil})
+  hi('markdownH6', {fg=p.base0F, bg=nil, attr=nil, sp=nil})
+
   -- Tree-sitter
   -- Sources:
   -- - `:h treesitter-highlight-groups`
@@ -680,6 +688,13 @@ H.apply_palette = function(palette, use_cterm)
     hi('@markup.italic',        {link='@text.emphasis'})
     hi('@markup.strikethrough', {link='@text.strike'})
     hi('@markup.underline',     {link='@text.underline'})
+
+    hi('@markup.heading.1', {link='markdownH1'})
+    hi('@markup.heading.2', {link='markdownH2'})
+    hi('@markup.heading.3', {link='markdownH3'})
+    hi('@markup.heading.4', {link='markdownH4'})
+    hi('@markup.heading.5', {link='markdownH5'})
+    hi('@markup.heading.6', {link='markdownH6'})
 
     hi('@string.special.vimdoc',     {link='SpecialChar'})
     hi('@variable.parameter.vimdoc', {fg=p.base09, bg=nil, attr=nil, sp=nil})

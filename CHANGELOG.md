@@ -4,6 +4,10 @@
 
 - BREAKING: visual textobject selection now puts the cursor on the right edge instead of left. This better aligns with the (undocumented) behavior of how built-in `a` / `i` textobjects work in Visual mode, as opposed to the (documented in `:h operator-resulting-pos`) behavior of how it is done after applying the operator.
 
+## mini.base16
+
+- FEATURE: add support for colored markdown headings.
+
 ## mini.hues
 
 - FEATURE: add support for colored markdown headings.
