@@ -638,6 +638,14 @@ MiniHues.apply_palette = function(palette, plugins)
   -- Built-in snippets
   hi('SnippetTabstop', { fg=nil, bg=p.yellow_bg })
 
+  -- Built-in markdown syntax
+  hi('markdownH1', { link='@markup.heading.1' })
+  hi('markdownH2', { link='@markup.heading.2' })
+  hi('markdownH3', { link='@markup.heading.3' })
+  hi('markdownH4', { link='@markup.heading.4' })
+  hi('markdownH5', { link='@markup.heading.5' })
+  hi('markdownH6', { link='@markup.heading.6' })
+
   -- Tree-sitter
   -- Sources:
   -- - `:h treesitter-highlight-groups`
@@ -819,7 +827,13 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('@markup.strikethrough', { link='@text.strike' })
     hi('@markup.underline',     { link='@text.underline' })
 
-    hi('@markup.heading', { link='@text.title' })
+    hi('@markup.heading',   { link='@text.title' })
+    hi('@markup.heading.1', { fg=p.orange, bg=nil })
+    hi('@markup.heading.2', { fg=p.yellow, bg=nil })
+    hi('@markup.heading.3', { fg=p.green,  bg=nil })
+    hi('@markup.heading.4', { fg=p.cyan,   bg=nil })
+    hi('@markup.heading.5', { fg=p.azure,  bg=nil })
+    hi('@markup.heading.6', { fg=p.blue,   bg=nil })
 
     hi('@markup.quote',       { link='@string.special' })
     hi('@markup.math',        { link='@string.special' })
