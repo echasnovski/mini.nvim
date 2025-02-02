@@ -33,16 +33,20 @@
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
 ---     - 'justinmk/vim-sneak'
+---     - 'ibhagwan/fzf-lua'
 ---     - 'kevinhwang91/nvim-bqf'
 ---     - 'kevinhwang91/nvim-ufo'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
+---     - 'MeanderingProgrammer/render-markdown.nvim'
 ---     - 'neoclide/coc.nvim'
 ---     - 'NeogitOrg/neogit'
 ---     - 'nvim-lualine/lualine.nvim'
 ---     - 'nvim-neo-tree/neo-tree.nvim'
 ---     - 'nvim-telescope/telescope.nvim'
 ---     - 'nvim-tree/nvim-tree.lua'
+---     - 'OXY2DEV/helpview.nvim'
+---     - 'OXY2DEV/markview.nvim'
 ---     - 'phaazon/hop.nvim'
 ---     - 'rcarriga/nvim-dap-ui'
 ---     - 'rcarriga/nvim-notify'
@@ -1023,6 +1027,20 @@ H.apply_palette = function(palette, use_cterm)
     hi('CmpItemKindVariable',      {link='Delimiter'})
   end
 
+  if H.has_integration('ibhagwan/fzf-lua') then
+    hi('FzfLuaBufFlagAlt', {link='Special'})
+    hi('FzfLuaBufFlagCur', {link='CursorLineNr'})
+    hi('FzfLuaBufNr',      {link='DiagnosticHint'})
+    hi('FzfLuaHeaderBind', {link='DiagnosticWarn'})
+    hi('FzfLuaHeaderText', {link='DiagnosticInfo'})
+    hi('FzfLuaLiveSym',    {link='DiagnosticHint'})
+    hi('FzfLuaPathColNr',  {link='DiagnosticHint'})
+    hi('FzfLuaPathLineNr', {link='DiagnosticInfo'})
+    hi('FzfLuaTabMarker',  {link='DiagnosticHint'})
+    hi('FzfLuaTabTitle',   {link='Title'})
+    hi('FzfLuaTitle',      {link='FloatTitle'})
+  end
+
   if H.has_integration('justinmk/vim-sneak') then
     hi('Sneak',      {fg=p.base00, bg=p.base0E, attr=nil,    sp=nil})
     hi('SneakScope', {fg=p.base00, bg=p.base07, attr=nil,    sp=nil})
@@ -1069,6 +1087,28 @@ H.apply_palette = function(palette, use_cterm)
     hi('IndentBlanklineIndent6',      {fg=p.base0D, bg=nil, attr='nocombine',           sp=nil})
     hi('IndentBlanklineIndent7',      {fg=p.base0E, bg=nil, attr='nocombine',           sp=nil})
     hi('IndentBlanklineIndent8',      {fg=p.base0F, bg=nil, attr='nocombine',           sp=nil})
+  end
+
+  if H.has_integration('MeanderingProgrammer/render-markdown.nvim') then
+    hi('RenderMarkdownBullet',     {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownChecked',    {link='DiagnosticOk'})
+    hi('RenderMarkdownCode',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownCodeInline', {fg=nil,      bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownDash',       {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH1',         {fg=p.base09, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH1Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownH2',         {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH2Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownH3',         {fg=p.base0B, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH3Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownH4',         {fg=p.base0C, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH4Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownH5',         {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH5Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownH6',         {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
+    hi('RenderMarkdownH6Bg',       {fg=nil,      bg=p.base01, attr=nil, sp=nil})
+    hi('RenderMarkdownTodo',       {link='Todo'})
+    hi('RenderMarkdownUnchecked',  {link='DiagnosticWarn'})
   end
 
   if H.has_integration('neoclide/coc.nvim') then
@@ -1143,6 +1183,52 @@ H.apply_palette = function(palette, use_cterm)
     hi('NvimTreeSpecialFile',  {fg=p.base0D, bg=nil,      attr='bold,underline', sp=nil})
     hi('NvimTreeSymlink',      {fg=p.base0F, bg=nil,      attr='bold',           sp=nil})
     hi('NvimTreeWindowPicker', {fg=p.base05, bg=p.base01, attr="bold",           sp=nil})
+  end
+
+  if H.has_integration('OXY2DEV/helpview.nvim') then
+    hi('HelpviewHeading1',     {link='markdownH1'})
+    hi('HelpviewHeading2',     {link='markdownH2'})
+    hi('HelpviewHeading3',     {link='markdownH3'})
+    hi('HelpviewHeading4',     {link='markdownH4'})
+    hi('HelpviewMentionlink',  {fg=nil,      bg=nil, attr='underline', sp=nil})
+    hi('HelpviewOptionlink',   {fg=p.base0D, bg=nil, attr='underline', sp=nil})
+    hi('HelpviewTaglink',      {fg=p.base0A, bg=nil, attr='bold',      sp=nil})
+    hi('HelpviewTitle',        {link='Title'})
+  end
+
+  if H.has_integration('OXY2DEV/markview.nvim') then
+    hi('MarkviewPalette0',     {fg=p.base0E, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette0Fg',   {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette0Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette0Sign', {fg=p.base0E, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette1',     {fg=p.base08, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette1Fg',   {fg=p.base08, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette1Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette1Sign', {fg=p.base08, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette2',     {fg=p.base09, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette2Fg',   {fg=p.base09, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette2Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette2Sign', {fg=p.base09, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette3',     {fg=p.base0A, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette3Fg',   {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette3Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette3Sign', {fg=p.base0A, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette4',     {fg=p.base0B, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette4Fg',   {fg=p.base0B, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette4Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette4Sign', {fg=p.base0B, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette5',     {fg=p.base0C, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette5Fg',   {fg=p.base0C, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette5Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette5Sign', {fg=p.base0C, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette6',     {fg=p.base0D, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette6Fg',   {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette6Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette6Sign', {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette7',     {fg=p.base0F, bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette7Fg',   {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
+    hi('MarkviewPalette7Bg',   {fg=nil,      bg=p.base00, attr=nil, sp=nil})
+    hi('MarkviewPalette7Sign', {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
   end
 
   if H.has_integration('phaazon/hop.nvim') then
