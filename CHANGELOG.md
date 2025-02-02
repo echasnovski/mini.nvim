@@ -11,6 +11,11 @@
 ## mini.hues
 
 - FEATURE: add support for colored markdown headings.
+- FEATURE: add new plugin integrations:
+    - 'ibhagwan/fzf-lua'
+    - 'MeanderingProgrammer/render-markdown.nvim'
+    - 'OXY2DEV/helpview.nvim'
+    - 'OXY2DEV/markview.nvim'
 
 
 # Version 0.15.0

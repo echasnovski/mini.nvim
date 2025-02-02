@@ -48,17 +48,21 @@
 ---     - 'glepnir/lspsaga.nvim'
 ---     - 'HiPhish/rainbow-delimiters.nvim'
 ---     - 'hrsh7th/nvim-cmp'
+---     - 'ibhagwan/fzf-lua'
 ---     - 'justinmk/vim-sneak'
 ---     - 'kevinhwang91/nvim-bqf'
 ---     - 'kevinhwang91/nvim-ufo'
 ---     - 'lewis6991/gitsigns.nvim'
 ---     - 'lukas-reineke/indent-blankline.nvim'
+---     - 'MeanderingProgrammer/render-markdown.nvim'
 ---     - 'neoclide/coc.nvim'
 ---     - 'NeogitOrg/neogit'
 ---     - 'nvim-lualine/lualine.nvim'
 ---     - 'nvim-neo-tree/neo-tree.nvim'
 ---     - 'nvim-telescope/telescope.nvim'
 ---     - 'nvim-tree/nvim-tree.lua'
+---     - 'OXY2DEV/helpview.nvim'
+---     - 'OXY2DEV/markview.nvim'
 ---     - 'phaazon/hop.nvim'
 ---     - 'rcarriga/nvim-dap-ui'
 ---     - 'rcarriga/nvim-notify'
@@ -1170,6 +1174,20 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('CmpItemKindVariable',      { link='Delimiter' })
   end
 
+  if has_integration('ibhagwan/fzf-lua') then
+    hi('FzfLuaBufFlagAlt', { link='Special' })
+    hi('FzfLuaBufFlagCur', { link='CursorLineNr' })
+    hi('FzfLuaBufNr',      { link='DiagnosticHint' })
+    hi('FzfLuaHeaderBind', { link='DiagnosticWarn' })
+    hi('FzfLuaHeaderText', { link='DiagnosticInfo' })
+    hi('FzfLuaLiveSym',    { link='DiagnosticHint' })
+    hi('FzfLuaPathColNr',  { link='DiagnosticHint' })
+    hi('FzfLuaPathLineNr', { link='DiagnosticInfo' })
+    hi('FzfLuaTabMarker',  { link='DiagnosticHint' })
+    hi('FzfLuaTabTitle',   { link='Title' })
+    hi('FzfLuaTitle',      { link='FloatTitle' })
+  end
+
   if has_integration('justinmk/vim-sneak') then
     hi('Sneak',      { fg=p.bg, bg=p.orange })
     hi('SneakScope', { fg=p.bg, bg=p.fg_edge2 })
@@ -1216,6 +1234,28 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('IndentBlanklineIndent6',      { fg=p.green,   bg=nil, nocombine=true })
     hi('IndentBlanklineIndent7',      { fg=p.orange,  bg=nil, nocombine=true })
     hi('IndentBlanklineIndent8',      { fg=p.purple,  bg=nil, nocombine=true })
+  end
+
+  if has_integration('MeanderingProgrammer/render-markdown.nvim') then
+    hi('RenderMarkdownBullet',     { fg=p.accent, bg=nil })
+    hi('RenderMarkdownChecked',    { link='DiagnosticOk' })
+    hi('RenderMarkdownCode',       { fg=nil,      bg=p.bg_edge })
+    hi('RenderMarkdownCodeInline', { fg=nil,      bg=p.bg_edge })
+    hi('RenderMarkdownDash',       { fg=p.accent, bg=nil })
+    hi('RenderMarkdownH1',         { fg=p.orange, bg=nil })
+    hi('RenderMarkdownH1Bg',       { fg=nil,      bg=p.orange_bg })
+    hi('RenderMarkdownH2',         { fg=p.yellow, bg=nil })
+    hi('RenderMarkdownH2Bg',       { fg=nil,      bg=p.yellow_bg })
+    hi('RenderMarkdownH3',         { fg=p.green,  bg=nil })
+    hi('RenderMarkdownH3Bg',       { fg=nil,      bg=p.green_bg })
+    hi('RenderMarkdownH4',         { fg=p.cyan,   bg=nil })
+    hi('RenderMarkdownH4Bg',       { fg=nil,      bg=p.cyan_bg })
+    hi('RenderMarkdownH5',         { fg=p.azure,  bg=nil })
+    hi('RenderMarkdownH5Bg',       { fg=nil,      bg=p.azure_bg })
+    hi('RenderMarkdownH6',         { fg=p.blue,   bg=nil })
+    hi('RenderMarkdownH6Bg',       { fg=nil,      bg=p.blue_bg })
+    hi('RenderMarkdownTodo',       { link='Todo' })
+    hi('RenderMarkdownUnchecked',  { link='DiagnosticWarn' })
   end
 
   if has_integration('neoclide/coc.nvim') then
@@ -1290,6 +1330,55 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('NvimTreeSpecialFile',  { fg=p.accent,  bg=nil,       underline=true })
     hi('NvimTreeSymlink',      { fg=p.blue,    bg=nil,       bold=true })
     hi('NvimTreeWindowPicker', { fg=p.fg,      bg=p.bg_mid2, bold=true })
+  end
+
+  if has_integration('OXY2DEV/helpview.nvim') then
+    hi('HelpviewCode',         { fg=nil,      bg=p.bg_edge })
+    hi('HelpviewCodeLanguage', { fg=nil,      bg=p.bg_edge })
+    hi('HelpviewHeading1',     { link='@markup.heading.1' })
+    hi('HelpviewHeading2',     { link='@markup.heading.2' })
+    hi('HelpviewHeading3',     { link='@markup.heading.3' })
+    hi('HelpviewHeading4',     { link='@markup.heading.4' })
+    hi('HelpviewInlineCode',   { fg=nil,      bg=p.bg_edge })
+    hi('HelpviewMentionlink',  { fg=p.accent, bg=nil,      underline=true })
+    hi('HelpviewOptionlink',   { fg=p.yellow, bg=nil,      underline=true })
+    hi('HelpviewTaglink',      { fg=p.accent, bg=nil,      bold=true })
+    hi('HelpviewTitle',        { link='Title' })
+  end
+
+  if has_integration('OXY2DEV/markview.nvim') then
+    hi('MarkviewPalette0',     { fg=p.accent, bg=p.accent_bg })
+    hi('MarkviewPalette0Fg',   { fg=p.accent, bg=nil })
+    hi('MarkviewPalette0Bg',   { fg=nil,      bg=p.accent_bg })
+    hi('MarkviewPalette0Sign', { fg=p.accent, bg=nil })
+    hi('MarkviewPalette1',     { fg=p.red,    bg=p.red_bg })
+    hi('MarkviewPalette1Fg',   { fg=p.red,    bg=nil })
+    hi('MarkviewPalette1Bg',   { fg=nil,      bg=p.red_bg })
+    hi('MarkviewPalette1Sign', { fg=p.red,    bg=nil })
+    hi('MarkviewPalette2',     { fg=p.orange, bg=p.orange_bg })
+    hi('MarkviewPalette2Fg',   { fg=p.orange, bg=nil })
+    hi('MarkviewPalette2Bg',   { fg=nil,      bg=p.orange_bg })
+    hi('MarkviewPalette2Sign', { fg=p.orange, bg=nil })
+    hi('MarkviewPalette3',     { fg=p.yellow, bg=p.yellow_bg })
+    hi('MarkviewPalette3Fg',   { fg=p.yellow, bg=nil })
+    hi('MarkviewPalette3Bg',   { fg=nil,      bg=p.yellow_bg })
+    hi('MarkviewPalette3Sign', { fg=p.yellow, bg=nil })
+    hi('MarkviewPalette4',     { fg=p.green,  bg=p.green_bg })
+    hi('MarkviewPalette4Fg',   { fg=p.green,  bg=nil })
+    hi('MarkviewPalette4Bg',   { fg=nil,      bg=p.green_bg })
+    hi('MarkviewPalette4Sign', { fg=p.green,  bg=nil })
+    hi('MarkviewPalette5',     { fg=p.cyan,   bg=p.cyan_bg })
+    hi('MarkviewPalette5Fg',   { fg=p.cyan,   bg=nil })
+    hi('MarkviewPalette5Bg',   { fg=nil,      bg=p.cyan_bg })
+    hi('MarkviewPalette5Sign', { fg=p.cyan,   bg=nil })
+    hi('MarkviewPalette6',     { fg=p.azure,  bg=p.azure_bg })
+    hi('MarkviewPalette6Fg',   { fg=p.azure,  bg=nil })
+    hi('MarkviewPalette6Bg',   { fg=nil,      bg=p.azure_bg })
+    hi('MarkviewPalette6Sign', { fg=p.azure,  bg=nil })
+    hi('MarkviewPalette7',     { fg=p.blue,   bg=p.blue_bg })
+    hi('MarkviewPalette7Fg',   { fg=p.blue,   bg=nil })
+    hi('MarkviewPalette7Bg',   { fg=nil,      bg=p.blue_bg })
+    hi('MarkviewPalette7Sign', { fg=p.blue,   bg=nil })
   end
 
   if has_integration('phaazon/hop.nvim') then
