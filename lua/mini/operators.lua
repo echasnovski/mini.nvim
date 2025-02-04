@@ -1133,9 +1133,14 @@ H.do_between_marks = function(operator, data)
   local cache_selection = vim.o.selection
   if data.mode == 'block' and vim.o.selection == 'exclusive' then vim.o.selection = 'inclusive' end
 
+  -- Don't trigger `TextYankPost` event as these yanks are not user-facing
+  local is_yank = operator == 'y'
+  local cache_eventignore = vim.o.eventignore
+  if is_yank then vim.o.eventignore = 'TextYankPost' end
+
   -- Make sure that marks `[` and `]` don't change after `y`
   local context_marks = { '<', '>' }
-  if operator == 'y' then context_marks = vim.list_extend(context_marks, { '[', ']' }) end
+  if is_yank then context_marks = vim.list_extend(context_marks, { '[', ']' }) end
   H.with_temp_context({ marks = context_marks }, function()
     local mark_from, mark_to, submode, register = data.mark_from, data.mark_to, data.submode, data.register
     local keys
@@ -1148,12 +1153,11 @@ H.do_between_marks = function(operator, data)
     -- Make sure that outer action is dot-repeatable by cancelling effect of
     -- `d` or dot-repeatable `y`
     local cancel_redo = operator == 'd' or (operator == 'y' and vim.o.cpoptions:find('y') ~= nil)
-    -- Don't trigger `TextYankPost` event as this yank is not user-facing
-    local noautocmd = operator == 'y'
-    H.cmd_normal(keys, { cancel_redo = cancel_redo, noautocmd = noautocmd })
+    H.cmd_normal(keys, { cancel_redo = cancel_redo })
   end)
 
   vim.o.selection = cache_selection
+  if is_yank then vim.o.eventignore = cache_eventignore end
 end
 
 H.is_content = function(x) return type(x) == 'table' and H.islist(x.lines) and type(x.submode) == 'string' end
@@ -1282,10 +1286,8 @@ H.cmd_normal = function(command, opts)
   opts = opts or {}
   local cancel_redo = opts.cancel_redo
   if cancel_redo == nil then cancel_redo = true end
-  local noautocmd = opts.noautocmd
-  if noautocmd == nil then noautocmd = false end
 
-  vim.cmd('silent keepjumps ' .. (noautocmd and 'noautocmd ' or '') .. 'normal! ' .. command)
+  vim.cmd('silent keepjumps normal! ' .. command)
 
   if cancel_redo then H.cancel_redo() end
 end

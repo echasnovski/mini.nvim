@@ -590,8 +590,14 @@ end
 
 T['Evaluate']['does not trigger `TextYankPost` event'] = function()
   child.cmd('au TextYankPost * lua _G.been_here = true')
+  -- Should also not block other events, like ModeChanged
+  child.cmd('au ModeChanged * lua _G.n = (_G.n or 0) + 1')
+
   validate_edit1d('1 + 1', 0, { 'g=$' }, '2', 0)
+
   eq(child.lua_get('_G.been_here'), vim.NIL)
+  eq(child.lua_get('_G.n') >= 8, true)
+  eq(child.o.eventignore, '')
 end
 
 T['Evaluate']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
@@ -1167,8 +1173,14 @@ end
 
 T['Exchange']['does not trigger `TextYankPost` event'] = function()
   child.cmd('au TextYankPost * lua _G.been_here = true')
+  -- Should also not block other events, like ModeChanged
+  child.cmd('au ModeChanged * lua _G.n = (_G.n or 0) + 1')
+
   validate_edit1d('aa bb', 0, { 'gxiw', 'w', 'gxiw' }, 'bb aa', 3)
+
   eq(child.lua_get('_G.been_here'), vim.NIL)
+  eq(child.lua_get('_G.n') >= 16, true)
+  eq(child.o.eventignore, '')
 end
 
 T['Exchange']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
@@ -1553,8 +1565,14 @@ end
 
 T['Multiply']['does not trigger `TextYankPost` event'] = function()
   child.cmd('au TextYankPost * lua _G.been_here = true')
+  -- Should also not block other events, like ModeChanged
+  child.cmd('au ModeChanged * lua _G.n = (_G.n or 0) + 1')
+
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'gmm' }, { 'aa', 'aa', 'bb' }, { 2, 0 })
+
   eq(child.lua_get('_G.been_here'), vim.NIL)
+  eq(child.lua_get('_G.n') >= 5, true)
+  eq(child.o.eventignore, '')
 end
 
 T['Multiply']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
@@ -2017,9 +2035,14 @@ T['Replace']['does not trigger `TextYankPost` event'] = function()
   type_keys('yiw')
 
   child.cmd('au TextYankPost * lua _G.been_here = true')
+  -- Should also not block other events, like ModeChanged
+  child.cmd('au ModeChanged * lua _G.n = (_G.n or 0) + 1')
 
   validate_edit1d('bb', 0, { 'griw' }, 'aa', 0)
+
   eq(child.lua_get('_G.been_here'), vim.NIL)
+  eq(child.lua_get('_G.n') >= 5, true)
+  eq(child.o.eventignore, '')
 end
 
 T['Replace']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
@@ -2276,8 +2299,14 @@ end
 
 T['Sort']['does not trigger `TextYankPost` event'] = function()
   child.cmd('au TextYankPost * lua _G.been_here = true')
+  -- Should also not block other events, like ModeChanged
+  child.cmd('au ModeChanged * lua _G.n = (_G.n or 0) + 1')
+
   validate_edit1d('b, a', 0, { 'gs$' }, 'a, b', 0)
+
   eq(child.lua_get('_G.been_here'), vim.NIL)
+  eq(child.lua_get('_G.n') >= 8, true)
+  eq(child.o.eventignore, '')
 end
 
 T['Sort']['respects `vim.{g,b}.minioperators_disable`'] = new_set({
