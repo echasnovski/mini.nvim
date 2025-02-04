@@ -49,15 +49,12 @@ local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock
 
 local mock_lsp = function() child.cmd('luafile tests/dir-statusline/mock-lsp.lua') end
 
-local mocked_filepath = vim.fn.fnamemodify('tests/dir-statusline/mocked.lua', ':p')
-local mock_file = function(bytes)
-  -- Reduce one byte for '\n' at end
-  local lines = { string.rep('a', bytes - 1) }
-
-  vim.fn.writefile(lines, mocked_filepath)
+local mock_buffer_size = function(bytes)
+  -- Reduce bytes for end-of-line: '\n' on Unix and '\r\n' on Windows
+  local eol_bytes = helpers.is_windows() and 2 or 1
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { string.rep('a', bytes - eol_bytes) })
+  child.bo.modified = false
 end
-
-local unmock_file = function() pcall(vim.fn.delete, mocked_filepath) end
 
 -- Time constants
 local term_mode_wait = helpers.get_time_const(50)
@@ -439,7 +436,7 @@ T['section_lsp()']['respects `config.use_icons`'] = function()
   eq(child.lua_get([[MiniStatusline.section_lsp({})]]), '󰰎 +')
 end
 
-T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_miniicons, post_case = unmock_file } })
+T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_miniicons } })
 
 local validate_fileinfo = function(args, pattern)
   local command = ('MiniStatusline.section_fileinfo({ %s })'):format(args)
@@ -447,34 +444,34 @@ local validate_fileinfo = function(args, pattern)
 end
 
 T['section_fileinfo()']['works'] = function()
-  mock_file(10)
-  child.cmd('edit ' .. mocked_filepath)
+  mock_buffer_size(10)
+  child.bo.filetype = 'text'
   local encoding = child.bo.fileencoding or child.bo.encoding
   local format = child.bo.fileformat
-  local pattern = '^󰢱 lua ' .. vim.pesc(encoding) .. '%[' .. vim.pesc(format) .. '%] 10B$'
+  local pattern = '^󰦪 text ' .. vim.pesc(encoding) .. '%[' .. vim.pesc(format) .. '%] 10B$'
   validate_fileinfo('', pattern)
 end
 
 T['section_fileinfo()']['respects `args.trunc_width`'] = function()
-  mock_file(10)
-  child.cmd('edit ' .. mocked_filepath)
+  mock_buffer_size(10)
+  child.bo.filetype = 'text'
 
   set_width(100)
-  validate_fileinfo('trunc_width = 100', '^󰢱 lua...')
+  validate_fileinfo('trunc_width = 100', '^󰦪 text...')
   set_width(99)
-  validate_fileinfo('trunc_width = 100', '^󰢱 lua$')
+  validate_fileinfo('trunc_width = 100', '^󰦪 text$')
 end
 
 T['section_fileinfo()']['respects `config.use_icons`'] = function()
-  mock_file(10)
-  child.cmd('edit ' .. mocked_filepath)
+  mock_buffer_size(10)
+  child.bo.filetype = 'text'
 
   child.lua('MiniStatusline.config.use_icons = false')
-  validate_fileinfo('', '^lua...')
+  validate_fileinfo('', '^text...')
 
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
-  validate_fileinfo('', '󰢱 lua...')
+  validate_fileinfo('', '󰦪 text...')
 end
 
 T['section_fileinfo()']["can fall back to 'nvim-web-devicons'"] = function()
@@ -498,27 +495,18 @@ T['section_fileinfo()']['shows correct size'] = function()
   validate_fileinfo('', '0B')
 
   -- Should update based on current text (not saved version)
-  mock_file(10)
-  child.cmd('edit ' .. mocked_filepath)
-
+  mock_buffer_size(10)
   validate_fileinfo('', '10B')
 
   type_keys('i', 'xxx')
   validate_fileinfo('', '13B')
 
-  child.cmd('%bwipeout!')
-  unmock_file()
-
   -- Should show human friendly size version
-  mock_file(1024)
-  child.cmd('edit ' .. mocked_filepath)
+  mock_buffer_size(1024)
   validate_fileinfo('', '1%.00KiB$')
-  unmock_file()
 
-  mock_file(1024 * 1024)
-  child.cmd('edit ' .. mocked_filepath)
+  mock_buffer_size(1024 * 1024)
   validate_fileinfo('', '1%.00MiB$')
-  unmock_file()
 end
 
 T['section_fileinfo()']['works in special buffers'] = function()
@@ -712,15 +700,7 @@ T['section_mode()']['respects `args.trunc_width`'] = function()
   eq(section_mode({ trunc_width = 100 }), { 'N', 'MiniStatuslineModeNormal' })
 end
 
-T['section_searchcount()'] = new_set({
-  hooks = {
-    pre_case = function()
-      mock_file(10)
-      child.cmd('edit! ' .. mocked_filepath)
-    end,
-    post_case = unmock_file,
-  },
-})
+T['section_searchcount()'] = new_set({ hooks = { pre_case = function() mock_buffer_size(10) end } })
 
 local section_searchcount = function(args)
   return child.lua_get('MiniStatusline.section_searchcount(...)', { args or {} })
@@ -798,18 +778,18 @@ T['Default content']['active'] = new_set({
       child.set_size(5, 160)
 
       child.lua('require("mini.icons").setup()')
-      mock_file(10)
+      child.cmd('edit tests/dir-statusline/mocked.lua')
+      child.bo.fileencoding = 'utf-8'
+      mock_buffer_size(10)
 
       -- Mock filename section to use relative path for consistent screenshots
       child.lua([[MiniStatusline.section_filename = function() return '%f%m%r' end]])
-      child.cmd('edit ' .. vim.fn.fnamemodify(mocked_filepath, ':.'))
       mock_diagnostics()
       mock_lsp()
       mock_minigit()
       mock_minidiff()
       type_keys('/a', '<CR>')
     end,
-    post_case = unmock_file,
   },
   -- There should also be test for 140, but it is for truncating in
   -- `section_filename` from full to relative paths
