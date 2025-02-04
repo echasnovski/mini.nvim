@@ -693,7 +693,10 @@ H.create_default_hl = function()
   vim.api.nvim_set_hl(0, 'MiniIndentscopeSymbolOff', { default = true, link = 'MiniIndentscopeSymbol' })
 end
 
-H.is_disabled = function() return vim.g.miniindentscope_disable == true or vim.b.miniindentscope_disable == true end
+H.is_disabled = function()
+  if vim.b.miniindentscope_disable ~= nil then return vim.b.miniindentscope_disable end
+  return vim.g.miniindentscope_disable == true
+end
 
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniIndentscope.config, vim.b.miniindentscope_config or {}, config or {})
