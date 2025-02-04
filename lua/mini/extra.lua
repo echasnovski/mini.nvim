@@ -1025,7 +1025,7 @@ MiniExtra.pickers.keymaps = function(local_opts, opts)
     local keys = vim.api.nvim_replace_termcodes(item.maparg.lhs, true, true, true)
     -- Restore Visual mode (should be active previously at least once)
     if item.maparg.mode == 'x' then keys = 'gv' .. keys end
-    vim.schedule(function() vim.fn.feedkeys(keys) end)
+    vim.schedule(function() vim.api.nvim_input(keys) end)
   end
 
   local default_opts = { source = { name = string.format('Keymaps (%s)', scope), preview = preview, choose = choose } }
