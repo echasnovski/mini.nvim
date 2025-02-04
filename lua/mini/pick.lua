@@ -1545,7 +1545,8 @@ end
 --- Picker registry
 ---
 --- Place for users and extensions to manage pickers with their commonly used
---- global options. By default contains all |MiniPick.builtin| entries.
+--- local options. By default contains all |MiniPick.builtin| pickers.
+--- All entries should accept only a single `local_opts` table argument.
 ---
 --- Serves as a source for |:Pick| command.
 ---
