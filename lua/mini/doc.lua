@@ -1019,6 +1019,7 @@ H.add_section_heading = function(s, heading)
 end
 
 H.mark_optional = function(s)
+  if #s == 0 or s.type ~= 'section' then return end
   -- Treat question mark at end of first word as "optional" indicator. See:
   -- https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#optional-params
   s[1] = s[1]:gsub('^(%s-%S-)%?', '%1 `(optional)`', 1)
