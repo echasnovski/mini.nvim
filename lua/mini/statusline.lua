@@ -390,6 +390,7 @@ end
 --- width is lower than `args.trunc_width` or buffer is not normal.
 ---
 --- Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
+--- File size is computed based on current buffer text, not file's saved version.
 ---
 --- If `config.use_icons` is true and icon provider is present (see
 --- "Dependencies" section in |mini.statusline|), shows icon near the filetype.
@@ -670,7 +671,7 @@ H.check_type = function(name, val, ref, allow_nil)
 end
 
 H.get_filesize = function()
-  local size = vim.fn.getfsize(vim.fn.getreg('%'))
+  local size = math.max(vim.fn.line2byte(vim.fn.line('$') + 1) - 1, 0)
   if size < 1024 then
     return string.format('%dB', size)
   elseif size < 1048576 then

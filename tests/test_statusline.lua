@@ -491,7 +491,24 @@ T['section_fileinfo()']['uses correct filetype'] = function()
   validate_fileinfo('', ' aaa ')
 end
 
-T['section_fileinfo()']['uses human friendly size'] = function()
+T['section_fileinfo()']['shows correct size'] = function()
+  -- Should show '0 bytes' on empty buffer
+  child.bo.filetype = 'aaa'
+  validate_fileinfo('', '0B')
+
+  -- Should update based on current text (not saved version)
+  mock_file(10)
+  child.cmd('edit ' .. mocked_filepath)
+
+  validate_fileinfo('', '10B')
+
+  type_keys('i', 'xxx')
+  validate_fileinfo('', '13B')
+
+  child.cmd('%bwipeout!')
+  unmock_file()
+
+  -- Should show human friendly size version
   mock_file(1024)
   child.cmd('edit ' .. mocked_filepath)
   validate_fileinfo('', '1%.00KiB$')

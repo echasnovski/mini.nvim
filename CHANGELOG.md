@@ -22,6 +22,11 @@
     - 'OXY2DEV/helpview.nvim'
     - 'OXY2DEV/markview.nvim'
 
+## mini.statusline
+
+- BREAKING: `section_fileinfo()` got several updates:
+    - File size is now computed based on the current buffer text and not for file's saved version.
+
 
 # Version 0.15.0
 
