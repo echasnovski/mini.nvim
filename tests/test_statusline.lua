@@ -479,6 +479,8 @@ end
 
 T['section_fileinfo()']["can fall back to 'nvim-web-devicons'"] = function()
   child.lua('_G.MiniIcons = nil')
+  reload_module()
+
   -- Mock 'nvim-web-devicons'
   child.cmd('set rtp+=tests/dir-statusline')
 
@@ -493,7 +495,6 @@ end
 
 T['section_fileinfo()']['shows correct size'] = function()
   -- Should show '0 bytes' on empty buffer
-  child.bo.filetype = 'aaa'
   validate_fileinfo('', '0B')
 
   -- Should update based on current text (not saved version)
@@ -520,11 +521,16 @@ T['section_fileinfo()']['shows correct size'] = function()
   unmock_file()
 end
 
-T['section_fileinfo()']['is shown only in buffers with filetypes'] = function()
-  child.bo.filetype = ''
-  validate_fileinfo('', '^$')
+T['section_fileinfo()']['works in special buffers'] = function()
+  local fileformat = helpers.is_windows() and 'dos' or 'unix'
 
-  -- Should still show even if buffer is not normal
+  -- Should treat normal buffer with empty filetype as failed filetype match
+  validate_fileinfo('', '^%[' .. fileformat .. '%] 0B$')
+
+  child.bo.filetype = 'aaa'
+  validate_fileinfo('', '^󰈔 aaa %[' .. fileformat .. '%] 0B$')
+
+  -- Should show only filetype for not normal buffers
   child.cmd('help')
   validate_fileinfo('', '^󰋖 help$')
 end

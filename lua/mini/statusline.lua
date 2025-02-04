@@ -386,11 +386,11 @@ end
 
 --- Section for file information
 ---
---- Short output contains only buffer's 'filetype' and is returned if window
---- width is lower than `args.trunc_width` or buffer is not normal.
+--- Shows 'filetype', 'fileencoding' / 'encoding', 'fileformat', and buffer size.
+--- Short output has only non-empty 'filetype' and is returned if window width is
+--- lower than `args.trunc_width` or buffer is not normal (as per 'buftype').
 ---
---- Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
---- File size is computed based on current buffer text, not file's saved version.
+--- Buffer size is computed based on current text, not file's saved version.
 ---
 --- If `config.use_icons` is true and icon provider is present (see
 --- "Dependencies" section in |mini.statusline|), shows icon near the filetype.
@@ -401,12 +401,9 @@ end
 MiniStatusline.section_fileinfo = function(args)
   local filetype = vim.bo.filetype
 
-  -- Don't show anything if there is no filetype
-  if filetype == '' then return '' end
-
   -- Add filetype icon
   H.ensure_get_icon()
-  if H.get_icon ~= nil then filetype = H.get_icon(filetype) .. ' ' .. filetype end
+  if H.get_icon ~= nil and filetype ~= '' then filetype = H.get_icon(filetype) .. ' ' .. filetype end
 
   -- Construct output string if truncated or buffer is not normal
   if MiniStatusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return filetype end
@@ -416,7 +413,7 @@ MiniStatusline.section_fileinfo = function(args)
   local format = vim.bo.fileformat
   local size = H.get_filesize()
 
-  return string.format('%s %s[%s] %s', filetype, encoding, format, size)
+  return string.format('%s%s%s[%s] %s', filetype, filetype == '' and '' or ' ', encoding, format, size)
 end
 
 --- Section for location inside buffer

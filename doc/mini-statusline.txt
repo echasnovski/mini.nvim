@@ -310,11 +310,11 @@ Return ~
                    `MiniStatusline.section_fileinfo`({args})
 Section for file information
 
-Short output contains only buffer's 'filetype' and is returned if window
-width is lower than `args.trunc_width` or buffer is not normal.
+Shows 'filetype', 'fileencoding' / 'encoding', 'fileformat', and buffer size.
+Short output has only non-empty 'filetype' and is returned if window width is
+lower than `args.trunc_width` or buffer is not normal (as per 'buftype').
 
-Nothing is shown if there is no 'filetype' set (treated as temporary buffer).
-File size is computed based on current buffer text, not file's saved version.
+Buffer size is computed based on current text, not file's saved version.
 
 If `config.use_icons` is true and icon provider is present (see
 "Dependencies" section in |mini.statusline|), shows icon near the filetype.

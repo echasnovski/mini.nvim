@@ -26,6 +26,7 @@
 
 - BREAKING: `section_fileinfo()` got several updates:
     - File size is now computed based on the current buffer text and not for file's saved version.
+    - File info is now shown even for buffers with empty 'filetype'. It previously was treated as a sign of a "temporary buffer", but it might be a result of an unsuccessful filetype matching.
 
 
 # Version 0.15.0
