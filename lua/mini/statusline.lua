@@ -377,10 +377,10 @@ MiniStatusline.section_filename = function(args)
   elseif MiniStatusline.is_truncated(args.trunc_width) then
     -- File name with 'truncate', 'modified', 'readonly' flags
     -- Use relative path if truncated
-    return '%f%m%r'
+    return args.truncated_func and args.truncated_func() or '%f%m%r'
   else
     -- Use fullpath if not truncated
-    return '%F%m%r'
+    return args.func and args.func() or '%F%m%r'
   end
 end
 
