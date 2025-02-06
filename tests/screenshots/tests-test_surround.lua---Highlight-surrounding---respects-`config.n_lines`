@@ -11,7 +11,7 @@
 10|~                                       
 11|~                                       
 12|[No Name] [+]         4,1            All
-13|(mini.surround) No surrounding ')' found
+13|(mini.surround) No surrounding ")" found
 14| within 2 lines and `config.search_metho
 15|d = 'cover'`.                           
 

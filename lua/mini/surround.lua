@@ -1389,9 +1389,8 @@ H.find_surrounding = function(surr_spec, opts)
 
   local region_pair = H.find_surrounding_region_pair(surr_spec, opts)
   if region_pair == nil then
-    local msg = ([[No surrounding '%s%s' found within %d line%s and `config.search_method = '%s'`.]]):format(
-      opts.n_times > 1 and opts.n_times or '',
-      surr_spec.id,
+    local msg = ([[No surrounding %s found within %d line%s and `config.search_method = '%s'`.]]):format(
+      vim.inspect((opts.n_times > 1 and opts.n_times or '') .. surr_spec.id),
       opts.n_lines,
       opts.n_lines > 1 and 's' or '',
       opts.search_method

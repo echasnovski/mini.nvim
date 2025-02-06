@@ -27,9 +27,8 @@ local has_message_about_not_found = function(char, n_lines, search_method, n_tim
   search_method = search_method or 'cover'
   n_times = n_times or 1
   local msg = string.format(
-    [[(mini.surround) No surrounding '%s%s' found within %s lines and `config.search_method = '%s'`.]],
-    n_times > 1 and n_times or '',
-    char,
+    [[(mini.surround) No surrounding %s found within %s lines and `config.search_method = '%s'`.]],
+    vim.inspect((n_times > 1 and n_times or '') .. char),
     n_lines,
     search_method
   )
@@ -824,6 +823,13 @@ T['Delete surrounding']['prompts helper message after one idle second'] = functi
   child.expect_screenshot()
 end
 
+T['Delete surrounding']['handles special characters in "not found" message'] = function()
+  type_keys('sd', '\t')
+  has_message_about_not_found('\t')
+  type_keys('sd', '<C-j>')
+  has_message_about_not_found('\n')
+end
+
 T['Delete surrounding']['works with multibyte characters'] = function()
   local f = function() type_keys('sd', ')') end
 
@@ -1061,6 +1067,13 @@ T['Replace surrounding']['prompts helper message after one idle second'] = funct
   -- Should clear afterwards
   type_keys('>')
   child.expect_screenshot()
+end
+
+T['Replace surrounding']['handles special characters in "not found" message'] = function()
+  type_keys('sr', '\t', ')')
+  has_message_about_not_found('\t')
+  type_keys('sr', '<C-j>', ')')
+  has_message_about_not_found('\n')
 end
 
 T['Replace surrounding']['works with multibyte characters'] = function()
@@ -1338,6 +1351,13 @@ T['Find surrounding']['prompts helper message after one idle second'] = function
   -- Should clear afterwards
   type_keys(')')
   child.expect_screenshot()
+end
+
+T['Find surrounding']['handles special characters in "not found" message'] = function()
+  type_keys('sf', '\t')
+  has_message_about_not_found('\t')
+  type_keys('sf', '<C-j>')
+  has_message_about_not_found('\n')
 end
 
 T['Find surrounding']['works with multibyte characters'] = function()
@@ -1952,8 +1972,7 @@ T['Builtin']['Default'] = new_set()
 
 T['Builtin']['Default']['works'] = function()
   local validate = function(key)
-    local key_str = vim.api.nvim_replace_termcodes(key, true, true, true)
-    local s = key_str .. 'aaa' .. key_str
+    local s = key .. 'aaa' .. key
 
     -- Should work as input surrounding
     validate_edit({ s }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', key)
@@ -1962,7 +1981,7 @@ T['Builtin']['Default']['works'] = function()
     validate_edit({ '(aaa)' }, { 1, 2 }, { s }, { 1, 1 }, type_keys, 'sr', ')', key)
   end
 
-  validate('<Space>')
+  validate(' ')
   validate('_')
   validate('*')
   validate('"')
