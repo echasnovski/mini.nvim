@@ -723,6 +723,10 @@ T['gen_spec']['treesitter()']['works'] = function()
 
   -- Should prefer match on current line over multiline covering
   validate_find(lines, { 4, 0 }, { 'a', 'F' }, { { 4, 10 }, { 4, 37 } })
+
+  -- Should prefer range from metadata instead of node itself. This is useful,
+  -- for example, with `#offset!` directive to create more precise captures.
+  validate_find(lines, { 9, 0 }, { 'i', 'F' }, { { 8, 3 }, { 10, 13 } })
 end
 
 T['gen_spec']['treesitter()']['allows array of captures'] = function()
@@ -766,6 +770,10 @@ T['gen_spec']['treesitter()']['respects `opts.use_nvim_treesitter`'] = function(
 
   -- Should respect `false` value
   validate_find(lines, { 1, 0 }, { 'a', 'O' }, nil)
+
+  -- Should prefer range from metadata instead of node itself. This is useful,
+  -- for example, with `#offset!` directive to create more precise captures.
+  validate_find(lines, { 9, 0 }, { 'i', 'F' }, { { 8, 3 }, { 10, 13 } })
 end
 
 T['gen_spec']['treesitter()']['respects plugin options'] = function()
