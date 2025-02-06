@@ -43,7 +43,7 @@ https://user-images.githubusercontent.com/24854248/181909691-b6f6b677-c37f-468f-
     - Argument.
     - Tag.
     - Derived from user prompt.
-    - Default for punctuation, digit, or whitespace single character.
+    - Default for anything but Latin letters (to fall back to `:h text-objects`).
 - Motions for jumping to left/right edge of textobject.
 - Set of specification generators to tweak some builtin textobjects (see
   help for `MiniAi.gen_spec`).

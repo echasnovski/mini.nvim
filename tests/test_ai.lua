@@ -2006,7 +2006,10 @@ T['Motion']['works with multibyte characters'] = function()
   validate_motion1d(' (ыыы) ', 0, 'g])', 8)
 end
 
-T['Motion']['works with special textobject id'] = function() validate_motion1d([[aa\bb\cc]], 4, [[g[\]], 3) end
+T['Motion']['works with special textobject id'] = function()
+  validate_motion1d([[aa\bb\cc]], 4, [[g[\]], 3)
+  validate_motion({ 'aa', 'bb', 'cc' }, { 1, 0 }, 'g[<C-j>', { 2, 0 })
+end
 
 T['Motion']['respects `vim.{g,b}.miniai_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
@@ -2827,11 +2830,11 @@ end
 T['Builtin']['Default'] = new_set()
 
 T['Builtin']['Default']['works'] = function()
-  -- Should allow only punctuation, digits, space, or tab
+  -- Should allow all possible `getcharstr()` output (but not Latin letters)
   -- Should include only right edge
 
-  local good_keys = { ',', '.', '_', '*', '-', '0', '1', ' ', '\t', '\\' }
-  for _, key in ipairs(good_keys) do
+  local chars = { ',', '.', '_', '*', '-', '0', '1', ' ', '\t', '\\', '\r' }
+  for _, key in ipairs(chars) do
     -- Single line
     validate_tobj1d('a' .. key .. 'bb' .. key, 0, 'a' .. key, { 3, 5 })
     validate_tobj1d('a' .. key .. 'bb' .. key, 0, 'i' .. key, { 3, 4 })
@@ -2840,17 +2843,14 @@ T['Builtin']['Default']['works'] = function()
     validate_tobj({ key, 'aa', key }, { 2, 0 }, 'a' .. key, { { 1, 2 }, { 3, 1 } })
     validate_tobj({ key, 'aa', key }, { 2, 0 }, 'i' .. key, { { 1, 2 }, { 2, 3 } })
   end
+end
 
-  -- Should stop with message on bad keys
-  child.set_size(10, 80)
-  child.o.cmdheight = 5
-  local bad_keys = { '\n', '\r', '\1', child.api.nvim_replace_termcodes('<BS>', true, true, true) }
-  for _, key in ipairs(bad_keys) do
-    set_lines({ 'aaa' })
-    type_keys('d', 'a', key)
-    expect.match(child.cmd_capture('1messages'), 'alphanumeric, punctuation, space, or tab')
-    child.cmd('messages clear')
-  end
+T['Builtin']['Default']['supports any identifier which can be `getcharstr()` output'] = function()
+  -- - <C-j> is '\n'
+  validate_edit({ 'aaa', 'bbb', 'ccc' }, { 2, 0 }, { 'aaa', 'ccc' }, { 2, 0 }, 'd', 'a', '<C-j>')
+  -- - Actually used multibyte (not like `<BS>`)
+  validate_edit1d('aыbbы', 0, 'aы', 1, 'd', 'a', 'ы')
+  validate_edit1d('a“bb“', 0, 'a“', 1, 'd', 'a', '“')
 end
 
 T['Builtin']['Default']['includes maximum right edge characters'] = function()
@@ -2925,6 +2925,20 @@ T['Custom textobject']['works'] = function()
   child.b.miniai_config = { custom_textobjects = { x = { 'y()y()y' } } }
   validate_tobj1d('aayyybb', 0, 'ax', { 3, 5 })
   validate_tobj1d('aayyybb', 0, 'ix', { 4, 4 })
+end
+
+T['Custom textobject']['supports any identifier which can be `getcharstr()` output'] = function()
+  child.lua([[
+    MiniAi.config.custom_textobjects = {
+      ['\22'] = { '@().-()#' },
+      ['ы']   = { 'Ы().-()Ы' },
+      ['「']  = { '「().-()」' },
+    }
+  ]])
+
+  validate_edit({ '@aaa#' }, { 1, 3 }, { '@#' }, { 1, 1 }, 'd', 'i', '<C-v>')
+  validate_edit({ 'ЫaaaЫ' }, { 1, 3 }, { 'ЫЫ' }, { 1, 2 }, 'd', 'i', 'ы')
+  validate_edit({ '「aaa」' }, { 1, 3 }, { '「」' }, { 1, 3 }, 'd', 'i', '「')
 end
 
 T['Custom textobject']['overrides module builtin'] = function()

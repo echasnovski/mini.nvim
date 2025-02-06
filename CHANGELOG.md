@@ -2,6 +2,7 @@
 
 ## mini.ai
 
+- FEATURE: textobject identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_textobjects` keys. Default textobject is extended to be anything but Latin letters (to fall back to `:h text-objects`).
 - BREAKING: visual textobject selection now puts the cursor on the right edge instead of left. This better aligns with the (undocumented) behavior of how built-in `a` / `i` textobjects work in Visual mode, as opposed to the (documented in `:h operator-resulting-pos`) behavior of how it is done after applying the operator.
 
 ## mini.base16

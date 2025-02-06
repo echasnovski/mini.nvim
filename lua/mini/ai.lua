@@ -25,7 +25,7 @@
 ---     - Argument.
 ---     - Tag.
 ---     - Derived from user prompt.
----     - Default for punctuation, digit, space, or tab.
+---     - Default for anything but Latin letters (to fall back to |text-objects|).
 ---
 ---     For more textobjects see |MiniExtra.gen_ai_spec|.
 ---
@@ -117,8 +117,8 @@
 ---
 --- This table describes all builtin textobjects along with what they
 --- represent. Explanation:
---- - `Key` represents the textobject identifier: single alphanumeric,
----   punctuation, space, or tab character which should be typed after `a`/`i`.
+--- - `Key` represents the textobject identifier: single character which should
+---   be typed after `a`/`i`.
 --- - `Name` is a description of textobject.
 --- - `Example line` contains a string for which examples are constructed. The
 ---   `*` denotes the cursor position.
@@ -162,18 +162,15 @@
 ---  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
 ---  | a |   Argument    | f(*a, g(b, c) )  | [3;5]  | [3;4]  | [5;14] | [7;13] |
 ---  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
----  |   |    Default    |                  |        |        |        |        |
----  |   |   (digits,    | aa_*b__cc___     | [4;7]  | [4;5]  | [8;12] | [8;9]  |
----  |   | punctuation,  | (example for _)  |        |        |        |        |
----  |   | or whitespace)|                  |        |        |        |        |
+---  |   |    Default    | aa_*b__cc___     | [4;7]  | [4;5]  | [8;12] | [8;9]  |
+---  |   |   (typed _)   |                  |        |        |        |        |
 ---  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
 --- <
 --- Notes:
 --- - All examples assume default `config.search_method`.
 --- - Open brackets differ from close brackets by how they treat inner edge
 ---   whitespace for `i` textobject: open ignores it, close - includes.
---- - Default textobject is activated for identifiers from digits (0, ..., 9),
----   punctuation (like `_`, `*`, `,`, etc.), whitespace (space, tab, etc.).
+--- - Default textobject is activated for identifiers which are not Latin letters.
 ---   They are designed to be treated as separators, so include only right edge
 ---   in `a` textobject. To include both edges, use custom textobjects
 ---   (see |MiniAi-textobject-specification| and |MiniAi.config|). Note:
@@ -432,11 +429,17 @@ end
 ---
 --- ## Custom textobjects ~
 ---
---- Each named entry of `config.custom_textobjects` is a textobject with
---- that identifier and specification (see |MiniAi-textobject-specification|).
---- They are also used to override builtin ones (|MiniAi-textobject-builtin|).
---- Supply non-valid input (not in specification format) to disable module's
---- builtin textobject in favor of external or Neovim's builtin mapping.
+--- User can define own textobjects by supplying `config.custom_textobjects`.
+--- It should be a table with keys being single character textobject identifier
+--- (supported by |getcharstr()|) and values - textobject specification
+--- (see |MiniAi-textobject-specification|).
+---
+--- General recommendations:
+--- - This can be used to override builtin ones (|MiniAi-textobject-builtin|).
+---   Supply non-valid input (not in specification format) to disable module's
+---   builtin textobject in favor of external or Neovim's builtin mapping.
+--- - Keys should use character representation which can be |getcharstr()| output.
+---   For example, `'\r'` and not `'<CR>'`.
 ---
 --- Examples:
 --- >lua
@@ -1292,11 +1295,11 @@ H.make_textobject_table = function()
   -- because only top level keys should be merged.
   local textobjects = vim.tbl_extend('force', H.builtin_textobjects, H.get_config().custom_textobjects or {})
 
-  -- Use default textobject pattern only for some characters: punctuation,
-  -- whitespace, digits.
+  -- Use default textobject pattern for anything excluding Latin characters, as
+  -- they are needed to fall back to Neovim's built-in textobjects (like `aw`)
   return setmetatable(textobjects, {
     __index = function(_, key)
-      if not (type(key) == 'string' and string.find(key, '^[%p%s%d]$')) then return end
+      if type(key) == 'string' and string.find(key, '^%a$') ~= nil then return end
       local key_esc = vim.pesc(key)
       -- Use `%f[]` to ensure maximum stretch in both directions. Include only
       -- right edge in `a` textobject.
@@ -1888,12 +1891,6 @@ H.user_textobject_id = function(ai_type)
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == '\27' then return nil end
-
-  if char:find('^[%w%p \t]$') == nil then
-    H.message('Input must be single character: alphanumeric, punctuation, space, or tab.')
-    return nil
-  end
-
   return char
 end
 

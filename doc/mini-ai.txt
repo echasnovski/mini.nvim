@@ -25,7 +25,7 @@ Features:
     - Argument.
     - Tag.
     - Derived from user prompt.
-    - Default for punctuation, digit, space, or tab.
+    - Default for anything but Latin letters (to fall back to |text-objects|).
 
     For more textobjects see |MiniExtra.gen_ai_spec|.
 
@@ -119,8 +119,8 @@ Builtin textobjects ~
 
 This table describes all builtin textobjects along with what they
 represent. Explanation:
-- `Key` represents the textobject identifier: single alphanumeric,
-  punctuation, space, or tab character which should be typed after `a`/`i`.
+- `Key` represents the textobject identifier: single character which should
+  be typed after `a`/`i`.
 - `Name` is a description of textobject.
 - `Example line` contains a string for which examples are constructed. The
   `*` denotes the cursor position.
@@ -164,18 +164,15 @@ to left/right edge of `a` textobject.
  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
  | a |   Argument    | f(*a, g(b, c) )  | [3;5]  | [3;4]  | [5;14] | [7;13] |
  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
- |   |    Default    |                  |        |        |        |        |
- |   |   (digits,    | aa_*b__cc___     | [4;7]  | [4;5]  | [8;12] | [8;9]  |
- |   | punctuation,  | (example for _)  |        |        |        |        |
- |   | or whitespace)|                  |        |        |        |        |
+ |   |    Default    | aa_*b__cc___     | [4;7]  | [4;5]  | [8;12] | [8;9]  |
+ |   |   (typed _)   |                  |        |        |        |        |
  |---|---------------|-1234567890123456-|--------|--------|--------|--------|
 <
 Notes:
 - All examples assume default `config.search_method`.
 - Open brackets differ from close brackets by how they treat inner edge
   whitespace for `i` textobject: open ignores it, close - includes.
-- Default textobject is activated for identifiers from digits (0, ..., 9),
-  punctuation (like `_`, `*`, `,`, etc.), whitespace (space, tab, etc.).
+- Default textobject is activated for identifiers which are not Latin letters.
   They are designed to be treated as separators, so include only right edge
   in `a` textobject. To include both edges, use custom textobjects
   (see |MiniAi-textobject-specification| and |MiniAi.config|). Note:
@@ -465,11 +462,17 @@ Default values:
 
 ## Custom textobjects ~
 
-Each named entry of `config.custom_textobjects` is a textobject with
-that identifier and specification (see |MiniAi-textobject-specification|).
-They are also used to override builtin ones (|MiniAi-textobject-builtin|).
-Supply non-valid input (not in specification format) to disable module's
-builtin textobject in favor of external or Neovim's builtin mapping.
+User can define own textobjects by supplying `config.custom_textobjects`.
+It should be a table with keys being single character textobject identifier
+(supported by |getcharstr()|) and values - textobject specification
+(see |MiniAi-textobject-specification|).
+
+General recommendations:
+- This can be used to override builtin ones (|MiniAi-textobject-builtin|).
+  Supply non-valid input (not in specification format) to disable module's
+  builtin textobject in favor of external or Neovim's builtin mapping.
+- Keys should use character representation which can be |getcharstr()| output.
+  For example, `'\r'` and not `'<CR>'`.
 
 Examples:
 >lua
