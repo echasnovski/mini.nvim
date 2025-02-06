@@ -327,7 +327,9 @@ MiniStatusline.section_diagnostics = function(args)
   if MiniStatusline.is_truncated(args.trunc_width) or H.diagnostic_is_disabled() then return '' end
 
   -- Construct string parts
-  local count = H.diagnostic_get_count()
+  local count = H.diagnostic_counts[vim.api.nvim_get_current_buf()]
+  if count == nil then return '' end
+
   local severity, signs, t = vim.diagnostic.severity, args.signs or {}, {}
   for _, level in ipairs(H.diagnostic_levels) do
     local n = count[severity[level.name]] or 0
@@ -353,7 +355,7 @@ end
 MiniStatusline.section_lsp = function(args)
   if MiniStatusline.is_truncated(args.trunc_width) then return '' end
 
-  local attached = H.get_attached_lsp()
+  local attached = H.attached_lsp[vim.api.nvim_get_current_buf()] or ''
   if attached == '' then return '' end
 
   local use_icons = H.use_icons or H.get_config().use_icons
@@ -476,6 +478,9 @@ H.diagnostic_levels = {
   { name = 'HINT', sign = 'H' },
 }
 
+-- Diagnostic counts per buffer id
+H.diagnostic_counts = {}
+
 -- String representation of attached LSP clients per buffer id
 H.attached_lsp = {}
 
@@ -520,10 +525,18 @@ H.create_autocommands = function()
 
   -- Use `schedule_wrap()` because at `LspDetach` server is still present
   local track_lsp = vim.schedule_wrap(function(data)
-    H.attached_lsp[data.buf] = H.compute_attached_lsp(data.buf)
+    H.attached_lsp[data.buf] = vim.api.nvim_buf_is_valid(data.buf) and H.compute_attached_lsp(data.buf) or nil
     vim.cmd('redrawstatus')
   end)
   au({ 'LspAttach', 'LspDetach' }, '*', track_lsp, 'Track LSP clients')
+
+  -- Use `schedule_wrap()` because `redrawstatus` might error on `:bwipeout`
+  -- See: https://github.com/neovim/neovim/issues/32349
+  local track_diagnostics = vim.schedule_wrap(function(data)
+    H.diagnostic_counts[data.buf] = vim.api.nvim_buf_is_valid(data.buf) and H.get_diagnostic_count(data.buf) or nil
+    vim.cmd('redrawstatus')
+  end)
+  au('DiagnosticChanged', '*', track_diagnostics, 'Track diagnostics')
 
   au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
 end
@@ -626,8 +639,6 @@ end
 H.default_content_inactive = function() return '%#MiniStatuslineInactive#%F%=' end
 
 -- LSP ------------------------------------------------------------------------
-H.get_attached_lsp = function() return H.attached_lsp[vim.api.nvim_get_current_buf()] or '' end
-
 H.compute_attached_lsp = function(buf_id) return string.rep('+', vim.tbl_count(H.get_buf_lsp_clients(buf_id))) end
 
 H.get_buf_lsp_clients = function(buf_id) return vim.lsp.get_clients({ bufnr = buf_id }) end
@@ -639,23 +650,23 @@ if vim.fn.has('nvim-0.10') == 0 then
 end
 
 -- Diagnostics ----------------------------------------------------------------
-H.diagnostic_get_count = function() return vim.diagnostic.count(0) end
+H.get_diagnostic_count = function(buf_id) return vim.diagnostic.count(buf_id) end
 if vim.fn.has('nvim-0.10') == 0 then
-  H.diagnostic_get_count = function()
+  H.get_diagnostic_count = function(buf_id)
     local res = {}
-    for _, d in ipairs(vim.diagnostic.get(0)) do
+    for _, d in ipairs(vim.diagnostic.get(buf_id)) do
       res[d.severity] = (res[d.severity] or 0) + 1
     end
     return res
   end
 end
 
-H.diagnostic_is_disabled = function(_) return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
+H.diagnostic_is_disabled = function() return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
 if vim.fn.has('nvim-0.10') == 0 then
   if vim.fn.has('nvim-0.9') == 1 then
-    H.diagnostic_is_disabled = function(_) return vim.diagnostic.is_disabled(0) end
+    H.diagnostic_is_disabled = function() return vim.diagnostic.is_disabled(0) end
   else
-    H.diagnostic_is_disabled = function(_) return false end
+    H.diagnostic_is_disabled = function() return false end
   end
 end
 

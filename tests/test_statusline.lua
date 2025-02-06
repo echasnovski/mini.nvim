@@ -45,7 +45,10 @@ local mock_minigit = function() child.b.minigit_summary_string = 'main|bisect (M
 
 local mock_minidiff = function() child.b.minidiff_summary_string = '#4 +3 ~2 -1' end
 
-local mock_diagnostics = function() child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua') end
+local mock_diagnostics = function()
+  child.cmd('luafile tests/dir-statusline/mock-diagnostics.lua')
+  child.cmd('doautocmd DiagnosticChanged')
+end
 
 local mock_lsp = function() child.cmd('luafile tests/dir-statusline/mock-lsp.lua') end
 
@@ -334,9 +337,17 @@ T['section_diagnostics()']['works'] = function()
   eq(child.lua_get('_G.n_lsp_clients'), 0)
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
-  -- Should return empty string if no diagnostic entries defined
+  -- Should use cache on `DiagnosticChanged`
+  child.cmd('enew')
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
+  child.cmd('doautocmd DiagnosticChanged')
+  eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
+
+  -- Should return empty string if no diagnostic entries is set
+  child.cmd('buffer #')
   child.lua('vim.diagnostic.get = function(...) return {} end')
   child.lua('vim.diagnostic.count = function(...) return {} end')
+  child.cmd('doautocmd DiagnosticChanged')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
@@ -371,10 +382,12 @@ end
 T['section_diagnostics()']['works in not normal buffers'] = function()
   -- Should return empty string if there is no diagnostic defined
   child.cmd('help')
+  child.cmd('doautocmd DiagnosticChanged')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   child.lua('vim.diagnostic.get = function(...) return {} end')
   child.lua('vim.diagnostic.count = function(...) return {} end')
+  child.cmd('doautocmd DiagnosticChanged')
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), '')
 end
 
