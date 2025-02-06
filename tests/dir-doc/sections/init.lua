@@ -24,7 +24,10 @@ local f = function(x, y) return x + 1 end
 ---
 --- Private method that shouldn't be present in output
 ---@private
-M._private_user = {}
+---
+---@param x number Should not error if there are sections after `@private`.
+---@return number Should not error if there are sections after `@private`.
+M._private_method = function(x) return x + 2 end
 
 --- Test for `@seealso` and `@usage`
 ---

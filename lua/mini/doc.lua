@@ -924,12 +924,16 @@ H.apply_structure_hooks = function(doc, hooks)
       hooks.block_pre(block)
 
       for _, section in ipairs(block) do
-        hooks.section_pre(section)
+        -- NOTE: Section can be empty if previous hook used `clear_lines()` on
+        -- the whole block (like default `@private`).
+        if #section > 0 then
+          hooks.section_pre(section)
 
-        local hook = hooks.sections[section.info.id]
-        if hook ~= nil then hook(section) end
+          local hook = hooks.sections[section.info.id]
+          if hook ~= nil then hook(section) end
 
-        hooks.section_post(section)
+          hooks.section_post(section)
+        end
       end
 
       hooks.block_post(block)
@@ -1012,8 +1016,6 @@ H.toc_insert = function(s)
 end
 
 H.add_section_heading = function(s, heading)
-  if #s == 0 or s.type ~= 'section' then return end
-
   -- Add heading
   s:insert(1, ('%s ~'):format(heading))
 end
@@ -1024,11 +1026,7 @@ H.mark_optional = function(s)
   s[1] = s[1]:gsub('^(%s-%S-)%?', '%1 `(optional)`', 1)
 end
 
-H.enclose_var_name = function(s)
-  if #s == 0 or s.type ~= 'section' then return end
-
-  s[1] = s[1]:gsub('(%S+)', '{%1}', 1)
-end
+H.enclose_var_name = function(s) s[1] = s[1]:gsub('(%S+)', '{%1}', 1) end
 
 ---@param init number Start of searching for first "type-like" string. It is
 ---   needed to not detect type early. Like in `@param a_function function`.
