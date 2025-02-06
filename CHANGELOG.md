@@ -28,6 +28,10 @@
     - File size is now computed based on the current buffer text and not for file's saved version.
     - File info is now shown even for buffers with empty 'filetype'. It previously was treated as a sign of a "temporary buffer", but it might be a result of an unsuccessful filetype matching.
 
+## mini.surround
+
+- FEATURE: surrounding identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_surroundings` keys.
+
 
 # Version 0.15.0
 

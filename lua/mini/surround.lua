@@ -30,8 +30,8 @@
 ---       balanced brackets (open - with whitespace pad, close - without), in
 ---       "output" - left and right parts of brackets.
 ---     - '?' - interactive. Prompts user to enter left and right parts.
----     - All other alphanumeric, punctuation, or space characters represent
----       surrounding with identical left and right parts.
+---     - All other single character identifiers (supported by |getcharstr()|)
+---       represent surrounding with identical left and right parts.
 ---
 --- - Configurable search methods to find not only covering but possibly next,
 ---   previous, or nearest surrounding. See more in |MiniSurround.config|.
@@ -545,8 +545,8 @@ end
 ---
 --- User can define own surroundings by supplying `config.custom_surroundings`.
 --- It should be a **table** with keys being single character surrounding
---- identifier and values - surround specification (see
---- |MiniSurround-surround-specification|).
+--- identifier (supported by |getcharstr()|) and values - surround specification
+--- (see |MiniSurround-surround-specification|).
 ---
 --- General recommendations:
 --- - In `config.custom_surroundings` only some data can be defined (like only
@@ -555,6 +555,8 @@ end
 ---   specification is helpful when user input is needed (like asking for
 ---   function name). Use |input()| or |MiniSurround.user_input()|. Return
 ---   `nil` to stop any current surround operation.
+--- - Keys should use character representation which can be |getcharstr()| output.
+---   For example, `'\r'` and not `'<CR>'`.
 ---
 --- Examples of using `config.custom_surroundings` (see more examples at
 --- |MiniSurround.gen_spec|): >lua
@@ -1938,12 +1940,6 @@ H.user_surround_id = function(sur_type)
 
   -- Terminate if couldn't get input (like with <C-c>) or it is `<Esc>`
   if not ok or char == '\27' then return nil end
-
-  if char:find('^[%w%p%s]$') == nil then
-    H.message('Input must be single character: alphanumeric, punctuation, or space.')
-    return nil
-  end
-
   return char
 end
 

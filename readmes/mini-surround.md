@@ -43,7 +43,7 @@ https://user-images.githubusercontent.com/24854248/173045302-cc4fd421-cc33-4924-
     - 't' - tag. In "input" finds tag with same identifier, in "output" prompts user to enter tag name.
     - All symbols in brackets '()', '[]', '{}', '<>". In "input' represents balanced brackets (open - with whitespace pad, close - without), in "output" - left and right parts of brackets.
     - '?' - interactive. Prompts user to enter left and right parts.
-    - All other alphanumeric, punctuation, or space characters represent surrounding with identical left and right parts.
+    - All other single character identifiers (supported by `getcharstr()`) represent surrounding with identical left and right parts.
 - Configurable search methods to find not only covering but possibly next, previous, or nearest surrounding. See more in help for `MiniSurround.config`.
 - All actions involving finding surrounding (delete, replace, find, highlight) can be used with suffix that changes search method to find previous/last. See more in help for `MiniSurround.config`.
 

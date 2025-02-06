@@ -492,11 +492,6 @@ T['Add surrounding']['respects `config.respect_selection_type` in blockwise mode
   eq(get_cursor(), { 1, 2 })
 end
 
-T['Add surrounding']['validates single character user input'] = function()
-  validate_edit({ ' aaa ' }, { 1, 1 }, { ' aaa ' }, { 1, 1 }, type_keys, 'sa', 'iw', '<C-v>')
-  eq(get_latest_message(), '(mini.surround) Input must be single character: alphanumeric, punctuation, or space.')
-end
-
 T['Add surrounding']['places cursor to the right of left surrounding'] = function()
   local f = function(surrounding, visual_key)
     if visual_key == nil then
@@ -2005,11 +2000,19 @@ T['Builtin']['Default']['works in edge cases'] = function()
   validate_edit({ '****' }, { 1, 3 }, { '**()' }, { 1, 3 }, f)
 end
 
-T['Builtin']['Default']['has limited support of multibyte characters'] = function()
-  -- At the moment, multibyte character doesn't pass validation of user
-  -- single character input. It would be great to fix this.
-  expect.error(function() validate_edit({ 'ыaaaы' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы') end)
-  expect.error(function() validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sr', ')', 'ы') end)
+T['Builtin']['Default']['supports any identifier which can be `getcharstr()` output'] = function()
+  validate_edit({ 'aaa' }, { 1, 0 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sa', 'iw', 'ы')
+  validate_edit({ 'ыaaaы' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы')
+  validate_edit({ '(aaa)' }, { 1, 2 }, { 'ыaaaы' }, { 1, 2 }, type_keys, 'sr', ')', 'ы')
+
+  validate_edit({ 'aaa' }, { 1, 0 }, { '「aaa「' }, { 1, 3 }, type_keys, 'sa', 'iw', '「')
+  validate_edit({ '「aaa「' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', '「')
+  validate_edit({ '(aaa)' }, { 1, 1 }, { '「aaa「' }, { 1, 3 }, type_keys, 'sr', ')', '「')
+
+  -- <C-j> is `\n`
+  validate_edit({ 'aaa' }, { 1, 0 }, { '', 'aaa', '' }, { 1, 0 }, type_keys, 'sa', 'iw', '<C-j>')
+  validate_edit({ 'aaa', 'bbb', 'ccc' }, { 2, 0 }, { 'aaabbbccc' }, { 1, 3 }, type_keys, 'sd', '<C-j>')
+  validate_edit({ 'aaa', 'bbb', 'ccc' }, { 2, 0 }, { 'aaa(bbb)ccc' }, { 1, 4 }, type_keys, 'sr', '<C-j>', ')')
 end
 
 T['Builtin']['Function call'] = new_set()
@@ -2317,6 +2320,19 @@ T['Custom surrounding']['works'] = function()
 
   validate_edit({ '@aaa#' }, { 1, 2 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'q')
   validate_edit({ '(aaa)' }, { 1, 2 }, { '@aaa#' }, { 1, 1 }, type_keys, 'sr', ')', 'q')
+end
+
+T['Custom surrounding']['supports any identifier which can be `getcharstr()` output'] = function()
+  set_custom_surr({
+    ['\22'] = { input = { '@().-()#' }, output = { left = '@', right = '#' } },
+    ['ы'] = { input = { 'Ы().-()Ы' }, output = { left = 'Ы', right = 'Ы' } },
+    ['「'] = { input = { '「().-()」' }, output = { left = '「', right = '」' } },
+  })
+
+  validate_edit({ ' aaa ' }, { 1, 1 }, { ' 「aaa」 ' }, { 1, 4 }, type_keys, 'sa', 'iw', '「')
+  validate_edit({ 'ЫaaaЫ' }, { 1, 3 }, { 'aaa' }, { 1, 0 }, type_keys, 'sd', 'ы')
+  validate_edit({ '@aaa#' }, { 1, 2 }, { '「aaa」' }, { 1, 3 }, type_keys, 'sr', '<C-v>', '「')
+  validate_edit({ '「aaa」' }, { 1, 3 }, { '@aaa#' }, { 1, 1 }, type_keys, 'sr', '「', '<C-v>')
 end
 
 T['Custom surrounding']['overrides builtins'] = function()
