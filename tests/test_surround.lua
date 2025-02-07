@@ -224,6 +224,9 @@ T['gen_spec']['input']['treesitter()']['works'] = function()
   mock_treesitter_builtin()
 
   local lines = get_lines()
+
+  -- Should prefer range from metadata instead of node itself. This is useful,
+  -- for example, with `#offset!` directive to create more precise captures.
   validate_find(lines, { 9, 0 }, { { 10, 12 }, { 11, 2 }, { 7, 6 }, { 8, 1 } }, type_keys, 'sf', 'F')
   validate_no_find(lines, { 13, 0 }, type_keys, 'sf', 'F')
 
@@ -313,6 +316,8 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
   validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'O')
 
   mock_treesitter_plugin()
+  -- Should prefer range from metadata instead of node itself. This is useful,
+  -- for example, with `#offset!` directive to create more precise captures.
   validate_find(lines, { 9, 0 }, { { 10, 12 }, { 11, 2 }, { 7, 6 }, { 8, 1 } }, type_keys, 'sf', 'F')
   validate_find(lines, { 1, 0 }, { { 1, 5 }, { 1, 0 } }, type_keys, 'sf', 'o')
 

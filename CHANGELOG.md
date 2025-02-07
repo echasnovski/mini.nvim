@@ -33,6 +33,7 @@
 ## mini.surround
 
 - FEATURE: surrounding identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_surroundings` keys.
+- FEATURE: update `gen_spec.input.treesitter()` to respect capture ranges specified by query directives (like `(#offset! @table.inner 0 1 0 -1)`).
 
 
 # Version 0.15.0

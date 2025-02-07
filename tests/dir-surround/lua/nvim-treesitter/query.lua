@@ -1,5 +1,12 @@
-local new_match = function(range, id)
+local new_match = function(range, id, metadata_range)
   return {
+    -- Allow emulating tree-sitter directives that can compute range in query.
+    -- For example, like this 'after/query/lua/textobjects.scm':
+    -- ```
+    -- ; extends
+    -- ((table_constructor) @table.outer @table.inner (#offset! @table.inner 0 1 0 -1))
+    -- ```
+    metadata = metadata_range ~= nil and { range = metadata_range } or nil,
     node = {
       -- Track `id` for mocking query within node
       _id = id,
@@ -7,12 +14,6 @@ local new_match = function(range, id)
       -- `node:range()` should return 0-based numbers (row1, col1, row2, col2)
       -- for end-exclusive region
       range = function(_) return unpack(range) end,
-
-      -- Return start row, start col, and number of bytes from buffer start
-      start = function(_) return range[1], range[2], vim.fn.line2byte(range[1] + 1) + range[2] - 1 end,
-
-      -- Return end row, end col, and number of bytes from buffer start
-      end_ = function(_) return range[3], range[4] - 1, vim.fn.line2byte(range[3] + 1) + range[4] - 2 end,
     },
   }
 end
@@ -29,7 +30,7 @@ local matches = {
   ['@function.inner'] = {
      new_match({ 3, 2,  3, 37 }, 4),
      new_match({ 3, 20, 3, 33 }, 5),
-     new_match({ 7, 2,  9, 13 }, 6),
+     new_match({ 6, 6, 10, 3  }, 6, { 7, 2,  9, 13 }),
   },
   ['@plugin_other.outer'] = {
      new_match({ 0,  0, 0,  12 }, 7),
