@@ -36,7 +36,9 @@ local get_query = function(lang, _)
     { 1, new_node({ 3,  9,  3,  37 }), {} },
     { 2, new_node({ 3,  20, 3,  33 }), {} },
     { 1, new_node({ 6,  6,  10, 3 }),  {} },
-    { 2, new_node({ 7,  2,  9,  13 }), {} },
+    -- Mock presence of something like `(#offset! @table.inner 1 -4 -1 10)`
+    -- which would result in third `metadata` value being like this
+    { 2, new_node({ 6,  6,  10, 3 }),  { [2] = { range = { 7,  2,  9,  13 } } } },
     { 3, new_node({ 12, 0,  12, 8 }),  {} },
   }
 

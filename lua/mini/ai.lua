@@ -969,16 +969,15 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
     -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
     local has_nvim_treesitter = pcall(require, 'nvim-treesitter') and pcall(require, 'nvim-treesitter.query')
-    local node_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_nodes_plugin
-      or H.get_matched_nodes_builtin
-    local matched_nodes = node_querier(target_captures)
+    local range_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_ranges_plugin
+      or H.get_matched_ranges_builtin
+    local matched_ranges = range_querier(target_captures)
 
     -- Return array of regions
-    return vim.tbl_map(function(node)
-      local line_from, col_from, line_to, col_to = node:range()
-      -- `node:range()` returns 0-based numbers for end-exclusive region
-      return { from = { line = line_from + 1, col = col_from + 1 }, to = { line = line_to + 1, col = col_to } }
-    end, matched_nodes)
+    return vim.tbl_map(function(range)
+      -- Ranges are 0-based numbers for end-exclusive region
+      return { from = { line = range[1] + 1, col = range[2] + 1 }, to = { line = range[3] + 1, col = range[4] } }
+    end, matched_ranges)
   end
 end
 
@@ -1498,16 +1497,13 @@ H.prepare_ai_captures = function(ai_captures)
   return { a = prepare(ai_captures.a), i = prepare(ai_captures.i) }
 end
 
-H.get_matched_nodes_plugin = function(captures)
+H.get_matched_ranges_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
-  return vim.tbl_map(
-    function(match) return match.node end,
-    -- This call should handle multiple languages in buffer
-    ts_queries.get_capture_matches_recursively(0, captures, 'textobjects')
-  )
+  local matches = ts_queries.get_capture_matches_recursively(0, captures, 'textobjects')
+  return vim.tbl_map(function(m) return H.get_match_range(m.node, m.metadata) end, matches)
 end
 
-H.get_matched_nodes_builtin = function(captures)
+H.get_matched_ranges_builtin = function(captures)
   -- Fetch treesitter data for buffer
   local lang = vim.bo.filetype
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
@@ -1518,16 +1514,22 @@ H.get_matched_nodes_builtin = function(captures)
   local query = get_query(lang, 'textobjects')
   if query == nil then H.error_treesitter('query', lang) end
 
-  -- Compute matched captures
-  captures = vim.tbl_map(function(x) return x:sub(2) end, captures)
+  -- Compute ranges of matched captures
+  local capture_is_requested = vim.tbl_map(function(c) return vim.tbl_contains(captures, '@' .. c) end, query.captures)
+
   local res = {}
   for _, tree in ipairs(parser:trees()) do
-    for capture_id, node, _ in query:iter_captures(tree:root(), 0) do
-      if vim.tbl_contains(captures, query.captures[capture_id]) then table.insert(res, node) end
+    for capture_id, node, metadata in query:iter_captures(tree:root(), 0) do
+      if capture_is_requested[capture_id] then
+        metadata = (metadata or {})[capture_id] or {}
+        table.insert(res, H.get_match_range(node, metadata))
+      end
     end
   end
   return res
 end
+
+H.get_match_range = function(node, metadata) return (metadata or {}).range and metadata.range or { node:range() } end
 
 H.error_treesitter = function(failed_get, lang)
   local bufnr = vim.api.nvim_get_current_buf()
