@@ -58,6 +58,7 @@ local node_match_ids = {
 
 local get_capture_matches_recursively = function(_, captures, _)
   local res = {}
+  captures = type(captures) == 'string' and { captures } or captures
   for _, cap in ipairs(captures) do
     vim.list_extend(res, matches[cap])
   end

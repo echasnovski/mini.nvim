@@ -10,7 +10,6 @@ vim.treesitter.get_parser = function(_, lang, _)
     trees = function(_)
       return { { root = function(_) return {} end } }
     end,
-    lang = function(_) return lang end,
   }
 end
 

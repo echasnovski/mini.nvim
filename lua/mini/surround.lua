@@ -1498,35 +1498,16 @@ end
 
 H.get_matched_node_pairs_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
-  local ts_parsers = require('nvim-treesitter.parsers')
+  local outer_matches = ts_queries.get_capture_matches_recursively(0, captures.outer, 'textobjects')
 
-  -- This is a modified version of `ts_queries.get_capture_matches_recursively`
-  -- source code which keeps track of match language
-  local matches = {}
-  local parser = ts_parsers.get_parser(0)
-  if parser then
-    parser:for_each_tree(function(tree, lang_tree)
-      local lang = lang_tree:lang()
-      local lang_matches = ts_queries.get_capture_matches(0, captures.outer, 'textobjects', tree:root(), lang)
-      for _, m in pairs(lang_matches) do
-        m.lang = lang
-      end
-      vim.list_extend(matches, lang_matches)
-    end)
-  end
-
-  return vim.tbl_map(
-    function(match)
-      local node_outer = match.node
-      -- Pick inner node as the biggest node matching inner query. This is
-      -- needed because query output is not quaranteed to come in order.
-      local matches_inner = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', node_outer, match.lang)
-      local nodes_inner = vim.tbl_map(function(x) return x.node end, matches_inner)
-      return { outer = node_outer, inner = H.get_biggest_node(nodes_inner) }
-    end,
-    -- This call should handle multiple languages in buffer
-    matches
-  )
+  -- Pick inner node as the biggest node matching inner query. This is needed
+  -- because query output is not quaranteed to come in order, so just picking
+  -- first one is not enough.
+  return vim.tbl_map(function(m)
+    local inner_matches = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', m.node, nil)
+    local inner_nodes = vim.tbl_map(function(match) return match.node end, inner_matches)
+    return { outer = m.node, inner = H.get_biggest_node(inner_nodes) }
+  end, outer_matches)
 end
 
 H.get_matched_node_pairs_builtin = function(captures)
