@@ -85,8 +85,7 @@
 ---       textobjects. 'mini.ai' does it via |MiniAi.find_textobject()|.
 ---     - Has no implementation of "moving to edge of textobject". 'mini.ai'
 ---       does it via |MiniAi.move_cursor()| and `g[` and `g]` default mappings.
----     - Has elaborate ways to control searching of the next textobject.
----       'mini.ai' relies on handful of 'config.search_method'.
+---     - Both implement the notion of manual "next"/"last" search directions.
 ---     - Implements `A`, `I` operators. 'mini.ai' does not by design: it is
 ---       assumed to be a property of textobject, not operator.
 ---     - Doesn't implement "function call" and "user prompt" textobjects.
@@ -98,8 +97,8 @@
 ---     - Along with textobject functionality provides a curated and maintained
 ---       set of popular textobject queries for many languages (which can power
 ---       |MiniAi.gen_spec.treesitter()| functionality).
----     - Operates with custom treesitter directives (see
----       |lua-treesitter-directives|) allowing more fine-tuned textobjects.
+---     - Both support working with |lua-treesitter-directives| allowing more
+---       fine-tuned textobjects.
 ---     - Implements only textobjects based on treesitter.
 ---     - Doesn't support |v:count|.
 ---     - Doesn't support multiple search method (basically, only 'cover').
