@@ -555,7 +555,7 @@ H.apply_config = function(config)
     if vim.fn.has('nvim-0.9') == 1 then vim.opt.shortmess:append('C') end
 
     -- More common completion behavior
-    vim.o.completeopt = 'menuone,noinsert,noselect'
+    vim.o.completeopt = 'menuone,noselect'
   end
 end
 
