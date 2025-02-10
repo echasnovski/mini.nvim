@@ -162,7 +162,7 @@ T['make_tabline_string()']['works with quickfix and location lists'] = function(
 
   -- Location list
   child.cmd('lbuffer | lopen')
-  eq(eval_tabline(), ' aaa  *quickfix*(3) ')
+  eq(eval_tabline(), ' aaa  *location*(3) ')
 end
 
 T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
