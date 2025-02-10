@@ -9,8 +9,8 @@ Fast and feature-rich surrounding. Can be configured to have experience
 similar to 'tpope/vim-surround' (see |MiniSurround-vim-surround-config|).
 
 Features:
-- Actions (text editing actions are dot-repeatable out of the box and respect
-  |[count]|) with configurable keymappings:
+- Actions (text editing actions are dot-repeatable out of the box and
+  respect |[count]|) with configurable mappings:
     - Add surrounding with `sa` (in visual mode or on motion).
     - Delete surrounding with `sd`.
     - Replace surrounding with `sr`.

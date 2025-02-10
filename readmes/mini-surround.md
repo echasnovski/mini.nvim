@@ -7,7 +7,7 @@
 ### Fast and feature-rich surround actions
 
 - Add, delete, replace, find, highlight surrounding (like pair of parenthesis, quotes, etc.).
-- Supports dot-repeat, `v:count`, different search methods, "last"/"next" extended mappings, customization via Lua patterns or functions, and more.
+- Supports dot-repeat for text edits, `v:count`, different search methods, "last"/"next" extended mappings, customization via Lua patterns or functions, and more.
 - Has builtins for brackets, function call, tag, user prompt, and any alphanumeric/punctuation/whitespace character.
 - Has maintained configuration of setup similar to 'tpope/vim-surround'.
 
@@ -27,17 +27,17 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://user-images.githubusercontent.com/24854248/173045302-cc4fd421-cc33-4924-a95b-207097973b48.mp4
+https://github.com/user-attachments/assets/e91b6e16-7a9c-44aa-afb4-7e07efc3e811
 
 ## Features
 
-- Actions (all of them are dot-repeatable out of the box and respect `v:count` for searching surrounding) with configurable keymappings:
+- Actions (text editing actions are dot-repeatable out of the box and respect `[count]`) with configurable mappings:
     - Add surrounding with `sa` (in visual mode or on motion).
     - Delete surrounding with `sd`.
     - Replace surrounding with `sr`.
     - Find surrounding with `sf` or `sF` (move cursor right or left).
     - Highlight surrounding with `sh`.
-    - Change number of neighbor lines with `sn` (see |MiniSurround-algorithm|).
+    - Change number of neighbor lines with `sn` (see `:h MiniSurround-algorithm`).
 - Surrounding is identified by a single character as both "input" (in `delete` and `replace` start, `find`, and `highlight`) and "output" (in `add` and `replace` end):
     - 'f' - function call (string of alphanumeric symbols or '_' or '.' followed by balanced '()'). In "input" finds function call, in "output" prompts user to enter function name.
     - 't' - tag. In "input" finds tag with same identifier, in "output" prompts user to enter tag name.
