@@ -177,9 +177,6 @@ H.default_config = vim.deepcopy(MiniTabline.config)
 -- Table to keep track of tabs
 H.tabs = {}
 
--- Indicator of whether there is clickable support
-H.tablineat = vim.fn.has('tablineat')
-
 -- Keep track of initially unnamed buffers
 H.unnamed_buffers_seq_ids = {}
 
@@ -259,7 +256,7 @@ H.make_tabpage_section = function()
   end
 
   local cur_tabpagenr = vim.fn.tabpagenr()
-  H.tabpage_section = (' Tab %s/%s '):format(cur_tabpagenr, n_tabpages)
+  H.tabpage_section = string.format(' Tab %s/%s ', cur_tabpagenr, n_tabpages)
 end
 
 -- Work with tabs -------------------------------------------------------------
@@ -267,10 +264,10 @@ end
 H.list_tabs = function()
   local tabs = {}
   for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    if H.is_buffer_in_minitabline(buf_id) then
+    if vim.bo[buf_id].buflisted then
       local tab = { buf_id = buf_id }
       tab['hl'] = H.construct_highlight(buf_id)
-      tab['tabfunc'] = H.construct_tabfunc(buf_id)
+      tab['tabfunc'] = '%' .. buf_id .. '@MiniTablineSwitchBuffer@'
       tab['label'], tab['label_extender'] = H.construct_label_data(buf_id)
 
       table.insert(tabs, tab)
@@ -280,30 +277,13 @@ H.list_tabs = function()
   H.tabs = tabs
 end
 
-H.is_buffer_in_minitabline = function(buf_id) return vim.bo[buf_id].buflisted end
-
 -- Tab's highlight group
 H.construct_highlight = function(buf_id)
-  local hl_type
-  if buf_id == vim.api.nvim_get_current_buf() then
-    hl_type = 'Current'
-  elseif vim.fn.bufwinnr(buf_id) > 0 then
-    hl_type = 'Visible'
-  else
-    hl_type = 'Hidden'
-  end
+  local hl_type = buf_id == vim.api.nvim_get_current_buf() and 'Current'
+    or (vim.fn.bufwinnr(buf_id) > 0 and 'Visible' or 'Hidden')
   if vim.bo[buf_id].modified then hl_type = 'Modified' .. hl_type end
 
-  return string.format('%%#MiniTabline%s#', hl_type)
-end
-
--- Tab's clickable action (if supported)
-H.construct_tabfunc = function(buf_id)
-  if H.tablineat > 0 then
-    return string.format('%%%d@MiniTablineSwitchBuffer@', buf_id)
-  else
-    return ''
-  end
+  return '%#MiniTabline' .. hl_type .. '#'
 end
 
 -- Tab's label and label extender
@@ -329,7 +309,7 @@ H.make_path_extender = function(buf_id)
   return function(label)
     local full_path = vim.api.nvim_buf_get_name(buf_id)
     -- Using `vim.pesc` prevents effect of problematic characters (like '.')
-    local pattern = string.format('[^%s]+%s%s$', vim.pesc(H.path_sep), vim.pesc(H.path_sep), vim.pesc(label))
+    local pattern = string.format('[^%s]+%s%s$', H.path_sep, H.path_sep, vim.pesc(label))
     return string.match(full_path, pattern) or label
   end
 end
@@ -342,28 +322,19 @@ end
 -- - Delete second one.
 -- - Tab label for third one remains the same.
 H.make_unnamed_label = function(buf_id)
-  local label
-  if vim.bo[buf_id].buftype == 'quickfix' then
-    -- It would be great to differentiate for buffer `buf_id` between quickfix
-    -- and location lists but it seems there is no reliable way to do so.
-    -- The only one is to use `getwininfo(bufwinid(buf_id))` and look for
-    -- `quickfix` and `loclist` fields, but that fails if buffer `buf_id` is
-    -- not visible.
-    label = '*quickfix*'
-  else
-    label = H.is_buffer_scratch(buf_id) and '!' or '*'
-  end
+  local buftype = vim.bo[buf_id].buftype
+  -- It would be great to differentiate for buffer `buf_id` between quickfix
+  -- and location lists but it seems there is no reliable way to do so.
+  -- It is possible via `getwininfo(bufwinid(buf_id))` (if there is `quickfix`
+  -- or `loclist` field), but that fails if buffer `buf_id` is not visible.
+  -- Also differentiate between scratch and other unnamed buffers.
+  local label = buftype == 'quickfix' and '*quickfix*' or ((buftype == 'nofile' or buftype == 'acwrite') and '!' or '*')
 
   -- Possibly add tracking id
   local unnamed_id = H.get_unnamed_id(buf_id)
   if unnamed_id > 1 then label = string.format('%s(%d)', label, unnamed_id) end
 
   return label
-end
-
-H.is_buffer_scratch = function(buf_id)
-  local buftype = vim.bo[buf_id].buftype
-  return (buftype == 'acwrite') or (buftype == 'nofile')
 end
 
 H.get_unnamed_id = function(buf_id)
@@ -379,12 +350,12 @@ end
 -- Work with labels -----------------------------------------------------------
 H.finalize_labels = function()
   -- Deduplicate
-  local nonunique_tab_ids = H.get_nonunique_tab_ids()
-  while #nonunique_tab_ids > 0 do
+  local nonunique_buf_ids = H.get_nonunique_buf_ids()
+  while #nonunique_buf_ids > 0 do
     local nothing_changed = true
 
     -- Extend labels
-    for _, buf_id in ipairs(nonunique_tab_ids) do
+    for _, buf_id in ipairs(nonunique_buf_ids) do
       local tab = H.tabs[buf_id]
       local old_label = tab.label
       tab.label = tab.label_extender(tab.label)
@@ -393,7 +364,7 @@ H.finalize_labels = function()
 
     if nothing_changed then break end
 
-    nonunique_tab_ids = H.get_nonunique_tab_ids()
+    nonunique_buf_ids = H.get_nonunique_buf_ids()
   end
 
   -- Format labels
@@ -409,27 +380,23 @@ H.finalize_labels = function()
   end
 end
 
----@return table Array of `H.tabs` ids which have non-unique labels.
----@private
-H.get_nonunique_tab_ids = function()
-  -- Collect tab-array-id per label
-  local label_tab_ids = {}
-  for i, tab in ipairs(H.tabs) do
-    local label = tab.label
-    if label_tab_ids[label] == nil then
-      label_tab_ids[label] = { i }
-    else
-      table.insert(label_tab_ids[label], i)
-    end
+H.get_nonunique_buf_ids = function()
+  local label_counts = {}
+  for _, tab in ipairs(H.tabs) do
+    label_counts[tab.label] = (label_counts[tab.label] or 0) + 1
   end
 
-  -- Collect tab-array-ids with non-unique labels
-  return H.tbl_flatten(vim.tbl_filter(function(x) return #x > 1 end, label_tab_ids))
+  local res = {}
+  for i, tab in ipairs(H.tabs) do
+    if label_counts[tab.label] > 1 then table.insert(res, i) end
+  end
+  return res
 end
 
 -- Fit tabline to maximum displayed width -------------------------------------
 H.fit_width = function()
-  H.update_center_buf_id()
+  local cur_buf = vim.api.nvim_get_current_buf()
+  if vim.bo[cur_buf].buflisted then H.center_buf_id = cur_buf end
 
   -- Compute label width data
   local center_offset = 1
@@ -451,11 +418,6 @@ H.fit_width = function()
   local display_interval = H.compute_display_interval(center_offset, tot_width)
 
   H.truncate_tabs_display(display_interval)
-end
-
-H.update_center_buf_id = function()
-  local cur_buf = vim.api.nvim_get_current_buf()
-  if H.is_buffer_in_minitabline(cur_buf) then H.center_buf_id = cur_buf end
 end
 
 H.compute_display_interval = function(center_offset, tabline_width)
@@ -509,20 +471,17 @@ H.concat_tabs = function()
   local t = {}
   for _, tab in ipairs(H.tabs) do
     -- Escape '%' in labels
-    table.insert(t, ('%s%s%s'):format(tab.hl, tab.tabfunc, tab.label:gsub('%%', '%%%%')))
+    table.insert(t, tab.hl .. tab.tabfunc .. tab.label:gsub('%%', '%%%%'))
   end
 
-  -- Usage of `%X` makes filled space to the right 'non-clickable'
-  local res = ('%s%%X%%#MiniTablineFill#'):format(table.concat(t, ''))
+  -- Usage of `%X` makes filled space to the right "non-clickable"
+  local res = table.concat(t, '') .. '%X%#MiniTablineFill#'
 
   -- Add tabpage section
-  local position = H.get_config().tabpage_section
   if H.tabpage_section ~= '' then
-    if position == 'left' then res = ('%%#MiniTablineTabpagesection#%s%s'):format(H.tabpage_section, res) end
-    if position == 'right' then
-      -- Use `%=` to make it stick to right hand side
-      res = ('%s%%=%%#MiniTablineTabpagesection#%s'):format(res, H.tabpage_section)
-    end
+    local position = H.get_config().tabpage_section
+    if position == 'left' then res = '%#MiniTablineTabpagesection#' .. H.tabpage_section .. res end
+    if position == 'right' then res = res .. '%=%#MiniTablineTabpagesection#' .. H.tabpage_section end
   end
 
   return res
@@ -554,9 +513,5 @@ H.ensure_get_icon = function(config)
     H.get_icon = function(name) return (devicons.get_icon(vim.fn.fnamemodify(name, ':t'), nil, { default = true })) end
   end
 end
-
--- TODO: Remove after compatibility with Neovim=0.9 is dropped
-H.tbl_flatten = vim.fn.has('nvim-0.10') == 1 and function(x) return vim.iter(x):flatten(math.huge):totable() end
-  or vim.tbl_flatten
 
 return MiniTabline
