@@ -1069,6 +1069,76 @@ T['Textobject']['respects `config.options.start_of_line`'] = function()
   eq(get_lines(), { ' # aa', '  # aa' })
 end
 
+T['Textobject']['respects `config.options.ignore_blank_line`'] = function()
+  child.lua('MiniComment.config.options.ignore_blank_line = true')
+
+  local validate = function(lines_before, cursor_line, lines_after)
+    set_lines(lines_before)
+    set_cursor(cursor_line, 0)
+    type_keys('d', 'gc')
+    eq(get_lines(), lines_after)
+  end
+
+  local lines = { 'aa', '# bb', '', ' ', '# dd', '# ee', '\t', '# gg', 'hh' }
+  local lines_without_comment = { 'aa', 'hh' }
+  validate(lines, 1, lines)
+  validate(lines, 2, lines_without_comment)
+  validate(lines, 3, lines_without_comment)
+  validate(lines, 4, lines_without_comment)
+  validate(lines, 5, lines_without_comment)
+  validate(lines, 6, lines_without_comment)
+  validate(lines, 7, lines_without_comment)
+  validate(lines, 8, lines_without_comment)
+  validate(lines, 9, lines)
+
+  lines = { '# aa', '', ' ', 'dd', '', '\t', '# gg' }
+  validate(lines, 1, { '', ' ', 'dd', '', '\t', '# gg' })
+  validate(lines, 2, lines)
+  validate(lines, 3, lines)
+  validate(lines, 4, lines)
+  validate(lines, 5, lines)
+  validate(lines, 6, lines)
+  validate(lines, 7, { '# aa', '', ' ', 'dd', '', '\t' })
+
+  lines = { '# aa', '', ' ', '\t', '# ee' }
+  lines_without_comment = { '' }
+  validate(lines, 1, lines_without_comment)
+  validate(lines, 2, lines_without_comment)
+  validate(lines, 3, lines_without_comment)
+  validate(lines, 4, lines_without_comment)
+  validate(lines, 5, lines_without_comment)
+
+  -- Should not recognize blank lines before/after as textobject
+  lines = { 'aa', '', ' ', '# dd', '', ' ', '# gg', '', '\t', 'jj' }
+  lines_without_comment = { 'aa', '', ' ', '', '\t', 'jj' }
+  validate(lines, 2, lines)
+  validate(lines, 3, lines)
+  validate(lines, 4, lines_without_comment)
+  validate(lines, 5, lines_without_comment)
+  validate(lines, 6, lines_without_comment)
+  validate(lines, 7, lines_without_comment)
+  validate(lines, 8, lines)
+  validate(lines, 9, lines)
+
+  lines = { '', ' ', '# dd', '', '\t' }
+  lines_without_comment = { '', ' ', '', '\t' }
+  validate(lines, 1, lines)
+  validate(lines, 2, lines)
+  validate(lines, 3, lines_without_comment)
+  validate(lines, 4, lines)
+  validate(lines, 5, lines)
+
+  -- Should work in buffer with only blank lines
+  reload_with_hooks()
+  child.lua('MiniComment.config.options.ignore_blank_line = true')
+  lines = { '', ' ', '\t', '' }
+  validate(lines, 2, lines)
+  eq(
+    child.lua_get('_G.hook_args'),
+    { { 'pre', { { action = 'textobject' } } }, { 'post', { { action = 'textobject' } } } }
+  )
+end
+
 T['Textobject']['respects `vim.{g,b}.minicomment_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {

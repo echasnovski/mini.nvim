@@ -77,7 +77,7 @@ Default values:
       -- Function to compute custom 'commentstring' (optional)
       custom_commentstring = nil,
 
-      -- Whether to ignore blank lines when commenting
+      -- Whether to ignore blank lines in actions and textobject
       ignore_blank_line = false,
 
       -- Whether to recognize as comment only lines without indent
@@ -202,8 +202,10 @@ Parameters ~
                            `MiniComment.textobject`()
 Select comment textobject
 
-This selects all commented lines adjacent to cursor line (if it itself is
-commented). Designed to be used with operator mode mappings (see |mapmode-o|).
+This selects all commented lines adjacent to cursor line. If `ignore_blank_line`
+option is enabled (see |MiniComment.config|), blank lines between commented
+lines are treated as part of textobject.
+Designed to be used with operator mode mappings (see |mapmode-o|).
 
 ------------------------------------------------------------------------------
                                                *MiniComment.get_commentstring()*

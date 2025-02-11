@@ -15,6 +15,10 @@
     - 'OXY2DEV/helpview.nvim'
     - 'OXY2DEV/markview.nvim'
 
+## mini.comment
+
+- FEATURE: update textobject to respect `ignore_blank_line` option. Blank lines between commented lines are treated as part of a textobject.
+
 ## mini.hues
 
 - FEATURE: add support for colored markdown headings.
