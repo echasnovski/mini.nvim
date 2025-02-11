@@ -997,6 +997,7 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('MiniTablineModifiedHidden',  { fg=p.bg_edge, bg=p.fg_mid })
     hi('MiniTablineModifiedVisible', { fg=p.bg_edge, bg=p.fg_mid,  bold=true })
     hi('MiniTablineTabpagesection',  { fg=p.bg,      bg=p.green,   bold=true })
+    hi('MiniTablineTrunc',           { fg=p.accent,  bg=p.bg_edge, bold=true })
     hi('MiniTablineVisible',         { fg=p.fg_mid,  bg=p.bg_edge, bold=true })
 
     hi('MiniTestEmphasis', { fg=nil,     bg=nil, bold=true })
