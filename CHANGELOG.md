@@ -37,6 +37,7 @@
 
 ## mini.tabline
 
+- FEATURE: add support for showing special (truncation) characters at left and/or right if there are more tabs to the left and/or right. They are shown with the new `MiniTablineTrunc` highlight group in case 'list' option is enabled (i.e. user deliberately enabled similar functionality for windows). Exact characters are taken from 'listchars' option: `precedes` and `extends` fields.
 - FEATURE: labels for quickfix and location lists are now different.
 
 

@@ -29,10 +29,7 @@ local eval_tabline = function(show_hl, show_action)
 
   if not show_hl then res = res:gsub('%%#%w+#', '') end
 
-  if not show_action then
-    res = res:gsub('%%%d+@%w+@', '')
-    res = res:gsub('%%X', '')
-  end
+  if not show_action then res = res:gsub('%%%d+@%w+@', ''):gsub('%%X', '') end
 
   return res
 end
@@ -72,6 +69,7 @@ T['setup()']['creates side effects'] = function()
   has_highlight('MiniTablineModifiedHidden', 'links to StatusLineNC')
   has_highlight('MiniTablineFill', 'links to Normal')
   has_highlight('MiniTablineTabpagesection', 'links to Search')
+  has_highlight('MiniTablineTrunc', 'links to MiniTablineHidden')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -210,8 +208,18 @@ T['make_tabline_string()']['respects `config.tabpage_section`'] = function()
 end
 
 T['make_tabline_string()']['shows only listed buffers'] = function()
-  child.cmd('edit aaa | edit bbb | set nobuflisted | help')
+  child.cmd('edit aaa | edit bbb | setlocal nobuflisted | help')
   eq(eval_tabline(), ' aaa ')
+
+  -- Can work when there is no listed buffers
+  child.cmd('%bwipeout')
+  edit('aaa')
+  child.bo.buflisted = false
+  eq(eval_tabline(), '')
+
+  child.cmd('tabe')
+  child.bo.buflisted = false
+  eq(eval_tabline(), ' Tab 2/2 ')
 end
 
 T['make_tabline_string()']['works with "problematic" labels'] = function()
@@ -538,6 +546,110 @@ T['make_tabline_string()']['properly truncates in edge cases'] = function()
 
   edit('aaaaaaaaaa')
   eq(eval_tabline(), 'aaaaaaa  bbbbbb')
+end
+
+T['make_tabline_string()']['can show truncation characters'] = function()
+  child.o.columns = 15
+  for _, name in ipairs({ 'aaa', 'bbb', 'ccc', 'ddd', 'eee' }) do
+    edit(name)
+  end
+  edit('aaa')
+
+  -- Should show nothing extra if 'list' is not enabled (as by default)
+  eq(eval_tabline(), ' aaa  bbb  ccc ')
+
+  child.o.list = true
+  child.o.listchars = 'precedes:<,extends:>'
+  eq(eval_tabline(), ' aaa  bbb  ccc>')
+  edit('bbb')
+  -- - Should show if edge tab is shown but not in full
+  eq(eval_tabline(), '<a  bbb  ccc  >')
+  edit('ccc')
+  eq(eval_tabline(), '<b  ccc  ddd  >')
+  edit('ddd')
+  eq(eval_tabline(), '<ccc  ddd  eee ')
+  edit('eee')
+  eq(eval_tabline(), '<ccc  ddd  eee ')
+
+  -- Should use special highlight group
+  edit('ccc')
+  local ref_tabline_with_hl = '%#MiniTablineTrunc#<'
+    .. '%#MiniTablineHidden#b %#MiniTablineCurrent# ccc %#MiniTablineHidden# ddd %#MiniTablineHidden# '
+    .. '%#MiniTablineTrunc#>'
+    .. '%#MiniTablineFill#'
+  eq(eval_tabline(true), ref_tabline_with_hl)
+
+  -- Should be properly shown if there is tabpage section
+  child.o.columns = 24
+  child.cmd('tabedit ccc')
+  eq(eval_tabline(true), '%#MiniTablineTabpagesection# Tab 2/2 ' .. ref_tabline_with_hl)
+  child.cmd('close')
+
+  -- Should react to 'list' and/or 'listchars' changes
+  child.o.columns = 15
+  child.o.listchars = 'precedes:^,extends:$'
+  edit('ccc')
+  eq(eval_tabline(), '^b  ccc  ddd  $')
+
+  child.o.list = false
+  eq(eval_tabline(), 'bb  ccc  ddd  e')
+
+  -- Uses global value of 'list' and 'listchars'
+  child.go.list, child.wo.list = true, false
+  child.go.listchars, child.wo.listchars = 'precedes:<,extends:>', 'precedes:^,extends:$'
+  eq(eval_tabline(), '<b  ccc  ddd  >')
+
+  -- Works with multibyte characters
+  child.cmd('%bwipeout')
+  for _, name in ipairs({ 'ыыы', 'ффф', 'ййй', 'ццц', 'яяя' }) do
+    edit(name)
+  end
+  edit('ййй')
+  eq(eval_tabline(), '<ф  ййй  ццц  >')
+
+  -- Works when there is no listed buffers
+  child.cmd('%bwipeout')
+  child.bo.buflisted = false
+  eq(eval_tabline(), '')
+
+  child.cmd('tabe')
+  child.bo.buflisted = false
+  eq(eval_tabline(), ' Tab 2/2 ')
+end
+
+T['make_tabline_string()']["properly uses 'listchars' option to get truncation characters"] = function()
+  child.o.columns = 15
+  child.o.list = true
+  for _, name in ipairs({ 'aaa', 'bbb', 'ccc', 'ddd', 'eee' }) do
+    edit(name)
+  end
+  edit('ccc')
+
+  local validate = function(listchars, ref_tabline)
+    child.o.listchars = listchars
+    eq(eval_tabline(), ref_tabline)
+  end
+
+  -- None of relevant fields
+  validate('', 'bb  ccc  ddd  e')
+  validate('tab:> ', 'bb  ccc  ddd  e')
+
+  -- Only single
+  validate('precedes:<', '<b  ccc  ddd  e')
+  validate('extends:>', 'bb  ccc  ddd  >')
+
+  -- Multibyte
+  validate('extends:…,precedes:•', '•b  ccc  ddd  …')
+  validate('extends:…,nbsp:␣,precedes:•', '•b  ccc  ddd  …')
+
+  -- Problematic characters
+  validate('extends:,,precedes:,', ',b  ccc  ddd  ,')
+  child.o.listchars = 'extends:%,precedes:%'
+  local ref_tabline = '%#MiniTablineTrunc#%%'
+    .. '%#MiniTablineHidden#b %#MiniTablineCurrent# ccc %#MiniTablineHidden# ddd %#MiniTablineHidden# '
+    .. '%#MiniTablineTrunc#%%'
+    .. '%#MiniTablineFill#'
+  eq(eval_tabline(true), ref_tabline)
 end
 
 local validate_columns = function(columns, string)

@@ -6,7 +6,6 @@ MIT License Copyright (c) 2021 Evgeni Chasnovski
 ==============================================================================
 
 Key idea: show all listed buffers in readable way with minimal total width.
-Also allow showing extra information section in case of multiple vim tabpages.
 
 Features:
 - Buffers are listed in the order of their identifier (see |bufnr()|).
@@ -21,6 +20,12 @@ Features:
   buffers open.
 
 - 'Buffer tabs' are clickable if Neovim allows it.
+
+- Extra information section in case of multiple Neovim tabpages.
+
+- Truncation symbols which show if there are tabs to the left and/or right.
+  Exact characters are taken from 'listchars' global value (`precedes` and
+  `extends` fields) and are shown only if 'list' option is enabled.
 
 What it doesn't do:
 - Custom buffer order is not supported.
@@ -55,6 +60,7 @@ You can override runtime config settings locally to buffer inside
 * `MiniTablineModifiedHidden` - buffer is modified and hidden.
 * `MiniTablineFill` - unused right space of tabline.
 * `MiniTablineTabpagesection` - section with tabpage information.
+* `MiniTablineTrunc` - truncation symbols indicating more left/right tabs.
 
 To change any highlight group, modify it directly with |:highlight|.
 
