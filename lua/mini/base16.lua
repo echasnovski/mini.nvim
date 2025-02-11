@@ -838,6 +838,7 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniTablineModifiedHidden',  {fg=p.base01, bg=p.base04, attr=nil,    sp=nil})
     hi('MiniTablineModifiedVisible', {fg=p.base02, bg=p.base04, attr='bold', sp=nil})
     hi('MiniTablineTabpagesection',  {fg=p.base01, bg=p.base0A, attr='bold', sp=nil})
+    hi('MiniTablineTrunc',           {fg=p.base05, bg=p.base01, attr='bold', sp=nil})
     hi('MiniTablineVisible',         {fg=p.base05, bg=p.base01, attr='bold', sp=nil})
 
     hi('MiniTestEmphasis', {fg=nil,      bg=nil, attr='bold', sp=nil})
