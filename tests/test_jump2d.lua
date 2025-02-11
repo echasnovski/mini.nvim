@@ -206,8 +206,8 @@ T['setup()']['resets <CR> mapping in quickfix window'] = function()
   child.set_size(20, 50)
   set_lines({ 'Hello World' })
   child.cmd([[cexpr ['Hello', 'Quickfix'] | copen]])
-  type_keys('<CR>')
-  child.expect_screenshot()
+  -- Should create not remappable buffer-local mapping
+  expect.match(child.cmd_capture('nmap <CR>'), '%*@<CR>')
 end
 
 T['setup()']['resets <CR> mapping in command-line window'] = function()
