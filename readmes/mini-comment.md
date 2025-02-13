@@ -148,7 +148,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Whether to ignore blank lines when commenting
     ignore_blank_line = false,
 
-    -- Whether to recognize as comment only lines without indent
+    -- Whether to ignore blank lines in actions and textobject
     start_of_line = false,
 
     -- Whether to force single space inner padding for comment parts

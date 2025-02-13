@@ -122,7 +122,7 @@ MiniComment.config = {
     -- Function to compute custom 'commentstring' (optional)
     custom_commentstring = nil,
 
-    -- Whether to ignore blank lines when commenting
+    -- Whether to ignore blank lines in actions and textobject
     ignore_blank_line = false,
 
     -- Whether to recognize as comment only lines without indent
@@ -290,8 +290,10 @@ end
 
 --- Select comment textobject
 ---
---- This selects all commented lines adjacent to cursor line (if it itself is
---- commented). Designed to be used with operator mode mappings (see |mapmode-o|).
+--- This selects all commented lines adjacent to cursor line. If `ignore_blank_line`
+--- option is enabled (see |MiniComment.config|), blank lines between commented
+--- lines are treated as part of textobject.
+--- Designed to be used with operator mode mappings (see |mapmode-o|).
 MiniComment.textobject = function()
   if H.is_disabled() then return end
 
@@ -304,17 +306,30 @@ MiniComment.textobject = function()
   local comment_check = H.make_comment_check(parts, config.options)
   local lnum_from, lnum_to
 
-  if comment_check(vim.fn.getline(lnum_cur)) then
+  local ignore_blank_line = config.options.ignore_blank_line
+  local check = function(lnum)
+    if lnum == 0 then return false end
+    local l = vim.fn.getline(lnum)
+    return comment_check(l) or (ignore_blank_line and H.is_blank(l))
+  end
+
+  -- Recognize textobject only if on comment or blank between comments
+  local lnum_prev, lnum_next = vim.fn.prevnonblank(lnum_cur), vim.fn.nextnonblank(lnum_cur)
+  local is_in_comments = check(lnum_prev) and (lnum_prev == lnum_cur or check(lnum_next))
+
+  if is_in_comments then
     lnum_from = lnum_cur
-    while (lnum_from >= 2) and comment_check(vim.fn.getline(lnum_from - 1)) do
+    while (lnum_from >= 2) and check(lnum_from - 1) do
       lnum_from = lnum_from - 1
     end
+    if ignore_blank_line then lnum_from = vim.fn.nextnonblank(lnum_from) end
 
     lnum_to = lnum_cur
     local n_lines = vim.api.nvim_buf_line_count(0)
-    while (lnum_to <= n_lines - 1) and comment_check(vim.fn.getline(lnum_to + 1)) do
+    while (lnum_to <= n_lines - 1) and check(lnum_to + 1) do
       lnum_to = lnum_to + 1
     end
+    if ignore_blank_line then lnum_to = vim.fn.prevnonblank(lnum_to) end
 
     local is_visual = vim.tbl_contains({ 'v', 'V', '\22' }, vim.fn.mode())
     if is_visual then vim.cmd('normal! \27') end
