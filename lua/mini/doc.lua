@@ -971,7 +971,17 @@ H.alias_replace = function(s)
       -- two values which might conflict if outputs are used as arguments.
       local name_escaped = vim.pesc(alias_name)
       local desc_escaped = vim.pesc(alias_desc)
-      s[i] = s[i]:gsub(name_escaped, desc_escaped)
+
+      if string.find(desc_escaped, "|", 1, true) then
+        desc_escaped = "(" .. desc_escaped .. ")"
+      end
+
+      local placeholder = "qqqq" .. name_escaped
+      local section_text = s[i]
+      section_text = section_text:gsub("([_%.0-9]+)%f[%a]" .. name_escaped .. "%f[%A]", "%1" .. placeholder)
+      section_text = section_text:gsub("([^_%w]*)%f[%a]" .. name_escaped .. "%f[%A]", "%1" .. desc_escaped)
+      section_text = section_text:gsub("([_%.0-9]+)%f[%a]" .. placeholder .. "%f[%A]", "%1" .. name_escaped)
+      s[i] = section_text
     end
   end
 end
