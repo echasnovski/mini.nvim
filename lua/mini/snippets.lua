@@ -1349,10 +1349,8 @@ MiniSnippets.session.get = function(all) return vim.deepcopy(all and H.sessions 
 ---       Cursor is placed on left edge if tabstop has not been edited yet (so
 ---       typing text replaces placeholder), on right edge otherwise (to update
 ---       already edited text).
----     - Show relevant choices for tabstop with choices. They are computed by
----       matching to tabstop text: choice is matched if starts with it.
----       Note: if 'completeopt' contains "fuzzy" flag, perform fuzzy matching
----       with |matchfuzzy()|.
+---     - Show all choices for tabstop with choices. Navigating through choices
+---       will update tabstop's text.
 ---
 ---@param direction string One of "next" or "prev".
 MiniSnippets.session.jump = function(direction)
