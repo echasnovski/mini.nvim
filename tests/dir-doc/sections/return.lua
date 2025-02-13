@@ -14,9 +14,11 @@
 ---@return number Should work.
 ---@return number[] Should work.
 ---@return number|nil Should work.
+---@return (number | nil) Should not be doubly enclosed in ().
 ---@return table<string, number> Should work.
 ---@return fun(a: string, b:number) Should work.
 ---@return fun(a: string, b:number): table Should work.
----@return NUMBER Shouldn't work.
----@return function Should not enclose second time: function .
+---@return NUMBER Should still work as custom classes are allowed.
+---@return NUMBER|nil Should still work as custom classes are allowed.
+---@return (NUMBER | nil) Should not be doubly enclosed in ().
 ---@return ... Should work.

@@ -256,12 +256,13 @@ MiniDoc.config = {
       ['@field'] = function(s)
         H.mark_optional(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
+        local col_past_var_name = s[1]:match('^%s*%S+%s+`%(optional%)`()') or s[1]:match('^%s*%S+()') or 1
+        H.enclose_type(s, col_past_var_name)
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@overload'] = --<function>,
       ['@overload'] = function(s)
-        H.enclose_type(s, '`%1`', 1)
+        s[1] = '`' .. s[1] .. '`'
         H.add_section_heading(s, 'Overload')
       end,
       --minidoc_replace_end
@@ -269,7 +270,8 @@ MiniDoc.config = {
       ['@param'] = function(s)
         H.mark_optional(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
+        local col_past_var_name = s[1]:match('^%s*%S+%s+`%(optional%)`()') or s[1]:match('^%s*%S+()') or 1
+        H.enclose_type(s, col_past_var_name)
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@private'] = --<function: registers block for removal>,
@@ -278,7 +280,7 @@ MiniDoc.config = {
       --minidoc_replace_start ['@return'] = --<function>,
       ['@return'] = function(s)
         H.mark_optional(s)
-        H.enclose_type(s, '`%(%1%)`', 1)
+        H.enclose_type(s, 1)
         H.add_section_heading(s, 'Return')
       end,
       --minidoc_replace_end
@@ -318,7 +320,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@type'] = --<function>,
       ['@type'] = function(s)
-        H.enclose_type(s, '`%(%1%)`', 1)
+        H.enclose_type(s, 1)
         H.add_section_heading(s, 'Type')
       end,
       --minidoc_replace_end
@@ -713,10 +715,14 @@ H.pattern_sets = {
   -- Patterns to work with type descriptions
   -- (see https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type)
   types = {
+    -- Allow union type
+    '%b()',
     'table%b<>',
     'fun%b(): %S+', 'fun%b()',
     'nil', 'any', 'boolean', 'string', 'number', 'integer', 'function', 'table', 'thread', 'userdata', 'lightuserdata',
-    '%.%.%.'
+    '%.%.%.',
+    -- Allow any class as a type
+    '[%a]%S*',
   },
 }
 --stylua: ignore end
@@ -1031,22 +1037,21 @@ H.enclose_var_name = function(s) s[1] = s[1]:gsub('(%S+)', '{%1}', 1) end
 ---@param init number Start of searching for first "type-like" string. It is
 ---   needed to not detect type early. Like in `@param a_function function`.
 ---@private
-H.enclose_type = function(s, enclosure, init)
+H.enclose_type = function(s, init)
   if #s == 0 or s.type ~= 'section' then return end
-  enclosure = enclosure or '`%(%1%)`'
   init = init or 1
 
-  local cur_type = H.match_first_pattern(s[1], H.pattern_sets['types'], init)
-  if #cur_type == 0 then return end
+  local cur_type = H.match_first_pattern(s[1], H.pattern_sets['types'], init)[1]
+  if cur_type == nil then return end
 
   -- Add `%S*` to front and back of found pattern to support their combination
-  -- with `|`. Also allows using `[]` and `?` prefixes.
-  local type_pattern = ('(%%S*%s%%S*)'):format(vim.pesc(cur_type[1]))
+  -- with `|`. Also allows using `[]` and `?` suffixes.
+  local type_pattern = ('(%%S*%s%%S*)'):format(vim.pesc(cur_type))
 
-  -- Avoid replacing possible match before `init`
-  local l_start = s[1]:sub(1, init - 1)
+  -- Avoid replacing match before `init` and avoid unnecessary () enclosing
+  local enclosure = cur_type:find('^%(.*%)$') ~= nil and '`%1`' or '`%(%1%)`'
   local l_end = s[1]:sub(init):gsub(type_pattern, enclosure, 1)
-  s[1] = ('%s%s'):format(l_start, l_end)
+  s[1] = s[1]:sub(1, init - 1) .. l_end
 end
 
 -- Infer data from afterlines -------------------------------------------------

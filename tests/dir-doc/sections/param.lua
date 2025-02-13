@@ -8,7 +8,7 @@
 ---   - Item 2.
 ---@param c table
 ---@param d
----@param x %%%bad_name!!
+---@param x %%%bad_name!! Might or might not be enclosed. Both are fine.
 
 --- Test for expanding `?` to `(optional)`
 ---
@@ -21,10 +21,13 @@
 ---@param a number Should work.
 ---@param b number[] Should work.
 ---@param c number|nil Should work.
+---@param C (number | nil) Should not be doubly enclosed in ().
 ---@param d table<string, number> Should work.
 ---@param e fun(a: string, b:number) Should work.
 ---@param f fun(a: string, b:number): table Should work.
----@param g NUMBER Shouldn't work.
+---@param g NUMBER Should still work as custom classes are allowed.
+---@param h NUMBER|nil Should still work as custom classes are allowed.
+---@param H (NUMBER | nil) Should not be doubly enclosed in ().
 ---@param a_function function Should enclose second `function`.
 ---@param function_a function Should enclose second `function`.
 ---@param a_function_a function Should enclose second `function`.
