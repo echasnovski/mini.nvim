@@ -34,6 +34,17 @@ local get_two_windows = function()
   return { active = cur_win, inactive = cur_win == wins_tabpage[1] and wins_tabpage[2] or wins_tabpage[1] }
 end
 
+local eval_statusline = function(stl, win_id) return child.api.nvim_eval_statusline(stl, { winid = win_id }).str end
+
+local validate_statusline = function(win_id, ref_content_source)
+  win_id = win_id == 0 and child.api.nvim_get_current_win() or win_id
+  local active = eval_statusline('%{%v:lua.MiniStatusline.active()%}', win_id)
+  local inactive = eval_statusline('%{%v:lua.MiniStatusline.inactive()%}', win_id)
+  local out = eval_statusline(child.api.nvim_get_option_value('statusline', { win = win_id }), win_id)
+  local out_content_source = out == active and 'active' or (out == inactive and 'inactive' or 'unknown')
+  eq(out_content_source, ref_content_source)
+end
+
 -- Mocks
 local mock_miniicons = function() child.lua('require("mini.icons").setup()') end
 
@@ -144,19 +155,15 @@ T['setup()']['ensures colors'] = function()
   expect.match(child.cmd_capture('hi MiniStatuslineModeNormal'), 'links to Cursor')
 end
 
-T['setup()']['sets proper autocommands'] = function()
-  local validate = function(win_id, field)
-    eq(child.api.nvim_win_get_option(win_id, 'statusline'), '%{%v:lua.MiniStatusline.' .. field .. '()%}')
-  end
-
+T['setup()']["sets proper dynamic 'statusline' value"] = function()
   local wins = get_two_windows()
 
-  validate(wins.active, 'active')
-  validate(wins.inactive, 'inactive')
+  validate_statusline(wins.active, 'active')
+  validate_statusline(wins.inactive, 'inactive')
 
   child.api.nvim_set_current_win(wins.inactive)
-  validate(wins.active, 'inactive')
-  validate(wins.inactive, 'active')
+  validate_statusline(wins.active, 'inactive')
+  validate_statusline(wins.inactive, 'active')
 end
 
 T['setup()']['respects `config.set_vim_settings`'] = function()
@@ -174,7 +181,7 @@ end
 
 T['setup()']['disables built-in statusline in quickfix window'] = function()
   child.cmd('copen')
-  expect.match(child.o.statusline, 'MiniStatusline')
+  validate_statusline(0, 'active')
 end
 
 T['setup()']['ensures content when working with built-in terminal'] = function()
@@ -185,21 +192,18 @@ T['setup()']['ensures content when working with built-in terminal'] = function()
   child.cmd('terminal! bash --noprofile --norc')
   -- Wait for terminal to get active
   vim.loop.sleep(term_mode_wait)
-  expect.match(child.wo.statusline, 'MiniStatusline%.active')
+  validate_statusline(0, 'active')
   eq(child.api.nvim_get_current_buf() == init_buf_id, false)
 
   type_keys('i', 'exit', '<CR>')
   vim.loop.sleep(term_mode_wait)
   type_keys('<CR>')
-  expect.match(child.wo.statusline, 'MiniStatusline%.active')
+  validate_statusline(0, 'active')
   eq(child.api.nvim_get_current_buf() == init_buf_id, true)
 end
 
 T['setup()']['ensures content when buffer is displayed in non-current window'] = function()
   local init_win_id = child.api.nvim_get_current_win()
-  local validate = function()
-    expect.match(child.api.nvim_win_get_option(init_win_id, 'statusline'), 'MiniStatusline%.active')
-  end
   local buf_id = child.api.nvim_create_buf(false, true)
 
   -- Normal window
@@ -207,29 +211,25 @@ T['setup()']['ensures content when buffer is displayed in non-current window'] =
   local new_win_id = child.api.nvim_get_current_win()
   child.api.nvim_set_current_win(init_win_id)
   child.api.nvim_win_set_buf(new_win_id, buf_id)
-  validate()
+  validate_statusline(init_win_id, 'active')
 
   -- Floating window
   child.api.nvim_open_win(buf_id, false, { relative = 'editor', row = 1, col = 1, height = 4, width = 10 })
-  validate()
+  validate_statusline(init_win_id, 'active')
 end
 
 T['setup()']['handles `laststatus=3`'] = function()
-  local validate_active = function(win_id)
-    expect.match(child.api.nvim_win_get_option(win_id, 'statusline'), 'MiniStatusline%.active')
-  end
-
-  -- Should set same 'statusline' value for global statusline to reduce flicker
+  -- Should set same active content for all windows
   child.o.laststatus = 3
   local init_win_id = child.api.nvim_get_current_win()
   child.cmd('leftabove vertical split')
   local new_win_id = child.api.nvim_get_current_win()
-  validate_active(init_win_id)
-  validate_active(new_win_id)
+  validate_statusline(init_win_id, 'active')
+  validate_statusline(new_win_id, 'active')
 
   child.cmd('wincmd w')
-  validate_active(init_win_id)
-  validate_active(new_win_id)
+  validate_statusline(init_win_id, 'active')
+  validate_statusline(new_win_id, 'active')
 end
 
 T['combine_groups()'] = new_set()
@@ -811,19 +811,13 @@ T['Default content']['active'] = new_set({
   test = function(window_width)
     helpers.skip_on_windows('Windows has different default path separator')
 
-    eq(child.wo.statusline, '%{%v:lua.MiniStatusline.active()%}')
+    validate_statusline(0, 'active')
     set_width(window_width)
     child.expect_screenshot()
   end,
 })
 
 T['Default content']['inactive'] = function()
-  local wins = get_two_windows()
-
-  -- Check that option is set correctly
-  eq(child.api.nvim_win_get_option(wins.inactive, 'statusline'), '%{%v:lua.MiniStatusline.inactive()%}')
-
-  -- Validate
   eq(child.lua_get('MiniStatusline.inactive()'), '%#MiniStatuslineInactive#%F%=')
 end
 
