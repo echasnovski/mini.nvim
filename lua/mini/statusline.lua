@@ -177,14 +177,12 @@ MiniStatusline.config = {
 --- Compute content for active window
 MiniStatusline.active = function()
   if H.is_disabled() then return '' end
-
   return (H.get_config().content.active or H.default_content_active)()
 end
 
 --- Compute content for inactive window
 MiniStatusline.inactive = function()
   if H.is_disabled() then return '' end
-
   return (H.get_config().content.inactive or H.default_content_inactive)()
 end
 
@@ -506,12 +504,9 @@ H.apply_config = function(config)
   -- Set settings to ensure statusline is displayed properly
   if config.set_vim_settings and (vim.o.laststatus == 0 or vim.o.laststatus == 1) then vim.o.laststatus = 2 end
 
-  -- Ensure proper 'statusline' values (to not rely on autocommands trigger)
-  H.ensure_content()
-
-  -- Set global value to reduce flickering when first time entering buffer, as
-  -- it is used by default before content is ensured on next loop
-  vim.go.statusline = '%{%v:lua.MiniStatusline.active()%}'
+  -- Set statusline globally and dynamically decide which content to use
+  vim.go.statusline =
+    '%{%(nvim_get_current_win()==#g:actual_curwin || &laststatus==3) ? v:lua.MiniStatusline.active() : v:lua.MiniStatusline.inactive()%}'
 end
 
 H.create_autocommands = function()
@@ -520,8 +515,6 @@ H.create_autocommands = function()
   local au = function(event, pattern, callback, desc)
     vim.api.nvim_create_autocmd(event, { group = gr, pattern = pattern, callback = callback, desc = desc })
   end
-
-  au({ 'WinEnter', 'BufWinEnter' }, '*', H.ensure_content, 'Ensure statusline content')
 
   -- Use `schedule_wrap()` because at `LspDetach` server is still present
   local track_lsp = vim.schedule_wrap(function(data)
@@ -566,17 +559,6 @@ H.is_disabled = function() return vim.g.ministatusline_disable == true or vim.b.
 H.get_config = function(config)
   return vim.tbl_deep_extend('force', MiniStatusline.config, vim.b.ministatusline_config or {}, config or {})
 end
-
--- Content --------------------------------------------------------------------
-H.ensure_content = vim.schedule_wrap(function()
-  -- NOTE: Use `schedule_wrap()` to properly work inside autocommands because
-  -- they might temporarily change current window
-  local cur_win_id, is_global_stl = vim.api.nvim_get_current_win(), vim.o.laststatus == 3
-  for _, win_id in ipairs(vim.api.nvim_list_wins()) do
-    vim.wo[win_id].statusline = (win_id == cur_win_id or is_global_stl) and '%{%v:lua.MiniStatusline.active()%}'
-      or '%{%v:lua.MiniStatusline.inactive()%}'
-  end
-end)
 
 -- Mode -----------------------------------------------------------------------
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste

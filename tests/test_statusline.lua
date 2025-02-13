@@ -116,7 +116,10 @@ T['setup()']['creates side effects'] = function()
   has_highlight('MiniStatuslineInactive', 'links to StatusLineNC')
 
   -- Sets global value of 'statusline'
-  eq(child.go.statusline, '%{%v:lua.MiniStatusline.active()%}')
+  eq(
+    child.go.statusline,
+    '%{%(nvim_get_current_win()==#g:actual_curwin || &laststatus==3) ? v:lua.MiniStatusline.active() : v:lua.MiniStatusline.inactive()%}'
+  )
 end
 
 T['setup()']['creates `config` field'] = function()
