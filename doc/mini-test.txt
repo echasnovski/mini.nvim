@@ -696,7 +696,7 @@ interact with it through |RPC| messages.
 For more information see |MiniTest-child-neovim|.
 
 Return ~
-MiniTest.child Object of |MiniTest-child-neovim|.
+`(MiniTest.child)` Object of |MiniTest-child-neovim|.
 
 Usage ~
 >lua
