@@ -691,7 +691,7 @@ end
 --- - Was added with |MiniDeps.add()| (preserving order of calls).
 --- - Is a "start" plugin and present in 'runtimpath'.
 ---
----@return session table Array with specifications of all plugins registered in
+---@return table Array with specifications of all plugins registered in
 ---   current session.
 MiniDeps.get_session = function()
   -- Normalize `H.session` allowing specs for same plugin

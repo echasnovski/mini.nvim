@@ -540,7 +540,7 @@ Plugin is registered in current session if it either:
 - Is a "start" plugin and present in 'runtimpath'.
 
 Return ~
-session `(table)` Array with specifications of all plugins registered in
+`(table)` Array with specifications of all plugins registered in
   current session.
 
 ------------------------------------------------------------------------------
