@@ -1482,7 +1482,7 @@ end
 ---     preview and choose. Default: `nil` to use "robust frecency".
 ---@param opts __extra_pickers_opts
 ---
----@return Chosen path.
+---@return ... Chosen path.
 MiniExtra.pickers.visit_labels = function(local_opts, opts)
   local pick = H.validate_pick('visit_labels')
   local has_visits, visits = pcall(require, 'mini.visits')
