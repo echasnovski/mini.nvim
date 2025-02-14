@@ -770,7 +770,7 @@ Start from currently active color scheme and loop through `cs_array`.
 Powers |:Colorscheme| user command created in |MiniColors.setup()|.
 
 Parameters ~
-{cs_array} `(`(table)`)` Array of |MiniColors-colorscheme| objects.
+{cs_array} `(table)` Array of |MiniColors-colorscheme| objects.
 {opts} `(table|nil)` Options. Possible fields:
   - <transition_steps> `(number)` - number of intermediate steps to show
     during transition between two color schemes. Bigger values result in

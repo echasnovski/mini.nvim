@@ -886,7 +886,7 @@ end
 ---
 --- Powers |:Colorscheme| user command created in |MiniColors.setup()|.
 ---
----@param cs_array `(table)` Array of |MiniColors-colorscheme| objects.
+---@param cs_array table Array of |MiniColors-colorscheme| objects.
 ---@param opts table|nil Options. Possible fields:
 ---   - <transition_steps> `(number)` - number of intermediate steps to show
 ---     during transition between two color schemes. Bigger values result in
