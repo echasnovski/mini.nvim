@@ -1036,12 +1036,12 @@ H.enclose_type = function(s, enclosure, init)
   enclosure = enclosure or '`%(%1%)`'
   init = init or 1
 
-  local cur_type = H.match_first_pattern(s[1], H.pattern_sets['types'], init)
-  if #cur_type == 0 then return end
+  local type_pattern = H.find_pattern_with_first_match(s[1], H.pattern_sets['types'], init)
+  if type_pattern == nil then return end
 
   -- Add `%S*` to front and back of found pattern to support their combination
   -- with `|`. Also allows using `[]` and `?` prefixes.
-  local type_pattern = ('(%%S*%s%%S*)'):format(vim.pesc(cur_type[1]))
+  type_pattern = '%S*' .. type_pattern .. '%S*'
 
   -- Avoid replacing possible match before `init`
   local l_start = s[1]:sub(1, init - 1)
@@ -1064,17 +1064,19 @@ H.infer_header = function(b)
   local tag, signature
 
   -- Try function definition
-  local fun_capture = H.match_first_pattern(l_all, H.pattern_sets['afterline_fundef'])
-  if #fun_capture > 0 then
-    tag = tag or ('%s()'):format(fun_capture[1])
-    signature = signature or ('%s%s'):format(fun_capture[1], fun_capture[2])
+  local fun_pattern = H.find_pattern_with_first_match(l_all, H.pattern_sets['afterline_fundef'])
+  if fun_pattern ~= nil then
+    local fun_name, fun_args = l_all:match(fun_pattern)
+    tag = tag or (fun_name .. '()')
+    signature = signature or (fun_name .. fun_args)
   end
 
   -- Try general assignment
-  local assign_capture = H.match_first_pattern(l_all, H.pattern_sets['afterline_assign'])
-  if #assign_capture > 0 then
-    tag = tag or assign_capture[1]
-    signature = signature or assign_capture[1]
+  local assign_pattern = H.find_pattern_with_first_match(l_all, H.pattern_sets['afterline_assign'])
+  if assign_pattern ~= nil then
+    local obj_name = l_all:match(assign_pattern)
+    tag = tag or obj_name
+    signature = signature or obj_name
   end
 
   if tag ~= nil then
@@ -1237,24 +1239,15 @@ H.visual_text_width = function(text)
   return vim.fn.strdisplaywidth(text) - n_concealed_chars
 end
 
---- Return earliest match among many patterns
----
---- Logic here is to test among several patterns. If several got a match,
---- return one with earliest match.
----
----@private
-H.match_first_pattern = function(text, pattern_set, init)
-  local start_tbl = vim.tbl_map(function(pattern) return text:find(pattern, init) or math.huge end, pattern_set)
-
-  local min_start, min_id = math.huge, nil
-  for id, st in ipairs(start_tbl) do
-    if st < min_start then
-      min_start, min_id = st, id
+H.find_pattern_with_first_match = function(text, pattern_set, init)
+  local min_start, first_pat = math.huge, nil
+  for _, pat in ipairs(pattern_set) do
+    local from = text:find(pat, init)
+    if from ~= nil and from < min_start then
+      min_start, first_pat = from, pat
     end
   end
-
-  if min_id == nil then return {} end
-  return { text:match(pattern_set[min_id], init) }
+  return first_pat
 end
 
 -- Utilities ------------------------------------------------------------------
