@@ -8,7 +8,7 @@
 ---   - Item 2.
 ---@param c table
 ---@param d
----@param x %%%bad_name!!
+---@param x %%%bad_name!! Actual formatting is not defined
 
 --- Test for expanding `?` to `(optional)`
 ---
@@ -20,11 +20,43 @@
 ---
 ---@param a number Should work.
 ---@param b number[] Should work.
+---@param B number[]? Should work.
 ---@param c number|nil Should work.
----@param d table<string, number> Should work.
----@param e fun(a: string, b:number) Should work.
----@param f fun(a: string, b:number): table Should work.
----@param g NUMBER Shouldn't work.
+---@param C number | nil Should work.
+---@param d number | number[] Should work.
+---@param e (number | nil) Should not be doubly enclosed in ().
+---@param f [number, string] Should work.
+---@param F [number, string[]] Should work.
+---@param g {[string]:number} Should work.
+---@param G { [string]: number } Should work.
+---@param h {key1:string,key2:number} Should work.
+---@param H { key1: string, key2: number } Should work.
+---@param i table<string, number> Should work.
+---@param j fun(a: string, b:number) Should work.
+---@param k fun(a: string, b:number): table Should work.
+---@param K fun(a: string, b:number):table Should work.
+---@param l fun(a: string): string | nil Should work.
+---@param L fun(a: string):string | nil Should work.
+---@param m fun(a: string): (string | nil) Should work.
+---@param M fun(a: string):(string | nil) Should work.
+---@param n fun(a: string): [number, string] Should work.
+---@param N fun(a: string):[number, string] Should work.
+---@param o fun(a: string): { key1: string } Should work.
+---@param O fun(a: string):{ key1: string } Should work.
+---@param p fun(a: string): table<string, number> Should work.
+---@param P fun(a: string):table<string, number> Should work.
+---@param q fun(a: string): NUMBER | OTHER Should work.
+---@param Q fun(a: string):NUMBER | OTHER Should work.
+---@param r NUMBER Should still work as custom classes are allowed.
+---@param R My_Class.child Should still work as custom classes are allowed.
+---@param s NUMBER|nil Should still work as custom classes are allowed.
+---@param S My_Class.child|nil Should still work as custom classes are allowed.
+---@param t NUMBER | nil Should still work as custom classes are allowed.
+---@param T My_Class.child | nil Should still work as custom classes are allowed.
+---@param u (NUMBER | nil) Should not be doubly enclosed in ().
+---@param v number[] | (string | nil) | [number, string] Should work.
+---@param w number | string Should ignore |later| special[] characters?
+---@param x (number) | (string) Should still enclose in parenthesis.
 ---@param a_function function Should enclose second `function`.
 ---@param function_a function Should enclose second `function`.
 ---@param a_function_a function Should enclose second `function`.

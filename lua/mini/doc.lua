@@ -256,12 +256,13 @@ MiniDoc.config = {
       ['@field'] = function(s)
         H.mark_optional(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
+        local col_past_var_name = s[1]:match('^%s*%S+%s+`%(optional%)`()') or s[1]:match('^%s*%S+()') or 1
+        H.enclose_type(s, col_past_var_name)
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@overload'] = --<function>,
       ['@overload'] = function(s)
-        H.enclose_type(s, '`%1`', 1)
+        s[1] = '`' .. s[1] .. '`'
         H.add_section_heading(s, 'Overload')
       end,
       --minidoc_replace_end
@@ -269,7 +270,8 @@ MiniDoc.config = {
       ['@param'] = function(s)
         H.mark_optional(s)
         H.enclose_var_name(s)
-        H.enclose_type(s, '`%(%1%)`', s[1]:find('%s'))
+        local col_past_var_name = s[1]:match('^%s*%S+%s+`%(optional%)`()') or s[1]:match('^%s*%S+()') or 1
+        H.enclose_type(s, col_past_var_name)
       end,
       --minidoc_replace_end
       --minidoc_replace_start ['@private'] = --<function: registers block for removal>,
@@ -278,7 +280,7 @@ MiniDoc.config = {
       --minidoc_replace_start ['@return'] = --<function>,
       ['@return'] = function(s)
         H.mark_optional(s)
-        H.enclose_type(s, '`%(%1%)`', 1)
+        H.enclose_type(s, 1)
         H.add_section_heading(s, 'Return')
       end,
       --minidoc_replace_end
@@ -318,7 +320,7 @@ MiniDoc.config = {
       --minidoc_replace_end
       --minidoc_replace_start ['@type'] = --<function>,
       ['@type'] = function(s)
-        H.enclose_type(s, '`%(%1%)`', 1)
+        H.enclose_type(s, 1)
         H.add_section_heading(s, 'Type')
       end,
       --minidoc_replace_end
@@ -713,10 +715,14 @@ H.pattern_sets = {
   -- Patterns to work with type descriptions
   -- (see https://github.com/sumneko/lua-language-server/wiki/EmmyLua-Annotations#types-and-type)
   types = {
+    '%b()', -- Allow union type
+    '%b[]',
+    '%b{}',
     'table%b<>',
-    'fun%b(): %S+', 'fun%b()',
+    'fun%b():%s*%b()', 'fun%b():%s*%b[]', 'fun%b():%s*%b{}', 'fun%b():%s*table%b<>', 'fun%b():%s*%S+', 'fun%b()',
     'nil', 'any', 'boolean', 'string', 'number', 'integer', 'function', 'table', 'thread', 'userdata', 'lightuserdata',
-    '%.%.%.'
+    '%.%.%.',
+    '[%a][%w_%.]*', -- Allow any class as a type
   },
 }
 --stylua: ignore end
@@ -1031,22 +1037,35 @@ H.enclose_var_name = function(s) s[1] = s[1]:gsub('(%S+)', '{%1}', 1) end
 ---@param init number Start of searching for first "type-like" string. It is
 ---   needed to not detect type early. Like in `@param a_function function`.
 ---@private
-H.enclose_type = function(s, enclosure, init)
+H.enclose_type = function(s, init)
   if #s == 0 or s.type ~= 'section' then return end
-  enclosure = enclosure or '`%(%1%)`'
   init = init or 1
 
-  local type_pattern = H.find_pattern_with_first_match(s[1], H.pattern_sets['types'], init)
+  local type_pattern_set = H.pattern_sets['types']
+  local type_pattern = H.find_pattern_with_first_match(s[1], type_pattern_set, init)
   if type_pattern == nil then return end
 
-  -- Add `%S*` to front and back of found pattern to support their combination
-  -- with `|`. Also allows using `[]` and `?` prefixes.
-  type_pattern = '%S*' .. type_pattern .. '%S*'
+  -- Find range representing type. It can be a match for type pattern (plain,
+  -- array `[]`, or optional `?`), possibly in a union (`|`).
+  local from, to = s[1]:find(type_pattern, init)
+  for _ = 1, s[1]:len() do
+    if s[1]:sub(to + 1, to + 2) == '[]' then to = to + 2 end
+    if s[1]:sub(to + 1, to + 1) == '?' then to = to + 1 end
 
-  -- Avoid replacing possible match before `init`
-  local l_start = s[1]:sub(1, init - 1)
-  local l_end = s[1]:sub(init):gsub(type_pattern, enclosure, 1)
-  s[1] = ('%s%s'):format(l_start, l_end)
+    local new_to = s[1]:sub(to + 1):match('^%s*|%s*()')
+    if new_to == nil then break end
+    to = to + new_to - 1
+    local next_type_pattern = H.find_pattern_with_first_match(s[1], type_pattern_set, to + 1)
+    if next_type_pattern == nil then break end
+    to = s[1]:match(next_type_pattern .. '()', to + 1) - 1
+  end
+
+  -- Avoid replacing match before `init` and avoid unnecessary () enclosing
+  local avoid_brackets = s[1]:sub(from, to):find('^%b()$') ~= nil
+  local left = avoid_brackets and '`' or '`('
+  local right = avoid_brackets and '`' or ')`'
+
+  s[1] = s[1]:sub(1, from - 1) .. left .. s[1]:sub(from, to) .. right .. s[1]:sub(to + 1)
 end
 
 -- Infer data from afterlines -------------------------------------------------

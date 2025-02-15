@@ -13,10 +13,41 @@
 ---
 ---@return number Should work.
 ---@return number[] Should work.
+---@return number[]? Should work.
 ---@return number|nil Should work.
+---@return number | nil Should work.
+---@return number | number[] Should work.
+---@return (number | nil) Should not be doubly enclosed in ().
+---@return [number, string] Should work.
+---@return [number, string[]] Should work.
+---@return {[string]:number} Should work.
+---@return { [string]: number } Should work.
+---@return {key1:string,key2:number} Should work.
+---@return { key1: string, key2: number } Should work.
 ---@return table<string, number> Should work.
 ---@return fun(a: string, b:number) Should work.
 ---@return fun(a: string, b:number): table Should work.
----@return NUMBER Shouldn't work.
----@return function Should not enclose second time: function .
+---@return fun(a: string, b:number):table Should work.
+---@return fun(a: string): string | nil Should work.
+---@return fun(a: string):string | nil Should work.
+---@return fun(a: string): (string | nil) Should work.
+---@return fun(a: string):(string | nil) Should work.
+---@return fun(a: string): [number, string] Should work.
+---@return fun(a: string):[number, string] Should work.
+---@return fun(a: string): { key1: string } Should work.
+---@return fun(a: string):{ key1: string } Should work.
+---@return fun(a: string): table<string, number> Should work.
+---@return fun(a: string):table<string, number> Should work.
+---@return fun(a: string): NUMBER | OTHER Should work.
+---@return fun(a: string):NUMBER | OTHER Should work.
+---@return NUMBER Should still work as custom classes are allowed.
+---@return My_Class.child Should still work as custom classes are allowed.
+---@return NUMBER|nil Should still work as custom classes are allowed.
+---@return My_Class.child|nil Should still work as custom classes are allowed.
+---@return NUMBER | nil Should still work as custom classes are allowed.
+---@return My_Class.child | nil Should still work as custom classes are allowed.
+---@return (NUMBER | nil) Should not be doubly enclosed in ().
+---@return number[] | (string | nil) | [number, string] Should work.
+---@return number | string Should ignore |later| special[] characters?
+---@return (number) | (string) Should still enclose in parenthesis.
 ---@return ... Should work.

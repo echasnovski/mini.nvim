@@ -19,6 +19,10 @@
 
 - FEATURE: update textobject to respect `ignore_blank_line` option. Blank lines between commented lines are treated as part of a textobject.
 
+## mini.doc
+
+- FEATURE: improve detection and formatting for types in `@param`, `@return`, and similar.
+
 ## mini.hues
 
 - FEATURE: add support for colored markdown headings.

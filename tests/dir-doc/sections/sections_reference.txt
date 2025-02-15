@@ -75,9 +75,9 @@ Test `@alias` section
 ------------------------------------------------------------------------------
 Parameters ~
 {x}   `(fun(type: string, data: any))`
-{y} Another data structure.
+{y} `(table<string,number>)` Another data structure.
   Its description spans over multiple lines.
-{z} var_three
+{z} `(var_three)` Should be enclosed as custom classes are allowed.
 
 ------------------------------------------------------------------------------
 Aliases also expand inside text:   fun(type: string, data: any)
@@ -89,7 +89,7 @@ Test of `MiniDoc.current.aliases`
   ["%bad_name*"] = "This alias has bad name and should still work.",
   var_one = "  fun(type: string, data: any)",
   var_three = "This alias shouldn't be applied to previous line as it is defined after it.",
-  var_two = "Another data structure.\n  Its description spans over multiple lines."
+  var_two = "table<string,number> Another data structure.\n  Its description spans over multiple lines."
 }
 
 
@@ -133,7 +133,7 @@ Parameters ~
   - Item 2.
 {c} `(table)`
 {d}
-{x} %%%bad_name!!
+{x} %%%`(bad_name)`!! Actual formatting is not defined
 
 ------------------------------------------------------------------------------
 Test for expanding `?` to `(optional)`
@@ -149,11 +149,43 @@ Test for enclosing type
 Parameters ~
 {a} `(number)` Should work.
 {b} `(number[])` Should work.
+{B} `(number[]?)` Should work.
 {c} `(number|nil)` Should work.
-{d} `(table<string, number>)` Should work.
-{e} `(fun(a: string, b:number))` Should work.
-{f} `(fun(a: string, b:number): table)` Should work.
-{g} NUMBER Shouldn't work.
+{C} `(number | nil)` Should work.
+{d} `(number | number[])` Should work.
+{e} `(number | nil)` Should not be doubly enclosed in ().
+{f} `([number, string])` Should work.
+{F} `([number, string[]])` Should work.
+{g} `({[string]:number})` Should work.
+{G} `({ [string]: number })` Should work.
+{h} `({key1:string,key2:number})` Should work.
+{H} `({ key1: string, key2: number })` Should work.
+{i} `(table<string, number>)` Should work.
+{j} `(fun(a: string, b:number))` Should work.
+{k} `(fun(a: string, b:number): table)` Should work.
+{K} `(fun(a: string, b:number):table)` Should work.
+{l} `(fun(a: string): string | nil)` Should work.
+{L} `(fun(a: string):string | nil)` Should work.
+{m} `(fun(a: string): (string | nil))` Should work.
+{M} `(fun(a: string):(string | nil))` Should work.
+{n} `(fun(a: string): [number, string])` Should work.
+{N} `(fun(a: string):[number, string])` Should work.
+{o} `(fun(a: string): { key1: string })` Should work.
+{O} `(fun(a: string):{ key1: string })` Should work.
+{p} `(fun(a: string): table<string, number>)` Should work.
+{P} `(fun(a: string):table<string, number>)` Should work.
+{q} `(fun(a: string): NUMBER | OTHER)` Should work.
+{Q} `(fun(a: string):NUMBER | OTHER)` Should work.
+{r} `(NUMBER)` Should still work as custom classes are allowed.
+{R} `(My_Class.child)` Should still work as custom classes are allowed.
+{s} `(NUMBER|nil)` Should still work as custom classes are allowed.
+{S} `(My_Class.child|nil)` Should still work as custom classes are allowed.
+{t} `(NUMBER | nil)` Should still work as custom classes are allowed.
+{T} `(My_Class.child | nil)` Should still work as custom classes are allowed.
+{u} `(NUMBER | nil)` Should not be doubly enclosed in ().
+{v} `(number[] | (string | nil) | [number, string])` Should work.
+{w} `(number | string)` Should ignore |later| special[] characters?
+{x} `((number) | (string))` Should still enclose in parenthesis.
 {a_function} `(function)` Should enclose second `function`.
 {function_a} `(function)` Should enclose second `function`.
 {a_function_a} `(function)` Should enclose second `function`.
@@ -186,7 +218,27 @@ Return ~
 Return ~
 `(number[])` Should work.
 Return ~
+`(number[])` `(optional)` Should work.
+Return ~
 `(number|nil)` Should work.
+Return ~
+`(number | nil)` Should work.
+Return ~
+`(number | number[])` Should work.
+Return ~
+`(number | nil)` Should not be doubly enclosed in ().
+Return ~
+`([number, string])` Should work.
+Return ~
+`([number, string[]])` Should work.
+Return ~
+`({[string]:number})` Should work.
+Return ~
+`({ [string]: number })` Should work.
+Return ~
+`({key1:string,key2:number})` Should work.
+Return ~
+`({ key1: string, key2: number })` Should work.
 Return ~
 `(table<string, number>)` Should work.
 Return ~
@@ -194,9 +246,51 @@ Return ~
 Return ~
 `(fun(a: string, b:number): table)` Should work.
 Return ~
-NUMBER Shouldn't work.
+`(fun(a: string, b:number):table)` Should work.
 Return ~
-`(function)` Should not enclose second time: function .
+`(fun(a: string): string | nil)` Should work.
+Return ~
+`(fun(a: string):string | nil)` Should work.
+Return ~
+`(fun(a: string): (string | nil))` Should work.
+Return ~
+`(fun(a: string):(string | nil))` Should work.
+Return ~
+`(fun(a: string): [number, string])` Should work.
+Return ~
+`(fun(a: string):[number, string])` Should work.
+Return ~
+`(fun(a: string): { key1: string })` Should work.
+Return ~
+`(fun(a: string):{ key1: string })` Should work.
+Return ~
+`(fun(a: string): table<string, number>)` Should work.
+Return ~
+`(fun(a: string):table<string, number>)` Should work.
+Return ~
+`(fun(a: string): NUMBER | OTHER)` Should work.
+Return ~
+`(fun(a: string):NUMBER | OTHER)` Should work.
+Return ~
+`(NUMBER)` Should still work as custom classes are allowed.
+Return ~
+`(My_Class.child)` Should still work as custom classes are allowed.
+Return ~
+`(NUMBER|nil)` Should still work as custom classes are allowed.
+Return ~
+`(My_Class.child|nil)` Should still work as custom classes are allowed.
+Return ~
+`(NUMBER | nil)` Should still work as custom classes are allowed.
+Return ~
+`(My_Class.child | nil)` Should still work as custom classes are allowed.
+Return ~
+`(NUMBER | nil)` Should not be doubly enclosed in ().
+Return ~
+`(number[] | (string | nil) | [number, string])` Should work.
+Return ~
+`(number | string)` Should ignore |later| special[] characters?
+Return ~
+`((number) | (string))` Should still enclose in parenthesis.
 Return ~
 `(...)` Should work.
 
