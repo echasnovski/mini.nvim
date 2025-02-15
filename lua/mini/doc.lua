@@ -969,15 +969,29 @@ end
 H.alias_replace = function(s)
   if MiniDoc.current.aliases == nil then return end
 
-  for i, _ in ipairs(s) do
-    for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
-      -- Escape special characters. This is done here and not while registering
-      -- alias to allow user to refer to aliases by its original name.
-      -- Store escaped words in separate variables because `vim.pesc()` returns
-      -- two values which might conflict if outputs are used as arguments.
-      local name_escaped = vim.pesc(alias_name)
-      local desc_escaped = vim.pesc(alias_desc)
-      s[i] = s[i]:gsub(name_escaped, desc_escaped)
+  for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
+    -- Escape special characters. This is done here and not while registering
+    -- alias to allow user to refer to aliases by its original name.
+    local name_escaped = vim.pesc(alias_name)
+    local desc_is_union = alias_desc:find('|') ~= nil
+    for i, _ in ipairs(s) do
+      -- Try to be accurate in which matches to replace. This avoids cases like
+      -- `@alias aaa AAA` with `aaaBBB->AAABBB` replacements
+      s[i] = s[i]:gsub('(.?)(' .. name_escaped .. ')(.?)', function(before, match, after)
+        local before_is_empty, after_is_empty = before == '', after == ''
+        local before_is_space, after_is_space = before:find('%s') == 1, after:find('%s') == 1
+        -- Allow match to be preceded/followed by special characters that can
+        -- be used inside EmmyLua/LuaCATS annotations.
+        -- Source: https://luals.github.io/wiki/annotations/#documenting-types
+        local before_is_special, after_is_special = before:find('[|,%[%(<:]') == 1, after:find('[|,%[%])>}%?]') == 1
+
+        local before_is_valid = before_is_empty or before_is_space or before_is_special
+        local after_is_valid = after_is_empty or after_is_space or after_is_special
+        if not (before_is_valid and after_is_valid) then return before .. match .. after end
+
+        local should_enclose = desc_is_union and (before_is_special or after_is_special)
+        return before .. (should_enclose and ('(' .. alias_desc .. ')') or alias_desc) .. after
+      end)
     end
   end
 end

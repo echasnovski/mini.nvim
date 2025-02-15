@@ -15,3 +15,68 @@
 --- Test of `MiniDoc.current.aliases`
 ---
 ---@eval return vim.inspect(MiniDoc.current.aliases)
+
+---@alias aaa number
+---@alias _bbb1 string
+---@alias ccc_ table
+---@alias union number|nil
+---@alias unionOther string | table
+
+--- Aliases should not be replaced when they are obviously not meant to
+---
+---@param a1 aaaClass Should not be replaced
+---@param a2 aaa_bbb1 Should not be replaced
+---@param a3 ccc_bbb1 Should not be replaced
+---
+---@text None of these should be replaced: aaaA _bbb1_ other.ccc_
+---
+---@return aaaClass
+---@return aaa_bbb1
+---@return ccc_bbb1
+---
+---@text All next ones should be replaced as they are inside allowed syntax
+---
+---@param b1 aaa?
+---@param b2 _bbb1?
+---@param b3 ccc_?
+---
+---@param c1 aaa|_bbb1|ccc_
+---@param c2 aaa[]
+---@param c3 [aaa,_bbb1,ccc_]
+---@param c4 {[aaa]:_bbb1}
+---@param c5 table<aaa,_bbb1>
+---@param c6 {key1:aaa,key2:_bbb1}
+---@param c7 fun(arg1:aaa,arg2:_bbb1):ccc_
+---
+---@text Union types should try to "smartly" add parenthesis
+---
+---@param d1  union
+---@param D1  unionOther
+---@param d2  union?
+---@param D2  unionOther?
+---@param d3  union[]
+---@param D3  unionOther[]
+---@param d4  [union,unionOther]
+---@param D4  [unionOther,union]
+---@param d5  [union, unionOther]
+---@param D5  [unionOther, union]
+---@param d6  [ union, unionOther ]
+---@param D6  [ unionOther, union ]
+---@param d7  [ union , unionOther ]
+---@param d8  {[union]:unionOther}
+---@param D8  {[unionOther]:union}
+---@param d9  { [union]: unionOther }
+---@param D9  { [unionOther]: union }
+---@param d10 table<union,unionOther>
+---@param D10 table<unionOther,union>
+---@param d11 table<union, unionOther>
+---@param D11 table<unionOther, union>
+---@param d12 {key1:union,key2:unionOther}
+---@param D12 {key1:unionOther,key2:union}
+---@param d13 { key1:union, key2:unionOther }
+---@param D13 { key1:unionOther, key2:union }
+---@param d14 { key1: union, key2: unionOther }
+---@param d15 fun(arg1:union,arg2:unionOther):union
+---@param D15 fun(arg1:unionOther,arg2:union):unionOther
+---@param d16 fun(arg1: union, arg2: unionOther): union
+---@param D16 fun(arg1: unionOther, arg2: union): unionOther

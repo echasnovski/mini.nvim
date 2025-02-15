@@ -92,6 +92,70 @@ Test of `MiniDoc.current.aliases`
   var_two = "table<string,number> Another data structure.\n  Its description spans over multiple lines."
 }
 
+------------------------------------------------------------------------------
+Aliases should not be replaced when they are obviously not meant to
+
+Parameters ~
+{a1} `(aaaClass)` Should not be replaced
+{a2} `(aaa_bbb1)` Should not be replaced
+{a3} `(ccc_bbb1)` Should not be replaced
+
+None of these should be replaced: aaaA _bbb1_ other.ccc_
+
+Return ~
+`(aaaClass)`
+Return ~
+`(aaa_bbb1)`
+Return ~
+`(ccc_bbb1)`
+
+All next ones should be replaced as they are inside allowed syntax
+
+{b1} `(number?)`
+{b2} `(string?)`
+{b3} `(table?)`
+
+{c1} `(number|string|table)`
+{c2} `(number[])`
+{c3} `([number,string,table])`
+{c4} `({[number]:string})`
+{c5} `(table<number,string>)`
+{c6} `({key1:number,key2:string})`
+{c7} `(fun(arg1:number,arg2:string):table)`
+
+Union types should try to "smartly" add parenthesis
+
+{d1}  `(number|nil)`
+{D1}  `(string | table)`
+{d2}  `((number|nil)?)`
+{D2}  `((string | table)?)`
+{d3}  `((number|nil)[])`
+{D3}  `((string | table)[])`
+{d4}  `([(number|nil),(string | table)])`
+{D4}  `([(string | table),(number|nil)])`
+{d5}  `([(number|nil), (string | table)])`
+{D5}  `([(string | table), (number|nil)])`
+{d6}  `([ (number|nil), string | table ])`
+{D6}  `([ (string | table), number|nil ])`
+{d7}  `([ number|nil , string | table ])`
+{d8}  `({[(number|nil)]:(string | table)})`
+{D8}  `({[(string | table)]:(number|nil)})`
+{d9}  `({ [(number|nil)]: string | table })`
+{D9}  `({ [(string | table)]: number|nil })`
+{d10} `(table<(number|nil),(string | table)>)`
+{D10} `(table<(string | table),(number|nil)>)`
+{d11} `(table<(number|nil), (string | table)>)`
+{D11} `(table<(string | table), (number|nil)>)`
+{d12} `({key1:(number|nil),key2:(string | table)})`
+{D12} `({key1:(string | table),key2:(number|nil)})`
+{d13} `({ key1:(number|nil), key2:(string | table) })`
+{D13} `({ key1:(string | table), key2:(number|nil) })`
+{d14} `({ key1: (number|nil), key2: string | table })`
+{d15} `(fun(arg1:(number|nil),arg2:(string | table)):(number|nil))`
+{D15} `(fun(arg1:(string | table),arg2:(number|nil)):(string | table))`
+{d16} `(fun(arg1: (number|nil), arg2: (string | table)): number|nil)`
+{D16} `(fun(arg1: (string | table), arg2: (number|nil)): string | table)`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
