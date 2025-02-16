@@ -409,8 +409,9 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
   else
     if findstart == 1 then return H.get_completion_start(H.completion.lsp.result) end
 
-    local process_items = H.get_config().lsp_completion.process_items
+    local process_items, is_incomplete = H.get_config().lsp_completion.process_items, false
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
+      is_incomplete = is_incomplete or response.isIncomplete
       -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then return {} end
@@ -418,7 +419,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
 
-    H.completion.lsp.status = 'done'
+    H.completion.lsp.status = is_incomplete and 'done-isincomplete' or 'done'
 
     -- Maybe trigger fallback action
     if vim.tbl_isempty(words) and H.completion.fallback then return H.trigger_fallback() end
@@ -460,7 +461,7 @@ H.keys = {
 -- Field `lsp` is a table describing state of all used LSP requests. It has the
 -- following structure:
 -- - id: identifier (consecutive numbers).
--- - status: status. One of 'sent', 'received', 'done', 'canceled'.
+-- - status: one of 'sent', 'received', 'done', 'done-isincomplete', 'canceled'
 -- - result: result of request.
 -- - cancel_fun: function which cancels current request.
 
@@ -600,8 +601,9 @@ H.auto_completion = function()
 
   H.completion.timer:stop()
 
-  local char_is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
-  if char_is_trigger then
+  local is_incomplete = H.completion.lsp.status == 'done-isincomplete'
+  local force = H.is_lsp_trigger(vim.v.char, 'completion') or is_incomplete
+  if force then
     -- If character is LSP trigger, force fresh LSP completion later
     -- Check LSP trigger before checking for pumvisible because it should be
     -- forced even if there are visible candidates
@@ -619,7 +621,7 @@ H.auto_completion = function()
   end
 
   -- Start non-forced completion with fallback or forced LSP source for trigger
-  H.completion.fallback, H.completion.force = not char_is_trigger, char_is_trigger
+  H.completion.fallback, H.completion.force = not force, force
 
   -- Cache id of Insert mode "text changed" event for a later tracking (reduces
   -- false positive delayed triggers). The intention is to trigger completion
@@ -633,13 +635,11 @@ H.auto_completion = function()
   -- If completion was requested after 'lsp' source exhausted itself (there
   -- were matches on typing start, but they disappeared during filtering), call
   -- fallback immediately.
-  if H.completion.source == 'lsp' then
-    H.trigger_fallback()
-    return
-  end
+  if H.completion.source == 'lsp' then return H.trigger_fallback() end
 
-  -- Using delay (of debounce type) actually improves user experience
-  -- as it allows fast typing without many popups.
+  -- Debounce delay improves experience (can type fast without many popups)
+  -- Request immediately if improving incomplete suggestions (less flickering)
+  if is_incomplete then return H.trigger_twostep() end
   H.completion.timer:start(H.get_config().delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
 end
 
@@ -767,6 +767,7 @@ H.stop_completion = function(keep_source)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
   H.completion.fallback, H.completion.force = true, false
+  if H.completion.lsp.status == 'done-isincomplete' then H.completion.lsp.status = 'done' end
   if not keep_source then H.completion.source = nil end
 end
 
