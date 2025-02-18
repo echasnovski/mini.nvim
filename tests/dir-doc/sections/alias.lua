@@ -80,3 +80,13 @@
 ---@param D15 fun(arg1:unionOther,arg2:union):unionOther
 ---@param d16 fun(arg1: union, arg2: unionOther): union
 ---@param D16 fun(arg1: unionOther, arg2: union): unionOther
+
+--- There should not be replacements in some special cases
+---
+---@param aaa aaa Parameter name should not be replaced.
+---
+---@class aaa Class name should not be replaced
+---@field aaa aaa Field name should not be replaced.
+---
+---@tag aaa
+---@toc_entry aaa (no alias replacement)

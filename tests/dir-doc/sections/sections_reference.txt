@@ -156,6 +156,19 @@ Union types should try to "smartly" add parenthesis
 {d16} `(fun(arg1: (number|nil), arg2: (string | table)): number|nil)`
 {D16} `(fun(arg1: (string | table), arg2: (number|nil)): string | table)`
 
+------------------------------------------------------------------------------
+                                                                           *aaa*
+There should not be replacements in some special cases
+
+Parameters ~
+{aaa} `(aaa)` Parameter name should not be replaced.
+
+Class ~
+{aaa} Class name should not be replaced
+Fields ~
+{aaa} `(aaa)` Field name should not be replaced.
+
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -364,6 +377,7 @@ Return ~
 Test `@toc` and `@toc_entry` sections
 
 Table of contents:
+  aaa (no alias replacement).............................................|aaa|
       Entry #1..............................................................
   Entry #2:.................................................................
   This time it is
@@ -406,7 +420,7 @@ TOC entry with very long description
 ------------------------------------------------------------------------------
 Test of `MiniDoc.current.toc`
 
-Number of current TOC entries: 7
+Number of current TOC entries: 8
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

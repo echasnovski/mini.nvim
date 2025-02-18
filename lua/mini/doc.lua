@@ -969,6 +969,9 @@ end
 H.alias_replace = function(s)
   if MiniDoc.current.aliases == nil then return end
 
+  local s_type = s.info.id
+  local has_special_first_word = s_type == '@param' or s_type == '@field' or s_type == '@class'
+  local has_special_type = s_type == '@tag' or s_type == '@toc_entry'
   for alias_name, alias_desc in pairs(MiniDoc.current.aliases) do
     -- Escape special characters. This is done here and not while registering
     -- alias to allow user to refer to aliases by its original name.
@@ -976,7 +979,8 @@ H.alias_replace = function(s)
     local desc_is_union = alias_desc:find('|') ~= nil
     for i, _ in ipairs(s) do
       -- Try to be accurate in which matches to replace. This avoids cases like
-      -- `@alias aaa AAA` with `aaaBBB->AAABBB` replacements
+      -- `@alias aaa AAA` with `aaaBBB->AAABBB` replacements or replacing
+      -- inside special places (like parameter/field/tag names, etc.)
       s[i] = s[i]:gsub('(.?)(' .. name_escaped .. ')(.?)', function(before, match, after)
         local before_is_empty, after_is_empty = before == '', after == ''
         local before_is_space, after_is_space = before:find('%s') == 1, after:find('%s') == 1
@@ -985,9 +989,11 @@ H.alias_replace = function(s)
         -- Source: https://luals.github.io/wiki/annotations/#documenting-types
         local before_is_special, after_is_special = before:find('[|,%[%(<:]') == 1, after:find('[|,%[%])>}%?]') == 1
 
+        local is_fixed_name = i == 1 and has_special_first_word and before_is_empty
         local before_is_valid = before_is_empty or before_is_space or before_is_special
         local after_is_valid = after_is_empty or after_is_space or after_is_special
-        if not (before_is_valid and after_is_valid) then return before .. match .. after end
+        local is_valid = before_is_valid and after_is_valid
+        if not is_valid or is_fixed_name or has_special_type then return before .. match .. after end
 
         local should_enclose = desc_is_union and (before_is_special or after_is_special)
         return before .. (should_enclose and ('(' .. alias_desc .. ')') or alias_desc) .. after
