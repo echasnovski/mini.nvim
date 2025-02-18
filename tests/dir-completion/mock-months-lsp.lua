@@ -75,6 +75,9 @@ end
 
 Months.requests = {
   ['textDocument/completion'] = function(params)
+    -- Count actual requests for easier "force completion" tests
+    _G.n_textdocument_completion = (_G.n_textdocument_completion or 0) + 1
+
     params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
 
     -- Imitate returning nothing in comments
@@ -101,7 +104,10 @@ Months.requests = {
       table.insert(items, res)
     end
 
-    return { { result = { items = items } } }
+    -- Mock incomplete computation
+    if _G.mock_isincomplete then items = vim.list_slice(items, 1, 6) end
+
+    return { { result = { items = items, isIncomplete = _G.mock_isincomplete } } }
   end,
 
   ['completionItem/resolve'] = function(params)

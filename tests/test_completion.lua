@@ -405,6 +405,36 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
   }
 )
 
+T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = function()
+  child.set_size(10, 20)
+  child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+  -- Mock incomplete completion list which contains only months 1-6
+  child.lua('_G.mock_isincomplete = true')
+  type_keys('i', 'J', '<C-Space>')
+  -- Should not contain `July` as it is not in the response
+  child.expect_screenshot()
+  eq(child.lua_get('_G.n_textdocument_completion'), 1)
+
+  -- Should force new request which this time will be complete
+  child.lua('_G.mock_isincomplete = false')
+  type_keys('u')
+  child.expect_screenshot()
+  eq(child.lua_get('_G.n_textdocument_completion'), 2)
+
+  -- Should *not* force new requests for complete responses
+  type_keys('n')
+  eq(child.lua_get('_G.n_textdocument_completion'), 2)
+  type_keys('<BS>')
+  eq(child.lua_get('_G.n_textdocument_completion'), 2)
+
+  -- Should force new request if deleting past the start of previous request.
+  -- This time response will be complete.
+  type_keys('<BS>')
+  child.expect_screenshot()
+  eq(child.lua_get('_G.n_textdocument_completion'), 3)
+end
+
 T['Autocompletion']['respects `config.delay.completion`'] = function()
   child.lua('MiniCompletion.config.delay.completion = ' .. (2 * default_completion_delay))
 
