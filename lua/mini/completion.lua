@@ -367,7 +367,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
   end
 
   -- NOTE: having code for request inside this function enables its use
-  -- directly with `<C-x><...>`.
+  -- directly with `<C-x><...>` and as a reaction to `<BS>`.
   if H.completion.lsp.status ~= 'received' then
     -- NOTE: it is CRUCIAL to make LSP request on the first call to
     -- 'complete-function' (as in Vim's help). This is due to the fact that
@@ -656,6 +656,11 @@ H.auto_signature = function()
 end
 
 H.on_completedonepre = function()
+  -- Do nothing if it is triggered inside `trigger_lsp()` as a result of
+  -- emulating 'completefunc'/'omnifunc' keys. This can happen if popup is
+  -- visible and pressing keys first hides it with 'CompleteDonePre' event.
+  if H.completion.lsp.status == 'received' then return end
+
   -- Try to apply additional text edits
   H.apply_additional_text_edits()
 
@@ -713,6 +718,15 @@ H.trigger_lsp = function()
   -- Do not trigger if not needed and/or allowed
   if vim.fn.mode() ~= 'i' or (H.pumvisible() and not H.completion.force) then return end
 
+  -- Overall idea: first make LSP request and re-trigger this same function
+  -- inside its callback to take the "received" route. This reduces flickering
+  -- in case popup is visible (like for `isIncomplete` and trigger characters)
+  -- as pressing 'completefunc'/'omnifunc' keys first hides completion menu.
+  -- There are still minor visual defects: typing new character reduces number
+  -- of matched items which can visually shrink popup while later increase it
+  -- again after LSP response is received. This is usually fine (especially
+  -- with not huge 'pumheight').
+  if H.completion.lsp.status ~= 'received' then return H.make_completion_request() end
   local keys = H.keys[H.get_config().lsp_completion.source_func]
   vim.api.nvim_feedkeys(keys, 'n', false)
 end
@@ -845,7 +859,7 @@ H.make_completion_request = function()
     H.completion.lsp.status = 'received'
     H.completion.lsp.result = result
 
-    -- Trigger LSP completion to use "received" route
+    -- Trigger LSP completion to use completefunc/omnifunc route
     H.trigger_lsp()
   end)
 

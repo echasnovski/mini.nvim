@@ -40,6 +40,16 @@ local mock_miniicons = function()
   ]])
 end
 
+local mock_completefunc_lsp_tracking = function()
+  child.lua([[
+    local completefunc_lsp_orig = MiniCompletion.completefunc_lsp
+    MiniCompletion.completefunc_lsp = function(...)
+      _G.n_completfunc_lsp = (_G.n_completfunc_lsp or 0) + 1
+      return completefunc_lsp_orig(...)
+    end
+  ]])
+end
+
 -- NOTE: this can't show "what filtered text is actually shown in window".
 -- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
@@ -375,8 +385,9 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
   { parametrize = { { 'completefunc' }, { 'omnifunc' } } },
   {
     test = function(source_func)
-      child.set_size(16, 20)
       reload_module({ lsp_completion = { source_func = source_func } })
+      mock_completefunc_lsp_tracking()
+      child.set_size(16, 20)
       child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
 
       --stylua: ignore
@@ -386,13 +397,18 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
       }
       type_keys('i', '<C-Space>')
       eq(get_completion(), all_months)
+      -- - Should only call two times, as per `:h complete-functions`, i.e. not
+      --   use it to actually make request (which would have made it 3 times).
+      eq(child.lua_get('_G.n_completfunc_lsp'), 2)
 
       type_keys('May.')
+      eq(child.lua_get('_G.n_completfunc_lsp'), 2)
       eq(child.fn.pumvisible(), 0)
       sleep(default_completion_delay - small_time)
       eq(child.fn.pumvisible(), 0)
       sleep(small_time + small_time)
       eq(get_completion(), all_months)
+      eq(child.lua_get('_G.n_completfunc_lsp'), 4)
       child.expect_screenshot()
 
       -- Should show only LSP without fallback, i.e. typing LSP trigger should
@@ -405,34 +421,74 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
   }
 )
 
+T['Autocompletion']['works with `<BS>`'] = function()
+  mock_completefunc_lsp_tracking()
+  child.set_size(10, 20)
+  child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+  type_keys('i', 'J', 'u', '<C-Space>')
+  -- - Should only call two times, as per `:h complete-functions`: first to
+  --   find the start column, second to return completion suggestions.
+  eq(child.lua_get('_G.n_completfunc_lsp'), 2)
+
+  type_keys('n')
+  child.expect_screenshot()
+  eq(child.lua_get('_G.n_completfunc_lsp'), 2)
+
+  -- Should keep completion menu and adjust items without extra 'completefunc'
+  -- calls (as it is still at or after initial start column)
+  type_keys('<BS>')
+  child.expect_screenshot()
+  eq(child.lua_get('_G.n_completfunc_lsp'), 2)
+
+  -- Should reevaluate completion list as it is past initial start column
+  type_keys('<BS>')
+  child.expect_screenshot()
+  -- - Should call three times: first to make a request, second and third to
+  --   act as a regular 'completefunc'/'omnifunc'
+  eq(child.lua_get('_G.n_completfunc_lsp'), 5)
+end
+
 T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = function()
+  mock_completefunc_lsp_tracking()
   child.set_size(10, 20)
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
 
   -- Mock incomplete completion list which contains only months 1-6
   child.lua('_G.mock_isincomplete = true')
   type_keys('i', 'J', '<C-Space>')
-  -- Should not contain `July` as it is not in the response
+  -- - Should not contain `July` as it is not in the response
   child.expect_screenshot()
   eq(child.lua_get('_G.n_textdocument_completion'), 1)
+  -- - Should only call two times, as per `:h complete-functions`: first to
+  --   find the start column, second to return completion suggestions.
+  eq(child.lua_get('_G.n_completfunc_lsp'), 2)
 
   -- Should force new request which this time will be complete
   child.lua('_G.mock_isincomplete = false')
   type_keys('u')
   child.expect_screenshot()
   eq(child.lua_get('_G.n_textdocument_completion'), 2)
+  -- - NOTE: not using completefunc to make an LSP request is a key to reduce
+  --   flickering in this use case (as executing `<C-x>...` forces popup hide).
+  eq(child.lua_get('_G.n_completfunc_lsp'), 4)
 
-  -- Should *not* force new requests for complete responses
+  -- Shouldn't force new requests or call 'completefunc' for complete responses
   type_keys('n')
   eq(child.lua_get('_G.n_textdocument_completion'), 2)
+  eq(child.lua_get('_G.n_completfunc_lsp'), 4)
   type_keys('<BS>')
   eq(child.lua_get('_G.n_textdocument_completion'), 2)
+  eq(child.lua_get('_G.n_completfunc_lsp'), 4)
 
   -- Should force new request if deleting past the start of previous request.
   -- This time response will be complete.
   type_keys('<BS>')
   child.expect_screenshot()
   eq(child.lua_get('_G.n_textdocument_completion'), 3)
+  -- - Should call three times: first to make a request, second and third to
+  --   act as a regular 'completefunc'/'omnifunc'
+  eq(child.lua_get('_G.n_completfunc_lsp'), 7)
 end
 
 T['Autocompletion']['respects `config.delay.completion`'] = function()
@@ -565,6 +621,23 @@ T['Manual completion']['works with fallback action'] = function()
   eq(get_completion(), { 'Jackpot' })
 end
 
+T['Manual completion']['works with explicit `<C-x>...`'] = new_set(
+  { parametrize = { { 'completefunc' }, { 'omnifunc' } } },
+  {
+    test = function(source_func)
+      reload_module({ lsp_completion = { source_func = source_func } })
+      mock_completefunc_lsp_tracking()
+      child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+      local source_keys = '<C-x>' .. (source_func == 'completefunc' and '<C-u>' or '<C-o>')
+      type_keys('i', 'J', source_keys)
+      eq(get_completion(), { 'January', 'June', 'July' })
+      -- Should call three times: first to initiate request, second/third to
+      -- perform its actions (as per `:h complete-functions`)
+      eq(child.lua_get('_G.n_completfunc_lsp'), 3)
+    end,
+  }
+)
 T['Manual completion']['respects `config.mappings'] = function()
   reload_module({ mappings = { force_twostep = '<C-z>', force_fallback = '<C-x>' } })
   type_keys('i', 'J', '<C-z>')
