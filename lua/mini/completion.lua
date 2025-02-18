@@ -363,20 +363,12 @@ end
 MiniCompletion.completefunc_lsp = function(findstart, base)
   -- Early return
   if not H.has_lsp_clients('completionProvider') or H.completion.lsp.status == 'sent' then
-    if findstart == 1 then return -3 end
-    return {}
+    return findstart == 1 and -3 or {}
   end
 
   -- NOTE: having code for request inside this function enables its use
   -- directly with `<C-x><...>`.
   if H.completion.lsp.status ~= 'received' then
-    local current_id = H.completion.lsp.id + 1
-    H.completion.lsp.id = current_id
-    H.completion.lsp.status = 'sent'
-
-    local bufnr = vim.api.nvim_get_current_buf()
-    local params = H.make_position_params()
-
     -- NOTE: it is CRUCIAL to make LSP request on the first call to
     -- 'complete-function' (as in Vim's help). This is due to the fact that
     -- cursor line and position are different on the first and second calls to
@@ -384,28 +376,13 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     -- of the line '  he', cursor position on the first call will be
     -- (<linenum>, 4) and line will be '  he' but on the second call -
     -- (<linenum>, 2) and '  ' (because 2 is a column of completion start).
-    -- This request is executed only on second call because it returns `-3` on
+    --
+    -- This request is not executed on second call because it returns `-3` on
     -- first call (which means cancel and leave completion mode).
-    -- NOTE: using `buf_request_all()` (instead of `buf_request()`) to easily
-    -- handle possible fallback and to have all completion suggestions be
-    -- filtered with one `base` in the other route of this function. Anyway,
-    -- the most common situation is with one attached LSP client.
-    local cancel_fun = vim.lsp.buf_request_all(bufnr, 'textDocument/completion', params, function(result)
-      if not H.is_lsp_current(H.completion, current_id) then return end
+    H.make_completion_request()
 
-      H.completion.lsp.status = 'received'
-      H.completion.lsp.result = result
-
-      -- Trigger LSP completion to take 'received' route
-      H.trigger_lsp()
-    end)
-
-    -- Cache cancel function to disable requests when they are not needed
-    H.completion.lsp.cancel_fun = cancel_fun
-
-    -- End completion and wait for LSP callback
-    if findstart == 1 then return -3 end
-    return {}
+    -- End completion and wait for LSP callback to re-trigger this
+    return findstart == 1 and -3 or {}
   else
     if findstart == 1 then return H.get_completion_start(H.completion.lsp.result) end
 
@@ -733,12 +710,11 @@ H.trigger_lsp = function()
   --   "done", it will once make whole LSP request. Having check for visible
   --   popup should prevent here the call to complete-function.
 
-  -- When `force` is `true` then presence of popup shouldn't matter.
-  local no_popup = H.completion.force or (not H.pumvisible())
-  if no_popup and vim.fn.mode() == 'i' then
-    local key = H.keys[H.get_config().lsp_completion.source_func]
-    vim.api.nvim_feedkeys(key, 'n', false)
-  end
+  -- Do not trigger if not needed and/or allowed
+  if vim.fn.mode() ~= 'i' or (H.pumvisible() and not H.completion.force) then return end
+
+  local keys = H.keys[H.get_config().lsp_completion.source_func]
+  vim.api.nvim_feedkeys(keys, 'n', false)
 end
 
 H.trigger_fallback = function()
@@ -853,6 +829,30 @@ end
 H.is_lsp_current = function(cache, id) return cache.lsp.id == id and cache.lsp.status == 'sent' end
 
 -- Completion -----------------------------------------------------------------
+H.make_completion_request = function()
+  local current_id = H.completion.lsp.id + 1
+  H.completion.lsp.id = current_id
+  H.completion.lsp.status = 'sent'
+
+  local buf_id, params = vim.api.nvim_get_current_buf(), H.make_position_params()
+  -- NOTE: use `buf_request_all()` (instead of `buf_request()`) to easily
+  -- handle possible fallback and to have all completion suggestions be later
+  -- filtered with one `base`. Anyway, the most common situation is with one
+  -- attached LSP client.
+  local cancel_fun = vim.lsp.buf_request_all(buf_id, 'textDocument/completion', params, function(result)
+    if not H.is_lsp_current(H.completion, current_id) then return end
+
+    H.completion.lsp.status = 'received'
+    H.completion.lsp.result = result
+
+    -- Trigger LSP completion to use "received" route
+    H.trigger_lsp()
+  end)
+
+  -- Cache cancel function to disable requests when they are not needed
+  H.completion.lsp.cancel_fun = cancel_fun
+end
+
 -- This is a truncated version of
 -- `vim.lsp.util.text_document_completion_list_to_complete_items` which does
 -- not filter and sort items.
