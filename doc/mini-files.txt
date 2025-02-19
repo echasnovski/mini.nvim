@@ -354,13 +354,23 @@ with the following information:
 
 File action events ~
 
+- `MiniFilesActionCreatePre` - before entry is created.
+
 - `MiniFilesActionCreate` - after entry is successfully created.
+
+- `MiniFilesActionDeletePre` - before entry is deleted.
 
 - `MiniFilesActionDelete` - after entry is successfully deleted.
 
+- `MiniFilesActionRenamePre` - before entry is renamed.
+
 - `MiniFilesActionRename` - after entry is successfully renamed.
 
+- `MiniFilesActionCopyPre` - before entry is copied.
+
 - `MiniFilesActionCopy` - after entry is successfully copied.
+
+- `MiniFilesActionMovePre` - before entry is moved.
 
 - `MiniFilesActionMove` - after entry is successfully moved.
 

@@ -350,13 +350,23 @@
 ---
 --- File action events ~
 ---
+--- - `MiniFilesActionCreatePre` - before entry is created.
+---
 --- - `MiniFilesActionCreate` - after entry is successfully created.
+---
+--- - `MiniFilesActionDeletePre` - before entry is deleted.
 ---
 --- - `MiniFilesActionDelete` - after entry is successfully deleted.
 ---
+--- - `MiniFilesActionRenamePre` - before entry is renamed.
+---
 --- - `MiniFilesActionRename` - after entry is successfully renamed.
 ---
+--- - `MiniFilesActionCopyPre` - before entry is copied.
+---
 --- - `MiniFilesActionCopy` - after entry is successfully copied.
+---
+--- - `MiniFilesActionMovePre` - before entry is moved.
 ---
 --- - `MiniFilesActionMove` - after entry is successfully moved.
 ---
@@ -2676,13 +2686,16 @@ end
 H.fs_actions_apply = function(fs_actions)
   for i = 1, #fs_actions do
     local diff, action = fs_actions[i], fs_actions[i].action
+    local to = action == 'create' and diff.to:gsub('/$', '') or diff.to
+    local data = { action = action, from = diff.from, to = to }
+    local action_titlecase = action:sub(1, 1):upper() .. action:sub(2)
+    local event = 'MiniFilesAction' .. action_titlecase
+    -- Trigger pre event before action
+    H.trigger_event(event .. 'Pre', data)
     local ok, success = pcall(H.fs_do[action], diff.from, diff.to)
     if ok and success then
       -- Trigger event
-      local to = action == 'create' and diff.to:gsub('/$', '') or diff.to
-      local data = { action = action, from = diff.from, to = to }
-      local action_titlecase = action:sub(1, 1):upper() .. action:sub(2)
-      H.trigger_event('MiniFilesAction' .. action_titlecase, data)
+      H.trigger_event(event, data)
 
       -- Modify later actions to account for file movement
       local has_moved = to ~= nil and not (action == 'copy' or action == 'create')
