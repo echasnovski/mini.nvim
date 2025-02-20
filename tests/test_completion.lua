@@ -873,6 +873,17 @@ T['Information window']['adjusts window width'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['stylizes markdown with concealed characters'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+
+  child.set_size(15, 45)
+  type_keys('i', 'Jul', '<C-Space>')
+  type_keys('<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
 T['Information window']['implements debounce-style delay'] = function()
   type_keys('i', 'J', '<C-Space>')
   eq(get_completion(), { 'January', 'June', 'July' })
@@ -1035,6 +1046,16 @@ T['Signature help']['adjusts window height'] = function()
   child.lua([[MiniCompletion.config.window.signature = { height = 15, width = 10, border = 'single' }]])
 
   type_keys('i', 'long(')
+  sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+end
+
+T['Signature help']['stylizes markdown with concealed characters'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+
+  child.set_size(10, 65)
+  child.bo.filetype = 'lua'
+  type_keys('i', 'string.format(')
   sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 end

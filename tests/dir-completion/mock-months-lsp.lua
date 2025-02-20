@@ -16,6 +16,35 @@ Months.items = {
   { name = 'December',  kind = 1 },
 }
 
+local markdown_info = {
+  -- Should remove all blank lines from the top
+  '',
+  '  ',
+  '# Month #07',
+  -- Should collapse multiple blank lines into one
+  '',
+  ' ',
+  '\t',
+  -- Should replace section separator with continuous one spanning window width
+  '---',
+  '',
+  -- Should conceal special characters and highlight
+  'This *is* __markdown__ text',
+  '',
+  ' ',
+  -- Should conceal code block characters *and* remove all blank lines before
+  -- and after code block (as those will be displayed as empty themselves)
+  '```lua',
+  'local a = 1',
+  '```',
+  -- Should remove all blank lines from the bottom
+  ' ',
+  '',
+  '\t',
+  ' ',
+  '',
+}
+
 Months.data = {
   January   = { documentation = 'Month #01' },
   February  = { documentation = 'Month #02' },
@@ -23,7 +52,7 @@ Months.data = {
   April     = { documentation = 'Month #04' },
   May       = { documentation = 'Month #05' },
   June      = { documentation = 'Month #06' },
-  July      = { documentation = 'Month #07' },
+  July      = { documentation = table.concat(markdown_info, '\n') },
   August    = { documentation = 'Month #08' },
   September = { documentation = 'Month #09' },
   October   = { documentation = 'Month #10' },
@@ -141,6 +170,8 @@ Months.requests = {
     local label, parameters
     if word == 'long(' then
       label = string.rep('a ', 1000)
+    elseif word == 'string.format(' then
+      label = 'function string.format(s:string|number, ...any)'
     else
       label = 'abc(param1, param2)'
       parameters = { { label = { 4, 10 } }, { label = { 12, 18 } } }
