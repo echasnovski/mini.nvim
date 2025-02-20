@@ -128,7 +128,7 @@ Default values:
       enable = true,
 
       -- Timing of animation (how steps will progress in time)
-      timing = --<function: implements linear total 250ms animation duration>,
+      timing = --<function: linear animation, total 250ms>,
 
       -- Path generator for visualized cursor movement
       path = --<function: implements shortest line path no longer than 1000>,
@@ -140,7 +140,7 @@ Default values:
       enable = true,
 
       -- Timing of animation (how steps will progress in time)
-      timing = --<function: implements linear total 250ms animation duration>,
+      timing = --<function: linear animation, total 250ms>,
 
       -- Subscroll generator based on total scroll
       subscroll = --<function: implements equal scroll with at most 60 steps>,
@@ -152,7 +152,7 @@ Default values:
       enable = true,
 
       -- Timing of animation (how steps will progress in time)
-      timing = --<function: implements linear total 250ms animation duration>,
+      timing = --<function: linear animation, total 250ms>,
 
       -- Subresize generator for all steps of resize animations
       subresize = --<function: implements equal linear steps>,
@@ -164,7 +164,7 @@ Default values:
       enable = true,
 
       -- Timing of animation (how steps will progress in time)
-      timing = --<function: implements linear total 250ms animation duration>,
+      timing = --<function: linear animation, total 250ms>,
 
       -- Floating window config generator visualizing specific window
       winconfig = --<function: implements static window for 25 steps>,
@@ -179,7 +179,7 @@ Default values:
       enable = true,
 
       -- Timing of animation (how steps will progress in time)
-      timing = --<function: implements linear total 250ms animation duration>,
+      timing = --<function: linear animation, total 250ms>,
 
       -- Floating window config generator visualizing specific window
       winconfig = --<function: implements static window for 25 steps>,
@@ -293,8 +293,14 @@ Notes:
   '<Cmd>lua vim.cmd("normal! n"); ' ..
     'MiniAnimate.execute_after("scroll", "normal! zvzz")<CR>'
 <
-- This animation works best with Neovim>=0.9 (after certain updates to
-  |WinScrolled| event).
+- Default timing might conflict with scrolling via holding a key (like `j` or `k`
+  with 'wrap' enabled) due to high key repeat rate: next scroll is done before
+  first step of current one finishes. Resolve this by not scrolling like that
+  or by ensuring maximum value of step duration to be lower than between
+  repeated keys: set timing like `function(_, n) return math.min(250/n, 10) end`
+  or use timing with constant step duration.
+- This animation works best with Neovim>=0.9 (after certain updates
+  to |WinScrolled| event).
 
 Configuration example: >lua
 

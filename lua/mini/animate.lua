@@ -241,8 +241,14 @@ end
 ---   '<Cmd>lua vim.cmd("normal! n"); ' ..
 ---     'MiniAnimate.execute_after("scroll", "normal! zvzz")<CR>'
 --- <
---- - This animation works best with Neovim>=0.9 (after certain updates to
----   |WinScrolled| event).
+--- - Default timing might conflict with scrolling via holding a key (like `j` or `k`
+---   with 'wrap' enabled) due to high key repeat rate: next scroll is done before
+---   first step of current one finishes. Resolve this by not scrolling like that
+---   or by ensuring maximum value of step duration to be lower than between
+---   repeated keys: set timing like `function(_, n) return math.min(250/n, 10) end`
+---   or use timing with constant step duration.
+--- - This animation works best with Neovim>=0.9 (after certain updates
+---   to |WinScrolled| event).
 ---
 --- Configuration example: >lua
 ---
@@ -400,7 +406,7 @@ MiniAnimate.config = {
     enable = true,
 
     -- Timing of animation (how steps will progress in time)
-    --minidoc_replace_start timing = --<function: implements linear total 250ms animation duration>,
+    --minidoc_replace_start timing = --<function: linear animation, total 250ms>,
     timing = function(_, n) return 250 / n end,
     --minidoc_replace_end
 
@@ -418,7 +424,7 @@ MiniAnimate.config = {
     enable = true,
 
     -- Timing of animation (how steps will progress in time)
-    --minidoc_replace_start timing = --<function: implements linear total 250ms animation duration>,
+    --minidoc_replace_start timing = --<function: linear animation, total 250ms>,
     timing = function(_, n) return 250 / n end,
     --minidoc_replace_end
 
@@ -436,7 +442,7 @@ MiniAnimate.config = {
     enable = true,
 
     -- Timing of animation (how steps will progress in time)
-    --minidoc_replace_start timing = --<function: implements linear total 250ms animation duration>,
+    --minidoc_replace_start timing = --<function: linear animation, total 250ms>,
     timing = function(_, n) return 250 / n end,
     --minidoc_replace_end
 
@@ -454,7 +460,7 @@ MiniAnimate.config = {
     enable = true,
 
     -- Timing of animation (how steps will progress in time)
-    --minidoc_replace_start timing = --<function: implements linear total 250ms animation duration>,
+    --minidoc_replace_start timing = --<function: linear animation, total 250ms>,
     timing = function(_, n) return 250 / n end,
     --minidoc_replace_end
 
@@ -477,7 +483,7 @@ MiniAnimate.config = {
     enable = true,
 
     -- Timing of animation (how steps will progress in time)
-    --minidoc_replace_start timing = --<function: implements linear total 250ms animation duration>,
+    --minidoc_replace_start timing = --<function: linear animation, total 250ms>,
     timing = function(_, n) return 250 / n end,
     --minidoc_replace_end
 
