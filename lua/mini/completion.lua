@@ -965,22 +965,9 @@ H.show_info_window = function()
   local event = H.info.event
   if not event then return end
 
-  -- Try first to take lines from LSP request result.
-  local lines
-  if H.info.lsp.status == 'received' then
-    lines = H.process_lsp_response(H.info.lsp.result, function(response)
-      if not response.documentation then return {} end
-      local res = vim.lsp.util.convert_input_to_markdown_lines(response.documentation)
-      return H.normalize_markdown_lines(res)
-    end)
-
-    H.info.lsp.status = 'done'
-  else
-    lines = H.info_window_lines(H.info.id)
-  end
-
-  -- Don't show anything if there is nothing to show
-  if not lines or H.is_whitespace(lines) then return end
+  -- Get info lines to show
+  local lines = H.info_window_lines(H.info.id)
+  if lines == nil or H.is_whitespace(lines) then return end
 
   -- Ensure permanent buffer with "markdown" highlighting to display info
   H.ensure_buffer(H.info, 'MiniCompletion:completion-item-info')
@@ -1008,22 +995,25 @@ H.info_window_lines = function(info_id)
   -- Try to use 'info' field of Neovim's completion item
   local completed_item = H.table_get(H.info, { 'event', 'completed_item' }) or {}
   local text = completed_item.info or ''
-
   if not H.is_whitespace(text) then return vim.split(text, '\n') end
 
   -- If popup is not from LSP then there is nothing more to do
   if H.completion.source ~= 'lsp' then return nil end
+
+  -- Try to get documentation from LSP's latest completion result
+  if H.info.lsp.status == 'received' then
+    local lines = H.process_lsp_response(H.info.lsp.result, H.normalize_item_doc)
+    H.info.lsp.status = 'done'
+    return lines
+  end
 
   -- Try to get documentation from LSP's initial completion result
   local lsp_completion_item = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'completion_item' })
   -- If there is no LSP's completion item, then there is no point to proceed as
   -- it should serve as parameters to LSP request
   if not lsp_completion_item then return end
-  local doc = lsp_completion_item.documentation
-  if doc then
-    local lines = vim.lsp.util.convert_input_to_markdown_lines(doc)
-    return H.normalize_markdown_lines(lines)
-  end
+  local doc = H.normalize_item_doc(lsp_completion_item)
+  if #doc > 0 then return doc end
 
   -- Finally, try request to resolve current completion to add documentation
   local bufnr = vim.api.nvim_get_current_buf()
@@ -1047,8 +1037,6 @@ H.info_window_lines = function(info_id)
   end)
 
   H.info.lsp.cancel_fun = cancel_fun
-
-  return nil
 end
 
 H.info_window_options = function()
@@ -1456,14 +1444,22 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-H.normalize_markdown_lines = function(lines)
+H.normalize_item_doc = function(completion_item)
+  local doc = completion_item.documentation
+  if doc == nil then return {} end
+
+  -- Extract string content. Treat markdown and plain kinds the same.
+  local text = type(doc) == 'table' and doc.value or doc
+  -- Ensure consistent line separators
+  text = text:gsub('\r\n?', '\n')
   -- Remove trailing whitespace (converts blank lines to empty)
-  lines = table.concat(lines, '\n'):gsub('[ \t]+\n', '\n'):gsub('[ \t]+$', '\n')
+  text = text:gsub('[ \t]+\n', '\n'):gsub('[ \t]+$', '\n')
   -- Collapse multiple empty lines, remove top and bottom padding
-  lines = lines:gsub('\n\n+', '\n\n'):gsub('^\n+', ''):gsub('\n+$', '')
+  text = text:gsub('\n\n+', '\n\n'):gsub('^\n+', ''):gsub('\n+$', '')
   -- Remove padding around code blocks as they are concealed and appear empty
-  lines = lines:gsub('\n*(\n```%S+\n)', '%1'):gsub('(\n```\n?)\n*', '%1')
-  return vim.split(lines, '\n')
+  text = text:gsub('\n*(\n```%S+\n)', '%1'):gsub('(\n```\n?)\n*', '%1')
+
+  return text == '' and {} or vim.split(text, '\n')
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
