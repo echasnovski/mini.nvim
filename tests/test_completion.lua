@@ -740,6 +740,25 @@ T['Manual completion']['respects `filterText` from LSP response'] = function()
   eq(get_cursor(), { 1, 13 })
 end
 
+T['Manual completion']['respects `labelDetails` from LSP response'] = function()
+  child.set_size(16, 32)
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      for _, it in ipairs(items) do
+        if it.label == 'January' then it.labelDetails = { detail = 'jan' } end
+        if it.label == 'February' then it.labelDetails = { description = 'FEB' } end
+        -- Should use both `detail` and `description`
+        if it.label == 'March' then it.labelDetails = { detail = 'mar', description = 'MAR' } end
+      end
+      return MiniCompletion.default_process_items(items, base)
+    end
+  ]])
+
+  set_lines({})
+  type_keys('i', '<C-Space>')
+  child.expect_screenshot()
+end
+
 T['Manual completion']['respects `kind_hlgroup` as item field'] = function()
   if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
   child.set_size(10, 40)
