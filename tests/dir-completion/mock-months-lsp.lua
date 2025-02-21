@@ -49,11 +49,11 @@ Months.data = {
   January   = { documentation = 'Month #01' },
   February  = { documentation = 'Month #02' },
   March     = { documentation = 'Month #03' },
-  April     = { documentation = 'Month #04' },
+  April     = { documentation = 'Month #04', detail = '\n  local a = "New info"  \n  \n' },
   May       = { documentation = 'Month #05' },
   June      = { documentation = 'Month #06' },
   July      = { documentation = table.concat(markdown_info, '\n') },
-  August    = { documentation = 'Month #08' },
+  August    = { documentation = 'Month #08', detail = 'Month' },
   September = { documentation = 'Month #09' },
   October   = { documentation = 'Month #10' },
   November  = { documentation = 'Month #11' },
@@ -141,6 +141,7 @@ Months.requests = {
 
   ['completionItem/resolve'] = function(params)
     params.documentation = { kind = 'markdown', value = Months.data[params.label].documentation }
+    params.detail = Months.data[params.label].detail
     -- Mock additionalTextEdits as in `typescript-language-server`
     if vim.tbl_contains({ 'October', 'November' }, params.label) then
       params.additionalTextEdits = construct_additionTextEdits('resolve', params.label)

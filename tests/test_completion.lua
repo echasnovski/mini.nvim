@@ -884,6 +884,25 @@ T['Information window']['stylizes markdown with concealed characters'] = functio
   child.expect_screenshot()
 end
 
+T['Information window']['uses `detail` to construct content'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+  child.bo.filetype = 'lua'
+
+  child.set_size(15, 45)
+  type_keys('i', 'A', '<C-Space>')
+
+  -- Should show `detail` in language's code block if it is new information
+  -- Should also trim `detail` for a more compact view
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  -- Should omit `detail` if its content is already present in `documentation`
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
 T['Information window']['implements debounce-style delay'] = function()
   type_keys('i', 'J', '<C-Space>')
   eq(get_completion(), { 'January', 'June', 'July' })
