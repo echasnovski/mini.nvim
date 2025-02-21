@@ -877,19 +877,12 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
 
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   for _, item in pairs(items) do
-    -- Documentation info
-    local docs = item.documentation
-    local info = H.table_get(docs, { 'value' })
-    if not info and type(docs) == 'string' then info = docs end
-    info = info or ''
-
     table.insert(res, {
       word = H.get_completion_word(item),
       abbr = item.label,
       kind = item_kinds[item.kind] or 'Unknown',
       kind_hlgroup = item.kind_hlgroup,
-      menu = item.detail or '',
-      info = info,
+      -- Do not set `info` field in favor of trying to first resolve it
       icase = 1,
       dup = 1,
       empty = 1,
@@ -1445,11 +1438,18 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 H.normalize_item_doc = function(completion_item)
-  local doc = completion_item.documentation
-  if doc == nil then return {} end
+  local detail, doc = completion_item.detail, completion_item.documentation
+  if detail == nil and doc == nil then return {} end
 
   -- Extract string content. Treat markdown and plain kinds the same.
-  local text = type(doc) == 'table' and doc.value or doc
+  -- Show both `detail` and `documentation` if the first provides new info.
+  detail, doc = detail or '', (type(doc) == 'table' and doc.value or doc) or ''
+  detail = (H.is_whitespace(detail) or doc:find(detail, 1, true) ~= nil) and ''
+    -- Wrap details in language's code block to (usually) improve highlighting
+    -- This approach seems to work in 'hrsh7th/nvim-cmp'
+    or string.format('```%s\n%s\n```\n', vim.bo.filetype:match('^[^%.]*'), vim.trim(detail))
+  local text = detail .. doc
+
   -- Ensure consistent line separators
   text = text:gsub('\r\n?', '\n')
   -- Remove trailing whitespace (converts blank lines to empty)
