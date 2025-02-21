@@ -877,11 +877,14 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
 
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   for _, item in pairs(items) do
+    local label_details, menu = item.labelDetails, nil
+    if label_details ~= nil then menu = (label_details.detail or '') .. (label_details.description or '') end
     table.insert(res, {
       word = H.get_completion_word(item),
       abbr = item.label,
       kind = item_kinds[item.kind] or 'Unknown',
       kind_hlgroup = item.kind_hlgroup,
+      menu = menu,
       -- Do not set `info` field in favor of trying to first resolve it
       icase = 1,
       dup = 1,

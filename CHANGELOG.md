@@ -27,6 +27,7 @@
     - Signature help uses same parser as in current filetype.
 - BREAKING FEATURE: rework how LSP completion items are converted to Neovim's completion items:
     - Show `detail` highlighted as buffer's language at the start of info window, but only if `detail` provides information not already present in `documentation`. It was previously used as extra text in the popup menu (via `menu` field), but this doesn't quite follow LSP specification: `detail` and `documentation` fields can be delayed up until `completionItem/resolve` request which implies they should be treated similarly.
+    - Show `labelDetails` as a part of the popup menu via `menu` completion item field.
 
 ## mini.doc
 
