@@ -922,6 +922,21 @@ T['Information window']['uses `detail` to construct content'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['uses `info` field from not LSP source'] = function()
+  child.set_size(10, 30)
+  child.lua([[
+    MiniCompletion.config.fallback_action = function()
+      vim.fn.complete(1, { { word = 'Fall', abbr = 'Fall', info = 'back' } })
+    end
+  ]])
+
+  set_lines({})
+  type_keys('i', '<A-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
 T['Information window']['implements debounce-style delay'] = function()
   type_keys('i', 'J', '<C-Space>')
   eq(get_completion(), { 'January', 'June', 'July' })
