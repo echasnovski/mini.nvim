@@ -54,7 +54,7 @@ Months.data = {
   June      = { documentation = 'Month #06' },
   July      = { documentation = table.concat(markdown_info, '\n') },
   August    = { documentation = 'Month #08', detail = 'Month' },
-  September = { documentation = 'Month #09' },
+  September = { documentation = nil,         detail = 'Sep' },
   October   = { documentation = 'Month #10' },
   November  = { documentation = 'Month #11' },
   December  = { documentation = string.rep('a ', 1000) },
@@ -140,7 +140,8 @@ Months.requests = {
   end,
 
   ['completionItem/resolve'] = function(params)
-    params.documentation = { kind = 'markdown', value = Months.data[params.label].documentation }
+    local doc = Months.data[params.label].documentation
+    if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
     params.detail = Months.data[params.label].detail
     -- Mock additionalTextEdits as in `typescript-language-server`
     if vim.tbl_contains({ 'October', 'November' }, params.label) then

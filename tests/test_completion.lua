@@ -949,6 +949,18 @@ T['Information window']['ignores data from first response if server can resolve 
   child.expect_screenshot()
 end
 
+T['Information window']['adjusts for top/bottom code block delimiters'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+
+  child.set_size(10, 30)
+  type_keys('i', 'Sep', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  -- Should show floating window with height 1, i.e. both top and bottom code
+  -- block delimiters should be hidden
+  child.expect_screenshot()
+end
+
 T['Information window']['uses `info` field from not LSP source'] = function()
   child.set_size(10, 30)
   child.lua([[

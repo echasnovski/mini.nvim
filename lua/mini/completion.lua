@@ -972,6 +972,10 @@ H.show_info_window = function()
 
   -- Compute floating window options
   local opts = H.info_window_options()
+  -- Adjust to hide top/bottom code block delimiters (as they are concealed)
+  local top_is_codeblock_start = lines[1]:find('^```%S*$')
+  if top_is_codeblock_start then opts.height = opts.height - 1 end
+  if lines[#lines]:find('^```$') then opts.height = opts.height - 1 end
 
   -- Adjust section separator with better visual alternative
   lines = vim.tbl_map(function(l) return l:gsub('^%-%-%-%-*$', string.rep('─', opts.width)) end, lines)
@@ -982,8 +986,14 @@ H.show_info_window = function()
     -- Ensure that window doesn't open when it shouldn't be
     if not (H.pumvisible() and vim.fn.mode() == 'i') then return end
     H.open_action_window(H.info, opts)
+    local win_id = H.info.win_id
+    if not H.is_valid_win(win_id) then return end
+
     -- Hide helper syntax elements (like ``` code blocks, etc.)
     vim.wo[H.info.win_id].conceallevel = 3
+
+    -- Scroll past first line if it is a start of a code block
+    if top_is_codeblock_start then vim.api.nvim_win_call(win_id, function() vim.fn.winrestview({ topline = 2 }) end) end
   end)
 end
 
