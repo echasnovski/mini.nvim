@@ -988,13 +988,13 @@ H.show_info_window = function()
 end
 
 H.info_window_lines = function(info_id)
-  -- Try to use 'info' field of Neovim's completion item
   local completed_item = H.table_get(H.info, { 'event', 'completed_item' }) or {}
-  local text = completed_item.info or ''
-  if not H.is_whitespace(text) then return vim.split(text, '\n') end
 
-  -- If popup is not from LSP then there is nothing more to do
-  if H.completion.source ~= 'lsp' then return nil end
+  -- If popup is not from LSP, try using 'info' field of completion item
+  if H.completion.source ~= 'lsp' then
+    local text = completed_item.info or ''
+    return (not H.is_whitespace(text)) and vim.split(text, '\n') or nil
+  end
 
   -- Try to get documentation from LSP's latest completion result
   if H.info.lsp.status == 'received' then
@@ -1003,23 +1003,23 @@ H.info_window_lines = function(info_id)
     return lines
   end
 
-  -- Try to get documentation from LSP's initial completion result
-  local lsp_completion_item = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'completion_item' })
-  -- If there is no LSP's completion item, then there is no point to proceed as
-  -- it should serve as parameters to LSP request
-  if not lsp_completion_item then return end
-  local doc = H.normalize_item_doc(lsp_completion_item)
-  if #doc > 0 then return doc end
+  -- If server doesn't support resolving completion item, reuse first response
+  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
+  -- NOTE: If there is no LSP's completion item, then there is no point to
+  -- proceed as it should serve as parameters to LSP request
+  if lsp_data.completion_item == nil then return end
 
-  -- Finally, try request to resolve current completion to add documentation
+  local client = vim.lsp.get_client_by_id(lsp_data.client_id) or {}
+  local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
+  if not can_resolve then return H.normalize_item_doc(lsp_data.completion_item) end
+
+  -- Finally, request to resolve current completion to add more documentation
   local bufnr = vim.api.nvim_get_current_buf()
-  local params = lsp_completion_item
-
   local current_id = H.info.lsp.id + 1
   H.info.lsp.id = current_id
   H.info.lsp.status = 'sent'
 
-  local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', params, function(result)
+  local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', lsp_data.completion_item, function(result)
     -- Don't do anything if there is other LSP request in action
     if not H.is_lsp_current(H.info, current_id) then return end
 
