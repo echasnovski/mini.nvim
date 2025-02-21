@@ -922,6 +922,33 @@ T['Information window']['uses `detail` to construct content'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['ignores data from first response if server can resolve completion item'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+
+  child.set_size(10, 45)
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      for _, it in ipairs(items) do
+        if it.label == 'April' then
+          it.detail = 'Initial detail'
+          it.documentation = 'Initial documentation'
+        end
+      end
+      return MiniCompletion.default_process_items(items, base)
+    end
+  ]])
+
+  set_lines({})
+  type_keys('i', 'Apr', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  -- Should show resolved data and not initial in order to always prefer
+  -- resolved if possible. This is useful if initial response contains only
+  -- single `detail` or `documentation` but resolving gets them both (like in
+  -- `r-language-server`, for example).
+  child.expect_screenshot()
+end
+
 T['Information window']['uses `info` field from not LSP source'] = function()
   child.set_size(10, 30)
   child.lua([[
