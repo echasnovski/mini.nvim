@@ -830,6 +830,8 @@ MiniSnippets.gen_loader = {}
 ---     used to find snippet files, as in |MiniSnippets.gen_loader.from_runtime()|.
 ---     Patterns will be processed in order. With |MiniSnippets.default_prepare()|
 ---     it means if snippets have same prefix, data from later patterns is used.
+---     To interactively check the current language with default context, execute
+---     `:=MiniSnippets.default_prepare({})` and see data in the second table.
 ---
 ---     Default pattern array (for non-empty language) is constructed as to read
 ---     `*.json` and `*.lua` files that are:
