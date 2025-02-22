@@ -50,10 +50,10 @@ end
 
 - With [folke/lazy.nvim](https://github.com/folke/lazy.nvim):
 
-| Branch | Code snippet                                         |
-|--------|------------------------------------------------------|
-| Main   | `{ 'echasnovski/mini.nvim', version = false },`      |
-| Stable | `{ 'echasnovski/mini.nvim', version = '*' },`        |
+| Branch | Code snippet                                    |
+|--------|-------------------------------------------------|
+| Main   | `{ 'echasnovski/mini.nvim', version = false },` |
+| Stable | `{ 'echasnovski/mini.nvim', version = '*' },`   |
 
 - With [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
@@ -121,7 +121,7 @@ These modules improve your Neovim appearance. Start with 'mini.hues', 'mini.icon
 |------------------|--------------------------------------|---------------------------------------|---------------------------------------|
 | mini.animate     | Animate common Neovim actions        | [README](readmes/mini-animate.md)     | [Help file](doc/mini-animate.txt)     |
 | mini.base16      | Base16 colorscheme creation          | [README](readmes/mini-base16.md)      | [Help file](doc/mini-base16.txt)      |
-| mini.colors | Tweak and save any color scheme | [README](readmes/mini-colors.md) | [Help file](doc/mini-colors.txt) |
+| mini.colors      | Tweak and save any color scheme      | [README](readmes/mini-colors.md)      | [Help file](doc/mini-colors.txt)      |
 | mini.cursorword  | Autohighlight word under cursor      | [README](readmes/mini-cursorword.md)  | [Help file](doc/mini-cursorword.txt)  |
 | mini.hipatterns  | Highlight patterns in text           | [README](readmes/mini-hipatterns.md)  | [Help file](doc/mini-hipatterns.txt)  |
 | mini.hues        | Generate configurable color scheme   | [README](readmes/mini-hues.md)        | [Help file](doc/mini-hues.txt)        |
@@ -138,11 +138,11 @@ These modules improve your Neovim appearance. Start with 'mini.hues', 'mini.icon
 
 These modules don't quite fit in any of the previous categories.
 
-| Module      | Description                     | Overview                         | Details                          |
-|-------------|---------------------------------|----------------------------------|----------------------------------|
-| mini.doc    | Generate Neovim help files      | [README](readmes/mini-doc.md)    | [Help file](doc/mini-doc.txt)    |
-| mini.fuzzy  | Fuzzy matching                  | [README](readmes/mini-fuzzy.md)  | [Help file](doc/mini-fuzzy.txt)  |
-| mini.test   | Test Neovim plugins             | [README](readmes/mini-test.md)   | [Help file](doc/mini-test.txt)   |
+| Module     | Description                | Overview                        | Details                         |
+|------------|----------------------------|---------------------------------|---------------------------------|
+| mini.doc   | Generate Neovim help files | [README](readmes/mini-doc.md)   | [Help file](doc/mini-doc.txt)   |
+| mini.fuzzy | Fuzzy matching             | [README](readmes/mini-fuzzy.md) | [Help file](doc/mini-fuzzy.txt) |
+| mini.test  | Test Neovim plugins        | [README](readmes/mini-test.md)  | [Help file](doc/mini-test.txt)  |
 
 ## General principles
 
