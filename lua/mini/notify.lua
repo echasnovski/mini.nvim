@@ -778,6 +778,9 @@ H.window_compute_config = function(buf_id, is_for_open)
   if vim.is_callable(win_config) then win_config = win_config(buf_id) end
   local config = vim.tbl_deep_extend('force', default_config, win_config or {})
 
+  if type(config.title) == 'string' then config.title = H.fit_to_width(config.title, config.width) end
+  if vim.fn.has('nvim-0.9') == 0 then config.title = nil end
+
   -- Tweak config values to ensure they are proper, accounting for border
   local offset = config.border == 'none' and 0 or 2
   config.height = math.min(config.height, max_height - offset)
@@ -849,6 +852,11 @@ H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nv
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
 
 H.is_win_in_tabpage = function(win_id) return vim.api.nvim_win_get_tabpage(win_id) == vim.api.nvim_get_current_tabpage() end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
+end
 
 H.get_timestamp = function()
   -- This is more acceptable for `vim.fn.strftime()` than `vim.loop.hrtime()`

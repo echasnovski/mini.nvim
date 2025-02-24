@@ -819,7 +819,7 @@ T['Window']['respects `window.config`'] = function()
 
   -- Allows title
   if child.fn.has('nvim-0.9') == 0 then return end
-  child.lua([[MiniNotify.config.window.config = { border = 'single', title = 'Notif' }]])
+  child.lua([[MiniNotify.config.window.config = { border = 'single', title = 'Custom title to check truncation' }]])
   refresh()
   child.expect_screenshot()
 end

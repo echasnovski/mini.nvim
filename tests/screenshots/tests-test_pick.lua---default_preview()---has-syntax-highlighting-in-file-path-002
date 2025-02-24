@@ -3,7 +3,7 @@
 02|~                                       
 03|~                                       
 04|~                                       
-05|┌pick/real-files/Makefile┐              
+05|┌…ick/real-files/Makefile┐              
 06|│VAR ?= 1                │              
 07|│                        │              
 08|│all: test               │              

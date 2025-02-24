@@ -2023,6 +2023,12 @@ H.buffer_reporter.setup_buf_and_win = function(window_opts)
   if vim.is_callable(window_opts) then
     win_id = window_opts()
   elseif type(window_opts) == 'table' then
+    -- Ensure proper title
+    if type(window_opts.title) == 'string' then
+      window_opts.title = H.fit_to_width(window_opts.title, window_opts.width)
+    end
+    if vim.fn.has('nvim-0.9') == 0 then window_opts.title = nil end
+
     win_id = vim.api.nvim_open_win(buf_id, true, window_opts)
   end
   win_id = win_id or vim.api.nvim_get_current_win()
@@ -2041,6 +2047,7 @@ H.buffer_reporter.default_window_opts = function()
     height = math.floor(0.618 * vim.o.lines),
     row = math.floor(0.191 * vim.o.lines),
     col = math.floor(0.191 * vim.o.columns),
+    border = 'none',
   }
 end
 
@@ -2343,6 +2350,11 @@ H.add_prefix = function(tbl, prefix)
 end
 
 H.add_style = function(x, ansi_code) return string.format('%s%s%s', H.ansi_codes[ansi_code], x, H.ansi_codes.reset) end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
+end
 
 H.string_to_chars = function(s)
   -- Can't use `vim.split(s, '')` because of multibyte characters

@@ -876,6 +876,10 @@ T['zoom()']['respects `config` argument'] = function()
 
   -- Should adjust in reaction to border
   validate({ border = 'double' }, 2, 28)
+
+  -- Should truncate possible title
+  if child.fn.has('nvim-0.9') == 0 then return end
+  validate({ width = 20, border = 'single', title = 'Custom title to check truncation' }, 2, 20)
 end
 
 T['zoom()']['reacts to relevant UI changes'] = function()

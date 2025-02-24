@@ -2423,21 +2423,13 @@ H.window_update = function(win_id, config)
   config.height = config.height ~= nil and math.min(config.height, max_height) or nil
   config.width = config.width ~= nil and math.min(config.width, vim.o.columns) or nil
 
-  -- Ensure proper title on Neovim>=0.9 (as they are not supported earlier)
-  if vim.fn.has('nvim-0.9') == 1 and config.title ~= nil then
-    -- Show only tail if title is too long
-    local title_string, width = config.title, config.width
-    local title_chars = vim.fn.strcharlen(title_string)
-    if width < title_chars then
-      title_string = '…' .. vim.fn.strcharpart(title_string, title_chars - width + 1, width - 1)
-    end
-    config.title = title_string
-    -- Preserve some config values
-    local win_config = vim.api.nvim_win_get_config(win_id)
-    config.border, config.title_pos = win_config.border, win_config.title_pos
-  else
-    config.title = nil
-  end
+  -- Ensure proper title
+  if type(config.title) == 'string' then config.title = H.fit_to_width(config.title, config.width) end
+  if vim.fn.has('nvim-0.9') == 0 then config.title = nil end
+
+  -- Preserve some config values
+  local win_config = vim.api.nvim_win_get_config(win_id)
+  config.border, config.title_pos = win_config.border, win_config.title_pos
 
   -- Update config
   config.relative = 'editor'
@@ -2867,6 +2859,11 @@ H.trigger_event = function(event_name, data) vim.api.nvim_exec_autocmds('User', 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
+end
 
 H.get_bufline = function(buf_id, line) return vim.api.nvim_buf_get_lines(buf_id, line - 1, line, false)[1] end
 

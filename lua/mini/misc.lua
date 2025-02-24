@@ -603,6 +603,10 @@ MiniMisc.zoom = function(buf_id, config)
     res.height = math.min(res.height, max_height - border_offset)
     res.width = math.min(res.width, max_width - border_offset)
 
+    -- Ensure proper title
+    if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end
+    if vim.fn.has('nvim-0.9') == 0 then res.title = nil end
+
     return res
   end
   H.zoom_winid = vim.api.nvim_open_win(buf_id or 0, true, compute_config())
@@ -674,6 +678,11 @@ end
 H.is_number = function(x) return type(x) == 'number' end
 
 H.is_string = function(x) return type(x) == 'string' end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
+end
 
 H.fs_normalize = vim.fs.normalize
 if vim.fn.has('nvim-0.9') == 0 then

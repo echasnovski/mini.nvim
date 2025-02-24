@@ -1520,8 +1520,6 @@ H.operator_tweaks = {
 
 H.query_to_keys = function(query) return table.concat(query, '') end
 
-H.query_to_title = function(query) return H.keytrans(H.query_to_keys(query)) end
-
 -- Window ---------------------------------------------------------------------
 H.window_update = vim.schedule_wrap(function(same_content)
   -- Make sure that outdated windows are not shown
@@ -1612,7 +1610,7 @@ H.window_get_config = function()
     row = vim.o.lines - vim.o.cmdheight - (has_statusline and 1 or 0),
     col = vim.o.columns,
     height = math.min(vim.api.nvim_buf_line_count(buf_id), max_height),
-    title = H.query_to_title(H.state.query),
+    title = H.keytrans(H.query_to_keys(H.state.query)),
   }
   local user_config = H.expand_callable(H.get_config().window.config, buf_id) or {}
   local res = vim.tbl_deep_extend('force', H.default_win_config, cur_config_fields, user_config)
@@ -1631,7 +1629,8 @@ H.window_get_config = function()
     res.col = is_on_left and 0 or cur_config_fields.col
   end
 
-  -- Ensure it works on Neovim<0.9
+  -- Ensure proper title
+  if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end
   if vim.fn.has('nvim-0.9') == 0 then res.title = nil end
 
   return res
@@ -1922,6 +1921,11 @@ end
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
+end
 
 H.expand_callable = function(x, ...)
   if vim.is_callable(x) then return x(...) end

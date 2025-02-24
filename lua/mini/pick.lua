@@ -2459,14 +2459,14 @@ H.picker_set_bordertext = function(picker)
   if not H.is_valid_win(win_id) then return end
 
   -- Compute main text managing views separately and truncating from left
-  local view_state = picker.view_state
+  local view_state, win_width = picker.view_state, vim.api.nvim_win_get_width(win_id)
   local config
   if view_state == 'main' then
     local query, caret = picker.query, picker.caret
     local before_caret = table.concat(vim.list_slice(query, 1, caret - 1), '')
     local after_caret = table.concat(vim.list_slice(query, caret, #query), '')
     local prompt_text = opts.window.prompt_prefix .. before_caret .. opts.window.prompt_cursor .. after_caret
-    local prompt = { { H.win_trim_to_width(win_id, prompt_text), 'MiniPickPrompt' } }
+    local prompt = { { H.fit_to_width(prompt_text, win_width), 'MiniPickPrompt' } }
     config = { title = prompt }
   end
 
@@ -2475,12 +2475,10 @@ H.picker_set_bordertext = function(picker)
     local stritem_cur = picker.stritems[picker.match_inds[picker.current_ind]] or ''
     -- Sanitize title
     stritem_cur = stritem_cur:gsub('%z', '│'):gsub('%s', ' ')
-    config = { title = { { H.win_trim_to_width(win_id, stritem_cur), 'MiniPickBorderText' } } }
+    config = { title = { { H.fit_to_width(stritem_cur, win_width), 'MiniPickBorderText' } } }
   end
 
-  if view_state == 'info' then
-    config = { title = { { H.win_trim_to_width(win_id, 'Info'), 'MiniPickBorderText' } } }
-  end
+  if view_state == 'info' then config = { title = { { H.fit_to_width('Info', win_width), 'MiniPickBorderText' } } } end
 
   -- Compute helper footer only if Neovim version permits and not in busy
   -- picker (otherwise it will flicker number of matches data on char delete)
@@ -2509,7 +2507,7 @@ H.picker_compute_footer = function(picker, win_id)
   local win_width, source_width, inds_width =
     vim.api.nvim_win_get_width(win_id), vim.fn.strchars(source_name), vim.fn.strchars(inds)
 
-  local footer = { { source_name, 'MiniPickBorderText' } }
+  local footer = { { H.fit_to_width(source_name, win_width), 'MiniPickBorderText' } }
   local n_spaces_between = win_width - (source_width + inds_width)
   if n_spaces_between > 0 then
     local border_hl = picker.is_busy and 'MiniPickBorderBusy' or 'MiniPickBorder'
@@ -3500,9 +3498,9 @@ H.win_update_hl = function(win_id, new_from, new_to)
   vim.wo[win_id].winhighlight = new_winhighlight
 end
 
-H.win_trim_to_width = function(win_id, text)
-  local win_width = vim.api.nvim_win_get_width(win_id)
-  return vim.fn.strcharpart(text, vim.fn.strchars(text) - win_width, win_width)
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
 end
 
 H.win_get_bottom_border = function(win_id)

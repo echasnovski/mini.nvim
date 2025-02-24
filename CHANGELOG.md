@@ -1,5 +1,8 @@
 # Version 0.15.0.9000
 
+- Unify behavior of floating windows:
+    - Truncate title/footer from left if it is too wide.
+
 ## mini.ai
 
 - FEATURE: textobject identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_textobjects` keys. Default textobject is extended to be anything but Latin letters (to fall back to `:h text-objects`).

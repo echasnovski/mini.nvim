@@ -1262,7 +1262,7 @@ T['Showing keys']['respects `config.window.config`'] = function()
   make_test_map('n', '<Space>a')
   load_module({
     triggers = { { mode = 'n', keys = '<Space>' } },
-    window = { delay = 0, config = { border = 'double' } },
+    window = { delay = 0, config = { border = 'double', title = 'Custom title to check truncation' } },
   })
 
   type_keys(' ')

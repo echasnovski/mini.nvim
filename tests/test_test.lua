@@ -1453,7 +1453,9 @@ T['gen_reporter']['buffer'] = new_set({
   parametrize = {
     { '' },
     { 'group_depth = 2' },
-    { 'window = { width = 0.9 * vim.o.columns, col = 0.05 * vim.o.columns }' },
+    {
+      'window = { width = 0.9 * vim.o.columns, col = 0.05 * vim.o.columns, border = "double", title = ("a"):rep(200) }',
+    },
   },
 }, {
   test = function(opts_element)
