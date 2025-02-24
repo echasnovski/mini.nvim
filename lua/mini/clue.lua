@@ -1610,7 +1610,7 @@ H.window_get_config = function()
     row = vim.o.lines - vim.o.cmdheight - (has_statusline and 1 or 0),
     col = vim.o.columns,
     height = math.min(vim.api.nvim_buf_line_count(buf_id), max_height),
-    title = H.keytrans(H.query_to_keys(H.state.query)),
+    title = ' ' .. H.keytrans(H.query_to_keys(H.state.query)) .. ' ',
   }
   local user_config = H.expand_callable(H.get_config().window.config, buf_id) or {}
   local res = vim.tbl_deep_extend('force', H.default_win_config, cur_config_fields, user_config)
