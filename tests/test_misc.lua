@@ -861,14 +861,21 @@ end
 T['zoom()']['respects `config` argument'] = function()
   child.set_size(5, 30)
 
-  local custom_config = { width = 20 }
-  child.lua('MiniMisc.zoom(...)', { 0, custom_config })
-  local floating_wins = get_floating_windows()
+  local validate = function(config, ref_height, ref_width)
+    child.lua('MiniMisc.zoom(...)', { 0, config })
+    local floating_wins = get_floating_windows()
 
-  eq(#floating_wins, 1)
-  validate_dims(floating_wins[1], 4, 20)
+    eq(#floating_wins, 1)
+    validate_dims(floating_wins[1], ref_height, ref_width)
+    child.expect_screenshot()
 
-  child.expect_screenshot()
+    child.cmd('quit')
+  end
+
+  validate({ width = 20 }, 4, 20)
+
+  -- Should adjust in reaction to border
+  validate({ border = 'double' }, 2, 28)
 end
 
 T['zoom()']['reacts to relevant UI changes'] = function()

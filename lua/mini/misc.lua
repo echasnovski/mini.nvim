@@ -594,9 +594,16 @@ MiniMisc.zoom = function(buf_id, config)
   -- Show
   local compute_config = function()
     -- Use precise dimensions for no Command line interactions (better scroll)
-    local width, height = vim.o.columns, vim.o.lines - vim.o.cmdheight
-    local default_config = { relative = 'editor', row = 0, col = 0, width = width, height = height }
-    return vim.tbl_deep_extend('force', default_config, config or {})
+    local max_width, max_height = vim.o.columns, vim.o.lines - vim.o.cmdheight
+    local default_config = { relative = 'editor', row = 0, col = 0, width = max_width, height = max_height }
+    local res = vim.tbl_deep_extend('force', default_config, config or {})
+
+    -- Adjust dimensions to fit border
+    local border_offset = (res.border or 'none') == 'none' and 0 or 2
+    res.height = math.min(res.height, max_height - border_offset)
+    res.width = math.min(res.width, max_width - border_offset)
+
+    return res
   end
   H.zoom_winid = vim.api.nvim_open_win(buf_id or 0, true, compute_config())
   vim.wo[H.zoom_winid].winblend = 0
