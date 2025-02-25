@@ -1700,6 +1700,25 @@ T['jump()']['works'] = function()
   validate_works(validate, #cur_jump_inds)
 end
 
+T['jump()']['works in a buffers without jumplist entries'] = function()
+  child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+  local validate = function(direction, opts)
+    local cur_pos = get_cursor()
+    child.lua('MiniBracketed.jump(...)', { direction, opts })
+    eq(get_cursor(), cur_pos)
+  end
+
+  validate('first', { n_times = 1 })
+  validate('first', { n_times = 2 })
+  validate('backward', { n_times = 1 })
+  validate('backward', { n_times = 2 })
+  validate('forward', { n_times = 1 })
+  validate('forward', { n_times = 2 })
+  validate('last', { n_times = 1 })
+  validate('last', { n_times = 2 })
+end
+
 T['jump()']['works when currently moved after latest jump'] = function()
   local cur_jump_inds, _, jump_list = setup_jumplist()
   local n = #cur_jump_inds

@@ -698,7 +698,7 @@ MiniBracketed.jump = function(direction, opts)
 
   -- Iterate
   local res_jump_num = MiniBracketed.advance(iterator, direction, opts)
-  if res_jump_num == nil then return end
+  if res_jump_num == nil or jump_list[res_jump_num] == nil then return end
 
   -- Apply. Make jump. Allow jumping to current jump entry as it might be
   -- different from current cursor position.
