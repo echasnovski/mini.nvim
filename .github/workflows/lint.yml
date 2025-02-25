@@ -31,7 +31,7 @@ jobs:
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
-          version: v0.10.3
+          version: v0.10.4
       - uses: actions/checkout@v4
       - name: Generate documentation
         run: make --silent documentation
@@ -48,7 +48,7 @@ jobs:
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
-          version: v0.10.3
+          version: v0.10.4
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
