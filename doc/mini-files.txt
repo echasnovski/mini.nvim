@@ -523,11 +523,15 @@ Use |MiniFiles.get_fs_entry()|: >lua
     vim.fn.setreg(vim.v.register, path)
   end
 
+  -- Open path with system default handler (useful for non-text files)
+  local ui_open = function() vim.ui.open(MiniFiles.get_fs_entry().path) end
+
   vim.api.nvim_create_autocmd('User', {
     pattern = 'MiniFilesBufferCreate',
     callback = function(args)
       local b = args.data.buf_id
       vim.keymap.set('n', 'g~', set_cwd,   { buffer = b, desc = 'Set cwd' })
+      vim.keymap.set('n', 'gX', ui_open,   { buffer = b, desc = 'OS open' })
       vim.keymap.set('n', 'gy', yank_path, { buffer = b, desc = 'Yank path' })
     end,
   })
