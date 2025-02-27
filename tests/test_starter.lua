@@ -935,8 +935,11 @@ T['sections']['recent_files()']['opens path in relative form'] = function()
   local file = 'tests/dir-starter/dir/file1'
   child.v.oldfiles = { child.fn.fnamemodify(file, ':p') }
   child.lua('MiniStarter.open()')
+  local n_bufs = #child.api.nvim_list_bufs()
   type_keys('<CR>')
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-starter/dir/file1')
+  -- Should properly hide Starter buffer
+  eq(#child.api.nvim_list_bufs(), n_bufs)
 end
 
 T['sections']['recent_files()']['respects files in subdirectories'] = function()

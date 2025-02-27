@@ -1352,6 +1352,45 @@ T['go_in()']['works on file'] = function()
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]' .. vim.pesc(test_dir_path))
 end
 
+T['go_in()']['mimics empty buffer reuse'] = function()
+  local validate = function(ref_n_bufs)
+    open(test_dir_path)
+    type_keys('/', [[\.a-file]], '<CR>')
+    go_in()
+    close()
+
+    eq(#child.api.nvim_list_bufs(), ref_n_bufs)
+    child.cmd('%bwipeout!')
+  end
+
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(child.api.nvim_get_current_buf() == 1, true)
+  validate(1)
+
+  eq(child.api.nvim_get_current_buf() ~= 1, true)
+  validate(1)
+
+  child.cmd('tabnew')
+  validate(2)
+
+  -- Should reuse only for strict set of conditions
+  child.api.nvim_buf_set_name(0, 'named-buf')
+  validate(2)
+
+  child.bo.buftype = 'quickfix'
+  validate(2)
+
+  child.cmd('split')
+  eq(#child.fn.win_findbuf(child.api.nvim_get_current_buf()), 2)
+  validate(2)
+
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { ' ' })
+  validate(2)
+
+  child.bo.modified = true
+  validate(2)
+end
+
 T['go_in()']['respects `opts.close_on_file`'] = function()
   open(test_dir_path)
   type_keys('/', [[\.a-file]], '<CR>')

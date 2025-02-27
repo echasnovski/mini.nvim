@@ -1248,13 +1248,13 @@ T['file()']['works with non-file current buffer'] = function()
   -- current working directory
   child.fn.chdir(dir_bracketed_path)
 
-  local buf_id_nonfile = child.api.nvim_get_current_buf()
-  eq(child.api.nvim_buf_get_name(0), '')
+  local setup_nonfile_buf = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 
+  setup_nonfile_buf()
   forward('file')
   validate_test_file('file-a')
 
-  child.api.nvim_set_current_buf(buf_id_nonfile)
+  setup_nonfile_buf()
   backward('file')
   validate_test_file('file-e')
 end
@@ -1978,8 +1978,11 @@ end
 T['oldfile()']['opens path in relative form'] = function()
   setup_oldfile()
   child.cmd('%bwipeout')
+  local n_bufs = #child.api.nvim_list_bufs()
   child.lua('MiniBracketed.oldfile("backward")')
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]tests/dir%-bracketed/file%-c')
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(#child.api.nvim_list_bufs(), n_bufs)
 end
 
 T['oldfile()']['works in not appropriate buffers'] = function()
@@ -1987,15 +1990,13 @@ T['oldfile()']['works in not appropriate buffers'] = function()
   local n = #files
 
   -- When in buffer without name should still go recent buffers
-  local buf_id_normal_nonfile = child.api.nvim_create_buf(true, false)
-  child.api.nvim_set_current_buf(buf_id_normal_nonfile)
-  eq(get_bufname(), '')
-  eq(child.bo.buftype, '')
+  local setup_nonfile_buf = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 
+  setup_nonfile_buf()
   backward('oldfile')
   validate_test_file(files[n])
 
-  child.api.nvim_set_current_buf(buf_id_normal_nonfile)
+  setup_nonfile_buf()
   forward('oldfile')
   validate_test_file(files[1])
 

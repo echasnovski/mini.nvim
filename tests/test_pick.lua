@@ -1940,7 +1940,7 @@ T['default_choose()']['reuses opened listed buffer for file path'] = function()
   validate_buf_name(buf_id_path, path)
   set_cursor(5, 3)
 
-  local buf_id_alt = child.api.nvim_create_buf(true, false)
+  local setup_dummy_cur_buf = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 
   local validate = function(pos)
     eq(child.api.nvim_win_get_buf(0), buf_id_path)
@@ -1949,22 +1949,57 @@ T['default_choose()']['reuses opened listed buffer for file path'] = function()
   end
 
   -- Reuses without setting cursor
-  child.api.nvim_set_current_buf(buf_id_alt)
+  setup_dummy_cur_buf()
   default_choose(path)
   validate({ 5, 3 })
 
   -- Reuses with setting cursor
-  child.api.nvim_set_current_buf(buf_id_alt)
+  setup_dummy_cur_buf()
   default_choose(path .. '\0007\0002')
   validate({ 7, 1 })
 
   -- Doesn't reuse if unlisted
-  child.api.nvim_set_current_buf(buf_id_alt)
+  setup_dummy_cur_buf()
   child.cmd('bdelete ' .. buf_id_path)
   eq(child.api.nvim_buf_get_option(buf_id_path, 'buflisted'), false)
   default_choose(path)
   validate({ 1, 0 })
   eq(child.api.nvim_buf_get_option(buf_id_path, 'buflisted'), true)
+end
+
+T['default_choose()']['mimics empty buffer reuse'] = function()
+  local validate = function(ref_n_bufs)
+    default_choose(real_file('b.txt'))
+    eq(#child.api.nvim_list_bufs(), ref_n_bufs)
+    child.cmd('%bwipeout!')
+  end
+
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(child.api.nvim_get_current_buf() == 1, true)
+  validate(1)
+
+  eq(child.api.nvim_get_current_buf() ~= 1, true)
+  validate(1)
+
+  child.cmd('tabnew')
+  validate(2)
+
+  -- Should reuse only for strict set of conditions
+  child.api.nvim_buf_set_name(0, 'named-buf')
+  validate(2)
+
+  child.bo.buftype = 'quickfix'
+  validate(2)
+
+  child.cmd('split')
+  eq(#child.fn.win_findbuf(child.api.nvim_get_current_buf()), 2)
+  validate(2)
+
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { ' ' })
+  validate(2)
+
+  child.bo.modified = true
+  validate(2)
 end
 
 T['default_choose()']['works for directory path'] = function()

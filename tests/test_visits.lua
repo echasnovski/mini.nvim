@@ -1123,6 +1123,46 @@ T['select_path()']['works'] = function()
   expect.match(child.cmd_capture('buffers'), '[^/]file_1%-1')
 end
 
+T['select_path()']['mimics empty buffer reuse'] = function()
+  local ref_index = { dir_1 = { ['dir_1/file_1-1'] = { count = 2, latest = 10 } } }
+  set_index_from_ref(ref_index)
+  child.fn.chdir(make_testpath('dir_1'))
+  mock_ui_select(1)
+
+  local validate = function(ref_n_bufs)
+    select_path()
+    eq(#child.api.nvim_list_bufs(), ref_n_bufs)
+    child.cmd('%bwipeout!')
+  end
+
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(child.api.nvim_get_current_buf() == 1, true)
+  validate(1)
+
+  eq(child.api.nvim_get_current_buf() ~= 1, true)
+  validate(1)
+
+  child.cmd('tabnew')
+  validate(2)
+
+  -- Should reuse only for strict set of conditions
+  child.api.nvim_buf_set_name(0, 'named-buf')
+  validate(2)
+
+  child.bo.buftype = 'quickfix'
+  validate(2)
+
+  child.cmd('split')
+  eq(#child.fn.win_findbuf(child.api.nvim_get_current_buf()), 2)
+  validate(2)
+
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { ' ' })
+  validate(2)
+
+  child.bo.modified = true
+  validate(2)
+end
+
 T['select_path()']['properly shortens paths'] = function()
   local home_dir = child.loop.os_homedir()
 
@@ -1231,6 +1271,45 @@ T['select_label()']['works'] = function()
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), '[^/]file_1%-2')
 end
 
+T['select_label()']['mimics empty buffer reuse'] = function()
+  local ref_index = { dir_1 = { ['dir_1/file_1-2'] = { count = 2, labels = { aaa = true }, latest = 9 } } }
+  set_index_from_ref(ref_index)
+  child.fn.chdir(make_testpath('dir_1'))
+  mock_ui_select(1)
+
+  local validate = function(ref_n_bufs)
+    select_label('', getcwd())
+    eq(#child.api.nvim_list_bufs(), ref_n_bufs)
+    child.cmd('%bwipeout!')
+  end
+
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(child.api.nvim_get_current_buf() == 1, true)
+  validate(1)
+
+  eq(child.api.nvim_get_current_buf() ~= 1, true)
+  validate(1)
+
+  child.cmd('tabnew')
+  validate(2)
+
+  -- Should reuse only for strict set of conditions
+  child.api.nvim_buf_set_name(0, 'named-buf')
+  validate(2)
+
+  child.bo.buftype = 'quickfix'
+  validate(2)
+
+  child.cmd('split')
+  eq(#child.fn.win_findbuf(child.api.nvim_get_current_buf()), 2)
+  validate(2)
+
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { ' ' })
+  validate(2)
+
+  child.bo.modified = true
+  validate(2)
+end
 T['select_label()']['can be properly canceled'] = function()
   local ref_index = { dir_1 = { file = { count = 1, labels = { aaa = true }, latest = 10 } } }
   set_index_from_ref(ref_index)

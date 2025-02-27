@@ -2684,11 +2684,15 @@ end
 T['Commands'][':DepsShowLog works'] = function()
   child.set_size(12, 60)
   load_module({ path = { package = test_opt_dir, log = test_dir_absolute .. '/test-log' } })
+  local n_bufs = #child.api.nvim_list_bufs()
   child.cmd('DepsShowLog')
   child.expect_screenshot()
 
   -- Should open path in relative form for nicer `:buffers`
   expect.match(child.cmd_capture('buffers'):gsub('\\', '/'), 'tests/dir%-deps/test%-log')
+
+  -- Should mimic `:h buffer-reuse` similar to how `:edit` does it
+  eq(#child.api.nvim_list_bufs(), n_bufs)
 end
 
 T['Commands'][':DepsClean works'] = function()
