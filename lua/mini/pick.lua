@@ -2562,7 +2562,7 @@ H.actions = {
 
   choose            = function(picker, _) return H.picker_choose(picker, nil)      end,
   choose_in_split   = function(picker, _) return H.picker_choose(picker, 'split')  end,
-  choose_in_tabpage = function(picker, _) return H.picker_choose(picker, 'tabnew') end,
+  choose_in_tabpage = function(picker, _) return H.picker_choose(picker, 'tab split') end,
   choose_in_vsplit  = function(picker, _) return H.picker_choose(picker, 'vsplit') end,
   choose_marked     = function(picker, _)
     local ok, res = pcall(picker.opts.source.choose_marked, MiniPick.get_picker_matches().marked)

@@ -5502,6 +5502,9 @@ T['Choose']['works for split/tab variations'] = function()
     eq(child.fn.getcwd(-1, -1), global_cwd)
     eq(child.fn.getcwd(0), global_cwd)
 
+    -- Should not create extra buffers due to splitting
+    eq(#child.api.nvim_list_bufs(), 1)
+
     -- Cleanup
     child.lua('_G.target_window = nil')
   end
