@@ -202,17 +202,17 @@ T['make_notify()']['works'] = function()
 
   -- Should add all notifications to history with proper `level` and `hl_group`
   local history = vim.tbl_map(
-    function(notif) return { msg = notif.msg, level = notif.level, hl_group = notif.hl_group } end,
+    function(notif) return { msg = notif.msg, level = notif.level, hl_group = notif.hl_group, data = notif.data } end,
     get_all()
   )
   --stylua: ignore
   eq(history, {
-    { msg = 'error', level = 'ERROR', hl_group = 'DiagnosticError' },
-    { msg = 'warn',  level = 'WARN',  hl_group = 'DiagnosticWarn' },
-    { msg = 'info',  level = 'INFO',  hl_group = 'DiagnosticInfo' },
-    { msg = 'debug', level = 'DEBUG', hl_group = 'DiagnosticHint' },
-    { msg = 'trace', level = 'TRACE', hl_group = 'DiagnosticOk' },
-    { msg = 'off',   level = 'OFF',   hl_group = 'MiniNotifyNormal' },
+    { msg = 'error', level = 'ERROR', hl_group = 'DiagnosticError',  data = { source = 'vim.notify' } },
+    { msg = 'warn',  level = 'WARN',  hl_group = 'DiagnosticWarn',   data = { source = 'vim.notify' } },
+    { msg = 'info',  level = 'INFO',  hl_group = 'DiagnosticInfo',   data = { source = 'vim.notify' } },
+    { msg = 'debug', level = 'DEBUG', hl_group = 'DiagnosticHint',   data = { source = 'vim.notify' } },
+    { msg = 'trace', level = 'TRACE', hl_group = 'DiagnosticOk',     data = { source = 'vim.notify' } },
+    { msg = 'off',   level = 'OFF',   hl_group = 'MiniNotifyNormal', data = { source = 'vim.notify' } },
   })
 
   -- Should make notifications disappear after configured duration
@@ -332,13 +332,14 @@ T['add()']['works'] = function()
   local notif = get(id)
   local notif_fields = vim.tbl_keys(notif)
   table.sort(notif_fields)
-  eq(notif_fields, { 'hl_group', 'level', 'msg', 'ts_add', 'ts_update' })
+  eq(notif_fields, { 'data', 'hl_group', 'level', 'msg', 'ts_add', 'ts_update' })
 
   eq(notif.msg, 'Hello')
 
   -- Non-message arguments should have defaults
   eq(notif.level, 'INFO')
   eq(notif.hl_group, 'MiniNotifyNormal')
+  eq(notif.data, {})
 
   -- Timestamp fields should use `vim.loop.gettimeofday()`
   eq(notif.ts_add, ref_seconds + ref_microseconds)
@@ -354,9 +355,10 @@ end
 
 T['add()']['respects arguments'] = function()
   local validate = function(level)
-    local id = add('Hello', level, 'Comment')
+    local id = add('Hello', level, 'Comment', { a = 1, b = { bb = 2 } })
     eq(get(id).level, level)
     eq(get(id).hl_group, 'Comment')
+    eq(get(id).data, { a = 1, b = { bb = 2 } })
   end
 
   validate('ERROR')
@@ -379,13 +381,18 @@ T['update()'] = new_set()
 local update = forward_lua('MiniNotify.update')
 
 T['update()']['works'] = function()
-  mock_gettimeofday()
+  child.lua([[
+    MiniNotify.config.content.format = function(notif)
+      return (notif.data.a > 10 and 'NEW' or 'OLD') .. ' ' .. notif.msg
+    end
+  ]])
 
-  local id = add('Hello', 'ERROR', 'Comment')
+  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = { c = 3, d = 'd' }, e = 'e' })
   child.expect_screenshot()
   local init_notif = get(id)
 
-  update(id, { msg = 'World', level = 'WARN', hl_group = 'String' })
+  local new_data = { a = 11, b = { c = 33, f = true }, g = {} }
+  update(id, { msg = 'World', level = 'WARN', hl_group = 'String', data = new_data })
 
   -- Should show updated notification in a floating window
   child.expect_screenshot()
@@ -397,6 +404,9 @@ T['update()']['works'] = function()
   eq(notif.level, 'WARN')
   eq(notif.hl_group, 'String')
 
+  -- Should deeply extend `data`
+  eq(notif.data, { a = 11, b = { c = 33, d = 'd', f = true }, e = 'e', g = {} })
+
   -- Add time should be untouched
   eq(notif.ts_add, init_notif.ts_add)
 
@@ -404,19 +414,21 @@ T['update()']['works'] = function()
   eq(init_notif.ts_update < notif.ts_update, true)
 end
 
-T['update()']['allows partial new data'] = function()
-  local id = add('Hello', 'ERROR', 'Comment')
-  update(id, { msg = 'World' })
+T['update()']['allows partial new content'] = function()
+  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = 2 })
+  update(id, { msg = 'World', data = { b = 22 } })
   local notif = get(id)
   eq(notif.msg, 'World')
   eq(notif.level, 'ERROR')
   eq(notif.hl_group, 'Comment')
+  eq(notif.data, { a = 1, b = 22 })
 
   -- Empty table
   update(id, {})
   eq(notif.msg, 'World')
   eq(notif.level, 'ERROR')
   eq(notif.hl_group, 'Comment')
+  eq(notif.data, { a = 1, b = 22 })
 end
 
 T['update()']['can update only active notification'] = function()
@@ -431,11 +443,12 @@ end
 T['update()']['validates arguments'] = function()
   local id = add('Hello')
   expect.error(function() update('a', { msg = 'World' }) end, '`id`.*identifier')
-  expect.error(function() update(id, 1) end, '`new_data`.*table')
+  expect.error(function() update(id, 1) end, '`new`.*table')
   expect.error(function() update(id, { msg = 1 }) end, '`msg`.*string')
   expect.error(function() update(id, { level = 1 }) end, '`level`.*key of `vim%.log%.levels`')
   expect.error(function() update(id, { level = 'Error' }) end, '`level`.*key of `vim%.log%.levels`')
   expect.error(function() update(id, { hl_group = 1 }) end, '`hl_group`.*string')
+  expect.error(function() update(id, { data = 1 }) end, '`data`.*table')
 end
 
 T['remove()'] = new_set()
@@ -1016,6 +1029,8 @@ T['LSP progress']['works'] = function()
   child.expect_screenshot()
 
   result.value.kind, result.value.message, result.value.percentage = 'report', '1/1', 100
+  -- - NOTE: `update()` is not called on 'end' progress for cleaner history
+  local ref_response = vim.deepcopy(result)
   call_handler(result, ctx)
   child.expect_screenshot()
 
@@ -1033,9 +1048,10 @@ T['LSP progress']['works'] = function()
   -- Should update single notification (and not remove/add new ones)
   local history = get_all()
   eq(#history, 1)
-  -- - Should use correct data
+  -- - Should use correct content
   eq(history[1].level, 'INFO')
   eq(history[1].hl_group, 'MiniNotifyLspProgress')
+  eq(history[1].data, { source = 'lsp_progress', client_name = 'mock-lsp', response = ref_response, context = ctx })
 end
 
 T['LSP progress']['handles not present data'] = function()

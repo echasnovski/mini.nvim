@@ -68,6 +68,7 @@ Notification is a table with the following keys:
 - <level> `(string)` - notification level as key of |vim.log.levels|.
   Like "ERROR", "WARN", "INFO", etc.
 - <hl_group> `(string)` - highlight group with which notification is shown.
+- <data> `(table)` - extra data to store in notification (like `source`, etc.).
 - <ts_add> `(number)` - timestamp of when notification is added.
 - <ts_update> `(number)` - timestamp of the latest notification update.
 - <ts_remove> `(number|nil)` - timestamp of when notification is removed.
@@ -157,8 +158,11 @@ Example: >lua
 
   require('mini.notify').setup({
     content = {
-      -- Use notification message as is
-      format = function(notif) return notif.msg end,
+      -- Use notification message as is for LSP progress
+      format = function(notif)
+        if notif.data.source == 'lsp_progress' then return notif.msg end
+        return MiniNotify.default_format(notif)
+      end,
 
       -- Show more recent notifications first
       sort = function(notif_arr)
@@ -193,7 +197,14 @@ Default: 1000.
 
 Notes:
 - This respects previously set handler by saving and calling it.
-- Overrding "$/progress" method of `vim.lsp.handlers` disables notifications.
+- Overriding "$/progress" method of `vim.lsp.handlers` disables notifications.
+- |MiniNotify.update()| is not called on progress end for (usually) cleaner and
+  more informative history.
+- All LSP progress notifications set the following fields in `data`:
+    - <source> is `"lsp_progress"`.
+    - <client_name> is set to client's name (provided by client or inferred).
+    - <context> is the latest LSP request context (`ctx` arg of |lsp-handler|).
+    - <response> is the latest LSP response (`result` arg of |lsp-handler|).
 
 # Window ~
 
@@ -239,6 +250,8 @@ Calling this function creates an implementation of |vim.notify()| powered by
 this module. General idea is to show notification as soon as safely possible
 (see |vim.schedule_wrap()|) and remove it after a configurable amount of time.
 
+All notifications set `source = "vim.notify"` in their `data` field.
+
 Examples: >lua
 
   -- Defaults
@@ -270,7 +283,7 @@ Parameters ~
 <
 ------------------------------------------------------------------------------
                                                               *MiniNotify.add()*
-                  `MiniNotify.add`({msg}, {level}, {hl_group})
+              `MiniNotify.add`({msg}, {level}, {hl_group}, {data})
 Add notification
 
 Add notification to history. It is considered "active" and is shown.
@@ -287,22 +300,25 @@ Parameters ~
   Default: `'INFO'`.
 {hl_group} `(string|nil)` Notification highlight group.
   Default: `'MiniNotifyNormal'`.
+{data} `(table|nil)` Extra data to store in the notification.
+  Default: `{}`.
 
 Return ~
 `(number)` Notification identifier.
 
 ------------------------------------------------------------------------------
                                                            *MiniNotify.update()*
-                     `MiniNotify.update`({id}, {new_data})
+                        `MiniNotify.update`({id}, {new})
 Update active notification
 
-Modify data of active notification.
+Modify contents of active notification.
 
 Parameters ~
 {id} `(number)` Identifier of currently active notification as returned
   by |MiniNotify.add()|.
-{new_data} `(table)` Table with data to update. Keys should be as non-timestamp
-  fields of |MiniNotify-specification| and values - new notification values.
+{new} `(table)` Table with contents to update. Keys should be as non-timestamp
+  fields of |MiniNotify-specification| and values - new content values.
+  Field `data` is updated with |vim.tbl_deep_extend()|.
 
 ------------------------------------------------------------------------------
                                                            *MiniNotify.remove()*
@@ -328,7 +344,7 @@ Hide all active notifications and stop showing window (if shown).
                              `MiniNotify.refresh`()
 Refresh notification window
 
-Make notification window show relevant data:
+Make notification window show relevant information:
 - Create an array of active notifications (see |MiniNotify-specification|).
 - Apply `config.content.sort` to an array. If output has zero notifications,
   make notification window to not show.

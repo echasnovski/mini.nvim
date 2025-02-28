@@ -66,6 +66,7 @@
 --- - <level> `(string)` - notification level as key of |vim.log.levels|.
 ---   Like "ERROR", "WARN", "INFO", etc.
 --- - <hl_group> `(string)` - highlight group with which notification is shown.
+--- - <data> `(table)` - extra data to store in notification (like `source`, etc.).
 --- - <ts_add> `(number)` - timestamp of when notification is added.
 --- - <ts_update> `(number)` - timestamp of the latest notification update.
 --- - <ts_remove> `(number|nil)` - timestamp of when notification is removed.
@@ -139,8 +140,11 @@ end
 ---
 ---   require('mini.notify').setup({
 ---     content = {
----       -- Use notification message as is
----       format = function(notif) return notif.msg end,
+---       -- Use notification message as is for LSP progress
+---       format = function(notif)
+---         if notif.data.source == 'lsp_progress' then return notif.msg end
+---         return MiniNotify.default_format(notif)
+---       end,
 ---
 ---       -- Show more recent notifications first
 ---       sort = function(notif_arr)
@@ -175,7 +179,14 @@ end
 ---
 --- Notes:
 --- - This respects previously set handler by saving and calling it.
---- - Overrding "$/progress" method of `vim.lsp.handlers` disables notifications.
+--- - Overriding "$/progress" method of `vim.lsp.handlers` disables notifications.
+--- - |MiniNotify.update()| is not called on progress end for (usually) cleaner and
+---   more informative history.
+--- - All LSP progress notifications set the following fields in `data`:
+---     - <source> is `"lsp_progress"`.
+---     - <client_name> is set to client's name (provided by client or inferred).
+---     - <context> is the latest LSP request context (`ctx` arg of |lsp-handler|).
+---     - <response> is the latest LSP response (`result` arg of |lsp-handler|).
 ---
 --- # Window ~
 ---
@@ -255,6 +266,8 @@ MiniNotify.config = {
 --- this module. General idea is to show notification as soon as safely possible
 --- (see |vim.schedule_wrap()|) and remove it after a configurable amount of time.
 ---
+--- All notifications set `source = "vim.notify"` in their `data` field.
+---
 --- Examples: >lua
 ---
 ---   -- Defaults
@@ -315,7 +328,7 @@ MiniNotify.make_notify = function(opts)
     local level_data = opts[level_name]
     if level_data.duration <= 0 then return end
 
-    local id = MiniNotify.add(msg, level_name, level_data.hl_group)
+    local id = MiniNotify.add(msg, level_name, level_data.hl_group, { source = 'vim.notify' })
     vim.defer_fn(function() MiniNotify.remove(id) end, level_data.duration)
   end)
 end
@@ -335,17 +348,21 @@ end
 ---   Default: `'INFO'`.
 ---@param hl_group string|nil Notification highlight group.
 ---   Default: `'MiniNotifyNormal'`.
+---@param data table|nil Extra data to store in the notification.
+---   Default: `{}`.
 ---
 ---@return number Notification identifier.
-MiniNotify.add = function(msg, level, hl_group)
+MiniNotify.add = function(msg, level, hl_group, data)
   H.validate_msg(msg)
   level = level or 'INFO'
   H.validate_level(level)
   hl_group = hl_group or 'MiniNotifyNormal'
   H.validate_hl_group(hl_group)
+  data = data or {}
+  H.check_type('data', data, 'table')
 
   local cur_ts = H.get_timestamp()
-  local new_notif = { msg = msg, level = level, hl_group = hl_group, ts_add = cur_ts, ts_update = cur_ts }
+  local new_notif = { msg = msg, level = level, hl_group = hl_group, ts_add = cur_ts, ts_update = cur_ts, data = data }
 
   local new_id = #H.history + 1
   -- NOTE: Crucial to use the same table here and later only update values
@@ -360,24 +377,27 @@ end
 
 --- Update active notification
 ---
---- Modify data of active notification.
+--- Modify contents of active notification.
 ---
 ---@param id number Identifier of currently active notification as returned
 ---   by |MiniNotify.add()|.
----@param new_data table Table with data to update. Keys should be as non-timestamp
----   fields of |MiniNotify-specification| and values - new notification values.
-MiniNotify.update = function(id, new_data)
+---@param new table Table with contents to update. Keys should be as non-timestamp
+---   fields of |MiniNotify-specification| and values - new content values.
+---   Field `data` is updated with |vim.tbl_deep_extend()|.
+MiniNotify.update = function(id, new)
   local notif = H.active[id]
   if notif == nil then H.error('`id` is not an identifier of active notification.') end
-  if type(new_data) ~= 'table' then H.error('`new_data` should be table.') end
+  H.check_type('new', new, 'table')
 
-  if new_data.msg ~= nil then H.validate_msg(new_data.msg) end
-  if new_data.level ~= nil then H.validate_level(new_data.level) end
-  if new_data.hl_group ~= nil then H.validate_hl_group(new_data.hl_group) end
+  if new.msg ~= nil then H.validate_msg(new.msg) end
+  if new.level ~= nil then H.validate_level(new.level) end
+  if new.hl_group ~= nil then H.validate_hl_group(new.hl_group) end
+  H.check_type('data', new.data, 'table', true)
 
-  notif.msg = new_data.msg or notif.msg
-  notif.level = new_data.level or notif.level
-  notif.hl_group = new_data.hl_group or notif.hl_group
+  notif.msg = new.msg or notif.msg
+  notif.level = new.level or notif.level
+  notif.hl_group = new.hl_group or notif.hl_group
+  if new.data ~= nil then notif.data = vim.tbl_deep_extend('force', notif.data, new.data) end
   notif.ts_update = H.get_timestamp()
 
   MiniNotify.refresh()
@@ -414,7 +434,7 @@ end
 
 --- Refresh notification window
 ---
---- Make notification window show relevant data:
+--- Make notification window show relevant information:
 --- - Create an array of active notifications (see |MiniNotify-specification|).
 --- - Apply `config.content.sort` to an array. If output has zero notifications,
 ---   make notification window to not show.
@@ -550,7 +570,7 @@ H.active = {}
 -- History of all notifications in order they are created
 H.history = {}
 
--- Map of LSP progress process id to notification data
+-- Map of LSP progress process id to notification content
 H.lsp_progress = {}
 
 -- Priorities of levels
@@ -663,10 +683,11 @@ H.lsp_progress_handler = function(err, result, ctx, config)
 
   local buf_id = ctx.bufnr or 'nil'
   local lsp_progress_id = buf_id .. client_name .. (result.token or '')
-  local progress_data = H.lsp_progress[lsp_progress_id] or {}
+  local progress_info = H.lsp_progress[lsp_progress_id] or {}
+  local data = { source = 'lsp_progress', client_name = client_name, response = result, context = ctx }
 
   -- Store percentage to be used if no new one was sent
-  progress_data.percentage = value.percentage or progress_data.percentage or 0
+  progress_info.percentage = value.percentage or progress_info.percentage or 0
 
   -- Stop notifications without update on progress end.
   -- This usually results into a cleaner and more informative history.
@@ -674,29 +695,29 @@ H.lsp_progress_handler = function(err, result, ctx, config)
   if value.kind == 'end' then
     H.lsp_progress[lsp_progress_id] = nil
     local delay = math.max(lsp_progress_config.duration_last, 0)
-    vim.defer_fn(function() MiniNotify.remove(progress_data.notif_id) end, delay)
+    vim.defer_fn(function() MiniNotify.remove(progress_info.notif_id) end, delay)
     return
   end
 
   -- Cache title because it is only supplied on 'begin'
-  if value.kind == 'begin' then progress_data.title = value.title end
+  if value.kind == 'begin' then progress_info.title = value.title end
 
   -- Make notification
   --stylua: ignore
   local msg = string.format(
     '%s: %s %s (%s%%)',
-    client_name, progress_data.title or '', value.message or '', progress_data.percentage
+    client_name, progress_info.title or '', value.message or '', progress_info.percentage
   )
 
   -- Check for valid history entry as `setup()` might have removed the id
-  if H.history[progress_data.notif_id] == nil then
-    progress_data.notif_id = MiniNotify.add(msg, lsp_progress_config.level, 'MiniNotifyLspProgress')
+  if H.history[progress_info.notif_id] == nil then
+    progress_info.notif_id = MiniNotify.add(msg, lsp_progress_config.level, 'MiniNotifyLspProgress', data)
   else
-    MiniNotify.update(progress_data.notif_id, { msg = msg })
+    MiniNotify.update(progress_info.notif_id, { msg = msg, data = data })
   end
 
-  -- Cache progress data
-  H.lsp_progress[lsp_progress_id] = progress_data
+  -- Cache progress info
+  H.lsp_progress[lsp_progress_id] = progress_info
 end
 
 -- Buffer ---------------------------------------------------------------------
