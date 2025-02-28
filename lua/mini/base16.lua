@@ -781,9 +781,10 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniMapSymbolLine',  {fg=p.base0D, bg=nil,      attr=nil, sp=nil})
     hi('MiniMapSymbolView',  {fg=p.base0F, bg=nil,      attr=nil, sp=nil})
 
-    hi('MiniNotifyBorder', {link='NormalFloat'})
-    hi('MiniNotifyNormal', {link='NormalFloat'})
-    hi('MiniNotifyTitle',  {link='FloatTitle'})
+    hi('MiniNotifyBorder',      {link='NormalFloat'})
+    hi('MiniNotifyLspProgress', {link='MiniNotifyNormal'})
+    hi('MiniNotifyNormal',      {link='NormalFloat'})
+    hi('MiniNotifyTitle',       {link='FloatTitle'})
 
     hi('MiniOperatorsExchangeFrom', {link='IncSearch'})
 
