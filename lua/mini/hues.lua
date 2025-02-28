@@ -940,9 +940,10 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('MiniMapSymbolLine',  { fg=p.accent,  bg=nil })
     hi('MiniMapSymbolView',  { fg=p.accent,  bg=nil })
 
-    hi('MiniNotifyBorder', { link='FloatBorder' })
-    hi('MiniNotifyNormal', { link='NormalFloat' })
-    hi('MiniNotifyTitle',  { link='FloatTitle'  })
+    hi('MiniNotifyBorder',      { link='FloatBorder' })
+    hi('MiniNotifyLspProgress', { link='MiniNotifyNormal' })
+    hi('MiniNotifyNormal',      { link='NormalFloat' })
+    hi('MiniNotifyTitle',       { link='FloatTitle' })
 
     hi('MiniOperatorsExchangeFrom', { link='IncSearch' })
 
