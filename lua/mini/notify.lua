@@ -155,8 +155,8 @@ end
 --- # LSP progress ~
 ---
 --- `config.lsp_progress` defines automated notifications for LSP progress.
---- It is implemented as a single updating notification with all information
---- about the progress.
+--- It is implemented as a single updating notification per progress with all
+--- information about it.
 --- Setting up is done inside |MiniNotify.setup()| via |vim.schedule()|'ed setting
 --- of |lsp-handler| for "$/progress" method.
 ---
@@ -164,6 +164,9 @@ end
 --- be shown in notifications. Can be disabled in current session.
 --- Default: `true`. Note: Should be `true` during |MiniNotify.setup()| call to be able
 --- to enable it in current session.
+---
+--- `lsp_progress.level` is a level to be used in |MiniNotify.add()|.
+--- Default: `'INFO'`.
 ---
 --- `lsp_progress.duration_last` is a number of milliseconds for the last progress
 --- report to be shown on screen before removing it.
@@ -223,6 +226,9 @@ MiniNotify.config = {
   lsp_progress = {
     -- Whether to enable showing
     enable = true,
+
+    -- Notification level
+    level = 'INFO',
 
     -- Duration (in ms) of how long last message should be shown
     duration_last = 1000,
@@ -682,7 +688,7 @@ H.lsp_progress_handler = function(err, result, ctx, config)
 
   -- Check for valid history entry as `setup()` might have removed the id
   if H.history[progress_data.notif_id] == nil then
-    progress_data.notif_id = MiniNotify.add(msg)
+    progress_data.notif_id = MiniNotify.add(msg, lsp_progress_config.level)
   else
     MiniNotify.update(progress_data.notif_id, { msg = msg })
   end

@@ -45,6 +45,10 @@
     - 'OXY2DEV/helpview.nvim'
     - 'OXY2DEV/markview.nvim'
 
+## mini.notify
+
+- FEATURE: add `lsp_progress.level` option to control level of LSP progress notifications.
+
 ## mini.statusline
 
 - BREAKING: `section_fileinfo()` got several updates:

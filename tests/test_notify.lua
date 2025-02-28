@@ -1030,7 +1030,10 @@ T['LSP progress']['works'] = function()
   child.expect_screenshot()
 
   -- Should update single notification (and not remove/add new ones)
-  eq(#get_all(), 1)
+  local history = get_all()
+  eq(#history, 1)
+  -- - Should use correct level
+  eq(history[1].level, 'INFO')
 end
 
 T['LSP progress']['handles not present data'] = function()
@@ -1076,6 +1079,15 @@ T['LSP progress']['respects `lsp_progress.enable`'] = function()
   child.lua('MiniNotify.config.lsp_progress.enable = true')
   call_handler(result, ctx)
   eq(is_notif_window_shown(), true)
+end
+
+T['LSP progress']['respects `lsp_progress.level`'] = function()
+  child.lua('MiniNotify.config.lsp_progress.level = "ERROR"')
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local result = { token = 'test', value = { kind = 'begin', title = 'Testing', message = '0/1', percentage = 0 } }
+
+  call_handler(result, ctx)
+  eq(get_all()[1].level, 'ERROR')
 end
 
 T['LSP progress']['respects `lsp_progress.duration_last`'] = function()

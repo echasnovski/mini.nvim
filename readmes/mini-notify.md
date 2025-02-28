@@ -150,6 +150,9 @@ Here are code snippets for some common installation methods (use only one):
     -- Whether to enable showing
     enable = true,
 
+    -- Notification level
+    level = 'INFO',
+
     -- Duration (in ms) of how long last message should be shown
     duration_last = 1000,
   },
