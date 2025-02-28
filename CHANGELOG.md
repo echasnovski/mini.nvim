@@ -48,6 +48,7 @@
 ## mini.notify
 
 - FEATURE: add `lsp_progress.level` option to control level of LSP progress notifications.
+- FEATURE: add `MiniNotifyLspProgress` highlight group to be used for LSP progress notifications.
 
 ## mini.statusline
 

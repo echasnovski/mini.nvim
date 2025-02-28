@@ -92,6 +92,7 @@ T['setup()']['creates side effects'] = function()
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
 
   has_highlight('MiniNotifyBorder', 'links to FloatBorder')
+  has_highlight('MiniNotifyLspProgress', 'links to MiniNotifyNormal')
   has_highlight('MiniNotifyNormal', 'links to NormalFloat')
   has_highlight('MiniNotifyTitle', 'links to FloatTitle')
 end
@@ -1032,8 +1033,9 @@ T['LSP progress']['works'] = function()
   -- Should update single notification (and not remove/add new ones)
   local history = get_all()
   eq(#history, 1)
-  -- - Should use correct level
+  -- - Should use correct data
   eq(history[1].level, 'INFO')
+  eq(history[1].hl_group, 'MiniNotifyLspProgress')
 end
 
 T['LSP progress']['handles not present data'] = function()

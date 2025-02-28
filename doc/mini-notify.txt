@@ -43,6 +43,7 @@ You can override runtime config settings locally to buffer inside
 # Highlight groups ~
 
 * `MiniNotifyBorder` - window border.
+* `MiniNotifyLspProgress` - notifications from built-in LSP progress report.
 * `MiniNotifyNormal` - basic foreground/background highlighting.
 * `MiniNotifyTitle` - window title.
 

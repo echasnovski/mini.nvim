@@ -223,6 +223,7 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
 
 - 'mini.notify':
     - `MiniNotifyBorder`
+    - `MiniNotifyLspProgress`
     - `MiniNotifyNormal`
     - `MiniNotifyTitle`
 

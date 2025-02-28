@@ -43,6 +43,7 @@
 --- # Highlight groups ~
 ---
 --- * `MiniNotifyBorder` - window border.
+--- * `MiniNotifyLspProgress` - notifications from built-in LSP progress report.
 --- * `MiniNotifyNormal` - basic foreground/background highlighting.
 --- * `MiniNotifyTitle` - window title.
 ---
@@ -630,6 +631,7 @@ H.create_default_hl = function()
   end
 
   hi('MiniNotifyBorder', { link = 'FloatBorder' })
+  hi('MiniNotifyLspProgress', { link = 'MiniNotifyNormal' })
   hi('MiniNotifyNormal', { link = 'NormalFloat' })
   hi('MiniNotifyTitle',  { link = 'FloatTitle'  })
 end
@@ -688,7 +690,7 @@ H.lsp_progress_handler = function(err, result, ctx, config)
 
   -- Check for valid history entry as `setup()` might have removed the id
   if H.history[progress_data.notif_id] == nil then
-    progress_data.notif_id = MiniNotify.add(msg, lsp_progress_config.level)
+    progress_data.notif_id = MiniNotify.add(msg, lsp_progress_config.level, 'MiniNotifyLspProgress')
   else
     MiniNotify.update(progress_data.notif_id, { msg = msg })
   end
