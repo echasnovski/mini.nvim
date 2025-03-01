@@ -412,13 +412,10 @@ updated internally. Use `MiniFilesWindowUpdate` event for them: >lua
       -- Ensure fixed height
       config.height = 10
 
-      -- Ensure title padding
-      if config.title[#config.title][1] ~= ' ' then
-        table.insert(config.title, { ' ', 'NormalFloat' })
-      end
-      if config.title[1][1] ~= ' ' then
-        table.insert(config.title, 1, { ' ', 'NormalFloat' })
-      end
+      -- Ensure no title padding
+      local n = #config.title
+      config.title[1][1] = config.title[1][1]:gsub('^ ', '')
+      config.title[n][1] = config.title[n][1]:gsub(' $', '')
 
       vim.api.nvim_win_set_config(args.data.win_id, config)
     end,

@@ -3,7 +3,7 @@
 02|~                                       
 03|~                                       
 04|~                                       
-05|┌Tree-sitter highlighting┐              
+05|┌…ee-sitter highlighting ┐              
 06|│local a = 1             │              
 07|│local t = {             │              
 08|│  x = math.max(1, 2),   │              

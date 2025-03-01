@@ -407,13 +407,10 @@
 ---       -- Ensure fixed height
 ---       config.height = 10
 ---
----       -- Ensure title padding
----       if config.title[#config.title][1] ~= ' ' then
----         table.insert(config.title, { ' ', 'NormalFloat' })
----       end
----       if config.title[1][1] ~= ' ' then
----         table.insert(config.title, 1, { ' ', 'NormalFloat' })
----       end
+---       -- Ensure no title padding
+---       local n = #config.title
+---       config.title[1][1] = config.title[1][1]:gsub('^ ', '')
+---       config.title[n][1] = config.title[n][1]:gsub(' $', '')
 ---
 ---       vim.api.nvim_win_set_config(args.data.win_id, config)
 ---     end,
@@ -1761,7 +1758,7 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
     -- Use shortened full path in left most window
     title = win_count == 1 and H.fs_shorten_path(H.fs_full_path(path)) or H.fs_get_basename(path),
   }
-  config.title = H.escape_newline(config.title)
+  config.title = ' ' .. H.escape_newline(config.title) .. ' '
 
   -- Prepare and register window
   local win_id = windows[win_count]
@@ -1913,7 +1910,7 @@ H.explorer_show_help = function(explorer, explorer_buf_id, explorer_win_id)
   config.col = 0
   config.width = max_line_width
   config.height = #lines
-  config.title = vim.fn.has('nvim-0.9') == 1 and [['mini.files' help]] or nil
+  config.title = vim.fn.has('nvim-0.9') == 1 and " 'mini.files' help " or nil
   config.zindex = config.zindex + 1
   config.style = 'minimal'
 

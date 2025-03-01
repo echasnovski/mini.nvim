@@ -2475,10 +2475,12 @@ H.picker_set_bordertext = function(picker)
     local stritem_cur = picker.stritems[picker.match_inds[picker.current_ind]] or ''
     -- Sanitize title
     stritem_cur = stritem_cur:gsub('%z', '│'):gsub('%s', ' ')
-    config = { title = { { H.fit_to_width(stritem_cur, win_width), 'MiniPickBorderText' } } }
+    config = { title = { { H.fit_to_width(' ' .. stritem_cur .. ' ', win_width), 'MiniPickBorderText' } } }
   end
 
-  if view_state == 'info' then config = { title = { { H.fit_to_width('Info', win_width), 'MiniPickBorderText' } } } end
+  if view_state == 'info' then
+    config = { title = { { H.fit_to_width(' Info ', win_width), 'MiniPickBorderText' } } }
+  end
 
   -- Compute helper footer only if Neovim version permits and not in busy
   -- picker (otherwise it will flicker number of matches data on char delete)

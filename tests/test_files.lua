@@ -2661,6 +2661,8 @@ T['Preview']['does not highlight big files'] = function()
   -- Has limit per line
   child.fn.writefile({ string.format('local a = "%s"', string.rep('a', 1000)) }, big_file)
   open(big_file)
+  -- NOTE: there is no visible right pad because it got truncated by Neovim,
+  -- as 'MOCK_ROOT' doesn't account for initial truncation from left
   child.expect_screenshot()
   close()
 
@@ -5268,8 +5270,8 @@ T['Events']['`MiniFilesWindowUpdate` can customize internally set window config 
         config.height = 5
         -- Ensure title padding
         local n = #config.title
-        if config.title[n][1] ~= ' ' then table.insert(config.title, { ' ', 'NormalFloat' }) end
-        if config.title[1][1] ~= ' ' then table.insert(config.title, 1, { ' ', 'NormalFloat' }) end
+        config.title[1][1] = config.title[1][1]:gsub('^ ', '')
+        config.title[n][1] = config.title[n][1]:gsub(' $', '')
         vim.api.nvim_win_set_config(args.data.win_id, config)
       end
     })
