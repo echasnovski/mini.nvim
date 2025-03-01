@@ -157,8 +157,8 @@ Here are code snippets for some common installation methods (use only one):
   -- - `height` and `width` are maximum dimensions.
   -- - `border` defines border (as in `nvim_open_win()`).
   window = {
-    info = { height = 25, width = 80, border = 'none' },
-    signature = { height = 25, width = 80, border = 'none' },
+    info = { height = 25, width = 80, border = 'single' },
+    signature = { height = 25, width = 80, border = 'single' },
   },
 
   -- Way of how module does LSP completion

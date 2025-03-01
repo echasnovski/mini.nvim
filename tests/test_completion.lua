@@ -135,10 +135,10 @@ T['setup()']['creates `config` field'] = function()
   expect_config('delay.signature', 50)
   expect_config('window.info.height', 25)
   expect_config('window.info.width', 80)
-  expect_config('window.info.border', 'none')
+  expect_config('window.info.border', 'single')
   expect_config('window.signature.height', 25)
   expect_config('window.signature.width', 80)
-  expect_config('window.signature.border', 'none')
+  expect_config('window.signature.border', 'single')
   expect_config('lsp_completion.source_func', 'completefunc')
   expect_config('lsp_completion.auto_setup', true)
   eq(child.lua_get('type(_G.MiniCompletion.config.lsp_completion.process_items)'), 'function')
@@ -1054,7 +1054,7 @@ local validate_signature_win = function(delay)
 end
 
 T['Signature help']['works'] = function()
-  child.set_size(5, 30)
+  child.set_size(7, 30)
   validate_signature_win(default_signature_delay)
   child.expect_screenshot()
 end
@@ -1071,7 +1071,7 @@ T['Signature help']['respects `config.delay.signature`'] = function()
 end
 
 T['Signature help']['updates highlighting of active parameter'] = function()
-  child.set_size(5, 30)
+  child.set_size(7, 30)
   child.cmd('startinsert')
 
   type_keys('abc(')
@@ -1125,7 +1125,7 @@ T['Signature help']['accounts for border when picking side'] = function()
 end
 
 T['Signature help']['has minimal dimensions for small text'] = function()
-  child.set_size(5, 30)
+  child.set_size(7, 30)
   local keys = { 'a', 'b', 'c', '(' }
   child.lua('MiniCompletion.config.window.signature.height = 1')
   child.lua('MiniCompletion.config.window.signature.width = 19')
