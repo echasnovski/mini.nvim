@@ -2048,6 +2048,7 @@ H.buffer_reporter.default_window_opts = function()
     row = math.floor(0.191 * vim.o.lines),
     col = math.floor(0.191 * vim.o.columns),
     border = 'none',
+    title = ' Test results ',
   }
 end
 

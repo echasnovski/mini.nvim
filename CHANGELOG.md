@@ -2,6 +2,7 @@
 
 - Unify behavior of floating windows:
     - Truncate title/footer from left if it is too wide.
+    - Set default title if window is allowed to have border.
     - BREAKING: Use single space padding for default title/footer.
 
 ## mini.ai

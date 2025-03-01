@@ -11,6 +11,14 @@ local unload_module = function() child.mini_unload('notify') end
 local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
+-- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as 0.8 does
+-- not have titles)
+child.expect_screenshot_orig = child.expect_screenshot
+child.expect_screenshot = function(opts)
+  if child.fn.has('nvim-0.9') == 0 then return end
+  child.expect_screenshot_orig(opts)
+end
+
 -- Common test helpers
 local get_notif_win_id = function(tabpage_id)
   tabpage_id = tabpage_id or child.api.nvim_get_current_tabpage()
@@ -826,16 +834,11 @@ T['Window']['respects `window.config`'] = function()
   -- As callable
   child.lua([[MiniNotify.config.window.config = function(buf_id)
     _G.buffer_filetype = vim.bo[buf_id].filetype
-    return { border = 'double', width = 25, height = 5 }
+    return { border = 'double', width = 25, height = 5, title = 'Custom title to check truncation' }
   end]])
   refresh()
-  child.expect_screenshot()
-
-  -- Allows title
-  if child.fn.has('nvim-0.9') == 0 then return end
-  child.lua([[MiniNotify.config.window.config = { border = 'single', title = 'Custom title to check truncation' }]])
-  refresh()
-  child.expect_screenshot()
+  -- NOTE: Neovim<=0.9 has issues with displaying title in this case
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 end
 
 T['Window']['respects `window.max_width_share`'] = function()

@@ -1074,6 +1074,7 @@ H.info_window_options = function()
     info_height, info_width = H.floating_dimensions(lines, win_config.height, space)
   end
 
+  local title = vim.fn.has('nvim-0.9') == 1 and H.fit_to_width(' Info ', info_width) or nil
   return {
     relative = 'editor',
     anchor = anchor,
@@ -1084,6 +1085,7 @@ H.info_window_options = function()
     focusable = false,
     style = 'minimal',
     border = win_config.border,
+    title = title,
   }
 end
 
@@ -1251,6 +1253,7 @@ H.signature_window_opts = function()
   local bufpos = vim.api.nvim_win_get_cursor(0)
   bufpos[1] = bufpos[1] - 1
 
+  local title = vim.fn.has('nvim-0.9') == 1 and H.fit_to_width(' Signature ', width) or nil
   return {
     relative = 'win',
     bufpos = bufpos,
@@ -1262,6 +1265,7 @@ H.signature_window_opts = function()
     focusable = false,
     style = 'minimal',
     border = win_config.border,
+    title = title,
   }
 end
 
@@ -1397,6 +1401,11 @@ H.is_whitespace = function(s)
     return true
   end
   return false
+end
+
+H.fit_to_width = function(text, width)
+  local t_width = vim.fn.strchars(text)
+  return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
 end
 
 -- Simulate splitting single line `l` like how it would look inside window with

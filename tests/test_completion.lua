@@ -21,13 +21,13 @@ local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim<=0.10 (as current Nightly
--- 0.11 has different way of computing attributes in popup-menu; see
--- https://github.com/neovim/neovim/pull/29980)
+-- Tweak `expect_screenshot()` to test only on 0.9<=Neovim<=0.10 (as 0.8 does
+-- not have titles and current Nightly 0.11 has different way of computing
+-- attributes in popup-menu; see https://github.com/neovim/neovim/pull/29980)
 -- TODO: Update to use Neovim>=0.11 when Neovim 0.11 is released
 child.expect_screenshot_orig = child.expect_screenshot
 child.expect_screenshot = function(opts)
-  if child.fn.has('nvim-0.11') == 1 then return end
+  if not (child.fn.has('nvim-0.9') == 1 and child.fn.has('nvim-0.11') == 0) then return end
   child.expect_screenshot_orig(opts)
 end
 
@@ -877,9 +877,9 @@ end
 
 T['Information window']['has minimal dimensions for small text'] = function()
   child.set_size(10, 40)
-  local win_config = { height = 1, width = 9 }
-  child.lua('MiniCompletion.config.window.info = ' .. vim.inspect(win_config))
-  validate_info_window_config('J', { 'January', 'June', 'July' }, win_config)
+  child.lua('MiniCompletion.config.window.info.height = 1')
+  child.lua('MiniCompletion.config.window.info.width = 9')
+  validate_info_window_config('J', { 'January', 'June', 'July' }, { height = 1, width = 9 })
   child.expect_screenshot()
 end
 
@@ -1127,9 +1127,9 @@ end
 T['Signature help']['has minimal dimensions for small text'] = function()
   child.set_size(5, 30)
   local keys = { 'a', 'b', 'c', '(' }
-  local win_config = { height = 1, width = 19 }
-  child.lua('MiniCompletion.config.window.signature = ' .. vim.inspect(win_config))
-  validate_signature_window_config(keys, win_config)
+  child.lua('MiniCompletion.config.window.signature.height = 1')
+  child.lua('MiniCompletion.config.window.signature.width = 19')
+  validate_signature_window_config(keys, { height = 1, width = 19 })
   child.expect_screenshot()
 end
 
