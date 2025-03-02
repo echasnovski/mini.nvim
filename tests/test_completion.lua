@@ -145,6 +145,8 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniCompletion.config.fallback_action)'), 'function')
   expect_config('mappings.force_twostep', '<C-Space>')
   expect_config('mappings.force_fallback', '<A-Space>')
+  expect_config('mappings.scroll_down', '<C-f>')
+  expect_config('mappings.scroll_up', '<C-b>')
   expect_config('set_vim_settings', true)
 end
 
@@ -187,6 +189,8 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = 'a' }, 'mappings', 'table')
   expect_config_error({ mappings = { force_twostep = 1 } }, 'mappings.force_twostep', 'string')
   expect_config_error({ mappings = { force_fallback = 1 } }, 'mappings.force_fallback', 'string')
+  expect_config_error({ mappings = { scroll_down = 1 } }, 'mappings.scroll_down', 'string')
+  expect_config_error({ mappings = { scroll_up = 1 } }, 'mappings.scroll_up', 'string')
   expect_config_error({ set_vim_settings = 1 }, 'set_vim_settings', 'boolean')
 end
 
@@ -1209,5 +1213,121 @@ T['Signature help']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
     eq(#get_floating_windows(), 0)
   end,
 })
+
+T['Scroll'] = new_set({
+  hooks = {
+    pre_case = function()
+      new_buffer()
+      mock_lsp()
+      child.set_size(10, 25)
+    end,
+  },
+})
+
+T['Scroll']['can be done in info window'] = function()
+  child.lua('MiniCompletion.config.window.info.height = 4')
+
+  type_keys('i', 'F', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  type_keys('<C-f>')
+  child.expect_screenshot()
+  type_keys('<C-f>')
+  child.expect_screenshot()
+  type_keys('<C-f>')
+  child.expect_screenshot()
+
+  type_keys('<C-b>')
+  child.expect_screenshot()
+  type_keys('<C-b>')
+  child.expect_screenshot()
+  type_keys('<C-b>')
+  child.expect_screenshot()
+end
+
+T['Scroll']['can be done in signature window'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip("'smoothscroll' requires Neovim>=0.10") end
+
+  child.lua('MiniCompletion.config.window.signature.height = 4')
+  child.lua('MiniCompletion.config.window.signature.width = 4')
+
+  type_keys('i', 'scroll(')
+  sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+
+  -- NOTE: there are `<<<` characters at the top during `:h 'smoothscroll'`
+  local ignore_smoothscroll_lines = { ignore_lines = { 3 } }
+
+  type_keys('<C-f>')
+  child.expect_screenshot(ignore_smoothscroll_lines)
+  type_keys('<C-f>')
+  child.expect_screenshot(ignore_smoothscroll_lines)
+
+  type_keys('<C-b>')
+  child.expect_screenshot(ignore_smoothscroll_lines)
+  type_keys('<C-b>')
+  child.expect_screenshot()
+end
+
+T['Scroll']['can be done in both windows'] = function()
+  child.lua('MiniCompletion.config.window.info.height = 4')
+  child.lua('MiniCompletion.config.window.signature.height = 4')
+  child.lua('MiniCompletion.config.window.signature.width = 4')
+
+  type_keys('i', 'scroll(')
+  sleep(default_signature_delay + small_time)
+
+  type_keys('F', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  -- Should prefer scrolling in info window if both are visible
+  type_keys('<C-f>')
+  child.expect_screenshot()
+  type_keys('<C-b>')
+  child.expect_screenshot()
+
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip("'smoothscroll' requires Neovim>=0.10") end
+  type_keys('<C-e>')
+  type_keys('<C-f>')
+  child.expect_screenshot()
+end
+
+T['Scroll']['respects `config.mappings`'] = function()
+  child.lua([[
+    vim.keymap.del('i', '<C-f>')
+    vim.keymap.del('i', '<C-b>')
+    MiniCompletion.setup({
+      lsp_completion = { source_func = 'omnifunc' },
+      mappings = { scroll_down = '<C-d>', scroll_up = '<C-u>' },
+      window = { info = { height = 4 } },
+    })
+  ]])
+
+  new_buffer()
+  mock_lsp()
+
+  type_keys('i', 'F', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  type_keys('<C-d>')
+  child.expect_screenshot()
+  type_keys('<C-u>')
+  child.expect_screenshot()
+  type_keys('<C-e>')
+
+  -- Mapped keys can be used without active target window
+  set_lines({ '  Line' })
+  set_cursor(1, 6)
+  type_keys('<C-d>')
+  eq(get_lines(), { 'Line' })
+  type_keys('<C-u>')
+  eq(get_lines(), { '' })
+end
 
 return T

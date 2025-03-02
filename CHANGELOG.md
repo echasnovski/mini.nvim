@@ -31,6 +31,7 @@
 
 ## mini.completion
 
+- FEATURE: add scrolling in info and signature window. By default can be done with `<C-f>` / `<C-b>` when target window is shown. Can be configured via `mappings.scroll_down` and `mappings.scroll_up` config options.
 - FEATURE: respect `isIncomplete` in LSP completion response and immediately force new completion request on the next key press.
 - FEATURE: both info and signature help windows now use tree-sitter highlighting:
     - Info window uses "markdown" parser (works best on Neovim>=0.10 as its parser is built-in). Special markdown characters are concealed (i.e. hidden) which might result into seemingly unnecessary whitespace as dimensions are computed not accounting for that.
