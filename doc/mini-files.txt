@@ -606,6 +606,8 @@ Default values:
       permanent_delete = true,
       -- Whether to use for editing directories
       use_as_default_explorer = true,
+      -- Whether to persist bookmarks (per root directory)
+      persist_bookmarks = false
     },
 
     -- Customization of explorer windows
@@ -683,6 +685,13 @@ Note: to work with directory in |arglist|, do not lazy load this module.
 permanent delete or move into special trash directory.
 This is a module-specific variant of "remove to trash".
 Target directory is 'mini.files/trash' inside standard path of Neovim data
+directory (execute `:echo stdpath('data')` to see its path in your case).
+
+`options.persist_bookmarks` is a boolean indicating whether to persist bookmarks
+made while using this plugin. The bookmarks are persisted per current working directory, 
+that means that they get restored if you open neovim from the same directory you made
+them in.
+Target directory is 'mini.files/bookmarks' inside standard path of Neovim data
 directory (execute `:echo stdpath('data')` to see its path in your case).
 
 # Windows ~
@@ -975,6 +984,40 @@ Parameters ~
 
 Return ~
 `(table)` Sorted array of file system entries.
+
+------------------------------------------------------------------------------
+                                                  *H.save_persisted_bookmarks()*
+                `H.save_persisted_bookmarks`({explorer}, {path})
+Saves bookmarks to disk if the configuration option is enabled
+Parameters ~
+{explorer} `(any)` The explorer to persist
+{path} `(string|function)` The newly added path, this is only to typecheck whether it
+a string because functions are not supported
+
+------------------------------------------------------------------------------
+                                               *H.restore_persisted_bookmarks()*
+                  `H.restore_persisted_bookmarks`({explorer})
+Restores persisted bookmarks from disk
+Parameters ~
+{explorer} `(any)`
+
+------------------------------------------------------------------------------
+                                                                 *H.serialize()*
+                              `H.serialize`({tab})
+Serializes a table
+Parameters ~
+{tab} `(table)` Table to be serialized
+Return ~
+`(string)` A string representation of a table
+
+------------------------------------------------------------------------------
+                                                               *H.deserialize()*
+                              `H.deserialize`({s})
+Deserializes a string to a table
+Parameters ~
+{s} `(string)` The serialized table
+Return ~
+`(table)` The deserialized table
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

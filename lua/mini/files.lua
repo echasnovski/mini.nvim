@@ -652,6 +652,13 @@ end
 --- Target directory is 'mini.files/trash' inside standard path of Neovim data
 --- directory (execute `:echo stdpath('data')` to see its path in your case).
 ---
+--- `options.persist_bookmarks` is a boolean indicating whether to persist bookmarks
+--- made while using this plugin. The bookmarks are persisted per current working directory, 
+--- that means that they get restored if you open neovim from the same directory you made
+--- them in.
+--- Target directory is 'mini.files/bookmarks' inside standard path of Neovim data
+--- directory (execute `:echo stdpath('data')` to see its path in your case).
+---
 --- # Windows ~
 ---
 --- `windows.max_number` is a maximum number of windows allowed to be open
@@ -700,6 +707,8 @@ MiniFiles.config = {
     permanent_delete = true,
     -- Whether to use for editing directories
     use_as_default_explorer = true,
+    -- Whether to persist bookmarks (per root directory)
+    persist_bookmarks = false
   },
 
   -- Customization of explorer windows
@@ -788,6 +797,9 @@ MiniFiles.open = function(path, use_latest, opts)
 
   -- Track lost focus
   H.explorer_track_lost_focus()
+
+  -- Restore persisted bookmarks
+  H.restore_persisted_bookmarks(explorer)
 
   -- Trigger appropriate event
   H.trigger_event('MiniFilesExplorerOpen')
@@ -1152,6 +1164,7 @@ MiniFiles.set_bookmark = function(id, path, opts)
   if not (opts.desc == nil or type(opts.desc) == 'string') then H.error('Bookmark description should be string') end
 
   explorer.bookmarks[id] = { path = path, desc = opts.desc }
+  H.save_persisted_bookmarks(explorer, path)
 end
 
 --- Get latest used anchor path
@@ -1299,8 +1312,7 @@ H.setup_config = function(config)
   H.check_type('options', config.options, 'table')
   H.check_type('options.use_as_default_explorer', config.options.use_as_default_explorer, 'boolean')
   H.check_type('options.permanent_delete', config.options.permanent_delete, 'boolean')
-
-  H.check_type('windows', config.windows, 'table')
+  H.check_type('options.persist_bookmarks', config.options.persist_bookmarks, 'boolean')
   H.check_type('windows.max_number', config.windows.max_number, 'number')
   H.check_type('windows.preview', config.windows.preview, 'boolean')
   H.check_type('windows.width_focus', config.windows.width_focus, 'number')
@@ -2904,5 +2916,143 @@ H.escape_newline = function(x) return ((x or ''):gsub('\n', '<NL>')) end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
+-- Bookmarks --------------------------------------------------------------------
+
+H.get_persist_file_path = function()
+  local cwd = vim.fn.getcwd()
+  -- Replace all non alphanumeric characters with underscores
+  cwd = cwd:gsub('%W', '_')
+  local persist_dir = H.fs_child_path(vim.fn.stdpath('data'), 'mini.files/bookmarks')
+  return persist_dir .. '/' .. cwd
+end
+
+--- Saves bookmarks to disk if the configuration option is enabled
+---@param explorer any The explorer to persist
+---@param path string|function The newly added path, this is only to typecheck whether it
+---is a string because functions are not supported
+H.save_persisted_bookmarks = function(explorer, path)
+  if explorer.opts.options.persist_bookmarks then
+    if not (type(path) == 'string') then H.error('Persisting bookmarks only support strings as paths.') end
+
+    local persist_dir = H.fs_child_path(vim.fn.stdpath('data'), 'mini.files/bookmarks')
+    if not H.fs_is_present_path(persist_dir) then vim.fn.mkdir(persist_dir, 'p') end
+
+    local f, err = io.open(H.get_persist_file_path(), 'w+')
+    if f == nil then H.error('Error opening bookmarks file for root dir: ' .. err) end
+    f:write(H.serialize(explorer.bookmarks))
+    f:close()
+  end
+end
+
+--- Restores persisted bookmarks from disk
+---@param explorer any
+H.restore_persisted_bookmarks = function(explorer)
+  local path = H.get_persist_file_path()
+  if not explorer.opts.options.persist_bookmarks then return end
+  if not H.fs_is_present_path(path) then return end
+
+  local f, err = io.open(path, 'r')
+  if not err == nil then H.error('failed to open persisted bookmarks: ' .. err) end
+  local s = f:read('*all')
+  f.close()
+  explorer.bookmarks = H.deserialize(s)
+end
+
+--- Serializes a table
+---@param tab table Table to be serialized
+---@return string A string representation of a table
+H.serialize = function(tab)
+  Pickle = {
+    clone = function(t)
+      local nt = {}
+      for i, v in pairs(t) do
+        nt[i] = v
+      end
+      return nt
+    end,
+  }
+
+  function Pickle:pickle_(root)
+    if type(root) ~= 'table' then H.error('can only pickle tables, not ' .. type(root) .. 's') end
+    self._tableToRef = {}
+    self._refToTable = {}
+    local savecount = 0
+    self:ref_(root)
+    local s = ''
+
+    while table.getn(self._refToTable) > savecount do
+      savecount = savecount + 1
+      local t = self._refToTable[savecount]
+      s = s .. '{\n'
+      for i, v in pairs(t) do
+        s = string.format('%s[%s]=%s,\n', s, self:value_(i), self:value_(v))
+      end
+      s = s .. '},\n'
+    end
+
+    return string.format('{%s}', s)
+  end
+
+  function Pickle:value_(v)
+    local vtype = type(v)
+    if vtype == 'string' then
+      return string.format('%q', v)
+    elseif vtype == 'number' then
+      return v
+    elseif vtype == 'boolean' then
+      return tostring(v)
+    elseif vtype == 'table' then
+      return '{' .. self:ref_(v) .. '}'
+    else --error("pickle a "..type(v).." is not supported")
+    end
+  end
+
+  function Pickle:ref_(t)
+    local ref = self._tableToRef[t]
+    if not ref then
+      if t == self then H.error("can't pickle the pickle class") end
+      table.insert(self._refToTable, t)
+      ref = table.getn(self._refToTable)
+      self._tableToRef[t] = ref
+    end
+    return ref
+  end
+
+  return Pickle:clone():pickle_(tab)
+end
+
+--- Deserializes a string to a table
+---@param s string The serialized table
+---@return table The deserialized table
+H.deserialize = function(s)
+  if type(s) ~= 'string' then H.error("can't unpickle a " .. type(s) .. ', only strings') end
+  local gentables = loadstring('return ' .. s)
+  local tables = gentables()
+
+  for tnum = 1, table.getn(tables) do
+    local t = tables[tnum]
+    local tcopy = {}
+    for i, v in pairs(t) do
+      tcopy[i] = v
+    end
+    for i, v in pairs(tcopy) do
+      local ni, nv
+      if type(i) == 'table' then
+        ni = tables[i[1]]
+      else
+        ni = i
+      end
+      if type(v) == 'table' then
+        nv = tables[v[1]]
+      else
+        nv = v
+      end
+      t[i] = nil
+      t[ni] = nv
+    end
+  end
+  return tables[1]
+end
 
 return MiniFiles
