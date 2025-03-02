@@ -2931,6 +2931,7 @@ end
 ---@param explorer any The explorer to persist
 ---@param path string|function The newly added path, this is only to typecheck whether it
 ---is a string because functions are not supported
+---@private
 H.save_persisted_bookmarks = function(explorer, path)
   if explorer.opts.options.persist_bookmarks then
     if not (type(path) == 'string') then H.error('Persisting bookmarks only support strings as paths.') end
@@ -2947,6 +2948,7 @@ end
 
 --- Restores persisted bookmarks from disk
 ---@param explorer any
+---@private
 H.restore_persisted_bookmarks = function(explorer)
   local path = H.get_persist_file_path()
   if not explorer.opts.options.persist_bookmarks then return end
@@ -2962,6 +2964,7 @@ end
 --- Serializes a table
 ---@param tab table Table to be serialized
 ---@return string A string representation of a table
+---@private
 H.serialize = function(tab)
   Pickle = {
     clone = function(t)
@@ -3025,6 +3028,7 @@ end
 --- Deserializes a string to a table
 ---@param s string The serialized table
 ---@return table The deserialized table
+---@private
 H.deserialize = function(s)
   if type(s) ~= 'string' then H.error("can't unpickle a " .. type(s) .. ', only strings') end
   local gentables = loadstring('return ' .. s)
