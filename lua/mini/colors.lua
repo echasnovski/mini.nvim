@@ -219,6 +219,12 @@
 ---   Great way for a hands-on introduction to concepts of lightness, chroma,
 ---   saturation, and hue.
 ---
+--- Note that Oklab/Oklch/Okhsl use channel normalization for `l`, `a`, `b`, `c`, `s` that
+--- is more oriented towards integer numbers (according to the above sources).
+--- Some implementations (like in CSS) are more oriented towards [0; 1] range or
+--- percentages. Adjust accordingly by dividing/multiplying output by 100.
+--- Also use `adjust_lightness = false` in |MiniColors.convert()|.
+---
 ---                                                          *MiniColors-gamut-clip*
 --- Gamut clip ~
 ---
