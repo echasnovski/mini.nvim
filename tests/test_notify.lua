@@ -395,12 +395,11 @@ T['update()']['works'] = function()
     end
   ]])
 
-  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = { c = 3, d = 'd' }, e = 'e' })
+  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = true, c = 'c' })
   child.expect_screenshot()
   local init_notif = get(id)
 
-  local new_data = { a = 11, b = { c = 33, f = true }, g = {} }
-  update(id, { msg = 'World', level = 'WARN', hl_group = 'String', data = new_data })
+  update(id, { msg = 'World', level = 'WARN', hl_group = 'String', data = { a = 11 } })
 
   -- Should show updated notification in a floating window
   child.expect_screenshot()
@@ -412,8 +411,8 @@ T['update()']['works'] = function()
   eq(notif.level, 'WARN')
   eq(notif.hl_group, 'String')
 
-  -- Should deeply extend `data`
-  eq(notif.data, { a = 11, b = { c = 33, d = 'd', f = true }, e = 'e', g = {} })
+  -- Should assign non-nil `data` as is, without `vim.tbl_deep_extend`
+  eq(notif.data, { a = 11 })
 
   -- Add time should be untouched
   eq(notif.ts_add, init_notif.ts_add)
@@ -423,20 +422,20 @@ T['update()']['works'] = function()
 end
 
 T['update()']['allows partial new content'] = function()
-  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = 2 })
-  update(id, { msg = 'World', data = { b = 22 } })
+  local id = add('Hello', 'ERROR', 'Comment', { a = 1, b = true })
+  update(id, { msg = 'World', data = { b = false } })
   local notif = get(id)
   eq(notif.msg, 'World')
   eq(notif.level, 'ERROR')
   eq(notif.hl_group, 'Comment')
-  eq(notif.data, { a = 1, b = 22 })
+  eq(notif.data, { b = false })
 
   -- Empty table
   update(id, {})
   eq(notif.msg, 'World')
   eq(notif.level, 'ERROR')
   eq(notif.hl_group, 'Comment')
-  eq(notif.data, { a = 1, b = 22 })
+  eq(notif.data, { b = false })
 end
 
 T['update()']['can update only active notification'] = function()

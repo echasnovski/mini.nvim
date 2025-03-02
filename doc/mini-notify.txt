@@ -318,7 +318,8 @@ Parameters ~
   by |MiniNotify.add()|.
 {new} `(table)` Table with contents to update. Keys should be as non-timestamp
   fields of |MiniNotify-specification| and values - new content values.
-  Field `data` is updated with |vim.tbl_deep_extend()|.
+  If present, field `data` is updated as is. Use |MiniNotify.get()| together
+  with |vim.tbl_deep_extend()| to change only part of it.
 
 ------------------------------------------------------------------------------
                                                            *MiniNotify.remove()*

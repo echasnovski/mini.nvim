@@ -383,7 +383,8 @@ end
 ---   by |MiniNotify.add()|.
 ---@param new table Table with contents to update. Keys should be as non-timestamp
 ---   fields of |MiniNotify-specification| and values - new content values.
----   Field `data` is updated with |vim.tbl_deep_extend()|.
+---   If present, field `data` is updated as is. Use |MiniNotify.get()| together
+---   with |vim.tbl_deep_extend()| to change only part of it.
 MiniNotify.update = function(id, new)
   local notif = H.active[id]
   if notif == nil then H.error('`id` is not an identifier of active notification.') end
@@ -397,7 +398,7 @@ MiniNotify.update = function(id, new)
   notif.msg = new.msg or notif.msg
   notif.level = new.level or notif.level
   notif.hl_group = new.hl_group or notif.hl_group
-  if new.data ~= nil then notif.data = vim.tbl_deep_extend('force', notif.data, new.data) end
+  notif.data = new.data or notif.data
   notif.ts_update = H.get_timestamp()
 
   MiniNotify.refresh()
