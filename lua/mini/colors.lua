@@ -939,6 +939,12 @@ end
 ---   inferred automatically.
 ---@param to_space string Id of allowed color space.
 ---@param opts table|nil Options. Possible fields:
+---   - <adjust_lightness> `(boolean)` - whether to adjust lightness value to have
+---     a more uniform progression from 0 to 100. Set `false` for results more
+---     compatible with some other Oklab/Oklch implementations (like in CSS).
+---     Source: "Intermission - a new lightness estimate for Oklab" section of
+---     https://bottosson.github.io/posts/colorpicker
+---     Default: `true`.
 ---   - <gamut_clip> `(string)` - method for |MiniColors-gamut-clip|.
 ---     Default: `'chroma'`.
 ---
@@ -949,8 +955,11 @@ MiniColors.convert = function(x, to_space, opts)
     local spaces = table.concat(vim.tbl_map(vim.inspect, H.allowed_spaces), ', ')
     H.error('Argument `to_space` should be one of ' .. spaces .. '.')
   end
-  opts = vim.tbl_deep_extend('force', { gamut_clip = 'chroma' }, opts or {})
+  opts = vim.tbl_deep_extend('force', { adjust_lightness = true, gamut_clip = 'chroma' }, opts or {})
 
+  -- Set reference value here once to not have to pass it as argument to many
+  -- downstream places
+  H.adjust_lightness = opts.adjust_lightness
   return H.converters[to_space](x, H.infer_color_space(x), opts)
 end
 
@@ -2194,6 +2203,8 @@ end
 -- Functions for lightness correction
 -- https://bottosson.github.io/posts/colorpicker/#intermission---a-new-lightness-estimate-for-oklab
 H.correct_lightness = function(x)
+  if not H.adjust_lightness then return x end
+
   x = 0.01 * x
   local k1, k2 = 0.206, 0.03
   local k3 = (1 + k1) / (1 + k2)
@@ -2203,6 +2214,8 @@ H.correct_lightness = function(x)
 end
 
 H.correct_lightness_inv = function(x)
+  if not H.adjust_lightness then return x end
+
   x = 0.01 * x
   local k1, k2 = 0.206, 0.03
   local k3 = (1 + k1) / (1 + k2)

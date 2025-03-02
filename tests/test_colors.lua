@@ -1940,6 +1940,42 @@ T['convert()']['converts to okhsl'] = function()
   validate({ l = 50, s = 10, h = 360 }, { l = 50, s = 10, h = 0 }, 1e-6)
 end
 
+T['convert()']['respects `opts.adjust_lightness`'] = function()
+  -- Should return correct lightness estimate
+  local validate = function(input, space, ref_output)
+    eq(convert(input, space, { adjust_lightness = false }), ref_output)
+  end
+  validate({ l = 20, a = 2, b = 0 }, 'hex', '#1e1216')
+  validate({ l = 20, c = 2, h = 0 }, 'hex', '#1e1216')
+  validate({ l = 20, s = 26, h = 357 }, 'hex', '#1e1216')
+
+  local validate_approx = function(input, space, ref_output, tol)
+    eq_approx(convert(input, space, { adjust_lightness = false }), ref_output, tol)
+  end
+  validate_approx({ l = 20, a = 2, b = 0 }, 'rgb', { r = 30, g = 18, b = 22 }, 0.5)
+  validate_approx({ l = 20, c = 2, h = 0 }, 'rgb', { r = 30, g = 18, b = 22 }, 0.5)
+  validate_approx({ l = 20, s = 26, h = 357 }, 'rgb', { r = 30, g = 18, b = 22 }, 0.5)
+
+  local validate_l = function(input, space, ref_l)
+    eq_approx(convert(input, space, { adjust_lightness = false }).l, ref_l, 0.05)
+  end
+  validate_l('#1e1216', 'oklab', 20)
+  validate_l('#1e1216', 'oklch', 20)
+  validate_l('#1e1216', 'okhsl', 20)
+
+  local validate_same_l = function(input, space) eq(convert(input, space, { adjust_lightness = false }).l, input.l) end
+  validate_same_l({ l = 20, a = 2, b = 0 }, 'oklch')
+  validate_same_l({ l = 20, a = 2, b = 0 }, 'okhsl')
+  validate_same_l({ l = 20, c = 2, h = 0 }, 'oklab')
+  validate_same_l({ l = 20, c = 2, h = 0 }, 'okhsl')
+  validate_same_l({ l = 20, s = 26, h = 357 }, 'oklab')
+  validate_same_l({ l = 20, s = 26, h = 357 }, 'oklch')
+
+  -- Should compute correct gamut clipping
+  eq(convert({ l = 20, c = 20, h = 0 }, 'hex', { adjust_lightness = false, gamut_clip = 'lightness' }), '#b2005d')
+  eq(convert({ l = 20, c = 20, h = 0 }, 'hex', { adjust_lightness = false, gamut_clip = 'cusp' }), '#6a0035')
+end
+
 T['convert()']['validates arguments'] = function()
   -- Input
   expect.error(function() convert('aaaaaa', 'rgb') end, 'Can not infer color space of "aaaaaa"')

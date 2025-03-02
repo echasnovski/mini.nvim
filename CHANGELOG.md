@@ -21,6 +21,10 @@
     - 'OXY2DEV/helpview.nvim'
     - 'OXY2DEV/markview.nvim'
 
+## mini.colors
+
+- FEATURE: update `convert()` to have `adjust_lightness` option which can be used to disable lightness adjustment (which is enabled by default for a more uniform progression from 0 to 100). This can be useful for output to be more consistent with other Oklab/Oklch implementations.
+
 ## mini.comment
 
 - FEATURE: update textobject to respect `ignore_blank_line` option. Blank lines between commented lines are treated as part of a textobject.
