@@ -198,8 +198,6 @@ Default: 1000.
 Notes:
 - This respects previously set handler by saving and calling it.
 - Overriding "$/progress" method of `vim.lsp.handlers` disables notifications.
-- |MiniNotify.update()| is not called on progress end for (usually) cleaner and
-  more informative history.
 - All LSP progress notifications set the following fields in `data`:
     - <source> is `"lsp_progress"`.
     - <client_name> is set to client's name (provided by client or inferred).

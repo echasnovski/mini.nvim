@@ -180,8 +180,6 @@ end
 --- Notes:
 --- - This respects previously set handler by saving and calling it.
 --- - Overriding "$/progress" method of `vim.lsp.handlers` disables notifications.
---- - |MiniNotify.update()| is not called on progress end for (usually) cleaner and
----   more informative history.
 --- - All LSP progress notifications set the following fields in `data`:
 ---     - <source> is `"lsp_progress"`.
 ---     - <client_name> is set to client's name (provided by client or inferred).
@@ -688,26 +686,17 @@ H.lsp_progress_handler = function(err, result, ctx, config)
   local data = { source = 'lsp_progress', client_name = client_name, response = result, context = ctx }
 
   -- Store percentage to be used if no new one was sent
-  progress_info.percentage = value.percentage or progress_info.percentage or 0
-
-  -- Stop notifications without update on progress end.
-  -- This usually results into a cleaner and more informative history.
-  -- Delay removal to not cause flicker.
-  if value.kind == 'end' then
-    H.lsp_progress[lsp_progress_id] = nil
-    local delay = math.max(lsp_progress_config.duration_last, 0)
-    vim.defer_fn(function() MiniNotify.remove(progress_info.notif_id) end, delay)
-    return
-  end
+  progress_info.percentage = (value.kind == 'end' and 100 or value.percentage) or progress_info.percentage or 0
 
   -- Cache title because it is only supplied on 'begin'
   if value.kind == 'begin' then progress_info.title = value.title end
 
-  -- Make notification
+  -- Make message
+  local title, message = progress_info.title or '', value.message or ''
   --stylua: ignore
   local msg = string.format(
-    '%s: %s %s (%s%%)',
-    client_name, progress_info.title or '', value.message or '', progress_info.percentage
+    '%s: %s%s%s%s(%s%%)',
+    client_name, title, title == '' and '' or ' ', message, message == '' and '' or ' ', progress_info.percentage
   )
 
   -- Check for valid history entry as `setup()` might have removed the id
@@ -719,6 +708,13 @@ H.lsp_progress_handler = function(err, result, ctx, config)
 
   -- Cache progress info
   H.lsp_progress[lsp_progress_id] = progress_info
+
+  -- Hide notification after last update to reduce flicker
+  if value.kind == 'end' then
+    H.lsp_progress[lsp_progress_id] = nil
+    local delay = math.max(lsp_progress_config.duration_last, 0)
+    vim.defer_fn(function() MiniNotify.remove(progress_info.notif_id) end, delay)
+  end
 end
 
 -- Buffer ---------------------------------------------------------------------

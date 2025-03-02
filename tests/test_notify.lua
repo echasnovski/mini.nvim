@@ -1031,14 +1031,11 @@ T['LSP progress']['works'] = function()
   child.expect_screenshot()
 
   result.value.kind, result.value.message, result.value.percentage = 'report', '1/1', 100
-  -- - NOTE: `update()` is not called on 'end' progress for cleaner history
-  local ref_response = vim.deepcopy(result)
   call_handler(result, ctx)
   child.expect_screenshot()
 
   result.value.kind, result.value.message, result.value.percentage = 'end', 'done', nil
   call_handler(result, ctx)
-  -- Should show the last 'report' message as it is usually more informative
   child.expect_screenshot()
 
   -- Should wait some time and then hide notifications
@@ -1050,10 +1047,10 @@ T['LSP progress']['works'] = function()
   -- Should update single notification (and not remove/add new ones)
   local history = get_all()
   eq(#history, 1)
-  -- - Should use correct content
+  -- - Should use correct content based on latest LSP response
   eq(history[1].level, 'INFO')
   eq(history[1].hl_group, 'MiniNotifyLspProgress')
-  eq(history[1].data, { source = 'lsp_progress', client_name = 'mock-lsp', response = ref_response, context = ctx })
+  eq(history[1].data, { source = 'lsp_progress', client_name = 'mock-lsp', response = result, context = ctx })
 end
 
 T['LSP progress']['handles not present data'] = function()
