@@ -608,13 +608,11 @@ end
 
 T['Manual completion']['uses `vim.lsp.protocol.CompletionItemKind` in LSP step'] = function()
   child.set_size(17, 30)
-  child.lua([[vim.lsp.protocol = {
-    CompletionItemKind = {
-      [1] = 'Text',         Text = 1,
-      [2] = 'Method',       Method = 2,
-      [3] = 'S Something',  ['S Something'] = 3,
-      [4] = 'Fallback',     Fallback = 4,
-    },
+  child.lua([[vim.lsp.protocol.CompletionItemKind = {
+    [1] = 'Text',         Text = 1,
+    [2] = 'Method',       Method = 2,
+    [3] = 'S Something',  ['S Something'] = 3,
+    [4] = 'Fallback',     Fallback = 4,
   }]])
   type_keys('i', '<C-Space>')
   child.expect_screenshot()
@@ -1328,6 +1326,51 @@ T['Scroll']['respects `config.mappings`'] = function()
   eq(get_lines(), { 'Line' })
   type_keys('<C-u>')
   eq(get_lines(), { '' })
+end
+
+T['Snippets'] = new_set()
+
+T['Snippets']['work'] = function() MiniTest.skip() end
+
+T['Snippets']['can be triggered by non-keyword'] = function()
+  -- Should work with regular non-keyword character
+
+  -- Should work with `<CR>` (with or without recommended remap)
+
+  -- Should properly do nothing after `<Esc>` / `<C-c>` (exit to Normal mode)
+
+  -- Should work when non-keyword char triggers Insert mode mapping that
+  -- inserts more characters (like in 'mini.pairs')
+  child.cmd('inoremap ( (abc)<Left><Left><Left>')
+  set_lines({ ' text after cursor' })
+  set_cursor(1, 0)
+  type_keys('i')
+  -- - TODO: prepare snippet completion
+  type_keys('(')
+
+  MiniTest.skip()
+end
+
+T['Snippets']['are not inserted if have no tabstops'] = function()
+  -- This allows inserting snippets "implicitly" after typing non-keyword
+  -- character. Without this, LSP serers which report any inserted text as
+  -- snippet will "eat" the next typed non-keyword charater.
+
+  -- Reference snippets to test:
+  -- - No insert:
+  --   - Just\ntext
+  --   - Text with $TM_FILENAME $VAR
+  --   - Text with \$1 escaped dollar
+  --   - Text with \${1} escaped dollar
+  -- - Insert:
+  --   - Has $1 tabstop
+  --   - $1 has tabstop
+  --   - Has ${1} tabstop
+  --   - ${1} has tabstop
+  --   - Has ${1:aaa} tabstop
+  --   - Has $0 tabstop
+  --   - Has ${0} tabstop
+  MiniTest.skip()
 end
 
 return T

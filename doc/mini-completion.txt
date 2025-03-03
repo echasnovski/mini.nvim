@@ -21,10 +21,10 @@ Features:
       LSP client (via 'textDocument/completion' request). Custom
       preprocessing of response items is possible (with
       `MiniCompletion.config.lsp_completion.process_items`), for example
-      with fuzzy matching. By default items which are not snippets and
-      directly start with completed word are kept and sorted according to
-      LSP specification. Supports `additionalTextEdits`, like auto-import
-      and others (see 'Notes').
+      with fuzzy matching. By default items directly starting with completed
+      word are kept and are sorted according to LSP specification.
+      Supports `additionalTextEdits`, like auto-import and others (see 'Notes'),
+      and snippet items (best results require |mini.snippets| dependency).
     - If first stage is not set up or resulted into no candidates, fallback
       action is executed. The most tested actions are Neovim's built-in
       insert completion (see |ins-completion|).
@@ -48,7 +48,6 @@ Features:
   (same meaning as in |complete-items|) to items.
 
 What it doesn't do:
-- Snippet expansion.
 - Many configurable sources.
 - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
   variable user expectations. See 'Helpful mappings' for suggestions.
@@ -58,8 +57,12 @@ What it doesn't do:
 Suggested dependencies (provide extra functionality, will work without them):
 
 - Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
-  Otherwise |MiniCompletion.default_process_items()| does not add highlighting.
+  If absent, |MiniCompletion.default_process_items()| does not add highlighting.
   Also take a look at |MiniIcons.tweak_lsp_kind()|.
+- Enabled |MiniSnippets| module for better handling of snippet items.
+  If absent and custom snippet handling is not configured, |vim.snippet.expand()|
+  is used on Neovim>=0.10 and nothing extra is done on earlier versions.
+  See |MiniCompletion.default_snippet_insert()|.
 
 # Setup ~
 
@@ -101,6 +104,14 @@ You can override runtime config settings locally to buffer inside
       'typescript-language-server'). In this case to apply edits user needs
       to trigger such request, i.e. select completion item and wait for
       `MiniCompletion.config.delay.info` time plus server response time.
+
+- TODO: how to work with snippets:
+    - Select item.
+    - Press <C-y> (|complete_CTRL-Y|) or any non-keyword character.
+      To cancel snippet expand, press <C-e> (|complete_CTRL-E|).
+  Snippets are either `Snippet` kind or have `S` in "menu".
+  Their text to be inserted (`word` in |complete-items|) the same as label
+  (`abbr` field) to reduce visual flicker during completion list navigation.
 
 # Comparisons ~
 
@@ -214,6 +225,10 @@ Default values:
       -- input items. Common use case is custom filter/sort.
       -- Default: `default_process_items`
       process_items = nil,
+
+      -- A function which takes a snippet as string and inserts it at cursor.
+      -- Default: `default_snippet_insert`
+      snippet_insert = nil,
     },
 
     -- Fallback action as function/string. Executed in Insert mode.
@@ -301,7 +316,7 @@ No need to use it directly, everything is setup in |MiniCompletion.setup|.
 Default processing of LSP items
 
 Steps:
-- Filter out items not matching `base` and snippet items.
+- Filter out items not starting with `base`.
 - Sort by LSP specification.
 - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 
