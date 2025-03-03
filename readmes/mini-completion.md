@@ -173,13 +173,14 @@ Here are code snippets for some common installation methods (use only one):
     -- A function which takes LSP 'textDocument/completion' response items
     -- and word to complete. Output should be a table of the same nature as
     -- input items. Common use case is custom filter/sort.
-    process_items = --<function: MiniCompletion.default_process_items>,
+    -- Default: `default_process_items`
+    process_items = nil,
   },
 
-  -- Fallback action. It will always be run in Insert mode. To use Neovim's
-  -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
-  fallback_action = --<function: like `<C-n>` completion>,
+  -- Fallback action as function/string. Executed in Insert mode.
+  -- To use built-in completion (`:h ins-completion`), set its mapping as
+  -- string. Example: set '<C-x><C-l>' for 'whole lines' completion.
+  fallback_action = '<C-n>',
 
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.

@@ -212,13 +212,14 @@ Default values:
       -- A function which takes LSP 'textDocument/completion' response items
       -- and word to complete. Output should be a table of the same nature as
       -- input items. Common use case is custom filter/sort.
-      process_items = --<function: MiniCompletion.default_process_items>,
+      -- Default: `default_process_items`
+      process_items = nil,
     },
 
-    -- Fallback action. It will always be run in Insert mode. To use Neovim's
-    -- built-in completion (see `:h ins-completion`), supply its mapping as
-    -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
-    fallback_action = --<function: like `<C-n>` completion>,
+    -- Fallback action as function/string. Executed in Insert mode.
+    -- To use built-in completion (`:h ins-completion`), set its mapping as
+    -- string. Example: set '<C-x><C-l>' for 'whole lines' completion.
+    fallback_action = '<C-n>',
 
     -- Module mappings. Use `''` (empty string) to disable one. Some of them
     -- might conflict with system mappings.
@@ -297,12 +298,19 @@ No need to use it directly, everything is setup in |MiniCompletion.setup|.
 ------------------------------------------------------------------------------
                                         *MiniCompletion.default_process_items()*
             `MiniCompletion.default_process_items`({items}, {base})
-Default `MiniCompletion.config.lsp_completion.process_items`
+Default processing of LSP items
 
 Steps:
 - Filter out items not matching `base` and snippet items.
 - Sort by LSP specification.
 - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
+
+Parameters ~
+{items} `(table)` Array of items from LSP response.
+{base} `(string)` Base for which completion is done. See |complete-functions|.
+
+Return ~
+`(table)` Array of processed items from LSP response.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

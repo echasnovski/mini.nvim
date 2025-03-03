@@ -265,36 +265,14 @@ MiniCompletion.config = {
     -- A function which takes LSP 'textDocument/completion' response items
     -- and word to complete. Output should be a table of the same nature as
     -- input items. Common use case is custom filter/sort.
-    --minidoc_replace_start process_items = --<function: MiniCompletion.default_process_items>,
-    process_items = function(items, base)
-      local res = vim.tbl_filter(function(item)
-        -- Keep items which match the base and are not snippets
-        local text = item.filterText or H.get_completion_word(item)
-        return vim.startswith(text, base) and item.kind ~= 15
-      end, items)
-
-      res = vim.deepcopy(res)
-      table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
-
-      -- Possibly add "kind" highlighting
-      if _G.MiniIcons ~= nil then
-        local add_kind_hlgroup = H.make_add_kind_hlgroup()
-        for _, item in ipairs(res) do
-          add_kind_hlgroup(item)
-        end
-      end
-
-      return res
-    end,
-    --minidoc_replace_end
+    -- Default: `default_process_items`
+    process_items = nil,
   },
 
-  -- Fallback action. It will always be run in Insert mode. To use Neovim's
-  -- built-in completion (see `:h ins-completion`), supply its mapping as
-  -- string. Example: to use 'whole lines' completion, supply '<C-x><C-l>'.
-  --minidoc_replace_start fallback_action = --<function: like `<C-n>` completion>,
-  fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false) end,
-  --minidoc_replace_end
+  -- Fallback action as function/string. Executed in Insert mode.
+  -- To use built-in completion (`:h ins-completion`), set its mapping as
+  -- string. Example: set '<C-x><C-l>' for 'whole lines' completion.
+  fallback_action = '<C-n>',
 
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.
@@ -415,6 +393,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     if findstart == 1 then return H.get_completion_start(H.completion.lsp.result) end
 
     local process_items, is_incomplete = H.get_config().lsp_completion.process_items, false
+    process_items = process_items or MiniCompletion.default_process_items
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       is_incomplete = is_incomplete or response.isIncomplete
       -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
@@ -435,14 +414,36 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
   end
 end
 
---- Default `MiniCompletion.config.lsp_completion.process_items`
+--- Default processing of LSP items
 ---
 --- Steps:
 --- - Filter out items not matching `base` and snippet items.
 --- - Sort by LSP specification.
 --- - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
+---
+---@param items table Array of items from LSP response.
+---@param base string Base for which completion is done. See |complete-functions|.
+---
+---@return table Array of processed items from LSP response.
 MiniCompletion.default_process_items = function(items, base)
-  return H.default_config.lsp_completion.process_items(items, base)
+  local res = vim.tbl_filter(function(item)
+    -- Keep items which match the base and are not snippets
+    local text = item.filterText or H.get_completion_word(item)
+    return vim.startswith(text, base) and item.kind ~= 15
+  end, items)
+
+  res = vim.deepcopy(res)
+  table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
+
+  -- Possibly add "kind" highlighting
+  if _G.MiniIcons ~= nil then
+    local add_kind_hlgroup = H.make_add_kind_hlgroup()
+    for _, item in ipairs(res) do
+      add_kind_hlgroup(item)
+    end
+  end
+
+  return res
 end
 
 -- Helper data ================================================================
@@ -525,7 +526,7 @@ H.setup_config = function(config)
     H.error('`lsp_completion.source_func` should be one of "completefunc" or "omnifunc"')
   end
   H.check_type('lsp_completion.auto_setup', config.lsp_completion.auto_setup, 'boolean')
-  H.check_type('lsp_completion.process_items', config.lsp_completion.process_items, 'function')
+  H.check_type('lsp_completion.process_items', config.lsp_completion.process_items, 'nil')
 
   H.check_type('mappings.force_twostep', config.mappings.force_twostep, 'string')
   H.check_type('mappings.force_fallback', config.mappings.force_fallback, 'string')
@@ -775,7 +776,8 @@ H.trigger_fallback = function()
   H.completion.source = 'fallback'
 
   -- Execute fallback action
-  local fallback_action = H.get_config().fallback_action
+  local fallback_action = H.get_config().fallback_action or H.default_fallback_action
+  fallback_action = fallback_action == '<C-n>' and H.default_fallback_action or fallback_action
   if vim.is_callable(fallback_action) then return fallback_action() end
   if type(fallback_action) ~= 'string' then return end
 
@@ -786,6 +788,8 @@ H.trigger_fallback = function()
   local trigger_keys = vim.api.nvim_replace_termcodes(keys, true, false, true)
   vim.api.nvim_feedkeys(trigger_keys, 'n', false)
 end
+
+H.default_fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false) end
 
 -- Stop actions ---------------------------------------------------------------
 H.stop_completion = function(keep_source)
