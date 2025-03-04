@@ -3443,7 +3443,9 @@ T['yank()']['replaces region based on `[` marks `]`'] = function()
   type_keys('yl')
 
   backward('yank')
-  eq(get_lines(), { '_two_' })
+  -- Neovim>=0.11 has more correct behavior for setting `[`/`]` marks here
+  local ref = child.fn.has('nvim-0.11') == 1 and '_two__' or '_two_'
+  eq(get_lines(), { ref })
 end
 
 T['yank()']['respects `register_put_region()` to determine region boundaries'] = function()
