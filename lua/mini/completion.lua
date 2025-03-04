@@ -1186,7 +1186,7 @@ H.process_signature_response = function(response)
   local signature = response.signatures[signature_id + 1]
 
   -- Get displayed signature label
-  local signature_label = signature.label
+  local signature_label = signature.label:gsub('\n', ' ')
 
   -- Get start and end of active parameter (for highlighting)
   local hl_range = {}

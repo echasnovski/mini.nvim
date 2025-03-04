@@ -1142,6 +1142,14 @@ T['Signature help']['adjusts window height'] = function()
   child.expect_screenshot()
 end
 
+T['Signature help']['handles multiline text'] = function()
+  child.set_size(10, 35)
+
+  type_keys('i', 'multiline(')
+  sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+end
+
 T['Signature help']['stylizes markdown with concealed characters'] = function()
   if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
 

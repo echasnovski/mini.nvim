@@ -174,6 +174,8 @@ Months.requests = {
       label = string.rep('a ', 1000)
     elseif word == 'string.format(' then
       label = 'function string.format(s:string|number, ...any)'
+    elseif word == 'multiline(' then
+      label = 'multiline(\narg1,\narg2)'
     else
       label = 'abc(param1, param2)'
       parameters = { { label = { 4, 10 } }, { label = { 12, 18 } } }
