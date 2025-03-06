@@ -467,36 +467,43 @@ T['setup_termbg_sync()'] = new_set({
   },
 })
 
-T['setup_termbg_sync()']['works'] = function()
-  skip_if_no_010()
+T['setup_termbg_sync()']['works'] = new_set(
+  -- Neovim=0.10 uses string sequence as response, while Neovim>=0.11 sets it
+  -- in `sequence` table field
+  { parametrize = { { '\27]11;rgb:1111/2626/2d2d' }, { { sequence = '\27]11;rgb:1111/2626/2d2d' } } } },
+  {
+    test = function(response_data)
+      skip_if_no_010()
 
-  local eq_log = function(ref_log)
-    eq(child.lua_get('_G.log'), ref_log)
-    child.lua('_G.log = {}')
-  end
+      local eq_log = function(ref_log)
+        eq(child.lua_get('_G.log'), ref_log)
+        child.lua('_G.log = {}')
+      end
 
-  child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
-  child.lua('MiniMisc.setup_termbg_sync()')
+      child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
+      child.lua('MiniMisc.setup_termbg_sync()')
 
-  -- Should first ask if terminal emulator supports the feature
-  eq_log({ { '\027]11;?\007' } })
+      -- Should first ask if terminal emulator supports the feature
+      eq_log({ { '\027]11;?\007' } })
 
-  -- Mock typical response assuming '#11262d' as background color
-  child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:1111/2626/2d2d' })
+      -- Mock typical response assuming '#11262d' as background color
+      child.api.nvim_exec_autocmds('TermResponse', { data = response_data })
 
-  -- Should sync immediately
-  eq_log({ { '\027]11;#dddddd\007' } })
+      -- Should sync immediately
+      eq_log({ { '\027]11;#dddddd\007' } })
 
-  -- Should sync on appropriate events
-  local validate_event = function(event, log_entry)
-    child.api.nvim_exec_autocmds(event, {})
-    eq_log({ { log_entry } })
-  end
-  validate_event('VimResume', '\027]11;#dddddd\007')
-  validate_event('ColorScheme', '\027]11;#dddddd\007')
-  validate_event('VimLeavePre', '\027]11;#11262d\007')
-  validate_event('VimSuspend', '\027]11;#11262d\007')
-end
+      -- Should sync on appropriate events
+      local validate_event = function(event, log_entry)
+        child.api.nvim_exec_autocmds(event, {})
+        eq_log({ { log_entry } })
+      end
+      validate_event('VimResume', '\027]11;#dddddd\007')
+      validate_event('ColorScheme', '\027]11;#dddddd\007')
+      validate_event('VimLeavePre', '\027]11;#11262d\007')
+      validate_event('VimSuspend', '\027]11;#11262d\007')
+    end,
+  }
+)
 
 T['setup_termbg_sync()']['can be called multiple times'] = function()
   skip_if_no_010()

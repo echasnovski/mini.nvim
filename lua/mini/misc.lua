@@ -301,11 +301,8 @@ H.root_cache = {}
 ---
 --- Works only on Neovim>=0.10.
 MiniMisc.setup_termbg_sync = function()
-  if vim.fn.has('nvim-0.10') == 0 then
-    -- Handling `'\027]11;?\007'` response was added in Neovim 0.10
-    H.notify('`setup_termbg_sync()` requires Neovim>=0.10', 'WARN')
-    return
-  end
+  -- Handling `'\027]11;?\007'` response was added in Neovim 0.10
+  if vim.fn.has('nvim-0.10') == 0 then return H.notify('`setup_termbg_sync()` requires Neovim>=0.10', 'WARN') end
 
   -- Proceed only if there is a valid stdout to use
   local has_stdout_tty = false
@@ -316,10 +313,12 @@ MiniMisc.setup_termbg_sync = function()
 
   local augroup = vim.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = true })
   local f = function(args)
-    local ok, bg_init = pcall(H.parse_osc11, args.data)
+    -- Neovim=0.10 uses string sequence as response, while Neovim>=0.11 sets it
+    -- in `sequence` table field
+    local seq = type(args.data) == 'table' and args.data.sequence or args.data
+    local ok, bg_init = pcall(H.parse_osc11, seq)
     if not (ok and type(bg_init) == 'string') then
-      H.notify('`setup_termbg_sync()` could not parse terminal emulator response ' .. vim.inspect(args.data), 'WARN')
-      return
+      return H.notify('`setup_termbg_sync()` could not parse terminal emulator response ' .. vim.inspect(seq), 'WARN')
     end
 
     -- Set up sync
