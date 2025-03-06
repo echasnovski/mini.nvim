@@ -299,7 +299,7 @@ By default it is |MiniOperators.default_evaluate_func()| which evaluates
 text as Lua code depending on the region submode.
 
 Parameters ~
-{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 
 ------------------------------------------------------------------------------
                                                       *MiniOperators.exchange()*
@@ -320,7 +320,7 @@ Notes:
 - Works with most cases of intersecting regions, but not officially supported.
 
 Parameters ~
-{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 
 ------------------------------------------------------------------------------
                                                       *MiniOperators.multiply()*
@@ -344,7 +344,7 @@ Notes:
      while "multiply" makes it at once.
 
 Parameters ~
-{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 
 ------------------------------------------------------------------------------
                                                        *MiniOperators.replace()*
@@ -365,7 +365,7 @@ Notes:
    - Can automatically reindent.
 
 Parameters ~
-{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 
 ------------------------------------------------------------------------------
                                                           *MiniOperators.sort()*
@@ -381,7 +381,7 @@ Notes:
   linewise a single line). This also results into no |[count]| support.
 
 Parameters ~
-{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+{mode} `(string|nil)` One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 
 ------------------------------------------------------------------------------
                                                  *MiniOperators.make_mappings()*

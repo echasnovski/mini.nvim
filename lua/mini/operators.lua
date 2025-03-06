@@ -149,7 +149,7 @@
 --- <
 ---@tag MiniOperators-overview
 
----@alias __operators_mode string|nil One of `nil`, `'char'`, `'line'`, `''block`, `'visual'`.
+---@alias __operators_mode string|nil One of `nil`, `'char'`, `'line'`, `'block'`, `'visual'`.
 ---@alias __operators_content table Table with the following fields:
 ---   - <lines> `(table)` - array with content lines.
 ---   - <submode> `(string)` - region submode. One of `'v'`, `'V'`, `'<C-v>'` (escaped).
