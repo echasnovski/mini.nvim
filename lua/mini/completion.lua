@@ -390,7 +390,10 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     -- End completion and wait for LSP callback to re-trigger this
     return findstart == 1 and -3 or {}
   else
-    if findstart == 1 then return H.get_completion_start(H.completion.lsp.result) end
+    if findstart == 1 then
+      H.completion.start_pos = H.get_completion_start(H.completion.lsp.result)
+      return H.completion.start_pos[2]
+    end
 
     local process_items, is_incomplete = H.get_config().lsp_completion.process_items, false
     process_items = process_items or MiniCompletion.default_process_items
@@ -479,6 +482,7 @@ H.completion = {
   text_changed_id = 0,
   timer = vim.loop.new_timer(),
   lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
+  start_pos = {},
 }
 
 -- Cache for completion item info
@@ -697,8 +701,9 @@ H.on_completedonepre = function()
   -- visible and pressing keys first hides it with 'CompleteDonePre' event.
   if H.completion.lsp.status == 'received' then return end
 
-  -- Try to apply additional text edits
-  H.apply_additional_text_edits()
+  -- Do extra actions for LSP completion items
+  local lsp_data = H.table_get(vim.v.completed_item, { 'user_data', 'nvim', 'lsp' })
+  if lsp_data ~= nil then H.make_lsp_extra_actions(lsp_data) end
 
   -- Stop processes
   MiniCompletion.stop({ 'completion', 'info' })
@@ -959,40 +964,39 @@ H.get_completion_word = function(item)
   return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or item.label or ''
 end
 
-H.apply_additional_text_edits = function()
-  -- Code originally.inspired by https://github.com/neovim/neovim/issues/12310
+H.make_lsp_extra_actions = function(lsp_data)
+  -- Prefer resolved item over the one from 'textDocument/completion'
+  local resolved = (H.info.lsp.result or {})[lsp_data.client_id]
+  local item = (resolved == nil or resolved.err) and lsp_data.completion_item or resolved.result
 
-  -- Try to get `additionalTextEdits`. First from 'completionItem/resolve';
-  -- then - from selected item. The reason for this is inconsistency in how
-  -- servers provide `additionTextEdits`: on 'textDocument/completion' or
-  -- 'completionItem/resolve'.
-  local resolve_data = H.process_lsp_response(H.info.lsp.result, function(response, client_id)
-    -- Return nested table because this will be a second argument of
-    -- `vim.list_extend()` and the whole inner table is a target value here.
-    return { { edits = response.additionalTextEdits, client_id = client_id } }
-  end)
-  local edits, client_id
-  if #resolve_data >= 1 then
-    edits, client_id = resolve_data[1].edits, resolve_data[1].client_id
-  else
-    local lsp_data = H.table_get(vim.v.completed_item, { 'user_data', 'nvim', 'lsp' }) or {}
-    edits = H.table_get(lsp_data, { 'completion_item', 'additionalTextEdits' })
-    client_id = lsp_data.client_id
-  end
+  -- Try to apply additional text edits
+  H.apply_additional_text_edits(item.additionalTextEdits, lsp_data.client_id)
+end
 
+H.apply_additional_text_edits = function(edits, client_id)
+  -- Code originally inspired by https://github.com/neovim/neovim/issues/12310
   if edits == nil then return end
   client_id = client_id or 0
 
-  -- Use extmark to track relevant cursor position after text edits
-  local cur_pos = vim.api.nvim_win_get_cursor(0)
-  local extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
+  -- Prepare extmarks to track relevant positions after text edits
+  local start_pos = H.completion.start_pos
+  local start_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, start_pos[1] - 1, start_pos[2], {})
 
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
+
+  -- Do text edits
   local offset_encoding = vim.lsp.get_client_by_id(client_id).offset_encoding
   vim.lsp.util.apply_text_edits(edits, vim.api.nvim_get_current_buf(), offset_encoding)
 
-  local extmark_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, extmark_id, {})
-  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, extmark_id)
-  pcall(vim.api.nvim_win_set_cursor, 0, { extmark_data[1] + 1, extmark_data[2] })
+  -- Restore relevant positions
+  local start_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, start_extmark_id, {})
+  H.completion.start_pos = { start_data[1] + 1, start_data[2] }
+  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, start_extmark_id)
+
+  local cursor_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, cursor_extmark_id, {})
+  pcall(vim.api.nvim_win_set_cursor, 0, { cursor_data[1] + 1, cursor_data[2] })
+  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, cursor_extmark_id)
 end
 
 -- Completion item info -------------------------------------------------------
@@ -1038,29 +1042,23 @@ end
 
 H.info_window_lines = function(info_id)
   local completed_item = H.table_get(H.info, { 'event', 'completed_item' }) or {}
+  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
+  local info = completed_item.info or ''
 
   -- If popup is not from LSP, try using 'info' field of completion item
-  if H.completion.source ~= 'lsp' then
-    local text = completed_item.info or ''
-    return (not H.is_whitespace(text)) and vim.split(text, '\n') or nil
-  end
+  if lsp_data == nil then return vim.split(info, '\n') end
 
-  -- Try to get documentation from LSP's latest completion result
+  -- Try to get documentation from LSP's latest resolved info
   if H.info.lsp.status == 'received' then
-    local lines = H.process_lsp_response(H.info.lsp.result, H.normalize_item_doc)
+    local lines = H.process_lsp_response(H.info.lsp.result, function(x) return H.normalize_item_doc(x, info) end)
     H.info.lsp.status = 'done'
     return lines
   end
 
   -- If server doesn't support resolving completion item, reuse first response
-  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
-  -- NOTE: If there is no LSP's completion item, then there is no point to
-  -- proceed as it should serve as parameters to LSP request
-  if lsp_data.completion_item == nil then return end
-
   local client = vim.lsp.get_client_by_id(lsp_data.client_id) or {}
   local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
-  if not can_resolve then return H.normalize_item_doc(lsp_data.completion_item) end
+  if not can_resolve then return H.normalize_item_doc(lsp_data.completion_item, info) end
 
   -- Finally, request to resolve current completion to add more documentation
   local bufnr = vim.api.nvim_get_current_buf()
@@ -1405,17 +1403,16 @@ end
 H.pumvisible = function() return vim.fn.pumvisible() > 0 end
 
 H.get_completion_start = function(lsp_result)
-  local pos = vim.api.nvim_win_get_cursor(0)
-
   -- Prefer completion start from LSP response(s)
   for _, response_data in pairs(lsp_result or {}) do
-    local server_start = H.get_completion_start_server(response_data, pos[1] - 1)
+    local server_start = H.get_completion_start_server(response_data)
     if server_start ~= nil then return server_start end
   end
 
   -- Fall back to start position of latest keyword
+  local pos = vim.api.nvim_win_get_cursor(0)
   local line = vim.api.nvim_get_current_line()
-  return vim.fn.match(line:sub(1, pos[2]), '\\k*$')
+  return { pos[1], vim.fn.match(line:sub(1, pos[2]), '\\k*$') }
 end
 
 H.get_completion_start_server = function(response_data, line_num)
@@ -1426,7 +1423,7 @@ H.get_completion_start_server = function(response_data, line_num)
       -- NOTE: As per LSP spec, `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
       local range = type(item.textEdit.range) == 'table' and item.textEdit.range or item.textEdit.insert
       -- NOTE: Return immediately, ignoring possibly several conflicting starts
-      return range.start.character
+      return { range.start.line + 1, range.start.character }
     end
   end
 end
@@ -1498,17 +1495,19 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-H.normalize_item_doc = function(completion_item)
+H.normalize_item_doc = function(completion_item, fallback_info)
   local detail, doc = completion_item.detail, completion_item.documentation
+  -- Fall back to explicit info only of there is no data in completion item
+  -- Assume that explicit info is a code that needs highlighting
+  detail = (detail == nil and doc == nil) and fallback_info or detail
   if detail == nil and doc == nil then return {} end
 
   -- Extract string content. Treat markdown and plain kinds the same.
   -- Show both `detail` and `documentation` if the first provides new info.
   detail, doc = detail or '', (type(doc) == 'table' and doc.value or doc) or ''
-  detail = (H.is_whitespace(detail) or doc:find(detail, 1, true) ~= nil) and ''
-    -- Wrap details in language's code block to (usually) improve highlighting
-    -- This approach seems to work in 'hrsh7th/nvim-cmp'
-    or string.format('```%s\n%s\n```\n', vim.bo.filetype:match('^[^%.]*'), vim.trim(detail))
+  -- Wrap details in language's code block to (usually) improve highlighting
+  -- This approach seems to work in 'hrsh7th/nvim-cmp'
+  detail = (H.is_whitespace(detail) or doc:find(detail, 1, true) ~= nil) and '' or (H.wrap_in_codeblock(detail) .. '\n')
   local text = detail .. doc
 
   -- Ensure consistent line separators
@@ -1520,8 +1519,11 @@ H.normalize_item_doc = function(completion_item)
   -- Remove padding around code blocks as they are concealed and appear empty
   text = text:gsub('\n*(\n```%S+\n)', '%1'):gsub('(\n```\n?)\n*', '%1')
 
+  if text == '' and fallback_info ~= '' then text = H.wrap_in_codeblock(fallback_info) end
   return text == '' and {} or vim.split(text, '\n')
 end
+
+H.wrap_in_codeblock = function(x) return string.format('```%s\n%s\n```', vim.bo.filetype:match('^[^%.]*'), vim.trim(x)) end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
