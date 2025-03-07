@@ -595,7 +595,8 @@ H.setup_config = function(config)
     H.error('`lsp_completion.source_func` should be one of "completefunc" or "omnifunc"')
   end
   H.check_type('lsp_completion.auto_setup', config.lsp_completion.auto_setup, 'boolean')
-  H.check_type('lsp_completion.process_items', config.lsp_completion.process_items, 'nil')
+  H.check_type('lsp_completion.process_items', config.lsp_completion.process_items, 'callable', true)
+  H.check_type('lsp_completion.snippet_insert', config.lsp_completion.snippet_insert, 'callable', true)
 
   H.check_type('mappings.force_twostep', config.mappings.force_twostep, 'string')
   H.check_type('mappings.force_fallback', config.mappings.force_fallback, 'string')
