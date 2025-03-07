@@ -32,9 +32,9 @@ https://user-images.githubusercontent.com/24854248/173044355-90bfc230-70c4-4932-
 - Two-stage chain completion:
     - First stage is an LSP completion. Supports `additionalTextEdits`, like auto-import and others.
     - If first stage is not set up or resulted into no candidates, fallback action is executed. The most tested actions are Neovim's built-in insert completion.
-- Automatic display in floating window of completion item info (via 'completionItem/resolve' request) and signature help (with highlighting of active parameter if LSP server provides such information).
+- Automatic display in floating window of completion item info (via 'completionItem/resolve' request) and signature help (with highlighting of active parameter if LSP server provides such information). Scrolling is possible in both info/signature window (`<C-f>` / `<C-b>` by default).
 - Automatic actions are done after some configurable amount of delay. This reduces computational load and allows fast typing (completion and signature help) and item selection (item info)
-- User can force two-stage completion via or fallback completion.
+- User can force two-stage/fallback completion (`<C-Space>` / `<A-Space>` by default).
 - Highlighting of LSP kind (like "Function", "Keyword", etc.). Requires enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) (uses its "lsp" category) and Neovim>=0.11.
 
 ## Dependencies
@@ -184,8 +184,15 @@ Here are code snippets for some common installation methods (use only one):
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.
   mappings = {
-    force_twostep = '<C-Space>', -- Force two-step completion
-    force_fallback = '<A-Space>', -- Force fallback completion
+    -- Force two-step/fallback completions
+    force_twostep = '<C-Space>',
+    force_fallback = '<A-Space>',
+
+    -- Scroll info/signature window down/up. When overriding, check for
+    -- conflicts with built-in keys for popup menu (like `<C-u>`/`<C-o>`
+    -- for 'completefunc'/'omnifunc' source function; or `<C-n>`/`<C-p>`).
+    scroll_down = '<C-f>',
+    scroll_up = '<C-b>',
   },
 
   -- Whether to set Vim's settings for better experience (modifies

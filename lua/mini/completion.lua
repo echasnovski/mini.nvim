@@ -31,19 +31,16 @@
 ---
 --- - Automatic display in floating window of completion item info (via
 ---   'completionItem/resolve' request) and signature help (with highlighting
----   of active parameter if LSP server provides such information). After
----   opening, window for signature help is fixed and is closed when there is
----   nothing to show, text is different or
----   when leaving Insert mode.
+---   of active parameter if LSP server provides such information). After opening,
+---   window for signature help is fixed and is closed when there is nothing to
+---   show, text is different or when leaving Insert mode.
+---   Scroll in either info/signature window (`<C-f>` / `<C-b>` by default).
 ---
 --- - Automatic actions are done after some configurable amount of delay. This
 ---   reduces computational load and allows fast typing (completion and
 ---   signature help) and item selection (item info)
 ---
---- - User can force two-stage completion via
----   |MiniCompletion.complete_twostage()| (by default is mapped to
----   `<C-Space>`) or fallback completion via
----   |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
+--- - Force two-stage/fallback completion (`<C-Space>` / `<A-Space>` by default).
 ---
 --- - LSP kind highlighting ("Function", "Keyword", etc.). Requires Neovim>=0.11.
 ---   By default uses "lsp" category of |MiniIcons| (if enabled). Can be customized
@@ -302,8 +299,15 @@ MiniCompletion.config = {
   -- Module mappings. Use `''` (empty string) to disable one. Some of them
   -- might conflict with system mappings.
   mappings = {
-    force_twostep = '<C-Space>', -- Force two-step completion
-    force_fallback = '<A-Space>', -- Force fallback completion
+    -- Force two-step/fallback completions
+    force_twostep = '<C-Space>',
+    force_fallback = '<A-Space>',
+
+    -- Scroll info/signature window down/up. When overriding, check for
+    -- conflicts with built-in keys for popup menu (like `<C-u>`/`<C-o>`
+    -- for 'completefunc'/'omnifunc' source function; or `<C-n>`/`<C-p>`).
+    scroll_down = '<C-f>',
+    scroll_up = '<C-b>',
   },
 
   -- Whether to set Vim's settings for better experience (modifies
@@ -335,6 +339,30 @@ MiniCompletion.complete_fallback = function()
   H.stop_completion()
   H.completion.fallback, H.completion.force = true, true
   H.trigger_fallback()
+end
+
+--- Scroll in info/signature window
+---
+--- Designed to be used in |:map-<expr>|.
+--- Scrolling is done as if |CTRL-F| and |CTRL-B| is pressed inside target window.
+--- Used in default `config.mappings.scroll_xxx` mappings.
+---
+---@param direction string One of `"down"` or `"up"`.
+---
+---@return boolean Whether scroll is scheduled to be done.
+MiniCompletion.scroll = function(direction)
+  if not (direction == 'down' or direction == 'up') then H.error('`direction` should be one of "up" or "down"') end
+  local win_id = H.is_valid_win(H.info.win_id) and H.info.win_id
+    or (H.is_valid_win(H.signature.win_id) and H.signature.win_id or nil)
+  if win_id == nil then return false end
+
+  -- Schedule execution as scrolling is not allowed in expression mappings
+  local key = direction == 'down' and '\6' or '\2'
+  vim.schedule(function()
+    if not H.is_valid_win(win_id) then return end
+    vim.api.nvim_win_call(win_id, function() vim.cmd('noautocmd normal! ' .. key) end)
+  end)
+  return true
 end
 
 --- Stop actions
@@ -501,6 +529,8 @@ H.setup_config = function(config)
 
   H.check_type('mappings.force_twostep', config.mappings.force_twostep, 'string')
   H.check_type('mappings.force_fallback', config.mappings.force_fallback, 'string')
+  H.check_type('mappings.scroll_down', config.mappings.scroll_down, 'string')
+  H.check_type('mappings.scroll_up', config.mappings.scroll_up, 'string')
 
   local is_string_or_array = function(x) return type(x) == 'string' or H.islist(x) end
   H.check_type('window.info.height', config.window.info.height, 'number')
@@ -522,10 +552,15 @@ end
 H.apply_config = function(config)
   MiniCompletion.config = config
 
-  --stylua: ignore start
   H.map('i', config.mappings.force_twostep, MiniCompletion.complete_twostage, { desc = 'Complete with two-stage' })
   H.map('i', config.mappings.force_fallback, MiniCompletion.complete_fallback, { desc = 'Complete with fallback' })
-  --stylua: ignore end
+
+  local map_scroll = function(lhs, direction)
+    local rhs = function() return MiniCompletion.scroll(direction) and '' or lhs end
+    H.map('i', lhs, rhs, { expr = true, desc = 'Scroll info/signature ' .. direction })
+  end
+  map_scroll(config.mappings.scroll_down, 'down')
+  map_scroll(config.mappings.scroll_up, 'up')
 
   if config.set_vim_settings then
     -- Don't give ins-completion-menu messages

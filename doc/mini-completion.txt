@@ -31,19 +31,16 @@ Features:
 
 - Automatic display in floating window of completion item info (via
   'completionItem/resolve' request) and signature help (with highlighting
-  of active parameter if LSP server provides such information). After
-  opening, window for signature help is fixed and is closed when there is
-  nothing to show, text is different or
-  when leaving Insert mode.
+  of active parameter if LSP server provides such information). After opening,
+  window for signature help is fixed and is closed when there is nothing to
+  show, text is different or when leaving Insert mode.
+  Scroll in either info/signature window (`<C-f>` / `<C-b>` by default).
 
 - Automatic actions are done after some configurable amount of delay. This
   reduces computational load and allows fast typing (completion and
   signature help) and item selection (item info)
 
-- User can force two-stage completion via
-  |MiniCompletion.complete_twostage()| (by default is mapped to
-  `<C-Space>`) or fallback completion via
-  |MiniCompletion.complete_fallback()| (mapped to `<M-Space>`).
+- Force two-stage/fallback completion (`<C-Space>` / `<A-Space>` by default).
 
 - LSP kind highlighting ("Function", "Keyword", etc.). Requires Neovim>=0.11.
   By default uses "lsp" category of |MiniIcons| (if enabled). Can be customized
@@ -226,8 +223,15 @@ Default values:
     -- Module mappings. Use `''` (empty string) to disable one. Some of them
     -- might conflict with system mappings.
     mappings = {
-      force_twostep = '<C-Space>', -- Force two-step completion
-      force_fallback = '<A-Space>', -- Force fallback completion
+      -- Force two-step/fallback completions
+      force_twostep = '<C-Space>',
+      force_fallback = '<A-Space>',
+
+      -- Scroll info/signature window down/up. When overriding, check for
+      -- conflicts with built-in keys for popup menu (like `<C-u>`/`<C-o>`
+      -- for 'completefunc'/'omnifunc' source function; or `<C-n>`/`<C-p>`).
+      scroll_down = '<C-f>',
+      scroll_up = '<C-b>',
     },
 
     -- Whether to set Vim's settings for better experience (modifies
@@ -249,6 +253,21 @@ Parameters ~
                                             *MiniCompletion.complete_fallback()*
                       `MiniCompletion.complete_fallback`()
 Run fallback completion
+
+------------------------------------------------------------------------------
+                                                       *MiniCompletion.scroll()*
+                      `MiniCompletion.scroll`({direction})
+Scroll in info/signature window
+
+Designed to be used in |:map-<expr>|.
+Scrolling is done as if |CTRL-F| and |CTRL-B| is pressed inside target window.
+Used in default `config.mappings.scroll_xxx` mappings.
+
+Parameters ~
+{direction} `(string)` One of `"down"` or `"up"`.
+
+Return ~
+`(boolean)` Whether scroll is scheduled to be done.
 
 ------------------------------------------------------------------------------
                                                          *MiniCompletion.stop()*

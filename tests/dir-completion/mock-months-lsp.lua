@@ -47,7 +47,7 @@ local markdown_info = {
 
 Months.data = {
   January   = { documentation = 'Month #01' },
-  February  = { documentation = 'Month #02' },
+  February  = { documentation = 'a\nb\nc\nd\ne\nf\ng\nh' },
   March     = { documentation = 'Month #03' },
   April     = { documentation = 'Month #04', detail = '\n  local a = "New info"  \n  \n' },
   May       = { documentation = 'Month #05' },
@@ -176,6 +176,8 @@ Months.requests = {
       label = 'function string.format(s:string|number, ...any)'
     elseif word == 'multiline(' then
       label = 'multiline(\narg1,\narg2)'
+    elseif word == 'scroll(' then
+      label = 'aaa bbb ccc ddd eee fff ggg hhh'
     else
       label = 'abc(param1, param2)'
       parameters = { { label = { 4, 10 } }, { label = { 12, 18 } } }
