@@ -11,7 +11,7 @@
 ---   up) and if no result, fallback to custom action.
 ---
 --- - Managing completion is done as much with Neovim's built-in tools as
----   possible.
+---   possible. |popupmenu-completion| is used to show completion suggetsions.
 ---
 --- Features:
 --- - Two-stage chain completion:
@@ -21,10 +21,10 @@
 ---       LSP client (via 'textDocument/completion' request). Custom
 ---       preprocessing of response items is possible (with
 ---       `MiniCompletion.config.lsp_completion.process_items`), for example
----       with fuzzy matching. By default items which are not snippets and
----       directly start with completed word are kept and sorted according to
----       LSP specification. Supports `additionalTextEdits`, like auto-import
----       and others (see 'Notes').
+---       with fuzzy matching. By default items directly starting with completed
+---       word are kept and are sorted according to LSP specification.
+---       Supports `additionalTextEdits`, like auto-import and others (see 'Notes'),
+---       and snippet items (best results require |mini.snippets| dependency).
 ---     - If first stage is not set up or resulted into no candidates, fallback
 ---       action is executed. The most tested actions are Neovim's built-in
 ---       insert completion (see |ins-completion|).
@@ -48,7 +48,6 @@
 ---   (same meaning as in |complete-items|) to items.
 ---
 --- What it doesn't do:
---- - Snippet expansion.
 --- - Many configurable sources.
 --- - Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
 ---   variable user expectations. See 'Helpful mappings' for suggestions.
@@ -58,8 +57,12 @@
 --- Suggested dependencies (provide extra functionality, will work without them):
 ---
 --- - Enabled |MiniIcons| module to highlight LSP kind (requires Neovim>=0.11).
----   Otherwise |MiniCompletion.default_process_items()| does not add highlighting.
+---   If absent, |MiniCompletion.default_process_items()| does not add highlighting.
 ---   Also take a look at |MiniIcons.tweak_lsp_kind()|.
+--- - Enabled |MiniSnippets| module for better snippet handling (much recommended).
+---   If absent and custom snippet insert is not configured, |vim.snippet.expand()|
+---   is used on Neovim>=0.10 (nothing extra is done on earlier versions).
+---   See |MiniCompletion.default_snippet_insert()|.
 ---
 --- # Setup ~
 ---
@@ -74,33 +77,53 @@
 --- `vim.b.minicompletion_config` which should have same structure as
 --- `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- # Snippets ~
+---
+--- As per LSP specification, some completion items can be supplied in the form of
+--- snippet - a template with both pre-defined text and places (called "tabstops")
+--- for user to interactively change/add text during snippet session.
+---
+--- In 'mini.completion' items that will insert snippet have "S" symbol shown in
+--- the popup (as part of `menu` in |complete-items|). To actually insert a snippet:
+--- - Select an item via <C-n> / <C-p>. This will insert item's label (usually not
+---   full snippet) first to reduce visual flicker. The full snippet text will be
+---   shown in info window if LSP server doesn't provide its own info for an item.
+--- - Press <C-y> (|complete_CTRL-Y|) or attempt inserting a non-keyword character
+---   (like <CR>; new character will be removed). It will clear text from previous
+---   step, set cursor, and call `lsp_completion.snippet_insert` with snippet text.
+--- - Press <C-e> (|complete_CTRL-E|) to cancel snippet insert and properly end
+---   completion.
+---
+--- See |MiniCompletion.default_snippet_insert()| for overview of how to work with
+--- inserted snippets.
+---
+--- Notes:
+--- - To stop LSP server from suggesting snippets, disable (set to `false`) the
+---   following capability during LSP server start:
+---   `textDocument.completion.completionItem.snippetSupport`.
+--- - If snippet body doesn't contain tabstops, `lsp_completion.snippet_insert`
+---   is not called and text is inserted as is.
+---
 --- # Notes ~
 ---
---- - More appropriate, albeit slightly advanced, LSP completion setup is to set
----   it not on every `BufEnter` event (default), but on every attach of LSP
+--- - More appropriate (albeit slightly advanced) LSP completion setup is to set
+---   it not on every |BufEnter| event (default), but on every attach of LSP
 ---   client. To do that:
 ---     - Use in initial config:
----     `lsp_completion = {source_func = 'omnifunc', auto_setup = false}`.
+---     `lsp_completion = { source_func = 'omnifunc', auto_setup = false }`.
 ---     - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
 ---       `v:lua.MiniCompletion.completefunc_lsp`.
+---
+--- - The `additionalTextEdits` data can come from LSP server only in response for
+---   "textDocument/resolve". For these servers select completion item and wait
+---   for `config.delay.info` time plus server response time to process the request.
 ---
 --- - Uses `vim.lsp.protocol.CompletionItemKind` map in LSP step to show a readable
 ---   version of item's kind. Modify it directly to change what is displayed.
 ---   If you have |mini.icons| enabled, take a look at |MiniIcons.tweak_lsp_kind()|.
 ---
---- - If you have trouble using custom (overridden) |vim.ui.input| (like from
----   'stevearc/dressing.nvim'), make automated disable of 'mini.completion'
----   for input buffer. For example, currently for 'dressing.nvim' it can be
----   with `au FileType DressingInput lua vim.b.minicompletion_disable = true`.
----
---- - Support of `additionalTextEdits` tries to handle both types of servers:
----     - When `additionalTextEdits` are supplied in response to
----       'textDocument/completion' request (like currently in 'pyright').
----     - When `additionalTextEdits` are supplied in response to
----       'completionItem/resolve' request (like currently in
----       'typescript-language-server'). In this case to apply edits user needs
----       to trigger such request, i.e. select completion item and wait for
----       `MiniCompletion.config.delay.info` time plus server response time.
+--- - If you have trouble using custom (overridden) |vim.ui.input|, disable
+---   'mini.completion' for input buffer (usually based on its 'filetype').
 ---
 --- # Comparisons ~
 ---
@@ -267,6 +290,11 @@ MiniCompletion.config = {
     -- input items. Common use case is custom filter/sort.
     -- Default: `default_process_items`
     process_items = nil,
+
+    -- A function which takes a snippet as string and inserts it at cursor.
+    -- Default: `default_snippet_insert` which tries to use 'mini.snippets'
+    -- and falls back to `vim.snippet.expand` (on Neovim>=0.10).
+    snippet_insert = nil,
   },
 
   -- Fallback action as function/string. Executed in Insert mode.
@@ -420,7 +448,7 @@ end
 --- Default processing of LSP items
 ---
 --- Steps:
---- - Filter out items not matching `base` and snippet items.
+--- - Filter out items not starting with `base`.
 --- - Sort by LSP specification.
 --- - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 ---
@@ -429,11 +457,10 @@ end
 ---
 ---@return table Array of processed items from LSP response.
 MiniCompletion.default_process_items = function(items, base)
-  local res = vim.tbl_filter(function(item)
-    -- Keep items which match the base and are not snippets
-    local text = item.filterText or H.get_completion_word(item)
-    return vim.startswith(text, base) and item.kind ~= 15
-  end, items)
+  local res = vim.tbl_filter(
+    function(item) return vim.startswith(item.filterText or H.get_completion_word(item), base) end,
+    items
+  )
 
   res = vim.deepcopy(res)
   table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
@@ -447,6 +474,44 @@ MiniCompletion.default_process_items = function(items, base)
   end
 
   return res
+end
+
+--- Default snippet insert
+---
+--- Order of preference:
+--- - Use |MiniSnippets| if set up (i.e. there is `require('mini.snippets').setup()`).
+--- - Use |vim.snippet.expand()| on Neovim>=0.10
+--- - Add snippet text at cursor as is.
+---
+--- After snippet is inserted, user is expected to navigate/jump between dedicated
+--- places (tabstops) to adjust inserted text as needed:
+--- - |MiniSnippets| by default uses <C-l> / <C-h> to jump to next/previous tabstop.
+---   Can be adjusted in `mappings` of |MiniSnippets.config|.
+--- - |vim.snippet| on Neovim=0.10 requires manually created mappings for jumping
+---   between tabstops (see |vim.snippet.jump()|). Neovim>=0.11 sets them up
+---   automatically to <Tab> / <S-Tab> (if not overridden by user).
+---
+--- End session by navigating all the way to the last tabstop. In 'mini.snippets':
+--- - Also make any text edit or exit Insert mode to end the session. This allows
+---   smoother navigation to previous tabstops in case of a lately spotted typo.
+--- - Press `<C-c>` to force session stop.
+---
+---@param snippet string Snippet body to insert at cursor.
+---
+---@seealso |MiniSnippets-session| if 'mini.snippets' is set up.
+--- |vim.snippet| for Neovim's built-in snippet engine.
+MiniCompletion.default_snippet_insert = function(snippet)
+  if _G.MiniSnippets then
+    local insert = MiniSnippets.config.expand.insert or MiniSnippets.default_insert
+    return insert({ body = snippet })
+  end
+  if vim.fn.has('nvim-0.10') == 1 then return vim.snippet.expand(snippet) end
+
+  local pos, lines = vim.api.nvim_win_get_cursor(0), vim.split(snippet, '\n')
+  vim.api.nvim_buf_set_text(0, pos[1] - 1, pos[2], pos[1] - 1, pos[2], lines)
+  local n = #lines
+  local new_pos = n == 1 and { pos[1], pos[2] + lines[n]:len() } or { pos[1] + n - 1, lines[n]:len() }
+  vim.api.nvim_win_set_cursor(0, new_pos)
 end
 
 -- Helper data ================================================================
@@ -911,29 +976,44 @@ H.make_completion_request = function()
   H.completion.lsp.cancel_fun = cancel_fun
 end
 
--- This is a truncated version of
--- `vim.lsp.util.text_document_completion_list_to_complete_items` which does
--- not filter and sort items.
--- For extra information see 'Response' section:
+-- Source:
 -- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
 H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   if vim.tbl_count(items) == 0 then return {} end
 
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
+  local snippet_kind = vim.lsp.protocol.CompletionItemKind.Snippet
+  local snippet_inserttextformat = vim.lsp.protocol.InsertTextFormat.Snippet
   for _, item in pairs(items) do
-    local label_details, menu = item.labelDetails, nil
-    if label_details ~= nil then menu = (label_details.detail or '') .. (label_details.description or '') end
+    local word = H.get_completion_word(item)
+
+    local is_snippet_kind = item.kind == snippet_kind
+    local is_snippet_format = item.insertTextFormat == snippet_inserttextformat
+    -- Treat item as snippet only if it has tabstops. This is important to make
+    -- "implicit" expand work with LSP servers that report even regular words
+    -- as `InsertTextFormat.Snippet` (like `gopls`).
+    local needs_snippet_insert = (is_snippet_kind or is_snippet_format)
+      and (word:find('[^\\]%${?%d') ~= nil or word:find('^%${?%d') ~= nil)
+
+    local details = item.labelDetails or {}
+    local snippet_clue = needs_snippet_insert and 'S' or ''
+    local label_detail = (details.detail or '') .. (details.description or '')
+    label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
+
+    local lsp_data = { completion_item = item, client_id = client_id, needs_snippet_insert = needs_snippet_insert }
     table.insert(res, {
-      word = H.get_completion_word(item),
+      -- Show less for snippet items (usually less confusion)
+      word = needs_snippet_insert and item.label or word,
       abbr = item.label,
       kind = item_kinds[item.kind] or 'Unknown',
       kind_hlgroup = item.kind_hlgroup,
-      menu = menu,
-      -- Do not set `info` field in favor of trying to first resolve it
+      menu = label_detail,
+      -- NOTE: info will be attempted to resolve, use snippet text as fallback
+      info = needs_snippet_insert and word or nil,
       icase = 1,
       dup = 1,
       empty = 1,
-      user_data = { nvim = { lsp = { completion_item = item, client_id = client_id } } },
+      user_data = { nvim = { lsp = lsp_data } },
     })
   end
   return res
@@ -959,8 +1039,6 @@ H.make_add_kind_hlgroup = function()
 end
 
 H.get_completion_word = function(item)
-  -- Completion word (textEdit.newText > insertText > label). This doesn't
-  -- support snippet expansion.
   return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or item.label or ''
 end
 
@@ -969,8 +1047,44 @@ H.make_lsp_extra_actions = function(lsp_data)
   local resolved = (H.info.lsp.result or {})[lsp_data.client_id]
   local item = (resolved == nil or resolved.err) and lsp_data.completion_item or resolved.result
 
-  -- Try to apply additional text edits
-  H.apply_additional_text_edits(item.additionalTextEdits, lsp_data.client_id)
+  if item.additionalTextEdits == nil and not lsp_data.needs_snippet_insert then return end
+  local snippet = lsp_data.needs_snippet_insert and H.get_completion_word(item) or nil
+
+  -- Make extra actions not only after an explicit `<C-y>` (accept completed
+  -- item), but also after implicit non-keyword character. This needs:
+  -- - Keeping track of newly added non-keyword character and cursor move (like
+  --   after 'mini.pairs') for a later undo. Do it via using expanding extmark.
+  -- - Delay actual execution to operate *after* characters are inserted (as it
+  --   is not immediate). Otherwise those characters will get "inserted" after
+  --   snippet is inserted and its session is active.
+  local cur = vim.api.nvim_win_get_cursor(0)
+  local extmark_opts = { end_row = cur[1] - 1, end_col = cur[2], right_gravity = false, end_right_gravity = true }
+  local track_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur[1] - 1, cur[2], extmark_opts)
+
+  vim.schedule(function()
+    -- Do nothing if user exited Insert mode
+    if vim.fn.mode() ~= 'i' then return end
+
+    -- Undo possible non-keyword character(s) and cursor move. Do this before
+    -- text edits to have more proper state (as it was at the time edits were
+    -- created by server), but only if there is snippet (keep new characters
+    -- for *only* text edits).
+    if snippet ~= nil then
+      local ok, new = pcall(vim.api.nvim_buf_get_extmark_by_id, 0, H.ns_id, track_id, { details = true })
+      if ok then vim.api.nvim_buf_set_text(0, new[1], new[2], new[3].end_row, new[3].end_col, {}) end
+      pcall(vim.api.nvim_win_set_cursor, 0, cur)
+    end
+
+    -- Try to apply additional text edits
+    H.apply_additional_text_edits(item.additionalTextEdits, lsp_data.client_id)
+
+    -- Expand snippet: remove inserted word and instead insert snippet
+    if snippet == nil then return end
+    local from, to = H.completion.start_pos, vim.api.nvim_win_get_cursor(0)
+    pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { '' })
+    local insert = H.get_config().lsp_completion.snippet_insert or MiniCompletion.default_snippet_insert
+    insert(snippet)
+  end)
 end
 
 H.apply_additional_text_edits = function(edits, client_id)
@@ -983,7 +1097,9 @@ H.apply_additional_text_edits = function(edits, client_id)
   local start_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, start_pos[1] - 1, start_pos[2], {})
 
   local cur_pos = vim.api.nvim_win_get_cursor(0)
-  local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
+  -- - Keep track of start-cursor range as not "expanding"
+  local cursor_extmark_opts = { right_gravity = false }
+  local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], cursor_extmark_opts)
 
   -- Do text edits
   local offset_encoding = vim.lsp.get_client_by_id(client_id).offset_encoding

@@ -50,6 +50,20 @@ local mock_completefunc_lsp_tracking = function()
   ]])
 end
 
+local mock_lsp_items = function(items)
+  child.lua('_G.input_items = ' .. vim.inspect(items))
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(_, base)
+      local items = vim.deepcopy(_G.input_items)
+      -- Ensure same order
+      for i, _ in ipairs(items) do
+        items[i].sortText = string.format('%03d', i)
+      end
+      return MiniCompletion.default_process_items(items, base)
+    end
+  ]])
+end
+
 -- NOTE: this can't show "what filtered text is actually shown in window".
 -- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
@@ -608,13 +622,11 @@ end
 
 T['Manual completion']['uses `vim.lsp.protocol.CompletionItemKind` in LSP step'] = function()
   child.set_size(17, 30)
-  child.lua([[vim.lsp.protocol = {
-    CompletionItemKind = {
-      [1] = 'Text',         Text = 1,
-      [2] = 'Method',       Method = 2,
-      [3] = 'S Something',  ['S Something'] = 3,
-      [4] = 'Fallback',     Fallback = 4,
-    },
+  child.lua([[vim.lsp.protocol.CompletionItemKind = {
+    [1] = 'Text',         Text = 1,
+    [2] = 'Method',       Method = 2,
+    [3] = 'S Something',  ['S Something'] = 3,
+    [4] = 'Fallback',     Fallback = 4,
   }]])
   type_keys('i', '<C-Space>')
   child.expect_screenshot()
@@ -1328,6 +1340,426 @@ T['Scroll']['respects `config.mappings`'] = function()
   eq(get_lines(), { 'Line' })
   type_keys('<C-u>')
   eq(get_lines(), { '' })
+end
+
+local mock_lsp_snippets = function(snippets)
+  local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
+  mock_lsp_items(vim.tbl_map(function(x) return { label = x, kind = kind_snippet } end, snippets))
+end
+
+T['Snippets'] = new_set({
+  hooks = {
+    pre_case = function()
+      -- Test primarily with 'mini.snippets'
+      child.lua('require("mini.snippets").setup()')
+
+      new_buffer()
+      mock_lsp()
+      child.set_size(10, 25)
+    end,
+  },
+})
+
+T['Snippets']['work'] = function()
+  child.set_size(10, 25)
+
+  local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
+  local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+
+  --stylua: ignore
+  local items = {
+    -- "Regular" snippet kind
+    { label = 'Snippet A $1', kind = kind_snippet },
+
+    -- Non-snippet kind, but with "Snippet" format of inserted text,
+    { label = 'Snippet B $1', kind = kind_function, insertTextFormat = format_snippet },
+
+    -- Should use `label` in popup and `insertText` after inserting
+    { label = 'Snip C', kind = kind_function, insertText = 'Snippet C $1', insertTextFormat = format_snippet },
+
+    -- Should use `label` in popup and `textEdit.newText` after inserting
+    { label = 'Snip D', kind = kind_function, textEdit = { newText = 'Snippet D $1', range = {} }, insertTextFormat = format_snippet },
+
+    -- Same, but `textEdit` is `InsertReplaceEdit`
+    { label = 'Snip E', kind = kind_function, textEdit = { newText = 'Snippet E $1', insert = {}, replace = {} }, insertTextFormat = format_snippet },
+  }
+
+  mock_lsp_items(items)
+  type_keys('i', '<C-Space>')
+  -- Should properly set abbreviation, kind, and "S" symbol
+  child.expect_screenshot()
+
+  -- Should show `label` when navigating with `<C-n>`
+  for i = 1, #items do
+    type_keys('<C-n>')
+    eq(get_lines(), { items[i].label })
+  end
+
+  type_keys('<C-e>')
+  set_lines({ '' })
+
+  -- Should properly insert snippet and start snippet session
+  local validate = function(item, ref_line, ref_cursor)
+    mock_lsp_items({ item })
+    type_keys('<C-Space>', '<C-n>', '<C-y>')
+    eq(get_lines(), { ref_line })
+    eq(get_cursor(), ref_cursor)
+    eq(child.fn.mode(), 'i')
+    eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+
+    type_keys('<C-c>')
+    set_lines({ '' })
+  end
+
+  validate(items[1], 'Snippet A ', { 1, 10 })
+  validate(items[2], 'Snippet B ', { 1, 10 })
+  validate(items[3], 'Snippet C ', { 1, 10 })
+  validate(items[4], 'Snippet D ', { 1, 10 })
+  validate(items[5], 'Snippet E ', { 1, 10 })
+end
+
+T['Snippets']['are inserted after attempting to insert non-keyword charater'] = function()
+  mock_lsp_snippets({ 'Snippet A $1' })
+
+  local validate = function(non_keyword_char, ref_line, ref_cursor)
+    type_keys('i', '<C-Space>', '<C-n>', non_keyword_char)
+
+    eq(get_lines(), { ref_line })
+    eq(get_cursor(), ref_cursor)
+    eq(child.fn.pumvisible(), 0)
+    eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+
+    type_keys('<C-c>', '<Esc>')
+    set_lines({ '' })
+  end
+
+  -- Should work with regular non-keyword character
+  validate(' ', 'Snippet A ', { 1, 10 })
+  validate('[', 'Snippet A ', { 1, 10 })
+  validate('<Tab>', 'Snippet A ', { 1, 10 })
+  validate('<S-Tab>', 'Snippet A ', { 1, 10 })
+
+  -- Should work with `<CR>` (with or without recommended remap)
+  validate('<CR>', 'Snippet A ', { 1, 10 })
+
+  child.lua([[
+    _G.cr_action = function()
+      -- '\25' is <C-y> and '\r' is <CR>
+      if vim.fn.pumvisible() ~= 0 then
+        local item_selected = vim.fn.complete_info()['selected'] ~= -1
+        return item_selected and '\25' or '\25\r'
+      else
+        return '\r'
+      end
+    end
+    vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
+  ]])
+  validate('<CR>', 'Snippet A ', { 1, 10 })
+
+  -- Should work when non-keyword char triggers Insert mode mapping that
+  -- inserts more characters (like in 'mini.pairs')
+  if child.fn.has('nvim-0.10') == 0 then
+    -- This is probably due to some fixed issue with extmarks
+    MiniTest.skip('Non-keyword character that inserts multiple characters can be used only on Neovim>=0.10 ')
+  end
+
+  child.cmd('inoremap ( (abc)<Left><Left><Left>')
+  set_lines({ 'Before cursor  text after cursor' })
+  set_cursor(1, 14)
+  -- - Should no part of `(abc)` be present
+  validate('(', 'Before cursor Snippet A  text after cursor', { 1, 24 })
+end
+
+T['Snippets']['can be stopped from inserting'] = function()
+  local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+  mock_lsp_items({
+    { label = 'Snip A', kind = kind_function, insertText = 'Snippet A $1', insertTextFormat = format_snippet },
+  })
+
+  local validate_stop = function(key, ref_line, ref_mode)
+    type_keys('i', '<C-Space>', '<C-n>')
+    type_keys(key)
+    eq(get_lines(), { ref_line })
+    eq(child.fn.mode(), ref_mode)
+
+    set_lines({ '' })
+    child.ensure_normal_mode()
+  end
+
+  -- Should do nothing after `<C-e>` (proper completion stop)
+  validate_stop('<C-e>', '', 'i')
+
+  -- Should not insert snippet after `<Esc>` / `<C-c>` (exit to Normal mode),
+  -- but inserted text
+  validate_stop('<Esc>', 'Snip A', 'n')
+  validate_stop('<C-c>', 'Snip A', 'n')
+end
+
+T['Snippets']['properly show special symbol in popup'] = function()
+  child.set_size(10, 35)
+  local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
+  local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
+
+  local items = {
+    -- Should correctly combine with label details
+    { label = 'Snippet A1 $1', kind = kind_snippet, labelDetails = { detail = 'Det' } },
+    { label = 'Snippet A2 $1', kind = kind_snippet, labelDetails = { description = 'Desc' } },
+    { label = 'Snippet A2 $1', kind = kind_snippet, labelDetails = { detail = 'Det', description = 'Desc' } },
+
+    -- No "S", as the text does not contain tabstop (although "Snippet" kind)
+    { label = 'OnlyText', kind = kind_snippet },
+
+    -- No "S", as not a snippet at all
+    { label = 'NotASnippet', kind = kind_function },
+  }
+
+  mock_lsp_items(items)
+  type_keys('i', '<C-Space>')
+  -- Should show "S" symbol only if item will actually insert snippet
+  child.expect_screenshot()
+end
+
+T['Snippets']['show full snippet text as info'] = function()
+  local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+  mock_lsp_items({
+    { label = 'January', kind = kind_function, insertText = 'January is $1', insertTextFormat = format_snippet },
+    { label = 'May', kind = kind_function, insertText = 'May the $1 be with you', insertTextFormat = format_snippet },
+  })
+
+  -- Should show full snippet text as info
+  type_keys('i', 'M', '<C-Space>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  type_keys('<C-e>', '<Esc>')
+  set_lines({ '' })
+
+  -- Should prefer server's documentation and/or detail if it provides one
+  type_keys('i', 'J', '<C-Space>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
+T['Snippets']["can fall back if no 'mini.snippets' is enabled"] = function()
+  -- "Unsetup" 'mini.snippets'
+  child.lua('_G.MiniSnippets = nil')
+
+  mock_lsp_snippets({ 'Single line $1 snippet', 'Multi\nline $1\\tnsnippet' })
+
+  -- On Neovim<0.10 should insert snippet text as is and set cursor at its end
+  if child.fn.has('nvim-0.10') == 0 then
+    local validate = function(snippet, ref_lines, ref_cursor)
+      mock_lsp_snippets({ snippet })
+
+      type_keys('i', '  Text before ')
+      type_keys('<C-Space>', '<C-n>', '<C-y>')
+      eq(get_lines(), ref_lines)
+      eq(get_cursor(), ref_cursor)
+      eq(child.fn.mode(), 'i')
+
+      child.ensure_normal_mode()
+      set_lines({ '' })
+    end
+
+    validate('Single line $1 snippet', { '  Text before Single line $1 snippet' }, { 1, 36 })
+    validate('Multi\nline $1\nsnippet', { '  Text before Multi', 'line $1', 'snippet' }, { 3, 7 })
+
+    return
+  end
+
+  -- On Neovim>=0.10 should use `vim.snippet.expand`
+  mock_lsp_snippets({ 'Multi\nline $1\nsnippet' })
+  type_keys('i', '  Text before ')
+  type_keys('<C-Space>', '<C-n>', '<C-y>')
+  eq(get_lines(), { '  Text before Multi', '  line ', '  snippet' })
+  eq(get_cursor(), { 2, 7 })
+  eq(child.fn.mode(), 'i')
+
+  child.lua('vim.snippet.jump(1)')
+  eq(get_cursor(), { 3, 9 })
+  eq(child.fn.mode(), 'i')
+end
+
+T['Snippets']["respect 'mini.snippets' config"] = function()
+  child.lua([[
+    MiniSnippets.config.expand.insert = function(snippet)
+      MiniSnippets.default_insert(snippet, { empty_tabstop = '!', lookup = { VAR = 'Hello' } })
+    end
+    MiniSnippets.config.mappings.jump_next = '<Tab>'
+    MiniSnippets.config.mappings.jump_prev = '<S-Tab>'
+  ]])
+  mock_lsp_snippets({ 'Snippet_$1($0) $VAR' })
+  type_keys('i', '<C-Space>', '<C-n>', '<C-y>')
+  -- NOTE: inline virtual text is supported on Neovim>=0.10
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
+  eq(get_cursor(), { 1, 8 })
+
+  type_keys('<Tab>')
+  eq(get_cursor(), { 1, 9 })
+  type_keys('<S-Tab>')
+  eq(get_cursor(), { 1, 8 })
+end
+
+T['Snippets']['can start nested sessions'] = function()
+  mock_lsp_snippets({ 'Snippet A $1', 'Snippet B $1' })
+  type_keys('i', '<C-Space>', '<C-n>', '<C-y>')
+  eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+  type_keys('<C-Space>', '<C-n>', '<C-n>', '<C-y>')
+  eq(child.lua_get('#MiniSnippets.session.get(true)'), 2)
+
+  eq(get_lines(), { 'Snippet A Snippet B ' })
+end
+
+T['Snippets']['respect `lsp_completion.snippet_insert`'] = function()
+  child.lua([[
+    _G.log = {}
+    MiniCompletion.config.lsp_completion.snippet_insert = function(...)
+      table.insert(_G.log, { ... })
+    end
+  ]])
+  mock_lsp_snippets({ 'Snippet $1' })
+  type_keys('i', '<C-Space>', '<C-n>', '<C-y>')
+  eq(child.fn.pumvisible(), 0)
+  eq(get_lines(), { '' })
+  eq(child.lua_get('_G.log'), { { 'Snippet $1' } })
+end
+
+T['Snippets']['are not inserted if have no tabstops'] = function()
+  -- This allows inserting snippets "implicitly" after typing non-keyword
+  -- character. Without this, LSP servers which report any inserted text as
+  -- snippet will "eat" the next typed non-keyword charater.
+
+  child.set_size(16, 45)
+  local snippets = {
+    -- - No insert:
+    'Just\ntext',
+    'Text with $TM_FILENAME $VAR',
+    [[Text with \$1 escaped dollar]],
+    [[Text with \${1} escaped dollar]],
+    -- - Insert:
+    'Has $1 tabstop',
+    '$1 has tabstop',
+    'Has ${1} tabstop',
+    '${1} has tabstop',
+    'Has ${1:aaa} tabstop',
+    'Has $0 tabstop',
+    'Has ${0} tabstop',
+    'Has tabstop$0',
+  }
+  mock_lsp_snippets(snippets)
+
+  -- Should not show "S" symbol in popup for "no insert" items
+  type_keys('i', '<C-Space>')
+  child.expect_screenshot()
+  type_keys('<C-e>', '<Esc>')
+
+  child.lua([[
+    _G.log = {}
+    MiniCompletion.config.lsp_completion.snippet_insert = function(...)
+      table.insert(_G.log, { ... })
+    end
+  ]])
+  local validate = function(snip, accept_key, should_insert)
+    child.lua('_G.log = {}')
+    mock_lsp_snippets({ snip })
+
+    type_keys('i', '<C-Space>', '<C-n>', accept_key)
+    eq(child.lua_get('#_G.log > 0'), should_insert)
+
+    type_keys('<C-e>', '<Esc>')
+    set_lines({ '' })
+  end
+
+  for i = 1, 4 do
+    validate(snippets[i], '<C-y>', false)
+    validate(snippets[i], '<CR>', false)
+    validate(snippets[i], ' ', false)
+  end
+
+  for i = 5, #snippets do
+    validate(snippets[i], '<C-y>', true)
+    validate(snippets[i], '<CR>', true)
+    validate(snippets[i], ' ', true)
+  end
+end
+
+T['Snippets']['prefer snippet from resolved item'] = function()
+  -- Although it is not recommended by LSP spec to update/provide `insertText`
+  -- or `textEdti` in 'completionItem/resolve', this still can probably happen.
+
+  child.lua([[
+    local buf_request_all_orig = vim.lsp.buf_request_all
+    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+      if method ~= 'completionItem/resolve' then return buf_request_all_orig(bufnr, method, params, callback) end
+      params.textEdit = { newText = 'Snippet $1 from resolve' }
+      callback({ { result = params } })
+    end
+  ]])
+
+  mock_lsp_snippets({ 'Snippet $1 original' })
+  type_keys('i', '<C-Space>', '<C-n>')
+  -- - Wait for 'completionItem/resolve' request to be sent
+  sleep(default_info_delay + small_time)
+  type_keys('<C-y>')
+  eq(get_lines(), { 'Snippet  from resolve' })
+end
+
+T['Snippets']['can be inserted together with additional text edits'] = function()
+  local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+
+  --stylua: ignore
+  local items = {
+    {
+      label = 'Snip A', kind = kind_function, insertText = 'Snippet A $1', insertTextFormat = format_snippet,
+      additionalTextEdits = {
+        {
+          newText = 'New text on first line',
+          range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 0 } },
+        },
+      }
+    },
+  }
+  mock_lsp_items(items)
+
+  local validate = function(ref_lines, ref_cursor)
+    type_keys('i', '<C-Space>', '<C-n>', '<C-y>')
+    eq(get_lines(), ref_lines)
+    eq(get_cursor(), ref_cursor)
+    eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+
+    type_keys('<C-c>')
+    child.ensure_normal_mode()
+    set_lines({ '' })
+  end
+
+  -- A usual case of additional text edit not near completed item
+  set_lines({ '', '' })
+  set_cursor(2, 0)
+  validate({ 'New text on first line', 'Snippet A ' }, { 2, 10 })
+
+  -- An unusual case of additional text edit in the same line
+  set_lines({ '' })
+  set_cursor(1, 0)
+  validate({ 'New text on first lineSnippet A ' }, { 1, 32 })
+
+  -- Additional text edits should be applied after removing inserted
+  -- non-keyword characters used to accept completion item
+  if child.fn.has('nvim-0.10') == 0 then
+    -- This is probably due to some fixed issue with extmarks
+    MiniTest.skip('Non-keyword character that inserts multiple characters can be used only on Neovim>=0.10 ')
+  end
+  items[1].additionalTextEdits[1].range = { start = { line = 0, character = 6 }, ['end'] = { line = 0, character = 6 } }
+  mock_lsp_items(items)
+  child.cmd('inoremap ( (abc)<Left><Left><Left>')
+
+  type_keys('i', '<C-Space>', '<C-n>', '(')
+  eq(get_lines(), { 'Snippet A New text on first line' })
+  eq(get_cursor(), { 1, 10 })
+  eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
 end
 
 return T

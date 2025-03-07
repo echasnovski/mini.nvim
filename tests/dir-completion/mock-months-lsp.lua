@@ -50,7 +50,7 @@ Months.data = {
   February  = { documentation = 'a\nb\nc\nd\ne\nf\ng\nh' },
   March     = { documentation = 'Month #03' },
   April     = { documentation = 'Month #04', detail = '\n  local a = "New info"  \n  \n' },
-  May       = { documentation = 'Month #05' },
+  May       = { documentation = nil },
   June      = { documentation = 'Month #06' },
   July      = { documentation = table.concat(markdown_info, '\n') },
   August    = { documentation = 'Month #08', detail = 'Month' },

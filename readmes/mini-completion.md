@@ -30,7 +30,7 @@ https://user-images.githubusercontent.com/24854248/173044355-90bfc230-70c4-4932-
 ## Features
 
 - Two-stage chain completion:
-    - First stage is an LSP completion. Supports `additionalTextEdits`, like auto-import and others.
+    - First stage is an LSP completion. Supports `additionalTextEdits` (like auto-import, etc.) and snippets (see ["Snippets"](#snippets)) (best results require ['mini.snippets'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-snippets.md) dependency).
     - If first stage is not set up or resulted into no candidates, fallback action is executed. The most tested actions are Neovim's built-in insert completion.
 - Automatic display in floating window of completion item info (via 'completionItem/resolve' request) and signature help (with highlighting of active parameter if LSP server provides such information). Scrolling is possible in both info/signature window (`<C-f>` / `<C-b>` by default).
 - Automatic actions are done after some configurable amount of delay. This reduces computational load and allows fast typing (completion and signature help) and item selection (item info)
@@ -41,7 +41,22 @@ https://user-images.githubusercontent.com/24854248/173044355-90bfc230-70c4-4932-
 
 For full experience needs (still works without any of suggestions):
 
-- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to highlight LSP kind (requires Neovim>=0.11). Otherwise `MiniCompletion.default_process_items()` does not add highlighting. Also take a look at `MiniIcons.tweak_lsp_kind()`.
+- Enabled ['mini.icons'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) module to highlight LSP kind (requires Neovim>=0.11). If absent, `MiniCompletion.default_process_items()` does not add highlighting. Also take a look at `MiniIcons.tweak_lsp_kind()`.
+- Enabled ['mini.snippets'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-snippets.md) module for better snippet handling (**much recommended**). If absent and custom snippet insert is not configured, `vim.snippet.expand()` is used on Neovim>=0.10 (nothing extra is done on earlier versions). See `:h MiniCompletion.default_snippet_insert()`.
+
+## Snippets
+
+As per LSP specification, some completion items can be supplied in the form of snippet - a template with both pre-defined text and places (called "tabstops") for user to interactively change/add text during snippet session.
+
+In 'mini.completion' items that will insert snippet have "S" symbol shown in the popup. To actually insert a snippet:
+
+- Select an item via `<C-n>` / `<C-p>`. This will insert item's label (usually not full snippet) first to reduce visual flicker. The full snippet text will be shown in info window if LSP server doesn't provide its own info for an item.
+
+- Press `<C-y>` or attempt inserting a non-keyword character (like `<CR>`; new character will be removed). It will clear text from previous step, set cursor, and call `lsp_completion.snippet_insert` with snippet text.
+
+- Press `<C-e>` to cancel snippet insert and properly end completion.
+
+See `:h MiniCompletion.default_snippet_insert()` for overview of how to work with inserted snippets.
 
 ## Installation
 
@@ -175,6 +190,11 @@ Here are code snippets for some common installation methods (use only one):
     -- input items. Common use case is custom filter/sort.
     -- Default: `default_process_items`
     process_items = nil,
+
+    -- A function which takes a snippet as string and inserts it at cursor.
+    -- Default: `default_snippet_insert` which tries to use 'mini.snippets'
+    -- and falls back to `vim.snippet.expand` (on Neovim>=0.10).
+    snippet_insert = nil,
   },
 
   -- Fallback action as function/string. Executed in Insert mode.
