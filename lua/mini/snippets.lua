@@ -2530,14 +2530,16 @@ H.get_comment_leaders = function()
   -- From 'comments'
   for _, comment_part in ipairs(vim.opt_local.comments:get()) do
     local prefix, suffix = comment_part:match('^(.*):(.*)$')
-    suffix = vim.trim(suffix)
-    if prefix:find('b') then
-      -- Respect `b` flag (for blank) requiring space, tab or EOL after it
-      table.insert(res, suffix .. ' ')
-      table.insert(res, suffix .. '\t')
-    elseif prefix:find('f') == nil then
-      -- Add otherwise ignoring `f` flag (only first line should have it)
-      table.insert(res, suffix)
+    if suffix ~= nil then
+      suffix = vim.trim(suffix)
+      if prefix:find('b') then
+        -- Respect `b` flag (for blank) requiring space, tab or EOL after it
+        table.insert(res, suffix .. ' ')
+        table.insert(res, suffix .. '\t')
+      elseif prefix:find('f') == nil then
+        -- Add otherwise ignoring `f` flag (only first line should have it)
+        table.insert(res, suffix)
+      end
     end
   end
 
