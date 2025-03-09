@@ -314,7 +314,7 @@ T['start()']['uses only visible lines'] = function()
   eq(get_cursor(), { 3, 3 })
 end
 
-T['start()']['does not account for current cursor position during label computation'] = new_set({
+T['start()']['ignores cursor position during label computation'] = new_set({
   parametrize = { { 1, 1 }, { 2, 0 }, { 3, 0 }, { 3, 3 } },
 }, {
   test = function(line, col)
@@ -397,7 +397,7 @@ T['start()']['stops jumping if not label was typed'] = new_set({
   end,
 })
 
-T['start()']['does not account for current window during label computation'] = new_set({
+T['start()']['ignores current window during label computation'] = new_set({
   parametrize = { { 'topright' }, { 'bottomleft' } },
 }, {
   test = function(window_name)
