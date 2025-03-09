@@ -12,51 +12,51 @@
 11|~                                                                                                                       
 12|~                                                                                                                       
 13|~                                                                                                                       
-14|~     ╔…aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa╗    
-15|~     ║Total number of cases: 9                                                                                    ║    
-16|~     ║Total number of groups: 1                                                                                   ║    
-17|~     ║                                                                                                            ║    
-18|~     ║tests/dir-test/testref_reporters.lua: oOxXoOxXO                                                             ║    
-19|~     ║                                                                                                            ║    
-20|~     ║Fails (4) and Notes (5)                                                                                     ║    
-21|~     ║NOTE in tests/dir-test/testref_reporters.lua | first group | pass with notes: Passed note                   ║    
-22|~     ║                                                                                                            ║    
-23|~     ║FAIL in tests/dir-test/testref_reporters.lua | first group | fail: Custom error                             ║    
-24|~     ║  Traceback:                                                                                                ║    
-25|~     ║    tests/dir-test/testref_reporters.lua:9                                                                  ║    
-26|~     ║                                                                                                            ║    
-27|~     ║FAIL in tests/dir-test/testref_reporters.lua | first group | fail with notes: Custom error after note       ║    
-28|~     ║  Traceback:                                                                                                ║    
-29|~     ║    tests/dir-test/testref_reporters.lua:12                                                                 ║    
-30|~     ║NOTE in tests/dir-test/testref_reporters.lua | first group | fail with notes: Failed note                   ║    
-31|~     ║                                                                                                            ║    
-32|~     ║NOTE in tests/dir-test/testref_reporters.lua | second group | pass with notes: Passed note #2               ║    
-33|~     ║                                                                                                            ║    
-34|~     ║FAIL in tests/dir-test/testref_reporters.lua | second group | fail: Custom error #2                         ║    
-35|~     ║  Traceback:                                                                                                ║    
-36|~     ║    tests/dir-test/testref_reporters.lua:18                                                                 ║    
-37|~     ║                                                                                                            ║    
-38|~     ║FAIL in tests/dir-test/testref_reporters.lua | second group | fail with notes: Custom error after note #2   ║    
-39|~     ║  Traceback:                                                                                                ║    
-40|~     ║    tests/dir-test/testref_reporters.lua:21                                                                 ║    
-41|~     ║NOTE in tests/dir-test/testref_reporters.lua | second group | fail with notes: Failed note #2               ║    
-42|~     ║                                                                                                            ║    
-43|~     ║NOTE in tests/dir-test/testref_reporters.lua | third group with \n in name | case with \n in name: Passed no║    
-44|~     ║te #3                                                                                                       ║    
-45|~     ║                                                                                                            ║    
-46|~     ║                                                                                                            ║    
-47|~     ║                                                                                                            ║    
-48|~     ║                                                                                                            ║    
-49|~     ║                                                                                                            ║    
-50|~     ║                                                                                                            ║    
-51|~     ║                                                                                                            ║    
-52|~     ║                                                                                                            ║    
-53|~     ║                                                                                                            ║    
-54|~     ║                                                                                                            ║    
-55|~     ║                                                                                                            ║    
-56|~     ║                                                                                                            ║    
-57|~     ║                                                                                                            ║    
-58|~     ╚════════════════════════════════════════════════════════════════════════════════════════════════════════════╝    
+14|~     ┌ Test results ──────────────────────────────────────────────────────────────────────────────────────────────┐    
+15|~     │Total number of cases: 9                                                                                    │    
+16|~     │Total number of groups: 1                                                                                   │    
+17|~     │                                                                                                            │    
+18|~     │tests/dir-test/testref_reporters.lua: oOxXoOxXO                                                             │    
+19|~     │                                                                                                            │    
+20|~     │Fails (4) and Notes (5)                                                                                     │    
+21|~     │NOTE in tests/dir-test/testref_reporters.lua | first group | pass with notes: Passed note                   │    
+22|~     │                                                                                                            │    
+23|~     │FAIL in tests/dir-test/testref_reporters.lua | first group | fail: Custom error                             │    
+24|~     │  Traceback:                                                                                                │    
+25|~     │    tests/dir-test/testref_reporters.lua:9                                                                  │    
+26|~     │                                                                                                            │    
+27|~     │FAIL in tests/dir-test/testref_reporters.lua | first group | fail with notes: Custom error after note       │    
+28|~     │  Traceback:                                                                                                │    
+29|~     │    tests/dir-test/testref_reporters.lua:12                                                                 │    
+30|~     │NOTE in tests/dir-test/testref_reporters.lua | first group | fail with notes: Failed note                   │    
+31|~     │                                                                                                            │    
+32|~     │NOTE in tests/dir-test/testref_reporters.lua | second group | pass with notes: Passed note #2               │    
+33|~     │                                                                                                            │    
+34|~     │FAIL in tests/dir-test/testref_reporters.lua | second group | fail: Custom error #2                         │    
+35|~     │  Traceback:                                                                                                │    
+36|~     │    tests/dir-test/testref_reporters.lua:18                                                                 │    
+37|~     │                                                                                                            │    
+38|~     │FAIL in tests/dir-test/testref_reporters.lua | second group | fail with notes: Custom error after note #2   │    
+39|~     │  Traceback:                                                                                                │    
+40|~     │    tests/dir-test/testref_reporters.lua:21                                                                 │    
+41|~     │NOTE in tests/dir-test/testref_reporters.lua | second group | fail with notes: Failed note #2               │    
+42|~     │                                                                                                            │    
+43|~     │NOTE in tests/dir-test/testref_reporters.lua | third group with \n in name | case with \n in name: Passed no│    
+44|~     │te #3                                                                                                       │    
+45|~     │                                                                                                            │    
+46|~     │                                                                                                            │    
+47|~     │                                                                                                            │    
+48|~     │                                                                                                            │    
+49|~     │                                                                                                            │    
+50|~     │                                                                                                            │    
+51|~     │                                                                                                            │    
+52|~     │                                                                                                            │    
+53|~     │                                                                                                            │    
+54|~     │                                                                                                            │    
+55|~     │                                                                                                            │    
+56|~     │                                                                                                            │    
+57|~     │                                                                                                            │    
+58|~     └────────────────────────────────────────────────────────────────────────────────────────────────────────────┘    
 59|~                                                                                                                       
 60|~                                                                                                                       
 61|~                                                                                                                       
@@ -84,7 +84,7 @@
 11|111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 12|111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 13|111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-14|111111233333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333321111
+14|111111233333333333333222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222221111
 15|111111244444444444444444444445555555555555555555555555555555555555555555555555555555555555555555555555555555555555521111
 16|111111244444444444444444444444555555555555555555555555555555555555555555555555555555555555555555555555555555555555521111
 17|111111255555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555521111
