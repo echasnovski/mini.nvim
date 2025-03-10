@@ -56,6 +56,17 @@ jobs:
       - name: Lint new commits
         run: make --silent lintcommit-ci
 
+  lint-filename-length:
+    name: Lint filename lengths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - name: Lint filename legnths
+        run: make --silent lint-filename-length-ci
+
   case-sensitivity:
     name: File case sensitivity
     runs-on: ubuntu-latest

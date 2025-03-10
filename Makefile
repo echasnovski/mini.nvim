@@ -30,6 +30,9 @@ documentation:
 lintcommit-ci:
 	export LINTCOMMIT_STRICT=true && chmod u+x scripts/lintcommit-ci.sh && scripts/lintcommit-ci.sh
 
+lint-filename-length-ci:
+	chmod u+x scripts/lint-filename-length.sh && scripts/lint-filename-length.sh
+
 dual_sync:
 	chmod u+x scripts/dual_sync.sh && scripts/dual_sync.sh
 
