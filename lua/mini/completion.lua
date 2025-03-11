@@ -427,9 +427,11 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     process_items = process_items or MiniCompletion.default_process_items
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       is_incomplete = is_incomplete or response.isIncomplete
-      -- Response can be `CompletionList` with 'items' field or `CompletionItem[]`
+      -- Response can be `CompletionList` with 'items' field plus their
+      -- defaults or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then return {} end
+      items = H.apply_item_defaults(items, response.itemDefaults)
       items = process_items(items, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
@@ -975,6 +977,29 @@ H.make_completion_request = function()
 
   -- Cache cancel function to disable requests when they are not needed
   H.completion.lsp.cancel_fun = cancel_fun
+end
+
+H.apply_item_defaults = function(items, defaults)
+  if type(defaults) ~= 'table' then return items end
+
+  local edit_range, has_edit_range = defaults.editRange, type(defaults.editRange) == 'table'
+  for _, item in ipairs(items) do
+    item.commitCharacters = item.commitCharacters or defaults.commitCharacters
+    item.data = item.data or defaults.data
+    item.insertTextFormat = item.insertTextFormat or defaults.insertTextFormat
+    item.insertTextMode = item.insertTextMode or defaults.insertTextMode
+    if has_edit_range then
+      item.textEdit = item.textEdit or {}
+      -- Infer new text from `item.textEditText` designed for default edit case
+      item.textEdit.newText = item.textEdit.newText or item.textEditText or item.label
+      -- Default `editRange` is range (start+end) or insert+replace ranges
+      item.textEdit.start = item.textEdit.start or edit_range.start
+      item.textEdit['end'] = item.textEdit['end'] or edit_range['end']
+      item.textEdit.insert = item.textEdit.insert or edit_range.insert
+      item.textEdit.replace = item.textEdit.replace or edit_range.replace
+    end
+  end
+  return items
 end
 
 -- Source:

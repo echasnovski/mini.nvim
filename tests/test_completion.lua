@@ -777,6 +777,67 @@ T['Manual completion']['respects `labelDetails` from LSP response'] = function()
   child.expect_screenshot()
 end
 
+T['Manual completion']['respects `itemDefaults` from LSP response'] = function()
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(items, _)
+      _G.latest_items = vim.deepcopy(items)
+      return items
+    end
+  ]])
+
+  child.lua([[
+    _G.mock_itemdefaults = {
+      commitCharacters = { ')' },
+      data = { hello = 'world' },
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
+      insertTextMode = 1,
+    }
+  ]])
+
+  -- Mock with `editRange` as regular `Range`
+  local edit_range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 1 } }
+  child.lua('_G.mock_itemdefaults.editRange = ' .. vim.inspect(edit_range))
+
+  set_lines({})
+  type_keys('i', '<C-Space>')
+
+  local items = child.lua_get('_G.latest_items')
+  for _, item in ipairs(items) do
+    eq(item.commitCharacters, { ')' })
+    eq(item.data, { hello = 'world' })
+    eq(item.insertTextFormat, format_snippet)
+    eq(item.insertTextMode, 1)
+
+    eq(item.textEdit.newText, item.textEditText or item.label)
+    eq(item.textEdit.start, edit_range.start)
+    eq(item.textEdit['end'], edit_range['end'])
+  end
+  type_keys('<C-e>')
+  child.lua('_G.latest_items = nil')
+
+  -- Mock with `editRange` as isnert+replace ranges and partial default data
+  child.lua('_G.mock_itemdefaults.data = nil')
+  edit_range = {
+    replace = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 1 } },
+    insert = { start = { line = 0, character = 1 }, ['end'] = { line = 0, character = 2 } },
+  }
+  child.lua('_G.mock_itemdefaults.editRange = ' .. vim.inspect(edit_range))
+
+  type_keys('<C-Space>')
+  items = child.lua_get('_G.latest_items')
+  for _, item in ipairs(items) do
+    eq(item.commitCharacters, { ')' })
+    eq(item.data, nil)
+    eq(item.insertTextFormat, format_snippet)
+    eq(item.insertTextMode, 1)
+
+    eq(item.textEdit.newText, item.textEditText or item.label)
+    eq(item.textEdit.insert, edit_range.insert)
+    eq(item.textEdit.replace, edit_range.replace)
+  end
+end
+
 T['Manual completion']['respects `kind_hlgroup` as item field'] = function()
   if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Kind highlighting is available on Neovim>=0.11') end
   child.set_size(10, 40)

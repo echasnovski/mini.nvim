@@ -38,6 +38,7 @@
 - FEATURE: both info and signature help windows now use tree-sitter highlighting:
     - Info window uses "markdown" parser (works best on Neovim>=0.10 as its parser is built-in). Special markdown characters are concealed (i.e. hidden) which might result into seemingly unnecessary whitespace as dimensions are computed not accounting for that.
     - Signature help uses same parser as in current filetype.
+- FEATURE: add support for item defaults in `CompletionList` response.
 - BREAKING FEATURE: rework how LSP completion items are converted to Neovim's completion items:
     - Show `detail` highlighted as buffer's language at the start of info window, but only if `detail` provides information not already present in `documentation`. It was previously used as extra text in the popup menu (via `menu` field), but this doesn't quite follow LSP specification: `detail` and `documentation` fields can be delayed up until `completionItem/resolve` request which implies they should be treated similarly.
     - Show `labelDetails` as a part of the popup menu via `menu` completion item field.

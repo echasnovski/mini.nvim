@@ -123,10 +123,12 @@ Months.requests = {
 
       if item.name == 'April' then
         res.textEdit = construct_textEdit(item.name, 'InsertReplaceEdit')
+        res.textEditText = _G.mock_itemdefaults ~= nil and 'New April' or nil
         res.filterText = construct_filterText(item.name)
       end
       if item.name == 'August' then
         res.textEdit = construct_textEdit(item.name, 'textEdit')
+        res.textEditText = _G.mock_itemdefaults ~= nil and 'New August' or nil
         res.filterText = construct_filterText(item.name)
       end
 
@@ -136,7 +138,7 @@ Months.requests = {
     -- Mock incomplete computation
     if _G.mock_isincomplete then items = vim.list_slice(items, 1, 6) end
 
-    return { { result = { items = items, isIncomplete = _G.mock_isincomplete } } }
+    return { { result = { items = items, isIncomplete = _G.mock_isincomplete, itemDefaults = _G.mock_itemdefaults } } }
   end,
 
   ['completionItem/resolve'] = function(params)
