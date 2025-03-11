@@ -11,7 +11,7 @@ Key design ideas:
   up) and if no result, fallback to custom action.
 
 - Managing completion is done as much with Neovim's built-in tools as
-  possible. |popupmenu-completion| is used to show completion suggetsions.
+  possible. |popupmenu-completion| is used to show completion suggestions.
 
 Features:
 - Two-stage chain completion:
