@@ -993,10 +993,12 @@ H.apply_item_defaults = function(items, defaults)
       -- Infer new text from `item.textEditText` designed for default edit case
       item.textEdit.newText = item.textEdit.newText or item.textEditText or item.label
       -- Default `editRange` is range (start+end) or insert+replace ranges
-      item.textEdit.start = item.textEdit.start or edit_range.start
-      item.textEdit['end'] = item.textEdit['end'] or edit_range['end']
-      item.textEdit.insert = item.textEdit.insert or edit_range.insert
-      item.textEdit.replace = item.textEdit.replace or edit_range.replace
+      if edit_range.start then
+        item.textEdit.range = item.textEdit.range or edit_range
+      elseif edit_range.insert then
+        item.textEdit.insert = item.textEdit.insert or edit_range.insert
+        item.textEdit.replace = item.textEdit.replace or edit_range.replace
+      end
     end
   end
   return items
