@@ -127,13 +127,20 @@
 ---
 --- # Comparisons ~
 ---
---- - 'nvim-cmp':
----     - More complex design which allows multiple sources each in form of
----       separate plugin. `MiniCompletion` has two built in: LSP and fallback.
----     - Supports snippet expansion.
----     - Doesn't have customizable delays for basic actions.
----     - Doesn't allow fallback action.
----     - Doesn't provide signature help.
+--- - 'hrsh7th/nvim-cmp':
+---     - Implements own popup menu to show completion candidates, while this
+---       module reuses |ins-completion-menu|.
+---     - Has more complex design which allows multiple sources, each in a form of
+---       a separate plugin. This module has two built-in: LSP and fallback.
+---     - Requires separate plugin for automated signature help.
+---     - Implements own "ghost text" feature, while this module does not.
+---
+--- - 'Saghen/blink.cmp':
+---     - Mostly similar to 'nvim-cmp' comparison: provides more features at the
+---       cost of more code and config complexity, while this module is designed
+---       to provide only a handful of "enough" features while relying on Neovim's
+---       built-in capabilities as much as possible.
+---     - Both provide automated signature help out of the box.
 ---
 --- # Helpful mappings ~
 ---
