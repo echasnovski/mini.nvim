@@ -983,6 +983,7 @@ H.apply_item_defaults = function(items, defaults)
   if type(defaults) ~= 'table' then return items end
 
   local edit_range, has_edit_range = defaults.editRange, type(defaults.editRange) == 'table'
+  local edit_range_range = (edit_range or {}).start ~= nil and edit_range or nil
   for _, item in ipairs(items) do
     item.commitCharacters = item.commitCharacters or defaults.commitCharacters
     item.data = item.data or defaults.data
@@ -993,8 +994,7 @@ H.apply_item_defaults = function(items, defaults)
       -- Infer new text from `item.textEditText` designed for default edit case
       item.textEdit.newText = item.textEdit.newText or item.textEditText or item.label
       -- Default `editRange` is range (start+end) or insert+replace ranges
-      item.textEdit.start = item.textEdit.start or edit_range.start
-      item.textEdit['end'] = item.textEdit['end'] or edit_range['end']
+      item.textEdit.range = item.textEdit.range or edit_range_range
       item.textEdit.insert = item.textEdit.insert or edit_range.insert
       item.textEdit.replace = item.textEdit.replace or edit_range.replace
     end

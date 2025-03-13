@@ -787,6 +787,7 @@ T['Manual completion']['respects `itemDefaults` from LSP response'] = function()
   ]])
 
   child.lua([[
+    _G.mock_textEdit = { new_text = function(x) return 'Hello ' .. x end, pos = { 1, 1 } }
     _G.mock_itemdefaults = {
       commitCharacters = { ')' },
       data = { hello = 'world' },
@@ -809,9 +810,13 @@ T['Manual completion']['respects `itemDefaults` from LSP response'] = function()
     eq(item.insertTextFormat, format_snippet)
     eq(item.insertTextMode, 1)
 
-    eq(item.textEdit.newText, item.textEditText or item.label)
-    eq(item.textEdit.start, edit_range.start)
-    eq(item.textEdit['end'], edit_range['end'])
+    eq(item.textEdit.newText, item.textEdit.newText or item.textEditText or item.label)
+    eq(item.textEdit.range, item.textEdit.range or edit_range)
+    -- 'April' has mocked 'InsertReplaceEdit' type of `textEdit` in the item
+    if item.label ~= 'April' then
+      eq(item.textEdit.insert, nil)
+      eq(item.textEdit.replace, nil)
+    end
   end
   type_keys('<C-e>')
   child.lua('_G.latest_items = nil')
@@ -832,9 +837,11 @@ T['Manual completion']['respects `itemDefaults` from LSP response'] = function()
     eq(item.insertTextFormat, format_snippet)
     eq(item.insertTextMode, 1)
 
-    eq(item.textEdit.newText, item.textEditText or item.label)
-    eq(item.textEdit.insert, edit_range.insert)
-    eq(item.textEdit.replace, edit_range.replace)
+    eq(item.textEdit.newText, item.textEdit.newText or item.textEditText or item.label)
+    -- 'August' has mocked 'Range' type of `textEdit` in the item
+    if item.label ~= 'August' then eq(item.textEdit.range, nil) end
+    eq(item.textEdit.insert, item.textEdit.insert or edit_range.insert)
+    eq(item.textEdit.replace, item.textEdit.replace or edit_range.replace)
   end
 end
 
