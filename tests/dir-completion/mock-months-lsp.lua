@@ -196,10 +196,15 @@ Months.requests = {
 }
 
 -- Replace builtin functions with custom testable ones ========================
-vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+local make_request = function(bufnr, method, params, callback)
   local requests = Months.requests[method]
   if requests == nil then return end
   callback(requests(params))
+end
+
+vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+  if _G.mock_request_delay == nil then return make_request(bufnr, method, params, callback) end
+  vim.defer_fn(function() make_request(bufnr, method, params, callback) end, _G.mock_request_delay)
 end
 
 local get_lsp_clients = function() return { Months.client } end

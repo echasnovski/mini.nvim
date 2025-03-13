@@ -526,6 +526,35 @@ T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = fun
   eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju', 'J' })
 end
 
+T['Autocompletion']['forces new LSP completion for `isIncomplete` even if canceled'] = function()
+  child.lua([[
+    _G.lines_at_request = {}
+    local buf_request_all_orig = vim.lsp.buf_request_all
+    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+      table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
+      return buf_request_all_orig(bufnr, method, params, callback)
+    end
+  ]])
+  child.set_size(10, 20)
+  child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
+
+  child.lua('_G.mock_request_delay = ' .. small_time)
+
+  -- Mock incomplete completion list which contains only months 1-6
+  child.lua('_G.mock_isincomplete = true')
+  type_keys('i', 'J', '<C-Space>')
+  sleep(small_time + small_time)
+  eq(child.lua_get('_G.lines_at_request'), { 'J' })
+
+  -- Should force two requests even though the first one was canceled due to
+  -- fast typing
+  child.lua('_G.mock_isincomplete = false')
+  type_keys('u', 'l')
+  sleep(small_time + small_time)
+  child.expect_screenshot()
+  eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju', 'Jul' })
+end
+
 T['Autocompletion']['respects `config.delay.completion`'] = function()
   child.lua('MiniCompletion.config.delay.completion = ' .. (2 * default_completion_delay))
 

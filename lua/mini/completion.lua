@@ -433,7 +433,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     local process_items, is_incomplete = H.get_config().lsp_completion.process_items, false
     process_items = process_items or MiniCompletion.default_process_items
     local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
-      is_incomplete = is_incomplete or response.isIncomplete
+      is_incomplete = is_incomplete or (response.isIncomplete == true)
       -- Response can be `CompletionList` with 'items' field plus their
       -- defaults or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
@@ -443,7 +443,8 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
 
-    H.completion.lsp.status = is_incomplete and 'done-isincomplete' or 'done'
+    H.completion.lsp.status = 'done'
+    H.completion.lsp.is_incomplete = is_incomplete
 
     -- Maybe trigger fallback action
     if vim.tbl_isempty(words) and H.completion.fallback then return H.trigger_fallback() end
@@ -544,7 +545,8 @@ H.keys = {
 -- Field `lsp` is a table describing state of all used LSP requests. It has the
 -- following structure:
 -- - id: identifier (consecutive numbers).
--- - status: one of 'sent', 'received', 'done', 'done-isincomplete', 'canceled'
+-- - status: one of 'sent', 'received', 'done', 'canceled'
+-- - is_incomplete: whether request was incomplete and require recomputing
 -- - result: result of request.
 -- - cancel_fun: function which cancels current request.
 
@@ -555,7 +557,7 @@ H.completion = {
   source = nil,
   text_changed_id = 0,
   timer = vim.loop.new_timer(),
-  lsp = { id = 0, status = nil, result = nil, cancel_fun = nil },
+  lsp = { id = 0, status = nil, is_incomplete = false, result = nil, cancel_fun = nil },
   start_pos = {},
 }
 
@@ -693,13 +695,15 @@ H.auto_completion = function()
 
   H.completion.timer:stop()
 
-  local is_incomplete = H.completion.lsp.status == 'done-isincomplete'
+  local is_incomplete = H.completion.lsp.is_incomplete
   local force = H.is_lsp_trigger(vim.v.char, 'completion') or is_incomplete
   if force then
-    -- If character is LSP trigger, force fresh LSP completion later
-    -- Check LSP trigger before checking for pumvisible because it should be
-    -- forced even if there are visible candidates
-    H.stop_completion(false)
+    -- Force fresh LSP completion if needed. Check before checking pumvisible
+    -- because it should be forced even if there are visible candidates.
+    -- Keep positive `is_incomplete` to allow fast typing and not "forget" that
+    -- list was incomplete after the second fast key press. This will force LSP
+    -- completion until `isIncomplete=false` response or general `stop()`.
+    H.stop_completion(false, is_incomplete)
   elseif H.pumvisible() then
     -- Do nothing if popup is visible. `H.pumvisible()` might be `true` even if
     -- there is no popup. It is common when manually typing candidate followed
@@ -874,11 +878,11 @@ end
 H.default_fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false) end
 
 -- Stop actions ---------------------------------------------------------------
-H.stop_completion = function(keep_source)
+H.stop_completion = function(keep_source, keep_lsp_is_incomplete)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
   H.completion.fallback, H.completion.force = true, false
-  if H.completion.lsp.status == 'done-isincomplete' then H.completion.lsp.status = 'done' end
+  if not keep_lsp_is_incomplete then H.completion.lsp.is_incomplete = false end
   if not keep_source then H.completion.source = nil end
 end
 
