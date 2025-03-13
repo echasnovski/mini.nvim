@@ -730,9 +730,11 @@ H.auto_completion = function()
   if H.completion.source == 'lsp' then return H.trigger_fallback() end
 
   -- Debounce delay improves experience (can type fast without many popups)
-  -- Request immediately if improving incomplete suggestions (less flickering)
-  if is_incomplete then return H.trigger_twostep() end
-  H.completion.timer:start(H.get_config().delay.completion, 0, vim.schedule_wrap(H.trigger_twostep))
+  -- Request right away if improving incomplete suggestions (less flickering),
+  -- but still with `vim.schedule` because line is still not up to date during
+  -- `InsertCharPre` event.
+  local delay = is_incomplete and 0 or H.get_config().delay.completion
+  H.completion.timer:start(delay, 0, vim.schedule_wrap(H.trigger_twostep))
 end
 
 H.auto_info = function()

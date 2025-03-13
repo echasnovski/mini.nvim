@@ -470,6 +470,14 @@ T['Autocompletion']['works with `<BS>`'] = function()
 end
 
 T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = function()
+  child.lua([[
+    _G.lines_at_request = {}
+    local buf_request_all_orig = vim.lsp.buf_request_all
+    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+      table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
+      return buf_request_all_orig(bufnr, method, params, callback)
+    end
+  ]])
   mock_completefunc_lsp_tracking()
   child.set_size(10, 20)
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
@@ -483,6 +491,7 @@ T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = fun
   -- - Should only call two times, as per `:h complete-functions`: first to
   --   find the start column, second to return completion suggestions.
   eq(child.lua_get('_G.n_completfunc_lsp'), 2)
+  eq(child.lua_get('_G.lines_at_request'), { 'J' })
 
   -- Should force new request which this time will be complete
   child.lua('_G.mock_isincomplete = false')
@@ -492,14 +501,19 @@ T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = fun
   -- - NOTE: not using completefunc to make an LSP request is a key to reduce
   --   flickering in this use case (as executing `<C-x>...` forces popup hide).
   eq(child.lua_get('_G.n_completfunc_lsp'), 4)
+  -- - Should request when line is up to date (i.e. not *exactly* inside
+  --   `InsertCharPre`).
+  eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju' })
 
   -- Shouldn't force new requests or call 'completefunc' for complete responses
   type_keys('n')
   eq(child.lua_get('_G.n_textdocument_completion'), 2)
   eq(child.lua_get('_G.n_completfunc_lsp'), 4)
+  eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju' })
   type_keys('<BS>')
   eq(child.lua_get('_G.n_textdocument_completion'), 2)
   eq(child.lua_get('_G.n_completfunc_lsp'), 4)
+  eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju' })
 
   -- Should force new request if deleting past the start of previous request.
   -- This time response will be complete.
@@ -509,6 +523,7 @@ T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = fun
   -- - Should call three times: first to make a request, second and third to
   --   act as a regular 'completefunc'/'omnifunc'
   eq(child.lua_get('_G.n_completfunc_lsp'), 7)
+  eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju', 'J' })
 end
 
 T['Autocompletion']['respects `config.delay.completion`'] = function()
