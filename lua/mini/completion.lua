@@ -467,11 +467,7 @@ end
 ---
 ---@return table Array of processed items from LSP response.
 MiniCompletion.default_process_items = function(items, base)
-  local res = vim.tbl_filter(
-    function(item) return vim.startswith(item.filterText or H.get_completion_word(item), base) end,
-    items
-  )
-
+  local res = vim.tbl_filter(function(x) return vim.startswith(x.filterText or x.label, base) end, items)
   res = vim.deepcopy(res)
   table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
 

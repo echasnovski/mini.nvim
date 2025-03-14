@@ -767,11 +767,14 @@ end
 T['Manual completion']['prefers completion range from LSP response'] = function()
   set_lines({})
   type_keys('i', 'months.')
-  -- Mock `textEdit` as in `tsserver` when called after `.`
-  child.lua([[_G.mock_textEdit = {
-    pos = vim.api.nvim_win_get_cursor(0),
-    new_text = function(name) return '.' .. name end,
-  } ]])
+  -- Mock `textEdit`+`filterText` as in `tsserver` when called after `.`
+  child.lua([[
+    _G.mock_textEdit = {
+      pos = vim.api.nvim_win_get_cursor(0),
+      new_text = function(name) return '.' .. name end,
+    }
+    _G.mock_filterText = function(name) return '.' .. name end
+  ]])
   type_keys('<C-space>')
 
   eq(get_completion('abbr'), { 'April', 'August' })
