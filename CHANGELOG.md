@@ -48,6 +48,10 @@
 
 - FEATURE: improve detection and formatting for types in `@param`, `@return`, and similar.
 
+## mini.fuzzy
+
+- BREAKING: update `process_lsp_items()` to only use `filterText` and `label` item fields during fuzzy matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
+
 ## mini.hues
 
 - FEATURE: add support for colored markdown headings.

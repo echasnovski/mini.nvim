@@ -152,15 +152,7 @@ end
 ---@param items table Array with LSP 'textDocument/completion' response items.
 ---@param base string Word to complete.
 MiniFuzzy.process_lsp_items = function(items, base)
-  -- Extract completion words from items
-  local words = vim.tbl_map(function(x)
-    if type(x.textEdit) == 'table' and type(x.textEdit.newText) == 'string' then return x.textEdit.newText end
-    if type(x.insertText) == 'string' then return x.insertText end
-    if type(x.label) == 'string' then return x.label end
-    return ''
-  end, items)
-
-  -- Fuzzy match
+  local words = vim.tbl_map(function(x) return x.filterText or x.label end, items)
   local _, match_inds = MiniFuzzy.filtersort(base, words)
   return vim.tbl_map(function(i) return items[i] end, match_inds)
 end
