@@ -52,6 +52,7 @@
 ## mini.fuzzy
 
 - BREAKING: update `process_lsp_items()` to only use `filterText` and `label` item fields during fuzzy matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
+- BREAKING: treat empty `word` as matching any candidate (matched positions is empty array and score is -1). This behavior is usually more useful in practice.
 
 ## mini.hues
 

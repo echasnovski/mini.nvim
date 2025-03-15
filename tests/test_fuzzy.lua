@@ -72,7 +72,7 @@ T['match()']['handles cases when match is impossible'] = function()
   eq(child.lua_get([[MiniFuzzy.match('ab', 'a')]]), { score = -1 })
 
   -- Empty word
-  eq(child.lua_get([[MiniFuzzy.match('', 'abc')]]), { score = -1 })
+  eq(child.lua_get([[MiniFuzzy.match('', 'abc')]]), { positions = {}, score = -1 })
 end
 
 local validate_match = function(word, candidate, positions)
@@ -189,7 +189,7 @@ T['filtersort()']['preserves original order with equal matching score'] = functi
 end
 
 T['filtersort()']['works with empty arguments'] = function()
-  validate_filtersort('', { 'a', 'b', '_a' }, {})
+  validate_filtersort('', { 'a', 'b', '_a' }, { 'a', 'b', '_a' })
   validate_filtersort('a', {}, {})
 end
 
@@ -205,6 +205,10 @@ T['process_lsp_items()']['works'] = function()
   local validate = function(items) eq(process_lsp_items(items, 'a'), { items[3], items[2], items[1] }) end
   validate({ new_item('___a'), new_item('__a'), new_item('_a') })
   validate({ new_item(nil, '___a'), new_item(nil, '__a'), new_item(nil, '_a') })
+
+  -- Should match all as is for empty string `base`
+  local items = { new_item(nil, '___a'), new_item(nil, '__a'), new_item(nil, '_a') }
+  eq(process_lsp_items(items, ''), items)
 end
 
 T['process_lsp_items()']['correctly extracts candidate from fields'] = function()

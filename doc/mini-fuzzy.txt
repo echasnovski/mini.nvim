@@ -43,7 +43,7 @@ See |mini.nvim-buffer-local-config| for more details.
 General design uses only width of found match and index of first letter
 match. No special characters or positions (like in fzy and fzf) are used.
 
-Given input `word` and target `candidate`:
+Given non-empty input `word` and target `candidate`:
 - The goal is to find matching between `word`'s letters and letters in
   `candidate` which minimizes certain score. It is assumed that order of
   letters in `word` and those matched in `candidate` should be the same.
@@ -108,9 +108,10 @@ Parameters ~
 Return ~
 `(table)` Matching information:
   - <positions> `(table|nil)` - array with letter indexes inside `candidate`
-    which matched to corresponding letters in `word`. It is `nil` if no match.
+    which matched to corresponding letters in `word`. It is empty array if
+    `word` is empty string and `nil` if no match.
   - <score> `number` - positive number representing how good the match is
-    (lower is better). It is `-1` if no match.
+    (lower is better). It is `-1` if no match or word is empty string.
 
 ------------------------------------------------------------------------------
                                                         *MiniFuzzy.filtersort()*

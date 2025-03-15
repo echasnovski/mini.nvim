@@ -41,7 +41,7 @@
 --- General design uses only width of found match and index of first letter
 --- match. No special characters or positions (like in fzy and fzf) are used.
 ---
---- Given input `word` and target `candidate`:
+--- Given non-empty input `word` and target `candidate`:
 --- - The goal is to find matching between `word`'s letters and letters in
 ---   `candidate` which minimizes certain score. It is assumed that order of
 ---   letters in `word` and those matched in `candidate` should be the same.
@@ -111,9 +111,10 @@ MiniFuzzy.config = {
 ---
 ---@return table Matching information:
 ---   - <positions> `(table|nil)` - array with letter indexes inside `candidate`
----     which matched to corresponding letters in `word`. It is `nil` if no match.
+---     which matched to corresponding letters in `word`. It is empty array if
+---     `word` is empty string and `nil` if no match.
 ---   - <score> `number` - positive number representing how good the match is
----     (lower is better). It is `-1` if no match.
+---     (lower is better). It is `-1` if no match or word is empty string.
 MiniFuzzy.match = function(word, candidate)
   -- Use 'smart case'
   candidate = word == word:lower() and candidate:lower() or candidate
@@ -236,7 +237,8 @@ end
 ---@private
 H.find_best_positions = function(letters, candidate)
   local n_candidate, n_letters = #candidate, #letters
-  if n_letters == 0 or n_candidate < n_letters then return nil end
+  if n_letters == 0 then return {} end
+  if n_candidate < n_letters then return nil end
 
   -- Search forward to find matching positions with left-most last letter match
   local pos_last = 0
