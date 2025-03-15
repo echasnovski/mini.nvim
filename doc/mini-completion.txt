@@ -361,7 +361,7 @@ Parameters ~
       - `'fuzzy'` - filter and sort with |matchfuzzy()| using `filterText`.
       - `'none'` - no filter and no sort.
     If callable, should take `items` and `base` arguments and return items array.
-    Default: `'prefix'`.
+    Default: `'fuzzy'` if 'completeopt' contains "fuzzy", `'prefix'` otherwise.
 
 Return ~
 `(table)` Array of processed items from LSP response.

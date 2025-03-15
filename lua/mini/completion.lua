@@ -482,14 +482,14 @@ end
 ---       - `'fuzzy'` - filter and sort with |matchfuzzy()| using `filterText`.
 ---       - `'none'` - no filter and no sort.
 ---     If callable, should take `items` and `base` arguments and return items array.
----     Default: `'prefix'`.
+---     Default: `'fuzzy'` if 'completeopt' contains "fuzzy", `'prefix'` otherwise.
 ---
 ---@return table Array of processed items from LSP response.
 MiniCompletion.default_process_items = function(items, base, opts)
   opts = opts or {}
 
   -- NOTE: custom filter+sort is important with frequent `isIncomplete`
-  local fs = opts.filtersort or 'prefix'
+  local fs = opts.filtersort or (vim.o.completeopt:find('fuzzy') ~= nil and 'fuzzy' or 'prefix')
   if type(fs) == 'string' then fs = H.filtersort_methods[fs] end
   if not vim.is_callable(fs) then H.error('`filtersort` should be callable or one of "prefix", "fuzzy", "none"') end
   local res = fs(items, base)

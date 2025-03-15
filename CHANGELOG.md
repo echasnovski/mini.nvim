@@ -44,7 +44,7 @@
     - Show `labelDetails` as a part of the popup menu via `menu` completion item field.
 - BREAKING: prefer to not use functions as default config values. In particular, for `lsp_completion.process_items` (use `nil` with explicit fallback) and `fallback_action` (use `'<C-n>'`). This should not have any user facing effects and marked as breaking only because a structure of a default config has changed to be more aligned with other modules.
 - BREAKING FEATURE: update behavior and capabilities of `default_process_items()`:
-    - Add `filtersort` option to control how items are filtered and/or sorted.
+    - Add `filtersort` option to control how items are filtered and/or sorted. Its default value has new (breaking) value: do fuzzy matching if 'completeopt' option contains "fuzzy" entry; same as before otherwise.
     - Use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
 
 ## mini.doc

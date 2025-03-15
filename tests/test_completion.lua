@@ -291,6 +291,11 @@ local ref_fuzzy_items = {
 T['default_process_items()']['works'] = function()
   -- Should use 'prefix' filtersort if no 'fuzzy' in 'completeopt'
   eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "M")'), ref_prefix_items)
+
+  -- Should use 'fuzzy' filtersort if there is 'fuzzy' in 'completeopt'
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("Only Neovim>=0.11 has 'fuzzy' flag in 'completeopt'") end
+  child.o.completeopt = 'menuone,noselect,fuzzy'
+  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "l")'), ref_fuzzy_items)
 end
 
 T['default_process_items()']["highlights LSP kind if 'mini.icons' is enabled"] = function()
