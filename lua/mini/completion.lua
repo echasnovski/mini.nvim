@@ -458,27 +458,49 @@ end
 --- Default processing of LSP items
 ---
 --- Steps:
---- - Filter out items not starting with `base`.
---- - Sort by LSP specification.
+--- - Filter and sort items according to supplied method.
 --- - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 ---
+--- Example of forcing fuzzy matching: >lua
+---
+---   local opts = { filtersort = 'fuzzy' }
+---   local process_items = function(items, base)
+---     return MiniCompletion.default_process_items(items, base, opts)
+---   end
+---   require('mini.completion').setup({
+---     lsp_completion = { process_items = process_items },
+---   })
+--- <
 ---@param items table Array of items from LSP response.
 ---@param base string Base for which completion is done. See |complete-functions|.
+---@param opts table|nil Options. Possible fields:
+---   - <filtersort> `(string|function)` - method of filtering and sorting items.
+---     If string, should be one of the following:
+---       - `'prefix'` - filter out items not starting with `base`, sort according
+---         to LSP specification. Use `filterText` and `sortText` respectively with
+---         fallback to `label`.
+---       - `'fuzzy'` - filter and sort with |matchfuzzy()| using `filterText`.
+---       - `'none'` - no filter and no sort.
+---     If callable, should take `items` and `base` arguments and return items array.
+---     Default: `'prefix'`.
 ---
 ---@return table Array of processed items from LSP response.
-MiniCompletion.default_process_items = function(items, base)
-  local res = vim.tbl_filter(function(x) return vim.startswith(x.filterText or x.label, base) end, items)
-  res = vim.deepcopy(res)
-  table.sort(res, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
+MiniCompletion.default_process_items = function(items, base, opts)
+  opts = opts or {}
+
+  -- NOTE: custom filter+sort is important with frequent `isIncomplete`
+  local fs = opts.filtersort or 'prefix'
+  if type(fs) == 'string' then fs = H.filtersort_methods[fs] end
+  if not vim.is_callable(fs) then H.error('`filtersort` should be callable or one of "prefix", "fuzzy", "none"') end
+  local res = fs(items, base)
 
   -- Possibly add "kind" highlighting
-  if _G.MiniIcons ~= nil then
-    local add_kind_hlgroup = H.make_add_kind_hlgroup()
-    for _, item in ipairs(res) do
-      add_kind_hlgroup(item)
-    end
-  end
+  if _G.MiniIcons == nil then return res end
 
+  local add_kind_hlgroup = H.make_add_kind_hlgroup()
+  for _, item in ipairs(res) do
+    add_kind_hlgroup(item)
+  end
   return res
 end
 
@@ -962,6 +984,24 @@ H.process_lsp_response = function(request_result, processor)
 end
 
 H.is_lsp_current = function(cache, id) return cache.lsp.id == id and cache.lsp.status == 'sent' end
+
+H.filtersort_methods = {
+  prefix = function(items, base)
+    local res = vim.tbl_filter(function(x) return vim.startswith(H.lsp_get_filterword(x), base) end, items)
+    res = vim.deepcopy(res)
+    table.sort(res, H.lsp_item_compare)
+    return res
+  end,
+  fuzzy = function(items, base)
+    if base == '' then return vim.deepcopy(items) end
+    return vim.fn.matchfuzzy(items, base, { text_cb = H.lsp_get_filterword })
+  end,
+  none = function(items, _) return vim.deepcopy(items) end,
+}
+
+H.lsp_get_filterword = function(x) return x.filterText or x.label end
+
+H.lsp_item_compare = function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end
 
 -- Completion -----------------------------------------------------------------
 H.make_completion_request = function()

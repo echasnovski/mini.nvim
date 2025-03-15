@@ -43,7 +43,9 @@
     - Show `detail` highlighted as buffer's language at the start of info window, but only if `detail` provides information not already present in `documentation`. It was previously used as extra text in the popup menu (via `menu` field), but this doesn't quite follow LSP specification: `detail` and `documentation` fields can be delayed up until `completionItem/resolve` request which implies they should be treated similarly.
     - Show `labelDetails` as a part of the popup menu via `menu` completion item field.
 - BREAKING: prefer to not use functions as default config values. In particular, for `lsp_completion.process_items` (use `nil` with explicit fallback) and `fallback_action` (use `'<C-n>'`). This should not have any user facing effects and marked as breaking only because a structure of a default config has changed to be more aligned with other modules.
-- BREAKING: update `default_process_items()` to only use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
+- BREAKING FEATURE: update behavior and capabilities of `default_process_items()`:
+    - Add `filtersort` option to control how items are filtered and/or sorted.
+    - Use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
 
 ## mini.doc
 

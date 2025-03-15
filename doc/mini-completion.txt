@@ -332,17 +332,36 @@ No need to use it directly, everything is setup in |MiniCompletion.setup|.
 
 ------------------------------------------------------------------------------
                                         *MiniCompletion.default_process_items()*
-            `MiniCompletion.default_process_items`({items}, {base})
+        `MiniCompletion.default_process_items`({items}, {base}, {opts})
 Default processing of LSP items
 
 Steps:
-- Filter out items not starting with `base`.
-- Sort by LSP specification.
+- Filter and sort items according to supplied method.
 - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 
+Example of forcing fuzzy matching: >lua
+
+  local opts = { filtersort = 'fuzzy' }
+  local process_items = function(items, base)
+    return MiniCompletion.default_process_items(items, base, opts)
+  end
+  require('mini.completion').setup({
+    lsp_completion = { process_items = process_items },
+  })
+<
 Parameters ~
 {items} `(table)` Array of items from LSP response.
 {base} `(string)` Base for which completion is done. See |complete-functions|.
+{opts} `(table|nil)` Options. Possible fields:
+  - <filtersort> `(string|function)` - method of filtering and sorting items.
+    If string, should be one of the following:
+      - `'prefix'` - filter out items not starting with `base`, sort according
+        to LSP specification. Use `filterText` and `sortText` respectively with
+        fallback to `label`.
+      - `'fuzzy'` - filter and sort with |matchfuzzy()| using `filterText`.
+      - `'none'` - no filter and no sort.
+    If callable, should take `items` and `base` arguments and return items array.
+    Default: `'prefix'`.
 
 Return ~
 `(table)` Array of processed items from LSP response.

@@ -278,12 +278,19 @@ T['default_process_items()'] = new_set({
   },
 })
 
+local ref_prefix_items = {
+  { kind = 2, label = 'March', sortText = '003' },
+  { kind = 2, label = 'May', sortText = '005' },
+}
+
+local ref_fuzzy_items = {
+  { kind = 100, label = 'July', sortText = '007' },
+  { kind = 2, label = 'April', sortText = '004' },
+}
+
 T['default_process_items()']['works'] = function()
-  local ref_processed_items = {
-    { kind = 2, label = 'March', sortText = '003' },
-    { kind = 2, label = 'May', sortText = '005' },
-  }
-  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "M")'), ref_processed_items)
+  -- Should use 'prefix' filtersort if no 'fuzzy' in 'completeopt'
+  eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "M")'), ref_prefix_items)
 end
 
 T['default_process_items()']["highlights LSP kind if 'mini.icons' is enabled"] = function()
@@ -313,6 +320,54 @@ T['default_process_items()']['works after `MiniIcons.tweak_lsp_kind()`'] = funct
     { kind = 100, kind_hlgroup = nil, label = 'July', sortText = '007' },
   }
   eq(child.lua_get('MiniCompletion.default_process_items(_G.items, "J")'), ref_processed_items)
+end
+
+T['default_process_items()']['respects `opts.filtersort`'] = function()
+  local all_items = child.lua_get('_G.items')
+  local validate = function(method, base, ref)
+    child.lua('_G.method = ' .. vim.inspect(method))
+    child.lua('_G.base = ' .. vim.inspect(base))
+    local out = child.lua([[
+      local copy_items = vim.deepcopy(_G.items)
+      local processed = MiniCompletion.default_process_items(_G.items, _G.base, { filtersort = _G.method })
+      local res = vim.deepcopy(processed)
+      if processed[1] ~= nil then processed[1].new_field = 'hello' end
+      return { processed = res, returns_copy = _G.items[1].new_field == nil}
+    ]])
+    eq(out.processed, ref)
+    eq(out.returns_copy, true)
+  end
+
+  validate(nil, 'l', {})
+  validate('fuzzy', 'l', ref_fuzzy_items)
+  validate('none', 'l', all_items)
+
+  -- Should return all items with empty string base
+  local all_items_sorted = vim.deepcopy(all_items)
+  table.sort(all_items_sorted, function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end)
+
+  validate(nil, '', all_items_sorted)
+  validate('fuzzy', '', all_items)
+  validate('none', '', all_items)
+
+  -- Should allow callable `filtersort`
+  child.lua([[
+    _G.args = {}
+    local filtersort = function(...)
+      table.insert(_G.args, { ... })
+      return { { label = 'New item' } }
+    end
+    _G.processed = MiniCompletion.default_process_items(_G.items, "l", { filtersort = filtersort })
+  ]])
+  eq(child.lua_get('_G.processed'), { { label = 'New item' } })
+  eq(child.lua_get('_G.args'), { { all_items, 'l' } })
+end
+
+T['default_process_items()']['validates input'] = function()
+  expect.error(
+    function() child.lua('MiniCompletion.default_process_items({}, "", { filtersort = 1 })') end,
+    '`filtersort`.*callable or one of'
+  )
 end
 
 -- Integration tests ==========================================================
