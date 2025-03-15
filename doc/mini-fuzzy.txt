@@ -34,7 +34,7 @@ See |mini.nvim-buffer-local-config| for more details.
 1. Currently there is no explicit design to work with multibyte symbols,
    but simple examples should work.
 2. Smart case is used: case insensitive if input word (which is usually a
-    user input) is all lower case. Case sensitive otherwise.
+   user input) is all lower case. Case sensitive otherwise.
 
 ------------------------------------------------------------------------------
                                                            *MiniFuzzy-algorithm*
@@ -45,16 +45,19 @@ match. No special characters or positions (like in fzy and fzf) are used.
 
 Given input `word` and target `candidate`:
 - The goal is to find matching between `word`'s letters and letters in
-  `candidate`, which minimizes certain score. It is assumed that order of
+  `candidate` which minimizes certain score. It is assumed that order of
   letters in `word` and those matched in `candidate` should be the same.
+
 - Matching is represented by matched positions: an array `positions` of
   integers with length equal to number of letters in `word`. The following
   should be always true in case of a match: `candidate`'s letter at index
   `positions[i]` is letters[i]` for all valid `i`.
+
 - Matched positions are evaluated based only on two features: their width
   (number of indexes between first and last positions) and first match
   (index of first letter match). There is a global setting `cutoff` for
   which all feature values greater than it can be considered "equally bad".
+
 - Score of matched positions is computed with following explicit formula:
   `cutoff * min(width, cutoff) + min(first, cutoff)`. It is designed to be
   equivalent to first comparing widths (lower is better) and then comparing
@@ -62,6 +65,7 @@ Given input `word` and target `candidate`:
     - '_time' (width 4) will have a better match than 't_ime' (width 5).
     - 'time_a' (width 4, first 1) will have a better match than 'a_time'
       (width 4, first 3).
+
 - Final matched positions are those which minimize score among all possible
   matched positions of `word` and `candidate`.
 
@@ -95,30 +99,27 @@ Default values:
 ------------------------------------------------------------------------------
                                                              *MiniFuzzy.match()*
                      `MiniFuzzy.match`({word}, {candidate})
-Compute match data of input `word` and `candidate` strings
-
-It tries to find best match for input string `word` (usually user input)
-and string `candidate`. Returns table with elements:
-- `positions` - array with letter indexes inside `candidate` which
-  matched to corresponding letters in `word`. Or `nil` if no match.
-- `score` - positive number representing how good the match is (lower is
-  better). Or `-1` if no match.
+Compute match data
 
 Parameters ~
 {word} `(string)` Input word (usually user input).
 {candidate} `(string)` Target word (usually with which matching is done).
 
 Return ~
-`(table)` Table with matching information (see function's description).
+`(table)` Matching information:
+  - <positions> `(table|nil)` - array with letter indexes inside `candidate`
+    which matched to corresponding letters in `word`. It is `nil` if no match.
+  - <score> `number` - positive number representing how good the match is
+    (lower is better). It is `-1` if no match.
 
 ------------------------------------------------------------------------------
                                                         *MiniFuzzy.filtersort()*
                `MiniFuzzy.filtersort`({word}, {candidate_array})
 Filter string array
 
-This leaves only those elements of input array which matched with `word`
-and sorts from best to worst matches (based on score and index in original
-array, both lower is better).
+- Keep only input elements which match `word`.
+- Sort from best to worst matches (based on score and index in original
+  array, both lower is better).
 
 Parameters ~
 {word} `(string)` String which will be searched.
@@ -137,13 +138,16 @@ Parameters ~
 {items} `(table)` Array with LSP 'textDocument/completion' response items.
 {base} `(string)` Word to complete.
 
+Return ~
+`(table)` Array of items with text (`filterText` or `label`) fuzzy matching `base`.
+
 ------------------------------------------------------------------------------
                                               *MiniFuzzy.get_telescope_sorter()*
                     `MiniFuzzy.get_telescope_sorter`({opts})
 Custom getter for `telescope.nvim` sorter
 
-Designed to be used as value for |telescope.defaults.file_sorter| and
-|telescope.defaults.generic_sorter| inside `setup()` call.
+Designed to be used as value for |telescope.defaults.file_sorter|
+and |telescope.defaults.generic_sorter|.
 
 Parameters ~
 {opts} `(table|nil)` Options (currently not used).
