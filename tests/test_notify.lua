@@ -389,6 +389,7 @@ T['update()'] = new_set()
 local update = forward_lua('MiniNotify.update')
 
 T['update()']['works'] = function()
+  mock_gettimeofday()
   child.lua([[
     MiniNotify.config.content.format = function(notif)
       return (notif.data.a > 10 and 'NEW' or 'OLD') .. ' ' .. notif.msg
