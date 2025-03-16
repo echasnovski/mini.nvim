@@ -981,7 +981,10 @@ H.process_lsp_response = function(request_result, processor)
 
   local res = {}
   for client_id, item in pairs(request_result) do
-    if not item.err and item.result then vim.list_extend(res, processor(item.result, client_id) or {}) end
+    -- TODO: Use only `.err` after compatibility with Neovim=0.10 is dropped
+    if not (item.err or item.error) and item.result then
+      vim.list_extend(res, processor(item.result, client_id) or {})
+    end
   end
 
   return res
@@ -1124,7 +1127,9 @@ end
 H.make_lsp_extra_actions = function(lsp_data)
   -- Prefer resolved item over the one from 'textDocument/completion'
   local resolved = (H.info.lsp.result or {})[lsp_data.client_id]
-  local item = (resolved == nil or resolved.err) and lsp_data.completion_item or resolved.result
+  -- TODO: Use only `.err` after compatibility with Neovim=0.10 is dropped
+  local has_resolved = resolved and not (resolved.err or resolved.error) and resolved.result
+  local item = has_resolved and resolved.result or lsp_data.completion_item
 
   if item.additionalTextEdits == nil and not lsp_data.needs_snippet_insert then return end
   local snippet = lsp_data.needs_snippet_insert and H.get_completion_word(item) or nil
@@ -1611,7 +1616,8 @@ H.get_completion_start = function(lsp_result)
 end
 
 H.get_completion_start_server = function(response_data, line_num)
-  if response_data.err or type(response_data.result) ~= 'table' then return end
+  -- TODO: Use only `.err` after compatibility with Neovim=0.10 is dropped
+  if response_data.err or response_data.error or type(response_data.result) ~= 'table' then return end
   local items = response_data.result.items or response_data.result
   for _, item in pairs(items) do
     if type(item.textEdit) == 'table' then
