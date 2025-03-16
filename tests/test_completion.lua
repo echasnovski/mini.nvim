@@ -726,6 +726,12 @@ T['Manual completion']['works with two-step completion'] = function()
   eq(get_completion(), { 'Jackpot' })
 end
 
+T['Manual completion']['handles request errors'] = function()
+  child.lua('_G.mock_completion_error = "Error"')
+  type_keys('i', 'J', '<C-Space>')
+  eq(get_completion(), { 'Jackpot' })
+end
+
 T['Manual completion']['uses `vim.lsp.protocol.CompletionItemKind` in LSP step'] = function()
   child.set_size(17, 30)
   child.lua([[vim.lsp.protocol.CompletionItemKind = {
@@ -1016,6 +1022,14 @@ T['Information window']['works'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['handles request errors'] = function()
+  child.lua('_G.mock_resolve_error = "Error"')
+  type_keys('i', 'J', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  eq(get_floating_windows(), {})
+end
+
 T['Information window']['respects `config.delay.info`'] = function()
   child.lua('MiniCompletion.config.delay.info = ' .. (2 * default_info_delay))
   validate_info_win(2 * default_info_delay)
@@ -1250,6 +1264,13 @@ T['Signature help']['works'] = function()
   child.set_size(7, 30)
   validate_signature_win(default_signature_delay)
   child.expect_screenshot()
+end
+
+T['Signature help']['handles request errors'] = function()
+  child.lua('_G.mock_signature_error = "Error"')
+  type_keys('i', 'abc(')
+  sleep(default_signature_delay + small_time)
+  eq(get_floating_windows(), {})
 end
 
 T['Signature help']['respects `config.delay.signature`'] = function()
@@ -1888,20 +1909,33 @@ T['Snippets']['prefer snippet from resolved item'] = function()
   -- or `textEdti` in 'completionItem/resolve', this still can probably happen.
 
   child.lua([[
+    local error_field = vim.fn.has('nvim-0.11') == 1 and 'err' or 'error'
     local buf_request_all_orig = vim.lsp.buf_request_all
     vim.lsp.buf_request_all = function(bufnr, method, params, callback)
       if method ~= 'completionItem/resolve' then return buf_request_all_orig(bufnr, method, params, callback) end
       params.textEdit = { newText = 'Snippet $1 from resolve' }
-      callback({ { result = params } })
+      callback({ { [error_field] = _G.resolve_error, result = _G.resolve_error == nil and params or nil } })
     end
   ]])
 
+  local validate = function(ref_lines)
+    type_keys('i', '<C-Space>', '<C-n>')
+    -- - Wait for 'completionItem/resolve' request to be sent
+    sleep(default_info_delay + small_time)
+    type_keys('<C-y>')
+    eq(get_lines(), ref_lines)
+
+    type_keys('<C-c>')
+    set_lines({})
+    child.ensure_normal_mode()
+  end
+
   mock_lsp_snippets({ 'Snippet $1 original' })
-  type_keys('i', '<C-Space>', '<C-n>')
-  -- - Wait for 'completionItem/resolve' request to be sent
-  sleep(default_info_delay + small_time)
-  type_keys('<C-y>')
-  eq(get_lines(), { 'Snippet  from resolve' })
+  validate({ 'Snippet  from resolve' })
+
+  -- Should handle error in 'completionItem/resolve' response
+  child.lua('_G.resolve_error = "Error"')
+  validate({ 'Snippet  original' })
 end
 
 T['Snippets']['can be inserted together with additional text edits'] = function()

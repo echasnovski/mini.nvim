@@ -102,8 +102,14 @@ local construct_filterText = function(name)
   return _G.mock_filterText(name)
 end
 
+-- Neovim<0.11 uses 'error' field in `buf_request_all` to indicate error,
+-- while Neovim>=0.11 uses 'err'
+local error_field = vim.fn.has('nvim-0.11') == 1 and 'err' or 'error'
+
 Months.requests = {
   ['textDocument/completion'] = function(params)
+    if _G.mock_completion_error ~= nil then return { { [error_field] = _G.mock_completion_error } } end
+
     -- Count actual requests for easier "force completion" tests
     _G.n_textdocument_completion = (_G.n_textdocument_completion or 0) + 1
 
@@ -142,6 +148,8 @@ Months.requests = {
   end,
 
   ['completionItem/resolve'] = function(params)
+    if _G.mock_resolve_error ~= nil then return { { [error_field] = _G.mock_resolve_error } } end
+
     local doc = Months.data[params.label].documentation
     if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
     params.detail = Months.data[params.label].detail
@@ -153,6 +161,8 @@ Months.requests = {
   end,
 
   ['textDocument/signatureHelp'] = function(params)
+    if _G.mock_signature_error ~= nil then return { { [error_field] = _G.mock_signature_error } } end
+
     params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
 
     local n_line, n_col = params.position.line, params.position.character
