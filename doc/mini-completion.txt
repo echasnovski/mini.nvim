@@ -31,10 +31,13 @@ Features:
 
 - Automatic display in floating window of completion item info (via
   'completionItem/resolve' request) and signature help (with highlighting
-  of active parameter if LSP server provides such information). After opening,
-  window for signature help is fixed and is closed when there is nothing to
-  show, text is different or when leaving Insert mode.
-  Scroll in either info/signature window (`<C-f>` / `<C-b>` by default).
+  of active parameter if LSP server provides such information).
+  Signature help is shown if character to cursor's left is a dedicated trigger
+  character (configured in `signatureHelpProvider.triggerCharacters` of LSP
+  server capabilities) and updated without delay if is currently opened.
+  Already shown window for signature help is fixed and is closed when there
+  is nothing to show, its text is different, or when leaving Insert mode.
+  Scroll in either info/signature window with `<C-f>` / `<C-b>` (by default).
 
 - Automatic actions are done after some configurable amount of delay. This
   reduces computational load and allows fast typing (completion and

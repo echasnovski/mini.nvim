@@ -31,10 +31,13 @@
 ---
 --- - Automatic display in floating window of completion item info (via
 ---   'completionItem/resolve' request) and signature help (with highlighting
----   of active parameter if LSP server provides such information). After opening,
----   window for signature help is fixed and is closed when there is nothing to
----   show, text is different or when leaving Insert mode.
----   Scroll in either info/signature window (`<C-f>` / `<C-b>` by default).
+---   of active parameter if LSP server provides such information).
+---   Signature help is shown if character to cursor's left is a dedicated trigger
+---   character (configured in `signatureHelpProvider.triggerCharacters` of LSP
+---   server capabilities) and updated without delay if is currently opened.
+---   Already shown window for signature help is fixed and is closed when there
+---   is nothing to show, its text is different, or when leaving Insert mode.
+---   Scroll in either info/signature window with `<C-f>` / `<C-b>` (by default).
 ---
 --- - Automatic actions are done after some configurable amount of delay. This
 ---   reduces computational load and allows fast typing (completion and
@@ -225,8 +228,8 @@
 --     - On `CursorMovedI` start auto signature (if there is any active LSP
 --       client) with similar to completion timer pattern. Better event might
 --       be `InsertCharPre` but there are issues with 'autopair-type' plugins.
---     - Check if character left to cursor is appropriate (')' or LSP's
---       signature help trigger characters). If not, do nothing.
+--       Update immediately if already shown or after delay if character to the
+--       left is signature help trigger (after delay has passed).
 --     - If timer is activated, send 'textDocument/signatureHelp' request to
 --       all LSP clients. On callback, process their results. Window is opened
 --       if not already with the same text (its characteristics are computed
@@ -787,11 +790,12 @@ H.auto_signature = function()
   H.signature.timer:stop()
   if not H.has_lsp_clients('signatureHelpProvider') then return end
 
-  local left_char = H.get_left_char()
-  local char_is_trigger = left_char == ')' or H.is_lsp_trigger(left_char, 'signature')
-  if not char_is_trigger then return end
+  local is_shown = H.is_valid_win(H.signature.win_id)
+  local left_char_is_trigger = H.is_lsp_trigger(H.get_left_char(), 'signature')
+  if not (is_shown or left_char_is_trigger) then return end
 
-  H.signature.timer:start(H.get_config().delay.signature, 0, vim.schedule_wrap(H.show_signature_window))
+  local delay = is_shown and 0 or H.get_config().delay.signature
+  H.signature.timer:start(delay, 0, vim.schedule_wrap(H.show_signature_window))
 end
 
 H.on_completedonepre = function()

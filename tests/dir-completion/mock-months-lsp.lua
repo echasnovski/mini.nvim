@@ -169,8 +169,8 @@ Months.requests = {
     local _, active_param_id = after_open_paren:gsub('%,', '%,')
 
     -- Compute what is displayed in signature help: text and parameter info
-    -- (for highlighting) based on latest word
-    local word = line:match('%S+$')
+    -- (for highlighting) based on latest function call
+    local word = line:match('(%S+%()[^%(]*$')
     local label, parameters
     if word == 'long(' then
       label = string.rep('a ', 1000)

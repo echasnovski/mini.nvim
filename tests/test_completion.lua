@@ -1271,13 +1271,33 @@ T['Signature help']['updates highlighting of active parameter'] = function()
   sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 
+  -- Should update without configurable delay as window is already shown
   type_keys('1,')
-  sleep(default_signature_delay + small_time)
+  sleep(small_time)
   child.expect_screenshot()
 
   -- As there are only two parameters, nothing should be highlighted
-  type_keys('2,')
+  type_keys('222,')
+  sleep(small_time)
+  child.expect_screenshot()
+
+  -- Should update if cursor is moved without typing (like during snippet jump)
+  set_cursor(1, 7)
+  sleep(small_time)
+  child.expect_screenshot()
+end
+
+T['Signature help']['updates without delay with different window'] = function()
+  child.set_size(8, 35)
+  set_lines({ 'multiline(', 'abc(111, 222)' })
+  child.cmd('startinsert')
+  set_cursor(1, 10)
+
   sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+
+  set_cursor(2, 11)
+  sleep(small_time)
   child.expect_screenshot()
 end
 
