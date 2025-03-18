@@ -1119,7 +1119,8 @@ MiniAlign.gen_step.default_justify = function() return MiniAlign.new_step('justi
 --- Outline of how parts are converted to array of strings:
 --- - Convert `merge_delimiter` option to array of strings (single string is
 ---   converted as one-element array). Recycle this array to have length equal
----   to number of columns in parts minus 1.
+---   to number of columns in parts minus 1. Also possibly trim leading whitespace
+---   in first merge character to not affect indentation.
 --- - Exclude empty strings from parts. They add nothing to output except extra
 ---   usage of merge delimiter.
 --- - Concatenate each row interleaving with array of merge delimiters.
@@ -1606,11 +1607,14 @@ H.default_action_merge = function(parts, opts)
     delimiter_arr[j] = H.slice_mod(delimiter, j)
   end
 
-  -- Concat non-empty cells (empty cells at this point add only extra merge)
-  return vim.tbl_map(function(row)
-    local row_no_empty = vim.tbl_filter(function(s) return s ~= '' end, row)
-    return H.concat_array(row_no_empty, delimiter_arr)
-  end, parts)
+  -- Do not change indentation
+  local first_parts_are_indent = true
+  for i = 1, dims.row do
+    first_parts_are_indent = first_parts_are_indent and H.is_whitespace(parts[i][1])
+  end
+  delimiter_arr[1] = first_parts_are_indent and delimiter_arr[1]:gsub('^%s*', '') or delimiter_arr[1]
+
+  return vim.tbl_map(function(row) return H.concat_array(row, delimiter_arr) end, parts)
 end
 
 -- Work with modifiers --------------------------------------------------------
@@ -1992,8 +1996,11 @@ end
 H.concat_array = function(target_arr, concat_arr)
   local ext_arr = {}
   for i = 1, #target_arr - 1 do
-    table.insert(ext_arr, target_arr[i])
-    table.insert(ext_arr, concat_arr[i])
+    -- Concat non-empty cells (empty cells at this point add only extra merge)
+    if target_arr[i] ~= '' then
+      table.insert(ext_arr, target_arr[i])
+      table.insert(ext_arr, concat_arr[i])
+    end
   end
   table.insert(ext_arr, target_arr[#target_arr])
   return table.concat(ext_arr, '')

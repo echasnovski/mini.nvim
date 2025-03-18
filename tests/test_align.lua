@@ -968,6 +968,23 @@ T['gen_step']['default_merge()']['does not merge empty strings in parts'] = func
   validate_align_strings({ '=a' }, { merge_delimiter = '-' }, { '=-a' })
 end
 
+T['gen_step']['default_merge()']['preserves indentation with whitespace in merge delimmiter'] = function()
+  set_config_opts({ split_pattern = '=' })
+
+  -- Should not add whitespace to the first part if all of them are indent
+  validate_align_strings({ ' =a=b', '  =c=d' }, { merge_delimiter = ' ' }, { '  = a = b', '  = c = d' })
+  validate_align_strings({ ' =a=b', '=c=d' }, { merge_delimiter = ' ' }, { ' = a = b', ' = c = d' })
+  validate_align_strings({ '=a=b', '=c=d' }, { merge_delimiter = ' ' }, { '= a = b', '= c = d' })
+
+  validate_align_strings({ ' =a=b', '  =c=d' }, { merge_delimiter = ' _' }, { '  _= _a _= _b', '  _= _c _= _d' })
+
+  validate_align_strings({ ' =a=b', 'x=c=d' }, { merge_delimiter = ' ' }, { '  = a = b', 'x = c = d' })
+
+  child.o.tabstop = 2
+  validate_align_strings({ '\t=a=b', '\t\t=c=d' }, { merge_delimiter = '\t' }, { '\t  =\ta\t=\tb', '\t\t=\tc\t=\td' })
+  validate_align_strings({ '\t=a=b', '\t\t=c=d' }, { merge_delimiter = ' ' }, { '\t  = a = b', '\t\t= c = d' })
+end
+
 T['gen_step']['filter()'] = new_set()
 
 T['gen_step']['filter()']['works'] = function()

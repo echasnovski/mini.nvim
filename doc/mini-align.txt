@@ -810,7 +810,8 @@ between them.
 Outline of how parts are converted to array of strings:
 - Convert `merge_delimiter` option to array of strings (single string is
   converted as one-element array). Recycle this array to have length equal
-  to number of columns in parts minus 1.
+  to number of columns in parts minus 1. Also possibly trim leading whitespace
+  in first merge character to not affect indentation.
 - Exclude empty strings from parts. They add nothing to output except extra
   usage of merge delimiter.
 - Concatenate each row interleaving with array of merge delimiters.
