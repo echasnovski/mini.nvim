@@ -1719,6 +1719,28 @@ T['Textobject']['ensures that output is not covered by reference'] = function()
   validate_edit1d('a()b(c)', 2, 'a()b()', 5, 'ci)')
 end
 
+T['Textobject']['opens just enough folds'] = function()
+  set_lines({ '(a', 'b', 'c', 'd', 'e', 'f)' })
+
+  -- Manually create two nested closed folds
+  set_cursor(1, 0)
+  type_keys('zf', 'j')
+  set_cursor(3, 0)
+  type_keys('zf', 'j')
+  set_cursor(5, 0)
+  type_keys('zf', 'j')
+  eq(child.fn.foldclosed(2), 1)
+  eq(child.fn.foldclosed(4), 3)
+  eq(child.fn.foldclosed(6), 5)
+
+  -- Selecting textobject should open just enough folds
+  set_cursor(1, 0)
+  type_keys('v', 'i', ')')
+  eq(child.fn.foldclosed(2), -1)
+  eq(child.fn.foldclosed(4), 3)
+  eq(child.fn.foldclosed(6), -1)
+end
+
 T['Textobject']['prompts helper message after one idle second'] = new_set({ parametrize = { { 'a' }, { 'i' } } }, {
   test = function(key)
     child.set_size(5, 70)
