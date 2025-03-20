@@ -1674,6 +1674,42 @@ T['Textobject']['works with empty output region'] = function()
   validate(1)
 end
 
+T['Textobject']['handles horizontal view for out of view textobjects'] = function()
+  child.o.wrap = false
+  child.set_size(10, 25)
+
+  local validate = function(line, cursor_col, leftcol, keys, ref_leftcol)
+    set_lines({ line })
+    set_cursor(1, cursor_col)
+    child.fn.winrestview({ leftcol = leftcol })
+    type_keys(keys)
+    eq(child.fn.winsaveview().leftcol, ref_leftcol)
+
+    child.ensure_normal_mode()
+  end
+
+  -- Should try to do as least horizontal scroll as possible
+  local partially_visible_right = 'abcdefghijklmnopqrst "xxxxx"'
+  validate(partially_visible_right, 0, 0, { 'c', 'i', '"' }, 0)
+  validate(partially_visible_right, 0, 0, { 'v', 'i', '"' }, 2)
+
+  local completely_to_right = 'abcdefghijklmnopqrst        "xxxxx"'
+  validate(completely_to_right, 0, 0, { 'c', 'i', '"' }, 5)
+  validate(completely_to_right, 0, 0, { 'v', 'i', '"' }, 9)
+
+  local partially_visible_left = '"xxxxx" abcdefghijklmnopqrst'
+  validate(partially_visible_left, 8, 3, { 'c', 'il', '"' }, 1)
+  validate(partially_visible_left, 8, 3, { 'v', 'il', '"' }, 3)
+
+  local completely_to_left = '"xxxxx"        abcdefghijklmnopqrst'
+  validate(completely_to_left, 34, 10, { 'c', 'il', '"' }, 1)
+  validate(completely_to_left, 34, 10, { 'v', 'il', '"' }, 5)
+
+  local outside_left_right = '"xxxxx abcdefghijklmnopqrst xxxxx"'
+  validate(outside_left_right, 12, 4, { 'c', 'i', '"' }, 1)
+  validate(outside_left_right, 12, 4, { 'v', 'i', '"' }, 8)
+end
+
 T['Textobject']['works in command-line window'] = function()
   child.set_size(20, 40)
 
