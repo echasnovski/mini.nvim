@@ -11,6 +11,9 @@ local new_match = function(range, id, metadata_range)
       -- Track `id` for mocking query within node
       _id = id,
 
+      -- Mock that it is a "real" TSNode
+      tree = function() end,
+
       -- `node:range()` should return 0-based numbers (row1, col1, row2, col2)
       -- for end-exclusive region
       range = function(_) return unpack(range) end,

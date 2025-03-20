@@ -1004,6 +1004,11 @@ MiniSurround.gen_spec = { input = {}, output = {} }
 ---   (falls back to builtin methods otherwise). This allows for a more
 ---   advanced features (like multiple buffer languages, custom directives, etc.).
 ---   See `opts.use_nvim_treesitter` for how to disable this.
+--- - Be sure that query files don't contain unknown |treesitter-directives|
+---   (like `#make-range!`, for example). Otherwise surrounding with such captures
+---   might not be found as |vim.treesitter| won't treat them as captures. Verify
+---   with `:=vim.treesitter.query.get('lang', 'textobjects')` and see if the
+---   target capture is recognized as one.
 --- - It uses buffer's |filetype| to determine query language.
 --- - On large files it is slower than pattern-based textobjects. Still very
 ---   fast though (one search should be magnitude of milliseconds or tens of
@@ -1498,6 +1503,13 @@ end
 H.get_matched_range_pairs_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
   local outer_matches = ts_queries.get_capture_matches_recursively(0, captures.outer, 'textobjects')
+
+  -- Make sure that found matches contain `node` field that is actually a node,
+  -- otherwise later `get_capture_matches` will error as it requires an actual
+  -- `TSNode` object. This is needed as capture might be defined with custom
+  -- directive (like `#make-range!`) which 'nvim-treesitter' handles manually
+  -- by returning "extended range" and not `TSNode`.
+  outer_matches = vim.tbl_filter(function(x) return x.node.tree ~= nil end, outer_matches)
 
   -- Pick inner range as the biggest range for node matching inner query. This
   -- is needed because query output is not quaranteed to come in order, so just
