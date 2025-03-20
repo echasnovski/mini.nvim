@@ -210,10 +210,8 @@ MiniMisc.setup_auto_root = function(names, fallback)
     vim.fn.chdir(root)
   end
   local augroup = vim.api.nvim_create_augroup('MiniMiscAutoRoot', {})
-  vim.api.nvim_create_autocmd(
-    'BufEnter',
-    { group = augroup, callback = set_root, desc = 'Find root and change current directory' }
-  )
+  local opts = { group = augroup, nested = true, callback = set_root, desc = 'Find root and change current directory' }
+  vim.api.nvim_create_autocmd('BufEnter', opts)
 end
 
 --- Find root directory

@@ -347,6 +347,13 @@ T['setup_auto_root()']['works in buffers without path'] = function()
   eq(getcwd(), cur_dir)
 end
 
+T['setup_auto_root()']['triggers nested autocommands'] = function()
+  setup_auto_root()
+  child.cmd('au DirChanged * lua _G.hello = "world"')
+  child.cmd('edit ' .. test_file_makefile)
+  eq(child.lua_get('_G.hello'), 'world')
+end
+
 T['find_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
 
 local find_root = function(...) return child.lua_get('MiniMisc.find_root(...)', { ... }) end
