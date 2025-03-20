@@ -347,6 +347,18 @@ T['setup_auto_root()']['works in buffers without path'] = function()
   eq(getcwd(), cur_dir)
 end
 
+T['setup_auto_root()']['trigger nested autocommands'] = function()
+  setup_auto_root()
+
+  child.api.nvim_set_var('triggered', false)
+  eq(child.api.nvim_get_var('triggered'), false)
+
+  child.api.nvim_create_autocmd('DirChanged', {command = 'let g:triggered = v:true'})
+
+  child.cmd('edit ' .. test_file_makefile)
+  eq(child.api.nvim_get_var('triggered'), true)
+end
+
 T['find_root()'] = new_set({ hooks = { post_case = cleanup_mock_git } })
 
 local find_root = function(...) return child.lua_get('MiniMisc.find_root(...)', { ... }) end
