@@ -170,10 +170,10 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Configuration for action windows:
   -- - `height` and `width` are maximum dimensions.
-  -- - `border` defines border (as in `nvim_open_win()`).
+  -- - `border` defines border (as in `nvim_open_win()`; default "single").
   window = {
-    info = { height = 25, width = 80, border = 'single' },
-    signature = { height = 25, width = 80, border = 'single' },
+    info = { height = 25, width = 80, border = nil },
+    signature = { height = 25, width = 80, border = nil },
   },
 
   -- Way of how module does LSP completion

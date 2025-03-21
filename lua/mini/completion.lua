@@ -280,10 +280,10 @@ MiniCompletion.config = {
 
   -- Configuration for action windows:
   -- - `height` and `width` are maximum dimensions.
-  -- - `border` defines border (as in `nvim_open_win()`).
+  -- - `border` defines border (as in `nvim_open_win()`; default "single").
   window = {
-    info = { height = 25, width = 80, border = 'single' },
-    signature = { height = 25, width = 80, border = 'single' },
+    info = { height = 25, width = 80, border = nil },
+    signature = { height = 25, width = 80, border = nil },
   },
 
   -- Way of how module does LSP completion
@@ -638,12 +638,12 @@ H.setup_config = function(config)
   local is_string_or_array = function(x) return type(x) == 'string' or H.islist(x) end
   H.check_type('window.info.height', config.window.info.height, 'number')
   H.check_type('window.info.width', config.window.info.width, 'number')
-  if not is_string_or_array(config.window.info.border) then
+  if not is_string_or_array(config.window.info.border or 'single') then
     H.error('`config.window.info.border` should be either string or array, not ' .. type(config.window.info.border))
   end
   H.check_type('window.signature.height', config.window.signature.height, 'number')
   H.check_type('window.signature.width', config.window.signature.width, 'number')
-  if not is_string_or_array(config.window.signature.border) then
+  if not is_string_or_array(config.window.signature.border or 'single') then
     H.error(
       '`config.window.signature.border` should be either string or array, not ' .. type(config.window.signature.border)
     )
@@ -1284,6 +1284,7 @@ end
 
 H.info_window_options = function()
   local win_config = H.get_config().window.info
+  local border = win_config.border or 'single'
 
   -- Compute dimensions based on lines to be displayed
   local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, false)
@@ -1294,7 +1295,7 @@ H.info_window_options = function()
   local left_to_pum = event.col - 1
   local right_to_pum = event.col + event.width + (event.scrollbar and 1 or 0)
 
-  local border_offset = win_config.border == 'none' and 0 or 2
+  local border_offset = border == 'none' and 0 or 2
   local space_left = left_to_pum - border_offset
   local space_right = vim.o.columns - right_to_pum - border_offset
 
@@ -1321,7 +1322,7 @@ H.info_window_options = function()
     height = info_height,
     focusable = false,
     style = 'minimal',
-    border = win_config.border,
+    border = border,
     title = title,
   }
 end
@@ -1465,12 +1466,13 @@ end
 
 H.signature_window_opts = function()
   local win_config = H.get_config().window.signature
+  local border = win_config.border or 'single'
   local lines = vim.api.nvim_buf_get_lines(H.signature.bufnr, 0, -1, false)
   local height, width = H.floating_dimensions(lines, win_config.height, win_config.width)
 
   -- Compute position
   local win_line = vim.fn.winline()
-  local border_offset = win_config.border == 'none' and 0 or 2
+  local border_offset = border == 'none' and 0 or 2
   local space_above = win_line - 1 - border_offset
   local space_below = vim.api.nvim_win_get_height(0) - win_line - border_offset
 
@@ -1501,7 +1503,7 @@ H.signature_window_opts = function()
     height = height,
     focusable = false,
     style = 'minimal',
-    border = win_config.border,
+    border = border,
     title = title,
   }
 end
