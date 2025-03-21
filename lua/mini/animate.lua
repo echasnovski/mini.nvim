@@ -348,14 +348,14 @@ end
 ---     {
 ---       row      = 0,        col    = 0,
 ---       width    = 10,       height = 10,
----       relative = 'editor', anchor = 'NW', focusable = false,
----       zindex   = 1,        style  = 'minimal',
+---       relative = 'editor', anchor = 'NW',   focusable = false,
+---       zindex   = 1,        border = 'none', style  = 'minimal',
 ---     },
 ---     {
 ---       row      = 0,        col    = 0,
 ---       width    = 5,        height = 5,
----       relative = 'editor', anchor = 'NW', focusable = false,
----       zindex   = 1,        style  = 'minimal',
+---       relative = 'editor', anchor = 'NW',   focusable = false,
+---       zindex   = 1,        border = 'none', style  = 'minimal',
 ---     },
 ---   }
 --- <
@@ -1025,6 +1025,7 @@ MiniAnimate.gen_winconfig.center = function(opts)
         height    = math.ceil((1 - coef) * height),
         focusable = false,
         zindex    = 1,
+        border    = 'none',
         style     = 'minimal',
       }
     end
@@ -1101,6 +1102,7 @@ MiniAnimate.gen_winconfig.wipe = function(opts)
         height = cur_height,
         focusable = false,
         zindex = 1,
+        border = 'none',
         style = 'minimal',
       }
       cur_row = cur_row + increment_row
@@ -2057,6 +2059,7 @@ H.winconfig_static = function(win_id, opts)
         height    = height,
         focusable = false,
         zindex    = 1,
+        border    = 'none',
         style     = 'minimal',
       }
   end

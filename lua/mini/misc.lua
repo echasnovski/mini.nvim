@@ -596,7 +596,7 @@ MiniMisc.zoom = function(buf_id, config)
     local default_config = {
       relative = 'editor', row = 0, col = 0,
       width = max_width, height = max_height,
-      title = ' Zoom '
+      title = ' Zoom ', border = 'none',
     }
     local res = vim.tbl_deep_extend('force', default_config, config or {})
 

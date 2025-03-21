@@ -934,6 +934,7 @@ local validate_winconfig = function(win_id, ref_position_data)
         height    = ref_position_data[step].height,
         focusable = false,
         zindex    = 1,
+        border    = 'none',
         style     = 'minimal',
       })
   end

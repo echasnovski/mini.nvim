@@ -400,14 +400,14 @@ Example:
     {
       row      = 0,        col    = 0,
       width    = 10,       height = 10,
-      relative = 'editor', anchor = 'NW', focusable = false,
-      zindex   = 1,        style  = 'minimal',
+      relative = 'editor', anchor = 'NW',   focusable = false,
+      zindex   = 1,        border = 'none', style  = 'minimal',
     },
     {
       row      = 0,        col    = 0,
       width    = 5,        height = 5,
-      relative = 'editor', anchor = 'NW', focusable = false,
-      zindex   = 1,        style  = 'minimal',
+      relative = 'editor', anchor = 'NW',   focusable = false,
+      zindex   = 1,        border = 'none', style  = 'minimal',
     },
   }
 <

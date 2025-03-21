@@ -1375,6 +1375,7 @@ H.normalize_window_options = function(win_opts, full)
     -- Can be updated at `VimResized` event
     height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0),
     focusable = win_opts.focusable,
+    border = 'none',
     zindex = win_opts.zindex,
   }
   if not full then return res end

@@ -1912,6 +1912,7 @@ H.explorer_show_help = function(explorer, explorer_buf_id, explorer_win_id)
   config.height = #lines
   config.title = vim.fn.has('nvim-0.9') == 1 and " 'mini.files' help " or nil
   config.zindex = config.zindex + 1
+  config.border = config.border or 'single'
   config.style = 'minimal'
 
   -- Open window
