@@ -592,7 +592,12 @@ MiniMisc.zoom = function(buf_id, config)
   local compute_config = function()
     -- Use precise dimensions for no Command line interactions (better scroll)
     local max_width, max_height = vim.o.columns, vim.o.lines - vim.o.cmdheight
-    local default_config = { relative = 'editor', row = 0, col = 0, width = max_width, height = max_height }
+    --stylua: ignore
+    local default_config = {
+      relative = 'editor', row = 0, col = 0,
+      width = max_width, height = max_height,
+      title = ' Zoom '
+    }
     local res = vim.tbl_deep_extend('force', default_config, config or {})
 
     -- Adjust dimensions to fit border
