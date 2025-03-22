@@ -2234,7 +2234,7 @@ H.picker_compute_win_config = function(win_config, is_for_open)
     height = math.floor(0.618 * max_height),
     col = 0,
     row = max_height + (has_tabline and 1 or 0),
-    border = 'single',
+    border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single',
     style = 'minimal',
     noautocmd = is_for_open,
     -- Use high enough value to be on top of built-in windows (pmenu, etc.)

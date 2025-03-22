@@ -1407,6 +1407,14 @@ T['Window']['ensures target window is valid'] = function()
   eq(child.api.nvim_get_current_win(), init_win_id)
 end
 
+T['Window']["does not respect 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.set_size(15, 20)
+  child.o.winborder = 'rounded'
+  map_open()
+  child.expect_screenshot()
+end
+
 T['Scrollbar'] = new_set()
 
 T['Scrollbar']['updates on cursor movement'] = function()

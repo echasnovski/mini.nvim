@@ -796,7 +796,7 @@ H.window_compute_config = function(buf_id, is_for_open)
   local default_config = { relative = 'editor', style = 'minimal', noautocmd = is_for_open, zindex = 999 }
   default_config.anchor, default_config.col, default_config.row = 'NE', vim.o.columns, has_tabline and 1 or 0
   default_config.width, default_config.height = H.buffer_default_dimensions(buf_id, config_win.max_width_share)
-  default_config.border = 'single'
+  default_config.border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single'
   default_config.title = ' Notifications '
   -- Don't allow focus to not disrupt window navigation
   default_config.focusable = false

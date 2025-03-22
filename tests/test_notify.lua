@@ -841,6 +841,20 @@ T['Window']['respects `window.config`'] = function()
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 end
 
+T['Window']["respects 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+
+  child.o.winborder = 'rounded'
+  add('Hello', 'ERROR', 'Comment')
+  child.expect_screenshot()
+  clear()
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua([[MiniNotify.config.window.config.border = 'double']])
+  add('Hello', 'ERROR', 'Comment')
+  child.expect_screenshot()
+end
+
 T['Window']['respects `window.max_width_share`'] = function()
   child.lua('MiniNotify.config.window.max_width_share = 0.75')
   add('A very-very-very-very-very long notification')

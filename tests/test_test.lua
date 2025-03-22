@@ -1458,7 +1458,10 @@ T['gen_reporter']['buffer'] = new_set({
   },
 }, {
   test = function(opts_element)
-    if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
+    if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
+    -- Should respect non-empty 'winborder' while preferring explicitly
+    -- configured value over it
+    if vim.startswith(opts_element, 'window') then child.o.winborder = 'rounded' end
 
     -- Testing "in dynamic" is left for manual approach
     local path = get_ref_path('testref_reporters.lua')
