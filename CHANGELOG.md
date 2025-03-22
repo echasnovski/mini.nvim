@@ -4,7 +4,7 @@
     - Truncate title/footer from left if it is too wide.
     - Set default title if window is allowed to have border.
     - BREAKING: Use single space padding for default title/footer.
-    - BREAKING: Use 'single' as default window border.
+    - BREAKING: Use 'single' as default window border in modules where it can be configured. On Neovim>=0.11 also respect non-empty 'winborder' option with lower precedence than explicitly configured value for the module.
 
 ## mini.ai
 
@@ -45,7 +45,7 @@
     - Show `labelDetails` as a part of the popup menu via `menu` completion item field.
 - BREAKING: prefer in some cases to use `nil` as default config value with explicit fallback. This should not have any user facing effects and marked as breaking only because a structure of a default config has changed. Affected fields:
     - `lsp_completion.process_items` (use `default_process_items` as fallback) and `fallback_action` (use `'<C-n>'` as fallback). This makes it more aligned with other modules that usually avoid using function values in default config.
-    - `window.info.border` and `window.signature.border` (use `'single'` as fallback).
+    - `window.info.border` and `window.signature.border` (use non-empty 'winborder' and `'single'` as fallback).
 - BREAKING FEATURE: update behavior and capabilities of `default_process_items()`:
     - Add `filtersort` option to control how items are filtered and/or sorted. Its default value has new (breaking) value: do fuzzy matching if 'completeopt' option contains "fuzzy" entry; same as before otherwise.
     - Use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.

@@ -1072,6 +1072,24 @@ T['Information window']['respects `config.window.info`'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']["respects 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+
+  local validate = function(ref_border)
+    validate_info_window_config('D', { 'December' }, { border = ref_border })
+    type_keys('<C-e>')
+    child.ensure_normal_mode()
+    set_lines({})
+  end
+
+  child.o.winborder = 'rounded'
+  validate({ '╭', '─', '╮', '│', '╯', '─', '╰', '│' })
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua('MiniCompletion.config.window.info.border = "double"')
+  validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
+end
+
 T['Information window']['accounts for border when picking side'] = function()
   child.set_size(10, 40)
   child.lua([[MiniCompletion.config.window.info.border = 'single']])
@@ -1347,6 +1365,24 @@ T['Signature help']['respects `config.window.signature`'] = function()
   child.b.minicompletion_config = { window = { signature = { height = 10, width = 20, border = test_border } } }
   validate_signature_window_config(keys, { height = 10, width = 20, border = test_border })
   child.expect_screenshot()
+end
+
+T['Signature help']["respects 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+
+  local validate = function(ref_border)
+    validate_signature_window_config('abc(', { border = ref_border })
+    type_keys('<C-e>')
+    child.ensure_normal_mode()
+    set_lines({})
+  end
+
+  child.o.winborder = 'rounded'
+  validate({ '╭', '─', '╮', '│', '╯', '─', '╰', '│' })
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua('MiniCompletion.config.window.signature.border = "double"')
+  validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
 end
 
 T['Signature help']['accounts for border when picking side'] = function()

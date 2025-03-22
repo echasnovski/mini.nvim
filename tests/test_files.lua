@@ -2588,6 +2588,31 @@ T['Windows']["do not evaluate 'foldexpr' too much"] = function()
   eq(child.lua_get('_G.n'), 0)
 end
 
+T['Windows']["respect 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.set_size(15, 40)
+
+  child.o.winborder = 'rounded'
+  open(test_dir_path)
+  child.expect_screenshot()
+  close()
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua([[
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'MiniFilesWindowOpen',
+      callback = function(args)
+        local win_id = args.data.win_id
+        local config = vim.api.nvim_win_get_config(win_id)
+        config.border = 'double'
+        vim.api.nvim_win_set_config(win_id, config)
+      end,
+    })
+  ]])
+  open(test_dir_path)
+  child.expect_screenshot()
+end
+
 T['Preview'] = new_set({
   hooks = {
     pre_case = function()

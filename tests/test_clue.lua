@@ -1269,6 +1269,23 @@ T['Showing keys']['respects `config.window.config`'] = function()
   child.expect_screenshot()
 end
 
+T['Showing keys']["respects 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  make_test_map('n', '<Space>a')
+  load_module({ triggers = { { mode = 'n', keys = '<Space>' } }, window = { delay = 0 } })
+
+  child.o.winborder = 'rounded'
+  type_keys(' ')
+  child.expect_screenshot()
+  type_keys('<Esc>')
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua('MiniClue.config.window.config.border = "double"')
+  type_keys(' ')
+  child.expect_screenshot()
+  type_keys('<Esc>')
+end
+
 T['Showing keys']['can have `config.window.config.width="auto"`'] = function()
   make_test_map('n', '<Space>a')
   load_module({

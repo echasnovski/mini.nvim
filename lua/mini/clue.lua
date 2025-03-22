@@ -1104,7 +1104,6 @@ H.state = {
 -- Default window config
 H.default_win_config = {
   anchor = 'SE',
-  border = 'single',
   focusable = false,
   relative = 'editor',
   style = 'minimal',
@@ -1611,6 +1610,7 @@ H.window_get_config = function()
     col = vim.o.columns,
     height = math.min(vim.api.nvim_buf_line_count(buf_id), max_height),
     title = ' ' .. H.keytrans(H.query_to_keys(H.state.query)) .. ' ',
+    border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single',
   }
   local user_config = H.expand_callable(H.get_config().window.config, buf_id) or {}
   local res = vim.tbl_deep_extend('force', H.default_win_config, cur_config_fields, user_config)

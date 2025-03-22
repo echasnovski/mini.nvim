@@ -896,6 +896,20 @@ T['zoom()']['respects `config` argument'] = function()
   validate({ width = 20, border = 'single', title = 'Custom title to check truncation' }, 2, 20)
 end
 
+T['zoom()']["respects 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.set_size(5, 30)
+
+  child.o.winborder = 'rounded'
+  child.lua('MiniMisc.zoom()')
+  child.expect_screenshot()
+  child.cmd('quit')
+
+  -- Should prefer explicitly configured value over 'winborder'
+  child.lua('MiniMisc.zoom(0, { border = "double" })')
+  child.expect_screenshot()
+end
+
 T['zoom()']['reacts to relevant UI changes'] = function()
   child.set_size(5, 30)
   child.lua('MiniMisc.zoom()')

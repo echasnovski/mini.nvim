@@ -1284,7 +1284,8 @@ end
 
 H.info_window_options = function()
   local win_config = H.get_config().window.info
-  local border = win_config.border or 'single'
+  local default_border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single'
+  local border = win_config.border or default_border
 
   -- Compute dimensions based on lines to be displayed
   local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, false)
@@ -1466,7 +1467,8 @@ end
 
 H.signature_window_opts = function()
   local win_config = H.get_config().window.signature
-  local border = win_config.border or 'single'
+  local default_border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single'
+  local border = win_config.border or default_border
   local lines = vim.api.nvim_buf_get_lines(H.signature.bufnr, 0, -1, false)
   local height, width = H.floating_dimensions(lines, win_config.height, win_config.width)
 

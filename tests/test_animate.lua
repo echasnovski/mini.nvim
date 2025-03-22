@@ -940,6 +940,13 @@ local validate_winconfig = function(win_id, ref_position_data)
   end
 end
 
+local validate_same_border = function(ref_border)
+  local output = child.lua_get('_G.test_winconfig(0)')
+  for _, step in ipairs(output) do
+    eq(step.border, ref_border)
+  end
+end
+
 T['gen_winconfig']['static()'] = new_set()
 
 T['gen_winconfig']['static()']['works'] = function()
@@ -992,6 +999,13 @@ T['gen_winconfig']['static()']['respects `opts.n_steps`'] = function()
       height = 22,
     },
   })
+end
+
+T['gen_winconfig']['static()']["should not respect 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.o.winborder = 'rounded'
+  child.lua('_G.test_winconfig = MiniAnimate.gen_winconfig.static()')
+  validate_same_border('none')
 end
 
 T['gen_winconfig']['center()'] = new_set()
@@ -1048,6 +1062,13 @@ T['gen_winconfig']['center()']['respects `opts.direction`'] = function()
       { col = 0, row = 0, width = 6, height = 3 },
     }
   )
+end
+
+T['gen_winconfig']['center()']["should not respect 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.o.winborder = 'rounded'
+  child.lua('_G.test_winconfig = MiniAnimate.gen_winconfig.center()')
+  validate_same_border('none')
 end
 
 T['gen_winconfig']['wipe()'] = new_set()
@@ -1158,6 +1179,13 @@ T['gen_winconfig']['wipe()']['respects `opts.direction`'] = function()
     { col = 0, row = 5, width = 12, height = 3 },
     { col = 0, row = 4, width = 12, height = 4 },
   })
+end
+
+T['gen_winconfig']['wipe()']["should not respect 'winborder' option"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+  child.o.winborder = 'rounded'
+  child.lua('_G.test_winconfig = MiniAnimate.gen_winconfig.wipe()')
+  validate_same_border('none')
 end
 
 T['gen_winblend'] = new_set()
@@ -2441,6 +2469,20 @@ T['Open']['correctly calls `winconfig`'] = function()
   eq(child.lua_get('_G.args_history'), { 1001 })
 end
 
+T['Open']["does not respect 'winborder' option by default"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+
+  -- Reset to default `config.open.winconfig`
+  unload_module()
+  load_module()
+
+  child.o.winborder = 'rounded'
+  local default_winconfig_steps = child.lua_get('MiniAnimate.config.open.winconfig(0)')
+  for _, step in ipairs(default_winconfig_steps) do
+    eq(step.border, 'none')
+  end
+end
+
 T['Open']['correctly calls `winblend`'] = function()
   child.lua('_G.args_history = {}')
   child.lua([[MiniAnimate.config.open.winblend = function(s, n)
@@ -2577,6 +2619,20 @@ T['Close']['correctly calls `winconfig`'] = function()
   child.cmd('close')
   sleep(step_time * 2 + small_time)
   eq(child.lua_get('_G.args_history'), { 1001 })
+end
+
+T['Close']["does not respect 'winborder' option by default"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+
+  -- Reset to default `config.open.winconfig`
+  unload_module()
+  load_module()
+
+  child.o.winborder = 'rounded'
+  local default_winconfig_steps = child.lua_get('MiniAnimate.config.close.winconfig(0)')
+  for _, step in ipairs(default_winconfig_steps) do
+    eq(step.border, 'none')
+  end
 end
 
 T['Close']['correctly calls `winblend`'] = function()

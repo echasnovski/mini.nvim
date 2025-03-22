@@ -2047,7 +2047,7 @@ H.buffer_reporter.default_window_opts = function()
     height = math.floor(0.618 * vim.o.lines),
     row = math.floor(0.191 * vim.o.lines),
     col = math.floor(0.191 * vim.o.columns),
-    border = 'single',
+    border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single',
     title = ' Test results ',
   }
 end
