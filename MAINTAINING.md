@@ -118,7 +118,7 @@ Begin the process of stopping official support for outdated Neovim version short
 
 - Stage 2, deprecation:
     - Remove all notification snippets added in Stage 1.
-    - Adjust code that is conditioned on `vim.fn.has('nvim-0.x')`.
+    - Adjust code that is conditioned on `vim.fn.has('nvim-0.x')` and `vim.fn.exists('+option')` (if the option is present in all currently supported Neovim versions).
     - Adjust code/comments/documentation that contains any combination of `Neovim{<,<=,=,>=,>}{0.x,0.(x+1)}` (like `Neovim<0.x`, `Neovim>=0.(x+1)`, etc.).
     - Add entry "Stop official support of Neovim 0.x." in 'CHANGELOG.md' at the start of current development version block.
 
