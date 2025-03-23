@@ -377,19 +377,19 @@ Return ~
 Test `@toc` and `@toc_entry` sections
 
 Table of contents:
-  aaa (no alias replacement).............................................|aaa|
-      Entry #1..............................................................
-  Entry #2:.................................................................
+  aaa (no alias replacement) ........................................... |aaa|
+      Entry #1 .............................................................
+  Entry #2: ................................................................
   This time it is
   multiline
-  Entry #3....................................................|toc-entry-with|
+  Entry #3 .................................................. |toc-entry-with|
                                                                |multiline-tag|
-  Entry #4:............................................|toc-second-entry-with|
+  Entry #4: .......................................... |toc-second-entry-with|
   Multiline with                                             |multiline-tag-2|
   three lines
-  .............................................|toc-entry-without-description|
-  Entry #6 (without tag)....................................................
-  Entry #7: A very-very-very-very-very-very-very-very-very-very long description...
+  ............................................ |toc-entry-without-description|
+  Entry #6 (without tag) ...................................................
+  Entry #7: A very-very-very-very-very-very-very-very-very-very long description ...
 
 ------------------------------------------------------------------------------
 TOC entry with leading spaces

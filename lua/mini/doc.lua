@@ -1023,8 +1023,12 @@ H.toc_insert = function(s)
       local left = toc_entry[i] or ''
       -- Use tag reference instead of tag enclosure
       local right = vim.trim((tag_section[i] or ''):gsub('%*', '|'))
-      -- Add visual line only at first entry (while not adding trailing space)
-      local filler = i == 1 and '.' or (right == '' and '' or ' ')
+      -- Add helper line of dots in first entry (without new trailing space)
+      local filler = right == '' and '' or ' '
+      if i == 1 then
+        -- Ensure parts are padded for proper conceal
+        filler, left, right = '.', (left:gsub('(%S)$', '%1 ')), (right:gsub('^(%S)', ' %1'))
+      end
       -- Make padding of 2 spaces at both left and right
       local n_filler = math.max(74 - H.visual_text_width(left) - H.visual_text_width(right), 3)
       table.insert(lines, ('  %s%s%s'):format(left, filler:rep(n_filler), right))
