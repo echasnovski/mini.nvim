@@ -13,7 +13,9 @@
 ---   or in |MiniPairs.setup| (for global mapping), |MiniPairs.map_buf| (for
 ---   buffer mapping).
 ---
---- - Pairs get automatically registered to be recognized by `<BS>` and `<CR>`.
+--- - Pairs get automatically registered for special <BS> (all configured modes)
+---   and <CR> (only Insert mode) mappings. Pressing the key inside pair will
+---   delete whole pair and insert extra blank line inside pair respectively.
 ---
 --- What it doesn't do:
 --- - It doesn't support multiple characters as "open" and "close" symbols. Use
@@ -51,7 +53,7 @@
 ---     ["'"] = { register = { cr = true } },
 ---   }
 ---
----   -- Insert `<>` pair if `<` is typed at line start, don't register for `<CR>`
+---   -- Insert `<>` pair if `<` is typed at line start, don't register for <CR>
 ---   local lt_opts = {
 ---     action = 'open',
 ---     pair = '<>',
@@ -74,7 +76,7 @@
 --- <
 --- # Notes ~
 ---
---- - Make sure to make proper mapping of `<CR>` in order to support completion
+--- - Make sure to make proper mapping of <CR> in order to support completion
 ---   plugin of your choice:
 ---     - For |MiniCompletion| see 'Helpful key mappings' section.
 ---     - For current implementation of "hrsh7th/nvim-cmp" there is no need to
@@ -95,8 +97,8 @@
 ---@alias __pairs_neigh_pattern string|nil Pattern for two neighborhood characters.
 ---   Character "\r" indicates line start, "\n" - line end.
 ---@alias __pairs_pair string String with two characters representing pair.
----@alias __pairs_unregistered_pair string Pair which should be unregistered from both
----   `<BS>` and `<CR>`. Should be explicitly supplied to avoid confusion.
+---@alias __pairs_unregistered_pair string Pair which should be unregistered from both <BS> and <CR>.
+---   Should be explicitly supplied to avoid confusion.
 ---   Supply `''` to not unregister pair.
 
 -- Module definition ==========================================================
@@ -140,7 +142,7 @@ MiniPairs.config = {
   -- - <action> - one of "open", "close", "closeopen".
   -- - <pair> - two character string for pair to be used.
   -- By default pair is not inserted after `\`, quotes are not recognized by
-  -- `<CR>`, `'` does not insert pair after a letter.
+  -- <CR>, `'` does not insert pair after a letter.
   -- Only parts of tables can be tweaked (others will use these defaults).
   -- Supply `false` instead of table to not map particular key.
   mappings = {
@@ -166,7 +168,7 @@ MiniPairs.config = {
 --- mapping (as string) it expects table with pair information.
 ---
 --- Using this function instead of |nvim_set_keymap()| allows automatic
---- registration of pairs which will be recognized by `<BS>` and `<CR>`.
+--- registration of pairs which will be recognized by <BS> and <CR>.
 --- It also infers mapping description from `pair_info`.
 ---
 ---@param mode string `mode` for |nvim_set_keymap()|.
@@ -179,9 +181,8 @@ MiniPairs.config = {
 ---     used as argument for action function.
 ---     Default: `'..'` (no restriction from neighborhood).
 ---   - <register> - optional table with information about whether this pair will
----     be recognized by `<BS>` (in |MiniPairs.bs|) and/or `<CR>` (in |MiniPairs.cr|).
----     Should have boolean fields <bs> and <cr> which are both `true` by
----     default (if not overridden explicitly).
+---     be recognized by <BS> (in |MiniPairs.bs|) and/or <CR> (in |MiniPairs.cr|).
+---     Should have boolean fields <bs> and <cr> (both `true` by default).
 ---@param opts table|nil Optional table `opts` for |nvim_set_keymap()|. Elements
 ---   `expr` and `noremap` won't be recognized (`true` by default).
 MiniPairs.map = function(mode, lhs, pair_info, opts)
@@ -192,7 +193,7 @@ MiniPairs.map = function(mode, lhs, pair_info, opts)
   vim.api.nvim_set_keymap(mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, 'all')
 
-  -- Ensure that `<BS>` and `<CR>` are mapped for input mode
+  -- Ensure that <BS> and <CR> are mapped for input mode
   H.ensure_cr_bs(mode)
 end
 
@@ -203,7 +204,7 @@ end
 --- in |MiniPairs.map|.
 ---
 --- Using this function instead of |nvim_buf_set_keymap()| allows automatic
---- registration of pairs which will be recognized by `<BS>` and `<CR>`.
+--- registration of pairs which will be recognized by <BS> and <CR>.
 --- It also infers mapping description from `pair_info`.
 ---
 ---@param buffer number `buffer` for |nvim_buf_set_keymap()|.
@@ -220,7 +221,7 @@ MiniPairs.map_buf = function(buffer, mode, lhs, pair_info, opts)
   vim.api.nvim_buf_set_keymap(buffer, mode, lhs, H.pair_info_to_map_rhs(pair_info), opts)
   H.register_pair(pair_info, mode, buffer == 0 and vim.api.nvim_get_current_buf() or buffer)
 
-  -- Ensure that `<BS>` and `<CR>` are mapped for input mode
+  -- Ensure that <BS> and <CR> are mapped for input mode
   H.ensure_cr_bs(mode)
 end
 
@@ -338,8 +339,8 @@ end
 
 --- Process |<BS>|
 ---
---- Used as |map-expr| mapping for `<BS>` in Insert mode. It removes whole pair
---- (via executing `<Del>` after input key) if neighborhood is equal to a whole
+--- Used as |map-expr| mapping for <BS> in Insert mode. It removes whole pair
+--- (via executing <Del> after input key) if neighborhood is equal to a whole
 --- pair recognized for current buffer. Pair is recognized for current buffer
 --- if it is registered for global or current buffer mapping. Pair is
 --- registered as a result of calling |MiniPairs.map| or |MiniPairs.map_buf|.
@@ -357,7 +358,7 @@ end
 ---   map_bs('<C-w>', 'v:lua.MiniPairs.bs("\23")')
 ---   map_bs('<C-u>', 'v:lua.MiniPairs.bs("\21")')
 --- <
----@param key string|nil Key to use. Default: `<BS>`.
+---@param key string|nil Key to use. Default: `'<BS>'`.
 ---
 ---@return string Keys performing "backspace" action.
 MiniPairs.bs = function(key)
@@ -373,7 +374,7 @@ end
 
 --- Process |i_<CR>|
 ---
---- Used as |map-expr| mapping for `<CR>` in insert mode. It puts "close"
+--- Used as |map-expr| mapping for <CR> in insert mode. It puts "close"
 --- symbol on next line (via `<CR><C-o>O`) if neighborhood is equal to a whole
 --- pair recognized for current buffer. Pair is recognized for current buffer
 --- if it is registered for global or current buffer mapping. Pair is
@@ -384,7 +385,7 @@ end
 ---
 --- Mapped by default inside |MiniPairs.setup|.
 ---
----@param key string|nil Key to use. Default: `<CR>`.
+---@param key string|nil Key to use. Default: `'<CR>'`.
 ---
 ---@return string Keys performing "new line" action.
 MiniPairs.cr = function(key)
@@ -487,7 +488,7 @@ H.apply_config = function(config)
     -- Allow `false` to not create mapping
     if pair_info == false then return end
 
-    -- This also should take care of mapping `<BS>` and `<CR>`
+    -- This also should take care of mapping <BS> and <CR>
     MiniPairs.map(mode, key, pair_info)
   end
 
@@ -562,7 +563,7 @@ H.ensure_cr_bs = function(mode)
   end
 
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
-  -- `<BS>` and `<CR>` should work as normal even if no pairs are registered
+  -- <BS> and <CR> should work as normal even if no pairs are registered
   if has_any_bs_pair then
     -- Use not `silent` in Command mode to make it redraw
     local opts = { silent = mode ~= 'c', expr = true, replace_keycodes = false, desc = 'MiniPairs <BS>' }

@@ -28,7 +28,7 @@ https://user-images.githubusercontent.com/24854248/173044991-18653715-9b4e-444e-
 
 - Functionality to work with two "paired" characters conditional on cursor's neighborhood (character to its left and character to its right).
 - Usage should be through making appropriate mappings using `MiniPairs.map()` or in `MiniPairs.setup()` (for global mapping), `MiniPairs.map_buf()` (for buffer mapping).
-- Pairs get automatically registered to be recognized by `<BS>` and `<CR>`.
+- Pairs get automatically registered for special `<BS>` (all configured modes) and `<CR>` (only Insert mode) mappings. Pressing the key inside pair will delete whole pair and insert extra blank line inside pair respectively.
 
 ## Installation
 
@@ -143,7 +143,7 @@ Here are code snippets for some common installation methods (use only one):
   -- - <action> - one of 'open', 'close', 'closeopen'.
   -- - <pair> - two character string for pair to be used.
   -- By default pair is not inserted after `\`, quotes are not recognized by
-  -- `<CR>`, `'` does not insert pair after a letter.
+  -- <CR>, `'` does not insert pair after a letter.
   -- Only parts of tables can be tweaked (others will use these defaults).
   mappings = {
     ['('] = { action = 'open', pair = '()', neigh_pattern = '[^\\].' },
