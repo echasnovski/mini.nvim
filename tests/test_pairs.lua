@@ -514,22 +514,25 @@ T['map()/map_buf()']['respect `opts` or `pair_info` argument'] = function(fun_na
 end
 
 T['map()/map_buf()']['create mappings for `<BS>` in new mode'] = function(fun_name)
-  expect.match(child.cmd_capture('cmap <BS>'), 'No mapping found')
-  validate_no('bs', 'c', '<>')
+  -- Should not override existing one
+  child.cmd('cnoremap <BS> <Cmd>echo "Hello"<CR>')
+  apply_map(fun_name, '"c", "<", { action = "open", pair = "<>" }')
+  expect.match(child.cmd_capture('cmap <BS>'), 'echo "Hello"')
+  child.cmd('cunmap <BS>')
 
-  apply_map(fun_name, [['c', '<', { action = 'open', pair = '<>' }]])
-
+  apply_map(fun_name, '"c", "<", { action = "open", pair = "<>" }')
+  expect.match(child.cmd_capture('cmap <BS>'), 'MiniPairs%.bs')
   validate_bs('c', '<>')
 end
 
 T['map()/map_buf()']['create mappings for `<CR>` in new mode'] = function(fun_name)
-  child.api.nvim_del_keymap('i', '<CR>')
+  -- Should not override existing one
+  child.cmd('inoremap <CR> <Cmd>echo "Hello"<CR>')
+  apply_map(fun_name, '"i", "<", { action = "open", pair = "<>" }')
+  expect.match(child.cmd_capture('imap <CR>'), 'echo "Hello"')
+  child.cmd('iunmap <CR>')
 
-  expect.match(child.cmd_capture('imap <CR>'), 'No mapping found')
-  validate_no('cr', '<>')
-
-  apply_map(fun_name, [['i', '<', { action = 'open', pair = '<>' }]])
-
+  apply_map(fun_name, '"i", "<", { action = "open", pair = "<>" }')
   expect.match(child.cmd_capture('imap <CR>'), 'MiniPairs%.cr')
   validate_cr('<>')
 end

@@ -16,6 +16,7 @@
 --- - Pairs get automatically registered for special <BS> (all configured modes)
 ---   and <CR> (only Insert mode) mappings. Pressing the key inside pair will
 ---   delete whole pair and insert extra blank line inside pair respectively.
+---   Note: these mappings are autocreated if they do not override existing ones.
 ---
 --- What it doesn't do:
 --- - It doesn't support multiple characters as "open" and "close" symbols. Use
@@ -564,12 +565,15 @@ H.ensure_cr_bs = function(mode)
 
   -- NOTE: this doesn't distinguish between global and buffer mappings. Both
   -- <BS> and <CR> should work as normal even if no pairs are registered
-  if has_any_bs_pair then
+  -- NOTE: do not autocreate mappings if there is already one present. This
+  -- allows creating more complicated `<CR>`/`<BS>` mappings and not worry
+  -- about the initialization/setup order.
+  if has_any_bs_pair and vim.fn.maparg('<BS>', mode) == '' then
     -- Use not `silent` in Command mode to make it redraw
     local opts = { silent = mode ~= 'c', expr = true, replace_keycodes = false, desc = 'MiniPairs <BS>' }
     H.map(mode, '<BS>', 'v:lua.MiniPairs.bs()', opts)
   end
-  if mode == 'i' and has_any_cr_pair then
+  if mode == 'i' and has_any_cr_pair and vim.fn.maparg('<CR>', mode) == '' then
     local opts = { expr = true, replace_keycodes = false, desc = 'MiniPairs <CR>' }
     H.map(mode, '<CR>', 'v:lua.MiniPairs.cr()', opts)
   end

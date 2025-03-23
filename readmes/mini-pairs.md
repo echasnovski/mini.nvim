@@ -28,7 +28,7 @@ https://user-images.githubusercontent.com/24854248/173044991-18653715-9b4e-444e-
 
 - Functionality to work with two "paired" characters conditional on cursor's neighborhood (character to its left and character to its right).
 - Usage should be through making appropriate mappings using `MiniPairs.map()` or in `MiniPairs.setup()` (for global mapping), `MiniPairs.map_buf()` (for buffer mapping).
-- Pairs get automatically registered for special `<BS>` (all configured modes) and `<CR>` (only Insert mode) mappings. Pressing the key inside pair will delete whole pair and insert extra blank line inside pair respectively.
+- Pairs get automatically registered for special `<BS>` (all configured modes) and `<CR>` (only Insert mode) mappings. Pressing the key inside pair will delete whole pair and insert extra blank line inside pair respectively. Note: these mappings are autocreated if they do not override existing ones.
 
 ## Installation
 

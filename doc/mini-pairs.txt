@@ -16,6 +16,7 @@ Features:
 - Pairs get automatically registered for special <BS> (all configured modes)
   and <CR> (only Insert mode) mappings. Pressing the key inside pair will
   delete whole pair and insert extra blank line inside pair respectively.
+  Note: these mappings are autocreated if they do not override existing ones.
 
 What it doesn't do:
 - It doesn't support multiple characters as "open" and "close" symbols. Use
