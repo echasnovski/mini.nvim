@@ -356,7 +356,7 @@ end
 ---@return string Keys performing "backspace" action.
 MiniPairs.bs = function(key)
   local res, neigh = key or H.keys.bs, H.get_cursor_neigh(0, 1)
-  local do_extra = not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 0, 'bs')
+  local do_extra = not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 'bs')
   return do_extra and (res .. H.keys.del) or res
 end
 
@@ -380,7 +380,7 @@ MiniPairs.cr = function(key)
   local res = key or H.keys.cr
 
   local neigh = H.get_cursor_neigh(0, 1)
-  if H.is_disabled() or not H.is_pair_registered(neigh, vim.fn.mode(), 0, 'cr') then return res end
+  if H.is_disabled() or not H.is_pair_registered(neigh, vim.fn.mode(), 'cr') then return res end
 
   -- Temporarily ignore mode change to not trigger some common expensive
   -- autocommands (like diagnostic check, etc.)
@@ -508,16 +508,14 @@ H.register_pair = function(pair_info, mode, buffer)
   local mode_pairs = H.registered_pairs[mode]
 
   -- Process new buffer
-  mode_pairs[buffer] = mode_pairs[buffer] or { bs = {}, cr = {} }
+  local buf_pairs = mode_pairs[buffer] or { bs = {}, cr = {} }
+  mode_pairs[buffer] = buf_pairs
 
-  -- Register pair if it is not already registered
+  -- Register pair in a buffer or 'all'. NOTE: ensure to add entry only if
+  -- `register[key]` is `true` for a faster check in `is_pair_registered`.
   local register, pair = pair_info.register, pair_info.pair
-  if register.bs and not vim.tbl_contains(mode_pairs[buffer].bs, pair) then
-    table.insert(mode_pairs[buffer].bs, pair)
-  end
-  if register.cr and not vim.tbl_contains(mode_pairs[buffer].cr, pair) then
-    table.insert(mode_pairs[buffer].cr, pair)
-  end
+  buf_pairs.bs[pair] = register.bs == true and true or nil
+  buf_pairs.cr[pair] = register.cr == true and true or nil
 end
 
 H.unregister_pair = function(pair, mode, buffer)
@@ -525,24 +523,19 @@ H.unregister_pair = function(pair, mode, buffer)
   if not (mode_pairs and mode_pairs[buffer]) then return end
 
   local buf_pairs = mode_pairs[buffer]
-  for _, key in ipairs({ 'bs', 'cr' }) do
-    for i, p in ipairs(buf_pairs[key]) do
-      if p == pair then table.remove(buf_pairs[key], i) end
-    end
-  end
+  buf_pairs.bs[pair], buf_pairs.cr[pair] = nil, nil
 end
 
-H.is_pair_registered = function(pair, mode, buffer, key)
+H.is_pair_registered = function(pair, mode, key)
   local mode_pairs = H.registered_pairs[mode]
   if not mode_pairs then return false end
 
-  if vim.tbl_contains(mode_pairs['all'][key], pair) then return true end
+  if mode_pairs['all'][key][pair] then return true end
 
-  buffer = buffer == 0 and vim.api.nvim_get_current_buf() or buffer
-  local buf_pairs = mode_pairs[buffer]
+  local buf_pairs = mode_pairs[vim.api.nvim_get_current_buf()]
   if not buf_pairs then return false end
 
-  return vim.tbl_contains(buf_pairs[key], pair)
+  return buf_pairs[key][pair] == true
 end
 
 H.ensure_cr_bs = function(mode)
