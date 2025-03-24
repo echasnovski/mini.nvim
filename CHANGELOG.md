@@ -74,6 +74,10 @@
 - FEATURE: add `MiniNotifyLspProgress` highlight group to be used for LSP progress notifications.
 - FEATURE: add `data` field to notification specification and as a new argument to `MiniNotify.add()`. It can be used to store any data relevant to the notification. For example, notifications from `make_notify()` output set `source` field to `'vim.notify'`, while notifications from LSP progress set `source` to `'lsp_progress'`.
 
+## mini.pairs
+
+- FEATURE: update all actions to work with pairs containing multibyte characters (like "¿?", "「」", and similar).
+
 ## mini.statusline
 
 - BREAKING: `section_fileinfo()` got several updates:

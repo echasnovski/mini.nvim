@@ -178,8 +178,10 @@ MiniPairs.config = {
 ---   - <action> - one of "open" (for |MiniPairs.open|),
 ---     "close" (for |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
 ---   - <pair> - two character string to be used as argument for action function.
+---     Can contain multibyte characters.
 ---   - <neigh_pattern> - optional 'two character' neighborhood pattern to be
----     used as argument for action function.
+---     used as argument for action function. Note: neighborhood might contain
+---     multiple characters.
 ---     Default: `'..'` (no restriction from neighborhood).
 ---   - <register> - optional table with information about whether this pair will
 ---     be recognized by <BS> (in |MiniPairs.bs|) and/or <CR> (in |MiniPairs.cr|).
@@ -600,17 +602,17 @@ H.get_neigh = function(neigh_type)
   -- Get line and add '\r' and '\n' to always return 2 characters
   local line = is_command_mode and vim.fn.getcmdline() or vim.api.nvim_get_current_line()
   line = '\r' .. line .. '\n'
-  -- Get column adjusting for `getcmdpos()` counting from 1
-  local col = is_command_mode and vim.fn.getcmdpos() or vim.api.nvim_win_get_cursor(0)[2]
-  col = col + 1 - (is_command_mode and 1 or 0)
+  -- Get start character index accounting for added '\r' at the start
+  local start = is_command_mode and vim.fn.charidx(line, vim.fn.getcmdpos()) or vim.fn.charcol('.')
+  start = start - 1
 
-  return string.sub(line, col + (neigh_type == 'right' and 1 or 0), col + (neigh_type == 'left' and 0 or 1))
+  return vim.fn.strcharpart(line, start + (neigh_type == 'right' and 1 or 0), neigh_type == 'whole' and 2 or 1)
 end
 
 H.neigh_match = function(pattern) return H.get_neigh('whole'):find(pattern or '') ~= nil end
 
-H.get_open_char = function(x) return x:sub(1, 1) end
-H.get_close_char = function(x) return x:sub(2, 2) end
+H.get_open_char = function(x) return vim.fn.strcharpart(x, 0, 1) end
+H.get_close_char = function(x) return vim.fn.strcharpart(x, 1, 1) end
 
 H.get_arrow_key = function(key)
   return vim.fn.mode() == 'i' and (key == 'right' and H.keys.right_undo or H.keys.left_undo)

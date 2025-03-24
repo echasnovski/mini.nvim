@@ -162,8 +162,10 @@ Parameters ~
   - <action> - one of "open" (for |MiniPairs.open|),
     "close" (for |MiniPairs.close|), or "closeopen" (for |MiniPairs.closeopen|).
   - <pair> - two character string to be used as argument for action function.
+    Can contain multibyte characters.
   - <neigh_pattern> - optional 'two character' neighborhood pattern to be
-    used as argument for action function.
+    used as argument for action function. Note: neighborhood might contain
+    multiple characters.
     Default: `'..'` (no restriction from neighborhood).
   - <register> - optional table with information about whether this pair will
     be recognized by <BS> (in |MiniPairs.bs|) and/or <CR> (in |MiniPairs.cr|).
