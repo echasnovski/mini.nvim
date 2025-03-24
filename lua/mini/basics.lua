@@ -319,7 +319,7 @@ MiniBasics.config = {
     -- Basic options ('number', 'ignorecase', and many more)
     basic = true,
 
-    -- Extra UI features ('winblend', 'cmdheight=0', ...)
+    -- Extra UI features ('winblend', 'listchars', 'pumheight', ...)
     extra_ui = false,
 
     -- Presets for window borders ('single', 'double', ...)
