@@ -281,7 +281,7 @@ end
 ---
 ---@return string Keys performing "open" action.
 MiniPairs.open = function(pair, neigh_pattern)
-  if H.is_disabled() or not H.neigh_match(neigh_pattern) then return pair:sub(1, 1) end
+  if H.is_disabled() or not H.neigh_match(neigh_pattern) then return H.get_open_char(pair) end
 
   -- Temporarily redraw lazily for no cursor flicker due to `<Left>`.
   -- This can happen in a big file with tree-sitter highlighting enabled.
@@ -307,8 +307,8 @@ end
 ---
 ---@return string Keys performing "close" action.
 MiniPairs.close = function(pair, neigh_pattern)
-  local close = pair:sub(2, 2)
-  local move_right = not H.is_disabled() and H.neigh_match(neigh_pattern) and H.get_cursor_neigh(1, 1) == close
+  local close = H.get_close_char(pair)
+  local move_right = not H.is_disabled() and H.neigh_match(neigh_pattern) and H.get_neigh('right') == close
   return move_right and H.get_arrow_key('right') or close
 end
 
@@ -326,7 +326,7 @@ end
 ---
 ---@return string Keys performing "closeopen" action.
 MiniPairs.closeopen = function(pair, neigh_pattern)
-  local move_right = not H.is_disabled() and H.get_cursor_neigh(1, 1) == pair:sub(2, 2)
+  local move_right = not H.is_disabled() and H.get_neigh('right') == H.get_close_char(pair)
   return move_right and H.get_arrow_key('right') or MiniPairs.open(pair, neigh_pattern)
 end
 
@@ -355,7 +355,7 @@ end
 ---
 ---@return string Keys performing "backspace" action.
 MiniPairs.bs = function(key)
-  local res, neigh = key or H.keys.bs, H.get_cursor_neigh(0, 1)
+  local res, neigh = key or H.keys.bs, H.get_neigh('whole')
   local do_extra = not H.is_disabled() and H.is_pair_registered(neigh, vim.fn.mode(), 'bs')
   return do_extra and (res .. H.keys.del) or res
 end
@@ -379,7 +379,7 @@ end
 MiniPairs.cr = function(key)
   local res = key or H.keys.cr
 
-  local neigh = H.get_cursor_neigh(0, 1)
+  local neigh = H.get_neigh('whole')
   if H.is_disabled() or not H.is_pair_registered(neigh, vim.fn.mode(), 'cr') then return res end
 
   -- Temporarily ignore mode change to not trigger some common expensive
@@ -595,18 +595,22 @@ H.check_type = function(name, val, ref, allow_nil)
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
 
-H.get_cursor_neigh = function(start, finish)
+H.get_neigh = function(neigh_type)
   local is_command_mode = vim.fn.mode() == 'c'
+  -- Get line and add '\r' and '\n' to always return 2 characters
   local line = is_command_mode and vim.fn.getcmdline() or vim.api.nvim_get_current_line()
+  line = '\r' .. line .. '\n'
+  -- Get column adjusting for `getcmdpos()` counting from 1
   local col = is_command_mode and vim.fn.getcmdpos() or vim.api.nvim_win_get_cursor(0)[2]
-  -- Adjust start/finish because `getcmdpos()` starts counting columns from 1
-  local offset = is_command_mode and 1 or 0
+  col = col + 1 - (is_command_mode and 1 or 0)
 
-  -- Add '\r' and '\n' to always return 2 characters
-  return string.sub('\r' .. line .. '\n', col + 1 + start - offset, col + 1 + finish - offset)
+  return string.sub(line, col + (neigh_type == 'right' and 1 or 0), col + (neigh_type == 'left' and 0 or 1))
 end
 
-H.neigh_match = function(pattern) return (pattern == nil) or (H.get_cursor_neigh(0, 1):find(pattern) ~= nil) end
+H.neigh_match = function(pattern) return H.get_neigh('whole'):find(pattern or '') ~= nil end
+
+H.get_open_char = function(x) return x:sub(1, 1) end
+H.get_close_char = function(x) return x:sub(2, 2) end
 
 H.get_arrow_key = function(key)
   return vim.fn.mode() == 'i' and (key == 'right' and H.keys.right_undo or H.keys.left_undo)
