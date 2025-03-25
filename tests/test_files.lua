@@ -202,6 +202,8 @@ local T = new_set({
 
       -- Make more robust screenshots
       child.o.laststatus = 0
+      child.o.showtabline = 0
+
       -- - Hide intro
       child.cmd('vsplit')
       child.cmd('quit')
@@ -1318,8 +1320,6 @@ end
 
 T['close()']['handles invalid target window'] = function()
   child.set_size(15, 60)
-  child.o.showtabline = 0
-  child.o.laststatus = 0
 
   child.cmd('wincmd v')
   local target_win_id = child.api.nvim_get_current_win()
@@ -2434,13 +2434,15 @@ T['Windows']['works with too small dimensions'] = function()
 end
 
 T['Windows']['respects tabline when computing position'] = function()
-  child.o.showtabline = 2
+  child.o.showtabline, child.o.tabline = 2, '%#TabLineSel#My tabline%#TabLineFill#'
   open(test_dir_path)
   child.expect_screenshot()
 end
 
 T['Windows']['respects tabline and statusline when computing height'] = function()
   child.set_size(8, 60)
+  child.o.tabline = '%#TabLineSel#My tabline%#TabLineFill#'
+  child.o.statusline = 'My statusline'
 
   local validate = function()
     open(test_dir_path)
@@ -2878,9 +2880,6 @@ T['Mappings']['`go_in` works'] = function()
 end
 
 T['Mappings']['`go_in` works in linewise Visual mode'] = function()
-  -- DIsable statusline for more portable screenshots
-  child.o.laststatus = 0
-
   local has_opened_buffer = function(name)
     local path = join_path(test_dir_path, name)
     for _, buf_id in ipairs(child.api.nvim_list_bufs()) do
@@ -2945,7 +2944,6 @@ end
 
 T['Mappings']['`go_in` supports <count>'] = function()
   child.set_size(15, 60)
-  child.o.laststatus = 0
   child.lua('MiniFiles.config.windows.width_focus = 20')
   child.lua('MiniFiles.config.windows.width_nofocus = 10')
 
@@ -2962,9 +2960,6 @@ T['Mappings']['`go_in` supports <count>'] = function()
 end
 
 T['Mappings']['`go_in_plus` works'] = function()
-  -- Disable statusline for more portable screenshots
-  child.o.laststatus = 0
-
   -- On directories should be the same as `go_in`
   -- Default
   open(test_dir_path)
@@ -3013,7 +3008,6 @@ end
 
 T['Mappings']['`go_in_plus` supports <count>'] = function()
   child.set_size(10, 50)
-  child.o.laststatus = 0
   child.lua('MiniFiles.config.windows.width_focus = 20')
   child.lua('MiniFiles.config.windows.width_nofocus = 10')
 
@@ -5547,14 +5541,11 @@ T['Default explorer']['respects `options.use_as_default_explorer`'] = function()
 end
 
 T['Default explorer']['works in `:edit .`'] = function()
-  child.o.laststatus = 0
   child.cmd('edit ' .. test_dir_path)
   child.expect_screenshot()
 end
 
 T['Default explorer']['works in `:vsplit .`'] = function()
-  child.o.laststatus = 0
-
   child.cmd('vsplit ' .. test_dir_path)
   child.expect_screenshot()
 
@@ -5583,7 +5574,6 @@ T['Default explorer']['works in `:tabfind .`'] = function()
 end
 
 T['Default explorer']['handles close without opening file'] = function()
-  child.o.laststatus = 0
   child.cmd('wincmd v')
   child.cmd('edit ' .. test_dir_path)
   child.expect_screenshot()
