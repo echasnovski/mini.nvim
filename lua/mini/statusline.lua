@@ -322,11 +322,12 @@ end
 --- <
 ---@return __statusline_section
 MiniStatusline.section_diagnostics = function(args)
-  if MiniStatusline.is_truncated(args.trunc_width) or H.diagnostic_is_disabled() then return '' end
+  if MiniStatusline.is_truncated(args.trunc_width) then return '' end
 
-  -- Construct string parts
+  -- Construct string parts. NOTE: call `diagnostic_is_disabled()` *after*
+  -- check for present `count` to not source `vim.diagnostic` on startup.
   local count = H.diagnostic_counts[vim.api.nvim_get_current_buf()]
-  if count == nil then return '' end
+  if count == nil or H.diagnostic_is_disabled() then return '' end
 
   local severity, signs, t = vim.diagnostic.severity, args.signs or {}, {}
   for _, level in ipairs(H.diagnostic_levels) do
