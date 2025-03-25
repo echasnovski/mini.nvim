@@ -1704,13 +1704,16 @@ T['show_help()']['works'] = function()
   type_keys('2j')
 
   show_help()
+  local buf_help = child.api.nvim_get_current_buf()
   child.expect_screenshot()
 
   -- Should focus on help window
   eq(child.api.nvim_get_current_win() ~= win_id_explorer, true)
 
-  -- Pressing `q` should close help window and focus on explorer at same line
+  -- Pressing `q` should close help window, delete buffer, and focus on
+  -- explorer at same line
   type_keys('q')
+  eq(child.api.nvim_buf_is_valid(buf_help), false)
   child.expect_screenshot()
 end
 

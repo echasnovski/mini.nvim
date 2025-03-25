@@ -1899,6 +1899,7 @@ H.explorer_show_help = function(explorer, explorer_buf_id, explorer_win_id)
   vim.b[buf_id].miniindentscope_disable = true
 
   vim.bo[buf_id].filetype = 'minifiles-help'
+  vim.bo[buf_id].bufhidden = 'wipe'
 
   -- Compute window data
   local line_widths = vim.tbl_map(vim.fn.strdisplaywidth, lines)
