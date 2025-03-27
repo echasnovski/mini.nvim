@@ -247,6 +247,9 @@ Notes:
 - See |[count]| for its meaning.
 - On Neovim>=0.10 mappings for `#` and `*` are not created as their
   enhanced variants are made built-in. See |v_star-default| and |v_#-default|.
+- On Neovim>=0.11 there are |[<Space>| / |]<Space>| for adding empty lines.
+  The `gO` and `go` mappings are still created as they are more aligned with
+  similarly purposed |O| and |o| keys (although sometimes conflict with |gO|).
 
 ## mappings.option_toggle_prefix ~
 
@@ -301,7 +304,7 @@ Here is a list with created Normal mode mappings (all mappings respect |[count]|
     - `<C-up>`    - increase window height.
     - `<C-right>` - increase window width.
 
-## mappings.move_with_alt
+## mappings.move_with_alt ~
 
 The `config.mappings.move_with_alt` creates mappings for a more consistent
 cursor move in Insert, Command, and Terminal modes. For example, it proves
