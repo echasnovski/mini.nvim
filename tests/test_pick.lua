@@ -4634,6 +4634,7 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
   end
 
   child.set_size(10, 20)
+  child.o.tabline, child.o.statusline = 'My tabline', 'My statusline'
 
   child.o.showtabline, child.o.laststatus = 2, 2
   validate()
@@ -4645,6 +4646,13 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
   validate()
 
   child.o.showtabline, child.o.laststatus = 0, 0
+  validate()
+
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for 0.11.') end
+  child.o.cmdheight = 2
+  validate()
+
+  child.o.cmdheight = 0
   validate()
 end
 
