@@ -1705,6 +1705,7 @@ T['show_help()']['works'] = function()
 
   show_help()
   local buf_help = child.api.nvim_get_current_buf()
+  eq(child.api.nvim_buf_get_name(0), 'minifiles://' .. buf_help .. '/help')
   child.expect_screenshot()
 
   -- Should focus on help window
@@ -5003,19 +5004,12 @@ end
 T['Events'] = new_set()
 
 local track_event = function(event_name)
-  local lua_cmd = string.format(
-    [[
+  child.lua('_G.event_name = ' .. vim.inspect(event_name))
+  local lua_cmd = [[
     _G.callback_args_data = {}
-    vim.api.nvim_create_autocmd(
-      'User',
-      {
-        pattern = '%s',
-        callback = function(args) table.insert(_G.callback_args_data, args.data or {}) end,
-      }
-    )
-    ]],
-    event_name
-  )
+    local f = function(args) table.insert(_G.callback_args_data, args.data or {}) end
+    vim.api.nvim_create_autocmd('User', { pattern = _G.event_name, callback = f })
+  ]]
   child.lua(lua_cmd)
 end
 
@@ -5073,13 +5067,24 @@ end
 
 T['Events']['`MiniFilesBufferCreate` triggers'] = function()
   track_event('MiniFilesBufferCreate')
+  child.lua([[
+    local f = function(args) _G.buf_name = vim.api.nvim_buf_get_name(args.data.buf_id) end
+    vim.api.nvim_create_autocmd('User', { pattern = 'MiniFilesBufferCreate', callback = f })
+  ]])
 
-  open(test_dir_path)
-  validate_event_track({ { buf_id = child.api.nvim_get_current_buf() } })
+  local open_path = full_path(test_dir_path)
+
+  open(open_path)
+  local buf_cur = child.api.nvim_get_current_buf()
+  validate_event_track({ { buf_id = buf_cur } })
+  -- - Should be already properly named
+  eq(child.lua_get('_G.buf_name'), 'minifiles://' .. buf_cur .. '/' .. open_path)
   clear_event_track()
 
   go_in()
-  validate_event_track({ { buf_id = child.api.nvim_get_current_buf() } })
+  buf_cur = child.api.nvim_get_current_buf()
+  validate_event_track({ { buf_id = buf_cur } })
+  eq(child.lua_get('_G.buf_name'), 'minifiles://' .. buf_cur .. '/' .. join_path(open_path, '.a-dir'))
   clear_event_track()
 
   -- No event should be triggered if buffer is reused

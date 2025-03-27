@@ -654,8 +654,12 @@ T['get()']['can be used after deleting all buffers'] = function()
   -- As `vim.filetype.match()` requries a buffer to be more useful, make sure
   -- that this cached buffer is persistent
   eq(get('file', 'hello.xpm'), { '󰍹', 'MiniIconsYellow', false })
+  -- The helper scratch buffer should be properly named
+  eq(child.api.nvim_buf_get_name(2), 'miniicons://2/filetype-match-scratch')
+
   child.cmd('%bwipeout')
   eq(get('file', 'hello.tcsh'), { '', 'MiniIconsAzure', false })
+  eq(child.api.nvim_buf_get_name(3), 'miniicons://3/filetype-match-scratch')
 end
 
 T['get()']['uses width one glyphs'] = function()

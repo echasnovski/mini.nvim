@@ -1223,6 +1223,10 @@ T['Showing keys']['works'] = function()
   child.expect_screenshot()
   sleep(small_time + small_time)
   child.expect_screenshot()
+
+  -- Should use proper buffer name
+  local buf_id = child.api.nvim_win_get_buf(1002)
+  eq(child.api.nvim_buf_get_name(buf_id), 'miniclue://' .. buf_id .. '/content')
 end
 
 T['Showing keys']['respects `config.window.delay`'] = function()

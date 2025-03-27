@@ -2018,6 +2018,7 @@ H.buffer_reporter = { ns_id = vim.api.nvim_create_namespace('MiniTestBuffer'), n
 
 H.buffer_reporter.setup_buf_and_win = function(window_opts)
   local buf_id = vim.api.nvim_create_buf(true, true)
+  H.set_buf_name(buf_id, 'buffer-reporter')
 
   local win_id
   if vim.is_callable(window_opts) then
@@ -2056,7 +2057,6 @@ H.buffer_reporter.set_options = function(buf_id, win_id)
   -- Set unique name
   local n_buffer = H.buffer_reporter.n_buffer + 1
   local suffix = n_buffer == 1 and '' or (' ' .. n_buffer)
-  vim.api.nvim_buf_set_name(buf_id, 'MiniTest' .. suffix)
   H.buffer_reporter.n_buffer = n_buffer
 
   vim.cmd('silent! set filetype=minitest')
@@ -2316,6 +2316,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minitest://' .. buf_id .. '/' .. name) end
 
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end

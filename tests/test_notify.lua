@@ -648,7 +648,8 @@ T['show_history()']['works'] = function()
   show_history()
   child.expect_screenshot()
 
-  -- Should set proper filetype
+  -- Should set proper buffer name and filetype
+  eq(child.api.nvim_buf_get_name(0), 'mininotify://' .. child.api.nvim_get_current_buf() .. '/history')
   eq(child.bo.filetype, 'mininotify-history')
 end
 
@@ -801,10 +802,13 @@ T['Window']['shows start of buffer if it does not fit whole'] = function()
   child.expect_screenshot()
 end
 
-T['Window']['uses proper buffer filetype'] = function()
-  child.cmd('au FileType mininotify lua _G.been_here = true')
+T['Window']['uses proper buffer filetype and name'] = function()
+  child.lua([[
+    local f = function(args) _G.is_correct = vim.api.nvim_buf_get_name(args.buf) == ('mininotify://') .. args.buf .. '/content' end
+    vim.api.nvim_create_autocmd('FileType', { pattern = 'mininotify', callback = f })
+  ]])
   add('Hello')
-  eq(child.lua_get('_G.been_here'), true)
+  eq(child.lua_get('_G.is_correct'), true)
 end
 
 T['Window']['respects `content.format`'] = function()

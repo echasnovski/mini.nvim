@@ -2141,8 +2141,11 @@ H.filetype_match = function(filename)
   -- (needed because the function in many ambiguous cases prefers to return
   -- nothing if there is no buffer supplied)
   local buf_id = H.scratch_buf_id
-  H.scratch_buf_id = (buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id)) and vim.api.nvim_create_buf(false, true)
-    or buf_id
+  if buf_id == nil or not vim.api.nvim_buf_is_valid(buf_id) then
+    buf_id = vim.api.nvim_create_buf(false, true)
+    H.set_buf_name(buf_id, 'filetype-match-scratch')
+    H.scratch_buf_id = buf_id
+  end
   return vim.filetype.match({ filename = filename, buf = H.scratch_buf_id })
 end
 
@@ -2153,6 +2156,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'miniicons://' .. buf_id .. '/' .. name) end
 
 H.notify = function(msg, level_name) vim.notify('(mini.icons) ' .. msg, vim.log.levels[level_name]) end
 

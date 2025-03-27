@@ -92,6 +92,11 @@ local validate_buf_name = function(buf_id, ref_name)
   eq(name, ref_name)
 end
 
+local validate_helper_buf_name = function(buf_id, ref_name)
+  buf_id = (buf_id == nil or buf_id == 0) and child.api.nvim_get_current_buf() or buf_id
+  eq(child.api.nvim_buf_get_name(buf_id), 'minipick://' .. buf_id .. '/' .. ref_name)
+end
+
 local validate_contains_all = function(base, to_be_present)
   local is_present_map, is_all_present = {}, true
   for _, x in pairs(to_be_present) do
@@ -483,6 +488,16 @@ T['start()']['creates proper main buffer'] = function()
   validate_buf_option(buf_id, 'filetype', 'minipick')
   validate_buf_option(buf_id, 'buflisted', false)
   validate_buf_option(buf_id, 'buftype', 'nofile')
+end
+
+T['start()']['uses properly named buffers'] = function()
+  start_with_items(test_items)
+  validate_helper_buf_name(0, 'main')
+  type_keys('<S-Tab>')
+  validate_helper_buf_name(0, 'info')
+  -- NOTE: Source's `preview()` can override buffer's name for more info
+  type_keys('<Tab>')
+  validate_helper_buf_name(0, 'preview')
 end
 
 T['start()']['tracks lost focus'] = function()
@@ -1568,11 +1583,17 @@ T['default_preview()']['works for file path'] = function()
     real_file('c.gif'),
   }
   validate_preview(items)
+
+  -- Should have proper buffer name
+  validate_helper_buf_name(0, 'preview')
+
   stop()
 
   -- Should work for failed to read files
   child.lua('vim.loop.fs_open = function() return nil end')
-  validate_preview({ real_file('Makefile') })
+  local makefile_path = real_file('Makefile')
+  validate_preview({ makefile_path })
+  validate_helper_buf_name(0, 'preview')
 end
 
 T['default_preview()']['works for relative file path'] = function()
@@ -1583,6 +1604,7 @@ T['default_preview()']['works for relative file path'] = function()
   child.lua_notify(lua_cmd)
   type_keys('<Tab>')
   child.expect_screenshot()
+  validate_helper_buf_name(0, 'preview')
   type_keys('<C-c>')
 
   -- Should respect source's cwd (thanks to window-local cwd)
@@ -1659,6 +1681,7 @@ end
 
 T['default_preview()']['works for directory path'] = function()
   validate_preview({ test_dir, { text = real_files_dir, path = real_files_dir } })
+  validate_helper_buf_name(0, 'preview')
 end
 
 T['default_preview()']['works for buffer'] = function()
@@ -1689,6 +1712,9 @@ T['default_preview()']['works for buffer'] = function()
     { text = 'Buffer #4', buf = buf_id_4 },
   }
   validate_preview(items)
+
+  -- Should have proper buffer name
+  validate_helper_buf_name(0, 'preview')
 end
 
 local mock_buffer_for_preview = function()
@@ -1751,6 +1777,8 @@ end
 T['default_preview()']['has fallback'] = function()
   child.set_size(10, 40)
   validate_preview({ -1, { text = 'Random table' } })
+
+  validate_helper_buf_name(0, 'preview')
 end
 
 T['default_preview()']['does not highlight big files'] = function()
@@ -3090,6 +3118,9 @@ T['builtin.help()']['has proper preview'] = function()
   -- Ignore footer as it contains non-reliable number of help tags
   child.expect_screenshot({ ignore_lines = { 14 } })
   eq(child.bo.buftype, 'nofile')
+  -- Changes buffer name to show explicitly help file.
+  -- This is neither good nor bad. Can be changed in the future.
+  eq(child.api.nvim_buf_get_name(0):find('^minipick://') == nil, true)
 
   eq(child.v.hlsearch, 0)
   eq(child.fn.getreg('/'), 'aa')

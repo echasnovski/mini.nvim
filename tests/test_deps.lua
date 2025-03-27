@@ -40,7 +40,7 @@ local log_args = function(range)
 end
 
 local validate_confirm_buf = function(name)
-  eq(child.api.nvim_buf_get_name(0), name)
+  eq(child.api.nvim_buf_get_name(0), 'minideps://' .. child.api.nvim_get_current_buf() .. '/' .. name)
   eq(child.bo.buftype, 'acwrite')
   eq(child.bo.filetype, 'minideps-confirm')
   eq(#child.api.nvim_list_tabpages() > 1, true)
@@ -1311,7 +1311,7 @@ T['update()']['works'] = function()
   -- "error", "has changes", "no changes".
   mock_hide_path(test_dir_absolute)
   child.expect_screenshot()
-  validate_confirm_buf('mini-deps://confirm-update')
+  validate_confirm_buf('confirm-update')
 end
 
 T['update()']['checks for executable Git'] = function()
@@ -1358,7 +1358,7 @@ T['update()']['Confirm buffer'] = new_set({
       update()
       eq(#get_spawn_log(), 15)
       eq(#get_notify_log(), 3)
-      validate_confirm_buf('mini-deps://confirm-update')
+      validate_confirm_buf('confirm-update')
       eq(child.lua_get('_G.minideps_ft_win_id') == child.api.nvim_get_current_win(), true)
 
       child.lua([[
@@ -1391,7 +1391,7 @@ end
 
 T['update()']['Confirm buffer']['can open several'] = function()
   child.lua('_G.prev_update()')
-  validate_confirm_buf('mini-deps://confirm-update_2')
+  validate_confirm_buf('confirm-update')
 end
 
 T['update()']['can fold in confirm buffer'] = function()
@@ -2048,7 +2048,7 @@ T['clean()']['works'] = function()
   child.set_cursor(1, 0)
   child.wo.wrap = false
   child.expect_screenshot()
-  validate_confirm_buf('mini-deps://confirm-clean')
+  validate_confirm_buf('confirm-clean')
   eq(child.lua_get('_G.minideps_ft_win_id') == child.api.nvim_get_current_win(), true)
 
   -- Should reveal concealed full path
@@ -2075,7 +2075,7 @@ end
 
 T['clean()']['can cancel confirm'] = function()
   clean()
-  validate_confirm_buf('mini-deps://confirm-clean')
+  validate_confirm_buf('confirm-clean')
   child.cmd('quit')
   validate_not_confirm_buf()
 

@@ -1396,6 +1396,7 @@ end
 -- Work with map updates ------------------------------------------------------
 H.create_map_buffer = function()
   local buf_id = vim.api.nvim_create_buf(false, true)
+  H.set_buf_name(buf_id, 'content')
 
   -- Set buffer local options (which don't involve `noautocmd`)
   vim.bo[buf_id].filetype = 'minimap'
@@ -1662,6 +1663,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minimap://' .. buf_id .. '/' .. name) end
 
 H.validate_if = function(predicate, x, x_name)
   local is_valid, msg = predicate(x, x_name)

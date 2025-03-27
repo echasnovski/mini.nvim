@@ -161,7 +161,8 @@ MiniBufremove.unshow_in_window = function(win_id)
     local has_previous = pcall(vim.cmd, 'bprevious')
     if has_previous and cur_buf ~= vim.api.nvim_win_get_buf(win_id) then return end
 
-    -- Create new listed buffer
+    -- Create new listed scratch buffer
+    -- NOTE: leave it unnamed to allow `:h buffer-reuse`
     local new_buf = vim.api.nvim_create_buf(true, false)
     vim.api.nvim_win_set_buf(win_id, new_buf)
   end)

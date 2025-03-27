@@ -17,7 +17,7 @@
 16|<CR> executes action of current item                        
 17|<C-c> closes this buffer                                    
 18|~                                                           
-19|Starter                                   9,1            All
+19|ministarter://2/welcome                   9,1            All
 20|(mini.starter) Query:                                       
 
 --|---------|---------|---------|---------|---------|---------|

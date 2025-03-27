@@ -355,6 +355,8 @@ T['open()']['sets important map buffer options'] = function()
   eq(#all_bufs, 2)
   local map_buf_id = all_bufs[1] == init_buf and all_bufs[2] or all_bufs[1]
 
+  eq(child.api.nvim_buf_get_name(map_buf_id), 'minimap://' .. map_buf_id .. '/content')
+
   local validate_option = function(name, value) eq(child.api.nvim_buf_get_option(map_buf_id, name), value) end
 
   validate_option('filetype', 'minimap')

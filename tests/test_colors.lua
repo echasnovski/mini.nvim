@@ -2224,6 +2224,7 @@ T['interactive()']['works'] = function()
   -- General data
   expect_screenshot()
 
+  eq(child.api.nvim_buf_get_name(0), 'minicolors://' .. child.api.nvim_get_current_buf() .. '/interactive')
   eq(child.bo.filetype, 'lua')
   eq(child.get_cursor(), { 22, 0 })
   eq(child.api.nvim_get_mode().mode, 'n')

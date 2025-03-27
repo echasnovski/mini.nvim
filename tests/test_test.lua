@@ -1485,6 +1485,9 @@ T['gen_reporter']['buffer'] = new_set({
     -- Should be able to run several times
     expect.no_error(child.lua, execute_command)
     expect.no_error(child.lua, execute_command)
+
+    -- Should use properly named buffer
+    eq(child.api.nvim_buf_get_name(0), 'minitest://' .. child.api.nvim_get_current_buf() .. '/buffer-reporter')
   end,
 })
 

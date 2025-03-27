@@ -6,6 +6,8 @@
     - BREAKING: Use single space padding for default title/footer.
     - BREAKING: Use 'single' as default window border in modules where it can be configured. On Neovim>=0.11 also respect non-empty 'winborder' option with lower precedence than explicitly configured value for the module.
 
+- BREAKING FEATURE: Unify how module-related buffers are named: `mini<module-name>://<buffer-number>/<useful-info>`. This structure allows creating identifiable, reasonably unique, and useful buffer names. This is a user facing change because in some cases the shown buffer's name will change (like in statusline of opened 'mini.starter' buffer or output of `:buffers!`).
+
 ## mini.ai
 
 - FEATURE: textobject identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_textobjects` keys. Default textobject is extended to be anything but Latin letters (to fall back to `:h text-objects`).

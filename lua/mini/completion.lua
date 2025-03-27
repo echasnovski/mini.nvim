@@ -1209,7 +1209,7 @@ H.show_info_window = function()
   if lines == nil or H.is_whitespace(lines) then return end
 
   -- Ensure permanent buffer with "markdown" highlighting to display info
-  H.ensure_buffer(H.info, 'MiniCompletion:completion-item-info')
+  H.ensure_buffer(H.info, 'item-info')
   H.ensure_highlight(H.info, 'markdown')
   vim.api.nvim_buf_set_lines(H.info.bufnr, 0, -1, false, lines)
 
@@ -1366,7 +1366,7 @@ H.show_signature_window = function()
   end
 
   -- Ensure permanent buffer with current highlighting to display signature
-  H.ensure_buffer(H.signature, 'MiniCompletion:signature-help')
+  H.ensure_buffer(H.signature, 'signature-help')
   H.ensure_highlight(H.signature, vim.bo.filetype)
   vim.api.nvim_buf_set_lines(H.signature.bufnr, 0, -1, false, lines)
 
@@ -1516,7 +1516,7 @@ H.ensure_buffer = function(cache, name)
 
   local buf_id = vim.api.nvim_create_buf(false, true)
   cache.bufnr = buf_id
-  vim.api.nvim_buf_set_name(buf_id, name)
+  H.set_buf_name(buf_id, name)
   vim.bo[buf_id].buftype = 'nofile'
 end
 
@@ -1591,6 +1591,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minicompletion://' .. buf_id .. '/' .. name) end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 

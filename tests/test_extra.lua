@@ -1346,8 +1346,10 @@ T['pickers']['git_branches()']['works'] = function()
   type_keys('<CR>')
 
   eq(get_lines(), log_lines)
-  eq(buf_init ~= child.api.nvim_get_current_buf(), true)
+  local buf_cur = child.api.nvim_get_current_buf()
+  eq(buf_init ~= buf_cur, true)
   eq(child.bo.buftype, 'nofile')
+  eq(child.api.nvim_buf_get_name(buf_cur), 'miniextra://' .. buf_cur .. '/main')
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), branch_lines[1])
@@ -1481,8 +1483,10 @@ T['pickers']['git_commits()']['works'] = function()
   type_keys('<CR>')
 
   eq(get_lines(), show_commit_lines)
-  eq(buf_init ~= child.api.nvim_get_current_buf(), true)
+  local buf_cur = child.api.nvim_get_current_buf()
+  eq(buf_init ~= buf_cur, true)
   eq(child.bo.buftype, 'nofile')
+  eq(child.api.nvim_buf_get_name(buf_cur), 'miniextra://' .. buf_cur .. '/1111111')
   eq(child.bo.syntax, 'git')
   eq(child.bo.filetype, 'git')
 

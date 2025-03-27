@@ -1014,6 +1014,9 @@ local validate_info_win = function(delay)
   eq(get_floating_windows(), {})
   sleep(small_time + small_time)
   validate_single_floating_win({ lines = { 'Month #01' } })
+
+  local info_buf_id = child.api.nvim_win_get_buf(get_floating_windows()[1])
+  eq(child.api.nvim_buf_get_name(info_buf_id), 'minicompletion://' .. info_buf_id .. '/item-info')
 end
 
 T['Information window']['works'] = function()
@@ -1276,6 +1279,9 @@ local validate_signature_win = function(delay)
   eq(get_floating_windows(), {})
   sleep(small_time + small_time)
   validate_single_floating_win({ lines = { 'abc(param1, param2)' } })
+
+  local signature_buf_id = child.api.nvim_win_get_buf(get_floating_windows()[1])
+  eq(child.api.nvim_buf_get_name(signature_buf_id), 'minicompletion://' .. signature_buf_id .. '/signature-help')
 end
 
 T['Signature help']['works'] = function()

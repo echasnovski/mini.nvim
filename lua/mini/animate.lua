@@ -1809,6 +1809,7 @@ H.make_openclose_step = function(action_type, win_id, config)
       -- Empty buffer should always be valid (might have been closed by user command)
       if H.empty_buf_id == nil or not vim.api.nvim_buf_is_valid(H.empty_buf_id) then
         H.empty_buf_id = vim.api.nvim_create_buf(false, true)
+        H.set_buf_name(H.empty_buf_id, 'open-close-scratch')
       end
 
       -- Set step config to window. Possibly (re)open (it could have been
@@ -2098,6 +2099,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minianimate://' .. buf_id .. '/' .. name) end
 
 H.validate_if = function(predicate, x, x_name)
   local is_valid, msg = predicate(x, x_name)

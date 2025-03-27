@@ -165,8 +165,9 @@ T['open()']['works'] = function()
 
   child.lua('MiniStarter.open()')
 
-  expect.no_equality(child.api.nvim_get_current_buf(), init_buf_id)
-  eq(child.api.nvim_buf_get_name(0), child.fn.getcwd() .. package.config:sub(1, 1) .. 'Starter')
+  local buf_cur = child.api.nvim_get_current_buf()
+  expect.no_equality(buf_cur, init_buf_id)
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://' .. buf_cur .. '/welcome')
   validate_starter_shown()
 
   expect.match(table.concat(get_lines(), '\n'), 'Builtin actions')
@@ -271,6 +272,7 @@ T['open()']['respects `buf_id` argument'] = function()
   local cur_buf_id = child.api.nvim_get_current_buf()
   child.lua(('MiniStarter.open(%s)'):format(cur_buf_id))
   eq(child.api.nvim_get_current_buf(), cur_buf_id)
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://' .. cur_buf_id .. '/welcome')
 end
 
 T['open()']['issues an autocommand after finished opening'] = function()
@@ -289,17 +291,11 @@ end
 
 T['open()']['creates unique buffer names'] = function()
   child.lua('MiniStarter.open()')
-  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter')
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://' .. child.api.nvim_get_current_buf() .. '/welcome')
 
   child.lua('MiniStarter.close()')
   child.lua('MiniStarter.open()')
-  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
-
-  -- Should not duplicate existing buffer name
-  local buf_id = child.api.nvim_create_buf(true, false)
-  child.api.nvim_buf_set_name(buf_id, child.fn.getcwd() .. '/Starter_3')
-  child.lua('MiniStarter.open()')
-  eq(child.api.nvim_buf_get_name(0), 'ministarter://3')
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://' .. child.api.nvim_get_current_buf() .. '/welcome')
 end
 
 T['open()']['respects `vim.{g,b}.ministarter_disable`'] = new_set({
@@ -1434,7 +1430,7 @@ T['Multiple buffers']['are allowed'] = function()
   -- It should open new Starter buffer while keeping previous one
   child.cmd('tabe')
   validate_starter_shown()
-  eq(vim.fn.fnamemodify(child.api.nvim_buf_get_name(0), ':t'), 'Starter_2')
+  eq(child.api.nvim_buf_get_name(0), 'ministarter://' .. child.api.nvim_get_current_buf() .. '/welcome')
 
   eq(child.api.nvim_buf_is_valid(buf_id_1), true)
   eq(child.api.nvim_buf_get_option(buf_id_1, 'filetype'), 'ministarter')

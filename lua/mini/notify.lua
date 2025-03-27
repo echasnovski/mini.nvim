@@ -525,6 +525,7 @@ MiniNotify.show_history = function()
   end
   if buf_id == nil then
     buf_id = vim.api.nvim_create_buf(true, true)
+    H.set_buf_name(buf_id, 'history')
     vim.bo[buf_id].filetype = 'mininotify-history'
   end
   H.buffer_refresh(buf_id, notif_arr)
@@ -720,6 +721,7 @@ end
 -- Buffer ---------------------------------------------------------------------
 H.buffer_create = function()
   local buf_id = vim.api.nvim_create_buf(false, true)
+  H.set_buf_name(buf_id, 'content')
   vim.bo[buf_id].filetype = 'mininotify'
   return buf_id
 end
@@ -873,6 +875,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'mininotify://' .. buf_id .. '/' .. name) end
 
 H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 

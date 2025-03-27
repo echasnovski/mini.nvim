@@ -590,6 +590,7 @@ MiniExtra.pickers.git_branches = function(local_opts, opts)
     local win_target = (pick.get_picker_state().windows or {}).target
     if win_target == nil or not H.is_valid_win(win_target) then return end
     local buf_id = vim.api.nvim_create_buf(true, true)
+    H.set_buf_name(buf_id, item:match('^%*?%s*(%S+)'))
     preview(buf_id, item)
     vim.api.nvim_win_set_buf(win_target, buf_id)
   end
@@ -645,6 +646,7 @@ MiniExtra.pickers.git_commits = function(local_opts, opts)
     local win_target = (pick.get_picker_state().windows or {}).target
     if win_target == nil or not H.is_valid_win(win_target) then return end
     local buf_id = vim.api.nvim_create_buf(true, true)
+    H.set_buf_name(buf_id, item:match('^(%S+)'))
     preview(buf_id, item)
     -- Set filetype on opened buffer to trigger appropriate `FileType` event
     vim.bo[buf_id].filetype = 'git'
@@ -2075,6 +2077,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'miniextra://' .. buf_id .. '/' .. name) end
 
 H.is_valid_win = function(win_id) return type(win_id) == 'number' and vim.api.nvim_win_is_valid(win_id) end
 

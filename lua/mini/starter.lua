@@ -309,6 +309,7 @@ MiniStarter.open = function(buf_id)
   vim.b.ministarter_config = config_local
 
   -- Setup buffer behavior
+  H.set_buf_name(buf_id, 'welcome')
   H.make_buffer_autocmd(buf_id)
   H.apply_buffer_options(buf_id)
   H.apply_buffer_mappings(buf_id)
@@ -1019,9 +1020,6 @@ H.default_content_hooks = { MiniStarter.gen_hook.adding_bullet(), MiniStarter.ge
 -- - <query> - current search query
 H.buffer_data = {}
 
--- Counter for unique buffer names
-H.buffer_number = 0
-
 -- Namespaces for highlighting
 H.ns = {
   activity = vim.api.nvim_create_namespace(''),
@@ -1339,17 +1337,6 @@ H.apply_buffer_options = function(buf_id)
   --   mapping is present (maybe due to non-blocking nature of `nvim_input()`).
   vim.api.nvim_feedkeys('\28\14', 'nx', false)
 
-  -- Set unique buffer name. Prefer "Starter" prefix as more user friendly.
-  H.buffer_number = H.buffer_number + 1
-  local name = H.buffer_number <= 1 and 'Starter' or ('Starter_' .. H.buffer_number)
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ':t') == name then
-      name = 'ministarter://' .. H.buffer_number
-      break
-    end
-  end
-  vim.api.nvim_buf_set_name(buf_id, name)
-
   -- Having `noautocmd` is crucial for performance: ~9ms without it, ~1.6ms with it
   vim.cmd('noautocmd silent! set filetype=ministarter')
 
@@ -1485,6 +1472,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'ministarter://' .. buf_id .. '/' .. name) end
 
 H.echo = function(msg, is_important)
   if H.get_config().silent then return end

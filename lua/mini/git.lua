@@ -1122,7 +1122,7 @@ H.show_in_split = function(mods, lines, subcmd, name)
 
   -- Prepare buffer
   local buf_id = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf_id, 'minigit://' .. buf_id .. '/' .. name)
+  H.set_buf_name(buf_id, name)
   vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
 
   vim.api.nvim_set_current_buf(buf_id)
@@ -1684,6 +1684,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minigit://' .. buf_id .. '/' .. name) end
 
 H.notify = function(msg, level_name) vim.notify('(mini.git) ' .. msg, vim.log.levels[level_name]) end
 

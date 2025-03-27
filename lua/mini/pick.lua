@@ -1409,6 +1409,7 @@ MiniPick.builtin.help = function(local_opts, opts)
   -- Get all tags
   local help_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[help_buf].buftype = 'help'
+  -- - NOTE: no dedicated buffer name because it is immediately wiped out
   local tags = vim.api.nvim_buf_call(help_buf, function() return vim.fn.taglist('.*') end)
   vim.api.nvim_buf_delete(help_buf, { force = true })
   vim.tbl_map(function(t) t.text = t.name end, tags)
@@ -2190,7 +2191,7 @@ H.picker_update = function(picker, do_match, update_window)
 end
 
 H.picker_new_buf = function()
-  local buf_id = H.create_scratch_buf()
+  local buf_id = H.create_scratch_buf('main')
   vim.bo[buf_id].filetype = 'minipick'
   return buf_id
 end
@@ -2802,7 +2803,7 @@ H.picker_show_info = function(picker)
 
   -- Manage buffer/window/state
   local buf_id_info = picker.buffers.info
-  if not H.is_valid_buf(buf_id_info) then buf_id_info = H.create_scratch_buf() end
+  if not H.is_valid_buf(buf_id_info) then buf_id_info = H.create_scratch_buf('info') end
   picker.buffers.info = buf_id_info
 
   H.set_buflines(buf_id_info, lines)
@@ -2833,7 +2834,7 @@ H.picker_show_preview = function(picker)
   local item = H.picker_get_current_item(picker)
   if item == nil then return end
 
-  local win_id, buf_id = picker.windows.main, H.create_scratch_buf()
+  local win_id, buf_id = picker.windows.main, H.create_scratch_buf('preview')
   vim.bo[buf_id].bufhidden = 'wipe'
   H.set_winbuf(win_id, buf_id)
   preview(buf_id, item)
@@ -3388,6 +3389,8 @@ H.check_type = function(name, val, ref, allow_nil)
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
 
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minipick://' .. buf_id .. '/' .. name) end
+
 H.notify = function(msg, level_name) vim.notify('(mini.pick) ' .. msg, vim.log.levels[level_name]) end
 
 H.edit = function(path, win_id)
@@ -3415,8 +3418,9 @@ H.is_array_of = function(x, ref_type)
   return true
 end
 
-H.create_scratch_buf = function()
+H.create_scratch_buf = function(name)
   local buf_id = vim.api.nvim_create_buf(false, true)
+  H.set_buf_name(buf_id, name)
   vim.bo[buf_id].matchpairs = ''
   vim.b[buf_id].minicursorword_disable = true
   vim.b[buf_id].miniindentscope_disable = true

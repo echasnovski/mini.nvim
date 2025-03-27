@@ -822,6 +822,7 @@ MiniColors.interactive = function(opts)
   local init_cs = opts.colorscheme == nil and MiniColors.get_colorscheme()
     or MiniColors.as_colorscheme(opts.colorscheme)
   local buf_id = vim.api.nvim_create_buf(true, true)
+  H.set_buf_name(buf_id, 'interactive')
 
   -- Write header lines
   local header_lines = {
@@ -2359,6 +2360,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'minicolors://' .. buf_id .. '/' .. name) end
 
 H.round = function(x)
   if x == nil then return nil end

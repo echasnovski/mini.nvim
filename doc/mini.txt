@@ -100,6 +100,13 @@ Table of contents:
   to use certain runtime config settings locally to buffer.
   See |mini.nvim-buffer-local-config| for more information.
 
+- <Buffer names>. All module-related buffers are named according to the
+  following format: `mini<module-name>://<buffer-number>/<useful-info>`
+  (forward slashes are used on any platform; `<useful-info>` may be empty).
+  This structure allows creating identifiable, reasonably unique, and useful
+  buffer names. For example, |MiniFiles| buffers are created per displayed
+  directory/file with names like `minifiles://10/path/to/displayed/directory`.
+
 - <Disabling>. Each module's core functionality can be disabled globally or
   locally to buffer. See "Disabling" section in module's help page for more
   details. See |mini.nvim-disabling-recipes| for common recipes.

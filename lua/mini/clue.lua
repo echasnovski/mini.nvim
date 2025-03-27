@@ -1639,7 +1639,10 @@ end
 -- Buffer ---------------------------------------------------------------------
 H.buffer_update = function()
   local buf_id = H.state.buf_id
-  if not H.is_valid_buf(buf_id) then buf_id = vim.api.nvim_create_buf(false, true) end
+  if not H.is_valid_buf(buf_id) then
+    buf_id = vim.api.nvim_create_buf(false, true)
+    H.set_buf_name(buf_id, 'content')
+  end
 
   -- Compute content data
   local keys = H.query_to_keys(H.state.query)
@@ -1886,6 +1889,8 @@ H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
 end
+
+H.set_buf_name = function(buf_id, name) vim.api.nvim_buf_set_name(buf_id, 'miniclue://' .. buf_id .. '/' .. name) end
 
 H.map = function(mode, lhs, rhs, opts)
   if lhs == '' then return end
