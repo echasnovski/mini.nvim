@@ -582,14 +582,17 @@ MiniExtra.pickers.git_branches = function(local_opts, opts)
   local repo_dir = H.git_get_repo_dir(path, path_type, 'git_branches')
 
   -- Define source
-  local show_history = function(buf_id, item)
+  local preview = function(buf_id, item)
     local branch = item:match('^%*?%s*(%S+)')
-    local cmd = { 'git', '-C', repo_dir, 'log', branch, '--format=format:%h %s' }
-    H.cli_show_output(buf_id, cmd)
+    H.cli_show_output(buf_id, { 'git', '-C', repo_dir, 'log', branch, '--format=format:%h %s' })
   end
-
-  local preview = show_history
-  local choose = H.make_show_in_target_win('git_branches', show_history)
+  local choose = function(item)
+    local win_target = (pick.get_picker_state().windows or {}).target
+    if win_target == nil or not H.is_valid_win(win_target) then return end
+    local buf_id = vim.api.nvim_create_buf(true, true)
+    preview(buf_id, item)
+    vim.api.nvim_win_set_buf(win_target, buf_id)
+  end
 
   local command = { 'git', 'branch', '-v', '--no-color', '--list' }
   if scope == 'all' or scope == 'remotes' then table.insert(command, 3, '--' .. scope) end
@@ -638,12 +641,15 @@ MiniExtra.pickers.git_commits = function(local_opts, opts)
     vim.bo[buf_id].syntax = 'git'
     H.cli_show_output(buf_id, { 'git', '-C', repo_dir, '--no-pager', 'show', item:match('^(%S+)') })
   end
-  local choose_show = function(buf_id, item)
+  local choose = function(item)
+    local win_target = (pick.get_picker_state().windows or {}).target
+    if win_target == nil or not H.is_valid_win(win_target) then return end
+    local buf_id = vim.api.nvim_create_buf(true, true)
     preview(buf_id, item)
     -- Set filetype on opened buffer to trigger appropriate `FileType` event
     vim.bo[buf_id].filetype = 'git'
+    vim.api.nvim_win_set_buf(win_target, buf_id)
   end
-  local choose = H.make_show_in_target_win('git_commits', choose_show)
 
   local command = { 'git', 'log', [[--format=format:%h %s]], '--', path }
 
@@ -1692,17 +1698,6 @@ H.pick_validate_scope = function(...) return H.pick_validate_one_of('scope', ...
 
 H.pick_get_config = function()
   return vim.tbl_deep_extend('force', (require('mini.pick') or {}).config or {}, vim.b.minipick_config or {})
-end
-
-H.make_show_in_target_win = function(fun_name, show_fun)
-  local pick = H.validate_pick(fun_name)
-  return function(item)
-    local win_target = (pick.get_picker_state().windows or {}).target
-    if win_target == nil or not H.is_valid_win(win_target) then return end
-    local buf_id = vim.api.nvim_create_buf(true, true)
-    show_fun(buf_id, item)
-    vim.api.nvim_win_set_buf(win_target, buf_id)
-  end
 end
 
 H.show_with_icons = function(buf_id, items, query)
