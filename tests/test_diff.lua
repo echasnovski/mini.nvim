@@ -2274,6 +2274,30 @@ T['Overlay']['always highlights whole lines'] = function()
   child.expect_screenshot()
 end
 
+T['Overlay']['scrolls along with buffer lines'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Virtual line scroll is available only on Neovim>=0.11') end
+
+  child.set_size(10, 15)
+  child.o.wrap = false
+  local l = 'abcdefghijklmnopqrstuvwxyz'
+  local L = l:upper()
+  local ref_lines = { 1 .. l, 2 .. l, 3 .. l, 4 .. l, 5 .. l, 6 .. l }
+  set_lines({ 1 .. l, 3 .. l, 4 .. L, 6 .. l })
+  set_cursor(1, 0)
+  set_ref_text(0, ref_lines)
+
+  -- Should scroll virtual lines for deleted and changed with linematch hunks
+  type_keys('zL')
+  child.expect_screenshot()
+
+  -- Should also scroll virtual lines for change hunks without linematch
+  child.lua('MiniDiff.config.options.linematch = 0')
+  set_cursor(1, 0)
+  set_ref_text(0, ref_lines)
+  type_keys('zL')
+  child.expect_screenshot()
+end
+
 T['Overlay']['works at edge lines'] = function()
   child.set_size(10, 15)
   -- Virtual lines above first line need scroll to become visible

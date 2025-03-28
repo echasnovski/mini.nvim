@@ -894,6 +894,9 @@ H.overlay_suffix = string.rep(' ', vim.o.columns)
 -- Flag for whether to invalidate extmarks
 H.extmark_invalidate = vim.fn.has('nvim-0.10') == 1 and true or nil
 
+-- Flag for whether to handle virtual lines overflow
+H.extmark_virt_lines_overflow = vim.fn.has('nvim-0.11') == 1 and 'scroll' or nil
+
 -- Permanent `vim.diff()` options
 H.vimdiff_opts = { result_type = 'indices', ctxlen = 0, interhunkctxlen = 0 }
 H.vimdiff_supports_linematch = vim.fn.has('nvim-0.9') == 1
@@ -1365,7 +1368,8 @@ H.draw_overlay_line = function(buf_id, ns_id, row, data)
   -- "Change"/"Delete" hunks are shown as virtual lines
   -- NOTE: virtual lines above line 1 need manual scroll (with `<C-y>`)
   -- See https://github.com/neovim/neovim/issues/16166
-  opts.virt_lines, opts.virt_lines_above = data.lines, data.show_above
+  opts.virt_lines, opts.virt_lines_above, opts.virt_lines_overflow =
+    data.lines, data.show_above, H.extmark_virt_lines_overflow
   H.set_extmark(buf_id, ns_id, row, 0, opts)
 end
 
@@ -1384,7 +1388,11 @@ H.draw_overlay_line_worddiff = function(buf_id, ns_id, row, data)
   if index <= ref_line:len() then table.insert(virt_line, { ref_line:sub(index), 'MiniDiffOverContext' }) end
   table.insert(virt_line, { H.overlay_suffix, 'MiniDiffOverContext' })
 
-  local ref_opts = { virt_lines = { virt_line }, virt_lines_above = true, priority = data.priority }
+  --stylua: ignore
+  local ref_opts = {
+    virt_lines = { virt_line }, virt_lines_above = true, virt_lines_overflow = H.extmark_virt_lines_overflow,
+    priority = data.priority,
+  }
   H.set_extmark(buf_id, ns_id, row, 0, ref_opts)
 
   -- Show changed parts in current line with separate extmarks
