@@ -891,8 +891,8 @@ H.style_extmark_data = {
 -- Suffix for overlay virtual lines to be highlighted as full line
 H.overlay_suffix = string.rep(' ', vim.o.columns)
 
--- Flag of whether Neovim version supports invalidating extmarks
-H.extmark_supports_invalidate = vim.fn.has('nvim-0.10') == 1
+-- Flag for whether to invalidate extmarks
+H.extmark_invalidate = vim.fn.has('nvim-0.10') == 1 and true or nil
 
 -- Permanent `vim.diff()` options
 H.vimdiff_opts = { result_type = 'indices', ctxlen = 0, interhunkctxlen = 0 }
@@ -1134,13 +1134,11 @@ H.convert_view_to_extmark_opts = function(view)
 
   local signs = view.style == 'sign' and view.signs or {}
   local field, hl_group_prefix = extmark_data.field, extmark_data.hl_group_prefix
-  local invalidate
-  if H.extmark_supports_invalidate then invalidate = true end
   --stylua: ignore
   return {
-    add =    { [field] = hl_group_prefix .. 'Add',    sign_text = signs.add,    priority = view.priority, invalidate = invalidate },
-    change = { [field] = hl_group_prefix .. 'Change', sign_text = signs.change, priority = view.priority, invalidate = invalidate },
-    delete = { [field] = hl_group_prefix .. 'Delete', sign_text = signs.delete, priority = view.priority, invalidate = invalidate },
+    add =    { [field] = hl_group_prefix .. 'Add',    sign_text = signs.add,    priority = view.priority, invalidate = H.extmark_invalidate },
+    change = { [field] = hl_group_prefix .. 'Change', sign_text = signs.change, priority = view.priority, invalidate = H.extmark_invalidate },
+    delete = { [field] = hl_group_prefix .. 'Delete', sign_text = signs.delete, priority = view.priority, invalidate = H.extmark_invalidate },
   }
 end
 
@@ -1338,7 +1336,8 @@ H.append_overlay_change = function(overlay_lines, hunk, ref_lines, buf_lines, pr
     local l = { { ref_lines[i], 'MiniDiffOverChange' }, { H.overlay_suffix, 'MiniDiffOverChange' } }
     table.insert(changed_lines, l)
   end
-  H.append_overlay(overlay_lines, hunk.buf_start, { type = 'change', lines = changed_lines, priority = priority })
+  local data = { type = 'change', lines = changed_lines, show_above = true, priority = priority }
+  H.append_overlay(overlay_lines, hunk.buf_start, data)
 end
 
 H.append_overlay_delete = function(overlay_lines, hunk, ref_lines, priority)
@@ -1352,29 +1351,22 @@ H.append_overlay_delete = function(overlay_lines, hunk, ref_lines, priority)
 end
 
 H.draw_overlay_line = function(buf_id, ns_id, row, data)
-  -- "Add" hunk: highlight whole buffer range
-  if data.type == 'add' then
-    local opts =
-      { end_row = data.to, end_col = 0, hl_group = 'MiniDiffOverAdd', hl_eol = true, priority = data.priority }
-    return H.set_extmark(buf_id, ns_id, row, 0, opts)
-  end
-
-  -- "Change" hunk: show changed lines above first hunk line
-  if data.type == 'change' then
-    -- NOTE: virtual lines above line 1 need manual scroll (with `<C-y>`)
-    -- See https://github.com/neovim/neovim/issues/16166
-    local opts = { virt_lines = data.lines, virt_lines_above = true, priority = data.priority }
-    return H.set_extmark(buf_id, ns_id, row, 0, opts)
-  end
-
   -- "Change worddif" hunk: compute word diff and show it above and over text
   if data.type == 'change_worddiff' then return H.draw_overlay_line_worddiff(buf_id, ns_id, row, data) end
 
-  -- "Delete" hunk: show deleted lines below buffer line (if possible)
-  if data.type == 'delete' then
-    local opts = { virt_lines = data.lines, virt_lines_above = data.show_above, priority = data.priority }
+  local opts = { priority = data.priority }
+
+  -- "Add" hunk: highlight whole buffer range
+  if data.type == 'add' then
+    opts.end_row, opts.end_col, opts.hl_group, opts.hl_eol = data.to, 0, 'MiniDiffOverAdd', true
     return H.set_extmark(buf_id, ns_id, row, 0, opts)
   end
+
+  -- "Change"/"Delete" hunks are shown as virtual lines
+  -- NOTE: virtual lines above line 1 need manual scroll (with `<C-y>`)
+  -- See https://github.com/neovim/neovim/issues/16166
+  opts.virt_lines, opts.virt_lines_above = data.lines, data.show_above
+  H.set_extmark(buf_id, ns_id, row, 0, opts)
 end
 
 H.draw_overlay_line_worddiff = function(buf_id, ns_id, row, data)
