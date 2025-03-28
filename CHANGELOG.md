@@ -55,6 +55,9 @@
 ## mini.diff
 
 - FEATURE: overlay virtual lines now scroll horizontally along with buffer lines. Requires Neovim>=0.11 and disabled 'wrap' option.
+- FEATURE: highlighting of buffer parts of change hunks can now be customized with these new highlight groups:
+    - `MiniDiffOverChangeBuf` - changed buffer text. Previously used `MiniDiffOverChange` (for changed reference text); links to it by default.
+    - `MiniDiffOverContextBuf` - context of a change shown in buffer overlay. Previously not highlighted, default highlight group is not created.
 
 ## mini.doc
 

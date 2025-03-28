@@ -20,6 +20,15 @@ local get_buf = function() return child.api.nvim_get_current_buf() end
 local set_buf = function(buf_id) child.api.nvim_set_current_buf(buf_id) end
 --stylua: ignore end
 
+-- Tweak `expect_screenshot()` to test only on Neovim>=0.9, as some technical
+-- approach doesn't seem to work on Neovim<=0.8. Use `expect_screenshot_orig()`
+-- for original testing.
+local expect_screenshot_orig = child.expect_screenshot
+child.expect_screenshot = function(...)
+  if child.fn.has('nvim-0.9') == 0 then return end
+  expect_screenshot_orig(...)
+end
+
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
@@ -224,7 +233,7 @@ end
 
 local get_overlay_extmarks = function(buf_id, from_line, to_line)
   local ns_id = child.api.nvim_get_namespaces().MiniDiffOverlay
-  return child.api.nvim_buf_get_extmarks(buf_id, ns_id, { from_line - 1, 0 }, { to_line - 1, 0 }, { details = true })
+  return child.api.nvim_buf_get_extmarks(buf_id, ns_id, { from_line - 1, 0 }, { to_line - 1, -1 }, { details = true })
 end
 
 -- Output test set ============================================================
@@ -265,7 +274,9 @@ T['setup()']['creates side effects'] = function()
   validate_hl_group('MiniDiffSignDelete', 'links to ' .. (is_010 and 'Removed' or 'diffRemoved'))
   validate_hl_group('MiniDiffOverAdd', 'links to DiffAdd')
   validate_hl_group('MiniDiffOverChange', 'links to DiffText')
+  validate_hl_group('MiniDiffOverChangeBuf', 'links to MiniDiffOverChange')
   validate_hl_group('MiniDiffOverContext', 'links to DiffChange')
+  eq(child.fn.hlexists('MiniFilesFile'), 1)
   validate_hl_group('MiniDiffOverDelete', 'links to DiffDelete')
 end
 
@@ -2329,37 +2340,70 @@ T['Overlay']['works when "change" overlaps with "delete"'] = function()
   child.expect_screenshot()
 end
 
-T['Overlay']['should use correct highlight groups'] = function()
+T['Overlay']['uses correct highlight groups'] = function()
   set_lines({ 'AAA', 'uuu', 'BBB', 'CcC', 'DDD', 'FFF' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
 
   -- 'Add'
-  local add_extmarks = get_overlay_extmarks(0, 2, 3)
+  local add_extmarks = get_overlay_extmarks(0, 2, 2)
+  eq(#add_extmarks, 1)
   eq(add_extmarks[1][4].hl_group, 'MiniDiffOverAdd')
 
   -- 'Change'
-  local change_extmarks = get_overlay_extmarks(0, 4, 5)
+  local change_extmarks = get_overlay_extmarks(0, 4, 4)
+  eq(#change_extmarks, 3)
 
-  -- - Reference part of changed line
-  local change_virt_lines = change_extmarks[1][4].virt_lines
-  eq(change_extmarks[1][4].virt_lines_above, true)
+  -- - Context of buffer changes as whole line highlighting
+  local change_details_1 = change_extmarks[1][4]
+  eq(change_extmarks[1][2], 3)
+  eq(change_extmarks[1][3], 0)
+  eq(change_details_1.end_row, 4)
+  eq(change_details_1.end_col, 0)
+  eq(change_details_1.hl_eol, true)
+  eq(change_details_1.hl_group, 'MiniDiffOverContextBuf')
+  eq(change_details_1.priority, 198)
+
+  -- - Context and change of reference text (as virtual line)
+  local change_virt_lines = change_extmarks[2][4].virt_lines
   eq(#change_virt_lines, 1)
   eq(change_virt_lines[1][1], { 'C', 'MiniDiffOverContext' })
   eq(change_virt_lines[1][2], { 'C', 'MiniDiffOverChange' })
   eq(change_virt_lines[1][3], { 'C', 'MiniDiffOverContext' })
+  eq(change_extmarks[2][4].virt_lines_above, true)
 
-  -- - Buffer part of changed line
-  eq(change_extmarks[2][4].hl_group, 'MiniDiffOverChange')
+  -- - Buffer changes as separate extmarks
+  eq(change_extmarks[3][4].hl_group, 'MiniDiffOverChangeBuf')
 
   -- 'Delete'
-  local delete_extmarks = get_overlay_extmarks(0, 5, 6)
-  eq(delete_extmarks[1][4].virt_lines_above, false)
+  local delete_extmarks = get_overlay_extmarks(0, 5, 5)
+  eq(#delete_extmarks, 1)
 
+  eq(delete_extmarks[1][4].virt_lines_above, false)
+  eq(delete_extmarks[1][4].virt_lines_above, false)
   local delete_virt_lines = delete_extmarks[1][4].virt_lines
-
-  eq(delete_extmarks[1][4].virt_lines_above, false)
   eq(#delete_virt_lines, 1)
   eq(delete_virt_lines[1][1], { 'EEE', 'MiniDiffOverDelete' })
+end
+
+T['Overlay']['uses correct highlight groups in uneven change hunks'] = function()
+  child.lua('MiniDiff.config.options.linematch = 0')
+  set_lines({ 'aaa', 'eee', 'fff', 'ggg', 'ddd' })
+  set_ref_text(0, { 'aaa', 'bbb', 'ccc', 'ddd' })
+  local extmarks = get_overlay_extmarks(0, 1, 5)
+
+  eq(#extmarks, 1)
+  -- Both changed reference lines should be shown as virtual lines
+  local virt_lines = extmarks[1][4].virt_lines
+  eq(virt_lines[1][1][2], 'MiniDiffOverChange')
+  eq(virt_lines[2][1][2], 'MiniDiffOverChange')
+
+  -- All three changed lines should be highlighted as whole lines
+  eq(extmarks[1][2], 1)
+  eq(extmarks[1][3], 0)
+  eq(extmarks[1][4].end_row, 4)
+  eq(extmarks[1][4].end_col, 0)
+  eq(extmarks[1][4].hl_eol, true)
+  eq(extmarks[1][4].hl_group, 'MiniDiffOverContextBuf')
 end
 
 T['Overlay']['respects `view.priority`'] = function()
@@ -2370,7 +2414,10 @@ T['Overlay']['respects `view.priority`'] = function()
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
   local overlay_extmarks = get_overlay_extmarks(0, 1, 6)
   local priorities = vim.tbl_map(function(t) return t[4].priority end, overlay_extmarks)
-  eq(priorities, vim.tbl_map(function() return ref_priority end, priorities))
+  -- Some extmarks (for context of changed buffer text) have one less of
+  -- reference priority to be below highlighting for changed buffer text
+  local is_proper = vim.tbl_map(function(p) return p == ref_priority or p == (ref_priority - 1) end, priorities)
+  eq(is_proper, vim.tbl_map(function() return true end, priorities))
 end
 
 T['Overlay']['word diff'] = new_set()

@@ -60,13 +60,15 @@ You can override runtime config settings locally to buffer inside
 
 # Highlight groups ~
 
-* `MiniDiffSignAdd`     - "add" hunk lines visualization.
-* `MiniDiffSignChange`  - "change" hunk lines visualization.
-* `MiniDiffSignDelete`  - "delete" hunk lines visualization.
-* `MiniDiffOverAdd`     - added text shown in overlay.
-* `MiniDiffOverChange`  - changed text shown in overlay.
-* `MiniDiffOverContext` - context of changed text shown in overlay.
-* `MiniDiffOverDelete`  - deleted text shown in overlay.
+* `MiniDiffSignAdd`        - "add" hunk lines visualization.
+* `MiniDiffSignChange`     - "change" hunk lines visualization.
+* `MiniDiffSignDelete`     - "delete" hunk lines visualization.
+* `MiniDiffOverAdd`        - added buffer text shown in overlay.
+* `MiniDiffOverChange`     - changed reference text shown in overlay.
+* `MiniDiffOverChangeBuf`  - changed buffer text shown in overlay.
+* `MiniDiffOverContext`    - context of a change shown in reference overlay.
+* `MiniDiffOverContextBuf` - context of a change shown in buffer overlay.
+* `MiniDiffOverDelete`     - deleted reference text shown in overlay.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -151,18 +153,20 @@ It shows more diff details inside text area:
 
 - Added buffer lines are highlighted with `MiniDiffOverAdd` highlight group.
 
-- Deleted reference lines are shown as virtual text and highlighted with
+- Deleted reference lines are shown as virtual lines and highlighted with
   `MiniDiffOverDelete` highlight group.
 
-- Changed reference lines are shown as virtual text and highlighted with
-  `MiniDiffOverChange` highlight group.
+- "Change" hunks with equal number of buffer/reference lines show "word diff".
+  This is usually the case when `options.linematch` is enabled (as by default).
+  Reference line is shown next to its buffer counterpart. Changed parts are
+  highlighted with `MiniDiffOverChange` and `MiniDiffOverChangeBuf` in reference
+  and buffer lines. The rest of lines have `MiniDiffOverContext`
+  and `MiniDiffOverContextBuf` highlighting.
 
-  "Change" hunks with equal number of buffer and reference lines have special
-  treatment and show "word diff". Reference line is shown next to its buffer
-  counterpart and only changed parts of both lines are highlighted with
-  `MiniDiffOverChange`. The rest of reference line has `MiniDiffOverContext`
-  highlighting.
-  This usually is the case when `config.options.linematch` is enabled.
+  Change with unequal number of buffer/reference lines is shown with reference
+  part as virtual lines highlighted with `MiniDiffOverChange` group.
+  Corresponding buffer lines are treated as context for the change and are
+  highlighted with `MiniDiffOverContextBuf` group.
 
 Notes:
 - Word diff has non-zero context width. This means if changed characters

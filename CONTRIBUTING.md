@@ -172,7 +172,9 @@ Here is a list of all highlight groups defined inside 'mini.nvim' modules. See d
     - `MiniDiffSignDelete`
     - `MiniDiffOverAdd`
     - `MiniDiffOverChange`
+    - `MiniDiffOverChangeBuf`
     - `MiniDiffOverContext`
+    - `MiniDiffOverContextBuf`
     - `MiniDiffOverDelete`
 
 - 'mini.files':
