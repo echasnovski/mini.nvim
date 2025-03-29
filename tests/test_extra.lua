@@ -2166,7 +2166,7 @@ T['pickers']['hl_groups()']['works'] = function()
 
   child.lua_notify('_G.return_item = MiniExtra.pickers.hl_groups()')
   validate_picker_name('Highlight groups')
-  type_keys('^Diff')
+  type_keys('^Spell')
   child.expect_screenshot({ ignore_lines = { 9 } })
 
   -- Should use same group for line highlighting
@@ -2184,11 +2184,11 @@ T['pickers']['hl_groups()']['works'] = function()
 
   -- Should properly choose
   type_keys('<CR>')
-  eq(child.fn.getcmdline(), 'hi DiffAdd guibg=#343700')
-  eq(child.fn.getcmdpos(), 25)
+  eq(child.fn.getcmdline(), 'hi SpellBad cterm=undercurl gui=undercurl guisp=#eab3d9')
+  eq(child.fn.getcmdpos(), 56)
 
   -- Should return chosen value
-  eq(child.lua_get('_G.return_item'), 'DiffAdd')
+  eq(child.lua_get('_G.return_item'), 'SpellBad')
 end
 
 T['pickers']['hl_groups()']['respects non-default/linked highlight groups'] = function()
