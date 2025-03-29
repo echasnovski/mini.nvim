@@ -877,7 +877,7 @@ H.exchange_set_region_extmark = function(mode, add_highlight)
   if add_highlight and extmark_hl_group == nil then
     -- Highlighting blockwise region needs full register type with width
     local opts = { regtype = H.exchange_get_blockwise_regtype(markcoords_from, markcoords_to) }
-    vim.highlight.range(buf_id, ns_id, 'MiniOperatorsExchangeFrom', extmark_from, extmark_to, opts)
+    H.highlight_range(buf_id, ns_id, 'MiniOperatorsExchangeFrom', extmark_from, extmark_to, opts)
   end
 
   -- Return data to cache
@@ -1294,5 +1294,9 @@ end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
+
+-- TODO: Remove after compatibility with Neovim=0.10 is dropped
+H.highlight_range = function(...) vim.hl.range(...) end
+if vim.fn.has('nvim-0.11') == 0 then H.highlight_range = function(...) vim.highlight.range(...) end end
 
 return MiniOperators

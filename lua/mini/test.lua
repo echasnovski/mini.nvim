@@ -1225,7 +1225,7 @@ MiniTest.new_child_neovim = function()
   --stylua: ignore start
   local supported_vim_tables = {
     -- Collections
-    'diagnostic', 'fn', 'highlight', 'json', 'loop', 'lsp', 'mpack', 'spell', 'treesitter', 'ui',
+    'diagnostic', 'fn', 'highlight', 'hl', 'json', 'loop', 'lsp', 'mpack', 'spell', 'treesitter', 'ui',
     -- Variables
     'g', 'b', 'w', 't', 'v', 'env',
     -- Options (no 'opt' because not really useful due to use of metatables)
@@ -1435,6 +1435,7 @@ end
 ---@field diagnostic table Redirection table for |vim.diagnostic|.
 ---@field fn table Redirection table for |vim.fn|.
 ---@field highlight table Redirection table for `vim.highlight` (|lua-highlight)|.
+---@field hl table Redirection table for |vim.hl|.
 ---@field json table Redirection table for `vim.json`.
 ---@field loop table Redirection table for |vim.loop|.
 ---@field lsp table Redirection table for `vim.lsp` (|lsp-core)|.
@@ -2123,7 +2124,7 @@ H.buffer_reporter.set_lines = function(buf_id, lines, start, finish)
 
   -- Add highlight
   for _, hl_data in ipairs(hl_ranges) do
-    vim.highlight.range(buf_id, ns_id, hl_data.hl, { hl_data.line, hl_data.left }, { hl_data.line, hl_data.right })
+    H.highlight_range(buf_id, ns_id, hl_data.hl, { hl_data.line, hl_data.left }, { hl_data.line, hl_data.right })
   end
 end
 
@@ -2371,5 +2372,9 @@ end
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.tbl_flatten = vim.fn.has('nvim-0.10') == 1 and function(x) return vim.iter(x):flatten(math.huge):totable() end
   or vim.tbl_flatten
+
+-- TODO: Remove after compatibility with Neovim=0.10 is dropped
+H.highlight_range = function(...) vim.hl.range(...) end
+if vim.fn.has('nvim-0.11') == 0 then H.highlight_range = function(...) vim.highlight.range(...) end end
 
 return MiniTest

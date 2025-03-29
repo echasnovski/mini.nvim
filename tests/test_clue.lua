@@ -2017,8 +2017,9 @@ T['Querying keys']['does not entirely block redraws'] = function()
     local n = 0
     _G.add_hl = function()
       local col = n
+      local vim_hl = vim.fn.has('nvim-0.11') == 1 and vim.hl or vim.highlight
       vim.defer_fn(function()
-        vim.highlight.range(0, ns_id, 'Comment', { 0, col }, { 0, col + 1 }, {})
+        vim_hl.range(0, ns_id, 'Comment', { 0, col }, { 0, col + 1 }, {})
       end, 5)
       n = n + 1
     end

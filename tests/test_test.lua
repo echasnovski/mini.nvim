@@ -1132,6 +1132,7 @@ T['child']['redirected method tables'] = new_set({
     { 'diagnostic', 'get', { 0 } },
     { 'fn', 'fnamemodify', { '.', ':p' } },
     { 'highlight', 'range', { 0, 1, 'Comment', { 0, 1 }, { 0, 2 } } },
+    { 'hl', 'range', { 0, 1, 'Comment', { 0, 1 }, { 0, 2 } } },
     { 'json', 'encode', { { a = 1 } } },
     { 'loop', 'hrtime', {} },
     { 'lsp', 'get_active_clients', {} },
@@ -1143,11 +1144,13 @@ T['child']['redirected method tables'] = new_set({
 })
 
 T['child']['redirected method tables']['method'] = function(tbl_name, field_name, args)
+  if tbl_name == 'hl' and child.fn.has('nvim-0.11') == 0 then return end
   local method = function() return child[tbl_name][field_name](unpack(args)) end
   validate_child_method(method, { name = tbl_name .. '.' .. field_name })
 end
 
 T['child']['redirected method tables']['field'] = function(tbl_name, field_name, _)
+  if tbl_name == 'hl' and child.fn.has('nvim-0.11') == 0 then return end
   -- Although being tables, they should be overridable to allow test doubles
   validate_child_field(tbl_name, field_name, true)
 end

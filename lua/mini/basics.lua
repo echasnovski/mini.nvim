@@ -308,8 +308,8 @@ end
 --- The `config.autocommands.basic` creates some common autocommands:
 ---
 --- - Starts insert mode when opening terminal (see |startinsert| and |TermOpen|).
---- - Highlights yanked text for a brief period of time (see
----   |vim.highlight.on_yank()| and |TextYankPost|).
+--- - Highlights yanked text for a brief period of time (see |vim.hl.on_yank()|;
+---   on Neovim<0.11 - |vim.highlight.on_yank|) and |TextYankPost|).
 ---
 --- ## autocommands.relnum_in_visual_mode ~
 ---
@@ -713,7 +713,9 @@ H.apply_autocommands = function(config)
   end
 
   if config.autocommands.basic then
-    au('TextYankPost', '*', function() vim.highlight.on_yank() end, 'Highlight yanked text')
+    local f = function() vim.hl.on_yank() end
+    if vim.fn.has('nvim-0.11') == 0 then f = function() vim.highlight.on_yank() end end
+    au('TextYankPost', '*', f, 'Highlight yanked text')
 
     local start_terminal_insert = vim.schedule_wrap(function(data)
       -- Try to start terminal mode only if target terminal is current

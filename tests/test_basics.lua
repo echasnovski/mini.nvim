@@ -781,7 +781,11 @@ end
 T['Autocommands'] = new_set()
 
 T['Autocommands']['work'] = function()
-  child.lua('vim.highlight.on_yank = function() _G.been_here = true end')
+  child.lua([[
+    local on_yank = function() _G.been_here = true end
+    local module = vim.fn.has('nvim-0.11') == 1 and vim.hl or vim.highlight
+    module.on_yank = on_yank
+  ]])
   load_module()
 
   -- Highlight on yank

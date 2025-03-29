@@ -294,8 +294,9 @@ end
 ---
 --- `view.priority` is a number with priority used for visualization and
 --- overlay |extmarks|.
---- Default: 199 which is one less than `user` in |vim.highlight.priorities| to have
---- higher priority than automated extmarks but not as in user enabled ones.
+--- Default: 199 which is one less than `user` in |vim.hl.priorities| (on Neovim<0.11
+--- see |vim.highlight.priorities|) to have higher priority than automated
+--- extmarks but not as in user enabled ones.
 ---
 ---                                                  *MiniDiff-source-specification*
 --- # Source ~

@@ -799,6 +799,7 @@ Fields ~
 {diagnostic} `(table)` Redirection table for |vim.diagnostic|.
 {fn} `(table)` Redirection table for |vim.fn|.
 {highlight} `(table)` Redirection table for `vim.highlight` (|lua-highlight)|.
+{hl} `(table)` Redirection table for |vim.hl|.
 {json} `(table)` Redirection table for `vim.json`.
 {loop} `(table)` Redirection table for |vim.loop|.
 {lsp} `(table)` Redirection table for `vim.lsp` (|lsp-core)|.
