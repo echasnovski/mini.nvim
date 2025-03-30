@@ -509,7 +509,7 @@ T['map()/map_buf()']['respect `opts` or `pair_info` argument'] = function(fun_na
   -- Throws error because mapping `(` should already exist
   expect.error(
     function() apply_map(fun_name, [['i', '(', { action = 'open', pair = '()' }, { unique = true }]]) end,
-    'mapping.*exists'
+    '[Mm]apping.*exists'
   )
 end
 
