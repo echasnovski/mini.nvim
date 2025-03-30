@@ -106,6 +106,9 @@ end
 -- while Neovim>=0.11 uses 'err'
 local error_field = vim.fn.has('nvim-0.11') == 1 and 'err' or 'error'
 
+-- Log actual table params for testing proper requests
+_G.params_log = {}
+
 Months.requests = {
   ['textDocument/completion'] = function(params)
     if _G.mock_completion_error ~= nil then return { { [error_field] = _G.mock_completion_error } } end
@@ -114,6 +117,7 @@ Months.requests = {
     _G.n_textdocument_completion = (_G.n_textdocument_completion or 0) + 1
 
     params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
+    table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
 
     -- Imitate returning nothing in comments
     local line = vim.fn.getline(params.position.line + 1)
@@ -149,6 +153,7 @@ Months.requests = {
 
   ['completionItem/resolve'] = function(params)
     if _G.mock_resolve_error ~= nil then return { { [error_field] = _G.mock_resolve_error } } end
+    table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
 
     local doc = Months.data[params.label].documentation
     if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
@@ -164,6 +169,7 @@ Months.requests = {
     if _G.mock_signature_error ~= nil then return { { [error_field] = _G.mock_signature_error } } end
 
     params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
+    table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
 
     local n_line, n_col = params.position.line, params.position.character
     local line = vim.api.nvim_buf_get_lines(0, n_line, n_line + 1, false)[1]

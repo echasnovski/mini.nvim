@@ -615,6 +615,42 @@ T['Autocompletion']['forces new LSP completion for `isIncomplete` even if cancel
   eq(child.lua_get('_G.lines_at_request'), { 'J', 'Ju', 'Jul' })
 end
 
+T['Autocompletion']['sends proper context in request'] = function()
+  child.lua('MiniCompletion.config.delay.completion = ' .. small_time)
+  -- Make sure that `CompleteDonePre` event is not triggered after typing `.`
+  child.o.iskeyword = '@,48-57,_,192-255,.'
+
+  local trigger_kinds = child.lua([[
+    local res = {}
+    for k, v in pairs(vim.lsp.protocol.CompletionTriggerKind) do
+      if type(k) == 'string' then res[k] = v end
+    end
+    return res
+  ]])
+  local validate_latest_request_context = function(ref_context)
+    local latest_params = child.lua_get('_G.params_log[#_G.params_log]')
+    eq(latest_params.method, 'textDocument/completion')
+    eq(latest_params.params.context, ref_context)
+  end
+
+  -- First request is done after typing non-trigger character
+  child.lua('_G.mock_isincomplete = true')
+  type_keys('i', 'J')
+  sleep(small_time + small_time)
+  validate_latest_request_context({ triggerKind = trigger_kinds.Invoked })
+
+  -- Second request is done automatically due to `isIncomplete`
+  type_keys('u')
+  sleep(small_time + small_time)
+  validate_latest_request_context({ triggerKind = trigger_kinds.TriggerForIncompleteCompletions })
+
+  -- Third request is done after typing trigger character, although there is
+  -- still `isIncomplete` after previous request
+  type_keys('.')
+  sleep(small_time + small_time)
+  validate_latest_request_context({ triggerKind = trigger_kinds.TriggerCharacter, triggerCharacter = '.' })
+end
+
 T['Autocompletion']['respects `config.delay.completion`'] = function()
   child.lua('MiniCompletion.config.delay.completion = ' .. (2 * default_completion_delay))
 
@@ -742,6 +778,24 @@ T['Manual completion']['uses `vim.lsp.protocol.CompletionItemKind` in LSP step']
   }]])
   type_keys('i', '<C-Space>')
   child.expect_screenshot()
+end
+
+T['Manual completion']['sends proper context in request'] = function()
+  local trigger_kind_invoked = child.lua_get('vim.lsp.protocol.CompletionTriggerKind.Invoked')
+  local validate_latest_request_context = function(ref_context)
+    local latest_params = child.lua_get('_G.params_log[#_G.params_log]')
+    eq(latest_params.method, 'textDocument/completion')
+    eq(latest_params.params.context, ref_context)
+  end
+
+  -- First request is done after manual completion invocation
+  type_keys('i', 'J', '<C-Space>')
+  validate_latest_request_context({ triggerKind = trigger_kind_invoked })
+
+  -- Second request is done via API
+  child.lua('MiniCompletion.complete_twostage()')
+  eq(child.lua_get('#_G.params_log'), 2)
+  validate_latest_request_context({ triggerKind = trigger_kind_invoked })
 end
 
 T['Manual completion']['works with fallback action'] = function()

@@ -578,7 +578,7 @@ H.completion = {
   source = nil,
   text_changed_id = 0,
   timer = vim.loop.new_timer(),
-  lsp = { id = 0, status = nil, is_incomplete = false, result = nil, cancel_fun = nil },
+  lsp = { id = 0, status = nil, is_incomplete = false, result = nil, cancel_fun = nil, context = nil },
   start_pos = {},
 }
 
@@ -717,7 +717,8 @@ H.auto_completion = function()
   H.completion.timer:stop()
 
   local is_incomplete = H.completion.lsp.is_incomplete
-  local force = H.is_lsp_trigger(vim.v.char, 'completion') or is_incomplete
+  local is_trigger = H.is_lsp_trigger(vim.v.char, 'completion')
+  local force = is_trigger or is_incomplete
   if force then
     -- Force fresh LSP completion if needed. Check before checking pumvisible
     -- because it should be forced even if there are visible candidates.
@@ -753,6 +754,14 @@ H.auto_completion = function()
   -- were matches on typing start, but they disappeared during filtering), call
   -- fallback immediately.
   if H.completion.source == 'lsp' then return H.trigger_fallback() end
+
+  -- Set completion context with information about how it was triggered
+  -- Prefer manual `TriggerCharacter` over automated `...ForIncomplete...`.
+  local trigger_kind_name = is_trigger and 'TriggerCharacter'
+    or (is_incomplete and 'TriggerForIncompleteCompletions' or 'Invoked')
+  local trigger_kind = vim.lsp.protocol.CompletionTriggerKind[trigger_kind_name]
+  local trigger_char = trigger_kind_name == 'TriggerCharacter' and vim.v.char or nil
+  H.completion.lsp.context = { triggerKind = trigger_kind, triggerCharacter = trigger_char }
 
   -- Debounce delay improves experience (can type fast without many popups)
   -- Request right away if improving incomplete suggestions (less flickering),
@@ -903,6 +912,7 @@ H.default_fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n',
 H.stop_completion = function(keep_source, keep_lsp_is_incomplete)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
+  H.completion.lsp.context = nil
   H.completion.fallback, H.completion.force = true, false
   if not keep_lsp_is_incomplete then H.completion.lsp.is_incomplete = false end
   if not keep_source then H.completion.source = nil end
@@ -1016,7 +1026,8 @@ H.make_completion_request = function()
   H.completion.lsp.id = current_id
   H.completion.lsp.status = 'sent'
 
-  local buf_id, params = vim.api.nvim_get_current_buf(), H.make_position_params()
+  local context = H.completion.lsp.context or { triggerKind = vim.lsp.protocol.CompletionTriggerKind.Invoked }
+  local buf_id, params = vim.api.nvim_get_current_buf(), H.make_position_params(context)
   -- NOTE: use `buf_request_all()` (instead of `buf_request()`) to easily
   -- handle possible fallback and to have all completion suggestions be later
   -- filtered with one `base`. Anyway, the most common situation is with one
@@ -1739,12 +1750,20 @@ H.get_buf_lsp_clients = function() return vim.lsp.get_clients({ bufnr = 0 }) end
 if vim.fn.has('nvim-0.10') == 0 then H.get_buf_lsp_clients = function() return vim.lsp.buf_get_clients() end end
 
 -- TODO: Remove after compatibility with Neovim=0.10 is dropped
-H.make_position_params = function() return vim.lsp.util.make_position_params() end
+H.make_position_params = function(context)
+  local res = vim.lsp.util.make_position_params()
+  res.context = context
+  return res
+end
 if vim.fn.has('nvim-0.11') == 1 then
   -- Use callable `params` to workaround mandatory non-nil `offset_encoding` in
   -- `vim.lsp.util.make_position_params()` on Neovim>=0.11
-  H.make_position_params = function()
-    return function(client, _) return vim.lsp.util.make_position_params(0, client.offset_encoding) end
+  H.make_position_params = function(context)
+    return function(client, _)
+      local res = vim.lsp.util.make_position_params(0, client.offset_encoding)
+      res.context = context
+      return res
+    end
   end
 end
 
