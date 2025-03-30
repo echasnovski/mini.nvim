@@ -721,7 +721,7 @@ end
 
 --- Expect equality to reference screenshot
 ---
----@param screenshot table|nil Array with screenshot information. Usually an output
+---@param screenshot table|function|nil Array with screenshot information. Usually an output
 ---   of `child.get_screenshot()` (see |MiniTest-child-neovim.get_screenshot()|).
 ---   If `nil`, expectation passed.
 ---@param path string|nil Path to reference screenshot. If `nil`, constructed
@@ -765,7 +765,7 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if opts.force or vim.fn.filereadable(path) == 0 then
     local dir_path = vim.fn.fnamemodify(path, ':p:h')
     vim.fn.mkdir(dir_path, 'p')
-    H.screenshot_write(screenshot, path)
+    H.screenshot_write(H.exec_callable(screenshot), path)
 
     MiniTest.add_note('Created reference screenshot at path ' .. vim.inspect(path))
     return true
@@ -773,8 +773,11 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
 
   local reference = H.screenshot_read(path)
 
-  -- Compare
-  local are_same, cause = H.screenshot_compare(reference, screenshot, opts)
+  local are_same, cause = H.maybe_wait(
+    function() return H.screenshot_compare(reference, H.exec_callable(screenshot), opts) end,
+    opts.timeout,
+    opts.interval
+  )
 
   if are_same then return true end
 
@@ -2340,7 +2343,7 @@ H.wrap_callable = function(f)
 end
 
 H.exec_callable = function(f, ...)
-  if not vim.is_callable(f) then return end
+  if not vim.is_callable(f) then return f end
   return f(...)
 end
 
@@ -2367,6 +2370,16 @@ H.string_to_chars = function(s)
     table.insert(res, vim.fn.strcharpart(s, i - 1, 1))
   end
   return res
+end
+
+H.maybe_wait = function(cond, timeout, interval)
+  if not tonumber(timeout) then return cond() end
+  local res
+  vim.wait(timeout, function()
+    res = { cond() }
+    return res[1]
+  end, interval)
+  return unpack(res)
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
