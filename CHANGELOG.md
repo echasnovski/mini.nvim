@@ -1,5 +1,7 @@
 # Version 0.15.0.9000
 
+- Soft deprecate support for Neovim 0.8. It will be fully stopped in next release.
+
 - Unify behavior of floating windows:
     - Truncate title/footer from left if it is too wide.
     - Set default title if window is allowed to have border.

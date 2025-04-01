@@ -229,6 +229,15 @@ local H = {}
 ---                                        -- needs `highlighters` field present
 --- <
 MiniHipatterns.setup = function(config)
+  -- TODO: Remove after Neovim=0.8 support is dropped
+  if vim.fn.has('nvim-0.9') == 0 then
+    vim.notify(
+      '(mini.hipatterns) Neovim<0.9 is soft deprecated (module works but not supported).'
+        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
+        .. ' Please update your Neovim version.'
+    )
+  end
+
   -- Export module
   _G.MiniHipatterns = MiniHipatterns
 
