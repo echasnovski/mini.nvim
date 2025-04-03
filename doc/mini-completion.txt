@@ -127,9 +127,8 @@ Notes:
   This setup is not default to allow simultaneous usage of filetype-speicific
   'omnifunc' (with manual |i_CTRL-X_CTRL-O|) and automated LSP completion.
 
-- The `additionalTextEdits` data can come from LSP server only in response for
-  "textDocument/resolve". For these servers select completion item and wait
-  for `config.delay.info` time plus server response time to process the request.
+- Use |MiniCompletion.get_lsp_capabilities()| to get/set information about part
+  of LSP specification supported by module. See its help for usability notes.
 
 - Uses `vim.lsp.protocol.CompletionItemKind` map in LSP step to show a readable
   version of item's kind. Modify it directly to change what is displayed.
@@ -408,6 +407,45 @@ Parameters ~
 See also ~
 |MiniSnippets-session| if 'mini.snippets' is set up.
 |vim.snippet| for Neovim's built-in snippet engine.
+
+------------------------------------------------------------------------------
+                                         *MiniCompletion.get_lsp_capabilities()*
+                 `MiniCompletion.get_lsp_capabilities`({opts})
+Get client LSP capabilities
+
+Possible usages:
+- On Neovim>=0.11 via |vim.lsp.config()|: >lua
+
+  vim.lsp.config('*', {capabilities = MiniCompletion.get_lsp_capabilities()})
+<
+- Together with |vim.lsp.protocol.make_client_capabilities()| to get the full
+  client capabilities (use |vim.tbl_deep_extend()| to merge tables).
+
+- Manually execute `:=MiniCompletion.get_lsp_capabilities()` to see the info.
+
+Notes:
+- It declares completion resolve support for `'additionalTextEdits'` (usually
+  used for something like auto-import feature), as it is usually a more robust
+  choice for various LSP servers. As a consequence, this requires selecting
+  completion item and waiting for `config.delay.info` milliseconds plus server
+  response time to process the request.
+  To not have to wait after an item selection and if the server handles absent
+  `'additionalTextEdits'` well, set `opts.resolve_additional_text_edits = false`.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <resolve_additional_text_edits> `(boolean)` - whether to declare
+    `'additionalTextEdits'` as possible to resolve in `'completionitem/resolve'`
+    requrest. See above "Notes" section.
+    Default: `true`.
+
+Return ~
+`(table)` Data about LSP capabilities supported by 'mini.completion'. Has same
+  structure as relevant parts of |vim.lsp.protocol.make_client_capabilities()|.
+
+See also ~
+Structures of `completionClientCapabilities` and `signatureHelpClientCapabilities`
+at https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

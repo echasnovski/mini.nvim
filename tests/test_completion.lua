@@ -375,6 +375,40 @@ T['default_process_items()']['validates input'] = function()
   )
 end
 
+T['get_lsp_capabilities()'] = new_set()
+
+T['get_lsp_capabilities()']['works'] = function()
+  local validate_keys = function(x, ref_keys)
+    local keys = vim.tbl_keys(x)
+    table.sort(keys)
+    eq(keys, ref_keys)
+  end
+
+  local out = child.lua_get('MiniCompletion.get_lsp_capabilities()')
+  validate_keys(out, { 'textDocument' })
+  validate_keys(out.textDocument, { 'completion', 'signatureHelp' })
+  --stylua: ignore
+  local completion_keys = {
+    'completionItem', 'completionItemKind', 'completionList',
+    'contextSupport', 'dynamicRegistration', 'insertTextMode',
+  }
+  validate_keys(out.textDocument.completion, completion_keys)
+  validate_keys(out.textDocument.signatureHelp, { 'contextSupport', 'dynamicRegistration', 'signatureInformation' })
+
+  local ref_resolve_properties = { 'additionalTextEdits', 'detail', 'documentation' }
+  eq(out.textDocument.completion.completionItem.resolveSupport.properties, ref_resolve_properties)
+end
+
+T['get_lsp_capabilities()']['respects `opts.resolve_additional_text_edits`'] = function()
+  local validate = function(out, ref_resolve_properties)
+    eq(out.textDocument.completion.completionItem.resolveSupport.properties, ref_resolve_properties)
+  end
+  local out_false = child.lua_get('MiniCompletion.get_lsp_capabilities({ resolve_additional_text_edits = false })')
+  validate(out_false, { 'detail', 'documentation' })
+  local out_true = child.lua_get('MiniCompletion.get_lsp_capabilities({ resolve_additional_text_edits = true })')
+  validate(out_true, { 'additionalTextEdits', 'detail', 'documentation' })
+end
+
 -- Integration tests ==========================================================
 T['Autocompletion'] = new_set({
   hooks = {

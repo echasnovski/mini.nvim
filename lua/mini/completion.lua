@@ -127,9 +127,8 @@
 ---   This setup is not default to allow simultaneous usage of filetype-speicific
 ---   'omnifunc' (with manual |i_CTRL-X_CTRL-O|) and automated LSP completion.
 ---
---- - The `additionalTextEdits` data can come from LSP server only in response for
----   "textDocument/resolve". For these servers select completion item and wait
----   for `config.delay.info` time plus server response time to process the request.
+--- - Use |MiniCompletion.get_lsp_capabilities()| to get/set information about part
+---   of LSP specification supported by module. See its help for usability notes.
 ---
 --- - Uses `vim.lsp.protocol.CompletionItemKind` map in LSP step to show a readable
 ---   version of item's kind. Modify it directly to change what is displayed.
@@ -562,6 +561,86 @@ MiniCompletion.default_snippet_insert = function(snippet)
   local n = #lines
   local new_pos = n == 1 and { pos[1], pos[2] + lines[n]:len() } or { pos[1] + n - 1, lines[n]:len() }
   vim.api.nvim_win_set_cursor(0, new_pos)
+end
+
+--- Get client LSP capabilities
+---
+--- Possible usages:
+--- - On Neovim>=0.11 via |vim.lsp.config()|: >lua
+---
+---   vim.lsp.config('*', {capabilities = MiniCompletion.get_lsp_capabilities()})
+--- <
+--- - Together with |vim.lsp.protocol.make_client_capabilities()| to get the full
+---   client capabilities (use |vim.tbl_deep_extend()| to merge tables).
+---
+--- - Manually execute `:=MiniCompletion.get_lsp_capabilities()` to see the info.
+---
+--- Notes:
+--- - It declares completion resolve support for `'additionalTextEdits'` (usually
+---   used for something like auto-import feature), as it is usually a more robust
+---   choice for various LSP servers. As a consequence, this requires selecting
+---   completion item and waiting for `config.delay.info` milliseconds plus server
+---   response time to process the request.
+---   To not have to wait after an item selection and if the server handles absent
+---   `'additionalTextEdits'` well, set `opts.resolve_additional_text_edits = false`.
+---
+---@param opts table|nil Options. Possible fields:
+---   - <resolve_additional_text_edits> `(boolean)` - whether to declare
+---     `'additionalTextEdits'` as possible to resolve in `'completionitem/resolve'`
+---     requrest. See above "Notes" section.
+---     Default: `true`.
+---
+---@return table Data about LSP capabilities supported by 'mini.completion'. Has same
+---   structure as relevant parts of |vim.lsp.protocol.make_client_capabilities()|.
+---
+---@seealso Structures of `completionClientCapabilities` and `signatureHelpClientCapabilities`
+--- at https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification
+MiniCompletion.get_lsp_capabilities = function(opts)
+  opts = vim.tbl_extend('force', { resolve_additional_text_edits = true }, opts or {})
+
+  local resolve_support = { 'detail', 'documentation' }
+  if opts.resolve_additional_text_edits then table.insert(resolve_support, 1, 'additionalTextEdits') end
+
+  return {
+    textDocument = {
+      -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionClientCapabilities
+      completion = {
+        dynamicRegistration = false,
+        completionItem = {
+          snippetSupport = true,
+          commitCharactersSupport = false,
+          documentationFormat = { 'markdown', 'plaintext' },
+          deprecatedSupport = false,
+          preselectSupport = false,
+          tagSupport = { valueSet = {} },
+          insertReplaceSupport = true,
+          resolveSupport = { properties = resolve_support },
+          insertTextModeSupport = { valueSet = { 1 } },
+          labelDetailsSupport = true,
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 },
+        },
+        contextSupport = true,
+        insertTextMode = 1,
+        completionList = {
+          itemDefaults = { 'commitCharacters', 'editRange', 'insertTextFormat', 'insertTextMode', 'data' },
+        },
+      },
+      -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelpClientCapabilities
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          documentationFormat = { 'markdown', 'plaintext' },
+          parameterInformation = {
+            labelOffsetSupport = false,
+          },
+          activeParameterSupport = true,
+        },
+        contextSupport = false,
+      },
+    },
+  }
 end
 
 -- Helper data ================================================================
