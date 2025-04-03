@@ -109,13 +109,23 @@ Notes:
 
 # Notes ~
 
-- More appropriate (albeit slightly advanced) LSP completion setup is to set
-  it not on every |BufEnter| event (default), but on every attach of LSP
-  client. To do that:
-    - Use in initial config:
-    `lsp_completion = { source_func = 'omnifunc', auto_setup = false }`.
-    - In `on_attach()` of every LSP client set 'omnifunc' option to exactly
-      `v:lua.MiniCompletion.completefunc_lsp`.
+- A more appropriate (albeit slightly advanced) LSP completion setup is to set
+  it not on every |BufEnter| event (default), but on every attach of LSP client.
+  To do that:
+    - Use in |MiniCompletion.setup()| config: >lua
+
+      lsp_completion = { source_func = 'omnifunc', auto_setup = false }
+<
+    - Set 'omnifunc' option to exactly `v:lua.MiniCompletion.completefunc_lsp`
+      for every client attach in an |LspAttach| event. Like this: >lua
+
+      local on_attach = function(args)
+        vim.bo[args.buf].omnifunc = 'v:lua.MiniCompletion.completefunc_lsp'
+      end
+      vim.api.nvim_create_autocmd('LspAttach', { callback = on_attach })
+<
+  This setup is not default to allow simultaneous usage of filetype-speicific
+  'omnifunc' (with manual |i_CTRL-X_CTRL-O|) and automated LSP completion.
 
 - The `additionalTextEdits` data can come from LSP server only in response for
   "textDocument/resolve". For these servers select completion item and wait
