@@ -959,6 +959,30 @@ T['Manual completion']['respects `filterText` from LSP response'] = function()
   eq(get_cursor(), { 1, 13 })
 end
 
+T['Manual completion']['respects `filterText` during built-in filtering'] = function()
+  set_lines({})
+  child.set_size(10, 20)
+  child.lua([[
+    local kinds = vim.lsp.protocol.CompletionItemKind
+    local format_snippet = vim.lsp.protocol.InsertTextFormat.Snippet
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      return {
+        { label = 'ab', filterText = 'ba' },
+        { label = 'cba', filterText = 'abc' },
+        -- Snippets should still be filtered according to 'filterText' and
+        -- not what snippet will be inserted later
+        { label = 'dcba', filterText = 'ab$1cd', insertTextFormat = format_snippet },
+        { label = 'edcba', filterText = 'abcde', insertText = 'snip$1pet', insertTextFormat = format_snippet },
+      }
+    end
+  ]])
+
+  type_keys('i', '<C-Space>')
+  child.expect_screenshot()
+  type_keys('a')
+  child.expect_screenshot()
+end
+
 T['Manual completion']['respects `labelDetails` from LSP response'] = function()
   child.set_size(16, 32)
   child.lua([[

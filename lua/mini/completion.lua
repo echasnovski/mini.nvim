@@ -1193,8 +1193,9 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
 
     local lsp_data = { completion_item = item, client_id = client_id, needs_snippet_insert = needs_snippet_insert }
     table.insert(res, {
-      -- Show less for snippet items (usually less confusion)
-      word = needs_snippet_insert and item.label or word,
+      -- Show less for snippet items (usually less confusion), but preserve
+      -- built-in filtering capabilities (as it uses `word` to filter).
+      word = needs_snippet_insert and H.lsp_get_filterword(item) or word,
       abbr = item.label,
       kind = item_kinds[item.kind] or 'Unknown',
       kind_hlgroup = item.kind_hlgroup,
@@ -1230,7 +1231,7 @@ H.make_add_kind_hlgroup = function()
 end
 
 H.get_completion_word = function(item)
-  return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or item.label or ''
+  return H.table_get(item, { 'textEdit', 'newText' }) or item.insertText or H.lsp_get_filterword(item) or ''
 end
 
 H.make_lsp_extra_actions = function(lsp_data)
