@@ -482,7 +482,7 @@ T['disable()']['works'] = function()
   set_lines({ 'aaa', 'bbb' })
   set_ref_text(0, { 'aaa' })
   eq(child.b.minidiff_summary == vim.NIL, false)
-  eq(child.b.minidiff_summary == vim.NIL, false)
+  eq(child.b.minidiff_summary_string == vim.NIL, false)
 
   disable(buf_id)
   eq(is_buf_enabled(buf_id), false)
@@ -492,7 +492,7 @@ T['disable()']['works'] = function()
 
   -- Should delete buffer-local variables
   eq(child.b.minidiff_summary == vim.NIL, true)
-  eq(child.b.minidiff_summary == vim.NIL, true)
+  eq(child.b.minidiff_summary_string == vim.NIL, true)
 
   -- Should detach source
   validate_dummy_log({ { 'detach', { buf_id } } })
