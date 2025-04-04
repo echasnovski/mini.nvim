@@ -30,7 +30,7 @@ https://github.com/echasnovski/mini.nvim/assets/24854248/77849127-ee9f-430b-9eff
 
 - Special toggleable overlay view with more hunk details inside text area.
 
-- Completely configurable per buffer source of reference text used to keep it up to date and define interactions with it. By default uses buffer's file content in Git index.
+- Completely configurable per buffer source(s) of reference text used to keep it up to date and define interactions with it. Can be array of sources which are attempted to attach in order. By default uses Git source (buffer's file text from Git index as reference).
 
 - Configurable mappings to manage diff hunks:
     - Apply and reset hunks inside region (selected visually or with a dot-repeatable operator).
@@ -236,7 +236,7 @@ Here are code snippets for some common installation methods (use only one):
     priority = 199,
   },
 
-  -- Source for how reference text is computed/updated/etc
+  -- Source(s) for how reference text is computed/updated/etc
   -- Uses content from Git index by default
   source = nil,
 

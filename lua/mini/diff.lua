@@ -15,10 +15,10 @@
 --- - Special toggleable overlay view with more hunk details inside text area.
 ---   See |MiniDiff.toggle_overlay()|.
 ---
---- - Completely configurable per buffer source of reference text used to keep
----   it up to date and define interactions with it.
----   See |MiniDiff-source-specification|. By default uses buffer's file content
----   in Git index. See |MiniDiff.gen_source.git()|.
+--- - Completely configurable per buffer source(s) of reference text used to keep
+---   it up to date and define interactions with it. Can be array of sources which
+---   are attempted to attach in order. See |MiniDiff-source-specification|.
+---   By default uses Git source. See |MiniDiff.gen_source.git()|.
 ---
 --- - Configurable mappings to manage diff hunks:
 ---     - Apply and reset hunks inside region (selected visually or with
@@ -199,7 +199,7 @@
 --- used in custom statusline to show an overview of hunks in current buffer:
 ---
 --- - `vim.b.minidiff_summary` is a table with the following fields:
----     - `source_name` - name of the source.
+---     - `source_name` - name of the active source.
 ---     - `n_ranges` - number of hunk ranges (sequences of contiguous hunks).
 ---     - `add` - number of added lines.
 ---     - `change` - number of changed lines.
@@ -310,11 +310,15 @@ end
 ---                                                  *MiniDiff-source-specification*
 --- # Source ~
 ---
---- `config.source` is a table defining how reference text is managed in
---- a particular buffer. It can have the following fields:
+--- `config.source` is a table with single source or array of them. Single source
+--- defines how reference text is managed in a particular buffer. Sources in array
+--- are attempted to attach in order; call |MiniDiff.disable()| if none attaches.
+---
+--- A single source table can have the following fields:
+---
 --- - <attach> `(function)` - callable which defines how and when reference text
----   should be updated inside a particular buffer. It is called
----   inside |MiniDiff.enable()| with a buffer identifier as a single argument.
+---   is updated inside a particular buffer. It is used inside |MiniDiff.enable()|
+---   with a buffer identifier as a single argument.
 ---
 ---   Should execute logic which results into calling |MiniDiff.set_ref_text()|
 ---   when reference text for buffer needs to be updated. Like inside callback
@@ -323,9 +327,10 @@ end
 ---   For example, default Git source watches when ".git/index" file is changed
 ---   and computes reference text as the one from Git index for current file.
 ---
----   Can return `false` to force buffer to not be enabled. If this can not be
----   inferred immediately (for example, due to asynchronous execution), should
----   call |MiniDiff.disable()| later to disable buffer.
+---   Can return `false` to indicate that attach has failed. If attach fail can
+---   not be inferred immediately (for example, due to asynchronous execution),
+---   should explicitly call |MiniDiff.fail_attch()| with appropriate arguments.
+---   This is important to properly process array of sources.
 ---
 ---   No default value, should be always supplied.
 ---
@@ -348,7 +353,7 @@ end
 ---
 ---   If not supplied, applying hunks throws an error.
 ---
---- Default: |MiniDiff.gen_source.git()|.
+--- Default: a single |MiniDiff.gen_source.git()|.
 ---
 --- # Delay ~
 ---
@@ -414,7 +419,7 @@ MiniDiff.config = {
     priority = 199,
   },
 
-  -- Source for how reference text is computed/updated/etc
+  -- Source(s) for how reference text is computed/updated/etc
   -- Uses content from Git index by default
   source = nil,
 
@@ -475,10 +480,6 @@ MiniDiff.enable = function(buf_id)
   -- Register enabled buffer with cached data for performance
   H.update_buf_cache(buf_id)
 
-  -- Try attaching source
-  local attach_output = H.cache[buf_id].source.attach(buf_id)
-  if attach_output == false then return MiniDiff.disable(buf_id) end
-
   -- Add buffer watchers
   vim.api.nvim_buf_attach(buf_id, false, {
     -- Called on every text change (`:h nvim_buf_lines_event`)
@@ -499,6 +500,11 @@ MiniDiff.enable = function(buf_id)
 
   -- Add buffer autocommands
   H.setup_buf_autocommands(buf_id)
+
+  -- Try attaching source after all necessary watchers are set up. It is needed
+  -- to still have them set up if first source of many returned `false`.
+  local attach_output = H.get_active_source(H.cache[buf_id]).attach(buf_id)
+  if attach_output == false then MiniDiff.fail_attach(buf_id) end
 end
 
 --- Disable diff processing in buffer
@@ -514,7 +520,7 @@ MiniDiff.disable = function(buf_id)
   pcall(vim.api.nvim_del_augroup_by_id, buf_cache.augroup)
   vim.b[buf_id].minidiff_summary, vim.b[buf_id].minidiff_summary_string = nil, nil
   H.clear_all_diff(buf_id)
-  pcall(buf_cache.source.detach, buf_id)
+  pcall(H.get_active_source(buf_cache).detach, buf_id)
 end
 
 --- Toggle diff processing in buffer
@@ -622,10 +628,15 @@ end
 --- Generate builtin sources
 ---
 --- This is a table with function elements. Call to actually get source.
---- Example of using |MiniDiff.gen_source.save()|: >lua
+--- Examples: >lua
 ---
 ---   local diff = require('mini.diff')
+---
+---   -- Single `save` source
 ---   diff.setup({ source = diff.gen_source.save() })
+---
+---   -- Multiple sources (attempted to attach in order)
+---   diff.setup({ source = { diff.gen_source.git(), diff.gen_source.save() } })
 --- <
 MiniDiff.gen_source = {}
 
@@ -751,7 +762,7 @@ MiniDiff.do_hunks = function(buf_id, action, opts)
 
   local hunks = H.get_hunks_in_range(buf_cache.hunks, line_start, line_end)
   if #hunks == 0 then return H.notify('No hunks to ' .. action, 'INFO') end
-  if action == 'apply' then buf_cache.source.apply_hunks(buf_id, hunks) end
+  if action == 'apply' then H.get_active_source(buf_cache).apply_hunks(buf_id, hunks) end
   if action == 'reset' then H.reset_hunks(buf_id, hunks) end
   if action == 'yank' then H.yank_hunks_ref(buf_cache.ref_text, hunks, opts.register) end
 end
@@ -868,11 +879,35 @@ MiniDiff.textobject = function()
   vim.cmd(string.format('normal! %dGV%dG', cur_region.from, cur_region.to))
 end
 
+--- Indicate source attach fail
+---
+--- Try to attach next source; if there is none - call |MiniDiff.disable()|.
+---
+---@param buf_id integer Buffer identifier for which attach has failed.
+MiniDiff.fail_attach = function(buf_id)
+  buf_id = H.validate_buf_id(buf_id)
+
+  -- Do nothing if there was no attempt to enable
+  local buf_cache = H.cache[buf_id]
+  if buf_cache == nil then return end
+
+  -- If no next source, disable buffer without calling any of `detach`
+  if buf_cache.source_id >= #buf_cache.source then
+    H.cache[buf_id].source_id = math.huge
+    return MiniDiff.disable(buf_id)
+  end
+
+  -- Try attaching next source
+  buf_cache.source_id = buf_cache.source_id + 1
+  local attach_output = H.get_active_source(H.cache[buf_id]).attach(buf_id)
+  if attach_output == false then MiniDiff.fail_attach(buf_id) end
+end
+
 -- Helper data ================================================================
 -- Module default config
 H.default_config = MiniDiff.config
 
-H.default_source = MiniDiff.gen_source.git()
+H.default_source = { MiniDiff.gen_source.git() }
 
 -- Timers
 H.timer_diff_update = vim.loop.new_timer()
@@ -1098,6 +1133,7 @@ H.update_buf_cache = function(buf_id)
   new_cache.config = buf_config
   new_cache.extmark_opts = H.convert_view_to_extmark_opts(buf_config.view)
   new_cache.source = H.normalize_source(buf_config.source or H.default_source)
+  new_cache.source_id = new_cache.source_id or 1
 
   new_cache.hunks = new_cache.hunks or {}
   new_cache.summary = new_cache.summary or {}
@@ -1132,20 +1168,29 @@ H.setup_buf_autocommands = function(buf_id)
 end
 
 H.normalize_source = function(source)
+  -- Normalize to an array of sources
   if type(source) ~= 'table' then H.error('`source` should be table.') end
+  if source[1] == nil then source = { source } end
 
-  local res = { attach = source.attach }
-  res.name = source.name or 'unknown'
-  res.detach = source.detach or function(_) end
-  res.apply_hunks = source.apply_hunks or function(_) H.error('Current source does not support applying hunks.') end
+  local res = {}
+  for i, s in ipairs(source) do
+    local cur_s = { attach = s.attach }
+    cur_s.name = s.name or 'unknown'
+    cur_s.detach = s.detach or function(_) end
+    cur_s.apply_hunks = s.apply_hunks or function(_) H.error('Current source does not support applying hunks.') end
 
-  if type(res.name) ~= 'string' then H.error('`source.name` should be string.') end
-  H.validate_callable(res.attach, 'source.attach')
-  H.validate_callable(res.detach, 'source.detach')
-  H.validate_callable(res.apply_hunks, 'source.apply_hunks')
+    if type(cur_s.name) ~= 'string' then H.error('`source.name` should be string.') end
+    H.validate_callable(cur_s.attach, 'source.attach')
+    H.validate_callable(cur_s.detach, 'source.detach')
+    H.validate_callable(cur_s.apply_hunks, 'source.apply_hunks')
+
+    res[i] = cur_s
+  end
 
   return res
 end
+
+H.get_active_source = function(buf_cache) return buf_cache.source[buf_cache.source_id] or {} end
 
 H.convert_view_to_extmark_opts = function(view)
   local extmark_data = H.style_extmark_data[view.style]
@@ -1228,7 +1273,7 @@ H.update_buf_diff = vim.schedule_wrap(function(buf_id)
     return
   end
   if type(buf_cache.ref_text) ~= 'string' or H.is_disabled(buf_id) then
-    local summary = { source_name = buf_cache.source.name }
+    local summary = { source_name = H.get_active_source(buf_cache).name }
     buf_cache.hunks, buf_cache.viz_lines, buf_cache.overlay_lines, buf_cache.summary = {}, {}, {}, summary
     vim.b[buf_id].minidiff_summary, vim.b[buf_id].minidiff_summary_string = summary, ''
     return
@@ -1314,7 +1359,7 @@ H.update_hunk_data = function(diff, buf_cache, buf_lines)
 
   buf_cache.hunks, buf_cache.viz_lines, buf_cache.overlay_lines = hunks, viz_lines, overlay_lines
   buf_cache.summary = { add = n_add, change = n_change, delete = n_delete, n_ranges = n_ranges }
-  buf_cache.summary.source_name = buf_cache.source.name
+  buf_cache.summary.source_name = H.get_active_source(buf_cache).name
 end
 
 H.clear_all_diff = function(buf_id)
@@ -1634,7 +1679,7 @@ H.git_start_watching_index = function(buf_id, path)
       H.cache[buf_id] = nil
       return
     end
-    MiniDiff.disable(buf_id)
+    MiniDiff.fail_attach(buf_id)
     H.git_cache[buf_id] = {}
   end)
 

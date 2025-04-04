@@ -61,7 +61,7 @@ local edit = function(path)
 end
 
 local set_ref_text = function(...)
-  local res = child.lua_get([[require('mini.diff').set_ref_text(...)]], { ... })
+  child.lua([[require('mini.diff').set_ref_text(...)]], { ... })
   -- Slow context needs a small delay to get things up to date
   if helpers.is_slow() then sleep(small_time) end
 end
@@ -89,6 +89,7 @@ local is_buf_enabled = function(buf_id) return get_buf_data(buf_id) ~= vim.NIL e
 -- - Dummy source, which is set by default in most tests
 local setup_with_dummy_source = function(text_change_delay)
   text_change_delay = text_change_delay or dummy_text_change_delay
+  child.lua('_G.text_change_delay = ' .. text_change_delay)
   child.lua([[
     _G.dummy_log = {}
     _G.dummy_source = {
@@ -97,15 +98,8 @@ local setup_with_dummy_source = function(text_change_delay)
       detach = function(...) table.insert(_G.dummy_log, { 'detach', { ... } }) end,
       apply_hunks = function(...) table.insert(_G.dummy_log, { 'apply_hunks', { ... } }) end,
     }
+    require('mini.diff').setup({ source = _G.dummy_source, delay = { text_change = _G.text_change_delay } })
   ]])
-  local lua_cmd = string.format(
-    [[require('mini.diff').setup({
-    delay = { text_change = %d },
-    source = _G.dummy_source,
-  })]],
-    text_change_delay
-  )
-  child.lua(lua_cmd)
 end
 
 local validate_dummy_log = function(ref_log) eq(child.lua_get('_G.dummy_log'), ref_log) end
@@ -1871,6 +1865,13 @@ T['textobject()'] = new_set()
 
 T['textobject()']['is present'] = function() eq(child.lua_get('type(MiniDiff.textobject)'), 'function') end
 
+-- More thorough tests are done in "Multiple source" set of "Integration tests"
+T['fail_attach()'] = new_set()
+
+T['fail_attach()']['validates arguments'] = function()
+  expect.error(function() child.lua('MiniDiff.fail_attach("a")') end, '`buf_id`.*valid buffer id')
+end
+
 -- Integration tests ==========================================================
 T['Auto enable'] = new_set()
 
@@ -3119,6 +3120,229 @@ T['Goto']['works with different mappings'] = function()
   validate('[g', { 3, 0 })
   validate(']g', { 5, 0 })
   validate(']G', { 7, 0 })
+end
+
+T['Array of sources'] = new_set()
+
+local setup_array_sources = function(n_attach_fails, fail_delay, text_change_delay)
+  child.lua('_G.n_attach_fails = ' .. (n_attach_fails or 2))
+  child.lua('_G.fail_delay = ' .. (fail_delay or (2 * small_time)))
+  child.lua('_G.text_change_delay = ' .. (text_change_delay or (3 * small_time)))
+
+  child.lua([[
+    _G.log = {}
+    local make_source = function(id, do_attach, fail)
+      return {
+        name = 'Source ' .. id,
+        attach = function(buf_id)
+          table.insert(_G.log, 'Source ' .. id .. ' attach')
+          if not do_attach() then return fail(buf_id, 'Source ' .. id) end
+          MiniDiff.set_ref_text(buf_id, 'This is source ' .. id .. '\n')
+          table.insert(_G.log, 'Source ' .. id .. ' attach success')
+        end,
+        detach = function(buf_id) table.insert(_G.log, 'Source ' .. id .. ' detach') end,
+        apply_hunks = function(buf_id, hunks)
+          table.insert(_G.log, 'Source ' .. id .. ' apply hunks')
+          MiniDiff.set_ref_text(buf_id, 'This is source ' .. id .. '\nAfter applying hunks\n')
+        end,
+      }
+    end
+
+    _G.n_attach_tries = 0
+    local do_attach = function()
+      _G.n_attach_tries = _G.n_attach_tries + 1
+      return _G.n_attach_tries > _G.n_attach_fails
+    end
+
+    local fail_now = function(_, source_name)
+      table.insert(_G.log, source_name .. ' attach fail')
+      return false
+    end
+    local fail_later = function(buf_id, source_name)
+      vim.defer_fn(function()
+        table.insert(_G.log, source_name .. ' attach fail')
+        MiniDiff.fail_attach(buf_id)
+      end, _G.fail_delay)
+    end
+
+    local source_1 = make_source(1, do_attach, fail_now)
+    local source_2 = make_source(2, do_attach, fail_later)
+    local source_3 = make_source(3, do_attach, fail_now)
+
+    require('mini.diff').setup({
+      -- Supplying array of sources should try to attach them in order
+      source = { source_1, source_2, source_3 },
+      delay = { text_change = text_change_delay },
+    })
+  ]])
+end
+
+T['Array of sources']['works'] = function()
+  local n_attach_fails, fail_delay, text_change_delay = 2, 2 * small_time, 3 * small_time
+  setup_array_sources(n_attach_fails, fail_delay, text_change_delay)
+
+  set_buf(new_scratch_buf())
+  set_lines({ 'This is' })
+  enable(0)
+
+  local ref_log = {
+    -- First source fails immediately
+    'Source 1 attach',
+    'Source 1 attach fail',
+    -- Second source delays its fail
+    'Source 2 attach',
+  }
+  eq(child.lua_get('_G.log'), ref_log)
+
+  -- - No source should be yet attached
+  eq(get_buf_data(0).ref_text, nil)
+  eq(child.b.minidiff_summary, vim.NIL)
+
+  -- After waiting for source 2 to fail, it should attach source 3
+  sleep(fail_delay + small_time)
+  vim.list_extend(ref_log, { 'Source 2 attach fail', 'Source 3 attach', 'Source 3 attach success' })
+
+  eq(child.lua_get('_G.log'), ref_log)
+  eq(get_buf_data(0).ref_text, 'This is source 3\n')
+
+  local ref_summary = { add = 0, change = 1, delete = 0, n_ranges = 1, source_name = 'Source 3' }
+  eq(child.b.minidiff_summary, ref_summary)
+
+  -- Should react to text change
+  set_lines({ 'This is', 'new', 'lines' })
+  sleep(text_change_delay + small_time)
+  ref_summary.add = 2
+  eq(child.b.minidiff_summary, ref_summary)
+
+  -- Should use methods from proper source
+  child.lua('_G.log = {}')
+  do_hunks(0, 'apply')
+  eq(child.lua_get('_G.log'), { 'Source 3 apply hunks' })
+
+  child.lua('_G.log = {}')
+  disable(0)
+  eq(child.lua_get('_G.log'), { 'Source 3 detach' })
+end
+
+T['Array of sources']['can not attach'] = function()
+  local n_attach_fails, fail_delay, text_change_delay = 4, 2 * small_time, 3 * small_time
+  setup_array_sources(n_attach_fails, fail_delay, text_change_delay)
+
+  set_buf(new_scratch_buf())
+  enable(0)
+
+  -- Should fail at all three attaches and not call any `detach`
+  sleep(fail_delay + small_time)
+  --stylua: ignore
+  local ref_log = {
+    'Source 1 attach', 'Source 1 attach fail',
+    'Source 2 attach', 'Source 2 attach fail',
+    'Source 3 attach', 'Source 3 attach fail',
+  }
+  eq(child.lua_get('_G.log'), ref_log)
+
+  -- Should properly clean up buffer
+  eq(is_buf_enabled(), false)
+  eq(child.b.minidiff_summary, vim.NIL)
+  eq(child.api.nvim_get_autocmds({ buffer = get_buf() }), {})
+
+  -- Next enable should try attaching from first source
+  child.lua('_G.log = {}')
+  enable(0)
+  sleep(fail_delay + small_time)
+  ref_log = { 'Source 1 attach', 'Source 1 attach fail', 'Source 2 attach', 'Source 2 attach success' }
+  eq(child.lua_get('_G.log'), ref_log)
+
+  local ref_summary = { add = 0, change = 1, delete = 0, n_ranges = 1, source_name = 'Source 2' }
+  eq(child.b.minidiff_summary, ref_summary)
+
+  -- Should still properly track changes
+  set_lines({ 'This is', 'new', 'lines' })
+  sleep(text_change_delay + small_time)
+  ref_summary.add = 2
+  eq(child.b.minidiff_summary, ref_summary)
+end
+
+T['Array of sources']['works after `:edit`'] = function()
+  local n_attach_fails, fail_delay, text_change_delay = 1, 2 * small_time, 3 * small_time
+  setup_array_sources(n_attach_fails, fail_delay, text_change_delay)
+
+  edit(test_file_path)
+  sleep(text_change_delay + small_time)
+
+  local ref_log = {
+    -- First source fails immediately
+    'Source 1 attach',
+    'Source 1 attach fail',
+    -- Second source attaches successfully (also immediately)
+    'Source 2 attach',
+    'Source 2 attach success',
+  }
+  eq(child.lua_get('_G.log'), ref_log)
+  eq(get_buf_data(0).ref_text, 'This is source 2\n')
+
+  local ref_summary = { add = 1, change = 1, delete = 0, n_ranges = 1, source_name = 'Source 2' }
+  eq(child.b.minidiff_summary, ref_summary)
+
+  -- Should try attaching from first source
+  child.lua('_G.log = {}')
+  child.cmd('edit')
+  ref_log = { 'Source 2 detach', 'Source 1 attach', 'Source 1 attach success' }
+  eq(child.lua_get('_G.log'), ref_log)
+
+  -- Should properly track changes
+  set_lines({ 'This is' })
+  sleep(text_change_delay + small_time)
+  ref_summary.add, ref_summary.source_name = 0, 'Source 1'
+  eq(child.b.minidiff_summary, ref_summary)
+end
+
+T['Array of sources']['respects buffer-local config'] = function()
+  local n_attach_fails, fail_delay, text_change_delay = 1, 2 * small_time, 3 * small_time
+  setup_array_sources(n_attach_fails, fail_delay, text_change_delay)
+
+  set_buf(new_scratch_buf())
+  child.lua('vim.b.minidiff_config = { source = { MiniDiff.config.source[3], MiniDiff.config.source[2] } }')
+  set_lines({ 'This is' })
+  enable(0)
+
+  local ref_log = { 'Source 3 attach', 'Source 3 attach fail', 'Source 2 attach', 'Source 2 attach success' }
+  eq(child.lua_get('_G.log'), ref_log)
+end
+
+T['Array of sources']['works with built-in sources'] = function()
+  mock_spawn()
+  child.lua([[
+    -- Fails to attach
+    _G.stdio_queue = {
+      { {} }, -- Get path to repo's Git dir
+    }
+    _G.process_mock_data = { { exit_code = 1 } }
+  ]])
+
+  local text_change_delay = 3 * small_time
+  child.lua('_G.text_change_delay = ' .. text_change_delay)
+
+  child.lua([[
+    MiniDiff.config.source = { MiniDiff.gen_source.git(), MiniDiff.gen_source.save() }
+    MiniDiff.config.delay.text_change = _G.text_change_delay
+  ]])
+  edit(git_file_path)
+  local init_lines = get_lines()
+  MiniTest.finally(function() child.fn.writefile(init_lines, git_file_path) end)
+
+  eq(is_buf_enabled(0), true)
+  local ref_summary_saved = { add = 0, change = 0, delete = 0, n_ranges = 0, source_name = 'save' }
+  eq(child.b.minidiff_summary, ref_summary_saved)
+
+  -- Should properly track changes
+  set_lines({ 'This is' })
+  sleep(text_change_delay + small_time)
+  local ref_summary_modified = { add = 0, change = 1, delete = 4, n_ranges = 1, source_name = 'save' }
+  eq(child.b.minidiff_summary, ref_summary_modified)
+
+  child.cmd('write')
+  eq(child.b.minidiff_summary, ref_summary_saved)
 end
 
 return T

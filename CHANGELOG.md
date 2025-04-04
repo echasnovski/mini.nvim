@@ -58,6 +58,7 @@
 
 ## mini.diff
 
+- FEATURE: `config.source` can now be array of sources, which will be attempted to attach in order. Important for source's `attach` to either return `false` or call `MiniDiff.fail_attach()` (even not immediately) to signal that source has failed to attach to a particular buffer.
 - FEATURE: overlay virtual lines now scroll horizontally along with buffer lines. Requires Neovim>=0.11 and disabled 'wrap' option.
 - FEATURE: highlighting of buffer parts of change hunks can now be customized with these new highlight groups:
     - `MiniDiffOverChangeBuf` - changed buffer text. Previously used `MiniDiffOverChange` (for changed reference text); links to it by default.

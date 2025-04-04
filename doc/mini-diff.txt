@@ -15,10 +15,10 @@ Features:
 - Special toggleable overlay view with more hunk details inside text area.
   See |MiniDiff.toggle_overlay()|.
 
-- Completely configurable per buffer source of reference text used to keep
-  it up to date and define interactions with it.
-  See |MiniDiff-source-specification|. By default uses buffer's file content
-  in Git index. See |MiniDiff.gen_source.git()|.
+- Completely configurable per buffer source(s) of reference text used to keep
+  it up to date and define interactions with it. Can be array of sources which
+  are attempted to attach in order. See |MiniDiff-source-specification|.
+  By default uses Git source. See |MiniDiff.gen_source.git()|.
 
 - Configurable mappings to manage diff hunks:
     - Apply and reset hunks inside region (selected visually or with
@@ -201,7 +201,7 @@ Each enabled buffer has the following buffer-local variables which can be
 used in custom statusline to show an overview of hunks in current buffer:
 
 - `vim.b.minidiff_summary` is a table with the following fields:
-    - `source_name` - name of the source.
+    - `source_name` - name of the active source.
     - `n_ranges` - number of hunk ranges (sequences of contiguous hunks).
     - `add` - number of added lines.
     - `change` - number of changed lines.
@@ -259,7 +259,7 @@ Default values:
       priority = 199,
     },
 
-    -- Source for how reference text is computed/updated/etc
+    -- Source(s) for how reference text is computed/updated/etc
     -- Uses content from Git index by default
     source = nil,
 
@@ -334,11 +334,15 @@ extmarks but not as in user enabled ones.
                                                  *MiniDiff-source-specification*
 # Source ~
 
-`config.source` is a table defining how reference text is managed in
-a particular buffer. It can have the following fields:
+`config.source` is a table with single source or array of them. Single source
+defines how reference text is managed in a particular buffer. Sources in array
+are attempted to attach in order; call |MiniDiff.disable()| if none attaches.
+
+A single source table can have the following fields:
+
 - <attach> `(function)` - callable which defines how and when reference text
-  should be updated inside a particular buffer. It is called
-  inside |MiniDiff.enable()| with a buffer identifier as a single argument.
+  is updated inside a particular buffer. It is used inside |MiniDiff.enable()|
+  with a buffer identifier as a single argument.
 
   Should execute logic which results into calling |MiniDiff.set_ref_text()|
   when reference text for buffer needs to be updated. Like inside callback
@@ -347,9 +351,10 @@ a particular buffer. It can have the following fields:
   For example, default Git source watches when ".git/index" file is changed
   and computes reference text as the one from Git index for current file.
 
-  Can return `false` to force buffer to not be enabled. If this can not be
-  inferred immediately (for example, due to asynchronous execution), should
-  call |MiniDiff.disable()| later to disable buffer.
+  Can return `false` to indicate that attach has failed. If attach fail can
+  not be inferred immediately (for example, due to asynchronous execution),
+  should explicitly call |MiniDiff.fail_attch()| with appropriate arguments.
+  This is important to properly process array of sources.
 
   No default value, should be always supplied.
 
@@ -372,7 +377,7 @@ a particular buffer. It can have the following fields:
 
   If not supplied, applying hunks throws an error.
 
-Default: |MiniDiff.gen_source.git()|.
+Default: a single |MiniDiff.gen_source.git()|.
 
 # Delay ~
 
@@ -520,10 +525,15 @@ Parameters ~
 Generate builtin sources
 
 This is a table with function elements. Call to actually get source.
-Example of using |MiniDiff.gen_source.save()|: >lua
+Examples: >lua
 
   local diff = require('mini.diff')
+
+  -- Single `save` source
   diff.setup({ source = diff.gen_source.save() })
+
+  -- Multiple sources (attempted to attach in order)
+  diff.setup({ source = { diff.gen_source.git(), diff.gen_source.save() } })
 <
 ------------------------------------------------------------------------------
                                                      *MiniDiff.gen_source.git()*
@@ -633,6 +643,16 @@ Select hunk range textobject
 Selects all contiguous lines adjacent to cursor line which are in any (not
 necessarily same) hunk (if cursor line itself is in hunk).
 Used in default mappings.
+
+------------------------------------------------------------------------------
+                                                        *MiniDiff.fail_attach()*
+                        `MiniDiff.fail_attach`({buf_id})
+Indicate source attach fail
+
+Try to attach next source; if there is none - call |MiniDiff.disable()|.
+
+Parameters ~
+{buf_id} `(integer)` Buffer identifier for which attach has failed.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
