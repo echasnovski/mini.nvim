@@ -1482,10 +1482,11 @@ H.show_signature_window = function()
 
   -- Add highlighting of active parameter
   local buf_id = H.signature.bufnr
+  vim.api.nvim_buf_clear_namespace(buf_id, H.ns_id, 0, -1)
   for i, hl_range in ipairs(hl_ranges) do
-    if not vim.tbl_isempty(hl_range) and hl_range.first and hl_range.last then
-      local first, last = hl_range.first, hl_range.last
-      vim.api.nvim_buf_add_highlight(buf_id, H.ns_id, 'MiniCompletionActiveParameter', i - 1, first, last)
+    if hl_range[1] ~= nil and hl_range[2] ~= nil then
+      local opts = { end_row = i - 1, end_col = hl_range[2], hl_group = 'MiniCompletionActiveParameter' }
+      vim.api.nvim_buf_set_extmark(buf_id, H.ns_id, i - 1, hl_range[1], opts)
     end
   end
 
@@ -1535,12 +1536,11 @@ H.process_signature_response = function(response)
   local signature = response.signatures[signature_id + 1]
 
   -- Get displayed signature label
-  local signature_label = signature.label:gsub('\n', ' ')
+  local res = { label = signature.label:gsub('\n', ' ') }
 
   -- Get start and end of active parameter (for highlighting)
-  local hl_range = {}
-  local n_params = vim.tbl_count(signature.parameters or {})
-  local has_params = signature.parameters and n_params > 0
+  local n_params = #(signature.parameters or {})
+  local has_params = type(signature.parameters) == 'table' and n_params > 0
 
   -- Take values in this order because data inside signature takes priority
   local parameter_id = signature.activeParameter or response.activeParameter or 0
@@ -1559,20 +1559,15 @@ H.process_signature_response = function(response)
     -- Compute highlight range based on type of supplied parameter label: can
     -- be string label which should be a part of signature label or direct start
     -- (inclusive) and end (exclusive) range values
-    local first, last = nil, nil
-    if type(param_label) == 'string' then
-      first, last = signature_label:find(vim.pesc(param_label))
-      -- Make zero-indexed and end-exclusive
-      if first then first = first - 1 end
-    elseif type(param_label) == 'table' then
-      first, last = unpack(param_label)
-    end
-    if first then hl_range = { first = first, last = last } end
+    local label_is_string = type(param_label) == 'string'
+    res.hl_range = label_is_string and { res.label:find(param_label, 1, true) } or (param_label or {})
+    -- - Make zero-indexed and end-exclusive
+    res.hl_range[1] = res.hl_range[1] - (label_is_string and 1 or 0)
   end
 
   -- Return nested table because this will be a second argument of
   -- `vim.list_extend()` and the whole inner table is a target value here.
-  return { { label = signature_label, hl_range = hl_range } }
+  return { res }
 end
 
 H.signature_window_opts = function()
