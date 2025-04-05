@@ -135,7 +135,7 @@ T['setup()']['creates side effects'] = function()
   -- Highlight groups
   child.cmd('hi clear')
   load_module()
-  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
+  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'links to LspSignatureActiveParameter')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -212,7 +212,7 @@ end
 
 T['setup()']['ensures colors'] = function()
   child.cmd('colorscheme default')
-  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'gui=underline')
+  expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'links to LspSignatureActiveParameter')
 end
 
 T['setup()']['properly handles `config.mappings`'] = function()

@@ -195,7 +195,6 @@ your 'init.lua' to make customized mapping: >lua
 # Highlight groups ~
 
 * `MiniCompletionActiveParameter` - signature active parameter.
-  By default displayed as plain underline.
 
 To change any highlight group, modify it directly with |:highlight|.
 

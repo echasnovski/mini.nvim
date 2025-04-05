@@ -195,7 +195,6 @@
 --- # Highlight groups ~
 ---
 --- * `MiniCompletionActiveParameter` - signature active parameter.
----   By default displayed as plain underline.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -799,7 +798,7 @@ H.create_autocommands = function(config)
 end
 
 H.create_default_hl = function()
-  vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, underline = true })
+  vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, link = 'LspSignatureActiveParameter' })
 end
 
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end

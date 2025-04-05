@@ -55,6 +55,7 @@
 - BREAKING FEATURE: update behavior and capabilities of `default_process_items()`:
     - Add `filtersort` option to control how items are filtered and/or sorted. Its default value has new (breaking) value: do fuzzy matching if 'completeopt' option contains "fuzzy" entry; same as before otherwise.
     - Use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
+- BREAKING: change default value of `MiniCompletionActiveParameter` highlight group to link to `LspSignatureActiveParameter` (instead of forcing underline).
 
 ## mini.diff
 
