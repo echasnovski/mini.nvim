@@ -633,7 +633,7 @@ MiniCompletion.get_lsp_capabilities = function(opts)
         signatureInformation = {
           documentationFormat = { 'markdown', 'plaintext' },
           parameterInformation = {
-            labelOffsetSupport = false,
+            labelOffsetSupport = true,
           },
           activeParameterSupport = true,
         },
