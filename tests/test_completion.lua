@@ -1442,6 +1442,17 @@ T['Signature help']['updates highlighting of active parameter'] = function()
   set_cursor(1, 7)
   sleep(small_time)
   child.expect_screenshot()
+
+  type_keys('<Esc>')
+  set_lines({ '' })
+
+  -- Should work when LSP server returns paramter label as string
+  type_keys('i', 'multiline(')
+  sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+  type_keys('3,')
+  sleep(small_time)
+  child.expect_screenshot()
 end
 
 T['Signature help']['updates without delay with different window'] = function()

@@ -194,6 +194,7 @@ Months.requests = {
       label = 'function string.format(s:string|number, ...any)'
     elseif word == 'multiline(' then
       label = 'multiline(\narg1,\narg2)'
+      parameters = { { label = 'arg1' }, { label = 'arg2' } }
     elseif word == 'scroll(' then
       label = 'aaa bbb ccc ddd eee fff ggg hhh'
     else
@@ -202,11 +203,7 @@ Months.requests = {
     end
 
     -- Construct output
-    local signature = {
-      activeParameter = active_param_id,
-      label = label,
-      parameters = parameters,
-    }
+    local signature = { activeParameter = active_param_id, label = label, parameters = parameters }
     return { { result = { signatures = { signature } } } }
   end,
 }
