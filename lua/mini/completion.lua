@@ -124,7 +124,7 @@
 ---       end
 ---       vim.api.nvim_create_autocmd('LspAttach', { callback = on_attach })
 --- <
----   This setup is not default to allow simultaneous usage of filetype-speicific
+---   This setup is not default to allow simultaneous usage of filetype-specific
 ---   'omnifunc' (with manual |i_CTRL-X_CTRL-O|) and automated LSP completion.
 ---
 --- - Use |MiniCompletion.get_lsp_capabilities()| to get/set information about part
