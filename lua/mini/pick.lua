@@ -595,16 +595,25 @@
 --- name (used to infer an action description in info view). The value is a table
 --- with the following fields:
 --- - <char> `(string)` - single character acting as action trigger.
---- - <func> `(function)` - callable to be executed without arguments after
----   user presses <char>. Its return value is treated as "should stop picker
----   after execution", i.e. returning nothing, `nil`, or `false` continues
----   picker while everything else (prefer `true`) stops it.
+--- - <func> `(function)` - callable which accept one argument - table with
+--- actions (see :help MiniPick-actions). <func> will be executed after user
+--- presses <char>. Its return value is treated as "should stop picker after
+--- execution", i.e. returning nothing, `nil`, or `false` continues picker
+--- while everything else (prefer `true`) stops it.
 ---
 --- Example of `execute` custom mapping: >lua
 ---
 ---   execute = {
 ---     char = '<C-e>',
 ---     func = function() vim.cmd(vim.fn.input('Execute: ')) end,
+---   }
+---
+---   mark_and_move_down = {
+---     char = '<Tab>',
+---     func = function(a)
+---     	a.mark()
+---     	a.move_down()
+---     end,
 ---   }
 --- <
 ---@tag MiniPick-actions
