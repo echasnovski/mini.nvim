@@ -2171,9 +2171,14 @@ H.picker_advance = function(picker)
     do_match = cur_action.name == nil or vim.startswith(cur_action.name, 'delete') or cur_action.name == 'paste'
     is_aborted = cur_action.name == 'stop'
 
+	local actions = {}
+	for name, fn in pairs(H.actions) do
+		actions[name] = function() return fn(picker, char) end
+	end
+
     local should_stop
     if cur_action.is_custom then
-      should_stop = cur_action.func()
+      should_stop = cur_action.func(actions)
     else
       should_stop = (cur_action.func or H.picker_query_add)(picker, char)
     end
