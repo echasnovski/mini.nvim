@@ -21,13 +21,10 @@ local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on 0.9<=Neovim<=0.10 (as 0.8 does
--- not have titles and current Nightly 0.11 has different way of computing
--- attributes in popup-menu; see https://github.com/neovim/neovim/pull/29980)
--- TODO: Update to use Neovim>=0.11 when Neovim 0.11 is released
+-- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (0.8 has no titles)
 child.expect_screenshot_orig = child.expect_screenshot
 child.expect_screenshot = function(opts)
-  if not (child.fn.has('nvim-0.9') == 1 and child.fn.has('nvim-0.11') == 0) then return end
+  if child.fn.has('nvim-0.9') == 0 then return end
   child.expect_screenshot_orig(opts)
 end
 
@@ -299,6 +296,8 @@ T['default_process_items()']['works'] = function()
 end
 
 T['default_process_items()']["highlights LSP kind if 'mini.icons' is enabled"] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'kind_hlgroup' field is present on Neovim>=0.11") end
+
   mock_miniicons()
   local ref_hlgroup = child.lua_get('_G.ref_hlgroup')
   local ref_processed_items = {

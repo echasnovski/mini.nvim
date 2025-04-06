@@ -1320,14 +1320,11 @@ H.show_info_window = function()
   -- Ensure permanent buffer with "markdown" highlighting to display info
   H.ensure_buffer(H.info, 'item-info')
   H.ensure_highlight(H.info, 'markdown')
+  H.ensure_no_concealed_lines(H.info.bufnr)
   vim.api.nvim_buf_set_lines(H.info.bufnr, 0, -1, false, lines)
 
   -- Compute floating window options
   local opts = H.info_window_options()
-  -- Adjust to hide top/bottom code block delimiters (as they are concealed)
-  local top_is_codeblock_start = lines[1]:find('^```%S*$')
-  if top_is_codeblock_start then opts.height = opts.height - 1 end
-  if lines[#lines]:find('^```$') then opts.height = opts.height - 1 end
 
   -- Adjust section separator with better visual alternative
   lines = vim.tbl_map(function(l) return l:gsub('^%-%-%-%-*$', string.rep('─', opts.width)) end, lines)
@@ -1344,8 +1341,10 @@ H.show_info_window = function()
     -- Hide helper syntax elements (like ``` code blocks, etc.)
     vim.wo[H.info.win_id].conceallevel = 3
 
-    -- Scroll past first line if it is a start of a code block
-    if top_is_codeblock_start then vim.api.nvim_win_call(win_id, function() vim.fn.winrestview({ topline = 2 }) end) end
+    -- Scroll past first line if it is a visible (Neovim<0.11) codeblock start
+    if vim.fn.has('nvim-0.11') == 0 and lines[1]:find('^```%S*$') ~= nil then
+      vim.api.nvim_win_call(win_id, function() vim.fn.winrestview({ topline = 2 }) end)
+    end
   end)
 end
 
@@ -1396,8 +1395,8 @@ H.info_window_options = function()
   local default_border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single'
   local border = win_config.border or default_border
 
-  -- Compute dimensions based on lines to be displayed
-  local lines = vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, false)
+  -- Compute dimensions based on actually visible lines to be displayed
+  local lines = H.compute_visible_md_lines(vim.api.nvim_buf_get_lines(H.info.bufnr, 0, -1, false))
   local info_height, info_width = H.floating_dimensions(lines, win_config.height, win_config.width)
 
   -- Compute position
@@ -1827,11 +1826,35 @@ H.normalize_item_doc = function(completion_item, fallback_info)
   text = text:gsub('[ \t]+\n', '\n'):gsub('[ \t]+$', '\n')
   -- Collapse multiple empty lines, remove top and bottom padding
   text = text:gsub('\n\n+', '\n\n'):gsub('^\n+', ''):gsub('\n+$', '')
-  -- Remove padding around code blocks as they are concealed and appear empty
-  text = text:gsub('\n*(\n```%S+\n)', '%1'):gsub('(\n```\n?)\n*', '%1')
+  -- Ensure single line pads around code blocks: on Neovim<0.11 top and bottom
+  -- lines just appear empty, on Neovim>=0.11 they disappear (account for that)
+  local pad = vim.fn.has('nvim-0.11') == 1 and '\n' or ''
+  text = text:gsub('\n*(\n```%S+\n)', pad .. '%1'):gsub('(\n```\n)\n*', '%1' .. pad)
 
   if text == '' and fallback_info ~= '' then text = H.wrap_in_codeblock(fallback_info) end
   return text == '' and {} or vim.split(text, '\n')
+end
+
+-- Neovim>=0.11 has visually impactful issue of TS (markdown) highlighting:
+-- sometimes concealing extmarks are not removed. Remove after 0.11.1 release.
+-- See https://github.com/neovim/neovim/issues/33333
+H.ensure_no_concealed_lines = function(buf_id)
+  local ts_ns_id = vim.api.nvim_get_namespaces()['nvim.treesitter.highlighter']
+  pcall(vim.api.nvim_buf_clear_namespace, buf_id, ts_ns_id, 0, -1)
+end
+if vim.fn.has('nvim-0.11') == 0 then H.ensure_no_concealed_lines = function(buf_id) end end
+
+-- Neovim>=0.11 has markdown codeblock delimiters hidden. Neovim<0.11 shows
+-- them as empty line (so ignore only top and bottom for more compact view).
+H.compute_visible_md_lines = function(lines)
+  return vim.tbl_filter(function(l) return l:find('^```%S*$') == nil end, lines)
+end
+if vim.fn.has('nvim-0.11') == 0 then
+  H.compute_visible_md_lines = function(lines)
+    if lines[1]:find('^```%S*$') ~= nil then table.remove(lines, 1) end
+    if lines[#lines]:find('^```$') ~= nil then table.remove(lines, #lines) end
+    return lines
+  end
 end
 
 H.wrap_in_codeblock = function(x) return string.format('```%s\n%s\n```', vim.bo.filetype:match('^[^%.]*'), vim.trim(x)) end
