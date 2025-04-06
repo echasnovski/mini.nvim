@@ -71,10 +71,10 @@ body:
       description: "Choose the latest Neovim version on which you can reproduce the problem"
       multiple: false
       options:
-        - 0.8.x
         - 0.9.x
         - 0.10.x
-        - 0.11 (!at least latest Nightly build!)
+        - 0.11.x
+        - 0.12 (!at least latest Nightly build!)
       default: 2
     validations:
       required: true
@@ -120,9 +120,13 @@ body:
         4. Replace this with description of interactive reproduction steps along with the behavior you observe.
            Feel free to include images/videos/etc, this helps a lot.
 
-        Note: after reporting the issue, it is safe (and even recommended for cleaner possible future bug reports) to remove 'nvim-repro' config from the system:
+        <details><summary>What to do after reporting an issue</summary>
+
+        After reporting the issue, it is safe (and even recommended for cleaner possible future bug reports) to remove 'nvim-repro' config from the system:
         - Delete config directory ('~/.config/nvim-repro' on Unix).
         - Delete data directory ('~/.local/share/nvim-repro' on Unix).
         - Delete state directory ('~/.local/state/nvim-repro' on Unix).
+
+        </details>
     validations:
       required: true
