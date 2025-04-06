@@ -1076,7 +1076,7 @@ end
 H.auto_enable = vim.schedule_wrap(function(data)
   if H.is_buf_enabled(data.buf) or H.is_disabled(data.buf) then return end
   local buf = data.buf
-  if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == '' and vim.bo[buf].buflisted) then return end
+  if not (vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == '' and vim.bo[buf].buflisted) then return end
   if not H.is_buf_text(buf) then return end
   MiniDiff.enable(buf)
 end)

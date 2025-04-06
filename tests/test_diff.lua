@@ -352,18 +352,33 @@ T['setup()']['ensures colors'] = function()
   expect.match(child.cmd_capture('hi MiniDiffOverAdd'), 'links to DiffAdd')
 end
 
-T['setup()']['auto enables in all existing buffers'] = function()
-  local buf_id_normal = new_buf()
-  set_buf(buf_id_normal)
+T['setup()']['auto enables in all existing loaded buffers'] = function()
+  unload_module()
+
+  local buf_id_cur_normal = new_buf()
+  set_buf(buf_id_cur_normal)
+  local buf_id_other_normal = new_buf()
 
   local buf_id_bad_1 = new_scratch_buf()
   local buf_id_bad_2 = new_buf()
   child.api.nvim_buf_set_lines(buf_id_bad_2, 0, -1, false, { '\0' })
 
-  -- Only normal valid text buffers should be auto enabled
-  eq(is_buf_enabled(buf_id_normal), true)
+  local buf_id_bad_3 = new_buf()
+  child.api.nvim_buf_delete(buf_id_bad_3, { unload = true })
+  eq(child.api.nvim_buf_is_loaded(buf_id_bad_3), false)
+  child.api.nvim_set_option_value('buflisted', true, { buf = buf_id_bad_3 })
+
+  setup_with_dummy_source()
+
+  -- Only normal valid loaded text buffers should be auto enabled
+  eq(is_buf_enabled(buf_id_cur_normal), true)
+  eq(is_buf_enabled(buf_id_other_normal), true)
   eq(is_buf_enabled(buf_id_bad_1), false)
   eq(is_buf_enabled(buf_id_bad_2), false)
+  eq(is_buf_enabled(buf_id_bad_3), false)
+
+  -- Should not force load unloaded buffers
+  eq(child.api.nvim_buf_is_loaded(buf_id_bad_3), false)
 end
 
 T['setup()']['can not create mappings'] = function()
@@ -1875,7 +1890,7 @@ end
 -- Integration tests ==========================================================
 T['Auto enable'] = new_set()
 
-T['Auto enable']['properly enables on `BufEnter`'] = function()
+T['Auto enable']['works'] = function()
   local buf_id = new_buf()
   set_buf(buf_id)
   eq(is_buf_enabled(buf_id), true)
@@ -1890,6 +1905,16 @@ T['Auto enable']['properly enables on `BufEnter`'] = function()
   eq(is_buf_enabled(buf_id), false)
   set_buf(buf_id)
   eq(is_buf_enabled(buf_id), true)
+
+  -- Should not error if buffer is not valid
+  expect.no_error(function()
+    child.lua([[
+      local buf_id = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_set_current_buf(buf_id)
+      vim.api.nvim_buf_delete(buf_id, { force = true })
+    ]])
+    eq(child.cmd_capture('1messages'), '')
+  end)
 end
 
 T['Auto enable']['does not enable in not proper buffers'] = function()
