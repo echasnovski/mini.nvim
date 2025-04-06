@@ -738,11 +738,9 @@ end
 
 -- Autocommands ---------------------------------------------------------------
 H.auto_enable = vim.schedule_wrap(function(data)
-  if H.is_buf_enabled(data.buf) then return end
-
-  -- Autoenable only in valid normal buffers. This function is scheduled so as
-  -- to have the relevant `buftype`.
-  if vim.api.nvim_buf_is_valid(data.buf) and vim.bo[data.buf].buftype == '' then MiniHipatterns.enable(data.buf) end
+  local buf = data.buf
+  if not (vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == '') then return end
+  MiniHipatterns.enable(buf)
 end)
 
 H.update_view = vim.schedule_wrap(function(data)

@@ -139,9 +139,7 @@ T['setup()']['ensures colors'] = function()
   expect.match(child.cmd_capture('hi MiniHipatternsFixme'), 'gui=bold,reverse')
 end
 
-T['Auto enable'] = new_set()
-
-T['Auto enable']['enables for normal buffers'] = function()
+T['setup()']['auto enables in all visible buffers'] = function()
   child.set_size(10, 30)
   child.o.winwidth = 1
 
@@ -156,9 +154,9 @@ T['Auto enable']['enables for normal buffers'] = function()
   child.api.nvim_set_current_buf(buf_id_3)
   set_lines({ '33abcd33' })
 
+  -- Should enable in all proper buffers currently shown in some window
   load_module(test_config)
   sleep(small_time)
-  -- Should enable in all proper buffers currently shown in some window
   child.expect_screenshot()
   eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { buf_id_1, buf_id_3 })
 
@@ -166,6 +164,51 @@ T['Auto enable']['enables for normal buffers'] = function()
   sleep(small_time)
   child.expect_screenshot()
   eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { buf_id_1, buf_id_2, buf_id_3 })
+end
+
+T['Auto enable'] = new_set()
+
+T['Auto enable']['works'] = function()
+  load_module(test_config)
+
+  local init_buf_id = child.api.nvim_get_current_buf()
+  local buf_id = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_set_lines(buf_id, 0, -1, false, { '22abcd22' })
+  child.api.nvim_set_current_buf(buf_id)
+  sleep(small_time)
+  child.expect_screenshot()
+  eq(child.lua_get('MiniHipatterns.get_enabled_buffers()'), { init_buf_id, buf_id })
+end
+
+T['Auto enable']['does not enable in not proper buffers'] = function()
+  load_module(test_config)
+
+  -- Should not load for not normal buffers
+  local scratch_buf_id = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(scratch_buf_id)
+  set_lines(test_lines)
+  sleep(test_config.delay.text_change + small_time)
+  child.expect_screenshot()
+
+  -- Should not load for not loaded buffers
+  local unloaded_buf_id = child.lua([[
+    local unloaded_buf_id = vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_set_current_buf(unloaded_buf_id)
+    vim.api.nvim_buf_delete(unloaded_buf_id, { unload = true })
+    return unloaded_buf_id
+  ]])
+  local enabled_buffers = child.lua_get('MiniHipatterns.get_enabled_buffers()')
+  eq(vim.tbl_contains(enabled_buffers, unloaded_buf_id), false)
+
+  -- Should not error if buffer is not valid
+  expect.no_error(function()
+    child.lua([[
+      local buf_id = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_set_current_buf(buf_id)
+      vim.api.nvim_buf_delete(buf_id, { force = true })
+    ]])
+    eq(child.cmd_capture('1messages'), '')
+  end)
 end
 
 T['Auto enable']['makes `:edit` work'] = function()
@@ -182,17 +225,6 @@ T['Auto enable']['makes `:edit` work'] = function()
   child.expect_screenshot()
 
   child.cmd('edit')
-  child.expect_screenshot()
-end
-
-T['Auto enable']['does not enable for not normal buffers'] = function()
-  load_module(test_config)
-  local scratch_buf_id = child.api.nvim_create_buf(false, true)
-  child.api.nvim_set_current_buf(scratch_buf_id)
-
-  set_lines(test_lines)
-  sleep(test_config.delay.text_change + small_time)
-  -- Should be no highlighting
   child.expect_screenshot()
 end
 
