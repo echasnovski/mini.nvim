@@ -233,13 +233,34 @@ T['setup()']['warns about missing executable'] = function()
   validate_notifications({ { '(mini.git) There is no `no-git-is-available` executable', 'WARN' } })
 end
 
-T['setup()']['auto enables in all existing buffers'] = function()
+T['setup()']['auto enables in all existing loaded buffers'] = function()
   mock_init_track_stdio_queue()
   child.lua('_G.stdio_queue = _G.init_track_stdio_queue')
 
+  local buf_id_bad_1 = new_scratch_buf()
+
+  edit(git_root_dir .. '/file-in-git_symlink-source')
+  local buf_id_bad_2 = get_buf()
+
+  edit(git_root_dir .. '/dir-in-git/file-in-dir-in-git')
+  local buf_id_other_normal = get_buf()
+
   edit(git_file_path)
+  local buf_id_cur_normal = get_buf()
+
+  -- Make enable-able buffer normal+listed but unloaded
+  child.api.nvim_buf_delete(buf_id_bad_2, { unload = true })
+  eq(child.api.nvim_buf_is_loaded(buf_id_bad_2), false)
+  child.api.nvim_set_option_value('buflisted', true, { buf = buf_id_bad_2 })
+
   load_module()
-  eq(is_buf_enabled(), true)
+  eq(is_buf_enabled(buf_id_cur_normal), true)
+  eq(is_buf_enabled(buf_id_other_normal), true)
+  eq(is_buf_enabled(buf_id_bad_1), false)
+  eq(is_buf_enabled(buf_id_bad_2), false)
+
+  -- Should not force load unloaded buffers
+  eq(child.api.nvim_buf_is_loaded(buf_id_bad_2), false)
 end
 
 T['show_at_cursor()'] = new_set({ hooks = { pre_case = load_module } })
@@ -1629,7 +1650,7 @@ end
 -- Integration tests ==========================================================
 T['Auto enable'] = new_set({ hooks = { pre_case = load_module } })
 
-T['Auto enable']['properly enables on `BufEnter`'] = function()
+T['Auto enable']['works'] = function()
   mock_init_track_stdio_queue()
   child.lua([[_G.stdio_queue = {
       _G.init_track_stdio_queue[1],
@@ -1683,6 +1704,16 @@ T['Auto enable']['does not enable in not proper buffers'] = function()
   -- Is not file buffer
   set_buf(new_buf())
   eq(is_buf_enabled(), false)
+
+  -- Should not error if buffer is not valid
+  expect.no_error(function()
+    child.lua([[
+      local buf_id = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_set_current_buf(buf_id)
+      vim.api.nvim_buf_delete(buf_id, { force = true })
+    ]])
+    eq(child.cmd_capture('1messages'), '')
+  end)
 
   -- Should infer all above cases without CLI runs
   validate_git_spawn_log({})
