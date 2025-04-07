@@ -215,10 +215,6 @@ Here are code snippets for some common installation methods (use only one):
     scroll_down = '<C-f>',
     scroll_up = '<C-b>',
   },
-
-  -- Whether to set Vim's settings for better experience (modifies
-  -- `shortmess` and `completeopt`)
-  set_vim_settings = true,
 }
 ```
 

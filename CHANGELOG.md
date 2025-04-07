@@ -10,6 +10,12 @@
 
 - BREAKING FEATURE: Unify how module-related buffers are named: `mini<module-name>://<buffer-number>/<useful-info>`. This structure allows creating identifiable, reasonably unique, and useful buffer names. This is a user facing change because in some cases the shown buffer's name will change (like in statusline of opened 'mini.starter' buffer or output of `:buffers!`).
 
+- BREAKING FEATURE: stop forcing recommended option values behind `set_vim_settings` config setting. Instead set them automatically in `setup()` if not set by user/plugin before it (no matter the value). Document this as a new general principle to be followed in the future. Affected modules:
+    - 'mini.bufremove' (do nothing as recommended 'hidden' is on by default)
+    - 'mini.completion' (set 'completeopt=menuone,noselect' and flags "cC" in 'shortmess')
+    - 'mini.statusline' (do nothing as recommended 'laststatus=2' is default)
+    - 'mini.tabline' (set 'showtabline=2')
+
 ## mini.ai
 
 - FEATURE: textobject identifier can now be any single character supported by `:h getcharstr()`. This also makes it possible to use characters outside of Latin alphanumeric and punctuation sets as `custom_textobjects` keys. Default textobject is extended to be anything but Latin letters (to fall back to `:h text-objects`).

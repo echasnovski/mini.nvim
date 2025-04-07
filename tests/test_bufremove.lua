@@ -212,14 +212,13 @@ T['setup()']['creates `config` field'] = function()
   eq(child.lua_get('type(_G.MiniBufremove.config)'), 'table')
 
   -- Check default values
-  eq(child.lua_get('MiniBufremove.config.set_vim_settings'), true)
   eq(child.lua_get('MiniBufremove.config.silent'), false)
 end
 
 T['setup()']['respects `config` argument'] = function()
   unload_module()
-  load_module({ set_vim_settings = false })
-  eq(child.lua_get('MiniBufremove.config.set_vim_settings'), false)
+  load_module({ silent = true })
+  eq(child.lua_get('MiniBufremove.config.silent'), true)
 end
 
 T['setup()']['validates `config` argument'] = function()
@@ -230,7 +229,6 @@ T['setup()']['validates `config` argument'] = function()
   end
 
   expect_config_error('a', 'config', 'table')
-  expect_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
   expect_config_error({ silent = 'a' }, 'silent', 'boolean')
 end
 

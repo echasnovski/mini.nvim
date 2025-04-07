@@ -50,6 +50,11 @@
 --- `vim.b.minitabline_config` which should have same structure as
 --- `MiniTabline.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- # Suggested option values ~
+---
+--- Some options are set automatically (if not set before |MiniTabline.setup()|):
+--- - 'showtabline' is set to 2 to always show tabline.
+---
 --- # Highlight groups ~
 ---
 --- * `MiniTablineCurrent` - buffer is current (has cursor in it).
@@ -146,10 +151,6 @@ MiniTabline.config = {
   -- By default surrounds with space and possibly prepends with icon
   format = nil,
 
-  -- Whether to set Vim's settings for tabline (make it always shown and
-  -- allow hidden buffers)
-  set_vim_settings = true,
-
   -- Where to show tabpage section in case of multiple vim tabpages.
   -- One of 'left', 'right', 'none'.
   tabpage_section = 'left',
@@ -215,7 +216,6 @@ H.setup_config = function(config)
 
   H.check_type('show_icons', config.show_icons, 'boolean')
   H.check_type('format', config.format, 'function', true)
-  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
   H.check_type('tabpage_section', config.tabpage_section, 'string')
 
   return config
@@ -224,11 +224,10 @@ end
 H.apply_config = function(config)
   MiniTabline.config = config
 
-  -- Set settings to ensure tabline is displayed properly
-  if config.set_vim_settings then
-    vim.o.showtabline = 2 -- Always show tabline
-    vim.o.hidden = true -- Allow switching buffers without saving them
-  end
+  -- Try making tabline always visible
+  -- TODO: use `nvim_get_option_info2` after Neovim=0.8 support is dropped
+  local was_set = vim.api.nvim_get_option_info('showtabline').was_set
+  if not was_set then vim.o.showtabline = 2 end
 
   -- Cache truncation characters
   H.cache_trunc_chars()

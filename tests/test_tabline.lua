@@ -80,13 +80,12 @@ T['setup()']['creates `config` field'] = function()
 
   expect_config('show_icons', true)
   expect_config('format', vim.NIL)
-  expect_config('set_vim_settings', true)
   expect_config('tabpage_section', 'left')
 end
 
 T['setup()']['respects `config` argument'] = function()
-  reload_module({ set_vim_settings = false })
-  eq(child.lua_get('MiniTabline.config.set_vim_settings'), false)
+  reload_module({ show_icons = false })
+  eq(child.lua_get('MiniTabline.config.show_icons'), false)
 end
 
 T['setup()']['validates `config` argument'] = function()
@@ -99,7 +98,6 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error('a', 'config', 'table')
   expect_config_error({ show_icons = 'a' }, 'show_icons', 'boolean')
   expect_config_error({ format = 'a' }, 'format', 'function')
-  expect_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
   expect_config_error({ tabpage_section = 1 }, 'tabpage_section', 'string')
 end
 
@@ -114,10 +112,13 @@ T['setup()']["sets proper 'tabline' option"] = function()
   eq(child.api.nvim_get_option('tabline'), '%!v:lua.MiniTabline.make_tabline_string()')
 end
 
-T['setup()']['respects `config.set_vim_settings`'] = function()
-  reload_module({ set_vim_settings = true })
+T['setup()']['sets recommended option values'] = function()
   eq(child.o.showtabline, 2)
-  eq(child.o.hidden, true)
+
+  -- Should not set if was previously set
+  child.o.showtabline = 1
+  reload_module()
+  eq(child.o.showtabline, 1)
 end
 
 T['make_tabline_string()'] = new_set()

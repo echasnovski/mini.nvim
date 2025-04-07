@@ -130,12 +130,12 @@ T['setup()']['creates `config` field'] = function()
 
   expect_config('content.active', vim.NIL)
   expect_config('content.inactive', vim.NIL)
-  expect_config('set_vim_settings', true)
+  expect_config('use_icons', true)
 end
 
 T['setup()']['respects `config` argument'] = function()
-  reload_module({ set_vim_settings = false })
-  eq(child.lua_get('MiniStatusline.config.set_vim_settings'), false)
+  reload_module({ use_icons = false })
+  eq(child.lua_get('MiniStatusline.config.use_icons'), false)
 end
 
 T['setup()']['validates `config` argument'] = function()
@@ -149,7 +149,6 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ content = 'a' }, 'content', 'table')
   expect_config_error({ content = { active = 'a' } }, 'content.active', 'function')
   expect_config_error({ content = { inactive = 'a' } }, 'content.inactive', 'function')
-  expect_config_error({ set_vim_settings = 'a' }, 'set_vim_settings', 'boolean')
   expect_config_error({ use_icons = 'a' }, 'use_icons', 'boolean')
 end
 
@@ -167,19 +166,6 @@ T['setup()']["sets proper dynamic 'statusline' value"] = function()
   child.api.nvim_set_current_win(wins.inactive)
   validate_statusline(wins.active, 'inactive')
   validate_statusline(wins.inactive, 'active')
-end
-
-T['setup()']['respects `config.set_vim_settings`'] = function()
-  local validate = function(init_laststatus, ref_laststatus)
-    child.o.laststatus = init_laststatus
-    reload_module({ set_vim_settings = true })
-    eq(child.o.laststatus, ref_laststatus)
-  end
-
-  validate(0, 2)
-  validate(1, 2)
-  validate(2, 2)
-  validate(3, 3)
 end
 
 T['setup()']['disables built-in statusline in quickfix window'] = function()

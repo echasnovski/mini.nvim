@@ -136,9 +136,6 @@ Here are code snippets for some common installation methods (use only one):
 ```lua
 -- No need to copy this inside `setup()`. Will be used automatically.
 {
-  -- Whether to set Vim's settings for buffers (allow hidden buffers)
-  set_vim_settings = true,
-
   -- Whether to disable showing non-error feedback
   silent = false,
 }

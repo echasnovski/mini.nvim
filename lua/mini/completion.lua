@@ -80,6 +80,13 @@
 --- `vim.b.minicompletion_config` which should have same structure as
 --- `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 ---
+--- # Suggested option values ~
+---
+--- Some options are set automatically (if not set before |MiniCompletion.setup()|):
+--- - 'completeopt' is set to "menuone,noselect" for less intrusive popup.
+---   To enable fuzzy matching, manually set to "menuone,noselect,fuzzy".
+--- - 'shortmess' is appended with "c" flag for silent <C-n> fallback.
+---
 --- # Snippets ~
 ---
 --- As per LSP specification, some completion items can be supplied in the form of
@@ -342,10 +349,6 @@ MiniCompletion.config = {
     scroll_down = '<C-f>',
     scroll_up = '<C-b>',
   },
-
-  -- Whether to set Vim's settings for better experience (modifies
-  -- `shortmess` and `completeopt`)
-  set_vim_settings = true,
 }
 --minidoc_afterlines_end
 
@@ -711,7 +714,6 @@ H.setup_config = function(config)
     H.error('`fallback_action` should be function or string, not ' .. type(config.fallback_action))
   end
   H.check_type('mappings', config.mappings, 'table')
-  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
 
   H.check_type('delay.completion', config.delay.completion, 'number')
   H.check_type('delay.info', config.delay.info, 'number')
@@ -762,14 +764,16 @@ H.apply_config = function(config)
   map_scroll(config.mappings.scroll_down, 'down')
   map_scroll(config.mappings.scroll_up, 'up')
 
-  if config.set_vim_settings then
-    -- Don't give ins-completion-menu messages
-    vim.opt.shortmess:append('c')
-    if vim.fn.has('nvim-0.9') == 1 then vim.opt.shortmess:append('C') end
+  -- Try setting suggested option values
+  -- TODO: use `nvim_get_option_info2` after Neovim=0.8 support is dropped
+  -- - More common completion behavior
+  local was_set = vim.api.nvim_get_option_info('completeopt').was_set
+  if not was_set then vim.o.completeopt = 'menuone,noselect' end
 
-    -- More common completion behavior
-    vim.o.completeopt = 'menuone,noselect'
-  end
+  -- - Don't show ins-completion-menu messages ("C" is default on Neovim>=0.10)
+  local shortmess_flags = 'c' .. ((vim.fn.has('nvim-0.9') == 1 and vim.fn.has('nvim-0.10') == 0) and 'C' or '')
+  was_set = vim.api.nvim_get_option_info('shortmess').was_set
+  if not was_set then vim.opt.shortmess:append(shortmess_flags) end
 end
 
 H.create_autocommands = function(config)

@@ -161,6 +161,8 @@ These modules don't quite fit in any of the previous categories.
 
     - Values of `config` which affect runtime activity can be changed on the fly to have effect. For example, `MiniSurround.config.n_lines` can be changed during runtime; but changing `MiniSurround.config.mappings` won't have any effect (as mappings are created once during `setup()`).
 
+    - If module works best with some specific non-default option value, it is set during `setup()` but only if it was not explicitly set (by user or another plugin, no matter the value) before that.
+
 - **Buffer local configuration**. Each module can be additionally configured to use certain runtime config settings locally to buffer. See `mini.nvim-buffer-local-config` section in help file for more information.
 
 - **Buffer names**. All module-related buffers are named according to the following format: `mini<module-name>://<buffer-number>/<useful-info>` (forward slashes are used on any platform; `<useful-info>` may be empty). This structure allows creating identifiable, reasonably unique, and useful buffer names. For example, 'mini.files' buffers are created per displayed directory/file with names like `minifiles://10/path/to/displayed/directory`.

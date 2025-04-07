@@ -176,9 +176,6 @@ MiniStatusline.config = {
 
   -- Whether to use icons by default
   use_icons = true,
-
-  -- Whether to set Vim's settings for statusline (make it always shown)
-  set_vim_settings = true,
 }
 --minidoc_afterlines_end
 
@@ -502,7 +499,6 @@ H.setup_config = function(config)
   H.check_type('content.active', config.content.active, 'function', true)
   H.check_type('content.inactive', config.content.inactive, 'function', true)
 
-  H.check_type('set_vim_settings', config.set_vim_settings, 'boolean')
   H.check_type('use_icons', config.use_icons, 'boolean')
 
   return config
@@ -510,9 +506,6 @@ end
 
 H.apply_config = function(config)
   MiniStatusline.config = config
-
-  -- Set settings to ensure statusline is displayed properly
-  if config.set_vim_settings and (vim.o.laststatus == 0 or vim.o.laststatus == 1) then vim.o.laststatus = 2 end
 
   -- Set statusline globally and dynamically decide which content to use
   vim.go.statusline =

@@ -96,6 +96,10 @@ Table of contents:
       `MiniSurround.config.mappings` won't have any effect (as mappings are
       created once during `setup()`).
 
+    - If module works best with some specific non-default option value, it is
+      set during `setup()` but only if it was not explicitly set (by user or
+      another plugin, no matter the value) before that.
+
 - <Buffer local configuration>. Each module can be additionally configured
   to use certain runtime config settings locally to buffer.
   See |mini.nvim-buffer-local-config| for more information.
@@ -386,9 +390,8 @@ Automated disabling is suggested to be done inside autocommands: >lua
 Buffer local config
 
 Each module can be additionally configured locally to buffer by creating
-appropriate buffer-scoped variable with values you want to override. It
-will affect only runtime options and not those used once during setup (like
-`mappings` or `set_vim_settings`).
+appropriate buffer-scoped variable with values to override. It affects only
+runtime options and not those used once during setup (like most `mappings`).
 
 Variable names have the same structure: `b:mini*_config` where `*` is
 module's lowercase name. For example, `b:minianimate_config` can store

@@ -159,7 +159,6 @@ T['setup()']['creates `config` field'] = function()
   expect_config('mappings.force_fallback', '<A-Space>')
   expect_config('mappings.scroll_down', '<C-f>')
   expect_config('mappings.scroll_up', '<C-b>')
-  expect_config('set_vim_settings', true)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -204,7 +203,6 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ mappings = { force_fallback = 1 } }, 'mappings.force_fallback', 'string')
   expect_config_error({ mappings = { scroll_down = 1 } }, 'mappings.scroll_down', 'string')
   expect_config_error({ mappings = { scroll_up = 1 } }, 'mappings.scroll_up', 'string')
-  expect_config_error({ set_vim_settings = 1 }, 'set_vim_settings', 'boolean')
 end
 
 T['setup()']['ensures colors'] = function()
@@ -248,11 +246,17 @@ T['setup()']['uses `config.lsp_completion`'] = function()
   validate(true, 'completefunc')
 end
 
-T['setup()']['respects `config.set_vim_settings`'] = function()
-  reload_module({ set_vim_settings = true })
-  expect.match(child.api.nvim_get_option('shortmess'), 'c')
-  if child.fn.has('nvim-0.9') == 1 then expect.match(child.api.nvim_get_option('shortmess'), 'C') end
-  eq(child.api.nvim_get_option('completeopt'), 'menuone,noselect')
+T['setup()']['sets recommended option values'] = function()
+  expect.match(child.o.shortmess, 'c')
+  if child.fn.has('nvim-0.9') == 1 then expect.match(child.o.shortmess, 'C') end
+  eq(child.o.completeopt, 'menuone,noselect')
+
+  -- Should not set if was previously set
+  child.o.shortmess = 'ltToO'
+  child.o.completeopt = 'menu,noinsert'
+  reload_module()
+  eq(child.o.shortmess, 'ltToO')
+  eq(child.o.completeopt, 'menu,noinsert')
 end
 
 T['default_process_items()'] = new_set({

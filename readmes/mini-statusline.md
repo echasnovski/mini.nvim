@@ -156,9 +156,6 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Whether to use icons by default
   use_icons = true,
-
-  -- Whether to set Vim's settings for statusline (make it always shown)
-  set_vim_settings = true,
 }
 ```
 

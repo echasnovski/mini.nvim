@@ -80,6 +80,13 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minicompletion_config` which should have same structure as
 `MiniCompletion.config`. See |mini.nvim-buffer-local-config| for more details.
 
+# Suggested option values ~
+
+Some options are set automatically (if not set before |MiniCompletion.setup()|):
+- 'completeopt' is set to "menuone,noselect" for less intrusive popup.
+  To enable fuzzy matching, manually set to "menuone,noselect,fuzzy".
+- 'shortmess' is appended with "c" flag for silent <C-n> fallback.
+
 # Snippets ~
 
 As per LSP specification, some completion items can be supplied in the form of
@@ -280,10 +287,6 @@ Default values:
       scroll_down = '<C-f>',
       scroll_up = '<C-b>',
     },
-
-    -- Whether to set Vim's settings for better experience (modifies
-    -- `shortmess` and `completeopt`)
-    set_vim_settings = true,
   }
 <
 ------------------------------------------------------------------------------

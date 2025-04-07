@@ -50,6 +50,11 @@ You can override runtime config settings locally to buffer inside
 `vim.b.minitabline_config` which should have same structure as
 `MiniTabline.config`. See |mini.nvim-buffer-local-config| for more details.
 
+# Suggested option values ~
+
+Some options are set automatically (if not set before |MiniTabline.setup()|):
+- 'showtabline' is set to 2 to always show tabline.
+
 # Highlight groups ~
 
 * `MiniTablineCurrent` - buffer is current (has cursor in it).
@@ -100,10 +105,6 @@ Default values:
     -- Function which formats the tab label
     -- By default surrounds with space and possibly prepends with icon
     format = nil,
-
-    -- Whether to set Vim's settings for tabline (make it always shown and
-    -- allow hidden buffers)
-    set_vim_settings = true,
 
     -- Where to show tabpage section in case of multiple vim tabpages.
     -- One of 'left', 'right', 'none'.
