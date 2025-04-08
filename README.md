@@ -161,7 +161,7 @@ These modules don't quite fit in any of the previous categories.
 
     - Values of `config` which affect runtime activity can be changed on the fly to have effect. For example, `MiniSurround.config.n_lines` can be changed during runtime; but changing `MiniSurround.config.mappings` won't have any effect (as mappings are created once during `setup()`).
 
-    - If module works best with some specific non-default option value, it is set during `setup()` but only if it was not explicitly set (by user or another plugin, no matter the value) before that.
+    - If module works best with some specific non-default option value, it is set during `setup()`. If the value is not essential to module's functionality, it is done only if user or another plugin hasn't set it beforehand (no matter the value).
 
 - **Buffer local configuration**. Each module can be additionally configured to use certain runtime config settings locally to buffer. See `mini.nvim-buffer-local-config` section in help file for more information.
 

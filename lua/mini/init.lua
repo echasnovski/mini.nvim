@@ -96,9 +96,10 @@
 ---       `MiniSurround.config.mappings` won't have any effect (as mappings are
 ---       created once during `setup()`).
 ---
----     - If module works best with some specific non-default option value, it is
----       set during `setup()` but only if it was not explicitly set (by user or
----       another plugin, no matter the value) before that.
+---     - If module works best with some specific non-default option value, it
+---       is set during `setup()`. If the value is not essential to module's
+---       functionality, it is done only if user or another plugin hasn't set
+---       it beforehand (no matter the value).
 ---
 --- - <Buffer local configuration>. Each module can be additionally configured
 ---   to use certain runtime config settings locally to buffer.
