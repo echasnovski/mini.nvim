@@ -115,10 +115,10 @@ end
 T['setup()']['sets recommended option values'] = function()
   eq(child.o.showtabline, 2)
 
-  -- Should not set if was previously set
+  -- Should set even if was previously set (it is essential for custom tabline)
   child.o.showtabline = 1
   reload_module()
-  eq(child.o.showtabline, 1)
+  eq(child.o.showtabline, 2)
 end
 
 T['make_tabline_string()'] = new_set()

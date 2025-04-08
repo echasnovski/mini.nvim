@@ -52,7 +52,7 @@
 ---
 --- # Suggested option values ~
 ---
---- Some options are set automatically (if not set before |MiniTabline.setup()|):
+--- Some options are set automatically by |MiniTabline.setup()|:
 --- - 'showtabline' is set to 2 to always show tabline.
 ---
 --- # Highlight groups ~
@@ -224,10 +224,8 @@ end
 H.apply_config = function(config)
   MiniTabline.config = config
 
-  -- Try making tabline always visible
-  -- TODO: use `nvim_get_option_info2` after Neovim=0.8 support is dropped
-  local was_set = vim.api.nvim_get_option_info('showtabline').was_set
-  if not was_set then vim.o.showtabline = 2 end
+  -- Make tabline always visible (essential for custom tabline)
+  vim.o.showtabline = 2
 
   -- Cache truncation characters
   H.cache_trunc_chars()

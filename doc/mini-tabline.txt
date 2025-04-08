@@ -52,7 +52,7 @@ You can override runtime config settings locally to buffer inside
 
 # Suggested option values ~
 
-Some options are set automatically (if not set before |MiniTabline.setup()|):
+Some options are set automatically by |MiniTabline.setup()|:
 - 'showtabline' is set to 2 to always show tabline.
 
 # Highlight groups ~
