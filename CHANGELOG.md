@@ -83,6 +83,7 @@
 
 ## mini.hues
 
+- BREAKING: update 'mini.pick' highlight groups to show prompt text with same colors as match ranges, as they are connected.
 - FEATURE: add support for colored markdown headings.
 - FEATURE: add new plugin integrations:
     - 'ibhagwan/fzf-lua'
