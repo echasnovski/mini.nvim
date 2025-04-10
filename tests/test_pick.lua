@@ -306,8 +306,20 @@ T['setup()']['creates `config` field'] = function()
   expect_config('source.choose_marked', vim.NIL)
 
   expect_config('window.config', vim.NIL)
-  expect_config('window.prompt_cursor', '▏')
+  expect_config('window.prompt_caret', '▏')
   expect_config('window.prompt_prefix', '> ')
+
+  -- Should temporarily respect deprecated `window.prompt_cursor`
+  local caret_cursor = child.lua([[
+    _G.log = {}
+    vim.notify = function(...) table.insert(_G.log, { ... }) end
+    require('mini.pick').setup({ window = { prompt_cursor = '$' } })
+    return { MiniPick.config.window.prompt_caret, MiniPick.config.window.prompt_cursor }
+  ]])
+  eq(caret_cursor, { '$' })
+  local ref_msg = '(mini.pick) `prompt_cursor` in `config.window` is renamed to `prompt_caret` for better naming consistency.'
+    .. ' It works for now, but will stop in the next release. Sorry for the inconvenience.'
+  eq(child.lua_get('_G.log'), { { ref_msg, child.lua_get('vim.log.levels.WARN') } })
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -372,7 +384,7 @@ T['setup()']['validates `config` argument'] = function()
 
   expect_config_error({ window = 'a' }, 'window', 'table')
   expect_config_error({ window = { config = 1 } }, 'window.config', 'table or callable')
-  expect_config_error({ window = { prompt_cursor = 1 } }, 'window.prompt_cursor', 'string')
+  expect_config_error({ window = { prompt_caret = 1 } }, 'window.prompt_caret', 'string')
   expect_config_error({ window = { prompt_prefix = 1 } }, 'window.prompt_prefix', 'string')
 end
 
@@ -868,8 +880,8 @@ T['start()']['respects `window.config`'] = function()
   stop()
 end
 
-T['start()']['respects `window.prompt_cursor`'] = function()
-  start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_cursor = '+' } })
+T['start()']['respects `window.prompt_caret`'] = function()
+  start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_caret = '+' } })
   child.expect_screenshot()
   type_keys('a', 'b', '<Left>')
   child.expect_screenshot()
@@ -4596,9 +4608,9 @@ end
 T['Overall view']['truncates prompt'] = function()
   child.set_size(10, 17)
   -- Should work with non-default lengths and multibyte characters in both
-  -- prefix and cursor
+  -- prefix and caret
   child.lua('MiniPick.config.window.prompt_prefix = "<ы>"')
-  child.lua('MiniPick.config.window.prompt_cursor = "!Ы!"')
+  child.lua('MiniPick.config.window.prompt_caret = "!Ы!"')
   start_with_items({ 'a' }, 'Test')
 
   -- Should work with multibyte characters in query

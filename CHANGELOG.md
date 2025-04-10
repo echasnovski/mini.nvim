@@ -99,6 +99,10 @@
 
 - FEATURE: update all actions to work with pairs containing multibyte characters (like "¿?", "「」", and similar).
 
+## mini.pick
+
+- BREAKING: rename `prompt_cursor` in `config.window` to `prompt_caret` for better naming consistency. It works for now, but will stop in the next release. Sorry for the inconvenience.
+
 ## mini.statusline
 
 - BREAKING: `section_fileinfo()` got several updates:

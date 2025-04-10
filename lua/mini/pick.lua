@@ -781,7 +781,7 @@ end
 --- picker window. This can be either a table overriding some parts or a callable
 --- returning such table. See |MiniPick-examples| for some examples.
 ---
---- `window.prompt_cursor` defines how cursor is displayed in window's prompt.
+--- `window.prompt_caret` defines how caret is displayed in window's prompt.
 --- Default: '▏'.
 ---
 --- `window.prompt_prefix` defines what prefix is used in window's prompt.
@@ -863,8 +863,8 @@ MiniPick.config = {
     -- Float window config (table or callable returning it)
     config = nil,
 
-    -- String to use as cursor in prompt
-    prompt_cursor = '▏',
+    -- String to use as caret in prompt
+    prompt_caret = '▏',
 
     -- String to use as prefix in prompt
     prompt_prefix = '> ',
@@ -1940,7 +1940,15 @@ H.setup_config = function(config)
   if not is_table_or_callable(config.window.config) then
     H.error('`window.config` should be table or callable, not ' .. type(config.window.config))
   end
-  H.check_type('window.prompt_cursor', config.window.prompt_cursor, 'string')
+  -- TODO: Remove after releasing 'mini.nvim' 0.16.0
+  if config.window.prompt_cursor ~= nil then
+    local msg = '`prompt_cursor` in `config.window` is renamed to `prompt_caret` for better naming consistency.'
+      .. ' It works for now, but will stop in the next release. Sorry for the inconvenience.'
+    H.notify(msg, 'WARN')
+    config.window.prompt_caret = config.window.prompt_cursor
+    config.window.prompt_cursor = nil
+  end
+  H.check_type('window.prompt_caret', config.window.prompt_caret, 'string')
   H.check_type('window.prompt_prefix', config.window.prompt_prefix, 'string')
 
   return config
@@ -2473,8 +2481,8 @@ H.picker_set_bordertext = function(picker)
   local config
   if view_state == 'main' then
     local caret, query = picker.caret, picker.query
-    local prefix, cursor = opts.window.prompt_prefix, opts.window.prompt_cursor
-    local max_width = math.max(1, win_width - vim.fn.strchars(prefix) - vim.fn.strchars(cursor))
+    local prompt_prefix, prompt_caret = opts.window.prompt_prefix, opts.window.prompt_caret
+    local max_width = math.max(1, win_width - vim.fn.strchars(prompt_prefix) - vim.fn.strchars(prompt_caret))
 
     -- Try to put caret in the center if there is not enough room to show the
     -- whole query (as in 'mini.tabline'). Do that after concatenating query
@@ -2494,7 +2502,7 @@ H.picker_set_bordertext = function(picker)
     before_caret = vim.fn.strcharpart(before_caret, w_before - w_left, w_left)
     after_caret = vim.fn.strcharpart(after_caret, 0, w_right)
 
-    local prompt_text = prefix .. pad_left .. before_caret .. cursor .. after_caret .. pad_right
+    local prompt_text = prompt_prefix .. pad_left .. before_caret .. prompt_caret .. after_caret .. pad_right
     local prompt = { { prompt_text, 'MiniPickPrompt' } }
     config = { title = prompt }
   end
