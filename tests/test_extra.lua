@@ -736,8 +736,11 @@ T['pickers'] = new_set({
       load_module()
       child.lua([[require('mini.pick').setup()]])
 
-      -- Make picker border differentiable in screenshots
-      child.cmd('hi MiniPickBorder ctermfg=2')
+      -- Make some UI elements differentiable in screenshots
+      child.cmd('hi MiniPickBorder guifg=Red ctermfg=1')
+      child.cmd('hi MiniPickPrompt guifg=Green ctermfg=2')
+      child.cmd('hi MiniPickPromptCaret guifg=Yellow ctermfg=3')
+      child.cmd('hi MiniPickPromptPrefix guifg=Azure ctermfg=4')
     end,
   },
 })
