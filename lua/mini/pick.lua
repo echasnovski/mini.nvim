@@ -129,6 +129,8 @@
 --- * `MiniPickPreviewLine` - target line in preview.
 --- * `MiniPickPreviewRegion` - target region in preview.
 --- * `MiniPickPrompt` - prompt.
+--- * `MiniPickPromptCaret` - caret in prompt.
+--- * `MiniPickPromptPrefix` - prefix of the prompt.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 
@@ -2001,6 +2003,8 @@ H.create_default_hl = function()
   hi('MiniPickPreviewLine',   { link = 'CursorLine' })
   hi('MiniPickPreviewRegion', { link = 'IncSearch' })
   hi('MiniPickPrompt',        { link = 'DiagnosticFloatingInfo' })
+  hi('MiniPickPromptCaret',   { link = 'MiniPickPrompt' })
+  hi('MiniPickPromptPrefix',  { link = 'MiniPickPrompt' })
 end
 
 H.create_user_commands = function()
@@ -2502,8 +2506,9 @@ H.picker_set_bordertext = function(picker)
     before_caret = vim.fn.strcharpart(before_caret, w_before - w_left, w_left)
     after_caret = vim.fn.strcharpart(after_caret, 0, w_right)
 
-    local prompt_text = prompt_prefix .. pad_left .. before_caret .. prompt_caret .. after_caret .. pad_right
-    local prompt = { { prompt_text, 'MiniPickPrompt' } }
+    local prompt = { { prompt_prefix, 'MiniPickPromptPrefix' }, { prompt_caret, 'MiniPickPromptCaret' } }
+    if after_caret ~= '' then table.insert(prompt, 3, { after_caret .. pad_right, 'MiniPickPrompt' }) end
+    if before_caret ~= '' then table.insert(prompt, 2, { pad_left .. before_caret, 'MiniPickPrompt' }) end
     config = { title = prompt }
   end
 

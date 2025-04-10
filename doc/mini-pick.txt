@@ -129,6 +129,8 @@ See |mini.nvim-buffer-local-config| for more details.
 * `MiniPickPreviewLine` - target line in preview.
 * `MiniPickPreviewRegion` - target region in preview.
 * `MiniPickPrompt` - prompt.
+* `MiniPickPromptCaret` - caret in prompt.
+* `MiniPickPromptPrefix` - prefix of the prompt.
 
 To change any highlight group, modify it directly with |:highlight|.
 

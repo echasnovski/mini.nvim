@@ -214,8 +214,11 @@ local T = new_set({
 
       load_module()
 
-      -- Make border differentiable in screenshots
-      child.cmd('hi MiniPickBorder ctermfg=2')
+      -- Make some UI elements differentiable in screenshots
+      child.cmd('hi MiniPickBorder guifg=Red ctermfg=1')
+      child.cmd('hi MiniPickPrompt guifg=Green ctermfg=2')
+      child.cmd('hi MiniPickPromptCaret guifg=Yellow ctermfg=3')
+      child.cmd('hi MiniPickPromptPrefix guifg=Azure ctermfg=4')
     end,
     post_once = child.stop,
   },
@@ -255,6 +258,8 @@ T['setup()']['creates side effects'] = function()
   validate_hl_group('MiniPickPreviewLine', 'links to CursorLine')
   validate_hl_group('MiniPickPreviewRegion', 'links to IncSearch')
   validate_hl_group('MiniPickPrompt', 'links to DiagnosticFloatingInfo')
+  validate_hl_group('MiniPickPromptCaret', 'links to MiniPickPrompt')
+  validate_hl_group('MiniPickPromptPrefix', 'links to MiniPickPrompt')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -888,10 +893,16 @@ T['start()']['respects `window.prompt_caret`'] = function()
 end
 
 T['start()']['respects `window.prompt_prefix`'] = function()
-  start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_prefix = '$>  ' } })
-  child.expect_screenshot()
-  type_keys('a', 'b', '<Left>')
-  child.expect_screenshot()
+  local validate = function(prefix)
+    start({ source = { items = { 'a', 'b', 'c' } }, window = { prompt_prefix = prefix } })
+    child.expect_screenshot()
+    type_keys('a', 'b', '<Left>')
+    child.expect_screenshot()
+    type_keys('<C-c>')
+  end
+
+  validate('$>  ')
+  validate('')
 end
 
 T['start()']['stops currently active picker'] = function()
@@ -4747,15 +4758,21 @@ T['Overall view']['uses dedicated highlight groups'] = function()
   expect.match(winhighlight, 'NormalFloat:MiniPickNormal')
   expect.match(winhighlight, 'FloatBorder:MiniPickBorderBusy')
 
-  local win_config = child.api.nvim_win_get_config(win_id)
-  if child.fn.has('nvim-0.9') == 1 then eq(win_config.title, { { '> ▏', 'MiniPickPrompt' } }) end
-
   -- Not busy picker
   set_picker_items({ 'a' })
   eq(get_picker_state().is_busy, false)
 
   winhighlight = child.api.nvim_win_get_option(win_id, 'winhighlight')
   expect.match(winhighlight, 'FloatBorder:MiniPickBorder')
+
+  -- Title support is present only on Neovim>=0.9
+  type_keys('a')
+
+  local win_config = child.api.nvim_win_get_config(win_id)
+  if child.fn.has('nvim-0.9') == 1 then
+    local ref_title = { { '> ', 'MiniPickPromptPrefix' }, { 'a', 'MiniPickPrompt' }, { '▏', 'MiniPickPromptCaret' } }
+    eq(win_config.title, ref_title)
+  end
 
   -- Footer support is present only on Neovim>=0.10
   if child.fn.has('nvim-0.10') == 1 then
