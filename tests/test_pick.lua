@@ -22,11 +22,6 @@ child.expect_screenshot = function(opts)
   child.expect_screenshot_orig(opts)
 end
 
-child.has_float_footer = function()
-  -- https://github.com/neovim/neovim/pull/24739
-  return child.fn.has('nvim-0.10') == 1
-end
-
 -- Test paths helpers
 local join_path = function(...) return table.concat({ ... }, '/') end
 
@@ -430,15 +425,12 @@ T['start()']['returns `nil` when there is no current match'] = function()
 end
 
 T['start()']['works with window footer'] = function()
-  -- TODO: Use this as primary test after support for Neovim<=0.9 is dropped
-  if not child.has_float_footer() then return end
-
   child.lua_notify('_G.picked_item = MiniPick.start(...)', { { source = { items = test_items } } })
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 
   eq(child.api.nvim_get_current_win(), get_picker_state().windows.main)
   type_keys('<CR>')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
   eq(child.lua_get('_G.picked_item'), test_items[1])
 end
 
@@ -620,7 +612,7 @@ end
 T['start()']['respects `source.name`'] = function()
   start({ source = { items = test_items, name = 'Hello' } })
   validate_picker_option('source.name', 'Hello')
-  if child.has_float_footer() then child.expect_screenshot_orig() end
+  child.expect_screenshot()
 end
 
 T['start()']['respects `source.cwd`'] = function()
@@ -4236,17 +4228,13 @@ end
 T['set_picker_opts()'] = new_set()
 
 T['set_picker_opts()']['works'] = function()
-  local expect_screenshot = function()
-    if child.has_float_footer() then child.expect_screenshot_orig() end
-  end
-
   local target_win_id = child.api.nvim_get_current_win()
   local init_cwd = child.fn.getcwd()
   start_with_items({ 'a', 'b', 'bb' })
-  expect_screenshot()
+  child.expect_screenshot()
 
   child.lua([[MiniPick.set_picker_opts({ source = { name = 'My name' }, window = { config = { col = 5 } } })]])
-  expect_screenshot()
+  child.expect_screenshot()
 
   -- Can be used to update mappings
   child.lua([[MiniPick.set_picker_opts({
@@ -4274,7 +4262,7 @@ T['set_picker_opts()']['works'] = function()
   -- Should rerun match
   child.lua('MiniPick.set_picker_opts({ source = { match = function() return { 2 } end } })')
   eq(get_picker_matches().all_inds, { 2 })
-  expect_screenshot()
+  child.expect_screenshot()
 
   -- Can be called without active picker
   type_keys('<C-c>')
@@ -4552,38 +4540,34 @@ T['Overall view']['shows prompt'] = function()
 end
 
 T['Overall view']['uses footer for extra info'] = function()
-  if not child.has_float_footer() then return end
-
   start_with_items({ 'a', 'b', 'bb', 'bbb' }, 'My name')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 
   -- Should update after matching
   type_keys('b')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 
   -- Should update after moving
   type_keys('<C-n>')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 
   -- Should update after marking and unmarking
   type_keys('<C-x>')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
   type_keys('<C-x>')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 
   -- Should correctly show no matches
   type_keys('x')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 end
 
 T['Overall view']['correctly infers footer empty space'] = function()
-  if not child.has_float_footer() then return end
-
   local validate = function(win_config)
     local lua_cmd = string.format('MiniPick.config.window.config = %s', vim.inspect(win_config))
     child.lua(lua_cmd)
     start_with_items({ 'a' })
-    child.expect_screenshot_orig()
+    child.expect_screenshot()
     type_keys('<C-c>')
   end
 
@@ -4600,21 +4584,16 @@ T['Overall view']['correctly infers footer empty space'] = function()
 end
 
 T['Overall view']['does not show footer if items are not set'] = function()
-  if not child.has_float_footer() then return end
   start_with_items()
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 end
 
 T['Overall view']['respects `options.content_from_bottom` with footer'] = function()
-  if not child.has_float_footer() then return end
-
   start({ source = { items = { 'a', 'b' } }, options = { content_from_bottom = true } })
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 end
 
 T['Overall view']['truncates prompt'] = function()
-  if not child.has_float_footer() then return end
-
   child.set_size(10, 17)
   -- Should work with non-default lengths and multibyte characters in both
   -- prefix and cursor
@@ -4625,29 +4604,27 @@ T['Overall view']['truncates prompt'] = function()
   -- Should work with multibyte characters in query
   local query = 'abcйцф_'
   type_keys(query)
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
   for _ = 1, vim.fn.strchars(query) do
     type_keys('<Left>')
-    child.expect_screenshot_orig()
+    child.expect_screenshot()
   end
 
   -- Should work with more single character query parts
   local query_arr = { 'ab', 'cde', 'fgh', 'ij' }
   set_picker_query(query_arr)
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
   for _ = 1, #query_arr do
     type_keys('<Left>')
-    child.expect_screenshot_orig()
+    child.expect_screenshot()
   end
 end
 
 T['Overall view']['truncates footer'] = function()
-  if not child.has_float_footer() then return end
-
   local validate = function(...)
     child.set_size(...)
     start_with_items({ 'a' }, 'Very long name')
-    child.expect_screenshot_orig()
+    child.expect_screenshot()
     type_keys('<C-c>')
   end
 
@@ -4658,11 +4635,9 @@ T['Overall view']['truncates footer'] = function()
 end
 
 T['Overall view']['allows "none" as border'] = function()
-  if not child.has_float_footer() then return end
-
   child.lua([[MiniPick.config.window.config = { border = 'none' }]])
   start_with_items({ 'a' }, 'My name')
-  child.expect_screenshot_orig()
+  child.expect_screenshot()
 end
 
 T['Overall view']["respects 'winborder' option"] = function()
@@ -4770,7 +4745,8 @@ T['Overall view']['uses dedicated highlight groups'] = function()
   winhighlight = child.api.nvim_win_get_option(win_id, 'winhighlight')
   expect.match(winhighlight, 'FloatBorder:MiniPickBorder')
 
-  if child.has_float_footer() then
+  -- Footer support is present only on Neovim>=0.10
+  if child.fn.has('nvim-0.10') == 1 then
     win_config = child.api.nvim_win_get_config(win_id)
     local footer = win_config.footer
     eq(footer[1], { ' My name ', 'MiniPickBorderText' })
