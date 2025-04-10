@@ -2472,11 +2472,30 @@ H.picker_set_bordertext = function(picker)
   local view_state, win_width = picker.view_state, vim.api.nvim_win_get_width(win_id)
   local config
   if view_state == 'main' then
-    local query, caret = picker.query, picker.caret
-    local before_caret = table.concat(vim.list_slice(query, 1, caret - 1), '')
-    local after_caret = table.concat(vim.list_slice(query, caret, #query), '')
-    local prompt_text = opts.window.prompt_prefix .. before_caret .. opts.window.prompt_cursor .. after_caret
-    local prompt = { { H.fit_to_width(prompt_text, win_width), 'MiniPickPrompt' } }
+    local caret, query = picker.caret, picker.query
+    local prefix, cursor = opts.window.prompt_prefix, opts.window.prompt_cursor
+    local max_width = math.max(1, win_width - vim.fn.strchars(prefix) - vim.fn.strchars(cursor))
+
+    -- Try to put caret in the center if there is not enough room to show the
+    -- whole query (as in 'mini.tabline'). Do that after concatenating query
+    -- parts as (after `set_picker_query()`) they can have multiple characters.
+    local before_caret = table.concat(vim.list_slice(query, 1, caret - 1))
+    local after_caret = table.concat(vim.list_slice(query, caret, #query))
+    local w_before, w_after = vim.fn.strchars(before_caret), vim.fn.strchars(after_caret)
+
+    local w_right = math.min(math.floor(0.5 * max_width), w_after)
+    local w_left = math.min(math.max(max_width - w_right, 0), w_before)
+    w_right = math.min(math.max(max_width - w_left, 0), w_after)
+
+    -- Show standard "there is more" padding symbols if needed
+    local pad_left, pad_right = w_left == w_before and '' or '…', w_right == w_after and '' or '…'
+    w_left, w_right = w_left - (pad_left == '' and 0 or 1), w_right - (pad_right == '' and 0 or 1)
+
+    before_caret = vim.fn.strcharpart(before_caret, w_before - w_left, w_left)
+    after_caret = vim.fn.strcharpart(after_caret, 0, w_right)
+
+    local prompt_text = prefix .. pad_left .. before_caret .. cursor .. after_caret .. pad_right
+    local prompt = { { prompt_text, 'MiniPickPrompt' } }
     config = { title = prompt }
   end
 

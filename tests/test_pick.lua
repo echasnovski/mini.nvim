@@ -4612,20 +4612,49 @@ T['Overall view']['respects `options.content_from_bottom` with footer'] = functi
   child.expect_screenshot_orig()
 end
 
-T['Overall view']['truncates border text'] = function()
+T['Overall view']['truncates prompt'] = function()
+  if not child.has_float_footer() then return end
+
+  child.set_size(10, 17)
+  -- Should work with non-default lengths and multibyte characters in both
+  -- prefix and cursor
+  child.lua('MiniPick.config.window.prompt_prefix = "<ы>"')
+  child.lua('MiniPick.config.window.prompt_cursor = "!Ы!"')
+  start_with_items({ 'a' }, 'Test')
+
+  -- Should work with multibyte characters in query
+  local query = 'abcйцф_'
+  type_keys(query)
+  child.expect_screenshot_orig()
+  for _ = 1, vim.fn.strchars(query) do
+    type_keys('<Left>')
+    child.expect_screenshot_orig()
+  end
+
+  -- Should work with more single character query parts
+  local query_arr = { 'ab', 'cde', 'fgh', 'ij' }
+  set_picker_query(query_arr)
+  child.expect_screenshot_orig()
+  for _ = 1, #query_arr do
+    type_keys('<Left>')
+    child.expect_screenshot_orig()
+  end
+end
+
+T['Overall view']['truncates footer'] = function()
   if not child.has_float_footer() then return end
 
   local validate = function(...)
     child.set_size(...)
     start_with_items({ 'a' }, 'Very long name')
-    set_picker_query({ 'very long query' })
     child.expect_screenshot_orig()
     type_keys('<C-c>')
   end
 
   validate(10, 20)
   -- Should not partially show footer indexes, only in full (when space allows)
-  validate(10, 35)
+  validate(10, 38)
+  validate(10, 39)
 end
 
 T['Overall view']['allows "none" as border'] = function()
