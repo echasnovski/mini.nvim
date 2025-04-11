@@ -1748,17 +1748,28 @@ end
 
 --- Set match indexes for active picker
 ---
---- This is intended to be used inside custom asynchronous |MiniPick-source.match|
---- implementations. See |MiniPick.poke_is_picker_active()| for an example.
+--- There are two intended use cases:
+--- - Inside custom asynchronous |MiniPick-source.match| function to set which of
+---   picker's stritems match the query. See |MiniPick.poke_is_picker_active()|.
+--- - To programmatically set current match and marked items.
+---   See |MiniPick.get_picker_matches()|.
 ---
----@param match_inds table Array of numbers indicating which elements of picker's
----   stritems match the query.
+---@param match_inds table Array of numbers with picker's items indexes.
+---@param match_type string|nil Type of match indexes to set. One of:
+---   - `"all"` (default) - indexes of items that match query.
+---   - `"current"` - index of current match. Only first element is used and should
+---     also be present among query matches.
+---   - `"marked"` - indexes of marked items. Values can be not among query matches.
+---     Will make only input indexes be marked, i.e. current marks are reset.
+---   Note: no `"shown"` match type as those indexes are computed automatically.
 ---
 ---@seealso |MiniPick.get_picker_matches()|
-MiniPick.set_picker_match_inds = function(match_inds)
+MiniPick.set_picker_match_inds = function(match_inds, match_type)
   if not MiniPick.is_picker_active() then return end
   if not H.is_array_of(match_inds, 'number') then H.error('`match_inds` should be an array of numbers.') end
-  H.picker_set_match_inds(H.pickers.active, match_inds)
+  local set = H.picker_set_inds[match_type or 'all']
+  if set == nil then H.error('`match_type` should be one of "all", "marked", "current"') end
+  set(H.pickers.active, match_inds)
   H.picker_update(H.pickers.active, false)
 end
 
@@ -2378,6 +2389,28 @@ H.picker_set_current_ind = function(picker, ind, force_update)
   picker.current_ind = ind
   picker.visible_range = { from = from, to = to, querytick = H.querytick }
 end
+
+H.picker_set_inds = {
+  all = function(picker, inds) H.picker_set_match_inds(H.pickers.active, inds) end,
+  current = function(picker, inds)
+    if inds[1] == nil or picker.match_inds == nil then return end
+    local current_match_ind, current_abs_ind = nil, inds[1]
+    for i, match_abs_ind in ipairs(picker.match_inds) do
+      if match_abs_ind == current_abs_ind then current_match_ind = i end
+    end
+    if current_match_ind == nil then H.error('Current match index should be present among all current matches') end
+    H.picker_set_current_ind(picker, current_match_ind, true)
+  end,
+  marked = function(picker, inds)
+    if picker.items == nil then return end
+    local marked_inds_map, n_items = {}, #picker.items
+    for _, ind in ipairs(inds) do
+      if not (1 <= ind and ind <= n_items) then H.error('Marked indexes should be from 1 to number of items') end
+      marked_inds_map[ind] = true
+    end
+    picker.marked_inds_map = marked_inds_map
+  end,
+}
 
 H.picker_set_lines = function(picker)
   local buf_id, win_id = picker.buffers.main, picker.windows.main

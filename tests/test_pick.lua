@@ -4286,10 +4286,81 @@ T['set_picker_match_inds()']['triggers relevant event'] = function()
   eq(child.lua_get('_G.log'), { { 'b', 'c' } })
 end
 
+T['set_picker_match_inds()']['can set current match index'] = function()
+  child.set_size(10, 35)
+  start_with_items({ 'a', 'b', 'c', 'da' })
+
+  set_picker_match_inds({ 3 }, 'current')
+  eq(get_picker_matches().current, 'c')
+  eq(get_picker_matches().current_ind, 3)
+  -- - Should update in overall view too
+  child.expect_screenshot()
+
+  -- Only first one should be used
+  set_picker_match_inds({ 2, 3 }, 'current')
+  eq(get_picker_matches().current_ind, 2)
+
+  -- Should treat as absolute indexes (i.e. indexes among all items)
+  type_keys('a')
+  set_picker_match_inds({ 4 }, 'current')
+  eq(get_picker_matches().current_ind, 4)
+
+  -- Should still update automatically later
+  type_keys('<C-u>')
+  eq(get_picker_matches().current_ind, 1)
+
+  -- Should throw error on bad input
+  type_keys('a')
+  expect.error(function() set_picker_match_inds({ 2 }, 'current') end, 'among all current matches')
+  type_keys('<C-u>')
+
+  type_keys('x')
+  expect.error(function() set_picker_match_inds({ 1 }, 'current') end, 'among all current matches')
+  type_keys('<C-u>')
+
+  expect.error(function() set_picker_match_inds(4, 'current') end, 'array')
+  expect.error(function() set_picker_match_inds({ 0 }, 'current') end, 'among all current matches')
+  expect.error(function() set_picker_match_inds({ 100 }, 'current') end, 'among all current matches')
+end
+
+T['set_picker_match_inds()']['can set marked match indexes'] = function()
+  child.set_size(10, 35)
+  start_with_items({ 'a', 'b', 'c', 'da' })
+
+  set_picker_match_inds({ 2, 4 }, 'marked')
+  eq(get_picker_matches().marked, { 'b', 'da' })
+  eq(get_picker_matches().marked_inds, { 2, 4 })
+  -- - Should update in overall view too
+  child.expect_screenshot()
+
+  -- Should set all marked indexes to the input
+  set_picker_match_inds({ 3 }, 'marked')
+  eq(get_picker_matches().marked_inds, { 3 })
+  child.expect_screenshot()
+
+  set_picker_match_inds({}, 'marked')
+  eq(get_picker_matches().marked_inds, {})
+
+  -- Should be able to mark not currently matched to query
+  type_keys('a')
+  set_picker_match_inds({ 2 }, 'marked')
+  eq(get_picker_matches().marked_inds, { 2 })
+
+  -- Should still be able to manually mark afterwards
+  type_keys('<C-x>')
+  eq(get_picker_matches().marked_inds, { 1, 2 })
+
+  -- Should throw error on bad input
+  expect.error(function() set_picker_match_inds({ 0 }, 'marked') end, 'from 1 to number of items')
+  expect.error(function() set_picker_match_inds({ 100 }, 'marked') end, 'from 1 to number of items')
+end
+
 T['set_picker_match_inds()']['validates arguments'] = function()
   start_with_items()
   expect.error(function() set_picker_match_inds(1) end, '`match_inds`.*array')
   expect.error(function() set_picker_match_inds({ 'a' }) end, '`match_inds`.*numbers')
+  expect.error(function() set_picker_match_inds({ 1 }, 1) end, '`match_type`.*one of')
+  expect.error(function() set_picker_match_inds({ 1 }, 'x') end, '`match_type`.*one of')
 end
 
 T['set_picker_opts()'] = new_set()

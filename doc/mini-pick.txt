@@ -1370,15 +1370,24 @@ See also ~
 
 ------------------------------------------------------------------------------
                                               *MiniPick.set_picker_match_inds()*
-                 `MiniPick.set_picker_match_inds`({match_inds})
+          `MiniPick.set_picker_match_inds`({match_inds}, {match_type})
 Set match indexes for active picker
 
-This is intended to be used inside custom asynchronous |MiniPick-source.match|
-implementations. See |MiniPick.poke_is_picker_active()| for an example.
+There are two intended use cases:
+- Inside custom asynchronous |MiniPick-source.match| function to set which of
+  picker's stritems match the query. See |MiniPick.poke_is_picker_active()|.
+- To programmatically set current match and marked items.
+  See |MiniPick.get_picker_matches()|.
 
 Parameters ~
-{match_inds} `(table)` Array of numbers indicating which elements of picker's
-  stritems match the query.
+{match_inds} `(table)` Array of numbers with picker's items indexes.
+{match_type} `(string|nil)` Type of match indexes to set. One of:
+  - `"all"` (default) - indexes of items that match query.
+  - `"current"` - index of current match. Only first element is used and should
+    also be present among query matches.
+  - `"marked"` - indexes of marked items. Values can be not among query matches.
+    Will make only input indexes be marked, i.e. current marks are reset.
+  Note: no `"shown"` match type as those indexes are computed automatically.
 
 See also ~
 |MiniPick.get_picker_matches()|
