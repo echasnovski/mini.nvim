@@ -1612,6 +1612,8 @@ MiniPick.get_picker_stritems = function() return vim.deepcopy((H.pickers.active 
 ---   - <current_ind> `(number|nil)` - index of current matched item.
 ---   - <marked> `(table|nil)` - marked items.
 ---   - <marked_inds> `(table|nil)` - indexes of marked items.
+---   - <shown> `(table|nil)` - shown items (from top to bottom).
+---   - <shown_inds> `(table|nil)` - indexes of shown items (from top to bottom).
 ---
 ---@seealso |MiniPick.set_picker_match_inds()|
 MiniPick.get_picker_matches = function()
@@ -1620,12 +1622,15 @@ MiniPick.get_picker_matches = function()
   local items = picker.items
   if items == nil or #items == 0 then return {} end
 
-  local res = { all_inds = vim.deepcopy(picker.match_inds), current_ind = picker.match_inds[picker.current_ind] }
-  res.all = vim.tbl_map(function(ind) return items[ind] end, picker.match_inds)
+  local match_inds = vim.deepcopy(picker.match_inds)
+  local res = { all_inds = match_inds, current_ind = match_inds[picker.current_ind] }
+  res.all = vim.tbl_map(function(ind) return items[ind] end, match_inds)
   res.current = picker.items[res.current_ind]
   local marked_inds = vim.tbl_keys(picker.marked_inds_map)
   table.sort(marked_inds)
   res.marked_inds, res.marked = marked_inds, vim.tbl_map(function(ind) return items[ind] end, marked_inds)
+  res.shown_inds = vim.tbl_map(function(ind) return match_inds[ind] end, picker.shown_inds)
+  res.shown = vim.tbl_map(function(ind) return items[ind] end, res.shown_inds)
   return res
 end
 
@@ -2158,6 +2163,8 @@ H.picker_new = function(opts)
 
     -- - Index of `match_inds` pointing at current item
     current_ind = nil,
+    -- - Array of indexes of `match_inds` pointing at currently shown items
+    shown_inds = {},
   }
 
   H.querytick = H.querytick + 1
@@ -2380,19 +2387,21 @@ H.picker_set_lines = function(picker)
 
   local visible_range, query = picker.visible_range, picker.query
   if picker.items == nil or visible_range.from == nil or visible_range.to == nil then
+    picker.shown_inds = {}
     picker.opts.source.show(buf_id, {}, query)
     H.clear_namespace(buf_id, H.ns_id.matches)
     return
   end
 
   -- Construct target items
-  local items_to_show, items, match_inds = {}, picker.items, picker.match_inds
+  local items_to_show, items, shown_inds, match_inds = {}, picker.items, {}, picker.match_inds
   local cur_ind, cur_line = picker.current_ind, nil
   local marked_inds_map, marked_lnums = picker.marked_inds_map, {}
   local is_from_bottom = picker.opts.options.content_from_bottom
   local from = is_from_bottom and visible_range.to or visible_range.from
   local to = is_from_bottom and visible_range.from or visible_range.to
   for i = from, to, (from <= to and 1 or -1) do
+    table.insert(shown_inds, i)
     table.insert(items_to_show, items[match_inds[i]])
     if i == cur_ind then cur_line = #items_to_show end
     if marked_inds_map[match_inds[i]] then table.insert(marked_lnums, #items_to_show) end
@@ -2403,6 +2412,7 @@ H.picker_set_lines = function(picker)
   marked_lnums = vim.tbl_map(function(x) return x + n_empty_top_lines end, marked_lnums)
 
   -- Update visible lines accounting for "from_bottom" direction
+  picker.shown_inds = shown_inds
   picker.opts.source.show(buf_id, items_to_show, query)
   if n_empty_top_lines > 0 then
     local empty_lines = vim.fn['repeat']({ '' }, n_empty_top_lines)
@@ -2592,6 +2602,7 @@ end
 H.picker_free = function(picker)
   if picker == nil then return end
   picker.match_inds = nil
+  picker.shown_inds = {}
   picker.cache = nil
   picker.stritems, picker.stritems_ignorecase, picker.marked_inds_map = nil, nil, nil
   picker.items = nil

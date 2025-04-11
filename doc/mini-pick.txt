@@ -1275,6 +1275,8 @@ Return ~
   - <current_ind> `(number|nil)` - index of current matched item.
   - <marked> `(table|nil)` - marked items.
   - <marked_inds> `(table|nil)` - indexes of marked items.
+  - <shown> `(table|nil)` - shown items (from top to bottom).
+  - <shown_inds> `(table|nil)` - indexes of shown items (from top to bottom).
 
 See also ~
 |MiniPick.set_picker_match_inds()|

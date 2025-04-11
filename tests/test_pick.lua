@@ -669,6 +669,8 @@ T['start()']['respects `source.show`'] = function()
     items = { 'a', { text = 'b' }, 'bb' },
     show = function(buf_id, items_to_show, query, ...)
       _G.show_args = { buf_id, items_to_show, query, ... }
+      -- Information about shown indexes should be up to date at this point
+      _G.shown_inds = MiniPick.get_picker_matches().shown_inds
       local lines = vim.tbl_map(
         function(x) return '__' .. (type(x) == 'table' and x.text or x) end,
         items_to_show
@@ -680,10 +682,12 @@ T['start()']['respects `source.show`'] = function()
 
   child.expect_screenshot()
   eq(child.lua_get('_G.show_args'), { buf_id, { 'a', { text = 'b' }, 'bb' }, {} })
+  eq(child.lua_get('_G.shown_inds'), { 1, 2, 3 })
 
   type_keys('b')
   child.expect_screenshot()
   eq(child.lua_get('_G.show_args'), { buf_id, { { text = 'b' }, 'bb' }, { 'b' } })
+  eq(child.lua_get('_G.shown_inds'), { 2, 3 })
 end
 
 T['start()']['respects `source.preview`'] = function()
@@ -3612,14 +3616,23 @@ T['get_picker_matches()']['works'] = function()
   start_with_items(items)
   child.lua('_G.res = MiniPick.get_picker_matches()')
 
-  local ref =
-    { all = items, all_inds = { 1, 2, 3 }, current = items[1], current_ind = 1, marked = {}, marked_inds = {} }
+  local ref = {
+    all = items,
+    all_inds = { 1, 2, 3 },
+    current = items[1],
+    current_ind = 1,
+    marked = {},
+    marked_inds = {},
+    shown = items,
+    shown_inds = { 1, 2, 3 },
+  }
   eq(child.lua_get('_G.res'), ref)
 
   -- Returns copy
   child.lua([[_G.res.all[1], _G.res.all_inds[1] = 'xx', 100]])
   child.lua([[_G.res.current, _G.res.current_ind = 'yy', 200]])
-  child.lua([[_G.res.marked[1], _G.res.marked_inds[1] = 'tt', 300]])
+  child.lua([[_G.res.marked[1], _G.res.marked_inds[1] = 'uu', 300]])
+  child.lua([[_G.res.shown[1], _G.res.shown_inds[1] = 'vv', 400]])
   eq(get_picker_matches(), ref)
 end
 
@@ -3678,6 +3691,37 @@ T['get_picker_matches()']['reacts to change in marked matches'] = function()
 
   type_keys('<C-n>', '<C-n>', '<C-x>')
   validate({ items[1], items[3] }, { 1, 3 })
+end
+
+T['get_picker_matches()']['reacts to change in shown matches'] = function()
+  local validate = function(ref_shown, ref_shown_inds)
+    local matches = get_picker_matches()
+    eq(matches.shown, ref_shown)
+    eq(matches.shown_inds, ref_shown_inds)
+  end
+
+  child.set_size(10, 20)
+
+  local items = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'hha', 'hhha', 'ha' }
+  start_with_items(items)
+  validate({ 'a', 'b', 'c', 'd', 'e' }, { 1, 2, 3, 4, 5 })
+
+  type_keys('<C-p>')
+  validate({ 'f', 'g', 'hha', 'hhha', 'ha' }, { 6, 7, 8, 9, 10 })
+
+  type_keys('a')
+  validate({ 'a', 'ha', 'hha', 'hhha' }, { 1, 10, 8, 9 })
+
+  type_keys('x')
+  validate({}, {})
+
+  type_keys('<C-c>')
+
+  -- Should always order from top to bottom
+  start({ source = { items = { 'a', 'b', 'c', 'ad', 'd' } }, options = { content_from_bottom = true } })
+  validate({ 'd', 'ad', 'c', 'b', 'a' }, { 5, 4, 3, 2, 1 })
+  type_keys('d')
+  validate({ 'ad', 'd' }, { 4, 5 })
 end
 
 T['get_picker_matches()']['handles no matches'] = function()

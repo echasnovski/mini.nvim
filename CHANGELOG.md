@@ -105,6 +105,7 @@
 
 - BREAKING: rename `prompt_cursor` in `config.window` to `prompt_caret` for better naming consistency. It works for now, but will stop in the next release. Sorry for the inconvenience.
 - FEATURE: add `MiniPickPromptCaret` and `MiniPickPromptPrefix` highlight groups to allow finer customization of picker's prompt.
+- FEATURE: update `get_picker_matches()` to return data (items and indexes) about currently shown items.
 
 ## mini.statusline
 
