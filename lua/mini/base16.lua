@@ -727,7 +727,8 @@ H.apply_palette = function(palette, use_cterm)
     hi('MiniClueSeparator',           {link='DiagnosticFloatingInfo'})
     hi('MiniClueTitle',               {fg=p.base0D, bg=p.base01, attr='bold', sp=nil})
 
-    hi('MiniCompletionActiveParameter', {fg=nil, bg=p.base02, attr=nil, sp=nil})
+    hi('MiniCompletionActiveParameter',    {link='LspSignatureActiveParameter'})
+    hi('MiniCompletionInfoBorderOutdated', {link='DiagnosticFloatingWarn'})
 
     hi('MiniCursorword',        {fg=nil, bg=nil, attr='underline', sp=nil})
     hi('MiniCursorwordCurrent', {fg=nil, bg=nil, attr='underline', sp=nil})
