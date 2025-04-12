@@ -886,7 +886,8 @@ MiniHues.apply_palette = function(palette, plugins)
     hi('MiniClueSeparator',           { link='DiagnosticFloatingInfo' })
     hi('MiniClueTitle',               { link='FloatTitle' })
 
-    hi('MiniCompletionActiveParameter', { fg=nil, bg=p.bg_mid2 })
+    hi('MiniCompletionActiveParameter',    { link='LspSignatureActiveParameter' })
+    hi('MiniCompletionInfoBorderOutdated', { link='DiagnosticFloatingWarn' })
 
     hi('MiniCursorword',        { fg=nil, bg=nil, underline=true })
     hi('MiniCursorwordCurrent', { fg=nil, bg=nil, underline=true })
