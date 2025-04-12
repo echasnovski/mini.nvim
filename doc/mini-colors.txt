@@ -714,7 +714,7 @@ Parameters ~
   - <new_name> `(string|nil)` - new name of colorscheme object.
 
 Return ~
-`(table)` Colorscheme object |(MiniColors-colorscheme|).
+`(table)` Colorscheme object (|MiniColors-colorscheme|).
 
 ------------------------------------------------------------------------------
                                                       *MiniColors.interactive()*

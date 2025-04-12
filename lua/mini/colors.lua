@@ -742,7 +742,7 @@ end
 ---@param opts table|nil Options. Possible fields:
 ---   - <new_name> `(string|nil)` - new name of colorscheme object.
 ---
----@return table Colorscheme object |(MiniColors-colorscheme|).
+---@return table Colorscheme object (|MiniColors-colorscheme|).
 MiniColors.get_colorscheme = function(name, opts)
   if not (name == nil or type(name) == 'string') then H.error('Argument `name` should be string or `nil`.') end
   opts = vim.tbl_deep_extend('force', { new_name = nil }, opts or {})
