@@ -202,6 +202,8 @@
 --- # Highlight groups ~
 ---
 --- * `MiniCompletionActiveParameter` - signature active parameter.
+--- * `MiniCompletionInfoBorderOutdated` - info window border when text is outdated
+---   due to explicit delay during fast movement through candidates.
 ---
 --- To change any highlight group, modify it directly with |:highlight|.
 ---
@@ -582,7 +584,7 @@ end
 ---   used for something like auto-import feature), as it is usually a more robust
 ---   choice for various LSP servers. As a consequence, this requires selecting
 ---   completion item and waiting for `config.delay.info` milliseconds plus server
----   response time to process the request.
+---   response time (i.e. until information window shows relevant text).
 ---   To not have to wait after an item selection and if the server handles absent
 ---   `'additionalTextEdits'` well, set `opts.resolve_additional_text_edits = false`.
 ---
@@ -803,6 +805,7 @@ end
 
 H.create_default_hl = function()
   vim.api.nvim_set_hl(0, 'MiniCompletionActiveParameter', { default = true, link = 'LspSignatureActiveParameter' })
+  vim.api.nvim_set_hl(0, 'MiniCompletionInfoBorderOutdated', { default = true, link = 'DiagnosticFloatingWarn' })
 end
 
 H.is_disabled = function() return vim.g.minicompletion_disable == true or vim.b.minicompletion_disable == true end
@@ -876,23 +879,30 @@ end
 H.auto_info = function()
   if H.is_disabled() then return end
 
-  H.info.timer:stop()
-
-  -- Defer execution because of textlock during `CompleteChanged` event
-  -- Don't stop timer when closing info window because it is needed
-  vim.schedule(function() H.close_action_window(H.info, true) end)
-
-  -- Stop current LSP request that tries to get not current data
+  -- Stop current LSP request that tries to get already not current data
   H.cancel_lsp({ H.info })
 
   -- Update metadata before leaving to register a `CompleteChanged` event
+  H.info.timer:stop()
   H.info.event = vim.v.event
   H.info.id = H.info.id + 1
 
-  -- Don't even try to show info if nothing is selected in popup
-  if vim.tbl_isempty(H.info.event.completed_item) then return end
+  -- Stop showing window if no candidate is selected
+  local completed_item = H.info.event.completed_item
+  if completed_item.word == nil then return vim.schedule(function() H.close_action_window(H.info, true) end) end
 
-  H.info.timer:start(H.get_config().delay.info, 0, vim.schedule_wrap(H.show_info_window))
+  -- Show info content without delay for visited and resolved LSP item.
+  -- Otherwise delay to not spam LSP requests on up/down navigation.
+  local item_id = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'item_id' })
+  local is_resolved = H.completion.lsp.resolved[item_id] ~= nil
+  local delay = is_resolved and 0 or H.get_config().delay.info
+
+  -- Mark visually that currently shown content will be outdated for a while
+  local win_id = H.info.win_id
+  if H.is_valid_win(win_id) and delay > 0 then
+    vim.wo[win_id].winhighlight = vim.wo[win_id].winhighlight .. ',FloatBorder:MiniCompletionInfoBorderOutdated'
+  end
+  H.info.timer:start(delay, 0, vim.schedule_wrap(H.show_info_window))
 end
 
 H.auto_signature = function()
@@ -1317,9 +1327,10 @@ H.show_info_window = function()
   local event = H.info.event
   if not event then return end
 
-  -- Get info lines to show and possibly cache them
+  -- Get info lines to show. Wait for resolve if returned `false`.
   local lines = H.info_window_lines(H.info.id)
-  if lines == nil or H.is_whitespace(lines) then return end
+  if lines == false then return end
+  if lines == nil or H.is_whitespace(lines) then lines = { '-No-info-' } end
 
   -- Ensure permanent buffer with "markdown" highlighting to display info
   H.ensure_buffer(H.info, 'item-info')
@@ -1338,7 +1349,7 @@ H.show_info_window = function()
   vim.schedule(function()
     -- Ensure that window doesn't open when it shouldn't be
     if not (H.pumvisible() and vim.fn.mode() == 'i') then return end
-    H.open_action_window(H.info, opts)
+    H.ensure_action_window(H.info, opts)
     local win_id = H.info.win_id
     if not H.is_valid_win(win_id) then return end
 
@@ -1403,6 +1414,7 @@ H.info_window_lines = function(info_id)
   end)
 
   H.info.lsp.cancel_fun = cancel_fun
+  return false
 end
 
 H.info_window_options = function()
@@ -1517,7 +1529,7 @@ H.show_signature_window = function()
   local opts = H.signature_window_opts()
 
   -- Ensure that window doesn't open when it shouldn't
-  if vim.fn.mode() == 'i' then H.open_action_window(H.signature, opts) end
+  if vim.fn.mode() == 'i' then H.ensure_action_window(H.signature, opts) end
 end
 
 H.signature_window_lines = function()
@@ -1682,14 +1694,18 @@ H.floating_dimensions = function(lines, max_height, max_width)
   return math.max(height, 1), math.max(width, 1)
 end
 
-H.open_action_window = function(cache, opts)
-  local win_id = vim.api.nvim_open_win(cache.bufnr, false, opts)
+H.ensure_action_window = function(cache, opts)
+  local is_shown = H.is_valid_win(cache.win_id)
+  if is_shown then vim.api.nvim_win_set_config(cache.win_id, opts) end
+  if not is_shown then cache.win_id = vim.api.nvim_open_win(cache.bufnr, false, opts) end
+
+  local win_id = cache.win_id
   vim.wo[win_id].breakindent = false
   vim.wo[win_id].foldenable = false
   vim.wo[win_id].foldmethod = 'manual'
   vim.wo[win_id].linebreak = true
+  vim.wo[win_id].winhighlight = vim.wo[win_id].winhighlight:gsub(',FloatBorder:MiniCompletionInfoBorderOutdated', '')
   vim.wo[win_id].wrap = true
-  cache.win_id = win_id
 end
 
 H.close_action_window = function(cache, keep_timer)

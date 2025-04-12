@@ -202,6 +202,8 @@ your 'init.lua' to make customized mapping: >lua
 # Highlight groups ~
 
 * `MiniCompletionActiveParameter` - signature active parameter.
+* `MiniCompletionInfoBorderOutdated` - info window border when text is outdated
+  due to explicit delay during fast movement through candidates.
 
 To change any highlight group, modify it directly with |:highlight|.
 
@@ -430,7 +432,7 @@ Notes:
   used for something like auto-import feature), as it is usually a more robust
   choice for various LSP servers. As a consequence, this requires selecting
   completion item and waiting for `config.delay.info` milliseconds plus server
-  response time to process the request.
+  response time (i.e. until information window shows relevant text).
   To not have to wait after an item selection and if the server handles absent
   `'additionalTextEdits'` well, set `opts.resolve_additional_text_edits = false`.
 

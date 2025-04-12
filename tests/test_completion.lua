@@ -133,6 +133,7 @@ T['setup()']['creates side effects'] = function()
   child.cmd('hi clear')
   load_module()
   expect.match(child.cmd_capture('hi MiniCompletionActiveParameter'), 'links to LspSignatureActiveParameter')
+  expect.match(child.cmd_capture('hi MiniCompletionInfoBorderOutdated'), 'links to DiagnosticFloatingWarn')
 end
 
 T['setup()']['creates `config` field'] = function()
@@ -1119,25 +1120,88 @@ T['Information window'] = new_set({
   },
 })
 
+local is_info_border_busy = function()
+  local win_id = get_floating_windows()[1]
+  local winhl = child.api.nvim_get_option_value('winhighlight', { win = win_id })
+  return winhl:find('FloatBorder:MiniCompletionInfoBorderOutdated') ~= nil
+end
+
 local validate_info_win = function(delay)
   type_keys('i', 'J', '<C-Space>')
   eq(get_completion(), { 'January', 'June', 'July' })
+
+  -- Should implement debounce-style delay
+  type_keys('<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(delay - small_time)
+  eq(get_floating_windows(), {})
 
   type_keys('<C-n>')
   eq(get_floating_windows(), {})
   sleep(delay - small_time)
   eq(get_floating_windows(), {})
-  sleep(small_time + small_time)
-  validate_single_floating_win({ lines = { 'Month #01' } })
 
+  sleep(small_time + small_time)
+  validate_single_floating_win({ lines = { 'Month #06' } })
+  eq(is_info_border_busy(), false)
+
+  -- Should use properly named buffer
   local info_buf_id = child.api.nvim_win_get_buf(get_floating_windows()[1])
   eq(child.api.nvim_buf_get_name(info_buf_id), 'minicompletion://' .. info_buf_id .. '/item-info')
+
+  -- Should try to keep window opened while visualizing outdated state via
+  -- border highlighting
+  type_keys('<C-p>')
+  validate_single_floating_win({ lines = { 'Month #06' } })
+  eq(is_info_border_busy(), true)
+
+  sleep(delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  eq(is_info_border_busy(), false)
+
+  -- Should close window immediately if no candidate is selected
+  type_keys('<C-p>')
+  eq(get_floating_windows(), {})
 end
 
 T['Information window']['works'] = function()
   child.set_size(10, 40)
   validate_info_win(default_info_delay)
+
+  -- Should show relevant content without delay upon revisit
+  type_keys('<C-n>')
   child.expect_screenshot()
+end
+
+T['Information window']['has "busy" visualization until receiving resolve response'] = function()
+  local request_delay = 3 * small_time
+  child.lua('_G.mock_request_delay = ' .. request_delay)
+
+  type_keys('i', 'J', '<C-Space>')
+  sleep(request_delay + small_time)
+  eq(child.fn.pumvisible(), 1)
+
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  eq(get_floating_windows(), {})
+  sleep(request_delay)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  eq(is_info_border_busy(), false)
+
+  type_keys('<C-n>')
+  eq(is_info_border_busy(), true)
+  sleep(default_info_delay + request_delay - small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  eq(is_info_border_busy(), true)
+  sleep(small_time + small_time)
+  validate_single_floating_win({ lines = { 'Month #06' } })
+  eq(is_info_border_busy(), false)
+end
+
+T['Information window']['handles no info in candidate'] = function()
+  type_keys('i', 'Ma', '<C-Space>', '<C-n>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  validate_single_floating_win({ lines = { '-No-info-' } })
 end
 
 T['Information window']['handles request errors'] = function()
@@ -1145,7 +1209,7 @@ T['Information window']['handles request errors'] = function()
   type_keys('i', 'J', '<C-Space>')
   type_keys('<C-n>')
   sleep(default_info_delay + small_time)
-  eq(get_floating_windows(), {})
+  validate_single_floating_win({ lines = { '-No-info-' } })
 end
 
 T['Information window']['respects `config.delay.info`'] = function()
@@ -1159,59 +1223,62 @@ T['Information window']['respects `config.delay.info`'] = function()
   validate_info_win(default_info_delay)
 end
 
-T['Information window']['caches lines for visited candidates'] = function()
+T['Information window']['caches info lines for visited candidates'] = function()
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
   local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
+  local validate_win = function(ref_lines, ref_is_border_busy)
+    if ref_lines == false then return eq(get_floating_windows(), {}) end
+    validate_single_floating_win({ lines = ref_lines })
+    eq(is_info_border_busy(), ref_is_border_busy)
+  end
 
   -- Fully compute info lines on first candidate visit
   type_keys('i', 'J', '<C-Space>', '<C-n>')
-  eq(get_floating_windows(), {})
+  validate_win(false)
   sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_win({ 'Month #01' }, false)
 
   type_keys('<C-n>')
-  eq(get_floating_windows(), {})
+  validate_win({ 'Month #01' }, true)
   sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #06' } })
+  validate_win({ 'Month #06' }, false)
 
-  -- For already visited items do not make new LSP requests
+  -- For already visited items do not make new LSP requests and show proper
+  -- content without delay
   validate_n_requests(2)
   type_keys('<C-p>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_win({ 'Month #01' }, false)
+
   type_keys('<C-n>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #06' } })
+  validate_win({ 'Month #06' }, false)
   validate_n_requests(2)
 
   -- Cached info lines should still be preserved until current completion end
   type_keys('<C-p>', '<C-p>')
-  eq(get_floating_windows(), {})
+  validate_win(false)
   type_keys('<C-n>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_win({ 'Month #01' }, false)
   validate_n_requests(2)
 
   type_keys('<C-p>')
-  eq(get_floating_windows(), {})
+  validate_win(false)
   type_keys('u', '<C-n>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #06' } })
+  validate_win({ 'Month #06' }, false)
   validate_n_requests(2)
 
   type_keys('<C-n>')
-  eq(get_floating_windows(), {})
+  validate_win({ 'Month #06' }, true)
   sleep(info_delay + small_time)
   -- - NOTE: actual lines for "July" entry is too long, so not tested here
-  validate_single_floating_win({})
+  validate_win(nil, false)
   validate_n_requests(3)
 
   -- Cache for visited lines should be properly cleared after completion end
   type_keys(' ', 'J', '<C-Space>', '<C-n>')
-  eq(get_floating_windows(), {})
+  validate_win(false)
   sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_win({ 'Month #01' }, false)
   validate_n_requests(4)
 end
 
@@ -1221,7 +1288,6 @@ T['Information window']['caches resolved data for visited candidates'] = functio
   validate_single_floating_win({ lines = { 'Month #10' } })
 
   type_keys('<C-n>', '<C-p>')
-  sleep(default_info_delay + small_time)
   validate_single_floating_win({ lines = { 'Month #10' } })
   type_keys('<C-y>')
 
@@ -1259,10 +1325,8 @@ T['Information window']['handles caching for items with the same basic data'] = 
   -- Should use caching mechanism that doesn't rely on fields that can be same
   validate_n_requests(2)
   type_keys('<C-p>')
-  sleep(info_delay + small_time)
   validate_single_floating_win({ lines = { 'Item 1' } })
   type_keys('<C-n>')
-  sleep(info_delay + small_time)
   validate_single_floating_win({ lines = { 'Item 2' } })
   validate_n_requests(2)
 end
@@ -1463,20 +1527,6 @@ T['Information window']['uses `info` field from not LSP source'] = function()
   type_keys('<C-n>')
   sleep(default_info_delay + small_time)
   child.expect_screenshot()
-end
-
-T['Information window']['implements debounce-style delay'] = function()
-  type_keys('i', 'J', '<C-Space>')
-  eq(get_completion(), { 'January', 'June', 'July' })
-
-  type_keys('<C-n>')
-  sleep(default_info_delay - small_time)
-  eq(#get_floating_windows(), 0)
-  type_keys('<C-n>')
-  sleep(default_info_delay - small_time)
-  eq(#get_floating_windows(), 0)
-  sleep(small_time + small_time)
-  validate_single_floating_win({ lines = { 'Month #06' } })
 end
 
 T['Information window']['is closed when forced outside of Insert mode'] = new_set(

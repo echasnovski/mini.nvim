@@ -56,6 +56,10 @@
 - BREAKING FEATURE: rework how LSP completion items are converted to Neovim's completion items:
     - Show `detail` highlighted as buffer's language at the start of info window, but only if `detail` provides information not already present in `documentation`. It was previously used as extra text in the popup menu (via `menu` field), but this doesn't quite follow LSP specification: `detail` and `documentation` fields can be delayed up until `completionItem/resolve` request which implies they should be treated similarly.
     - Show `labelDetails` as a part of the popup menu via `menu` completion item field.
+- BREAKING FEATURE: rework how information window is shown with the goal to reduce flickering during fast up/down navigation through completion candidates:
+    - Do not close the window immediately after the move. Instead highlight border with `MiniCompletionInfoBorderOutdated` immediately while update window when its content is ready. Close the window only if no candidate is selected.
+    - Show content of already visited/resolved candidate without delay.
+    - Show default `-No-info-` text if there is no extra information about the candidate.
 - BREAKING: prefer in some cases to use `nil` as default config value with explicit fallback. This should not have any user facing effects and marked as breaking only because a structure of a default config has changed. Affected fields:
     - `lsp_completion.process_items` (use `default_process_items` as fallback) and `fallback_action` (use `'<C-n>'` as fallback). This makes it more aligned with other modules that usually avoid using function values in default config.
     - `window.info.border` and `window.signature.border` (use non-empty 'winborder' and `'single'` as fallback).
