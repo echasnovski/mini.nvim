@@ -1159,6 +1159,152 @@ T['Information window']['respects `config.delay.info`'] = function()
   validate_info_win(default_info_delay)
 end
 
+T['Information window']['caches lines for visited candidates'] = function()
+  local info_delay = 2 * small_time
+  child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
+  local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
+
+  -- Fully compute info lines on first candidate visit
+  type_keys('i', 'J', '<C-Space>', '<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+
+  type_keys('<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #06' } })
+
+  -- For already visited items do not make new LSP requests
+  validate_n_requests(2)
+  type_keys('<C-p>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #06' } })
+  validate_n_requests(2)
+
+  -- Cached info lines should still be preserved until current completion end
+  type_keys('<C-p>', '<C-p>')
+  eq(get_floating_windows(), {})
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_n_requests(2)
+
+  type_keys('<C-p>')
+  eq(get_floating_windows(), {})
+  type_keys('u', '<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #06' } })
+  validate_n_requests(2)
+
+  type_keys('<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(info_delay + small_time)
+  -- - NOTE: actual lines for "July" entry is too long, so not tested here
+  validate_single_floating_win({})
+  validate_n_requests(3)
+
+  -- Cache for visited lines should be properly cleared after completion end
+  type_keys(' ', 'J', '<C-Space>', '<C-n>')
+  eq(get_floating_windows(), {})
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01' } })
+  validate_n_requests(4)
+end
+
+T['Information window']['caches resolved data for visited candidates'] = function()
+  type_keys('i', '<C-space>', '<C-p>', '<C-p>', '<C-p>')
+  sleep(default_info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #10' } })
+
+  type_keys('<C-n>', '<C-p>')
+  sleep(default_info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #10' } })
+  type_keys('<C-y>')
+
+  eq(get_lines(), { 'from months.resolve import October', 'October' })
+end
+
+T['Information window']['handles caching for items with the same basic data'] = function()
+  local info_delay = 2 * small_time
+  child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
+  local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
+
+  child.lua([[
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      return {
+        { label = 'ab', sortText = '01', documentation = 'Item 1' },
+        { label = 'ab', sortText = '02', documentation = 'Item 2' },
+      }
+    end
+
+    local buf_request_all_orig = vim.lsp.buf_request_all
+    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+      if method ~= 'completionItem/resolve' then return buf_request_all_orig(bufnr, method, params, callback) end
+      _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
+      callback({ { result = params } })
+    end
+  ]])
+
+  type_keys('i', '<C-Space>', '<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Item 1' } })
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Item 2' } })
+
+  -- Should use caching mechanism that doesn't rely on fields that can be same
+  validate_n_requests(2)
+  type_keys('<C-p>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Item 1' } })
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Item 2' } })
+  validate_n_requests(2)
+end
+
+T['Information window']['works if server does not support `completionItem/resolve`'] = function()
+  child.lua([[
+    local get_client_by_id_orig = vim.lsp.get_client_by_id
+    vim.lsp.get_client_by_id = function(...)
+      local res = get_client_by_id_orig(...)
+      res.server_capabilities.completionProvider.resolveProvider = false
+    end
+
+    MiniCompletion.config.lsp_completion.process_items = function(items)
+      for _, item in ipairs(items) do
+        if item.label == 'January' then item.documentation = 'Month #01 not resolved' end
+      end
+      return items
+    end
+  ]])
+
+  local info_delay = 2 * small_time
+  child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
+
+  -- Should use data provided at the time of 'textDocument/completion' request
+  type_keys('i', 'J', '<C-Space>', '<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Month #01 not resolved' } })
+
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { '-No-info-' } })
+
+  -- Should still cache data as visited/resolved
+  type_keys('<C-p>')
+  validate_single_floating_win({ lines = { 'Month #01 not resolved' } })
+  type_keys('<C-n>')
+  validate_single_floating_win({ lines = { '-No-info-' } })
+
+  -- Should not do 'completionItem/resolve' requests (as there is no support)
+  eq(child.lua_get('_G.n_completionitem_resolve'), vim.NIL)
+end
+
 local validate_info_window_config = function(keys, completion_items, win_config)
   type_keys('i', keys, '<C-Space>')
   eq(get_completion(), completion_items)

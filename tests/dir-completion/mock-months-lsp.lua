@@ -155,6 +155,9 @@ Months.requests = {
     if _G.mock_resolve_error ~= nil then return { { [error_field] = _G.mock_resolve_error } } end
     table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
 
+    -- Count actual requests for easier tests
+    _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
+
     local doc = Months.data[params.label].documentation
     if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
     params.detail = Months.data[params.label].detail

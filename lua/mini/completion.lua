@@ -678,7 +678,7 @@ H.completion = {
   source = nil,
   text_changed_id = 0,
   timer = vim.loop.new_timer(),
-  lsp = { id = 0, status = nil, is_incomplete = false, result = nil, cancel_fun = nil, context = nil },
+  lsp = { id = 0, status = nil, is_incomplete = false, result = nil, resolved = {}, cancel_fun = nil, context = nil },
   start_pos = {},
 }
 
@@ -832,7 +832,8 @@ H.auto_completion = function()
     -- there is no popup. It is common when manually typing candidate followed
     -- by an LSP trigger (like ".").
     -- Keep completion source as it is needed all time when popup is visible.
-    return H.stop_completion(true)
+    -- Keep resolved candidates because they should be relevant in this route.
+    return H.stop_completion(true, false, true)
   elseif not H.is_char_keyword(vim.v.char) then
     -- Stop everything if inserted character is not appropriate. Check this
     -- after popup check to allow completion candidates to have bad characters.
@@ -1010,13 +1011,14 @@ end
 H.default_fallback_action = function() vim.api.nvim_feedkeys(H.keys.ctrl_n, 'n', false) end
 
 -- Stop actions ---------------------------------------------------------------
-H.stop_completion = function(keep_source, keep_lsp_is_incomplete)
+H.stop_completion = function(keep_source, keep_lsp_is_incomplete, keep_lsp_resolved)
   H.completion.timer:stop()
   H.cancel_lsp({ H.completion })
   H.completion.lsp.context = nil
   H.completion.fallback, H.completion.force = true, false
-  if not keep_lsp_is_incomplete then H.completion.lsp.is_incomplete = false end
   if not keep_source then H.completion.source = nil end
+  if not keep_lsp_is_incomplete then H.completion.lsp.is_incomplete = false end
+  if not keep_lsp_resolved then H.completion.lsp.resolved = {} end
 end
 
 H.stop_info = function()
@@ -1178,7 +1180,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   local snippet_kind = vim.lsp.protocol.CompletionItemKind.Snippet
   local snippet_inserttextformat = vim.lsp.protocol.InsertTextFormat.Snippet
-  for _, item in pairs(items) do
+  for i, item in pairs(items) do
     local word = H.get_completion_word(item)
 
     local is_snippet_kind = item.kind == snippet_kind
@@ -1194,7 +1196,8 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     local label_detail = (details.detail or '') .. (details.description or '')
     label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
 
-    local lsp_data = { completion_item = item, client_id = client_id, needs_snippet_insert = needs_snippet_insert }
+    local lsp_data = { completion_item = item, item_id = i, client_id = client_id }
+    lsp_data.needs_snippet_insert = needs_snippet_insert
     table.insert(res, {
       -- Show less for snippet items (usually less confusion), but preserve
       -- built-in filtering capabilities (as it uses `word` to filter).
@@ -1239,10 +1242,7 @@ end
 
 H.make_lsp_extra_actions = function(lsp_data)
   -- Prefer resolved item over the one from 'textDocument/completion'
-  local resolved = (H.info.lsp.result or {})[lsp_data.client_id]
-  -- TODO: Use only `.err` after compatibility with Neovim=0.10 is dropped
-  local has_resolved = resolved and not (resolved.err or resolved.error) and resolved.result
-  local item = has_resolved and resolved.result or lsp_data.completion_item
+  local item = H.completion.lsp.resolved[lsp_data.item_id] or lsp_data.completion_item
 
   if item.additionalTextEdits == nil and not lsp_data.needs_snippet_insert then return end
   local snippet = lsp_data.needs_snippet_insert and H.get_completion_word(item) or nil
@@ -1317,7 +1317,7 @@ H.show_info_window = function()
   local event = H.info.event
   if not event then return end
 
-  -- Get info lines to show
+  -- Get info lines to show and possibly cache them
   local lines = H.info_window_lines(H.info.id)
   if lines == nil or H.is_whitespace(lines) then return end
 
@@ -1353,12 +1353,16 @@ H.show_info_window = function()
 end
 
 H.info_window_lines = function(info_id)
-  local completed_item = H.table_get(H.info, { 'event', 'completed_item' }) or {}
-  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
+  local completed_item = H.info.event.completed_item
   local info = completed_item.info or ''
+  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
 
   -- If popup is not from LSP, try using 'info' field of completion item
   if lsp_data == nil then return vim.split(info, '\n') end
+
+  -- Prefer reusing (without new LSP request) already resolved completion item
+  local item_id, resolved_cache = lsp_data.item_id, H.completion.lsp.resolved
+  if resolved_cache[item_id] ~= nil then return H.normalize_item_doc(resolved_cache[item_id], info) end
 
   -- Try to get documentation from LSP's latest resolved info
   if H.info.lsp.status == 'received' then
@@ -1370,7 +1374,10 @@ H.info_window_lines = function(info_id)
   -- If server doesn't support resolving completion item, reuse first response
   local client = vim.lsp.get_client_by_id(lsp_data.client_id) or {}
   local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
-  if not can_resolve then return H.normalize_item_doc(lsp_data.completion_item, info) end
+  if not can_resolve then
+    resolved_cache[item_id] = lsp_data.completion_item
+    return H.normalize_item_doc(lsp_data.completion_item, info)
+  end
 
   -- Finally, request to resolve current completion to add more documentation
   local bufnr = vim.api.nvim_get_current_buf()
@@ -1388,6 +1395,10 @@ H.info_window_lines = function(info_id)
     if H.info.id ~= info_id then return end
 
     H.info.lsp.result = result
+    -- - Cache resolved item to not have to send same request on revisit.
+    --   Do this outside of `H.info.event.completed_item` because it will not
+    --   have persistent effect as it will come fresh from Vimscript `v:event`.
+    resolved_cache[item_id] = result[lsp_data.client_id].result
     H.show_info_window()
   end)
 
