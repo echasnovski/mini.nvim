@@ -1,4 +1,11 @@
-# Perform local sync of standalone repositories
+# Perform local sync of standalone repositories, but only if on `main` branch
+branch="$( git symbolic-ref --short HEAD )"
+if [[ $branch != "main" ]]
+then
+  printf "\nDo sync only for 'main' branch, not '$branch'\n\n"
+  exit 2
+fi
+
 repos_dir=dual/repos
 patches_dir=dual/patches
 
