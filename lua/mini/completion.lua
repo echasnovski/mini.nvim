@@ -467,6 +467,11 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
       items = process_items(items, base)
       return H.lsp_completion_response_items_to_complete_items(items, client_id)
     end)
+    -- Add item id to use in `H.completion.lsp.resolve` caching. Do this after
+    -- processing all servers to have unique ids in case of several servers.
+    for i, w in ipairs(words) do
+      w.user_data.nvim.lsp.item_id = i
+    end
 
     H.completion.lsp.status = 'done'
     H.completion.lsp.is_incomplete = is_incomplete
@@ -1190,7 +1195,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   local snippet_kind = vim.lsp.protocol.CompletionItemKind.Snippet
   local snippet_inserttextformat = vim.lsp.protocol.InsertTextFormat.Snippet
-  for i, item in pairs(items) do
+  for _, item in pairs(items) do
     local word = H.get_completion_word(item)
 
     local is_snippet_kind = item.kind == snippet_kind
@@ -1206,7 +1211,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     local label_detail = (details.detail or '') .. (details.description or '')
     label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
 
-    local lsp_data = { completion_item = item, item_id = i, client_id = client_id }
+    local lsp_data = { completion_item = item, client_id = client_id }
     lsp_data.needs_snippet_insert = needs_snippet_insert
     table.insert(res, {
       -- Show less for snippet items (usually less confusion), but preserve

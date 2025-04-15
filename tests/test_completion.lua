@@ -1294,6 +1294,68 @@ T['Information window']['caches resolved data for visited candidates'] = functio
   eq(get_lines(), { 'from months.resolve import October', 'October' })
 end
 
+T['Information window']['caches data with multiple servers'] = function()
+  child.lua([[
+    -- Mock two LSP servers: [1] - months, [2] - fruits
+    local clients = {
+      {
+        name = 'months-lsp',
+        offset_encoding = 'utf-16',
+        server_capabilities = { completionProvider = { resolveProvider = true } },
+      },
+      {
+        name = 'fruits-lsp',
+        offset_encoding = 'utf-16',
+        server_capabilities = { completionProvider = { resolveProvider = true } },
+      },
+    }
+
+    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+      if method == 'textDocument/completion' then
+        local result = {
+          { result = { { label = 'January', insertText = 'month January' } } },
+          { result = { { label = 'Apple', insertText = 'fruit Apple' } } },
+        }
+        callback(result)
+        return
+      end
+
+      if method == 'completionItem/resolve' then
+        _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
+
+        params = vim.deepcopy(params)
+        params.documentation = { kind = 'markdown', value = params.label .. ' ' .. params.label }
+        local client_id = params.label == 'January' and 1 or 2
+        callback({ [client_id] = { result = params } })
+        return
+      end
+    end
+
+    local get_lsp_clients = function() return vim.deepcopy(clients) end
+    vim.lsp.get_client_by_id = function(client_id) return get_lsp_clients()[client_id] end
+    if vim.fn.has('nvim-0.10') == 0 then vim.lsp.buf_get_clients = get_lsp_clients end
+    if vim.fn.has('nvim-0.10') == 1 then vim.lsp.get_clients = get_lsp_clients end
+  ]])
+
+  local info_delay = 2 * small_time
+  child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
+  local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
+
+  type_keys('i', '<C-Space>', '<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'January January' } })
+  type_keys('<C-n>')
+  sleep(info_delay + small_time)
+  validate_single_floating_win({ lines = { 'Apple Apple' } })
+
+  validate_n_requests(2)
+  type_keys('<C-p>')
+  validate_single_floating_win({ lines = { 'January January' } })
+  type_keys('<C-n>')
+  validate_single_floating_win({ lines = { 'Apple Apple' } })
+  validate_n_requests(2)
+end
+
 T['Information window']['handles caching for items with the same basic data'] = function()
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
