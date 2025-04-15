@@ -1195,11 +1195,11 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
 
     local is_snippet_kind = item.kind == snippet_kind
     local is_snippet_format = item.insertTextFormat == snippet_inserttextformat
-    -- Treat item as snippet only if it has tabstops. This is important to make
-    -- "implicit" expand work with LSP servers that report even regular words
-    -- as `InsertTextFormat.Snippet` (like `gopls`).
+    -- Treat item as snippet only if it has tabstops or variables. This is
+    -- important to make "implicit" expand work with LSP servers that report
+    -- even regular words as `InsertTextFormat.Snippet` (like `gopls`).
     local needs_snippet_insert = (is_snippet_kind or is_snippet_format)
-      and (word:find('[^\\]%${?%d') ~= nil or word:find('^%${?%d') ~= nil)
+      and (word:find('[^\\]%${?%w') ~= nil or word:find('^%${?%w') ~= nil)
 
     local details = item.labelDetails or {}
     local snippet_clue = needs_snippet_insert and 'S' or ''

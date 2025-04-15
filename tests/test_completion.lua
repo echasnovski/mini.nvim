@@ -2209,19 +2209,24 @@ T['Snippets']['respect `lsp_completion.snippet_insert`'] = function()
   eq(child.lua_get('_G.log'), { { 'Snippet $1' } })
 end
 
-T['Snippets']['are not inserted if have no tabstops'] = function()
+T['Snippets']['are not inserted if have no tabstops or variables'] = function()
   -- This allows inserting snippets "implicitly" after typing non-keyword
   -- character. Without this, LSP servers which report any inserted text as
   -- snippet will "eat" the next typed non-keyword charater.
+  -- Treating text as snippet if there is a variable is important for a snippet
+  -- insert method to expand them.
 
-  child.set_size(16, 45)
+  child.set_size(19, 52)
   local snippets = {
     -- - No insert:
     'Just\ntext',
-    'Text with $TM_FILENAME $VAR',
     [[Text with \$1 escaped dollar]],
+    [[Text with \$TM_FILENAME escaped dollar]],
     [[Text with \${1} escaped dollar]],
+    [[Text with \${TM_FILENAME} escaped dollar]],
     -- - Insert:
+    'Has $TM_FILENAME variable',
+    'Has $var variable',
     'Has $1 tabstop',
     '$1 has tabstop',
     'Has ${1} tabstop',
@@ -2255,13 +2260,13 @@ T['Snippets']['are not inserted if have no tabstops'] = function()
     set_lines({ '' })
   end
 
-  for i = 1, 4 do
+  for i = 1, 5 do
     validate(snippets[i], '<C-y>', false)
     validate(snippets[i], '<CR>', false)
     validate(snippets[i], ' ', false)
   end
 
-  for i = 5, #snippets do
+  for i = 6, #snippets do
     validate(snippets[i], '<C-y>', true)
     validate(snippets[i], '<CR>', true)
     validate(snippets[i], ' ', true)
