@@ -940,6 +940,20 @@ T['Manual completion']['prefers completion range from LSP response'] = function(
   type_keys('<C-n>', '<C-y>')
   eq(get_lines(), { 'months.April' })
   eq(get_cursor(), { 1, 12 })
+
+  type_keys('<C-e>', '<Esc>')
+  set_lines({})
+
+  -- Should recognize edit range from `itemDefaults` (as in `tailwindcss`)
+  type_keys('i', 'months.A')
+  child.lua([[_G.mock_itemdefaults = {
+    editRange = { start = { line = 0, character = 5 }, ['end'] = { line = 0, character = 7 } },
+  }
+  _G.mock_filterText = function(name) return 's.' .. name end
+  ]])
+  type_keys('<C-space>')
+  type_keys('<C-n>', '<C-y>')
+  eq(get_lines(), { 'month.April' })
 end
 
 T['Manual completion']['respects `filterText` from LSP response'] = function()

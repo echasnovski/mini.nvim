@@ -1750,8 +1750,8 @@ H.pumvisible = function() return vim.fn.pumvisible() > 0 end
 H.get_completion_start = function(lsp_result)
   -- Prefer completion start from LSP response(s)
   for _, response_data in pairs(lsp_result or {}) do
-    local server_start = H.get_completion_start_server(response_data)
-    if server_start ~= nil then return server_start end
+    local range = H.get_lsp_edit_range(response_data)
+    if range ~= nil then return { range.start.line + 1, range.start.character } end
   end
 
   -- Fall back to start position of latest keyword
@@ -1760,17 +1760,20 @@ H.get_completion_start = function(lsp_result)
   return { pos[1], vim.fn.match(line:sub(1, pos[2]), '\\k*$') }
 end
 
-H.get_completion_start_server = function(response_data, line_num)
+H.get_lsp_edit_range = function(response_data)
   -- TODO: Use only `.err` after compatibility with Neovim=0.10 is dropped
   if response_data.err or response_data.error or type(response_data.result) ~= 'table' then return end
+
+  -- Try using item defaults if they contain edit range (which can be either
+  -- `Range` or contain `insert` field of `Range` type)
+  local edit_range = H.table_get(response_data.result, { 'itemDefaults', 'editRange' })
+  if type(edit_range) == 'table' then return edit_range.insert or edit_range end
+
+  -- Try using all items to find the first one with edit range
   local items = response_data.result.items or response_data.result
   for _, item in pairs(items) do
-    if type(item.textEdit) == 'table' then
-      -- NOTE: As per LSP spec, `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
-      local range = type(item.textEdit.range) == 'table' and item.textEdit.range or item.textEdit.insert
-      -- NOTE: Return immediately, ignoring possibly several conflicting starts
-      return { range.start.line + 1, range.start.character }
-    end
+    -- Account for `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
+    if type(item.textEdit) == 'table' then return item.textEdit.range or item.textEdit.insert end
   end
 end
 
