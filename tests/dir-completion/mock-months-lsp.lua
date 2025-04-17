@@ -102,17 +102,11 @@ local construct_filterText = function(name)
   return _G.mock_filterText(name)
 end
 
--- Neovim<0.11 uses 'error' field in `buf_request_all` to indicate error,
--- while Neovim>=0.11 uses 'err'
-local error_field = vim.fn.has('nvim-0.11') == 1 and 'err' or 'error'
-
 -- Log actual table params for testing proper requests
 _G.params_log = {}
 
 Months.requests = {
   ['textDocument/completion'] = function(params)
-    if _G.mock_completion_error ~= nil then return { { [error_field] = _G.mock_completion_error } } end
-
     -- Count actual requests for easier "force completion" tests
     _G.n_textdocument_completion = (_G.n_textdocument_completion or 0) + 1
 
@@ -121,13 +115,13 @@ Months.requests = {
 
     -- Imitate returning nothing in comments
     local line = vim.fn.getline(params.position.line + 1)
-    if line:find('^%s*#') ~= nil then return { { result = { items = {} } } } end
+    if line:find('^%s*#') ~= nil then return { items = {} } end
 
     local items = {}
     for i, item in ipairs(Months.items) do
       local res = { label = item.name, kind = item.kind, sortText = ('%03d'):format(i) }
       -- Mock `additionalTextEdits` as in `pyright`
-      if vim.tbl_contains({ 'September', 'November' }, item.name) then
+      if item.name == 'September' or item.name == 'November' then
         res.additionalTextEdits = construct_additionTextEdits('completion', item.name)
       end
 
@@ -148,29 +142,29 @@ Months.requests = {
     -- Mock incomplete computation
     if _G.mock_isincomplete then items = vim.list_slice(items, 1, 6) end
 
-    return { { result = { items = items, isIncomplete = _G.mock_isincomplete, itemDefaults = _G.mock_itemdefaults } } }
+    return { items = items, isIncomplete = _G.mock_isincomplete, itemDefaults = _G.mock_itemdefaults }
   end,
 
   ['completionItem/resolve'] = function(params)
-    if _G.mock_resolve_error ~= nil then return { { [error_field] = _G.mock_resolve_error } } end
-    table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
+    table.insert(_G.params_log, { method = 'completionItem/resolve', params = vim.deepcopy(params) })
 
     -- Count actual requests for easier tests
     _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
 
-    local doc = Months.data[params.label].documentation
+    local data = Months.data[params.label]
+    if data == nil then return params end
+
+    local doc = data.documentation
     if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
-    params.detail = Months.data[params.label].detail
+    params.detail = data.detail
     -- Mock additionalTextEdits as in `typescript-language-server`
-    if vim.tbl_contains({ 'October', 'November' }, params.label) then
+    if params.label == 'October' or params.label == 'November' then
       params.additionalTextEdits = construct_additionTextEdits('resolve', params.label)
     end
-    return { { result = params } }
+    return params
   end,
 
   ['textDocument/signatureHelp'] = function(params)
-    if _G.mock_signature_error ~= nil then return { { [error_field] = _G.mock_signature_error } } end
-
     params = type(params) == 'function' and params(Months.client, vim.api.nvim_get_current_buf()) or params
     table.insert(_G.params_log, { method = 'textDocument/completion', params = vim.deepcopy(params) })
 
@@ -182,7 +176,7 @@ Months.requests = {
     local after_close_paren = line:match('%).*$') or line
 
     -- Stop showing signature help after closing bracket
-    if after_close_paren:len() < after_open_paren:len() then return { {} } end
+    if after_close_paren:len() < after_open_paren:len() then return { signatures = {} } end
 
     -- Compute active parameter id by counting number of ',' from latest '('
     local _, active_param_id = after_open_paren:gsub('%,', '%,')
@@ -207,25 +201,51 @@ Months.requests = {
 
     -- Construct output
     local signature = { activeParameter = active_param_id, label = label, parameters = parameters }
-    return { { result = { signatures = { signature } } } }
+    return { signatures = { signature } }
   end,
 }
 
--- Replace builtin functions with custom testable ones ========================
-local make_request = function(bufnr, method, params, callback)
-  local requests = Months.requests[method]
-  if requests == nil then return end
-  callback(requests(params))
+-- Start an actual LSP server -------------------------------------------------
+_G.lines_at_request = {}
+
+local cmd = function(dispatchers)
+  -- Adaptation of `MiniSnippets.start_lsp_server()` implementation
+  local is_closing, request_id = false, 0
+  local capabilities = { capabilities = Months.client.server_capabilities }
+
+  return {
+    request = function(method, params, callback)
+      table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
+
+      if method == 'initialize' then callback(nil, capabilities) end
+      if method == 'shutdown' then callback(nil, nil) end
+
+      -- Mock relevant methods with possible error
+      local err = (_G.mock_error or {})[method]
+      local method_impl = err ~= nil and function() return nil end or Months.requests[method]
+      if method_impl and _G.mock_request_delay == nil then callback(err, method_impl(params)) end
+      if method_impl and _G.mock_request_delay ~= nil then
+        vim.defer_fn(function() callback(err, method_impl(params)) end, _G.mock_request_delay)
+      end
+
+      request_id = request_id + 1
+      return true, request_id
+    end,
+    notify = function(method, params)
+      if method == 'exit' then dispatchers.on_exit(0, 15) end
+      return false
+    end,
+    is_closing = function() return is_closing end,
+    terminate = function() is_closing = true end,
+  }
 end
 
-vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-  if _G.mock_request_delay == nil then return make_request(bufnr, method, params, callback) end
-  vim.defer_fn(function() make_request(bufnr, method, params, callback) end, _G.mock_request_delay)
+-- NOTE: set `root_dir` for a working `reuse_client` on Neovim<0.11
+_G.months_lsp_client_id = vim.lsp.start({ name = Months.client.name, cmd = cmd, root_dir = vim.fn.getcwd() })
+
+local gr = vim.api.nvim_create_augroup('months-lsp-auto-attach', { clear = true })
+local auto_attach = function(ev)
+  if not vim.api.nvim_buf_is_valid(ev.buf) then return end
+  vim.lsp.buf_attach_client(ev.buf, _G.months_lsp_client_id)
 end
-
-local get_lsp_clients = function() return { Months.client } end
-
-if vim.fn.has('nvim-0.10') == 0 then vim.lsp.buf_get_clients = get_lsp_clients end
-if vim.fn.has('nvim-0.10') == 1 then vim.lsp.get_clients = get_lsp_clients end
-
-vim.lsp.get_client_by_id = function(client_id) return get_lsp_clients()[client_id] end
+vim.api.nvim_create_autocmd('BufEnter', { group = gr, callback = auto_attach })

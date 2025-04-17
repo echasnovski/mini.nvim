@@ -419,7 +419,7 @@ T['Autocompletion'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see mocking of 'textDocument/completion' request
+      -- For details see 'mock-months-lsp'
       mock_lsp()
     end,
   },
@@ -444,9 +444,7 @@ T['Autocompletion']['works with LSP client'] = function()
 end
 
 T['Autocompletion']['works without LSP clients'] = function()
-  -- Mock absence of LSP
-  child.lsp.buf_get_clients = function() return {} end
-  child.lsp.get_clients = function() return {} end
+  child.lsp.buf_detach_client(0, child.lua_get('_G.months_lsp_client_id'))
 
   type_keys('i', 'aab aac aba a')
   eq(get_completion(), {})
@@ -568,14 +566,7 @@ T['Autocompletion']['works with `<BS>`'] = function()
 end
 
 T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = function()
-  child.lua([[
-    _G.lines_at_request = {}
-    local buf_request_all_orig = vim.lsp.buf_request_all
-    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-      table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
-      return buf_request_all_orig(bufnr, method, params, callback)
-    end
-  ]])
+  child.lua('_G.lines_at_request = {}')
   mock_completefunc_lsp_tracking()
   child.set_size(10, 20)
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
@@ -625,14 +616,7 @@ T['Autocompletion']['forces new LSP completion in case of `isIncomplete`'] = fun
 end
 
 T['Autocompletion']['forces new LSP completion for `isIncomplete` even if canceled'] = function()
-  child.lua([[
-    _G.lines_at_request = {}
-    local buf_request_all_orig = vim.lsp.buf_request_all
-    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-      table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
-      return buf_request_all_orig(bufnr, method, params, callback)
-    end
-  ]])
+  child.lua('_G.lines_at_request = {}')
   child.set_size(10, 20)
   child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false))
 
@@ -780,7 +764,7 @@ T['Manual completion'] = new_set({
       child.lua('MiniCompletion.config.delay.completion = 100000')
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see mocking of 'textDocument/completion' request
+      -- For details see 'mock-months-lsp'
       mock_lsp()
 
       set_lines({ 'Jackpot', '' })
@@ -801,7 +785,7 @@ T['Manual completion']['works with two-step completion'] = function()
 end
 
 T['Manual completion']['handles request errors'] = function()
-  child.lua('_G.mock_completion_error = "Error"')
+  child.lua('_G.mock_error = { ["textDocument/completion"] = "Error" }')
   type_keys('i', 'J', '<C-Space>')
   eq(get_completion(), { 'Jackpot' })
 end
@@ -1128,7 +1112,7 @@ T['Information window'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see mocking of 'textDocument/completion' request
+      -- For details see 'mock-months-lsp'
       mock_lsp()
     end,
   },
@@ -1219,7 +1203,7 @@ T['Information window']['handles no info in candidate'] = function()
 end
 
 T['Information window']['handles request errors'] = function()
-  child.lua('_G.mock_resolve_error = "Error"')
+  child.lua('_G.mock_error = { ["completionItem/resolve"] = "Error" }')
   type_keys('i', 'J', '<C-Space>')
   type_keys('<C-n>')
   sleep(default_info_delay + small_time)
@@ -1309,65 +1293,61 @@ T['Information window']['caches resolved data for visited candidates'] = functio
 end
 
 T['Information window']['caches data with multiple servers'] = function()
+  -- Start another LSP server
   child.lua([[
-    -- Mock two LSP servers: [1] - months, [2] - fruits
-    local clients = {
-      {
-        name = 'months-lsp',
-        offset_encoding = 'utf-16',
-        server_capabilities = { completionProvider = { resolveProvider = true } },
-      },
-      {
-        name = 'fruits-lsp',
-        offset_encoding = 'utf-16',
-        server_capabilities = { completionProvider = { resolveProvider = true } },
-      },
-    }
+    local cmd = function(dispatchers)
+      -- Adaptation of `MiniSnippets.start_lsp_server()` implementation
+      local is_closing, request_id = false, 0
+      local capabilities = { capabilities = { completionProvider = { resolveProvider = true } } }
 
-    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-      if method == 'textDocument/completion' then
-        local result = {
-          { result = { { label = 'January', insertText = 'month January' } } },
-          { result = { { label = 'Apple', insertText = 'fruit Apple' } } },
-        }
-        callback(result)
-        return
-      end
+      return {
+        request = function(method, params, callback)
+          if method == 'initialize' then callback(nil, capabilities) end
+          if method == 'shutdown' then callback(nil, nil) end
 
-      if method == 'completionItem/resolve' then
-        _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
+          if method == 'textDocument/completion' then
+            local items = { { label = 'Jackfruit', insertText = 'Fruit Jack' } }
+            callback(nil, items)
+          end
 
-        params = vim.deepcopy(params)
-        params.documentation = { kind = 'markdown', value = params.label .. ' ' .. params.label }
-        local client_id = params.label == 'January' and 1 or 2
-        callback({ [client_id] = { result = params } })
-        return
-      end
+          if method == 'completionItem/resolve' then
+            if params.label == 'Jackfruit' then
+              params.documentation = { kind = 'markdown', value = 'Jackfruit is a fruit' }
+            end
+            callback(nil, params)
+          end
+
+          request_id = request_id + 1
+          return true, request_id
+        end,
+        notify = function(method, params) return false end,
+        is_closing = function() return is_closing end,
+        terminate = function() is_closing = true end,
+      }
     end
 
-    local get_lsp_clients = function() return vim.deepcopy(clients) end
-    vim.lsp.get_client_by_id = function(client_id) return get_lsp_clients()[client_id] end
-    if vim.fn.has('nvim-0.10') == 0 then vim.lsp.buf_get_clients = get_lsp_clients end
-    if vim.fn.has('nvim-0.10') == 1 then vim.lsp.get_clients = get_lsp_clients end
+    vim.lsp.start({ name = 'fruits-lsp', cmd = cmd, root_dir = vim.fn.getcwd() })
   ]])
 
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
-  local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
 
-  type_keys('i', '<C-Space>', '<C-n>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'January January' } })
-  type_keys('<C-n>')
-  sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Apple Apple' } })
+  local validate_info_content = function(sleep_delay)
+    local validate_step = function(lines)
+      type_keys('<C-n>')
+      if sleep_delay > 0 then sleep(sleep_delay) end
+      validate_single_floating_win({ lines = lines })
+    end
 
-  validate_n_requests(2)
-  type_keys('<C-p>')
-  validate_single_floating_win({ lines = { 'January January' } })
+    validate_step({ 'Month #01' })
+    validate_step({ 'Jackfruit is a fruit' })
+  end
+
+  type_keys('i', 'Ja', '<C-Space>')
+  validate_info_content(info_delay + small_time)
+
   type_keys('<C-n>')
-  validate_single_floating_win({ lines = { 'Apple Apple' } })
-  validate_n_requests(2)
+  validate_info_content(0)
 end
 
 T['Information window']['handles caching for items with the same basic data'] = function()
@@ -1381,13 +1361,6 @@ T['Information window']['handles caching for items with the same basic data'] = 
         { label = 'ab', sortText = '01', documentation = 'Item 1' },
         { label = 'ab', sortText = '02', documentation = 'Item 2' },
       }
-    end
-
-    local buf_request_all_orig = vim.lsp.buf_request_all
-    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-      if method ~= 'completionItem/resolve' then return buf_request_all_orig(bufnr, method, params, callback) end
-      _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
-      callback({ { result = params } })
     end
   ]])
 
@@ -1652,7 +1625,7 @@ T['Signature help'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see mocking of 'textDocument/completion' request
+      -- For details see 'mock-months-lsp'
       mock_lsp()
     end,
   },
@@ -1678,7 +1651,7 @@ T['Signature help']['works'] = function()
 end
 
 T['Signature help']['handles request errors'] = function()
-  child.lua('_G.mock_signature_error = "Error"')
+  child.lua('_G.mock_error = { ["textDocument/signatureHelp"] = "Error" }')
   type_keys('i', 'abc(')
   sleep(default_signature_delay + small_time)
   eq(get_floating_windows(), {})
@@ -2008,7 +1981,7 @@ end
 T['Snippets'] = new_set({
   hooks = {
     pre_case = function()
-      -- Test primarily with 'mini.snippets'
+      -- Test snippet insert primarily with 'mini.snippets'
       child.lua('require("mini.snippets").setup()')
 
       new_buffer()
