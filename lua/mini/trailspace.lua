@@ -97,20 +97,29 @@ MiniTrailspace.config = {
 
 -- Module functionality =======================================================
 --- Highlight trailing whitespace in current window
-MiniTrailspace.highlight = function()
-  -- Highlight only in normal mode
-  if H.is_disabled() or vim.fn.mode() ~= 'n' then
-    MiniTrailspace.unhighlight()
-    return
-  end
+MiniTrailspace.highlight = function(ev)
+  MiniTrailspace.unhighlight()
+
+  if H.is_disabled() then return end
 
   -- Possibly work only in normal buffers
   if H.get_config().only_in_normal_buffers and not H.is_buffer_normal() then return end
 
-  -- Don't add match id on top of existing one
-  if H.get_match_id() ~= nil then return end
-
-  vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
+  local mode = vim.fn.mode()
+  -- 'InsertEnter' events are fired just before starting insert mode,
+  -- so we need to test for them explicitly instead of relying purely
+  -- on 'mode' value.
+  if mode == 'i' or (ev and ev.event == 'InsertEnter') then
+    -- in insert mode highlight trailing space only if the cursor
+    -- is not immediately after it. This prevents highlight from
+    -- triggering while typing normally.
+    -- Note that moving cursor from the end of a line "into"
+    -- white space or to another line does not immediately update
+    -- highlights, but eventually they will "catch up".
+    vim.fn.matchadd('MiniTrailspace', [[\s\+\%#\@<!$]])
+  elseif mode == 'n' then
+    vim.fn.matchadd('MiniTrailspace', [[\s\+$]])
+  end
 end
 
 --- Unhighlight trailing whitespace in current window
@@ -163,8 +172,8 @@ H.create_autocommands = function(config)
   -- NOTE: Respecting both `WinEnter` and `BufEnter` seems to be useful to
   -- account of different order of handling buffer opening in new window.
   -- Notable example: 'nvim-tree' at commit a1600e5.
-  au({ 'WinEnter', 'BufEnter', 'InsertLeave' }, '*', MiniTrailspace.highlight, 'Highlight')
-  au({ 'WinLeave', 'BufLeave', 'InsertEnter' }, '*', MiniTrailspace.unhighlight, 'Unhighlight')
+  au({ 'WinEnter', 'BufEnter', 'InsertEnter', 'InsertLeave' }, '*', MiniTrailspace.highlight, 'Highlight')
+  au({ 'WinLeave', 'BufLeave' }, '*', MiniTrailspace.unhighlight, 'Unhighlight')
 
   if config.only_in_normal_buffers then
     -- Add tracking of 'buftype' changing because it can be set after events on
