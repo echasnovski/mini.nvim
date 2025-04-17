@@ -2411,4 +2411,53 @@ T['Snippets']['can be inserted together with additional text edits'] = function(
   eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
 end
 
+T['Snippets']["LSP server from 'mini.snippets'"] = new_set({
+  hooks = {
+    pre_case = function()
+      child.lsp.buf_detach_client(0, child.lua_get('_G.months_lsp_client_id'))
+
+      child.lua([[
+        MiniSnippets.config.snippets = {
+          { prefix = 'aa', body = 'Snippet $1 aa', desc = 'The aa snippet' },
+          { prefix = 'bb cc', body = 'Snippet $1 bb cc', desc = 'The bb cc snippet' },
+        }
+      ]])
+
+      child.set_size(10, 35)
+    end,
+  },
+})
+
+T['Snippets']["LSP server from 'mini.snippets'"]['works'] = function()
+  child.lua('MiniSnippets.start_lsp_server()')
+
+  type_keys('i', '<C-Space>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+
+  type_keys(' ')
+  eq(get_lines(), { 'Snippet  aa' })
+  eq(get_cursor(), { 1, 8 })
+  eq(child.fn.mode(), 'i')
+  eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+end
+
+T['Snippets']["LSP server from 'mini.snippets'"]['works with in-server matching'] = function()
+  child.lua([[
+    local match = function(snippets)
+      local res = { snippets[2] }
+      res[1].region = { from = { line = 1, col = 1 }, to = { line = 1, col = vim.fn.col('.') } }
+      return res
+    end
+    MiniSnippets.start_lsp_server({ match = match })
+  ]])
+
+  type_keys('i', 'bb c', '<C-Space>')
+  child.expect_screenshot()
+  type_keys('<C-n>', '<C-y>')
+  eq(get_lines(), { 'Snippet  bb cc' })
+  eq(get_cursor(), { 1, 8 })
+  eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+end
+
 return T
