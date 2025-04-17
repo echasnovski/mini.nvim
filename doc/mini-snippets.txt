@@ -29,6 +29,10 @@ Features:
 - Select from several matched snippets via `vim.ui.select()`.
   See |MiniSnippets.default_select()|.
 
+- Start specialized in-process LSP server to show loaded snippets inside
+  (auto)completion engines (like |mini.completion|).
+  See |MiniSnippets.start_lsp_server()|.
+
 - Insert, jump, and edit during snippet session in a configurable manner:
     - Configurable mappings for jumping and stopping.
     - Jumping wraps around the tabstops for easier navigation.
@@ -303,6 +307,12 @@ Snippet session allows interactive editing at tabstop locations:
   of the snippet.
 
 For more details about snippet session see |MiniSnippets-session|.
+
+To select and insert snippets via completion engine (that supports LSP
+completion; like |mini.completion| or |lsp-autocompletion|),
+call |MiniSnippets.start_lsp_server()| after |MiniSnippets.setup()|. This sets up
+an LSP server that matches and provides snippets loaded with 'mini.snippets'.
+To match with completion engine, use `start_lsp_server({ match = false })`.
 
 # Management ~
 
@@ -745,6 +755,11 @@ Usage ~
   -- Get all current context snippets
   local all = MiniSnippets.expand({ match = false, insert = false })
 <
+
+See also ~
+|MiniSnippets.start_lsp_server()| to instead show loaded snippets
+  in (auto)completion engines (like |mini.completion|).
+
 ------------------------------------------------------------------------------
                                                        *MiniSnippets.gen_loader*
                            `MiniSnippets.gen_loader`
@@ -1220,6 +1235,36 @@ Return ~
     - <text> `(string|nil)` - variable value.
     - <placeholder> `(table|nil)` - array of nodes to be used as placeholder.
     - <transform> `(table|nil)` - array of transformation string parts.
+
+------------------------------------------------------------------------------
+                                               *MiniSnippets.start_lsp_server()*
+                    `MiniSnippets.start_lsp_server`({opts})
+Start completion LSP server
+
+This starts (|vim.lsp.start()|) an LSP server with the purpose of displaying
+snippets in (auto)completion engines (|mini.completion| in particular).
+The server:
+- Only implements `textDocument/completion` method which prepares and matches
+  snippets at cursor (via |MiniSnippets.expand()|).
+- Auto-attaches to all loaded buffers by default.
+
+Parameters ~
+{opts} `(table|nil)` Options. Possible fields:
+  - <before_attach> `(function)` - function executed before every attach to
+    the buffer. Takes buffer id as input and can return `false` (not `nil`) to
+    cancel attaching to the buffer. Default: |nvim_buf_is_loaded()|.
+  - <match> `(false|function)` - value of `opts.match` forwarded to
+    the |MiniSnippets.expand()| when computing completion candidates.
+    Supply `false` to not do matching at cursor, return all available snippets
+    in cursor context, and rely on completion engine to match and sort items.
+    Default: `nil` (equivalent to |MiniSnippets.default_match()|).
+  - <server_config> `(table)` - server config to be used as basis for first
+    argument to |vim.lsp.start()| (`cmd` will be overridden). Default: `{}`.
+  - <triggers> `(table)` - array of trigger characters to be used as
+    `completionProvider.triggerCharacters` server capability. Default: `{}`.
+
+Return ~
+`(integer|nil)` Identifier of started LSP server.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

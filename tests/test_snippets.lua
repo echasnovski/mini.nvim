@@ -3228,6 +3228,210 @@ T['parse()']['validates input'] = function()
   expect.error(function() parse(1) end, 'Snippet body.*string or array of strings')
 end
 
+T['start_lsp_server()'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.lua([[
+    MiniSnippets.config.snippets = {
+      function(context) return { { prefix = 'ba', body = 'Snippet $1 ba' } } end,
+      { { prefix = 'aa', body = 'Snippet $VAR aa' } },
+      { prefix = 'xx', body = 'Snippet xx', desc = 'XX snippet' },
+    }]])
+    end,
+  },
+})
+
+local start_lsp_server = forward_lua('MiniSnippets.start_lsp_server')
+
+local make_request = function(client_id)
+  child.lua('_G.client = vim.lsp.get_client_by_id(...)', { client_id })
+  child.lua([[
+    _G.response_log = _G.response_log or {}
+    local params = vim.lsp.util.make_position_params(0, 'utf-16')
+    local handler = function(err, result, context) table.insert(_G.response_log, { err = err, result = result, context = context }) end
+    if vim.fn.has('nvim-0.11') == 1 then
+      _G.client:request('textDocument/completion', params, handler)
+    else
+      _G.client.request('textDocument/completion', params, handler)
+    end
+  ]])
+end
+
+local get_client_field = function(client_id, field)
+  return child.lua_get('vim.lsp.get_client_by_id(...).' .. field, { client_id })
+end
+
+local validate_lsp_items = function(out, ref)
+  -- LSP server should return array of `CompletionItem`, each properly
+  -- constructed to represent a snippet
+  eq_partial_tbl(out, ref)
+
+  local insert_text_format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+  local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
+  for _, item in ipairs(out) do
+    eq(item.insertTextFormat, insert_text_format_snippet)
+    eq(item.kind, kind_snippet)
+  end
+end
+
+local validate_attached_clients = function(buf_id, ref_client_ids)
+  child.lua('_G.buf_id = ' .. buf_id)
+  local attached = child.lua([[
+    local get_active_clients = vim.fn.has('nvim-0.10') == 1 and vim.lsp.get_clients or vim.lsp.get_active_clients
+    return vim.tbl_keys(get_active_clients({ bufnr = _G.buf_id }))
+  ]])
+  eq(attached, ref_client_ids)
+end
+
+T['start_lsp_server()']['works'] = function()
+  local client_id = child.lua([[
+    _G.client_id = MiniSnippets.start_lsp_server()
+    return _G.client_id
+  ]])
+
+  -- Should properly register server
+  eq(get_client_field(client_id, 'name'), 'mini.snippets')
+  local ref_completion_provider = { resolveProvider = false, triggerCharacters = {} }
+  eq(get_client_field(client_id, 'server_capabilities').completionProvider, ref_completion_provider)
+
+  -- Should attach to at least current buffer
+  validate_attached_clients(0, { client_id })
+
+  -- Should properly support 'textDocument/completion' request
+  make_request(client_id)
+  local response_log = child.lua_get('_G.response_log')
+  eq(#response_log, 1)
+  eq(response_log[1].err, nil)
+
+  local ref_items = {
+    { label = 'aa', documentation = 'Snippet $VAR aa', insertText = 'Snippet $VAR aa' },
+    { label = 'ba', documentation = 'Snippet $1 ba', insertText = 'Snippet $1 ba' },
+    { label = 'xx', documentation = 'XX snippet', insertText = 'Snippet xx' },
+  }
+  validate_lsp_items(response_log[1].result, ref_items)
+
+  -- Should match via 'mini.snippets' by default
+  type_keys('i', 'a')
+  make_request(client_id)
+  response_log = child.lua_get('_G.response_log')
+  eq(#response_log, 2)
+  eq(response_log[1].err, nil)
+
+  -- - When matching is done on LSP server side, provide `textEdit` with
+  --   information about which region was used for matching
+  local matched_items = {
+    {
+      label = 'aa',
+      documentation = 'Snippet $VAR aa',
+      textEdit = {
+        newText = 'Snippet $VAR aa',
+        range = { start = { character = 0, line = 0 }, ['end'] = { character = 1, line = 0 } },
+      },
+    },
+    {
+      label = 'ba',
+      documentation = 'Snippet $1 ba',
+      textEdit = {
+        newText = 'Snippet $1 ba',
+        range = { start = { character = 0, line = 0 }, ['end'] = { character = 1, line = 0 } },
+      },
+    },
+  }
+  validate_lsp_items(response_log[2].result, matched_items)
+
+  -- Should not leave dangling "pending" requests
+  eq(get_client_field(client_id, 'requests'), {})
+end
+
+T['start_lsp_server()']['sets up auto-attach'] = function()
+  -- Should also attach to already existing loaded buffers
+  local buf_id_current = child.api.nvim_create_buf(true, false)
+  set_buf(buf_id_current)
+  local buf_id_normal = child.api.nvim_create_buf(true, false)
+  local buf_id_scratch = child.api.nvim_create_buf(false, true)
+
+  local buf_id_unloaded = child.api.nvim_create_buf(true, false)
+  child.api.nvim_buf_delete(buf_id_unloaded, { unload = true })
+  eq(child.api.nvim_buf_is_valid(buf_id_unloaded), true)
+  eq(child.api.nvim_buf_is_loaded(buf_id_unloaded), false)
+
+  local client_id = start_lsp_server()
+  validate_attached_clients(buf_id_current, { client_id })
+  validate_attached_clients(buf_id_normal, { client_id })
+  validate_attached_clients(buf_id_scratch, { client_id })
+  validate_attached_clients(buf_id_unloaded, {})
+
+  -- Should auto-attach to buffers on explicit `BufEnter`
+  local buf_id_new = child.api.nvim_create_buf(true, false)
+  validate_attached_clients(buf_id_new, {})
+  child.lua('_G.buf_id_new = ' .. buf_id_new)
+  local buf_id_tmp = child.lua([[
+    local buf_id_tmp = vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_set_current_buf(buf_id_tmp)
+    vim.api.nvim_set_current_buf(buf_id_new)
+    return buf_id_tmp
+  ]])
+  validate_attached_clients(buf_id_new, { client_id })
+  validate_attached_clients(buf_id_tmp, {})
+end
+
+T['start_lsp_server()']['respects `opts.before_attach`'] = function()
+  local client_id = child.lua([[
+    -- Returning explicit `false` should stop attaching to the buffer.
+    -- While returning `nil` should still attach.
+    local before_attach = function(buf_id)
+      if vim.bo[buf_id].filetype == 'python' then return nil end
+      if vim.bo[buf_id].filetype ~= 'lua' then return false end
+    end
+    return MiniSnippets.start_lsp_server({ before_attach = before_attach })
+  ]])
+  validate_attached_clients(0, {})
+
+  child.cmd('edit new.lua')
+  validate_attached_clients(0, { client_id })
+  child.cmd('edit new.py')
+  validate_attached_clients(0, { client_id })
+  child.cmd('edit new.unknown')
+  validate_attached_clients(0, {})
+end
+
+T['start_lsp_server()']['respects `opts.match`'] = function()
+  type_keys('i', 'a')
+
+  local client_id = start_lsp_server({ match = false })
+  make_request(client_id)
+  local response_log = child.lua_get('_G.response_log')
+  eq(#response_log, 1)
+  eq(response_log[1].err, nil)
+
+  -- With `match = false` should return all snippets at context
+  local ref_items = {
+    { label = 'aa', documentation = 'Snippet $VAR aa', insertText = 'Snippet $VAR aa' },
+    { label = 'ba', documentation = 'Snippet $1 ba', insertText = 'Snippet $1 ba' },
+    { label = 'xx', documentation = 'XX snippet', insertText = 'Snippet xx' },
+  }
+  validate_lsp_items(response_log[1].result, ref_items)
+end
+
+T['start_lsp_server()']['respects `opts.server_config`'] = function()
+  local cmd_cwd = child.fn.getcwd() .. '/tests'
+  local client_id = start_lsp_server({ server_config = { cmd_cwd = cmd_cwd } })
+  eq(get_client_field(client_id, 'config.cmd_cwd'), cmd_cwd)
+end
+
+T['start_lsp_server()']['respects `opts.triggers`'] = function()
+  local triggers = { '.', '\\' }
+  local client_id = start_lsp_server({ triggers = triggers })
+  eq(get_client_field(client_id, 'server_capabilities').completionProvider.triggerCharacters, triggers)
+end
+
+T['start_lsp_server()']['can be called several times without duplicating servers'] = function()
+  local client_id = start_lsp_server()
+  local client_id_second = start_lsp_server()
+  eq(client_id, client_id_second)
+  validate_attached_clients(0, { client_id })
+end
+
 -- Integration tests ==========================================================
 T['Session'] = new_set()
 

@@ -29,6 +29,10 @@
 --- - Select from several matched snippets via `vim.ui.select()`.
 ---   See |MiniSnippets.default_select()|.
 ---
+--- - Start specialized in-process LSP server to show loaded snippets inside
+---   (auto)completion engines (like |mini.completion|).
+---   See |MiniSnippets.start_lsp_server()|.
+---
 --- - Insert, jump, and edit during snippet session in a configurable manner:
 ---     - Configurable mappings for jumping and stopping.
 ---     - Jumping wraps around the tabstops for easier navigation.
@@ -300,6 +304,12 @@
 ---   of the snippet.
 ---
 --- For more details about snippet session see |MiniSnippets-session|.
+---
+--- To select and insert snippets via completion engine (that supports LSP
+--- completion; like |mini.completion| or |lsp-autocompletion|),
+--- call |MiniSnippets.start_lsp_server()| after |MiniSnippets.setup()|. This sets up
+--- an LSP server that matches and provides snippets loaded with 'mini.snippets'.
+--- To match with completion engine, use `start_lsp_server({ match = false })`.
 ---
 --- # Management ~
 ---
@@ -769,6 +779,9 @@ MiniSnippets.config = {
 ---   -- Get all current context snippets
 ---   local all = MiniSnippets.expand({ match = false, insert = false })
 --- <
+---
+---@seealso |MiniSnippets.start_lsp_server()| to instead show loaded snippets
+---   in (auto)completion engines (like |mini.completion|).
 MiniSnippets.expand = function(opts)
   if H.is_disabled() then return end
   local config = H.get_config()
@@ -1463,8 +1476,64 @@ MiniSnippets.parse = function(snippet_body, opts)
   return opts.normalize and H.parse_normalize(nodes, opts) or nodes
 end
 
--- TODO: Implement this when adding snippet support in 'mini.completion'
--- MiniSnippets.mock_lsp_server = function() end
+--- Start completion LSP server
+---
+--- This starts (|vim.lsp.start()|) an LSP server with the purpose of displaying
+--- snippets in (auto)completion engines (|mini.completion| in particular).
+--- The server:
+--- - Only implements `textDocument/completion` method which prepares and matches
+---   snippets at cursor (via |MiniSnippets.expand()|).
+--- - Auto-attaches to all loaded buffers by default.
+---
+---@param opts table|nil Options. Possible fields:
+---   - <before_attach> `(function)` - function executed before every attach to
+---     the buffer. Takes buffer id as input and can return `false` (not `nil`) to
+---     cancel attaching to the buffer. Default: |nvim_buf_is_loaded()|.
+---   - <match> `(false|function)` - value of `opts.match` forwarded to
+---     the |MiniSnippets.expand()| when computing completion candidates.
+---     Supply `false` to not do matching at cursor, return all available snippets
+---     in cursor context, and rely on completion engine to match and sort items.
+---     Default: `nil` (equivalent to |MiniSnippets.default_match()|).
+---   - <server_config> `(table)` - server config to be used as basis for first
+---     argument to |vim.lsp.start()| (`cmd` will be overridden). Default: `{}`.
+---   - <triggers> `(table)` - array of trigger characters to be used as
+---     `completionProvider.triggerCharacters` server capability. Default: `{}`.
+---
+---@return integer|nil Identifier of started LSP server.
+MiniSnippets.start_lsp_server = function(opts)
+  local default_opts = { before_attach = H.lsp_default_before_attach, match = nil, server_config = {}, triggers = {} }
+  opts = vim.tbl_extend('force', default_opts, opts or {})
+  H.check_type('opts.before_attch', opts.before_attach, 'callable')
+  H.check_type('opts.server_config', opts.server_config, 'table')
+  H.check_type('opts.triggers', opts.triggers, 'table')
+
+  local config = vim.deepcopy(opts.server_config)
+  -- NOTE: set `root_dir` for a working `reuse_client` on Neovim<0.11
+  config.name, config.root_dir = config.name or 'mini.snippets', config.root_dir or vim.fn.getcwd()
+  config.cmd = H.lsp_make_cmd(opts)
+  local ok, client_id = pcall(vim.lsp.start, config, { attach = false })
+  if not (ok and type(client_id) == 'number') then H.error("Could not start 'mini.snippets' in-process LSP server") end
+  if vim.fn.has('nvim-0.11') == 0 then pcall(vim.lsp.buf_detach_client, 0, client_id) end
+
+  local attach = function(buf_id)
+    if not vim.api.nvim_buf_is_valid(buf_id) or opts.before_attach(buf_id) == false then return end
+    vim.lsp.buf_attach_client(buf_id, client_id)
+  end
+  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+    attach(buf_id)
+  end
+
+  local gr = vim.api.nvim_create_augroup('MiniSnippetsLsp', {})
+  -- NOTE: schedule to auto-attach only on explicit buffer ente (not temporary
+  -- from script) and have buffer properties (like 'filetype') set up.
+  local auto_attach = vim.schedule_wrap(function(ev)
+    if ev.buf ~= vim.api.nvim_get_current_buf() then return end
+    attach(ev.buf)
+  end)
+  vim.api.nvim_create_autocmd('BufEnter', { callback = auto_attach, desc = "Auto attach 'mini.snippets' LSP server" })
+
+  return client_id
+end
 
 -- Helper data ================================================================
 -- Module default config
@@ -2583,6 +2652,61 @@ H.reindent = function(lines, row, col)
   end
   return lines
 end
+
+-- LSP server -----------------------------------------------------------------
+H.lsp_make_cmd = function(opts)
+  local capabilities = {
+    capabilities = { completionProvider = { triggerCharacters = opts.triggers, resolveProvider = false } },
+  }
+  local textdocument_completion = H.lsp_make_textdocument_completion(opts)
+
+  return function(dispatchers)
+    -- Loose adaptation of https://github.com/neovim/neovim/pull/24338
+    local is_closing, request_id = false, 0
+    return {
+      request = function(method, params, callback, notify_reply_callback)
+        if method == 'initialize' then callback(nil, capabilities) end
+        if method == 'textDocument/completion' then callback(nil, textdocument_completion(params)) end
+        if method == 'shutdown' then callback(nil, nil) end
+        request_id = request_id + 1
+        -- NOTE: This is needed to not accumulated "pending" `Client.requests`
+        if notify_reply_callback then vim.schedule(function() pcall(notify_reply_callback, request_id) end) end
+        return true, request_id
+      end,
+      notify = function(method, params)
+        if method == 'exit' then dispatchers.on_exit(0, 15) end
+        return false
+      end,
+      is_closing = function() return is_closing end,
+      terminate = function() is_closing = true end,
+    }
+  end
+end
+
+H.lsp_make_textdocument_completion = function(opts)
+  local expand_opts = { match = opts.match, insert = false }
+  local insert_text_format_snippet = vim.lsp.protocol.InsertTextFormat.Snippet
+  local kind_snippet = vim.lsp.protocol.CompletionItemKind.Snippet
+
+  return function(params)
+    local res = {}
+    for _, s in ipairs(MiniSnippets.expand(expand_opts)) do
+      local candidate = { label = s.prefix, insertText = s.body, documentation = s.desc, kind = kind_snippet }
+      candidate.insertTextFormat = insert_text_format_snippet
+      if s.region ~= nil then
+        local from, to = s.region.from, s.region.to
+        local range_start = { line = from.line - 1, character = from.col - 1 }
+        local range_end = { line = to.line - 1, character = to.col }
+        candidate.textEdit = { newText = s.body, range = { start = range_start, ['end'] = range_end } }
+        candidate.insertText = nil
+      end
+      table.insert(res, candidate)
+    end
+    return res
+  end
+end
+
+H.lsp_default_before_attach = function(buf_id) return vim.api.nvim_buf_is_loaded(buf_id) end
 
 -- Validators -----------------------------------------------------------------
 H.is_string = function(x) return type(x) == 'string' end

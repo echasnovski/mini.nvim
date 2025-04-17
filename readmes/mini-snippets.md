@@ -34,6 +34,8 @@ https://github.com/user-attachments/assets/2cb38960-a26c-48ae-83cd-5fbcaa57d1cf
 
 - Select from several matched snippets via `vim.ui.select()`. See `:h MiniSnippets.default_select()`.
 
+- Start specialized in-process LSP server to show loaded snippets inside (auto)completion engines (like [mini.completion](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-completion.md)). See `:h MiniSnippets.start_lsp_server()`.
+
 - Insert, jump, and edit during snippet session in a configurable manner:
     - Configurable mappings for jumping and stopping.
     - Jumping wraps around the tabstops for easier navigation.
@@ -191,6 +193,8 @@ Snippet session allows interactive editing at tabstop locations:
 - Stop session manually by pressing `<C-c>` or make it stop automatically: if final tabstop is current either make a text edit or exit to Normal mode. If snippet doesn't explicitly define final tabstop, it is added at the end of the snippet.
 
 For more details about snippet session see `:h MiniSnippets-session`.
+
+To select and insert snippets via completion engine (that supports LSP completion; like [mini.completion](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-completion.md) or `:h vim.lsp.completion`), call `:h MiniSnippets.start_lsp_server()` after `require('mini.snippets').setup()`. This sets up an LSP server that matches and provides snippets loaded with 'mini.snippets'. To match with completion engine, use `start_lsp_server({ match = false })`.
 
 ### Management
 

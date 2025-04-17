@@ -189,6 +189,12 @@ There are following change types:
 
 - Update `set_picker_match_inds()` to be able to set current match and marked items indexes.
 
+## mini.snippets
+
+### Expand
+
+- Add `start_lsp_server()` to start specialized in-process LSP server to show loaded snippets inside (auto)completion engines (like 'mini.completion').
+
 ## mini.statusline
 
 ### Refine
