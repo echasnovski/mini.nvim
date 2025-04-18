@@ -3350,7 +3350,7 @@ T['start_lsp_server()']['works'] = function()
 end
 
 T['start_lsp_server()']['sets up auto-attach'] = function()
-  -- Should also attach to already existing loaded buffers
+  -- Should also attach to already existing loaded normal buffers
   local buf_id_current = child.api.nvim_create_buf(true, false)
   set_buf(buf_id_current)
   local buf_id_normal = child.api.nvim_create_buf(true, false)
@@ -3364,7 +3364,7 @@ T['start_lsp_server()']['sets up auto-attach'] = function()
   local client_id = start_lsp_server()
   validate_attached_clients(buf_id_current, { client_id })
   validate_attached_clients(buf_id_normal, { client_id })
-  validate_attached_clients(buf_id_scratch, { client_id })
+  validate_attached_clients(buf_id_scratch, {})
   validate_attached_clients(buf_id_unloaded, {})
 
   -- Should auto-attach to buffers on explicit `BufEnter`

@@ -1488,7 +1488,7 @@ end
 ---@param opts table|nil Options. Possible fields:
 ---   - <before_attach> `(function)` - function executed before every attach to
 ---     the buffer. Takes buffer id as input and can return `false` (not `nil`) to
----     cancel attaching to the buffer. Default: |nvim_buf_is_loaded()|.
+---     cancel attaching to the buffer. Default: attach to loaded normal buffers.
 ---   - <match> `(false|function)` - value of `opts.match` forwarded to
 ---     the |MiniSnippets.expand()| when computing completion candidates.
 ---     Supply `false` to not do matching at cursor, return all available snippets
@@ -2708,7 +2708,9 @@ H.lsp_make_textdocument_completion = function(opts)
   end
 end
 
-H.lsp_default_before_attach = function(buf_id) return vim.api.nvim_buf_is_loaded(buf_id) end
+H.lsp_default_before_attach = function(buf_id)
+  return vim.api.nvim_buf_is_loaded(buf_id) and vim.bo[buf_id].buftype == ''
+end
 
 -- Validators -----------------------------------------------------------------
 H.is_string = function(x) return type(x) == 'string' end

@@ -1252,7 +1252,7 @@ Parameters ~
 {opts} `(table|nil)` Options. Possible fields:
   - <before_attach> `(function)` - function executed before every attach to
     the buffer. Takes buffer id as input and can return `false` (not `nil`) to
-    cancel attaching to the buffer. Default: |nvim_buf_is_loaded()|.
+    cancel attaching to the buffer. Default: attach to loaded normal buffers.
   - <match> `(false|function)` - value of `opts.match` forwarded to
     the |MiniSnippets.expand()| when computing completion candidates.
     Supply `false` to not do matching at cursor, return all available snippets
