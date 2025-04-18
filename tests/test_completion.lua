@@ -2433,7 +2433,7 @@ T['Snippets']["LSP server from 'mini.snippets'"]['works'] = function()
 
   type_keys('i', '<C-Space>', '<C-n>')
   sleep(default_info_delay + small_time)
-  child.expect_screenshot()
+  if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 
   type_keys(' ')
   eq(get_lines(), { 'Snippet  aa' })
