@@ -3306,9 +3306,15 @@ T['start_lsp_server()']['works'] = function()
   local ref_items = {
     { label = 'aa', documentation = 'Snippet $VAR aa', insertText = 'Snippet $VAR aa' },
     { label = 'ba', documentation = 'Snippet $1 ba', insertText = 'Snippet $1 ba' },
-    { label = 'xx', documentation = 'XX snippet', insertText = 'Snippet xx' },
+    { label = 'xx', documentation = 'XX snippet', detail = 'Snippet xx', insertText = 'Snippet xx' },
   }
   validate_lsp_items(response_log[1].result, ref_items)
+
+  -- Should provide snippet body as `detail` only if it is different from
+  -- already provided description as `documentation` (which is not rare, as
+  -- `desc` is inferred from `body` if there is no such explicit field)
+  eq(response_log[1].result[1].detail, nil)
+  eq(response_log[1].result[2].detail, nil)
 
   -- Should match via 'mini.snippets' by default
   type_keys('i', 'a')

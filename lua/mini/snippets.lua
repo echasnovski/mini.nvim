@@ -2691,8 +2691,10 @@ H.lsp_make_textdocument_completion = function(opts)
   return function(params)
     local res = {}
     for _, s in ipairs(MiniSnippets.expand(expand_opts)) do
-      local candidate = { label = s.prefix, insertText = s.body, documentation = s.desc, kind = kind_snippet }
-      candidate.insertTextFormat = insert_text_format_snippet
+      local candidate = { label = s.prefix, insertText = s.body, documentation = s.desc }
+      -- NOTE: set `detail` along with `documentation` if it provides new info
+      candidate.detail = s.body ~= s.desc and s.body or nil
+      candidate.insertTextFormat, candidate.kind = insert_text_format_snippet, kind_snippet
       if s.region ~= nil then
         local from, to = s.region.from, s.region.to
         local range_start = { line = from.line - 1, character = from.col - 1 }
