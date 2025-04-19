@@ -455,38 +455,35 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
       return H.completion.start_pos[2]
     end
 
-    local process_items, is_incomplete = H.get_config().lsp_completion.process_items, false
-    process_items = process_items or MiniCompletion.default_process_items
-    local words = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
+    local is_incomplete = false
+    local all_items = H.process_lsp_response(H.completion.lsp.result, function(response, client_id)
       is_incomplete = is_incomplete or (response.isIncomplete == true)
       -- Response can be `CompletionList` with 'items' field plus their
       -- defaults or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then return {} end
 
-      -- Process items
       items = H.apply_item_defaults(items, response.itemDefaults)
       for _, item in ipairs(items) do
         item.client_id = client_id
       end
-      items = process_items(items, base)
-      return H.lsp_completion_response_items_to_complete_items(items)
+      return items
     end)
-    -- Add item id to use in `H.completion.lsp.resolve` caching. Do this after
-    -- processing all servers to have unique ids in case of several servers.
-    for i, w in ipairs(words) do
-      w.user_data.lsp.item_id = i
-    end
+
+    -- Process items
+    local process_items = H.get_config().lsp_completion.process_items or MiniCompletion.default_process_items
+    all_items = process_items(all_items, base)
+    local candidates = H.lsp_completion_response_items_to_complete_items(all_items)
 
     H.completion.lsp.status = 'done'
     H.completion.lsp.is_incomplete = is_incomplete
 
     -- Maybe trigger fallback action
-    if vim.tbl_isempty(words) and H.completion.fallback then return H.trigger_fallback() end
+    if vim.tbl_isempty(candidates) and H.completion.fallback then return H.trigger_fallback() end
 
     -- Track from which source is current popup
     H.completion.source = 'lsp'
-    return words
+    return candidates
   end
 end
 
@@ -1200,7 +1197,7 @@ H.lsp_completion_response_items_to_complete_items = function(items)
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   local snippet_kind = vim.lsp.protocol.CompletionItemKind.Snippet
   local snippet_inserttextformat = vim.lsp.protocol.InsertTextFormat.Snippet
-  for _, item in pairs(items) do
+  for i, item in pairs(items) do
     local word = H.get_completion_word(item)
 
     local is_snippet_kind = item.kind == snippet_kind
@@ -1216,7 +1213,7 @@ H.lsp_completion_response_items_to_complete_items = function(items)
     local label_detail = (details.detail or '') .. (details.description or '')
     label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
 
-    local lsp_data = { item = item }
+    local lsp_data = { item = item, item_id = i }
     lsp_data.needs_snippet_insert = needs_snippet_insert
     table.insert(res, {
       -- Show less for snippet items (usually less confusion), but preserve

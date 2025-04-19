@@ -715,6 +715,28 @@ T['Autocompletion']['respects `config.lsp_completion.process_items`'] = function
   eq(get_completion(), { 'April', 'May' })
 end
 
+T['Autocompletion']['calls `config.lsp_completion.process_items` once for several servers'] = function()
+  child.lua([[
+    require('mini.snippets').setup({ snippets = { { prefix = 'Jav', body = 'Java snippet' } } })
+    MiniSnippets.start_lsp_server()
+
+    _G.log = {}
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      table.insert(_G.log, items)
+      return MiniCompletion.default_process_items(items, base)
+    end
+  ]])
+
+  type_keys('i', 'J')
+  sleep(default_completion_delay + small_time)
+  eq(get_completion(), { 'January', 'June', 'July', 'Java snippet' })
+
+  local log = child.lua_get('_G.log')
+  eq(#log, 1)
+  eq(log[1][1].label, 'January')
+  eq(log[1][#log[1]].label, 'Jav')
+end
+
 T['Autocompletion']['respects string `config.fallback_action`'] = function()
   child.set_size(10, 25)
   child.lua([[MiniCompletion.config.fallback_action = '<C-x><C-l>']])

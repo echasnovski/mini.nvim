@@ -97,6 +97,8 @@ There are following change types:
 
 - Change default value of `MiniCompletionActiveParameter` highlight group to link to `LspSignatureActiveParameter` (instead of forcing underline).
 
+- Call `lsp_completion.process_items` with an array of items from all buffer servers at once (and not for each server separately). This can be used for more elaborate filter/sort strategies.
+
 ### Expand
 
 - Add scrolling in info and signature window. By default can be done with `<C-f>` / `<C-b>` when target window is shown. Can be configured via `mappings.scroll_down` and `mappings.scroll_up` config options.
