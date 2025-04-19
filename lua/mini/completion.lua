@@ -1383,15 +1383,15 @@ H.info_window_lines = function(info_id)
 
   -- Try to get documentation from LSP's latest resolved info
   if H.info.lsp.status == 'received' then
-    local lines = H.process_lsp_response(H.info.lsp.result, function(x) return H.normalize_item_doc(x, info) end)
+    local lines = H.normalize_item_doc(H.info.lsp.result, info)
     H.info.lsp.status = 'done'
     return lines
   end
 
-  -- If server doesn't support resolving completion item, reuse first response
+  -- If server doesn't support resolve or not known, reuse first response
   local client = vim.lsp.get_client_by_id(lsp_data.item.client_id) or {}
   local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
-  if not can_resolve then
+  if not can_resolve or client.id == nil then
     resolved_cache[item_id] = lsp_data.item
     return H.normalize_item_doc(lsp_data.item, info)
   end
@@ -1402,7 +1402,7 @@ H.info_window_lines = function(info_id)
   H.info.lsp.id = current_id
   H.info.lsp.status = 'sent'
 
-  local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', lsp_data.item, function(result)
+  local cancel_fun = H.client_request(client, 'completionItem/resolve', lsp_data.item, function(err, result, _)
     -- Don't do anything if there is other LSP request in action
     if not H.is_lsp_current(H.info, current_id) then return end
 
@@ -1411,13 +1411,16 @@ H.info_window_lines = function(info_id)
     -- Don't do anything if completion item was changed
     if H.info.id ~= info_id then return end
 
+    -- Still use original item if there was error during resolve
+    if err ~= nil then result = result or lsp_data.item end
+
     H.info.lsp.result = result
     -- - Cache resolved item to not have to send same request on revisit.
     --   Do this outside of `H.info.event.completed_item` because it will not
     --   have persistent effect as it will come fresh from Vimscript `v:event`.
-    resolved_cache[item_id] = result[lsp_data.item.client_id].result
+    resolved_cache[item_id] = result
     H.show_info_window()
-  end)
+  end, bufnr)
 
   H.info.lsp.cancel_fun = cancel_fun
   return false
@@ -1920,6 +1923,18 @@ if vim.fn.has('nvim-0.11') == 1 then
       res.context = context
       return res
     end
+  end
+end
+
+-- TODO: Remove after compatibility with Neovim=0.10 is dropped
+H.client_request = function(client, method, params, handler, bufnr)
+  local ok, request_id = client:request(method, params, handler, bufnr)
+  return ok and function() pcall(client.cancel_request, client, request_id) end or function() end
+end
+if vim.fn.has('nvim-0.11') == 0 then
+  H.client_request = function(client, method, params, handler, bufnr)
+    local ok, request_id = client.request(method, params, handler, bufnr)
+    return ok and function() pcall(client.cancel_request, request_id) end or function() end
   end
 end
 

@@ -1330,9 +1330,8 @@ T['Information window']['caches data with multiple servers'] = function()
           end
 
           if method == 'completionItem/resolve' then
-            if params.label == 'Jackfruit' then
-              params.documentation = { kind = 'markdown', value = 'Jackfruit is a fruit' }
-            end
+            _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
+            params.documentation = { kind = 'markdown', value = 'Jackfruit is a fruit' }
             callback(nil, params)
           end
 
@@ -1350,6 +1349,7 @@ T['Information window']['caches data with multiple servers'] = function()
 
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
+  local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
 
   local validate_info_content = function(sleep_delay)
     local validate_step = function(lines)
@@ -1366,7 +1366,9 @@ T['Information window']['caches data with multiple servers'] = function()
   validate_info_content(info_delay + small_time)
 
   type_keys('<C-n>')
+  validate_n_requests(2)
   validate_info_content(0)
+  validate_n_requests(2)
 end
 
 T['Information window']['handles caching for items with the same basic data'] = function()
@@ -2340,19 +2342,24 @@ end
 T['Snippets']['prefer snippet from resolved item'] = function()
   -- Although it is not recommended by LSP spec to update/provide `insertText`
   -- or `textEdti` in 'completionItem/resolve', this still can probably happen.
+  -- NOTE: There is no such test for regular inserted text because that is
+  -- pre-computed after 'textDocument/completion' inside complete-items (as
+  -- they are responsible for inserting text).
 
   child.lua([[
-    local error_field = vim.fn.has('nvim-0.11') == 1 and 'err' or 'error'
-    local buf_request_all_orig = vim.lsp.buf_request_all
-    vim.lsp.buf_request_all = function(bufnr, method, params, callback)
-      if method ~= 'completionItem/resolve' then return buf_request_all_orig(bufnr, method, params, callback) end
-      params.textEdit = { newText = 'Snippet $1 from resolve' }
-      callback({ { [error_field] = _G.resolve_error, result = _G.resolve_error == nil and params or nil } })
+    MiniCompletion.config.lsp_completion.process_items = function(items, base)
+      for _, item in ipairs(items) do
+        if item.label == 'May' then
+          item.kind = vim.lsp.protocol.CompletionItemKind.Snippet
+          item.insertText = 'May $1 snippet'
+        end
+      end
+      return MiniCompletion.default_process_items(items, base)
     end
   ]])
 
   local validate = function(ref_lines)
-    type_keys('i', '<C-Space>', '<C-n>')
+    type_keys('i', 'May', '<C-Space>', '<C-n>')
     -- - Wait for 'completionItem/resolve' request to be sent
     sleep(default_info_delay + small_time)
     type_keys('<C-y>')
@@ -2363,12 +2370,12 @@ T['Snippets']['prefer snippet from resolved item'] = function()
     child.ensure_normal_mode()
   end
 
-  mock_lsp_snippets({ 'Snippet $1 original' })
-  validate({ 'Snippet  from resolve' })
+  -- mock_lsp_snippets({ 'Snippet $1 original' })
+  validate({ 'Resolved  May' })
 
   -- Should handle error in 'completionItem/resolve' response
-  child.lua('_G.resolve_error = "Error"')
-  validate({ 'Snippet  original' })
+  child.lua('_G.mock_error = { ["completionItem/resolve"] = "Error" }')
+  validate({ 'May  snippet' })
 end
 
 T['Snippets']['can be inserted together with additional text edits'] = function()

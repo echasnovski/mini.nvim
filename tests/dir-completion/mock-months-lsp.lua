@@ -157,10 +157,16 @@ Months.requests = {
     local doc = data.documentation
     if doc ~= nil then params.documentation = { kind = 'markdown', value = doc } end
     params.detail = data.detail
+
     -- Mock additionalTextEdits as in `typescript-language-server`
     if params.label == 'October' or params.label == 'November' then
       params.additionalTextEdits = construct_additionTextEdits('resolve', params.label)
     end
+
+    -- Mock resolving text to be inserted (which should usually not happen, but
+    -- it still might)
+    if params.label == 'May' then params.insertText = 'Resolved $1 May' end
+
     return params
   end,
 
