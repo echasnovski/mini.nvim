@@ -353,11 +353,14 @@ Default processing of LSP items
 
 Steps:
 - Filter and sort items according to supplied method.
+- Arrange items further by completion item kind according to their priority.
 - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 
-Example of forcing fuzzy matching: >lua
+Example of forcing fuzzy matching, filtering out `Text` items, and putting
+`Snippet` items last: >lua
 
-  local opts = { filtersort = 'fuzzy' }
+  local kind_priority = { Text = -1, Snippet = 99 }
+  local opts = { filtersort = 'fuzzy', kind_priority = kind_priority }
   local process_items = function(items, base)
     return MiniCompletion.default_process_items(items, base, opts)
   end
@@ -378,6 +381,15 @@ Parameters ~
       - `'none'` - no filter and no sort.
     If callable, should take `items` and `base` arguments and return items array.
     Default: `'fuzzy'` if 'completeopt' contains "fuzzy", `'prefix'` otherwise.
+  - <kind_priority> `(table)` - map of completion item kinds (like `Variable`,
+    `Snippet`; see string keys of `vim.lsp.protocol.CompletionItemKind`) to
+    their numerical priority. It will be used after applying <filtersort> to
+    arrange by completion item kind: items with negative priority kinds will
+    be filtered out, the rest are sorted by decreasing priority (preserving
+    order in case of same priority).
+    Priorities can be any number, only matters how they compare to each other.
+    Value 100 is used for missing kinds (i.e. not all can be supplied).
+    Default: `{}` (all equal priority).
 
 Return ~
 `(table)` Array of processed items from LSP response.

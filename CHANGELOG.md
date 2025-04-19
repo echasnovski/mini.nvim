@@ -87,6 +87,7 @@ There are following change types:
 
 - Update behavior and capabilities of `default_process_items()`:
     - Add `filtersort` option to control how items are filtered and/or sorted. Its new default value has changed behavior: do fuzzy matching if 'completeopt' option contains "fuzzy" entry; same as before otherwise.
+    - Add `kind_priority` option to allow arranging items by completion item kind (like "Variable", "Snippet", "Text", etc.) after applying `filtersort`. This allows finer filter and/or sort based on kind, like "put Variable on top, Snippet on bottom, remove Text".
     - Use `filterText` and `label` item fields during matching (instead of `textEdit.newText`, `insertText`, and `label` as before). This is more aligned with LSP specification.
 
 ### Refine

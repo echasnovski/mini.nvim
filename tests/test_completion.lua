@@ -4,6 +4,7 @@ local helpers = dofile('tests/helpers.lua')
 
 local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
+local eq_partial_tbl = helpers.expect.equality_partial_tbl
 local new_set = MiniTest.new_set
 
 -- Helpers with child processes
@@ -26,6 +27,11 @@ child.expect_screenshot_orig = child.expect_screenshot
 child.expect_screenshot = function(opts)
   if child.fn.has('nvim-0.9') == 0 then return end
   child.expect_screenshot_orig(opts)
+end
+
+local forward_lua = function(fun_str)
+  local lua_cmd = fun_str .. '(...)'
+  return function(...) return child.lua_get(lua_cmd, { ... }) end
 end
 
 local mock_miniicons = function()
@@ -282,6 +288,8 @@ T['default_process_items()'] = new_set({
   },
 })
 
+local default_process_items = forward_lua('MiniCompletion.default_process_items')
+
 local ref_prefix_items = {
   { kind = 2, label = 'March', sortText = '003' },
   { kind = 2, label = 'May', sortText = '005' },
@@ -374,10 +382,76 @@ T['default_process_items()']['respects `opts.filtersort`'] = function()
   eq(child.lua_get('_G.args'), { { all_items, 'l' } })
 end
 
+T['default_process_items()']['respects `opts.kind_priority`'] = function()
+  local kind_map = child.lua([[
+    _G.kind_map = {}
+    for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
+      if type(k) == 'string' then _G.kind_map[k] = v end
+    end
+    return _G.kind_map
+  ]])
+
+  -- Should work even if `vim.lsp.protocol.CompletionItemKind` is tweaked
+  mock_miniicons()
+  child.lua('MiniIcons.tweak_lsp_kind()')
+
+  local items = {
+    { label = 'a', kind = kind_map.Function },
+    { label = 'b', kind = kind_map.Snippet },
+    { label = 'c', kind = kind_map.Text },
+    { label = 'd', kind = kind_map.Function },
+    { label = 'e', kind = kind_map.Variable },
+    { label = 'f', kind = kind_map.Text },
+    { label = 'g', kind = kind_map.Variable },
+    -- Should work with unknown/missing kind (with default priority of 100)
+    { label = 'h', kind = -13 },
+    { label = 'i', kind = 3.14 },
+    { label = 'j', kind = nil },
+  }
+  local opts = { kind_priority = { Variable = 101, Snippet = 99, Text = -1 } }
+  --stylua: ignore
+  local ref_items = {
+    items[5], items[7], -- priority 101
+    items[1], items[4], items[8], items[9], items[10], -- priority 100
+    items[2], -- priority 99
+    -- No items for negative priority
+  }
+  eq_partial_tbl(default_process_items(items, '', opts), ref_items)
+
+  -- Should apply after `filtersort` and preserve its order within priority
+  items = {
+    { label = 'ba', kind = kind_map.Snippet },
+    { label = 'ca', kind = kind_map.Variable },
+    { label = 'ea', kind = kind_map.Text },
+    { label = 'da', kind = kind_map.Function },
+
+    { label = 'ac', kind = kind_map.Variable },
+    { label = 'ab', kind = kind_map.Snippet },
+    { label = 'ad', kind = kind_map.Function },
+    { label = 'ae', kind = kind_map.Text },
+
+    { label = 'xx', kind = kind_map.Variable },
+
+    { label = 'cca', kind = kind_map.Variable },
+  }
+  opts = { filtersort = 'fuzzy', kind_priority = { Variable = 101, Snippet = 99, Text = -1 } }
+  --stylua: ignore
+  ref_items = {
+    items[5], items[2], items[10], -- priority 101
+    items[7], items[4],            -- priority 100
+    items[6], items[1],            -- priority 99
+  }
+  eq_partial_tbl(default_process_items(items, 'a', opts), ref_items)
+end
+
 T['default_process_items()']['validates input'] = function()
   expect.error(
     function() child.lua('MiniCompletion.default_process_items({}, "", { filtersort = 1 })') end,
     '`filtersort`.*callable or one of'
+  )
+  expect.error(
+    function() child.lua('MiniCompletion.default_process_items({}, "", { kind_priority = 1 })') end,
+    '`kind_priority`.*table'
   )
 end
 

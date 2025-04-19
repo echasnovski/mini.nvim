@@ -491,11 +491,14 @@ end
 ---
 --- Steps:
 --- - Filter and sort items according to supplied method.
+--- - Arrange items further by completion item kind according to their priority.
 --- - If |MiniIcons| is enabled, add <kind_hlgroup> based on the "lsp" category.
 ---
---- Example of forcing fuzzy matching: >lua
+--- Example of forcing fuzzy matching, filtering out `Text` items, and putting
+--- `Snippet` items last: >lua
 ---
----   local opts = { filtersort = 'fuzzy' }
+---   local kind_priority = { Text = -1, Snippet = 99 }
+---   local opts = { filtersort = 'fuzzy', kind_priority = kind_priority }
 ---   local process_items = function(items, base)
 ---     return MiniCompletion.default_process_items(items, base, opts)
 ---   end
@@ -515,16 +518,28 @@ end
 ---       - `'none'` - no filter and no sort.
 ---     If callable, should take `items` and `base` arguments and return items array.
 ---     Default: `'fuzzy'` if 'completeopt' contains "fuzzy", `'prefix'` otherwise.
+---   - <kind_priority> `(table)` - map of completion item kinds (like `Variable`,
+---     `Snippet`; see string keys of `vim.lsp.protocol.CompletionItemKind`) to
+---     their numerical priority. It will be used after applying <filtersort> to
+---     arrange by completion item kind: items with negative priority kinds will
+---     be filtered out, the rest are sorted by decreasing priority (preserving
+---     order in case of same priority).
+---     Priorities can be any number, only matters how they compare to each other.
+---     Value 100 is used for missing kinds (i.e. not all can be supplied).
+---     Default: `{}` (all equal priority).
 ---
 ---@return table Array of processed items from LSP response.
 MiniCompletion.default_process_items = function(items, base, opts)
   opts = opts or {}
 
-  -- NOTE: custom filter+sort is important with frequent `isIncomplete`
+  -- Filter+sort (important with frequent `isIncomplete`)
   local fs = opts.filtersort or (vim.o.completeopt:find('fuzzy') ~= nil and 'fuzzy' or 'prefix')
   if type(fs) == 'string' then fs = H.filtersort_methods[fs] end
   if not vim.is_callable(fs) then H.error('`filtersort` should be callable or one of "prefix", "fuzzy", "none"') end
   local res = fs(items, base)
+
+  -- Arrange by kind
+  if opts.kind_priority ~= nil then res = H.lsp_arrange_by_kind(res, opts.kind_priority) end
 
   -- Possibly add "kind" highlighting
   if _G.MiniIcons == nil then return res end
@@ -1136,6 +1151,22 @@ H.filtersort_methods = {
   none = function(items, _) return vim.deepcopy(items) end,
 }
 
+H.lsp_arrange_by_kind = function(items, kind_priority)
+  if type(kind_priority) ~= 'table' then H.error('`kind_priority` should be table') end
+
+  H.ensure_kind_map()
+
+  local res_raw = {}
+  for i, item in ipairs(items) do
+    local priority = kind_priority[H.kind_map[item.kind]] or 100
+    if priority >= 0 then table.insert(res_raw, { priority, i, item }) end
+  end
+
+  local compare = function(a, b) return a[1] > b[1] or (a[1] == b[1] and a[2] < b[2]) end
+  table.sort(res_raw, compare)
+  return vim.tbl_map(function(x) return x[3] end, res_raw)
+end
+
 H.lsp_get_filterword = function(x) return x.filterText or x.label end
 
 H.lsp_item_compare = function(a, b) return (a.sortText or a.label) < (b.sortText or b.label) end
@@ -1237,19 +1268,23 @@ end
 H.make_add_kind_hlgroup = function()
   -- Account for possible effect of `MiniIcons.tweak_lsp_kind()` which modifies
   -- only array part of `CompletionItemKind` but not "map" part
-  if H.kind_map == nil then
-    -- Cache kind map so as to not recompute it each time (as it will be called
-    -- in performance sensitive context). Assumes `tweak_lsp_kind()` is called
-    -- right after `require('mini.icons').setup()`.
-    H.kind_map = {}
-    for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
-      if type(k) == 'string' and type(v) == 'number' then H.kind_map[v] = k end
-    end
-  end
+  H.ensure_kind_map()
 
   return function(item)
     local _, hl, is_default = _G.MiniIcons.get('lsp', H.kind_map[item.kind] or 'Unknown')
     item.kind_hlgroup = not is_default and hl or nil
+  end
+end
+
+H.ensure_kind_map = function()
+  if H.kind_map ~= nil then return end
+
+  -- Cache kind map so as to not recompute it each time (as it will be called
+  -- in performance sensitive context). Assumes `tweak_lsp_kind()` is called
+  -- right after `require('mini.icons').setup()`.
+  H.kind_map = {}
+  for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
+    if type(k) == 'string' and type(v) == 'number' then H.kind_map[v] = k end
   end
 end
 
