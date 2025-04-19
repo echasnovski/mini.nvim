@@ -470,7 +470,7 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     -- Add item id to use in `H.completion.lsp.resolve` caching. Do this after
     -- processing all servers to have unique ids in case of several servers.
     for i, w in ipairs(words) do
-      w.user_data.nvim.lsp.item_id = i
+      w.user_data.lsp.item_id = i
     end
 
     H.completion.lsp.status = 'done'
@@ -898,7 +898,7 @@ H.auto_info = function()
 
   -- Show info content without delay for visited and resolved LSP item.
   -- Otherwise delay to not spam LSP requests on up/down navigation.
-  local item_id = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp', 'item_id' })
+  local item_id = H.table_get(completed_item, { 'user_data', 'lsp', 'item_id' })
   local is_resolved = H.completion.lsp.resolved[item_id] ~= nil
   local delay = is_resolved and 0 or H.get_config().delay.info
 
@@ -931,7 +931,7 @@ H.on_completedonepre = function()
   if H.completion.lsp.status == 'received' then return end
 
   -- Do extra actions for LSP completion items
-  local lsp_data = H.table_get(vim.v.completed_item, { 'user_data', 'nvim', 'lsp' })
+  local lsp_data = H.table_get(vim.v.completed_item, { 'user_data', 'lsp' })
   if lsp_data ~= nil then H.make_lsp_extra_actions(lsp_data) end
 
   -- Stop processes
@@ -1211,7 +1211,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     local label_detail = (details.detail or '') .. (details.description or '')
     label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
 
-    local lsp_data = { completion_item = item, client_id = client_id }
+    local lsp_data = { item = item, client_id = client_id }
     lsp_data.needs_snippet_insert = needs_snippet_insert
     table.insert(res, {
       -- Show less for snippet items (usually less confusion), but preserve
@@ -1226,7 +1226,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
       icase = 1,
       dup = 1,
       empty = 1,
-      user_data = { nvim = { lsp = lsp_data } },
+      user_data = { lsp = lsp_data },
     })
   end
   return res
@@ -1257,7 +1257,7 @@ end
 
 H.make_lsp_extra_actions = function(lsp_data)
   -- Prefer resolved item over the one from 'textDocument/completion'
-  local item = H.completion.lsp.resolved[lsp_data.item_id] or lsp_data.completion_item
+  local item = H.completion.lsp.resolved[lsp_data.item_id] or lsp_data.item
 
   if item.additionalTextEdits == nil and not lsp_data.needs_snippet_insert then return end
   local snippet = lsp_data.needs_snippet_insert and H.get_completion_word(item) or nil
@@ -1371,7 +1371,7 @@ end
 H.info_window_lines = function(info_id)
   local completed_item = H.info.event.completed_item
   local info = completed_item.info or ''
-  local lsp_data = H.table_get(completed_item, { 'user_data', 'nvim', 'lsp' })
+  local lsp_data = H.table_get(completed_item, { 'user_data', 'lsp' })
 
   -- If popup is not from LSP, try using 'info' field of completion item
   if lsp_data == nil then return vim.split(info, '\n') end
@@ -1391,8 +1391,8 @@ H.info_window_lines = function(info_id)
   local client = vim.lsp.get_client_by_id(lsp_data.client_id) or {}
   local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
   if not can_resolve then
-    resolved_cache[item_id] = lsp_data.completion_item
-    return H.normalize_item_doc(lsp_data.completion_item, info)
+    resolved_cache[item_id] = lsp_data.item
+    return H.normalize_item_doc(lsp_data.item, info)
   end
 
   -- Finally, request to resolve current completion to add more documentation
@@ -1401,7 +1401,7 @@ H.info_window_lines = function(info_id)
   H.info.lsp.id = current_id
   H.info.lsp.status = 'sent'
 
-  local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', lsp_data.completion_item, function(result)
+  local cancel_fun = vim.lsp.buf_request_all(bufnr, 'completionItem/resolve', lsp_data.item, function(result)
     -- Don't do anything if there is other LSP request in action
     if not H.is_lsp_current(H.info, current_id) then return end
 
@@ -1844,8 +1844,8 @@ H.map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
-H.normalize_item_doc = function(completion_item, fallback_info)
-  local detail, doc = completion_item.detail, completion_item.documentation
+H.normalize_item_doc = function(lsp_item, fallback_info)
+  local detail, doc = lsp_item.detail, lsp_item.documentation
   -- Fall back to explicit info only of there is no data in completion item
   -- Assume that explicit info is a code that needs highlighting
   detail = (detail == nil and doc == nil) and fallback_info or detail
