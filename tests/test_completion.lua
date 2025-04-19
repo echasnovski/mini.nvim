@@ -47,14 +47,16 @@ local mock_completefunc_lsp_tracking = function()
   ]])
 end
 
-local mock_lsp_items = function(items)
+local mock_lsp_items = function(items, client_id)
   child.lua('_G.input_items = ' .. vim.inspect(items))
+  child.lua('_G.client_id = ' .. (client_id or 1))
   child.lua([[
     MiniCompletion.config.lsp_completion.process_items = function(_, base)
       local items = vim.deepcopy(_G.input_items)
       -- Ensure same order
       for i, _ in ipairs(items) do
         items[i].sortText = string.format('%03d', i)
+        items[i].client_id = _G.client_id
       end
       return MiniCompletion.default_process_items(items, base)
     end
@@ -964,20 +966,15 @@ end
 T['Manual completion']['respects `filterText` during built-in filtering'] = function()
   set_lines({})
   child.set_size(10, 20)
-  child.lua([[
-    local kinds = vim.lsp.protocol.CompletionItemKind
-    local format_snippet = vim.lsp.protocol.InsertTextFormat.Snippet
-    MiniCompletion.config.lsp_completion.process_items = function(items, base)
-      return {
-        { label = 'ab', filterText = 'ba' },
-        { label = 'cba', filterText = 'abc' },
-        -- Snippets should still be filtered according to 'filterText' and
-        -- not what snippet will be inserted later
-        { label = 'dcba', filterText = 'ab$1cd', insertTextFormat = format_snippet },
-        { label = 'edcba', filterText = 'abcde', insertText = 'snip$1pet', insertTextFormat = format_snippet },
-      }
-    end
-  ]])
+  local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
+  mock_lsp_items({
+    { label = 'ab', filterText = 'ba' },
+    { label = 'cba', filterText = 'abc' },
+    -- Snippets should still be filtered according to 'filterText' and
+    -- not what snippet will be inserted later
+    { label = 'dcba', filterText = 'ab$1cd', insertTextFormat = format_snippet },
+    { label = 'edcba', filterText = 'abcde', insertText = 'snip$1pet', insertTextFormat = format_snippet },
+  })
 
   type_keys('i', '<C-Space>')
   child.expect_screenshot()
@@ -1355,14 +1352,10 @@ T['Information window']['handles caching for items with the same basic data'] = 
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
   local validate_n_requests = function(ref) eq(child.lua_get('_G.n_completionitem_resolve'), ref) end
 
-  child.lua([[
-    MiniCompletion.config.lsp_completion.process_items = function(items, base)
-      return {
-        { label = 'ab', sortText = '01', documentation = 'Item 1' },
-        { label = 'ab', sortText = '02', documentation = 'Item 2' },
-      }
-    end
-  ]])
+  mock_lsp_items({
+    { label = 'ab', sortText = '01', documentation = 'Item 1' },
+    { label = 'ab', sortText = '02', documentation = 'Item 2' },
+  })
 
   type_keys('i', '<C-Space>', '<C-n>')
   sleep(info_delay + small_time)

@@ -186,9 +186,9 @@ Here are code snippets for some common installation methods (use only one):
     auto_setup = true,
 
     -- A function which takes LSP 'textDocument/completion' response items
-    -- and word to complete. Output should be a table of the same nature as
-    -- input items. Common use case is custom filter/sort.
-    -- Default: `default_process_items`
+    -- (each with `client_id` field for item's server) and word to complete.
+    -- Output should be a table of the same nature as input. Common use case
+    -- is custom filter/sort. Default: `default_process_items`
     process_items = nil,
 
     -- A function which takes a snippet as string and inserts it at cursor.

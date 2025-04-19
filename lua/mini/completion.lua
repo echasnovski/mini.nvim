@@ -322,9 +322,9 @@ MiniCompletion.config = {
     auto_setup = true,
 
     -- A function which takes LSP 'textDocument/completion' response items
-    -- and word to complete. Output should be a table of the same nature as
-    -- input items. Common use case is custom filter/sort.
-    -- Default: `default_process_items`
+    -- (each with `client_id` field for item's server) and word to complete.
+    -- Output should be a table of the same nature as input. Common use case
+    -- is custom filter/sort. Default: `default_process_items`
     process_items = nil,
 
     -- A function which takes a snippet as string and inserts it at cursor.
@@ -463,9 +463,14 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
       -- defaults or `CompletionItem[]`
       local items = H.table_get(response, { 'items' }) or response
       if type(items) ~= 'table' then return {} end
+
+      -- Process items
       items = H.apply_item_defaults(items, response.itemDefaults)
+      for _, item in ipairs(items) do
+        item.client_id = client_id
+      end
       items = process_items(items, base)
-      return H.lsp_completion_response_items_to_complete_items(items, client_id)
+      return H.lsp_completion_response_items_to_complete_items(items)
     end)
     -- Add item id to use in `H.completion.lsp.resolve` caching. Do this after
     -- processing all servers to have unique ids in case of several servers.
@@ -1189,7 +1194,7 @@ end
 
 -- Source:
 -- https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textDocument_completion
-H.lsp_completion_response_items_to_complete_items = function(items, client_id)
+H.lsp_completion_response_items_to_complete_items = function(items)
   if vim.tbl_count(items) == 0 then return {} end
 
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
@@ -1211,7 +1216,7 @@ H.lsp_completion_response_items_to_complete_items = function(items, client_id)
     local label_detail = (details.detail or '') .. (details.description or '')
     label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
 
-    local lsp_data = { item = item, client_id = client_id }
+    local lsp_data = { item = item }
     lsp_data.needs_snippet_insert = needs_snippet_insert
     table.insert(res, {
       -- Show less for snippet items (usually less confusion), but preserve
@@ -1288,7 +1293,7 @@ H.make_lsp_extra_actions = function(lsp_data)
     end
 
     -- Try to apply additional text edits
-    H.apply_additional_text_edits(item.additionalTextEdits, lsp_data.client_id)
+    H.apply_additional_text_edits(item)
 
     -- Expand snippet: remove inserted word and instead insert snippet
     if snippet == nil then return end
@@ -1299,10 +1304,9 @@ H.make_lsp_extra_actions = function(lsp_data)
   end)
 end
 
-H.apply_additional_text_edits = function(edits, client_id)
+H.apply_additional_text_edits = function(item)
   -- Code originally inspired by https://github.com/neovim/neovim/issues/12310
-  if edits == nil then return end
-  client_id = client_id or 0
+  if item.additionalTextEdits == nil then return end
 
   -- Prepare extmarks to track relevant positions after text edits
   local start_pos = H.completion.start_pos
@@ -1314,8 +1318,8 @@ H.apply_additional_text_edits = function(edits, client_id)
   local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], cursor_extmark_opts)
 
   -- Do text edits
-  local offset_encoding = vim.lsp.get_client_by_id(client_id).offset_encoding
-  vim.lsp.util.apply_text_edits(edits, vim.api.nvim_get_current_buf(), offset_encoding)
+  local offset_encoding = item.client_id == nil and 'utf-16' or vim.lsp.get_client_by_id(item.client_id).offset_encoding
+  vim.lsp.util.apply_text_edits(item.additionalTextEdits, vim.api.nvim_get_current_buf(), offset_encoding)
 
   -- Restore relevant positions
   local start_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, start_extmark_id, {})
@@ -1373,8 +1377,8 @@ H.info_window_lines = function(info_id)
   local info = completed_item.info or ''
   local lsp_data = H.table_get(completed_item, { 'user_data', 'lsp' })
 
-  -- If popup is not from LSP, try using 'info' field of completion item
-  if lsp_data == nil then return vim.split(info, '\n') end
+  -- If popup is not from a known LSP server, use 'info' field of complete-item
+  if lsp_data == nil or lsp_data.item.client_id == nil then return vim.split(info, '\n') end
 
   -- Prefer reusing (without new LSP request) already resolved completion item
   local item_id, resolved_cache = lsp_data.item_id, H.completion.lsp.resolved
@@ -1388,7 +1392,7 @@ H.info_window_lines = function(info_id)
   end
 
   -- If server doesn't support resolving completion item, reuse first response
-  local client = vim.lsp.get_client_by_id(lsp_data.client_id) or {}
+  local client = vim.lsp.get_client_by_id(lsp_data.item.client_id) or {}
   local can_resolve = H.table_get(client.server_capabilities, { 'completionProvider', 'resolveProvider' })
   if not can_resolve then
     resolved_cache[item_id] = lsp_data.item
@@ -1414,7 +1418,7 @@ H.info_window_lines = function(info_id)
     -- - Cache resolved item to not have to send same request on revisit.
     --   Do this outside of `H.info.event.completed_item` because it will not
     --   have persistent effect as it will come fresh from Vimscript `v:event`.
-    resolved_cache[item_id] = result[lsp_data.client_id].result
+    resolved_cache[item_id] = result[lsp_data.item.client_id].result
     H.show_info_window()
   end)
 

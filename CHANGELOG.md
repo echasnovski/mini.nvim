@@ -115,6 +115,8 @@ There are following change types:
 
 - Add `get_lsp_capabilities()` that returns data about which part of LSP specification is supported in 'mini.completion'.
 
+- Input items for `lsp_completion.process_items` now have `client_id` field with the identifier of the server that item came from. Use `vim.lsp.get_client_by_id()` to get an actual data about the server.
+
 ## mini.diff
 
 ### Expand
