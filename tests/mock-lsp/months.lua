@@ -105,7 +105,10 @@ end
 -- Log actual table params for testing proper requests
 _G.params_log = {}
 
-Months.requests = {
+local requests = {
+  initialize = function(_) return { capabilities = Months.client.server_capabilities } end,
+  shutdown = function(_) return nil end,
+
   ['textDocument/completion'] = function(params)
     -- Count actual requests for easier "force completion" tests
     _G.n_textdocument_completion = (_G.n_textdocument_completion or 0) + 1
@@ -217,18 +220,14 @@ _G.lines_at_request = {}
 local cmd = function(dispatchers)
   -- Adaptation of `MiniSnippets.start_lsp_server()` implementation
   local is_closing, request_id = false, 0
-  local capabilities = { capabilities = Months.client.server_capabilities }
 
   return {
     request = function(method, params, callback)
       table.insert(_G.lines_at_request, vim.api.nvim_get_current_line())
 
-      if method == 'initialize' then callback(nil, capabilities) end
-      if method == 'shutdown' then callback(nil, nil) end
-
       -- Mock relevant methods with possible error
       local err = (_G.mock_error or {})[method]
-      local method_impl = err ~= nil and function() return nil end or Months.requests[method]
+      local method_impl = err ~= nil and function() return nil end or requests[method]
       if method_impl and _G.mock_request_delay == nil then callback(err, method_impl(params)) end
       if method_impl and _G.mock_request_delay ~= nil then
         vim.defer_fn(function() callback(err, method_impl(params)) end, _G.mock_request_delay)

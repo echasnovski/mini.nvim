@@ -61,7 +61,7 @@ local mock_diagnostics = function()
   child.cmd('doautocmd DiagnosticChanged')
 end
 
-local mock_lsp = function() child.cmd('luafile tests/dir-statusline/mock-lsp.lua') end
+local mock_lsp = function() child.cmd('luafile tests/mock-lsp/months.lua') end
 
 local mock_buffer_size = function(bytes)
   -- Reduce bytes for end-of-line: '\n' on Unix and '\r\n' on Windows
@@ -315,15 +315,21 @@ T['active()/inactive()']['respects `vim.{g,b}.ministatusline_disable`'] = new_se
 T['section_diagnostics()'] = new_set({ hooks = { pre_case = mock_diagnostics } })
 
 T['section_diagnostics()']['works'] = function()
+  local get_n_attached_clients = function()
+    return child.lua([[
+      return vim.fn.has('nvim-0.10') == 1 and #vim.lsp.get_clients({ bufnr = 0 }) or
+      #vim.lsp.get_active_clients({ bufnr = 0 })
+    ]])
+  end
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   -- Should not depend on LSP server attached
   mock_lsp()
-  eq(child.lua_get('_G.n_lsp_clients'), 1)
+  eq(get_n_attached_clients(), 1)
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
-  child.lua('_G.detach_lsp()')
-  eq(child.lua_get('_G.n_lsp_clients'), 0)
+  child.lua('vim.lsp.buf_detach_client(0, _G.months_lsp_client_id)')
+  eq(get_n_attached_clients(), 0)
   eq(child.lua_get('MiniStatusline.section_diagnostics({})'), ' E4 W3 I2 H1')
 
   -- Should use cache on `DiagnosticChanged`
@@ -400,21 +406,16 @@ T['section_lsp()']['works'] = function()
   eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 +')
 
   -- Should show number of attached LSP servers
-  child.lua('_G.attach_lsp()')
+  child.cmd('luafile tests/mock-lsp/fruits.lua')
   eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 ++')
-
-  -- Should show empty string if no attached LSP servers
-  child.lua('_G.detach_lsp()')
-  child.lua('_G.detach_lsp()')
-  eq(child.lua_get('MiniStatusline.section_lsp({})'), '')
 
   -- Should work if attached buffer clients is returned not as array
-  child.lua([[
-    local f = function() return { [2] = { id = 2 }, [4] = { id = 4 } } end
-    vim.lsp.buf_get_clients, vim.lsp.get_clients = f, f
-    vim.api.nvim_exec_autocmds('LspAttach', {})
-  ]])
-  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 ++')
+  child.lua('vim.lsp.buf_detach_client(0, _G.months_lsp_client_id)')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 +')
+
+  -- Should show empty string if no attached LSP servers
+  child.lua('vim.lsp.buf_detach_client(0, _G.fruits_lsp_client_id)')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '')
 end
 
 T['section_lsp()']['respects `args.trunc_width`'] = function()
@@ -425,17 +426,17 @@ T['section_lsp()']['respects `args.trunc_width`'] = function()
 end
 
 T['section_lsp()']['respects `args.icon`'] = function()
-  eq(child.lua_get([[MiniStatusline.section_lsp({icon = 'A'})]]), 'A +')
-  eq(child.lua_get([[MiniStatusline.section_lsp({icon = 'AAA'})]]), 'AAA +')
+  eq(child.lua_get('MiniStatusline.section_lsp({icon = "A"})'), 'A +')
+  eq(child.lua_get('MiniStatusline.section_lsp({icon = "AAA"})'), 'AAA +')
 end
 
 T['section_lsp()']['respects `config.use_icons`'] = function()
   child.lua('MiniStatusline.config.use_icons = false')
-  eq(child.lua_get([[MiniStatusline.section_lsp({})]]), 'LSP +')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), 'LSP +')
 
   -- Should also use buffer local config
   child.b.ministatusline_config = { use_icons = true }
-  eq(child.lua_get([[MiniStatusline.section_lsp({})]]), '󰰎 +')
+  eq(child.lua_get('MiniStatusline.section_lsp({})'), '󰰎 +')
 end
 
 T['section_fileinfo()'] = new_set({ hooks = { pre_case = mock_miniicons } })

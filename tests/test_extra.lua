@@ -2514,24 +2514,32 @@ local pick_lsp = forward_lua_notify('MiniExtra.pickers.lsp')
 local setup_lsp = function()
   child.set_size(15, 90)
 
-  -- Mock
-  local mock_file = join_path(test_dir, 'mocks', 'lsp.lua')
-  local lua_cmd = string.format('dofile(%s)', vim.inspect(mock_file))
-  child.lua(lua_cmd)
-
-  -- Set up
+  -- Set up file
   local file_path = real_file('a.lua')
   child.cmd('edit ' .. file_path)
 
+  -- Mock server
+  child.cmd('luafile tests/mock-lsp/extra.lua')
+
   return file_path, full_path(file_path)
 end
+
+local scope_to_request = {
+  declaration = 'textDocument/declaration',
+  definition = 'textDocument/definition',
+  document_symbol = 'textDocument/documentSymbol',
+  implementation = 'textDocument/implementation',
+  references = 'textDocument/references',
+  type_definition = 'textDocument/typeDefinition',
+  workspace_symbol = 'workspace/symbol',
+}
 
 local validate_location_scope = function(scope)
   local file_path, file_path_full = setup_lsp()
 
   mock_slash_path_sep()
   pick_lsp({ scope = scope })
-  eq(child.lua_get('_G.lsp_buf_calls'), { scope })
+  eq(child.lua_get('_G.lsp_requests'), { scope_to_request[scope] })
   validate_picker_name('LSP (' .. scope .. ')')
   child.expect_screenshot()
 
@@ -2546,8 +2554,18 @@ local validate_location_scope = function(scope)
     path = file_path_full,
     lnum = 3,
     col = 16,
+    end_lnum = 3,
+    end_col = 17,
     text = file_path:gsub('\\', '/') .. '│3│16│   x = math.max(a, 2),',
+    user_data = {
+      range = { start = { line = 2, character = 15 }, ['end'] = { line = 2, character = 16 } },
+      uri = 'file://' .. (helpers.is_windows() and '/' or '') .. file_path_full:gsub('\\', '/'),
+    },
   }
+  if child.fn.has('nvim-0.11') == 0 then
+    ref_item.end_lnum, ref_item.end_col = nil, nil
+  end
+  if child.fn.has('nvim-0.10') == 0 then ref_item.user_data = nil end
   eq(get_picker_items()[1], ref_item)
 
   -- Should properly choose by moving to the position
@@ -2566,8 +2584,8 @@ local validate_symbol_scope = function(scope, skip_preview)
   mock_slash_path_sep()
   pick_lsp({ scope = scope })
   validate_picker_name('LSP (' .. scope .. ')')
-  eq(child.lua_get('_G.lsp_buf_calls'), { scope })
-  if scope == 'workspace_symbol' then eq(child.lua_get('_G.workspace_symbol_query'), '') end
+  eq(child.lua_get('_G.lsp_requests'), { scope_to_request[scope] })
+  if scope == 'workspace_symbol' then eq(child.lua_get('_G.params.query'), '') end
   child.expect_screenshot()
 
   -- Should highlight some symbols
@@ -2604,10 +2622,15 @@ local validate_symbol_scope = function(scope, skip_preview)
     path = file_path_full,
     lnum = 1,
     col = 7,
+    end_lnum = 1,
+    end_col = 8,
     kind = 'Number',
     text = text_prefix .. '[' .. kind_name .. '] a',
     hl = ref_extmark_data[1].hl_group,
   }
+  if child.fn.has('nvim-0.11') == 0 then
+    ref_item.end_lnum, ref_item.end_col = nil, nil
+  end
   eq(get_picker_items()[1], ref_item)
 
   -- Should properly choose by moving to the position
@@ -2655,7 +2678,7 @@ T['pickers']['lsp()']['works for `references`'] = function()
   mock_slash_path_sep()
   pick_lsp({ scope = 'references' })
   validate_picker_name('LSP (references)')
-  eq(child.lua_get('_G.lsp_buf_calls'), { 'references' })
+  eq(child.lua_get('_G.lsp_requests'), { 'textDocument/references' })
   child.expect_screenshot()
 
   -- Should preview position
@@ -2669,8 +2692,18 @@ T['pickers']['lsp()']['works for `references`'] = function()
     path = file_path_full,
     lnum = 3,
     col = 16,
+    end_lnum = 3,
+    end_col = 17,
     text = file_path:gsub('\\', '/') .. '│3│16│   x = math.max(a, 2),',
+    user_data = {
+      uri = 'file://' .. (helpers.is_windows() and '/' or '') .. file_path_full:gsub('\\', '/'),
+      range = { start = { line = 2, character = 15 }, ['end'] = { line = 2, character = 16 } },
+    },
   }
+  if child.fn.has('nvim-0.11') == 0 then
+    ref_item.end_lnum, ref_item.end_col = nil, nil
+  end
+  if child.fn.has('nvim-0.10') == 0 then ref_item.user_data = nil end
   eq(get_picker_items()[2], ref_item)
 
   -- Should properly choose by moving to the position
@@ -2698,7 +2731,7 @@ T['pickers']['lsp()']['respects `local_opts.symbol_query`'] = function()
   setup_lsp()
 
   pick_lsp({ scope = 'workspace_symbol', symbol_query = 'aaa' })
-  eq(child.lua_get('_G.workspace_symbol_query'), 'aaa')
+  eq(child.lua_get('_G.params.query'), 'aaa')
 end
 
 T['pickers']['lsp()']['respects `opts`'] = function()

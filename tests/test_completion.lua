@@ -18,7 +18,7 @@ local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
 local type_keys = function(...) return child.type_keys(...) end
 local sleep = function(ms) helpers.sleep(ms, child, true) end
-local mock_lsp = function() child.cmd('luafile tests/dir-completion/mock-months-lsp.lua') end
+local mock_lsp = function() child.cmd('luafile tests/mock-lsp/months.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
@@ -495,7 +495,7 @@ T['Autocompletion'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see 'mock-months-lsp'
+      -- For details see 'mock-lsp/months.lua'
       mock_lsp()
     end,
   },
@@ -862,7 +862,7 @@ T['Manual completion'] = new_set({
       child.lua('MiniCompletion.config.delay.completion = 100000')
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see 'mock-months-lsp'
+      -- For details see 'mock-lsp/months.lua'
       mock_lsp()
 
       set_lines({ 'Jackpot', '' })
@@ -1205,7 +1205,7 @@ T['Information window'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see 'mock-months-lsp'
+      -- For details see 'mock-lsp/months.lua'
       mock_lsp()
     end,
   },
@@ -1387,39 +1387,7 @@ end
 
 T['Information window']['caches data with multiple servers'] = function()
   -- Start another LSP server
-  child.lua([[
-    local cmd = function(dispatchers)
-      -- Adaptation of `MiniSnippets.start_lsp_server()` implementation
-      local is_closing, request_id = false, 0
-      local capabilities = { capabilities = { completionProvider = { resolveProvider = true } } }
-
-      return {
-        request = function(method, params, callback)
-          if method == 'initialize' then callback(nil, capabilities) end
-          if method == 'shutdown' then callback(nil, nil) end
-
-          if method == 'textDocument/completion' then
-            local items = { { label = 'Jackfruit', insertText = 'Fruit Jack' } }
-            callback(nil, items)
-          end
-
-          if method == 'completionItem/resolve' then
-            _G.n_completionitem_resolve = (_G.n_completionitem_resolve or 0) + 1
-            params.documentation = { kind = 'markdown', value = 'Jackfruit is a fruit' }
-            callback(nil, params)
-          end
-
-          request_id = request_id + 1
-          return true, request_id
-        end,
-        notify = function(method, params) return false end,
-        is_closing = function() return is_closing end,
-        terminate = function() is_closing = true end,
-      }
-    end
-
-    vim.lsp.start({ name = 'fruits-lsp', cmd = cmd, root_dir = vim.fn.getcwd() })
-  ]])
+  child.cmd('luafile tests/mock-lsp/fruits.lua')
 
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
@@ -1472,28 +1440,19 @@ T['Information window']['handles caching for items with the same basic data'] = 
 end
 
 T['Information window']['works if server does not support `completionItem/resolve`'] = function()
-  child.lua([[
-    local get_client_by_id_orig = vim.lsp.get_client_by_id
-    vim.lsp.get_client_by_id = function(...)
-      local res = get_client_by_id_orig(...)
-      res.server_capabilities.completionProvider.resolveProvider = false
-    end
+  child.lsp.buf_detach_client(0, child.lua_get('_G.months_lsp_client_id'))
 
-    MiniCompletion.config.lsp_completion.process_items = function(items)
-      for _, item in ipairs(items) do
-        if item.label == 'January' then item.documentation = 'Month #01 not resolved' end
-      end
-      return items
-    end
-  ]])
+  -- Start another LSP server in a way that doesn't support resolve
+  child.lua('_G.mock_no_resolve = true')
+  child.cmd('luafile tests/mock-lsp/fruits.lua')
 
   local info_delay = 2 * small_time
   child.lua('MiniCompletion.config.delay.info = ' .. info_delay)
 
   -- Should use data provided at the time of 'textDocument/completion' request
-  type_keys('i', 'J', '<C-Space>', '<C-n>')
+  type_keys('i', '<C-Space>', '<C-n>')
   sleep(info_delay + small_time)
-  validate_single_floating_win({ lines = { 'Month #01 not resolved' } })
+  validate_single_floating_win({ lines = { 'Apple fruit' } })
 
   type_keys('<C-n>')
   sleep(info_delay + small_time)
@@ -1501,7 +1460,7 @@ T['Information window']['works if server does not support `completionItem/resolv
 
   -- Should still cache data as visited/resolved
   type_keys('<C-p>')
-  validate_single_floating_win({ lines = { 'Month #01 not resolved' } })
+  validate_single_floating_win({ lines = { 'Apple fruit' } })
   type_keys('<C-n>')
   validate_single_floating_win({ lines = { '-No-info-' } })
 
@@ -1716,7 +1675,7 @@ T['Signature help'] = new_set({
     pre_case = function()
       -- Create new buffer to set buffer-local `completefunc` or `omnifunc`
       new_buffer()
-      -- For details see 'mock-months-lsp'
+      -- For details see 'mock-lsp/months.lua'
       mock_lsp()
     end,
   },

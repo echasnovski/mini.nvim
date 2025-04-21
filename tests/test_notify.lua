@@ -1009,28 +1009,8 @@ T['LSP progress'] = new_set({
       mock_gettimeofday()
       child.lua('MiniNotify.config.window.config = { width = 45, height = 1 }')
 
-      -- Mock LSP
-      child.lua([[
-        -- Use source table for better mock (to be compatible with Neovim<=0.9)
-        _G.clients = {}
-
-        vim.lsp.get_client_by_id = function(id)
-          if _G.clients[id] ~= nil then return _G.clients[id] end
-
-          local res = {
-            name = 'mock-lsp',
-
-            -- Mock methods for testing relevancy of `LspProgress` event
-            progress = { pending = {}, push = function() end },
-
-            -- Mock methods to be compatible with Neovim<=0.9
-            messages = { progress = {} },
-          }
-          if id == 2 then res.name = nil end
-
-          _G.clients[id] = res
-          return res
-        end]])
+      -- Mock LSP just to have its client id
+      child.cmd('luafile tests/mock-lsp/fruits.lua')
     end,
   },
 })
@@ -1043,7 +1023,7 @@ local call_handler = function(result, ctx)
 end
 
 T['LSP progress']['works'] = function()
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
 
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing', message = '0/1', percentage = 0 } }
   call_handler(result, ctx)
@@ -1069,12 +1049,12 @@ T['LSP progress']['works'] = function()
   -- - Should use correct content based on latest LSP response
   eq(history[1].level, 'INFO')
   eq(history[1].hl_group, 'MiniNotifyLspProgress')
-  eq(history[1].data, { source = 'lsp_progress', client_name = 'mock-lsp', response = result, context = ctx })
+  eq(history[1].data, { source = 'lsp_progress', client_name = 'fruits-lsp', response = result, context = ctx })
 end
 
 T['LSP progress']['handles not present data'] = function()
-  -- Absent client name
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 2 }
+  -- NOTE: client's name is always present
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
 
   -- All data which is allowed to be absent (as per LSP spec) is absent
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing' } }
@@ -1095,7 +1075,7 @@ T['LSP progress']['handles sent error'] = function()
   child.lua([[vim.lsp.handlers['$/progress'](
     { code = 1, message = 'Error' },
     {},
-    {bufnr = vim.api.nvim_get_current_buf(), client_id = 1},
+    {bufnr = vim.api.nvim_get_current_buf(), client_id = _G.fruits_lsp_client_id},
     {}
   )]])
   eq(
@@ -1105,7 +1085,7 @@ T['LSP progress']['handles sent error'] = function()
 end
 
 T['LSP progress']['respects `lsp_progress.enable`'] = function()
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing', message = '0/1', percentage = 0 } }
 
   child.lua('MiniNotify.config.lsp_progress.enable = false')
@@ -1119,7 +1099,7 @@ end
 
 T['LSP progress']['respects `lsp_progress.level`'] = function()
   child.lua('MiniNotify.config.lsp_progress.level = "ERROR"')
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing', message = '0/1', percentage = 0 } }
 
   call_handler(result, ctx)
@@ -1127,7 +1107,7 @@ T['LSP progress']['respects `lsp_progress.level`'] = function()
 end
 
 T['LSP progress']['respects `lsp_progress.duration_last`'] = function()
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing', message = '0/1', percentage = 0 } }
   call_handler(result, ctx)
 
@@ -1151,7 +1131,7 @@ T['LSP progress']['reuses previous LSP handler'] = function()
   if child.fn.has('nvim-0.10') == 0 then return end
   child.cmd('au LspProgress * lua _G.n_been_here = (_G.n_been_here or 0) + 1')
 
-  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = 1 }
+  local ctx = { bufnr = vim.api.nvim_get_current_buf(), client_id = child.lua_get('_G.fruits_lsp_client_id') }
   local result = { token = 'test', value = { kind = 'begin', title = 'Testing' } }
   call_handler(result, ctx)
 
