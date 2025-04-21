@@ -686,14 +686,14 @@ H.lsp_progress_handler = function(err, result, ctx, config)
   if not (type(result) == 'table' and type(result.value) == 'table') then return end
   local value = result.value
 
-  -- Construct LSP progress id
-  local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-  if type(client_name) ~= 'string' then client_name = string.format('LSP[id=%s]', ctx.client_id) end
+  local client = vim.lsp.get_client_by_id(ctx.client_id)
+  if client == nil then return end
 
+  -- Construct LSP progress id
   local buf_id = ctx.bufnr or 'nil'
-  local lsp_progress_id = buf_id .. client_name .. (result.token or '')
+  local lsp_progress_id = buf_id .. client.name .. (result.token or '')
   local progress_info = H.lsp_progress[lsp_progress_id] or {}
-  local data = { source = 'lsp_progress', client_name = client_name, response = result, context = ctx }
+  local data = { source = 'lsp_progress', client_name = client.name, response = result, context = ctx }
 
   -- Store percentage to be used if no new one was sent
   progress_info.percentage = (value.kind == 'end' and 100 or value.percentage) or progress_info.percentage or 0
@@ -706,7 +706,7 @@ H.lsp_progress_handler = function(err, result, ctx, config)
   --stylua: ignore
   local msg = string.format(
     '%s: %s%s%s%s(%s%%)',
-    client_name, title, title == '' and '' or ' ', message, message == '' and '' or ' ', progress_info.percentage
+    client.name, title, title == '' and '' or ' ', message, message == '' and '' or ' ', progress_info.percentage
   )
 
   -- Check for valid history entry as `setup()` might have removed the id
