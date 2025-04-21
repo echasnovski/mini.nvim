@@ -510,13 +510,33 @@ T['start()']['uses properly named buffers'] = function()
 end
 
 T['start()']['tracks lost focus'] = function()
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { 'aa bb' })
+  child.lua_notify([[
+    local win_id = vim.api.nvim_get_current_win()
+    local change_focus = function()
+     vim.api.nvim_set_current_win(win_id)
+     return false
+    end
+    MiniPick.start({
+      source = { items = { 'a', 'b' } },
+      mappings = { change_focus = { char = 'e', func = change_focus } },
+    })
+  ]])
+  child.expect_screenshot()
+  type_keys('e')
+  -- By default it checks inside a timer with 1 second period
+  sleep(track_lost_focus_delay + small_time)
+  child.expect_screenshot()
+  -- - Should not keep key query process going
+  type_keys('w')
+  eq(get_cursor(), { 1, 3 })
+
+  -- Should also work in case of an error in action
   child.lua_notify([[MiniPick.start({
     source = { items = { 'a', 'b' } },
     mappings = { error = { char = 'e', func = function() error() end } },
   })]])
-  child.expect_screenshot()
   type_keys('e')
-  -- By default it checks inside a timer with 1 second period
   sleep(track_lost_focus_delay + small_time)
   child.expect_screenshot()
 end

@@ -2296,6 +2296,7 @@ H.picker_track_lost_focus = function(picker)
     local is_cur_win = vim.api.nvim_get_current_win() == picker.windows.main
     local is_proper_focus = is_cur_win and (H.cache.is_in_getcharstr or vim.fn.mode() ~= 'n')
     if is_proper_focus then return end
+    if H.cache.is_in_getcharstr then return vim.api.nvim_feedkeys('\3', 't', true) end
     H.picker_stop(picker, true)
   end)
   H.timers.focus:start(1000, 1000, track)
