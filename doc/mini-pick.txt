@@ -208,6 +208,10 @@ milliseconds of idle time.
 
 ## Implementation details ~
 
+- Processing key typing is done via a dedicated key query process for more
+  control over their side effects. As a result, regular mappings don't work
+  here and picker's window needs to be current as long as it is shown.
+  Changing window focus leads to automatic picker stop (after small delay).
 - Any picker is non-blocking but waits to return the chosen item. Example:
   `file = MiniPick.builtin.files()` allows other actions to be executed when
   picker is shown while still assigning `file` with value of the chosen item.
