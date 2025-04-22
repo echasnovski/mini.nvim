@@ -25,7 +25,7 @@ If you want to help this project grow but don't know where to start, check out [
 
 ## Demo
 
-https://github.com/user-attachments/assets/2161dbbe-c41b-4512-b220-a7ec3f7b0ab6
+https://github.com/user-attachments/assets/dd3fe2e2-9795-47c1-9479-0b3fa14c6e75
 
 ## Features
 
