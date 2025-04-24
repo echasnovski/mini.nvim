@@ -16,7 +16,7 @@
 15|Has ${0} tabstop                         Snippet S  
 16|Has tabstop$0                            Snippet S  
 17|~                                                   
-18|[No Name]                         0,1            All
+18|[No Name] 0,1                                       
 19|-- INSERT --                                        
 
 --|---------|---------|---------|---------|---------|--

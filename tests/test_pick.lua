@@ -3141,7 +3141,7 @@ T['builtin.help()']['works'] = function()
   eq(child.lua_get('_G.help_item'), item)
 
   -- Should open help page as choosing
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 13 } })
 end
 
 T['builtin.help()']['has proper preview'] = function()
@@ -3219,7 +3219,7 @@ T['builtin.help()']['works when help window is already opened'] = function()
 
   -- Should open help in already opened help window (just like `:help`)
   type_keys('<CR>')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_lines = { 13 } })
   eq(#child.api.nvim_list_wins(), 2)
 end
 

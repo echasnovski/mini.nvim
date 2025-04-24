@@ -21,7 +21,7 @@
 20|              <C-c> closes this buffer                                          
 21|~                                                                               
 22|~                                                                               
-23|ministarter://2/welcome                                       12,15          All
+23|ministarter://2/welcome 12,15                                                   
 24|(mini.starter) Query:                                                           
 
 --|---------|---------|---------|---------|---------|---------|---------|---------|

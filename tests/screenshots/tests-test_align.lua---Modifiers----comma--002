@@ -5,7 +5,7 @@
 04|~                             
 05|~                             
 06|~                             
-07|[No Name] [+]  2,1         All
+07|[No Name] 2,1                 
 08|(mini.align) Split: "," | Just
 09|ify: (trim, pair) "left" | Mer
 10|ge: " " | Enter modifier      

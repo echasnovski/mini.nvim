@@ -11,7 +11,7 @@
 10|!!{filter}              Filter [count] l
 11|ines through the external program       
 12|                        {filter}.       
-13|change.txt [Help][RO]                   
+13|change.txt 551,8-57                     
 14|                                        
 15|                                        
 

@@ -25,7 +25,7 @@
 24|~                                                           
 25|~                                                           
 26|~                                                           
-27|minicolors://2/interactive                22,24          All
+27|minicolors://2/interactive 22,24                            
 28|Write to 'colors/' of your config under this name: test_inte
 29|ractive                                                     
 30|                                                            

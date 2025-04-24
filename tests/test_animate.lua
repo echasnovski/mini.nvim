@@ -2186,7 +2186,7 @@ T['Resize']['does not flicker due to high cursor column'] = function()
   sleep(small_time)
   for _ = 1, 5 do
     sleep(step_time)
-    child.expect_screenshot()
+    child.expect_screenshot({ ignore_lines = { 4 } })
   end
 end
 
