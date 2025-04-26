@@ -1518,11 +1518,11 @@ H.cs_write = function(self, opts)
     vim.list_extend(lines, { '', '-- No highlight groups defined' })
   end
 
-  local lines_groups = vim.tbl_map(
-    function(hl) return string.format('hi(0, "%s", %s)', hl.name, vim.inspect(hl.spec, { newline = ' ', indent = '' })) end,
-    H.hl_groups_to_array(cs.groups)
-  )
-  vim.list_extend(lines, lines_groups)
+  local make_hi_line = function(hl)
+    local spec = setmetatable(hl.spec, nil)
+    return string.format('hi(0, "%s", %s)', hl.name, vim.inspect(spec, { newline = ' ', indent = '' }))
+  end
+  vim.list_extend(lines, vim.tbl_map(make_hi_line, H.hl_groups_to_array(cs.groups)))
 
   -- - Terminal colors
   if vim.tbl_count(cs.terminal) > 0 then
@@ -1662,7 +1662,8 @@ H.get_hl_by_name = function(name)
   -- default it links to `Identifier`).
   res[true] = nil
 
-  return res
+  -- Return plain `{}` instead of `vim.empty_dict()`
+  return setmetatable(res, nil)
 end
 
 H.get_current_terminal = function()

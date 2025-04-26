@@ -1401,6 +1401,25 @@ T['as_colorscheme() methods']['write()']['handles empty fields'] = function()
   validate_match('%-%- No terminal colors defined')
 end
 
+T['as_colorscheme() methods']['write()']['handles metatables'] = function()
+  child.lua([[
+    local mt = { __tostring = function(x) return vim.inspect(x) end }
+    _G.cs = MiniColors.as_colorscheme({
+      name = 'my_cs',
+      groups = {
+        Normal = setmetatable({ fg = '#ffffff', bg = '#000000' }, mt),
+        -- This should be dropped during compression
+        SpecialChar = vim.empty_dict(),
+      },
+      terminal = setmetatable({ [1] = '#ff0000' }, mt),
+    })]])
+
+  child.lua('_G.cs:write()')
+  local _, validate_no_match = make_validate_file_lines(colors_path .. '/my_cs.lua')
+  validate_no_match('metatable')
+  validate_no_match('vim%.empty_dict%(%)')
+end
+
 T['as_colorscheme() methods']['write()']['respects `opts.compress`'] = function()
   child.lua([[_G.cs = MiniColors.as_colorscheme({
     name = 'my_cs',
@@ -1504,6 +1523,28 @@ T['get_colorscheme()']['works when color is defined by name'] = function()
   child.lua('_G.cs = MiniColors.get_colorscheme()')
   eq(child.lua_get('_G.cs.groups.Normal'), { fg = '#ff0000', bg = '#000000' })
   eq(child.lua_get('_G.cs.terminal[1]'), '#ff0000')
+end
+
+T['get_colorscheme()']['works with cleared groups'] = function()
+  child.cmd('hi clear MsgArea')
+  child.cmd('hi clear AAA')
+
+  local validate_hl = function(name, ref)
+    eq(child.lua_get('_G.cs.groups.' .. name), ref)
+    -- Should not include metatable (from being equal to `vim.empty_dict()`),
+    -- as this results in incorrect lines after `write()`
+    eq(child.lua_get('getmetatable(_G.cs.groups.' .. name .. ')'), vim.NIL)
+  end
+
+  -- Cleared groups should still be present
+  child.lua('_G.cs = MiniColors.get_colorscheme()')
+  validate_hl('MsgArea', {})
+  validate_hl('AAA', {})
+
+  -- Should work after `add_transparency()` (still no metatable)
+  child.lua('_G.cs = _G.cs:add_transparency()')
+  validate_hl('MsgArea', { blend = 0 })
+  validate_hl('AAA', {})
 end
 
 T['get_colorscheme()']['validates arguments'] = function()
