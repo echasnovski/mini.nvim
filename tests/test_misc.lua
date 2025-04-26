@@ -474,6 +474,11 @@ T['setup_termbg_sync()'] = new_set({
   },
 })
 
+local validate_termbg_augroup = function(ref)
+  local has_augroup = pcall(child.api.nvim_get_autocmds, { group = 'MiniMiscTermbgSync', event = 'TermResponse' })
+  eq(has_augroup, ref)
+end
+
 T['setup_termbg_sync()']['works'] = new_set(
   -- Neovim=0.10 uses string sequence as response, while Neovim>=0.11 sets it
   -- in `sequence` table field
@@ -555,18 +560,15 @@ T['setup_termbg_sync()']['handles no response from terminal emulator'] = functio
 
   child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
   child.lua('MiniMisc.setup_termbg_sync()')
-  local validate_n_autocmds = function(ref_n)
-    eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync', event = 'TermResponse' }), ref_n)
-  end
-  validate_n_autocmds(1)
+  validate_termbg_augroup(true)
 
   -- If there is no response from terminal emulator for 1s, delete autocmd
-  vim.loop.sleep(no_term_response_delay + small_time)
-  validate_n_autocmds(0)
+  child.loop.sleep(no_term_response_delay + small_time)
+  validate_termbg_augroup(false)
 
   -- Should show informative notification
   local ref_notify = {
-    '(mini.misc) `setup_termbg_sync()` did not get response from terminal emulator',
+    '(mini.misc) `setup_termbg_sync()` did not get proper response from terminal emulator',
     child.lua_get('vim.log.levels.WARN'),
   }
   eq(child.lua_get('_G.notify_log'), { ref_notify })
@@ -577,17 +579,53 @@ T['setup_termbg_sync()']['handles bad response from terminal emulator'] = functi
 
   child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
   child.lua('MiniMisc.setup_termbg_sync()')
-  child.api.nvim_exec_autocmds('TermResponse', { data = 'something-bad' })
-  -- Should not create any delete 'TermResponse' autocommand and not create any
-  -- new ones
-  eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync' }), 0)
 
-  -- Should show informative notification
+  -- Should not delete augroup/autocommand or show notification yet, because
+  -- proper response might comer later
+  child.api.nvim_exec_autocmds('TermResponse', { data = 'something-bad' })
+  validate_termbg_augroup(true)
+  eq(child.lua_get('_G.notify_log'), {})
+
+  child.api.nvim_exec_autocmds('TermResponse', { data = 'other-bad' })
+  validate_termbg_augroup(true)
+  eq(child.lua_get('_G.notify_log'), {})
+
+  -- After timeout delay it should cleanup and show all bad responses
+  child.loop.sleep(no_term_response_delay + small_time)
+  validate_termbg_augroup(false)
   local ref_notify = {
-    '(mini.misc) `setup_termbg_sync()` could not parse terminal emulator response "something-bad"',
+    '(mini.misc) `setup_termbg_sync()` did not get proper response from terminal emulator,'
+      .. ' only these: { "something-bad", "other-bad" }',
     child.lua_get('vim.log.levels.WARN'),
   }
   eq(child.lua_get('_G.notify_log'), { ref_notify })
+end
+
+T['setup_termbg_sync()']['handles parallel unrelated `TermResponse` events'] = function()
+  skip_if_no_010()
+
+  child.lua('_G.notify_log = {}; vim.notify = function(...) table.insert(_G.notify_log, { ... }) end')
+  child.lua('MiniMisc.setup_termbg_sync()')
+
+  local validate_n_termresponse = function(ref_n)
+    eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync', event = 'TermResponse' }), ref_n)
+  end
+
+  -- After receiving bad response should still wait for possible proper one
+  child.api.nvim_exec_autocmds('TermResponse', { data = 'something-bad' })
+  validate_termbg_augroup(true)
+  validate_n_termresponse(1)
+  eq(child.lua_get('_G.notify_log'), {})
+
+  -- After receiving proper response should immediately stop waiting for it and
+  -- set up proper `termbg` autocommands
+  local seq = '\27]11;rgb:1111/2626/2d2d'
+  local data = child.fn.has('nvim-0.11') == 1 and { sequence = seq } or seq
+  child.api.nvim_exec_autocmds('TermResponse', { data = data })
+  validate_termbg_augroup(true)
+  validate_n_termresponse(0)
+  eq(#child.api.nvim_get_autocmds({ group = 'MiniMiscTermbgSync' }) > 0, true)
+  eq(child.lua_get('_G.notify_log'), {})
 end
 
 T['setup_termbg_sync()']['handles different color formats'] = function()

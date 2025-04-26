@@ -319,14 +319,18 @@ MiniMisc.setup_termbg_sync = function()
   if not has_stdout_tty then return end
 
   local augroup = vim.api.nvim_create_augroup('MiniMiscTermbgSync', { clear = true })
+  local track_au_id, bad_responses, had_proper_response = nil, {}, false
   local f = function(args)
+    -- Process proper response only once
+    if had_proper_response then return end
+
     -- Neovim=0.10 uses string sequence as response, while Neovim>=0.11 sets it
     -- in `sequence` table field
     local seq = type(args.data) == 'table' and args.data.sequence or args.data
     local ok, bg_init = pcall(H.parse_osc11, seq)
-    if not (ok and type(bg_init) == 'string') then
-      return H.notify('`setup_termbg_sync()` could not parse terminal emulator response ' .. vim.inspect(seq), 'WARN')
-    end
+    if not (ok and type(bg_init) == 'string') then return table.insert(bad_responses, seq) end
+    had_proper_response = true
+    pcall(vim.api.nvim_del_autocmd, track_au_id)
 
     -- Set up sync
     local sync = function()
@@ -347,12 +351,17 @@ MiniMisc.setup_termbg_sync = function()
     sync()
   end
 
-  -- Ask about current background color and process the response
-  local id = vim.api.nvim_create_autocmd('TermResponse', { group = augroup, callback = f, once = true, nested = true })
+  -- Ask about current background color and process the proper response.
+  -- NOTE: do not use `once = true` as Neovim itself triggers `TermResponse`
+  -- events during startup, so this should wait until the proper one.
+  track_au_id = vim.api.nvim_create_autocmd('TermResponse', { group = augroup, callback = f, nested = true })
   io.stdout:write('\027]11;?\007')
   vim.defer_fn(function()
-    local ok = pcall(vim.api.nvim_del_autocmd, id)
-    if ok then H.notify('`setup_termbg_sync()` did not get response from terminal emulator', 'WARN') end
+    if had_proper_response then return end
+    pcall(vim.api.nvim_del_augroup_by_id, augroup)
+    local bad_suffix = #bad_responses == 0 and '' or (', only these: ' .. vim.inspect(bad_responses))
+    local msg = '`setup_termbg_sync()` did not get proper response from terminal emulator' .. bad_suffix
+    H.notify(msg, 'WARN')
   end, 1000)
 end
 
