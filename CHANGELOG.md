@@ -174,6 +174,12 @@ There are following change types:
 
 - Add `data` field to notification specification and as a new argument to `MiniNotify.add()`. It can be used to store any data relevant to the notification. For example, notifications from `make_notify()` output set `source` field to `'vim.notify'`, while notifications from LSP progress set `source` to `'lsp_progress'`.
 
+## mini.operators
+
+### Expand
+
+- Update `setup()` to remap built-in `gx` Normal/Visual mode mappings (for opening an URI under cursor) to `gX` (if that is not already taken).
+
 ## mini.pairs
 
 ### Expand

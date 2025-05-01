@@ -109,6 +109,7 @@
 --- All operators are automatically mapped during |MiniOperators.setup()| execution.
 --- Mappings keys are deduced from `prefix` field of corresponding `config` entry.
 --- All built-in conflicting mappings are removed (like |gra|, |grn| in Neovim>=0.11).
+--- Both |gx| and |v_gx| are remapped to `gX` (if that is not already taken).
 ---
 --- For each operator the following mappings are created:
 ---
@@ -712,6 +713,14 @@ H.apply_config = function(config)
     vim.keymap.del(mode, lhs)
   end
 
+  local remap_builtin_gx = function(mode)
+    if vim.fn.maparg('gX', mode) ~= '' then return end
+    local keymap = vim.fn.maparg('gx', mode, false, true)
+    local rhs = keymap.callback or keymap.rhs
+    if rhs == nil or (keymap.desc or ''):find('URI under cursor') == nil then return end
+    vim.keymap.set(mode, 'gX', rhs, { desc = keymap.desc })
+  end
+
   -- Make mappings
   local map_all = function(operator_name)
     -- Map only valid LHS
@@ -725,6 +734,11 @@ H.apply_config = function(config)
       remove_lsp_mapping('n', 'gri')
       remove_lsp_mapping('n', 'grr')
       remove_lsp_mapping('n', 'grn')
+    end
+
+    if prefix == 'gx' and vim.fn.has('nvim-0.10') == 1 then
+      remap_builtin_gx('n')
+      remap_builtin_gx('x')
     end
 
     local lhs_tbl = {

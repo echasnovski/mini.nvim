@@ -135,6 +135,31 @@ T['setup()']['removes built-in LSP mappings'] = function()
   eq(child.fn.maparg('grn'), '')
 end
 
+T['setup()']['remaps built-in `gx` mappings'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Neovim<0.10 does not have built-in `gx` mappings') end
+
+  child.lua('vim.ui.open = function() _G.n = (_G.n or 0) + 1 end')
+  local validate = function(keys, ref_n)
+    type_keys(keys)
+    eq(child.lua_get('_G.n'), ref_n)
+  end
+
+  validate('gX', 1)
+  validate('vgX', 2)
+
+  -- Should remap only built-in `gx`
+  child.lua('vim.keymap.set({ "n", "x" }, "gx", function() _G.n = _G.n + 5 end)')
+  child.lua('MiniOperators.setup()')
+  validate('gX', 3)
+  validate('vgX', 4)
+
+  -- Should not override already present mapping
+  child.lua('vim.keymap.set({ "n", "x" }, "gX", function() _G.n = _G.n + 10 end)')
+  child.lua('MiniOperators.setup()')
+  validate('gX', 14)
+  validate('vgX', 24)
+end
+
 T['evaluate()'] = new_set()
 
 T['evaluate()']['is present'] = function() eq(child.lua_get('type(MiniOperators.evaluate)'), 'function') end
