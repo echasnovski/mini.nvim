@@ -3026,7 +3026,9 @@ T[':Git']['completion']['works with subcommand targets'] = function()
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git push origin v')
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
+  child.set_size(15, 30)
   validate_command_completion(':Git push origin main ')
+  child.set_size(15, 20)
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git pull ') -- CLI
@@ -3037,7 +3039,9 @@ T[':Git']['completion']['works with subcommand targets'] = function()
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
   validate_command_completion(':Git pull origin v')
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
+  child.set_size(15, 30)
   validate_command_completion(':Git pull origin main ')
+  child.set_size(15, 20)
   validate_latest_spawn_args({ '--no-pager', 'rev-parse', '--symbolic', '--branches', '--tags' })
 
   validate_command_completion(':Git checkout ') -- CLI
