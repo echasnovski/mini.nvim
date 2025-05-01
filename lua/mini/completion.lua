@@ -1240,9 +1240,12 @@ H.lsp_completion_response_items_to_complete_items = function(items)
       and (word:find('[^\\]%${?%w') ~= nil or word:find('^%${?%w') ~= nil)
 
     local details = item.labelDetails or {}
-    local snippet_clue = needs_snippet_insert and 'S' or ''
-    local label_detail = (details.detail or '') .. (details.description or '')
-    label_detail = snippet_clue .. ((snippet_clue ~= '' and label_detail ~= '') and ' ' or '') .. label_detail
+    -- NOTE: Using `table.concat({}, ' ')` would be cleaner but less performant
+    local snip, detail, desc = needs_snippet_insert and 'S' or '', details.detail or '', details.description or ''
+    local pad = (snip ~= '' and detail ~= '') and ' ' or ''
+    local label_detail = snip .. pad .. detail
+    pad = (label_detail ~= '' and desc ~= '') and ' ' or ''
+    label_detail = label_detail .. pad .. desc
 
     local lsp_data = { item = item, item_id = i }
     lsp_data.needs_snippet_insert = needs_snippet_insert
