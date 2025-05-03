@@ -52,8 +52,9 @@ Features:
 
 What it doesn't do:
 - Many configurable sources.
-- Automatic mapping of `<CR>`, `<Tab>`, etc., as those tend to have highly
-  variable user expectations. See 'Helpful mappings' for suggestions.
+- Automatic mapping of `<CR>`, `<Tab>`, etc. Those tend to have highly
+  variable user expectations. See 'Helpful mappings' for suggestions or
+  use |MiniKeymap.map_multistep()| with `"pmenu_*"` built-in steps.
 
 # Dependencies ~
 
@@ -163,6 +164,9 @@ Notes:
 
 # Helpful mappings ~
 
+If there is |mini.keymap| available, prefer using |MiniKeymap.map_multistep()|
+with `"pmenu_*"` built-in steps. See |MiniKeymap-examples| for examples.
+
 To use `<Tab>` and `<S-Tab>` for navigation through completion list, make
 these mappings: >lua
 
@@ -175,29 +179,16 @@ these mappings: >lua
 To get more consistent behavior of `<CR>`, you can use this template in
 your 'init.lua' to make customized mapping: >lua
 
-  local keycode = vim.keycode or function(x)
-    return vim.api.nvim_replace_termcodes(x, true, true, true)
-  end
-  local keys = {
-    ['cr']        = keycode('<CR>'),
-    ['ctrl-y']    = keycode('<C-y>'),
-    ['ctrl-y_cr'] = keycode('<C-y><CR>'),
-  }
-
   _G.cr_action = function()
-    if vim.fn.pumvisible() ~= 0 then
-      -- If popup is visible, confirm selected item or add new line otherwise
-      local item_selected = vim.fn.complete_info()['selected'] ~= -1
-      return item_selected and keys['ctrl-y'] or keys['ctrl-y_cr']
-    else
-      -- If popup is not visible, use plain `<CR>`. You might want to customize
-      -- according to other plugins. For example, to use 'mini.pairs', replace
-      -- next line with `return require('mini.pairs').cr()`
-      return keys['cr']
-    end
+    -- If there is selected item in popup, accept it with <C-y>
+    if vim.fn.complete_info()['selected'] ~= -1 then return '\25' end
+    -- Fall back to plain `<CR>`. You might want to customize according
+    -- to other plugins. For example if 'mini.pairs' is set up, replace
+    -- next line with `return MiniPairs.cr()`
+    return '\r'
   end
 
-  vim.keymap.set('i', '<CR>', 'v:lua._G.cr_action()', { expr = true })
+  vim.keymap.set('i', '<CR>', 'v:lua.cr_action()', { expr = true })
 <
 # Highlight groups ~
 
