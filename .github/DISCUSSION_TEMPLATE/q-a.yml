@@ -39,6 +39,7 @@ body:
         - mini.indentscope
         - mini.jump
         - mini.jump2d
+        - mini.keymap
         - mini.map
         - mini.misc
         - mini.move

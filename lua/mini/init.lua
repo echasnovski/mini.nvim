@@ -38,6 +38,7 @@
 ---   Visualize and work with indent scope .................... |mini.indentscope|
 ---   Jump to next/previous single character ......................... |mini.jump|
 ---   Jump within visible lines .................................... |mini.jump2d|
+---   Special key mappings ......................................... |mini.keymap|
 ---   Window with buffer text overview ................................ |mini.map|
 ---   Miscellaneous functions ........................................ |mini.misc|
 ---   Move any selection in any direction ............................ |mini.move|
@@ -247,6 +248,10 @@
 --- - |MiniJump2d| - minimal and fast Lua plugin for jumping (moving cursor)
 ---   within visible lines via iterative label filtering. Supports custom jump
 ---   targets (spots), labels, hooks, allowed windows and lines, and more.
+---
+--- - |MiniKeymap| - utilities to make special key mappings: multi-step actions
+---   (with built-in steps for "smart" <Tab>, <S-Tab>, <CR>, <BS>),
+---   combos (more general version of "better escape" like behavior).
 ---
 --- - |MiniMap| - window with buffer text overview, scrollbar, and highlights.
 ---   Allows configurable symbols for line encode and scrollbar, extensible

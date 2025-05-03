@@ -164,6 +164,13 @@ There are following change types:
     - 'OXY2DEV/helpview.nvim'
     - 'OXY2DEV/markview.nvim'
 
+
+## mini.keymap
+
+### Expand
+
+- Introduction of a new module.
+
 ## mini.notify
 
 ### Expand

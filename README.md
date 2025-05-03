@@ -84,6 +84,7 @@ These modules improve your text editing experience. Start with 'mini.ai', 'mini.
 | mini.align      | Align text interactively              | [README](readmes/mini-align.md)      | [Help file](doc/mini-align.txt)      |
 | mini.comment    | Comment lines                         | [README](readmes/mini-comment.md)    | [Help file](doc/mini-comment.txt)    |
 | mini.completion | Completion and signature help         | [README](readmes/mini-completion.md) | [Help file](doc/mini-completion.txt) |
+| mini.keymap     | Special key mappings                  | [README](readmes/mini-keymap.md)     | [Help file](doc/mini-keymap.txt)     |
 | mini.move       | Move any selection in any direction   | [README](readmes/mini-move.md)       | [Help file](doc/mini-move.txt)       |
 | mini.operators  | Text edit operators                   | [README](readmes/mini-operators.md)  | [Help file](doc/mini-operators.txt)  |
 | mini.pairs      | Autopairs                             | [README](readmes/mini-pairs.md)      | [Help file](doc/mini-pairs.txt)      |
@@ -195,7 +196,6 @@ This is the list of modules I currently intend to implement eventually (as my fr
 - 'mini.cmdline' - improved Command line. Possibly with custom `vim.ui.input` implementation.
 - 'mini.cycle' - cycle through alternatives with pre-defined rules. Something like [monaqa/dial.nvim](https://github.com/monaqa/dial.nvim) and [AndrewRadev/switch.vim](https://github.com/AndrewRadev/switch.vim)
 - 'mini.folds' - more capable and user-friendly folds.
-- 'mini.keymap' - utilities to make non-trivial mappings: like [max397574/better-escape.nvim](https://github.com/max397574/better-escape.nvim), dot-repeatable mappings, "super" mappings (super-tab, super-shift-tab, super-enter).
 - 'mini.repl' - extendable wrapper for REPLs with built-in support for R, Python, Julia, and maybe (just maybe) some AI tools.
 - 'mini.sendtext' - send text between buffers. In particular between regular and built-in terminal buffers.
 - 'mini.statuscolumn' - customizable 'statuscolumn'.

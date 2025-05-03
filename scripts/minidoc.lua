@@ -28,6 +28,7 @@ local modules = {
   'indentscope',
   'jump',
   'jump2d',
+  'keymap',
   'map',
   'misc',
   'move',
