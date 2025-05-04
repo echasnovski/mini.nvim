@@ -1396,7 +1396,7 @@ T['map_combo()']['works inside macros'] = function()
 end
 
 T['map_combo()']['respects `opts.delay`'] = function()
-  map_combo('i', 'jk', 'xy', { delay = 1.5 * default_combo_delay + small_time })
+  map_combo('i', 'jk', 'xy', { delay = 1.5 * default_combo_delay + 2 * small_time })
   type_keys('i', 'j')
   sleep(1.5 * default_combo_delay)
   type_keys('k')
