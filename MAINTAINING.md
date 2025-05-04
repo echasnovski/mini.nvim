@@ -166,12 +166,14 @@ Begin the process of stopping official support for outdated Neovim version short
 - Commit changes with message 'feat(xxx): add NEW MODULE'. NOTE: it is cleaner to synchronize standalone repositories prior to this commit.
 - If there are new highlight groups, follow up with adding explicit support in color scheme modules.
 - Make standalone plugin:
-    - Create new empty GitHub repository. Disable Issues and limit PRs.
-    - Synchronize standalone repositories. It should have created new git repository with single initial commit.
+    - Create new empty GitHub repository. Disable Issues, limit PRs.
+    - Clone the repo manually. Copy 'LICENSE' file to it, stage, and commit ("docs: add license"). Push.
+    - Add the following GitHub tags: "lua", "neovim", "neovim-plugin", "mini-nvim".
+- Push `main` and sync dual distribution.
+- Check that standalone repo doesn't have some known issues:
     - Make sure that all tracked files are synchronized. For list of tracked files see 'scripts/dual_sync.sh'. Initially they are 'doc/mini-xxx.txt', 'lua/mini/xxx.lua', 'LICENSE', and 'readmes/mini-xxx.md' (copied to be 'README.md' in standalone repository).
     - Make sure that 'README.md' in standalone repository has appropriate relative links (see patch script).
-    - **Amend** initial commit and push.
-- Push `main` and sync dual distribution.
+    - If there are issues, manually adjust in the repo, amend to latest commit, and force push.
 - Create a beta-testing issue and pin it.
 
 ## Making stable release
