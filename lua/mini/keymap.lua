@@ -178,6 +178,16 @@
 ---   local action = function() vim.cmd('nohlsearch') end
 ---   require('mini.keymap').map_combo({ 'n','i','x','c' }, '<Esc><Esc>', action)
 --- <
+--- ## Buffer navigation ~
+---
+--- Replace some movements with easier to type alternatives: >lua
+---
+---   local map_combo = require('mini.keymap').map_combo
+---   map_combo({ 'n', 'x' }, 'll', 'g$')
+---   map_combo({ 'n', 'x' }, 'hh', 'g^')
+---   map_combo({ 'n', 'x' }, 'jj', '}')
+---   map_combo({ 'n', 'x' }, 'kk', '{')
+--- <
 ---@tag MiniKeymap-examples
 
 ---@diagnostic disable:undefined-field
