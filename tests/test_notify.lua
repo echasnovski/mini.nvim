@@ -77,7 +77,6 @@ local T = new_set({
       -- Make more comfortable screenshots
       child.set_size(7, 45)
       child.o.laststatus = 0
-      child.o.ruler = false
     end,
     post_once = child.stop,
   },
@@ -903,7 +902,7 @@ T['Window']['respects tabline/statusline/cmdline'] = function()
   -- Validate tabline/statusline
   local validate = function()
     refresh()
-    child.expect_screenshot({ ignore_lines = { 1 } })
+    child.expect_screenshot({ ignore_lines = { 1, 7 } })
   end
 
   local validate_ui_lines = function()

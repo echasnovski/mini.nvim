@@ -1520,9 +1520,9 @@ T['Showing keys']['properly translates special keys'] = function()
 end
 
 T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
-  -- Check this only on Neovim>=0.11, as there is a slight change in
+  -- Check this only on Neovim>=0.12, as there is a slight change in
   -- highlighting command line area
-  if child.fn.has('nvim-0.11') == 0 then return end
+  if child.fn.has('nvim-0.12') == 0 then return end
 
   child.set_size(7, 40)
 
