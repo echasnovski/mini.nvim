@@ -1256,6 +1256,19 @@ T['map_combo()']['not recursive during RHS keys execution'] = function()
   eq(get_lines(), { 'jkjkjkjk' })
 end
 
+T['map_combo()']['ignores RHS keys in tracking'] = function()
+  map_combo('n', 'll', 'ww', { delay = test_combo_delay })
+  map_combo('n', 'ww', 'dd', { delay = test_combo_delay })
+  map_combo('n', 'lll', '$', { delay = test_combo_delay })
+
+  set_lines({ 'aaaaa bbbbb ccccc ddddd eeeee' })
+  set_cursor(1, 0)
+  type_keys(small_time, 'l', 'l')
+  eq(get_cursor(), { 1, 12 })
+  type_keys('l')
+  eq(get_cursor(), { 1, 28 })
+end
+
 T['map_combo()']['detecting combo does not depend on preceding keys'] = function()
   map_combo('i', 'jk', 'xy', { delay = test_combo_delay })
   type_keys('i')

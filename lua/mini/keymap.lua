@@ -513,16 +513,13 @@ MiniKeymap.map_combo = function(mode, lhs, action, opts)
   local i, last_time, n_seq = 0, hrtime(), #seq
   local delay_ns = 1000000 * delay
 
-  local ignore = false
-  local unignore = vim.schedule_wrap(function() ignore = false end)
-
   -- Explicitly ignore keys from action. Otherwise they will be processed
   -- because `nvim_input` mocks "as if typed" approach.
   local input_keys = vim.schedule_wrap(function(keys)
-    ignore = true
+    H.combo_ignore = true
     vim.api.nvim_input(keys)
     -- NOTE: Can't unignore right away because `nvim_input` is executed later
-    unignore()
+    H.combo_unignore_later()
   end)
 
   if type(action) == 'string' then
@@ -539,7 +536,7 @@ MiniKeymap.map_combo = function(mode, lhs, action, opts)
   local watcher = function(key, typed)
     -- Use only keys "as if typed" and in proper mode
     key = get_key(key, typed)
-    if key == '' or (i == 0 and not mode_tbl[H.cur_mode]) or ignore then return end
+    if key == '' or (i == 0 and not mode_tbl[H.cur_mode]) or H.combo_ignore then return end
 
     -- Advance tracking and reset if not in sequence
     i = i + 1
@@ -582,6 +579,10 @@ H.ns_id_combo = {}
 
 -- Current mode used in "combo" mappings, for better speed
 H.cur_mode = 'n'
+
+-- Whether to ignore current keys as part of the combo. Needs to be global for
+-- combo's RHS keys not interfering with tracking of other combos.
+H.combo_ignore = false
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -631,6 +632,8 @@ H.combo_make_mode_tbl = function(mode)
   end
   return res
 end
+
+H.combo_unignore_later = vim.schedule_wrap(function() H.combo_ignore = false end)
 
 H.combo_get_key = function(_, typed) return typed end
 if vim.fn.has('nvim-0.11') == 0 then H.combo_get_key = function(key) return key end end
