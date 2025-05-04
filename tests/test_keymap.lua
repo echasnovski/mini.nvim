@@ -91,6 +91,17 @@ local validate_edit1d = function(line_before, col_before, keys, line_after, col_
   validate_edit({ line_before }, { 1, col_before }, keys, { line_after }, { 1, col_after })
 end
 
+local validate_jumps = function(key, ref_pos_seq)
+  -- Should keep initial mode (relevant for Insert mode)
+  local start_mode = child.fn.mode()
+  for _, ref_pos in ipairs(ref_pos_seq) do
+    type_keys(key)
+    eq(get_cursor(), ref_pos)
+    eq(child.fn.mode(), start_mode)
+  end
+  child.ensure_normal_mode()
+end
+
 local is_pumvisible = function() return child.fn.pumvisible() == 1 end
 
 -- Time constants
@@ -439,64 +450,106 @@ T['map_multistep()']['built-in steps']['minipairs_bs'] = function()
 end
 
 T['map_multistep()']['built-in steps']['jump_after_tsnode'] = function()
-  map_multistep('i', '<Tab>', { 'jump_after_tsnode' })
+  map_multistep({ 'i', 'n', 'x' }, '<Tab>', { 'jump_after_tsnode' })
 
   -- Should work if there is no tree-sitter parser
   type_keys('i', '<Tab>')
   eq(get_lines(), { '\t' })
+  child.ensure_normal_mode()
 
   if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
 
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
+
+  -- Insert mode
+  type_keys('i')
   set_cursor(3, 4)
+  validate_jumps('<Tab>', {
+    -- Should jump just after the end of current node
+    { 3, 6 },
+    -- Should be possible to "chain" jumps and place cursor after end of line
+    { 5, 3 },
+    { 6, 3 },
+    { 8, 16 },
+    -- Should be possible to call at end of buffer without movement
+    { 8, 16 },
+  })
 
-  local validate_jump = function(...)
-    type_keys('<Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
+  -- Normal mode
+  set_cursor(3, 4)
+  validate_jumps('<Tab>', {
+    { 3, 6 },
+    -- Should be possible to chain, although not possible to place after EOL
+    { 5, 2 },
+    { 6, 2 },
+    { 8, 15 },
+    -- Should be possible to call at end of buffer without movement
+    { 8, 15 },
+  })
 
-  -- Should jump just after the end of current node while keeping Insert mode
-  validate_jump(3, 6)
+  -- - Should place after line end if possible
+  child.o.virtualedit = 'onemore'
+  set_cursor(3, 4)
+  validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
+  child.o.virtualedit = ''
 
-  -- Should be possible to "chain" jumps and place cursor on end-of-line cell
-  validate_jump(5, 3)
-  validate_jump(6, 3)
-  validate_jump(8, 16)
+  -- Visual mode
+  set_cursor(3, 4)
+  type_keys('v')
+  validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
 
-  -- Should be possible to call at end of buffer without movement
-  validate_jump(8, 16)
+  set_cursor(3, 4)
+  type_keys('V')
+  validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
+
+  set_cursor(3, 4)
+  type_keys('<C-v>')
+  validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
 end
 
 T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
-  map_multistep('i', '<S-Tab>', { 'jump_before_tsnode' })
+  map_multistep({ 'i', 'n', 'x' }, '<S-Tab>', { 'jump_before_tsnode' })
 
   -- Should work if there is no tree-sitter parser
   type_keys('i', '<S-Tab>')
   eq(get_lines(), { '\t' })
+  child.ensure_normal_mode()
 
   if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
 
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
+
+  -- Insert mode
+  type_keys('i')
   set_cursor(3, 5)
+  validate_jumps('<S-Tab>', {
+    -- Should jump just at the start of current node (as in Insert mode cursor
+    -- will be just before the node) while keeping Insert mode
+    { 3, 4 },
+    -- Should be possible to "chain" jumps (although cursor is in the same node)
+    { 2, 9 },
+    { 2, 2 },
+    { 1, 0 },
+    -- Should be possible to call at end of buffer without movement
+    { 1, 0 },
+  })
 
-  local validate_jump = function(...)
-    type_keys('<S-Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
+  -- Normal mode
+  set_cursor(3, 5)
+  validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
 
-  -- Should jump just at the start of current node (as in Insert mode cursor
-  -- will be just before the node) while keeping Insert mode
-  validate_jump(3, 4)
+  -- Visual mode
+  set_cursor(3, 5)
+  type_keys('v')
+  validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
 
-  -- Should be possible to "chain" jumps (although cursor is in the same node)
-  validate_jump(2, 9)
-  validate_jump(2, 2)
-  validate_jump(1, 0)
+  set_cursor(3, 5)
+  type_keys('V')
+  validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
 
-  -- Should be possible to call at start of buffer without movement
-  validate_jump(1, 0)
+  set_cursor(3, 5)
+  type_keys('<C-v>')
+  validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
 end
 
 T['map_multistep()']['built-in steps']['jump_after_close'] = function()
@@ -506,33 +559,29 @@ T['map_multistep()']['built-in steps']['jump_after_close'] = function()
   set_cursor(1, 7)
   type_keys('i')
 
-  local validate_jump = function(...)
-    type_keys('<Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
+  validate_jumps('<Tab>', {
+    -- Should put cursor on the right of closing character
+    { 1, 10 },
 
-  -- Should put cursor on the right of closing character
-  validate_jump(1, 10)
+    -- Should be able to "chain" to work with consecutive characters
+    { 1, 11 },
+    { 1, 12 },
+    { 1, 13 },
+    { 1, 14 },
+    -- - Should be possible to put cursor after end of line
+    { 1, 15 },
 
-  -- Should be able to "chain" to work with consecutive characters
-  validate_jump(1, 11)
-  validate_jump(1, 12)
-  validate_jump(1, 13)
-  validate_jump(1, 14)
-  -- - Should be possible to put cursor after end of line
-  validate_jump(1, 15)
+    -- Should work across multiple lines and with not necessarily balanced pairs
+    { 3, 1 },
+    { 4, 1 },
+    { 5, 1 },
+    { 6, 1 },
+    { 7, 1 },
+    { 8, 1 },
 
-  -- Should work across multiple lines and with not necessarily balanced pairs
-  validate_jump(3, 1)
-  validate_jump(4, 1)
-  validate_jump(5, 1)
-  validate_jump(6, 1)
-  validate_jump(7, 1)
-  validate_jump(8, 1)
-
-  -- Should do nothing if there is no search matches
-  validate_jump(8, 1)
+    -- Should do nothing if there is no search matches
+    { 8, 1 },
+  })
   eq(get_lines()[8], '`')
 end
 
@@ -543,33 +592,29 @@ T['map_multistep()']['built-in steps']['jump_before_open'] = function()
   set_cursor(8, 7)
   type_keys('i')
 
-  local validate_jump = function(...)
-    type_keys('<S-Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
+  validate_jumps('<S-Tab>', {
+    -- Should put cursor on the left of closing character
+    { 8, 5 },
 
-  -- Should put cursor on the left of closing character
-  validate_jump(8, 5)
+    -- Should be able to "chain" to work with consecutive characters
+    { 8, 4 },
+    { 8, 3 },
+    { 8, 2 },
+    { 8, 1 },
+    -- - Should be possible to put cursor at first column
+    { 8, 0 },
 
-  -- Should be able to "chain" to work with consecutive characters
-  validate_jump(8, 4)
-  validate_jump(8, 3)
-  validate_jump(8, 2)
-  validate_jump(8, 1)
-  -- - Should be possible to put cursor at first column
-  validate_jump(8, 0)
+    -- Should work across multiple lines and with not necessarily balanced pairs
+    { 6, 0 },
+    { 5, 0 },
+    { 4, 0 },
+    { 3, 0 },
+    { 2, 0 },
+    { 1, 0 },
 
-  -- Should work across multiple lines and with not necessarily balanced pairs
-  validate_jump(6, 0)
-  validate_jump(5, 0)
-  validate_jump(4, 0)
-  validate_jump(3, 0)
-  validate_jump(2, 0)
-  validate_jump(1, 0)
-
-  -- Should do nothing if there is no search matches
-  validate_jump(1, 0)
+    -- Should do nothing if there is no search matches
+    { 1, 0 },
+  })
   eq(get_lines()[1], '`')
 end
 
@@ -1035,21 +1080,16 @@ T['gen_step']['search_pattern()']['works'] = function()
   set_lines({ '[_{(_[[[', '[_(' })
   set_cursor(2, 1)
   type_keys('i')
+  validate_jumps('<S-Tab>', {
+    -- Should respect pattern and flags (search backward, no wrapping)
+    { 2, 0 },
+    { 1, 5 },
+    { 1, 2 },
+    { 1, 0 },
 
-  local validate_jump = function(...)
-    type_keys('<S-Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
-
-  -- Should respect pattern and flags (search backward, no wrapping)
-  validate_jump(2, 0)
-  validate_jump(1, 5)
-  validate_jump(1, 2)
-  validate_jump(1, 0)
-
-  -- Should silently do nothing if can not jump
-  validate_jump(1, 0)
+    -- Should silently do nothing if can not jump
+    { 1, 0 },
+  })
 
   -- Can be used only in Insert mode
   child.ensure_normal_mode()
@@ -1069,21 +1109,17 @@ T['gen_step']['search_pattern()']['respects `opts.side`'] = function()
   set_cursor(1, 1)
   type_keys('i')
 
-  local validate_jump = function(...)
-    type_keys('<Tab>')
-    eq(get_cursor(), { ... })
-    eq(child.fn.mode(), 'i')
-  end
+  validate_jumps('<Tab>', {
+    -- Should respect pattern and flags (search forward, no wrapping) and put
+    -- cursor to the right
+    { 1, 3 },
+    { 2, 1 },
+    { 2, 4 },
+    { 2, 8 },
 
-  -- Should respect pattern and flags (search forward, no wrapping) and put
-  -- cursor to the right
-  validate_jump(1, 3)
-  validate_jump(2, 1)
-  validate_jump(2, 4)
-  validate_jump(2, 8)
-
-  -- Should silently do nothing if can not jump
-  validate_jump(2, 8)
+    -- Should silently do nothing if can not jump
+    { 2, 8 },
+  })
 end
 
 T['gen_step']['search_pattern()']['validates input'] = function()

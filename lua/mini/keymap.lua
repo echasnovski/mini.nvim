@@ -250,10 +250,10 @@ MiniKeymap.config = {}
 --- │ minipairs_cr        │ Module set up  │ <CR> respecting pairs    │ <CR>    │
 --- │ minipairs_bs        │ Module set up  │ <BS> respecting pairs    │ <BS>    │
 --- ├┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Jump around in Insert mode ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┤
---- │ jump_after_tsnode   │ Mode + parser  │ Jump after node end      │ <Tab>   │
---- │ jump_before_tsnode  │ Mode + parser  │ Jump before node start   │ <S-Tab> │
---- │ jump_after_close    │ Mode           │ Jump after  )]}"'`       │ <Tab>   │
---- │ jump_before_open    │ Mode           │ Jump before ([{"'`       │ <S-Tab> │
+--- │ jump_after_tsnode   │ TS parser      │ Jump after node end      │ <Tab>   │
+--- │ jump_before_tsnode  │ TS parser      │ Jump before node start   │ <S-Tab> │
+--- │ jump_after_close    │ Insert mode    │ Jump after  )]}"'`       │ <Tab>   │
+--- │ jump_before_open    │ Insert mode    │ Jump before ([{"'`       │ <S-Tab> │
 --- ├┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Work with whitespace ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┤
 --- │ increase_indent     │ Is on indent   │ Increase indent          │ <Tab>   │
 --- │ decrease_indent     │ Is on indent   │ Decrease indent          │ <S-Tab> │
@@ -379,6 +379,7 @@ MiniKeymap.gen_step = {}
 ---
 --- Use |search()| in Insert mode to jump to pattern match. Possibly adjust final
 --- side (before or after) of cursor.
+--- For other modes use |search()| directly inside step action.
 ---
 ---@param pattern string Same as for |search()|.
 ---@param flags string|nil Same as for |search()|.
@@ -692,7 +693,7 @@ H.steps_builtin.minipairs_bs = { condition = H.has_minipairs, action = function(
 H.can_jump_tsnode = function()
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
   local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })
-  return vim.fn.mode() == 'i' and has_parser and parser ~= nil
+  return has_parser and parser ~= nil
 end
 
 H.make_jump_tsnode = function(side)
@@ -709,12 +710,15 @@ H.make_jump_tsnode = function(side)
       local row = side == 'before' and from_row or to_row
       local col = side == 'before' and from_col or to_col
       new_pos = H.normalize_pos(row, col)
-      -- Iterate up the tree until different position is found. This is mostly
-      -- useful for "before" direction.
+      -- Iterate up the tree until different position is found. This is useful
+      -- for "before" direction and non-Insert mode.
+      if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then
+        pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
+        new_pos = vim.api.nvim_win_get_cursor(0)
+      end
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then break end
       node = node:parent()
     end
-    pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
   end
 
   -- Return callable which is wrapped to be executed after expression mapping
