@@ -879,11 +879,12 @@ end
 ---
 ---@return boolean|nil Whether closing was done or `nil` if there was nothing to close.
 MiniFiles.close = function()
-  local explorer = H.explorer_get()
-  if explorer == nil then return nil end
-
-  -- Stop tracking lost focus
+  -- Stop possible tracking lost focus
   pcall(vim.loop.timer_stop, H.timers.focus)
+
+  -- Act if there is explorer to close (even invisible after improper quit)
+  local explorer = H.explorer_get(nil, true)
+  if explorer == nil then return nil end
 
   -- Confirm close if there is modified buffer
   if not H.explorer_ignore_pending_fs_actions(explorer, 'Close') then return false end
@@ -1429,11 +1430,11 @@ H.explorer_new = function(path)
   }
 end
 
-H.explorer_get = function(tabpage_id)
+H.explorer_get = function(tabpage_id, ignore_visibility)
   tabpage_id = tabpage_id or vim.api.nvim_get_current_tabpage()
   local res = H.opened_explorers[tabpage_id]
 
-  if H.explorer_is_visible(res) then return res end
+  if ignore_visibility or H.explorer_is_visible(res) then return res end
 
   H.opened_explorers[tabpage_id] = nil
   return nil

@@ -2526,6 +2526,7 @@ end
 
 T['Windows']['can be closed manually'] = function()
   open(test_dir_path)
+  type_keys('G', '<CR>')
   child.cmd('wincmd l | only')
   validate_n_wins(1)
 
@@ -2534,6 +2535,13 @@ T['Windows']['can be closed manually'] = function()
 
   close(test_dir_path)
   validate_n_wins(1)
+
+  open(test_dir_path)
+  child.cmd('quit!')
+  validate_n_wins(1)
+
+  open(test_dir_path)
+  validate_n_wins(2)
 end
 
 T['Windows']['never shows past end of buffer'] = function()
