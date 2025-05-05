@@ -1131,7 +1131,7 @@ T['gen_step']['search_pattern()']['validates input'] = function()
   validate({ 'a', '', { side = 1 } }, '`opts.side`.*one of')
 end
 
-T['map_combo()'] = new_set()
+T['map_combo()'] = new_set({ n_retry = helpers.get_n_retry(5) })
 
 local map_combo = forward_lua('require("mini.keymap").map_combo')
 
