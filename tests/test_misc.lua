@@ -347,6 +347,26 @@ T['setup_auto_root()']['works in buffers without path'] = function()
   eq(getcwd(), cur_dir)
 end
 
+T['setup_auto_root()']['works only for current buffer'] = function()
+  setup_auto_root()
+  init_mock_git('file')
+
+  child.lua('_G.log = {}')
+  child.lua('_G.path_1 = ' .. vim.inspect(test_file_makefile))
+  child.lua('_G.path_2 = ' .. vim.inspect(test_file_git))
+  child.cmd('autocmd DirChanged * lua table.insert(_G.log, vim.fn.getcwd())')
+
+  child.lua([[
+    vim.cmd('edit ' .. vim.fn.fnameescape(_G.path_1))
+    local buf_id_1 = vim.api.nvim_get_current_buf()
+    vim.cmd('edit ' .. vim.fn.fnameescape(_G.path_2))
+    vim.api.nvim_buf_delete(buf_id_1, { force = true })
+  ]])
+  local log = vim.tbl_map(fs_normalize, child.lua_get('_G.log'))
+  eq(log, { git_repo_path })
+  eq(child.cmd_capture('messages'), '')
+end
+
 T['setup_auto_root()']['triggers nested autocommands'] = function()
   setup_auto_root()
   child.cmd('au DirChanged * lua _G.hello = "world"')
@@ -375,7 +395,8 @@ T['find_root()']['works'] = function()
 end
 
 T['find_root()']['validates arguments'] = function()
-  expect.error(function() find_root('a') end, '`buf_id`.*number')
+  expect.error(function() find_root('a') end, '`buf_id`.*buffer id')
+  expect.error(function() find_root(-1) end, '`buf_id`.*buffer id')
   expect.error(function() find_root(0, 1) end, '`names`.*string')
   expect.error(function() find_root(0, '.git') end, '`names`.*array')
   expect.error(function() find_root(0, { '.git' }, 1) end, '`fallback`.*callable')

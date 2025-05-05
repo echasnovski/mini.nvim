@@ -213,11 +213,12 @@ MiniMisc.setup_auto_root = function(names, fallback)
   vim.o.autochdir = false
 
   -- Create autocommand
-  local set_root = function(data)
+  local set_root = vim.schedule_wrap(function(data)
+    if data.buf ~= vim.api.nvim_get_current_buf() then return end
     local root = MiniMisc.find_root(data.buf, names, fallback)
     if root == nil then return end
     vim.fn.chdir(root)
-  end
+  end)
   local augroup = vim.api.nvim_create_augroup('MiniMiscAutoRoot', {})
   local opts = { group = augroup, nested = true, callback = set_root, desc = 'Find root and change current directory' }
   vim.api.nvim_create_autocmd('BufEnter', opts)
@@ -250,7 +251,7 @@ MiniMisc.find_root = function(buf_id, names, fallback)
   names = names or { '.git', 'Makefile' }
   fallback = fallback or function() return nil end
 
-  if type(buf_id) ~= 'number' then H.error('Argument `buf_id` of `find_root()` should be number.') end
+  if not H.is_valid_buf(buf_id) then H.error('Argument `buf_id` of `find_root()` should be valid buffer id.') end
   if not (H.is_array_of(names, H.is_string) or vim.is_callable(names)) then
     H.error('Argument `names` of `find_root()` should be array of string file names or a callable.')
   end
@@ -687,6 +688,8 @@ H.check_type = function(name, val, ref, allow_nil)
 end
 
 H.notify = function(msg, level) vim.notify('(mini.misc) ' .. msg, vim.log.levels[level]) end
+
+H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nvim_buf_is_valid(buf_id) end
 
 H.is_array_of = function(x, predicate)
   if not H.islist(x) then return false end
