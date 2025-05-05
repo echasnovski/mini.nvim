@@ -1100,7 +1100,7 @@ H.filetype_icons = {
   csdl                   = { glyph = '󰫰', hl = 'MiniIconsCyan'   },
   csh                    = { glyph = '', hl = 'MiniIconsGrey'   },
   csp                    = { glyph = '󰫰', hl = 'MiniIconsAzure'  },
-  css                    = { glyph = '󰌜', hl = 'MiniIconsAzure'  },
+  css                    = { glyph = '', hl = 'MiniIconsAzure'  },
   csv                    = { glyph = '', hl = 'MiniIconsGreen'  },
   csv_pipe               = { glyph = '', hl = 'MiniIconsAzure'  },
   csv_semicolon          = { glyph = '', hl = 'MiniIconsRed'    },
