@@ -1195,7 +1195,8 @@ MiniPick.default_choose_marked = function(items, opts)
     local item_data = H.parse_item(item)
     if item_data.type == 'file' or item_data.type == 'buffer' or item_data.type == 'uri' then
       local entry = { bufnr = item_data.buf_id, filename = H.parse_uri(item_data.path) or item_data.path }
-      entry.lnum, entry.col, entry.text = item_data.lnum or 1, item_data.col or 1, item_data.text or ''
+      entry.lnum, entry.col = item_data.lnum or 1, item_data.col or 1
+      entry.text = (item_data.text or ''):gsub('%z', '│')
       entry.end_lnum, entry.end_col = item_data.end_lnum, item_data.end_col
       table.insert(list, entry)
     end

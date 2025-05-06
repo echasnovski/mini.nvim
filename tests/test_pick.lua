@@ -2380,6 +2380,10 @@ T['default_choose_marked()']['creates quickfix list from file/buffer positions']
 
     -- URI
     { path = 'file:/' .. full_path(path) },
+
+    -- Edge cases
+    { text = '\000a\0b', path = path },
+    { text = '\000a\0b', bufnr = buf_id },
   }
 
   start_with_items(items)
@@ -2407,6 +2411,9 @@ T['default_choose_marked()']['creates quickfix list from file/buffer positions']
   validate_qfitem(qflist[17], { bufnr = buf_id, lnum = 7, col = 8, end_lnum = 8, end_col = 0 })
 
   validate_qfitem(qflist[18], { filename = full_path(path), lnum = 1, col = 1, end_lnum = 0, end_col = 0 })
+
+  validate_qfitem(qflist[19], { filename = path, lnum = 1, col = 1, end_lnum = 0, end_col = 0, text = '│a│b' })
+  validate_qfitem(qflist[20], { bufnr = buf_id, lnum = 1, col = 1, end_lnum = 0, end_col = 0, text = '│a│b' })
 end
 
 T['default_choose_marked()']['falls back to choosing first item'] = function()
