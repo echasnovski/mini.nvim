@@ -1074,13 +1074,14 @@ T['gen_step']['search_pattern()']['works'] = function()
   child.lua([=[
     local keymap = require('mini.keymap')
     local step = keymap.gen_step.search_pattern([[[(\[{]\+]], 'bW')
-    keymap.map_multistep({ 'i', 'n' }, '<S-Tab>', { step })
+    keymap.map_multistep({ 'i', 'n', 'x' }, '<S-Tab>', { step })
   ]=])
 
   set_lines({ '[_{(_[[[', '[_(' })
+
+  -- Insert mode
   set_cursor(2, 1)
-  type_keys('i')
-  validate_jumps('<S-Tab>', {
+  local ref_jumps = {
     -- Should respect pattern and flags (search backward, no wrapping)
     { 2, 0 },
     { 1, 5 },
@@ -1089,13 +1090,26 @@ T['gen_step']['search_pattern()']['works'] = function()
 
     -- Should silently do nothing if can not jump
     { 1, 0 },
-  })
+  }
+  type_keys('i')
+  validate_jumps('<S-Tab>', ref_jumps)
 
-  -- Can be used only in Insert mode
-  child.ensure_normal_mode()
+  -- Normal mode
   set_cursor(2, 1)
-  type_keys('<S-Tab>')
-  eq(get_cursor(), { 2, 1 })
+  validate_jumps('<S-Tab>', ref_jumps)
+
+  -- Visual mode
+  set_cursor(2, 1)
+  type_keys('v')
+  validate_jumps('<S-Tab>', ref_jumps)
+
+  set_cursor(2, 1)
+  type_keys('V')
+  validate_jumps('<S-Tab>', ref_jumps)
+
+  set_cursor(2, 1)
+  type_keys('<C-v>')
+  validate_jumps('<S-Tab>', ref_jumps)
 end
 
 T['gen_step']['search_pattern()']['respects `opts.side`'] = function()

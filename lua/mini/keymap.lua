@@ -387,30 +387,32 @@ MiniKeymap.gen_step = {}
 
 --- Search pattern step
 ---
---- Use |search()| in Insert mode to jump to pattern match. Possibly adjust final
---- side (before or after) of cursor.
---- For other modes use |search()| directly inside step action.
+--- Use |search()| to jump to pattern match. Possibly adjust final position to
+--- be just to the right of the match (useful in Insert mode).
 ---
 ---@param pattern string Same as for |search()|.
 ---@param flags string|nil Same as for |search()|.
 ---@param opts table|nil Options. Possible fields:
 ---   - <side> `(string)` - one of `"before"` (default) or `"after"`.
 ---
----@return table Step which searches pattern only in Insert mode.
+---@return table Step which searches pattern.
 ---
 ---@usage Built-in |MiniKeymap.map_multistep()| steps "jump_after_close" and
---- "jump_before_open" use this.
+--- "jump_before_open" use this, but only in Insert mode.
 ---
---- Example of steps that jump before/after all consecutive brackets: >lua
+--- Steps that jump before/after all consecutive brackets in several modes: >lua
 ---
 ---   local keymap = require('mini.keymap')
----   local tab_step = keymap.gen_step.search_pattern(
+---   local tab_step_insert = keymap.gen_step.search_pattern(
+---     -- Need to use 'c' flag and 'after' side for robust "chaining"
 ---     [=[[)\]}]\+]=], 'ceW', { side = 'after' }
 ---   )
----   keymap.map_multistep('i', '<Tab>', { tab_step })
+---   keymap.map_multistep('i', '<Tab>', { tab_step_insert })
+---   local tab_step = keymap.gen_step.search_pattern([=[[)\]}]\+]=], 'eW')
+---   keymap.map_multistep({ 'n', 'x' }, '<Tab>', { tab_step })
 ---
 ---   local stab_step = keymap.gen_step.search_pattern([=[[(\[{]\+]=], 'bW')
----   keymap.map_multistep({ 'i' }, '<S-Tab>', { stab_step })
+---   keymap.map_multistep({ 'i', 'n', 'x' }, '<S-Tab>', { stab_step })
 ---<
 MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   if type(pattern) ~= 'string' then H.error('`pattern` should be string, not ' .. vim.inspect(type(pattern))) end
@@ -440,7 +442,7 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
     adjust_cursor()
   end
 
-  return { condition = function() return vim.fn.mode() == 'i' end, action = function() return act end }
+  return { condition = function() return true end, action = function() return act end }
 end
 
 --- Map combo post action
@@ -738,8 +740,17 @@ end
 H.steps_builtin.jump_after_tsnode  = { condition = H.can_jump_tsnode, action = H.make_jump_tsnode('after') }
 H.steps_builtin.jump_before_tsnode = { condition = H.can_jump_tsnode, action = H.make_jump_tsnode('before') }
 
-H.steps_builtin.jump_after_close = MiniKeymap.gen_step.search_pattern([=[[)\]}"'`]]=], 'cW', { side = 'after' })
-H.steps_builtin.jump_before_open = MiniKeymap.gen_step.search_pattern([=[[(\[{"'`]]=], 'bW', { side = 'before' })
+H.steps_builtin.jump_after_close = {
+  condition = function() return vim.fn.mode() == 'i' end,
+  -- NOTE: In Insert mode 'c' flag (accept at cursor) with 'after' adjust are
+  -- needed for working "chaining". In other modes it is no flag and no adjust,
+  -- which is why these steps only work in Insert mode.
+  action = MiniKeymap.gen_step.search_pattern([=[[)\]}"'`]]=], 'cW', { side = 'after' }).action,
+}
+H.steps_builtin.jump_before_open = {
+  condition = function() return vim.fn.mode() == 'i' end,
+  action = MiniKeymap.gen_step.search_pattern([=[[(\[{"'`]]=], 'bW', { side = 'before' }).action,
+}
 
 H.is_in_indent = function()
   local line, col = vim.api.nvim_get_current_line(), vim.fn.col('.')
