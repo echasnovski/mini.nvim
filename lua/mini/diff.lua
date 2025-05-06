@@ -1719,6 +1719,7 @@ H.git_setup_index_watch = function(buf_id, git_dir_path)
 end
 
 H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
+  if not vim.api.nvim_buf_is_valid(buf_id) then return end
   local buf_set_ref_text = vim.schedule_wrap(function(text) pcall(MiniDiff.set_ref_text, buf_id, text) end)
 
   -- NOTE: Do not cache buffer's name to react to its possible rename

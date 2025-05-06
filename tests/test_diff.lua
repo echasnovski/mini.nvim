@@ -1102,6 +1102,28 @@ T['gen_source']['git()']['works with errors during attach'] = function()
   eq(is_buf_enabled(0), false)
 end
 
+T['gen_source']['git()']['works with wiped out target buffer'] = function()
+  child.lua([[_G.stdio_queue = { { { 'out', _G.git_dir } } }]])
+
+  child.lua('_G.path = ' .. vim.inspect(git_file_path))
+  local buf_id = child.lua([[
+    vim.cmd('edit ' .. vim.fn.fnameescape(_G.path))
+    local buf_id = vim.api.nvim_get_current_buf()
+    -- Should not result in an error
+    vim.schedule(function() vim.api.nvim_buf_delete(buf_id, { force = true }) end)
+    return buf_id
+  ]])
+
+  eq(is_buf_enabled(0), false)
+  eq(child.api.nvim_buf_is_valid(buf_id), false)
+  eq(child.cmd_capture('messages'), '')
+
+  local ref_git_spawn_log = {
+    { args = { 'rev-parse', '--path-format=absolute', '--git-dir' }, cwd = git_dir_path },
+  }
+  validate_git_spawn_log(ref_git_spawn_log)
+end
+
 T['gen_source']['git()']['works with errors during getting reference text'] = function()
   -- Should attach but reset ref text (to react if it *gets* in index)
   child.lua([[
