@@ -851,7 +851,11 @@ T['start()']['respects `options.use_cache`'] = function()
 end
 
 T['start()']['allows custom mappings'] = function()
-  -- Both in global and local config
+  -- Should prefer custom action over built-ins (even hard-coded alternatives)
+  child.lua('MiniPick.config.mappings.custom_bs = { char = "<BS>", func = function() _G.custom_bs = true end }')
+  child.lua('MiniPick.config.mappings.custom_home = { char = "<Home>", func = function() _G.custom_home = true end }')
+
+  -- Should work in global and local config
   child.lua([[MiniPick.config.mappings.custom_global = {
     char = '<C-d>',
     -- Should be executed with source's cwd set as current directory
@@ -860,7 +864,7 @@ T['start()']['allows custom mappings'] = function()
 
   child.lua('_G.cwd = ' .. vim.inspect(test_dir_absolute))
   child.lua_notify([[MiniPick.start({
-    source = { items = { 'a', 'b' }, cwd = _G.cwd },
+    source = { items = { 'a', 'ab', 'b' }, cwd = _G.cwd },
     mappings = {
       -- Return value is treated as "should stop picker after execution"
       custom = { char = 'm', func = function(...) _G.args_local = { ... }; return true end },
@@ -871,6 +875,14 @@ T['start()']['allows custom mappings'] = function()
   eq(child.lua_get('_G.cur_cwd'), test_dir_absolute)
   eq(child.lua_get('_G.args_global'), {})
   eq(is_picker_active(), true)
+
+  type_keys('a', '<BS>')
+  eq(child.lua_get('_G.custom_bs'), true)
+  eq(get_picker_query(), { 'a' })
+
+  type_keys('<Down>', '<Home>')
+  eq(child.lua_get('_G.custom_home'), true)
+  eq(get_picker_matches().current_ind, 2)
 
   type_keys('m')
   eq(child.lua_get('_G.args_local'), {})
@@ -5135,10 +5147,18 @@ T['Info view']['works'] = function()
 end
 
 T['Info view']['respects custom mappings'] = function()
-  child.set_size(20, 60)
+  child.set_size(23, 60)
   child.lua([[MiniPick.config.mappings.custom_action = { char = '<C-d>', func = function() print('Hello') end }]])
   child.lua([[MiniPick.config.mappings.another_action = { char = '<C-e>', func = function() print('World') end }]])
+  -- Should prefer custom action key over built-in
+  child.lua([[MiniPick.config.mappings.dup_key_action = { char = '<Left>', func = function() print('!!!') end }]])
   child.lua([[MiniPick.config.mappings.choose = 'a']])
+  -- Should omit the rest of "Choose" as they are disabled
+  child.lua([[MiniPick.config.mappings.choose_in_split = '']])
+  child.lua([[MiniPick.config.mappings.choose_in_vsplit = '']])
+  child.lua([[MiniPick.config.mappings.choose_in_tabpage = '']])
+  child.lua([[MiniPick.config.mappings.choose_marked = '']])
+
   child.lua([[MiniPick.config.window.config = { height = 20 }]])
 
   start_with_items({ 'a', 'b', 'bb' }, 'My name')

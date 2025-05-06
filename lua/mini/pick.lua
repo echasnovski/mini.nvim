@@ -2505,6 +2505,12 @@ end
 
 H.normalize_mappings = function(mappings, skip_alternatives)
   local res = {}
+  local add_to_res = function(char, data)
+    local key = H.replace_termcodes(char)
+    -- Omit disabled keys and prefer custom actions over built-ins
+    if (key == nil or key == '') or (res[key] ~= nil and res[key].is_custom) then return end
+    res[key] = data
+  end
 
   -- Use alternative keys for some common actions
   local alt_chars = {}
@@ -2515,10 +2521,8 @@ H.normalize_mappings = function(mappings, skip_alternatives)
     local is_custom = type(rhs) == 'table'
     local char = is_custom and rhs.char or rhs
     local data = { char = char, name = name, func = is_custom and rhs.func or H.actions[name], is_custom = is_custom }
-    res[H.replace_termcodes(char)] = data
-
-    local alt = alt_chars[name]
-    if alt ~= nil then res[H.replace_termcodes(alt)] = data end
+    add_to_res(char, data)
+    add_to_res(alt_chars[name], data)
   end
 
   return res
