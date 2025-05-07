@@ -399,24 +399,20 @@ end
 MiniExtra.pickers.colorschemes = function(local_opts, opts)
   local pick = H.validate_pick('colorschemes')
 
-  local target = vim.g.colors_name -- original or selected
-  local load_colorscheme = function()
-    if target ~= vim.g.colors_name then vim.schedule(function() vim.cmd('colorscheme ' .. target) end) end
-  end
+  local original_or_selected_cs = vim.g.colors_name
+  local choose = function(item) original_or_selected_cs = item end
 
-  local choose = function(item) target = item end
+  local original_bg = vim.o.background
   local preview = function(buf_id, item)
-    vim.cmd('colorscheme ' .. item)
+    H.set_colorscheme(item, original_bg)
     vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { item })
   end
 
-  local items = function()
-    vim.api.nvim_create_autocmd('User', { pattern = 'MiniPickStop', once = true, callback = load_colorscheme })
-    return vim.fn.getcompletion('', 'color')
-  end
-
+  local items = vim.fn.getcompletion('', 'color')
   local default_opts = { source = { name = 'Colorschemes', preview = preview, choose = choose } }
-  return H.pick_start(items, default_opts, opts)
+  local result = H.pick_start(items, default_opts, opts)
+  H.set_colorscheme(original_or_selected_cs, original_bg)
+  return result
 end
 
 --- Neovim commands picker
@@ -1758,6 +1754,14 @@ H.choose_with_buflisted = function(item)
   local win_target = pick.get_picker_state().windows.target
   local buf_id = vim.api.nvim_win_get_buf(win_target)
   vim.bo[buf_id].buflisted = true
+end
+
+-- Colorscheme picker ----------------------------------------------------------
+H.set_colorscheme = function(colorscheme, background)
+  if colorscheme ~= vim.g.colors_name then
+    vim.o.background = background
+    vim.schedule(function() vim.cmd('colorscheme ' .. colorscheme) end)
+  end
 end
 
 -- Diagnostic picker ----------------------------------------------------------
