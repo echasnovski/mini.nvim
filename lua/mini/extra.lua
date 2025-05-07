@@ -384,6 +384,41 @@ MiniExtra.pickers.buf_lines = function(local_opts, opts)
   return H.pick_start(items, { source = default_source }, opts)
 end
 
+--- Colorscheme picker
+---
+--- Pick and load from colorschemes.
+--- Notes:
+--- - Preview temporarily loads a colorscheme
+--- - Canceling reverts to original colorscheme
+---
+---@param local_opts __extra_pickers_local_opts
+---   Not used at the moment.
+---@param opts __extra_pickers_opts
+---
+---@return __extra_pickers_return
+MiniExtra.pickers.colorschemes = function(local_opts, opts)
+  local pick = H.validate_pick('colorschemes')
+
+  local target = vim.g.colors_name -- original or selected
+  local load_colorscheme = function()
+    if target ~= vim.g.colors_name then vim.schedule(function() vim.cmd('colorscheme ' .. target) end) end
+  end
+
+  local choose = function(item) target = item end
+  local preview = function(buf_id, item)
+    vim.cmd('colorscheme ' .. item)
+    vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { item })
+  end
+
+  local items = function()
+    vim.api.nvim_create_autocmd('User', { pattern = 'MiniPickStop', once = true, callback = load_colorscheme })
+    return vim.fn.getcompletion('', 'color')
+  end
+
+  local default_opts = { source = { name = 'Colorschemes', preview = preview, choose = choose } }
+  return H.pick_start(items, default_opts, opts)
+end
+
 --- Neovim commands picker
 ---
 --- Pick from Neovim built-in (|ex-commands|) and |user-commands|.
