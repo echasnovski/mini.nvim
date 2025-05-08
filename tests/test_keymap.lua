@@ -1136,6 +1136,38 @@ T['gen_step']['search_pattern()']['respects `opts.side`'] = function()
   })
 end
 
+T['gen_step']['search_pattern()']['respects `opts.stopline`'] = function()
+  child.lua([=[
+    local keymap = require('mini.keymap')
+    local step_num = keymap.gen_step.search_pattern(')', 'W', { stopline = 1 })
+    keymap.map_multistep('n', '<Tab>', { step_num })
+    local step_fun = keymap.gen_step.search_pattern('(', 'bW', { stopline = function() return vim.fn.line('.') end })
+    keymap.map_multistep('n', '<S-Tab>', { step_fun })
+  ]=])
+
+  set_lines({ '()', '()' })
+  set_cursor(1, 0)
+  validate_jumps('<Tab>', { { 1, 1 }, { 1, 1 } })
+  set_cursor(2, 1)
+  validate_jumps('<S-Tab>', { { 2, 0 }, { 2, 0 } })
+end
+
+T['gen_step']['search_pattern()']['respects `opts.timeout` and `opts.skip`'] = function()
+  child.lua([[
+    local search_orig = vim.fn.search
+    vim.fn.search = function(...)
+      _G.args = { ... }
+      return search_orig(...)
+    end
+    local keymap = require('mini.keymap')
+    local step = keymap.gen_step.search_pattern(')', 'W', { timeout = 1, skip = 'a' })
+    keymap.map_multistep('n', '<Tab>', { step })
+  ]])
+
+  type_keys('<Tab>')
+  eq(child.lua_get('vim.deep_equal(_G.args, { ")", "W", nil, 1, "a" })'), true)
+end
+
 T['gen_step']['search_pattern()']['validates input'] = function()
   local validate = function(args, ref_pattern)
     expect.error(function() child.lua('require("mini.keymap").gen_step.search_pattern(...)', args) end, ref_pattern)

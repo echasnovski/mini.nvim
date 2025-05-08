@@ -394,6 +394,10 @@ MiniKeymap.gen_step = {}
 ---@param flags string|nil Same as for |search()|.
 ---@param opts table|nil Options. Possible fields:
 ---   - <side> `(string)` - one of `"before"` (default) or `"after"`.
+---   - <stopline> `(number|function)` - forwarded to |search()| (as number or
+---     as function's output after calling it before every search).
+---   - <timeout> `(number)` - forwarded to |search()|.
+---   - <skip> `(string|function)` - forwarded to |search()|.
 ---
 ---@return table Step which searches pattern.
 ---
@@ -419,9 +423,16 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   flags = flags or ''
   if type(flags) ~= 'string' then H.error('`flags` should be string, not ' .. vim.inspect(type(flags))) end
 
-  opts = vim.tbl_extend('force', { side = 'before' }, opts or {})
+  opts = vim.tbl_extend('force', { side = 'before', stopline = nil, timeout = nil, skip = nil }, opts or {})
   local side = opts.side
   if not (side == 'before' or side == 'after') then H.error('`opts.side` should be one of "before" or "after"') end
+
+  local stopline = opts.stopline or function() return nil end
+  if type(stopline) == 'number' then
+    local line = stopline
+    stopline = function() return line end
+  end
+  if not vim.is_callable(stopline) then H.error('`opts.stopline` should be number or callable') end
 
   -- NOTEs:
   -- - Using `normal!` doesn't go past the end of line and triggers
@@ -438,7 +449,7 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   if side == 'before' then adjust_cursor = function() end end
 
   local act = function()
-    vim.fn.search(pattern, flags)
+    vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
     adjust_cursor()
   end
 
