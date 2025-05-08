@@ -270,10 +270,10 @@ Parameters ~
                 `MiniBracketed.diagnostic`({direction}, {opts})
 Diagnostic
 
-Go to next/previous diagnostic. This is mostly similar to
-|vim.diagnostic.goto_next()| and |vim.diagnostic.goto_prev()| for
-current buffer which supports |[count]| and functionality to go to
-first/last diagnostic entry.
+Go to next/previous diagnostic. This is mostly similar to built-in
+|vim.diagnostic.jump()| (on Neovim<0.11 it is |vim.diagnostic.goto_next()| and
+|vim.diagnostic.goto_prev()|) which has an interface and behavior
+consistent with other methods of the module.
 
 Direction "forward" increases line number, "backward" - decreases.
 

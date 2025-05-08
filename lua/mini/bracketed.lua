@@ -419,10 +419,10 @@ end
 
 --- Diagnostic
 ---
---- Go to next/previous diagnostic. This is mostly similar to
---- |vim.diagnostic.goto_next()| and |vim.diagnostic.goto_prev()| for
---- current buffer which supports |[count]| and functionality to go to
---- first/last diagnostic entry.
+--- Go to next/previous diagnostic. This is mostly similar to built-in
+--- |vim.diagnostic.jump()| (on Neovim<0.11 it is |vim.diagnostic.goto_next()| and
+--- |vim.diagnostic.goto_prev()|) which has an interface and behavior
+--- consistent with other methods of the module.
 ---
 --- Direction "forward" increases line number, "backward" - decreases.
 ---
@@ -445,30 +445,28 @@ MiniBracketed.diagnostic = function(direction, opts)
   if H.is_disabled() then return end
 
   H.validate_direction(direction, { 'first', 'backward', 'forward', 'last' }, 'diagnostic')
-  opts = vim.tbl_deep_extend(
-    'force',
-    { float = nil, n_times = vim.v.count1, severity = nil, wrap = true },
-    H.get_config().diagnostic.options,
-    opts or {}
-  )
+  local default_opts = { float = vim.diagnostic.config().float, n_times = vim.v.count1, severity = nil, wrap = true }
+  local buf_id = vim.api.nvim_get_current_buf()
+  if vim.is_callable(default_opts.float) then default_opts.float = default_opts.float(nil, buf_id) end
+  opts = vim.tbl_extend('force', default_opts, H.get_config().diagnostic.options, opts or {})
 
   -- Define iterator that traverses all diagnostic entries in current buffer
-  local is_position = function(x) return type(x) == 'table' and #x == 2 end
-  local diag_pos_to_cursor_pos = function(pos) return { pos[1] + 1, pos[2] } end
+  local to_cursor_pos = function(pos) return { pos[1] + 1, pos[2] } end
+  local pos_field = vim.fn.has('nvim-0.11') == 1 and 'pos' or 'cursor_position'
   local iterator = {}
 
   iterator.next = function(position)
-    local goto_opts = { cursor_position = diag_pos_to_cursor_pos(position), severity = opts.severity, wrap = false }
-    local new_pos = vim.diagnostic.get_next_pos(goto_opts)
-    if not is_position(new_pos) then return end
-    return new_pos
+    local next_opts = { [pos_field] = to_cursor_pos(position), severity = opts.severity, wrap = false }
+    local next = vim.diagnostic.get_next(next_opts)
+    if next == nil then return end
+    return { next.lnum, next.col }
   end
 
   iterator.prev = function(position)
-    local goto_opts = { cursor_position = diag_pos_to_cursor_pos(position), severity = opts.severity, wrap = false }
-    local new_pos = vim.diagnostic.get_prev_pos(goto_opts)
-    if not is_position(new_pos) then return end
-    return new_pos
+    local prev_opts = { [pos_field] = to_cursor_pos(position), severity = opts.severity, wrap = false }
+    local prev = vim.diagnostic.get_prev(prev_opts)
+    if prev == nil then return end
+    return { prev.lnum, prev.col }
   end
 
   -- - Define states with zero-based indexing as used in `vim.diagnostic`.
@@ -486,13 +484,9 @@ MiniBracketed.diagnostic = function(direction, opts)
   local res_pos = MiniBracketed.advance(iterator, direction, opts)
   if res_pos == nil or res_pos == iterator.state then return end
 
-  -- Apply. Use `goto_next()` with offsetted cursor position to make it respect
+  -- Apply. Use built-in jump with offsetted cursor position to make it respect
   -- `vim.diagnostic.config()`.
-  vim.diagnostic.goto_next({
-    cursor_position = { res_pos[1] + 1, res_pos[2] - 1 },
-    float = opts.float,
-    severity = opts.severity,
-  })
+  H.diagnostic_jump({ res_pos[1] + 1, res_pos[2] - 1 }, opts.float, opts.severity)
 end
 
 --- File on disk
@@ -1678,6 +1672,16 @@ end
 H.is_conflict_mark = function(line_num)
   local l_start = vim.fn.getline(line_num):sub(1, 8)
   return l_start == '<<<<<<< ' or l_start == '=======' or l_start == '>>>>>>> '
+end
+
+-- Diagnostic -----------------------------------------------------------------
+H.diagnostic_jump = function(pos, float, severity)
+  vim.diagnostic.jump({ count = 1, pos = pos, float = float, severity = severity })
+end
+if vim.fn.has('nvim-0.11') == 0 then
+  H.diagnostic_jump = function(pos, float, severity)
+    vim.diagnostic.goto_next({ cursor_position = pos, float = float, severity = severity })
+  end
 end
 
 -- Files ----------------------------------------------------------------------
