@@ -449,8 +449,8 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   if side == 'before' then adjust_cursor = function() end end
 
   local act = function()
-    vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
-    adjust_cursor()
+    local had_match = vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
+    if had_match ~= 0 then adjust_cursor() end
   end
 
   return { condition = function() return true end, action = function() return act end }

@@ -583,6 +583,12 @@ T['map_multistep()']['built-in steps']['jump_after_close'] = function()
     { 8, 1 },
   })
   eq(get_lines()[8], '`')
+
+  -- Does not adjust cursor when not needed
+  set_lines({ 'x)xxx' })
+  set_cursor(1, 0)
+  type_keys('i')
+  validate_jumps('<Tab>', { { 1, 2 }, { 1, 2 } })
 end
 
 T['map_multistep()']['built-in steps']['jump_before_open'] = function()
@@ -616,6 +622,12 @@ T['map_multistep()']['built-in steps']['jump_before_open'] = function()
     { 1, 0 },
   })
   eq(get_lines()[1], '`')
+
+  -- Does not adjust cursor when not needed
+  set_lines({ 'xxx(x' })
+  set_cursor(1, 4)
+  type_keys('i')
+  validate_jumps('<S-Tab>', { { 1, 3 }, { 1, 3 } })
 end
 
 T['map_multistep()']['built-in steps']['increase_indent'] = function()
@@ -1077,19 +1089,19 @@ T['gen_step']['search_pattern()']['works'] = function()
     keymap.map_multistep({ 'i', 'n', 'x' }, '<S-Tab>', { step })
   ]=])
 
-  set_lines({ '[_{(_[[[', '[_(' })
+  set_lines({ 'xx[_{(_[[[', '[_(' })
 
   -- Insert mode
   set_cursor(2, 1)
   local ref_jumps = {
     -- Should respect pattern and flags (search backward, no wrapping)
     { 2, 0 },
-    { 1, 5 },
+    { 1, 7 },
+    { 1, 4 },
     { 1, 2 },
-    { 1, 0 },
 
     -- Should silently do nothing if can not jump
-    { 1, 0 },
+    { 1, 2 },
   }
   type_keys('i')
   validate_jumps('<S-Tab>', ref_jumps)
@@ -1119,7 +1131,7 @@ T['gen_step']['search_pattern()']['respects `opts.side`'] = function()
     keymap.map_multistep('i', '<Tab>', { step })
   ]=])
 
-  set_lines({ ']_)', ']_})_]]]' })
+  set_lines({ ']_)', ']_})_]]]xx' })
   set_cursor(1, 1)
   type_keys('i')
 
