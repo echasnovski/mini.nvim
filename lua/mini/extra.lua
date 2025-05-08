@@ -400,9 +400,11 @@ MiniExtra.pickers.colorschemes_1 = function(local_opts, opts)
   local pick = H.validate_pick('colorschemes')
 
   local original_bg = vim.o.background
-  local selected_cs = H.get_colorscheme()
+  local has_colors, colors = pcall(require, 'mini.colors')
+  local selected_cs = has_colors and colors.get_colorscheme() or vim.g.colors_name
 
   local choose = function(item) selected_cs = item end
+  local choose_marked = function(items) choose(items[1] or selected_cs) end
   local preview = function(buf_id, item)
     H.set_colorscheme(item, original_bg)
     vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { item })
@@ -1792,17 +1794,14 @@ H.get_colorscheme = function()
   return has_colors and colors.get_colorscheme() or vim.g.colors_name
 end
 
-H.set_colorscheme = function(colorscheme, background)
+H.set_colorscheme = vim.schedule_wrap(function(colorscheme, background)
   vim.o.background = background
-  vim.schedule(function()
-    if type(colorscheme) == 'string' then
-      vim.cmd('colorscheme ' .. colorscheme)
-    else
-      colorscheme:apply()
-      vim.cmd('doautocmd ColorScheme') -- trigger for things like mini.misc termbg_sync
-    end
-  end)
-end
+  if colorscheme == vim.g.colors_name then return end
+  if type(colorscheme) == 'string' then return vim.cmd('colorscheme ' .. colorscheme) end
+  colorscheme:apply()
+  -- Trigger to indicate actual color scheme application
+  vim.cmd('doautocmd ColorScheme')
+end)
 
 -- Diagnostic picker ----------------------------------------------------------
 H.diagnostic_make_compare = function(sort_by)
