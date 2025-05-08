@@ -396,7 +396,7 @@ end
 ---@param opts __extra_pickers_opts
 ---
 ---@return __extra_pickers_return
-MiniExtra.pickers.colorschemes_1 = function(local_opts, opts)
+MiniExtra.pickers.colorschemes = function(local_opts, opts)
   local pick = H.validate_pick('colorschemes')
 
   local original_bg = vim.o.background
@@ -411,39 +411,11 @@ MiniExtra.pickers.colorschemes_1 = function(local_opts, opts)
   end
 
   local items = vim.fn.getcompletion('', 'color')
-  local default_opts = { source = { name = 'Colorschemes', preview = preview, choose = choose } }
+  local default_opts =
+    { source = { name = 'Colorschemes', preview = preview, choose = choose, choose_marked = choose_marked } }
   local result = H.pick_start(items, default_opts, opts)
 
   H.set_colorscheme(selected_cs, original_bg)
-  return result
-end
-
-MiniExtra.pickers.colorschemes_2 = function(local_opts, opts)
-  local pick = H.validate_pick('colorschemes')
-
-  local original_bg = vim.o.background
-  local original_cs = H.get_colorscheme()
-  local selected_cs = nil
-  local previewed_cs = nil
-
-  local choose = function(item) selected_cs = item end
-  local preview = function(buf_id, item)
-    if item == previewed_cs then return end
-    previewed_cs = item
-    H.set_colorscheme(previewed_cs, original_bg)
-    vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { item })
-  end
-
-  local items = vim.fn.getcompletion('', 'color')
-  local default_opts = { source = { name = 'Colorschemes', preview = preview, choose = choose } }
-  local result = H.pick_start(items, default_opts, opts)
-
-  if selected_cs == nil and previewed_cs ~= nil then
-    H.set_colorscheme(original_cs, original_bg)
-  elseif selected_cs ~= previewed_cs then
-    H.set_colorscheme(selected_cs, original_bg)
-  end
-
   return result
 end
 
@@ -1789,11 +1761,6 @@ H.choose_with_buflisted = function(item)
 end
 
 -- Colorscheme picker ----------------------------------------------------------
-H.get_colorscheme = function()
-  local has_colors, colors = pcall(require, 'mini.colors')
-  return has_colors and colors.get_colorscheme() or vim.g.colors_name
-end
-
 H.set_colorscheme = vim.schedule_wrap(function(colorscheme, background)
   vim.o.background = background
   if colorscheme == vim.g.colors_name then return end
