@@ -111,7 +111,7 @@
 ---   map_multistep('i', '<Tab>', tab_steps)
 ---
 ---   local shifttab_steps = {
----     'minisnippets_prev',  'pmenu_next',
+---     'minisnippets_prev',  'pmenu_prev',
 ---     'jump_before_tsnode', 'jump_before_open',
 ---   }
 ---   map_multistep('i', '<S-Tab>', shifttab_steps)
