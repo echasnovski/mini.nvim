@@ -85,7 +85,8 @@ You can override runtime config settings locally to buffer inside
 
 Some options are set automatically (if not set before |MiniCompletion.setup()|):
 - 'completeopt' is set to "menuone,noselect" for less intrusive popup.
-  To enable fuzzy matching, manually set to "menuone,noselect,fuzzy".
+  To enable fuzzy matching, manually set to "menuone,noselect,fuzzy". Consider
+  also adding "nosort" flag to preserve initial order when filtering.
 - 'shortmess' is appended with "c" flag for silent <C-n> fallback.
 
 # Snippets ~

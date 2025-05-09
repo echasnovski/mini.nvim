@@ -382,6 +382,19 @@ T['default_process_items()']['respects `opts.filtersort`'] = function()
   eq(child.lua_get('_G.args'), { { all_items, 'l' } })
 end
 
+T['default_process_items()']['prefers match at start instead of camel case at end'] = function()
+  if child.fn.has('nvim-0.12') == 0 then MiniTest.skip('Only Neovim>=0.12 allows `camelcase=false` in `matchfuzzy`') end
+
+  local items = {
+    { kind = 1, label = 'MyClass' },
+    { kind = 1, label = 'Class' },
+    { kind = 1, label = 'MyOtherClass' },
+  }
+  child.lua('_G.items = ' .. vim.inspect(items))
+  local out = child.lua_get('MiniCompletion.default_process_items(_G.items, "Cl", { filtersort = "fuzzy" })')
+  eq(out, { items[2], items[1], items[3] })
+end
+
 T['default_process_items()']['respects `opts.kind_priority`'] = function()
   local kind_map = child.lua([[
     _G.kind_map = {}

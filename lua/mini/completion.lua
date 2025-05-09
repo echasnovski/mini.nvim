@@ -85,7 +85,8 @@
 ---
 --- Some options are set automatically (if not set before |MiniCompletion.setup()|):
 --- - 'completeopt' is set to "menuone,noselect" for less intrusive popup.
----   To enable fuzzy matching, manually set to "menuone,noselect,fuzzy".
+---   To enable fuzzy matching, manually set to "menuone,noselect,fuzzy". Consider
+---   also adding "nosort" flag to preserve initial order when filtering.
 --- - 'shortmess' is appended with "c" flag for silent <C-n> fallback.
 ---
 --- # Snippets ~
@@ -1137,7 +1138,7 @@ H.filtersort_methods = {
   end,
   fuzzy = function(items, base)
     if base == '' then return vim.deepcopy(items) end
-    return vim.fn.matchfuzzy(items, base, { text_cb = H.lsp_get_filterword })
+    return vim.fn.matchfuzzy(items, base, { text_cb = H.lsp_get_filterword, camelcase = false })
   end,
   none = function(items, _) return vim.deepcopy(items) end,
 }
