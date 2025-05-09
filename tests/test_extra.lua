@@ -905,6 +905,111 @@ T['pickers']['buf_lines()']['validates arguments'] = function()
   validate({ scope = '1' }, '`pickers%.buf_lines`.*"scope".*"1".*one of')
 end
 
+T['pickers']['colorschemes()'] = new_set()
+
+local pick_colorschemes = forward_lua_notify('MiniExtra.pickers.colorschemes')
+
+T['pickers']['colorschemes()']['works'] = function()
+  child.set_size(10, 80)
+  child.cmd('colorscheme default')
+
+  child.lua_notify('_G.return_item = MiniExtra.pickers.colorschemes()')
+  validate_picker_name('Colorschemes')
+  type_keys('ha')
+
+  -- should find habamax and wildcharm
+  child.expect_screenshot({ ignore_lines = { 9 } })
+
+  -- Should have proper preview
+  type_keys('<Tab>')
+  eq(child.g.colors_name, 'habamax')
+  child.expect_screenshot({ ignore_lines = { 9 } })
+
+  -- Should properly choose
+  type_keys('<CR>')
+  eq(child.g.colors_name, 'habamax')
+
+  -- Should return chosen value
+  eq(child.lua_get('_G.return_item'), 'habamax')
+end
+
+T['pickers']['colorschemes()']['up/down with preview'] = function()
+  child.set_size(10, 80)
+  child.cmd('colorscheme default')
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('ha', '<Tab>')
+  eq(child.g.colors_name, 'habamax')
+
+  -- Move down and validate theme changes
+  type_keys('<C-n>')
+  eq(child.g.colors_name, 'wildcharm')
+
+  -- Move up and validate theme changes
+  type_keys('<C-p>')
+  eq(child.g.colors_name, 'habamax')
+end
+
+T['pickers']['colorschemes()']['choose marked'] = function()
+  child.set_size(10, 80)
+  child.cmd('colorscheme default')
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('ha', '<Tab>')
+  eq(child.g.colors_name, 'habamax')
+
+  -- Mark habamax and wildcharm, then select
+  type_keys('<C-x>', '<C-n>', '<C-x>', '<M-CR>')
+  eq(child.g.colors_name, 'habamax')
+end
+
+T['pickers']['colorschemes()']['cancel with mini.colors'] = function()
+  child.set_size(10, 80)
+  child.cmd('colorscheme default')
+
+  -- This customization should persist with mini.colors
+  local custom_normal_hl = { fg = 0 }
+  child.api.nvim_set_hl(0, 'Normal', custom_normal_hl)
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('habamax', '<Tab>')
+  eq(child.g.colors_name, 'habamax')
+
+  -- Cancel picker and validate restoration
+  type_keys('<C-c>')
+  eq(child.g.colors_name, 'default')
+  eq(child.api.nvim_get_hl(0, { name = 'Normal' }), custom_normal_hl)
+end
+
+T['pickers']['colorschemes()']['cancel without mini.colors'] = function()
+  -- FIXME: How do I unload mini.colors to test without it?
+  child.set_size(10, 80)
+  child.cmd('colorscheme default')
+  local original_normal_hl = child.api.nvim_get_hl(0, { name = 'Normal' })
+
+  -- This customization should NOT persist without mini.colors
+  local custom_normal_hl = { fg = 0 }
+  child.api.nvim_set_hl(0, 'Normal', custom_normal_hl)
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('habamax', '<Tab>')
+  eq(child.g.colors_name, 'habamax')
+
+  -- Cancel picker and validate restoration
+  type_keys('<C-c>')
+  eq(child.g.colors_name, 'default')
+  eq(child.api.nvim_get_hl(0, { name = 'Normal' }), original_normal_hl)
+end
+
+T['pickers']['colorschemes()']['respects `opts`'] = function()
+  pick_colorschemes({}, { source = { name = 'My name' } })
+  validate_picker_name('My name')
+end
+
 T['pickers']['commands()'] = new_set()
 
 local pick_commands = forward_lua_notify('MiniExtra.pickers.commands')
