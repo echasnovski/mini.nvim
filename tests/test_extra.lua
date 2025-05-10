@@ -905,6 +905,110 @@ T['pickers']['buf_lines()']['validates arguments'] = function()
   validate({ scope = '1' }, '`pickers%.buf_lines`.*"scope".*"1".*one of')
 end
 
+T['pickers']['colorschemes()'] = new_set({
+  hooks = {
+    pre_case = function() child.cmd('colorscheme minischeme') end,
+  },
+})
+
+local pick_colorschemes = forward_lua_notify('MiniExtra.pickers.colorschemes')
+
+T['pickers']['colorschemes()']['works'] = function()
+  child.lua_notify('_G.return_item = MiniExtra.pickers.colorschemes()')
+  validate_picker_name('Colorschemes')
+  type_keys('mini')
+
+  -- should find minicyan and minischeme
+  child.expect_screenshot({ ignore_lines = { 14 } })
+
+  -- Should have proper preview
+  type_keys('<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+  child.expect_screenshot({ ignore_lines = { 14 } })
+
+  -- Should properly choose
+  type_keys('<CR>')
+  eq(child.g.colors_name, 'minicyan')
+
+  -- Should return chosen value
+  eq(child.lua_get('_G.return_item'), 'minicyan')
+end
+
+T['pickers']['colorschemes()']['up/down with preview'] = function()
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('mini', '<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+
+  -- Move down and validate theme changes
+  type_keys('<C-n>')
+  eq(child.g.colors_name, 'minischeme')
+
+  -- Move up and validate theme changes
+  type_keys('<C-p>')
+  eq(child.g.colors_name, 'minicyan')
+end
+
+T['pickers']['colorschemes()']['choose marked'] = function()
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('mini')
+
+  -- Mark minicyan and minischeme, then select
+  type_keys('<C-x>', '<C-n>', '<C-x>', '<M-CR>')
+  eq(child.g.colors_name, 'minicyan')
+end
+
+T['pickers']['colorschemes()']['cancel with mini.colors'] = function()
+  -- This customization should persist with mini.colors
+  local custom_normal_hl = { fg = 0 }
+  child.api.nvim_set_hl(0, 'Normal', custom_normal_hl)
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('mini', '<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+
+  -- Cancel picker. The custome normal hl will be preserved because
+  -- mini.colors is present and the picker uses it to save prior state.
+  type_keys('<C-c>')
+  eq(child.g.colors_name, 'minischeme')
+  eq(child.api.nvim_get_hl(0, { name = 'Normal' }), custom_normal_hl)
+end
+
+T['pickers']['colorschemes()']['cancel without mini.colors'] = function()
+  -- Disable mini.colors to test restoral via :colorscheme
+  child.lua([[
+  local require_orig = require
+  require = function(modname)
+    if modname == 'mini.colors' then error("module 'mini.colors' not found") end
+    return require_orig(modname)
+  end
+]])
+
+  local original_normal_hl = child.api.nvim_get_hl(0, { name = 'Normal' })
+  local custom_normal_hl = { fg = 0 }
+
+  -- This customization should NOT persist without mini.colors
+  child.api.nvim_set_hl(0, 'Normal', custom_normal_hl)
+
+  -- Preview colorscheme
+  pick_colorschemes()
+  type_keys('mini', '<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+
+  -- Cancel picker. The custom normal hl will NOT be preserved because
+  -- :colorscheme command is used when mini.colors is not present.
+  type_keys('<C-c>')
+  eq(child.g.colors_name, 'minischeme')
+  eq(child.api.nvim_get_hl(0, { name = 'Normal' }), original_normal_hl)
+end
+
+T['pickers']['colorschemes()']['respects `opts`'] = function()
+  pick_colorschemes({}, { source = { name = 'My name' } })
+  validate_picker_name('My name')
+end
+
 T['pickers']['commands()'] = new_set()
 
 local pick_commands = forward_lua_notify('MiniExtra.pickers.commands')

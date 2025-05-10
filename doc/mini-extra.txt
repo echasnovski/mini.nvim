@@ -249,6 +249,24 @@ Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
+                                              *MiniExtra.pickers.colorschemes()*
+             `MiniExtra.pickers.colorschemes`({local_opts}, {opts})
+Colorscheme picker
+
+Pick and load from colorschemes.
+Notes:
+- Preview temporarily loads a colorscheme
+- Canceling reverts to original colorscheme
+
+Parameters ~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Not used at the moment.
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return ~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
                                                   *MiniExtra.pickers.commands()*
                `MiniExtra.pickers.commands`({local_opts}, {opts})
 Neovim commands picker
