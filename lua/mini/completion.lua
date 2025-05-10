@@ -908,7 +908,7 @@ H.auto_info = function()
   -- Show info content without delay for visited and resolved LSP item.
   -- Otherwise delay to not spam LSP requests on up/down navigation.
   local item_id = H.table_get(completed_item, { 'user_data', 'lsp', 'item_id' })
-  local is_resolved = H.completion.lsp.resolved[item_id] ~= nil
+  local is_resolved = item_id == nil or H.completion.lsp.resolved[item_id] ~= nil
   local delay = is_resolved and 0 or H.get_config().delay.info
 
   -- Mark visually that currently shown content will be outdated for a while

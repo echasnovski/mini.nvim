@@ -1294,6 +1294,28 @@ T['Information window']['works'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['works without attached LSP server'] = function()
+  child.set_size(10, 40)
+  child.lsp.buf_detach_client(0, child.lua_get('_G.months_lsp_client_id'))
+  child.lua([[
+    local items = {
+      { word = 'aa', info = 'Word aa' },
+      { word = 'aaa', info = 'Word aaa' },
+    }
+    MiniCompletion.config.fallback_action = function() vim.fn.complete(vim.fn.col('.'), items) end
+  ]])
+
+  type_keys('i', '<C-Space>')
+  type_keys('<C-n>')
+  -- Should show info window immediately (as there is no LSP server to resolve
+  -- with) with regular border highlight
+  child.expect_screenshot()
+  eq(is_info_border_busy(), false)
+  type_keys('<C-n>')
+  child.expect_screenshot()
+  eq(is_info_border_busy(), false)
+end
+
 T['Information window']['has "busy" visualization until receiving resolve response'] = function()
   local request_delay = 3 * small_time
   child.lua('_G.mock_request_delay = ' .. request_delay)
