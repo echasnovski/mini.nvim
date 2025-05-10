@@ -69,6 +69,23 @@ local mock_lsp_items = function(items, client_id)
   ]])
 end
 
+local mock_custom_window_config = function()
+  child.lua([[
+    vim.api.nvim_create_autocmd('BufWinEnter', {
+    callback = function(args)
+      local buf_id = args.buf
+      local completion_type = vim.api.nvim_buf_get_name(buf_id):match('^minicompletion://%d+/(.*)$')
+      if completion_type == nil then return end
+
+      local win_id = vim.fn.win_findbuf(buf_id)[1]
+      local config = vim.api.nvim_win_get_config(win_id)
+      config.title, config.title_pos = 'Custom', 'right'
+      vim.api.nvim_win_set_config(win_id, config)
+    end,
+    })
+  ]])
+end
+
 -- NOTE: this can't show "what filtered text is actually shown in window".
 -- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
@@ -1530,6 +1547,20 @@ T['Information window']["respects 'winborder' option"] = function()
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
 end
 
+T['Information window']['preserves non-essential window config parts'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('"title_pos" window config field was added in Neovim=0.11') end
+
+  mock_custom_window_config()
+  child.set_size(10, 40)
+
+  type_keys('i', 'J', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
 T['Information window']['accounts for border when picking side'] = function()
   child.set_size(10, 40)
   child.lua([[MiniCompletion.config.window.info.border = 'single']])
@@ -1823,6 +1854,16 @@ T['Signature help']["respects 'winborder' option"] = function()
   -- Should prefer explicitly configured value over 'winborder'
   child.lua('MiniCompletion.config.window.signature.border = "double"')
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
+end
+
+T['Signature help']['preserves non-essential window config parts'] = function()
+  mock_custom_window_config()
+  child.set_size(7, 30)
+  type_keys('i', 'abc(')
+  sleep(default_signature_delay + small_time)
+  type_keys('x', ',')
+  sleep(small_time)
+  child.expect_screenshot()
 end
 
 T['Signature help']['accounts for border when picking side'] = function()

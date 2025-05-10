@@ -1735,7 +1735,12 @@ end
 
 H.ensure_action_window = function(cache, opts)
   local is_shown = H.is_valid_win(cache.win_id)
-  if is_shown then vim.api.nvim_win_set_config(cache.win_id, opts) end
+  if is_shown then
+    -- Preserve non-essential config values
+    local win_config = vim.api.nvim_win_get_config(cache.win_id)
+    opts.title = win_config.title
+    vim.api.nvim_win_set_config(cache.win_id, opts)
+  end
   if not is_shown then cache.win_id = vim.api.nvim_open_win(cache.bufnr, false, opts) end
 
   local win_id = cache.win_id
