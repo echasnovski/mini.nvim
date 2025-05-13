@@ -564,6 +564,11 @@ MiniKeymap.map_combo = function(mode, lhs, action, opts)
     local keys = action()
     if type(keys) == 'string' and keys ~= '' then input_keys(keys) end
   end)
+  local reset = function(key)
+    -- Make latest key start new combo, like for 'jjk' or j-wait-jj for 'jj'
+    i = seq[1] == key and 1 or 0
+    last_time = i == 0 and last_time or hrtime()
+  end
 
   local watcher = function(key, typed)
     -- Use only keys "as if typed" and in proper mode
@@ -572,19 +577,11 @@ MiniKeymap.map_combo = function(mode, lhs, action, opts)
 
     -- Advance tracking and reset if not in sequence
     i = i + 1
-    if seq[i] ~= key then
-      -- Allow latest key to start new combo (like during typing 'jjk')
-      i = seq[1] == key and 1 or 0
-      last_time = i == 0 and last_time or hrtime()
-      return
-    end
+    if seq[i] ~= key then return reset(key) end
 
     -- Reset if time between key presses is too big
     local cur_time = hrtime()
-    if (cur_time - last_time) > delay_ns and i > 1 then
-      i = 0
-      return
-    end
+    if (cur_time - last_time) > delay_ns and i > 1 then return reset(key) end
     last_time = cur_time
 
     -- Wait for more info if sequence is not exhausted, act otherwise

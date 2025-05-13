@@ -1368,6 +1368,14 @@ T['map_combo()']['detecting combo does not depend on preceding keys'] = function
   type_keys('i')
   type_keys(small_time, 'j', 'j', 'k', 'j')
   eq(get_lines(), { 'jjkxyj' })
+  set_lines({ '' })
+  child.ensure_normal_mode()
+
+  map_combo('i', 'jj', 'XY', { delay = test_combo_delay })
+  type_keys('i', 'j')
+  sleep(test_combo_delay + small_time)
+  type_keys(small_time, 'j', 'j')
+  eq(get_lines(), { 'jjjXY' })
 end
 
 T['map_combo()']['works when typing already mapped keys'] = function()
