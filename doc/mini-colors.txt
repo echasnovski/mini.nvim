@@ -669,7 +669,7 @@ Module setup
 Calling this function creates a `:Colorscheme` user command. It takes one or
 more registered color scheme names and performs animated transition between
 them (starting from currently active color scheme).
-It uses |MiniColors.animte()| with default options.
+It uses |MiniColors.animate()| with default options.
 
 Parameters ~
 {config} `(table|nil)` Module config table. See |MiniColors.config|.
