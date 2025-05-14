@@ -113,7 +113,7 @@ An extra smart <Tab> and <S-Tab>: >lua
   map_multistep('i', '<Tab>', tab_steps)
 
   local shifttab_steps = {
-    'minisnippets_prev',  'pmenu_next',
+    'minisnippets_prev',  'pmenu_prev',
     'jump_before_tsnode', 'jump_before_open',
   }
   map_multistep('i', '<S-Tab>', shifttab_steps)
@@ -357,6 +357,10 @@ Parameters ~
 {flags} `(string|nil)` Same as for |search()|.
 {opts} `(table|nil)` Options. Possible fields:
   - <side> `(string)` - one of `"before"` (default) or `"after"`.
+  - <stopline> `(number|function)` - forwarded to |search()| (as number or
+    as function's output after calling it before every search).
+  - <timeout> `(number)` - forwarded to |search()|.
+  - <skip> `(string|function)` - forwarded to |search()|.
 
 Return ~
 `(table)` Step which searches pattern.

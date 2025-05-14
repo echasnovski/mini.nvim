@@ -69,6 +69,23 @@ local mock_lsp_items = function(items, client_id)
   ]])
 end
 
+local mock_custom_window_config = function()
+  child.lua([[
+    vim.api.nvim_create_autocmd('BufWinEnter', {
+    callback = function(args)
+      local buf_id = args.buf
+      local completion_type = vim.api.nvim_buf_get_name(buf_id):match('^minicompletion://%d+/(.*)$')
+      if completion_type == nil then return end
+
+      local win_id = vim.fn.win_findbuf(buf_id)[1]
+      local config = vim.api.nvim_win_get_config(win_id)
+      config.title, config.title_pos = 'Custom', 'right'
+      vim.api.nvim_win_set_config(win_id, config)
+    end,
+    })
+  ]])
+end
+
 -- NOTE: this can't show "what filtered text is actually shown in window".
 -- Seems to be because information for `complete_info()`
 --- is updated in the very last minute (probably, by UI). This means that the
@@ -380,6 +397,19 @@ T['default_process_items()']['respects `opts.filtersort`'] = function()
   ]])
   eq(child.lua_get('_G.processed'), { { label = 'New item' } })
   eq(child.lua_get('_G.args'), { { all_items, 'l' } })
+end
+
+T['default_process_items()']['prefers match at start instead of camel case at end'] = function()
+  if child.fn.has('nvim-0.12') == 0 then MiniTest.skip('Only Neovim>=0.12 allows `camelcase=false` in `matchfuzzy`') end
+
+  local items = {
+    { kind = 1, label = 'MyClass' },
+    { kind = 1, label = 'Class' },
+    { kind = 1, label = 'MyOtherClass' },
+  }
+  child.lua('_G.items = ' .. vim.inspect(items))
+  local out = child.lua_get('MiniCompletion.default_process_items(_G.items, "Cl", { filtersort = "fuzzy" })')
+  eq(out, { items[2], items[1], items[3] })
 end
 
 T['default_process_items()']['respects `opts.kind_priority`'] = function()
@@ -1264,6 +1294,28 @@ T['Information window']['works'] = function()
   child.expect_screenshot()
 end
 
+T['Information window']['works without attached LSP server'] = function()
+  child.set_size(10, 40)
+  child.lsp.buf_detach_client(0, child.lua_get('_G.months_lsp_client_id'))
+  child.lua([[
+    local items = {
+      { word = 'aa', info = 'Word aa' },
+      { word = 'aaa', info = 'Word aaa' },
+    }
+    MiniCompletion.config.fallback_action = function() vim.fn.complete(vim.fn.col('.'), items) end
+  ]])
+
+  type_keys('i', '<C-Space>')
+  type_keys('<C-n>')
+  -- Should show info window immediately (as there is no LSP server to resolve
+  -- with) with regular border highlight
+  child.expect_screenshot()
+  eq(is_info_border_busy(), false)
+  type_keys('<C-n>')
+  child.expect_screenshot()
+  eq(is_info_border_busy(), false)
+end
+
 T['Information window']['has "busy" visualization until receiving resolve response'] = function()
   local request_delay = 3 * small_time
   child.lua('_G.mock_request_delay = ' .. request_delay)
@@ -1515,6 +1567,20 @@ T['Information window']["respects 'winborder' option"] = function()
   -- Should prefer explicitly configured value over 'winborder'
   child.lua('MiniCompletion.config.window.info.border = "double"')
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
+end
+
+T['Information window']['preserves non-essential window config parts'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('"title_pos" window config field was added in Neovim=0.11') end
+
+  mock_custom_window_config()
+  child.set_size(10, 40)
+
+  type_keys('i', 'J', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
 end
 
 T['Information window']['accounts for border when picking side'] = function()
@@ -1810,6 +1876,16 @@ T['Signature help']["respects 'winborder' option"] = function()
   -- Should prefer explicitly configured value over 'winborder'
   child.lua('MiniCompletion.config.window.signature.border = "double"')
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
+end
+
+T['Signature help']['preserves non-essential window config parts'] = function()
+  mock_custom_window_config()
+  child.set_size(7, 30)
+  type_keys('i', 'abc(')
+  sleep(default_signature_delay + small_time)
+  type_keys('x', ',')
+  sleep(small_time)
+  child.expect_screenshot()
 end
 
 T['Signature help']['accounts for border when picking side'] = function()

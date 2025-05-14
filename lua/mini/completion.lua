@@ -85,7 +85,8 @@
 ---
 --- Some options are set automatically (if not set before |MiniCompletion.setup()|):
 --- - 'completeopt' is set to "menuone,noselect" for less intrusive popup.
----   To enable fuzzy matching, manually set to "menuone,noselect,fuzzy".
+---   To enable fuzzy matching, manually set to "menuone,noselect,fuzzy". Consider
+---   also adding "nosort" flag to preserve initial order when filtering.
 --- - 'shortmess' is appended with "c" flag for silent <C-n> fallback.
 ---
 --- # Snippets ~
@@ -907,7 +908,7 @@ H.auto_info = function()
   -- Show info content without delay for visited and resolved LSP item.
   -- Otherwise delay to not spam LSP requests on up/down navigation.
   local item_id = H.table_get(completed_item, { 'user_data', 'lsp', 'item_id' })
-  local is_resolved = H.completion.lsp.resolved[item_id] ~= nil
+  local is_resolved = item_id == nil or H.completion.lsp.resolved[item_id] ~= nil
   local delay = is_resolved and 0 or H.get_config().delay.info
 
   -- Mark visually that currently shown content will be outdated for a while
@@ -1137,7 +1138,7 @@ H.filtersort_methods = {
   end,
   fuzzy = function(items, base)
     if base == '' then return vim.deepcopy(items) end
-    return vim.fn.matchfuzzy(items, base, { text_cb = H.lsp_get_filterword })
+    return vim.fn.matchfuzzy(items, base, { text_cb = H.lsp_get_filterword, camelcase = false })
   end,
   none = function(items, _) return vim.deepcopy(items) end,
 }
@@ -1734,7 +1735,12 @@ end
 
 H.ensure_action_window = function(cache, opts)
   local is_shown = H.is_valid_win(cache.win_id)
-  if is_shown then vim.api.nvim_win_set_config(cache.win_id, opts) end
+  if is_shown then
+    -- Preserve non-essential config values
+    local win_config = vim.api.nvim_win_get_config(cache.win_id)
+    opts.title = win_config.title
+    vim.api.nvim_win_set_config(cache.win_id, opts)
+  end
   if not is_shown then cache.win_id = vim.api.nvim_open_win(cache.bufnr, false, opts) end
 
   local win_id = cache.win_id
