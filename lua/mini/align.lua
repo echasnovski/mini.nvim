@@ -1617,13 +1617,11 @@ H.default_action_merge = function(parts, opts)
   end
 
   -- Do not change indentation
-  if #delimiter_arr > 0 then
-    local first_parts_are_indent = true
-    for i = 1, dims.row do
-      first_parts_are_indent = first_parts_are_indent and H.is_whitespace(parts[i][1])
-    end
-    delimiter_arr[1] = first_parts_are_indent and delimiter_arr[1]:gsub('^%s*', '') or delimiter_arr[1]
+  local first_parts_are_indent = true
+  for i = 1, dims.row do
+    first_parts_are_indent = first_parts_are_indent and H.is_whitespace(parts[i][1])
   end
+  delimiter_arr[1] = first_parts_are_indent and delimiter_arr[1]:gsub('^%s*', '') or delimiter_arr[1]
 
   return vim.tbl_map(function(row) return H.concat_array(row, delimiter_arr) end, parts)
 end
