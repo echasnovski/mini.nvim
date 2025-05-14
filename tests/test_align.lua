@@ -953,6 +953,13 @@ T['gen_step']['default_merge()']['works'] = function()
   )
 end
 
+T['gen_step']['default_merge()']['indentity for empty list and zero-length strings'] = function()
+  validate_align_strings({}, {}, {})
+  validate_align_strings({ '' }, {}, { '' })
+  validate_align_strings({ '', '' }, {}, { '', '' })
+  validate_align_strings({ '', ' ' }, {}, { '', ' ' })
+end
+
 T['gen_step']['default_merge()']['verifies relevant options'] = function()
   expect.error(
     function() child.lua([[MiniAlign.align_strings({ 'a' }, { merge_delimiter = 1 }, {})]]) end,
