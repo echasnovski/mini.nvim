@@ -2019,6 +2019,7 @@ end
 T['Scroll']['can be done in signature window'] = function()
   if child.fn.has('nvim-0.10') == 0 then MiniTest.skip("'smoothscroll' requires Neovim>=0.10") end
 
+  child.o.smoothscroll = true
   child.lua('MiniCompletion.config.window.signature.height = 4')
   child.lua('MiniCompletion.config.window.signature.width = 4')
 
@@ -2041,6 +2042,7 @@ T['Scroll']['can be done in signature window'] = function()
 end
 
 T['Scroll']['can be done in both windows'] = function()
+  child.o.smoothscroll = true
   child.lua('MiniCompletion.config.window.info.height = 4')
   child.lua('MiniCompletion.config.window.signature.height = 4')
   child.lua('MiniCompletion.config.window.signature.width = 4')
