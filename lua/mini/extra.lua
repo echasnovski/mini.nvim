@@ -1467,8 +1467,7 @@ MiniExtra.pickers.visit_paths = function(local_opts, opts)
 
   local name = string.format('Visit paths (%s)', is_for_cwd and 'cwd' or 'all')
   local default_source = { name = name, cwd = picker_cwd, match = match, show = show }
-  opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {}, { source = { items = items } })
-  return pick.start(opts)
+  return H.pick_start(items, { source = default_source }, opts)
 end
 
 --- Visit labels from 'mini.visits' picker
@@ -1539,8 +1538,7 @@ MiniExtra.pickers.visit_labels = function(local_opts, opts)
 
   local name = string.format('Visit labels (%s)', is_for_cwd and 'cwd' or 'all')
   local default_source = { name = name, cwd = picker_cwd, preview = preview, choose = choose }
-  opts = vim.tbl_deep_extend('force', { source = default_source }, opts or {}, { source = { items = items } })
-  return pick.start(opts)
+  return H.pick_start(items, { source = default_source }, opts)
 end
 
 -- Helper data ================================================================
@@ -1653,14 +1651,7 @@ end
 
 H.pick_start = function(items, default_opts, opts)
   local pick = H.validate_pick()
-  local fallback = {
-    source = {
-      preview = pick.default_preview,
-      choose = pick.default_choose,
-      choose_marked = pick.default_choose_marked,
-    },
-  }
-  local opts_final = vim.tbl_deep_extend('force', fallback, default_opts, opts or {}, { source = { items = items } })
+  local opts_final = vim.tbl_deep_extend('force', default_opts, opts or {}, { source = { items = items } })
   return pick.start(opts_final)
 end
 

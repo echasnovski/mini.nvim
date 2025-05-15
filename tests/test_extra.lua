@@ -745,6 +745,26 @@ T['pickers'] = new_set({
   },
 })
 
+local validate_global_source_options = function(picker_start, check_preview, check_choose)
+  child.lua([[
+    MiniPick.config.source.preview = function(buf_id, item)
+      vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { "My preview" })
+      _G.custom_preview = true
+    end
+    MiniPick.config.source.choose = function(item)
+      _G.custom_choose = true
+    end
+  ]])
+  picker_start()
+  local ref_custom_preview = check_preview == false and vim.NIL or true
+  type_keys('<Tab>')
+  eq(child.lua_get('_G.custom_preview'), ref_custom_preview)
+  local ref_custom_choose = check_choose == false and vim.NIL or true
+  type_keys('<CR>')
+  eq(child.lua_get('_G.custom_choose'), ref_custom_choose)
+  type_keys('<C-c>')
+end
+
 T['pickers']["validate no 'mini.pick'"] = function()
   child.lua([[require = function(module) error() end]])
 
@@ -898,6 +918,10 @@ T['pickers']['buf_lines()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['buf_lines()']['respects global source options'] = function()
+  validate_global_source_options(pick_buf_lines, true, true)
+end
+
 T['pickers']['buf_lines()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.buf_lines(...)', { local_opts }) end, error_pattern)
@@ -957,6 +981,10 @@ end
 T['pickers']['commands()']['respects `opts`'] = function()
   pick_commands({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['commands()']['respects global source options'] = function()
+  validate_global_source_options(pick_commands, false, false)
 end
 
 T['pickers']['diagnostic()'] = new_set({
@@ -1096,6 +1124,10 @@ end
 T['pickers']['diagnostic()']['respects `opts`'] = function()
   pick_diagnostic({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['diagnostic()']['respects global source options'] = function()
+  validate_global_source_options(pick_diagnostic, true, false)
 end
 
 T['pickers']['diagnostic()']['does not modify diagnostic table'] = function()
@@ -1292,6 +1324,10 @@ T['pickers']['explorer()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['explorer()']['respects global source options'] = function()
+  validate_global_source_options(pick_explorer, true, false)
+end
+
 T['pickers']['explorer()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.explorer(...)', { local_opts }) end, error_pattern)
@@ -1413,6 +1449,10 @@ T['pickers']['git_branches()']['respects `opts`'] = function()
   mock_git_repo(repo_dir)
   pick_git_branches({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['git_branches()']['respects global source options'] = function()
+  validate_global_source_options(pick_git_branches, false, false)
 end
 
 T['pickers']['git_branches()']['validates git'] = function()
@@ -1537,6 +1577,10 @@ T['pickers']['git_commits()']['respects `opts`'] = function()
   mock_git_repo(repo_dir)
   pick_git_commits({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['git_commits()']['respects global source options'] = function()
+  validate_global_source_options(pick_git_branches, false, false)
 end
 
 T['pickers']['git_commits()']['validates git'] = function()
@@ -1668,6 +1712,14 @@ T['pickers']['git_files()']['respects `opts`'] = function()
   mock_git_repo(repo_dir)
   pick_git_files({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['git_files()']['respects global source options'] = function()
+  local repo_dir = test_dir_absolute
+  child.fn.chdir(repo_dir)
+  mock_git_repo(repo_dir)
+  mock_cli_return({ 'git-files/git-file-1', 'git-files/git-file-2' })
+  validate_global_source_options(pick_git_files, true, true)
 end
 
 T['pickers']['git_files()']['validates git'] = function()
@@ -1859,6 +1911,15 @@ T['pickers']['git_hunks()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['git_hunks()']['respects global source options'] = function()
+  local repo_dir = test_dir_absolute
+  child.fn.chdir(repo_dir)
+  mock_git_repo(repo_dir)
+  local diff_lines = child.fn.readfile(join_path('mocks', 'git-diff'))
+  mock_cli_return(diff_lines)
+  validate_global_source_options(pick_git_hunks, false, true)
+end
+
 T['pickers']['git_hunks()']['validates git'] = function()
   -- CLI
   mock_fn_executable({})
@@ -1994,6 +2055,11 @@ T['pickers']['hipatterns()']['respects `opts`'] = function()
   setup_hipatterns()
   pick_hipatterns({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['hipatterns()']['respects global source options'] = function()
+  setup_hipatterns()
+  validate_global_source_options(pick_hipatterns, true, true)
 end
 
 T['pickers']['hipatterns()']["checks for present 'mini.hipatterns'"] = function()
@@ -2153,6 +2219,10 @@ T['pickers']['history()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['history()']['respects global source options'] = function()
+  validate_global_source_options(pick_history, false, false)
+end
+
 T['pickers']['history()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.history(...)', { local_opts }) end, error_pattern)
@@ -2211,6 +2281,10 @@ end
 T['pickers']['hl_groups()']['respects `opts`'] = function()
   pick_hl_groups({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['hl_groups()']['respects global source options'] = function()
+  validate_global_source_options(pick_hl_groups, false, false)
 end
 
 T['pickers']['keymaps()'] = new_set()
@@ -2350,6 +2424,10 @@ end
 T['pickers']['keymaps()']['respects `opts`'] = function()
   pick_keymaps({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['keymaps()']['respects global source options'] = function()
+  validate_global_source_options(pick_keymaps, false, false)
 end
 
 T['pickers']['keymaps()']['validates arguments'] = function()
@@ -2496,6 +2574,14 @@ end
 T['pickers']['list()']['respects `opts`'] = function()
   pick_list({ scope = 'jump' }, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['list()']['respects global source options'] = function()
+  local path = real_file('a.lua')
+  child.cmd('edit ' .. path)
+  type_keys('G')
+  type_keys('gg')
+  validate_global_source_options(function() pick_list({ scope = 'jump' }) end, true, false)
 end
 
 T['pickers']['list()']['validates arguments'] = function()
@@ -2740,6 +2826,11 @@ T['pickers']['lsp()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['lsp()']['respects global source options'] = function()
+  setup_lsp()
+  validate_global_source_options(function() pick_lsp({ scope = 'document_symbol' }) end, true, false)
+end
+
 T['pickers']['lsp()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.lsp(...)', { local_opts }) end, error_pattern)
@@ -2836,6 +2927,11 @@ T['pickers']['marks()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['marks()']['respects global source options'] = function()
+  setup_marks()
+  validate_global_source_options(pick_marks, true, true)
+end
+
 T['pickers']['marks()']['validates arguments'] = function()
   local validate = function(local_opts, error_pattern)
     expect.error(function() child.lua('MiniExtra.pickers.marks(...)', { local_opts }) end, error_pattern)
@@ -2922,6 +3018,13 @@ end
 T['pickers']['oldfiles()']['respects `opts`'] = function()
   pick_oldfiles({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['oldfiles()']['respects global source options'] = function()
+  local path_1, path_2 = real_file('LICENSE'), make_testpath('mocks', 'diagnostic.lua')
+  local ref_oldfiles = { full_path(path_1), full_path(path_2), 'not-existing' }
+  child.v.oldfiles = ref_oldfiles
+  validate_global_source_options(pick_oldfiles, true, true)
 end
 
 T['pickers']['oldfiles()']['respects `opts.source.cwd`'] = function()
@@ -3033,6 +3136,10 @@ end
 T['pickers']['options()']['respects `opts`'] = function()
   pick_options({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['options()']['respects global source options'] = function()
+  validate_global_source_options(pick_options, false, false)
 end
 
 T['pickers']['options()']['validates arguments'] = function()
@@ -3160,6 +3267,11 @@ T['pickers']['registers()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['registers()']['respects global source options'] = function()
+  setup_registers()
+  validate_global_source_options(pick_registers, false, false)
+end
+
 T['pickers']['spellsuggest()'] = new_set()
 
 local pick_spellsuggest = forward_lua_notify('MiniExtra.pickers.spellsuggest')
@@ -3201,6 +3313,11 @@ T['pickers']['spellsuggest()']['respects `opts`'] = function()
   setup_spell()
   pick_spellsuggest({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['spellsuggest()']['respects global source options'] = function()
+  setup_spell()
+  validate_global_source_options(pick_spellsuggest, false, false)
 end
 
 T['pickers']['spellsuggest()']['validates arguments'] = function()
@@ -3263,6 +3380,11 @@ T['pickers']['treesitter()']['respects `opts`'] = function()
   setup_treesitter()
   pick_treesitter({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['treesitter()']['respects global source options'] = function()
+  setup_treesitter()
+  validate_global_source_options(pick_treesitter, true, true)
 end
 
 local setup_visits = function()
@@ -3366,6 +3488,11 @@ T['pickers']['visit_paths()']['respects `opts`'] = function()
   validate_picker_name('My name')
 end
 
+T['pickers']['visit_paths()']['respects global source options'] = function()
+  setup_visits()
+  validate_global_source_options(pick_visit_paths, true, true)
+end
+
 T['pickers']['visit_paths()']["checks for present 'mini.visits'"] = function()
   child.lua([[
     local require_orig = require
@@ -3446,6 +3573,11 @@ end
 T['pickers']['visit_labels()']['respects `opts`'] = function()
   pick_visit_labels({}, { source = { name = 'My name' } })
   validate_picker_name('My name')
+end
+
+T['pickers']['visit_labels()']['respects global source options'] = function()
+  setup_visits()
+  validate_global_source_options(pick_visit_labels, false, false)
 end
 
 T['pickers']['visit_labels()']["checks for present 'mini.visits'"] = function()
