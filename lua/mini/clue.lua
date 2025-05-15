@@ -1914,7 +1914,10 @@ H.replace_termcodes = function(x)
   return vim.api.nvim_replace_termcodes(H.keytrans(x), true, true, true)
 end
 
-H.keytrans = function(x) return (vim.fn.keytrans(x):gsub('<lt>', '<'):gsub('<[Nn][Ll]>', '<C-J>')) end
+H.keytrans = function(x)
+  local res = vim.fn.keytrans(x):gsub('<NL>', '<C-J>'):gsub('<S%-NL>', '<C-S-J>'):gsub('<M%-NL>', '<C-M-J>')
+  return (res:gsub('<lt>', '<'))
+end
 
 H.get_forced_submode = function()
   local mode = vim.fn.mode(1)
