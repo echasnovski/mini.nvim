@@ -384,6 +384,41 @@ MiniExtra.pickers.buf_lines = function(local_opts, opts)
   return H.pick_start(items, { source = default_source }, opts)
 end
 
+--- Colorscheme picker
+---
+--- Pick and load from colorschemes.
+--- Notes:
+--- - Preview temporarily loads a colorscheme
+--- - Canceling reverts to original colorscheme
+---
+---@param local_opts __extra_pickers_local_opts
+---   Not used at the moment.
+---@param opts __extra_pickers_opts
+---
+---@return __extra_pickers_return
+MiniExtra.pickers.colorschemes = function(local_opts, opts)
+  local pick = H.validate_pick('colorschemes')
+
+  local original_bg = vim.o.background
+  local has_colors, colors = pcall(require, 'mini.colors')
+  local selected_cs = has_colors and colors.get_colorscheme() or vim.g.colors_name
+
+  local choose = function(item) selected_cs = item end
+  local choose_marked = function(items) choose(items[1] or selected_cs) end
+  local preview = function(buf_id, item)
+    H.set_colorscheme(item, original_bg)
+    vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { item })
+  end
+
+  local items = vim.fn.getcompletion('', 'color')
+  local default_opts =
+    { source = { name = 'Colorschemes', preview = preview, choose = choose, choose_marked = choose_marked } }
+  local result = H.pick_start(items, default_opts, opts)
+
+  H.set_colorscheme(selected_cs, original_bg)
+  return result
+end
+
 --- Neovim commands picker
 ---
 --- Pick from Neovim built-in (|ex-commands|) and |user-commands|.
@@ -1715,6 +1750,16 @@ H.choose_with_buflisted = function(item)
   local buf_id = vim.api.nvim_win_get_buf(win_target)
   vim.bo[buf_id].buflisted = true
 end
+
+-- Colorscheme picker ----------------------------------------------------------
+H.set_colorscheme = vim.schedule_wrap(function(colorscheme, background)
+  vim.o.background = background
+  if colorscheme == vim.g.colors_name then return end
+  if type(colorscheme) == 'string' then return vim.cmd('colorscheme ' .. colorscheme) end
+  colorscheme:apply()
+  -- Trigger to indicate actual color scheme application
+  vim.cmd('doautocmd ColorScheme')
+end)
 
 -- Diagnostic picker ----------------------------------------------------------
 H.diagnostic_make_compare = function(sort_by)
