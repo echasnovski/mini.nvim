@@ -165,7 +165,7 @@ Helpers.new_child_neovim = function()
     child.lua(([[package.loaded['%s'] = nil]]):format(module_name))
 
     -- Remove global table
-    child.lua(('_G[%s] = nil'):format(tbl_name))
+    child.lua(('_G["%s"] = nil'):format(tbl_name))
 
     -- Remove autocmd group
     if child.fn.exists('#' .. tbl_name) == 1 then child.api.nvim_del_augroup_by_name(tbl_name) end

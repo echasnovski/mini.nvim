@@ -721,13 +721,13 @@ T['gen_hook'] = new_set({
 T['gen_hook']['adding_bullet()'] = new_set()
 
 T['gen_hook']['adding_bullet()']['works'] = function()
-  reload_from_strconfig({ content_hooks = '{ MiniStarter.gen_hook.adding_bullet() }' })
+  reload_from_strconfig({ content_hooks = '{ require("mini.starter").gen_hook.adding_bullet() }' })
   child.lua('MiniStarter.open()')
   child.expect_screenshot()
 end
 
 T['gen_hook']['adding_bullet()']['respects `bullet` argument'] = function()
-  reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.adding_bullet('> ') }]] })
+  reload_from_strconfig({ content_hooks = '{ require("mini.starter").gen_hook.adding_bullet("> ") }' })
   child.lua('MiniStarter.open()')
   child.expect_screenshot()
 end
@@ -738,7 +738,7 @@ T['gen_hook']['adding_bullet() respects `place_cursor` argument'] = function()
       header = [['']],
       footer = [['']],
       items = ('{ %s }'):format(mock_itemstring('bbb', '')),
-      content_hooks = ([[{ MiniStarter.gen_hook.adding_bullet('aaa', %s) }]]):format(place_cursor),
+      content_hooks = ('{ require("mini.starter").gen_hook.adding_bullet("aaa", %s) }'):format(place_cursor),
     })
   end
 
@@ -754,7 +754,7 @@ end
 T['gen_hook']['aligning()'] = new_set()
 
 T['gen_hook']['aligning()']['works'] = function()
-  reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.aligning() }]] })
+  reload_from_strconfig({ content_hooks = '{ require("mini.starter").gen_hook.aligning() }' })
   child.lua('MiniStarter.open()')
   -- By default shouldn't do any aligning
   child.expect_screenshot()
@@ -778,7 +778,7 @@ T['gen_hook']['aligning()']['respects arguments'] = new_set({
 }, {
   test = function(args)
     reload_from_strconfig({
-      content_hooks = ('{ MiniStarter.gen_hook.aligning(%s) }'):format(args),
+      content_hooks = ('{ require("mini.starter").gen_hook.aligning(%s) }'):format(args),
       header = [['']],
       footer = [['']],
       items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
@@ -796,7 +796,7 @@ T['gen_hook']['aligning()']['handles small windows'] = function()
   child.api.nvim_win_set_width(0, 2)
   child.api.nvim_win_set_height(0, 2)
   reload_from_strconfig({
-    content_hooks = [[{ MiniStarter.gen_hook.aligning('right', 'bottom') }]],
+    content_hooks = '{ require("mini.starter").gen_hook.aligning("right", "bottom") }',
     header = [['']],
     footer = [['']],
     items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
@@ -811,7 +811,7 @@ T['gen_hook']['aligning()']['has output respecting `buf_id` argument'] = functio
 
   child.set_size(15, 40)
   reload_from_strconfig({
-    content_hooks = [[{ MiniStarter.gen_hook.aligning('center', 'center') }]],
+    content_hooks = '{ require("mini.starter").gen_hook.aligning("center", "center") }',
     header = [['']],
     footer = [['']],
     items = ('{ %s, %s }'):format(mock_itemstring('aaa', 'AAA'), mock_itemstring('bbb', 'AAA')),
@@ -839,7 +839,7 @@ local reload_indexing = function(args)
     header = [['']],
     footer = [['']],
     items = '{ ' .. table.concat(itemstrings, ', ') .. '}',
-    content_hooks = ('{ MiniStarter.gen_hook.indexing(%s) }'):format(args),
+    content_hooks = ('{ require("mini.starter").gen_hook.indexing(%s) }'):format(args),
   })
 end
 
@@ -866,7 +866,7 @@ T['gen_hook']['indexing()']['respects arguments'] = new_set({
 T['gen_hook']['padding()'] = new_set()
 
 T['gen_hook']['padding()']['works'] = function()
-  reload_from_strconfig({ content_hooks = [[{ MiniStarter.gen_hook.padding() }]] })
+  reload_from_strconfig({ content_hooks = '{ require("mini.starter").gen_hook.padding() }' })
   child.lua('MiniStarter.open()')
   -- By default shouldn't do any aligning
   child.expect_screenshot()
@@ -876,7 +876,7 @@ T['gen_hook']['padding()']['respects arguments'] = new_set({
   parametrize = { { '2, 0' }, { '0, 2' }, { '2, 2' } },
 }, {
   test = function(args)
-    local command = string.format('{ MiniStarter.gen_hook.padding(%s) }', args)
+    local command = string.format('{ require("mini.starter").gen_hook.padding(%s) }', args)
     reload_from_strconfig({ content_hooks = command })
     child.lua('MiniStarter.open()')
     child.expect_screenshot()
@@ -1333,7 +1333,7 @@ end
 T['Highlighting']['uses `MiniStarterItemBullet`'] = function()
   reload_from_strconfig({
     items = example_itemstring,
-    content_hooks = '{ MiniStarter.gen_hook.adding_bullet() }',
+    content_hooks = '{ require("mini.starter").gen_hook.adding_bullet() }',
     header = [['']],
     footer = [['']],
   })
@@ -1388,7 +1388,7 @@ T['Cursor positioning']['works with bullets'] = new_set({
   test = function(place_cursor, cursor_start, cursor_finish)
     reload_from_strconfig({
       items = example_itemstring,
-      content_hooks = ('{ MiniStarter.gen_hook.adding_bullet(nil, %s) }'):format(place_cursor),
+      content_hooks = ('{ require("mini.starter").gen_hook.adding_bullet(nil, %s) }'):format(place_cursor),
       header = [['']],
       footer = [['']],
     })
