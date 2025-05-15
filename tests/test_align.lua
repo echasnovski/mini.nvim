@@ -442,6 +442,13 @@ T['align_strings()']['works with multibyte characters'] = function()
   )
 end
 
+T['align_strings()']['works in edge cases'] = function()
+  validate_align_strings({}, {}, {})
+  validate_align_strings({ '' }, {}, { '' })
+  validate_align_strings({ '', '' }, {}, { '', '' })
+  validate_align_strings({ '', ' ' }, {}, { '', ' ' })
+end
+
 T['align_strings()']['does not affect input array'] = function()
   child.lua([[strings = { 'a=b', 'aa=b' }]])
   child.lua([[pre_split = { MiniAlign.new_step('aaa', function(s, _) s[1] = 'xxx' end) }]])
@@ -951,6 +958,13 @@ T['gen_step']['default_merge()']['works'] = function()
     -- Part resulted from separator is treated the same as any other part
     { 'a-=!b-=!c-=' }
   )
+end
+
+T['gen_step']['default_merge()']['works in edge cases'] = function()
+  validate_align_strings({}, {}, {})
+  validate_align_strings({ '' }, {}, { '' })
+  validate_align_strings({ '', '' }, {}, { '', '' })
+  validate_align_strings({ '', ' ' }, {}, { '', ' ' })
 end
 
 T['gen_step']['default_merge()']['verifies relevant options'] = function()
