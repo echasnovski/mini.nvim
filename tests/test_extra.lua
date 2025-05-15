@@ -745,6 +745,8 @@ T['pickers'] = new_set({
   },
 })
 
+local validate_active_picker = function() eq(child.lua_get('require("mini.pick").get_picker_state() ~= nil'), true) end
+
 local validate_global_source_options = function(picker_start, check_preview, check_choose)
   child.lua([[
     MiniPick.config.source.preview = function(buf_id, item)
@@ -825,6 +827,11 @@ T['pickers']['buf_lines()']['works'] = function()
 
   -- Should return chosen value with proper structure
   eq(child.lua_get('_G.return_item'), { bufnr = buffers[1], lnum = 2, text = 'buffer-1\0002\000  buffer 1' })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_buf_lines()
+  validate_active_picker()
 end
 
 T['pickers']['buf_lines()']['respects `local_opts.scope`'] = function()
@@ -953,6 +960,11 @@ T['pickers']['commands()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), 'chdir')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_commands()
+  validate_active_picker()
 end
 
 T['pickers']['commands()']['respects user commands'] = function()
@@ -1045,6 +1057,11 @@ T['pickers']['diagnostic()']['works'] = function()
     message  = 'Error 2',
     text     = 'E │ tests/dir-extra/mocks/diagnostic-file-1 │ Error 2',
   })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_diagnostic()
+  validate_active_picker()
 end
 
 T['pickers']['diagnostic()']['respects `local_opts.get_opts`'] = function()
@@ -1197,6 +1214,11 @@ T['pickers']['explorer()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), { fs_type = 'file', path = init_dir .. '/file3', text = 'file3' })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_explorer()
+  validate_active_picker()
 end
 
 T['pickers']['explorer()']['works with query'] = function()
@@ -1392,6 +1414,11 @@ T['pickers']['git_branches()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), branch_lines[1])
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_git_branches()
+  validate_active_picker()
 end
 
 T['pickers']['git_branches()']['respects `local_opts.path`'] = function()
@@ -1535,6 +1562,11 @@ T['pickers']['git_commits()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), log_lines[#log_lines])
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_git_commits()
+  validate_active_picker()
 end
 
 T['pickers']['git_commits()']['respects `local_opts.path`'] = function()
@@ -1640,6 +1672,11 @@ T['pickers']['git_files()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), 'git-files/git-file-1')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_git_files()
+  validate_active_picker()
 end
 
 T['pickers']['git_files()']['respects `local_opts.path`'] = function()
@@ -1796,6 +1833,11 @@ T['pickers']['git_hunks()']['works'] = function()
   eq(return_item_keys, { 'header', 'hunk', 'lnum', 'path', 'text' })
   eq(return_item.path, 'git-files/git-file-2')
   eq(return_item.lnum, 12)
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_git_hunks()
+  validate_active_picker()
 end
 
 T['pickers']['git_hunks()']['respects `local_opts.n_context`'] = new_set({ parametrize = { { 0 }, { 20 } } }, {
@@ -2027,6 +2069,11 @@ T['pickers']['hipatterns()']['works'] = function()
     end_col = 4,
     text = 'minmax │ Buffer_3│3│1│max',
   })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_hipatterns()
+  validate_active_picker()
 end
 
 T['pickers']['hipatterns()']['respects `local_opts.scope`'] = function()
@@ -2132,6 +2179,11 @@ T['pickers']['history()']['works'] = function()
   -- Should return chosen value with proper structure
   type_keys('<CR>')
   eq(child.lua_get('_G.return_item'), ': lua _G.n = _G.n + 2')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_history()
+  validate_active_picker()
 end
 
 T['pickers']['history()']['works for command-line history'] = function()
@@ -2262,6 +2314,11 @@ T['pickers']['hl_groups()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), 'SpellBad')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_hl_groups()
+  validate_active_picker()
 end
 
 T['pickers']['hl_groups()']['respects non-default/linked highlight groups'] = function()
@@ -2338,6 +2395,11 @@ T['pickers']['keymaps()']['works'] = function()
     maparg = ref_maparg,
     text = 'n @ │ <Space>b   │ <Cmd>lua _G.res = "buf"<CR>',
   })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_keymaps()
+  validate_active_picker()
 end
 
 T['pickers']['keymaps()']['can be chosen in non-Normal modes'] = function()
@@ -2900,6 +2962,11 @@ T['pickers']['marks()']['works'] = function()
   local path_slash = path:gsub('\\', '/')
   local ref_item = { col = 6, lnum = 1, path = path_slash, text = 'A │ ' .. path_slash .. '│1│6' }
   eq(child.lua_get('_G.return_item'), ref_item)
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_marks()
+  validate_active_picker()
 end
 
 T['pickers']['marks()']['respects `local_opts.scope`'] = function()
@@ -2973,6 +3040,11 @@ T['pickers']['oldfiles()']['works'] = function()
   --stylua: ignore
   -- Should return chosen value with proper structure
   eq(child.lua_get('_G.return_item'), path_1_slash)
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_oldfiles()
+  validate_active_picker()
 end
 
 T['pickers']['oldfiles()']['works with empty `v:oldfiles`'] = function()
@@ -3068,6 +3140,11 @@ T['pickers']['options()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), { text = 'cursorbind', info = child.api.nvim_get_option_info('cursorbind') })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_options()
+  validate_active_picker()
 end
 
 T['pickers']['options()']['respects set options'] = function()
@@ -3192,6 +3269,11 @@ T['pickers']['registers()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), { regname = 'a', regcontents = 'Register a', text = 'a │ Register a' })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_registers()
+  validate_active_picker()
 end
 
 T['pickers']['registers()']['can be chosen in non-Normal modes'] = function()
@@ -3301,6 +3383,11 @@ T['pickers']['spellsuggest()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), { index = 1, text = 'world' })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_spellsuggest()
+  validate_active_picker()
 end
 
 T['pickers']['spellsuggest()']['respects `local_opts.n_suggestions`'] = function()
@@ -3370,6 +3457,11 @@ T['pickers']['treesitter()']['works'] = function()
     lnum = 1,
     text = ' assignment_statement (1│7 - 1│12)',
   })
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_treesitter()
+  validate_active_picker()
 end
 
 T['pickers']['treesitter()']['checks for active tree-sitter'] = function()
@@ -3430,6 +3522,11 @@ T['pickers']['visit_paths()']['works'] = function()
 
   -- Should return chosen value
   eq(child.lua_get('_G.return_item'), 'real-files/a.lua')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_visit_paths()
+  validate_active_picker()
 end
 
 T['pickers']['visit_paths()']['respects `local_opts.cwd`'] = function()
@@ -3529,6 +3626,11 @@ T['pickers']['visit_labels()']['works'] = function()
 
   -- Should return chosen path
   eq(child.lua_get('_G.return_item'), 'real-files/a.lua')
+
+  -- Should work without set up 'mini.pick'
+  child.mini_unload('pick')
+  pick_visit_labels()
+  validate_active_picker()
 end
 
 T['pickers']['visit_labels()']['respects `local_opts.cwd`'] = function()
