@@ -127,6 +127,11 @@ MiniJump.config = {
   -- This also affects (purely informational) helper messages shown after
   -- idle time if user input is required.
   silent = false,
+
+  -- Optional callback to be triggered when waiting for target input
+  -- Useful for combining mini.jump with other plugins that also want
+  -- to modify f/t/F/T behavior.
+  get_target_callback = function(_backward) end
 }
 --minidoc_afterlines_end
 
@@ -241,7 +246,7 @@ MiniJump.smart_jump = function(backward, till)
   -- Ask for target only when needed
   local target
   if not MiniJump.state.jumping or MiniJump.state.target == nil then
-    target = H.get_target()
+    target = H.get_target(backward)
     -- Stop if user supplied invalid target
     if target == nil then return end
   end
@@ -312,6 +317,7 @@ H.setup_config = function(config)
   H.check_type('mappings.repeat_jump', config.mappings.repeat_jump, 'string')
 
   H.check_type('silent', config.silent, 'boolean')
+  H.check_type('get_target_callback', config.get_target_callback, 'callable')
 
   return config
 end
@@ -368,7 +374,7 @@ H.make_expr_jump = function(backward, till)
     -- Ask for `target` for non-repeating jump as this will be used only in
     -- operator-pending mode. Dot-repeat is supported via expression-mapping.
     local is_repeat_jump = backward == nil or till == nil
-    local target = is_repeat_jump and MiniJump.state.target or H.get_target()
+    local target = is_repeat_jump and MiniJump.state.target or H.get_target(backward)
 
     -- Stop if user supplied invalid target
     if target == nil then return '<Esc>' end
@@ -528,13 +534,23 @@ end
 
 H.get_cursor_data = function() return { vim.api.nvim_get_current_win(), vim.api.nvim_win_get_cursor(0) } end
 
-H.get_target = function()
+H.get_target = function(backward)
   local needs_help_msg = true
   vim.defer_fn(function()
     if not needs_help_msg then return end
     H.echo('Enter target single character ')
     H.cache.msg_shown = true
   end, 1000)
+
+  local config = H.get_config()
+  local get_target_callback = config.get_target_callback
+  if vim.is_callable(get_target_callback) then
+    local ok, _ = pcall(get_target_callback, backward)
+    if not ok then
+      H.error('Error in `get_target_callback`: ' .. debug.traceback())
+    end
+  end
+
   local ok, char = pcall(vim.fn.getcharstr)
   needs_help_msg = false
   H.unecho()
@@ -551,3 +567,4 @@ H.map = function(mode, lhs, rhs, opts)
 end
 
 return MiniJump
+
