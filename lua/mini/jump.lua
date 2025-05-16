@@ -350,6 +350,7 @@ H.create_autocommands = function()
   au('CursorMoved', '*', H.on_cursormoved, 'On CursorMoved')
   au({ 'BufLeave', 'InsertEnter' }, '*', MiniJump.stop_jumping, 'Stop jumping')
   au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')
+  vim.on_key(H.on_key)
 end
 
 H.create_default_hl = function() vim.api.nvim_set_hl(0, 'MiniJump', { default = true, link = 'SpellRare' }) end
@@ -389,6 +390,17 @@ H.on_cursormoved = function()
     H.cache.n_cursor_moved = H.cache.n_cursor_moved + 1
     -- Stop jumping only if `CursorMoved` was not a result of smart jump
     if H.cache.n_cursor_moved > 1 then MiniJump.stop_jumping() end
+  end
+end
+
+H.on_key = function(char)
+  -- Check if jumping to avoid unnecessary actions on every on_key
+  if MiniJump.state.jumping then
+    local key = vim.fn.keytrans(char)
+    if key == '<Esc>' then
+      -- Stop jumping if user pressed `<Esc>`
+      MiniJump.stop_jumping()
+    end
   end
 end
 
