@@ -97,6 +97,11 @@ Default values:
     -- This also affects (purely informational) helper messages shown after
     -- idle time if user input is required.
     silent = false,
+
+    -- Optional callback to be triggered when waiting for target input
+    -- Useful for combining mini.jump with other plugins that also want
+    -- to modify f/t/F/T behavior.
+    get_target_callback = function(_backward) end
   }
 <
 ------------------------------------------------------------------------------
