@@ -108,6 +108,18 @@ It stores various information used in this module. All elements, except
 `jumping`, is about the latest jump. They are used as default values for
 similar arguments.
 
+Usage ~
+This can be used to define mappings which depend on state; either as
+a standalone mapping or part of |MiniKeymap.map_multistep()|. For example: >lua
+
+  -- Stop jumping after pressing `<Esc>`
+  local jump_stop = function()
+    if not MiniJump.state.jumping then return '<Esc>' end
+    MiniJump.stop_jumping()
+  end
+  local opts = { expr = true, desc = 'Stop jumping' }
+  vim.keymap.set({ 'n', 'x', 'o' }, '<Esc>', jump_stop, opts)
+<
 Class ~
 {JumpingState}
 
