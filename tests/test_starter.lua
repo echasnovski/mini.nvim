@@ -965,6 +965,12 @@ T['sections']['recent_files()']['respects `n`'] = function()
 
   child.v.oldfiles = { child.fn.fnamemodify(test_file1, ':p'), child.fn.fnamemodify(test_file3, ':p') }
 
+  -- Mock forward slash for more robust screenshot testing
+  child.lua([[
+    local fnamemodify_orig = vim.fn.fnamemodify
+    vim.fn.fnamemodify = function(...) return (fnamemodify_orig(...):gsub('\\', '/')) end
+  ]])
+
   child.lua('MiniStarter.config.items = { MiniStarter.sections.recent_files(1, false) }')
   child.lua('MiniStarter.open()')
   -- "Recent files" section should only show the first file

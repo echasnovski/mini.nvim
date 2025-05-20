@@ -530,23 +530,20 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
     local n_added = 0
     local files = {}
     for _, f in ipairs(vim.v.oldfiles) do
-      if n_added == n then break end
+      if n_added >= n then break end
 
-      -- Use only actual readable files
-      local add = vim.fn.filereadable(f) == 1
-      if current_dir then
-        -- Filter files from current directory and its subdirectories
-        add = add and f:find(cwd_pattern) ~= nil
-      end
-      if add then
+      -- Use only actual readable files possibly respecting current directory
+      local is_readable = vim.fn.filereadable(f) == 1
+      local is_in_dir = not current_dir or f:find(cwd_pattern) ~= nil
+      if is_readable and is_in_dir then
         n_added = n_added + 1
         table.insert(files, f)
       end
     end
 
     if #files == 0 then
-      local text = current_dir and 'There are no recent files in current directory'
-        or 'There are no recent files (`v:oldfiles` is empty)'
+      local suffix = current_dir and 'in current directory' or '(`v:oldfiles` is empty)'
+      local text = 'There are no recent files ' .. suffix
       return { { name = text, action = '', section = section } }
     end
 
