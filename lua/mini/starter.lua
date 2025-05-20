@@ -524,29 +524,35 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
 
   return function()
     local section = string.format('Recent files%s', current_dir and ' (current directory)' or '')
+    local sep = vim.loop.os_uname().sysname == 'Windows_NT' and [[%\]] or '%/'
+    local cwd_pattern = '^' .. vim.pesc(vim.fn.getcwd()) .. sep
 
-    -- Use only actual readable files
-    local files = vim.tbl_filter(function(f) return vim.fn.filereadable(f) == 1 end, vim.v.oldfiles or {})
+    local n_added = 0
+    local files = {}
+    for _, f in ipairs(vim.v.oldfiles) do
+      if n_added == n then break end
 
-    if #files == 0 then
-      return { { name = 'There are no recent files (`v:oldfiles` is empty)', action = '', section = section } }
+      -- Use only actual readable files
+      local add = vim.fn.filereadable(f) == 1
+      if current_dir then
+        -- Filter files from current directory and its subdirectories
+        add = add and f:find(cwd_pattern) ~= nil
+      end
+      if add then
+        n_added = n_added + 1
+        table.insert(files, f)
+      end
     end
 
-    -- Possibly filter files from current directory
-    if current_dir then
-      local sep = vim.loop.os_uname().sysname == 'Windows_NT' and [[%\]] or '%/'
-      local cwd_pattern = '^' .. vim.pesc(vim.fn.getcwd()) .. sep
-      -- Use only files from current directory and its subdirectories
-      files = vim.tbl_filter(function(f) return f:find(cwd_pattern) ~= nil end, files)
-    end
-
     if #files == 0 then
-      return { { name = 'There are no recent files in current directory', action = '', section = section } }
+      local text = current_dir and 'There are no recent files in current directory'
+        or 'There are no recent files (`v:oldfiles` is empty)'
+      return { { name = text, action = '', section = section } }
     end
 
     -- Create items
     local items = {}
-    for _, f in ipairs(vim.list_slice(files, 1, n)) do
+    for _, f in ipairs(files) do
       local name = vim.fn.fnamemodify(f, ':t') .. show_path(f)
       table.insert(items, { action = function() H.edit(f) end, name = name, section = section })
     end
@@ -554,6 +560,7 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
     return items
   end
 end
+
 
 -- stylua: ignore
 --- Section with 'mini.pick' pickers
