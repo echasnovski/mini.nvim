@@ -104,12 +104,10 @@ notify_many_keys('l')
 
 This plugin can be installed as part of 'mini.nvim' library (**recommended**) or as a standalone Git repository.
 
-During beta-testing phase there is only one branch to install from:
-<!-- There are two branches to install from: -->
+There are two branches to install from:
 
-- `main` (default, **recommended**) will have latest development version of plugin.
-<!-- - `main` (default, **recommended**) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled). -->
-<!-- - `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch. -->
+- `main` (default, **recommended**) will have latest development version of plugin. All changes since last stable release should be perceived as being in beta testing phase (meaning they already passed alpha-testing and are moderately settled).
+- `stable` will be updated only upon releases with code tested during public beta-testing phase in `main` branch.
 
 Here are code snippets for some common installation methods (use only one):
 
@@ -122,23 +120,17 @@ Here are code snippets for some common installation methods (use only one):
         </tr>
     </thead>
     <tbody>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td rowspan=2><i>Follow recommended 'mini.deps' installation</i></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.keymap')</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>add({ source = 'echasnovski/mini.keymap', checkout = 'stable' })</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <td>'mini.nvim' library</td> <td>Main</td> <td><i>Follow recommended 'mini.deps' installation</i></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td rowspan=2><i>Follow recommended 'mini.deps' installation</i></td>
         </tr>
         <tr>
-            <td>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.keymap')</code></td>
+            <td>Stable</td>
+        </tr>
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.keymap')</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>add({ source = 'echasnovski/mini.keymap', checkout = 'stable' })</code></td>
         </tr>
     </tbody>
 </table>
@@ -153,23 +145,17 @@ Here are code snippets for some common installation methods (use only one):
         </tr>
     </thead>
     <tbody>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini.keymap', version = false },</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>{ 'echasnovski/mini.keymap', version = '*' },</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <td>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
         </tr>
         <tr>
-            <td>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini.keymap', version = false },</code></td>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+        </tr>
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini.keymap', version = false },</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>{ 'echasnovski/mini.keymap', version = '*' },</code></td>
         </tr>
     </tbody>
 </table>
@@ -184,23 +170,17 @@ Here are code snippets for some common installation methods (use only one):
         </tr>
     </thead>
     <tbody>
-        <!-- <tr> -->
-        <!--     <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.keymap'</code></td> -->
-        <!-- </tr> -->
-        <!-- <tr> -->
-        <!--     <td>Stable</td> <td><code>Plug 'echasnovski/mini.keymap', { 'branch': 'stable' }</code></td> -->
-        <!-- </tr> -->
         <tr>
-            <td>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
         </tr>
         <tr>
-            <td>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.keymap'</code></td>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
+        </tr>
+        <tr>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.keymap'</code></td>
+        </tr>
+        <tr>
+            <td>Stable</td> <td><code>Plug 'echasnovski/mini.keymap', { 'branch': 'stable' }</code></td>
         </tr>
     </tbody>
 </table>
