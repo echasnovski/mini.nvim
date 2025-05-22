@@ -959,6 +959,14 @@ T['sections']['recent_files()']['respects files in subdirectories'] = function()
   child.expect_screenshot()
 end
 
+T['sections']['recent_files()']['respects `n`'] = function()
+  local dir = 'tests/dir-starter/dir'
+  local test_file1, test_file3 = dir .. '/file1', dir .. '/file3'
+
+  child.v.oldfiles = { child.fn.fnamemodify(test_file1, ':p'), child.fn.fnamemodify(test_file3, ':p') }
+  eq(child.lua_get('#MiniStarter.sections.recent_files(1, false)()'), 1)
+end
+
 T['sections']['recent_files()']['respects `show_path`'] = function()
   local test_file = 'tests/dir-starter/dir/file1'
 

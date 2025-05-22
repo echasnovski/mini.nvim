@@ -524,29 +524,27 @@ MiniStarter.sections.recent_files = function(n, current_dir, show_path)
 
   return function()
     local section = string.format('Recent files%s', current_dir and ' (current directory)' or '')
+    local sep = vim.loop.os_uname().sysname == 'Windows_NT' and '\\' or '/'
+    local cwd = vim.fn.getcwd() .. sep
 
-    -- Use only actual readable files
-    local files = vim.tbl_filter(function(f) return vim.fn.filereadable(f) == 1 end, vim.v.oldfiles or {})
-
-    if #files == 0 then
-      return { { name = 'There are no recent files (`v:oldfiles` is empty)', action = '', section = section } }
-    end
-
-    -- Possibly filter files from current directory
-    if current_dir then
-      local sep = vim.loop.os_uname().sysname == 'Windows_NT' and [[%\]] or '%/'
-      local cwd_pattern = '^' .. vim.pesc(vim.fn.getcwd()) .. sep
-      -- Use only files from current directory and its subdirectories
-      files = vim.tbl_filter(function(f) return f:find(cwd_pattern) ~= nil end, files)
+    local files = {}
+    for _, f in ipairs(vim.v.oldfiles) do
+      -- Use only actually readable files possibly respecting current directory
+      if vim.fn.filereadable(f) == 1 and (not current_dir or vim.startswith(f, cwd)) then
+        table.insert(files, f)
+        if #files >= n then break end
+      end
     end
 
     if #files == 0 then
-      return { { name = 'There are no recent files in current directory', action = '', section = section } }
+      local suffix = current_dir and 'in current directory' or '(`v:oldfiles` is empty)'
+      local text = 'There are no recent files ' .. suffix
+      return { { name = text, action = '', section = section } }
     end
 
     -- Create items
     local items = {}
-    for _, f in ipairs(vim.list_slice(files, 1, n)) do
+    for _, f in ipairs(files) do
       local name = vim.fn.fnamemodify(f, ':t') .. show_path(f)
       table.insert(items, { action = function() H.edit(f) end, name = name, section = section })
     end
