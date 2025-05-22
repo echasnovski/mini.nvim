@@ -547,6 +547,9 @@ Paste is an action to paste content of |registers| at caret.
 
 Notes:
 - Does not support expression register `=`.
+- Supports special cases of register: <C-f> (as |c_CTRL-R_CTRL-F|),
+  <C-w> (as |c_CTRL-R_CTRL-W|), <C-a> (as |c_CTRL-R_CTRL-A|),
+  <C-l> (as |c_CTRL-R_CTRL-L|).
 
                                                        *MiniPick-actions-refine*
 ## Refine ~

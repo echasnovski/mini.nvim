@@ -7,6 +7,12 @@ There are following change types:
 
 # Version 0.16.0.9000
 
+## mini.pick
+
+### Expand
+
+- "Paste" action now supports special registers: `<C-w>` (word at cursor), `<C-a>` (WORD at cursor), `<C-l>` (line at cursor), `<C-f>` (filename at cursor).
+
 
 # Version 0.16.0
 

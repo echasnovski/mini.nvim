@@ -542,6 +542,9 @@
 ---
 --- Notes:
 --- - Does not support expression register `=`.
+--- - Supports special cases of register: <C-f> (as |c_CTRL-R_CTRL-F|),
+---   <C-w> (as |c_CTRL-R_CTRL-W|), <C-a> (as |c_CTRL-R_CTRL-A|),
+---   <C-l> (as |c_CTRL-R_CTRL-L|).
 ---
 ---                                                        *MiniPick-actions-refine*
 --- ## Refine ~
@@ -2691,10 +2694,7 @@ H.actions = {
   move_up    = function(picker, _) H.picker_move_current(picker, -1) end,
 
   paste = function(picker, _)
-    local register = H.getcharstr(picker.opts.delay.async)
-    local has_register, reg_contents = pcall(vim.fn.getreg, register)
-    if not has_register then return end
-    reg_contents = reg_contents:gsub('[\n\t]', ' ')
+    local reg_contents = H.picker_get_register_contents(picker):gsub('[\n\t]', ' ')
     for i = 1, vim.fn.strchars(reg_contents) do
       H.picker_query_add(picker, vim.fn.strcharpart(reg_contents, i - 1, 1))
     end
@@ -2851,6 +2851,20 @@ end
 H.picker_get_current_item = function(picker)
   if picker.items == nil then return nil end
   return picker.items[picker.match_inds[picker.current_ind]]
+end
+
+H.picker_get_register_contents = function(picker)
+  local register = H.getcharstr(picker.opts.delay.async)
+  -- Mimic some "insert object under cursor" behavior of Command-line mode
+  local expand_var = ({ ['\1'] = '<cWORD>', ['\6'] = '<cfile>', ['\23'] = '<cword>' })[register]
+  if expand_var then
+    return vim.api.nvim_win_call(picker.windows.target, function() return vim.fn.expand(expand_var) end)
+  end
+  if register == '\f' then
+    return vim.api.nvim_win_call(picker.windows.target, function() return vim.fn.getline('.') end)
+  end
+  local has_register, res = pcall(vim.fn.getreg, register)
+  return has_register and res or ''
 end
 
 H.picker_show_main = function(picker)

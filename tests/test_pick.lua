@@ -6011,6 +6011,30 @@ T['Paste']['works'] = function()
   validate('a\nb\tc', { 'a', ' ', 'b', ' ', 'c' })
 end
 
+T['Paste']['supports special registers'] = function()
+  child.o.iskeyword = child.o.iskeyword .. ',-'
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { 'aa bb!cc-dd ee', test_dir })
+  set_cursor(1, 7)
+
+  start_with_items({ 'a' })
+
+  local validate = function(register, ref_query)
+    type_keys('<C-r>', register)
+    eq(get_picker_query(), ref_query)
+    type_keys('<C-u>')
+  end
+
+  validate('<C-w>', vim.split('cc-dd', ''))
+  validate('<C-a>', vim.split('bb!cc-dd', ''))
+  validate('<C-l>', vim.split('aa bb!cc-dd ee', ''))
+
+  type_keys('<C-c>')
+
+  set_cursor(2, 0)
+  start_with_items({ 'a' })
+  validate('<C-f>', vim.split(test_dir, ''))
+end
+
 T['Paste']['pastes at caret'] = function()
   child.fn.setreg('a', 'hello ')
   start_with_items({ 'a' })
