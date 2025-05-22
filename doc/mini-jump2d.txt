@@ -345,7 +345,7 @@ Usage ~
   -- Jump to first character of punctuation group only inside current window
   -- which is placed at cursor line; visualize with `Search`
   MiniJump2d.start({
-    spotter = MiniJump2d.gen_pattern_spotter('%p+'),
+    spotter = MiniJump2d.gen_spotter.pattern('%p+'),
     allowed_lines = { cursor_before = false, cursor_after = false },
     allowed_windows = { not_current = false },
     hl_group = 'Search'
@@ -360,8 +360,15 @@ See also ~
 Stop jumping
 
 ------------------------------------------------------------------------------
-                                              *MiniJump2d.gen_pattern_spotter()*
-              `MiniJump2d.gen_pattern_spotter`({pattern}, {side})
+                                                        *MiniJump2d.gen_spotter*
+                            `MiniJump2d.gen_spotter`
+Generate spotter
+
+This is a table with function elements. Call to actually get a spotter.
+
+------------------------------------------------------------------------------
+                                              *MiniJump2d.gen_spotter.pattern()*
+              `MiniJump2d.gen_spotter.pattern`({pattern}, {side})
 Generate spotter for Lua pattern
 
 Parameters ~
@@ -379,21 +386,21 @@ Return ~
 Usage ~
 >lua
   -- Match any punctuation
-  MiniJump2d.gen_pattern_spotter('%p')
+  MiniJump2d.gen_spotter.pattern('%p')
 
   -- Match first from line start non-whitespace character
-  MiniJump2d.gen_pattern_spotter('^%s*%S', 'end')
+  MiniJump2d.gen_spotter.pattern('^%s*%S', 'end')
 
   -- Match start of last word
-  MiniJump2d.gen_pattern_spotter('[^%s%p]+[%s%p]-$', 'start')
+  MiniJump2d.gen_spotter.pattern('[^%s%p]+[%s%p]-$', 'start')
 
   -- Match letter followed by another letter (example of manual matching
   -- inside pattern)
-  MiniJump2d.gen_pattern_spotter('%a()%a', 'none')
+  MiniJump2d.gen_spotter.pattern('%a()%a', 'none')
 <
 ------------------------------------------------------------------------------
-                                                *MiniJump2d.gen_union_spotter()*
-                     `MiniJump2d.gen_union_spotter`({...})
+                                                *MiniJump2d.gen_spotter.union()*
+                     `MiniJump2d.gen_spotter.union`({...})
 Generate union of spotters
 
 Parameters ~
@@ -406,9 +413,9 @@ Return ~
 Usage ~
 >lua
   -- Match start and end of non-blank character groups:
-  local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
-  local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
-  local spotter = MiniJump2d.gen_union_spotter(nonblank_start, nonblank_end)
+  local nonblank_start = MiniJump2d.gen_spotter.pattern('%S+', 'start')
+  local nonblank_end = MiniJump2d.gen_spotter.pattern('%S+', 'end')
+  local spotter = MiniJump2d.gen_spotter.union(nonblank_start, nonblank_end)
 <
 ------------------------------------------------------------------------------
                                                     *MiniJump2d.default_spotter*

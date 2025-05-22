@@ -363,7 +363,7 @@ MiniJump2d.config = {
 ---   -- Jump to first character of punctuation group only inside current window
 ---   -- which is placed at cursor line; visualize with `Search`
 ---   MiniJump2d.start({
----     spotter = MiniJump2d.gen_pattern_spotter('%p+'),
+---     spotter = MiniJump2d.gen_spotter.pattern('%p+'),
 ---     allowed_lines = { cursor_before = false, cursor_after = false },
 ---     allowed_windows = { not_current = false },
 ---     hl_group = 'Search'
@@ -419,6 +419,11 @@ MiniJump2d.stop = function()
   if H.cache.is_in_getcharstr then vim.api.nvim_input('<C-c>') end
 end
 
+--- Generate spotter
+---
+--- This is a table with function elements. Call to actually get a spotter.
+MiniJump2d.gen_spotter = {}
+
 --- Generate spotter for Lua pattern
 ---
 ---@param pattern string|nil Lua pattern. Default: `'[^%s%p]+'` which matches group
@@ -433,19 +438,19 @@ end
 ---
 ---@usage >lua
 ---   -- Match any punctuation
----   MiniJump2d.gen_pattern_spotter('%p')
+---   MiniJump2d.gen_spotter.pattern('%p')
 ---
 ---   -- Match first from line start non-whitespace character
----   MiniJump2d.gen_pattern_spotter('^%s*%S', 'end')
+---   MiniJump2d.gen_spotter.pattern('^%s*%S', 'end')
 ---
 ---   -- Match start of last word
----   MiniJump2d.gen_pattern_spotter('[^%s%p]+[%s%p]-$', 'start')
+---   MiniJump2d.gen_spotter.pattern('[^%s%p]+[%s%p]-$', 'start')
 ---
 ---   -- Match letter followed by another letter (example of manual matching
 ---   -- inside pattern)
----   MiniJump2d.gen_pattern_spotter('%a()%a', 'none')
+---   MiniJump2d.gen_spotter.pattern('%a()%a', 'none')
 --- <
-MiniJump2d.gen_pattern_spotter = function(pattern, side)
+MiniJump2d.gen_spotter.pattern = function(pattern, side)
   -- Don't use `%w` to account for multibyte characters
   pattern = pattern or '[^%s%p]+'
   side = side or 'start'
@@ -496,6 +501,15 @@ MiniJump2d.gen_pattern_spotter = function(pattern, side)
   end
 end
 
+-- TODO: Remove after releasing 'mini.nvim' 0.17.0
+MiniJump2d.gen_pattern_spotter = function(pattern, side)
+  local msg = '`gen_pattern_spotter` is moved to `gen_spotter.pattern` for consistency with other modules.'
+    .. ' It still works for now, but will stop working after the next release.'
+    .. ' Sorry for the inconvenience.'
+  H.notify(msg, 'WARN')
+  return MiniJump2d.gen_spotter.pattern(pattern, side)
+end
+
 --- Generate union of spotters
 ---
 ---@param ... any Each argument should be a valid spotter.
@@ -505,11 +519,11 @@ end
 ---
 ---@usage >lua
 ---   -- Match start and end of non-blank character groups:
----   local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
----   local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
----   local spotter = MiniJump2d.gen_union_spotter(nonblank_start, nonblank_end)
+---   local nonblank_start = MiniJump2d.gen_spotter.pattern('%S+', 'start')
+---   local nonblank_end = MiniJump2d.gen_spotter.pattern('%S+', 'end')
+---   local spotter = MiniJump2d.gen_spotter.union(nonblank_start, nonblank_end)
 --- <
-MiniJump2d.gen_union_spotter = function(...)
+MiniJump2d.gen_spotter.union = function(...)
   local spotters = { ... }
   if #spotters == 0 then return function() return {} end end
 
@@ -518,7 +532,7 @@ MiniJump2d.gen_union_spotter = function(...)
     if not vim.is_callable(x) then is_all_callable = false end
   end
 
-  if not is_all_callable then H.error('All `gen_union_spotter()` arguments should be callable elements.') end
+  if not is_all_callable then H.error('All `gen_spotter.union()` arguments should be callable elements.') end
 
   return function(line_num, args)
     local res = spotters[1](line_num, args)
@@ -527,6 +541,15 @@ MiniJump2d.gen_union_spotter = function(...)
     end
     return res
   end
+end
+
+-- TODO: Remove after releasing 'mini.nvim' 0.17.0
+MiniJump2d.gen_union_spotter = function(...)
+  local msg = '`gen_union_spotter` is moved to `gen_spotter.union` for consistency with other modules.'
+    .. ' It still works for now, but will stop working after the next release.'
+    .. ' Sorry for the inconvenience.'
+  H.notify(msg, 'WARN')
+  return MiniJump2d.gen_spotter.union(...)
 end
 
 --- Default spotter function
@@ -544,15 +567,15 @@ end
 ---
 --- Usually takes from 2 to 3 keystrokes to get to destination.
 MiniJump2d.default_spotter = (function()
-  -- NOTE: not using `MiniJump2d.gen_union_spotter()` due to slightly better
+  -- NOTE: not using `MiniJump2d.gen_spotter.union()` due to slightly better
   -- algorithmic complexity merging small arrays first.
-  local nonblank_start = MiniJump2d.gen_pattern_spotter('%S+', 'start')
-  local nonblank_end = MiniJump2d.gen_pattern_spotter('%S+', 'end')
+  local nonblank_start = MiniJump2d.gen_spotter.pattern('%S+', 'start')
+  local nonblank_end = MiniJump2d.gen_spotter.pattern('%S+', 'end')
   -- Use `[^%s%p]` as "alphanumeric" to allow working with multibyte characters
-  local alphanum_before_punct = MiniJump2d.gen_pattern_spotter('[^%s%p]%p', 'start')
-  local alphanum_after_punct = MiniJump2d.gen_pattern_spotter('%p[^%s%p]', 'end')
+  local alphanum_before_punct = MiniJump2d.gen_spotter.pattern('[^%s%p]%p', 'start')
+  local alphanum_after_punct = MiniJump2d.gen_spotter.pattern('%p[^%s%p]', 'end')
   -- NOTE: works only with Latin alphabet
-  local upper_start = MiniJump2d.gen_pattern_spotter('%u+', 'start')
+  local upper_start = MiniJump2d.gen_spotter.pattern('%u+', 'start')
 
   return function(line_num, args)
     local res_1 = H.merge_unique(nonblank_start(line_num, args), nonblank_end(line_num, args))
@@ -610,7 +633,7 @@ MiniJump2d.builtin_opts.line_start = {
 --- Jump to word start
 ---
 --- Defines `spotter`.
-MiniJump2d.builtin_opts.word_start = { spotter = MiniJump2d.gen_pattern_spotter('[^%s%p]+') }
+MiniJump2d.builtin_opts.word_start = { spotter = MiniJump2d.gen_spotter.pattern('[^%s%p]+') }
 
 -- Produce `opts` which modifies spotter based on user input
 local function user_input_opts(input_fun)
@@ -626,7 +649,7 @@ local function user_input_opts(input_fun)
         res.spotter = function() return {} end
       else
         local pattern = vim.pesc(input)
-        res.spotter = MiniJump2d.gen_pattern_spotter(pattern)
+        res.spotter = MiniJump2d.gen_spotter.pattern(pattern)
       end
     end,
   }
@@ -1034,6 +1057,10 @@ H.error = function(msg) error('(mini.jump2d) ' .. msg, 0) end
 H.check_type = function(name, val, ref, allow_nil)
   if type(val) == ref or (ref == 'callable' and vim.is_callable(val)) or (allow_nil and val == nil) then return end
   H.error(string.format('`%s` should be %s, not %s', name, ref, type(val)))
+end
+
+H.notify = function(msg, level_name, silent)
+  if not silent then vim.notify('(mini.jump2d) ' .. msg, vim.log.levels[level_name]) end
 end
 
 H.echo = function(msg, is_important)
