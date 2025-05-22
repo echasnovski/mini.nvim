@@ -9,6 +9,9 @@ There are following change types:
 
 ## mini.jump2d
 
+### Evolve
+
+- Update `builtin_opts.word_start` to use built-in notion of "keyword" (see `:h 'iskeyword'`) when computing word start.
 
 ### Refine
 

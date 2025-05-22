@@ -1130,13 +1130,19 @@ end
 T['builtin_opts.word_start'] = new_set({ hooks = { pre_case = function() child.set_size(5, 20) end } })
 
 T['builtin_opts.word_start']['works'] = function()
-  set_lines({ 'x xx xxx _xx' })
+  set_lines({ 'x xx xx.xx _xx' })
+  child.lua('MiniJump2d.start(MiniJump2d.builtin_opts.word_start)')
+  child.expect_screenshot()
+  child.lua('MiniJump2d.stop()')
+
+  -- Should respect 'iskeyword' when computing word boundaries
+  child.o.iskeyword = child.o.iskeyword .. ',.'
   child.lua('MiniJump2d.start(MiniJump2d.builtin_opts.word_start)')
   child.expect_screenshot()
 end
 
 T['builtin_opts.word_start']['works with multibyte characters'] = function()
-  set_lines({ 'ы ыы ыыы _ыы' })
+  set_lines({ 'ы ыы ыы.ыы _ыы' })
   child.lua('MiniJump2d.start(MiniJump2d.builtin_opts.word_start)')
   child.expect_screenshot()
 end

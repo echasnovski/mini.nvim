@@ -503,6 +503,8 @@ Defines `spotter` and `hooks.after_jump`.
                       `MiniJump2d.builtin_opts.word_start`
 Jump to word start
 
+Respects 'iskeyword' when computing word start.
+
 Defines `spotter`.
 
 ------------------------------------------------------------------------------

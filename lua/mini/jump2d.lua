@@ -665,8 +665,10 @@ MiniJump2d.builtin_opts.line_start = {
 
 --- Jump to word start
 ---
+--- Respects 'iskeyword' when computing word start.
+---
 --- Defines `spotter`.
-MiniJump2d.builtin_opts.word_start = { spotter = MiniJump2d.gen_spotter.pattern('[^%s%p]+') }
+MiniJump2d.builtin_opts.word_start = { spotter = MiniJump2d.gen_spotter.vimpattern('\\k\\+') }
 
 -- Produce `opts` which modifies spotter based on user input
 local function user_input_opts(input_fun)
