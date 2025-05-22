@@ -399,6 +399,26 @@ Usage ~
   MiniJump2d.gen_spotter.pattern('%a()%a', 'none')
 <
 ------------------------------------------------------------------------------
+                                           *MiniJump2d.gen_spotter.vimpattern()*
+                 `MiniJump2d.gen_spotter.vimpattern`({pattern})
+Generate spotter for Vimscript pattern
+
+Parameters ~
+{pattern} `(string|nil)` Vimscript |pattern|. Default: `\k\+` to match group
+  of "keyword characters" (see 'iskeyword').
+
+Return ~
+`(function)` Spotter function.
+
+Usage ~
+>lua
+  -- Match start of a keyword
+  MiniJump2d.gen_spotter.vimpattern('\\k\\+')
+
+  -- Match end of a keyword
+  MiniJump2d.gen_spotter.vimpattern('\\k*\\zs\\k')
+<
+------------------------------------------------------------------------------
                                                 *MiniJump2d.gen_spotter.union()*
                      `MiniJump2d.gen_spotter.union`({...})
 Generate union of spotters

@@ -976,6 +976,58 @@ T['gen_spotter']['pattern()']['works in edge cases'] = function()
   child.expect_screenshot()
 end
 
+T['gen_spotter']['vimpattern'] = new_set({
+  hooks = {
+    pre_case = function()
+      set_lines({ 'x x xx_xx xx.xx xxx' })
+      child.set_size(5, 20)
+    end,
+  },
+})
+
+local start_gen_vimpattern = function(pattern)
+  local command =
+    string.format([[MiniJump2d.start({ spotter = MiniJump2d.gen_spotter.vimpattern(%s) })]], vim.inspect(pattern))
+  child.lua(command)
+end
+
+T['gen_spotter']['vimpattern']['works'] = function()
+  start_gen_vimpattern()
+  child.expect_screenshot()
+  child.lua('MiniJump2d.stop()')
+
+  child.o.iskeyword = child.o.iskeyword .. ',.'
+  start_gen_vimpattern()
+  child.expect_screenshot()
+end
+
+T['gen_spotter']['vimpattern']['respects `pattern` argument'] = function()
+  start_gen_vimpattern('\\k*\\zs\\k')
+  child.expect_screenshot()
+end
+
+T['gen_spotter']['vimpattern']['works with multibyte characters'] = function()
+  set_lines({ 'ы ыыы ы_ы ыы.ыы ыы' })
+  start_gen_vimpattern()
+  child.expect_screenshot()
+end
+
+T['gen_spotter']['vimpattern']['works with anchored patterns'] = function()
+  child.set_size(7, 20)
+  child.api.nvim_buf_set_lines(0, 0, -1, false, { 'xxx xxx', 'xxx xxx', 'xx' })
+
+  local validate = function(pattern)
+    start_gen_vimpattern(pattern)
+    child.expect_screenshot()
+    child.lua('MiniJump2d.stop()')
+  end
+
+  validate('^')
+  validate('$')
+  validate('^...\\zs')
+  validate('\\zs...$')
+end
+
 T['gen_spotter']['union()'] = new_set()
 
 T['gen_spotter']['union()']['works'] = function()

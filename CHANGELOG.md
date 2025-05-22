@@ -9,6 +9,7 @@ There are following change types:
 
 ## mini.jump2d
 
+
 ### Refine
 
 - Move `gen_xxx_spotter` into separate `gen_spotter` table for consistency with other modules:
@@ -16,6 +17,10 @@ There are following change types:
     - `gen_union_spotter` -> `gen_spotter.union`
 
     The `gen_xxx_spotter` functions will work (with warning) until at least next release.
+
+### Expand
+
+- Add `gen_spotter.vimpattern()` that can generate spotter based on Vimscript (not Lua) pattern.
 
 ## mini.pick
 

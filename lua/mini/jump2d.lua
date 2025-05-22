@@ -510,6 +510,39 @@ MiniJump2d.gen_pattern_spotter = function(pattern, side)
   return MiniJump2d.gen_spotter.pattern(pattern, side)
 end
 
+--- Generate spotter for Vimscript pattern
+---
+---@param pattern string|nil Vimscript |pattern|. Default: `\k\+` to match group
+---   of "keyword characters" (see 'iskeyword').
+---
+---@return function Spotter function.
+---
+---@usage >lua
+---   -- Match start of a keyword
+---   MiniJump2d.gen_spotter.vimpattern('\\k\\+')
+---
+---   -- Match end of a keyword
+---   MiniJump2d.gen_spotter.vimpattern('\\k*\\zs\\k')
+--- <
+MiniJump2d.gen_spotter.vimpattern = function(pattern)
+  pattern = pattern or '\\k\\+'
+  if type(pattern) ~= 'string' then H.error('`pattern` should be string') end
+  local r = vim.regex(pattern)
+  local is_anchored = pattern:sub(1, 1) == '^' or pattern:sub(-1, -1) == '$'
+
+  return function(line_num, _)
+    local res, l, start = {}, vim.fn.getline(line_num), 1
+    local n = is_anchored and 1 or (l:len() + 1)
+    for _ = 1, n do
+      local from, to = r:match_str(l)
+      if from == nil then break end
+      table.insert(res, from + start)
+      l, start = l:sub(to + 1), start + to
+    end
+    return res
+  end
+end
+
 --- Generate union of spotters
 ---
 ---@param ... any Each argument should be a valid spotter.
