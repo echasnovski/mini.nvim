@@ -677,17 +677,13 @@ local function user_input_opts(input_fun)
     allowed_lines = { blank = false, fold = false },
   }
 
-  res.hooks = {
-    before_start = function()
-      local input = input_fun()
-      if input == nil then
-        res.spotter = function() return {} end
-      else
-        local pattern = vim.pesc(input)
-        res.spotter = MiniJump2d.gen_spotter.pattern(pattern)
-      end
-    end,
-  }
+  local before_start = function()
+    local input = input_fun()
+    -- Allow user to cancel input and not show any jumping spots
+    if input == nil then return end
+    res.spotter = MiniJump2d.gen_spotter.pattern(vim.pesc(input))
+  end
+  res.hooks = { before_start = before_start }
 
   return res
 end
