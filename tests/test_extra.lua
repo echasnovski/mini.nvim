@@ -2200,9 +2200,8 @@ T['pickers']['history()']['works for command-line history'] = function()
   -- Should work with aliases
   pick_history({ scope = ':' })
   validate_picker_name('History (:)')
-  -- - NOTE: now it doesn't update command line history, but probably should
-  --   (just couldn't find a way to achieve this)
-  eq(get_picker_items(), { ': lua _G.n = _G.n + 2', ': lua _G.n = _G.n + 1' })
+  -- Should update command line history
+  eq(get_picker_items(), { ': lua _G.n = _G.n + 1', ': lua _G.n = _G.n + 2' })
 end
 
 T['pickers']['history()']['works for search history'] = function()
@@ -2223,6 +2222,7 @@ T['pickers']['history()']['works for search history'] = function()
   -- Should work with aliases
   pick_history({ scope = '/' })
   validate_picker_name('History (/)')
+  -- - Should have updated the history
   eq(get_picker_items(), { '/ aaa', '/ bbb' })
   stop_picker()
 
@@ -2264,6 +2264,12 @@ T['pickers']['history()']['works for input history'] = function()
   pick_history({ scope = '@' })
   validate_picker_name('History (@)')
   eq(get_picker_items(), { '@ input 2', '@ input 1' })
+end
+
+T['pickers']['history()']['works with too wide entries'] = function()
+  child.set_size(10, 15)
+  pick_history({ scope = 'cmd' })
+  eq(get_picker_items(), { ': lua _G.n = _G.n + 2', ': lua _G.n = _G.n + 1' })
 end
 
 T['pickers']['history()']['respects `opts`'] = function()

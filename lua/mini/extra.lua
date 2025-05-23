@@ -896,12 +896,10 @@ MiniExtra.pickers.history = function(local_opts, opts)
   local items = {}
   local names = scope == 'all' and { 'cmd', 'search', 'expr', 'input', 'debug' } or { scope }
   for _, cur_name in ipairs(names) do
-    local cmd_output = vim.api.nvim_exec(':history ' .. cur_name, true)
-    local lines = vim.split(cmd_output, '\n')
     local id = type_ids[cur_name]
-    -- Output of `:history` is sorted from oldest to newest
-    for i = #lines, 2, -1 do
-      local hist_entry = lines[i]:match('^.-%-?%d+%s+(.*)$')
+    for i = 1, vim.fn.histnr(cur_name) do
+      local hist_entry = vim.fn.histget(cur_name, -i)
+      if hist_entry == '' then break end
       table.insert(items, string.format('%s %s', id, hist_entry))
     end
   end
@@ -913,7 +911,7 @@ MiniExtra.pickers.history = function(local_opts, opts)
     if not (type(item) == 'string' and vim.fn.mode() == 'n') then return end
     local id, entry = item:match('^(.) (.*)$')
     if id == ':' or id == '/' or id == '?' then
-      vim.schedule(function() vim.fn.feedkeys(id .. entry .. '\r', 'nx') end)
+      vim.schedule(function() vim.fn.feedkeys(id .. entry .. '\r', 'nxt') end)
     end
   end
 
