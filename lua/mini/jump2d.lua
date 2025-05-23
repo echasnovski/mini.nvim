@@ -680,9 +680,7 @@ local function user_input_opts(input_fun)
   res.hooks = {
     before_start = function()
       local input = input_fun()
-      if input == nil then
-        res.spotter = function() return {} end
-      else
+      if input ~= nil then
         local pattern = vim.pesc(input)
         res.spotter = MiniJump2d.gen_spotter.pattern(pattern)
       end
