@@ -553,6 +553,21 @@ T['move_cursor()']['opens just enough folds'] = function()
   eq(child.fn.foldclosed(3), 3)
 end
 
+T['move_cursor()']['adds jumplist entry'] = function()
+  set_lines({ '(aa', 'b)' })
+
+  local validate = function(init_pos, direction, ref_pos)
+    set_cursor(unpack(init_pos))
+    child.lua('MiniAi.move_cursor("' .. direction .. '", "a", ")")')
+    eq(get_cursor(), ref_pos)
+    type_keys('``')
+    eq(get_cursor(), init_pos)
+  end
+
+  validate({ 1, 1 }, 'right', { 2, 1 })
+  validate({ 2, 1 }, 'left', { 1, 0 })
+end
+
 T['move_cursor()']['handles function as textobject spec'] = function()
   -- Should call it only once
   child.lua('_G.n = 0')

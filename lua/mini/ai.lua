@@ -658,6 +658,7 @@ MiniAi.move_cursor = function(side, ai_type, id, opts)
   end
 
   -- Move cursor and open enough folds
+  vim.cmd("normal! m'")
   vim.api.nvim_win_set_cursor(0, { pos.line, pos.col - 1 })
   vim.cmd('normal! zv')
 end
