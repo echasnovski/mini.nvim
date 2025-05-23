@@ -53,6 +53,19 @@ disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
+                                                               *MiniJump-events*
+Events ~
+
+To allow user customization and integration of external tools, certain |User|
+autocommand events are triggered under common circumstances:
+
+- `MiniJumpGetTarget` - before asking user for the target. Use |MiniJump.state|
+  for more information about the upcoming jump.
+- `MiniJumpStart` - after jumping has started.
+- `MiniJumpJump` - after performing a jump.
+- `MiniJumpStop` - after jumping is stopped.
+
+------------------------------------------------------------------------------
                                                               *MiniJump.setup()*
                            `MiniJump.setup`({config})
 Module setup

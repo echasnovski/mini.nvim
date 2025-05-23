@@ -7,6 +7,12 @@ There are following change types:
 
 # Version 0.16.0.9000
 
+## mini.jump
+
+### Expand
+
+- Trigger dedicated events during steps of jumping life cycle. See `:h MiniJump-events`.
+
 ## mini.jump2d
 
 ### Evolve

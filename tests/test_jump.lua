@@ -1136,4 +1136,177 @@ T['Stop jumping after idle']['respects `vim.b.minijump_config`'] = function()
   eq(get_cursor(), { 2, 0 })
 end
 
+T['Events'] = new_set({
+  hooks = {
+    pre_case = function()
+      child.lua([[
+        _G.log = {}
+        local pattern = { 'MiniJumpGetTarget', 'MiniJumpStart', 'MiniJumpJump', 'MiniJumpStop' }
+        local add_to_log = function(ev)
+          table.insert(_G.log, { event = ev.match, data = ev.data, state = vim.deepcopy(MiniJump.state) })
+        end
+        vim.api.nvim_create_autocmd('User', { pattern = pattern, callback = add_to_log })
+      ]])
+
+      set_lines({ '11e22e__', '33e44e__', '55e66e__' })
+    end,
+  },
+})
+
+local validate_log_and_clean = function(ref_log)
+  eq(child.lua_get('_G.log'), ref_log)
+  child.lua('_G.log = {}')
+end
+
+T['Events']['work'] = function()
+  local state = { mode = 'n', jumping = false, backward = false, till = false, n_times = 1 }
+  type_keys('f')
+  validate_log_and_clean({ { event = 'MiniJumpGetTarget', state = state } })
+
+  type_keys('e')
+  state.jumping, state.target = true, 'e'
+  validate_log_and_clean({
+    { event = 'MiniJumpStart', state = state },
+    { event = 'MiniJumpJump', state = state },
+  })
+
+  local validate_key = function(keys, ref_backward, ref_till)
+    state.backward, state.till = ref_backward, ref_till
+    type_keys(keys)
+    validate_log_and_clean({ { event = 'MiniJumpJump', state = state } })
+  end
+  validate_key('f', false, false)
+  validate_key('F', true, false)
+  validate_key('t', false, true)
+  validate_key('T', true, true)
+
+  state.backward, state.till, state.n_times = false, false, 2
+  type_keys('2f')
+  validate_log_and_clean({ { event = 'MiniJumpJump', state = state } })
+
+  child.lua('MiniJump.stop_jumping()')
+  state.jumping = false
+  validate_log_and_clean({ { event = 'MiniJumpStop', state = state } })
+end
+
+T['Events']['work in Visual and Operator-pending modes'] = function()
+  local validate = function(mode, ref_init_target)
+    local state = { mode = mode, jumping = false, backward = false, till = false, n_times = 1 }
+    state.target = ref_init_target
+
+    local mode_key = mode == 'v' and 'v' or 'd'
+    type_keys(mode_key, 'f')
+    validate_log_and_clean({ { event = 'MiniJumpGetTarget', state = state } })
+
+    type_keys('e')
+    state.mode = mode == 'v' and 'v' or 'nov'
+    state.jumping, state.target = true, 'e'
+    validate_log_and_clean({
+      { event = 'MiniJumpStart', state = state },
+      { event = 'MiniJumpJump', state = state },
+    })
+
+    child.lua('MiniJump.stop_jumping()')
+    state.jumping = false
+    validate_log_and_clean({ { event = 'MiniJumpStop', state = state } })
+
+    type_keys('<Esc>')
+  end
+
+  -- Visual mode
+  validate('v', nil)
+
+  -- Operator-pending mode. In `state` target is preserved as it is cached for
+  -- possible future `;`.
+  validate('no', 'e')
+end
+
+T['Events']['work for automatic jump stop'] = function()
+  -- Moving cursor outside of jumping
+  type_keys('f', 'e')
+  child.lua('_G.log = {}')
+
+  type_keys('l')
+  local state = { target = 'e', mode = 'n', jumping = false, backward = false, till = false, n_times = 1 }
+  validate_log_and_clean({ { event = 'MiniJumpStop', state = state } })
+
+  -- Enter Insert mode
+  type_keys('f', 'e')
+  child.lua('_G.log = {}')
+
+  type_keys('i')
+  validate_log_and_clean({ { event = 'MiniJumpStop', state = state } })
+  type_keys('<Esc>')
+
+  -- Idle stop
+  local idle_stop = 10 * small_time
+  child.lua('MiniJump.config.delay.idle_stop = ' .. idle_stop)
+  type_keys('f', 'e')
+  child.lua('_G.log = {}')
+
+  sleep(idle_stop - small_time)
+  validate_log_and_clean({})
+  sleep(small_time + small_time)
+  validate_log_and_clean({ { event = 'MiniJumpStop', state = state } })
+end
+
+T['Events']['have up to date state before asking for target'] = function()
+  local validate = function(keys, ref_state)
+    type_keys(keys)
+    validate_log_and_clean({ { event = 'MiniJumpGetTarget', state = ref_state } })
+    type_keys('<Esc>', '<Esc>')
+  end
+
+  local state = { mode = 'n', jumping = false, backward = false, till = false, n_times = 1 }
+  validate('f', state)
+
+  state.n_times = 2
+  validate('2f', state)
+  state.n_times = 1
+
+  state.mode, state.backward, state.till = 'v', true, false
+  validate('vF', state)
+
+  state.mode, state.backward, state.till = 'no', false, true
+  validate('dt', state)
+end
+
+T['Events']['work during repeat with `;`'] = function()
+  type_keys('f', 'e')
+  child.lua('MiniJump.stop_jumping()')
+  child.lua('_G.log = {}')
+
+  eq(child.lua_get('MiniJump.state.jumping'), false)
+
+  local state = { mode = 'n', jumping = true, target = 'e', backward = false, till = false, n_times = 1 }
+  type_keys(';')
+  validate_log_and_clean({
+    { event = 'MiniJumpStart', state = state },
+    { event = 'MiniJumpJump', state = state },
+  })
+
+  type_keys(';')
+  validate_log_and_clean({ { event = 'MiniJumpJump', state = state } })
+
+  type_keys('T')
+  state.backward, state.till = true, true
+  validate_log_and_clean({ { event = 'MiniJumpJump', state = state } })
+
+  type_keys(';')
+  validate_log_and_clean({ { event = 'MiniJumpJump', state = state } })
+end
+
+T['Events']['work with dot-repeat'] = function()
+  type_keys('df', 'e')
+  child.lua('MiniJump.stop_jumping()')
+  child.lua('_G.log = {}')
+
+  type_keys('.')
+  local state = { mode = 'nov', jumping = true, target = 'e', backward = false, till = false, n_times = 1 }
+  validate_log_and_clean({
+    { event = 'MiniJumpStart', state = state },
+    { event = 'MiniJumpJump', state = state },
+  })
+end
+
 return T
