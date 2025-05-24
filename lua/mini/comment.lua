@@ -219,8 +219,8 @@ end
 
 --- Toggle comments between two line numbers
 ---
---- It uncomments if lines are comment (every line is a comment) and comments
---- otherwise. It respects indentation and doesn't insert trailing
+--- It uncomments if lines are comment (every line is a comment or blank) and
+--- comments otherwise. It respects indentation and doesn't insert trailing
 --- whitespace. Toggle commenting not in visual mode is also dot-repeatable
 --- and respects |count|.
 ---
