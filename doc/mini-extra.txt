@@ -249,6 +249,30 @@ Return ~
 `(any)` Output of the called picker.
 
 ------------------------------------------------------------------------------
+                                              *MiniExtra.pickers.colorschemes()*
+             `MiniExtra.pickers.colorschemes`({local_opts}, {opts})
+Color scheme picker
+
+Pick and apply color scheme. Preview temporarily applies item's color scheme
+and shows how selected highlight groups look.
+Canceling reverts to color scheme before picker start:
+- With |MiniColors-colorscheme:apply()| if |mini.colors| was available.
+- With |:colorscheme| if |g:colors_name| was available.
+
+Parameters ~
+{local_opts} `(table|nil)` Options defining behavior of this particular picker.
+  Possible fields:
+  - <names> `(table)` - array of color scheme names to pick from.
+    Default: all available color schemes.
+  - <preview_hl_groups> `(table)` - array of highlight groups to show in preview
+    window. Default: all defined highlight groups in alphabetical order.
+
+{opts} `(table|nil)` Options forwarded to |MiniPick.start()|.
+
+Return ~
+`(any)` Output of the called picker.
+
+------------------------------------------------------------------------------
                                                   *MiniExtra.pickers.commands()*
                `MiniExtra.pickers.commands`({local_opts}, {opts})
 Neovim commands picker

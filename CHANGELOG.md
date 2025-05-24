@@ -7,6 +7,12 @@ There are following change types:
 
 # Version 0.16.0.9000
 
+## mini.extra
+
+### Expand
+
+- Add `pickers.colorschemes` picker. By @pkazmier, PR #1789.
+
 ## mini.jump
 
 ### Expand

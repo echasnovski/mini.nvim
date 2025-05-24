@@ -936,6 +936,164 @@ T['pickers']['buf_lines()']['validates arguments'] = function()
   validate({ scope = '1' }, '`pickers%.buf_lines`.*"scope".*"1".*one of')
 end
 
+T['pickers']['colorschemes()'] = new_set()
+
+local pick_colorschemes = forward_lua_notify('MiniExtra.pickers.colorschemes')
+
+T['pickers']['colorschemes()']['works'] = function()
+  child.lua_notify('_G.return_item = MiniExtra.pickers.colorschemes()')
+  validate_picker_name('Colorschemes')
+  type_keys('^mini')
+
+  -- Should find minicyan and minischeme
+  child.expect_screenshot({ ignore_lines = { 14 } })
+
+  -- Should have proper preview
+  type_keys('<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+  child.expect_screenshot({ ignore_lines = { 14 } })
+
+  -- Should properly choose
+  type_keys('<CR>')
+  eq(child.g.colors_name, 'minicyan')
+  expect.match(child.cmd_capture('hi Normal'), 'guibg=#0a2a2a')
+
+  -- Should return chosen value
+  eq(child.lua_get('_G.return_item'), 'minicyan')
+end
+
+T['pickers']['colorschemes()']['works with preview'] = function()
+  pick_colorschemes()
+  type_keys('^mini')
+
+  -- Preview should actually apply the color scheme
+  local validate = function(ref_name, ref_normal_bg)
+    eq(child.g.colors_name, ref_name)
+    expect.match(child.cmd_capture('hi Normal'), 'guibg=' .. ref_normal_bg)
+    child.expect_screenshot({ ignore_lines = { 14 } })
+  end
+
+  type_keys('<Tab>')
+  validate('minicyan', '#0a2a2a')
+
+  type_keys('<C-n>')
+  validate('minischeme', '#112641')
+
+  type_keys('<C-p>')
+  validate('minicyan', '#0a2a2a')
+end
+
+T['pickers']['colorschemes()']['previews with original background'] = function()
+  child.cmd('set rtp+=tests/dir-extra/colorschemes')
+
+  child.o.background = 'dark'
+  pick_colorschemes()
+  type_keys('^mini', '<C-n>', '<Tab>')
+  eq(child.o.background, 'light')
+  eq(child.g.colors_name, 'miniforcebg')
+
+  type_keys('<C-n>')
+  eq(child.o.background, 'dark')
+  eq(child.g.colors_name, 'minischeme')
+end
+
+T['pickers']['colorschemes()']['can choose marked'] = function()
+  pick_colorschemes()
+  type_keys('^mini')
+  type_keys('<C-x>', '<C-n>', '<C-x>', '<M-CR>')
+  eq(child.g.colors_name, 'minicyan')
+end
+
+T['pickers']['colorschemes()']["can cancel with 'mini.colors'"] = function()
+  child.cmd('colorscheme minischeme')
+  -- These customizations should persist even if there was preview
+  child.api.nvim_set_hl(0, 'Normal', { fg = '#000000' })
+  child.g.terminal_color_0 = '#010101'
+
+  child.lua_notify('_G.return_item = MiniExtra.pickers.colorschemes()')
+  type_keys('^mini', '<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+
+  -- Should trigger 'ColorScheme' event
+  child.cmd('au ColorScheme * lua _G.n = (_G.n or 0) + 1')
+  type_keys('<C-c>')
+  eq(child.lua_get('_G.n'), child.fn.has('nvim-0.10') == 1 and 1 or 2)
+
+  eq(child.lua_get('_G.return_item'), vim.NIL)
+  eq(child.g.colors_name, 'minischeme')
+  expect.match(child.cmd_capture('hi Normal'), 'guifg=#000000')
+  eq(child.g.terminal_color_0, '#010101')
+end
+
+T['pickers']['colorschemes()']["can cancel without 'mini.colors'"] = function()
+  -- Mock absent 'mini.colors'
+  child.lua([[
+    local require_orig = require
+    require = function(modname)
+      if modname == 'mini.colors' then error("module 'mini.colors' not found") end
+      return require_orig(modname)
+    end
+  ]])
+
+  child.cmd('colorscheme minischeme')
+  -- These customizations can not persist even if there was preview
+  child.api.nvim_set_hl(0, 'Normal', { fg = '#000000' })
+  child.g.terminal_color_0 = '#010101'
+
+  child.lua_notify('_G.return_item = MiniExtra.pickers.colorschemes()')
+  type_keys('^mini', '<Tab>')
+  eq(child.g.colors_name, 'minicyan')
+
+  type_keys('<C-c>')
+
+  eq(child.lua_get('_G.return_item'), vim.NIL)
+  eq(child.g.colors_name, 'minischeme')
+  expect.match(child.cmd_capture('hi Normal'), 'guifg=#e2e98f')
+  eq(child.g.terminal_color_0, '#112641')
+
+  -- Should work if there is no `g:colors_name` defined before starting picker
+  child.g.colors_name = nil
+  pick_colorschemes()
+  type_keys('^mini', '<Tab>', '<C-c>')
+  eq(child.cmd_capture('messages'), '')
+end
+
+T['pickers']['colorschemes()']['restores original color scheme only if needed'] = function()
+  pick_colorschemes()
+  child.cmd('au ColorScheme * lua _G.n = (_G.n or 0) + 1')
+  type_keys('<C-c>')
+  eq(child.lua_get('_G.n'), vim.NIL)
+end
+
+T['pickers']['colorschemes()']['respects `local_opts.names`'] = function()
+  pick_colorschemes({ names = { 'randomhue', 'minischeme' } })
+  eq(get_picker_items(), { 'randomhue', 'minischeme' })
+  type_keys('<Tab>')
+  eq(child.g.colors_name, 'randomhue')
+  type_keys('<C-c>')
+
+  -- Should validate
+  expect.error(function() child.lua('MiniExtra.pickers.colorschemes({ names = 1 })') end, '`names`.*array')
+  expect.error(function() child.lua('MiniExtra.pickers.colorschemes({ names = { "xxx" } })') end, '"xxx".*not')
+end
+
+T['pickers']['colorschemes()']['respects `local_opts.preview_hl_groups`'] = function()
+  pick_colorschemes({ preview_hl_groups = { 'Normal', 'MiniPickBorder' } })
+  type_keys('^mini', '<Tab>')
+  child.expect_screenshot({ ignore_lines = { 14 } })
+
+  -- Should validate
+  expect.error(
+    function() child.lua('MiniExtra.pickers.colorschemes({ preview_hl_groups = 1 })') end,
+    '`preview_hl_groups`.*array'
+  )
+end
+
+T['pickers']['colorschemes()']['respects `opts`'] = function()
+  pick_colorschemes({}, { source = { name = 'My name' } })
+  validate_picker_name('My name')
+end
+
 T['pickers']['commands()'] = new_set()
 
 local pick_commands = forward_lua_notify('MiniExtra.pickers.commands')
