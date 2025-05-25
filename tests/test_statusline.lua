@@ -72,6 +72,7 @@ end
 
 -- Time constants
 local term_mode_wait = helpers.get_time_const(50)
+local small_time = helpers.get_time_const(10)
 
 -- Output test set ============================================================
 local T = new_set({
@@ -730,16 +731,20 @@ T['section_searchcount()']['works'] = function()
 end
 
 T['section_searchcount()']['works with many search matches'] = function()
-  set_lines({ string.rep('a ', 101) })
+  local maxcount = child.fn.has('nvim-0.12') == 1 and 999 or 99
+  local args = { options = { timeout = 15 * small_time } }
+
+  set_lines({ string.rep('a ', maxcount + 2) })
   type_keys('/', 'a', '<CR>')
   set_cursor(1, 0)
-  eq(section_searchcount(), '1/>99')
 
-  set_cursor(1, 197)
-  eq(section_searchcount(), '99/>99')
+  eq(section_searchcount(args), '1/>' .. maxcount)
 
-  set_cursor(1, 198)
-  eq(section_searchcount(), '>99/>99')
+  set_cursor(1, maxcount * 2 - 1)
+  eq(section_searchcount(args), maxcount .. '/>' .. maxcount)
+
+  set_cursor(1, maxcount * 2)
+  eq(section_searchcount(args), '>' .. maxcount .. '/>' .. maxcount)
 end
 
 T['section_searchcount()']['respects `args.trunc_width`'] = function()
