@@ -7,6 +7,12 @@ There are following change types:
 
 # Version 0.16.0.9000
 
+## mini.diff
+
+### Expand
+
+- Add support for working with files containing BOM bytes.
+
 ## mini.extra
 
 ### Expand

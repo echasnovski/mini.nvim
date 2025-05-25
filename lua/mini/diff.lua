@@ -139,6 +139,7 @@
 ---
 --- Notes:
 --- - Use |:edit| to reset (disable and re-enable) current buffer.
+--- - To work with BOM bytes, set 'bomb' and have `ucs-bom` in 'fileencodings'.
 ---
 --- # Overlay ~
 ---
@@ -705,8 +706,7 @@ MiniDiff.gen_source.save = function()
 
     local set_ref = function()
       if vim.bo[buf_id].modified then return end
-      local lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
-      MiniDiff.set_ref_text(buf_id, table.concat(lines, '\n') .. '\n')
+      MiniDiff.set_ref_text(buf_id, H.get_buftext(buf_id))
     end
 
     -- Autocommand are more efficient than file watcher as it doesn't read disk
@@ -955,6 +955,22 @@ H.vimdiff_supports_linematch = vim.fn.has('nvim-0.9') == 1
 --stylua: ignore
 H.worddiff_opts = { algorithm = 'minimal', result_type = 'indices', ctxlen = 0, interhunkctxlen = 4, indent_heuristic = false }
 if H.vimdiff_supports_linematch then H.worddiff_opts.linematch = 0 end
+
+-- BOM bytes prepended to buffer text if 'bomb' is enabled. See `:h bom-bytes`.
+--stylua: ignore
+H.bom_bytes = {
+  ['utf-8']    = string.char(0xef, 0xbb, 0xbf),
+  ['utf-16be'] = string.char(0xfe, 0xff),
+  ['utf-16']   = string.char(0xfe, 0xff),
+  ['utf-16le'] = string.char(0xff, 0xfe),
+  -- In 'fileencoding', 'utf-32' is transformed into 'ucs-4'
+  ['utf-32be'] = string.char(0x00, 0x00, 0xfe, 0xff),
+  ['ucs-4be']  = string.char(0x00, 0x00, 0xfe, 0xff),
+  ['utf-32']   = string.char(0x00, 0x00, 0xfe, 0xff),
+  ['ucs-4']    = string.char(0x00, 0x00, 0xfe, 0xff),
+  ['utf-32le'] = string.char(0xff, 0xfe, 0x00, 0x00),
+  ['ucs-4le']  = string.char(0xff, 0xfe, 0x00, 0x00),
+}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -1285,9 +1301,7 @@ H.update_buf_diff = vim.schedule_wrap(function(buf_id)
   H.vimdiff_opts.indent_heuristic = options.indent_heuristic
   if H.vimdiff_supports_linematch then H.vimdiff_opts.linematch = options.linematch end
 
-  -- - NOTE: Appending '\n' makes more intuitive diffs at end-of-file
-  local buf_lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
-  local buf_text = table.concat(buf_lines, '\n') .. '\n'
+  local buf_text, buf_lines = H.get_buftext(buf_id)
   local diff = vim.diff(buf_cache.ref_text, buf_text, H.vimdiff_opts)
 
   -- Recompute hunks with summary and draw information
@@ -1457,10 +1471,11 @@ H.draw_overlay_line_worddiff = function(buf_id, ns_id, row, data)
 
   -- Show changes in buffer line as one whole-line highlighting with separate
   -- highlighting for changed regions on top (as priority of context is lower)
+  local off = vim.bo[buf_id].bomb and (H.bom_bytes[vim.bo[buf_id].fileencoding] or ''):len() or 0
   for i = 1, #buf_parts do
     local part = buf_parts[i]
-    local buf_opts = { end_row = row, end_col = part[2], hl_group = 'MiniDiffOverChangeBuf', priority = priority }
-    H.set_extmark(buf_id, ns_id, row, part[1] - 1, buf_opts)
+    local buf_opts = { end_row = row, end_col = part[2] - off, hl_group = 'MiniDiffOverChangeBuf', priority = priority }
+    H.set_extmark(buf_id, ns_id, row, part[1] - 1 - off, buf_opts)
   end
   local context_opts =
     { end_row = row + 1, end_col = 0, hl_group = 'MiniDiffOverContextBuf', hl_eol = true, priority = priority - 1 }
@@ -1778,7 +1793,7 @@ H.git_get_path_data = function(path)
 end
 
 H.git_format_patch = function(buf_id, hunks, path_data)
-  local buf_lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
+  local _, buf_lines = H.get_buftext(buf_id)
   local ref_lines = vim.split(H.cache[buf_id].ref_text, '\n')
 
   local res = {
@@ -1876,6 +1891,16 @@ H.is_buf_text = function(buf_id)
   local n = vim.api.nvim_buf_call(buf_id, function() return vim.fn.byte2line(1024) end)
   local lines = vim.api.nvim_buf_get_lines(buf_id, 0, n, false)
   return table.concat(lines, ''):find('\0') == nil
+end
+
+H.get_buftext = function(buf_id)
+  local lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
+  -- - NOTE: Appending '\n' makes more intuitive diffs at end-of-file
+  local text = table.concat(lines, '\n') .. '\n'
+  if not vim.bo[buf_id].bomb then return text, lines end
+  local bytes = H.bom_bytes[vim.bo[buf_id].fileencoding] or ''
+  lines[1] = bytes .. lines[1]
+  return bytes .. text, lines
 end
 
 -- Try getting buffer's full real path (after resolving symlinks)

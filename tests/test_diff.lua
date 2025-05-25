@@ -1282,6 +1282,30 @@ T['gen_source']['save()']['works'] = function()
   eq(has_save_autocommands(), false)
 end
 
+T['gen_source']['save()']['works with BOM bytes'] = function()
+  child.lua('MiniDiff.config.source = MiniDiff.gen_source.save()')
+  local path = test_dir_absolute .. '/file-bom'
+  edit(path)
+
+  local init_content = child.fn.readblob(path, 'b')
+  MiniTest.finally(function()
+    local file = io.open(path, 'w')
+    assert(file)
+    file:write(init_content)
+    file:close()
+  end)
+
+  local validate_ref_text = function(ref) eq(get_buf_data(0).ref_text, ref) end
+
+  eq(child.bo.fileencoding, 'utf-8')
+  local utf8_bom_bytes = string.char(0xef, 0xbb, 0xbf)
+  validate_ref_text(utf8_bom_bytes .. 'bbb\nvvv\n')
+
+  type_keys('G', 'o', 'hello', '<Esc>')
+  child.cmd('write')
+  validate_ref_text(utf8_bom_bytes .. 'bbb\nvvv\nhello\n')
+end
+
 T['do_hunks()'] = new_set()
 
 local do_hunks = forward_lua('MiniDiff.do_hunks')
@@ -2524,6 +2548,19 @@ T['Overlay']['word diff']['works with multibyte characters'] = function()
   validate({ 'xxx', 'xxx', 'xxx' }, { 'ыxx', 'xыx', 'xxы' })
 end
 
+T['Overlay']['word diff']['works with BOM bytes'] = function()
+  local path = test_dir_absolute .. '/file-bom'
+  edit(path)
+  local content = child.fn.readblob(path, 'b'):gsub('\r', '')
+
+  toggle_overlay(0)
+  set_lines({ 'bBb', 'vvv' })
+  set_ref_text(0, content)
+
+  type_keys('<C-y>')
+  child.expect_screenshot()
+end
+
 T['Diff'] = new_set({ hooks = { pre_case = setup_enabled_buffer } })
 
 T['Diff']['works'] = function()
@@ -2646,6 +2683,43 @@ T['Diff']['respects `options.linematch`'] = function()
     { buf_start = 2, buf_count = 2, ref_start = 2, ref_count = 1, type = 'change' },
   }
   eq(get_buf_hunks(0), nolinematch_hunks)
+end
+
+T['Diff']['works with BOM bytes'] = function()
+  local small_text_change_delay = 3 * small_time
+  child.lua('MiniDiff.config.delay.text_change = ' .. small_text_change_delay)
+  local lines = { 'aaa', 'bbb' }
+
+  local validate_bom_buffer = function(fileencoding, bytes)
+    -- Mock buffer with BOM bytes
+    local buf_id = new_scratch_buf()
+    set_buf(buf_id)
+
+    child.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
+    child.api.nvim_set_option_value('fileencoding', fileencoding, { buf = buf_id })
+    child.api.nvim_set_option_value('bomb', true, { buf = buf_id })
+
+    local text_lines = vim.deepcopy(lines)
+    text_lines[1] = bytes .. text_lines[1]
+    set_ref_text(buf_id, text_lines)
+
+    -- Should respect BOM bytes and not report first line as "change" hunk
+    eq(get_buf_data().hunks, {})
+
+    type_keys('G', 'o', 'hello', '<Esc>')
+    sleep(small_text_change_delay + small_time)
+    eq(get_buf_data().hunks, { { type = 'add', buf_start = 3, buf_count = 1, ref_start = 2, ref_count = 0 } })
+  end
+
+  validate_bom_buffer('utf-8', string.char(0xef, 0xbb, 0xbf))
+  validate_bom_buffer('utf-16be', string.char(0xfe, 0xff))
+  validate_bom_buffer('utf-16', string.char(0xfe, 0xff))
+  validate_bom_buffer('utf-16le', string.char(0xff, 0xfe))
+  validate_bom_buffer('ucs-4be', string.char(0x00, 0x00, 0xfe, 0xff))
+  validate_bom_buffer('ucs-4', string.char(0x00, 0x00, 0xfe, 0xff))
+  validate_bom_buffer('ucs-4le', string.char(0xff, 0xfe, 0x00, 0x00))
+
+  validate_bom_buffer('unknown', '')
 end
 
 T['Diff']['redraws statusline when diff is updated'] = function()

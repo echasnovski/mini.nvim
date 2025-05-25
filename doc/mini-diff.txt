@@ -141,6 +141,7 @@ a table with the following fields:
 
 Notes:
 - Use |:edit| to reset (disable and re-enable) current buffer.
+- To work with BOM bytes, set 'bomb' and have `ucs-bom` in 'fileencodings'.
 
 # Overlay ~
 
