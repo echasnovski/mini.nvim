@@ -241,7 +241,7 @@ Vimscript functions that operate only inside current window.
 ## View ~
 
 Option `view.n_steps_ahead` controls how many steps ahead to show along
-with the currently required label. Those future steps are showed with
+with the currently required label. Those future steps are shown with
 different (less visible) highlight group ("MiniJump2dSpotAhead"). Usually
 it is a good idea to use this with a spotter which doesn't result into many
 jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
