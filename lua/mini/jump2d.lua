@@ -76,7 +76,7 @@
 ---     allowed_windows = { not_current = false },
 ---   })
 --- <
---- - Jump to word start using combination of options supplied in
+--- - Jump to line start using combination of options supplied in
 ---   |MiniJump2d.config| and |MiniJump2d.builtin_opts.line_start|: >vim
 ---
 ---   :lua MiniJump2d.start(MiniJump2d.builtin_opts.line_start)
@@ -213,7 +213,7 @@ end
 --- ## View ~
 ---
 --- Option `view.n_steps_ahead` controls how many steps ahead to show along
---- with the currently required label. Those future steps are showed with
+--- with the currently required label. Those future steps are shown with
 --- different (less visible) highlight group ("MiniJump2dSpotAhead"). Usually
 --- it is a good idea to use this with a spotter which doesn't result into many
 --- jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
@@ -341,7 +341,7 @@ MiniJump2d.config = {
 --- default spotter function. Rarely 3 steps are needed with several windows.
 ---
 ---@param opts table|nil Configuration of jumping, overriding global and buffer
----   local values.config|. Has the same structure as |MiniJump2d.config|
+---   local values. Has the same structure as |MiniJump2d.config|
 ---   without <mappings> field. Extra allowed fields:
 ---     - <hl_group> - which highlight group to use for first step.
 ---       Default: "MiniJump2dSpot".
@@ -490,7 +490,7 @@ MiniJump2d.gen_spotter.pattern = function(pattern, side)
       spot = math.min(math.max(spot, 0), line:len())
 
       -- Unify how spot is chosen in case of multibyte characters
-      -- Use `+-1` to make sure that result it at start of multibyte character
+      -- Use `+-1` to make sure that result is at start of multibyte character
       local utf_index = vim.str_utfindex(line, spot) - 1
       spot = vim.str_byteindex(line, utf_index) + 1
 
