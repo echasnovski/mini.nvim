@@ -213,7 +213,7 @@ end
 --- ## View ~
 ---
 --- Option `view.n_steps_ahead` controls how many steps ahead to show along
---- with the currently required label. Those future steps are showed with
+--- with the currently required label. Those future steps are shown with
 --- different (less visible) highlight group ("MiniJump2dSpotAhead"). Usually
 --- it is a good idea to use this with a spotter which doesn't result into many
 --- jump spots (like, for example, |MiniJump2d.builtin_opts.word_start|).
@@ -490,7 +490,7 @@ MiniJump2d.gen_spotter.pattern = function(pattern, side)
       spot = math.min(math.max(spot, 0), line:len())
 
       -- Unify how spot is chosen in case of multibyte characters
-      -- Use `+-1` to make sure that result it at start of multibyte character
+      -- Use `+-1` to make sure that result is at start of multibyte character
       local utf_index = vim.str_utfindex(line, spot) - 1
       spot = vim.str_byteindex(line, utf_index) + 1
 
