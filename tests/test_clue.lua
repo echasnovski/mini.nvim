@@ -1562,6 +1562,25 @@ T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
   validate()
 end
 
+T['Showing keys']['works with small available dimensions'] = function()
+  -- Check this only on Neovim>=0.12, as there is a slight change in
+  -- highlighting command line area
+  if child.fn.has('nvim-0.12') == 0 then return end
+
+  child.set_size(5, 40)
+  child.o.showtabline, child.o.laststatus = 0, 0
+  child.o.cmdheight = 4
+
+  load_module({
+    clues = { { mode = 'n', keys = '<Space>a' }, { mode = 'n', keys = '<Space>b' } },
+    triggers = { { mode = 'n', keys = '<Space>' } },
+    window = { delay = 0 },
+  })
+
+  type_keys(' ')
+  child.expect_screenshot()
+end
+
 T['Showing keys']['reacts to `VimResized`'] = function()
   child.set_size(7, 20)
   load_module({

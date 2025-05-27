@@ -1612,6 +1612,7 @@ H.window_get_config = function()
   local has_tabline = vim.o.showtabline == 2 or (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1)
   -- Remove 2 from maximum height to account for top and bottom borders
   local max_height = vim.o.lines - vim.o.cmdheight - (has_tabline and 1 or 0) - (has_statusline and 1 or 0) - 2
+  max_height = math.max(max_height, 1)
 
   local buf_id = H.state.buf_id
   local cur_config_fields = {
@@ -1626,7 +1627,6 @@ H.window_get_config = function()
 
   -- Tweak "auto" fields
   if res.width == 'auto' then res.width = H.buffer_get_width() + 1 end
-  res.width = math.min(res.width, vim.o.columns)
 
   if res.row == 'auto' then
     local is_on_top = res.anchor == 'NW' or res.anchor == 'NE'
@@ -1638,9 +1638,10 @@ H.window_get_config = function()
     res.col = is_on_left and 0 or cur_config_fields.col
   end
 
-  -- Ensure proper title
+  -- Ensure proper config
   if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end
   if vim.fn.has('nvim-0.9') == 0 then res.title = nil end
+  res.width = math.min(math.max(res.width, 1), vim.o.columns)
 
   return res
 end
