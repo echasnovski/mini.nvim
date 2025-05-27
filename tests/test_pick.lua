@@ -4868,6 +4868,17 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
   validate()
 end
 
+T['Overall view']['works with small available dimensions'] = function()
+  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.11') end
+
+  child.set_size(5, 40)
+  child.o.showtabline, child.o.laststatus = 0, 0
+  child.o.cmdheight = 4
+
+  start_with_items({ 'a' }, 'My name')
+  child.expect_screenshot()
+end
+
 T['Overall view']["respects 'guicursor'"] = function()
   local validate = function(keys, init_guicursor)
     init_guicursor = init_guicursor or 'n-v-c:block'
