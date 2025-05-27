@@ -944,10 +944,6 @@ end
 ---   })
 --- <
 --- Notes:
---- - By default query is done using 'nvim-treesitter' plugin if it is present
----   (falls back to builtin methods otherwise). This allows for a more
----   advanced features (like multiple buffer languages, custom directives, etc.).
----   See `opts.use_nvim_treesitter` for how to disable this.
 --- - Be sure that query files don't contain unknown |treesitter-directives|
 ---   (like `#make-range!`, for example). Otherwise textobject for such capture
 ---   might not be found as |vim.treesitter| won't treat them as captures. Verify
@@ -964,9 +960,11 @@ end
 ---   array of such captures (best among all matches will be chosen).
 ---@param opts table|nil Options. Possible values:
 ---   - <use_nvim_treesitter> - whether to try to use 'nvim-treesitter' plugin
----     (if present) to do the query. It implements more advanced behavior at
----     cost of increased execution time. Provides more coherent experience if
----     'nvim-treesitter-textobjects' queries are used. Default: `true`.
+---     (if present) to do the query. It used to implement more advanced behavior
+---     and more coherent experience if 'nvim-treesitter-textobjects' queries are
+---     used. However, as |lua-treesitter-core| methods are more capable now,
+---     the option will soon be removed. Only present for backward compatibility.
+---     Default: `false`.
 ---
 ---@return function Function with |MiniAi.find_textobject()| signature which
 ---   returns array of current buffer regions representing matches for
@@ -974,11 +972,12 @@ end
 ---
 ---@seealso |MiniAi-textobject-specification| for how this type of textobject
 ---   specification is processed.
---- |get_query()| for how query is fetched in case of no 'nvim-treesitter'.
+--- |vim.treesitter.get_query()| for how query is fetched.
 --- |Query:iter_captures()| for how all query captures are iterated in case of
 ---   no 'nvim-treesitter'.
 MiniAi.gen_spec.treesitter = function(ai_captures, opts)
-  opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = true }, opts or {})
+  -- TODO: Remove after releasing 'mini.nvim' 0.17.0
+  opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = false }, opts or {})
   ai_captures = H.prepare_ai_captures(ai_captures)
 
   return function(ai_type, _, _)

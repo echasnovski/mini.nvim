@@ -768,23 +768,20 @@ T['gen_spec']['treesitter()']['respects `opts.use_nvim_treesitter`'] = function(
     o = MiniAi.gen_spec.treesitter({ a = '@plugin_other', i = '@plugin_other' }),
     O = MiniAi.gen_spec.treesitter(
       { a = '@plugin_other', i = '@plugin_other' },
-      { use_nvim_treesitter = false }
+      { use_nvim_treesitter = true }
     )
   }]])
   local lines = get_lines()
 
-  -- By default it should be `true` but fall back to builtin if no
-  -- 'nvim-treesitter' is found
+  -- By default it should be `false`
   validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
   validate_find(lines, { 1, 0 }, { 'a', 'o' }, nil)
   validate_find(lines, { 1, 0 }, { 'a', 'O' }, nil)
 
   mock_treesitter_plugin()
   validate_find(lines, { 1, 0 }, { 'a', 'F' }, { { 3, 1 }, { 5, 3 } })
-  validate_find(lines, { 1, 0 }, { 'a', 'o' }, { { 1, 1 }, { 1, 12 } })
-
-  -- Should respect `false` value
-  validate_find(lines, { 1, 0 }, { 'a', 'O' }, nil)
+  validate_find(lines, { 1, 0 }, { 'a', 'o' }, nil)
+  validate_find(lines, { 1, 0 }, { 'a', 'O' }, { { 1, 1 }, { 1, 12 } })
 
   -- Should prefer range from metadata instead of node itself. This is useful,
   -- for example, with `#offset!` directive to create more precise captures.
