@@ -49,6 +49,40 @@ local validate_next_region1d = function(keys, next_region)
   eq({ child.fn.col('v'), child.fn.col('.') }, next_region)
 end
 
+local validate_tobj = function(lines, cursor, keys, expected, vis_mode)
+  vis_mode = vim.api.nvim_replace_termcodes(vis_mode or 'v', true, true, true)
+
+  child.ensure_normal_mode()
+  set_lines(lines)
+  set_cursor(unpack(cursor))
+  type_keys(vis_mode, keys)
+  eq(get_mode(), vis_mode)
+
+  -- Allow supplying number items to verify linewise selection
+  local expected_from = type(expected[1]) == 'number' and expected[1] or { expected[1][1], expected[1][2] - 1 }
+  local expected_to = type(expected[2]) == 'number' and expected[2] or { expected[2][1], expected[2][2] - 1 }
+  child.expect_visual_marks(expected_from, expected_to)
+end
+
+local validate_tobj1d = function(line, column, keys, expected)
+  validate_tobj({ line }, { 1, column }, keys, { { 1, expected[1] }, { 1, expected[2] } })
+end
+
+local validate_no_tobj = function(lines, cursor, keys, vis_mode)
+  vis_mode = vim.api.nvim_replace_termcodes(vis_mode or 'v', true, true, true)
+
+  child.ensure_normal_mode()
+  set_lines(lines)
+  set_cursor(unpack(cursor))
+
+  type_keys(vis_mode, keys)
+  eq(get_mode(), 'n')
+  eq(get_cursor(), cursor)
+  expect.match(get_latest_message(), 'No textobject')
+end
+
+local validate_no_tobj1d = function(line, column, keys) validate_no_tobj({ line }, { 1, column }, keys) end
+
 local mock_treesitter_builtin = function() child.cmd('source tests/dir-ai/mock-lua-treesitter.lua') end
 
 local mock_treesitter_plugin = function() child.cmd('noautocmd set rtp+=tests/dir-ai') end
@@ -846,6 +880,35 @@ T['gen_spec']['treesitter()']['validates builtin treesitter presence'] = functio
   )
 end
 
+T['gen_spec']['user_prompt()'] = new_set()
+
+-- More tests are done in `T['Builtin']['User prompt']`
+T['gen_spec']['user_prompt()']['works'] = function()
+  -- Define custom "user prompt" textobject
+  child.lua('MiniAi.config.custom_textobjects = { ["/"] = MiniAi.gen_spec.user_prompt() }')
+
+  -- Single character edges
+  validate_tobj1d('__e__o__', 0, 'a/e<CR>o<CR>', { 3, 6 })
+  validate_tobj1d('__e__o__', 0, 'i/e<CR>o<CR>', { 4, 5 })
+
+  -- Multiple character edges
+  validate_tobj1d('__ef__op__', 0, 'a/ef<CR>op<CR>', { 3, 8 })
+  validate_tobj1d('__ef__op__', 0, 'i/ef<CR>op<CR>', { 5, 6 })
+
+  -- Supports dot-repeat
+  set_lines({ '_e--o_', '+e---o+' })
+  set_cursor(1, 0)
+  type_keys('da', '/', 'e<CR>', 'o<CR>')
+  eq(get_lines(), { '__', '+e---o+' })
+  type_keys('j', '.')
+  eq(get_lines(), { '__', '++' })
+
+  set_lines({ '_r--t_' })
+  set_cursor(1, 0)
+  type_keys('di', '/', 'r<CR>', 't<CR>')
+  eq(get_lines(), { '_rt_' })
+end
+
 local validate_select = function(lines, cursor, args, expected)
   child.ensure_normal_mode()
   set_lines(lines)
@@ -1395,40 +1458,6 @@ T['Search method']['works with "nearest" in Operator-pending mode'] = function()
 end
 
 -- Integration tests ==========================================================
-local validate_tobj = function(lines, cursor, keys, expected, vis_mode)
-  vis_mode = vim.api.nvim_replace_termcodes(vis_mode or 'v', true, true, true)
-
-  child.ensure_normal_mode()
-  set_lines(lines)
-  set_cursor(unpack(cursor))
-  type_keys(vis_mode, keys)
-  eq(get_mode(), vis_mode)
-
-  -- Allow supplying number items to verify linewise selection
-  local expected_from = type(expected[1]) == 'number' and expected[1] or { expected[1][1], expected[1][2] - 1 }
-  local expected_to = type(expected[2]) == 'number' and expected[2] or { expected[2][1], expected[2][2] - 1 }
-  child.expect_visual_marks(expected_from, expected_to)
-end
-
-local validate_tobj1d = function(line, column, keys, expected)
-  validate_tobj({ line }, { 1, column }, keys, { { 1, expected[1] }, { 1, expected[2] } })
-end
-
-local validate_no_tobj = function(lines, cursor, keys, vis_mode)
-  vis_mode = vim.api.nvim_replace_termcodes(vis_mode or 'v', true, true, true)
-
-  child.ensure_normal_mode()
-  set_lines(lines)
-  set_cursor(unpack(cursor))
-
-  type_keys(vis_mode, keys)
-  eq(get_mode(), 'n')
-  eq(get_cursor(), cursor)
-  expect.match(get_latest_message(), 'No textobject')
-end
-
-local validate_no_tobj1d = function(line, column, keys) validate_no_tobj({ line }, { 1, column }, keys) end
-
 T['Textobject'] = new_set()
 
 T['Textobject']['works in Visual mode'] = function()

@@ -996,6 +996,35 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
   end
 end
 
+--- Specification from user prompt
+---
+--- - Ask user for left and right textobject edges as raw strings (no pattern).
+--- - Construct specification for a textobject that matches from left edge string
+---   to right edge string: `a` includes both strings, `i` only insides.
+---
+--- Used for |MiniAi-textobject-builtin| with identifier `?`.
+---
+---@return function Textobject specification as function.
+MiniAi.gen_spec.user_prompt = function()
+  return function()
+    -- Using cache allows for a dot-repeat without another user input
+    if H.cache.prompted_textobject ~= nil then return H.cache.prompted_textobject end
+
+    local left = H.user_input('Left edge')
+    if left == nil or left == '' then return end
+    local right = H.user_input('Right edge')
+    if right == nil or right == '' then return end
+
+    -- Clean command line from prompt messages (does not work in Visual mode)
+    vim.cmd([[echo '' | redraw]])
+
+    local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
+    local res = { string.format('%s().-()%s', left_esc, right_esc) }
+    H.cache.prompted_textobject = res
+    return res
+  end
+end
+
 --- Visually select textobject region
 ---
 --- Does nothing if no region is found.
@@ -1119,23 +1148,7 @@ H.builtin_textobjects = {
   ['"'] = { '%b""', '^.().*().$' },
   ['`'] = { '%b``', '^.().*().$' },
   -- Derived from user prompt
-  ['?'] = function()
-    -- Using cache allows for a dot-repeat without another user input
-    if H.cache.prompted_textobject ~= nil then return H.cache.prompted_textobject end
-
-    local left = H.user_input('Left edge')
-    if left == nil or left == '' then return end
-    local right = H.user_input('Right edge')
-    if right == nil or right == '' then return end
-
-    -- Clean command line from prompt messages (does not work in Visual mode)
-    vim.cmd([[echo '' | redraw]])
-
-    local left_esc, right_esc = vim.pesc(left), vim.pesc(right)
-    local res = { string.format('%s().-()%s', left_esc, right_esc) }
-    H.cache.prompted_textobject = res
-    return res
-  end,
+  ['?'] = MiniAi.gen_spec.user_prompt(),
   -- Argument
   ['a'] = MiniAi.gen_spec.argument(),
   -- Brackets

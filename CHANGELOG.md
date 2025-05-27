@@ -13,6 +13,10 @@ There are following change types:
 
 - Update `gen_spec.treesitter()` to have `use_nvim_treesitter = false` as default option value (instead of `true`). It used to implement more advanced behavior, but as built-in `vim.treesitter` is capable enough, there is no need in extra dependency. The option will be removed after the release.
 
+### Expand
+
+- Add `gen_spec.user_prompt` that acts the same as `?` built-in textobject. It can be used for using this textobject under another identifier.
+
 ## mini.diff
 
 ### Expand
