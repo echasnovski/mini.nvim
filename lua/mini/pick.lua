@@ -1815,7 +1815,7 @@ MiniPick.set_picker_query = function(query)
   if not MiniPick.is_picker_active() then return end
   if not H.is_array_of(query, 'string') then H.error('`query` should be an array of strings.') end
 
-  H.pickers.active.query, H.pickers.active.caret = query, #query + 1
+  H.pickers.active.query, H.pickers.active.caret = vim.deepcopy(query), #query + 1
   H.querytick = H.querytick + 1
   H.pickers.active.match_inds = H.seq_along(MiniPick.get_picker_items())
   H.picker_update(H.pickers.active, true)

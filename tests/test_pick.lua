@@ -4490,6 +4490,18 @@ T['set_picker_query()']['works'] = function()
   eq(set_picker_query({ 'a' }), vim.NIL)
 end
 
+T['set_picker_query()']['does not have side effects'] = function()
+  start_with_items({ 'a', 'b', 'bb' })
+
+  child.lua([[
+    _G.query = { 'b' }
+    MiniPick.set_picker_query(_G.query)
+  ]])
+
+  type_keys('b')
+  eq(child.lua_get('_G.query'), { 'b' })
+end
+
 T['set_picker_query()']['resets caret'] = function()
   start_with_items({ 'a', 'b', 'bb' })
   type_keys('b', 'b', '<Left>')
