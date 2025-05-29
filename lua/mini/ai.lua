@@ -1540,7 +1540,9 @@ end
 
 H.get_matched_ranges_builtin = function(captures)
   -- Fetch treesitter data for buffer
-  local lang = vim.bo.filetype
+  local ft = vim.bo.filetype
+  local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
+  lang = has_lang and lang or ft
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
   local has_parser, parser = pcall(vim.treesitter.get_parser, 0, lang, { error = false })
   if not has_parser or parser == nil then H.error_treesitter('parser', lang) end
