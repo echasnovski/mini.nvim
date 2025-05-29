@@ -275,7 +275,7 @@
 --- - <hooks> `(table|nil)` - table with callable hooks to call on certain events.
 ---   Possible hook names:
 ---     - <pre_install>   - before creating plugin directory.
----     - <post_install>  - after  creating plugin directory.
+---     - <post_install>  - after  creating plugin directory (before |:packadd|).
 ---     - <pre_checkout>  - before making change in existing plugin.
 ---     - <post_checkout> - after  making change in existing plugin.
 ---   Each hook is executed with the following table as an argument:
