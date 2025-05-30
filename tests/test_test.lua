@@ -989,6 +989,60 @@ T['expect']['reference_screenshot()']['respects `opts.ignore_lines`'] = function
   )
 end
 
+T['expect']['reference_screenshot()']['respects `opts.ignore_text`'] = function()
+  local path = get_ref_path('reference-screenshot')
+  child.set_size(5, 12)
+  local validate = function(ignore_text, ref)
+    eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_text = ignore_text }), ref)
+  end
+
+  set_lines({ 'aaa' })
+  validate(nil, true)
+  validate(false, true)
+
+  -- Make different text but same highlighting
+  set_lines({ 'aaa', 'bbb' })
+  local ns_id = child.api.nvim_create_namespace('test-hl')
+  child.api.nvim_buf_set_extmark(0, ns_id, 1, 0, { end_row = 2, end_col = 0, hl_group = 'EndOfBuffer', hl_eol = true })
+
+  validate({ 2 }, true)
+  validate({ 1, 2, 3 }, true)
+
+  set_lines({ 'ccc', 'bbb' })
+  expect.error(
+    function() MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_text = { 2 } }) end,
+    'screenshot equality to reference at '
+      .. vim.pesc(vim.inspect(path))
+      .. '.*Different `text` cell at line 1 column 1%. Reference: "a"%. Observed: "c"%.'
+  )
+end
+
+T['expect']['reference_screenshot()']['respects `opts.ignore_attr`'] = function()
+  local path = get_ref_path('reference-screenshot')
+  child.set_size(5, 12)
+  local validate = function(ignore_attr, ref)
+    eq(MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_attr = ignore_attr }), ref)
+  end
+
+  set_lines({ 'aaa' })
+  validate(nil, true)
+  validate(false, true)
+
+  -- Make different attr but same text
+  local ns_id = child.api.nvim_create_namespace('test-hl')
+  child.api.nvim_buf_set_extmark(0, ns_id, 0, 1, { end_row = 0, end_col = 3, hl_group = 'EndOfBuffer' })
+
+  validate({ 1 }, true)
+  validate({ 1, 2 }, true)
+
+  expect.error(
+    function() MiniTest.expect.reference_screenshot(child.get_screenshot(), path, { ignore_text = { 2 } }) end,
+    'screenshot equality to reference at '
+      .. vim.pesc(vim.inspect(path))
+      .. '.*Different `attr` cell at line 1 column 2%. Reference: "0"%. Observed: "1"%.'
+  )
+end
+
 T['expect']['reference_screenshot()']['respects `opts.directory`'] = function()
   child.set_size(5, 12)
   set_lines({ 'opts.directory' })

@@ -59,6 +59,12 @@ There are following change types:
 
 - "Paste" action now supports special registers: `<C-w>` (word at cursor), `<C-a>` (WORD at cursor), `<C-l>` (line at cursor), `<C-f>` (filename at cursor).
 
+## mini.test
+
+### Expand
+
+- Update `expect.reference_screenshot()` to support separate ignoring of text and attribute screenshot data via new `ignore_text` and `ignore_attr` options.
+
 
 # Version 0.16.0
 

@@ -581,7 +581,14 @@ Parameters ~
 {opts} `(table|nil)` Options:
   - <force> `(boolean)` - whether to forcefully create reference screenshot.
     Temporary useful during test writing. Default: `false`.
+  - <ignore_text> `(boolean|table)` - whether to ignore all or some text lines.
+    If `true` - ignore all, if number array - ignore text of those lines,
+    if `false` - do not ignore any. Default: `false`.
+  - <ignore_attr> `(boolean|table)` - whether to ignore all or some attr lines.
+    If `true` - ignore all, if number array - ignore attr of those lines,
+    if `false` - do not ignore any. Default: `false`.
   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
+    Same as supplying line number as part of <ignore_text> and <ignore_attr>.
     Default: `nil` to check all lines.
   - <directory> `(string)` - directory where automatically constructed `path`
     is located. Default: "tests/screenshots".

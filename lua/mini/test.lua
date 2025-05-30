@@ -740,14 +740,23 @@ end
 ---@param opts table|nil Options:
 ---   - <force> `(boolean)` - whether to forcefully create reference screenshot.
 ---     Temporary useful during test writing. Default: `false`.
+---   - <ignore_text> `(boolean|table)` - whether to ignore all or some text lines.
+---     If `true` - ignore all, if number array - ignore text of those lines,
+---     if `false` - do not ignore any. Default: `false`.
+---   - <ignore_attr> `(boolean|table)` - whether to ignore all or some attr lines.
+---     If `true` - ignore all, if number array - ignore attr of those lines,
+---     if `false` - do not ignore any. Default: `false`.
 ---   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
+---     Same as supplying line number as part of <ignore_text> and <ignore_attr>.
 ---     Default: `nil` to check all lines.
 ---   - <directory> `(string)` - directory where automatically constructed `path`
 ---     is located. Default: "tests/screenshots".
 MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if screenshot == nil then return true end
 
-  opts = vim.tbl_extend('force', { force = false, ignore_lines = {}, directory = 'tests/screenshots' }, opts or {})
+  local default_opts = { force = false, ignore_lines = {}, directory = 'tests/screenshots' }
+  default_opts.ignore_text, default_opts.ignore_attr = false, false
+  opts = vim.tbl_extend('force', default_opts, opts or {})
 
   H.cache.n_screenshots = H.cache.n_screenshots + 1
 
@@ -783,10 +792,11 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   local reference = H.screenshot_read(path)
 
   -- Compare
-  local are_same, cause = H.screenshot_compare(reference, screenshot, opts)
+  local same_text, cause_text = H.screenshot_compare_part('text', reference, screenshot, opts)
+  local same_attr, cause_attr = H.screenshot_compare_part('attr', reference, screenshot, opts)
+  if same_text and same_attr then return true end
 
-  if are_same then return true end
-
+  local cause = same_text and cause_attr or cause_text
   local subject = 'screenshot equality to reference at ' .. vim.inspect(path)
   local context = string.format('%s\nReference:\n%s\n\nObserved:\n%s', cause, tostring(reference), tostring(screenshot))
   H.error_expect(subject, context)
@@ -2264,40 +2274,34 @@ H.screenshot_encode_attr = function(attr)
   return res
 end
 
-H.screenshot_compare = function(screen_ref, screen_obs, opts)
+H.screenshot_compare_part = function(part, ref, obs, opts)
+  local ignore_part, ignore_lines = opts['ignore_' .. part], opts.ignore_lines
+  if ignore_part == true then return true, '' end
+
   local compare = function(x, y, desc)
-    if x ~= y then
-      return false, ('Different %s. Reference: %s. Observed: %s.'):format(desc, vim.inspect(x), vim.inspect(y))
-    end
-    return true, ''
+    if x == y then return true, '' end
+    return false, ('Different %s. Reference: %s. Observed: %s.'):format(desc, vim.inspect(x), vim.inspect(y))
   end
 
-  --stylua: ignore start
   local ok, cause
-  ok, cause = compare(#screen_ref.text, #screen_obs.text, 'number of `text` lines')
-  if not ok then return ok, cause end
-  ok, cause = compare(#screen_ref.attr, #screen_obs.attr, 'number of `attr` lines')
+  ok, cause = compare(#ref[part], #obs[part], 'number of `' .. part .. '` lines')
   if not ok then return ok, cause end
 
-  local lines_to_check, ignore_lines = {}, opts.ignore_lines
-  for i = 1, #screen_ref.text do
-    if not vim.tbl_contains(ignore_lines, i) then table.insert(lines_to_check, i) end
+  local lines_to_check = {}
+  for i = 1, #ref[part] do
+    local is_ignore_part = type(ignore_part) == 'table' and vim.tbl_contains(ignore_part, i)
+    if not (is_ignore_part or vim.tbl_contains(ignore_lines, i)) then table.insert(lines_to_check, i) end
   end
 
   for _, i in ipairs(lines_to_check) do
-    ok, cause = compare(#screen_ref.text[i], #screen_obs.text[i], 'number of columns in `text` line ' .. i)
-    if not ok then return ok, cause end
-    ok, cause = compare(#screen_ref.attr[i], #screen_obs.attr[i], 'number of columns in `attr` line ' .. i)
+    ok, cause = compare(#ref[part][i], #obs[part][i], 'number of columns in `' .. part .. '` line ' .. i)
     if not ok then return ok, cause end
 
-    for j = 1, #screen_ref.text[i] do
-      ok, cause = compare(screen_ref.text[i][j], screen_obs.text[i][j], string.format('`text` cell at line %s column %s', i, j))
-      if not ok then return ok, cause end
-      ok, cause = compare(screen_ref.attr[i][j], screen_obs.attr[i][j], string.format('`attr` cell at line %s column %s', i, j))
+    for j = 1, #ref[part][i] do
+      ok, cause = compare(ref[part][i][j], obs[part][i][j], '`' .. part .. '` cell at line ' .. i .. ' column ' .. j)
       if not ok then return ok, cause end
     end
   end
-  --stylua: ignore end
 
   return true, ''
 end
