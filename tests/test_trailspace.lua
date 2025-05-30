@@ -296,7 +296,7 @@ T['Trailspace highlighting on startup']['works'] = function()
     'tests/dir-trailspace/file',
   })
   child.set_size(5, 12)
-  child.expect_screenshot({ ignore_lines = { 4 } })
+  child.expect_screenshot({ ignore_text = helpers.is_windows() and { 4 } or {} })
 end
 
 return T

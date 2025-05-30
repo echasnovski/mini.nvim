@@ -946,12 +946,12 @@ T['pickers']['colorschemes()']['works'] = function()
   type_keys('^mini')
 
   -- Should find minicyan and minischeme
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
 
   -- Should have proper preview
   type_keys('<Tab>')
   eq(child.g.colors_name, 'minicyan')
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
 
   -- Should properly choose
   type_keys('<CR>')
@@ -970,7 +970,7 @@ T['pickers']['colorschemes()']['works with preview'] = function()
   local validate = function(ref_name, ref_normal_bg)
     eq(child.g.colors_name, ref_name)
     expect.match(child.cmd_capture('hi Normal'), 'guibg=' .. ref_normal_bg)
-    child.expect_screenshot({ ignore_lines = { 14 } })
+    child.expect_screenshot({ ignore_text = { 14 } })
   end
 
   type_keys('<Tab>')
@@ -1080,7 +1080,7 @@ end
 T['pickers']['colorschemes()']['respects `local_opts.preview_hl_groups`'] = function()
   pick_colorschemes({ preview_hl_groups = { 'Normal', 'MiniPickBorder' } })
   type_keys('^mini', '<Tab>')
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
 
   -- Should validate
   expect.error(
@@ -1104,12 +1104,12 @@ T['pickers']['commands()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.commands()')
   validate_picker_name('Commands')
   type_keys("'chdir")
-  child.expect_screenshot({ ignore_lines = { 9 } })
+  child.expect_screenshot({ ignore_text = { 9 } })
 
   -- Should have proper preview
   type_keys('<Tab>')
   -- - No data for built-in commands is yet available
-  child.expect_screenshot({ ignore_lines = { 9 } })
+  child.expect_screenshot({ ignore_text = { 9 } })
 
   -- Should properly choose
   type_keys('<CR>')
@@ -1137,9 +1137,9 @@ T['pickers']['commands()']['respects user commands'] = function()
 
   -- Should have proper preview with data
   type_keys('<Tab>')
-  child.expect_screenshot({ ignore_lines = { 24 } })
+  child.expect_screenshot({ ignore_text = { 24 } })
   type_keys('<C-n>')
-  child.expect_screenshot({ ignore_lines = { 24 } })
+  child.expect_screenshot({ ignore_text = { 24 } })
 
   -- Should on choose execute command if it is without arguments
   type_keys('<C-p>', '<CR>')
@@ -2456,7 +2456,7 @@ T['pickers']['hl_groups()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.hl_groups()')
   validate_picker_name('Highlight groups')
   type_keys('^Spell')
-  child.expect_screenshot({ ignore_lines = { 9 } })
+  child.expect_screenshot({ ignore_text = { 9 } })
 
   -- Should use same group for line highlighting
   local matches = get_picker_matches().all
@@ -2469,7 +2469,7 @@ T['pickers']['hl_groups()']['works'] = function()
 
   -- Should have proper preview
   type_keys('<Tab>')
-  child.expect_screenshot({ ignore_lines = { 9 } })
+  child.expect_screenshot({ ignore_text = { 9 } })
 
   -- Should properly choose
   type_keys('<CR>')
@@ -3285,11 +3285,11 @@ T['pickers']['options()']['works'] = function()
   child.lua_notify('_G.return_item = MiniExtra.pickers.options()')
   validate_picker_name('Options (all)')
   type_keys('^cursor')
-  child.expect_screenshot({ ignore_lines = { 34 } })
+  child.expect_screenshot({ ignore_text = { 34 } })
 
   -- Should have proper preview
   type_keys('<Tab>')
-  child.expect_screenshot({ ignore_lines = { 34 } })
+  child.expect_screenshot({ ignore_text = { 34 } })
 
   -- - Should use proper highlight group for headers
   validate_partial_equal_arr(get_extra_picker_extmarks(0, -1), {
@@ -3350,7 +3350,7 @@ T['pickers']['options()']['correctly previews deprecated options'] = function()
   child.set_size(10, 115)
   pick_options()
   type_keys('^aleph', '<Tab>')
-  child.expect_screenshot({ ignore_lines = { 9 } })
+  child.expect_screenshot({ ignore_text = { 9 } })
 end
 
 T['pickers']['options()']['respects `local_opts.scope`'] = function()

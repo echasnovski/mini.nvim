@@ -1520,10 +1520,6 @@ T['Showing keys']['properly translates special keys'] = function()
 end
 
 T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
-  -- Check this only on Neovim>=0.12, as there is a slight change in
-  -- highlighting command line area
-  if child.fn.has('nvim-0.12') == 0 then return end
-
   child.set_size(7, 40)
 
   --stylua: ignore
@@ -1537,15 +1533,15 @@ T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
     window = { delay = 0 },
   })
 
-  local validate = function()
+  local validate = function(screenshot_opts)
     type_keys(' ')
-    child.expect_screenshot({ ignore_lines = { 1 } })
+    child.expect_screenshot(screenshot_opts)
     type_keys('<Esc>')
   end
 
   -- Tabline
   child.o.showtabline = 2
-  validate()
+  validate({ ignore_text = { 1 }, ignore_attr = { 1 } })
   child.o.showtabline = 0
 
   -- Statusline
@@ -1555,7 +1551,7 @@ T['Showing keys']['respects tabline, statusline, cmdheight'] = function()
 
   -- Command line height
   child.o.cmdheight = 2
-  validate()
+  validate({ ignore_text = { 6, 7 }, ignore_attr = { 6, 7 } })
 
   -- - Zero command line height
   child.o.cmdheight = 0
@@ -2021,7 +2017,7 @@ T['Postkeys']['persists window if action changes tabpage'] = function()
   type_keys('<C-w>')
   child.expect_screenshot()
   type_keys('T')
-  child.expect_screenshot({ ignore_lines = { 1 } })
+  child.expect_screenshot({ ignore_text = { 1 }, ignore_attr = { 1 } })
 end
 
 T['Querying keys'] = new_set()

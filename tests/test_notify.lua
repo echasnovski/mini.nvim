@@ -902,7 +902,7 @@ T['Window']['respects tabline/statusline/cmdline'] = function()
   -- Validate tabline/statusline
   local validate = function()
     refresh()
-    child.expect_screenshot({ ignore_lines = { 1, 7 } })
+    child.expect_screenshot({ ignore_text = { 1, 7 }, ignore_attr = { 1, 7 } })
   end
 
   local validate_ui_lines = function()

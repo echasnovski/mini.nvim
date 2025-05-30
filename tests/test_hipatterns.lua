@@ -255,12 +255,12 @@ T['Autocommands']['resets on color scheme change'] = function()
 
   -- After `:hi clear` highlighting disappears as highlight group is cleared
   child.cmd('hi clear')
-  child.expect_screenshot({ ignore_lines = { child.o.lines } })
+  child.expect_screenshot({ ignore_attr = { child.o.lines } })
 
   -- `ColorScheme` event which should lead to highlight reevaluation of all
   -- enabled buffers
   child.cmd('doautocmd ColorScheme')
-  child.expect_screenshot({ ignore_lines = { child.o.lines } })
+  child.expect_screenshot({ ignore_attr = { child.o.lines } })
 end
 
 T['enable()'] = new_set()

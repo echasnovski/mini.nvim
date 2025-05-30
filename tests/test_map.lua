@@ -1003,7 +1003,7 @@ T['gen_integration'] = new_set({
 T['gen_integration']['builtin_search()'] = new_set()
 
 T['gen_integration']['builtin_search()']['works'] = function()
-  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_lines = { 30 } }
+  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_text = { 30 }, ignore_attr = { 30 } }
   map_open_with_integration('builtin_search')
 
   -- It should show counts for actual matches, not matched lines
@@ -1036,7 +1036,7 @@ T['gen_integration']['builtin_search()']['respects `hl_groups` argument'] = func
 end
 
 T['gen_integration']['builtin_search()']['updates when appropriate'] = function()
-  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_lines = { 30 } }
+  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_text = { 30 }, ignore_attr = { 30 } }
   map_open_with_integration('builtin_search')
 
   type_keys('/', ' a', '<CR>')
@@ -1055,7 +1055,7 @@ T['gen_integration']['builtin_search()']['updates when appropriate'] = function(
 end
 
 T['gen_integration']['builtin_search()']['respects documented keymaps'] = function()
-  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_lines = { 30 } }
+  local screen_opts = child.fn.has('nvim-0.12') == 1 and {} or { ignore_text = { 30 }, ignore_attr = { 30 } }
   map_open_with_integration('builtin_search')
 
   child.lua([[

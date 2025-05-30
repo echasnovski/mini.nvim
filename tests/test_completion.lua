@@ -2027,16 +2027,13 @@ T['Scroll']['can be done in signature window'] = function()
   sleep(default_signature_delay + small_time)
   child.expect_screenshot()
 
-  -- NOTE: there are `<<<` characters at the top during `:h 'smoothscroll'`
-  local ignore_smoothscroll_lines = { ignore_lines = { 3 } }
-
   type_keys('<C-f>')
-  child.expect_screenshot(ignore_smoothscroll_lines)
+  child.expect_screenshot()
   type_keys('<C-f>')
-  child.expect_screenshot(ignore_smoothscroll_lines)
+  child.expect_screenshot()
 
   type_keys('<C-b>')
-  child.expect_screenshot(ignore_smoothscroll_lines)
+  child.expect_screenshot()
   type_keys('<C-b>')
   child.expect_screenshot()
 end

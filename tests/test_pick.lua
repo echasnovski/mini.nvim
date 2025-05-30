@@ -3149,7 +3149,7 @@ end
 T['builtin.help()']['works'] = function()
   child.lua_notify('_G.help_item = MiniPick.builtin.help()')
   -- Ignore footer as it contains non-reliable number of help tags
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
 
   -- Should set correct name
   validate_picker_option('source.name', 'Help')
@@ -3160,7 +3160,7 @@ T['builtin.help()']['works'] = function()
   eq(child.lua_get('_G.help_item'), item)
 
   -- Should open help page as choosing
-  child.expect_screenshot({ ignore_lines = { 13 } })
+  child.expect_screenshot({ ignore_text = { 13 } })
 end
 
 T['builtin.help()']['has proper preview'] = function()
@@ -3174,7 +3174,7 @@ T['builtin.help()']['has proper preview'] = function()
   builtin_help()
   type_keys('<Tab>')
   -- Ignore footer as it contains non-reliable number of help tags
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
   eq(child.bo.buftype, 'nofile')
   -- Changes buffer name to show explicitly help file.
   -- This is neither good nor bad. Can be changed in the future.
@@ -3226,7 +3226,7 @@ T['builtin.help()']['works for help tags with special characters'] = function()
   set_picker_query({ 'c_CTRL-K' })
   type_keys('<Tab>')
   -- Ignore footer as it contains non-reliable number of help tags
-  child.expect_screenshot({ ignore_lines = { 14 } })
+  child.expect_screenshot({ ignore_text = { 14 } })
 end
 
 T['builtin.help()']['works when help window is already opened'] = function()
@@ -3238,7 +3238,7 @@ T['builtin.help()']['works when help window is already opened'] = function()
 
   -- Should open help in already opened help window (just like `:help`)
   type_keys('<CR>')
-  child.expect_screenshot({ ignore_lines = { 13 } })
+  child.expect_screenshot({ ignore_text = { 13 } })
   eq(#child.api.nvim_list_wins(), 2)
 end
 

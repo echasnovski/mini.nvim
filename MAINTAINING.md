@@ -13,7 +13,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to generate help files, run tests
 - Use module's `H.get_config()` and `H.is_disabled()` helpers. They both should respect buffer local configuration.
 - From time to time some test cases will break on Neovim Nightly. This is usually due to the following reasons:
     - There was an intended change in Neovim Nightly to which affected module(s) should adapt. Update module and/or tests.
-    - There was a change in Neovim Nightly disrupting only tests (usually screenshots due to changed way of how highlight attributes are computed). Update test: ideally so that it passes on all versions, but testing some parts only on Nightly is allowed if needed (usually by regenerating screenshot on Nightly and verifying it only on versions starting from it).
+    - There was a change in Neovim Nightly disrupting only tests (usually screenshots due to changed way of how highlight attributes are computed). Update test: ideally so that it passes on all versions (by adjusting test logic or by selectively ignoring attributes / text of not matching lines with `ignore_text` / `ignore_attr` *behind narrowest Neovim version check*), but testing some parts only on Nightly is allowed if needed (regenerate screenshot on Nightly and verify it only on versions starting from it).
     - There was an unintended change in Neovim Nightly which breaks functionality it should not break. Create an issue in ['neovim/neovim' repo](https://github.com/neovim/neovim). If the issue is not resolved for a long-ish time (i.e. more than a week) try to make tests pass and/or adapt the code to new behavior.
 
 ## Maintainer setup
