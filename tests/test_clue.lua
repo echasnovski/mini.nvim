@@ -3173,17 +3173,8 @@ end
 
 T["'mini.nvim' compatibility"] = new_set()
 
-local setup_mini_module = function(name, config)
-  local lua_cmd = string.format([[_G.has_module, _G.module = pcall(require, 'mini.%s')]], name)
-  child.lua(lua_cmd)
-  if not child.lua_get('_G.has_module') then return false end
-  child.lua('module.setup()', { config })
-  return true
-end
-
 T["'mini.nvim' compatibility"]['mini.ai'] = function()
-  local has_ai = setup_mini_module('ai')
-  if not has_ai then MiniTest.skip("Could not load 'mini.ai'.") end
+  child.lua('require("mini.ai").setup()')
 
   load_module({ triggers = { { mode = 'o', keys = 'i' }, { mode = 'o', keys = 'a' } }, window = { delay = 0 } })
   validate_trigger_keymap('o', 'i')
@@ -3254,15 +3245,12 @@ T["'mini.nvim' compatibility"]['mini.align'] = function()
   child.set_size(10, 30)
   child.o.cmdheight = 5
 
-  local has_align = setup_mini_module('align')
-  if not has_align then MiniTest.skip("Could not load 'mini.align'.") end
+  child.lua('require("mini.align").setup()')
 
   -- Works together with 'mini.ai' without `g` as trigger
-  local has_ai = setup_mini_module('ai')
-  if has_ai then
-    load_module({ triggers = { { mode = 'o', keys = 'i' } } })
-    validate_edit({ 'f(', 'a_b', 'aa_b', ')' }, { 2, 0 }, { 'ga', 'if', '_' }, { 'f(', 'a _b', 'aa_b', ')' }, { 1, 1 })
-  end
+  child.lua('require("mini.ai").setup()')
+  load_module({ triggers = { { mode = 'o', keys = 'i' } } })
+  validate_edit({ 'f(', 'a_b', 'aa_b', ')' }, { 2, 0 }, { 'ga', 'if', '_' }, { 'f(', 'a _b', 'aa_b', ')' }, { 1, 1 })
 
   -- Works with `g` as trigger
   load_module({ triggers = { { mode = 'n', keys = 'g' }, { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
@@ -3300,8 +3288,7 @@ T["'mini.nvim' compatibility"]['mini.align'] = function()
 end
 
 T["'mini.nvim' compatibility"]['mini.basics'] = function()
-  local has_basics = setup_mini_module('basics')
-  if not has_basics then MiniTest.skip("Could not load 'mini.basics'.") end
+  child.lua('require("mini.basics").setup()')
 
   load_module({ triggers = { { mode = 'n', keys = 'g' } }, window = { delay = 0 } })
   validate_trigger_keymap('n', 'g')
@@ -3318,8 +3305,7 @@ T["'mini.nvim' compatibility"]['mini.basics'] = function()
 end
 
 T["'mini.nvim' compatibility"]['mini.bracketed'] = function()
-  local has_bracketed = setup_mini_module('bracketed')
-  if not has_bracketed then MiniTest.skip("Could not load 'mini.bracketed'.") end
+  child.lua('require("mini.bracketed").setup()')
 
   load_module({
     triggers = {
@@ -3382,15 +3368,12 @@ end
 T["'mini.nvim' compatibility"]['mini.comment'] = function()
   child.o.commentstring = '## %s'
 
-  local has_comment = setup_mini_module('comment')
-  if not has_comment then MiniTest.skip("Could not load 'mini.comment'.") end
+  child.lua('require("mini.comment").setup()')
 
   -- Works together with 'mini.ai' without `g` as trigger
-  local has_ai = setup_mini_module('ai')
-  if has_ai then
-    load_module({ triggers = { { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
-    validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, 0 })
-  end
+  child.lua('require("mini.ai").setup()')
+  load_module({ triggers = { { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
+  validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gc', 'ip' }, { '## aa', '## bb', '', 'cc' }, { 1, 0 })
 
   -- Works with `g` as trigger
   load_module({
@@ -3440,8 +3423,7 @@ T["'mini.nvim' compatibility"]['mini.comment'] = function()
 end
 
 T["'mini.nvim' compatibility"]['mini.indentscope'] = function()
-  local has_indentscope = setup_mini_module('indentscope')
-  if not has_indentscope then MiniTest.skip("Could not load 'mini.indentscope'.") end
+  child.lua('require("mini.indentscope").setup()')
 
   load_module({
     triggers = {
@@ -3515,16 +3497,13 @@ end
 T["'mini.nvim' compatibility"]['mini.surround'] = function()
   -- `saiw` works as expected when `s` and `i` are triggers: doesn't move cursor, no messages.
 
-  local has_surround = setup_mini_module('surround')
-  if not has_surround then MiniTest.skip("Could not load 'mini.surround'.") end
+  child.lua('require("mini.surround").setup()')
 
   -- Works together with 'mini.ai' without `s` as trigger
-  local has_ai = setup_mini_module('ai')
-  if has_ai then
-    load_module({ triggers = { { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
-    validate_edit1d('aa bb', 0, { 'sa', 'iw', ')' }, '(aa) bb', 1)
-    validate_edit1d('aa ff(bb)', 0, { 'sa', 'if', ']' }, 'aa ff([bb])', 7)
-  end
+  child.lua('require("mini.ai").setup()')
+  load_module({ triggers = { { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
+  validate_edit1d('aa bb', 0, { 'sa', 'iw', ')' }, '(aa) bb', 1)
+  validate_edit1d('aa ff(bb)', 0, { 'sa', 'if', ']' }, 'aa ff([bb])', 7)
 
   -- Works with `s` as trigger
   load_module({ triggers = { { mode = 'n', keys = 's' }, { mode = 'o', keys = 'i' } }, window = { delay = 0 } })
