@@ -969,6 +969,11 @@ T['expect']['reference_screenshot()']['respects `opts.force` argument'] = functi
 end
 
 T['expect']['reference_screenshot()']['respects `opts.ignore_lines`'] = function()
+  -- Do not show soft deprecation message
+  local notify_orig = vim.notify
+  vim.notify = function() end
+  MiniTest.finally(function() vim.notify = notify_orig end)
+
   local path = get_ref_path('reference-screenshot')
   child.set_size(5, 12)
   local validate = function(ignore_lines, ref)

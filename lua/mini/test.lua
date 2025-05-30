@@ -746,17 +746,23 @@ end
 ---   - <ignore_attr> `(boolean|table)` - whether to ignore all or some attr lines.
 ---     If `true` - ignore all, if number array - ignore attr of those lines,
 ---     if `false` - do not ignore any. Default: `false`.
----   - <ignore_lines> `(table)` - array of line numbers to ignore during compare.
----     Same as supplying line number as part of <ignore_text> and <ignore_attr>.
----     Default: `nil` to check all lines.
 ---   - <directory> `(string)` - directory where automatically constructed `path`
 ---     is located. Default: "tests/screenshots".
 MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
   if screenshot == nil then return true end
 
-  local default_opts = { force = false, ignore_lines = {}, directory = 'tests/screenshots' }
-  default_opts.ignore_text, default_opts.ignore_attr = false, false
+  local default_opts = { force = false, ignore_text = false, ignore_attr = false, directory = 'tests/screenshots' }
   opts = vim.tbl_extend('force', default_opts, opts or {})
+
+  -- TODO: Remove after releasing 'mini.nvim' 0.17.0
+  if opts.ignore_lines ~= nil then
+    vim.notify(
+      '(mini.test) `ignore_lines` is soft deprecated in favor of separate `ignore_text` and `ignore_attr`.'
+        .. ' It will work at least until the next release, after which its support will be removed.'
+        .. ' Sorry for the inconvenience.'
+    )
+  end
+  opts.ignore_lines = opts.ignore_lines or {}
 
   H.cache.n_screenshots = H.cache.n_screenshots + 1
 

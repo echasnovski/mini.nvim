@@ -61,6 +61,12 @@ There are following change types:
 
 ## mini.test
 
+### Refine
+
+- Soft deprecate `ignore_lines` option in `expect.reference_screenshot()` in favor of more capable `ignore_text` and `ignore_attr` options. For example, `ignore_lines = { 1 }` is the same as supplying both `ignore_text = { 1 }` and `ignore_attr = { 1 }`.
+
+    It will work at least until the next release, after which its support will be removed. Sorry for the inconvenience.
+
 ### Expand
 
 - Update `expect.reference_screenshot()` to support separate ignoring of text and attribute screenshot data via new `ignore_text` and `ignore_attr` options.
