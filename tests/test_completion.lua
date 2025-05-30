@@ -1611,7 +1611,7 @@ T['Information window']['adjusts window width'] = function()
 end
 
 T['Information window']['stylizes markdown with concealed characters'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Markdown highlighting is different on Neovim<0.10') end
 
   child.set_size(15, 45)
   type_keys('i', 'Jul', '<C-Space>')
@@ -1622,7 +1622,7 @@ T['Information window']['stylizes markdown with concealed characters'] = functio
 end
 
 T['Information window']['uses `detail` to construct content'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Markdown highlighting is different on Neovim<0.10') end
   child.bo.filetype = 'lua'
 
   child.set_size(15, 45)
@@ -1641,7 +1641,7 @@ T['Information window']['uses `detail` to construct content'] = function()
 end
 
 T['Information window']['ignores data from first response if server can resolve completion item'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Markdown highlighting is different on Neovim<0.10') end
 
   child.set_size(10, 45)
   child.lua([[
@@ -1668,8 +1668,6 @@ T['Information window']['ignores data from first response if server can resolve 
 end
 
 T['Information window']['adjusts for top/bottom code block delimiters'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
-
   child.set_size(10, 30)
   type_keys('i', 'Sep', '<C-Space>')
   type_keys('<C-n>')
@@ -1924,7 +1922,7 @@ T['Signature help']['handles multiline text'] = function()
 end
 
 T['Signature help']['stylizes markdown with concealed characters'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Lua highlighting is different on Neovim<0.10') end
 
   child.set_size(10, 65)
   child.bo.filetype = 'lua'

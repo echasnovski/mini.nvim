@@ -946,7 +946,6 @@ T['zoom()']['respects `config` argument'] = function()
   end
 
   validate({ width = 20 }, 4, 20)
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9') end
 
   -- Should adjust in reaction to border
   validate({ border = 'double' }, 2, 28)

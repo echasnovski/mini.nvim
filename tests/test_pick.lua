@@ -4851,9 +4851,9 @@ T['Overall view']["respects 'winborder' option"] = function()
 end
 
 T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
-  local validate = function()
+  local validate = function(screenshot_opts)
     start_with_items({ 'a' }, 'My name')
-    child.expect_screenshot()
+    child.expect_screenshot(screenshot_opts)
     type_keys('<C-c>')
   end
 
@@ -4872,23 +4872,21 @@ T['Overall view']["respects tabline, statusline, 'cmdheight'"] = function()
   child.o.showtabline, child.o.laststatus = 0, 0
   validate()
 
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for 0.11.') end
   child.o.cmdheight = 2
-  validate()
+  local ignore_cmdline_hl = child.fn.has('nvim-0.11') == 1 and {} or { ignore_attr = { 9, 10 } }
+  validate(ignore_cmdline_hl)
 
   child.o.cmdheight = 0
   validate()
 end
 
 T['Overall view']['works with small available dimensions'] = function()
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.11') end
-
   child.set_size(5, 40)
   child.o.showtabline, child.o.laststatus = 0, 0
   child.o.cmdheight = 4
 
   start_with_items({ 'a' }, 'My name')
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_attr = child.fn.has('nvim-0.11') == 0 })
 end
 
 T['Overall view']["respects 'guicursor'"] = function()
@@ -5135,12 +5133,9 @@ T['Main view']['properly computes items range to show'] = function()
 end
 
 T['Main view']['does not inherit highlighting from `matchparen`'] = function()
-  -- child.set_lines({ 'hello', 'world' })
-  -- child.fn.matchaddpos('Comment', { { 1, 1 }, { 1, 3 } })
   child.cmd('packadd matchparen')
   child.set_lines({ '(  )' })
   child.set_cursor(1, 0)
-  if #child.fn.getmatches() == 0 then return MiniTest.skip('No "matchparen"') end
 
   start_with_items({ 'aaaaaaaa' })
   eq(child.fn.getmatches(get_picker_state().windows.main), {})

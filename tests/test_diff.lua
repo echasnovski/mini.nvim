@@ -2143,7 +2143,7 @@ T['Visualization']['works when "change" overlaps with "delete"'] = function()
 end
 
 T['Visualization']['reacts to hunk lines delete/move'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Reaction to line delete/move is available on Neovim>0.10.') end
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Reaction to line delete/move is available on Neovim>=0.10.') end
   child.o.signcolumn = 'yes'
 
   set_lines({ 'aaa', 'bbb', 'uuu', 'vvv', 'ccc', 'ddd' })

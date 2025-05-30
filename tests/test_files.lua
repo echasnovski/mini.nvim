@@ -5284,7 +5284,11 @@ T['Events']['`MiniFilesWindowUpdate` is triggered after current buffer is set'] 
 end
 
 T['Events']['`MiniFilesWindowUpdate` can customize internally set window config parts'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.9') end
+  local expect_screenshot = child.expect_screenshot
+  if child.fn.has('nvim-0.10') == 0 then
+    local expect_orig = expect_screenshot
+    expect_screenshot = function() child.expect_screenshot({ ignore_attr = true }) end
+  end
   child.set_size(15, 80)
 
   load_module({
@@ -5314,27 +5318,27 @@ T['Events']['`MiniFilesWindowUpdate` can customize internally set window config 
 
   open(test_dir_path)
   go_in()
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Works in Insert mode when number of entries is less than height
   type_keys('o', 'a', 'b', 'c')
-  child.expect_screenshot()
+  expect_screenshot()
   child.ensure_normal_mode()
 
   -- Works in Insert mode when number of entries is more than height
   go_out()
   type_keys('o', 'd', 'e', 'f')
-  child.expect_screenshot()
+  expect_screenshot()
   child.ensure_normal_mode()
 
   -- Works when modifying below last visible line
   type_keys('3j', 'o', 'a')
-  child.expect_screenshot()
+  expect_screenshot()
 
   -- Works even if completion menu (like from 'mini.completion') is triggered
   child.cmd('set iskeyword+=-')
   type_keys('<C-n>')
-  child.expect_screenshot()
+  expect_screenshot()
 end
 
 T['Events']['`MiniFilesActionCreate` triggers'] = function()

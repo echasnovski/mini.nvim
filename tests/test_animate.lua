@@ -1310,8 +1310,6 @@ T['Cursor']['does not stop if mark should be placed outside of range'] = functio
 end
 
 T['Cursor']['stops on buffer change'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
-
   child.set_size(12, 24)
   child.o.winwidth = 1
   child.cmd('vertical botright new')
@@ -1605,7 +1603,6 @@ T['Scroll']["respects 'virtualedit'"] = function()
 end
 
 T['Scroll']["respects 'scrolloff' in presence of folds"] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10') end
   set_cursor(6, 0)
   type_keys('zf5j')
   set_cursor(1, 0)
@@ -1618,7 +1615,7 @@ T['Scroll']["respects 'scrolloff' in presence of folds"] = function()
   sleep(small_time)
   for _ = 1, 4 do
     sleep(step_time)
-    child.expect_screenshot()
+    child.expect_screenshot({ ignore_text = { 7 } })
   end
 end
 
@@ -1646,10 +1643,6 @@ T['Scroll']['places cursor proportionally to scroll step'] = function()
 end
 
 T['Scroll']['correctly places cursor in presence of multibyte characters'] = function()
-  if child.lua_get('vim.fn.exists("*virtcol2col") == 0') then
-    MiniTest.skip('`vim.fn.virt2col()` is needed for this to work.')
-  end
-
   local validate = function(topline_ref, cursor_ref)
     eq(child.fn.line('w0'), topline_ref)
     eq(get_cursor(), cursor_ref)
@@ -1679,10 +1672,6 @@ T['Scroll']['correctly places cursor in presence of multibyte characters'] = fun
 end
 
 T['Scroll']['correctly places cursor in presence of tabs'] = function()
-  if child.lua_get('vim.fn.exists("*virtcol2col") == 0') then
-    MiniTest.skip('`vim.fn.virt2col()` is needed for this to work.')
-  end
-
   local validate = function(topline_ref, cursor_ref)
     eq(child.fn.line('w0'), topline_ref)
     eq(get_cursor(), cursor_ref)

@@ -591,8 +591,6 @@ T['open()']['shows appropriate integration counts'] = function()
 end
 
 T['open()']['respects `MiniMapNormal` highlight group'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshot is generated for Neovim>=0.10.') end
-
   set_lines(example_lines)
   child.cmd('hi MiniMapNormal ctermfg=black')
   map_open({ window = { winblend = 0 } })

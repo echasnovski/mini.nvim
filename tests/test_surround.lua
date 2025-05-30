@@ -1602,8 +1602,6 @@ T['Highlight surrounding']['works with multiline input surroundings'] = function
 end
 
 T['Highlight surrounding']['removes highlighting in correct buffer'] = function()
-  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
-
   child.set_size(5, 60)
   local test_duration = child.lua_get('MiniSurround.config.highlight_duration')
 

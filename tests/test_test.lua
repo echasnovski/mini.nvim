@@ -1515,10 +1515,12 @@ T['gen_reporter']['buffer'] = new_set({
   },
 }, {
   test = function(opts_element)
-    if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.10.') end
     -- Should respect non-empty 'winborder' while preferring explicitly
     -- configured value over it
-    if vim.startswith(opts_element, 'window') then child.o.winborder = 'rounded' end
+    if vim.startswith(opts_element, 'window') then
+      if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
+      child.o.winborder = 'rounded'
+    end
 
     -- Testing "in dynamic" is left for manual approach
     local path = get_ref_path('testref_reporters.lua')
@@ -1560,7 +1562,6 @@ T['gen_reporter']['stdout'] = new_set({
 }, {
   test = function(env_var)
     helpers.skip_on_windows('Terminal tests are designed for Unix')
-    if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for Neovim>=0.11.') end
 
     -- Testing "in dynamic" is left for manual approach
     local path = 'tests/dir-test/init_stdout-reporter_works.lua'
@@ -1568,7 +1569,8 @@ T['gen_reporter']['stdout'] = new_set({
     child.fn.termopen(command)
     -- Wait until check is done and possible process is ended
     vim.loop.sleep(terminal_wait)
-    child.expect_screenshot()
+    local ignore_attr = child.fn.has('nvim-0.11') == 1 and {} or { 31, 32, 34, 35 }
+    child.expect_screenshot({ ignore_attr = ignore_attr })
   end,
 })
 

@@ -892,7 +892,6 @@ T['Window']['respects `window.winblend`'] = function()
 end
 
 T['Window']['respects tabline/statusline/cmdline'] = function()
-  if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('Screenshots are generated for 0.11.') end
   child.set_size(7, 20)
   child.lua('MiniNotify.config.content.format = function(notif) return notif.msg end')
   for i = 1, 7 do
@@ -900,23 +899,26 @@ T['Window']['respects tabline/statusline/cmdline'] = function()
   end
 
   -- Validate tabline/statusline
-  local validate = function()
+  local validate = function(screenshot_opts)
     refresh()
-    child.expect_screenshot({ ignore_text = { 1, 7 }, ignore_attr = { 1, 7 } })
+    child.expect_screenshot(screenshot_opts)
   end
 
   local validate_ui_lines = function()
+    local ignore_tabline = child.fn.has('nvim-0.11') == 0 and 1 or nil
+    local ignore_ruler = child.fn.has('nvim-0.12') == 0 and 7 or nil
+
     child.o.showtabline, child.o.laststatus = 2, 2
-    validate()
+    validate({ ignore_text = { ignore_tabline, ignore_ruler }, ignore_attr = { ignore_tabline } })
 
     child.o.showtabline, child.o.laststatus = 2, 0
-    validate()
+    validate({ ignore_text = { ignore_tabline, ignore_ruler }, ignore_attr = { ignore_tabline } })
 
     child.o.showtabline, child.o.laststatus = 0, 2
-    validate()
+    validate({ ignore_text = { ignore_ruler } })
 
     child.o.showtabline, child.o.laststatus = 0, 0
-    validate()
+    validate({ ignore_text = { ignore_ruler } })
   end
 
   -- Both with and without border
@@ -927,7 +929,8 @@ T['Window']['respects tabline/statusline/cmdline'] = function()
   -- Command line
   child.o.showtabline, child.o.laststatus = 0, 0
   child.o.cmdheight = 3
-  validate()
+  local ignore_cmdline = child.fn.has('nvim-0.11') == 1 and {} or { ignore_text = { 5 }, ignore_attr = { 5, 6, 7 } }
+  validate(ignore_cmdline)
 
   child.o.cmdheight = 0
   validate()
