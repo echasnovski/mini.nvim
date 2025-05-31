@@ -1700,26 +1700,15 @@ end
 -- Context snippets -----------------------------------------------------------
 H.get_default_context = function()
   local buf_id = vim.api.nvim_get_current_buf()
-  local lang = vim.bo[buf_id].filetype
 
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
   local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, nil, { error = false })
-  if not has_parser or parser == nil then return { buf_id = buf_id, lang = lang } end
+  if not has_parser or parser == nil then return { buf_id = buf_id, lang = vim.bo[buf_id].filetype } end
 
-  -- Compute local TS language from the deepest parser covering position
-  local lnum, col = vim.fn.line('.'), vim.fn.col('.')
-  local ref_range, res_level = { lnum - 1, col - 1, lnum - 1, col }, 0
-  local traverse
-  traverse = function(lang_tree, level)
-    if lang_tree:contains(ref_range) and level > res_level then
-      lang, res_level = lang_tree:lang() or lang, level
-    end
-    for _, child_lang_tree in pairs(lang_tree:children()) do
-      traverse(child_lang_tree, level + 1)
-    end
-  end
-  traverse(parser, 1)
-
+  -- Compute local (at cursor) TS language
+  local pos = vim.api.nvim_win_get_cursor(0)
+  local lang_tree = parser:language_for_range({ pos[1] - 1, pos[2], pos[1] - 1, pos[2] })
+  local lang = lang_tree:lang() or vim.bo[buf_id].filetype
   return { buf_id = buf_id, lang = lang }
 end
 
