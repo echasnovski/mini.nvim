@@ -869,14 +869,14 @@ T['gen_spec']['treesitter()']['validates builtin treesitter presence'] = functio
 
   expect.error(
     function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
-    vim.pesc([[(mini.ai) Can not get query for buffer 1 and language 'lua'.]])
+    vim.pesc([[(mini.ai) Can not get query for buffer 1 and language "lua".]])
   )
 
   -- Parser
   child.bo.filetype = 'aaa'
   expect.error(
     function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
-    vim.pesc([[(mini.ai) Can not get parser for buffer 1 and language 'aaa'.]])
+    vim.pesc([[(mini.ai) Can not get parser for buffer 1 and language "aaa".]])
   )
 
   -- - Should respect registered language for a filetype
@@ -885,7 +885,7 @@ T['gen_spec']['treesitter()']['validates builtin treesitter presence'] = functio
   ]])
   expect.error(
     function() child.lua([[MiniAi.find_textobject('a', 'F')]]) end,
-    vim.pesc([[(mini.ai) Can not get parser for buffer 1 and language 'my_aaa'.]])
+    vim.pesc([[(mini.ai) Can not get parser for buffer 1 and language "my_aaa".]])
   )
 end
 
