@@ -45,6 +45,7 @@ if not vim.loop.fs_stat(mini_path) then
   }
   vim.fn.system(clone_cmd)
   vim.cmd('packadd mini.nvim | helptags ALL')
+  vim.cmd('echo "Installed `mini.nvim`" | redraw')
 end
 ```
 
