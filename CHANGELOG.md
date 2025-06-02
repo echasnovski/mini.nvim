@@ -59,6 +59,12 @@ There are following change types:
 
 - "Paste" action now supports special registers: `<C-w>` (word at cursor), `<C-a>` (WORD at cursor), `<C-l>` (line at cursor), `<C-f>` (filename at cursor).
 
+## mini.surround
+
+### Refine
+
+- Update `gen_spec.inpuf.treesitter()` to have `use_nvim_treesitter = false` as default option value (instead of `true`). It used to implement more advanced behavior, but as built-in `vim.treesitter` is capable enough, there is no need in extra dependency. The option will be removed after the release.
+
 ## mini.test
 
 ### Refine

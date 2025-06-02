@@ -303,14 +303,13 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
     O = {
       input = MiniSurround.gen_spec.input.treesitter(
         { outer = '@plugin_other.outer', inner = '@plugin_other.inner' },
-        { use_nvim_treesitter = false }
+        { use_nvim_treesitter = true }
       )
     },
   }]])
   local lines = get_lines()
 
-  -- By default it should be `true` but fall back to builtin if no
-  -- 'nvim-treesitter' is found
+  -- By default it should be `false`
   validate_find(lines, { 9, 0 }, { { 10, 12 }, { 11, 2 }, { 7, 6 }, { 8, 1 } }, type_keys, 'sf', 'F')
   validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'o')
   validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'O')
@@ -319,10 +318,8 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
   -- Should prefer range from metadata instead of node itself. This is useful,
   -- for example, with `#offset!` directive to create more precise captures.
   validate_find(lines, { 9, 0 }, { { 10, 12 }, { 11, 2 }, { 7, 6 }, { 8, 1 } }, type_keys, 'sf', 'F')
-  validate_find(lines, { 1, 0 }, { { 1, 5 }, { 1, 0 } }, type_keys, 'sf', 'o')
-
-  -- Should respect `false` value
-  validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'O')
+  validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'o')
+  validate_find(lines, { 1, 0 }, { { 1, 5 }, { 1, 0 } }, type_keys, 'sf', 'O')
 end
 
 T['gen_spec']['input']['treesitter()']['respects plugin options'] = function()
