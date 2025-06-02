@@ -369,14 +369,23 @@ T['gen_spec']['input']['treesitter()']['validates builtin treesitter presence'] 
 
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
-    vim.pesc([[(mini.surround) Can not get query for buffer 1 and language 'lua'.]])
+    vim.pesc([[(mini.surround) Can not get query for buffer 1 and language "lua".]])
   )
 
   -- Parser
   child.bo.filetype = 'aaa'
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
-    vim.pesc([[(mini.surround) Can not get parser for buffer 1 and language 'aaa'.]])
+    vim.pesc([[(mini.surround) Can not get parser for buffer 1 and language "aaa".]])
+  )
+
+  -- - Should respect registered language for a filetype
+  child.lua([[
+    vim.treesitter.language.register('my_aaa', 'aaa')
+  ]])
+  expect.error(
+    function() type_keys('sd', 'F', '<CR>') end,
+    vim.pesc([[(mini.surround) Can not get parser for buffer 1 and language "my_aaa".]])
   )
 end
 

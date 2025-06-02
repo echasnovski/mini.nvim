@@ -1532,19 +1532,24 @@ H.get_matched_range_pairs_plugin = function(captures)
 end
 
 H.get_matched_range_pairs_builtin = function(captures)
-  -- Fetch treesitter data for buffer
-  local lang = vim.bo.filetype
+  -- Get buffer's parser (LanguageTree)
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
-  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, lang, { error = false })
-  if not has_parser or parser == nil then H.error_treesitter('parser', lang) end
+  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })
+  if not has_parser or parser == nil then H.error_treesitter('parser') end
 
+  -- Get parser (LanguageTree) at cursor (important for injected languages)
+  local pos = vim.api.nvim_win_get_cursor(0)
+  local lang_tree = parser:language_for_range({ pos[1] - 1, pos[2], pos[1] - 1, pos[2] })
+  local lang = lang_tree:lang()
+
+  -- Get query file depending on the local language
   local get_query = vim.fn.has('nvim-0.9') == 1 and vim.treesitter.query.get or vim.treesitter.get_query
   local query = get_query(lang, 'textobjects')
-  if query == nil then H.error_treesitter('query', lang) end
+  if query == nil then H.error_treesitter('query') end
 
   -- Compute matches for outer capture
   local outer_matches = {}
-  for _, tree in ipairs(parser:trees()) do
+  for _, tree in ipairs(lang_tree:trees()) do
     vim.list_extend(outer_matches, H.get_builtin_matches(captures.outer:sub(2), tree:root(), query))
   end
 
@@ -1582,9 +1587,11 @@ end
 
 H.get_match_range = function(node, metadata) return (metadata or {}).range and metadata.range or { node:range() } end
 
-H.error_treesitter = function(failed_get, lang)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local msg = string.format([[Can not get %s for buffer %d and language '%s'.]], failed_get, bufnr, lang)
+H.error_treesitter = function(failed_get)
+  local buf_id, ft = vim.api.nvim_get_current_buf(), vim.bo.filetype
+  local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
+  lang = has_lang and lang or ft
+  local msg = string.format('Can not get %s for buffer %d and language "%s".', failed_get, buf_id, lang)
   H.error(msg)
 end
 
