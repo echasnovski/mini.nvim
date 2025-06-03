@@ -29,6 +29,12 @@ There are following change types:
 
 - Add `pickers.colorschemes` picker. By @pkazmier, PR #1789.
 
+## mini.hues
+
+### Refine
+
+- Make black (0 and 8) and white (7 and 15) colors for built-in terminal different from regular background and foreground. This improves color coverage and does not affect default uncolored text (it is highlighted as `Normal`).
+
 ## mini.jump
 
 ### Expand

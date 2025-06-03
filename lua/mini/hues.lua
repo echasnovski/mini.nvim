@@ -1500,22 +1500,22 @@ MiniHues.apply_palette = function(palette, plugins)
   local is_bg_dark = H.hex2oklch(p.bg).l < H.hex2oklch(p.fg).l
   local black = is_bg_dark and 'bg' or 'fg'
   local white = is_bg_dark and 'fg' or 'bg'
-  vim.g.terminal_color_0  = p[black]
+  vim.g.terminal_color_0  = p[black .. '_edge2']
   vim.g.terminal_color_1  = p.red
   vim.g.terminal_color_2  = p.green
   vim.g.terminal_color_3  = p.yellow
   vim.g.terminal_color_4  = p.azure
   vim.g.terminal_color_5  = p.purple
   vim.g.terminal_color_6  = p.cyan
-  vim.g.terminal_color_7  = p[white]
-  vim.g.terminal_color_8  = p[black]
+  vim.g.terminal_color_7  = p[white .. '_mid2']
+  vim.g.terminal_color_8  = p[black .. '_mid2']
   vim.g.terminal_color_9  = p.red
   vim.g.terminal_color_10 = p.green
   vim.g.terminal_color_11 = p.yellow
   vim.g.terminal_color_12 = p.azure
   vim.g.terminal_color_13 = p.purple
   vim.g.terminal_color_14 = p.cyan
-  vim.g.terminal_color_15 = p[white]
+  vim.g.terminal_color_15 = p[white .. '_edge2']
 end
 
 --- Generate random base colors

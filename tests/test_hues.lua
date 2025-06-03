@@ -117,30 +117,30 @@ end
 T['setup()']['defines terminal colors'] = function()
   load_module({ background = '#222222', foreground = '#dddddd' })
 
-  eq(child.g.terminal_color_0, '#222222')
+  eq(child.g.terminal_color_0, '#080808')
   eq(child.g.terminal_color_1, '#ffc7da')
   eq(child.g.terminal_color_2, '#c7eab5')
   eq(child.g.terminal_color_3, '#f2dca0')
   eq(child.g.terminal_color_4, '#a5e6ff')
   eq(child.g.terminal_color_5, '#f2ceff')
   eq(child.g.terminal_color_6, '#a1efdf')
-  eq(child.g.terminal_color_7, '#dddddd')
+  eq(child.g.terminal_color_7, '#9a9a9a')
 
-  eq(child.g.terminal_color_8, '#222222')
+  eq(child.g.terminal_color_8, '#5c5c5c')
   eq(child.g.terminal_color_9, '#ffc7da')
   eq(child.g.terminal_color_10, '#c7eab5')
   eq(child.g.terminal_color_11, '#f2dca0')
   eq(child.g.terminal_color_12, '#a5e6ff')
   eq(child.g.terminal_color_13, '#f2ceff')
   eq(child.g.terminal_color_14, '#a1efdf')
-  eq(child.g.terminal_color_15, '#dddddd')
+  eq(child.g.terminal_color_15, '#f4f4f4')
 
   -- Properly sets black and white for light color scheme
   load_module({ background = '#dddddd', foreground = '#222222' })
-  eq(child.g.terminal_color_0, '#222222')
-  eq(child.g.terminal_color_7, '#dddddd')
-  eq(child.g.terminal_color_8, '#222222')
-  eq(child.g.terminal_color_15, '#dddddd')
+  eq(child.g.terminal_color_0, '#080808')
+  eq(child.g.terminal_color_7, '#9a9a9a')
+  eq(child.g.terminal_color_8, '#5c5c5c')
+  eq(child.g.terminal_color_15, '#f4f4f4')
 end
 
 T['setup()']['clears previous colorscheme'] = function()
@@ -448,7 +448,7 @@ T['apply_palette()']['works'] = function()
   validate_hl_group('MiniCursorword', 'cterm=underline gui=underline')
   validate_hl_group('WhichKey', 'guifg=#a1efdf')
   if child.fn.has('nvim-0.9') == 1 then validate_hl_group('@lsp.type.variable', 'links to @variable') end
-  eq(child.g.terminal_color_7, '#aaaaaa')
+  eq(child.g.terminal_color_0, '#080808')
 end
 
 T['apply_palette()']['respects `plugins`'] = function()
