@@ -134,6 +134,13 @@ T['setup()']['defines terminal colors'] = function()
   eq(child.g.terminal_color_13, '#f2ceff')
   eq(child.g.terminal_color_14, '#a1efdf')
   eq(child.g.terminal_color_15, '#dddddd')
+
+  -- Properly sets black and white for light color scheme
+  load_module({ background = '#dddddd', foreground = '#222222' })
+  eq(child.g.terminal_color_0, '#222222')
+  eq(child.g.terminal_color_7, '#dddddd')
+  eq(child.g.terminal_color_8, '#222222')
+  eq(child.g.terminal_color_15, '#dddddd')
 end
 
 T['setup()']['clears previous colorscheme'] = function()
