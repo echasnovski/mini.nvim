@@ -876,7 +876,11 @@ MiniSnippets.gen_loader = {}
 ---@usage >lua
 ---   -- Adjust language patterns
 ---   local latex_patterns = { 'latex/**/*.json', '**/latex.json' }
----   local lang_patterns = { tex = latex_patterns, plaintex = latex_patterns }
+---   local lang_patterns = {
+---     tex = latex_patterns, plaintex = latex_patterns,
+---     -- Recognize special injected language of markdown tree-sitter parser
+---     markdown_inline = { 'markdown.json' },
+---   }
 ---   local gen_loader = require('mini.snippets').gen_loader
 ---   require('mini.snippets').setup({
 ---     snippets = {
