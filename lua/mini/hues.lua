@@ -726,7 +726,7 @@ MiniHues.apply_palette = function(palette, plugins)
   hi('@tag',              { link='Tag' })
 
   hi('@symbol', { link='Keyword' })
-  hi('@none',   { link='Normal' })
+  hi('@none',   {})
 
   -- Semantic tokens
   if vim.fn.has('nvim-0.9') == 1 then
