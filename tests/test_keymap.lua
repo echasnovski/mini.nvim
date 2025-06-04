@@ -449,7 +449,9 @@ T['map_multistep()']['built-in steps']['minipairs_bs'] = function()
   eq(get_lines(), { 'a' })
 end
 
-T['map_multistep()']['built-in steps']['jump_after_tsnode'] = function()
+T['map_multistep()']['built-in steps']['jump_after_tsnode'] = MiniTest.new_set()
+
+T['map_multistep()']['built-in steps']['jump_after_tsnode']['works'] = function()
   map_multistep({ 'i', 'n', 'x' }, '<Tab>', { 'jump_after_tsnode' })
 
   -- Should work if there is no tree-sitter parser
@@ -507,7 +509,21 @@ T['map_multistep()']['built-in steps']['jump_after_tsnode'] = function()
   validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
 end
 
-T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
+T['map_multistep()']['built-in steps']['jump_after_tsnode']['closes pmenu'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
+
+  map_multistep({ 'i' }, '<Tab>', { 'jump_after_tsnode' })
+
+  child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
+
+  set_cursor(3, 4)
+  type_keys('i<C-n><Tab>')
+  eq(is_pumvisible(), false)
+end
+
+T['map_multistep()']['built-in steps']['jump_before_tsnode'] = MiniTest.new_set()
+
+T['map_multistep()']['built-in steps']['jump_before_tsnode']['works'] = function()
   map_multistep({ 'i', 'n', 'x' }, '<S-Tab>', { 'jump_before_tsnode' })
 
   -- Should work if there is no tree-sitter parser
@@ -552,7 +568,21 @@ T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
   validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
 end
 
-T['map_multistep()']['built-in steps']['jump_after_close'] = function()
+T['map_multistep()']['built-in steps']['jump_before_tsnode']['closes pmenu'] = function()
+  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
+
+  map_multistep({ 'i' }, '<S-Tab>', { 'jump_before_tsnode' })
+
+  child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
+
+  set_cursor(3, 4)
+  type_keys('i<C-n><S-Tab>')
+  eq(is_pumvisible(), false)
+end
+
+T['map_multistep()']['built-in steps']['jump_after_close'] = MiniTest.new_set()
+
+T['map_multistep()']['built-in steps']['jump_after_close']['works'] = function()
   map_multistep('i', '<Tab>', { 'jump_after_close' })
 
   set_lines({ [=[([{"'` x `'"}])]=], '', ')', ']', '}', '"', "'", '`' })
@@ -591,7 +621,18 @@ T['map_multistep()']['built-in steps']['jump_after_close'] = function()
   validate_jumps('<Tab>', { { 1, 2 }, { 1, 2 } })
 end
 
-T['map_multistep()']['built-in steps']['jump_before_open'] = function()
+T['map_multistep()']['built-in steps']['jump_after_close']['closes pmenu'] = function()
+  map_multistep({ 'i' }, '<Tab>', { 'jump_after_close' })
+
+  set_lines({ 'xx_)', 'yy_)' })
+  set_cursor(2, 0)
+  type_keys('i<C-n><Tab>')
+  eq(is_pumvisible(), false)
+end
+
+T['map_multistep()']['built-in steps']['jump_before_open'] = MiniTest.new_set()
+
+T['map_multistep()']['built-in steps']['jump_before_open']['works'] = function()
   map_multistep('i', '<S-Tab>', { 'jump_before_open' })
 
   set_lines({ '`', "'", '"', '{', '[', '(', '', [=[([{"'` x `'"}])]=] })
@@ -628,6 +669,15 @@ T['map_multistep()']['built-in steps']['jump_before_open'] = function()
   set_cursor(1, 4)
   type_keys('i')
   validate_jumps('<S-Tab>', { { 1, 3 }, { 1, 3 } })
+end
+
+T['map_multistep()']['built-in steps']['jump_before_open']['closes pmenu'] = function()
+  map_multistep({ 'i' }, '<S-Tab>', { 'jump_before_open' })
+
+  set_lines({ 'xx_(', 'yy_(' })
+  set_cursor(2, 0)
+  type_keys('i<C-n><S-Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_multistep()']['built-in steps']['increase_indent'] = function()
@@ -1187,6 +1237,19 @@ T['gen_step']['search_pattern()']['validates input'] = function()
   validate({ 1, '' }, '`pattern`.*string')
   validate({ 'a', 1 }, '`flags`.*string')
   validate({ 'a', '', { side = 1 } }, '`opts.side`.*one of')
+end
+
+T['gen_step']['search_pattern()']['closes pmenu'] = function()
+  child.lua([=[
+    local keymap = require('mini.keymap')
+    local step = keymap.gen_step.search_pattern(')')
+    keymap.map_multistep({ 'i' }, '<Tab>', { step })
+  ]=])
+
+  set_lines({ 'xx_)', 'yy_)' })
+  set_cursor(2, 0)
+  type_keys('i<C-n><Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_combo()'] = new_set({ n_retry = helpers.get_n_retry(5) })

@@ -450,7 +450,10 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
 
   local act = function()
     local had_match = vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
-    if had_match ~= 0 then adjust_cursor() end
+    if had_match == 0 then return end
+
+    adjust_cursor()
+    H.hide_completion()
   end
 
   return { condition = function() return true end, action = function() return act end }
@@ -724,7 +727,7 @@ H.make_jump_tsnode = function(side)
       -- Output of `get_node_range` is 0-indexed with "from" data inclusive and
       -- "to" data exclusive. This is exactly what is needed here:
       -- - For "before" direction exact left end is needed. This will be used
-      --   in Insert mode and cursor weill be between target and its left cell.
+      --   in Insert mode and cursor will be between target and its left cell.
       -- - For "after" direction the one cell to right (after normalization) is
       --   needed because cursor in Insert mode will be just after the node.
       local from_row, from_col, to_row, to_col = vim.treesitter.get_node_range(node)
@@ -735,6 +738,7 @@ H.make_jump_tsnode = function(side)
       -- for "before" direction and non-Insert mode.
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then
         pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
+        H.hide_completion()
         new_pos = vim.api.nvim_win_get_cursor(0)
       end
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then break end
@@ -868,6 +872,18 @@ H.get_row_cols = function(row) return vim.fn.getline(row + 1):len() end
 
 H.get_tsnode = function() return vim.treesitter.get_node() end
 if vim.fn.has('nvim-0.9') == 0 then H.get_tsnode = function() return vim.treesitter.get_node_at_cursor() end end
+
+H.hide_completion = function()
+  -- NOTE: `complete()` instead of emulating <C-y> has immediate effect
+  -- (without the need to `vim.schedule()`). The downsides are that `fn.mode(1)`
+  -- returns 'ic' (i.e. not "i" for clean Insert mode) and <C-n>/<C-p> act as if
+  -- there is completion active (thus not allowing them as custom mappings).
+  -- Appending ` | call feedkeys("\\<C-y>", "n")` removes that, but still would
+  -- require workarounds to work in edge cases.
+  -- NOTE: Use `silent` to not show "Pattern not found" messages. It also hides
+  -- '--INSERT--' temporarily when 'showmode' is active, but seems acceptable.
+  if vim.fn.mode() == 'i' then vim.cmd('silent noautocmd call complete(col("."), [])') end
+end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
