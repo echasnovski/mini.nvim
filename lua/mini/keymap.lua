@@ -449,11 +449,9 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   if side == 'before' then adjust_cursor = function() end end
 
   local act = function()
-    local had_match = vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
-    if had_match == 0 then return end
-
-    adjust_cursor()
     H.hide_completion()
+    local had_match = vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
+    if had_match ~= 0 then adjust_cursor() end
   end
 
   return { condition = function() return true end, action = function() return act end }
@@ -737,8 +735,8 @@ H.make_jump_tsnode = function(side)
       -- Iterate up the tree until different position is found. This is useful
       -- for "before" direction and non-Insert mode.
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then
-        pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
         H.hide_completion()
+        pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
         new_pos = vim.api.nvim_win_get_cursor(0)
       end
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then break end

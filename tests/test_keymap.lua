@@ -517,7 +517,9 @@ T['map_multistep()']['built-in steps']['jump_after_tsnode']['closes pmenu'] = fu
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
 
   set_cursor(3, 4)
-  type_keys('i<C-n><Tab>')
+  type_keys('i<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
   eq(is_pumvisible(), false)
 end
 
@@ -576,7 +578,9 @@ T['map_multistep()']['built-in steps']['jump_before_tsnode']['closes pmenu'] = f
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
 
   set_cursor(3, 4)
-  type_keys('i<C-n><S-Tab>')
+  type_keys('i<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<S-Tab>')
   eq(is_pumvisible(), false)
 end
 
@@ -626,7 +630,9 @@ T['map_multistep()']['built-in steps']['jump_after_close']['closes pmenu'] = fun
 
   set_lines({ 'xx_)', 'yy_)' })
   set_cursor(2, 0)
-  type_keys('i<C-n><Tab>')
+  type_keys('i<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
   eq(is_pumvisible(), false)
 end
 
@@ -676,7 +682,9 @@ T['map_multistep()']['built-in steps']['jump_before_open']['closes pmenu'] = fun
 
   set_lines({ 'xx_(', 'yy_(' })
   set_cursor(2, 0)
-  type_keys('i<C-n><S-Tab>')
+  type_keys('i<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<S-Tab>')
   eq(is_pumvisible(), false)
 end
 
@@ -1248,7 +1256,9 @@ T['gen_step']['search_pattern()']['closes pmenu'] = function()
 
   set_lines({ 'xx_)', 'yy_)' })
   set_cursor(2, 0)
-  type_keys('i<C-n><Tab>')
+  type_keys('i<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
   eq(is_pumvisible(), false)
 end
 
