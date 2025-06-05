@@ -808,7 +808,7 @@ H.steps_builtin.cmp_prev   = { condition = H.is_visible_cmp,  action = H.make_cm
 H.steps_builtin.cmp_accept = { condition = H.is_selected_cmp, action = H.make_cmp_action('confirm') }
 
 H.is_visible_blink  = function() return H.has_module('blink.cmp') and require('blink.cmp').is_menu_visible() end
-H.is_selected_blink = function() return H.has_module('blink.cmp') and require('blink.cmp').get_selected_item() ~= nil end
+H.is_selected_blink = function() return H.is_visible_blink() and require('blink.cmp').get_selected_item() ~= nil end
 H.make_blink_action = function(action) return H.make_cmd_lua_action('require("blink.cmp").' .. action .. '()') end
 
 H.steps_builtin.blink_next   = { condition = H.is_visible_blink,  action = H.make_blink_action('select_next') }

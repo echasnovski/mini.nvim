@@ -992,15 +992,16 @@ T['map_multistep()']['built-in steps']['blink_accept'] = function()
   mock_plugin('blink.cmp')
 
   -- Should pass through if there is no selected blink.cmp item
+  child.lua('_G.blink_is_menu_visible_res = true')
   type_keys('<CR>')
   eq(get_lines(), { '', '', '' })
-  validate_log_and_clean({ 'blink.get_selected_item' })
+  validate_log_and_clean({ 'blink.is_menu_visible', 'blink.get_selected_item' })
 
   child.lua('_G.blink_get_selected_item_res = {}')
   type_keys('<CR>')
   -- - Should not modify text
   eq(get_lines(), { '', '', '' })
-  validate_log_and_clean({ 'blink.get_selected_item', 'blink.accept' })
+  validate_log_and_clean({ 'blink.is_menu_visible', 'blink.get_selected_item', 'blink.accept' })
 end
 
 T['map_multistep()']['built-in steps']['luasnip_next'] = function()
