@@ -505,6 +505,13 @@ T['map_multistep()']['built-in steps']['jump_after_tsnode'] = function()
   set_cursor(3, 4)
   type_keys('<C-v>')
   validate_jumps('<Tab>', { { 3, 6 }, { 5, 3 }, { 6, 3 }, { 8, 16 }, { 8, 16 } })
+
+  -- Should hide possibly visible popup menu
+  set_cursor(3, 4)
+  type_keys('i', '<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
@@ -550,6 +557,13 @@ T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
   set_cursor(3, 5)
   type_keys('<C-v>')
   validate_jumps('<S-Tab>', { { 3, 4 }, { 2, 9 }, { 2, 2 }, { 1, 0 }, { 1, 0 } })
+
+  -- Should hide possibly visible popup menu
+  set_cursor(3, 4)
+  type_keys('i', '<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<S-Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_multistep()']['built-in steps']['jump_after_close'] = function()
@@ -589,6 +603,14 @@ T['map_multistep()']['built-in steps']['jump_after_close'] = function()
   set_cursor(1, 0)
   type_keys('i')
   validate_jumps('<Tab>', { { 1, 2 }, { 1, 2 } })
+
+  -- Should hide possibly visible popup menu
+  set_lines({ 'xx ( yy )' })
+  set_cursor(1, 5)
+  type_keys('i', '<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_multistep()']['built-in steps']['jump_before_open'] = function()
@@ -628,6 +650,14 @@ T['map_multistep()']['built-in steps']['jump_before_open'] = function()
   set_cursor(1, 4)
   type_keys('i')
   validate_jumps('<S-Tab>', { { 1, 3 }, { 1, 3 } })
+
+  -- Should hide possibly visible popup menu
+  set_lines({ 'xx ( yy )' })
+  set_cursor(1, 5)
+  type_keys('i', '<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<S-Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_multistep()']['built-in steps']['increase_indent'] = function()
@@ -1187,6 +1217,21 @@ T['gen_step']['search_pattern()']['validates input'] = function()
   validate({ 1, '' }, '`pattern`.*string')
   validate({ 'a', 1 }, '`flags`.*string')
   validate({ 'a', '', { side = 1 } }, '`opts.side`.*one of')
+end
+
+T['gen_step']['search_pattern()']['hides pmenu'] = function()
+  child.lua([[
+    local keymap = require('mini.keymap')
+    local step = keymap.gen_step.search_pattern(')')
+    keymap.map_multistep({ 'i' }, '<Tab>', { step })
+  ]])
+
+  set_lines({ 'xx ( yy )' })
+  set_cursor(1, 5)
+  type_keys('i', '<C-n>')
+  eq(is_pumvisible(), true)
+  type_keys('<Tab>')
+  eq(is_pumvisible(), false)
 end
 
 T['map_combo()'] = new_set({ n_retry = helpers.get_n_retry(5) })

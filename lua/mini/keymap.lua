@@ -449,6 +449,7 @@ MiniKeymap.gen_step.search_pattern = function(pattern, flags, opts)
   if side == 'before' then adjust_cursor = function() end end
 
   local act = function()
+    H.hide_completion()
     local had_match = vim.fn.search(pattern, flags, stopline(), opts.timeout, opts.skip)
     if had_match ~= 0 then adjust_cursor() end
   end
@@ -724,7 +725,7 @@ H.make_jump_tsnode = function(side)
       -- Output of `get_node_range` is 0-indexed with "from" data inclusive and
       -- "to" data exclusive. This is exactly what is needed here:
       -- - For "before" direction exact left end is needed. This will be used
-      --   in Insert mode and cursor weill be between target and its left cell.
+      --   in Insert mode and cursor will be between target and its left cell.
       -- - For "after" direction the one cell to right (after normalization) is
       --   needed because cursor in Insert mode will be just after the node.
       local from_row, from_col, to_row, to_col = vim.treesitter.get_node_range(node)
@@ -734,6 +735,7 @@ H.make_jump_tsnode = function(side)
       -- Iterate up the tree until different position is found. This is useful
       -- for "before" direction and non-Insert mode.
       if not (new_pos[1] == pos[1] and new_pos[2] == pos[2]) then
+        H.hide_completion()
         pcall(vim.api.nvim_win_set_cursor, 0, new_pos)
         new_pos = vim.api.nvim_win_get_cursor(0)
       end
@@ -868,6 +870,14 @@ H.get_row_cols = function(row) return vim.fn.getline(row + 1):len() end
 
 H.get_tsnode = function() return vim.treesitter.get_node() end
 if vim.fn.has('nvim-0.9') == 0 then H.get_tsnode = function() return vim.treesitter.get_node_at_cursor() end end
+
+H.hide_completion = function()
+  -- NOTE: `complete()` instead of emulating <C-y> works immediately (without
+  -- the need to `vim.schedule()`). See 'mini.snippets' for more details.
+  -- NOTE: Checking 'pumvisible() == 1' should not lead to edge cases from
+  -- 'mini.snippets' (as there is no extmarks involved).
+  if vim.fn.mode() == 'i' and vim.fn.pumvisible() == 1 then vim.cmd('silent noautocmd call complete(col("."), [])') end
+end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
