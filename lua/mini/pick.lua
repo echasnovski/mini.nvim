@@ -3475,7 +3475,9 @@ H.schedule_resume_is_active = vim.schedule_wrap(function(co) coroutine.resume(co
 
 H.poke_picker_throttle = function(querytick_ref)
   -- Allow calling this even if no picker is active
-  if not MiniPick.is_picker_active() then return function() return true end end
+  if not MiniPick.is_picker_active() then
+    return function() return true end
+  end
 
   local latest_time, dont_check_querytick = vim.loop.hrtime(), querytick_ref == nil
   local threshold = 1000000 * H.get_config().delay.async

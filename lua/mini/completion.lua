@@ -903,7 +903,9 @@ H.auto_info = function()
 
   -- Stop showing window if no candidate is selected
   local completed_item = H.info.event.completed_item
-  if completed_item.word == nil then return vim.schedule(function() H.close_action_window(H.info, true) end) end
+  if completed_item.word == nil then
+    return vim.schedule(function() H.close_action_window(H.info, true) end)
+  end
 
   -- Show info content without delay for visited and resolved LSP item.
   -- Otherwise delay to not spam LSP requests on up/down navigation.

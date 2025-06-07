@@ -1298,7 +1298,7 @@ H.with_temp_context = function(context, f)
 end
 
 -- A hack to restore previous dot-repeat action
-H.cancel_redo = function() end;
+H.cancel_redo = function() end
 (function()
   local has_ffi, ffi = pcall(require, 'ffi')
   if not has_ffi then return end

@@ -1329,7 +1329,9 @@ H.resolve_path_cwd = function(path, cwd)
   local cwd_arr = cwd == '' and vim.tbl_keys(H.index) or { cwd }
 
   -- Empty path means all available paths in all target cwds
-  if path ~= '' then return vim.tbl_map(function(x) return { path = path, cwd = x } end, cwd_arr) end
+  if path ~= '' then
+    return vim.tbl_map(function(x) return { path = path, cwd = x } end, cwd_arr)
+  end
 
   local res = {}
   for _, d in ipairs(cwd_arr) do

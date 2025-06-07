@@ -2093,7 +2093,9 @@ H.cartesian_product = function(arr)
 end
 
 H.wrap_callable_table = function(x)
-  if vim.is_callable(x) and type(x) == 'table' then return function(...) return x(...) end end
+  if vim.is_callable(x) and type(x) == 'table' then
+    return function(...) return x(...) end
+  end
   return x
 end
 

@@ -558,7 +558,9 @@ end
 --- <
 MiniJump2d.gen_spotter.union = function(...)
   local spotters = { ... }
-  if #spotters == 0 then return function() return {} end end
+  if #spotters == 0 then
+    return function() return {} end
+  end
 
   local is_all_callable = true
   for _, x in ipairs(spotters) do
