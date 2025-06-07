@@ -32,7 +32,8 @@
 --- - Autoread default session (local if detected, else latest written global) if
 ---   Neovim was called without intention to show something else.
 ---
---- - Autowrite currently read session before quitting Neovim.
+--- - Autowrite currently read session before leaving it (quit Neovim or read
+---   another session).
 ---
 --- - Configurable severity level of all actions.
 ---
@@ -100,7 +101,7 @@ MiniSessions.config = {
   -- Whether to read default session if Neovim opened without file arguments
   autoread = false,
 
-  -- Whether to write currently read session before quitting Neovim
+  -- Whether to write currently read session before leaving it
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)
@@ -142,7 +143,8 @@ MiniSessions.detected = {}
 --- Read detected session
 ---
 --- What it does:
---- - If there is an active session, write it with |MiniSessions.write()|.
+--- - If there is an active session and `autowrite` is `true` in |MiniSessions.config|,
+---   write it with |MiniSessions.write()|.
 --- - Delete all current buffers with |bwipeout|. This is needed to correctly
 ---   restore buffers from target session. If `force` is not `true`, checks
 ---   beforehand for unsaved listed buffers and stops if there is any.
@@ -195,7 +197,9 @@ MiniSessions.read = function(session_name, opts)
   end
 
   -- Write current session to allow proper switching between sessions
-  if H.get_this_session() ~= '' then MiniSessions.write(nil, { force = true, verbose = false }) end
+  if H.get_this_session() ~= '' and MiniSessions.config.autowrite then
+    MiniSessions.write(nil, { force = true, verbose = false })
+  end
 
   -- Execute 'pre' hook
   H.possibly_execute(opts.hooks.pre, data)

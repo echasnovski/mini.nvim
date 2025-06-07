@@ -141,7 +141,7 @@ Here are code snippets for some common installation methods (use only one):
   -- Whether to read default session if Neovim opened without file arguments
   autoread = false,
 
-  -- Whether to write currently read session before quitting Neovim
+  -- Whether to write currently read session before leaving it
   autowrite = true,
 
   -- Directory where global sessions are stored (use `''` to disable)

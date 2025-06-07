@@ -32,7 +32,8 @@ Features:
 - Autoread default session (local if detected, else latest written global) if
   Neovim was called without intention to show something else.
 
-- Autowrite currently read session before quitting Neovim.
+- Autowrite currently read session before leaving it (quit Neovim or read
+  another session).
 
 - Configurable severity level of all actions.
 
@@ -81,7 +82,7 @@ Default values:
     -- Whether to read default session if Neovim opened without file arguments
     autoread = false,
 
-    -- Whether to write currently read session before quitting Neovim
+    -- Whether to write currently read session before leaving it
     autowrite = true,
 
     -- Directory where global sessions are stored (use `''` to disable)
@@ -123,7 +124,8 @@ change):
 Read detected session
 
 What it does:
-- If there is an active session, write it with |MiniSessions.write()|.
+- If there is an active session and `autowrite` is `true` in |MiniSessions.config|,
+  write it with |MiniSessions.write()|.
 - Delete all current buffers with |bwipeout|. This is needed to correctly
   restore buffers from target session. If `force` is not `true`, checks
   beforehand for unsaved listed buffers and stops if there is any.

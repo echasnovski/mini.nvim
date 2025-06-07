@@ -495,12 +495,20 @@ T['read()']['writes current session prior to reading a new one'] = function()
   local cur_session = project_root .. '/tests/dir-sessions/global/current-session'
   MiniTest.finally(function() child.fn.delete(cur_session) end)
 
-  reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
-  child.v.this_session = cur_session
+  local validate = function(ref_autowrite)
+    reload_module({ autowrite = false, directory = 'tests/dir-sessions/global' })
+    child.v.this_session = cur_session
+    child.lua('MiniSessions.config.autowrite = ' .. tostring(ref_autowrite))
 
-  eq(child.fn.filereadable(cur_session), 0)
-  child.lua([[MiniSessions.read('session1')]])
-  eq(child.fn.filereadable(cur_session), 1)
+    eq(child.fn.filereadable(cur_session), 0)
+    child.lua('MiniSessions.read("session1")')
+    -- Should only write current if `autowrite` is enabled
+    eq(child.fn.filereadable(cur_session), ref_autowrite and 1 or 0)
+    child.fn.delete(cur_session)
+  end
+
+  validate(true)
+  validate(false)
 end
 
 T['read()']['respects hooks from `config` and `opts` argument'] = new_set({
