@@ -11,6 +11,7 @@ vim.treesitter.get_parser = function(_, _, _)
       return { { root = function(_) return {} end } }
     end,
     lang = function(_) return 'lua' end,
+    parse = function(_, _) end,
   }
   lang_tree.language_for_range = function(_, _) return lang_tree end
   return lang_tree
@@ -31,7 +32,7 @@ local get_query = function(lang, _)
   -- Imitate matches from reference file 'tests/dir-ai/lua-file.lua'
   -- The 'function.outer' and 'function.inner' matches are "real"
   --stylua: ignore
-  local matches = {
+  local captures = {
     { 3, new_node({ 0,  0,  0,  12 }), {} },
     { 1, new_node({ 2,  0,  4,  3 }),  {} },
     { 2, new_node({ 3,  2,  3,  37 }), {} },
@@ -44,7 +45,31 @@ local get_query = function(lang, _)
     { 3, new_node({ 12, 0,  12, 8 }),  {} },
   }
 
+  -- Imitate matches from reference file 'tests/dir-ai/lua-file.lua'
+  -- The 'function.outer' and 'function.inner' matches are "real"
+  --stylua: ignore
+  local matches = {
+    { 3,  { [3] = { new_node({ 0, 0,  0,  12 }) } }, {} },
+    { 3,  { [3] = { new_node({ 12, 0,  12, 8 }) } }, {} },
+    { 9,  { [1] = { new_node({ 2, 0,  4,  3 }) } },  {} },
+    { 10, { [2] = { new_node({ 3, 2,  3,  37 }) } }, {} },
+    { 9,  { [1] = { new_node({ 3, 9,  3,  37 }) } }, {} },
+    { 11, { [2] = { new_node({ 3, 20, 3,  33 }) } }, {} },
+    { 9,  { [1] = { new_node({ 6, 6,  10, 3 }) } },  {} },
+    { 11, { [2] = { new_node({ 7, 2,  9,  13 }) } }, {} },
+  }
+
   query.iter_captures = function(_, _, _, _, _)
+    local iterator = function(s, _)
+      s.i = s.i + 1
+      local res = captures[s.i]
+      if res == nil then return nil end
+      return unpack(res)
+    end
+    return iterator, { i = 0 }
+  end
+
+  query.iter_matches = function(_, _, _, _, _)
     local iterator = function(s, _)
       s.i = s.i + 1
       local res = matches[s.i]
