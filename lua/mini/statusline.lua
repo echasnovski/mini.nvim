@@ -132,15 +132,6 @@ local H = {}
 ---   require('mini.statusline').setup({}) -- replace {} with your config table
 --- <
 MiniStatusline.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.statusline) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniStatusline = MiniStatusline
 
@@ -647,13 +638,7 @@ if vim.fn.has('nvim-0.10') == 0 then
 end
 
 H.diagnostic_is_disabled = function() return not vim.diagnostic.is_enabled({ bufnr = 0 }) end
-if vim.fn.has('nvim-0.10') == 0 then
-  if vim.fn.has('nvim-0.9') == 1 then
-    H.diagnostic_is_disabled = function() return vim.diagnostic.is_disabled(0) end
-  else
-    H.diagnostic_is_disabled = function() return false end
-  end
-end
+if vim.fn.has('nvim-0.10') == 0 then H.diagnostic_is_disabled = function() return vim.diagnostic.is_disabled(0) end end
 
 -- Utilities ------------------------------------------------------------------
 H.error = function(msg) error('(mini.statusline) ' .. msg, 0) end

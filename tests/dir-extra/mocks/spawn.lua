@@ -31,7 +31,7 @@ vim.loop.new_pipe = function()
 
   return {
     read_start = function(_, callback)
-      -- It is not possible in Neovim<=0.9 to execute `vim.fn` functions during
+      -- It is not possible in Neovim<0.10 to execute `vim.fn` functions during
       -- `pipe:read_start()`
       local data_feed = stream_type == 'stdout' and _G.stdout_data_feed or _G.stderr_data_feed
       for _, x in ipairs(data_feed or {}) do

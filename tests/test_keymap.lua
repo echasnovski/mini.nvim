@@ -457,8 +457,6 @@ T['map_multistep()']['built-in steps']['jump_after_tsnode'] = function()
   eq(get_lines(), { '\t' })
   child.ensure_normal_mode()
 
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
-
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
 
   -- Insert mode
@@ -521,8 +519,6 @@ T['map_multistep()']['built-in steps']['jump_before_tsnode'] = function()
   type_keys('i', '<S-Tab>')
   eq(get_lines(), { '\t' })
   child.ensure_normal_mode()
-
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tree-sitter testing is easier on Neovim>=0.9') end
 
   child.cmd('edit ' .. test_dir .. '/tree-sitter-tests.lua')
 

@@ -207,15 +207,6 @@ local H = {}
 ---                                    -- needs `keymap` field present
 --- <
 MiniKeymap.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.keymap) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniKeymap = MiniKeymap
 
@@ -869,7 +860,6 @@ end
 H.get_row_cols = function(row) return vim.fn.getline(row + 1):len() end
 
 H.get_tsnode = function() return vim.treesitter.get_node() end
-if vim.fn.has('nvim-0.9') == 0 then H.get_tsnode = function() return vim.treesitter.get_node_at_cursor() end end
 
 H.hide_completion = function()
   -- NOTE: `complete()` instead of emulating <C-y> works immediately (without

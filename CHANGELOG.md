@@ -7,6 +7,12 @@ There are following change types:
 
 # Version 0.16.0.9000
 
+## All
+
+### Refine
+
+- Stop official support of Neovim 0.8.
+
 ## mini.ai
 
 ### Refine

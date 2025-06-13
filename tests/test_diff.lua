@@ -20,15 +20,6 @@ local get_buf = function() return child.api.nvim_get_current_buf() end
 local set_buf = function(buf_id) child.api.nvim_set_current_buf(buf_id) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim>=0.9, as some technical
--- approach doesn't seem to work on Neovim<=0.8. Use `expect_screenshot_orig()`
--- for original testing.
-local expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(...)
-  if child.fn.has('nvim-0.9') == 0 then return end
-  expect_screenshot_orig(...)
-end
-
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 local islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
 
@@ -202,11 +193,10 @@ local get_viz_extmarks = function(buf_id)
     -- Do not test with dummy extmark (placed to ensure visible signcolumn)
     local is_dummy_extmark = e[2] == 0
       and e[3] == 0
-      -- Have fallback for `sign_` details as Neovim<0.9 doesn't provide those
-      and (e[4].sign_text or '  ') == '  '
-      and (e[4].sign_hl_group or 'SignColumn') == 'SignColumn'
-      and (e[4].cursorline_hl_group or 'CursorLineSign') == 'CursorLineSign'
-      and (e[4].right_gravity == false)
+      and e[4].sign_text == '  '
+      and e[4].sign_hl_group == 'SignColumn'
+      and e[4].cursorline_hl_group == 'CursorLineSign'
+      and e[4].right_gravity == false
     if not is_dummy_extmark then
       table.insert(res, {
         line = e[2] + 1,
@@ -219,11 +209,7 @@ local get_viz_extmarks = function(buf_id)
   return res
 end
 
-local validate_viz_extmarks = function(buf_id, ref)
-  -- Neovim<0.9 does not return all necessary data
-  if child.fn.has('nvim-0.9') == 0 then ref = vim.tbl_map(function(t) return { line = t.line } end, ref) end
-  eq(get_viz_extmarks(buf_id), ref)
-end
+local validate_viz_extmarks = function(buf_id, ref) eq(get_viz_extmarks(buf_id), ref) end
 
 local get_overlay_extmarks = function(buf_id, from_line, to_line)
   local ns_id = child.api.nvim_get_namespaces().MiniDiffOverlay
@@ -751,8 +737,6 @@ T['get_buf_data()']['correctly computes summary numbers'] = function()
 end
 
 T['get_buf_data()']['uses number of contiguous ranges in summary'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Contiguous regions are relevant with `linematch` option.') end
-
   set_lines({ 'AAA', 'uuu', 'BbB', 'DDD', 'www', 'EEE' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE' })
   local buf_data = get_buf_data()
@@ -1461,8 +1445,6 @@ T['do_hunks()']['works with "delete" hunks on edges as target'] = function()
 end
 
 T['do_hunks()']['works when "change" and "delete" hunks overlap'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Contiguous regions are relevant with `linematch` option.') end
-
   set_lines({ 'AAA', 'CcC', 'EeE', 'FFF' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
 
@@ -1763,8 +1745,6 @@ T['goto_hunk()']['works with no hunks'] = function()
 end
 
 T['goto_hunk()']['correctly computes contiguous ranges'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Contiguous regions are relevant with `linematch` option.') end
-
   local validate = function(init_cursor, direction, opts, ref_cursor)
     set_cursor(unpack(init_cursor))
     goto_hunk(direction, opts)
@@ -2052,7 +2032,6 @@ T['Visualization']['does not appear if there is no gutter'] = function()
 end
 
 T['Visualization']['can be visually disabled'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Neovim<0.9 still forces sign column to appear') end
   child.lua('MiniDiff.config.view.style = "sign"')
   child.lua('MiniDiff.config.view.signs = { add = "", change = "", delete = "" }')
   disable()
@@ -2187,12 +2166,6 @@ T['Visualization']['forces redraw when it is needed'] = function()
 end
 
 T['Visualization']['respects `view.style`'] = function()
-  -- Screenshots are proper on Neovim>=0.9, as 0.8 has sign column
-  -- automatically shown if extmarks with `number_hl_group` is present
-  local expect_screenshot = function()
-    if child.fn.has('nvim-0.9') == 1 then child.expect_screenshot() end
-  end
-
   child.lua([[MiniDiff.config.view.style = 'number']])
   child.o.number = true
   disable()
@@ -2208,7 +2181,7 @@ T['Visualization']['respects `view.style`'] = function()
   }
   validate_viz_extmarks(0, viz_extmarks)
 
-  expect_screenshot()
+  child.expect_screenshot()
 
   -- Should work even without 'number' set
   child.o.number = false
@@ -2217,7 +2190,7 @@ T['Visualization']['respects `view.style`'] = function()
   set_lines({ 'AAA', 'uuu', 'BBB', 'CcC', 'DDD', 'FFF' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF' })
   validate_viz_extmarks(0, viz_extmarks)
-  expect_screenshot()
+  child.expect_screenshot()
 end
 
 T['Visualization']['shows signcolumn even if hunks are outside of view'] = function()
@@ -2276,12 +2249,7 @@ T['Visualization']['respects `view.priority`'] = function()
 
   local ns_id = child.api.nvim_get_namespaces().MiniDiffViz
   local extmarks = child.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
-
-  if child.fn.has('nvim-0.9') == 1 then
-    eq(vim.tbl_map(function(e) return e[4].priority end, extmarks), { 100, 100, 100 })
-  else
-    eq(#extmarks, 3)
-  end
+  eq(vim.tbl_map(function(e) return e[4].priority end, extmarks), { 100, 100, 100 })
 end
 
 T['Visualization']['respects `vim.b.minidiff_config`'] = function()
@@ -2406,7 +2374,6 @@ T['Overlay']['works at edge lines'] = function()
 end
 
 T['Overlay']['works when "change" overlaps with "delete"'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Works only on Neovim>=0.9') end
   set_lines({ 'AAA', 'BbB', 'DDD' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD' })
   child.expect_screenshot()
@@ -2665,8 +2632,6 @@ T['Diff']['respects `options.indent_heuristic`'] = function()
 end
 
 T['Diff']['respects `options.linematch`'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('`linematch` option is introduced in Neovim 0.9.') end
-
   set_lines({ 'xxx', 'uuu', 'AaA', 'xxx' })
   local ref_lines = { 'xxx', 'AAA', 'xxx' }
 
@@ -3025,8 +2990,6 @@ T['Textobject']['allows dot-repeat across buffers'] = function()
 end
 
 T['Textobject']['correctly computes contiguous ranges'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Contiguous regions are relevant with `linematch` option.') end
-
   -- "Change" hunk adjacent to "add" and "delete" hunks
   set_lines({ 'AAA', 'uuu', 'BbB', 'DDD', 'www', 'EEE' })
   set_ref_text(0, { 'AAA', 'BBB', 'CCC', 'DDD', 'EEE' })

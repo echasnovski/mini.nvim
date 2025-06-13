@@ -3303,7 +3303,7 @@ T['pickers']['options()']['works'] = function()
   eq(child.fn.getcmdpos(), 15)
 
   -- Should return chosen value
-  eq(child.lua_get('_G.return_item'), { text = 'cursorbind', info = child.api.nvim_get_option_info('cursorbind') })
+  eq(child.lua_get('_G.return_item'), { text = 'cursorbind', info = child.api.nvim_get_option_info2('cursorbind', {}) })
 
   -- Should work without set up 'mini.pick'
   child.mini_unload('pick')
@@ -3361,8 +3361,14 @@ T['pickers']['options()']['respects `local_opts.scope`'] = function()
     if scope == 'all' then return stop_picker() end
 
     -- Validate proper set of options
+    local is_010 = child.fn.has('nvim-0.10') == 1 and child.fn.has('nvim-0.11') == 0
     for _, item in ipairs(get_picker_items()) do
-      eq(child.api.nvim_get_option_info(item.text).scope, scope)
+      -- Neovim=0.10 has `nvim_get_option_info2()` throwing error for options
+      -- that are obsolete (like 'aleph').
+      -- It doesn't happen on Neovim=0.9 or Neovim>=0.11.
+      local ok, item_info = pcall(child.api.nvim_get_option_info2, item.text, {})
+      local item_scope = (not ok and is_010) and scope or item_info.scope
+      eq(item_scope, scope)
     end
 
     stop_picker()

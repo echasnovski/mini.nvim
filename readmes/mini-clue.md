@@ -60,8 +60,6 @@ For more details see these tags in help:
 - `*MiniClue.gen_clues*`.
 
 Notes:
-- Works on all supported versions but using Neovim>=0.9 is recommended.
-
 - There is no functionality to create mappings in order to clearly separate two different tasks.
 
   The best suggested practice is to manually create mappings with descriptions (`desc` field in options), as they will be automatically used inside clue window.

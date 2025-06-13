@@ -9,8 +9,8 @@
 --- - Commenting in Normal mode respects |count| and is dot-repeatable.
 ---
 --- - Comment structure by default is inferred from 'commentstring': either
----   from current buffer or from locally active tree-sitter language (only on
----   Neovim>=0.9). It can be customized via `options.custom_commentstring`
+---   from current buffer or from locally active tree-sitter language.
+---   It can be customized via `options.custom_commentstring`
 ---   (see |MiniComment.config| for details).
 ---
 --- - Allows custom hooks before and after successful commenting.
@@ -26,8 +26,8 @@
 ---
 --- Notes:
 --- - To use tree-sitter aware commenting, global value of 'commentstring'
----   should be `''` (empty string). This is the default value in Neovim>=0.9,
----   so make sure to not set it manually.
+---   should be `''` (empty string). This is the default value, so make sure to
+---   not set it manually to a different value.
 ---
 --- # Setup ~
 ---
@@ -64,15 +64,6 @@ local H = {}
 ---   require('mini.comment').setup({}) -- replace {} with your config table
 --- <
 MiniComment.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.comment) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniComment = MiniComment
 
@@ -227,7 +218,7 @@ end
 --- # Notes ~
 ---
 --- - Comment structure is inferred from buffer's 'commentstring' option or
----   local language of tree-sitter parser (if active; only on Neovim>=0.9).
+---   local language of tree-sitter parser (if active).
 ---
 --- - Call to this function will remove all |extmarks| from target range.
 ---
@@ -358,8 +349,8 @@ end
 --- 'commentstring' option in current buffer. Used to infer comment structure.
 ---
 --- It has the following logic:
---- - (Only on Neovim>=0.9) If there is an active tree-sitter parser, try to get
----   'commentstring' from the local language at `ref_position`.
+--- - If there is an active tree-sitter parser, try to get 'commentstring' from
+---   the local language at `ref_position`.
 ---
 --- - If first step is not successful, use buffer's 'commentstring' directly.
 ---
@@ -370,9 +361,6 @@ end
 ---@return string Relevant value of 'commentstring'.
 MiniComment.get_commentstring = function(ref_position)
   local buf_cs = vim.bo.commentstring
-
-  -- Neovim<0.9 can only have buffer 'commentstring'
-  if vim.fn.has('nvim-0.9') == 0 then return buf_cs end
 
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
   local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })

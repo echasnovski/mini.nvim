@@ -10,12 +10,7 @@ local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
 
-local fs_normalize = vim.fs.normalize
-if vim.fn.has('nvim-0.9') == 0 then
-  fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
-end
-
-local project_root = fs_normalize(vim.fn.getcwd())
+local project_root = vim.fs.normalize(vim.fn.getcwd())
 local empty_dir_relpath = 'tests/dir-sessions/empty'
 local empty_dir_path = project_root .. '/' .. empty_dir_relpath
 
@@ -26,7 +21,7 @@ local unload_module = function() child.mini_unload('sessions') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local reload_from_strconfig = function(strconfig) unload_module(); child.mini_load_strconfig('sessions', strconfig) end
 local set_lines = function(...) return child.set_lines(...) end
-local make_path = function(...) return fs_normalize(table.concat({...}, '/')) end
+local make_path = function(...) return vim.fs.normalize(table.concat({...}, '/')) end
 local cd = function(...) child.cmd('cd ' .. make_path(...)) end
 local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
@@ -481,12 +476,12 @@ T['read()']['does not stop on source error'] = function()
   eq(#buffers, 2)
 
   child.api.nvim_set_current_buf(buffers[1])
-  local buf_name_1 = fs_normalize(child.api.nvim_buf_get_name(0))
+  local buf_name_1 = vim.fs.normalize(child.api.nvim_buf_get_name(0))
   eq(vim.endswith(buf_name_1, '/' .. folded_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'No folds in this file' })
 
   child.api.nvim_set_current_buf(buffers[2])
-  local buf_name_2 = fs_normalize(child.api.nvim_buf_get_name(0))
+  local buf_name_2 = vim.fs.normalize(child.api.nvim_buf_get_name(0))
   eq(vim.endswith(buf_name_2, '/' .. extra_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'This should be preserved in session' })
 end

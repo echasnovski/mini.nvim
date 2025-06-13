@@ -108,8 +108,6 @@ T['setup()']['defines tree-sitter groups'] = function()
 end
 
 T['setup()']['defines LSP semantic token highlights'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('LSP semantic token groups are defined for Neovim>=0.9') end
-
   load_module({ background = '#222222', foreground = '#dddddd' })
   validate_hl_group('@lsp.type.variable', 'links to @variable')
 end
@@ -447,7 +445,7 @@ T['apply_palette()']['works'] = function()
   validate_hl_group('@variable', 'guifg=#aaaaaa')
   validate_hl_group('MiniCursorword', 'cterm=underline gui=underline')
   validate_hl_group('WhichKey', 'guifg=#a1efdf')
-  if child.fn.has('nvim-0.9') == 1 then validate_hl_group('@lsp.type.variable', 'links to @variable') end
+  validate_hl_group('@lsp.type.variable', 'links to @variable')
   eq(child.g.terminal_color_0, '#080808')
 end
 

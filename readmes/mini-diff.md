@@ -273,7 +273,7 @@ Here are code snippets for some common installation methods (use only one):
     -- Whether to use "indent heuristic". See `:h vim.diff()`.
     indent_heuristic = true,
 
-    -- The amount of second-stage diff to align lines (in Neovim>=0.9)
+    -- The amount of second-stage diff to align lines
     linematch = 60,
 
     -- Whether to wrap around edges during hunk navigation

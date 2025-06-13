@@ -9,8 +9,8 @@ Features:
 - Commenting in Normal mode respects |count| and is dot-repeatable.
 
 - Comment structure by default is inferred from 'commentstring': either
-  from current buffer or from locally active tree-sitter language (only on
-  Neovim>=0.9). It can be customized via `options.custom_commentstring`
+  from current buffer or from locally active tree-sitter language.
+  It can be customized via `options.custom_commentstring`
   (see |MiniComment.config| for details).
 
 - Allows custom hooks before and after successful commenting.
@@ -26,8 +26,8 @@ What it doesn't do:
 
 Notes:
 - To use tree-sitter aware commenting, global value of 'commentstring'
-  should be `''` (empty string). This is the default value in Neovim>=0.9,
-  so make sure to not set it manually.
+  should be `''` (empty string). This is the default value, so make sure to
+  not set it manually to a different value.
 
 # Setup ~
 
@@ -185,7 +185,7 @@ and respects |count|.
 # Notes ~
 
 - Comment structure is inferred from buffer's 'commentstring' option or
-  local language of tree-sitter parser (if active; only on Neovim>=0.9).
+  local language of tree-sitter parser (if active).
 
 - Call to this function will remove all |extmarks| from target range.
 
@@ -216,8 +216,8 @@ This function represents default approach of computing relevant
 'commentstring' option in current buffer. Used to infer comment structure.
 
 It has the following logic:
-- (Only on Neovim>=0.9) If there is an active tree-sitter parser, try to get
-  'commentstring' from the local language at `ref_position`.
+- If there is an active tree-sitter parser, try to get 'commentstring' from
+  the local language at `ref_position`.
 
 - If first step is not successful, use buffer's 'commentstring' directly.
 

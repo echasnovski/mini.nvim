@@ -102,7 +102,7 @@ Begin the process of stopping official support for outdated Neovim version short
 
     ```lua
     -- TODO: Remove after Neovim=0.8 support is dropped
-    if vim.fn.has('nvim-0.8') == 0 then
+    if vim.fn.has('nvim-0.9') == 0 then
       vim.notify(
         '(mini.ai) Neovim<0.9 is soft deprecated (module works but not supported).'
           .. ' It will be deprecated after next "mini.nvim" release (module might not work).'

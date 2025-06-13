@@ -182,12 +182,7 @@ T['toggle_lines()']["works with different 'commentstring' options"] = function()
 end
 
 T['toggle_lines()']['respects tree-sitter injections'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
-
   local lines = {
     'set background=dark',
     'lua << EOF',
@@ -227,12 +222,7 @@ T['toggle_lines()']['respects tree-sitter injections'] = function()
 end
 
 T['toggle_lines()']['respects `opts.ref_position`'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
-
   local lines = {
     'lua << EOF',
     '  print(1)',
@@ -552,9 +542,6 @@ T['get_commentstring()']['works'] = function()
 
   eq(get_commentstring(), '# %s')
 
-  -- Uses local tree-sitter language on Neovim>=0.9
-  if child.fn.has('nvim-0.9') == 0 then return end
-
   local lines = {
     'lua << EOF',
     '  print(1)',
@@ -663,12 +650,7 @@ T['Operator']["works with empty 'commentstring'"] = function()
 end
 
 T['Operator']['respects tree-sitter injections'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
-
   local lines = {
     'set background=dark',
     'lua << EOF',
@@ -856,12 +838,7 @@ T['Current line']['works with different mapping'] = function()
 end
 
 T['Current line']['respects tree-sitter injections'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
-
   local lines = {
     'set background=dark',
     'lua << EOF',
@@ -883,10 +860,6 @@ T['Current line']['respects tree-sitter injections'] = function()
 end
 
 T['Current line']["computes local 'commentstring' based on cursor position"] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   local lines = {
     'lua << EOF',
     '  print(1)',
@@ -1017,12 +990,7 @@ T['Textobject']['works with different mapping'] = function()
 end
 
 T['Textobject']['respects tree-sitter injections'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip("Tree-sitter aware 'commentstring' detection is only for Neovim>=0.9")
-  end
-
   -- NOTE: This leverages bundled Vimscript and Lua tree-sitter parsers
-
   local lines = {
     '" set background=dark',
     '" set termguicolors',

@@ -4,16 +4,11 @@ local child = helpers.new_child_neovim()
 local expect, eq = helpers.expect, helpers.expect.equality
 local new_set = MiniTest.new_set
 
-local fs_normalize = vim.fs.normalize
-if vim.fn.has('nvim-0.9') == 0 then
-  fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
-end
-
 local skip_if_no_010 = function()
   if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('`setup_termbg_sync()` works only on Neovim>=0.10') end
 end
 
-local project_root = fs_normalize(vim.fn.fnamemodify(vim.fn.getcwd(), ':p'))
+local project_root = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.getcwd(), ':p'))
 local dir_misc_path = project_root .. '/tests/dir-misc'
 
 -- Helpers with child processes
@@ -23,9 +18,9 @@ local unload_module = function() child.mini_unload('misc') end
 local reload_module = function(config) unload_module(); load_module(config) end
 local set_lines = function(...) return child.set_lines(...) end
 local get_lines = function(...) return child.get_lines(...) end
-local make_path = function(...) return fs_normalize(table.concat({...}, '/')) end
+local make_path = function(...) return vim.fs.normalize(table.concat({...}, '/')) end
 local make_abspath = function(...) return make_path(project_root, ...) end
-local getcwd = function() return fs_normalize(child.fn.getcwd()) end
+local getcwd = function() return vim.fs.normalize(child.fn.getcwd()) end
 local set_cursor = function(...) return child.set_cursor(...) end
 local get_cursor = function(...) return child.get_cursor(...) end
 local edit = function(x) child.cmd('edit ' .. x) end
@@ -333,7 +328,7 @@ T['setup_auto_root()']['respects `fallback` argument'] = function()
   child.lua(lua_cmd)
 
   child.cmd('edit ' .. test_file_git)
-  eq(child.lua_get('_G.path_arg'), fs_normalize(child.api.nvim_buf_get_name(0)))
+  eq(child.lua_get('_G.path_arg'), vim.fs.normalize(child.api.nvim_buf_get_name(0)))
   eq(getcwd(), dir_misc_path)
 end
 
@@ -362,7 +357,7 @@ T['setup_auto_root()']['works only for current buffer'] = function()
     vim.cmd('edit ' .. vim.fn.fnameescape(_G.path_2))
     vim.api.nvim_buf_delete(buf_id_1, { force = true })
   ]])
-  local log = vim.tbl_map(fs_normalize, child.lua_get('_G.log'))
+  local log = vim.tbl_map(vim.fs.normalize, child.lua_get('_G.log'))
   eq(log, { git_repo_path })
   eq(child.cmd_capture('messages'), '')
 end
@@ -442,7 +437,7 @@ T['find_root()']['respects `fallback` argument'] = function()
     eq(child.lua_get(lua_cmd), ref)
 
     -- Fallback should be called with buffer path
-    eq(child.lua_get('_G.path_arg'), fs_normalize(child.api.nvim_buf_get_name(0)))
+    eq(child.lua_get('_G.path_arg'), vim.fs.normalize(child.api.nvim_buf_get_name(0)))
 
     -- Cleanup
     child.lua('_G.path_arg = nil')

@@ -2354,13 +2354,7 @@ T['treesitter()']['works'] = function()
 end
 
 T['treesitter()']['sets cursor safely'] = function()
-  child.lua([[
-    if vim.fn.has('nvim-0.9') == 1 then
-      vim.treesitter.get_node = function() return _G.node end
-    else
-      vim.treesitter.get_node_at_pos = function() return _G.node end
-    end
-  ]])
+  child.lua('vim.treesitter.get_node = function() return _G.node end')
   set_lines({ 'aaa' })
 
   -- Before start

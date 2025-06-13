@@ -261,15 +261,6 @@ local H = {}
 ---   require('mini.completion').setup({}) -- replace {} with your config table
 --- <
 MiniCompletion.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.completion) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniCompletion = MiniCompletion
 
@@ -781,14 +772,13 @@ H.apply_config = function(config)
   map_scroll(config.mappings.scroll_up, 'up')
 
   -- Try setting suggested option values
-  -- TODO: use `nvim_get_option_info2` after Neovim=0.8 support is dropped
   -- - More common completion behavior
-  local was_set = vim.api.nvim_get_option_info('completeopt').was_set
+  local was_set = vim.api.nvim_get_option_info2('completeopt', { scope = 'global' }).was_set
   if not was_set then vim.o.completeopt = 'menuone,noselect' end
 
   -- - Don't show ins-completion-menu messages ("C" is default on Neovim>=0.10)
-  local shortmess_flags = 'c' .. ((vim.fn.has('nvim-0.9') == 1 and vim.fn.has('nvim-0.10') == 0) and 'C' or '')
-  was_set = vim.api.nvim_get_option_info('shortmess').was_set
+  local shortmess_flags = 'c' .. (vim.fn.has('nvim-0.10') == 0 and 'C' or '')
+  was_set = vim.api.nvim_get_option_info2('shortmess', { scope = 'global' }).was_set
   if not was_set then vim.opt.shortmess:append(shortmess_flags) end
 end
 
@@ -1489,7 +1479,6 @@ H.info_window_options = function()
     info_height, info_width = H.floating_dimensions(lines, win_config.height, space)
   end
 
-  local title = vim.fn.has('nvim-0.9') == 1 and H.fit_to_width(' Info ', info_width) or nil
   return {
     relative = 'editor',
     anchor = anchor,
@@ -1500,7 +1489,7 @@ H.info_window_options = function()
     focusable = false,
     style = 'minimal',
     border = border,
-    title = title,
+    title = H.fit_to_width(' Info ', info_width),
   }
 end
 
@@ -1665,7 +1654,6 @@ H.signature_window_opts = function()
   local bufpos = vim.api.nvim_win_get_cursor(0)
   bufpos[1] = bufpos[1] - 1
 
-  local title = vim.fn.has('nvim-0.9') == 1 and H.fit_to_width(' Signature ', width) or nil
   return {
     relative = 'win',
     bufpos = bufpos,
@@ -1677,7 +1665,7 @@ H.signature_window_opts = function()
     focusable = false,
     style = 'minimal',
     border = border,
-    title = title,
+    title = H.fit_to_width(' Signature ', width),
   }
 end
 

@@ -37,7 +37,6 @@ https://user-images.githubusercontent.com/24854248/215829092-5aba4e8d-94a5-43da-
 - `MiniAnimate.animate()` function which can be used to perform own animations.
 
 Notes:
-- Although all animations work in all supported versions of Neovim, scroll and resize animations have best experience with Neovim>=0.9.
 - Scroll and resize animations actually change Neovim state to achieve their effects and are asynchronous. This can cause following issues:
     - If you have remapped any movement operation to center after it is done (like with `nzvzz` or `<C-d>zz`), you need to change those mappings. Either remove them or update to use `MiniAnimate.execute_after()` (see `:h MiniAnimate.config.scroll`)
     - Using mouse wheel to scroll can appear slower or can have visual jitter. This usually happens due to high number of wheel turns per second: each turn is taking over previous one to start new animation. To mitigate this, you can either modify 'mousescroll' option (set vertical scroll to 1 and use high turn speed or set to high value and use one turn at a time) or `config.scroll` to fine tune when/how scroll animation is done.

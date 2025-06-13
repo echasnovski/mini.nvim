@@ -22,13 +22,6 @@ local mock_lsp = function() child.cmd('luafile tests/mock-lsp/months.lua') end
 local new_buffer = function() child.api.nvim_set_current_buf(child.api.nvim_create_buf(true, false)) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (0.8 has no titles)
-child.expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(opts)
-  if child.fn.has('nvim-0.9') == 0 then return end
-  child.expect_screenshot_orig(opts)
-end
-
 local forward_lua = function(fun_str)
   local lua_cmd = fun_str .. '(...)'
   return function(...) return child.lua_get(lua_cmd, { ... }) end
@@ -274,7 +267,7 @@ end
 
 T['setup()']['sets recommended option values'] = function()
   expect.match(child.o.shortmess, 'c')
-  if child.fn.has('nvim-0.9') == 1 then expect.match(child.o.shortmess, 'C') end
+  expect.match(child.o.shortmess, 'C')
   eq(child.o.completeopt, 'menuone,noselect')
 
   -- Should not set if was previously set

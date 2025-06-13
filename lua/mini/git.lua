@@ -234,15 +234,6 @@ local H = {}
 ---   require('mini.git').setup({}) -- replace {} with your config table
 --- <
 MiniGit.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.git) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniGit = MiniGit
 
@@ -815,9 +806,7 @@ H.ensure_git_editor = function(mods)
     H.skip_timeout, H.skip_sync = true, true
     local cleanup = function()
       local _, channel = pcall(vim.fn.sockconnect, 'pipe', servername, { rpc = true })
-      local has_exec2 = vim.fn.has('nvim-0.9') == 1
-      local method, opts = has_exec2 and 'nvim_exec2' or 'nvim_exec', has_exec2 and {} or false
-      pcall(vim.rpcnotify, channel, method, 'quitall!', opts)
+      pcall(vim.rpcnotify, channel, 'nvim_exec2', 'quitall!', {})
       H.skip_timeout, H.skip_sync = false, false
     end
 

@@ -2197,10 +2197,6 @@ T['Resize']['does not flicker due to high cursor column in current window'] = fu
 end
 
 T['Resize']['works with `winheight`/`winwidth`'] = function()
-  -- Requires Neovim>=0.9 due to fixed `WinScrolled` behavior
-  -- See https://github.com/neovim/neovim/pull/21136
-  if child.fn.has('nvim-0.9') == 0 then return end
-
   child.o.winwidth, child.o.winheight = 8, 4
   sleep(step_time * 4)
 

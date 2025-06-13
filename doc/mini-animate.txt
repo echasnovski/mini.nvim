@@ -42,10 +42,6 @@ Notes:
   mappings, etc.). See |MiniAnimate.config.scroll| and
   |MiniAnimate.config.resize| for more details.
 
-- Although all animations work in all supported versions of Neovim, scroll
-  and resize animations have best experience with Neovim>=0.9. This is due
-  to updated implementation of |WinScrolled| event.
-
 # Setup ~
 
 This module needs a setup with `require('mini.animate').setup({})` (replace
@@ -80,8 +76,7 @@ as `MiniAnimate.config`. See |mini.nvim-buffer-local-config| for more details.
       'mini.animate' animates scroll resulting from any window view change.
 - 'anuvyklack/windows.nvim':
     - Resize animation is done only within custom commands and mappings,
-      while 'mini.animate' animates any resize out of the box (works
-      similarly to 'windows.nvim' in Neovim>=0.9 with appropriate
+      while 'mini.animate' animates any resize with appropriate values of
       'winheight' / 'winwidth' and 'winminheight' / 'winminwidth').
 
 # Highlight groups ~
@@ -299,8 +294,6 @@ Notes:
   or by ensuring maximum value of step duration to be lower than between
   repeated keys: set timing like `function(_, n) return math.min(250/n, 10) end`
   or use timing with constant step duration.
-- This animation works best with Neovim>=0.9 (after certain updates
-  to |WinScrolled| event).
 
 Configuration example: >lua
 
@@ -357,9 +350,6 @@ Notes:
     - It breaks the use of several relative resizing commands in the same
       command. Use |MiniAnimate.execute_after()| to schedule action after
       reaching target window sizes.
-- This animation works best with Neovim>=0.9 (after certain updates to
-  |WinScrolled| event). For example, resize resulting from effect of
-  'winheight' / 'winwidth' will work properly.
 
 Configuration example: >lua
 

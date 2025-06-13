@@ -480,15 +480,6 @@ local H = {}
 ---   require('mini.surround').setup({}) -- replace {} with your config table
 --- <
 MiniSurround.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.surround) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniSurround = MiniSurround
 
@@ -1542,8 +1533,7 @@ H.get_matched_range_pairs_builtin = function(captures)
   local lang = lang_tree:lang()
 
   -- Get query file depending on the local language
-  local get_query = vim.fn.has('nvim-0.9') == 1 and vim.treesitter.query.get or vim.treesitter.get_query
-  local query = get_query(lang, 'textobjects')
+  local query = vim.treesitter.query.get(lang, 'textobjects')
   if query == nil then H.error_treesitter('query') end
 
   -- Compute matches for outer capture

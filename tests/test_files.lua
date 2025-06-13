@@ -16,14 +16,6 @@ local type_keys = function(...) return child.type_keys(...) end
 local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as it introduced
--- titles). Use `expect_screenshot_orig()` for original testing.
-local expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(...)
-  if child.fn.has('nvim-0.9') == 0 then return end
-  expect_screenshot_orig(...)
-end
-
 -- Test paths helpers
 local test_dir = 'tests/dir-files'
 
@@ -5195,8 +5187,6 @@ T['Events']['`MiniFilesWindowOpen` triggers'] = function()
 end
 
 T['Events']['`MiniFilesWindowOpen` can be used to tweak window config'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Tested window config values appeared in Neovim 0.9') end
-
   child.lua([[
     vim.api.nvim_create_autocmd('User', {
       pattern = 'MiniFilesWindowOpen',

@@ -229,15 +229,6 @@ local H = {}
 ---                                        -- needs `highlighters` field present
 --- <
 MiniHipatterns.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.hipatterns) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniHipatterns = MiniHipatterns
 
@@ -709,8 +700,7 @@ end
 
 H.create_default_hl = function()
   local hi_link_bold_reverse = function(to, from)
-    local data = vim.fn.has('nvim-0.9') == 1 and vim.api.nvim_get_hl(0, { name = from, link = false })
-      or vim.api.nvim_get_hl_by_name(from, true)
+    local data = vim.api.nvim_get_hl(0, { name = from, link = false })
     data.default, data.bold, data.reverse = true, true, true
     data.cterm = { bold = true, reverse = true }
     vim.api.nvim_set_hl(0, to, data)

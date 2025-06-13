@@ -556,15 +556,6 @@ local H = {}
 ---                                      -- needs `snippets` field present
 --- <
 MiniSnippets.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.snippets) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniSnippets = MiniSnippets
 
@@ -1629,8 +1620,7 @@ end
 
 H.create_default_hl = function()
   local hi_link_underdouble = function(to, from)
-    local data = vim.fn.has('nvim-0.9') == 1 and vim.api.nvim_get_hl(0, { name = from, link = false })
-      or vim.api.nvim_get_hl_by_name(from, true)
+    local data = vim.api.nvim_get_hl(0, { name = from, link = false })
     data.default = true
     data.underdouble, data.underline, data.undercurl, data.underdotted, data.underdashed =
       true, false, false, false, false
@@ -1640,7 +1630,7 @@ H.create_default_hl = function()
   end
   hi_link_underdouble('MiniSnippetsCurrent', 'DiagnosticUnderlineWarn')
   hi_link_underdouble('MiniSnippetsCurrentReplace', 'DiagnosticUnderlineError')
-  hi_link_underdouble('MiniSnippetsFinal', 'DiagnosticUnderline' .. (vim.fn.has('nvim-0.9') == 1 and 'Ok' or 'Hint'))
+  hi_link_underdouble('MiniSnippetsFinal', 'DiagnosticUnderlineOk')
   hi_link_underdouble('MiniSnippetsUnvisited', 'DiagnosticUnderlineHint')
   hi_link_underdouble('MiniSnippetsVisited', 'DiagnosticUnderlineInfo')
 end

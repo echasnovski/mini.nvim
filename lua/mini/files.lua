@@ -40,8 +40,6 @@
 --- - This module is written and thoroughly tested on Linux. Support for other
 ---   platform/OS (like Windows or MacOS) is a goal, but there is no guarantee.
 ---
---- - Works on all supported versions but using Neovim>=0.9 is recommended.
----
 --- - This module silently reacts to not enough permissions:
 ---     - In case of missing file, check its or its parent read permissions.
 ---     - In case of no manipulation result, check write permissions.
@@ -571,15 +569,6 @@ local H = {}
 ---   require('mini.files').setup({}) -- replace {} with your config table
 --- <
 MiniFiles.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.files) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniFiles = MiniFiles
 
@@ -1922,7 +1911,7 @@ H.explorer_show_help = function(explorer, explorer_buf_id, explorer_win_id)
   config.col = 0
   config.width = max_line_width
   config.height = #lines
-  config.title = vim.fn.has('nvim-0.9') == 1 and " 'mini.files' help " or nil
+  config.title = " 'mini.files' help "
   config.zindex = config.zindex + 1
   local default_border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'single'
   config.border = config.border or default_border
@@ -2401,9 +2390,6 @@ H.window_open = function(buf_id, config)
   -- Add temporary data which will be updated later
   config.row = 1
 
-  -- Ensure it works on Neovim<0.9
-  if vim.fn.has('nvim-0.9') == 0 then config.title = nil end
-
   -- Open without entering
   local win_id = vim.api.nvim_open_win(buf_id, false, config)
 
@@ -2442,7 +2428,6 @@ H.window_update = function(win_id, config)
 
   -- Ensure proper title
   if type(config.title) == 'string' then config.title = H.fit_to_width(config.title, config.width) end
-  if vim.fn.has('nvim-0.9') == 0 then config.title = nil end
 
   -- Preserve some config values
   local win_config = vim.api.nvim_win_get_config(win_id)

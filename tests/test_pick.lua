@@ -451,23 +451,6 @@ T['start()']['works with window footer'] = function()
   eq(child.lua_get('_G.picked_item'), test_items[1])
 end
 
-T['start()']['works on Neovim<0.9'] = function()
-  if child.fn.has('nvim-0.9') == 1 then return end
-
-  child.lua_notify('_G.picked_item = MiniPick.start(...)', { { source = { items = test_items } } })
-  child.expect_screenshot_orig()
-
-  -- Should focus on floating window
-  eq(child.api.nvim_get_current_win(), get_picker_state().windows.main)
-
-  -- Should close window after an item and print it (as per `default_choose()`)
-  type_keys('<CR>')
-  child.expect_screenshot_orig()
-
-  -- Should return picked value
-  eq(child.lua_get('_G.picked_item'), test_items[1])
-end
-
 T['start()']['can be started without explicit items'] = function()
   child.lua_notify('_G.picked_item = MiniPick.start()')
   child.expect_screenshot()
@@ -2680,12 +2663,6 @@ T['builtin.files()']['respects `local_opts.tool`'] = function()
 end
 
 T['builtin.files()']['has fallback tool'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    local f = function() child.lua([[MiniPick.builtin.files({ tool = 'fallback' })]]) end
-    expect.error(f, 'Tool "fallback" of `files`.*0%.9')
-    return
-  end
-
   local cwd = join_path(test_dir, 'builtin-tests')
   builtin_files({ tool = 'fallback' }, { source = { cwd = cwd } })
   validate_picker_option('source.cwd', full_path(cwd))
@@ -2838,12 +2815,6 @@ end
 
 T['builtin.grep()']['has fallback tool'] = new_set({ parametrize = { { 'default' }, { 'supplied' } } }, {
   test = function(pattern_type)
-    if child.fn.has('nvim-0.9') == 0 then
-      local f = function() child.lua([[MiniPick.builtin.grep({ tool = 'fallback', pattern = 'x' })]]) end
-      expect.error(f, 'Tool "fallback" of `grep`.*0%.9')
-      return
-    end
-
     local pattern, keys
     if pattern_type == 'default' then
       keys = { 'aaa', '<CR>' }
@@ -4940,14 +4911,10 @@ T['Overall view']['uses dedicated highlight groups'] = function()
   winhighlight = child.api.nvim_win_get_option(win_id, 'winhighlight')
   expect.match(winhighlight, 'FloatBorder:MiniPickBorder')
 
-  -- Title support is present only on Neovim>=0.9
   type_keys('a')
-
   local win_config = child.api.nvim_win_get_config(win_id)
-  if child.fn.has('nvim-0.9') == 1 then
-    local ref_title = { { '> ', 'MiniPickPromptPrefix' }, { 'a', 'MiniPickPrompt' }, { '▏', 'MiniPickPromptCaret' } }
-    eq(win_config.title, ref_title)
-  end
+  local ref_title = { { '> ', 'MiniPickPromptPrefix' }, { 'a', 'MiniPickPrompt' }, { '▏', 'MiniPickPromptCaret' } }
+  eq(win_config.title, ref_title)
 
   -- Footer support is present only on Neovim>=0.10
   if child.fn.has('nvim-0.10') == 1 then

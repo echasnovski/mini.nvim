@@ -130,15 +130,6 @@ local H = {}
 ---   require('mini.bracketed').setup({}) -- replace {} with your config table
 --- <
 MiniBracketed.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.bracketed) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniBracketed = MiniBracketed
 
@@ -812,9 +803,7 @@ end
 --- Go to end/start of current tree-sitter node and its parents (except root).
 ---
 --- Notes:
---- - Requires |get_node_at_pos()| from |lua-treesitter| (present in Neovim=0.8)
----   or |vim.treesitter.get_node()| (present in Neovim>=0.9) along with loaded
----   tree-sitter parser in current buffer.
+--- - Requires loaded tree-sitter parser in the current buffer.
 --- - Directions "first" and "last" work differently from most other targets
 ---   for performance reasons. They are essentially "backward" and "forward"
 ---   with very big `n_times` option.
@@ -1812,9 +1801,6 @@ end
 
 -- Treesitter -----------------------------------------------------------------
 H.get_treesitter_node = function(row, col) return vim.treesitter.get_node({ pos = { row, col } }) end
-if vim.fn.has('nvim-0.9') == 0 then
-  H.get_treesitter_node = function(row, col) return vim.treesitter.get_node_at_pos(0, row, col, {}) end
-end
 
 -- Undo -----------------------------------------------------------------------
 H.undo_sync = function(buf_id, tree, is_advancing)

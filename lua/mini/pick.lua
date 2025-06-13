@@ -51,8 +51,8 @@
 --- - Match caching to increase responsiveness on repeated prompts.
 ---
 --- Notes:
---- - Works on all supported versions but using Neovim>=0.9 is recommended.
----   Neovim>=0.10 will give more visual feedback in floating window footer.
+--- - Works on all supported versions but Neovim>=0.10 will give more visual
+---   feedback in floating window footer.
 ---
 --- - For more pickers see |MiniExtra.pickers|.
 ---
@@ -167,8 +167,8 @@
 --- - "Preview" - preview of current item (toggle with `<Tab>`).
 --- - "Info" - general info about picker and its state (toggle with `<S-Tab>`).
 ---
---- Current prompt is displayed (in Neovim>=0.9) at the top left of the window
---- border with vertical line indicating caret (current input position).
+--- Current prompt is displayed at the top left of the window border with vertical
+--- line indicating caret (current input position).
 ---
 --- Bottom part of window border displays (in Neovim>=0.10) extra visual feedback:
 --- - Left part is a picker name.
@@ -702,15 +702,6 @@ local H = {}
 ---   require('mini.pick').setup({}) -- replace {} with your config table
 --- <
 MiniPick.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.pick) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniPick = MiniPick
 
@@ -2596,9 +2587,6 @@ H.picker_set_bordertext = function(picker)
   vim.wo[win_id].list = true
 end
 
--- - No border text functionality is available in Neovim<0.9
-if vim.fn.has('nvim-0.9') == 0 then H.picker_set_bordertext = function() end end
-
 H.picker_compute_footer = function(picker, win_id)
   local info = H.picker_get_general_info(picker)
   local source_name = string.format(' %s ', info.source_name)
@@ -3398,7 +3386,6 @@ H.files_get_command = function(tool)
 end
 
 H.files_fallback_items = function(cwd)
-  if vim.fn.has('nvim-0.9') == 0 then H.error('Tool "fallback" of `files` builtin needs Neovim>=0.9.') end
   local poke_picker = H.poke_picker_throttle()
   local f = function()
     local items = {}
@@ -3441,7 +3428,6 @@ H.grep_get_command = function(tool, pattern, globs)
 end
 
 H.grep_fallback_items = function(pattern, cwd)
-  if vim.fn.has('nvim-0.9') == 0 then H.error('Tool "fallback" of `grep` builtin needs Neovim>=0.9.') end
   local poke_picker = H.poke_picker_throttle()
   local f = function()
     local files, files_full = {}, {}
@@ -3554,7 +3540,7 @@ H.set_cursor = function(win_id, lnum, col) pcall(vim.api.nvim_win_set_cursor, wi
 
 H.set_curwin = function(win_id)
   if not H.is_valid_win(win_id) then return end
-  -- Explicitly preserve cursor to fix Neovim<=0.9 after choosing position in
+  -- Explicitly preserve cursor to fix Neovim<0.10 after choosing position in
   -- already shown buffer
   local cursor = vim.api.nvim_win_get_cursor(win_id)
   vim.api.nvim_set_current_win(win_id)

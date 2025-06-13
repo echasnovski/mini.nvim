@@ -144,15 +144,6 @@ local H = {}
 ---   })
 --- <
 MiniHues.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.hues) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniHues = MiniHues
 
@@ -728,30 +719,27 @@ MiniHues.apply_palette = function(palette, plugins)
   hi('@symbol', { link='Keyword' })
   hi('@none',   {})
 
-  -- Semantic tokens
-  if vim.fn.has('nvim-0.9') == 1 then
-    -- Source: `:h lsp-semantic-highlight`
-    hi('@lsp.type.class',         { link='@structure' })
-    hi('@lsp.type.decorator',     { link='@function' })
-    hi('@lsp.type.enum',          { link='@type' })
-    hi('@lsp.type.enumMember',    { link='@constant' })
-    hi('@lsp.type.function',      { link='@function' })
-    hi('@lsp.type.interface',     { link='@type' })
-    hi('@lsp.type.macro',         { link='@macro' })
-    hi('@lsp.type.method',        { link='@method' })
-    hi('@lsp.type.namespace',     { link='@namespace' })
-    hi('@lsp.type.parameter',     { link='@parameter' })
-    hi('@lsp.type.property',      { link='@property' })
-    hi('@lsp.type.struct',        { link='@structure' })
-    hi('@lsp.type.type',          { link='@type' })
-    hi('@lsp.type.typeParameter', { link='@type.definition' })
-    hi('@lsp.type.variable',      { link='@variable' })
+  -- Semantic tokens. Source: `:h lsp-semantic-highlight`.
+  hi('@lsp.type.class',         { link='@structure' })
+  hi('@lsp.type.decorator',     { link='@function' })
+  hi('@lsp.type.enum',          { link='@type' })
+  hi('@lsp.type.enumMember',    { link='@constant' })
+  hi('@lsp.type.function',      { link='@function' })
+  hi('@lsp.type.interface',     { link='@type' })
+  hi('@lsp.type.macro',         { link='@macro' })
+  hi('@lsp.type.method',        { link='@method' })
+  hi('@lsp.type.namespace',     { link='@namespace' })
+  hi('@lsp.type.parameter',     { link='@parameter' })
+  hi('@lsp.type.property',      { link='@property' })
+  hi('@lsp.type.struct',        { link='@structure' })
+  hi('@lsp.type.type',          { link='@type' })
+  hi('@lsp.type.typeParameter', { link='@type.definition' })
+  hi('@lsp.type.variable',      { link='@variable' })
 
-    hi('@lsp.mod.deprecated',     { fg=p.red, bg=nil })
-  end
+  hi('@lsp.mod.deprecated',     { fg=p.red, bg=nil })
 
   -- New tree-sitter groups
-  if vim.fn.has('nvim-0.9') == 1 then
+  if vim.fn.has('nvim-0.10') == 1 then
     -- Sources:
     -- - `:h treesitter-highlight-groups`
     -- - https://github.com/nvim-treesitter/nvim-treesitter/commit/1ae9b0e4558fe7868f8cda2db65239cfb14836d0

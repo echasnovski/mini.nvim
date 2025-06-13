@@ -189,7 +189,7 @@ T['open()']['sets local options'] = function()
   eq(child.wo.foldlevel, 999)
   eq(child.bo.modifiable, false)
   eq(child.wo.signcolumn, 'no')
-  if child.fn.has('nvim-0.9') == 1 then eq(child.wo.statuscolumn, '') end
+  eq(child.wo.statuscolumn, '')
   eq(child.wo.wrap, false)
 
   -- Should hide tabline but not touch statusline

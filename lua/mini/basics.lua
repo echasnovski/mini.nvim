@@ -76,15 +76,6 @@ local H = {}
 ---   require('mini.basics').setup({}) -- replace {} with your config table
 --- <
 MiniBasics.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.basics) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniBasics = MiniBasics
 
@@ -140,7 +131,7 @@ end
 ---     - |signcolumn|
 ---     - |shortmess|
 ---     - |splitbelow|
----     - |splitkeep| (on Neovim>=0.9)
+---     - |splitkeep|
 ---     - |splitright|
 ---     - |termguicolors| (on Neovim<0.10; later versions have it smartly enabled)
 ---     - |wrap|
@@ -386,7 +377,6 @@ MiniBasics.toggle_diagnostic = function()
   f(buf_id)
 
   local new_buf_state = not is_enabled
-  H.buffer_diagnostic_state[buf_id] = new_buf_state
 
   return new_buf_state and '  diagnostic' or 'nodiagnostic'
 end
@@ -394,9 +384,6 @@ end
 -- Helper data ================================================================
 -- Module default config
 H.default_config = vim.deepcopy(MiniBasics.config)
-
--- Diagnostic state per buffer
-H.buffer_diagnostic_state = {}
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
@@ -484,12 +471,8 @@ H.apply_options = function(config)
     o.formatoptions = 'qjl1'             -- Don't autoformat comments
 
     -- Neovim version dependent
-    if vim.fn.has('nvim-0.9') == 1 then
-      opt.shortmess:append('WcC') -- Reduce command line messages
-      o.splitkeep = 'screen'      -- Reduce scroll during window split
-    else
-      opt.shortmess:append('Wc')  -- Reduce command line messages
-    end
+    opt.shortmess:append('WcC') -- Reduce command line messages
+    o.splitkeep = 'screen'      -- Reduce scroll during window split
 
     if vim.fn.has('nvim-0.10') == 0 then
       o.termguicolors = true -- Enable gui colors
@@ -521,7 +504,7 @@ end
 
 H.vim_o = setmetatable({}, {
   __newindex = function(_, name, value)
-    local was_set = vim.api.nvim_get_option_info(name).was_set
+    local was_set = vim.api.nvim_get_option_info2(name, { scope = 'global' }).was_set
     if was_set then return end
 
     vim.o[name] = value
@@ -530,7 +513,7 @@ H.vim_o = setmetatable({}, {
 
 H.vim_opt = setmetatable({}, {
   __index = function(_, name)
-    local was_set = vim.api.nvim_get_option_info(name).was_set
+    local was_set = vim.api.nvim_get_option_info2(name, { scope = 'global' }).was_set
     if was_set then return { append = function() end, remove = function() end } end
 
     return vim.opt[name]
@@ -599,7 +582,7 @@ H.apply_mappings = function(config)
     map('x', 'g/', '<esc>/\\%V', { silent = false, desc = 'Search inside visual selection' })
 
     -- Search visually selected text (slightly better than builtins in
-    -- Neovim>=0.8 but slightly worse than builtins in Neovim>=0.10)
+    -- Neovim<0.10 but slightly worse than builtins in Neovim>=0.10)
     -- TODO: Remove this after compatibility with Neovim=0.9 is dropped
     if vim.fn.has('nvim-0.10') == 0 then
       map('x', '*', [[y/\V<C-R>=escape(@", '/\')<CR><CR>]], { desc = 'Search forward' })
@@ -769,14 +752,8 @@ end
 
 if vim.fn.has('nvim-0.10') == 1 then
   H.diagnostic_is_enabled = function(buf_id) return vim.diagnostic.is_enabled({ bufnr = buf_id }) end
-elseif vim.fn.has('nvim-0.9') == 1 then
-  H.diagnostic_is_enabled = function(buf_id) return not vim.diagnostic.is_disabled(buf_id) end
 else
-  H.diagnostic_is_enabled = function(buf_id)
-    local res = H.buffer_diagnostic_state[buf_id]
-    if res == nil then res = true end
-    return res
-  end
+  H.diagnostic_is_enabled = function(buf_id) return not vim.diagnostic.is_disabled(buf_id) end
 end
 
 return MiniBasics

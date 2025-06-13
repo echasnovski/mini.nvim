@@ -297,7 +297,7 @@ Default values:
       -- Whether to use "indent heuristic". See `:h vim.diff()`.
       indent_heuristic = true,
 
-      -- The amount of second-stage diff to align lines (in Neovim>=0.9)
+      -- The amount of second-stage diff to align lines
       linematch = 60,
 
       -- Whether to wrap around edges during hunk navigation
@@ -423,7 +423,6 @@ Default: `true`.
 
 `options.linematch` is a number defining hunk size for which a second
 stage diff is executed for a better aligned and more granular hunks.
-Note: present only in Neovim>=0.9.
 Default: 60. See |vim.diff()| and 'diffopt' for more details.
 
 `options.wrap_goto` is a boolean indicating whether to wrap around edges during

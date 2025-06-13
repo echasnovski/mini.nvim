@@ -95,12 +95,11 @@ T['setup()']['creates side effects'] = function()
   child.cmd('hi DiagnosticHint  guifg=#00ffff ctermfg=12')
   load_module()
   local has_highlight = function(group, value) expect.match(child.cmd_capture('hi ' .. group), value) end
-  local ctermfg = child.fn.has('nvim-0.9') == 1 and function(x) return ' ctermfg=' .. x end or function(_) return '' end
 
-  has_highlight('MiniHipatternsFixme', 'cterm=bold,reverse' .. ctermfg(9) .. ' gui=bold,reverse guifg=#ff0000')
-  has_highlight('MiniHipatternsHack', 'cterm=bold,reverse' .. ctermfg(11) .. ' gui=bold,reverse guifg=#ffff00')
-  has_highlight('MiniHipatternsTodo', 'cterm=bold,reverse' .. ctermfg(14) .. ' gui=bold,reverse guifg=#0000ff')
-  has_highlight('MiniHipatternsNote', 'cterm=bold,reverse' .. ctermfg(12) .. ' gui=bold,reverse guifg=#00ffff')
+  has_highlight('MiniHipatternsFixme', 'cterm=bold,reverse ctermfg=9 gui=bold,reverse guifg=#ff0000')
+  has_highlight('MiniHipatternsHack', 'cterm=bold,reverse ctermfg=11 gui=bold,reverse guifg=#ffff00')
+  has_highlight('MiniHipatternsTodo', 'cterm=bold,reverse ctermfg=14 gui=bold,reverse guifg=#0000ff')
+  has_highlight('MiniHipatternsNote', 'cterm=bold,reverse ctermfg=12 gui=bold,reverse guifg=#00ffff')
 end
 
 T['setup()']['creates `config` field'] = function()

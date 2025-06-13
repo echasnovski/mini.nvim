@@ -860,7 +860,6 @@ T['Exchange']['works with different `virtualedit`'] = function()
     validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'V', 'gx', 'k', 'V', 'gx' }, { 'aa', 'cc', 'bb' }, { 2, 0 })
 
     -- Blockwise
-    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
     child.lua([[vim.keymap.set('o', 'ie', function() vim.cmd('normal! \22j') end)]])
     validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'gx', 'ie', 'l', 'gx', 'ie' }, { 'bac', 'edf' }, { 1, 1 })
     validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'gx', 'ie', 'l', 'gx', 'ie' }, { 'acb', 'dfe' }, { 1, 2 })
@@ -1267,8 +1266,6 @@ T['Multiply']['works linewise in Normal mode'] = function()
 end
 
 T['Multiply']['works blockwise in Normal mode'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
-
   -- Validate for all four ways to create block
   child.lua([[vim.keymap.set('o', 'ia', function() vim.cmd('normal! \22jl') end)]])
   child.lua([[vim.keymap.set('o', 'ib', function() vim.cmd('normal! \22jh') end)]])
@@ -1299,8 +1296,6 @@ T['Multiply']['works blockwise in Normal mode'] = function()
 end
 
 T['Multiply']['works with two types of `[count]` in Normal mode'] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
-
   child.lua([[vim.keymap.set('o', 'ia', function() vim.cmd('normal! \22j' .. vim.v.count1 .. 'l') end)]])
 
   -- Second `[count]` for textobject with dot-repeat
@@ -1359,8 +1354,6 @@ T['Multiply']['works in Visual mode'] = function()
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'V', 'gm' }, { 'aa', 'aa', 'bb' }, { 2, 0 })
   validate_edit({ '  aa', 'bb' }, { 1, 0 }, { 'V', 'gm' }, { '  aa', '  aa', 'bb' }, { 2, 2 })
 
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
-
   local lines = { 'ab rs', 'cd uv' }
   local ref_lines, ref_cursor = { 'abab rs', 'cdcd uv' }, { 1, 2 }
   validate_edit(lines, { 1, 0 }, { '<C-v>jl', 'gm' }, ref_lines, ref_cursor)
@@ -1374,8 +1367,6 @@ T['Multiply']['works with `[count]` in Visual mode'] = function()
 
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'V', '2gm' }, { 'aa', 'aa', 'aa', 'bb' }, { 2, 0 })
   validate_edit({ '  aa', 'bb' }, { 1, 0 }, { 'V', '2gm' }, { '  aa', '  aa', '  aa', 'bb' }, { 2, 2 })
-
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
 
   local lines = { 'ab rs', 'cd uv' }
   local ref_lines, ref_cursor = { 'ababab rs', 'cdcdcd uv' }, { 1, 2 }
@@ -1406,7 +1397,6 @@ T['Multiply']['works with different `virtualedit`'] = function()
     validate_edit({ 'aa', 'bb', 'cc' }, { 3, 0 }, { 'V', 'gm' }, { 'aa', 'bb', 'cc', 'cc' }, { 4, 0 })
 
     -- Blockwise
-    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
     child.lua([[vim.keymap.set('o', 'ie', function() vim.cmd('normal! \22j') end)]])
     validate_edit({ 'abc', 'def' }, { 1, 0 }, { 'gm', 'ie' }, { 'aabc', 'ddef' }, { 1, 1 })
     validate_edit({ 'abc', 'def' }, { 1, 1 }, { 'gm', 'ie' }, { 'abbc', 'deef' }, { 1, 2 })
@@ -1462,8 +1452,6 @@ T['Multiply']['respects `config.multiply.func`'] = function()
 
   validate_edit1d('aa bb', 0, { 'gmiw' }, 'aaaa bb', 2)
   validate_edit({ 'aa', 'bb', '', 'cc' }, { 1, 0 }, { 'gmip' }, { 'aa', 'bb', '  aa', '  bb', '', 'cc' }, { 3, 2 })
-
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
   validate_edit({ 'ab', 'cd' }, { 1, 0 }, { '<C-v>j', 'gm' }, { 'aab', 'ccd' }, { 1, 1 })
 end
 
@@ -1550,8 +1538,6 @@ T['Multiply']['respects `selection=exclusive`'] = function()
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { 'V', 'gm' }, { 'aa', 'aa', 'bb' }, { 2, 0 })
 
   -- Blockwise for all four ways to create block
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
-
   -- - Normal mode
   child.lua([[_G.block_object = function(keys)
     return function()
@@ -2200,7 +2186,6 @@ T['Sort']['works with different `virtualedit`'] = function()
     validate_edit({ 'cc', 'bb', 'aa' }, { 1, 0 }, { 'V2j', 'gs' }, { 'aa', 'bb', 'cc' }, { 1, 0 })
 
     -- Blockwise
-    if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Blockwise selection has core issues on Neovim<0.9.') end
     child.lua([[vim.keymap.set('o', 'iE', function() vim.cmd('normal! \22jj') end)]])
     validate_edit({ 'cba', 'bac', 'acb' }, { 1, 0 }, { 'gs', 'iE' }, { 'aba', 'bac', 'ccb' }, { 1, 0 })
     validate_edit({ 'cba', 'bac', 'acb' }, { 1, 1 }, { 'gs', 'iE' }, { 'caa', 'bbc', 'acb' }, { 1, 1 })

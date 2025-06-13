@@ -71,15 +71,6 @@ local H = {}
 ---   require('mini.sessions').setup({}) -- replace {} with your config table
 --- <
 MiniSessions.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.sessions) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniSessions = MiniSessions
 
@@ -547,7 +538,7 @@ H.get_unsaved_listed_buffers = function()
   )
 end
 
-H.get_this_session = function() return H.fs_normalize(vim.v.this_session) end
+H.get_this_session = function() return vim.fs.normalize(vim.v.this_session) end
 
 H.name_to_path = function(session_name)
   if session_name == nil then
@@ -604,12 +595,7 @@ end
 
 H.is_readable_file = function(path) return vim.fn.isdirectory(path) ~= 1 and vim.fn.getfperm(path):sub(1, 1) == 'r' end
 
-H.fs_normalize = function(...) return vim.fs.normalize(...) end
-if vim.fn.has('nvim-0.9') == 0 then
-  H.fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
-end
-
-H.full_path = function(path) return H.fs_normalize(vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))) end
+H.full_path = function(path) return vim.fs.normalize(vim.fn.resolve(vim.fn.fnamemodify(path, ':p'))) end
 
 H.is_something_shown = function()
   -- Don't autoread session if Neovim is opened to show something. That is

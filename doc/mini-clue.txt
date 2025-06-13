@@ -41,8 +41,6 @@ For more details see:
 - |MiniClue.gen_clues|.
 
 Notes:
-- Works on all supported versions but using Neovim>=0.9 is recommended.
-
 - There is no functionality to create mappings while defining clues.
   This is done to clearly separate these two different actions.
   The best suggested practice is to manually create mappings with

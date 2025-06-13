@@ -388,10 +388,6 @@ T['section_diagnostics()']['works in not normal buffers'] = function()
 end
 
 T['section_diagnostics()']['is not shown if diagnostics is disabled'] = function()
-  if child.fn.has('nvim-0.9') == 0 then
-    MiniTest.skip('Requires `vim.diagnostic.is_disabled` / `vim.diagnostic.is_enabled` which are Neovim>=0.9.')
-  end
-
   local buf_id = child.api.nvim_get_current_buf()
   if child.fn.has('nvim-0.10') == 1 then
     child.diagnostic.enable(false, { bufnr = buf_id })

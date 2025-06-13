@@ -100,15 +100,6 @@ local H = {}
 ---   require('mini.notify').setup({}) -- replace {} with your config table
 --- <
 MiniNotify.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.notify) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniNotify = MiniNotify
 
@@ -817,7 +808,6 @@ H.window_compute_config = function(buf_id, is_for_open)
   local config = vim.tbl_deep_extend('force', default_config, win_config or {})
 
   if type(config.title) == 'string' then config.title = H.fit_to_width(config.title, config.width) end
-  if vim.fn.has('nvim-0.9') == 0 then config.title = nil end
 
   -- Tweak config values to ensure they are proper, accounting for border
   local offset = config.border == 'none' and 0 or 2

@@ -348,8 +348,6 @@ T['add()']['uses only valid characters when infers source'] = function()
 end
 
 T['add()']["properly sources 'plugin/' and 'after/plugin/'"] = function()
-  if child.fn.has('nvim-0.9') == 0 then MiniTest.skip('Neovim<0.9 has different sourcing behavior.') end
-
   add({ name = 'plugin_1', depends = { 'plugin_2' } })
   --stylua: ignore
   local ref_plugin_log = {

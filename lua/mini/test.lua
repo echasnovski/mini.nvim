@@ -151,15 +151,6 @@ local H = {}
 ---   require('mini.test').setup({}) -- replace {} with your config table
 --- <
 MiniTest.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.test) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniTest = MiniTest
 
@@ -777,9 +768,7 @@ MiniTest.expect.reference_screenshot = function(screenshot, path, opts)
 
     -- Don't end with whitespace or dot (forbidden on Windows)
     name = name:gsub('[%s%.]$', '-')
-
-    -- TODO: remove `:gsub()` after compatibility with Neovim=0.8 is dropped
-    path = vim.fs.normalize(opts.directory):gsub('/$', '') .. '/' .. name
+    path = vim.fs.normalize(opts.directory) .. '/' .. name
 
     -- Deal with multiple screenshots
     if H.cache.n_screenshots > 1 then path = path .. string.format('-%03d', H.cache.n_screenshots) end
@@ -1130,10 +1119,9 @@ MiniTest.new_child_neovim = function()
     -- Using 'jobstart' for creating a job is crucial for getting this to work
     -- in Github Actions. Other approaches:
     -- - Using `{ pty = true }` seems crucial to make this work on GitHub CI.
-    -- - Using `vim.loop.spawn()` is doable, but has issues on Neovim>=0.9:
+    -- - Using `vim.loop.spawn()` is doable, but has some issues:
     --     - https://github.com/neovim/neovim/issues/21630
     --     - https://github.com/neovim/neovim/issues/21886
-    --     - https://github.com/neovim/neovim/issues/22018
     job.id = vim.fn.jobstart(full_args)
 
     local step = 10
@@ -2054,8 +2042,6 @@ H.buffer_reporter.setup_buf_and_win = function(window_opts)
     if type(window_opts.title) == 'string' then
       window_opts.title = H.fit_to_width(window_opts.title, window_opts.width)
     end
-    if vim.fn.has('nvim-0.9') == 0 then window_opts.title = nil end
-
     win_id = vim.api.nvim_open_win(buf_id, true, window_opts)
   end
   win_id = win_id or vim.api.nvim_get_current_win()

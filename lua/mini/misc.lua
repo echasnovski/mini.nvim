@@ -57,15 +57,6 @@ local H = {}
 ---   require('mini.misc').setup({}) -- replace {} with your config table
 --- <
 MiniMisc.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.misc) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniMisc = MiniMisc
 
@@ -280,7 +271,7 @@ MiniMisc.find_root = function(buf_id, names, fallback)
 
   -- Use absolute path to an existing directory
   if type(res) ~= 'string' then return end
-  res = H.fs_normalize(vim.fn.fnamemodify(res, ':p'))
+  res = vim.fs.normalize(vim.fn.fnamemodify(res, ':p'))
   if vim.fn.isdirectory(res) == 0 then return end
 
   -- Cache result per directory path
@@ -627,7 +618,6 @@ MiniMisc.zoom = function(buf_id, config)
 
     -- Ensure proper title
     if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end
-    if vim.fn.has('nvim-0.9') == 0 then res.title = nil end
 
     return res
   end
@@ -706,11 +696,6 @@ H.is_string = function(x) return type(x) == 'string' end
 H.fit_to_width = function(text, width)
   local t_width = vim.fn.strchars(text)
   return t_width <= width and text or ('…' .. vim.fn.strcharpart(text, t_width - width + 1, width - 1))
-end
-
-H.fs_normalize = vim.fs.normalize
-if vim.fn.has('nvim-0.9') == 0 then
-  H.fs_normalize = function(...) return vim.fs.normalize(...):gsub('(.)/+$', '%1') end
 end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped

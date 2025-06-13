@@ -22,7 +22,7 @@ vim.loop.new_pipe = function()
 
   return {
     read_start = function(_, callback)
-      -- It is not possible in Neovim<=0.9 to execute `vim.fn` functions during
+      -- It is not possible in Neovim<0.10 to execute `vim.fn` functions during
       -- `pipe:read_start()`
       local vim_fn_orig = vim.deepcopy(vim.fn)
       vim.fn = setmetatable({}, { __index = function() error('Can not use `vim.fn` during `read_start`.') end })

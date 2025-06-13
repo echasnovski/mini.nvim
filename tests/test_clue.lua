@@ -18,14 +18,6 @@ local sleep = function(ms) helpers.sleep(ms, child) end
 local get_window = function() return child.api.nvim_get_current_win() end
 local set_window = function(win_id) return child.api.nvim_set_current_win(win_id) end
 
--- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as it introduced
--- titles). Use `expect_screenshot_orig()` for original testing.
-local expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(...)
-  if child.fn.has('nvim-0.9') == 0 then return end
-  expect_screenshot_orig(...)
-end
-
 local forward_lua = function(fun_str)
   local lua_cmd = fun_str .. '(...)'
   return function(...) return child.lua_get(lua_cmd, { ... }) end

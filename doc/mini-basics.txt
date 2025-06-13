@@ -159,7 +159,7 @@ Here is the list of affected options (put cursor on it and press |CTRL-]|):
     - |signcolumn|
     - |shortmess|
     - |splitbelow|
-    - |splitkeep| (on Neovim>=0.9)
+    - |splitkeep|
     - |splitright|
     - |termguicolors| (on Neovim<0.10; later versions have it smartly enabled)
     - |wrap|

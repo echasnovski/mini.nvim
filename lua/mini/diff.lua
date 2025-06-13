@@ -248,15 +248,6 @@ local H = {}
 ---   require('mini.diff').setup({}) -- replace {} with your config table
 --- <
 MiniDiff.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.diff) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniDiff = MiniDiff
 
@@ -399,7 +390,6 @@ end
 ---
 --- `options.linematch` is a number defining hunk size for which a second
 --- stage diff is executed for a better aligned and more granular hunks.
---- Note: present only in Neovim>=0.9.
 --- Default: 60. See |vim.diff()| and 'diffopt' for more details.
 ---
 --- `options.wrap_goto` is a boolean indicating whether to wrap around edges during
@@ -457,7 +447,7 @@ MiniDiff.config = {
     -- Whether to use "indent heuristic". See `:h vim.diff()`.
     indent_heuristic = true,
 
-    -- The amount of second-stage diff to align lines (in Neovim>=0.9)
+    -- The amount of second-stage diff to align lines
     linematch = 60,
 
     -- Whether to wrap around edges during hunk navigation
@@ -948,13 +938,15 @@ H.extmark_virt_lines_overflow = vim.fn.has('nvim-0.11') == 1 and 'scroll' or nil
 
 -- Permanent `vim.diff()` options
 H.vimdiff_opts = { result_type = 'indices', ctxlen = 0, interhunkctxlen = 0 }
-H.vimdiff_supports_linematch = vim.fn.has('nvim-0.9') == 1
 
 -- Options for `vim.diff()` during word diff. Use `interhunkctxlen = 4` to
 -- reduce noisiness (chosen as slightly less than average English word length)
 --stylua: ignore
-H.worddiff_opts = { algorithm = 'minimal', result_type = 'indices', ctxlen = 0, interhunkctxlen = 4, indent_heuristic = false }
-if H.vimdiff_supports_linematch then H.worddiff_opts.linematch = 0 end
+H.worddiff_opts = {
+  algorithm = 'minimal',    result_type = 'indices',
+  ctxlen = 0,               interhunkctxlen = 4,
+  indent_heuristic = false, linematch = 0
+}
 
 -- BOM bytes prepended to buffer text if 'bomb' is enabled. See `:h bom-bytes`.
 --stylua: ignore
@@ -1299,7 +1291,7 @@ H.update_buf_diff = vim.schedule_wrap(function(buf_id)
   local options = buf_cache.config.options
   H.vimdiff_opts.algorithm = options.algorithm
   H.vimdiff_opts.indent_heuristic = options.indent_heuristic
-  if H.vimdiff_supports_linematch then H.vimdiff_opts.linematch = options.linematch end
+  H.vimdiff_opts.linematch = options.linematch
 
   local buf_text, buf_lines = H.get_buftext(buf_id)
   local diff = vim.diff(buf_cache.ref_text, buf_text, H.vimdiff_opts)

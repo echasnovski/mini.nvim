@@ -41,8 +41,6 @@
 --- - |MiniClue.gen_clues|.
 ---
 --- Notes:
---- - Works on all supported versions but using Neovim>=0.9 is recommended.
----
 --- - There is no functionality to create mappings while defining clues.
 ---   This is done to clearly separate these two different actions.
 ---   The best suggested practice is to manually create mappings with
@@ -490,15 +488,6 @@ local H = {}
 ---                                  -- needs `triggers` field present
 --- <
 MiniClue.setup = function(config)
-  -- TODO: Remove after Neovim=0.8 support is dropped
-  if vim.fn.has('nvim-0.9') == 0 then
-    vim.notify(
-      '(mini.clue) Neovim<0.9 is soft deprecated (module works but not supported).'
-        .. ' It will be deprecated after next "mini.nvim" release (module might not work).'
-        .. ' Please update your Neovim version.'
-    )
-  end
-
   -- Export module
   _G.MiniClue = MiniClue
 
@@ -1640,7 +1629,6 @@ H.window_get_config = function()
 
   -- Ensure proper config
   if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end
-  if vim.fn.has('nvim-0.9') == 0 then res.title = nil end
   res.width = math.min(math.max(res.width, 1), vim.o.columns)
 
   return res

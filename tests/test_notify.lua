@@ -11,14 +11,6 @@ local unload_module = function() child.mini_unload('notify') end
 local sleep = function(ms) helpers.sleep(ms, child) end
 --stylua: ignore end
 
--- Tweak `expect_screenshot()` to test only on Neovim>=0.9 (as 0.8 does
--- not have titles)
-child.expect_screenshot_orig = child.expect_screenshot
-child.expect_screenshot = function(opts)
-  if child.fn.has('nvim-0.9') == 0 then return end
-  child.expect_screenshot_orig(opts)
-end
-
 -- Common test helpers
 local get_notif_win_id = function(tabpage_id)
   tabpage_id = tabpage_id or child.api.nvim_get_current_tabpage()
@@ -840,7 +832,7 @@ T['Window']['respects `window.config`'] = function()
     return { border = 'double', width = 25, height = 5, title = 'Custom title to check truncation' }
   end]])
   refresh()
-  -- NOTE: Neovim<=0.9 has issues with displaying title in this case
+  -- NOTE: Neovim<0.10 has issues with displaying title in this case
   if child.fn.has('nvim-0.10') == 1 then child.expect_screenshot() end
 end
 
@@ -992,7 +984,7 @@ T['Window']['uses dedicated UI highlight groups'] = function()
   local winhighlight = child.api.nvim_win_get_option(win_id, 'winhighlight')
   expect.match(winhighlight, 'NormalFloat:MiniNotifyNormal')
   expect.match(winhighlight, 'FloatBorder:MiniNotifyBorder')
-  if child.fn.has('nvim-0.9') == 1 then expect.match(winhighlight, 'FloatTitle:MiniNotifyTitle') end
+  expect.match(winhighlight, 'FloatTitle:MiniNotifyTitle')
 end
 
 T['Window']['handles width computation for empty lines inside notification buffer'] = function()
