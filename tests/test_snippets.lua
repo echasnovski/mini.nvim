@@ -2354,6 +2354,8 @@ end
 T['session.stop()'] = new_set()
 
 T['session.stop()']['works'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   -- Should work without active session
   expect.no_error(stop)
 
@@ -2361,18 +2363,18 @@ T['session.stop()']['works'] = function()
   default_insert({ body = 'U1=$1 U0=$0' })
   validate_state('i', { 'T1=U1= U0= T0=' }, { 1, 6 })
   validate_n_sessions(2)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   -- Should stop active session (no change mode/cursor) and resume previous
   stop()
   validate_state('i', { 'T1=U1= U0= T0=' }, { 1, 6 })
   validate_n_sessions(1)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   stop()
   validate_state('i', { 'T1=U1= U0= T0=' }, { 1, 6 })
   validate_n_sessions(0)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   -- Should clean all side effects
   expect.error(function() child.cmd('au MiniSnippetsTrack') end, 'No such group')
@@ -3517,19 +3519,21 @@ T['Session']['should replace placeholder on added text at its start'] = function
 end
 
 T['Session']['preserves order of "squashed" empty tabstops'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('$1$2$3 $1$3$2 $2$1$3 $2$3$1 $3$1$2 $3$2$1')
   child.expect_screenshot()
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   ensure_clean_state()
 
   start_session('$1$2$0')
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 end
 
 T['Session']['tracks whole session'] = function()
@@ -3919,6 +3923,8 @@ T['Session']['highlighting']['properly highlights final tabstop'] = function()
 end
 
 T['Session']['highlighting']['uses same highlighting for whole placeholder for current tabstop'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('T1=${1:<T2=${2:$3}>} $2 $0 $3')
   local ref_extmark_data = {
     { tabstop = '1', hl_group = 'MiniSnippetsCurrentReplace' },
@@ -3943,7 +3949,7 @@ T['Session']['highlighting']['uses same highlighting for whole placeholder for c
     { tabstop = '3', virt_text = { { '•', 'MiniSnippetsUnvisited' } }, virt_text_pos = 'inline' },
   }
   validate_tabstop_hl(ref_extmark_data)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   jump('next')
   ref_extmark_data = {
@@ -3956,7 +3962,7 @@ T['Session']['highlighting']['uses same highlighting for whole placeholder for c
     { tabstop = '3', virt_text = { { '•', 'MiniSnippetsCurrentReplace' } }, virt_text_pos = 'inline' },
   }
   validate_tabstop_hl(ref_extmark_data)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 end
 
 T['Session']['highlighting']['hides when nesting'] = function()
@@ -4268,13 +4274,15 @@ T['Session']['linked tabstops']['have proper extmark tracking'] = function()
 end
 
 T['Session']['linked tabstops']['jumps to the first node'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('T1=${1:<T2=$2>} T2=$2 T1=$1')
   validate_state('i', { 'T1=<T2=> T2= T1=<T2=>' }, { 1, 3 })
   child.expect_screenshot()
 
   jump('next')
   validate_state('i', { 'T1=<T2=> T2= T1=<T2=>' }, { 1, 7 })
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   -- Even if first node for linked tabstops is changed
   jump('prev')
@@ -4286,6 +4294,7 @@ T['Session']['linked tabstops']['jumps to the first node'] = function()
 end
 
 T['Session']['linked tabstops']['validates that session data is valid'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
   local ref_msg = '(mini.snippets) Session contains corrupted data (deleted or out of range extmarks). It is stopped.'
 
   -- Forcefully removed extmarks
@@ -4297,7 +4306,7 @@ T['Session']['linked tabstops']['validates that session data is valid'] = functi
   validate_no_active_session()
   eq(child.lua_get('_G.notify_log'), { { ref_msg, 'WARN' } })
   child.lua('_G.notify_log = {}')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   ensure_clean_state()
 
@@ -4409,6 +4418,7 @@ end
 T['Session']['nesting'] = new_set({ hooks = { pre_case = setup_event_log } })
 
 T['Session']['nesting']['works and triggers events'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
   local body_1, body_2, body_3 = 'T1=$1 T0=$0', 'U1=$1 U0=$0', 'V1=$1 V0=$0'
 
   start_session(body_1)
@@ -4420,7 +4430,7 @@ T['Session']['nesting']['works and triggers events'] = function()
   eq(get_snippet_body(get()), body_2)
   validate_n_sessions(2)
   -- Highlighting of previous session should stop, but should still track
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   start_session(body_3)
   -- Any user typing in nested session should be tracked in all other sessions
@@ -4440,12 +4450,12 @@ T['Session']['nesting']['works and triggers events'] = function()
   eq(get_snippet_body(get()), body_2)
   validate_n_sessions(2)
   -- Tabstop range of previous session should track changes in nested ones
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   stop()
   validate_n_sessions(1)
   eq(get_snippet_body(get()), body_1)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   stop()
 
@@ -4477,10 +4487,12 @@ T['Session']['nesting']['works and triggers events'] = function()
 end
 
 T['Session']['nesting']['does not nest if no tabstops in new session'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('T1=$1 T0=$0')
   start_session('just text')
   validate_n_sessions(1)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 end
 
 T['Session']['nesting']['resuming session should not change mode/cursor/buffer'] = function()
@@ -4516,11 +4528,13 @@ T['Session']['nesting']['resuming session should not change mode/cursor/buffer']
 end
 
 T['Session']['nesting']['can be done outside of current session region'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('T1=$1 T0=$0')
   type_keys('<Esc>', 'o', '<CR>')
   start_session('U1=$1 U0=$0')
   validate_n_sessions(2)
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 end
 
 T['Session']['nesting']['can be done in different buffer'] = function()
@@ -4802,13 +4816,15 @@ end
 T['Tricky snippets'] = new_set()
 
 T['Tricky snippets']['nested empty tabstops'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('${1:${2:$3}} ${2:$3} $3')
   -- Should show every tabstop with inline text
   child.expect_screenshot()
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   type_keys('a')
   child.expect_screenshot()
@@ -4825,13 +4841,15 @@ T['Tricky snippets']['nested empty tabstops'] = function()
 end
 
 T['Tricky snippets']['nested empty tabstops, another'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   start_session('$1 ${2:$1} ${3:${2:$1}}')
   -- Should show every tabstop with inline text
   child.expect_screenshot()
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
 
   jump('prev')
   jump('prev')
@@ -4941,6 +4959,8 @@ T['Tricky snippets']['tabstop nested inside itself'] = function()
 end
 
 T['Tricky snippets']['intertwined nested tabstops'] = function()
+  local screen_opts = child.fn.has('nvim-0.12') == 0 and { ignore_text = { 8 }, ignore_attr = { 8 } } or {}
+
   -- Should be normalized into 'T1=${1:<T2=$2>} and T2=$2' during `parse()`
   start_session('T1=${1:<T2=$2>} and T2=${2:<T1=$1>}')
   child.expect_screenshot()
@@ -4954,7 +4974,7 @@ T['Tricky snippets']['intertwined nested tabstops'] = function()
   -- Order matters
   start_session('T1=${1:<T2=$2>} and T2=${2:<T1=$1>}')
   jump('next')
-  child.expect_screenshot()
+  child.expect_screenshot(screen_opts)
   type_keys('x')
   child.expect_screenshot()
   jump('prev')
