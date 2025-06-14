@@ -162,9 +162,9 @@ local clear_notify_log = function() return child.lua('_G.notify_log = {}') end
 
 -- Common validators
 local is_in_rtp = function(path)
-  path = vim.fs.normalize(path)
+  path = child.fs.normalize(path)
   for _, p in ipairs(child.api.nvim_list_runtime_paths()) do
-    if path == vim.fs.normalize(p) then return true end
+    if path == child.fs.normalize(p) then return true end
   end
   return false
 end

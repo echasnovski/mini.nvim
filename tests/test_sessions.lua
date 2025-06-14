@@ -476,12 +476,12 @@ T['read()']['does not stop on source error'] = function()
   eq(#buffers, 2)
 
   child.api.nvim_set_current_buf(buffers[1])
-  local buf_name_1 = vim.fs.normalize(child.api.nvim_buf_get_name(0))
+  local buf_name_1 = child.fs.normalize(child.api.nvim_buf_get_name(0))
   eq(vim.endswith(buf_name_1, '/' .. folded_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'No folds in this file' })
 
   child.api.nvim_set_current_buf(buffers[2])
-  local buf_name_2 = vim.fs.normalize(child.api.nvim_buf_get_name(0))
+  local buf_name_2 = child.fs.normalize(child.api.nvim_buf_get_name(0))
   eq(vim.endswith(buf_name_2, '/' .. extra_file), true)
   eq(child.api.nvim_buf_get_lines(0, 0, -1, true), { 'This should be preserved in session' })
 end

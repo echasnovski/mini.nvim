@@ -138,7 +138,7 @@ local validate_git_spawn_log = function(ref_log)
     elseif islist(ref) then
       eq(real, { executable = 'git', options = { args = ref, cwd = real.options.cwd } })
     else
-      if real.options.cwd ~= nil then real.options.cwd = vim.fs.normalize(real.options.cwd) end
+      if real.options.cwd ~= nil then real.options.cwd = child.fs.normalize(real.options.cwd) end
       eq(real, { executable = 'git', options = ref })
     end
   end

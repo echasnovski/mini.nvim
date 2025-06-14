@@ -1197,8 +1197,16 @@ T['child']['redirected method tables'] = new_set({
     { 'lsp', 'get_active_clients', {} },
     { 'mpack', 'encode', { { a = 1 } } },
     { 'spell', 'check', { 'thouht' } },
-    -- The `treesitter` module is also redirected but there is no reliable way
-    -- to test it without installing parsers
+    { 'treesitter', 'get_parser', {} },
+    { 'ui', 'select', {} },
+    { 'fs', 'normalize', { '/tmp/' } },
+  },
+  hooks = {
+    pre_case = function()
+      -- Mock problematic methods
+      child.lua('vim.treesitter.get_parser = function() end')
+      child.lua('vim.ui.select = function() end')
+    end,
   },
 })
 
