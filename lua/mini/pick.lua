@@ -2283,9 +2283,12 @@ H.picker_compute_win_config = function(win_config, is_for_open)
 
   -- Tweak config values to ensure they are proper
   if config.border == 'none' then config.border = { '', ' ', '', '', '', ' ', '', '' } end
-  -- - Account for border
-  config.height = math.max(math.min(config.height, max_height - 2), 1)
-  config.width = math.max(math.min(config.width, max_width - 2), 1)
+  -- - Adjust dimensions accounting for actually present border parts
+  local bor, n = config.border, type(config.border) == 'table' and #config.border or 0
+  local height_offset = n == 0 and 2 or ((bor[1 % n + 1] == '' and 0 or 1) + (bor[5 % n + 1] == '' and 0 or 1))
+  local width_offset = n == 0 and 2 or ((bor[3 % n + 1] == '' and 0 or 1) + (bor[7 % n + 1] == '' and 0 or 1))
+  config.height = math.max(math.min(config.height, max_height - height_offset), 1)
+  config.width = math.max(math.min(config.width, max_width - width_offset), 1)
 
   return config
 end

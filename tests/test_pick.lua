@@ -4800,6 +4800,53 @@ T['Overall view']['allows "none" as border'] = function()
   child.expect_screenshot()
 end
 
+T['Overall view']['adjusts dimensions respecting border'] = function()
+  child.set_size(10, 20)
+  child.o.laststatus, child.o.showtabline, child.o.cmdheight = 0, 0, 0
+  child.lua([[MiniPick.config.window.config = { width = vim.o.columns, height = vim.o.lines }]])
+
+  start_with_items({ 'a' }, 'My name')
+  child.expect_screenshot()
+
+  local validate_border = function(border)
+    local border_str = vim.inspect(border)
+    local lua_cmd = string.format('MiniPick.set_picker_opts({ window = { config = { border = %s } } })', border_str)
+    child.lua(lua_cmd)
+    child.expect_screenshot()
+  end
+
+  -- All sides
+  validate_border({ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' })
+  -- No left side
+  validate_border({ '', 'b', 'c', 'd', 'e', 'f', '', '' })
+  -- No right side
+  validate_border({ 'a', 'b', '', '', '', 'f', 'g', 'h' })
+  -- No left and right side
+  validate_border({ '', 'b', '', '', '', 'f', '', '' })
+  -- No top side
+  validate_border({ '', '', '', 'd', 'e', 'f', 'g', 'h' })
+  -- No bottom side
+  validate_border({ 'a', 'b', 'c', 'd', '', '', '', 'h' })
+  -- No top and bottom side
+  validate_border({ '', '', '', 'd', '', '', '', 'h' })
+
+  -- Different length of border array
+  validate_border({ 'a', 'b', 'c', 'd' })
+  validate_border({ 'a', 'b' })
+  validate_border({ 'a' })
+  -- No left and right side
+  validate_border({ '', 'b', '', '' })
+  -- No top and bottom side
+  validate_border({ '', '', '', 'd' })
+
+  -- Forced no sides
+  validate_border({ 'a', '' })
+  validate_border({ '' })
+
+  -- Special "no sides"
+  validate_border('none')
+end
+
 T['Overall view']["respects 'winborder' option"] = function()
   if child.fn.has('nvim-0.11') == 0 then MiniTest.skip("'winborder' option is present on Neovim>=0.11") end
 
