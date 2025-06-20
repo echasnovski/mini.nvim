@@ -2730,10 +2730,13 @@ H.fs_do.delete = function(from, to)
   -- Act based on whether delete is permanent or not
   if to == nil then return vim.fn.delete(from, 'rf') == 0 end
   pcall(vim.fn.delete, to, 'rf')
-  return H.fs_do.move(from, to)
+  -- Move to trash but skip renaming loaded buffer (same as with permanent
+  -- delete). This also skips triggering extra autocommands that can have
+  -- unwanted side effects (like loading LSP in the new "trash" project).
+  return H.fs_do.move(from, to, true)
 end
 
-H.fs_do.move = function(from, to)
+H.fs_do.move = function(from, to, skip_buf_rename)
   -- Don't override existing path
   if H.fs_is_present_path(to) then return H.warn_existing_path(from, 'move or rename') end
 
@@ -2755,8 +2758,10 @@ H.fs_do.move = function(from, to)
   H.replace_path_in_index(from, to)
 
   -- Rename in loaded buffers
-  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    H.rename_loaded_buffer(buf_id, from, to)
+  if not skip_buf_rename then
+    for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+      H.rename_loaded_buffer(buf_id, from, to)
+    end
   end
 
   return success

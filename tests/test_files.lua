@@ -3519,8 +3519,12 @@ T['File manipulation']['creates nested directories'] = function()
 end
 
 T['File manipulation']['can delete'] = function()
-  local temp_dir =
-    make_temp_dir('temp', { 'file', 'empty-dir/', 'dir/', 'dir/file', 'dir/nested-dir/', 'dir/nested-dir/file' })
+  local entries = { 'file', 'empty-dir/', 'dir/', 'dir/file', 'dir/nested-dir/', 'dir/nested-dir/file' }
+  local temp_dir = make_temp_dir('temp', entries)
+  child.cmd('edit ' .. (temp_dir .. '/file'))
+  local buf_id = child.api.nvim_get_current_buf()
+  local buf_name = child.api.nvim_buf_get_name(buf_id)
+
   open(temp_dir)
 
   set_lines({})
@@ -3531,6 +3535,8 @@ T['File manipulation']['can delete'] = function()
   child.expect_screenshot()
 
   validate_tree(temp_dir, {})
+  -- - Should not affect the buffer for deleted file (allows restoring it)
+  eq(child.api.nvim_buf_get_name(buf_id), buf_name)
 
   -- Validate separately because order is not guaranteed
   local ref_pattern = make_plain_pattern('CONFIRM FILE SYSTEM ACTIONS', short_path(temp_dir) .. '\n')
@@ -3548,9 +3554,12 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
   local data_dir = mock_stdpath_data()
   local trash_dir = join_path(data_dir, 'mini.files', 'trash')
 
-  -- Create temporary data and delete it
+  -- Create temporary data, open file from it, and delete it
   child.lua('MiniFiles.config.options.permanent_delete = false')
   local temp_dir = make_temp_dir('temp', { 'file', 'dir/', 'dir/subfile' })
+  child.cmd('edit ' .. (temp_dir .. '/file'))
+  local buf_id = child.api.nvim_get_current_buf()
+  local buf_name = child.api.nvim_buf_get_name(buf_id)
 
   open(temp_dir)
 
@@ -3560,10 +3569,14 @@ T['File manipulation']['delete respects `options.permanent_delete`'] = function(
 
   -- Should move into special trash directory
   validate_tree(temp_dir, {})
-  validate_tree(trash_dir, { 'dir/', 'dir/subfile', 'file' })
+  validate_tree(trash_dir, { 'file', 'dir/', 'dir/subfile' })
 
   validate_confirm_args('  DELETE │ file %(to trash%)')
   validate_confirm_args('  DELETE │ dir %(to trash%)')
+
+  -- - Should not affect the buffer for moved to trash file (similar to regular
+  --   "delete" action and avoids triggering autocommands).
+  eq(child.api.nvim_buf_get_name(buf_id), buf_name)
 
   -- Deleting entries again with same name should replace previous ones
   -- - Recreate previously deleted entries with different content
