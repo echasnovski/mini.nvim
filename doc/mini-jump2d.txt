@@ -324,12 +324,14 @@ Parameters ~
 {opts} `(table|nil)` Configuration of jumping, overriding global and buffer
   local values. Has the same structure as |MiniJump2d.config|
   without <mappings> field. Extra allowed fields:
-    - <hl_group> - which highlight group to use for first step.
-      Default: "MiniJump2dSpot".
-    - <hl_group_ahead> - which highlight group to use for second step and later.
-      Default: "MiniJump2dSpotAhead".
-    - <hl_group_dim> - which highlight group to use dimming used lines.
-      Default: "MiniJump2dSpotDim".
+    - <hl_group> - highlight group for first step.
+      Default: `"MiniJump2dSpot"`.
+    - <hl_group_ahead> - highlight group for second and later steps.
+      Default: `"MiniJump2dSpotAhead"`.
+    - <hl_group_dim> - highlight group for dimming used lines.
+      Default: `"MiniJump2dDim"`.
+    - <hl_group_unique> - highlight group for unique next step.
+      Default: `"MiniJump2dSpotUnique"`.
 
 Usage ~
 >lua
