@@ -705,6 +705,25 @@ T['start()']['respects `allowed_windows`'] = new_set({
   end,
 })
 
+T['start()']['ignores not focusable windows'] = function()
+  child.set_size(6, 40)
+
+  local create_float = function(focusable, col)
+    local buf_id = child.api.nvim_create_buf(false, true)
+    local l = 'xx' .. buf_id .. 'xx'
+    child.api.nvim_buf_set_lines(buf_id, 0, -1, true, { l, l, l })
+    local config = { relative = 'editor', row = 0, col = col, height = 3, width = 10, focusable = focusable }
+    child.api.nvim_open_win(buf_id, false, config)
+  end
+
+  setup_two_windows()
+  create_float(false, 9)
+  create_float(true, 29)
+
+  start({ allowed_windows = { current = true, not_current = true } })
+  child.expect_screenshot()
+end
+
 T['start()']['respects `hooks`'] = function()
   child.lua('_G.n_before_start = 0; _G.n_after_jump = 0')
 

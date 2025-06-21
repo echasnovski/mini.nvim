@@ -61,6 +61,8 @@ There are following change types:
 
     The `gen_xxx_spotter` functions will work (with warning) until at least next release.
 
+- Not focusable windows are now ignored when computing jump spots.
+
 ### Expand
 
 - Add `gen_spotter.vimpattern()` that can generate spotter based on Vimscript (not Lua) pattern.

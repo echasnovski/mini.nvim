@@ -816,10 +816,11 @@ end
 
 -- Jump spots -----------------------------------------------------------------
 H.spots_compute = function(opts)
-  local win_id_init = vim.api.nvim_get_current_win()
+  local win_id_init, allowed = vim.api.nvim_get_current_win(), opts.allowed_windows
   local win_id_arr = vim.tbl_filter(function(win_id)
-    if win_id == win_id_init then return opts.allowed_windows.current end
-    return opts.allowed_windows.not_current
+    if not vim.api.nvim_win_get_config(win_id).focusable then return false end
+    if win_id == win_id_init then return allowed.current end
+    return allowed.not_current
   end, H.tabpage_list_wins(0))
 
   local res = {}
