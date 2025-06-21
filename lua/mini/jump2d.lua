@@ -340,6 +340,8 @@ MiniJump2d.config = {
 ---       Default: "MiniJump2dSpotAhead".
 ---     - <hl_group_dim> - which highlight group to use dimming used lines.
 ---       Default: "MiniJump2dSpotDim".
+---     - <hl_group_unique> - which highlight group to use for unique next step.
+---       Default: "MiniJump2dSpotUnique".
 ---
 ---@usage >lua
 ---   -- Start default jumping
