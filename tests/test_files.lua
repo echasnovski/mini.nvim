@@ -2685,6 +2685,45 @@ T['Preview']['works for files'] = function()
   expect_screenshot()
 end
 
+T['Preview']['works with imaginary paths'] = function()
+  child.set_size(15, 60)
+  local temp_dir = make_temp_dir('temp', {})
+  open(temp_dir)
+
+  -- Should show preview for empty line
+  child.expect_screenshot()
+
+  -- Should still show preview window for files not (yet) on disk
+  type_keys('o')
+  child.expect_screenshot()
+  type_keys('n')
+  child.expect_screenshot()
+  -- Should update title as user types
+  type_keys('e')
+  child.expect_screenshot()
+  type_keys('w/')
+
+  -- Should update the title even if popup menu is shown
+  child.o.completeopt = 'menuone,noselect'
+  type_keys('<CR>', 'n', '<C-n>')
+  eq(child.fn.pumvisible() == 1, true)
+  type_keys('e')
+  child.expect_screenshot()
+
+  -- Should treat non-empty blank line as new file name
+  type_keys('<Esc>', 'o', ' ')
+  child.expect_screenshot()
+  type_keys('<C-u>', '<Esc>')
+
+  -- Should properly update to existing file preview after synchronization
+  mock_confirm(1)
+  synchronize()
+  validate_tree(temp_dir, { 'new/', 'ne' })
+  child.expect_screenshot()
+  type_keys('j')
+  child.expect_screenshot()
+end
+
 T['Preview']['does not highlight big files'] = function()
   local big_file = make_test_path('big.lua')
   MiniTest.finally(function() child.fn.delete(big_file, 'rf') end)
@@ -2746,19 +2785,6 @@ T['Preview']['previews only one level deep'] = function()
   child.set_size(10, 80)
 
   open(make_test_path('nested'))
-  child.expect_screenshot()
-end
-
-T['Preview']['handles user created lines'] = function()
-  child.lua('MiniFiles.config.windows.width_focus = 50')
-  open(test_dir_path)
-  type_keys('o', 'new_entry', '<Esc>')
-  type_keys('k')
-
-  child.expect_screenshot()
-  type_keys('j')
-  child.expect_screenshot()
-  type_keys('j')
   child.expect_screenshot()
 end
 
@@ -5118,12 +5144,22 @@ T['Events']['`MiniFilesBufferCreate` triggers inside preview'] = function()
   type_keys('j')
   validate_n_events(3)
 
-  -- No event should be triggered when going inside preview buffer (as it
-  -- should be reused). But should also be triggered for file previews.
+  -- No event should be triggered when going inside previewed directory (as
+  -- buffer should be reused). But should also be triggered for file previews.
   clear_event_track()
   type_keys('k')
   go_in()
   validate_n_events(1)
+
+  -- No event should trigger for imaginary path
+  clear_event_track()
+  type_keys('o')
+  validate_n_wins(3)
+  validate_n_events(0)
+
+  type_keys('imaginary-file')
+  validate_n_wins(3)
+  validate_n_events(0)
 end
 
 T['Events']['`MiniFilesBufferCreate` can be used to create buffer-local mappings'] = function()
@@ -5170,11 +5206,39 @@ T['Events']['`MiniFilesBufferUpdate` triggers'] = function()
   validate_event_track({ { buf_id = buf_id_2 } })
   clear_event_track()
 
-  -- Force all buffer to update
+  -- Force all buffers to update
   synchronize()
 
   -- - Force order, as there is no order guarantee of event trigger
   validate_event_track({ { buf_id = buf_id_1, win_id = win_id_1 }, { buf_id = buf_id_2, win_id = win_id_2 } }, true)
+end
+
+T['Events']['`MiniFilesBufferUpdate` triggers inside preview'] = function()
+  track_event('MiniFilesBufferUpdate')
+
+  child.lua('MiniFiles.config.windows.preview = true')
+  open(test_dir_path)
+  validate_n_events(2)
+
+  type_keys('j')
+  validate_n_events(3)
+
+  -- Should be triggered when going inside previewed directory (as different
+  -- buffer becomes current).
+  clear_event_track()
+  type_keys('k')
+  go_in()
+  validate_n_events(2)
+
+  -- No event should trigger for imaginary path
+  clear_event_track()
+  type_keys('o')
+  validate_n_wins(3)
+  validate_n_events(0)
+
+  type_keys('imaginary-file')
+  validate_n_wins(3)
+  validate_n_events(0)
 end
 
 T['Events']['`MiniFilesWindowOpen` triggers'] = function()

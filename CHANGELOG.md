@@ -35,6 +35,12 @@ There are following change types:
 
 - Add `pickers.colorschemes` picker. By @pkazmier, PR #1789.
 
+## mini.files
+
+### Refine
+
+- Ensure preview window is never hidden, even if cursor is on the line for a not (yet) existing file system entry. This reduces flickering of preview window when creating new files in Insert mode.
+
 ## mini.hues
 
 ### Refine

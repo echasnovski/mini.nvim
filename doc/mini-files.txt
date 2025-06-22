@@ -690,9 +690,10 @@ simultaneously. For example, use value 1 to always show single window.
 There is no constraint by default.
 
 `windows.preview` is a boolean indicating whether to show preview of
-file/directory under cursor. Note: it is shown with highlighting if Neovim
-version is sufficient and file is small enough (less than 1K bytes per line
-or 1M bytes in total).
+file/directory under cursor. Notes:
+- It is always shown, even if current line is for not yet existing path.
+- File preview is highlighted if its size is small enough (less than 1K
+  bytes per line or 1M bytes in total).
 
 `windows.width_focus` and `windows.width_nofocus` are number of columns used
 as `width` for focused and non-focused windows respectively.
