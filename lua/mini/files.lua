@@ -2235,7 +2235,7 @@ H.buffer_update_directory = function(buf_id, path, opts, is_preview)
   local lines, icon_hl, name_hl = {}, {}, {}
   local prefix_fun, n_computed_prefixes = opts.content.prefix, is_preview and vim.o.lines or math.huge
   for i, entry in ipairs(fs_entries) do
-    local prefix, hl
+    local prefix, hl, name
     -- Compute prefix only in visible preview (for performance).
     -- NOTE: limiting entries in `fs_read_dir()` is not possible because all
     -- entries are needed for a proper filter and sort.
