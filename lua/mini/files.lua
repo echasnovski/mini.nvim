@@ -1757,7 +1757,7 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
     -- Use shortened full path in left most window
     title = win_count == 1 and H.fs_shorten_path(H.fs_full_path(path)) or H.fs_get_basename(path),
   }
-  config.title = ' ' .. H.escape_newline(config.title) .. ' '
+  config.title = ' ' .. H.sanitize_string(config.title) .. ' '
 
   -- Prepare and register window
   local win_id = windows[win_count]
@@ -2242,7 +2242,7 @@ H.buffer_update_directory = function(buf_id, path, opts, is_preview)
     if i <= n_computed_prefixes then
       prefix, hl = prefix_fun(entry)
     end
-    prefix, hl, name = prefix or '', hl or '', H.escape_newline(entry.name)
+    prefix, hl, name = prefix or '', hl or '', H.sanitize_string(entry.name)
     table.insert(lines, string.format(line_format, H.path_index[entry.path], prefix, name))
     table.insert(icon_hl, hl)
     table.insert(name_hl, entry.fs_type == 'directory' and 'MiniFilesDirectory' or 'MiniFilesFile')
@@ -2324,7 +2324,7 @@ H.buffer_compute_fs_diff = function(buf_id)
     local path_to = H.fs_child_path(path, name_to) .. (vim.endswith(name_to, '/') and '/' or '')
 
     -- Ignore blank lines and already synced entries (even several user-copied)
-    if l:find('^%s*$') == nil and H.escape_newline(path_from) ~= H.escape_newline(path_to) then
+    if l:find('^%s*$') == nil and H.sanitize_string(path_from) ~= H.sanitize_string(path_to) then
       table.insert(res, { from = path_from, to = path_to, dir = path })
     elseif path_id ~= nil then
       present_path_ids[path_id] = true
@@ -2652,7 +2652,7 @@ H.fs_actions_to_lines = function(fs_actions)
 
     -- Add to per directory lines
     local dir_actions = actions_per_dir[dir] or {}
-    table.insert(dir_actions, '  ' .. H.escape_newline(l))
+    table.insert(dir_actions, '  ' .. H.sanitize_string(l))
     actions_per_dir[dir] = dir_actions
   end
 
@@ -2907,7 +2907,7 @@ H.getcharstr = function()
   return char
 end
 
-H.escape_newline = function(x) return ((x or ''):gsub('\n', '<NL>')) end
+H.sanitize_string = function(x) return ((x or ''):gsub('\n', '<NL>')) end
 
 -- TODO: Remove after compatibility with Neovim=0.9 is dropped
 H.islist = vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist
