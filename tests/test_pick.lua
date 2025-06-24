@@ -4748,6 +4748,19 @@ T['Overall view']['does not show footer if items are not set'] = function()
   child.expect_screenshot()
 end
 
+T['Overall view']['sanitizes picker name'] = function()
+  local bad_name = 'Bad\000multi\nline\npicker\tname\n'
+
+  child.lua('MiniPick.config.window.config = { width = vim.o.columns }')
+  start_with_items({ 'a' }, bad_name)
+  child.expect_screenshot()
+  stop()
+
+  child.lua('MiniPick.config.options.content_from_bottom = true')
+  start_with_items({ 'a' }, bad_name)
+  child.expect_screenshot()
+end
+
 T['Overall view']['respects `options.content_from_bottom` with footer'] = function()
   start({ source = { items = { 'a', 'b' } }, options = { content_from_bottom = true } })
   child.expect_screenshot()

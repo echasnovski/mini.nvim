@@ -2592,7 +2592,7 @@ end
 
 H.picker_compute_footer = function(picker, win_id)
   local info = H.picker_get_general_info(picker)
-  local source_name = string.format(' %s ', info.source_name)
+  local source_name = string.format(' %s ', info.source_name):gsub('[%z%s]', ' ')
   local n_marked_text = info.n_marked == 0 and '' or (info.n_marked .. '/')
   local inds = string.format(' %s|%s|%s%s ', info.relative_current_ind, info.n_matched, n_marked_text, info.n_total)
   local win_width, source_width, inds_width =
