@@ -1764,7 +1764,7 @@ H.git_get_path_data = function(path)
   -- Get path data needed for proper patch header
   local cwd, basename = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
   local stdout = vim.loop.new_pipe()
-  local args = { 'ls-files', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', basename }
+  local args = { 'ls-files', '-z', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', basename }
   local spawn_opts = { args = args, cwd = cwd, stdio = { nil, stdout, nil } }
 
   local process, stdout_feed, res, did_exit = nil, {}, { cwd = cwd }, false
@@ -1774,7 +1774,7 @@ H.git_get_path_data = function(path)
     did_exit = true
     if exit_code ~= 0 then return end
     -- Parse data about path
-    local out = table.concat(stdout_feed, ''):gsub('\n+$', '')
+    local out = table.concat(stdout_feed, ''):gsub('(%z\n)+$', '')
     res.mode_bits, res.eol, res.rel_path = string.match(out, '^(%d+) (%S+) (.*)$')
   end
 

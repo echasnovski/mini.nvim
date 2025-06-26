@@ -893,11 +893,12 @@ T['gen_source']['git()']['can apply hunks'] = function()
 
   child.lua([[MiniDiff.do_hunks(0, 'apply')]])
 
+  --stylua: ignore
   local ref_git_spawn_log = {
     { args = { 'rev-parse', '--path-format=absolute', '--git-dir' }, cwd = git_dir_path },
     { args = { 'show', ':0:./' .. git_file_basename }, cwd = git_dir_path },
     {
-      args = { 'ls-files', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', git_file_basename },
+      args = { 'ls-files', '-z', '--full-name', '--format=%(objectmode) %(eolinfo:index) %(path)', '--', git_file_basename },
       cwd = git_dir_path,
     },
     { args = { 'apply', '--whitespace=nowarn', '--cached', '--unidiff-zero', '-' }, cwd = git_dir_path },
