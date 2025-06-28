@@ -1680,6 +1680,12 @@ T['pickers']['git_commits()']['works'] = function()
   mock_git_repo(repo_dir)
   local log_lines = { '0123456 Commit message.', 'aaaaaaa Another commit message.', '1111111 Initial commit.' }
   mock_cli_return(log_lines)
+  child.lua([[
+    vim.treesitter.get_parser = function(...)
+      _G.ts_get_parser_args = { ... }
+      errror('No parser')
+    end
+  ]])
 
   local buf_init = child.api.nvim_get_current_buf()
   child.lua_notify('_G.return_item = MiniExtra.pickers.git_commits()')
@@ -1692,12 +1698,13 @@ T['pickers']['git_commits()']['works'] = function()
   clear_spawn_log()
   clear_process_log()
 
-  -- Should have proper preview
+  -- Should have proper preview (should try to load tree-sitter first)
   child.lua([[_G.stream_type_queue = { 'stdout', 'stderr' }]])
   local show_commit_lines = child.fn.readfile(join_path('mocks', 'git-commit'))
   mock_cli_return(show_commit_lines)
   type_keys('<C-p>', '<Tab>')
   child.expect_screenshot()
+  eq(child.lua_get('_G.ts_get_parser_args[2]'), 'git')
 
   eq(get_spawn_log(), {
     { executable = 'git', options = { args = { '-C', repo_dir, '--no-pager', 'show', '1111111' } } },
@@ -1958,25 +1965,29 @@ T['pickers']['git_hunks()']['works'] = function()
   mock_git_repo(repo_dir)
   local diff_lines = child.fn.readfile(join_path('mocks', 'git-diff'))
   mock_cli_return(diff_lines)
+  child.lua([[
+    vim.treesitter.get_parser = function(...)
+      _G.ts_get_parser_args = { ... }
+      errror('No parser')
+    end
+  ]])
 
   child.lua_notify('_G.return_item = MiniExtra.pickers.git_hunks()')
   validate_picker_name('Git hunks (unstaged all)')
   child.expect_screenshot()
 
-  eq(get_spawn_log(), {
-    {
-      executable = 'git',
-      options = { args = { 'diff', '--patch', '--unified=3', '--color=never', '--', repo_dir }, cwd = repo_dir },
-    },
-  })
+  local ref_args = { 'diff', '--patch', '--unified=3', '--color=never', '--', repo_dir }
+  eq(get_spawn_log(), { { executable = 'git', options = { args = ref_args, cwd = repo_dir } } })
 
-  -- Should have proper preview (without extra CLI calls)
+  -- Should have proper preview (without extra CLI calls, but with trying to
+  -- load tree-sitter first)
   type_keys('<Tab>')
   child.expect_screenshot()
   for _ = 1, (#get_picker_items() - 1) do
     type_keys('<C-n>')
     child.expect_screenshot()
   end
+  eq(child.lua_get('_G.ts_get_parser_args[2]'), 'diff')
 
   -- Should properly choose by navigating to the first hunk change
   type_keys('<CR>')

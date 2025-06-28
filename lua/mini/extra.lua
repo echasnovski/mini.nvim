@@ -705,8 +705,10 @@ MiniExtra.pickers.git_commits = function(local_opts, opts)
   -- Define source
   local preview = function(buf_id, item)
     if type(item) ~= 'string' then return end
-    -- Only define syntax highlighting to avoid costly `FileType` autocommands
-    vim.bo[buf_id].syntax = 'git'
+    local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, 'git', { error = false })
+    has_parser = has_parser and parser ~= nil
+    if has_parser then has_parser = pcall(vim.treesitter.start, buf_id, 'git') end
+    if not has_parser then vim.bo[buf_id].syntax = 'git' end
     H.cli_show_output(buf_id, { 'git', '-C', repo_dir, '--no-pager', 'show', item:match('^(%S+)') })
   end
   local choose = function(item)
@@ -828,7 +830,10 @@ MiniExtra.pickers.git_hunks = function(local_opts, opts)
   -- Define source
   local show = H.pick_get_config().source.show or H.show_with_icons
   local preview = function(buf_id, item)
-    vim.bo[buf_id].syntax = 'diff'
+    local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, 'diff', { error = false })
+    has_parser = has_parser and parser ~= nil
+    if has_parser then has_parser = pcall(vim.treesitter.start, buf_id, 'diff') end
+    if not has_parser then vim.bo[buf_id].syntax = 'diff' end
     local lines = vim.deepcopy(item.header)
     vim.list_extend(lines, item.hunk)
     H.set_buflines(buf_id, lines)
