@@ -206,6 +206,7 @@ See more in |MiniAlign-modifiers-builtin| and |MiniAlign-examples|.
 Notes:
 - Visual blockwise selection works best with 'virtualedit' equal to "block"
   or "all".
+- Alignment with preview works best with 'showmode' disabled.
 
 ------------------------------------------------------------------------------
                                                    *MiniAlign-modifiers-builtin*

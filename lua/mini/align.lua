@@ -203,6 +203,7 @@
 --- Notes:
 --- - Visual blockwise selection works best with 'virtualedit' equal to "block"
 ---   or "all".
+--- - Alignment with preview works best with 'showmode' disabled.
 ---@tag MiniAlign-algorithm
 
 --- Overview of builtin modifiers
