@@ -647,19 +647,28 @@ MiniDiff.gen_source = {}
 MiniDiff.gen_source.git = function()
   local attach = function(buf_id)
     -- Try attaching to a buffer only once
-    if H.git_cache[buf_id] ~= nil then return false end
+    if H.dvcs_cache[buf_id] ~= nil then return false end
     -- - Possibly resolve symlinks to get data from the original repo
     local path = H.get_buf_realpath(buf_id)
     if path == '' then return false end
 
-    H.git_cache[buf_id] = {}
-    H.git_start_watching_index(buf_id, path)
+    H.dvcs_cache[buf_id] = {}
+    local watch_index_opts = {
+      command = 'git',
+      dvcs_dir_cmd_args = { 'rev-parse', '--path-format=absolute', '--git-dir' },
+      index_name = 'index',
+      dvcs_file_test_spawn_args_fn = function(local_path)
+        local basename = vim.fn.fnamemodify(local_path, ':t')
+        return { 'show', ':0:./' .. basename }
+      end
+    }
+    H.dvcs_start_watching_index(buf_id, path, watch_index_opts)
   end
 
   local detach = function(buf_id)
-    local cache = H.git_cache[buf_id]
-    H.git_cache[buf_id] = nil
-    H.git_invalidate_cache(cache)
+    local cache = H.dvcs_cache[buf_id]
+    H.dvcs_cache[buf_id] = nil
+    H.dvcs_invalidate_cache(cache)
   end
 
   local apply_hunks = function(buf_id, hunks)
@@ -915,7 +924,7 @@ H.bufs_to_update = {}
 H.cache = {}
 
 -- Cache per buffer for attached `git` source
-H.git_cache = {}
+H.dvcs_cache = {}
 
 -- Cache for operator
 H.operator_cache = {}
@@ -1674,25 +1683,28 @@ H.export_qf = function(opts)
   return res
 end
 
--- Git ------------------------------------------------------------------------
-H.git_start_watching_index = function(buf_id, path)
+-- DVCS ------------------------------------------------------------------------
+H.dvcs_start_watching_index = function(buf_id, path, watch_index_opts)
   -- NOTE: Watching single 'index' file is not enough as staging by Git is done
   -- via "create fresh 'index.lock' file, apply modifications, change file name
   -- to 'index'". Hence watch the whole '.git' (first level) and react only if
   -- change was in 'index' file.
   local stdout = vim.loop.new_pipe()
-  local args = { 'rev-parse', '--path-format=absolute', '--git-dir' }
-  local spawn_opts = { args = args, cwd = vim.fn.fnamemodify(path, ':h'), stdio = { nil, stdout, nil } }
+  local spawn_opts = {
+    args = watch_index_opts.dvcs_dir_cmd_args,
+    cwd = vim.fn.fnamemodify(path, ':h'),
+    stdio = { nil, stdout, nil }
+  }
 
-  -- If path is not in Git, disable buffer but make sure that it will not try
+  -- If path is not in DVCS, disable buffer but make sure that it will not try
   -- to re-attach until buffer is properly disabled
-  local on_not_in_git = vim.schedule_wrap(function()
+  local on_not_in_dvcs = vim.schedule_wrap(function()
     if not vim.api.nvim_buf_is_valid(buf_id) then
       H.cache[buf_id] = nil
       return
     end
     MiniDiff.fail_attach(buf_id)
-    H.git_cache[buf_id] = {}
+    H.dvcs_cache[buf_id] = {}
   end)
 
   local process, stdout_feed = nil, {}
@@ -1700,48 +1712,51 @@ H.git_start_watching_index = function(buf_id, path)
     process:close()
 
     -- Watch index only if there was no error retrieving path to it
-    if exit_code ~= 0 or stdout_feed[1] == nil then return on_not_in_git() end
+    if exit_code ~= 0 or stdout_feed[1] == nil then return on_not_in_dvcs() end
 
     -- Set up index watching
-    local git_dir_path = table.concat(stdout_feed, ''):gsub('\n+$', '')
-    H.git_setup_index_watch(buf_id, git_dir_path)
+    local dvcs_dir_path = table.concat(stdout_feed, ''):gsub('\n+$', '')
+    H.dvcs_setup_index_watch(buf_id, dvcs_dir_path, watch_index_opts)
 
     -- Set reference text immediately
-    H.git_set_ref_text(buf_id)
+    H.dvcs_set_ref_text(buf_id, watch_index_opts)
   end
 
-  process = vim.loop.spawn('git', spawn_opts, on_exit)
-  H.git_read_stream(stdout, stdout_feed)
+  process = vim.loop.spawn(watch_index_opts.command, spawn_opts, on_exit)
+  H.dvcs_read_stream(stdout, stdout_feed)
 end
 
-H.git_setup_index_watch = function(buf_id, git_dir_path)
+H.dvcs_setup_index_watch = function(buf_id, dvcs_dir_path, watch_index_opts)
   local buf_fs_event, timer = vim.loop.new_fs_event(), vim.loop.new_timer()
-  local buf_git_set_ref_text = function() H.git_set_ref_text(buf_id) end
+  local buf_dvcs_set_ref_text = function() H.dvcs_set_ref_text(buf_id, watch_index_opts) end
 
   local watch_index = function(_, filename, _)
-    if filename ~= 'index' then return end
+    if filename ~= watch_index_opts.index_name then return end
     -- Debounce to not overload during incremental staging (like in script)
     timer:stop()
-    timer:start(50, 0, buf_git_set_ref_text)
+    timer:start(50, 0, buf_dvcs_set_ref_text)
   end
-  buf_fs_event:start(git_dir_path, { recursive = false }, watch_index)
+  buf_fs_event:start(dvcs_dir_path, { recursive = false }, watch_index)
 
-  H.git_invalidate_cache(H.git_cache[buf_id])
-  H.git_cache[buf_id] = { fs_event = buf_fs_event, timer = timer }
+  H.dvcs_invalidate_cache(H.dvcs_cache[buf_id])
+  H.dvcs_cache[buf_id] = { fs_event = buf_fs_event, timer = timer }
 end
 
-H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
+H.dvcs_set_ref_text = vim.schedule_wrap(function(buf_id, watch_index_opts)
   if not vim.api.nvim_buf_is_valid(buf_id) then return end
   local buf_set_ref_text = vim.schedule_wrap(function(text) pcall(MiniDiff.set_ref_text, buf_id, text) end)
 
   -- NOTE: Do not cache buffer's name to react to its possible rename
   local path = H.get_buf_realpath(buf_id)
   if path == '' then return buf_set_ref_text({}) end
-  local cwd, basename = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
 
   -- Set
   local stdout = vim.loop.new_pipe()
-  local spawn_opts = { args = { 'show', ':0:./' .. basename }, cwd = cwd, stdio = { nil, stdout, nil } }
+  local spawn_opts = {
+    args = watch_index_opts.dvcs_file_test_spawn_args_fn(path),
+    cwd = vim.fn.fnamemodify(path, ':h'),
+    stdio = { nil, stdout, nil }
+  }
 
   local process, stdout_feed = nil, {}
   local on_exit = function(exit_code)
@@ -1752,7 +1767,7 @@ H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
     -- - 'Not in index' files (new, ignored, etc.).
     -- - 'Neither in index nor on disk' files (after checking out commit which
     --   does not yet have file created).
-    -- - 'Relative can not be used outside working tree' (when opening file
+    -- - 'Relative can not be used outside working tree' (e.g. when opening file
     --   inside '.git' directory).
     if exit_code ~= 0 or stdout_feed[1] == nil then return buf_set_ref_text({}) end
 
@@ -1761,10 +1776,11 @@ H.git_set_ref_text = vim.schedule_wrap(function(buf_id)
     buf_set_ref_text(text)
   end
 
-  process = vim.loop.spawn('git', spawn_opts, on_exit)
-  H.git_read_stream(stdout, stdout_feed)
+  process = vim.loop.spawn(watch_index_opts.command, spawn_opts, on_exit)
+  H.dvcs_read_stream(stdout, stdout_feed)
 end)
 
+-- Git ------------------------------------------------------------------------
 H.git_get_path_data = function(path)
   -- Get path data needed for proper patch header
   local cwd, basename = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
@@ -1784,7 +1800,7 @@ H.git_get_path_data = function(path)
   end
 
   process = vim.loop.spawn('git', spawn_opts, on_exit)
-  H.git_read_stream(stdout, stdout_feed)
+  H.dvcs_read_stream(stdout, stdout_feed)
   vim.wait(1000, function() return did_exit end, 1)
   return res
 end
@@ -1835,7 +1851,7 @@ H.git_apply_patch = function(path_data, patch)
   stdin:shutdown(function() stdin:close() end)
 end
 
-H.git_read_stream = function(stream, feed)
+H.dvcs_read_stream = function(stream, feed)
   local callback = function(err, data)
     if data ~= nil then return table.insert(feed, data) end
     if err then feed[1] = nil end
@@ -1844,7 +1860,7 @@ H.git_read_stream = function(stream, feed)
   stream:read_start(callback)
 end
 
-H.git_invalidate_cache = function(cache)
+H.dvcs_invalidate_cache = function(cache)
   if cache == nil then return end
   pcall(vim.loop.fs_event_stop, cache.fs_event)
   pcall(vim.loop.timer_stop, cache.timer)
