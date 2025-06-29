@@ -26,6 +26,13 @@
 ---     - "Hunk range under cursor" textobject to be used as operator target.
 ---     - Navigate to first/previous/next/last hunk. See |MiniDiff.goto_hunk()|.
 ---
+--- - Supports three diff sources:
+---     - |MiniDiff.gen_source.git()|: Use git repository as the source to diff
+---       the current buffer.
+---     - |MiniDiff.gen_source.hg()|: Use mercurial repository as the source to
+---       diff the current buffer.
+---     - |MiniDiff.gen_source.save()|: Diff with respect to the file on disk.
+---
 --- What it doesn't do:
 ---
 --- - Provide functionality to work directly with Git outside of visualizing
@@ -627,7 +634,11 @@ end
 ---   diff.setup({ source = diff.gen_source.save() })
 ---
 ---   -- Multiple sources (attempted to attach in order)
----   diff.setup({ source = { diff.gen_source.git(), diff.gen_source.save() } })
+---   diff.setup({ source = {
+---     diff.gen_source.git(),
+---     diff.gen_source.hg(),
+---     diff.gen_source.save()
+---   } })
 --- <
 MiniDiff.gen_source = {}
 
@@ -679,6 +690,47 @@ MiniDiff.gen_source.git = function()
   end
 
   return { name = 'git', attach = attach, detach = detach, apply_hunks = apply_hunks }
+end
+
+--- Merurial/hg source
+---
+--- Uses file text from mercurial's `dirstate` as reference. This results in:
+--- - "Add" hunks represent text present in current buffer, but not in hg repo.
+--- - "Change" hunks represent modified text not in hg repo.
+--- - "Delete" hunks represent text deleted from repo.
+---
+--- Notes:
+--- - Requires Git version at least 6.9.4.
+---
+---@return table Source. See |MiniDiff-source-specification|.
+MiniDiff.gen_source.hg = function()
+  local attach = function(buf_id)
+    -- Try attaching to a buffer only once
+    if H.dvcs_cache[buf_id] ~= nil then return false end
+    -- - Possibly resolve symlinks to get data from the original repo
+    local path = H.get_buf_realpath(buf_id)
+    if path == '' then return false end
+
+    H.dvcs_cache[buf_id] = {}
+    local watch_index_opts = {
+      command = 'hg',
+      dvcs_dir_cmd_args = { 'root', '--template', '{reporoot}/.hg' },
+      index_name = 'dirstate',
+      dvcs_file_test_spawn_args_fn = function(local_path)
+        local basename = vim.fn.fnamemodify(local_path, ':t')
+        return { 'cat', basename }
+      end
+    }
+    H.dvcs_start_watching_index(buf_id, path, watch_index_opts)
+  end
+
+  local detach = function(buf_id)
+    local cache = H.dvcs_cache[buf_id]
+    H.dvcs_cache[buf_id] = nil
+    H.dvcs_invalidate_cache(cache)
+  end
+
+  return { name = 'hg', attach = attach, detach = detach }
 end
 
 --- "Do nothing" source
