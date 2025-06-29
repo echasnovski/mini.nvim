@@ -950,7 +950,7 @@ MiniDiff.fail_attach = function(buf_id)
 
   -- Try attaching next source
   buf_cache.source_id = buf_cache.source_id + 1
-  local attach_output = H.get_active_source(H.cache[buf_id]).attach(buf_id)
+  local attach_output = H.get_active_source(buf_cache).attach(buf_id)
   if attach_output == false then MiniDiff.fail_attach(buf_id) end
 end
 
@@ -1755,8 +1755,8 @@ H.dvcs_start_watching_index = function(buf_id, path, watch_index_opts)
       H.cache[buf_id] = nil
       return
     end
+    H.dvcs_cache[buf_id] = nil
     MiniDiff.fail_attach(buf_id)
-    H.dvcs_cache[buf_id] = {}
   end)
 
   local process, stdout_feed = nil, {}
