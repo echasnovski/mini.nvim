@@ -984,8 +984,8 @@ H.operator_cache = {}
 -- Common extmark data for supported styles
 --stylua: ignore
 H.style_extmark_data = {
-  sign   = { hl_group_prefix = 'MiniDiffSign', field = 'sign_hl_group' },
-  number = { hl_group_prefix = 'MiniDiffSign', field = 'number_hl_group' },
+  sign    = { hl_group_prefix = 'MiniDiffSign', field = 'sign_hl_group' },
+  number  = { hl_group_prefix = 'MiniDiffSign', field = 'number_hl_group' },
 }
 
 -- Suffix for overlay virtual lines to be highlighted as full line
@@ -1004,12 +1004,9 @@ H.vimdiff_opts = { result_type = 'indices', ctxlen = 0, interhunkctxlen = 0 }
 -- reduce noisiness (chosen as slightly less than average English word length)
 --stylua: ignore
 H.worddiff_opts = {
-  algorithm = 'minimal',
-  result_type = 'indices',
-  ctxlen = 0,
-  interhunkctxlen = 4,
-  indent_heuristic = false,
-  linematch = 0
+  algorithm = 'minimal',    result_type = 'indices',
+  ctxlen = 0,               interhunkctxlen = 4,
+  indent_heuristic = false, linematch = 0
 }
 
 -- BOM bytes prepended to buffer text if 'bomb' is enabled. See `:h bom-bytes`.
@@ -1081,14 +1078,14 @@ H.apply_config = function(config)
   H.map(modes, mappings.textobject, '<Cmd>lua MiniDiff.textobject()<CR>', { desc = 'Hunk range textobject' })
 
   --stylua: ignore start
-  H.map({ 'n', 'x' }, mappings.goto_first, "<Cmd>lua MiniDiff.goto_hunk('first')<CR>", { desc = 'First hunk' })
-  H.map('o', mappings.goto_first, "V<Cmd>lua MiniDiff.goto_hunk('first')<CR>", { desc = 'First hunk' })
-  H.map({ 'n', 'x' }, mappings.goto_prev, "<Cmd>lua MiniDiff.goto_hunk('prev')<CR>", { desc = 'Previous hunk' })
-  H.map('o', mappings.goto_prev, "V<Cmd>lua MiniDiff.goto_hunk('prev')<CR>", { desc = 'Previous hunk' })
-  H.map({ 'n', 'x' }, mappings.goto_next, "<Cmd>lua MiniDiff.goto_hunk('next')<CR>", { desc = 'Next hunk' })
-  H.map('o', mappings.goto_next, "V<Cmd>lua MiniDiff.goto_hunk('next')<CR>", { desc = 'Next hunk' })
-  H.map({ 'n', 'x' }, mappings.goto_last, "<Cmd>lua MiniDiff.goto_hunk('last')<CR>", { desc = 'Last hunk' })
-  H.map('o', mappings.goto_last, "V<Cmd>lua MiniDiff.goto_hunk('last')<CR>", { desc = 'Last hunk' })
+  H.map({ 'n', 'x' }, mappings.goto_first,  "<Cmd>lua MiniDiff.goto_hunk('first')<CR>", { desc = 'First hunk' })
+  H.map('o',          mappings.goto_first, "V<Cmd>lua MiniDiff.goto_hunk('first')<CR>", { desc = 'First hunk' })
+  H.map({ 'n', 'x' }, mappings.goto_prev,   "<Cmd>lua MiniDiff.goto_hunk('prev')<CR>",  { desc = 'Previous hunk' })
+  H.map('o',          mappings.goto_prev,  "V<Cmd>lua MiniDiff.goto_hunk('prev')<CR>",  { desc = 'Previous hunk' })
+  H.map({ 'n', 'x' }, mappings.goto_next,   "<Cmd>lua MiniDiff.goto_hunk('next')<CR>",  { desc = 'Next hunk' })
+  H.map('o',          mappings.goto_next,  "V<Cmd>lua MiniDiff.goto_hunk('next')<CR>",  { desc = 'Next hunk' })
+  H.map({ 'n', 'x' }, mappings.goto_last,   "<Cmd>lua MiniDiff.goto_hunk('last')<CR>",  { desc = 'Last hunk' })
+  H.map('o',          mappings.goto_last,  "V<Cmd>lua MiniDiff.goto_hunk('last')<CR>",  { desc = 'Last hunk' })
   --stylua: ignore end
 
   -- Register decoration provider which actually makes visualization
@@ -1118,15 +1115,15 @@ H.create_default_hl = function()
   end
 
   local has_core_diff_hl = vim.fn.has('nvim-0.10') == 1
-  hi('MiniDiffSignAdd', { link = has_core_diff_hl and 'Added' or 'diffAdded' })
-  hi('MiniDiffSignChange', { link = has_core_diff_hl and 'Changed' or 'diffChanged' })
-  hi('MiniDiffSignDelete', { link = has_core_diff_hl and 'Removed' or 'diffRemoved' })
-  hi('MiniDiffOverAdd', { link = 'DiffAdd' })
-  hi('MiniDiffOverChange', { link = 'DiffText' })
-  hi('MiniDiffOverChangeBuf', { link = 'MiniDiffOverChange' })
-  hi('MiniDiffOverContext', { link = 'DiffChange' })
+  hi('MiniDiffSignAdd',        { link = has_core_diff_hl and 'Added' or 'diffAdded' })
+  hi('MiniDiffSignChange',     { link = has_core_diff_hl and 'Changed' or 'diffChanged' })
+  hi('MiniDiffSignDelete',     { link = has_core_diff_hl and 'Removed' or 'diffRemoved'  })
+  hi('MiniDiffOverAdd',        { link = 'DiffAdd' })
+  hi('MiniDiffOverChange',     { link = 'DiffText' })
+  hi('MiniDiffOverChangeBuf',  { link = 'MiniDiffOverChange'})
+  hi('MiniDiffOverContext',    { link = 'DiffChange' })
   hi('MiniDiffOverContextBuf', {})
-  hi('MiniDiffOverDelete', { link = 'DiffDelete' })
+  hi('MiniDiffOverDelete',     { link = 'DiffDelete'  })
 end
 
 H.is_disabled = function(buf_id)
@@ -1272,7 +1269,7 @@ H.convert_view_to_extmark_opts = function(view)
   local field, hl_group_prefix = extmark_data.field, extmark_data.hl_group_prefix
   --stylua: ignore
   return {
-    add = { [field] = hl_group_prefix .. 'Add', sign_text = signs.add, priority = view.priority, invalidate = H.extmark_invalidate },
+    add =    { [field] = hl_group_prefix .. 'Add',    sign_text = signs.add,    priority = view.priority, invalidate = H.extmark_invalidate },
     change = { [field] = hl_group_prefix .. 'Change', sign_text = signs.change, priority = view.priority, invalidate = H.extmark_invalidate },
     delete = { [field] = hl_group_prefix .. 'Delete', sign_text = signs.delete, priority = view.priority, invalidate = H.extmark_invalidate },
   }
@@ -1458,7 +1455,7 @@ H.append_overlay_change = function(overlay_lines, hunk, ref_lines, buf_lines, pr
       -- Defer actually computing word diff until in decoration provider as it
       -- will compute only for displayed lines
       local data =
-      { type = 'change_worddiff', ref_line = ref_lines[ref_n], buf_line = buf_lines[buf_n], priority = priority }
+        { type = 'change_worddiff', ref_line = ref_lines[ref_n], buf_line = buf_lines[buf_n], priority = priority }
       H.append_overlay(overlay_lines, buf_n, data)
     end
     return
@@ -1499,7 +1496,7 @@ H.draw_overlay_line = function(buf_id, ns_id, row, data)
 
   -- "Change"/"Delete" hunks show affected reference range as virtual lines
   opts.virt_lines, opts.virt_lines_above, opts.virt_lines_overflow =
-      data.lines, data.show_above, H.extmark_virt_lines_overflow
+    data.lines, data.show_above, H.extmark_virt_lines_overflow
   H.set_extmark(buf_id, ns_id, row, 0, opts)
 end
 
@@ -1520,9 +1517,7 @@ H.draw_overlay_line_worddiff = function(buf_id, ns_id, row, data)
 
   --stylua: ignore
   local ref_opts = {
-    virt_lines = { virt_line },
-    virt_lines_above = true,
-    virt_lines_overflow = H.extmark_virt_lines_overflow,
+    virt_lines = { virt_line }, virt_lines_above = true, virt_lines_overflow = H.extmark_virt_lines_overflow,
     priority = priority,
   }
   H.set_extmark(buf_id, ns_id, row, 0, ref_opts)
@@ -1536,7 +1531,7 @@ H.draw_overlay_line_worddiff = function(buf_id, ns_id, row, data)
     H.set_extmark(buf_id, ns_id, row, part[1] - 1 - off, buf_opts)
   end
   local context_opts =
-  { end_row = row + 1, end_col = 0, hl_group = 'MiniDiffOverContextBuf', hl_eol = true, priority = priority - 1 }
+    { end_row = row + 1, end_col = 0, hl_group = 'MiniDiffOverContextBuf', hl_eol = true, priority = priority - 1 }
   H.set_extmark(buf_id, ns_id, row, 0, context_opts)
 end
 
