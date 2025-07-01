@@ -1808,6 +1808,14 @@ T['Signature help']['updates highlighting of active parameter'] = function()
   type_keys('3,')
   sleep(small_time)
   child.expect_screenshot()
+
+  type_keys('<Esc>')
+  set_lines({ '' })
+
+  -- Should not error if parameters contain not correct label data
+  type_keys('i', 'bad_signature(')
+  sleep(default_signature_delay + small_time)
+  eq(child.cmd_capture('messages'):gsub('%s*$', ''), '')
 end
 
 T['Signature help']['updates without delay with different window'] = function()

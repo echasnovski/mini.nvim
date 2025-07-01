@@ -1617,7 +1617,7 @@ H.process_signature_response = function(response)
     local label_is_string = type(param_label) == 'string'
     res.hl_range = label_is_string and { res.label:find(param_label, 1, true) } or (param_label or {})
     -- - Make zero-indexed and end-exclusive
-    res.hl_range[1] = res.hl_range[1] - (label_is_string and 1 or 0)
+    if res.hl_range[1] ~= nil then res.hl_range[1] = res.hl_range[1] - (label_is_string and 1 or 0) end
   end
 
   -- Return nested table because this will be a second argument of

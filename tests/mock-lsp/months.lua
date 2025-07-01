@@ -201,6 +201,9 @@ local requests = {
     elseif word == 'multiline(' then
       label = 'multiline(\narg1,\narg2)'
       parameters = { { label = 'arg1' }, { label = 'arg2' } }
+    elseif word == 'bad_signature(' then
+      label = 'bad_signature(param1)'
+      parameters = { { label = 'not-substring' } }
     elseif word == 'scroll(' then
       label = 'aaa bbb ccc ddd eee fff ggg hhh'
     else
