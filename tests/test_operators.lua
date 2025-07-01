@@ -132,7 +132,9 @@ end
 
 T['setup()']['removes built-in LSP mappings'] = function()
   eq(child.fn.maparg('gra'), '')
+  eq(child.fn.maparg('gri'), '')
   eq(child.fn.maparg('grn'), '')
+  eq(child.fn.maparg('grt'), '')
 end
 
 T['setup()']['remaps built-in `gx` mappings'] = function()
