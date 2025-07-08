@@ -522,8 +522,21 @@ end
 ---
 --- ## Mappings ~
 ---
---- Mappings `around_next`/`inside_next` and `around_last`/`inside_last` are
---- essentially `around`/`inside` but using search method `'next'` and `'prev'`.
+--- Mappings `around_next` / `inside_next` and `around_last` / `inside_last` are
+--- essentially `around` / `inside` but using search method `'next'` and `'prev'`.
+---
+--- NOTE: with default config, built-in LSP mappings |an| and |in| on Neovim>=0.12
+--- are overridden. Either use different `around_next` / `inside_next` keys or
+--- map manually using |vim.lsp.buf.selection_range()|. For example: >lua
+---
+---   local map_lsp_selection = function(lhs, desc)
+---     local s = vim.startswith(desc, 'Increase') and 1 or -1
+---     local rhs = function() vim.lsp.buf.selection_range(s * vim.v.count1) end
+---     vim.keymap.set('x', lhs, rhs, { desc = desc })
+---   end
+---   map_lsp_selection('<Leader>ls', 'Increase selection')
+---   map_lsp_selection('<Leader>lS', 'Decrease selection')
+--- <
 MiniAi.config = {
   -- Table with textobject id as fields, textobject specification as values.
   -- Also use this to disable builtin textobjects. See |MiniAi.config|.
@@ -536,6 +549,8 @@ MiniAi.config = {
     inside = 'i',
 
     -- Next/last textobjects
+    -- NOTE: These override built-in LSP selection mappings on Neovim>=0.12
+    -- Map LSP selection manually to use it (see `:h MiniAi.config`)
     around_next = 'an',
     inside_next = 'in',
     around_last = 'al',
