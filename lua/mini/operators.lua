@@ -284,6 +284,7 @@ MiniOperators.config = {
 
   -- Exchange text regions
   exchange = {
+    -- NOTE: Default `gx` is remapped to `gX`
     prefix = 'gx',
 
     -- Whether to reindent new text to match previous indent
@@ -300,6 +301,7 @@ MiniOperators.config = {
 
   -- Replace text with register
   replace = {
+    -- NOTE: Default `gr*` LSP mappings are removed
     prefix = 'gr',
 
     -- Whether to reindent new text to match previous indent

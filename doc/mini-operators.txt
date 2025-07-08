@@ -186,6 +186,7 @@ Default values:
 
     -- Exchange text regions
     exchange = {
+      -- NOTE: Default `gx` is remapped to `gX`
       prefix = 'gx',
 
       -- Whether to reindent new text to match previous indent
@@ -202,6 +203,7 @@ Default values:
 
     -- Replace text with register
     replace = {
+      -- NOTE: Default `gr*` LSP mappings are removed
       prefix = 'gr',
 
       -- Whether to reindent new text to match previous indent

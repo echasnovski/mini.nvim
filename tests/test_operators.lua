@@ -150,16 +150,18 @@ T['setup()']['remaps built-in `gx` mappings'] = function()
   validate('vgX', 2)
 
   -- Should remap only built-in `gx`
+  child.lua('vim.keymap.del({ "n", "x" }, "gX")')
   child.lua('vim.keymap.set({ "n", "x" }, "gx", function() _G.n = _G.n + 5 end)')
   child.lua('MiniOperators.setup()')
-  validate('gX', 3)
-  validate('vgX', 4)
+  validate('gX', 2)
+  validate('vgX', 2)
 
   -- Should not override already present mapping
+  child.lua('vim.keymap.set({ "n", "x" }, "gx", function() _G.n = _G.n + 5 end, { desc = "URI under cursor" })')
   child.lua('vim.keymap.set({ "n", "x" }, "gX", function() _G.n = _G.n + 10 end)')
   child.lua('MiniOperators.setup()')
-  validate('gX', 14)
-  validate('vgX', 24)
+  validate('gX', 12)
+  validate('vgX', 22)
 end
 
 T['evaluate()'] = new_set()

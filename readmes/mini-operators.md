@@ -158,6 +158,7 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Exchange text regions
   exchange = {
+    -- NOTE: Default `gx` is remapped to `gX`
     prefix = 'gx',
 
     -- Whether to reindent new text to match previous indent
@@ -174,6 +175,7 @@ Here are code snippets for some common installation methods (use only one):
 
   -- Replace text with register
   replace = {
+    -- NOTE: Default `gr*` LSP mappings are removed
     prefix = 'gr',
 
     -- Whether to reindent new text to match previous indent
