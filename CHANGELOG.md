@@ -13,6 +13,14 @@ There are following change types:
 
 - Stop official support of Neovim 0.8.
 
+### Expand
+
+- Add new bundled color schemes based on 'mini.hues':
+    - `miniwinter`: "icy winter" palette with azure background.
+    - `minispring`: "blooming spring" palette with green background.
+    - `minisummer`: "hot summer" palette with brown/yellow background.
+    - `miniautumn`: "cooling autumn" palette with purple background.
+
 ## mini.ai
 
 ### Refine

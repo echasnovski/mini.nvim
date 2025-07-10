@@ -24,7 +24,25 @@ If you want to help this project grow but don't know where to start, check out [
 
 https://user-images.githubusercontent.com/24854248/236634787-ab0c33df-f697-4d96-a754-d77eccee7513.mp4
 
-Sample screenshots of 'randomhue' color scheme which uses 'mini.hues' with **randomly generated** background and foreground of same hue (color will change on every `:colorscheme randomhue` call):
+### Bundled color schemes
+
+- `miniwinter`: "icy winter" palette with azure background
+
+<img width="2880" height="1734" alt="miniwinter dark" src="https://github.com/user-attachments/assets/53aaab49-2b35-4b4c-8f01-a23bbc9ab4f0" style="width: 45%"/> <img width="2880" height="1734" alt="miniwinter light" src="https://github.com/user-attachments/assets/b09d1c28-179f-46bf-94b3-d18d7e75156d" style="width: 45%"/>
+
+- `minispring`: "blooming spring" palette with green background
+
+<img width="2880" height="1734" alt="minispring dark" src="https://github.com/user-attachments/assets/762f7361-1c58-4a8f-91d6-27b74c1138c3" style="width: 45%"/> <img width="2880" height="1734"  alt="minispring light" src="https://github.com/user-attachments/assets/41f4be2d-dcc1-422a-9d4a-f21f8f102c14" style="width: 45%"/>
+
+- `minisummer`: "hot summer" palette with brown/yellow background
+
+<img width="2880" height="1734" alt="minisummer dark" src="https://github.com/user-attachments/assets/87f5a405-f20f-41a3-b5ab-9ee5c5a078eb" style="width: 45%"/> <img width="2880" height="1734"  alt="minisummer light" src="https://github.com/user-attachments/assets/b58c757a-8e62-4905-8191-ca1ce322d1d9" style="width: 45%"/>
+
+- `miniautumn`: "cooling autumn" palette with purple background
+
+<img width="2880" height="1734" alt="miniautumn dark" src="https://github.com/user-attachments/assets/aa98f7ff-827a-439d-82c2-434cafb07ff7" style="width: 45%"/> <img width="2880" height="1734"  alt="miniautumn light" src="https://github.com/user-attachments/assets/a2900b75-641d-4bf6-9368-e6251f2781ea" style="width: 45%"/>
+
+- `randomhue`: uses **randomly generated** background and foreground of same hue (color will change on every `:colorscheme randomhue` call):
 
 <img alt="Dark purple" src="https://user-images.githubusercontent.com/24854248/236633651-1c2a69aa-b1d3-4e2a-a537-bf39f94cdfe5.png" style="width: 45%"/> <img alt="Light purple" src="https://user-images.githubusercontent.com/24854248/236633659-87332f44-c7da-4144-9581-5b610f9316bb.png" style="width: 45%"/>
 
@@ -78,6 +96,8 @@ require('mini.hues').setup({ background = '#002734', foreground = '#c0c8cc', acc
 - Random generator for base colors. Powers `randomhue` color scheme.
 
 - Lua function to compute palette used in color scheme.
+
+- Bundled color schemes. See [bundled-color-schemes]().
 
 Supported highlight groups:
 

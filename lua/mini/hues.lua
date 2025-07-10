@@ -23,6 +23,8 @@
 --- - Lua function to compute palette used in color scheme.
 ---   See |MiniHues.make_palette()|.
 ---
+--- - Bundled color schemes. See |MiniHues-color-schemes|.
+---
 --- Supported highlight groups:
 --- - All built-in UI and syntax groups.
 ---
@@ -96,6 +98,9 @@
 --- <
 --- # Notes ~
 ---
+--- - This is used to create some of plugin's color schemes
+---   (see |MiniHues-color-schemes|).
+---
 --- - Using `setup()` doesn't actually create a |colorscheme|. It basically
 ---   creates a coordinated set of |highlight|s. To create your own scheme:
 ---     - Put "myscheme.lua" file (name after your chosen theme name) inside
@@ -108,19 +113,24 @@
 ---   Use |mini.colors| module, |MiniColors-colorscheme:add_cterm_attributes()|
 ---   in particular.
 
---- Random hue color scheme ~
+--- Bundled color schemes
 ---
---- This module comes with a pre-built color scheme but with a twist: every
---- `:colorscheme randomhue` call will result in a different (randomly yet
---- carefully selected) colors.
+--- - *miniwinter* : "icy winter" palette with azure background.
+--- - *minispring* : "blooming spring" palette with green background.
+--- - *minisummer* : "hot summer" palette with brown/yellow background.
+--- - *miniautumn* : "cooling autumn" palette with purple background.
 ---
---- It is essentially a combination of calls to |MiniHues.setup()| and
---- |MiniHues.gen_random_base_colors()| with a slight adjustments for
---- 'background' value.
+--- - *randomhue* : uses randomly generated same hue background and foreground.
+---   Every `:colorscheme randomhue` call results in a different (randomly yet
+---   carefully selected) colors.
 ---
---- Activate it as regular |colorscheme|. Get currently active config with
---- `:lua print(vim.inspect(MiniHues.config))`.
----@tag randomhue
+---   It is essentially a combination of calls to |MiniHues.setup()| and
+---   |MiniHues.gen_random_base_colors()| with a slight adjustments for
+---   'background' value.
+---
+---   Activate it as regular |colorscheme|. Get currently active config with
+---   `:lua print(vim.inspect(MiniHues.config))`.
+---@tag MiniHues-color-schemes
 
 ---@diagnostic disable:undefined-field
 ---@diagnostic disable:discard-returns

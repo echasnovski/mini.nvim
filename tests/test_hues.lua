@@ -561,11 +561,42 @@ T['gen_random_base_colors()']['validates arguments'] = function()
   )
 end
 
-T['randomhue colorscheme'] = new_set()
+T['Bundled color schemes'] = new_set()
 
-T['randomhue colorscheme']['works'] = function()
+T['Bundled color schemes']['works'] = function()
+  -- randomhue
   expect.no_error(function() child.cmd('colorscheme randomhue') end)
   eq(child.fn.hlexists('MiniCursorword'), 1)
+
+  local validate_lightness = function()
+    local hl = child.api.nvim_get_hl(0, { name = 'Normal' })
+    -- NOTE: This is not 100% proper solution, but at least it is something
+    if child.o.background == 'dark' then eq(hl.fg > hl.bg, true) end
+    if child.o.background == 'light' then eq(hl.fg < hl.bg, true) end
+  end
+
+  child.o.background = 'dark'
+  validate_lightness()
+  child.o.background = 'light'
+  validate_lightness()
+
+  -- Four seasons
+  local validate = function(cs_name, ref_bg)
+    expect.no_error(function() child.cmd('colorscheme ' .. cs_name) end)
+    expect.match(child.cmd_capture('hi Normal'), 'guibg=' .. ref_bg)
+  end
+
+  child.o.background = 'dark'
+  validate('miniwinter', '#11262d')
+  validate('minispring', '#1c2617')
+  validate('minisummer', '#27211e')
+  validate('miniautumn', '#262029')
+
+  child.o.background = 'light'
+  validate('miniwinter', '#dce4e8')
+  validate('minispring', '#e0e4de')
+  validate('minisummer', '#e9e1dd')
+  validate('miniautumn', '#e5e1e7')
 end
 
 return T

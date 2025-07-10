@@ -179,15 +179,24 @@ These modules don't quite fit in any of the previous categories.
 
 - **Not filetype/language specific**. Including functionality which needs several filetype/language specific implementations is an explicit no-goal of this project. This is mostly due to the potential increase in maintenance to keep implementation up to date. However, any part which might need filetype/language specific tuning should be designed to allow it by letting user set proper buffer options and/or local configuration.
 
-## Plugin colorschemes
+## Plugin color schemes
 
-This plugin comes with several color schemes (all have both dark and light variants):
+This plugin comes with several color schemes (all have both dark and light variants). Activate any of them as a regular `colorscheme` (like `:colorscheme miniwinter` or `vim.cmd.colorscheme('miniwinter')`).
 
-- `randomhue` - random background and foreground of the same hue with medium saturation.
-- `minicyan` - cyan and grey main colors with medium contrast and saturation palette.
-- `minischeme` - blue and yellow main colors with high contrast and saturation palette.
+- Based on ['mini.hues'](readmes/mini-hues.md) (recommended):
+    - `miniwinter`: "icy winter" palette with azure background.
+    - `minispring`: "blooming spring" palette with green background.
+    - `minisummer`: "hot summer" palette with brown/yellow background.
+    - `miniautumn`: "cooling autumn" palette with purple background.
+    - `randomhue`: random background and foreground of the same hue with medium saturation.
 
-Activate them as regular `colorscheme` (for example, `:colorscheme randomhue` or `:colorscheme minicyan`). You can see how they look in [demo of 'mini.hues'](readmes/mini-hues.md#demo) or [demo of 'mini.base16'](readmes/mini-base16.md#demo).
+    You can see how they look in ['mini.hues' README](readmes/mini-hues.md#bundled-color-schemes).
+
+- Based on ['mini.base16'](readmes/mini-base16.md):
+    - `minicyan`: cyan and grey main colors with medium contrast and saturation palette.
+    - `minischeme`: blue and yellow main colors with high contrast and saturation palette.
+
+    You can see how they look in ['mini.base16' README](readmes/mini-base16.md#demo).
 
 ## Planned modules
 

@@ -164,7 +164,7 @@
 ---   local now, later = MiniDeps.now, MiniDeps.later
 ---
 ---   -- Safely execute immediately
----   now(function() vim.cmd('colorscheme randomhue') end)
+---   now(function() vim.cmd('colorscheme miniwinter') end)
 ---   now(function() require('mini.statusline').setup() end)
 ---
 ---   -- Safely execute later

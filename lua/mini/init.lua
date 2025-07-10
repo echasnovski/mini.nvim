@@ -12,7 +12,7 @@
 ---   General overview ............................................... |mini.nvim|
 ---   Disabling recipes ............................ |mini.nvim-disabling-recipes|
 ---   Buffer-local config ........................ |mini.nvim-buffer-local-config|
----   Plugin colorschemes ................................... |mini-color-schemes|
+---   Plugin color schemes ............................. |mini.nvim-color-schemes|
 ---   Extend and create a/i textobjects ................................ |mini.ai|
 ---   Align text interactively ...................................... |mini.align|
 ---   Animate common Neovim actions ............................... |mini.animate|
@@ -409,6 +409,12 @@
 --- writing exact rules for module's buffer local configuration is left to
 --- user. It is done in similar fashion to |mini.nvim-disabling-recipes|.
 ---@tag mini.nvim-buffer-local-config
+
+--- Plugin color schemes
+---
+--- - Color schemes based on |mini.hues|: |MiniHues-color-schemes|.
+--- - Color schemes based on |mini.base16|: |mini-base16-color-schemes|.
+---@tag mini.nvim-color-schemes
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])
 
