@@ -494,6 +494,31 @@ T['apply_palette()']['validates input'] = function()
   expect.error(function() apply_palette(palette, 'a') end, '`plugins`.*table')
 end
 
+T['get_palette()'] = new_set()
+
+T['get_palette()']['works'] = function()
+  local res = child.lua([[
+    local palette = MiniHues.make_palette({ background = '#222222', foreground = '#dddddd' })
+    palette.fg = '#aaaaaa'
+    MiniHues.apply_palette(palette)
+
+    local res_palette = MiniHues.get_palette()
+    local is_same = vim.deep_equal(palette, res_palette)
+
+    -- Should not be affected by change in applied palette
+    palette.bg = '#000000'
+    local is_same_1 = vim.deep_equal(palette, res_palette)
+
+    -- Should return copy
+    res_palette.bg = '#000000'
+    local is_same_2 = vim.deep_equal(MiniHues.get_palette(), res_palette)
+
+    return { is_same, is_same_1, is_same_2 }
+  ]])
+
+  eq(res, { true, false, false })
+end
+
 T['gen_random_base_colors()'] = new_set()
 
 T['gen_random_base_colors()']['works'] = function()

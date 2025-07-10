@@ -314,6 +314,8 @@ MiniHues.config = {
 ---     background.
 ---   - <accent> and <accent_bg> represent accent colors with foreground and
 ---     background lightness values.
+---
+---@seealso |MiniHues.get_palette()|
 MiniHues.make_palette = function(config)
   config = vim.tbl_deep_extend('force', MiniHues.config, config or {})
   local bg = H.validate_hex(config.background, 'background')
@@ -420,10 +422,13 @@ end
 ---   palette.cyan_bg = '#004629'
 ---   require('mini.hues').apply_palette(palette)
 --- <
+---@seealso |MiniHues.get_palette()|
 MiniHues.apply_palette = function(palette, plugins)
   if type(palette) ~= 'table' then H.error('`palette` should be table with palette colors.') end
   plugins = plugins or MiniHues.config.plugins
   if type(plugins) ~= 'table' then H.error('`plugins` should be table with plugin integrations data.') end
+
+  H.palette = vim.deepcopy(palette)
 
   -- Prepare highlighting application. Notes:
   -- - Clear current highlight only if other theme was loaded previously.
@@ -1506,6 +1511,12 @@ MiniHues.apply_palette = function(palette, plugins)
   vim.g.terminal_color_15 = p[white .. '_edge2']
 end
 
+--- Get latest applied palette
+---
+---@return table Table with structure as |MiniHues.make_palette()| output that was
+---   the latest applied (via |MiniHues.apply_palette()|) palette.
+MiniHues.get_palette = function() return vim.deepcopy(H.palette) end
+
 --- Generate random base colors
 ---
 --- Compute background and foreground colors based on randomly generated hue
@@ -1621,6 +1632,9 @@ H.cusps = {
   {27.04,65.51},{26.92,65.40},{26.81,65.30},{26.66,65.16},{26.55,65.06},{26.45,64.96},{26.35,64.87},
 }
 --stylua: ignore end
+
+-- Latest applied palette
+H.palette = nil
 
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------

@@ -309,6 +309,9 @@ Return ~
   - <accent> and <accent_bg> represent accent colors with foreground and
     background lightness values.
 
+See also ~
+|MiniHues.get_palette()|
+
 ------------------------------------------------------------------------------
                                                       *MiniHues.apply_palette()*
                  `MiniHues.apply_palette`({palette}, {plugins})
@@ -334,6 +337,18 @@ Usage ~
   palette.cyan_bg = '#004629'
   require('mini.hues').apply_palette(palette)
 <
+See also ~
+|MiniHues.get_palette()|
+
+------------------------------------------------------------------------------
+                                                        *MiniHues.get_palette()*
+                            `MiniHues.get_palette`()
+Get latest applied palette
+
+Return ~
+`(table)` Table with structure as |MiniHues.make_palette()| output that was
+  the latest applied (via |MiniHues.apply_palette()|) palette.
+
 ------------------------------------------------------------------------------
                                              *MiniHues.gen_random_base_colors()*
                    `MiniHues.gen_random_base_colors`({opts})

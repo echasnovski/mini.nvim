@@ -47,6 +47,10 @@ There are following change types:
 
 - Make black (0 and 8) and white (7 and 15) colors for built-in terminal different from regular background and foreground. This improves color coverage and does not affect default uncolored text (it is highlighted as `Normal`).
 
+### Expand
+
+- Add `get_palette()` function.
+
 ## mini.jump
 
 ### Expand
