@@ -413,7 +413,7 @@
 --- Plugin color schemes
 ---
 --- - Color schemes based on |mini.hues|: |MiniHues-color-schemes|.
---- - Color schemes based on |mini.base16|: |mini-base16-color-schemes|.
+--- - Color schemes based on |mini.base16|: |MiniBase16-color-schemes|.
 ---@tag mini.nvim-color-schemes
 
 vim.notify([[Do not `require('mini')` directly. Setup every module separately.]])

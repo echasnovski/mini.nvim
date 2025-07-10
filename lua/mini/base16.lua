@@ -97,7 +97,8 @@
 --- <
 --- # Notes ~
 ---
---- 1. This is used to create plugin's colorschemes (see |mini.nvim-color-schemes|).
+--- 1. This is used to create some of plugin's color schemes
+---    (see |MiniBase16-color-schemes|).
 --- 2. Using `setup()` doesn't actually create a |colorscheme|. It basically
 ---    creates a coordinated set of |highlight|s. To create your own theme:
 ---     - Put "myscheme.lua" file (name after your chosen theme name) inside
@@ -108,13 +109,14 @@
 
 --- Base16 colorschemes ~
 ---
---- This module comes with several pre-built color schemes. All of them are a
---- |MiniBase16| theme created with faster version of the following Lua code: >lua
+--- This module comes with several pre-built color schemes. Each of them is
+--- a |MiniBase16| theme created with faster version of the following Lua code: >lua
 ---
 ---   require('mini.base16').setup({ palette = palette, use_cterm = true })
 --- <
 --- Activate them as regular |colorscheme| (for example, `:colorscheme minischeme`).
 ---
+---                                                                     *minischeme*
 --- ## minischeme ~
 ---
 --- Blue and yellow main colors with high contrast and saturation palette.
@@ -126,6 +128,7 @@
 ---   -- For light 'background':
 ---   MiniBase16.mini_palette('#e2e5ca', '#002a83', 75)
 --- <
+---                                                                       *minicyan*
 --- ## minicyan ~
 ---
 --- Cyan and grey main colors with moderate contrast and saturation palette.
@@ -137,9 +140,7 @@
 ---   -- For light 'background':
 ---   MiniBase16.mini_palette('#C0D2D2', '#262626', 80)
 --- <
----@tag mini-base16-color-schemes
----@tag minischeme
----@tag minicyan
+---@tag MiniBase16-color-schemes
 
 -- Module definition ==========================================================
 local MiniBase16 = {}
