@@ -894,7 +894,7 @@ H.auto_info = function()
   -- Stop showing window if no candidate is selected
   local completed_item = H.info.event.completed_item
   if completed_item.word == nil then
-    return vim.schedule(function() H.close_action_window(H.info, true) end)
+    return vim.schedule(function() H.close_action_window(H.info) end)
   end
 
   -- Show info content without delay for visited and resolved LSP item.
@@ -1525,10 +1525,7 @@ H.show_signature_window = function()
   H.signature.lsp.status = 'done'
 
   -- Close window and exit if there is nothing to show
-  if not lines or H.is_whitespace(lines) then
-    H.close_action_window(H.signature)
-    return
-  end
+  if not lines or H.is_whitespace(lines) then return H.close_action_window(H.signature) end
 
   -- Ensure permanent buffer with current highlighting to display signature
   H.ensure_buffer(H.signature, 'signature-help')
@@ -1742,8 +1739,8 @@ H.ensure_action_window = function(cache, opts)
   vim.wo[win_id].wrap = true
 end
 
-H.close_action_window = function(cache, keep_timer)
-  if not keep_timer then cache.timer:stop() end
+H.close_action_window = function(cache)
+  cache.timer:stop()
 
   if H.is_valid_win(cache.win_id) then vim.api.nvim_win_close(cache.win_id, true) end
   cache.win_id = nil
