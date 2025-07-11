@@ -1562,12 +1562,21 @@ H.get_matched_ranges_builtin = function(captures)
   -- Compute ranges of matched captures
   local capture_is_requested = vim.tbl_map(function(c) return vim.tbl_contains(captures, '@' .. c) end, query.captures)
 
+  parser:parse(true)
+
   local res = {}
   for _, tree in ipairs(lang_tree:trees()) do
-    for capture_id, node, metadata in query:iter_captures(tree:root(), 0) do
-      if capture_is_requested[capture_id] then
-        metadata = (metadata or {})[capture_id] or {}
-        table.insert(res, H.get_match_range(node, metadata))
+    for _, match, metadata in query:iter_matches(tree:root(), 0) do
+      for capture_id, nodes in pairs(match) do
+        if capture_is_requested[capture_id] then
+          metadata = (metadata or {})[capture_id] or {}
+          local first = nodes[1]
+          local first_range = H.get_match_range(first, metadata)
+          local last = nodes[#nodes]
+          local last_range = H.get_match_range(last, metadata)
+
+          table.insert(res, { first_range[1], first_range[2], last_range[3], last_range[4] })
+        end
       end
     end
   end
