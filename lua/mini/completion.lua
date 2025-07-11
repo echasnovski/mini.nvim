@@ -892,7 +892,7 @@ H.auto_info = function()
   H.info.id = H.info.id + 1
 
   -- Stop showing window if no candidate is selected
-  local completed_item = H.info.event.completed_item
+  local completed_item = H.info.event.completed_item or {}
   if completed_item.word == nil then
     return vim.schedule(function() H.close_action_window(H.info) end)
   end
@@ -908,7 +908,8 @@ H.auto_info = function()
   if H.is_valid_win(win_id) and delay > 0 then
     vim.wo[win_id].winhighlight = vim.wo[win_id].winhighlight .. ',FloatBorder:MiniCompletionInfoBorderOutdated'
   end
-  H.info.timer:start(delay, 0, vim.schedule_wrap(H.show_info_window))
+  local cur_info_id = H.info.id
+  H.info.timer:start(delay, 0, function() H.show_info_window(cur_info_id) end)
 end
 
 H.auto_signature = function()
@@ -1351,12 +1352,15 @@ H.apply_additional_text_edits = function(item)
 end
 
 -- Completion item info -------------------------------------------------------
-H.show_info_window = function()
-  local event = H.info.event
-  if not event then return end
+H.show_info_window = vim.schedule_wrap(function(info_id)
+  -- Do nothing if completion item was changed. For example, after autoinvoked
+  -- in timer with zero delay but after it there is another `CompleteChanged`
+  -- that closes popup. This only stops the timer *but* not actually cancelling
+  -- this function.
+  if H.info.id ~= info_id then return end
 
   -- Get info lines to show. Wait for resolve if returned `false`.
-  local lines = H.info_window_lines(H.info.id)
+  local lines = H.info_window_lines(info_id)
   if lines == false then return end
   if lines == nil or H.is_whitespace(lines) then lines = { '-No-info-' } end
 
@@ -1389,7 +1393,7 @@ H.show_info_window = function()
       vim.api.nvim_win_call(win_id, function() vim.fn.winrestview({ topline = 2 }) end)
     end
   end)
-end
+end)
 
 H.info_window_lines = function(info_id)
   local completed_item = H.info.event.completed_item
@@ -1430,7 +1434,7 @@ H.info_window_lines = function(info_id)
 
     H.info.lsp.status = 'received'
 
-    -- Don't do anything if completion item was changed
+    -- Do nothing if completion item was changed
     if H.info.id ~= info_id then return end
 
     -- Still use original item if there was error during resolve
@@ -1441,7 +1445,7 @@ H.info_window_lines = function(info_id)
     --   Do this outside of `H.info.event.completed_item` because it will not
     --   have persistent effect as it will come fresh from Vimscript `v:event`.
     resolved_cache[item_id] = result
-    H.show_info_window()
+    H.show_info_window(info_id)
   end, bufnr)
 
   H.info.lsp.cancel_fun = cancel_fun

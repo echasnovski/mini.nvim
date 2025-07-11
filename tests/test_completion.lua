@@ -1713,6 +1713,35 @@ T['Information window']['handles all buffer wipeout'] = function()
   validate_info_win(default_info_delay)
 end
 
+T['Information window']['handles outdated scheduled showing'] = function()
+  child.set_size(30, 40)
+  child.o.cmdheight = 20
+  child.o.completeopt = 'menuone,noinsert'
+
+  type_keys('i')
+  local text = 'aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar as at au av aw ax ay az'
+  child.lua('_G.text = ' .. vim.inspect(text))
+  child.lua('_G.delay = ' .. small_time)
+  child.lua([[
+    MiniCompletion.config.delay.completion = _G.delay
+    MiniCompletion.config.delay.info = 0
+
+    local n_char = 0
+    local function type_text()
+      n_char = n_char + 1
+      local char = _G.text:sub(n_char, n_char)
+      if char == '' then return end
+      vim.api.nvim_input(char)
+      vim.defer_fn(type_text, _G.delay + 1)
+    end
+
+    type_text()
+  ]])
+
+  sleep(small_time * text:len() + small_time)
+  eq(child.cmd_capture('messages'), '')
+end
+
 T['Information window']['respects `vim.{g,b}.minicompletion_disable`'] = new_set({
   parametrize = { { 'g' }, { 'b' } },
 }, {
