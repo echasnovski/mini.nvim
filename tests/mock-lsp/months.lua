@@ -206,6 +206,8 @@ local requests = {
       parameters = { { label = 'not-substring' } }
     elseif word == 'scroll(' then
       label = 'aaa bbb ccc ddd eee fff ggg hhh'
+    elseif word == 'short(' then
+      label = line:match('^short%(aa,') and 'bbbbbbbbbbb' or 'aa'
     else
       label = 'abc(param1, param2)'
       parameters = { { label = { 4, 10 } }, { label = { 12, 18 } } }

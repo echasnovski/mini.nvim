@@ -1621,9 +1621,20 @@ end
 
 T['Information window']['adjusts window width'] = function()
   child.set_size(10, 27)
-  child.lua([[MiniCompletion.config.window.info= { height = 15, width = 10, border = 'single' }]])
+  child.lua([[MiniCompletion.config.window.info = { height = 15, width = 10, border = 'single' }]])
 
   type_keys('i', 'J', '<C-Space>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+end
+
+T['Information window']['adjusts title'] = function()
+  child.set_size(20, 35)
+
+  type_keys('i', '<C-Space>', '<C-n>', '<C-n>')
+  sleep(default_info_delay + small_time)
+  child.expect_screenshot()
+  type_keys('<C-p>')
   sleep(default_info_delay + small_time)
   child.expect_screenshot()
 end
@@ -1989,6 +2000,17 @@ T['Signature help']['handles multiline text'] = function()
 
   type_keys('i', 'multiline(')
   sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+end
+
+T['Signature help']['adjusts title'] = function()
+  child.set_size(10, 25)
+
+  type_keys('i', 'short(')
+  sleep(default_signature_delay + small_time)
+  child.expect_screenshot()
+  type_keys('aa,')
+  sleep(small_time)
   child.expect_screenshot()
 end
 
