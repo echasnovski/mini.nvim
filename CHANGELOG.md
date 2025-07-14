@@ -31,6 +31,12 @@ There are following change types:
 
 - Add `gen_spec.user_prompt` that acts the same as `?` built-in textobject. It can be used for using this textobject under another identifier.
 
+## mini.completion
+
+### Expand
+
+- Add `MiniCompletionWindowOpen` and `MiniCompletionWindowUpdate` events.
+
 ## mini.diff
 
 ### Expand

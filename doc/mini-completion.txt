@@ -208,6 +208,20 @@ rules for disabling module's functionality is left to user. See
 |mini.nvim-disabling-recipes| for common recipes.
 
 ------------------------------------------------------------------------------
+                                                         *MiniCompletion-events*
+Events ~
+
+To allow user customization, certain |User| autocommand events are
+triggered under common circumstances:
+
+- Info and signature help window:
+    - `MiniCompletionWindowOpen` - after opening new window.
+    - `MiniCompletionWindowUpdate` - after updating existing window.
+
+    Each event's |event-data| table contains `kind` (one of "info" or "signature")
+    and `win_id` (affected window identifier) fields.
+
+------------------------------------------------------------------------------
                                                         *MiniCompletion.setup()*
                         `MiniCompletion.setup`({config})
 Module setup

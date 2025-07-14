@@ -62,19 +62,26 @@ local mock_lsp_items = function(items, client_id)
   ]])
 end
 
+local mock_event_log = function()
+  child.lua([[
+    _G.log = {}
+    local events = { 'MiniCompletionWindowOpen', 'MiniCompletionWindowUpdate' }
+    local log_event = function(ev)
+      table.insert(_G.log, { event = ev.match, data = ev.data })
+    end
+    vim.api.nvim_create_autocmd('User', { pattern = events, callback = log_event })
+  ]])
+end
+
 local mock_custom_window_config = function()
   child.lua([[
-    vim.api.nvim_create_autocmd('BufWinEnter', {
-    callback = function(args)
-      local buf_id = args.buf
-      local completion_type = vim.api.nvim_buf_get_name(buf_id):match('^minicompletion://%d+/(.*)$')
-      if completion_type == nil then return end
-
-      local win_id = vim.fn.win_findbuf(buf_id)[1]
-      local config = vim.api.nvim_win_get_config(win_id)
-      config.title, config.title_pos = 'Custom', 'right'
-      vim.api.nvim_win_set_config(win_id, config)
-    end,
+    vim.api.nvim_create_autocmd('User', {
+      pattern = { 'MiniCompletionWindowOpen', 'MiniCompletionWindowUpdate' },
+      callback = function(ev)
+        local config = vim.api.nvim_win_get_config(ev.data.win_id)
+        config.title, config.title_pos = 'Custom', 'right'
+        vim.api.nvim_win_set_config(ev.data.win_id, config)
+      end,
     })
   ]])
 end
@@ -1562,7 +1569,25 @@ T['Information window']["respects 'winborder' option"] = function()
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
 end
 
-T['Information window']['preserves non-essential window config parts'] = function()
+T['Information window']['triggers relevant events'] = function()
+  mock_event_log()
+  local validate_log = function(ref)
+    eq(child.lua_get('_G.log'), ref)
+    child.lua('_G.log = {}')
+  end
+
+  type_keys('i', 'J', '<C-Space>')
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  local win_id = get_floating_windows()[1]
+  validate_log({ { event = 'MiniCompletionWindowOpen', data = { kind = 'info', win_id = win_id } } })
+
+  type_keys('<C-n>')
+  sleep(default_info_delay + small_time)
+  validate_log({ { event = 'MiniCompletionWindowUpdate', data = { kind = 'info', win_id = win_id } } })
+end
+
+T['Information window']['can be adjusted in event'] = function()
   if child.fn.has('nvim-0.11') == 0 then MiniTest.skip('"title_pos" window config field was added in Neovim=0.11') end
 
   mock_custom_window_config()
@@ -1906,7 +1931,23 @@ T['Signature help']["respects 'winborder' option"] = function()
   validate({ '╔', '═', '╗', '║', '╝', '═', '╚', '║' })
 end
 
-T['Signature help']['preserves non-essential window config parts'] = function()
+T['Signature help']['triggers relevant events'] = function()
+  mock_event_log()
+  local validate_log = function(ref)
+    eq(child.lua_get('_G.log'), ref)
+    child.lua('_G.log = {}')
+  end
+
+  type_keys('i', 'abc(')
+  sleep(default_signature_delay + small_time)
+  local win_id = get_floating_windows()[1]
+  validate_log({ { event = 'MiniCompletionWindowOpen', data = { kind = 'signature', win_id = win_id } } })
+
+  -- Currently signature window is not updated after opened, so no
+  -- `MiniCompletionWindowUpdate` event is triggered
+end
+
+T['Signature help']['can be adjusted in event'] = function()
   mock_custom_window_config()
   child.set_size(7, 30)
   type_keys('i', 'abc(')

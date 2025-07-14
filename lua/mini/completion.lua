@@ -207,6 +207,19 @@
 --- rules for disabling module's functionality is left to user. See
 --- |mini.nvim-disabling-recipes| for common recipes.
 
+--- Events ~
+---
+--- To allow user customization, certain |User| autocommand events are
+--- triggered under common circumstances:
+---
+--- - Info and signature help window:
+---     - `MiniCompletionWindowOpen` - after opening new window.
+---     - `MiniCompletionWindowUpdate` - after updating existing window.
+---
+---     Each event's |event-data| table contains `kind` (one of "info" or "signature")
+---     and `win_id` (affected window identifier) fields.
+---@tag MiniCompletion-events
+
 -- Overall implementation design:
 -- - Completion:
 --     - On `InsertCharPre` event try to start auto completion. If needed,
@@ -1381,7 +1394,7 @@ H.show_info_window = vim.schedule_wrap(function(info_id)
   vim.schedule(function()
     -- Ensure that window doesn't open when it shouldn't be
     if not (H.pumvisible() and vim.fn.mode() == 'i') then return end
-    H.ensure_action_window(H.info, opts)
+    H.ensure_action_window('info', opts)
     local win_id = H.info.win_id
     if not H.is_valid_win(win_id) then return end
 
@@ -1560,7 +1573,7 @@ H.show_signature_window = function()
   local opts = H.signature_window_opts()
 
   -- Ensure that window doesn't open when it shouldn't
-  if vim.fn.mode() == 'i' then H.ensure_action_window(H.signature, opts) end
+  if vim.fn.mode() == 'i' then H.ensure_action_window('signature', opts) end
 end
 
 H.signature_window_lines = function()
@@ -1724,7 +1737,8 @@ H.floating_dimensions = function(lines, max_height, max_width)
   return math.max(height, 1), math.max(width, 1)
 end
 
-H.ensure_action_window = function(cache, opts)
+H.ensure_action_window = function(window_kind, opts)
+  local cache = H[window_kind]
   local is_shown = H.is_valid_win(cache.win_id)
   if is_shown then
     -- Preserve non-essential config values
@@ -1741,6 +1755,10 @@ H.ensure_action_window = function(cache, opts)
   vim.wo[win_id].linebreak = true
   vim.wo[win_id].winhighlight = vim.wo[win_id].winhighlight:gsub(',FloatBorder:MiniCompletionInfoBorderOutdated', '')
   vim.wo[win_id].wrap = true
+
+  local event = 'MiniCompletionWindow' .. (is_shown and 'Update' or 'Open')
+  local data = { kind = window_kind, win_id = win_id }
+  vim.api.nvim_exec_autocmds('User', { pattern = event, data = data })
 end
 
 H.close_action_window = function(cache)
