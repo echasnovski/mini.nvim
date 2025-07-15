@@ -1569,8 +1569,10 @@ H.get_matched_ranges_builtin = function(captures)
   lang_tree:parse(false)
 
   local res = {}
+  -- TODO: Remove after compatibility with Neovim=0.10 is dropped
+  local opts = { all = true }
   for _, tree in ipairs(lang_tree:trees()) do
-    for _, match, metadata in query:iter_matches(tree:root(), 0) do
+    for _, match, metadata in query:iter_matches(tree:root(), 0, nil, nil, opts) do
       for capture_id, nodes in pairs(match) do
         if capture_is_requested[capture_id] then
           metadata = (metadata or {})[capture_id] or {}

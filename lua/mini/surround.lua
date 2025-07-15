@@ -1568,7 +1568,9 @@ end
 H.get_builtin_matches = function(capture, root, query, buf_id)
   local res = {} ---@type Range6[]
 
-  for _, match, metadata in query:iter_matches(root, 0) do
+  -- TODO: Remove after compatibility with Neovim=0.10 is dropped
+  local opts = { all = true }
+  for _, match, metadata in query:iter_matches(root, 0, nil, nil, opts) do
     for capture_id, nodes in pairs(match) do
       if query.captures[capture_id] == capture then
         metadata = (metadata or {})[capture_id] or {}
