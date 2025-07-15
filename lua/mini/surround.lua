@@ -1515,12 +1515,16 @@ H.get_matched_range_pairs_plugin = function(captures)
   outer_matches = vim.tbl_filter(function(x) return x.node.tree ~= nil end, outer_matches)
 
   -- Pick inner range as the biggest range for node matching inner query. This
-  -- is needed because query output is not quaranteed to come in order, so just
+  -- is needed because query output is not guaranteed to come in order, so just
   -- picking first one is not enough.
   return vim.tbl_map(function(m)
     local inner_matches = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', m.node, nil)
+    local inner_ranges = vim.tbl_map(
+      function(match) return vim.treesitter.get_range(match.node, buf_id, match.metadata) end,
+      inner_matches
+    )
     local outer = vim.treesitter.get_range(m.node, buf_id, m.metadata)
-    local inner = H.get_biggest_range(buf_id, inner_matches)
+    local inner = H.get_biggest_range(inner_ranges)
     return { outer = outer, inner = inner }
   end, outer_matches)
 end
@@ -1541,35 +1545,58 @@ H.get_matched_range_pairs_builtin = function(captures)
   local query = vim.treesitter.query.get(lang, 'textobjects')
   if query == nil then H.error_treesitter('query') end
 
+  parser:parse(true)
+
   -- Compute matches for outer capture
   local outer_matches = {}
   for _, tree in ipairs(lang_tree:trees()) do
-    vim.list_extend(outer_matches, H.get_builtin_matches(captures.outer:sub(2), tree:root(), query))
+    vim.list_extend(outer_matches, H.get_builtin_matches(captures.outer:sub(2), tree:root(), query, buf_id))
   end
 
   -- Pick inner range as the biggest range for node matching inner query
-  return vim.tbl_map(function(m)
-    local inner_matches = H.get_builtin_matches(captures.inner:sub(2), m.node, query)
-    local outer = vim.treesitter.get_range(m.node, buf_id, m.metadata)
-    local inner = H.get_biggest_range(buf_id, inner_matches)
+  return vim.tbl_map(function(outer)
+    local node = lang_tree:named_node_for_range(
+      { outer[1], outer[2], outer[4], outer[5] },
+      { ignore_injections = false }
+    )
+    local inner_matches = H.get_builtin_matches(captures.inner:sub(2), node, query, buf_id)
+    local inner = H.get_biggest_range(inner_matches)
     return { outer = outer, inner = inner }
   end, outer_matches)
 end
 
-H.get_builtin_matches = function(capture, root, query)
-  local res = {}
-  for capture_id, node, metadata in query:iter_captures(root, 0) do
-    if query.captures[capture_id] == capture then
-      table.insert(res, { node = node, metadata = (metadata or {})[capture_id] or {} })
+H.get_builtin_matches = function(capture, root, query, buf_id)
+  local res = {} ---@type Range6[]
+
+  for _, match, metadata in query:iter_matches(root, 0) do
+    for capture_id, nodes in pairs(match) do
+      if query.captures[capture_id] == capture then
+        metadata = (metadata or {})[capture_id] or {}
+        local first_range ---@type Range6
+        local last_range ---@type Range6
+
+        for _, node in ipairs(nodes) do
+          local range = vim.treesitter.get_range(node, buf_id, metadata)
+          local current_start_byte = first_range and first_range[3] or math.huge
+          local current_end_byte = last_range and last_range[6] or -1
+          if range[3] < current_start_byte then first_range = range end
+          if range[6] > current_end_byte then last_range = range end
+        end
+
+        table.insert(
+          res,
+          { first_range[1], first_range[2], first_range[3], last_range[4], last_range[5], last_range[6] }
+        )
+      end
     end
   end
+
   return res
 end
 
-H.get_biggest_range = function(buf_id, match_arr)
+H.get_biggest_range = function(ranges)
   local best_range, best_byte_count = nil, -math.huge
-  for _, match in ipairs(match_arr) do
-    local range = vim.treesitter.get_range(match.node, buf_id, match.metadata)
+  for _, range in ipairs(ranges) do
     local byte_count = range[6] - range[3] + 1
     if best_byte_count < byte_count then
       best_range, best_byte_count = range, byte_count
