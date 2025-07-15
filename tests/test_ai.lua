@@ -817,6 +817,14 @@ T['gen_spec']['treesitter()']['respects `opts.use_nvim_treesitter`'] = function(
   validate_find(lines, { 9, 0 }, { 'i', 'F' }, { { 8, 3 }, { 10, 13 } })
 end
 
+T['gen_spec']['treesitter()']['works with directives'] = function()
+  child.lua([[MiniAi.config.custom_textobjects = {
+    S = MiniAi.gen_spec.treesitter({ a = '@string', i = '@string_offset' }),
+  }]])
+  local lines = get_lines()
+  validate_find(lines, { 9, 9 }, { 'i', 'S' }, { { 9, 10 }, { 9, 16 } })
+end
+
 T['gen_spec']['treesitter()']['respects plugin options'] = function()
   local lines = get_lines()
 

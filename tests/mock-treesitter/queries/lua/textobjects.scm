@@ -10,3 +10,5 @@
 (return_statement (expression_list (_) @return.inner))
 
 (string) @string
+
+((string) @string_offset (#offset! @string_offset 0 1 0 -2))

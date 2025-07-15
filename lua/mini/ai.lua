@@ -994,11 +994,12 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
       or H.get_matched_ranges_builtin
     local matched_ranges = range_querier(target_captures)
 
-    -- Return array of regions
-    return vim.tbl_map(function(range)
-      -- Ranges are 0-based numbers for end-exclusive region
-      return { from = { line = range[1] + 1, col = range[2] + 1 }, to = { line = range[3] + 1, col = range[4] } }
-    end, matched_ranges)
+    -- Return array of regions. Input ranges are 0-based, end-exclusive, with
+    -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format
+    return vim.tbl_map(
+      function(r) return { from = { line = r[1] + 1, col = r[2] + 1 }, to = { line = r[4] + 1, col = r[5] } } end,
+      matched_ranges
+    )
   end
 end
 
@@ -1540,14 +1541,17 @@ end
 
 H.get_matched_ranges_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
-  local matches = ts_queries.get_capture_matches_recursively(0, captures, 'textobjects')
-  return vim.tbl_map(function(m) return H.get_match_range(m.node, m.metadata) end, matches)
+  local buf_id = vim.api.nvim_get_current_buf()
+  local matches = ts_queries.get_capture_matches_recursively(buf_id, captures, 'textobjects')
+  local res = vim.tbl_map(function(m) return vim.treesitter.get_range(m.node, buf_id, m.metadata) end, matches)
+  return res
 end
 
 H.get_matched_ranges_builtin = function(captures)
   -- Get buffer's parser (LanguageTree)
+  local buf_id = vim.api.nvim_get_current_buf()
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
-  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })
+  local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, nil, { error = false })
   if not has_parser or parser == nil then H.error_treesitter('parser') end
 
   -- Get parser (LanguageTree) at cursor (important for injected languages)
@@ -1567,14 +1571,12 @@ H.get_matched_ranges_builtin = function(captures)
     for capture_id, node, metadata in query:iter_captures(tree:root(), 0) do
       if capture_is_requested[capture_id] then
         metadata = (metadata or {})[capture_id] or {}
-        table.insert(res, H.get_match_range(node, metadata))
+        table.insert(res, vim.treesitter.get_range(node, buf_id, metadata))
       end
     end
   end
   return res
 end
-
-H.get_match_range = function(node, metadata) return (metadata or {}).range and metadata.range or { node:range() } end
 
 H.error_treesitter = function(failed_get)
   local buf_id, ft = vim.api.nvim_get_current_buf(), vim.bo.filetype
