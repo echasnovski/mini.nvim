@@ -70,10 +70,6 @@ local validate_no_find = function(lines, start_pos, f, ...)
   eq(get_cursor(), start_pos)
 end
 
-local mock_treesitter_builtin = function() child.cmd('source tests/dir-surround/mock-lua-treesitter.lua') end
-
-local mock_treesitter_plugin = function() child.cmd('noautocmd set rtp+=tests/dir-surround') end
-
 -- Time constants
 local default_highlight_duraion = 500
 local helper_message_delay = 1000
@@ -209,8 +205,12 @@ T['gen_spec']['input'] = new_set()
 T['gen_spec']['input']['treesitter()'] = new_set({
   hooks = {
     pre_case = function()
+      -- Mock tree-sitter queries
+      child.cmd('noautocmd set rtp+=tests/mock-treesitter')
+
       -- Start editing reference file
-      child.cmd('edit tests/dir-surround/lua-file.lua')
+      child.cmd('edit tests/mock-treesitter/lua-file.lua')
+      child.lua('vim.treesitter.start()')
 
       -- Define "function definition" surrounding
       child.lua([[MiniSurround.config.custom_surroundings = {
@@ -221,8 +221,6 @@ T['gen_spec']['input']['treesitter()'] = new_set({
 })
 
 T['gen_spec']['input']['treesitter()']['works'] = function()
-  mock_treesitter_builtin()
-
   local lines = get_lines()
 
   -- Should prefer range from metadata instead of node itself. This is useful,
@@ -231,40 +229,38 @@ T['gen_spec']['input']['treesitter()']['works'] = function()
   validate_no_find(lines, { 13, 0 }, type_keys, 'sf', 'F')
 
   -- Should prefer match on current line over multiline covering
-  child.lua([[MiniSurround.config.search_method = 'cover_or_next']])
-  validate_find(lines, { 4, 0 }, { { 4, 9 }, { 4, 19 }, { 4, 33 }, { 4, 36 } }, type_keys, 'sf', 'F')
+  child.lua('MiniSurround.config.search_method = "cover_or_next"')
+  validate_find(lines, { 4, 0 }, { { 4, 9 }, { 4, 19 }, { 4, 34 }, { 4, 37 } }, type_keys, 'sf', 'F')
 end
 
 T['gen_spec']['input']['treesitter()']['works with empty region'] = function()
-  mock_treesitter_builtin()
   child.lua([[MiniSurround.config.custom_surroundings = {
-    o = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@other.outer', inner = '@other.inner' }) },
+    o = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@return.outer', inner = '@return.inner' }) },
   }]])
   local lines = get_lines()
 
   -- Delete
   set_lines(lines)
-  set_cursor(1, 0)
+  set_cursor(10, 2)
   type_keys('sd', 'o')
-  eq(get_lines()[1], 'M = {}')
+  eq(get_lines()[10], '  true')
 
   -- Replace
   set_lines(lines)
-  set_cursor(1, 0)
+  set_cursor(10, 2)
   type_keys('sr', 'o', '>')
-  eq(get_lines()[1], '<M = {}>')
+  eq(get_lines()[10], '  <true>')
 
   -- Find
-  validate_find(lines, { 1, 0 }, { { 1, 5 }, { 1, 0 } }, type_keys, 'sf', 'o')
+  validate_find(lines, { 10, 2 }, { { 10, 8 }, { 10, 2 } }, type_keys, 'sf', 'o')
 
   -- Highlight
   child.set_size(15, 40)
   child.o.cmdheight = 1
   set_lines(lines)
-  set_cursor(1, 0)
+  set_cursor(10, 2)
   type_keys('sh', 'o')
-  child.poke_eventloop()
-  -- It highlights `local` differently from other places
+  -- It highlights `return` differently from other places
   if child.fn.has('nvim-0.11') == 1 then child.expect_screenshot() end
 
   -- Edge case for empty region on end of last line
@@ -275,9 +271,8 @@ T['gen_spec']['input']['treesitter()']['works with empty region'] = function()
 end
 
 T['gen_spec']['input']['treesitter()']['works with no inner captures'] = function()
-  mock_treesitter_builtin()
   child.lua([[MiniSurround.config.custom_surroundings = {
-    o = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@other.outer', inner = '@other.inner' }) },
+    o = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@return.outer', inner = '@string' }) },
   }]])
   local lines = get_lines()
 
@@ -285,18 +280,21 @@ T['gen_spec']['input']['treesitter()']['works with no inner captures'] = functio
   set_lines(lines)
   set_cursor(10, 2)
   type_keys('sd', 'o')
-  eq(get_lines()[10], '   true')
+  -- - Should treat the whole "outer" match as left surrounding with
+  --   right surrounding being a single position right match edge.
+  eq(get_lines()[10], '  ')
 
   -- Replace
   set_lines(lines)
   set_cursor(10, 2)
   type_keys('sr', 'o', '>')
-  eq(get_lines()[10], '  <> true')
+  eq(get_lines()[10], '  <>')
+
+  -- Find
+  validate_find(lines, { 10, 2 }, { { 10, 12 }, { 10, 2 } }, type_keys, 'sf', 'o')
 end
 
 T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = function()
-  mock_treesitter_builtin()
-
   child.lua([[MiniSurround.config.custom_surroundings = {
     F = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@function.outer', inner = '@function.inner' }) },
     o = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@plugin_other.outer', inner = '@plugin_other.inner' }) },
@@ -314,7 +312,7 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
   validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'o')
   validate_no_find(lines, { 1, 0 }, type_keys, 'sf', 'O')
 
-  mock_treesitter_plugin()
+  child.cmd('noautocmd set rtp+=tests/dir-surround/mock-nvim-treesitter')
   -- Should prefer range from metadata instead of node itself. This is useful,
   -- for example, with `#offset!` directive to create more precise captures.
   validate_find(lines, { 9, 0 }, { { 10, 12 }, { 11, 2 }, { 7, 6 }, { 8, 1 } }, type_keys, 'sf', 'F')
@@ -323,8 +321,6 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
 end
 
 T['gen_spec']['input']['treesitter()']['respects plugin options'] = function()
-  mock_treesitter_builtin()
-
   local lines = get_lines()
 
   -- `opts.n_lines`
@@ -333,13 +329,11 @@ T['gen_spec']['input']['treesitter()']['respects plugin options'] = function()
 
   -- `opts.search_method`
   child.lua('MiniSurround.config.n_lines = 50')
-  child.lua([[MiniSurround.config.search_method = 'next']])
+  child.lua('MiniSurround.config.search_method = "next"')
   validate_no_find(lines, { 9, 0 }, type_keys, 'sf', 'F')
 end
 
 T['gen_spec']['input']['treesitter()']['validates `captures` argument'] = function()
-  mock_treesitter_builtin()
-
   local validate = function(args)
     expect.error(function() child.lua([[MiniSurround.gen_spec.input.treesitter(...)]], { args }) end, 'captures')
   end
@@ -354,30 +348,27 @@ T['gen_spec']['input']['treesitter()']['validates `captures` argument'] = functi
 end
 
 T['gen_spec']['input']['treesitter()']['validates builtin treesitter presence'] = function()
-  mock_treesitter_builtin()
   child.cmdheight = 40
 
   -- Query
-  child.lua('vim.treesitter.query.get = function() return nil end')
+  child.bo.filetype = 'vim'
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
-    vim.pesc([[(mini.surround) Can not get query for buffer 1 and language "lua".]])
+    '%(mini%.surround%) Can not get query for buffer 1 and language "vim"%.'
   )
 
   -- Parser
   child.bo.filetype = 'aaa'
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
-    vim.pesc([[(mini.surround) Can not get parser for buffer 1 and language "aaa".]])
+    '%(mini%.surround%) Can not get parser for buffer 1 and language "aaa"%.'
   )
 
   -- - Should respect registered language for a filetype
-  child.lua([[
-    vim.treesitter.language.register('my_aaa', 'aaa')
-  ]])
+  child.lua('vim.treesitter.language.register("my_aaa", "aaa")')
   expect.error(
     function() type_keys('sd', 'F', '<CR>') end,
-    vim.pesc([[(mini.surround) Can not get parser for buffer 1 and language "my_aaa".]])
+    '%(mini%.surround%) Can not get parser for buffer 1 and language "my_aaa"%.'
   )
 end
 
