@@ -320,6 +320,14 @@ T['gen_spec']['input']['treesitter()']['respects `opts.use_nvim_treesitter`'] = 
   validate_find(lines, { 1, 0 }, { { 1, 5 }, { 1, 0 } }, type_keys, 'sf', 'O')
 end
 
+T['gen_spec']['input']['treesitter()']['works with directives'] = function()
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    S = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@string', inner = '@string_offset' }) }
+  }]])
+  local lines = get_lines()
+  validate_find(lines, { 9, 9 }, { { 9, 16 }, { 9, 17 }, { 9, 8 }, { 9, 16 } }, type_keys, 'sf', 'S')
+end
+
 T['gen_spec']['input']['treesitter()']['respects plugin options'] = function()
   local lines = get_lines()
 

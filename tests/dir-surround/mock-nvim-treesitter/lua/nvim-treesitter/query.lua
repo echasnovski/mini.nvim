@@ -16,7 +16,14 @@ local new_match = function(range, id, metadata_range)
 
       -- `node:range()` should return 0-based numbers (row1, col1, row2, col2)
       -- for end-exclusive region
-      range = function(_) return unpack(range) end,
+      range = function(include_bytes)
+        if not include_bytes then return unpack(range) end
+        -- If `include_bytes` is `true`, then the output is
+        -- `row1-col1-byte1-row2-col2-byte2`
+        local start_byte = vim.fn.line2byte(range[1] + 1) + range[2]
+        local end_byte = vim.fn.line2byte(range[3] + 1) + range[4] - 1
+        return range[1], range[2], start_byte, range[3], range[4], end_byte
+      end,
     },
   }
 end

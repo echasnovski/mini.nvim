@@ -1047,8 +1047,9 @@ MiniSurround.gen_spec.input.treesitter = function(captures, opts)
 
     -- Return array of region pairs
     return vim.tbl_map(function(range_pair)
-      -- Range is an array with 0-based numbers for end-exclusive region
-      local left_from_line, left_from_col, right_to_line, right_to_col = unpack(range_pair.outer)
+      -- Input ranges are 0-based, end-exclusive, with
+      -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format
+      local left_from_line, left_from_col, _, right_to_line, right_to_col, _ = unpack(range_pair.outer)
       local left_from = { line = left_from_line + 1, col = left_from_col + 1 }
       local right_to = { line = right_to_line + 1, col = right_to_col }
 
@@ -1058,7 +1059,7 @@ MiniSurround.gen_spec.input.treesitter = function(captures, opts)
         right_from = H.pos_to_right(right_to)
         right_to = nil
       else
-        local left_to_line, left_to_col, right_from_line, right_from_col = unpack(range_pair.inner)
+        local left_to_line, left_to_col, _, right_from_line, right_from_col, _ = unpack(range_pair.inner)
         left_to = { line = left_to_line + 1, col = left_to_col + 1 }
         right_from = { line = right_from_line + 1, col = right_from_col }
         -- Take into account that inner capture should be both edges exclusive
@@ -1503,7 +1504,8 @@ end
 
 H.get_matched_range_pairs_plugin = function(captures)
   local ts_queries = require('nvim-treesitter.query')
-  local outer_matches = ts_queries.get_capture_matches_recursively(0, captures.outer, 'textobjects')
+  local buf_id = vim.api.nvim_get_current_buf()
+  local outer_matches = ts_queries.get_capture_matches_recursively(buf_id, captures.outer, 'textobjects')
 
   -- Make sure that found matches contain `node` field that is actually a node,
   -- otherwise later `get_capture_matches` will error as it requires an actual
@@ -1517,14 +1519,17 @@ H.get_matched_range_pairs_plugin = function(captures)
   -- picking first one is not enough.
   return vim.tbl_map(function(m)
     local inner_matches = ts_queries.get_capture_matches(0, captures.inner, 'textobjects', m.node, nil)
-    return { outer = H.get_match_range(m.node, m.metadata), inner = H.get_biggest_range(inner_matches) }
+    local outer = vim.treesitter.get_range(m.node, buf_id, m.metadata)
+    local inner = H.get_biggest_range(buf_id, inner_matches)
+    return { outer = outer, inner = inner }
   end, outer_matches)
 end
 
 H.get_matched_range_pairs_builtin = function(captures)
   -- Get buffer's parser (LanguageTree)
+  local buf_id = vim.api.nvim_get_current_buf()
   -- TODO: Remove `opts.error` after compatibility with Neovim=0.11 is dropped
-  local has_parser, parser = pcall(vim.treesitter.get_parser, 0, nil, { error = false })
+  local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, nil, { error = false })
   if not has_parser or parser == nil then H.error_treesitter('parser') end
 
   -- Get parser (LanguageTree) at cursor (important for injected languages)
@@ -1545,7 +1550,9 @@ H.get_matched_range_pairs_builtin = function(captures)
   -- Pick inner range as the biggest range for node matching inner query
   return vim.tbl_map(function(m)
     local inner_matches = H.get_builtin_matches(captures.inner:sub(2), m.node, query)
-    return { outer = H.get_match_range(m.node, m.metadata), inner = H.get_biggest_range(inner_matches) }
+    local outer = vim.treesitter.get_range(m.node, buf_id, m.metadata)
+    local inner = H.get_biggest_range(buf_id, inner_matches)
+    return { outer = outer, inner = inner }
   end, outer_matches)
 end
 
@@ -1559,13 +1566,11 @@ H.get_builtin_matches = function(capture, root, query)
   return res
 end
 
-H.get_biggest_range = function(match_arr)
+H.get_biggest_range = function(buf_id, match_arr)
   local best_range, best_byte_count = nil, -math.huge
   for _, match in ipairs(match_arr) do
-    local range = H.get_match_range(match.node, match.metadata)
-    local start_byte = vim.fn.line2byte(range[1] + 1) + range[2]
-    local end_byte = vim.fn.line2byte(range[3] + 1) + range[4] - 1
-    local byte_count = end_byte - start_byte + 1
+    local range = vim.treesitter.get_range(match.node, buf_id, match.metadata)
+    local byte_count = range[6] - range[3] + 1
     if best_byte_count < byte_count then
       best_range, best_byte_count = range, byte_count
     end
