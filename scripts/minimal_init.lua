@@ -14,3 +14,6 @@ if vim.fn.has('nvim-0.11') == 1 then
   vim.api.nvim_set_hl(0, 'PmenuMatch', { link = 'Pmenu' })
   vim.api.nvim_set_hl(0, 'PmenuMatchSel', { link = 'PmenuSel' })
 end
+
+-- Ensure no custom fold method in Lua files (it interfers with many tests)
+vim.cmd('au FileType lua set foldmethod=manual')
