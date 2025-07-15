@@ -1545,7 +1545,7 @@ H.get_matched_range_pairs_builtin = function(captures)
   local query = vim.treesitter.query.get(lang, 'textobjects')
   if query == nil then H.error_treesitter('query') end
 
-  parser:parse(true)
+  lang_tree:parse(false)
 
   -- Compute matches for outer capture
   local outer_matches = {}

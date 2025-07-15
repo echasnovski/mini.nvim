@@ -1566,7 +1566,7 @@ H.get_matched_ranges_builtin = function(captures)
   -- Compute ranges of matched captures
   local capture_is_requested = vim.tbl_map(function(c) return vim.tbl_contains(captures, '@' .. c) end, query.captures)
 
-  parser:parse(true)
+  lang_tree:parse(false)
 
   local res = {}
   for _, tree in ipairs(lang_tree:trees()) do
