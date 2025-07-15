@@ -21,16 +21,17 @@ end
 local matches = {
   ['@function.outer'] = {
      new_match({ 2, 0, 4,  3  }),
-     new_match({ 3, 9, 3,  37 }),
+     new_match({ 3, 9, 3,  38 }),
      new_match({ 6, 6, 10, 3  }),
   },
   ['@function.inner'] = {
-     new_match({ 3, 2,  3, 37 }),
+     new_match({ 3, 2,  3, 38 }),
      new_match({ 3, 20, 3, 33 }),
      new_match({ 6, 6, 10, 3  }, { 7, 2,  9, 13 }),
   },
-  ['@plugin_other'] = {
-     new_match({ 0,  0, 0,  12 }),
+  ['@plugin_return'] = {
+     new_match({ 3,  2, 3,  38 }),
+     new_match({ 9,  2, 9,  13 }),
      new_match({ 12, 0, 12, 8  }),
   },
 }
