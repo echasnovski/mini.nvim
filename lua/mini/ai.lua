@@ -986,6 +986,17 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
   opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = false }, opts or {})
   ai_captures = H.prepare_ai_captures(ai_captures)
 
+  -- Tree-sitter ranges are 0-based, end-exclusive, and usually
+  -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format.
+  local ts_range_to_region = function(r)
+    -- The `master` branch of 'nvim-treesitter' can return "range four" format
+    -- if it uses custom directives, like `#make-range!`. Due ot the fact that
+    -- it doesn't fully mock the `TSNode:range()` method to return "range six".
+    -- TODO: Remove after 'nvim-treesitter' `master` branch support is dropped.
+    local offset = #r == 4 and -1 or 0
+    return { from = { line = r[1] + 1, col = r[2] + 1 }, to = { line = r[4 + offset] + 1, col = r[5 + offset] } }
+  end
+
   return function(ai_type, _, _)
     -- Get array of matched treesitter nodes
     local target_captures = ai_captures[ai_type]
@@ -993,13 +1004,7 @@ MiniAi.gen_spec.treesitter = function(ai_captures, opts)
     local range_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_ranges_plugin
       or H.get_matched_ranges_builtin
     local matched_ranges = range_querier(target_captures)
-
-    -- Return array of regions. Input ranges are 0-based, end-exclusive, with
-    -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format
-    return vim.tbl_map(
-      function(r) return { from = { line = r[1] + 1, col = r[2] + 1 }, to = { line = r[4] + 1, col = r[5] } } end,
-      matched_ranges
-    )
+    return vim.tbl_map(ts_range_to_region, matched_ranges)
   end
 end
 
