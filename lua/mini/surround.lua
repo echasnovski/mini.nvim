@@ -1039,6 +1039,17 @@ MiniSurround.gen_spec.input.treesitter = function(captures, opts)
   opts = vim.tbl_deep_extend('force', { use_nvim_treesitter = false }, opts or {})
   captures = H.prepare_captures(captures)
 
+  -- Tree-sitter ranges are 0-based, end-exclusive, and usually
+  -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format.
+  local ts_range_to_region = function(r)
+    -- The `master` branch of 'nvim-treesitter' can return "range four" format
+    -- if it uses custom directives, like `#make-range!`. Due ot the fact that
+    -- it doesn't fully mock the `TSNode:range()` method to return "range six".
+    -- TODO: Remove after 'nvim-treesitter' `master` branch support is dropped.
+    local offset = #r == 4 and -1 or 0
+    return { from = { line = r[1] + 1, col = r[2] + 1 }, to = { line = r[4 + offset] + 1, col = r[5 + offset] } }
+  end
+
   return function()
     local has_nvim_treesitter = pcall(require, 'nvim-treesitter') and pcall(require, 'nvim-treesitter.query')
     local range_pair_querier = (has_nvim_treesitter and opts.use_nvim_treesitter) and H.get_matched_range_pairs_plugin
@@ -1047,11 +1058,8 @@ MiniSurround.gen_spec.input.treesitter = function(captures, opts)
 
     -- Return array of region pairs
     return vim.tbl_map(function(range_pair)
-      -- Input ranges are 0-based, end-exclusive, with
-      -- `row1-col1-byte1-row2-col2-byte2` (i.e. "range six") format
-      local left_from_line, left_from_col, _, right_to_line, right_to_col, _ = unpack(range_pair.outer)
-      local left_from = { line = left_from_line + 1, col = left_from_col + 1 }
-      local right_to = { line = right_to_line + 1, col = right_to_col }
+      local outer_region = ts_range_to_region(range_pair.outer)
+      local left_from, right_to = outer_region.from, outer_region.to
 
       local left_to, right_from
       if range_pair.inner == nil then
@@ -1059,9 +1067,8 @@ MiniSurround.gen_spec.input.treesitter = function(captures, opts)
         right_from = H.pos_to_right(right_to)
         right_to = nil
       else
-        local left_to_line, left_to_col, _, right_from_line, right_from_col, _ = unpack(range_pair.inner)
-        left_to = { line = left_to_line + 1, col = left_to_col + 1 }
-        right_from = { line = right_from_line + 1, col = right_from_col }
+        local inner_region = ts_range_to_region(range_pair.inner)
+        left_to, right_from = inner_region.from, inner_region.to
         -- Take into account that inner capture should be both edges exclusive
         left_to, right_from = H.pos_to_left(left_to), H.pos_to_right(right_from)
       end
