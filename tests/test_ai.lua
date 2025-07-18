@@ -825,6 +825,25 @@ T['gen_spec']['treesitter()']['works with directives'] = function()
   validate_find(lines, { 9, 9 }, { 'i', 'S' }, { { 9, 10 }, { 9, 16 } })
 end
 
+T['gen_spec']['treesitter()']['works with quantified captures'] = function()
+  if child.fn.has('nvim-0.10') == 0 then
+    MiniTest.skip('`Query:iter_matches()` returning several nodes requires Neovim>=0.10')
+  end
+
+  child.lua([[MiniAi.config.custom_textobjects = {
+    P = MiniAi.gen_spec.treesitter({ a = '@parameter.outer', i = '@parameter.inner' }),
+  }]])
+
+  -- "Around" parameter should include whitespace and comma
+  local lines = get_lines()
+  validate_find(lines, { 3, 0 }, { 'i', 'P' }, { { 3, 14 }, { 3, 14 } })
+  validate_find(lines, { 3, 0 }, { 'a', 'P' }, { { 3, 14 }, { 3, 15 } })
+  validate_find(lines, { 3, 0 }, { 'i', 'P', { n_times = 2 } }, { { 3, 17 }, { 3, 18 } })
+  validate_find(lines, { 3, 0 }, { 'a', 'P', { n_times = 2 } }, { { 3, 15 }, { 3, 18 } })
+  validate_find(lines, { 3, 0 }, { 'i', 'P', { n_times = 3 } }, { { 3, 21 }, { 3, 23 } })
+  validate_find(lines, { 3, 0 }, { 'a', 'P', { n_times = 3 } }, { { 3, 19 }, { 3, 23 } })
+end
+
 T['gen_spec']['treesitter()']['respects plugin options'] = function()
   local lines = get_lines()
 

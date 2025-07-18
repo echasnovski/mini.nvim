@@ -4,6 +4,19 @@
 (function_declaration body: (_) @function.inner)
 (function_definition body: (_) @function.inner)
 
+; - Quantified captures (several captured nodes). Result range should cover
+;   from left most node start to right most node end.
+(parameters
+  .
+  (_) @parameter.inner @parameter.outer
+  .
+  ","? @parameter.outer)
+
+(parameters
+  "," @parameter.outer
+  .
+  (_) @parameter.inner @parameter.outer)
+
 ; Custom
 [ (return_statement) ] @return.outer
 

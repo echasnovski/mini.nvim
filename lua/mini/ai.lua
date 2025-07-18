@@ -1573,14 +1573,33 @@ H.get_matched_ranges_builtin = function(captures)
 
   local res = {}
   for _, tree in ipairs(lang_tree:trees()) do
-    for capture_id, node, metadata in query:iter_captures(tree:root(), 0) do
-      if capture_is_requested[capture_id] then
-        metadata = (metadata or {})[capture_id] or {}
-        table.insert(res, vim.treesitter.get_range(node, buf_id, metadata))
+    -- TODO: Remove `opts.all`after compatibility with Neovim=0.10 is dropped
+    for _, match, metadata in query:iter_matches(tree:root(), buf_id, nil, nil, { all = true }) do
+      for capture_id, nodes in pairs(match) do
+        local mt = metadata[capture_id]
+        if capture_is_requested[capture_id] then table.insert(res, H.get_nodes_range_builtin(nodes, buf_id, mt)) end
       end
     end
   end
+
   return res
+end
+
+H.get_nodes_range_builtin = function(nodes, buf_id, metadata)
+  -- In Neovim<0.10 `Query:iter_matches()` has `match` map to single node.
+  -- TODO: Remove `opts.all`after compatibility with Neovim=0.9 is dropped
+  nodes = type(nodes) == 'table' and nodes or { nodes }
+
+  -- Get matched range as spanning from left most node start to right most node
+  -- end. This accounts for several matched nodes that are intentionally there
+  -- to cover complex cases. Approach is named "quantified captures".
+  local left, right
+  for _, node in ipairs(nodes) do
+    local range = vim.treesitter.get_range(node, buf_id, metadata)
+    if left == nil or range[3] < left[3] then left = range end
+    if right == nil or range[6] > right[6] then right = range end
+  end
+  return { left[1], left[2], left[3], right[4], right[5], right[6] }
 end
 
 H.error_treesitter = function(failed_get)
