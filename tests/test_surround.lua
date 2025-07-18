@@ -328,6 +328,27 @@ T['gen_spec']['input']['treesitter()']['works with directives'] = function()
   validate_find(lines, { 9, 9 }, { { 9, 16 }, { 9, 17 }, { 9, 8 }, { 9, 16 } }, type_keys, 'sf', 'S')
 end
 
+T['gen_spec']['input']['treesitter()']['works with quantified captures'] = function()
+  if child.fn.has('nvim-0.10') == 0 then
+    MiniTest.skip('`Query:iter_matches()` returning several nodes requires Neovim>=0.10')
+  end
+
+  child.lua([[MiniSurround.config.custom_surroundings = {
+    P = { input = MiniSurround.gen_spec.input.treesitter({ outer = '@parameter.outer', inner = '@parameter.inner' }) }
+  }]])
+
+  local lines = get_lines()
+  local validate = function(col, ref_line)
+    set_lines(lines)
+    set_cursor(3, col)
+    type_keys('sr', 'P', '>')
+    eq(get_lines()[3], ref_line)
+  end
+  validate(13, 'function M.a(<u> vv, www)')
+  validate(16, 'function M.a(u<vv>, www)')
+  validate(21, 'function M.a(u, vv<www>)')
+end
+
 T['gen_spec']['input']['treesitter()']['respects plugin options'] = function()
   local lines = get_lines()
 
