@@ -611,10 +611,13 @@ MiniMisc.zoom = function(buf_id, config)
     }
     local res = vim.tbl_deep_extend('force', default_config, config or {})
 
-    -- Adjust dimensions to fit border
-    local border_offset = (res.border or 'none') == 'none' and 0 or 2
-    res.height = math.min(res.height, max_height - border_offset)
-    res.width = math.min(res.width, max_width - border_offset)
+    -- Adjust dimensions to fit actually present border parts
+    local bor = res.border == 'none' and { '' } or res.border
+    local n = type(bor) == 'table' and #bor or 0
+    local height_offset = n == 0 and 2 or ((bor[1 % n + 1] == '' and 0 or 1) + (bor[5 % n + 1] == '' and 0 or 1))
+    local width_offset = n == 0 and 2 or ((bor[3 % n + 1] == '' and 0 or 1) + (bor[7 % n + 1] == '' and 0 or 1))
+    res.height = math.min(res.height, max_height - height_offset)
+    res.width = math.min(res.width, max_width - width_offset)
 
     -- Ensure proper title
     if type(res.title) == 'string' then res.title = H.fit_to_width(res.title, res.width) end

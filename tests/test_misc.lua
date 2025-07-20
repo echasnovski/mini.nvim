@@ -947,6 +947,14 @@ T['zoom()']['respects `config` argument'] = function()
 
   -- Should truncate possible title
   validate({ width = 20, border = 'single', title = 'Custom title to check truncation' }, 2, 20)
+
+  -- Should work with different border types
+  validate({ border = { '', 'x', '', '', '', 'x', '', '' } }, 2, 30)
+  validate({ border = { '', '', '', 'x', '', '', '', 'x' } }, 4, 28)
+  validate({ border = { '!', 'x', '', '', '', '', '', 'x' } }, 3, 29)
+  validate({ border = { '', '', '', 'x' } }, 4, 28)
+  validate({ border = { '!', 'x' } }, 2, 28)
+  validate({ border = { 'x' } }, 2, 28)
 end
 
 T['zoom()']["respects 'winborder' option"] = function()
