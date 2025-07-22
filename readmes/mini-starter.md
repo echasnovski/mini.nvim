@@ -1,4 +1,4 @@
-<img src="https://github.com/echasnovski/media/blob/main/mini.nvim/logo/logo_starter.png" style="width: 100%"/>
+<div align="center"> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/logo-2/logo-starter_readme.png" alt="mini.starter"/> </div>
 
 <!-- badges: start -->
 [![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
