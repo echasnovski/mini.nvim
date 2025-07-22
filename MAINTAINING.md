@@ -159,7 +159,8 @@ Begin the process of stopping official support for outdated Neovim version short
     - '.github/ISSUE_TEMPLATE/feature-request.yml' to be included in a dropdown menu.
     - '.github/DISCUSSION_TEMPLATE/q-a.yml' to be included in a dropdown menu.
 - Generate help files.
-- Add README to 'readmes' directory. NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
+- Create new logo files in https://github.com/echasnovski/media and push them. See 'mini.nvim/logo-2/generate.lua' in the repo for more details.
+- Add README to 'readmes' directory following the structure of some of already existing README (preferably one of the latest). NOTE: comment out mentions of `stable` branch, as it won't work during beta-testing.
 - Update main README to mention new module in table of contents.
 - Update 'CHANGELOG.md' to mention introduction of new module.
 - Update 'CONTRIBUTING.md' to mention new highlight groups (if there are any).
