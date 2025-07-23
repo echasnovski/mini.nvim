@@ -2867,6 +2867,7 @@ T['Mappings']['`close` works'] = function()
   eq(is_explorer_active(), true)
   type_keys('q')
   eq(is_explorer_active(), false)
+  eq(#child.api.nvim_list_wins(), 1)
   close()
 
   -- User-supplied
@@ -2874,6 +2875,7 @@ T['Mappings']['`close` works'] = function()
   eq(is_explorer_active(), true)
   type_keys('Q')
   eq(is_explorer_active(), false)
+  eq(#child.api.nvim_list_wins(), 1)
   close()
 
   -- Empty
