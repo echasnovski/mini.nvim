@@ -930,6 +930,7 @@ H.file_icons = {
 
   -- Supported by `vim.filetype.match` but result in confusing glyph
   ['.prettierignore'] = { glyph = '', hl = 'MiniIconsOrange' },
+  ['.dockerignore']   = { glyph = '󰡨', hl = 'MiniIconsBlue'   },
 }
 
 -- Filetype icons. Keys are filetypes explicitly supported by Neovim core
