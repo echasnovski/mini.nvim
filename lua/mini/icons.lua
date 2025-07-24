@@ -871,7 +871,6 @@ H.file_icons = {
   ['.gitlab-ci.yml']     = { glyph = '󰮠', hl = 'MiniIconsOrange' },
   ['.gitkeep']           = { glyph = '󰊢', hl = 'MiniIconsRed'    },
   ['.mailmap']           = { glyph = '󰊢', hl = 'MiniIconsCyan'   },
-  ['.npmignore']         = { glyph = '󰒓', hl = 'MiniIconsGrey'   },
   ['.nvmrc']             = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
   ['.xinitrc']           = { glyph = '󰒓', hl = 'MiniIconsBlue'   },
   ['.zshrc']             = { glyph = '󰒓', hl = 'MiniIconsGreen'  },
@@ -929,7 +928,14 @@ H.file_icons = {
   ['tclsh.rc']            = 'tcl',
 
   -- Supported by `vim.filetype.match` but result in confusing glyph
-  ['.prettierignore'] = { glyph = '', hl = 'MiniIconsOrange' },
+  ['.containerignore'] = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.dockerignore']    = { glyph = '󰡨', hl = 'MiniIconsOrange' },
+  ['.fdignore']        = { glyph = '󰒓', hl = 'MiniIconsYellow' },
+  ['.ignore']          = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.npmignore']       = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.prettierignore']  = { glyph = '', hl = 'MiniIconsOrange' },
+  ['.rgignore']        = { glyph = '󰒓', hl = 'MiniIconsYellow' },
+  ['.vscodeignore']    = { glyph = '', hl = 'MiniIconsAzure' },
 }
 
 -- Filetype icons. Keys are filetypes explicitly supported by Neovim core

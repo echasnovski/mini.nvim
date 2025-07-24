@@ -289,6 +289,9 @@ T['get()']['works with "file" category'] = function()
   -- Cached data for basename should not affect full path resolution
   eq(get('file', 'gshadow'), { 'F', 'Comment', true })
   validate('/etc/gshadow', '󰫴', 'MiniIconsCyan', false)
+
+  -- Should override some confusing `vim.filetype.match()` results
+  validate('.dockerignore', '󰡨', 'MiniIconsOrange', false)
 end
 
 T['get()']['respects `config.use_file_extension`'] = function()
