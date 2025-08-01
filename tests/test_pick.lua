@@ -3156,15 +3156,20 @@ T['builtin.help()']['has proper preview'] = function()
 end
 
 T['builtin.help()']['has customized `choose` modifications'] = function()
+  child.lua([[
+    MiniPick.config.mappings.choose_in_split = '<C-w>'
+    MiniPick.config.mappings.choose_in_vsplit = '<C-e>'
+    MiniPick.config.mappings.choose_in_tabpage = '<C-r>'
+  ]])
   local validate = function(keys, win_layout, n_tabpages)
     builtin_help()
     type_keys(keys)
     validate_help_with_layout(win_layout, n_tabpages)
     child.cmd('%bw')
   end
-  validate('<C-s>', 'col', 1)
-  validate('<C-v>', 'row', 1)
-  validate('<C-t>', 'leaf', 2)
+  validate('<C-w>', 'col', 1)
+  validate('<C-e>', 'row', 1)
+  validate('<C-r>', 'leaf', 2)
 end
 
 T['builtin.help()']['respects `local_opts.default_split`'] = function()

@@ -1458,11 +1458,12 @@ MiniPick.builtin.help = function(local_opts, opts)
     return { char = char, func = f }
   end
 
+  local config_mappings = H.get_config().mappings
   --stylua: ignore
   local mappings = {
-    choose_in_split   = '', show_help_in_split   = map_custom('<C-s>', ''),
-    choose_in_vsplit  = '', show_help_in_vsplit  = map_custom('<C-v>', 'vertical '),
-    choose_in_tabpage = '', show_help_in_tabpage = map_custom('<C-t>', 'tab '),
+    choose_in_split   = '', show_help_in_split   = map_custom(config_mappings.choose_in_split, ''),
+    choose_in_vsplit  = '', show_help_in_vsplit  = map_custom(config_mappings.choose_in_vsplit, 'vertical '),
+    choose_in_tabpage = '', show_help_in_tabpage = map_custom(config_mappings.choose_in_tabpage, 'tab '),
   }
 
   local source = { items = tags, name = 'Help', choose = choose, preview = preview }
