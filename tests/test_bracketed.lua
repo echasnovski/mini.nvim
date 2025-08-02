@@ -3914,24 +3914,36 @@ T['Mappings']['diagnostic']['works'] = function()
 
   -- Operator-pending mode
   child.diagnostic.reset()
-  local lines = { 'aa Error', 'aa Error2' }
-  set_lines(lines)
 
+  local lines = { 'aa Error', 'aa Error2' }
   local sev_err = vim.diagnostic.severity.ERROR
   local diagnostic_arr = {
     { lnum = 0, end_lnum = 0, col = 3, end_col = 8, message = 'Error 1', severity = sev_err },
     { lnum = 1, end_lnum = 1, col = 3, end_col = 9, message = 'Error 2', severity = sev_err },
   }
   local ns = child.api.nvim_create_namespace('mock-single-diagnostics')
-  child.diagnostic.set(ns, 0, diagnostic_arr, {})
 
-  validate_edit(lines, { 1, 1 }, 'd[D', { 'arror', 'aa Error2' }, { 1, 1 })
-  validate_edit(lines, { 2, 0 }, 'd[d', { 'aa a Error2' }, { 1, 3 })
-  validate_edit(lines, { 2, 0 }, 'd]d', { 'aa Error', 'rror2' }, { 2, 0 })
-  validate_edit(lines, { 1, 0 }, 'd]D', { 'rror2' }, { 1, 0 })
+  local validate_edit_with_diagnostic = function(lines_before, cursor_before, keys, lines_after, cursor_after)
+    set_lines(lines_before)
+    child.diagnostic.set(ns, 0, diagnostic_arr, {})
+    set_cursor(cursor_before[1], cursor_before[2])
 
-  -- - Dot-repeat. As diagnostic is not updated, it deletes twice up to { 1, 3 }
-  validate_edit(lines, { 1, 2 }, 'd]d.', { 'aaor', 'aa Error2' }, { 1, 2 })
+    type_keys(keys)
+
+    eq(get_lines(), lines_after)
+    eq(get_cursor(), cursor_after)
+  end
+
+  validate_edit_with_diagnostic(lines, { 1, 1 }, 'd[D', { 'arror', 'aa Error2' }, { 1, 1 })
+  validate_edit_with_diagnostic(lines, { 2, 0 }, 'd[d', { 'aa a Error2' }, { 1, 3 })
+  validate_edit_with_diagnostic(lines, { 2, 0 }, 'd]d', { 'aa Error', 'rror2' }, { 2, 0 })
+  validate_edit_with_diagnostic(lines, { 1, 0 }, 'd]D', { 'rror2' }, { 1, 0 })
+
+  -- - Dot-repeat. On Neovim>=0.12 diagnostic is done via extmarks, which get
+  --   deleted if its text range is deleted. So on dot-repeat it goes to the
+  --   second position. On Neovim<0.12 it deletes twice up to { 1, 3 }.
+  local ref_lines = child.fn.has('nvim-0.12') == 1 and { 'aarror2' } or { 'aaor', 'aa Error2' }
+  validate_edit_with_diagnostic(lines, { 1, 2 }, 'd]d.', ref_lines, { 1, 2 })
 end
 
 T['Mappings']['diagnostic']['allows non-letter suffix'] = function()

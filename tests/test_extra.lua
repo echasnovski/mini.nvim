@@ -1204,9 +1204,15 @@ T['pickers']['diagnostic()']['works'] = function()
   validate_buf_name(0, make_testpath('mocks', 'diagnostic-file-1'))
   eq(get_cursor(), { 2, 2 })
 
+  local return_item = child.lua_get('_G.return_item')
+  -- - Remove any private fields (like `_extmark_id` on Neovim>=0.12)
+  for _, k in ipairs(vim.tbl_keys(return_item)) do
+    if k:sub(1, 1) == '_' then return_item[k] = nil end
+  end
+
   --stylua: ignore
   -- Should return chosen value with proper structure
-  eq(child.lua_get('_G.return_item'), {
+  eq(return_item, {
     bufnr    = 1, namespace = child.lua_get('_G.diag_ns'),
     severity = 1,
     col      = 3, end_col   = 8,
