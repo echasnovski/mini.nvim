@@ -1896,7 +1896,7 @@ H.normalize_item_doc = function(lsp_item, fallback_info)
 
   -- Extract string content. Treat markdown and plain kinds the same.
   -- Show both `detail` and `documentation` if the first provides new info.
-  detail, doc = detail or '', (type(doc) == 'table' and doc.value or doc) or ''
+  detail, doc = detail or '', type(doc) == 'table' and (doc.value or '') or (doc or '')
   -- Wrap details in language's code block to (usually) improve highlighting
   -- This approach seems to work in 'hrsh7th/nvim-cmp'
   detail = (H.is_whitespace(detail) or doc:find(detail, 1, true) ~= nil) and '' or (H.wrap_in_codeblock(detail) .. '\n')
