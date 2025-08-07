@@ -1815,7 +1815,9 @@ H.get_lsp_edit_range = function(response_data)
   -- Try using all items to find the first one with edit range
   local items = response_data.result.items or response_data.result
   for _, item in pairs(items) do
-    -- Account for `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
+	if type(item) ~= "table" then return end
+    
+	-- Account for `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
     if type(item.textEdit) == 'table' then return item.textEdit.range or item.textEdit.insert end
   end
 end
