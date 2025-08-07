@@ -411,7 +411,7 @@ end
 ---   'signature' string. Default: array containing all of them.
 MiniCompletion.stop = function(actions)
   actions = actions or { 'completion', 'info', 'signature' }
-  for _, n in pairs(actions) do
+  for _, n in ipairs(actions) do
     H.stop_actions[n]()
   end
 end
@@ -1100,7 +1100,7 @@ H.is_lsp_trigger = function(char, type)
   local triggers
   local providers = { completion = 'completionProvider', signature = 'signatureHelpProvider' }
 
-  for _, client in pairs(H.get_buf_lsp_clients()) do
+  for _, client in ipairs(H.get_buf_lsp_clients()) do
     triggers = H.table_get(client, { 'server_capabilities', providers[type], 'triggerCharacters' })
     if vim.tbl_contains(triggers or {}, char) then return true end
   end
@@ -1109,7 +1109,7 @@ end
 
 H.cancel_lsp = function(caches)
   caches = caches or { H.completion, H.info, H.signature }
-  for _, c in pairs(caches) do
+  for _, c in ipairs(caches) do
     if vim.tbl_contains({ 'sent', 'received' }, c.lsp.status) then
       if c.lsp.cancel_fun then c.lsp.cancel_fun() end
       c.lsp.status = 'canceled'
@@ -1226,7 +1226,7 @@ H.lsp_completion_response_items_to_complete_items = function(items)
   local res, item_kinds = {}, vim.lsp.protocol.CompletionItemKind
   local snippet_kind = vim.lsp.protocol.CompletionItemKind.Snippet
   local snippet_inserttextformat = vim.lsp.protocol.InsertTextFormat.Snippet
-  for i, item in pairs(items) do
+  for i, item in ipairs(items) do
     local word = H.get_completion_word(item)
 
     local is_snippet_kind = item.kind == snippet_kind
@@ -1582,7 +1582,7 @@ H.signature_window_lines = function()
   -- client. Each highlight range is a table which indicates (if not empty)
   -- what parameter to highlight for every LSP client's signature string.
   local lines, hl_ranges = {}, {}
-  for _, t in pairs(signature_data) do
+  for _, t in ipairs(signature_data) do
     -- `t` is allowed to be an empty table (in which case nothing is added) or
     -- a table with two entries. This ensures that `hl_range`'s integer index
     -- points to an actual line in future buffer.
@@ -1715,7 +1715,7 @@ H.floating_dimensions = function(lines, max_height, max_width)
   -- This is not 100% accurate (mostly because of concealed characters and
   -- multibyte manifest into empty space at bottom), but does the job
   local lines_wrap = {}
-  for _, l in pairs(lines) do
+  for _, l in ipairs(lines) do
     vim.list_extend(lines_wrap, H.wrap_line(l, max_width))
   end
   -- Height is a number of wrapped lines truncated to maximum height
@@ -1814,7 +1814,7 @@ H.get_lsp_edit_range = function(response_data)
 
   -- Try using all items to find the first one with edit range
   local items = response_data.result.items or response_data.result
-  for _, item in pairs(items) do
+  for _, item in ipairs(items) do
     -- Account for `textEdit` can be either `TextEdit` or `InsertReplaceEdit`
     if type(item.textEdit) == 'table' then return item.textEdit.range or item.textEdit.insert end
   end
@@ -1823,7 +1823,7 @@ end
 H.is_whitespace = function(s)
   if type(s) == 'string' then return s:find('^%s*$') end
   if type(s) == 'table' then
-    for _, val in pairs(s) do
+    for _, val in ipairs(s) do
       if not H.is_whitespace(val) then return false end
     end
     return true
