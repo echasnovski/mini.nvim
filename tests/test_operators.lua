@@ -1352,6 +1352,20 @@ T['Multiply']['works with `[count]` in Normal mode for line'] = function()
   validate_edit({ 'aa', 'bb' }, { 1, 0 }, { '2gmm', '2j', '.' }, { 'aa', 'aa', 'aa', 'bb', 'bb', 'bb' }, { 5, 0 })
 end
 
+T['Multiply']['works with `cmdheight=0`'] = function()
+  child.set_size(7, 20)
+  child.o.cmdheight = 0
+  child.o.statusline = 'My statusline'
+  -- Force quick test for regular `gm` operator
+  child.api.nvim_del_keymap('n', 'gmm')
+
+  set_lines({ 'aa bb' })
+  type_keys('gm')
+  child.expect_screenshot({ redraw = false })
+  type_keys('iw')
+  child.expect_screenshot({ redraw = false })
+end
+
 T['Multiply']['works in Visual mode'] = function()
   validate_edit1d('aa bb', 0, { 'viw', 'gm' }, 'aaaa bb', 2)
 
@@ -1735,6 +1749,21 @@ T['Replace']['works with two types of `[count]` in Normal mode'] = function()
   -- Both `[count]`s with dot-repeat
   validate_edit1d('aa bb cc dd ee', 0, { 'yiw', 'w', '2gr2aW' }, 'aa aaaadd ee', 3)
   validate_edit1d('aa bb cc dd ee', 0, { 'yiw', 'w', '2gr2aW', '.' }, 'aaaaaa', 2)
+end
+
+T['Replace']['works with `cmdheight=0`'] = function()
+  child.set_size(7, 20)
+  child.o.cmdheight = 0
+  child.o.statusline = 'My statusline'
+  -- Force quick test for regular `gr` operator
+  child.api.nvim_del_keymap('n', 'grr')
+
+  set_lines({ 'aa bb' })
+  type_keys('yiw', 'w')
+  type_keys('gr')
+  child.expect_screenshot({ redraw = false })
+  type_keys('iw')
+  child.expect_screenshot({ redraw = false })
 end
 
 T['Replace']['works in Normal mode for line'] = function()

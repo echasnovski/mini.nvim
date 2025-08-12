@@ -415,7 +415,7 @@ MiniOperators.multiply = function(mode)
     H.cache.multiply = { count = vim.v.count1 }
 
     -- Reset count to allow two counts: first for paste, second for textobject
-    return vim.api.nvim_replace_termcodes('<Cmd>echon ""<CR>g@', true, true, true)
+    return vim.api.nvim_replace_termcodes('<Cmd>redraw<CR>g@', true, true, true)
   end
 
   local count = mode == 'visual' and vim.v.count1 or H.cache.multiply.count
@@ -472,7 +472,7 @@ MiniOperators.replace = function(mode)
     H.cache.replace = { count = vim.v.count1, register = vim.v.register }
 
     -- Reset count to allow two counts: first for paste, second for textobject
-    return vim.api.nvim_replace_termcodes('<Cmd>echon ""<CR>g@', true, true, true)
+    return vim.api.nvim_replace_termcodes('<Cmd>redraw<CR>g@', true, true, true)
   end
 
   -- Do replace
