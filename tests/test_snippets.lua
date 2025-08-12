@@ -3234,11 +3234,11 @@ T['start_lsp_server()'] = new_set({
   hooks = {
     pre_case = function()
       child.lua([[
-    MiniSnippets.config.snippets = {
-      function(context) return { { prefix = 'ba', body = 'Snippet $1 ba' } } end,
-      { { prefix = 'aa', body = 'Snippet $VAR aa' } },
-      { prefix = 'xx', body = 'Snippet xx', desc = 'XX snippet' },
-    }]])
+        MiniSnippets.config.snippets = {
+          function(context) return { { prefix = 'ba', body = 'Snippet $1 ba' } } end,
+          { { prefix = 'aa', body = 'Snippet $VAR aa' } },
+          { prefix = 'xx', body = 'Snippet xx', desc = 'XX snippet' },
+        }]])
     end,
   },
 })
@@ -3431,6 +3431,16 @@ T['start_lsp_server()']['respects `opts.triggers`'] = function()
   local triggers = { '.', '\\' }
   local client_id = start_lsp_server({ triggers = triggers })
   eq(get_client_field(client_id, 'server_capabilities').completionProvider.triggerCharacters, triggers)
+end
+
+T['start_lsp_server()']['works with built-in Insert mode completion'] = function()
+  child.bo.omnifunc = 'v:lua.vim.lsp.omnifunc'
+  start_lsp_server()
+
+  type_keys('i', '<C-x>', '<C-o>')
+  local ref_items = child.fn.has('nvim-0.11') == 1 and { 'aa', 'ba', 'xx' }
+    or { 'Snippet  aa', 'Snippet  ba', 'Snippet xx' }
+  validate_pumitems(ref_items)
 end
 
 T['start_lsp_server()']['can be called several times without duplicating servers'] = function()

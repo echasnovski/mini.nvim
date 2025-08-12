@@ -2649,7 +2649,7 @@ H.lsp_make_cmd = function(opts)
     return {
       request = function(method, params, callback, notify_reply_callback)
         if method == 'initialize' then callback(nil, capabilities) end
-        if method == 'textDocument/completion' then callback(nil, textdocument_completion(params)) end
+        if method == 'textDocument/completion' then textdocument_completion(params, callback) end
         if method == 'shutdown' then callback(nil, nil) end
         request_id = request_id + 1
         -- NOTE: This is needed to not accumulated "pending" `Client.requests`
@@ -2671,7 +2671,7 @@ H.lsp_make_textdocument_completion = function(opts)
   local insert_text_format_snippet = vim.lsp.protocol.InsertTextFormat.Snippet
   local kind_snippet = vim.lsp.protocol.CompletionItemKind.Snippet
 
-  return function(params)
+  return vim.schedule_wrap(function(params, callback)
     local res = {}
     for _, s in ipairs(MiniSnippets.expand(expand_opts)) do
       local candidate = { label = s.prefix, insertText = s.body, documentation = s.desc }
@@ -2687,8 +2687,9 @@ H.lsp_make_textdocument_completion = function(opts)
       end
       table.insert(res, candidate)
     end
-    return res
-  end
+
+    callback(nil, res)
+  end)
 end
 
 H.lsp_default_before_attach = function(buf_id)
