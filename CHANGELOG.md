@@ -37,6 +37,12 @@ There are following change types:
 
 - Add `MiniCompletionWindowOpen` and `MiniCompletionWindowUpdate` events.
 
+## mini.clue
+
+### Expand
+
+- Add `gen_clues.square_brackets` to generate clues for `[` and `]` keys. By @TheLeoP, PR #1937.
+
 ## mini.diff
 
 ### Expand
