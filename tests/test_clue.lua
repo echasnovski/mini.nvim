@@ -786,6 +786,29 @@ T['gen_clues']['g()']['works'] = function()
   child.expect_screenshot()
 end
 
+T['gen_clues']['square_brackets()'] = new_set()
+
+T['gen_clues']['square_brackets()']['works'] = function()
+  -- Check this only on Neovim>=0.11, as there are many new built-in mappings
+  if child.fn.has('nvim-0.11') == 0 then return end
+  child.set_size(43, 66)
+
+  child.lua([[
+    local miniclue = require('mini.clue')
+    miniclue.setup({
+      clues = { miniclue.gen_clues.square_brackets() },
+      triggers = { { mode = 'n', keys = '[' }, { mode = 'n', keys = ']' } },
+      window = { delay = 0, config = { width = 66 } },
+    })
+  ]])
+
+  type_keys('[')
+  child.expect_screenshot()
+  type_keys('<Esc>')
+  type_keys(']')
+  child.expect_screenshot()
+end
+
 T['gen_clues']['z()'] = new_set()
 
 T['gen_clues']['z()']['works'] = function()

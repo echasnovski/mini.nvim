@@ -243,6 +243,10 @@ this module plus all |<Leader>| mappings in Normal and Visual modes: >lua
       { mode = 'n', keys = '<Leader>' },
       { mode = 'x', keys = '<Leader>' },
 
+      -- `[` and `]` keys
+      { mode = 'n', keys = '[' },
+      { mode = 'n', keys = ']' },
+
       -- Built-in completion
       { mode = 'i', keys = '<C-x>' },
 
@@ -272,6 +276,7 @@ this module plus all |<Leader>| mappings in Normal and Visual modes: >lua
 
     clues = {
       -- Enhance this by adding descriptions for <Leader> mapping groups
+      miniclue.gen_clues.square_brackets(),
       miniclue.gen_clues.builtin_completion(),
       miniclue.gen_clues.g(),
       miniclue.gen_clues.marks(),
@@ -668,6 +673,19 @@ Contains clues for the following triggers: >lua
 
   { mode = 'n', keys = 'g' }
   { mode = 'x', keys = 'g' }
+<
+Return ~
+`(table)` Array of clues.
+
+------------------------------------------------------------------------------
+                                          *MiniClue.gen_clues.square_brackets()*
+                     `MiniClue.gen_clues.square_brackets`()
+Generate clues for `[` and `]` keys
+
+Contains clues for the following triggers: >lua
+
+  { mode = 'n', keys = '[' }
+  { mode = 'n', keys = ']' }
 <
 Return ~
 `(table)` Array of clues.
