@@ -1275,7 +1275,7 @@ H.make_operator = function(task, search_method, ask_for_textobject)
     -- `[count1]sa[count2][textobject]`.
     -- - Concatenate `' '` to operator output to "disable" motion
     --   required by `g@`. It is used to enable dot-repeatability.
-    return '<Cmd>echon ""<CR>g@' .. (ask_for_textobject and '' or ' ')
+    return '<Cmd>redraw<CR>g@' .. (ask_for_textobject and '' or ' ')
   end
 end
 

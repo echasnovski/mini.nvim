@@ -660,6 +660,19 @@ T['Add surrounding']['handles `[count]` cache'] = function()
   eq(get_lines(), { '((aa)) (bb)' })
 end
 
+T['Add surrounding']['works with `cmdheight=0`'] = function()
+  child.set_size(7, 20)
+  child.o.cmdheight = 0
+  child.o.statusline = 'My statusline'
+  set_lines({ 'aa bb' })
+  type_keys('sa')
+  child.expect_screenshot({ redraw = false })
+  type_keys('iw')
+  child.expect_screenshot({ redraw = false })
+  type_keys(')')
+  child.expect_screenshot({ redraw = false })
+end
+
 T['Add surrounding']['respects `selection=exclusive` option'] = function()
   child.o.selection = 'exclusive'
   local f = function() type_keys('v2l', 'sa', ')') end
@@ -1720,11 +1733,11 @@ T['Highlight surrounding']['respects `vim.b.minisurround_config`'] = function()
   set_cursor(1, 2)
   type_keys('sh', '<')
   child.poke_eventloop()
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_attr = { 5 } })
 
   -- Should stop highlighting after duration from local config
   sleep(5 * small_time + small_time)
-  child.expect_screenshot()
+  child.expect_screenshot({ ignore_attr = { 5 } })
 end
 
 T['Update number of lines'] = new_set()
