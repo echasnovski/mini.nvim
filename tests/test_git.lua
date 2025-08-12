@@ -997,7 +997,7 @@ T['show_diff_source()']['uses correct working directory'] = function()
     },
     {
       args = {
-        '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+        '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
         '--', 'log-output'
       },
       cwd = root,
@@ -1235,7 +1235,7 @@ T['show_range_history()']['uses correct working directory'] = function()
     },
     {
       args = {
-        '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+        '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
         '--', 'dir-in-git/file-in-dir-in-git'
       },
       cwd = git_root_dir,
@@ -1359,7 +1359,7 @@ T['enable()']['works'] = function()
       cwd = git_root_dir,
     },
     {
-      args = { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+      args = { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
       cwd = git_root_dir,
     },
   }
@@ -1423,7 +1423,7 @@ T['enable()']['resolves symlinks'] = function()
 
   -- Should run Git CLI with data *after* resolving symlink
   local status_args = get_spawn_log()[3].options.args
-  eq({ status_args[3], status_args[#status_args] }, { 'status', 'file-in-git_symlink-source' })
+  eq({ status_args[4], status_args[#status_args] }, { 'status', 'file-in-git_symlink-source' })
   eq(get_buf_data().status, '??')
   eq(child.b.minigit_summary_string, 'main (??)')
 end
@@ -1812,7 +1812,7 @@ T['Tracking']['updates all buffers from same repo on repo change'] = function()
     },
     {
       args = {
-        '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+        '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
         '--', 'file-in-git'
       },
       cwd = git_root_dir,
@@ -1827,7 +1827,7 @@ T['Tracking']['updates all buffers from same repo on repo change'] = function()
     },
     {
       args = {
-        '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+        '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
         '--', 'dir-in-git/file-in-dir-in-git'
       },
       cwd = git_root_dir,
@@ -1838,7 +1838,7 @@ T['Tracking']['updates all buffers from same repo on repo change'] = function()
     },
     {
       args = {
-        '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+        '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
         '--', 'file-in-git', 'dir-in-git/file-in-dir-in-git'
       },
       cwd = git_root_dir,
@@ -1886,9 +1886,9 @@ T['Tracking']['reacts to content change outside of current session'] = function(
       cwd = git_root_dir,
     },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 end
@@ -1929,7 +1929,7 @@ T['Tracking']['reacts to buffer rename'] = function()
       cwd = git_root_dir,
     },
     {
-      args = { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+      args = { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
       cwd = git_root_dir,
     },
     {
@@ -1941,7 +1941,7 @@ T['Tracking']['reacts to buffer rename'] = function()
       cwd = new_root,
     },
     {
-      args = { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', file_rel },
+      args = { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', file_rel },
       cwd = new_root,
     },
   }
@@ -2011,9 +2011,9 @@ T['Tracking']['reacts to staging'] = function()
       cwd = git_root_dir,
     },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 end
@@ -2052,9 +2052,9 @@ T['Tracking']['reacts to change in HEAD'] = function()
       cwd = git_root_dir,
     },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
     { '-c', 'gc.auto=0', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD' },
-    { '-c', 'gc.auto=0', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
+    { '-c', 'gc.auto=0', '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--', 'file-in-git' },
   }
   validate_git_spawn_log(ref_git_spawn_log)
 end
@@ -2251,7 +2251,7 @@ T['Tracking']['event is properly triggered on buffer write'] = function()
   local ref_git_spawn_log = {
     {
       '-c', 'gc.auto=0',
-      'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+      '--no-optional-locks', 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
       '--', 'dir-in-git/file-in-dir-in-git'
     }
   }

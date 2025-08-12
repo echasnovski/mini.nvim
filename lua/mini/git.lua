@@ -1414,7 +1414,13 @@ H.update_git_in_progress = function(repo, bufs)
 end
 
 H.update_git_status = function(root, bufs)
-  local command = H.git_cmd({ 'status', '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z', '--' })
+  --stylua: ignore
+  local command = H.git_cmd({
+    -- NOTE: Use `--no-optional-locks` to reduce conflicts with other Git tasks
+    '--no-optional-locks', 'status',
+    '--verbose', '--untracked-files=all', '--ignored', '--porcelain', '-z',
+    '--',
+  })
   local root_len, path_data = string.len(root), {}
   for _, buf_id in ipairs(bufs) do
     -- Use paths relative to the root as in `git status --porcelain` output
