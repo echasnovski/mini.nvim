@@ -993,3 +993,19 @@ local set_lines = function(lines) child.api.nvim_buf_set_lines(0, 0, -1, true, l
 - When working with automatically named screenshots, beware of the following caveats:
     - Some systems are case insensitive (like usually Windows and MacOS). So having two different file names which are the same ignoring case will introduce problems for users to properly install plugin.
     - Some system setups have restrictions on full path length (like 260 bytes on some Git+Windows combinations) or file name length (like 255 bytes on ext4 Windows partitions and 143 bytes on eCryptfs Linux partitions). Restriction on full path is hard to accommodate for (apart from limiting file name size to some reasonable number), but trying to not have file names longer than 143 bytes (by having shorter test case names) should be reasonable.
+
+- To make reading strings that contain Lua code easier (for `child.lua` and `child.lua_get`), you can add the following tree-sitter capture to your personal configuration. Put it in the file 'after/queries/lua/injections.scm'. Don't forget to add `; extends` at the beginning of the file (see `:h treesitter-query-modeline-extends`):
+
+    ```query
+    ; extends
+    (function_call
+      name: (dot_index_expression
+        table: (identifier) @_table
+        field: (identifier) @_field)
+      arguments: (arguments
+        (string
+          content: (string_content) @injection.content))
+      (#eq? @_table child)
+      (#any-of? @_field lua lua_get)
+      (#set! injection.language "lua"))
+    ```
