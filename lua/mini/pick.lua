@@ -766,6 +766,9 @@ end
 --- on repeated prompts (like when deleting query entries) at the cost of using
 --- more memory. Default: `false`.
 ---
+--- `options.show_hidden` is a boolean indicating whether match results should
+--- include hidden files. Default: `false`.
+---
 --- # Source ~
 ---
 --- `config.source` defines fallbacks for source specification. For example, this
@@ -842,6 +845,9 @@ MiniPick.config = {
 
     -- Whether to cache matches (more speed and memory on repeated prompts)
     use_cache = false,
+
+    -- Whether to show hidden files
+    show_hidden = false,
   },
 
   -- Source definition. See `:h MiniPick-source`.
@@ -1942,6 +1948,7 @@ H.setup_config = function(config)
   H.check_type('options', config.options, 'table')
   H.check_type('options.content_from_bottom', config.options.content_from_bottom, 'boolean')
   H.check_type('options.use_cache', config.options.use_cache, 'boolean')
+  H.check_type('options.show_hidden', config.options.show_hidden, 'boolean')
 
   H.check_type('source', config.source, 'table')
   H.check_type('source.items', config.source.items, 'table', true)
@@ -2116,6 +2123,7 @@ H.validate_picker_opts = function(opts)
   local options = opts.options
   if type(options.content_from_bottom) ~= 'boolean' then H.error('`options.content_from_bottom` should be boolean.') end
   if type(options.use_cache) ~= 'boolean' then H.error('`options.use_cache` should be boolean.') end
+  if type(options.show_hidden) ~= 'boolean' then H.error('`options.show_hidden` should be boolean.') end
 
   -- Window
   local win_config = opts.window.config
@@ -3383,9 +3391,28 @@ H.files_get_tool = function()
 end
 
 H.files_get_command = function(tool)
-  if tool == 'rg' then return { 'rg', '--files', '--no-follow', '--color=never' } end
-  if tool == 'fd' then return { 'fd', '--type=f', '--no-follow', '--color=never' } end
-  if tool == 'git' then return { 'git', 'ls-files', '--cached', '--others', '--exclude-standard' } end
+  local show_hidden = H.get_config().options.show_hidden
+  if tool == 'rg' then 
+      local command = { 'rg', '--files', '--no-follow', '--color=never' }
+      if show_hidden then
+          table.insert(command, "--hidden")
+      end
+      return command
+  end
+  if tool == 'fd' then 
+      local command = { 'fd', '--type=f', '--no-follow', '--color=never' }
+      if show_hidden then
+          table.insert(command, "--hidden")
+      end
+      return command
+  end
+  if tool == 'git' then 
+      local command = { 'git', 'ls-files', '--cached', '--others' }
+      if not show_hidden then
+          table.insert(command, "--exclude-standard")
+      end
+      return command
+  end
   H.error([[Wrong 'tool' for `files` builtin.]])
 end
 
