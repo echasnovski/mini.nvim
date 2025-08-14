@@ -1,2 +1,4 @@
 doc/tags
 dual
+.nvim.lua
+Session.vim
