@@ -1302,6 +1302,9 @@ H.expr_textobject = function(mode, ai_type, opts)
     vis_mode_field = vim.inspect(vis_mode_field == '' and 'v' or vis_mode_field)
   end
 
+  local tobj = MiniAi.find_textobject(ai_type, tobj_id, opts)
+  if tobj == nil then return '<Esc>' end
+
   -- Make expression
   return '<Cmd>lua '
     .. string.format(
