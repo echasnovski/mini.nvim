@@ -165,12 +165,22 @@ T['setup()']['respects `config.saturation`'] = function()
   validate('medium', '#ffc7da')
   validate('mediumhigh', '#ffb5cf')
   validate('high', '#ffa8c6')
+
+  expect.error(
+    function() load_module({ background = '#222222', foreground = '#dddddd', saturation = 'aaa' }) end,
+    'one of.*"high"'
+  )
 end
 
 T['setup()']['respects `config.accent`'] = function()
   load_module({ background = '#222222', foreground = '#dddddd', accent = 'red' })
 
   validate_hl_group('WinSeparator', 'guifg=#ffc7da')
+
+  expect.error(
+    function() load_module({ background = '#222222', foreground = '#dddddd', accent = 'aaa' }) end,
+    'one of.*"bg"'
+  )
 end
 
 T['setup()']['respects `config.plugins`'] = function()
@@ -423,9 +433,9 @@ T['make_palette()']['validates arguments'] = function()
   expect.error(function() make_palette({ background = bg, foreground = fg, n_hues = -1 }) end, '0')
   expect.error(function() make_palette({ background = bg, foreground = fg, n_hues = 9 }) end, '8')
 
-  expect.error(function() make_palette({ background = bg, foreground = fg, saturation = 'aaa' }) end, 'one of')
+  expect.error(function() make_palette({ background = bg, foreground = fg, saturation = 'aaa' }) end, 'one of.*"high"')
 
-  expect.error(function() make_palette({ background = bg, foreground = fg, accent = 'aaa' }) end, 'one of')
+  expect.error(function() make_palette({ background = bg, foreground = fg, accent = 'aaa' }) end, 'one of.*"bg"')
 end
 
 T['apply_palette()'] = new_set()
