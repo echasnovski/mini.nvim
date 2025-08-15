@@ -1663,7 +1663,7 @@ H.setup_config = function(config)
     H.error('`saturation` should be one of ' .. table.concat(vim.tbl_map(vim.inspect, H.saturation_values), ', '))
   end
   if not vim.tbl_contains(H.accent_values, config.accent) then
-    H.error('`accent` should be one of ' .. table.concat(vim.tbl_map(vim.inspect, H.saturation_values), ', '))
+    H.error('`accent` should be one of ' .. table.concat(vim.tbl_map(vim.inspect, H.accent_values), ', '))
   end
   H.check_type('plugins', config.plugins, 'table')
 
