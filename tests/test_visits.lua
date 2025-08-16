@@ -52,22 +52,6 @@ local validate_buf_name = function(buf_id, name)
   eq(child.api.nvim_buf_get_name(buf_id):gsub('\\', '/'), name)
 end
 
-local validate_partial_equal_arr = function(test_arr, ref_arr)
-  -- Same length
-  eq(#test_arr, #ref_arr)
-
-  -- Partial values
-  local test_arr_mod = {}
-  for i = 1, #ref_arr do
-    local test_with_ref_keys = {}
-    for key, _ in pairs(ref_arr[i]) do
-      test_with_ref_keys[key] = test_arr[i][key]
-    end
-    test_arr_mod[i] = test_with_ref_keys
-  end
-  eq(test_arr_mod, ref_arr)
-end
-
 local validate_partial_equal = function(test_tbl, ref_tbl)
   eq(type(test_tbl), 'table')
 
@@ -86,20 +70,6 @@ local validate_index_entry = function(cwd, path, ref)
   else
     validate_partial_equal(out, ref)
   end
-end
-
-local validate_index = function(index_out, index_ref)
-  -- Convert to absolute paths (beware that this depends on current directory)
-  local index_ref_compare = {}
-  for cwd, cwd_tbl in pairs(index_ref) do
-    local cwd_tbl_ref_compare = {}
-    for path, path_tbl in pairs(cwd_tbl) do
-      cwd_tbl_ref_compare[full_path(path)] = path_tbl
-    end
-    index_ref_compare[full_path(cwd)] = cwd_tbl_ref_compare
-  end
-
-  eq(index_out, index_ref)
 end
 
 local make_ref_index_full = function(ref_index)
