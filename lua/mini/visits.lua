@@ -334,7 +334,7 @@
 ---@tag MiniVisits-examples
 
 ---@alias __visits_path string|nil Visit path. Can be empty string to mean "all visited
----   paths for `cwd`". Default: path of current buffer.
+---   paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 ---@alias __visits_cwd string|nil Visit cwd (project directory). Can be empty string to mean
 ---   "all visited cwd". Default: |current-directory|.
 ---@alias __visits_filter - <filter> `(function)` - predicate to filter paths. For more information
@@ -495,7 +495,8 @@ MiniVisits.config = {
 --- - Add 1 to visit `count`.
 --- - Set `latest` visit time to equal current time.
 ---
----@param path string|nil Visit path. Default: path of current buffer.
+---@param path string|nil Visit path. Default: path of current buffer if normal,
+---   error otherwise.
 ---@param cwd string|nil Visit cwd (project directory). Default: |current-directory|.
 MiniVisits.register_visit = function(path, cwd)
   path = H.validate_path(path)
@@ -1421,7 +1422,8 @@ end
 
 -- Validators -----------------------------------------------------------------
 H.validate_path = function(x)
-  x = x or H.buf_get_path(vim.api.nvim_get_current_buf()) or ''
+  x = x or H.buf_get_path(vim.api.nvim_get_current_buf())
+  if x == nil then H.error('Current buffer is not for a regular file') end
   H.validate_string(x, 'path')
   return x == '' and '' or H.full_path(x)
 end
@@ -1506,7 +1508,7 @@ H.is_valid_buf = function(buf_id) return type(buf_id) == 'number' and vim.api.nv
 
 H.buf_get_path = function(buf_id)
   -- Get path only for valid normal buffers
-  if not H.is_valid_buf(buf_id) or vim.bo[buf_id].buftype ~= '' then return nil end
+  if not (H.is_valid_buf(buf_id) and vim.bo[buf_id].buftype == '') then return nil end
   local res = H.full_path(vim.api.nvim_buf_get_name(buf_id))
   if res == '' then return end
   return res

@@ -471,7 +471,8 @@ Steps:
 - Set `latest` visit time to equal current time.
 
 Parameters ~
-{path} `(string|nil)` Visit path. Default: path of current buffer.
+{path} `(string|nil)` Visit path. Default: path of current buffer if normal,
+  error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Default: |current-directory|.
 
 ------------------------------------------------------------------------------
@@ -485,7 +486,7 @@ already present, does nothing. If not - creates it with both `count` and
 
 Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
-  paths for `cwd`". Default: path of current buffer.
+  paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 
@@ -501,7 +502,7 @@ Steps:
 Parameters ~
 {label} `(string|nil)` Label string. Default: `nil` to ask from user.
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
-  paths for `cwd`". Default: path of current buffer.
+  paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 
@@ -519,7 +520,7 @@ Notes:
 
 Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
-  paths for `cwd`". Default: path of current buffer.
+  paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 
@@ -535,7 +536,7 @@ Steps:
 Parameters ~
 {label} `(string|nil)` Label string. Default: `nil` to ask from user.
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
-  paths for `cwd`". Default: path of current buffer.
+  paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 
@@ -604,7 +605,7 @@ Examples: >lua
 <
 Parameters ~
 {path} `(string|nil)` Visit path. Can be empty string to mean "all visited
-  paths for `cwd`". Default: path of current buffer.
+  paths for `cwd`". Default: path of current buffer if normal, error otherwise.
 {cwd} `(string|nil)` Visit cwd (project directory). Can be empty string to mean
   "all visited cwd". Default: |current-directory|.
 {opts} `(table|nil)` Options. Possible fields:

@@ -44,6 +44,12 @@ local set_index = forward_lua('MiniVisits.set_index')
 
 local getcwd = function() return (child.fn.getcwd():gsub('\\', '/')) end
 
+local new_uri_scratch_buf = function()
+  local buf_id = child.api.nvim_create_buf(false, true)
+  child.api.nvim_buf_set_name(buf_id, 'xxx://hello/world')
+  return buf_id
+end
+
 -- Common test helpers
 local validate_buf_name = function(buf_id, name)
   buf_id = buf_id or child.api.nvim_get_current_buf()
@@ -241,6 +247,10 @@ T['register_visit()']['uses current data as defaults'] = function()
   edit(path)
   register_visit()
   eq(get_index(), { [getcwd()] = { [path] = { count = 1, latest = child_time() } } })
+
+  -- Errors on non-normal buffer
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(register_visit, 'not for a regular file')
 end
 
 T['register_visit()']['handles paths with "~" for home directory'] = function()
@@ -327,6 +337,10 @@ T['add_path()']['uses current data as defaults'] = function()
   edit(path)
   add_path()
   eq(get_index(), { [getcwd()] = { [path] = { count = 0, latest = 0 } } })
+
+  -- Errors on non-normal buffer
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(add_path, 'not for a regular file')
 end
 
 T['add_path()']['does not affect other stored data'] = function()
@@ -422,6 +436,10 @@ T['add_label()']['uses current data as defaults for path and cwd'] = function()
   edit(path)
   add_label('aaa')
   eq(get_index(), { [getcwd()] = { [path] = { count = 0, labels = { aaa = true }, latest = 0 } } })
+
+  -- Errors on non-normal buffer
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(function() add_label('aaa') end, 'not for a regular file')
 end
 
 T['add_label()']['asks user for label if it is not supplied'] = function()
@@ -534,6 +552,10 @@ T['remove_path()']['uses current data as defaults'] = function()
 
   remove_path()
   eq(get_index(), {})
+
+  -- Errors on non-normal buffer
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(remove_path, 'not for a regular file')
 end
 
 T['remove_path()']['validates arguments'] = function()
@@ -632,6 +654,10 @@ T['remove_label()']['uses current data as defaults for path and cwd'] = function
 
   remove_label('aaa')
   eq(get_index(), { [getcwd()] = { [path] = { count = 0, latest = 0 } } })
+
+  -- Errors on non-normal buffer
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(function() remove_label('aaa') end, 'not for a regular file')
 end
 
 T['remove_label()']['asks user for label if it is not supplied'] = function()
@@ -1049,6 +1075,9 @@ end
 T['list_labels()']['validates arguments'] = function()
   expect.error(function() list_labels(1, 'cwd') end, '`path`.*string')
   expect.error(function() list_labels('file', 1) end, '`cwd`.*string')
+
+  child.api.nvim_set_current_buf(new_uri_scratch_buf())
+  expect.error(function() list_labels() end, 'not for a regular file')
 end
 
 T['select_path()'] = new_set({
