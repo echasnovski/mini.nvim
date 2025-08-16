@@ -1175,7 +1175,7 @@ T['Manual completion']['respects `itemDefaults` from LSP response'] = function()
   child.lua('_G.mock_itemdefaults.data = nil')
   edit_range = {
     replace = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 1 } },
-    insert = { start = { line = 0, character = 1 }, ['end'] = { line = 0, character = 2 } },
+    insert = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 2 } },
   }
   child.lua('_G.mock_itemdefaults.editRange = ' .. vim.inspect(edit_range))
 
@@ -2214,7 +2214,8 @@ T['Snippets']['work'] = function()
   local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
   local format_snippet = child.lua_get('vim.lsp.protocol.InsertTextFormat.Snippet')
 
-  --stylua: ignore
+  local r = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 0 } }
+
   local items = {
     -- "Regular" snippet kind
     { label = 'Snippet A $1', kind = kind_snippet },
@@ -2226,10 +2227,20 @@ T['Snippets']['work'] = function()
     { label = 'Snip C', kind = kind_function, insertText = 'Snippet C $1', insertTextFormat = format_snippet },
 
     -- Should use `label` in popup and `textEdit.newText` after inserting
-    { label = 'Snip D', kind = kind_function, textEdit = { newText = 'Snippet D $1', range = {} }, insertTextFormat = format_snippet },
+    {
+      label = 'Snip D',
+      kind = kind_function,
+      textEdit = { newText = 'Snippet D $1', range = vim.deepcopy(r) },
+      insertTextFormat = format_snippet,
+    },
 
     -- Same, but `textEdit` is `InsertReplaceEdit`
-    { label = 'Snip E', kind = kind_function, textEdit = { newText = 'Snippet E $1', insert = {}, replace = {} }, insertTextFormat = format_snippet },
+    {
+      label = 'Snip E',
+      kind = kind_function,
+      textEdit = { newText = 'Snippet E $1', insert = vim.deepcopy(r), replace = vim.deepcopy(r) },
+      insertTextFormat = format_snippet,
+    },
   }
 
   mock_lsp_items(items)
@@ -2632,6 +2643,52 @@ T['Snippets']['can be inserted together with additional text edits'] = function(
   eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
 end
 
+T['Snippets']['respect covering `textEdit` in candidate'] = function()
+  if child.fn.has('nvim-0.10') == 0 then MiniTest.skip('This has problems on Neovim<0.10') end
+
+  child.set_size(10, 25)
+
+  local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
+  local items = {
+    {
+      label = 'Snip A',
+      kind = kind_snippet,
+      textEdit = {
+        newText = 'Snippet A $1',
+        -- Multi-line range to replace when inserting snippet
+        range = { start = { line = 0, character = 1 }, ['end'] = { line = 1, character = 1 } },
+      },
+    },
+    {
+      label = 'Snip B',
+      kind = kind_snippet,
+      textEdit = {
+        newText = 'Snippet B $1',
+        -- Should remove `insert` range when inserting snippet
+        insert = { start = { line = 0, character = 2 }, ['end'] = { line = 0, character = 4 } },
+        replace = { start = { line = 0, character = 2 }, ['end'] = { line = 0, character = 5 } },
+      },
+    },
+  }
+
+  mock_lsp_items(items)
+  local validate = function(item, ref_lines, ref_cursor)
+    mock_lsp_items({ item })
+    set_lines({ 'ab Sdef', 'gh' })
+    set_cursor(1, 4)
+    type_keys('i', '<C-Space>', '<C-n>', '<C-y>')
+    eq(get_lines(), ref_lines)
+    eq(get_cursor(), ref_cursor)
+    eq(child.fn.mode(), 'i')
+    eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
+
+    type_keys('<C-c>', '<Esc>')
+  end
+
+  validate(items[1], { 'aSnippet A h' }, { 1, 11 })
+  validate(items[2], { 'abSnippet B def', 'gh' }, { 1, 12 })
+end
+
 T['Snippets']["LSP server from 'mini.snippets'"] = new_set({
   hooks = {
     pre_case = function()
@@ -2667,7 +2724,7 @@ T['Snippets']["LSP server from 'mini.snippets'"]['works with in-server matching'
   child.lua([[
     local match = function(snippets)
       local res = { snippets[2] }
-      res[1].region = { from = { line = 1, col = 1 }, to = { line = 1, col = vim.fn.col('.') } }
+      res[1].region = { from = { line = 1, col = 1 }, to = { line = 1, col = vim.fn.col('.') - 1 } }
       return res
     end
     MiniSnippets.start_lsp_server({ match = match })

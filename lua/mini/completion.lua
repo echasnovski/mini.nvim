@@ -447,8 +447,11 @@ MiniCompletion.completefunc_lsp = function(findstart, base)
     return findstart == 1 and -3 or {}
   else
     if findstart == 1 then
-      H.completion.start_pos = H.get_completion_start(H.completion.lsp.result)
-      return H.completion.start_pos[2]
+      local from, to = H.get_completion_range(H.completion.lsp.result)
+      -- Cache initial completion state to revert to it when inserting snippet
+      -- NOTE: Track only length of base for performance, since this is enough
+      H.completion.init_base = { lnum = from[1], col = from[2], length = math.max(to[2] - from[2], 0) }
+      return from[2]
     end
 
     local is_incomplete = false
@@ -699,7 +702,7 @@ H.completion = {
   text_changed_id = 0,
   timer = vim.loop.new_timer(),
   lsp = { id = 0, status = nil, is_incomplete = false, result = nil, resolved = {}, cancel_fun = nil, context = nil },
-  start_pos = {},
+  init_base = { lnum = nil, col = nil, length = nil },
 }
 
 -- Cache for completion item info
@@ -1328,9 +1331,18 @@ H.make_lsp_extra_actions = function(lsp_data)
     -- Try to apply additional text edits
     H.apply_additional_text_edits(item)
 
-    -- Expand snippet: remove inserted word and instead insert snippet
+    -- Expand snippet: possibly revert to initial completion state (to respect
+    -- `textEdit` spanning after cursor), remove completed word, insert snippet
     if snippet == nil then return end
-    local from, to = H.completion.start_pos, vim.api.nvim_win_get_cursor(0)
+    local init_base = H.completion.init_base
+    local from, to = { init_base.lnum, init_base.col }, vim.api.nvim_win_get_cursor(0)
+    local range = H.get_lsp_edit_range({ result = { item } })
+    if range ~= nil then
+      -- NOTE: actual base string should not be relevant here, only byte count
+      local prefix = string.rep('x', init_base.length)
+      pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { prefix })
+      from, to = { range.start.line + 1, range.start.character }, { range['end'].line + 1, range['end'].character }
+    end
     pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { '' })
     local insert = H.get_config().lsp_completion.snippet_insert or MiniCompletion.default_snippet_insert
     insert(snippet)
@@ -1342,8 +1354,8 @@ H.apply_additional_text_edits = function(item)
   if item.additionalTextEdits == nil then return end
 
   -- Prepare extmarks to track relevant positions after text edits
-  local start_pos = H.completion.start_pos
-  local start_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, start_pos[1] - 1, start_pos[2], {})
+  local init_base = H.completion.init_base
+  local start_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, init_base.lnum - 1, init_base.col, {})
 
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   -- - Keep track of start-cursor range as not "expanding"
@@ -1356,7 +1368,7 @@ H.apply_additional_text_edits = function(item)
 
   -- Restore relevant positions
   local start_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, start_extmark_id, {})
-  H.completion.start_pos = { start_data[1] + 1, start_data[2] }
+  H.completion.init_base = { lnum = start_data[1] + 1, col = start_data[2], length = init_base.length }
   pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, start_extmark_id)
 
   local cursor_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, cursor_extmark_id, {})
@@ -1790,17 +1802,18 @@ end
 -- immediately).
 H.pumvisible = function() return vim.fn.pumvisible() > 0 end
 
-H.get_completion_start = function(lsp_result)
+H.get_completion_range = function(lsp_result)
+  local pos = vim.api.nvim_win_get_cursor(0)
+
   -- Prefer completion start from LSP response(s)
   for _, response_data in pairs(lsp_result or {}) do
     local range = H.get_lsp_edit_range(response_data)
-    if range ~= nil then return { range.start.line + 1, range.start.character } end
+    if range ~= nil then return { range.start.line + 1, range.start.character }, pos end
   end
 
   -- Fall back to start position of latest keyword
-  local pos = vim.api.nvim_win_get_cursor(0)
   local line = vim.api.nvim_get_current_line()
-  return { pos[1], vim.fn.match(line:sub(1, pos[2]), '\\k*$') }
+  return { pos[1], vim.fn.match(line:sub(1, pos[2]), '\\k*$') }, pos
 end
 
 H.get_lsp_edit_range = function(response_data)
