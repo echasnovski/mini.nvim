@@ -2208,7 +2208,7 @@ T['Snippets'] = new_set({
 })
 
 T['Snippets']['work'] = function()
-  child.set_size(10, 25)
+  child.set_size(10, 40)
 
   local kind_snippet = child.lua_get('vim.lsp.protocol.CompletionItemKind.Snippet')
   local kind_function = child.lua_get('vim.lsp.protocol.CompletionItemKind.Function')
@@ -2241,6 +2241,14 @@ T['Snippets']['work'] = function()
       textEdit = { newText = 'Snippet E $1', insert = vim.deepcopy(r), replace = vim.deepcopy(r) },
       insertTextFormat = format_snippet,
     },
+
+    -- Multi-line snippets in label
+    { label = 'Snippet F\nMulti\nLine $1', kind = kind_snippet },
+    {
+      label = 'Snip G',
+      kind = kind_snippet,
+      textEdit = { newText = 'Snippet G\nMulti\nLine $1', range = vim.deepcopy(r) },
+    },
   }
 
   mock_lsp_items(items)
@@ -2251,17 +2259,19 @@ T['Snippets']['work'] = function()
   -- Should show `label` when navigating with `<C-n>`
   for i = 1, #items do
     type_keys('<C-n>')
-    eq(get_lines(), { items[i].label })
+    local ref_lines = vim.split(items[i].label, '\n')
+    -- Built-in multi-line completion is present in Neovim>=0.11
+    if not (#ref_lines > 1 and child.fn.has('nvim-0.11') == 0) then eq(get_lines(), ref_lines) end
   end
 
   type_keys('<C-e>')
   set_lines({ '' })
 
   -- Should properly insert snippet and start snippet session
-  local validate = function(item, ref_line, ref_cursor)
+  local validate = function(item, ref_lines, ref_cursor)
     mock_lsp_items({ item })
     type_keys('<C-Space>', '<C-n>', '<C-y>')
-    eq(get_lines(), { ref_line })
+    eq(get_lines(), ref_lines)
     eq(get_cursor(), ref_cursor)
     eq(child.fn.mode(), 'i')
     eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
@@ -2270,11 +2280,13 @@ T['Snippets']['work'] = function()
     set_lines({ '' })
   end
 
-  validate(items[1], 'Snippet A ', { 1, 10 })
-  validate(items[2], 'Snippet B ', { 1, 10 })
-  validate(items[3], 'Snippet C ', { 1, 10 })
-  validate(items[4], 'Snippet D ', { 1, 10 })
-  validate(items[5], 'Snippet E ', { 1, 10 })
+  validate(items[1], { 'Snippet A ' }, { 1, 10 })
+  validate(items[2], { 'Snippet B ' }, { 1, 10 })
+  validate(items[3], { 'Snippet C ' }, { 1, 10 })
+  validate(items[4], { 'Snippet D ' }, { 1, 10 })
+  validate(items[5], { 'Snippet E ' }, { 1, 10 })
+  validate(items[6], { 'Snippet F', 'Multi', 'Line ' }, { 3, 5 })
+  validate(items[7], { 'Snippet G', 'Multi', 'Line ' }, { 3, 5 })
 end
 
 T['Snippets']['are inserted after attempting to insert non-keyword charater'] = function()
@@ -2638,8 +2650,8 @@ T['Snippets']['can be inserted together with additional text edits'] = function(
   child.cmd('inoremap ( (abc)<Left><Left><Left>')
 
   type_keys('i', '<C-Space>', '<C-n>', '(')
-  eq(get_lines(), { 'Snippet A New text on first line' })
-  eq(get_cursor(), { 1, 10 })
+  eq(get_lines(), { 'New text on first lineSnippet A ' })
+  eq(get_cursor(), { 1, 32 })
   eq(child.lua_get('#MiniSnippets.session.get(true)'), 1)
 end
 
@@ -2669,6 +2681,25 @@ T['Snippets']['respect covering `textEdit` in candidate'] = function()
         replace = { start = { line = 0, character = 2 }, ['end'] = { line = 0, character = 5 } },
       },
     },
+    {
+      label = 'Snip C',
+      kind = kind_snippet,
+      textEdit = {
+        newText = 'Snippet C $1',
+        range = { start = { line = 0, character = 3 }, ['end'] = { line = 0, character = 4 } },
+      },
+      -- Additional text edits both before and after candidate text edit
+      additionalTextEdits = {
+        {
+          newText = 'X',
+          range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 2 } },
+        },
+        {
+          newText = 'Y',
+          range = { start = { line = 0, character = 5 }, ['end'] = { line = 0, character = 6 } },
+        },
+      },
+    },
   }
 
   mock_lsp_items(items)
@@ -2687,6 +2718,7 @@ T['Snippets']['respect covering `textEdit` in candidate'] = function()
 
   validate(items[1], { 'aSnippet A h' }, { 1, 11 })
   validate(items[2], { 'abSnippet B def', 'gh' }, { 1, 12 })
+  validate(items[3], { 'X Snippet C dYf', 'gh' }, { 1, 12 })
 end
 
 T['Snippets']["LSP server from 'mini.snippets'"] = new_set({

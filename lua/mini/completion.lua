@@ -1328,52 +1328,65 @@ H.make_lsp_extra_actions = function(lsp_data)
       pcall(vim.api.nvim_win_set_cursor, 0, cur)
     end
 
-    -- Try to apply additional text edits
-    H.apply_additional_text_edits(item)
+    -- Try to only apply additional text edits for non-snippet items
+    if snippet == nil then return H.apply_text_edits(item.client_id, item.additionalTextEdits) end
 
-    -- Expand snippet: possibly revert to initial completion state (to respect
-    -- `textEdit` spanning after cursor), remove completed word, insert snippet
-    if snippet == nil then return end
+    -- Revert to initial completion state to respect text edit coordinates
     local init_base = H.completion.init_base
     local from, to = { init_base.lnum, init_base.col }, vim.api.nvim_win_get_cursor(0)
-    local range = H.get_lsp_edit_range({ result = { item } })
-    if range ~= nil then
-      -- NOTE: actual base string should not be relevant here, only byte count
-      local prefix = string.rep('x', init_base.length)
-      pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { prefix })
-      from, to = { range.start.line + 1, range.start.character }, { range['end'].line + 1, range['end'].character }
+    -- NOTE: actual base string should not be relevant here, only byte count
+    local prefix = string.rep('x', init_base.length)
+    pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { prefix })
+    to = { from[1], from[2] + init_base.length }
+
+    local edit_range = H.get_lsp_edit_range({ result = { item } })
+    if edit_range ~= nil then
+      from = { edit_range.start.line + 1, edit_range.start.character }
+      to = { edit_range['end'].line + 1, edit_range['end'].character }
     end
+
+    -- Try to apply additional text edits *after* restoring state because their
+    -- data is computed by the server at that state. Keep track of the range
+    -- that needs clearing as it might change during edits.
+    from, to = H.apply_tracked_text_edits(item.client_id, item.additionalTextEdits, from, to)
+
+    -- Expand snippet: remove base and insert at cursor
     pcall(vim.api.nvim_buf_set_text, 0, from[1] - 1, from[2], to[1] - 1, to[2], { '' })
     local insert = H.get_config().lsp_completion.snippet_insert or MiniCompletion.default_snippet_insert
     insert(snippet)
   end)
 end
 
-H.apply_additional_text_edits = function(item)
-  -- Code originally inspired by https://github.com/neovim/neovim/issues/12310
-  if item.additionalTextEdits == nil then return end
+H.apply_text_edits = function(client_id, text_edits)
+  if text_edits == nil then return end
+  local offset_encoding = client_id == nil and 'utf-16' or vim.lsp.get_client_by_id(client_id).offset_encoding
+  vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), offset_encoding)
+end
 
-  -- Prepare extmarks to track relevant positions after text edits
-  local init_base = H.completion.init_base
-  local start_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, init_base.lnum - 1, init_base.col, {})
+H.apply_tracked_text_edits = function(client_id, text_edits, from, to)
+  if text_edits == nil then return from, to end
 
+  -- Prepare extmarks to track relevant positions
   local cur_pos = vim.api.nvim_win_get_cursor(0)
-  -- - Keep track of start-cursor range as not "expanding"
-  local cursor_extmark_opts = { right_gravity = false }
-  local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], cursor_extmark_opts)
+  local cursor_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, cur_pos[1] - 1, cur_pos[2], {})
+
+  local from_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, from[1] - 1, from[2], {})
+  local to_extmark_id = vim.api.nvim_buf_set_extmark(0, H.ns_id, to[1] - 1, to[2], {})
 
   -- Do text edits
-  local offset_encoding = item.client_id == nil and 'utf-16' or vim.lsp.get_client_by_id(item.client_id).offset_encoding
-  vim.lsp.util.apply_text_edits(item.additionalTextEdits, vim.api.nvim_get_current_buf(), offset_encoding)
+  H.apply_text_edits(client_id, text_edits)
 
-  -- Restore relevant positions
-  local start_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, start_extmark_id, {})
-  H.completion.init_base = { lnum = start_data[1] + 1, col = start_data[2], length = init_base.length }
-  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, start_extmark_id)
-
+  -- Restore cursor position
   local cursor_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, cursor_extmark_id, {})
+  vim.api.nvim_buf_del_extmark(0, H.ns_id, cursor_extmark_id)
   pcall(vim.api.nvim_win_set_cursor, 0, { cursor_data[1] + 1, cursor_data[2] })
-  pcall(vim.api.nvim_buf_del_extmark, 0, H.ns_id, cursor_extmark_id)
+
+  -- Update in place tracked range
+  local from_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, from_extmark_id, {})
+  vim.api.nvim_buf_del_extmark(0, H.ns_id, from_extmark_id)
+  local to_data = vim.api.nvim_buf_get_extmark_by_id(0, H.ns_id, to_extmark_id, {})
+  vim.api.nvim_buf_del_extmark(0, H.ns_id, to_extmark_id)
+  return { from_data[1] + 1, from_data[2] }, { to_data[1] + 1, to_data[2] }
 end
 
 -- Completion item info -------------------------------------------------------
