@@ -997,4 +997,23 @@ T['zoom()']['can be safely closed manually'] = function()
   expect.error(function() child.cmd_capture('au MiniMiscZoom') end, 'No such group')
 end
 
+T['zoom()']['returns correct state'] = function()
+  child.set_size(5, 30)
+  local zoomed_in = child.lua_get('MiniMisc.zoom()')
+  eq(zoomed_in, true)
+
+  zoomed_in = child.lua_get('MiniMisc.zoom()')
+  eq(zoomed_in, false)
+end
+
+T['zoom()']['returns correct state if closed manually'] = function()
+  child.set_size(5, 30)
+  local zoomed_in = child.lua_get('MiniMisc.zoom()')
+  eq(zoomed_in, true)
+
+  child.cmd('quit')
+  zoomed_in = child.lua_get('MiniMisc.zoom()')
+  eq(zoomed_in, true)
+end
+
 return T
