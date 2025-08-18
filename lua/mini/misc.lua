@@ -589,13 +589,14 @@ end
 ---@param buf_id number|nil Buffer identifier (see |bufnr()|) to be zoomed.
 ---   Default: 0 for current.
 ---@param config table|nil Optional config for window (as for |nvim_open_win()|).
+---@return boolean Whether current buffer is zoomed in.
 MiniMisc.zoom = function(buf_id, config)
   -- Hide
   if H.zoom_winid and vim.api.nvim_win_is_valid(H.zoom_winid) then
     pcall(vim.api.nvim_del_augroup_by_name, 'MiniMiscZoom')
     vim.api.nvim_win_close(H.zoom_winid, true)
     H.zoom_winid = nil
-    return
+    return false
   end
 
   -- Show
@@ -639,6 +640,7 @@ MiniMisc.zoom = function(buf_id, config)
   end
   vim.api.nvim_create_autocmd('VimResized', { group = gr, callback = adjust_config })
   vim.api.nvim_create_autocmd('OptionSet', { group = gr, pattern = 'cmdheight', callback = adjust_config })
+  return true
 end
 
 -- Helper data ================================================================
