@@ -921,13 +921,16 @@ end
 
 --- Neovim history picker
 ---
---- Pick from output of |:history|.
+--- Pick from output of |:history|. Use `<C-e>` to edit current match in
+--- Command line.
+---
 --- Notes:
 --- - Has no preview.
 --- - Choosing action depends on scope:
 ---     - For "cmd" / ":" scopes, the command is executed.
 ---     - For "search" / "/" / "?" scopes, search is redone.
 ---     - For other scopes nothing is done (but chosen item is still returned).
+--- - `<C-e>` only works for "cmd" / ":" / "search" / "/" / "?" scopes.
 ---
 --- Examples ~
 ---
@@ -978,6 +981,16 @@ MiniExtra.pickers.history = function(local_opts, opts)
     end
   end
 
+  local edit_command = function()
+    local cur_match = MiniPick.get_picker_matches().current
+    local cur_scope, cur_item = cur_match:match('^(.) (.*)$')
+    if not (cur_scope == ':' or cur_scope == '/' or cur_scope == '?') then return end
+    vim.schedule(function() vim.api.nvim_input(cur_scope .. cur_item) end)
+    return true
+  end
+  local mappings = { edit_command = { char = '<C-e>', func = edit_command } }
+
+  opts = vim.tbl_deep_extend('force', opts or {}, { mappings = mappings })
   local default_source = { name = string.format('History (%s)', scope), preview = preview, choose = choose }
   return H.pick_start(items, { source = default_source }, opts)
 end

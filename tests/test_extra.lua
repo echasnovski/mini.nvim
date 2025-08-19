@@ -2463,6 +2463,36 @@ T['pickers']['history()']['validates arguments'] = function()
   validate({ scope = '1' }, '`pickers%.history`.*"scope".*"1".*one of')
 end
 
+T['pickers']['history()']['has custom "edit_command" mapping'] = function()
+  local validate = function(type, content, active)
+    eq(child.fn.getcmdtype(), type)
+    eq(child.fn.getcmdline(), content)
+    eq(is_picker_active(), active)
+    type_keys('<C-c>')
+  end
+
+  pick_history()
+  eq(child.lua_get('MiniPick.get_picker_opts().mappings.edit_command.char'), '<C-e>')
+  type_keys(':', '<C-e>')
+  validate(':', 'lua _G.n = _G.n + 2', false)
+
+  pick_history()
+  type_keys('/', '<C-e>')
+  validate('/', 'bbb', false)
+
+  pick_history()
+  type_keys('@', '<C-e>')
+  validate('', '', true)
+
+  pick_history({ scope = ':' })
+  type_keys('<C-e>')
+  validate(':', 'lua _G.n = _G.n + 2', false)
+
+  pick_history({ scope = '/' })
+  type_keys('<C-e>')
+  validate('/', 'bbb', false)
+end
+
 T['pickers']['hl_groups()'] = new_set()
 
 local pick_hl_groups = forward_lua_notify('MiniExtra.pickers.hl_groups')
