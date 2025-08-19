@@ -327,7 +327,7 @@ MiniMisc.setup_termbg_sync = function()
     -- Set up sync
     local sync = function()
       local normal = vim.api.nvim_get_hl_by_name('Normal', true)
-      if normal.background == nil then return end
+      normal.background = normal.background or 0
       -- NOTE: use `io.stdout` instead of `io.write` to ensure correct target
       -- Otherwise after `io.output(file); file:close()` there is an error
       io.stdout:write(string.format('\027]11;#%06x\007', normal.background))
