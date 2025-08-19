@@ -55,6 +55,8 @@ There are following change types:
 
 - Add `pickers.colorschemes` picker. By @pkazmier, PR #1789.
 
+- Add `<C-e>` mapping for `pickers.history` picker to edit commands or searches in cmdline. By @TheLeoP, PR #1960.
+
 ## mini.files
 
 ### Refine

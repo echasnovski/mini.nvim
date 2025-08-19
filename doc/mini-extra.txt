@@ -512,13 +512,16 @@ Return ~
                `MiniExtra.pickers.history`({local_opts}, {opts})
 Neovim history picker
 
-Pick from output of |:history|.
+Pick from output of |:history|. Use `<C-e>` to edit current match in
+Command line.
+
 Notes:
 - Has no preview.
 - Choosing action depends on scope:
     - For "cmd" / ":" scopes, the command is executed.
     - For "search" / "/" / "?" scopes, search is redone.
     - For other scopes nothing is done (but chosen item is still returned).
+- `<C-e>` only works for "cmd" / ":" / "search" / "/" / "?" scopes.
 
 Examples ~
 
