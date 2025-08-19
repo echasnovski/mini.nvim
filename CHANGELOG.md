@@ -97,6 +97,12 @@ There are following change types:
 
 - Add `gen_spotter.vimpattern()` that can generate spotter based on Vimscript (not Lua) pattern.
 
+## mini.misc
+
+### Expand
+
+- Update `zoom()` to return whether current buffer is zoomed in. By @loichyan, PR #1954.
+
 ## mini.pick
 
 ### Expand

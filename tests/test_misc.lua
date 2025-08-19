@@ -904,7 +904,7 @@ T['zoom()']['works'] = function()
   child.o.winblend = 50
 
   local buf_id = child.api.nvim_get_current_buf()
-  child.lua('MiniMisc.zoom()')
+  eq(child.lua_get('MiniMisc.zoom()'), true)
   local floating_wins = get_floating_windows()
 
   eq(#floating_wins, 1)
@@ -915,6 +915,10 @@ T['zoom()']['works'] = function()
 
   -- No statusline should be present
   child.expect_screenshot()
+
+  -- Should toggle between zoom in and out
+  eq(child.lua_get('MiniMisc.zoom()'), false)
+  eq(#get_floating_windows(), 0)
 end
 
 T['zoom()']['respects `buf_id` argument'] = function()
