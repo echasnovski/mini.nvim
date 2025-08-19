@@ -1221,21 +1221,19 @@ H.apply_config = function(config)
   MiniClue.enable_all_triggers()
 
   -- Tweak macro execution
-  local macro_keymap_opts = { nowait = true, desc = "Execute macro without 'mini.clue' triggers" }
-  local exec_macro = function(keys)
-    local register = H.getcharstr()
+  local exec_macro = function(key, register)
     if register == nil then return end
     MiniClue.disable_all_triggers()
-    vim.schedule(MiniClue.enable_all_triggers)
-    pcall(vim.api.nvim_feedkeys, vim.v.count1 .. '@' .. register, 'nx', false)
+    vim.schedule(function() MiniClue.enable_all_triggers() end)
+    pcall(vim.api.nvim_feedkeys, vim.v.count1 .. key .. register, 'nx', false)
   end
-  if vim.fn.maparg('@', 'n') == '' then vim.keymap.set('n', '@', exec_macro, macro_keymap_opts) end
 
-  local exec_latest_macro = function(keys)
-    MiniClue.disable_all_triggers()
-    vim.schedule(MiniClue.enable_all_triggers)
-    vim.api.nvim_feedkeys(vim.v.count1 .. 'Q', 'nx', false)
-  end
+  local macro_keymap_opts = { nowait = true, desc = "Execute macro without 'mini.clue' triggers" }
+
+  local exec_register_macro = function() exec_macro('@', H.getcharstr()) end
+  if vim.fn.maparg('@', 'n') == '' then vim.keymap.set('n', '@', exec_register_macro, macro_keymap_opts) end
+
+  local exec_latest_macro = function() exec_macro('Q', '') end
   if vim.fn.maparg('Q', 'n') == '' then vim.keymap.set('n', 'Q', exec_latest_macro, macro_keymap_opts) end
 end
 
