@@ -1264,10 +1264,20 @@ H.create_autocommands = function()
   local special_ft = { 'help', 'git' }
   au('Filetype', special_ft, ensure_triggers, 'Ensure buffer-local trigger keymaps')
 
-  -- Disable all triggers when recording macro as they interfere with what is
-  -- actually recorded
-  au('RecordingEnter', '*', MiniClue.disable_all_triggers, 'Disable all triggers')
-  au('RecordingLeave', '*', MiniClue.enable_all_triggers, 'Enable all triggers')
+  -- Disable all triggers (current and future) when recording macro as they
+  -- interfere with what is actually recorded
+  local cache_disable
+  local disable_all_plus = function()
+    MiniClue.disable_all_triggers()
+    cache_disable = vim.g.miniclue_disable
+    vim.g.miniclue_disable = true
+  end
+  local enable_all_plus = function()
+    vim.g.miniclue_disable = cache_disable
+    MiniClue.enable_all_triggers()
+  end
+  au('RecordingEnter', '*', disable_all_plus, 'Disable all triggers')
+  au('RecordingLeave', '*', enable_all_plus, 'Enable all triggers')
 
   au('VimResized', '*', H.window_update, 'Update window on resize')
   au('ColorScheme', '*', H.create_default_hl, 'Ensure colors')

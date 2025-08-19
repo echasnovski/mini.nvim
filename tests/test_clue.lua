@@ -3044,7 +3044,7 @@ end
 
 T['Reproducing keys']['works with macros'] = function()
   mock_comment_operators()
-  load_module({ triggers = { { mode = 'n', keys = 'g' }, { mode = 'o', keys = 'i' } } })
+  load_module({ triggers = { { mode = 'n', keys = 'g' }, { mode = 'o', keys = 'i' }, { mode = 'i', keys = '<C-r>' } } })
   validate_trigger_keymap('n', 'g')
   validate_trigger_keymap('o', 'i')
 
@@ -3099,6 +3099,12 @@ T['Reproducing keys']['works with macros'] = function()
   child.api.nvim_buf_set_lines(new_buf_id, 0, -1, false, { 'cc', 'dd' })
   validate_trigger_keymap('n', 'g')
   validate_trigger_keymap('o', 'i')
+
+  -- Should work when creating new buffer inside macro (i.e. auto-creating
+  -- triggers should not intefere)
+  child.fn.setreg('a', 'word')
+  type_keys('qw', ':enew<CR>', 'i', '<C-r>', 'a', '<Esc>', 'q')
+  eq(child.fn.getreg('w'), ':enew\ri\18a\27')
 end
 
 T['Reproducing keys']['works when key query is executed in presence of longer keymaps'] = function()
