@@ -904,7 +904,7 @@ T['zoom()']['works'] = function()
   child.o.winblend = 50
 
   local buf_id = child.api.nvim_get_current_buf()
-  child.lua('MiniMisc.zoom()')
+  eq(child.lua_get('MiniMisc.zoom()'), true)
   local floating_wins = get_floating_windows()
 
   eq(#floating_wins, 1)
@@ -915,22 +915,41 @@ T['zoom()']['works'] = function()
 
   -- No statusline should be present
   child.expect_screenshot()
+
+  eq(child.lua_get('MiniMisc.zoom()'), false)
+end
+
+T['zoom()']['returns correct state'] = function()
+  child.set_size(5, 30)
+  eq(child.lua_get('MiniMisc.zoom()'), true)
+  -- Should zoom out if called again
+  eq(child.lua_get('MiniMisc.zoom()'), false)
+end
+
+T['zoom()']['returns correct state if closed manually'] = function()
+  child.set_size(5, 30)
+  eq(child.lua_get('MiniMisc.zoom()'), true)
+  child.cmd('quit')
+  -- Should zoom in again since closed manually
+  eq(child.lua_get('MiniMisc.zoom()'), true)
 end
 
 T['zoom()']['respects `buf_id` argument'] = function()
   local buf_id = child.api.nvim_create_buf(true, false)
-  child.lua('MiniMisc.zoom(...)', { buf_id })
+  eq(child.lua_get('MiniMisc.zoom(...)', { buf_id }), true)
   local floating_wins = get_floating_windows()
 
   eq(#floating_wins, 1)
   eq(child.api.nvim_win_get_buf(floating_wins[1]), buf_id)
+
+  eq(child.lua_get('MiniMisc.zoom(...)', { buf_id }), false)
 end
 
 T['zoom()']['respects `config` argument'] = function()
   child.set_size(5, 30)
 
   local validate = function(config, ref_height, ref_width)
-    child.lua('MiniMisc.zoom(...)', { 0, config })
+    eq(child.lua_get('MiniMisc.zoom(...)', { 0, config }), true)
     local floating_wins = get_floating_windows()
 
     eq(#floating_wins, 1)
@@ -962,18 +981,19 @@ T['zoom()']["respects 'winborder' option"] = function()
   child.set_size(5, 30)
 
   child.o.winborder = 'rounded'
-  child.lua('MiniMisc.zoom()')
+  eq(child.lua_get('MiniMisc.zoom()'), true)
   child.expect_screenshot()
   child.cmd('quit')
 
   -- Should prefer explicitly configured value over 'winborder'
-  child.lua('MiniMisc.zoom(0, { border = "double" })')
+  eq(child.lua_get('MiniMisc.zoom(0, { border = "double" })'), true)
   child.expect_screenshot()
+  eq(child.lua_get('MiniMisc.zoom(0, { border = "double" })'), false)
 end
 
 T['zoom()']['reacts to relevant UI changes'] = function()
   child.set_size(5, 30)
-  child.lua('MiniMisc.zoom()')
+  eq(child.lua_get('MiniMisc.zoom()'), true)
   local win_id = get_floating_windows()[1]
 
   validate_dims(win_id, 4, 30)
@@ -985,35 +1005,18 @@ T['zoom()']['reacts to relevant UI changes'] = function()
   validate_dims(win_id, 10, 20)
   child.o.cmdheight = 3
   validate_dims(win_id, 7, 20)
+
+  eq(child.lua_get('MiniMisc.zoom()'), false)
 end
 
 T['zoom()']['can be safely closed manually'] = function()
   child.set_size(5, 30)
-  child.lua('MiniMisc.zoom()')
+  eq(child.lua_get('MiniMisc.zoom()'), true)
   child.cmd('quit')
 
   expect.no_error(function() child.cmd_capture('au MiniMiscZoom') end)
   child.o.lines = 10
   expect.error(function() child.cmd_capture('au MiniMiscZoom') end, 'No such group')
-end
-
-T['zoom()']['returns correct state'] = function()
-  child.set_size(5, 30)
-  local zoomed_in = child.lua_get('MiniMisc.zoom()')
-  eq(zoomed_in, true)
-
-  zoomed_in = child.lua_get('MiniMisc.zoom()')
-  eq(zoomed_in, false)
-end
-
-T['zoom()']['returns correct state if closed manually'] = function()
-  child.set_size(5, 30)
-  local zoomed_in = child.lua_get('MiniMisc.zoom()')
-  eq(zoomed_in, true)
-
-  child.cmd('quit')
-  zoomed_in = child.lua_get('MiniMisc.zoom()')
-  eq(zoomed_in, true)
 end
 
 return T
