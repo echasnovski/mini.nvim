@@ -324,19 +324,22 @@ MiniMisc.setup_termbg_sync = function()
     had_proper_response = true
     pcall(vim.api.nvim_del_autocmd, track_au_id)
 
-    -- Set up sync
-    local sync = function()
-      local normal = vim.api.nvim_get_hl_by_name('Normal', true)
-      normal.background = normal.background or 0
-      -- NOTE: use `io.stdout` instead of `io.write` to ensure correct target
-      -- Otherwise after `io.output(file); file:close()` there is an error
-      io.stdout:write(string.format('\027]11;#%06x\007', normal.background))
-    end
-    vim.api.nvim_create_autocmd({ 'VimResume', 'ColorScheme' }, { group = augroup, callback = sync })
-
     -- Set up reset to the color returned from the very first call
     H.termbg_init = H.termbg_init or bg_init
     local reset = function() io.stdout:write('\027]11;' .. H.termbg_init .. '\007') end
+    -- Set up sync
+    local sync = function()
+      local normal = vim.api.nvim_get_hl_by_name('Normal', true)
+      -- NOTE: use `io.stdout` instead of `io.write` to ensure correct target
+      -- Otherwise after `io.output(file); file:close()` there is an error
+      if normal.background then
+        io.stdout:write(string.format('\027]11;#%06x\007', normal.background))
+      else
+        reset()
+      end
+    end
+    vim.api.nvim_create_autocmd({ 'VimResume', 'ColorScheme' }, { group = augroup, callback = sync })
+
     vim.api.nvim_create_autocmd({ 'VimLeavePre', 'VimSuspend' }, { group = augroup, callback = reset })
 
     -- Sync immediately
@@ -605,9 +608,13 @@ MiniMisc.zoom = function(buf_id, config)
     local default_border = (vim.fn.exists('+winborder') == 1 and vim.o.winborder ~= '') and vim.o.winborder or 'none'
     --stylua: ignore
     local default_config = {
-      relative = 'editor', row = 0, col = 0,
-      width = max_width, height = max_height,
-      title = ' Zoom ', border = default_border,
+      relative = 'editor',
+      row = 0,
+      col = 0,
+      width = max_width,
+      height = max_height,
+      title = ' Zoom ',
+      border = default_border,
     }
     local res = vim.tbl_deep_extend('force', default_config, config or {})
 
