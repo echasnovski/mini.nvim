@@ -319,25 +319,25 @@ MiniMisc.setup_termbg_sync = function()
     -- Neovim=0.10 uses string sequence as response, while Neovim>=0.11 sets it
     -- in `sequence` table field
     local seq = type(args.data) == 'table' and args.data.sequence or args.data
-    local ok, bg_init = pcall(H.parse_osc11, seq)
-    if not (ok and type(bg_init) == 'string') then return table.insert(bad_responses, seq) end
+    local ok, termbg = pcall(H.parse_osc11, seq)
+    if not (ok and type(termbg) == 'string') then return table.insert(bad_responses, seq) end
     had_proper_response = true
     pcall(vim.api.nvim_del_autocmd, track_au_id)
+
+    -- Set up reset to the color returned from the very first call
+    H.termbg_init = H.termbg_init or termbg
+    local reset = function() io.stdout:write('\027]11;' .. H.termbg_init .. '\007') end
+    vim.api.nvim_create_autocmd({ 'VimLeavePre', 'VimSuspend' }, { group = augroup, callback = reset })
 
     -- Set up sync
     local sync = function()
       local normal = vim.api.nvim_get_hl_by_name('Normal', true)
-      if normal.background == nil then return end
+      if normal.background == nil then return reset() end
       -- NOTE: use `io.stdout` instead of `io.write` to ensure correct target
       -- Otherwise after `io.output(file); file:close()` there is an error
       io.stdout:write(string.format('\027]11;#%06x\007', normal.background))
     end
     vim.api.nvim_create_autocmd({ 'VimResume', 'ColorScheme' }, { group = augroup, callback = sync })
-
-    -- Set up reset to the color returned from the very first call
-    H.termbg_init = H.termbg_init or bg_init
-    local reset = function() io.stdout:write('\027]11;' .. H.termbg_init .. '\007') end
-    vim.api.nvim_create_autocmd({ 'VimLeavePre', 'VimSuspend' }, { group = augroup, callback = reset })
 
     -- Sync immediately
     sync()

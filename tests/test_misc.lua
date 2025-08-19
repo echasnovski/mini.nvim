@@ -676,6 +676,21 @@ T['setup_termbg_sync()']['handles different color formats'] = function()
   validate('rgba:1/23/456/1234', '#112345')
 end
 
+T['setup_termbg_sync()']['handles transparent `Normal` background'] = function()
+  skip_if_no_010()
+
+  child.cmd('hi Normal guifg=#222222 guibg=#dddddd')
+  child.lua('MiniMisc.setup_termbg_sync()')
+  child.api.nvim_exec_autocmds('TermResponse', { data = '\27]11;rgb:1111/2626/2d2d' })
+  child.lua('_G.log = {}')
+
+  -- When syncing with "transparent" `Normal`, should restore the original
+  -- terminal background
+  child.cmd('hi Normal guifg=#222222 guibg=NONE')
+  child.api.nvim_exec_autocmds('ColorScheme', {})
+  eq(child.lua_get('_G.log'), { { '\27]11;#11262d\a' } })
+end
+
 local restore_cursor_test_file = make_path(dir_misc_path, 'restore-cursor.lua')
 local restore_cursor_init_file = make_path(dir_misc_path, 'init-restore-cursor.lua')
 local restore_cursor_shada_path = make_path(dir_misc_path, 'restore-cursor.shada')
