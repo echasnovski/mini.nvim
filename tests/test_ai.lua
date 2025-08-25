@@ -883,18 +883,28 @@ T['gen_spec']['treesitter()']['validates builtin treesitter presence'] = functio
     '%(mini%.ai%) Can not get query for buffer 1 and language "vim"%.'
   )
 
+  -- - Should show local language in error message
+  child.cmd('edit tmp.lua')
+  set_lines({ 'vim.cmd([[', 'setlocal cursorline', ']])' })
+  set_cursor(2, 0)
+  expect.error(
+    function() child.lua('MiniAi.find_textobject("a", "F")') end,
+    '%(mini%.ai%) Can not get query for buffer 2 and language "vim"%.'
+  )
+
   -- Parser
+  child.cmd('enew')
   child.bo.filetype = 'aaa'
   expect.error(
     function() child.lua('MiniAi.find_textobject("a", "F")') end,
-    '%(mini%.ai%) Can not get parser for buffer 1 and language "aaa"%.'
+    '%(mini%.ai%) Can not get parser for buffer 3 and language "aaa"%.'
   )
 
   -- - Should respect registered language for a filetype
   child.lua('vim.treesitter.language.register("my_aaa", "aaa")')
   expect.error(
     function() child.lua('MiniAi.find_textobject("a", "F")') end,
-    '%(mini%.ai%) Can not get parser for buffer 1 and language "my_aaa"%.'
+    '%(mini%.ai%) Can not get parser for buffer 3 and language "my_aaa"%.'
   )
 end
 

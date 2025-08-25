@@ -1566,7 +1566,7 @@ H.get_matched_ranges_builtin = function(captures)
 
   -- Get query file depending on the local language
   local query = vim.treesitter.query.get(lang, 'textobjects')
-  if query == nil then H.error_treesitter('query') end
+  if query == nil then H.error_treesitter('query', lang) end
 
   -- Compute ranges of matched captures
   local capture_is_requested = vim.tbl_map(function(c) return vim.tbl_contains(captures, '@' .. c) end, query.captures)
@@ -1602,10 +1602,12 @@ H.get_nodes_range_builtin = function(nodes, buf_id, metadata)
   return { left[1], left[2], left[3], right[4], right[5], right[6] }
 end
 
-H.error_treesitter = function(failed_get)
+H.error_treesitter = function(failed_get, lang)
   local buf_id, ft = vim.api.nvim_get_current_buf(), vim.bo.filetype
-  local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
-  lang = has_lang and lang or ft
+  if lang == nil then
+    local has_lang, ft_lang = pcall(vim.treesitter.language.get_lang, ft)
+    lang = has_lang and ft_lang or ft
+  end
   local msg = string.format('Can not get %s for buffer %d and language "%s".', failed_get, buf_id, lang)
   H.error(msg)
 end
