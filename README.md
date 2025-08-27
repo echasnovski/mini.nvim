@@ -17,7 +17,7 @@ If you want to help this project grow but don't know where to start, check out [
 - [Installation](#installation)
 - [Modules](#modules)
 - [General principles](#general-principles)
-- [Plugin colorschemes](#plugin-colorschemes)
+- [Plugin color schemes](#plugin-color-schemes)
 - [Planned modules](#planned-modules)
 
 ## Installation
