@@ -1496,7 +1496,7 @@ H.cs_write = function(self, opts)
   -- Create file lines
   -- - Header
   local lines = {
-    [[-- Made with 'mini.colors' module of https://github.com/echasnovski/mini.nvim]],
+    [[-- Made with 'mini.colors' module of https://github.com/nvim-mini/mini.nvim]],
     '',
     [[if vim.g.colors_name ~= nil then vim.cmd('highlight clear') end]],
     'vim.g.colors_name = ' .. vim.inspect(cs.name),
