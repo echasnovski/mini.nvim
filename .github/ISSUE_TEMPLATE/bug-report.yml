@@ -7,9 +7,9 @@ body:
     attributes:
       label: Contributing guidelines
       options:
-      - label: I have read [CONTRIBUTING.md](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md)
+      - label: I have read [CONTRIBUTING.md](https://github.com/nvim-mini/mini.nvim/blob/main/CONTRIBUTING.md)
         required: true
-      - label: I have read [CODE_OF_CONDUCT.md](https://github.com/echasnovski/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
+      - label: I have read [CODE_OF_CONDUCT.md](https://github.com/nvim-mini/mini.nvim/blob/main/CODE_OF_CONDUCT.md)
         required: true
       - label: I have updated 'mini.nvim' to latest version of the `main` branch
         required: true
@@ -103,7 +103,7 @@ body:
             -- Clone latest 'mini.nvim' (requires Git CLI installed)
             vim.cmd('echo "Installing `mini.nvim`" | redraw')
             local mini_path = vim.fn.stdpath('data') .. '/site/pack/deps/start/mini.nvim'
-            local clone_cmd = { 'git', 'clone', '--depth=1', 'https://github.com/echasnovski/mini.nvim', mini_path }
+            local clone_cmd = { 'git', 'clone', '--depth=1', 'https://github.com/nvim-mini/mini.nvim', mini_path }
             vim.fn.system(clone_cmd)
             vim.cmd('echo "`mini.nvim` is installed" | redraw')
 
