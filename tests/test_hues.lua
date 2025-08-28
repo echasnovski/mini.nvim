@@ -198,7 +198,11 @@ T['setup()']['respects `config.plugins`'] = function()
 
   -- If supplied `false`, should not load plugin integration
   clear_highlight()
-  reload_module({ background = '#222222', foreground = '#dddddd', plugins = { ['echasnovski/mini.nvim'] = false } })
+  reload_module({
+    background = '#222222',
+    foreground = '#dddddd',
+    plugins = { ['nvim-mini/mini.nvim'] = false, ['echasnovski/mini.nvim'] = false },
+  })
   expect.match(child.cmd_capture('hi MiniCursorword'), 'cleared')
 
   -- Should allow loading only chosen integrations
@@ -470,7 +474,7 @@ T['apply_palette()']['respects `plugins`'] = function()
   child.lua([[require('mini.hues').setup({
     background = '#222222',
     foreground = '#dddddd',
-    plugins = { default = true, ["echasnovski/mini.nvim"] = false },
+    plugins = { default = true, ["nvim-mini/mini.nvim"] = false, ["echasnovski/mini.nvim"] = false },
   })]])
   apply_palette(palette)
   validate_hl_group('MiniCursorword', 'cleared')

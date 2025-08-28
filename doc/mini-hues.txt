@@ -36,7 +36,7 @@ Supported highlight groups:
 
 - Plugins (either with explicit definition or by verification that default
   highlighting works appropriately):
-    - 'echasnovski/mini.nvim'
+    - 'nvim-mini/mini.nvim'
     - 'akinsho/bufferline.nvim'
     - 'anuvyklack/hydra.nvim'
     - 'DanilaMihailov/beacon.nvim'
@@ -92,7 +92,7 @@ Example:
     foreground = '#c0c8cc',
     plugins = {
       default = false,
-      ['echasnovski/mini.nvim'] = true,
+      ['nvim-mini/mini.nvim'] = true,
     },
   })
 <
@@ -197,7 +197,7 @@ Example which will load only "mini.nvim" integration:
     foreground = '#c0c8cc',
     plugins = {
       default = false,
-      ['echasnovski/mini.nvim'] = true,
+      ['nvim-mini/mini.nvim'] = true,
     },
   })
 

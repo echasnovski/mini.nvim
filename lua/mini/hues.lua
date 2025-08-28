@@ -36,7 +36,7 @@
 ---
 --- - Plugins (either with explicit definition or by verification that default
 ---   highlighting works appropriately):
----     - 'echasnovski/mini.nvim'
+---     - 'nvim-mini/mini.nvim'
 ---     - 'akinsho/bufferline.nvim'
 ---     - 'anuvyklack/hydra.nvim'
 ---     - 'DanilaMihailov/beacon.nvim'
@@ -92,7 +92,7 @@
 ---     foreground = '#c0c8cc',
 ---     plugins = {
 ---       default = false,
----       ['echasnovski/mini.nvim'] = true,
+---       ['nvim-mini/mini.nvim'] = true,
 ---     },
 ---   })
 --- <
@@ -188,7 +188,7 @@ end
 ---     foreground = '#c0c8cc',
 ---     plugins = {
 ---       default = false,
----       ['echasnovski/mini.nvim'] = true,
+---       ['nvim-mini/mini.nvim'] = true,
 ---     },
 ---   })
 ---
@@ -876,8 +876,9 @@ MiniHues.apply_palette = function(palette, plugins)
   end
 
   -- Plugins
-  -- echasnovski/mini.nvim
-  if has_integration('echasnovski/mini.nvim') then
+  -- nvim-mini/mini.nvim
+  -- TODO: Remove 'echasnovski/mini.nvim' fallback after September 2026
+  if has_integration('nvim-mini/mini.nvim') or has_integration('echasnovski/mini.nvim') then
     hi('MiniAnimateCursor',      { fg=nil, bg=nil, reverse=true, nocombine=true })
     hi('MiniAnimateNormalFloat', { link='NormalFloat' })
 
