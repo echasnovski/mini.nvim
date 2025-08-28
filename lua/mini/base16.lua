@@ -17,7 +17,7 @@
 ---
 --- - Plugins (either with explicit definition or by verification that default
 ---   highlighting works appropriately):
----     - 'echasnovski/mini.nvim'
+---     - 'nvim-mini/mini.nvim'
 ---     - 'akinsho/bufferline.nvim'
 ---     - 'anuvyklack/hydra.nvim'
 ---     - 'DanilaMihailov/beacon.nvim'
@@ -91,7 +91,7 @@
 ---     use_cterm = true,
 ---     plugins = {
 ---       default = false,
----       ['echasnovski/mini.nvim'] = true,
+---       ['nvim-mini/mini.nvim'] = true,
 ---     },
 ---   })
 --- <
@@ -198,7 +198,7 @@ end
 ---     palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75),
 ---     plugins = {
 ---       default = false,
----       ['echasnovski/mini.nvim'] = true,
+---       ['nvim-mini/mini.nvim'] = true,
 ---     }
 ---   })
 --- <
@@ -702,8 +702,9 @@ H.apply_palette = function(palette, use_cterm)
   end
 
   -- Plugins
-  -- echasnovski/mini.nvim
-  if H.has_integration('echasnovski/mini.nvim') then
+  -- nvim-mini/mini.nvim
+  -- TODO: Remove 'echasnovski/mini.nvim' fallback after September 2026
+  if H.has_integration('nvim-mini/mini.nvim') or H.has_integration('echasnovski/mini.nvim') then
     hi('MiniAnimateCursor',      {fg=nil, bg=nil, attr='reverse,nocombine', sp=nil})
     hi('MiniAnimateNormalFloat', {link='NormalFloat'})
 

@@ -175,12 +175,15 @@ T['setup()']['respects `config.plugins`'] = function()
 
   -- If supplied `false`, should not load plugin integration
   clear_highlight()
-  reload_module({ palette = minischeme_palette, plugins = { ['echasnovski/mini.nvim'] = false } })
+  reload_module({
+    palette = minischeme_palette,
+    plugins = { ['nvim-mini/mini.nvim'] = false, ['echasnovski/mini.nvim'] = false },
+  })
   expect.match(child.cmd_capture('hi MiniCursorword'), 'cleared')
 
   -- Should allow loading only chosen integrations
   clear_highlight()
-  reload_module({ palette = minischeme_palette, plugins = { default = false, ['echasnovski/mini.nvim'] = true } })
+  reload_module({ palette = minischeme_palette, plugins = { default = false, ['nvim-mini/mini.nvim'] = true } })
   validate_hl_group('MiniCursorword', 'gui=underline')
   expect.match(child.cmd_capture('hi GitSignsAdd'), 'cleared')
 end

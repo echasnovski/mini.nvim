@@ -17,7 +17,7 @@ Supported highlight groups:
 
 - Plugins (either with explicit definition or by verification that default
   highlighting works appropriately):
-    - 'echasnovski/mini.nvim'
+    - 'nvim-mini/mini.nvim'
     - 'akinsho/bufferline.nvim'
     - 'anuvyklack/hydra.nvim'
     - 'DanilaMihailov/beacon.nvim'
@@ -91,7 +91,7 @@ Example: >lua
     use_cterm = true,
     plugins = {
       default = false,
-      ['echasnovski/mini.nvim'] = true,
+      ['nvim-mini/mini.nvim'] = true,
     },
   })
 <
@@ -207,7 +207,7 @@ Example which will load only "mini.nvim" integration: >lua
     palette = require('mini.base16').mini_palette('#112641', '#e2e98f', 75),
     plugins = {
       default = false,
-      ['echasnovski/mini.nvim'] = true,
+      ['nvim-mini/mini.nvim'] = true,
     }
   })
 <
