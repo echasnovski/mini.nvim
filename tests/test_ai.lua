@@ -1692,7 +1692,7 @@ end
 
 T['Textobject']["works with 'langmap'"] = function()
   -- Useful for different keyboard layouts. See
-  -- https://github.com/echasnovski/mini.nvim/issues/195
+  -- https://github.com/nvim-mini/mini.nvim/issues/195
   child.o.langmap = 'ki,ik'
 
   local validate_visual = function(line, column, keys, expected)

@@ -8,7 +8,7 @@ This directory contains code and results of benchmarking 'mini.starter' and its 
 
 Summary of startup-times for various 'init' files from 'init-files/' directory can be seen in 'startup-summary.md'. Current benchmark was done with Neovim 0.5.1 on Ubuntu 18.04 (i3-6100). Exact states of plugins used:
 
-- [echasnovski/mini.nvim](https://github.com/echasnovski/mini.nvim/tree/cfa108eeaead1abd8854a1f1cfb02e72482641ce)
+- [nvim-mini/mini.nvim](https://github.com/nvim-mini/mini.nvim/tree/cfa108eeaead1abd8854a1f1cfb02e72482641ce)
 - [mhinz/vim-startify](https://github.com/mhinz/vim-startify/tree/81e36c352a8deea54df5ec1e2f4348685569bed2)
 - [glepnir/dashboard-nvim](https://github.com/glepnir/dashboard-nvim/tree/ba98ab86487b8eda3b0934b5423759944b5f7ebd)
 - [goolord/alpha-nvim](https://github.com/goolord/alpha-nvim/tree/7a49086bf9197f573b396d4ac46262c02dfb9aec)

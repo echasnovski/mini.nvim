@@ -15,7 +15,7 @@ You can make contributions in the following ways:
     - **Documentation related**. For example, fix typo/wording in 'README.md', code comments or annotations (which are used to generate Neovim documentation; see later section). Feel free to make these without creating a GitHub issue.
     - **Add plugin integration to 'mini.base16' and 'mini.hues' modules**.
 - **Add explicit support to other colorschemes**. Every 'mini.nvim' module supports any colorscheme right out of the box. This is done by making most highlight groups be linked to a semantically similar builtin highlight group. Other groups are hard-coded based on personal preference. However, these choices might be out of tune with a particular colorscheme. Updating as many colorschemes as possible to have explicit 'mini.nvim' support is highly appreciated. For your convenience, there is a list of all highlight groups in later section of this file.
-- **Participate in [discussions](https://github.com/echasnovski/mini.nvim/discussions)**.
+- **Participate in [discussions](https://github.com/nvim-mini/mini.nvim/discussions)**.
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
 

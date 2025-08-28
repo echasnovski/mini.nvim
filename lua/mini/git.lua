@@ -956,7 +956,7 @@ H.command_complete_option = function(command)
   if #lines == 0 then return {} end
   -- - On some systems (like Mac), output still might contain formatting
   --   sequences, like "a\ba" and "_\ba" meaning bold and italic.
-  --   See https://github.com/echasnovski/mini.nvim/issues/918
+  --   See https://github.com/nvim-mini/mini.nvim/issues/918
   lines = vim.tbl_map(function(l) return l:gsub('.\b', '') end, lines)
 
   -- Construct non-duplicating candidates by parsing lines of help page

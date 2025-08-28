@@ -1584,7 +1584,7 @@ H.scroll_action = function(key, n, cursor_data)
   -- Computation of available top/bottom line depends on `scrolloff = 0`
   -- because otherwise it will go out of bounds causing scroll overshoot with
   -- later "bounce" back on view restore (see
-  -- https://github.com/echasnovski/mini.nvim/issues/177).
+  -- https://github.com/nvim-mini/mini.nvim/issues/177).
   local top, bottom = vim.fn.line('w0'), vim.fn.line('w$')
   local line = math.min(math.max(cursor_data.line, top), bottom)
 

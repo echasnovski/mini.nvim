@@ -1,8 +1,4 @@
-<div align="center"> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/logo-2/logo-extra_readme.png" alt="mini.extra"/> </div>
-
-<!-- badges: start -->
-[![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-<!-- badges: end -->
+<div align="center"> <img src="https://github.com/nvim-mini/assets/blob/main/logo-2/logo-extra_readme.png" alt="mini.extra"/> </div>
 
 ### Extra 'mini.nvim' functionality
 
@@ -10,7 +6,10 @@ See more details in [Features](#features) and [help file](../doc/mini-extra.txt)
 
 ---
 
-⦿ This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. Please use [this link](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-extra.md) if you want to mention this module.
+> [!NOTE]
+> This was previously hosted at a personal `echasnovski` GitHub account. It was transferred to a dedicated organization to improve long term project stability. See more details [here](https://github.com/nvim-mini/mini.nvim/discussions/1970).
+
+⦿ This is a part of [mini.nvim](https://github.com/nvim-mini/mini.nvim) library. Please use [this link](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-extra.md) if you want to mention this module.
 
 ⦿ All contributions (issues, pull requests, discussions, etc.) are done inside of 'mini.nvim'.
 
@@ -18,11 +17,11 @@ See more details in [Features](#features) and [help file](../doc/mini-extra.txt)
 
 ---
 
-If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
+If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/nvim-mini/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Demo
 
-https://github.com/echasnovski/mini.nvim/assets/24854248/31ceb716-eefa-4858-b77f-5b6b3fe594f5
+https://github.com/nvim-mini/mini.nvim/assets/24854248/31ceb716-eefa-4858-b77f-5b6b3fe594f5
 
 ## Features
 
@@ -30,7 +29,7 @@ Extra useful functionality which is not essential enough for other 'mini.nvim' m
 
 Features:
 
-- Various pickers for ['mini.pick'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pick.md):
+- Various pickers for ['mini.pick'](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-pick.md):
     - Built-in diagnostic (`*MiniExtra.pickers.diagnostic()*`).
     - File explorer (`*MiniExtra.pickers.explorer()*`).
     - Git branches/commits/files/hunks (`*MiniExtra.pickers.git_hunks()*`, etc.).
@@ -40,9 +39,9 @@ Features:
     - **And much more**.
   See `*MiniExtra.pickers*` help tag for more.
 
-- Various textobject specifications for ['mini.ai'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-ai.md). See `*MiniExtra.gen_ai_spec*` help tag for more.
+- Various textobject specifications for ['mini.ai'](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-ai.md). See `*MiniExtra.gen_ai_spec*` help tag for more.
 
-- Various highlighters for ['mini.hipatterns'](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-hipatterns.md). See `*MiniExtra.gen_highlighter*` help tag for more.
+- Various highlighters for ['mini.hipatterns'](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-hipatterns.md). See `*MiniExtra.gen_highlighter*` help tag for more.
 
 Notes:
 - This module requires only those 'mini.nvim' modules which are needed for a particular functionality: 'mini.pick' for pickers, etc.
@@ -65,7 +64,7 @@ There are two branches to install from:
 Here are code snippets for some common installation methods (use only one):
 
 <details>
-<summary>With <a href="https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
+<summary>With <a href="https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
 <table>
     <thead>
         <tr>
@@ -81,10 +80,10 @@ Here are code snippets for some common installation methods (use only one):
             <td>Stable</td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.extra')</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('nvim-mini/mini.extra')</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>add({ source = 'echasnovski/mini.extra', checkout = 'stable' })</code></td>
+            <td>Stable</td> <td><code>add({ source = 'nvim-mini/mini.extra', checkout = 'stable' })</code></td>
         </tr>
     </tbody>
 </table>
@@ -102,17 +101,17 @@ Here are code snippets for some common installation methods (use only one):
     <tbody>
         <tr>
             <td rowspan=2>'mini.nvim' library</td>
-            <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
+            <td>Main</td> <td><code>{ 'nvim-mini/mini.nvim', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.nvim', version = '*' },</code></td>
         </tr>
         <tr>
             <td rowspan=2>Standalone plugin</td>
-            <td>Main</td> <td><code>{ 'echasnovski/mini.extra', version = false },</code></td>
+            <td>Main</td> <td><code>{ 'nvim-mini/mini.extra', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.extra', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.extra', version = '*' },</code></td>
         </tr>
     </tbody>
 </table>
@@ -130,16 +129,16 @@ Here are code snippets for some common installation methods (use only one):
     <tbody>
         <tr>
             <td rowspan=2>'mini.nvim' library</td>
-            <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
+            <td>Main</td> <td><code>Plug 'nvim-mini/mini.nvim'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.extra'</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'nvim-mini/mini.extra'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.extra', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.extra', { 'branch': 'stable' }</code></td>
         </tr>
     </tbody>
 </table>

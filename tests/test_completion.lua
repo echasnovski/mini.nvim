@@ -603,7 +603,7 @@ T['Autocompletion']['forces new LSP completion at LSP trigger'] = new_set(
   -- how certain completion events (`CompleteDonePre`) are triggered, which
   -- affects whether autocompletion is done in certain cases (for example, when
   -- completion candidate is fully typed).
-  -- See https://github.com/echasnovski/mini.nvim/issues/813
+  -- See https://github.com/nvim-mini/mini.nvim/issues/813
   { parametrize = { { 'completefunc' }, { 'omnifunc' } } },
   {
     test = function(source_func)
@@ -1072,7 +1072,7 @@ T['Manual completion']['respects `filterText` from LSP response'] = function()
   set_lines({})
   type_keys('i', 'months.')
   -- Mock `textEdit` and `filterText` as in `tsserver` when called after `.`
-  -- (see https://github.com/echasnovski/mini.nvim/issues/306#issuecomment-1602245446)
+  -- (see https://github.com/nvim-mini/mini.nvim/issues/306#issuecomment-1602245446)
   child.lua([[
     _G.mock_textEdit = {
       pos = vim.api.nvim_win_get_cursor(0),

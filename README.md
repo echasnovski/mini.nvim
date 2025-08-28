@@ -1,16 +1,13 @@
 <div align="center"> <img src="logo.png" alt="mini.nvim"/> </div>
 
-<!-- badges: start -->
-[![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-[![GitHub tag](https://badgen.net/github/tag/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/tags/)
-[![Current version](https://badgen.net/badge/Current%20version/development/cyan)](https://github.com/echasnovski/mini.nvim/blob/main/CHANGELOG.md)
-<!-- badges: end -->
-
 Library of 40+ independent Lua modules improving overall [Neovim](https://github.com/neovim/neovim) (version 0.9 and higher) experience with minimal effort. They all share same configuration approaches and general design principles.
 
 Think about this project as "Swiss Army knife" among Neovim plugins: it has many different independent tools (modules) suitable for most common tasks. Each module can be used separately without any startup and usage overhead.
 
 If you want to help this project grow but don't know where to start, check out [contributing guides](CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
+
+> [!NOTE]
+> This was previously hosted at `echasnovski/mini.nvim`. It was transferred to a dedicated organization to improve long term project stability. See more details [here](https://github.com/nvim-mini/mini.nvim/discussions/1970).
 
 ## Table of contents
 
@@ -29,7 +26,7 @@ There are two branches to install from:
 
 Here are code snippets for some common installation methods:
 
-- Manually with `git clone` (compatible with [mini.deps](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-deps.md)):
+- Manually with `git clone` (compatible with [mini.deps](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-deps.md)):
 
 ```lua
 -- Put this at the top of 'init.lua'
@@ -41,7 +38,7 @@ if not vim.loop.fs_stat(mini_path) then
     'git', 'clone', '--filter=blob:none',
     -- Uncomment next line to use 'stable' branch
     -- '--branch', 'stable',
-    'https://github.com/echasnovski/mini.nvim', mini_path
+    'https://github.com/nvim-mini/mini.nvim', mini_path
   }
   vim.fn.system(clone_cmd)
   vim.cmd('packadd mini.nvim | helptags ALL')
@@ -53,15 +50,15 @@ end
 
 | Branch | Code snippet                                    |
 |--------|-------------------------------------------------|
-| Main   | `{ 'echasnovski/mini.nvim', version = false },` |
-| Stable | `{ 'echasnovski/mini.nvim', version = '*' },`   |
+| Main   | `{ 'nvim-mini/mini.nvim', version = false },` |
+| Stable | `{ 'nvim-mini/mini.nvim', version = '*' },`   |
 
 - With [junegunn/vim-plug](https://github.com/junegunn/vim-plug):
 
 | Branch | Code snippet                                           |
 |--------|--------------------------------------------------------|
-| Main   | `Plug 'echasnovski/mini.nvim'`                         |
-| Stable | `Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }` |
+| Main   | `Plug 'nvim-mini/mini.nvim'`                         |
+| Stable | `Plug 'nvim-mini/mini.nvim', { 'branch': 'stable' }` |
 
 - Every module is also distributed as a standalone Git repository. Check out module's information for more details.
 

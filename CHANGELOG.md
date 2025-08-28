@@ -9,6 +9,12 @@ There are following change types:
 
 ## All
 
+### Evolve
+
+- Move repository hosting from personal 'echasnovski' GitHub account to the 'nvim-mini' organization. All `git pull` and `git clone` should be automatically redirected from previous to new locations without breaking user configurations. Yet updating source links to point to new locations (like `'echasnovski/mini.nvim'` -> `'nvim-mini/mini.nvim'` and standalone repos) is recommended.
+
+    This change is made to improve long term project stability. See more details [here](https://github.com/nvim-mini/mini.nvim/discussions/1970).
+
 ### Refine
 
 - Stop official support of Neovim 0.8.

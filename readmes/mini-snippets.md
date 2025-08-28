@@ -1,8 +1,4 @@
-<div align="center"> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/logo-2/logo-snippets_readme.png" alt="mini.snippets"/> </div>
-
-<!-- badges: start -->
-[![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-<!-- badges: end -->
+<div align="center"> <img src="https://github.com/nvim-mini/assets/blob/main/logo-2/logo-snippets_readme.png" alt="mini.snippets"/> </div>
 
 ### Manage and expand snippets
 
@@ -10,7 +6,10 @@ See more details in [Features](#features) and [help file](../doc/mini-snippets.t
 
 ---
 
-⦿ This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. Please use [this link](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-snippets.md) if you want to mention this module.
+> [!NOTE]
+> This was previously hosted at a personal `echasnovski` GitHub account. It was transferred to a dedicated organization to improve long term project stability. See more details [here](https://github.com/nvim-mini/mini.nvim/discussions/1970).
+
+⦿ This is a part of [mini.nvim](https://github.com/nvim-mini/mini.nvim) library. Please use [this link](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-snippets.md) if you want to mention this module.
 
 ⦿ All contributions (issues, pull requests, discussions, etc.) are done inside of 'mini.nvim'.
 
@@ -18,7 +17,7 @@ See more details in [Features](#features) and [help file](../doc/mini-snippets.t
 
 ---
 
-If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
+If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/nvim-mini/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Demo
 
@@ -34,7 +33,7 @@ https://github.com/user-attachments/assets/2cb38960-a26c-48ae-83cd-5fbcaa57d1cf
 
 - Select from several matched snippets via `vim.ui.select()`. See `:h MiniSnippets.default_select()`.
 
-- Start specialized in-process LSP server to show loaded snippets inside (auto)completion engines (like [mini.completion](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-completion.md)). See `:h MiniSnippets.start_lsp_server()`.
+- Start specialized in-process LSP server to show loaded snippets inside (auto)completion engines (like [mini.completion](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-completion.md)). See `:h MiniSnippets.start_lsp_server()`.
 
 - Insert, jump, and edit during snippet session in a configurable manner:
     - Configurable mappings for jumping and stopping.
@@ -194,7 +193,7 @@ Snippet session allows interactive editing at tabstop locations:
 
 For more details about snippet session see `:h MiniSnippets-session`.
 
-To select and insert snippets via completion engine (that supports LSP completion; like [mini.completion](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-completion.md) or `:h vim.lsp.completion`), call `:h MiniSnippets.start_lsp_server()` after `require('mini.snippets').setup()`. This sets up an LSP server that matches and provides snippets loaded with 'mini.snippets'. To match with completion engine, use `start_lsp_server({ match = false })`.
+To select and insert snippets via completion engine (that supports LSP completion; like [mini.completion](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-completion.md) or `:h vim.lsp.completion`), call `:h MiniSnippets.start_lsp_server()` after `require('mini.snippets').setup()`. This sets up an LSP server that matches and provides snippets loaded with 'mini.snippets'. To match with completion engine, use `start_lsp_server({ match = false })`.
 
 ### Management
 
@@ -242,7 +241,7 @@ There are two branches to install from:
 Here are code snippets for some common installation methods (use only one):
 
 <details>
-<summary>With <a href="https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
+<summary>With <a href="https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
 <table>
     <thead>
         <tr>
@@ -257,10 +256,10 @@ Here are code snippets for some common installation methods (use only one):
             <td>Stable</td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.snippets')</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('nvim-mini/mini.snippets')</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>add({ source = 'echasnovski/mini.snippets', checkout = 'stable' })</code></td>
+            <td>Stable</td> <td><code>add({ source = 'nvim-mini/mini.snippets', checkout = 'stable' })</code></td>
         </tr>
     </tbody>
 </table>
@@ -276,16 +275,16 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'nvim-mini/mini.nvim', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.nvim', version = '*' },</code></td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini.snippets', version = false },</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'nvim-mini/mini.snippets', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.snippets', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.snippets', version = '*' },</code></td>
         </tr>
     </tbody>
 </table>
@@ -301,16 +300,16 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'nvim-mini/mini.nvim'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.snippets'</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'nvim-mini/mini.snippets'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.snippets', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.snippets', { 'branch': 'stable' }</code></td>
         </tr>
     </tbody>
 </table>

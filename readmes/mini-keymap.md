@@ -1,8 +1,4 @@
-<div align="center"> <img src="https://github.com/echasnovski/media/blob/main/mini.nvim/logo-2/logo-keymap_readme.png" alt="mini.keymap"/> </div>
-
-<!-- badges: start -->
-[![GitHub license](https://badgen.net/github/license/echasnovski/mini.nvim)](https://github.com/echasnovski/mini.nvim/blob/main/LICENSE)
-<!-- badges: end -->
+<div align="center"> <img src="https://github.com/nvim-mini/assets/blob/main/logo-2/logo-keymap_readme.png" alt="mini.keymap"/> </div>
 
 ### Special key mappings
 
@@ -10,7 +6,10 @@ See more details in [Features](#features) and [help file](../doc/mini-keymap.txt
 
 ---
 
-⦿ This is a part of [mini.nvim](https://github.com/echasnovski/mini.nvim) library. Please use [this link](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-keymap.md) if you want to mention this module.
+> [!NOTE]
+> This was previously hosted at a personal `echasnovski` GitHub account. It was transferred to a dedicated organization to improve long term project stability. See more details [here](https://github.com/nvim-mini/mini.nvim/discussions/1970).
+
+⦿ This is a part of [mini.nvim](https://github.com/nvim-mini/mini.nvim) library. Please use [this link](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-keymap.md) if you want to mention this module.
 
 ⦿ All contributions (issues, pull requests, discussions, etc.) are done inside of 'mini.nvim'.
 
@@ -18,7 +17,7 @@ See more details in [Features](#features) and [help file](../doc/mini-keymap.txt
 
 ---
 
-If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/echasnovski/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
+If you want to help this project grow but don't know where to start, check out [contributing guides of 'mini.nvim'](https://github.com/nvim-mini/mini.nvim/blob/main/CONTRIBUTING.md) or leave a Github star for 'mini.nvim' project and/or any its standalone Git repositories.
 
 ## Demo
 
@@ -29,9 +28,9 @@ https://github.com/user-attachments/assets/a3e34e9f-6901-4e57-a5bd-9508b2c6d065
 - Map keys to perform configurable multi-step actions: if condition for step one is true - execute step one action, else check step two, and so on until falling back to executing original keys. This is usually referred to as "smart" keys (like "smart tab"). See `:h MiniKeymap.map_multistep()`.
 
   There are many built-in steps targeted for Insert mode mappings of special keys like `<Tab>`, `<S-Tab>`, `<CR>`, and `<BS>`:
-  - Navigate and accept built-in Insert mode completion. Useful for [mini.completion](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-completion.md).
-  - Navigate and expand [mini.snippets](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-snippets.md).
-  - Execute `<CR>` and `<BS>` respecting [mini.pairs](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pairs.md).
+  - Navigate and accept built-in Insert mode completion. Useful for [mini.completion](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-completion.md).
+  - Navigate and expand [mini.snippets](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-snippets.md).
+  - Execute `<CR>` and `<BS>` respecting [mini.pairs](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-pairs.md).
   - Jump before/after current tree-sitter node.
   - Jump before opening and after closing characters (brackets and quotes).
   - Increase/decrease indent when cursor is inside of it.
@@ -112,7 +111,7 @@ There are two branches to install from:
 Here are code snippets for some common installation methods (use only one):
 
 <details>
-<summary>With <a href="https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
+<summary>With <a href="https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-deps.md">mini.deps</a></summary>
 <table>
     <thead>
         <tr>
@@ -127,10 +126,10 @@ Here are code snippets for some common installation methods (use only one):
             <td>Stable</td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('echasnovski/mini.keymap')</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>add('nvim-mini/mini.keymap')</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>add({ source = 'echasnovski/mini.keymap', checkout = 'stable' })</code></td>
+            <td>Stable</td> <td><code>add({ source = 'nvim-mini/mini.keymap', checkout = 'stable' })</code></td>
         </tr>
     </tbody>
 </table>
@@ -146,16 +145,16 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'echasnovski/mini.nvim', version = false },</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>{ 'nvim-mini/mini.nvim', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.nvim', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.nvim', version = '*' },</code></td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'echasnovski/mini.keymap', version = false },</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>{ 'nvim-mini/mini.keymap', version = false },</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>{ 'echasnovski/mini.keymap', version = '*' },</code></td>
+            <td>Stable</td> <td><code>{ 'nvim-mini/mini.keymap', version = '*' },</code></td>
         </tr>
     </tbody>
 </table>
@@ -171,16 +170,16 @@ Here are code snippets for some common installation methods (use only one):
     </thead>
     <tbody>
         <tr>
-            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.nvim'</code></td>
+            <td rowspan=2>'mini.nvim' library</td> <td>Main</td> <td><code>Plug 'nvim-mini/mini.nvim'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.nvim', { 'branch': 'stable' }</code></td>
         </tr>
         <tr>
-            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'echasnovski/mini.keymap'</code></td>
+            <td rowspan=2>Standalone plugin</td> <td>Main</td> <td><code>Plug 'nvim-mini/mini.keymap'</code></td>
         </tr>
         <tr>
-            <td>Stable</td> <td><code>Plug 'echasnovski/mini.keymap', { 'branch': 'stable' }</code></td>
+            <td>Stable</td> <td><code>Plug 'nvim-mini/mini.keymap', { 'branch': 'stable' }</code></td>
         </tr>
     </tbody>
 </table>
