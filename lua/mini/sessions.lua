@@ -486,11 +486,9 @@ H.detect_sessions_global = function(global_dir)
   end
 
   -- Find global sessions
-  local globs = vim.fn.globpath(global_dir, '*')
-  if #globs == 0 then return {} end
-
   local res = {}
-  for _, f in pairs(vim.split(globs, '\n')) do
+  for name in vim.fs.dir(global_dir) do
+    local f = global_dir .. '/' .. name
     if H.is_readable_file(f) then
       local s = H.new_session(f, 'global')
       res[s.name] = s
