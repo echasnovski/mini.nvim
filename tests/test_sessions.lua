@@ -237,7 +237,7 @@ T['setup()']['detects sessions and respects `config.directory`'] = function()
   eq(type(detected), 'table')
   local keys = vim.tbl_keys(detected)
   table.sort(keys)
-  eq(keys, { 'Session.vim', 'session1', 'session2.vim', 'session3.lua' })
+  eq(keys, { '.session', 'Session.vim', 'session1', 'session2.vim', 'session3.lua' })
 
   -- Elements should have correct structure
   local cur_dir = child.fn.getcwd()
