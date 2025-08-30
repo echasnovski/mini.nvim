@@ -3383,8 +3383,8 @@ H.files_get_tool = function()
 end
 
 H.files_get_command = function(tool)
-  if tool == 'rg' then return { 'rg', '--files', '--no-follow', '--color=never' } end
-  if tool == 'fd' then return { 'fd', '--type=f', '--no-follow', '--color=never' } end
+  if tool == 'rg' then return { 'rg', '--files', '--color=never' } end
+  if tool == 'fd' then return { 'fd', '--type=f', '--color=never' } end
   if tool == 'git' then return { 'git', 'ls-files', '--cached', '--others', '--exclude-standard' } end
   H.error([[Wrong 'tool' for `files` builtin.]])
 end
@@ -3413,7 +3413,7 @@ end
 H.grep_get_command = function(tool, pattern, globs)
   if tool == 'rg' then
     local res = {
-      'rg', '--column', '--line-number', '--no-heading', '--field-match-separator', '\\x00', '--no-follow', '--color=never'
+      'rg', '--column', '--line-number', '--no-heading', '--field-match-separator', '\\x00', '--color=never'
     }
     for _, g in ipairs(globs) do
       table.insert(res, '--glob')

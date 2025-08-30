@@ -2657,8 +2657,8 @@ T['builtin.files()']['respects `local_opts.tool`'] = function()
     clear_spawn_log()
   end
 
-  validate('rg', { '--files', '--no-follow' })
-  validate('fd', { '--type=f', '--no-follow' })
+  validate('rg', { '--files' })
+  validate('fd', { '--type=f' })
   validate('git', { 'ls-files', '--cached', '--others' })
 end
 
