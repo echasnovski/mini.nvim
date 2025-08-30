@@ -77,7 +77,7 @@ Module config
 Default values:
 >lua
   MiniBasics.config = {
-    -- Options. Set to `false` to disable.
+    -- Options. Set field to `false` to disable.
     options = {
       -- Basic options ('number', 'ignorecase', and many more)
       basic = true,
@@ -89,7 +89,7 @@ Default values:
       win_borders = 'default',
     },
 
-    -- Mappings. Set to `false` to disable.
+    -- Mappings. Set field to `false` to disable.
     mappings = {
       -- Basic mappings (better 'jk', save with Ctrl+S, ...)
       basic = true,
@@ -105,7 +105,7 @@ Default values:
       move_with_alt = false,
     },
 
-    -- Autocommands. Set to `false` to disable
+    -- Autocommands. Set field to `false` to disable
     autocommands = {
       -- Basic autocommands (highlight on yank, start Insert in terminal, ...)
       basic = true,

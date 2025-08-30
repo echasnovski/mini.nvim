@@ -317,7 +317,7 @@ end
 --- enable |relativenumber| in linewise and blockwise Visual modes and disable
 --- otherwise. See |ModeChanged|.
 MiniBasics.config = {
-  -- Options. Set to `false` to disable.
+  -- Options. Set field to `false` to disable.
   options = {
     -- Basic options ('number', 'ignorecase', and many more)
     basic = true,
@@ -329,7 +329,7 @@ MiniBasics.config = {
     win_borders = 'default',
   },
 
-  -- Mappings. Set to `false` to disable.
+  -- Mappings. Set field to `false` to disable.
   mappings = {
     -- Basic mappings (better 'jk', save with Ctrl+S, ...)
     basic = true,
@@ -345,7 +345,7 @@ MiniBasics.config = {
     move_with_alt = false,
   },
 
-  -- Autocommands. Set to `false` to disable
+  -- Autocommands. Set field to `false` to disable
   autocommands = {
     -- Basic autocommands (highlight on yank, start Insert in terminal, ...)
     basic = true,
